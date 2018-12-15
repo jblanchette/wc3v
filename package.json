@@ -1,0 +1,24 @@
+{
+	"name": "w3gv",
+	"version": "0.0.1",
+	"description": "Warcraft III Replay Viewer",
+	"keywords": [
+		"w3g",
+		"julas",
+		"replay",
+		"warcraft",
+		"warcraft iii",
+		"warcraft 3"
+	],
+	"author": {
+		"name": "Jeff Blanchette",
+		"email": "jeff.blanchette5@gmail.com"
+	},
+	"contributors": [],
+	"main": "./lib/w3g_julas",
+	"dependencies": {
+		"w3gjs": "anXieTyPB/w3gjs#master"
+	},
+	"license": "MIT",
+	"readmeFilename": "README.md"
+}
