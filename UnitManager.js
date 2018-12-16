@@ -1,17 +1,24 @@
+const Player = require("./Player");
+
 const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
 const UnitManager = class {
 	constructor () {
+		this.meta = null;
 		this.players = {};
 	}
 
-	makePlayer (id) {
-		const player = {
-			id: id,
-			units: {}
-		};
+	setMetaData (meta) {
+		this.meta = meta;
+	}
 
+	makePlayer (id) {
+		let playerSlot = this.meta.playerSlotRecords.find(slot => {	
+			return slot.playerId === id;
+		});
+
+		let player = new Player(id, playerSlot);
 		this.players[id] = player;
 	}
 
@@ -24,17 +31,30 @@ const UnitManager = class {
 	}
 
 	handleAction (actionBlock, action) {
+		const self = this;
 		const actionName = ActionBlockNames[action.actionId];
 		const player = this.players[actionBlock.playerId];
 
-		console.log("Running: ", actionName);
-		console.log("Action: ", action);
-
     switch (actionName) {
-      case "UseAbilityWithTarget":
-        console.log("Player: ", player);
-        console.log("action: ", action);
+      case "ChangeSelection":
+        player.changeSelection(action);
       break;
+
+      case "UpdateSubgroup":
+      	player.toggleUpdateSubgroup();
+      break;
+
+      case "SelectSubgroup":
+      	player.selectSubgroup(action);
+      break;
+
+      case "UseAbilityNoTarget":
+      	player.useAbilityNoTarget(action);
+      break;	
+
+      case "UseAbilityWithTargetAndObjectId":
+      	player.useAbilityWithTargetAndObjectId(action);
+     	break;
     }
 	}
 };
