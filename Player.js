@@ -112,7 +112,7 @@ const Player = class {
     	}	
     } else {
     	// de-selected unit
-    	// TODO: implement
+    	this.selection.deselect(subGroup);
     }
 
     // console.log("ChangeSelection:");

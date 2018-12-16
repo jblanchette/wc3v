@@ -10,8 +10,6 @@ const Unit = class {
 
 		this.selected = false;
 
-		console.log("%% starting pos: ", startingPosition);
-
 		this.currentX = startingPosition.x;
 		this.currentY = startingPosition.y;
 
@@ -36,7 +34,6 @@ const Unit = class {
 	}
 
 	moveTo (targetX, targetY) {
-		console.log("** Moving unit to: ", targetX, targetY);
 		this.state = "walking";
 
 		this.path.push({
@@ -46,8 +43,6 @@ const Unit = class {
 
 		this.currentX = targetX;
 		this.currentY = targetY;
-
-		console.log("Path so far: ", this.path);
 	}
 };
 

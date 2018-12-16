@@ -39,16 +39,16 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'right',
-    'file': 'replays/test-bnet-echoisles-right.w3g'
-  },
-  {
-    'side': 'left',
-    'file': 'replays/test-bnet-echoisles-left.w3g'
-  },
-  {
-    'side': 'left',
-    'file': 'replays/test-bnet-echoisles-left2.w3g'
+    'file': 'replays/test-square.w3g'
   }
+  // {
+  //   'side': 'left',
+  //   'file': 'replays/test-bnet-echoisles-left.w3g'
+  // },
+  // {
+  //   'side': 'left',
+  //   'file': 'replays/test-bnet-echoisles-left2.w3g'
+  // }
 ];
 
 paths.forEach(path => {
@@ -58,6 +58,8 @@ paths.forEach(path => {
   hasParsedMeta = false;
   
   const replay = Parser.parse(file);
+
+  console.log("UnitMgr: ", unitManager.players['1'].units);
 
   console.log("===============================");
 });
