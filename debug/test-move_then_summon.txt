@@ -1,0 +1,184 @@
+================================
+Action 1 Player 1
+================================
+# select existing peon near mine
+Running:  ChangeSelection
+Action:  { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+ChangeSelection:
+Sub action:  { itemId1: [ -76, 62, 0, 0 ], itemId2: [ -76, 62, 0, 0 ] }
+================================
+================================
+Action 2 Player 1
+================================
+Running:  UpdateSubgroup
+Action:  { actionId: 26 }
+================================
+================================
+Action 3 Player 1
+================================
+# set subgroup as selected mine peon
+Running:  SelectSubgroup
+Action:  { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 16052,
+  objectId2: 16052 }
+================================
+================================
+Action 4 Player 1
+================================
+# move peon
+Running:  UseAbilityWithTargetAndObjectId
+Action:  { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 1166311764,
+  targetY: 1162529604,
+  objectId1: -1,
+  objectId2: -1 }
+================================
+================================
+Action 5 Player 1
+================================
+# move peon 
+Running:  UseAbilityWithTargetAndObjectId
+Action:  { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 1166302617,
+  targetY: 1161273501,
+  objectId1: -1,
+  objectId2: -1 }
+================================
+================================
+Action 6 Player 1
+================================
+Running:  Pause
+Action:  { actionId: 1 }
+================================
+================================
+Action 7 Player 1
+================================
+Running:  Resume
+Action:  { actionId: 2 }
+================================
+================================
+Action 8 Player 1
+================================
+# de-select the last peon
+Running:  ChangeSelection
+Action:  { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+ChangeSelection:
+Sub action:  { itemId1: [ -76, 62, 0, 0 ], itemId2: [ -76, 62, 0, 0 ] }
+================================
+================================
+Action 9 Player 1
+================================
+# select the town hall
+Running:  ChangeSelection
+Action:  { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+ChangeSelection:
+Sub action:  { itemId1: [ 60, 62, 0, 0 ], itemId2: [ 60, 62, 0, 0 ] }
+================================
+================================
+Action 10 Player 1
+================================
+Running:  UpdateSubgroup
+Action:  { actionId: 26 }
+================================
+================================
+Action 11 Player 1
+================================
+# set subgroup as townhall
+Running:  SelectSubgroup
+Action:  { actionId: 25,
+  itemId: 'ergo',
+  objectId1: 15932,
+  objectId2: 15932 }
+================================
+================================
+Action 12 Player 1
+================================
+# train the peon
+Running:  UseAbilityNoTarget
+Action:  { actionId: 16,
+  abilityFlags: 66,
+  itemId: 'oepo',
+  unknownA: -1,
+  unknownB: -1 }
+================================
+================================
+Action 13 Player 1
+================================
+# de-select the town hall
+Running:  ChangeSelection
+Action:  { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+ChangeSelection:
+Sub action:  { itemId1: [ 60, 62, 0, 0 ], itemId2: [ 60, 62, 0, 0 ] }
+================================
+================================
+Action 14 Player 1
+================================
+# select the newly trained peon
+Running:  ChangeSelection
+Action:  { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+ChangeSelection:
+Sub action:  { itemId1: [ 101, 61, 0, 0 ], itemId2: [ 62, 71, 0, 0 ] }
+================================
+================================
+Action 15 Player 1
+================================
+Running:  UpdateSubgroup
+Action:  { actionId: 26 }
+================================
+================================
+Action 16 Player 1
+================================
+# select peon as subgroup
+Running:  SelectSubgroup
+Action:  { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 15717,
+  objectId2: 18238 }
+================================
+================================
+Action 17 Player 1
+================================
+# move trained peon
+Running:  UseAbilityWithTargetAndObjectId
+Action:  { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 1166234331,
+  targetY: 1162476942,
+  objectId1: -1,
+  objectId2: -1 }
+================================
+================================
+Action 18 Player 1
+================================
+Running:  Pause
+Action:  { actionId: 1 }
+================================
+parse: 42.276ms
+done
