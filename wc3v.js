@@ -38,17 +38,9 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 
 const paths = [
   {
-    'side': 'right',
-    'file': 'replays/test-square.w3g'
+    'side': 'left',
+    'file': 'replays/test-objectid.w3g'
   }
-  // {
-  //   'side': 'left',
-  //   'file': 'replays/test-bnet-echoisles-left.w3g'
-  // },
-  // {
-  //   'side': 'left',
-  //   'file': 'replays/test-bnet-echoisles-left2.w3g'
-  // }
 ];
 
 paths.forEach(path => {
@@ -57,9 +49,22 @@ paths.forEach(path => {
   unitManager = new UnitManager();
   hasParsedMeta = false;
   
+  console.log("Parsing file: ", file);
+  
   const replay = Parser.parse(file);
+  let players = unitManager.players;
 
-  console.log("UnitMgr: ", unitManager.players['1'].units);
+  Object.keys(players).forEach(playerId => {
+    let units = players[playerId].units;
 
-  console.log("===============================");
+    units.forEach(unit => {
+      if (unit.isBuilding) {
+        console.log("Unit is a building: ", unit);
+        return;
+      }
+
+      console.log("Path: ", unit.path);
+    })
+    console.log("===============================");
+  });
 });
