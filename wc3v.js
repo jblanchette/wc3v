@@ -39,7 +39,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/test-double-select-build.w3g'
+    'file': 'replays/test-double-building-no-select.w3g'
   }
 ];
 
@@ -58,7 +58,10 @@ paths.forEach(path => {
     console.log("******************************");
     console.log(`Inspecting player: ${playerId}`);
 
+    // console.log(players[playerId]);
+
     let units = players[playerId].units;
+    console.log(`Unit count: ${units.length}`);
 
     units.forEach(unit => {
       console.log("================================");
