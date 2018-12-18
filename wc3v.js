@@ -39,7 +39,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/test-objectid.w3g'
+    'file': 'replays/test-hum-hero.w3g'
   }
 ];
 
@@ -55,16 +55,17 @@ paths.forEach(path => {
   let players = unitManager.players;
 
   Object.keys(players).forEach(playerId => {
+    console.log("******************************");
+    console.log(`Inspecting player: ${playerId}`);
+
     let units = players[playerId].units;
 
     units.forEach(unit => {
-      if (unit.isBuilding) {
-        console.log("Unit is a building: ", unit);
-        return;
-      }
-
+      console.log("================================");
+      console.log("Unit: ", unit);
       console.log("Path: ", unit.path);
-    })
-    console.log("===============================");
+      console.log("================================");
+    });
+    console.log("******************************");
   });
 });

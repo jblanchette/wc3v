@@ -7,10 +7,11 @@ const Unit = class {
 		this.itemId2 = itemId2;
 
 		this.itemId = null;
-		this.objectId = null;
+		this.displayName = null;
 
 		this.isSpawnedAtStart = utils.isEqualItemId(itemId1, itemId2);
 		this.isBuilding = false;
+		this.isUnit = false;
 
 		// non-selectable things on the map
 		// like trees
@@ -30,11 +31,24 @@ const Unit = class {
 	}
 
 	registerUnit (itemId, objectId1, objectId2) {
+		// not sure why yet, but itemId's are reversed?
+		itemId = itemId.split("").reverse().join("");
+
 		this.itemId = itemId;
 		this.objectId1 = objectId1;
 		this.objectId2 = objectId2;
 
-		this.isBuilding = !!(mappings.buildings[itemId]);
+		const { 
+			displayName, 
+			isBuilding, 
+			isUnit 
+		} = mappings.getUnitInfo(itemId);
+
+		console.log("Register results: ", itemId, isBuilding, isUnit);
+
+		this.displayName = displayName;
+		this.isBuilding = isBuilding;
+		this.isUnit = isUnit;
 	}
 
 	spawn () {
