@@ -30,13 +30,21 @@ const Unit = class {
 		this.state = null;
 	}
 
-	registerUnit (itemId, objectId1, objectId2) {
-		// not sure why yet, but itemId's are reversed?
-		itemId = itemId.split("").reverse().join("");
+	registerObjectIds (objectId1, objectId2) {
+		this.objectId1 = objectId1;
+		this.objectId2 = objectId2;
 
+		this.hasBeenInGroup = true;
+	}
+
+	registerUnit (itemId, objectId1, objectId2) {
 		this.itemId = itemId;
 		this.objectId1 = objectId1;
 		this.objectId2 = objectId2;
+
+		console.log("***");
+		console.log("*** Registered: ", itemId, objectId1, objectId2);
+		console.log("***");
 
 		const { 
 			displayName, 
@@ -45,12 +53,12 @@ const Unit = class {
 			meta
 		} = mappings.getUnitInfo(itemId);
 
-		console.log("Register results: ", itemId, isBuilding, isUnit);
-
 		this.displayName = displayName;
 		this.isBuilding = isBuilding;
 		this.isUnit = isUnit;
 		this.meta = meta;
+
+		this.hasBeenInGroup = true;
 	}
 
 	spawn () {

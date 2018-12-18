@@ -5,10 +5,6 @@ const {
 	units
 } = w3gMappings;
 
-const heroes = {
-  
-};
-
 const unitMetaData = {
 	'opeo': {
 		'displayName': 'Peon',
@@ -179,6 +175,15 @@ const unitMetaData = {
 		'permanent': true
   }
 };
+
+const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
+	let item = unitMetaData[key];
+	if (item.hero) {
+		acc[key] = `u_${item.displayName}`;
+	}
+
+	return acc;
+}, {});
 
 const abilityActions = {
 	'RightClick': [3, 0, 13, 0]
