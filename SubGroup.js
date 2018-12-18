@@ -7,8 +7,6 @@ const SubGroup = class {
 	}
 
 	deselect (otherGroup) {
-		this.numberUnits -= otherGroup.numberUnits;
-
 		this.units = this.units.filter(unit => {
 			const unitInOtherGroup = otherGroup.units.find(otherUnit => {
 				return utils.isEqualItemId(unit.itemId1, otherUnit.itemId1) &&
@@ -17,8 +15,10 @@ const SubGroup = class {
 
 			// when the unit is *not* in the other group
 			// we keep it (return true)
-			return (unitInOtherGroup === null);
+			return (unitInOtherGroup === null || unitInOtherGroup === undefined);
 		});
+
+		this.numberUnits -= otherGroup.numberUnits;
 	}
 
 	mergeGroups (otherGroup) {

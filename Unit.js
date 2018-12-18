@@ -9,7 +9,7 @@ const Unit = class {
 		this.itemId = null;
 		this.displayName = null;
 
-		this.isSpawnedAtStart = utils.isEqualItemId(itemId1, itemId2);
+		this.isSpawnedAtStart = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);
 		this.isBuilding = false;
 		this.isUnit = false;
 
@@ -26,7 +26,7 @@ const Unit = class {
 		this.currentX = startingPosition.x;
 		this.currentY = startingPosition.y;
 
-		this.path = [{ x: this.currentX, y: this.currentY }];
+		this.path = [];
 		this.state = null;
 	}
 
@@ -41,7 +41,8 @@ const Unit = class {
 		const { 
 			displayName, 
 			isBuilding, 
-			isUnit 
+			isUnit,
+			meta
 		} = mappings.getUnitInfo(itemId);
 
 		console.log("Register results: ", itemId, isBuilding, isUnit);
@@ -49,6 +50,7 @@ const Unit = class {
 		this.displayName = displayName;
 		this.isBuilding = isBuilding;
 		this.isUnit = isUnit;
+		this.meta = meta;
 	}
 
 	spawn () {

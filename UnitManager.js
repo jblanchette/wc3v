@@ -3,7 +3,7 @@ const Player = require("./Player");
 const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
-const debugActions = false;
+const debugActions = true;
 
 const UnitManager = class {
 	constructor () {
@@ -43,7 +43,7 @@ const UnitManager = class {
 			console.log(`Action:`, action);
 			console.log("====================================");
 		}
-		
+
     switch (actionName) {
       case "ChangeSelection":
         player.changeSelection(action);
@@ -67,6 +67,10 @@ const UnitManager = class {
 
       case "UseAbilityWithTargetAndObjectId":
       	player.useAbilityWithTargetAndObjectId(action);
+     	break;
+
+     	case "ChooseBuilding":
+     		player.chooseBuilding(action);
      	break;
     }
 	}

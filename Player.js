@@ -21,6 +21,8 @@ const Player = class {
 		this.units = [];
 		this.updatingSubgroup = false;
 		this.selection = null;
+
+		this.buildMenuOpen = false;
 	}
 
 	makeUnit (itemId1, itemId2) {
@@ -76,7 +78,6 @@ const Player = class {
 			throw new Error("Unable to find unit for group selection.");
 		}
 
-		console.log("Registering unit: ", itemId);
 		firstGroupUnit.registerUnit(itemId, objectId1, objectId2);
 
 		firstGroupUnit.spawning = false;
@@ -155,21 +156,28 @@ const Player = class {
 	useAbilityWithTarget (action) {
 		console.log("% Player.useAbilityWithTarget");
 
-		// { actionId: 17,
-		//   abilityFlags: 4,
-		//   itemId: 'tlao',
-		//   unknownA: -1,
-		//   unknownB: -1,
-		//   targetX: -5664,
-		//   targetY: 3104 }
+		const selectionUnits = this.getSelectionUnits();
+		let firstUnit = selectionUnits[0];
 
-		console.log("%%%%%%%");
-		console.log("%%%%%%%");
-		console.log("%%%%%%%");
-		console.log("%%%%%%%");
-		console.log("%%%%%%%");
-		console.log("ActioN: ", action);
-		console.log("%%%%%%%");
+		if (this.buildMenuOpen && firstUnit.meta.worker) {
+			console.log("%%% potentially making a building");
+			console.log("Action: ", action);
+
+			const { targetX, targetY, itemId } = action;
+			const startingPosition = {
+				x: targetX,
+				y: targetY
+			};
+
+			let building = new Unit(null, null, startingPosition);
+			building.registerUnit(itemId, null, null);
+
+			this.units.push(building);
+		}
+	}
+
+	chooseBuilding (action) {
+		this.buildMenuOpen = true;
 	}
 };
 

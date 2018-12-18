@@ -6,54 +6,179 @@ const {
 } = w3gMappings;
 
 const heroes = {
-  'Hamg': 'Archmage',
-  'Hblm': 'Blood Mage',
-  'Hmkg': 'Mountain King',
-  'Hpal': 'Paladin',
-  'Ewar': 'Warden',
-  'Ekee': 'Keeper of the Grove',
-  'Emoo': 'Priestess of the Moon',
-  'Edem': 'Demon Hunter',
-  'Oshd': 'Shadow Hunter',
-  'Obla': 'Blademaster',
-  'Ofar': 'Far Seer',
-  'Otch': 'Tauren Chieftain',
-  'Ucrl': 'Crypt Lord',
-  'Udea': 'Death Knight',
-  'Udre': 'Dread Lord',
-  'Ulic': 'Lich',
-  'Npbm': 'Pandaren Brewmaster',
-  'Nbrn': 'Dark Ranger',
-  'Nngs': 'Naga Sea Witch',
-  'Nplh': 'Pit Lord',
-  'Nbst': 'Beastmaster',
-  'Ntin': 'Goblin Tinker',
-  'Nfir': 'FireLord',
-  'Nalc': 'Goblin Alchemist'
+  
 };
 
-const unitTypes = {
-	'oepo': {
+const unitMetaData = {
+	'opeo': {
 		'displayName': 'Peon',
+		'hero': false,
 		'worker': true,
 		'permanent': true
 	},
 	'uaco ': {
 		'displayName': 'Acolyte',
+		'hero': false,
 		'worker': true,
 		'permanent': true
 	},
 	'ewsp ': {
 		'displayName': 'Wisp',
+		'hero': false,
 		'worker': true,
 		'permanent': true
 	},
 	'hpea': {
 		'displayName': 'Peasent',
+		'hero': false,
 		'worker': true,
 		'permanent': true
-	}
-}
+	},
+	'Hamg': {
+		'displayName': 'Archmage',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Hblm': {
+		'displayName': 'Blood Mage',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Hmkg': {
+		'displayName':'Mountain King',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Hpal': {
+		'displayName':'Paladin',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Ewar': {
+		'displayName':'Warden',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Ekee': {
+		'displayName':'Keeper of the Grove',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Emoo': {
+		'displayName':'Priestess of the Moon',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Edem': {
+		'displayName':'Demon Hunter',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Oshd': {
+		'displayName':'Shadow Hunter',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Obla': {
+		'displayName':'Blademaster',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+	},
+  'Ofar': {
+		'displayName':'Far Seer',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Otch': {
+		'displayName':'Tauren Chieftain',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Ucrl': {
+		'displayName':'Crypt Lord',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Udea': {
+		'displayName':'Death Knight',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Udre': {
+		'displayName':'Dread Lord',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Ulic': {
+		'displayName':'Lich',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Npbm': {
+		'displayName':'Pandaren Brewmaster',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Nbrn': {
+		'displayName':'Dark Ranger',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Nngs': {
+		'displayName':'Naga Sea Witch',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Nplh': {
+		'displayName':'Pit Lord',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Nbst': {
+		'displayName':'Beastmaster',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Ntin': {
+		'displayName':'Goblin Tinker',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Nfir': {
+		'displayName':'FireLord',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  },
+  'Nalc': {
+		'displayName':'Goblin Alchemist',
+		'hero': true,
+		'worker': false,
+		'permanent': true
+  }
+};
 
 const abilityActions = {
 	'RightClick': [3, 0, 13, 0]
@@ -76,7 +201,6 @@ const getUnitInfo = (itemId) => {
 	const isHero = (inHeroList);
 	const isUnit = (inUnitList || isHero && !isBuilding);
 
-
 	let displayName = "Unknown";
 	if (isBuilding) {
 		displayName = buildings[itemId];
@@ -84,10 +208,17 @@ const getUnitInfo = (itemId) => {
 		displayName = units[itemId] || heroes[itemId];
 	}
 
+	let meta = unitMetaData[itemId] || {
+		hero: false,
+		worker: false,
+		permanent: isBuilding
+	};
+
 	return {
 		displayName: displayName,
 		isBuilding: isBuilding,
-		isUnit: isUnit
+		isUnit: isUnit,
+		meta: meta
 	};
 }
 
@@ -95,7 +226,7 @@ module.exports = {
 	getUnitInfo: getUnitInfo,
 	buildings: buildings,
 	units: units,
-	unitTypes: unitTypes,
+	unitMetaData: unitMetaData,
 	abilityActions: abilityActions,
 	mapStartPositions: mapStartPositions
 };
