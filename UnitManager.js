@@ -3,6 +3,8 @@ const Player = require("./Player");
 const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
+const debugActions = false;
+
 const UnitManager = class {
 	constructor () {
 		this.meta = null;
@@ -35,11 +37,13 @@ const UnitManager = class {
 		const actionName = ActionBlockNames[action.actionId];
 		const player = this.players[actionBlock.playerId];
 
-		console.log("====================================");
-		console.log(`ActionName: ${actionName}`);
-		console.log(`Action:`, action);
-		console.log("====================================");
-
+		if (debugActions) {
+			console.log("====================================");
+			console.log(`ActionName: ${actionName}`);
+			console.log(`Action:`, action);
+			console.log("====================================");
+		}
+		
     switch (actionName) {
       case "ChangeSelection":
         player.changeSelection(action);

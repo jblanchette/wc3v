@@ -76,6 +76,7 @@ const Player = class {
 			throw new Error("Unable to find unit for group selection.");
 		}
 
+		console.log("Registering unit: ", itemId);
 		firstGroupUnit.registerUnit(itemId, objectId1, objectId2);
 
 		firstGroupUnit.spawning = false;
