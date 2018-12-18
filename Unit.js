@@ -1,9 +1,21 @@
+const mappings = require("./mappings");
+const utils = require("./utils");
+
 const Unit = class {
 	constructor (itemId1, itemId2, startingPosition) {
 		this.itemId1 = itemId1;
 		this.itemId2 = itemId2;
 
+		this.itemId = null;
 		this.objectId = null;
+
+		this.isSpawnedAtStart = utils.isEqualItemId(itemId1, itemId2);
+		this.isBuilding = false;
+
+		// non-selectable things on the map
+		// like trees
+		
+		this.hasBeenInGroup = false;
 
 		this.abilityFlags = null;
 		this.spawning = true;
@@ -17,8 +29,12 @@ const Unit = class {
 		this.state = null;
 	}
 
-	assignObjectId (objectId) {
-		this.objectId = objectId;
+	registerUnit (itemId, objectId1, objectId2) {
+		this.itemId = itemId;
+		this.objectId1 = objectId1;
+		this.objectId2 = objectId2;
+
+		this.isBuilding = !!(mappings.buildings[itemId]);
 	}
 
 	spawn () {
@@ -43,6 +59,8 @@ const Unit = class {
 
 		this.currentX = targetX;
 		this.currentY = targetY;
+
+		console.log("# moved: ", targetX, targetY);
 	}
 };
 

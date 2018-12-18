@@ -5,6 +5,12 @@
  Goal is to simulate enough of wc3 to get a 'birds eye view'
  of the match from a given replay.
 
+# Usage
+
+run
+
+`node wc3v.js`
+
 # Progress
 
 Currently the wc3v system is able to process very basic unit moving pathing.

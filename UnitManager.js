@@ -35,13 +35,18 @@ const UnitManager = class {
 		const actionName = ActionBlockNames[action.actionId];
 		const player = this.players[actionBlock.playerId];
 
+		console.log("====================================");
+		console.log(`ActionName: ${actionName}`);
+		console.log(`Action:`, action);
+		console.log("====================================");
+
     switch (actionName) {
       case "ChangeSelection":
         player.changeSelection(action);
       break;
 
       case "UpdateSubgroup":
-      	player.toggleUpdateSubgroup();
+      	player.toggleUpdateSubgroup(action);
       break;
 
       case "SelectSubgroup":
@@ -51,6 +56,10 @@ const UnitManager = class {
       case "UseAbilityNoTarget":
       	player.useAbilityNoTarget(action);
       break;	
+
+      case "UseAbilityWithTarget":
+      	player.useAbilityWithTarget(action);
+      break;
 
       case "UseAbilityWithTargetAndObjectId":
       	player.useAbilityWithTargetAndObjectId(action);

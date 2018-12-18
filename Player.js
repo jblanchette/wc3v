@@ -55,7 +55,7 @@ const Player = class {
 		});
 	}
 
-	toggleUpdateSubgroup () {
+	toggleUpdateSubgroup (action) {
 		// auto-gen war3 message was triggered
 		this.updatingSubgroup = true;
 	}
@@ -76,7 +76,7 @@ const Player = class {
 			throw new Error("Unable to find unit for group selection.");
 		}
 
-		firstGroupUnit.assignObjectId(objectId1);
+		firstGroupUnit.registerUnit(itemId, objectId1, objectId2);
 
 		firstGroupUnit.spawning = false;
 		firstGroupUnit.selected = true;
@@ -122,14 +122,16 @@ const Player = class {
 	}
 
 	useAbilityNoTarget (action) {
-		console.log("% player.useAbilityNoTarget");
-		console.log(action);
+		// console.log("% player.useAbilityNoTarget");
+		// console.log(action);
 
 		// todo: implement
 	} 
 
 	useAbilityWithTargetAndObjectId (action) {
-		console.log("% player.useAbilityWithTargetAndObjectId");
+		// console.log("% player.useAbilityWithTargetAndObjectId");
+		// console.log("Action: ", action);
+
 		let units = this.getSelectionUnits();
 
 		const abilityActionName = Object.keys(abilityActions).find(abilityKey => {
@@ -140,13 +142,33 @@ const Player = class {
 
 		switch (abilityActionName) {
 			case 'RightClick':
-				const { targetX, targetY } = action;
+				let { targetX, targetY } = action;
 
 				units.forEach(unit => {
 					unit.moveTo(targetX, targetY);
 				});
 			break;
 		}
+	}
+
+	useAbilityWithTarget (action) {
+		console.log("% Player.useAbilityWithTarget");
+
+		// { actionId: 17,
+		//   abilityFlags: 4,
+		//   itemId: 'tlao',
+		//   unknownA: -1,
+		//   unknownB: -1,
+		//   targetX: -5664,
+		//   targetY: 3104 }
+
+		console.log("%%%%%%%");
+		console.log("%%%%%%%");
+		console.log("%%%%%%%");
+		console.log("%%%%%%%");
+		console.log("%%%%%%%");
+		console.log("ActioN: ", action);
+		console.log("%%%%%%%");
 	}
 };
 
