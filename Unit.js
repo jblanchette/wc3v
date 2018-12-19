@@ -35,6 +35,7 @@ const Unit = class {
 		this.state = null;
 
 		this.learnedSkills = {};
+		this.knownLevel = 1;
 
 		this.setUnitMeta();
 	}
