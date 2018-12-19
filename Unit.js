@@ -34,6 +34,8 @@ const Unit = class {
 		this.path = [];
 		this.state = null;
 
+		this.learnedSkills = {};
+
 		this.setUnitMeta();
 	}
 
@@ -85,6 +87,16 @@ const Unit = class {
 
 	deselect () {
 		this.selected = false;
+	}
+
+	getSkillForType (skillType) {
+		let skillKey = Object.keys(this.learnedSkills).find(key => {
+			let learnedSkill = this.learnedSkills[key];
+
+			return learnedSkill.type === skillType;
+		});
+
+		return skillKey && mappings.heroAbilities[skillKey] || null;
 	}
 
 	moveTo (targetX, targetY) {
