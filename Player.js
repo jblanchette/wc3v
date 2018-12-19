@@ -18,8 +18,6 @@ const Player = class {
 		this.teamId = playerSlot.teamId;
 		this.race = playerSlot.raceFlag;
 
-		console.log("Race: ", this.race);
-
 		switch (this.race) {
 			case 'O':
 				this.units = [
@@ -80,6 +78,11 @@ const Player = class {
 
 		this.possibleRegisterItem = null;
 		this.possibleSelectList = [];
+
+		this.knownObjectIds = {
+			'worker': null,
+			'townhall': null
+		};
 	}
 
 	makeUnit (itemId1, itemId2) {
@@ -140,23 +143,64 @@ const Player = class {
 		this.updatingSubgroup = true;
 	}
 
-	assignPossibleSelectGroup () {
+	assignKnownUnits () {
 		let self = this;
+		let knownObjectIds = this.knownObjectIds;
 
-		console.log("Running assignPossibleSelectGroup");
-		console.log("Possible list: ", this.possibleSelectList);
+		const shouldCheckAssignments = Object.keys(knownObjectIds).some(key => {
+			return knownObjectIds[key] === null;
+		});
+
+		if (!shouldCheckAssignments) {
+			return;
+		}
+
+		this.units.forEach(unit => {
+			if (!unit.isSpawnedAtStart || unit.objectId1 === null) {
+				return;
+			}
+
+			if (!knownObjectIds.worker && unit.meta.worker) {
+				knownObjectIds.worker = unit.objectId1;
+			} else if (!knownObjectIds.townhall && unit.isBuilding) {
+				knownObjectIds.townhall = unit.objectId1;
+			}
+		});
+	}
+
+	guessUnitType (objectId) {
+		console.log("Guessing a unit type from objectId: ", objectId);
+		console.log("Known objects: ", this.knownObjectIds);
+		const knownObjectIds = this.knownObjectIds;
+		const threshold = 6;
+
+		let bestGuess = Object.keys(knownObjectIds).find(key => {
+			const knownId = knownObjectIds[key];
+			if (knownId === null) {
+				return false;
+			}
+
+			return Math.abs(knownId - objectId) <= threshold;
+		});
+
+		return bestGuess || null;
+	}
+
+	assignPossibleSelectGroup (itemId) {
+		let self = this;
 
 		this.possibleSelectList = this.possibleSelectList.filter(selectItem => {
 			const { itemId1, itemId2 } = selectItem;
 			const isStarterUnit = utils.isEqualItemId(itemId1, itemId2);
 
-			let playerUnit = self.units.find(selectedUnit => {
-				return selectedUnit.itemId1 === null &&
-				       selectedUnit.isSpawnedAtStart === isStarterUnit;
+			let foundPlayerUnit = self.units.find(playerUnit => {
+				return playerUnit.itemId === itemId &&
+							 playerUnit.itemId1 === null &&
+				       playerUnit.isSpawnedAtStart === isStarterUnit;
 			});
 
-			if (playerUnit) {
-				playerUnit.registerItemIds(itemId1, itemId2);
+			if (foundPlayerUnit) {
+				foundPlayerUnit.registerItemIds(itemId1, itemId2);
 				self.unregisteredUnitCount -= 1;
 
 				return false;
@@ -173,27 +217,23 @@ const Player = class {
 		const {itemId1, itemId2} = firstGroupItem;
 
 		const fixedItemId = utils.fixItemId(itemId);
-
 		const playerHasUnregisteredUnits = (this.unregisteredUnitCount > 0);
 
 		if (playerHasUnregisteredUnits) {
-			this.assignPossibleSelectGroup();
+			this.assignPossibleSelectGroup(fixedItemId);
 		}
 
-		console.log("Select subgroup finding unit:", itemId1, itemId2);
 		let firstGroupUnit = this.findUnit(itemId1, itemId2);
 		
 		if (!firstGroupUnit && playerHasUnregisteredUnits) {
-			console.log("@@ did not find unit, action: ", action);
 			let unregisteredUnit = this.findUnregisteredUnitByItemId(fixedItemId);
 			
 			if (unregisteredUnit) {
 				unregisteredUnit.registerUnit(fixedItemId, objectId1, objectId2);
-				console.log("Setting unregistered unit: ", unregisteredUnit);
-
-				this.unregisteredUnitCount -= 1;
-				console.log("Remaining unregistered units: ", this.unregisteredUnitCount);
 				
+				this.unregisteredUnitCount -= 1;
+				this.assignKnownUnits();
+
 				unregisteredUnit.spawning = false;
 				unregisteredUnit.selected = true;
 
@@ -204,10 +244,9 @@ const Player = class {
 			}
 		} else {
 			// we're certain about this unit being our selection
-
-			console.log("** Register");
-			console.log("Not first unit in group, no unreg count", fixedItemId);
 			firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
+
+			this.assignKnownUnits();
 
 			firstGroupUnit.spawning = false;
 			firstGroupUnit.selected = true;
@@ -228,19 +267,13 @@ const Player = class {
     	// register first-time selected units
     	subActions.forEach(subAction => {
     		const {itemId1, itemId2} = subAction;
-
-    		console.log("&& Looking for changeSelection unit: ", itemId1, itemId2);
     		let unit = self.findUnit(itemId1, itemId2);
     		
     		if (!unit) {
     			const playerHasUnregisteredUnits = (self.unregisteredUnitCount > 0);
-    			console.log("&& didnt find unit.", self.unregisteredUnitCount);
-
     			if (playerHasUnregisteredUnits) {
     				// we can't know for sure
     				// that this unit needs to be made or registered yet
-
-    				console.log("Added to possible select list");
 
     				this.possibleSelectList.push({
     					itemId1: itemId1,
@@ -250,7 +283,7 @@ const Player = class {
     				return;
     			}
 
-    			console.log("Making new unit");
+    			console.log("!! called make unit: ", itemId1, itemId2);
     			self.makeUnit(itemId1, itemId2);
     		}
     	});
@@ -270,6 +303,23 @@ const Player = class {
 
 	useAbilityNoTarget (action) {
 		const itemId = utils.fixItemId(action.itemId);
+		let selectedUnits = this.getSelectionUnits();
+
+		if (selectedUnits) {
+			let firstUnit = selectedUnits[0];
+
+			if (firstUnit.isBuilding) {
+				let spellInfo = mappings.getUnitInfo(itemId);
+
+				if (spellInfo && spellInfo.isUnit) {
+					console.log("%% spawned unit:", spellInfo.displayName);
+					let newUnit = new Unit(null, null, itemId, false);
+					
+					this.units.push(newUnit);
+					this.unregisteredUnitCount += 1;
+				}
+			}
+		}
 
 		if (this.possibleRegisterItem) {
 			console.log("%%% unit called an ability that might be unreg.", itemId);
@@ -302,6 +352,8 @@ const Player = class {
 						// note: maybe use this?
 					}
 
+					// TOOD: maybe swap object ids around here?
+
 					possibleUnit.registerObjectIds(objectId1, objectId2);
 					this.unregisteredUnitCount -= 1;
 				}
@@ -320,12 +372,34 @@ const Player = class {
 
 		switch (abilityActionName) {
 			case 'RightClick':
-				let { targetX, targetY } = action;
+				let { 
+					targetX, 
+					targetY,
+					objectId1,
+					objectId2
+				} = action;
 
-				console.log("Iterating units: ", units);
+				if (objectId1 === -1 && objectId2 === -1) {
+					// clicked on ground
+				} else {
+					// clicked object directly
 
+					let clickedUnit = this.units.find(unit => {
+						return unit.objectId1 === objectId1 &&
+									 unit.objectId2 === objectId2;
+					});
+
+					if (!clickedUnit) {
+						console.log("** Clicked a non-existing unit", objectId1, objectId2);
+						let unitGuess = this.guessUnitType(objectId1);
+						
+						if (!unitGuess) {
+							console.log("%%% clicked something not near known object ids");
+						}
+					}
+				}
+				
 				units.forEach(unit => {
-
 					unit.moveTo(targetX, targetY);
 				});
 			break;

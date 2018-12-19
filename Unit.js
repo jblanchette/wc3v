@@ -10,13 +10,11 @@ const Unit = class {
 		this.objectId2 = null;
 
 		this.itemId = knownItemId || null;
-		this.setUnitMeta();
-
-		this.displayName = null;
 
 		const spawnedAtStartCheck = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);
 		this.isSpawnedAtStart = isSpawnedAtStart || spawnedAtStartCheck;
 
+		this.displayName = null;
 		this.isBuilding = false;
 		this.isUnit = false;
 
@@ -35,9 +33,13 @@ const Unit = class {
 
 		this.path = [];
 		this.state = null;
+
+		this.setUnitMeta();
 	}
 
 	setUnitMeta () {
+		console.log("!! setUnitMeta: ", this.itemId);
+		
 		const { 
 			displayName, 
 			isBuilding, 

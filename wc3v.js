@@ -39,7 +39,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/test-starters-no-train.w3g'
+    'file': 'replays/test-gold.w3g'
   }
 ];
 
