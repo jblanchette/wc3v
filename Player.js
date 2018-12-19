@@ -18,20 +18,72 @@ const Player = class {
 		this.teamId = playerSlot.teamId;
 		this.race = playerSlot.raceFlag;
 
-		this.startingPosition = mapStartPositions['EchoIsles'][this.teamId];
+		console.log("Race: ", this.race);
 
-		this.units = [];
+		switch (this.race) {
+			case 'O':
+				this.units = [
+					new Unit(null, null, 'opeo', true),
+					new Unit(null, null, 'opeo', true),
+					new Unit(null, null, 'opeo', true),
+					new Unit(null, null, 'opeo', true),
+					new Unit(null, null, 'opeo', true),
+					new Unit(null, null, 'ogre', true)
+				];
+
+				this.unregisteredUnitCount = 6;
+			break;
+			case 'H':
+				this.units = [
+					new Unit(null, null, 'hpea', true),
+					new Unit(null, null, 'hpea', true),
+					new Unit(null, null, 'hpea', true),
+					new Unit(null, null, 'hpea', true),
+					new Unit(null, null, 'hpea', true),
+					new Unit(null, null, 'ogre', true)
+				];
+
+				this.unregisteredUnitCount = 6;
+			break;
+			case 'E':
+				this.units = [
+					new Unit(null, null, 'ewsp', true),
+					new Unit(null, null, 'ewsp', true),
+					new Unit(null, null, 'ewsp', true),
+					new Unit(null, null, 'ewsp', true),
+					new Unit(null, null, 'ewsp', true),
+					new Unit(null, null, 'ogre', true)
+				];
+
+				this.unregisteredUnitCount = 6;
+			break;
+			case 'U':
+				this.units = [
+					new Unit(null, null, 'uaco', true),
+					new Unit(null, null, 'uaco', true),
+					new Unit(null, null, 'uaco', true),
+					new Unit(null, null, 'ogre', true)
+				];
+
+				this.unregisteredUnitCount = 4;
+			break;
+			default:
+				this.units = [];
+			break;
+		};
+
+		this.startingPosition = null;
 		this.updatingSubgroup = false;
 		this.selection = null;
 
 		this.buildMenuOpen = false;
-		this.unregisteredBuildingCount = 0;
 
 		this.possibleRegisterItem = null;
+		this.possibleSelectList = [];
 	}
 
 	makeUnit (itemId1, itemId2) {
-		let unit = new Unit(itemId1, itemId2, this.startingPosition);
+		let unit = new Unit(itemId1, itemId2);
 
 		this.units.push(unit);
 	}
@@ -61,17 +113,26 @@ const Player = class {
 		});
 	}
 
+	findUnregisteredUnitByItemIds (itemId1, itemId2) {
+		return null;
+	}
+
 	getSelectionUnits () {
 		const self = this;
 		if (!this.selection) {
 			return [];
 		}
 
-		return this.selection.units.map(unitItem => {
+		return this.selection.units.reduce((acc, unitItem) => {
 			const { itemId1, itemId2 } = unitItem;
-			
-			return self.findUnit(itemId1, itemId2);
-		});
+			const unit = self.findUnit(itemId1, itemId2);
+
+			if (unit) {
+				acc.push(unit);
+			}
+
+			return acc;
+		}, []);
 	}
 
 	toggleUpdateSubgroup (action) {
@@ -79,23 +140,74 @@ const Player = class {
 		this.updatingSubgroup = true;
 	}
 
+	assignPossibleSelectGroup () {
+		let self = this;
+
+		console.log("Running assignPossibleSelectGroup");
+		console.log("Possible list: ", this.possibleSelectList);
+
+		this.possibleSelectList = this.possibleSelectList.filter(selectItem => {
+			const { itemId1, itemId2 } = selectItem;
+			const isStarterUnit = utils.isEqualItemId(itemId1, itemId2);
+
+			let playerUnit = self.units.find(selectedUnit => {
+				return selectedUnit.itemId1 === null &&
+				       selectedUnit.isSpawnedAtStart === isStarterUnit;
+			});
+
+			if (playerUnit) {
+				playerUnit.registerItemIds(itemId1, itemId2);
+				self.unregisteredUnitCount -= 1;
+
+				return false;
+			} else {
+				// keep in list, didn't find a match yet
+				return true;
+			}
+		})
+	}
+
 	selectSubgroup (action) {
 		const { itemId, objectId1, objectId2 } = action;
 		const firstGroupItem = this.selection.units[0];
 		const {itemId1, itemId2} = firstGroupItem;
 
+		const fixedItemId = utils.fixItemId(itemId);
+
+		const playerHasUnregisteredUnits = (this.unregisteredUnitCount > 0);
+
+		if (playerHasUnregisteredUnits) {
+			this.assignPossibleSelectGroup();
+		}
+
 		console.log("Select subgroup finding unit:", itemId1, itemId2);
 		let firstGroupUnit = this.findUnit(itemId1, itemId2);
 		
-		if (!firstGroupUnit) {
-			// assign this unit to an unregistered unit
-			console.log("@@ did not find unit, storing action for later.");
-			console.log("@@ stored register ", action);
+		if (!firstGroupUnit && playerHasUnregisteredUnits) {
+			console.log("@@ did not find unit, action: ", action);
+			let unregisteredUnit = this.findUnregisteredUnitByItemId(fixedItemId);
+			
+			if (unregisteredUnit) {
+				unregisteredUnit.registerUnit(fixedItemId, objectId1, objectId2);
+				console.log("Setting unregistered unit: ", unregisteredUnit);
 
-			this.possibleRegisterItem = action;
+				this.unregisteredUnitCount -= 1;
+				console.log("Remaining unregistered units: ", this.unregisteredUnitCount);
+				
+				unregisteredUnit.spawning = false;
+				unregisteredUnit.selected = true;
+
+				this.updatingSubgroup = false;
+			} else {
+				console.log("@@ stored register ", unregisteredUnit);
+				this.possibleRegisterItem = action;	
+			}
 		} else {
 			// we're certain about this unit being our selection
-			firstGroupUnit.registerUnit(utils.fixItemId(itemId), objectId1, objectId2);
+
+			console.log("** Register");
+			console.log("Not first unit in group, no unreg count", fixedItemId);
+			firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
 
 			firstGroupUnit.spawning = false;
 			firstGroupUnit.selected = true;
@@ -117,16 +229,28 @@ const Player = class {
     	subActions.forEach(subAction => {
     		const {itemId1, itemId2} = subAction;
 
+    		console.log("&& Looking for changeSelection unit: ", itemId1, itemId2);
     		let unit = self.findUnit(itemId1, itemId2);
     		
     		if (!unit) {
-    			if (self.unregisteredBuildingCount > 0) {
+    			const playerHasUnregisteredUnits = (self.unregisteredUnitCount > 0);
+    			console.log("&& didnt find unit.", self.unregisteredUnitCount);
+
+    			if (playerHasUnregisteredUnits) {
     				// we can't know for sure
     				// that this unit needs to be made or registered yet
+
+    				console.log("Added to possible select list");
+
+    				this.possibleSelectList.push({
+    					itemId1: itemId1,
+    					itemId2: itemId2
+    				});
 
     				return;
     			}
 
+    			console.log("Making new unit");
     			self.makeUnit(itemId1, itemId2);
     		}
     	});
@@ -142,16 +266,9 @@ const Player = class {
     	// de-selected unit
     	this.selection.deselect(subGroup);
     }
-
-    // console.log("ChangeSelection:");
-    // subActions.forEach(subAction => {
-    // 	console.log("Sub action: ", subAction);
-    // });
 	}
 
 	useAbilityNoTarget (action) {
-		// console.log("% player.useAbilityNoTarget");
-		// console.log(action);
 		const itemId = utils.fixItemId(action.itemId);
 
 		if (this.possibleRegisterItem) {
@@ -176,7 +293,7 @@ const Player = class {
 
 			if (targetItemId) {
 				// found a target to try and assign
-				let possibleUnit = this.findUnregisteredUnitByItemId(targetItemId);
+				let possibleUnit = this.UnregisteredUnitByItemId(targetItemId);
 
 				if (possibleUnit) {
 					const { itemId, objectId1, objectId2 } = this.possibleRegisterItem;
@@ -186,10 +303,7 @@ const Player = class {
 					}
 
 					possibleUnit.registerObjectIds(objectId1, objectId2);
-
-					if (targetUnitInfo.isBuilding) {
-						this.unregisteredBuildingCount -= 1;
-					}
+					this.unregisteredUnitCount -= 1;
 				}
 			}
 		}
@@ -208,7 +322,10 @@ const Player = class {
 			case 'RightClick':
 				let { targetX, targetY } = action;
 
+				console.log("Iterating units: ", units);
+
 				units.forEach(unit => {
+
 					unit.moveTo(targetX, targetY);
 				});
 			break;
@@ -231,7 +348,7 @@ const Player = class {
 			let building = new Unit(null, null, startingPosition);
 			building.registerUnit(utils.fixItemId(itemId), null, null);
 
-			this.unregisteredBuildingCount += 1;
+			this.unregisteredUnitCount += 1;
 			this.units.push(building);
 		}
 	}
