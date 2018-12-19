@@ -16,11 +16,29 @@ run
 The system handles most early game actions generally well.
 As more actions occur in the replay the data becomes more certain.
 
-Hotkey unit selections are not supported yet.
+## Implemented
+	
+* unit selection / deselection
+* unit spawning
+* skill training, levels
+* skill usage - point, object target, summon
+* Right Click path tracking
 
-Need to implement starting position best-guess.
+## Not implemented
 
-No time / game simulation yet.
+* Neutral Creep tracking
+* Hotkey Groups
+* Items
+* Item unit spawns
+* Shop tracking
+* Game Time simulation
+* Gold + Wood resource tracking
+* Food / Upkeep tracking
+* Rendering 'birds eye view' of game play
+
+# How It Works
+
+See the [DESIGN.md](DESIGN.md) file
 
 # Credits
 
