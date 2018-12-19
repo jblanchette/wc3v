@@ -7,9 +7,14 @@
 
 # Usage
 
-run
+run `node wc3v.js`
 
-`node wc3v.js`
+A list of replays is provided in the `replays` folder.
+To configure a different replay parsing, edit the `paths` const.
+
+# How It Works
+
+See the [DESIGN.md](DESIGN.md) file
 
 # Progress
 
@@ -35,10 +40,6 @@ As more actions occur in the replay the data becomes more certain.
 * Gold + Wood resource tracking
 * Food / Upkeep tracking
 * Rendering 'birds eye view' of game play
-
-# How It Works
-
-See the [DESIGN.md](DESIGN.md) file
 
 # Credits
 
