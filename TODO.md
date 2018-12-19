@@ -4,6 +4,8 @@ Things left to finish
 
 ## wc3v engine
 
+* add building meta data so we can detect alters from each race and such
+
 * FIX - starting position based on team ID is wrong.  need to estimate based on action targets.
 * Add itemId mappings for units / buildings with extra metadata
  * isBuilding

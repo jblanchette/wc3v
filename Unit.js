@@ -2,14 +2,21 @@ const mappings = require("./mappings");
 const utils = require("./utils");
 
 const Unit = class {
-	constructor (itemId1, itemId2, startingPosition) {
+	constructor (itemId1, itemId2, knownItemId, isSpawnedAtStart = false ) {
 		this.itemId1 = itemId1;
 		this.itemId2 = itemId2;
 
-		this.itemId = null;
+		this.objectId1 = null;
+		this.objectId2 = null;
+
+		this.itemId = knownItemId || null;
+		this.setUnitMeta();
+
 		this.displayName = null;
 
-		this.isSpawnedAtStart = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);
+		const spawnedAtStartCheck = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);
+		this.isSpawnedAtStart = isSpawnedAtStart || spawnedAtStartCheck;
+
 		this.isBuilding = false;
 		this.isUnit = false;
 
@@ -23,11 +30,32 @@ const Unit = class {
 
 		this.selected = false;
 
-		this.currentX = startingPosition.x;
-		this.currentY = startingPosition.y;
+		this.currentX = 0;
+		this.currentY = 0;
 
 		this.path = [];
 		this.state = null;
+	}
+
+	setUnitMeta () {
+		const { 
+			displayName, 
+			isBuilding, 
+			isUnit,
+			meta
+		} = mappings.getUnitInfo(this.itemId);
+
+		this.displayName = displayName;
+		this.isBuilding = isBuilding;
+		this.isUnit = isUnit;
+		this.meta = meta;
+	}
+
+	registerItemIds (itemId1, itemId2) {
+		this.itemId1 = itemId1;
+		this.itemId2 = itemId2;
+
+		this.hasBeenInGroup = true;
 	}
 
 	registerObjectIds (objectId1, objectId2) {
@@ -46,17 +74,7 @@ const Unit = class {
 		console.log("*** Registered: ", itemId, objectId1, objectId2);
 		console.log("***");
 
-		const { 
-			displayName, 
-			isBuilding, 
-			isUnit,
-			meta
-		} = mappings.getUnitInfo(itemId);
-
-		this.displayName = displayName;
-		this.isBuilding = isBuilding;
-		this.isUnit = isUnit;
-		this.meta = meta;
+		this.setUnitMeta();
 
 		this.hasBeenInGroup = true;
 	}
