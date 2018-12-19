@@ -239,6 +239,8 @@ const Player = class {
 
 				this.updatingSubgroup = false;
 			} else {
+
+				// todo: is this needed?
 				console.log("@@ stored register ", unregisteredUnit);
 				this.possibleRegisterItem = action;	
 			}
@@ -283,6 +285,7 @@ const Player = class {
     				return;
     			}
 
+    			// todo: is this needed?
     			console.log("!! called make unit: ", itemId1, itemId2);
     			self.makeUnit(itemId1, itemId2);
     		}
@@ -322,6 +325,8 @@ const Player = class {
 		}
 
 		if (this.possibleRegisterItem) {
+			// todo: is this needed?
+			
 			console.log("%%% unit called an ability that might be unreg.", itemId);
 
 			// note: we also have the possible reg item itemId

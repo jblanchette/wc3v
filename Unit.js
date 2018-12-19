@@ -38,8 +38,6 @@ const Unit = class {
 	}
 
 	setUnitMeta () {
-		console.log("!! setUnitMeta: ", this.itemId);
-		
 		const { 
 			displayName, 
 			isBuilding, 
@@ -72,10 +70,6 @@ const Unit = class {
 		this.objectId1 = objectId1;
 		this.objectId2 = objectId2;
 
-		console.log("***");
-		console.log("*** Registered: ", itemId, objectId1, objectId2);
-		console.log("***");
-
 		this.setUnitMeta();
 
 		this.hasBeenInGroup = true;
@@ -103,8 +97,6 @@ const Unit = class {
 
 		this.currentX = targetX;
 		this.currentY = targetY;
-
-		console.log("# moved: ", targetX, targetY);
 	}
 };
 
