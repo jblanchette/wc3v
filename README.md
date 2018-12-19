@@ -13,10 +13,14 @@ run
 
 # Progress
 
-Currently the wc3v system is able to process very basic unit moving pathing.
+The system handles most early game actions generally well.
+As more actions occur in the replay the data becomes more certain.
 
-Only supporting `Echo Isles` map currently, but plan to introduce
-map loading + parsing for dynamic map information.
+Hotkey unit selections are not supported yet.
+
+Need to implement starting position best-guess.
+
+No time / game simulation yet.
 
 # Credits
 
