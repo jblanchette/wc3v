@@ -1075,6 +1075,10 @@ const getUnitInfo = (itemId) => {
 		displayName = buildings[itemId];
 	} else if (isUnit) {
 		displayName = units[itemId] || heroes[itemId];
+
+		if (displayName.startsWith("u_")) {
+			displayName = displayName.substring(2);
+		}
 	}
 
 	let meta = unitMetaData[itemId] || {

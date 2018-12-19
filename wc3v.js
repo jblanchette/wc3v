@@ -62,7 +62,15 @@ paths.forEach(path => {
 
     let units = players[playerId].units;
     console.log(`Unit count: ${units.length}`);
-    console.log(units.map(unit => { return unit.displayName; }));
+    console.log(units.map(unit => { 
+      if (unit.meta.hero) {
+        return `${unit.displayName} - (${unit.knownLevel})`;
+      } else if (unit.isBuilding) {
+        return `Building - ${unit.displayName}`;
+      } else {
+        return unit.displayName;   
+      }
+    }));
 
     return;
     units.forEach(unit => {

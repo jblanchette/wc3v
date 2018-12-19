@@ -393,6 +393,8 @@ const Player = class {
 							console.log("%% Learned spell: ", spell);
 						} else {
 							firstUnit.learnedSkills[itemId].level += 1;
+							firstUnit.knownLevel += 1;
+							
 							console.log("Leveled up skill: ", firstUnit.learnedSkills[itemId]);
 						}
 						
@@ -404,7 +406,6 @@ const Player = class {
 					console.log("Test: ", abilityFlagNames);
 
 					console.log("Action was: ", action);
-					
 				break;
 			};
 			
