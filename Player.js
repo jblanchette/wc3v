@@ -385,8 +385,17 @@ const Player = class {
 						//       and some other ability flag to inspect?
 
 						let spell = mappings.heroAbilities[itemId];
-						firstUnit.learnedSkills[itemId] = spell;
-						console.log("%% Learned spell: ", spell);
+						if (!firstUnit.learnedSkills[itemId]) {
+							// learning first level
+							spell.level = 1;
+
+							firstUnit.learnedSkills[itemId] = spell;
+							console.log("%% Learned spell: ", spell);
+						} else {
+							firstUnit.learnedSkills[itemId].level += 1;
+							console.log("Leveled up skill: ", firstUnit.learnedSkills[itemId]);
+						}
+						
 					}
 				break;
 
