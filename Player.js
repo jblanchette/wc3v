@@ -1,7 +1,11 @@
 const utils = require("./utils"),
       mappings = require("./mappings");
 
-const { abilityActions, mapStartPositions } = mappings;
+const { 
+	abilityActions,
+	abilityFlagNames,
+	mapStartPositions 
+} = mappings;
 
 const Unit = require("./Unit"),
       SubGroup = require("./SubGroup");
@@ -212,6 +216,8 @@ const Player = class {
 	}
 
 	selectSubgroup (action) {
+		console.log("% Player.selectSubgroup");
+
 		const { itemId, objectId1, objectId2 } = action;
 		const firstGroupItem = this.selection.units[0];
 		const {itemId1, itemId2} = firstGroupItem;
@@ -224,7 +230,7 @@ const Player = class {
 		}
 
 		let firstGroupUnit = this.findUnit(itemId1, itemId2);
-		
+
 		if (!firstGroupUnit && playerHasUnregisteredUnits) {
 			let unregisteredUnit = this.findUnregisteredUnitByItemId(fixedItemId);
 			
@@ -305,12 +311,54 @@ const Player = class {
 	}
 
 	useAbilityNoTarget (action) {
-		const itemId = utils.fixItemId(action.itemId);
+		console.log("% Player.useAbilityNoTarget");
+
+		const isItemArray = Array.isArray(action.itemId);
+		const itemId = isItemArray ?
+			action.itemId : utils.fixItemId(action.itemId);
+		const abilityFlags = action.abilityFlags;
+		
 		let selectedUnits = this.getSelectionUnits();
 
-		if (selectedUnits) {
+		if (selectedUnits.length) {
 			let firstUnit = selectedUnits[0];
 
+			if (isItemArray) {
+				if (firstUnit.meta.hero) {
+					const abilityActionName = utils.findItemIdForObject(itemId, abilityActions);
+					switch (abilityActionName) {
+						case 'CastSummonSkill':
+							console.log("Unit called summon skill: ", firstUnit.displayName);
+
+							let skill = firstUnit.getSkillForType("summon");
+							console.log("Skill: ", skill);
+
+							if (!skill) {
+								console.error("Cound not find skill.", firstUnit);
+								return;
+							}
+
+							const {summonCount, summonItemId } = skill;
+							for (let i = 0; i < summonCount; i++) {
+								console.log("Making unit: ", i, summonItemId);
+
+								let summonUnit = new Unit(null, null, summonItemId, false);
+								
+								this.units.push(summonUnit);
+								this.unregisteredUnitCount += 1;
+							}
+						break;
+
+						default:
+							console.log("Unknown ability with no target.");
+						break;
+					};
+				}
+
+				return;
+			}
+
+			
 			if (firstUnit.isBuilding) {
 				let spellInfo = mappings.getUnitInfo(itemId);
 
@@ -321,12 +369,41 @@ const Player = class {
 					this.units.push(newUnit);
 					this.unregisteredUnitCount += 1;
 				}
+
+				return;
 			}
+
+			switch (abilityFlags) {
+				// learn skill
+				case abilityFlagNames.LearnSkill:
+					// training skill
+					if (firstUnit.meta.hero) {
+						console.log("%% Hero learning spell.");
+
+						// TODO: only do this when abilityFlags is 0x42
+						// TODO: otherwise we have an itemId array
+						//       and some other ability flag to inspect?
+
+						let spell = mappings.heroAbilities[itemId];
+						firstUnit.learnedSkills[itemId] = spell;
+						console.log("%% Learned spell: ", spell);
+					}
+				break;
+
+				default:
+					console.log("No match for ability flag: ", abilityFlags.LearnSkill);
+					console.log("Test: ", abilityFlagNames);
+
+					console.log("Action was: ", action);
+					
+				break;
+			};
+			
 		}
 
 		if (this.possibleRegisterItem) {
 			// todo: is this needed?
-			
+
 			console.log("%%% unit called an ability that might be unreg.", itemId);
 
 			// note: we also have the possible reg item itemId
@@ -334,8 +411,6 @@ const Player = class {
 
 			let targetItemId = null;
 			let targetUnitInfo = mappings.getUnitInfo(itemId);
-
-			console.log("Target info: ", targetUnitInfo);
 
 			if (targetUnitInfo.isUnit) {
 				// ability is making a unit
@@ -368,14 +443,43 @@ const Player = class {
 
 	useAbilityWithTargetAndObjectId (action) {
 		let units = this.getSelectionUnits();
+		let firstUnit = units[0];
 
-		const abilityActionName = Object.keys(abilityActions).find(abilityKey => {
-			const abilityItemId = abilityActions[abilityKey];
-
-			return utils.isEqualItemId(action.itemId, abilityItemId);
-		});
-
+		const abilityActionName = utils.findItemIdForObject(action.itemId, abilityActions);
 		switch (abilityActionName) {
+			case 'CastSkillTarget':
+				console.log("Casting target skill at point.");
+				console.log("Unit casting: ", firstUnit.displayName);
+
+				if (firstUnit.meta.hero) {
+					console.log("Hero CastSkillTarget spell.");
+
+					let skill = firstUnit.getSkillForType("pointTarget");
+
+					if (!skill) {
+						console.log("Couldnt find pointTarget skill for unit: ", firstUnit);
+						return;
+					}
+
+					console.log("Casting point target skill: ", skill);
+				}
+			break;
+			case 'CastSkillObject':
+				console.log("casting skill on object target.");
+				console.log("Unit casting: ", firstUnit.displayName);
+
+				if (firstUnit.meta.hero) {
+					console.log("Hero CastSkillObject spell.");
+					let skill = firstUnit.getSkillForType("objectTarget");
+
+					if (!skill) {
+						console.log("Couldnt find objectTarget skill for unit: ", firstUnit);
+						return;
+					}
+					
+					console.log("Casting object target skill: ", skill);
+				}
+			break;
 			case 'RightClick':
 				let { 
 					targetX, 
@@ -424,6 +528,7 @@ const Player = class {
 				y: targetY
 			};
 
+			console.log("# Made a building");
 			let building = new Unit(null, null, startingPosition);
 			building.registerUnit(utils.fixItemId(itemId), null, null);
 

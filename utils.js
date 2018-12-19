@@ -20,7 +20,16 @@ const fixItemId = (itemId) => {
 	return itemId.split("").reverse().join("");
 };
 
+const findItemIdForObject = (itemId, focusObject) => {
+	return Object.keys(focusObject).find(abilityKey => {
+			const abilityItemId = focusObject[abilityKey];
+
+			return isEqualItemId(itemId, abilityItemId);
+	});
+};
+
 module.exports = {
 	fixItemId: fixItemId,
-	isEqualItemId: isEqualItemId
-}
+	isEqualItemId: isEqualItemId,
+	findItemIdForObject: findItemIdForObject
+};

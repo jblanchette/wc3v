@@ -39,7 +39,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/happy_vs_grubby.w3g'
+    'file': 'replays/test-hero-2.w3g'
   }
 ];
 
@@ -62,6 +62,7 @@ paths.forEach(path => {
 
     let units = players[playerId].units;
     console.log(`Unit count: ${units.length}`);
+    console.log(units.map(unit => { return unit.displayName; }));
 
     return;
     units.forEach(unit => {
