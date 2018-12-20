@@ -32,7 +32,7 @@ As more actions occur in the replay the data becomes more certain.
 ## Not implemented
 
 * Neutral Creep tracking
-* Hotkey Groups
+* ~Hotkey Groups~
 * Items
 * Item unit spawns
 * Shop tracking
