@@ -21,6 +21,34 @@ See the [DESIGN.md](DESIGN.md) file
 The system handles most early game actions generally well.
 As more actions occur in the replay the data becomes more certain.
 
+Output from a normal starting match on `Echo Isles` for an Undead player:
+
+```
+====================================
+parse: 316.603ms
+******************************
+Inspecting player: 1
+Unit count: 16
+Unit names:
+
+[ 'Acolyte',
+  'Acolyte',
+  'Acolyte',
+  'Building - Necropolis',
+  'Acolyte',
+  'Acolyte',
+  'Building - Crypt',
+  'Building - Altar of Darkness',
+  'Building - Ziggurat',
+  'Building - Graveyard',
+  'Building - Tomb of Relics',
+  'Death Knight - (1)',
+  'Ghoul',
+  'Ghoul',
+  'Building - Ziggurat',
+  'Crypt Fiend' ]
+```
+
 ## Implemented
 	
 * unit selection / deselection
