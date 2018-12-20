@@ -44,33 +44,34 @@ const UnitManager = class {
 			console.log("====================================");
 		}
 
+		// todo: roll this up. switch became unnessicary
     switch (actionName) {
       case "ChangeSelection":
         player.changeSelection(action);
       break;
-
       case "UpdateSubgroup":
       	player.toggleUpdateSubgroup(action);
       break;
-
       case "SelectSubgroup":
       	player.selectSubgroup(action);
       break;
-
       case "UseAbilityNoTarget":
       	player.useAbilityNoTarget(action);
       break;	
-
       case "UseAbilityWithTarget":
       	player.useAbilityWithTarget(action);
       break;
-
       case "UseAbilityWithTargetAndObjectId":
       	player.useAbilityWithTargetAndObjectId(action);
      	break;
-
      	case "ChooseBuilding":
      		player.chooseBuilding(action);
+     	break;
+     	case "AssingGroupHotkey":
+     		player.assignGroupHotkey(action);
+     	break;
+     	case "SelectGroupHotkey":
+     		player.selectGroupHotkey(action);
      	break;
     }
 	}

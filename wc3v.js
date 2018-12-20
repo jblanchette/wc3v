@@ -35,11 +35,10 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   });
 };
 
-
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/test-skills-2.w3g'
+    'file': 'replays/test-ud-reg.w3g'
   }
 ];
 
@@ -76,6 +75,7 @@ paths.forEach(path => {
     units.forEach(unit => {
       console.log("================================");
       console.log("Unit: ", unit.displayName);
+      console.log("Path: ", unit.path);
       console.log("================================");
     });
     console.log("******************************");
