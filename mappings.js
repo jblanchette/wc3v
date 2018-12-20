@@ -24,13 +24,13 @@ const unitMetaData = {
 		'worker': true,
 		'permanent': true
 	},
-	'uaco ': {
+	'uaco': {
 		'displayName': 'Acolyte',
 		'hero': false,
 		'worker': true,
 		'permanent': true
 	},
-	'ewsp ': {
+	'ewsp': {
 		'displayName': 'Wisp',
 		'hero': false,
 		'worker': true,

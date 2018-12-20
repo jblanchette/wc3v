@@ -64,7 +64,7 @@ const Player = class {
 					new Unit(null, null, 'uaco', true),
 					new Unit(null, null, 'uaco', true),
 					new Unit(null, null, 'uaco', true),
-					new Unit(null, null, 'ogre', true)
+					new Unit(null, null, 'unpl', true)
 				];
 
 				this.unregisteredUnitCount = 4;
@@ -77,6 +77,7 @@ const Player = class {
 		this.startingPosition = null;
 		this.updatingSubgroup = false;
 		this.selection = null;
+		this.groupSelections = {};
 
 		this.buildMenuOpen = false;
 
@@ -192,27 +193,44 @@ const Player = class {
 
 	assignPossibleSelectGroup (itemId) {
 		let self = this;
+		let registeredUnits = [];
+		let registerCount = 0;
 
-		this.possibleSelectList = this.possibleSelectList.filter(selectItem => {
-			const { itemId1, itemId2 } = selectItem;
-			const isStarterUnit = utils.isEqualItemId(itemId1, itemId2);
+		const selectionSize = this.selection.numberUnits;
+		console.log("Starting assignPossibleSelectGroup", itemId);
 
-			let foundPlayerUnit = self.units.find(playerUnit => {
-				return playerUnit.itemId === itemId &&
-							 playerUnit.itemId1 === null &&
-				       playerUnit.isSpawnedAtStart === isStarterUnit;
+		this.selection.units.forEach(selectionUnit => {
+			self.possibleSelectList.find(selectItem => {
+				const { itemId1, itemId2 } = selectItem;
+
+				const foundSelectionUnit = (
+					utils.isEqualItemId(selectionUnit.itemId1, itemId1) &&
+					utils.isEqualItemId(selectionUnit.itemId2, itemId2)
+				);
+
+				if (foundSelectionUnit) {
+					let foundPlayerUnit = self.units.find(playerUnit => {
+						return playerUnit.itemId === itemId && // same unit as selection
+						       playerUnit.itemId1 === null;
+					});
+
+					if (foundPlayerUnit) {
+						foundPlayerUnit.registerItemIds(itemId1, itemId2);
+						self.unregisteredUnitCount -= 1;
+
+						console.log("Found and registered unit: ", foundPlayerUnit.displayName);
+						registeredUnits.push(foundPlayerUnit);
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
 			});
+		});
 
-			if (foundPlayerUnit) {
-				foundPlayerUnit.registerItemIds(itemId1, itemId2);
-				self.unregisteredUnitCount -= 1;
-
-				return false;
-			} else {
-				// keep in list, didn't find a match yet
-				return true;
-			}
-		})
+		return registeredUnits;
 	}
 
 	selectSubgroup (action) {
@@ -223,18 +241,21 @@ const Player = class {
 		const {itemId1, itemId2} = firstGroupItem;
 
 		const fixedItemId = utils.fixItemId(itemId);
-		const playerHasUnregisteredUnits = (this.unregisteredUnitCount > 0);
+
+		let newlyRegisteredUnits = [];
+		let firstGroupUnit = this.findUnit(itemId1, itemId2);
+		let playerHasUnregisteredUnits = (this.unregisteredUnitCount > 0);
 
 		if (playerHasUnregisteredUnits) {
-			this.assignPossibleSelectGroup(fixedItemId);
+			newlyRegisteredUnits = this.assignPossibleSelectGroup(fixedItemId);
 		}
 
-		let firstGroupUnit = this.findUnit(itemId1, itemId2);
-
-		if (!firstGroupUnit && playerHasUnregisteredUnits) {
+		if (!firstGroupUnit && !newlyRegisteredUnits.length) {
+			console.log("No first group unit, has unreg.");
 			let unregisteredUnit = this.findUnregisteredUnitByItemId(fixedItemId);
 			
 			if (unregisteredUnit) {
+				console.log("reg unit", fixedItemId);
 				unregisteredUnit.registerUnit(fixedItemId, objectId1, objectId2);
 				
 				this.unregisteredUnitCount -= 1;
@@ -251,15 +272,22 @@ const Player = class {
 				this.possibleRegisterItem = action;	
 			}
 		} else {
-			// we're certain about this unit being our selection
-			firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
 
-			this.assignKnownUnits();
+			if (!firstGroupUnit) {
+				console.log("%% could not find unit in selection group.");
+				console.log("Selection: ", this.selection);
+			} else {
+				console.log("At bottom?");
+				// we're certain about this unit being our selection
+				firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
 
-			firstGroupUnit.spawning = false;
-			firstGroupUnit.selected = true;
+				this.assignKnownUnits();
 
-			this.updatingSubgroup = false;
+				firstGroupUnit.spawning = false;
+				firstGroupUnit.selected = true;
+
+				this.updatingSubgroup = false;
+			}
 		}
 	}
 
@@ -269,6 +297,7 @@ const Player = class {
     const selectMode = action.selectMode;
     const numberUnits = action.numberUnits;
 
+    let hasUnregisteredUnitFlag = false;
     let subGroup = new SubGroup(numberUnits, subActions);
 
     if (selectMode === SelectModes.select) {
@@ -277,23 +306,23 @@ const Player = class {
     		const {itemId1, itemId2} = subAction;
     		let unit = self.findUnit(itemId1, itemId2);
     		
+    		console.log("changeSelection unit: ", unit);
     		if (!unit) {
     			const playerHasUnregisteredUnits = (self.unregisteredUnitCount > 0);
     			if (playerHasUnregisteredUnits) {
     				// we can't know for sure
     				// that this unit needs to be made or registered yet
 
+    				console.log("Added unit to possible select list.");
     				this.possibleSelectList.push({
     					itemId1: itemId1,
     					itemId2: itemId2
     				});
 
-    				return;
+    				hasUnregisteredUnitFlag = true;
+    			} else {
+    				console.error("No unit found and no unregistered units!");
     			}
-
-    			// todo: is this needed?
-    			console.log("!! called make unit: ", itemId1, itemId2);
-    			self.makeUnit(itemId1, itemId2);
     		}
     	});
 
@@ -303,6 +332,10 @@ const Player = class {
     	} else {
     		// merge our selected sub groups
     		this.selection.mergeGroups(subGroup);
+    	}
+
+    	if (hasUnregisteredUnitFlag) {
+    		this.selection.hasUnregisteredUnit = true;
     	}	
     } else {
     	// de-selected unit
@@ -394,7 +427,7 @@ const Player = class {
 						} else {
 							firstUnit.learnedSkills[itemId].level += 1;
 							firstUnit.knownLevel += 1;
-							
+
 							console.log("Leveled up skill: ", firstUnit.learnedSkills[itemId]);
 						}
 						
@@ -529,7 +562,15 @@ const Player = class {
 		console.log("% Player.useAbilityWithTarget");
 
 		const selectionUnits = this.getSelectionUnits();
+
+		console.log("Selection units: ", selectionUnits);
+		console.log("Selection: ", this.selection.units[0]);
+
 		let firstUnit = selectionUnits[0];
+
+		if (!firstUnit && this.selection.hasUnregisteredUnit) {
+			console.log("Unregistered unit used ability. Maybe worker?");
+		}
 
 		if (this.buildMenuOpen && firstUnit.meta.worker) {
 			const { targetX, targetY, itemId } = action;
@@ -549,6 +590,31 @@ const Player = class {
 
 	chooseBuilding (action) {
 		this.buildMenuOpen = true;
+	}
+
+	assignGroupHotkey (action) {
+		const { 
+			groupNumber, 
+			numberUnits,
+			actions
+		} = action;
+
+		console.log("Assign group hotkey: ", groupNumber, numberUnits);
+		this.groupSelections[groupNumber] = new SubGroup(numberUnits, actions);
+	}
+
+	selectGroupHotkey (action) {
+		const { groupNumber } = action;
+
+		if (this.groupSelections[groupNumber]) {
+			console.log("Selecing group:", groupNumber);	
+
+			// todo: add group deselectAll
+			this.selection = this.groupSelections[groupNumber];
+		} else {
+			console.error("selected group that didnt exist?");
+		}
+		
 	}
 };
 

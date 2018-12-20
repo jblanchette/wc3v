@@ -7,6 +7,8 @@ const SubGroup = class {
 	}
 
 	deselect (otherGroup) {
+		// todo: update the unit selected property
+		
 		this.units = this.units.filter(unit => {
 			const unitInOtherGroup = otherGroup.units.find(otherUnit => {
 				return utils.isEqualItemId(unit.itemId1, otherUnit.itemId1) &&
