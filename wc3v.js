@@ -8,6 +8,20 @@ let unitManager;
 let actionCount = 0;
 let hasParsedMeta = false;
 
+
+/*
+* For now - configure the replay files to parse here in the `paths`
+*           list.
+*           
+* To enable verbose debugging, configure the UnitManager.js debugActions
+* flag - or use player specific ID debugging.
+*/
+const paths = [
+  {
+    'file': 'replays/happy_vs_grubby.w3g'
+  }
+];
+
 W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   if (!hasParsedMeta) {
     unitManager.setMetaData(this.gameMetaDataDecoded.meta);
@@ -41,15 +55,8 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   });
 };
 
-const paths = [
-  {
-    'side': 'left',
-    'file': 'replays/happy_vs_grubby.w3g'
-  }
-];
-
 paths.forEach(path => {
-  const {side, file} = path;
+  const {file} = path;
 
   unitManager = new UnitManager();
   hasParsedMeta = false;

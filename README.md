@@ -10,7 +10,11 @@
 run `node wc3v.js`
 
 A list of replays is provided in the `replays` folder.
-To configure a different replay parsing, edit the `paths` const.
+
+To configure a different replay parsing, edit the `paths` const
+in the `wc3v.js` file.
+
+(WIP) accept replay file / replay flags from CLI
 
 # How It Works
 
