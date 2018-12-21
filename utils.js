@@ -17,6 +17,10 @@ const isEqualItemId = (itemId1, itemId2) => {
 };
 
 const fixItemId = (itemId) => {
+	if (Array.isArray(itemId)) {
+		return itemId;
+	}
+	
 	return itemId.split("").reverse().join("");
 };
 

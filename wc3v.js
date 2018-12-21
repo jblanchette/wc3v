@@ -18,7 +18,7 @@ let hasParsedMeta = false;
 */
 const paths = [
   {
-    'file': 'replays/test-tavern-hero.w3g'
+    'file': 'replays/happy_vs_grubby.w3g'
   }
 ];
 

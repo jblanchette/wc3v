@@ -9,14 +9,6 @@ const Unit = class {
 		this.objectId1 = null;
 		this.objectId2 = null;
 
-		if (knownItemId === "Udea") {
-			console.log("Making known DK");
-		}
-
-		if (knownItemId === "ucry") {
-			console.log(3, "Making fiend.");
-		}
-
 		this.itemId = knownItemId || null;
 
 		const spawnedAtStartCheck = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);

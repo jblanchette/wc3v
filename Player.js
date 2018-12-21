@@ -508,6 +508,32 @@ const Player = class {
 							//       we probably just need to remove the 'last added'
 							//       from list for most cases
 
+							if (!firstUnit.trainedUnits.length) {								
+								// buildings that have no record of training a unit
+								// should mean this building canceled itself while
+								// it was being made.
+
+								const buildingRemoveIndex = this.units.findIndex(unit => {
+									return unit.itemId === firstUnit.itemId &&
+												 (utils.isEqualItemId(unit.itemId1, firstUnit.itemId1) &&
+												  utils.isEqualItemId(unit.itemId2, firstUnit.itemId2))
+								});
+
+								if (buildingRemoveIndex === -1) {
+									console.error("Could not find building to cancel: ", firstUnit.itemId);
+
+									return;
+								}
+
+								const removeBuilding = this.units[buildingRemoveIndex];
+								console.log(this.id, "Removing canceled building: ", removeBuilding.displayName);
+
+								this.units.splice(buildingRemoveIndex, 1);
+								this.unregisteredUnitCount--;
+
+								return;
+							}
+
 							const removeIndex = firstUnit.trainedUnits.findIndex(unit => {
 								return !unit.completed;
 							});
@@ -515,6 +541,8 @@ const Player = class {
 
 							if (!removeItem) {
 								console.error("Nothing to remove from training list?");
+
+								console.log("Building: ", firstUnit);
 								return;
 							}
 
@@ -570,7 +598,7 @@ const Player = class {
 
 						console.log(this.id, "Hero leveled up: ", firstUnit.displayName, firstUnit.knownLevel);
 					} else if (firstUnit.isBuilding) {
-						console.log("Building is training a unit.", unitInfo.displayName);
+						console.log(this.id, "Building is training a unit.", unitInfo.displayName);
 
 						// building spawned a unit into world
 						let newUnit = new Unit(null, null, itemId, false);
@@ -579,8 +607,7 @@ const Player = class {
 							completed: false
 						});
 
-						console.log("Adding trained unit to building: ", firstUnit.displayName);
-						console.log("Making trained unit: ", newUnit.displayName);	
+						console.log(this.id, "Making trained unit: ", newUnit.displayName);	
 
 						this.units.push(newUnit);
 						this.unregisteredUnitCount++;
@@ -589,8 +616,6 @@ const Player = class {
 
 				case abilityFlagNames.TrainUnit:
 					if (firstUnit.isBuilding) {
-						console.log(1, "Train unit info: ", unitInfo);
-
 						if (unitInfo && unitInfo.isUnit) {
 							if (unitInfo.isBuilding) {
 								// building upgraded itself
@@ -628,8 +653,7 @@ const Player = class {
 									completed: false
 								});
 
-								console.log("Adding trained unit to building: ", firstUnit.displayName);
-								console.log("Making trained unit: ", newUnit.displayName);		
+								console.log(this.id, "Making trained unit: ", newUnit.displayName);		
 								this.units.push(newUnit);
 								this.unregisteredUnitCount++;
 							}
@@ -639,7 +663,7 @@ const Player = class {
 				case abilityFlagNames.CancelTrainOrResearch:
 					firstUnit.upgradeBuilding(itemId);
 
-					console.log("Building researched upgrade: ", unitInfo.displayName);
+					console.log(this.id, "Building researched upgrade: ", firstUnit.displayName, unitInfo.displayName);
 				break;
 				default:
 					console.log("No match for ability flag");
@@ -781,31 +805,43 @@ const Player = class {
 	}
 
 	useAbilityWithTarget (action) {
+		const { targetX, targetY, itemId } = action;
+		const isItemArray = Array.isArray(action.itemId);
+		const fixedItemId = utils.fixItemId(itemId);
+
 		const selectionUnits = this.getSelectionUnits();
 		let firstUnit = selectionUnits[0];
 
-		if (!firstUnit && this.selection.hasUnregisteredUnit) {
-			console.log("Unregistered unit used ability. Maybe worker?");
-			
+		if (isItemArray) {
+			console.log("Use ability with target item array.");
+			return;
+		} else {
+			if (!firstUnit && this.selection.hasUnregisteredUnit) {
+				console.log("Unregistered unit used ability. Maybe worker?");
+				console.log("Selection: ", this.selection);
 
-			console.log("Selection: ", this.selection);
-			console.log("Selection units: ", selectionUnits);
+				let maybeUnits = this.units.find(unit => {
+					return unit.itemId === fixedItemId;
+				});
 
-			throw new Error("stop here.");
-		}
+				console.log("Maybe units: ", fixedItemId,  maybeUnits);
 
-		if (this.buildMenuOpen && firstUnit.meta.worker) {
-			const { targetX, targetY, itemId } = action;
-			const startingPosition = {
-				x: targetX,
-				y: targetY
-			};
+				throw new Error("stop here.");
+			}
 
-			let building = new Unit(null, null, startingPosition);
-			building.registerUnit(utils.fixItemId(itemId), null, null);
+			if (this.buildMenuOpen && firstUnit.meta.worker) {
+				
+				const startingPosition = {
+					x: targetX,
+					y: targetY
+				};
 
-			this.unregisteredUnitCount++;
-			this.units.push(building);
+				let building = new Unit(null, null, startingPosition);
+				building.registerUnit(fixedItemId, null, null);
+
+				this.unregisteredUnitCount++;
+				this.units.push(building);
+			}
 		}
 	}
 
