@@ -44,7 +44,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/test-hero-spawn-2.w3g'
+    'file': 'replays/happy_vs_grubby.w3g'
   }
 ];
 
