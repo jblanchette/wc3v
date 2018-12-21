@@ -11,6 +11,7 @@ let {
 
 const extraUnits = {
 	'AOsf': 'Feral Spirit',
+	'uske': 'Skeleton Warrior'
 };
 
 Object.keys(extraUnits).forEach(key => {
@@ -1056,29 +1057,30 @@ const mapStartPositions = {
 };
 
 const abilityFlagNames = {
-	'LearnSkill': 66, // 0x42
-	'Summon': 68 // 0x44
+    'CancelTrain': 64, // 0x40
+	'LearnSkill': 66,  // 0x42
+	'Summon': 68,      // 0x44
+    'TrainUnit': 70    // 0x46
 };
 
 const getUnitInfo = (itemId) => {
 	const inBuildingList = !!(buildings[itemId]);
 	const inUnitList = !!(units[itemId]);
 	const inHeroList = !!(heroes[itemId]);
-	const isBuildingUpgrade = (inUnitList && itemId.startsWith("b"));
-
+	const isBuildingUpgrade = (inUnitList && units[itemId].startsWith("b"));
 	const isBuilding = (inBuildingList || isBuildingUpgrade);
 	const isHero = (inHeroList);
 	const isUnit = (inUnitList || isHero && !isBuilding);
 
 	let displayName = "Unknown";
 	if (isBuilding) {
-		displayName = buildings[itemId];
+		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
 	} else if (isUnit) {
 		displayName = units[itemId] || heroes[itemId];
+	}
 
-		if (displayName.startsWith("u_")) {
-			displayName = displayName.substring(2);
-		}
+	if (displayName.startsWith("u_") || displayName.startsWith("b_")) {
+		displayName = displayName.substring(2);
 	}
 
 	let meta = unitMetaData[itemId] || {
