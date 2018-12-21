@@ -31,64 +31,107 @@ Output from Grubby vs Happy showmatch:
 Inspecting player: 1
 Unit count: 28
 Unregistered units: -1
+
+parse: 356.022ms
+******************************
+Inspecting player: 1
+Unit count: 43
+Unregistered units: -10
 [ 'Peon',
   'Peon',
   'Peon',
   'Peon',
   'Peon',
-  'Building - Great Hall',
+  'Building - Fortress',
+  'Peon',
+  'Peon',
   'Building - Altar of Storms',
   'Building - Orc Burrow',
+  'Peon',
   'Building - Barracks',
+  'Peon',
+  'Peon',
+  'Peon',
   'Blademaster - (4)',
   'Building - Orc Burrow',
   'Grunt',
-  'Building - Voodoo Lounge',
+  'Grunt',
+  'Peon',
+  'Grunt',
+  'Unknown (shas)',
+  'Grunt',
   'Building - Orc Burrow',
+  'Grunt',
   'Shadow Hunter - (4)',
   'Building - Beastiary',
   'Building - Beastiary',
+  'Wind Rider',
+  'Wind Rider',
   'Building - Orc Burrow',
+  'Wind Rider',
+  'Wind Rider',
   'Wind Rider',
   'Building - Orc Burrow',
   'Building - War Mill',
-  'Building - Voodoo Lounge',
+  'Wind Rider',
+  'Unknown (tgrh)',
   'Building - Orc Burrow',
   'Building - Orc Burrow',
   'Building - Watch Tower',
-  'Building - Watch Tower',
-  'Building - Watch Tower',
-  'Peon' ]
+  'Peon',
+  'Building - Watch Tower' ]
 ******************************
 Inspecting player: 2
-Unit count: 26
-Unregistered units: 1
+Unit count: 46
+Unregistered units: -2
 [ 'Acolyte',
   'Acolyte',
   'Acolyte',
-  'Building - Necropolis',
+  'Building - Black Citadel',
+  'Acolyte',
   'Ghoul',
   'Building - Crypt',
   'Building - Graveyard',
-  'Building - Altar of Darkness',
-  'Building - Ziggurat',
-  'Building - Tomb of Relics',
-  'Death Knight - (4)',
   'Acolyte',
+  'Building - Altar of Darkness',
+  'Building - Nerubian Tower',
+  'Ghoul',
+  'Unknown (ocor)',
+  'Death Knight - (4)',
+  'Crypt Fiend',
+  'Building - Ziggurat',
   'Crypt Fiend',
   'Skeleton Warrior',
+  'Ghoul',
+  'Crypt Fiend',
   'Building - Ziggurat',
+  'Crypt Fiend',
   'Lich - (2)',
   'Building - Slaughterhouse',
-  'Building - Ziggurat',
+  'Crypt Fiend',
+  'Crypt Fiend',
   'Obsidian Statue',
-  'Building - Temple of the Damned',
   'Building - Ziggurat',
+  'Crypt Fiend',
+  'Obsidian Statue',
+  'Crypt Fiend',
+  'Building - Temple of the Damned',
   'Acolyte',
+  'Building - Ziggurat',
   'Building - Necropolis',
   'Banshee',
+  'Crypt Fiend',
+  'Banshee',
+  'Obsidian Statue',
   'Building - Ziggurat',
-  'Building - Ziggurat' ]
+  'Acolyte',
+  'Acolyte',
+  'Acolyte',
+  'Acolyte',
+  'Building - Ziggurat',
+  'Acolyte' ]
+
+
 ```
 
 Output from a normal starting match on `Echo Isles` for an Undead player:
