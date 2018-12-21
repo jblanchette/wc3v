@@ -3,8 +3,8 @@ const Player = require("./Player");
 const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
-const debugActions = true;
-const debugPlayer = null;
+const debugActions = false;
+const debugPlayer = 2;
 
 const UnitManager = class {
 	constructor () {

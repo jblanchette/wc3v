@@ -308,8 +308,6 @@ const Player = class {
 
 					existingUnit.registerObjectIds(objectId1, objectId2);
 				} else {
-					console.log("Existing count: ", existingUnits.length);
-
 					unregisteredUnit.registerUnit(fixedItemId, objectId1, objectId2);
 					unregisteredUnit.registerItemIds(itemId1, itemId2);
 
@@ -516,11 +514,16 @@ const Player = class {
 							// TODO: support a backlog queue of trained units
 							//       we probably just need to remove the 'last added'
 							//       from list for most cases
-							
+
 							const removeIndex = firstUnit.trainedUnits.findIndex(unit => {
 								return !unit.completed;
 							});
 							const removeItem = firstUnit.trainedUnits[removeIndex];
+
+							if (!removeItem) {
+								console.error("Nothing to remove from training list?");
+								return;
+							}
 
 							const unitRemoveIndex = this.units.findIndex(unit => {
 								return unit.itemId === removeItem.itemId &&
@@ -528,6 +531,8 @@ const Player = class {
 								       unit.objectId1 === null;
 							});
 							const removeUnit = this.units[unitRemoveIndex];
+
+							console.log("Removing non-finished unit: ", removeUnit.displayName);
 
 							this.units.splice(unitRemoveIndex, 1);
 							this.unregisteredUnitCount--;
@@ -565,7 +570,7 @@ const Player = class {
 				break;
 
 				case abilityFlagNames.TrainUnit:
-					console.log("Train unit ability called.", itemId);
+					console.log(1, "Train unit ability called.", itemId);
 
 					if (firstUnit.isBuilding) {
 						let unitInfo = mappings.getUnitInfo(itemId);
@@ -578,14 +583,35 @@ const Player = class {
 								// building spawned a unit into world
 								let newUnit = new Unit(null, null, itemId, false);
 
+								// NOTE: for some unknown reason, TrainUnit actions
+								//       can show up in a replay even when there
+								//       was one previously issued - with no actions in between.
+								//       
+								//       heroes are unique units, so we just prevent
+								//       the command issued from doing anything,
+								//       and wait for an actual CancelTrain action
+
+								if (unitInfo.meta.hero) {
+									console.log(1, "Making a hero.");
+
+									const inTraining = firstUnit.trainedUnits.filter(unit => {
+										return !unit.completed && unit.itemId === itemId;
+									});
+
+									if (inTraining.length) {
+										console.log(1, "Stopping double hero train.");
+										return;	
+									}
+									
+								}
+
 								firstUnit.trainedUnits.push({
 									itemId: itemId,
 									completed: false
 								});
 
 								console.log("Adding trained unit to building: ", firstUnit.displayName);
-								console.log("Trained units: ", firstUnit.trainedUnits);
-								console.log("Making trained unit: ", newUnit);		
+								console.log("Making trained unit: ", newUnit.displayName);		
 								this.units.push(newUnit);
 								this.unregisteredUnitCount++;
 							}
@@ -722,6 +748,7 @@ const Player = class {
 
 		if (!firstUnit && this.selection.hasUnregisteredUnit) {
 			console.log("Unregistered unit used ability. Maybe worker?");
+			return;
 		}
 
 		if (this.buildMenuOpen && firstUnit.meta.worker) {
