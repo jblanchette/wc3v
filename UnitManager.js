@@ -4,7 +4,7 @@ const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
 // Turn on verbose debugging - or player specific verbose debugging
-const debugActions = false;
+const debugActions = true;
 const debugPlayer = 2;
 
 const UnitManager = class {

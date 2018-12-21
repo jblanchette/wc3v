@@ -1057,8 +1057,8 @@ const mapStartPositions = {
 };
 
 const abilityFlagNames = {
-    'CancelTrain': 64, // 0x40
-	'LearnSkill': 66,  // 0x42
+    'CancelTrainOrResearch': 64, // 0x40
+	'LearnSkillOrTrain': 66,  // 0x42
 	'Summon': 68,      // 0x44
     'TrainUnit': 70    // 0x46
 };

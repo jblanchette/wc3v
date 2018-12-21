@@ -332,9 +332,6 @@ const Player = class {
 				this.updatingSubgroup = false;
 			} else {
 
-				console.log("% could not find unregistered unit for: ", fixedItemId);
-				console.log("% ObjectIDs: ", objectId1, objectId2);
-
 				let existingUnits = this.units.filter(unit => {
 					return unit.itemId === fixedItemId;
 				});
@@ -343,18 +340,12 @@ const Player = class {
 				// so we know to update it
 				if (existingUnits.length === 1) {
 					let existingUnit = existingUnits[0];
-
 					existingUnit.registerObjectIds(objectId1, objectId2);
 				} else {
-
-					console.log("Existing count: ", existingUnits.length);
-
 					// possibly spawned unit was selected?
 					let possibleUnit = mappings.getUnitInfo(fixedItemId);
 					if (possibleUnit.isUnit) {
-						if (fixedItemId === "Udea") {
-							console.log("Creating known DK 1");
-						}
+						console.log(1, "Selected a spawned unit", possibleUnit.displayName);
 
 						let newUnit = new Unit(null, null, fixedItemId, false);
 						this.units.push(newUnit);
@@ -472,10 +463,11 @@ const Player = class {
 
 		if (selectedUnits.length) {
 			let firstUnit = selectedUnits[0];
-			const abilityActionName = utils.findItemIdForObject(itemId, abilityActions);
 
 			if (isItemArray) {
 				if (firstUnit.meta.hero) {
+					const abilityActionName = utils.findItemIdForObject(itemId, abilityActions);
+
 					switch (abilityActionName) {
 						case 'CastSummonSkill':
 							console.log("Unit called summon skill: ", firstUnit.displayName);
@@ -510,7 +502,7 @@ const Player = class {
 					console.log("Building ability no target.");
 
 					switch (abilityFlags) {
-						case abilityFlagNames.CancelTrain:
+						case abilityFlagNames.CancelTrainOrResearch:
 							// TODO: support a backlog queue of trained units
 							//       we probably just need to remove the 'last added'
 							//       from list for most cases
@@ -530,8 +522,14 @@ const Player = class {
 								       unit.itemId1 === null &&
 								       unit.objectId1 === null;
 							});
-							const removeUnit = this.units[unitRemoveIndex];
 
+							if (unitRemoveIndex === -1) {
+								
+
+								return;
+							}
+
+							const removeUnit = this.units[unitRemoveIndex];
 							console.log("Removing non-finished unit: ", removeUnit.displayName);
 
 							this.units.splice(unitRemoveIndex, 1);
@@ -547,9 +545,15 @@ const Player = class {
 				return;
 			}
 
+			// not an itemId array
+			// we have a string itemId now
+
+			console.log("Checking ability flag: ", abilityFlags);
+			let unitInfo = mappings.getUnitInfo(itemId);
+
 			switch (abilityFlags) {
 				// learn skill
-				case abilityFlagNames.LearnSkill:
+				case abilityFlagNames.LearnSkillOrTrain:
 					if (firstUnit.meta.hero) {
 						let spell = mappings.heroAbilities[itemId];
 						if (!firstUnit.learnedSkills[itemId]) {
@@ -566,20 +570,35 @@ const Player = class {
 						firstUnit.knownLevel++;
 
 						console.log(this.id, "Hero leveled up: ", firstUnit.displayName, firstUnit.knownLevel);
+					} else if (firstUnit.isBuilding) {
+						console.log("Building is training a unit.", unitInfo.displayName);
+
+						// building spawned a unit into world
+						let newUnit = new Unit(null, null, itemId, false);
+						firstUnit.trainedUnits.push({
+							itemId: itemId,
+							completed: false
+						});
+
+						console.log("Adding trained unit to building: ", firstUnit.displayName);
+						console.log("Making trained unit: ", newUnit.displayName);	
+
+						this.units.push(newUnit);
+						this.unregisteredUnitCount++;
 					}
 				break;
 
 				case abilityFlagNames.TrainUnit:
-					console.log(1, "Train unit ability called.", itemId);
-
 					if (firstUnit.isBuilding) {
-						let unitInfo = mappings.getUnitInfo(itemId);
+						console.log(1, "Train unit info: ", unitInfo);
 
 						if (unitInfo && unitInfo.isUnit) {
 							if (unitInfo.isBuilding) {
 								// building upgraded itself
+
+								console.log("Building upgraded itself: ", unitInfo.displayName);
 								firstUnit.upgradeBuilding(itemId);
-							} else {
+							} else if (unitInfo.isUnit) {
 								// building spawned a unit into world
 								let newUnit = new Unit(null, null, itemId, false);
 
@@ -589,7 +608,7 @@ const Player = class {
 								//       
 								//       heroes are unique units, so we just prevent
 								//       the command issued from doing anything,
-								//       and wait for an actual CancelTrain action
+								//       and wait for an actual CancelTrainOrResearch action
 
 								if (unitInfo.meta.hero) {
 									console.log(1, "Making a hero.");
@@ -618,12 +637,14 @@ const Player = class {
 						}
 					}
 				break;
+				case abilityFlagNames.CancelTrainOrResearch:
+					firstUnit.upgradeBuilding(itemId);
 
+					console.log("Building researched upgrade: ", unitInfo.displayName);
+				break;
 				default:
-					console.log("No match for ability flag: ", abilityFlags.LearnSkill);
-					console.log("Test: ", abilityFlagNames);
-
-					console.log("Action was: ", action);
+					console.log("No match for ability flag");
+					console.log("Unit info for itemId: ", unitInfo);
 				break;
 			};
 			
@@ -748,7 +769,12 @@ const Player = class {
 
 		if (!firstUnit && this.selection.hasUnregisteredUnit) {
 			console.log("Unregistered unit used ability. Maybe worker?");
-			return;
+			
+
+			console.log("Selection: ", this.selection);
+			console.log("Selection units: ", selectionUnits);
+
+			throw new Error("stop here.");
 		}
 
 		if (this.buildMenuOpen && firstUnit.meta.worker) {
