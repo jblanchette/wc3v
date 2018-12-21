@@ -25,6 +25,72 @@ See the [DESIGN.md](DESIGN.md) file
 The system handles most early game actions generally well.
 As more actions occur in the replay the data becomes more certain.
 
+Output from Grubby vs Happy showmatch:
+
+```
+Inspecting player: 1
+Unit count: 28
+Unregistered units: -1
+[ 'Peon',
+  'Peon',
+  'Peon',
+  'Peon',
+  'Peon',
+  'Building - Great Hall',
+  'Building - Altar of Storms',
+  'Building - Orc Burrow',
+  'Building - Barracks',
+  'Blademaster - (4)',
+  'Building - Orc Burrow',
+  'Grunt',
+  'Building - Voodoo Lounge',
+  'Building - Orc Burrow',
+  'Shadow Hunter - (4)',
+  'Building - Beastiary',
+  'Building - Beastiary',
+  'Building - Orc Burrow',
+  'Wind Rider',
+  'Building - Orc Burrow',
+  'Building - War Mill',
+  'Building - Voodoo Lounge',
+  'Building - Orc Burrow',
+  'Building - Orc Burrow',
+  'Building - Watch Tower',
+  'Building - Watch Tower',
+  'Building - Watch Tower',
+  'Peon' ]
+******************************
+Inspecting player: 2
+Unit count: 26
+Unregistered units: 1
+[ 'Acolyte',
+  'Acolyte',
+  'Acolyte',
+  'Building - Necropolis',
+  'Ghoul',
+  'Building - Crypt',
+  'Building - Graveyard',
+  'Building - Altar of Darkness',
+  'Building - Ziggurat',
+  'Building - Tomb of Relics',
+  'Death Knight - (4)',
+  'Acolyte',
+  'Crypt Fiend',
+  'Skeleton Warrior',
+  'Building - Ziggurat',
+  'Lich - (2)',
+  'Building - Slaughterhouse',
+  'Building - Ziggurat',
+  'Obsidian Statue',
+  'Building - Temple of the Damned',
+  'Building - Ziggurat',
+  'Acolyte',
+  'Building - Necropolis',
+  'Banshee',
+  'Building - Ziggurat',
+  'Building - Ziggurat' ]
+```
+
 Output from a normal starting match on `Echo Isles` for an Undead player:
 
 ```
