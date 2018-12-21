@@ -14,8 +14,14 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
     hasParsedMeta = true;
   }
 
+  if (this.leaveEvents.length) {
+    console.log("###");
+    console.log("Found leave event:", this.leaveEvents);
+    console.log("###");
+  }
+
   timeSlotBlock.actions.forEach(actionBlock => {
-  	try {
+  	// try {
       unitManager.checkCreatePlayer(actionBlock);
 
 	  	ActionBlockList.parse(actionBlock.actions).forEach(action => {
@@ -27,9 +33,9 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 
         unitManager.handleAction(actionBlock, action);
 	  	});
-  	} catch (ex) {
-    	console.error(ex)
-  	}
+  	// } catch (ex) {
+   //  	console.error(ex);
+  	// }
 
     this.processCommandDataBlock(actionBlock);
   });
@@ -38,7 +44,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 const paths = [
   {
     'side': 'left',
-    'file': 'replays/test-ud-reg.w3g'
+    'file': 'replays/test-hero-spawn-2.w3g'
   }
 ];
 
@@ -61,6 +67,8 @@ paths.forEach(path => {
 
     let units = players[playerId].units;
     console.log(`Unit count: ${units.length}`);
+    console.log(`Unregistered units: ${players[playerId].unregisteredUnitCount}`);
+
     console.log(units.map(unit => { 
       if (unit.meta.hero) {
         return `${unit.displayName} - (${unit.knownLevel})`;

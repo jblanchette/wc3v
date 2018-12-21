@@ -9,6 +9,14 @@ const Unit = class {
 		this.objectId1 = null;
 		this.objectId2 = null;
 
+		if (knownItemId === "Udea") {
+			console.log("Making known DK");
+		}
+
+		if (knownItemId === "ucry") {
+			console.log(3, "Making fiend.");
+		}
+
 		this.itemId = knownItemId || null;
 
 		const spawnedAtStartCheck = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);
@@ -34,10 +42,16 @@ const Unit = class {
 		this.path = [];
 		this.state = null;
 
+		this.trainedUnits = [];
+
 		this.learnedSkills = {};
-		this.knownLevel = 1;
+		this.knownLevel = 0;
 
 		this.setUnitMeta();
+	}
+
+	setAliveFlags () {
+		this.spawning = false;
 	}
 
 	setUnitMeta () {
@@ -65,6 +79,8 @@ const Unit = class {
 		this.objectId1 = objectId1;
 		this.objectId2 = objectId2;
 
+		this.isSpawnedAtStart = this.objectId1 === this.objectId2;
+
 		this.hasBeenInGroup = true;
 	}
 
@@ -73,8 +89,16 @@ const Unit = class {
 		this.objectId1 = objectId1;
 		this.objectId2 = objectId2;
 
-		this.setUnitMeta();
+		this.isSpawnedAtStart = this.objectId1 === this.objectId2;
 
+		this.setUnitMeta();
+		this.hasBeenInGroup = true;
+	}
+
+	upgradeBuilding (newItemId) {
+		this.itemId = newItemId;
+
+		this.setUnitMeta();
 		this.hasBeenInGroup = true;
 	}
 

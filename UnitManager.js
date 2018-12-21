@@ -4,6 +4,7 @@ const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
 const debugActions = true;
+const debugPlayer = null;
 
 const UnitManager = class {
 	constructor () {
@@ -37,9 +38,9 @@ const UnitManager = class {
 		const actionName = ActionBlockNames[action.actionId];
 		const player = this.players[actionBlock.playerId];
 
-		if (debugActions) {
+		if (debugActions && (debugPlayer === null || player.id === debugPlayer)) {
 			console.log("====================================");
-			console.log(`ActionName: ${actionName}`);
+			console.log(`ActionName: ${actionName} PID: ${player.id}`);
 			console.log(`Action:`, action);
 			console.log("====================================");
 		}
@@ -72,6 +73,9 @@ const UnitManager = class {
      	break;
      	case "SelectGroupHotkey":
      		player.selectGroupHotkey(action);
+     	break;
+     	case "GiveOrDropItem":
+     		player.giveOrDropItem(action);
      	break;
     }
 	}
