@@ -1076,7 +1076,7 @@ const getUnitInfo = (itemId) => {
 	const isHero = (inHeroList);
 	const isUnit = (inUnitList || isHero && !isBuilding);
 
-	let displayName = "Unknown";
+	let displayName = `Unknown (${itemId})`;
 	if (isBuilding) {
 		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
 	} else if (isUnit) {
