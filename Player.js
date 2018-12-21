@@ -4,7 +4,8 @@ const utils = require("./utils"),
 const { 
 	abilityActions,
 	abilityFlagNames,
-	mapStartPositions 
+	mapStartPositions,
+	specialBuildings
 } = mappings;
 
 const Unit = require("./Unit"),
@@ -80,6 +81,7 @@ const Player = class {
 		this.groupSelections = {};
 
 		this.buildMenuOpen = false;
+		this.tavernSelected = false;
 
 		this.possibleRegisterItem = null;
 		this.possibleSelectList = [];
@@ -274,6 +276,13 @@ const Player = class {
 		const {itemId1, itemId2} = firstGroupItem;
 		const fixedItemId = utils.fixItemId(itemId);
 
+		if (fixedItemId === specialBuildings.tavern) {
+			this.tavernSelected = true;
+			return;
+		} else if (this.tavernSelected) {
+			this.tavernSelected = false;
+		}
+
 		if (!this.isPlayersRace(fixedItemId)) {
 			// do not take action when selecting other teams units
 			// TODO: eventually support skills like possesion maybe?
@@ -281,7 +290,15 @@ const Player = class {
 			// NOTE: this does not work for mirror matches.
 			//       we need to do additional 'guessing' for that.
 
-			return;
+			const hasExistingUnit = this.units.find(unit => {
+				return unit.itemId === fixedItemId;
+			});
+
+			// if you don't have this hero in your list
+			// of units, then we move on
+			if (!hasExistingUnit) {
+				return;
+			}
 		}
 
 		let newlyRegisteredUnits = this.assignPossibleSelectGroup(fixedItemId);
@@ -407,30 +424,14 @@ const Player = class {
     		let unit = self.findUnit(itemId1, itemId2);
     		
     		if (!unit) {
-    			// we can't know for sure
-    				// that this unit needs to be made or registered yet
-    				self.possibleSelectList.push({
-    					itemId1: itemId1,
-    					itemId2: itemId2
-    				});
+  			  // we can't know for sure
+  				// that this unit needs to be made or registered yet
+  				self.possibleSelectList.push({
+  					itemId1: itemId1,
+  					itemId2: itemId2
+  				});
 
     			hasUnregisteredUnitFlag = true;
-
-    			// const playerHasUnregisteredUnits = (self.unregisteredUnitCount > 0);
-    			// if (playerHasUnregisteredUnits) {
-    				
-    			// } else {
-
-    			// 	console.log(self.id, "registered unit names:", this.debugRegister);
-    			// 	console.log(self.id, "Current units: ");
-
-    			// 	self.units.forEach(unit => {
-    			// 		console.log(unit.itemId1, unit.itemId2);
-    			// 	});
-
-    			// 	console.log("Sub unit: ", itemId1, itemId2);
-    			// 	throw new Error("No unit found and no unregistered units.");
-    			// }
     		} else {
     			unit.setAliveFlags();
     		}
@@ -547,8 +548,6 @@ const Player = class {
 
 			// not an itemId array
 			// we have a string itemId now
-
-			console.log("Checking ability flag: ", abilityFlags);
 			let unitInfo = mappings.getUnitInfo(itemId);
 
 			switch (abilityFlags) {
@@ -648,6 +647,24 @@ const Player = class {
 				break;
 			};
 			
+		} else {
+			let unitInfo = mappings.getUnitInfo(itemId);
+			switch (abilityFlags) {
+				// learn skill
+				case abilityFlagNames.Summon:
+					if (this.tavernSelected) {
+						let newTavernHero = new Unit(null, null, itemId, false);
+
+						console.log(this.id, "Creating tavern hero: ", unitInfo.displayName);
+						this.units.push(newTavernHero);
+						this.unregisteredUnitCount++;
+					}
+				break;
+
+				default:
+					console.error("Empty selection, no match on ability.");
+				break;
+			}
 		}
 
 		if (this.possibleRegisterItem) {
