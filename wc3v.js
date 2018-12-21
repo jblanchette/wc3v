@@ -18,7 +18,7 @@ let hasParsedMeta = false;
 */
 const paths = [
   {
-    'file': 'replays/test-unit-upgrade.w3g'
+    'file': 'replays/test-tavern-hero.w3g'
   }
 ];
 

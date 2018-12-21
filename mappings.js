@@ -1033,6 +1033,10 @@ const heroAbilities = {
    'ANtm': { 'displayName': 'Transmute'}
 };
 
+const specialBuildings = {
+    'tavern': 'ntav'
+};
+
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
 	let item = unitMetaData[key];
 	if (item.hero) {
@@ -1102,6 +1106,7 @@ module.exports = {
 	buildings: buildings,
 	units: units,
 	unitMetaData: unitMetaData,
+    specialBuildings: specialBuildings,
 	heroAbilities: heroAbilities,
 	abilityActions: abilityActions,
 	abilityFlagNames: abilityFlagNames,
