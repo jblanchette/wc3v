@@ -72,11 +72,12 @@ paths.forEach(path => {
 
     // console.log(players[playerId]);
 
-    let units = players[playerId].units;
+    let units = players[playerId].units;;
+
     console.log(`Unit count: ${units.length}`);
     console.log(`Unregistered units: ${players[playerId].unregisteredUnitCount}`);
 
-    console.log(units.map(unit => { 
+    let sortedUnits = units.map(unit => { 
       if (unit.meta.hero) {
         return `${unit.displayName} - (${unit.knownLevel})`;
       } else if (unit.isBuilding) {
@@ -84,9 +85,12 @@ paths.forEach(path => {
       } else {
         return unit.displayName;   
       }
-    }));
+    });
 
+    sortedUnits = sortedUnits.sort();
+    console.log(sortedUnits);
     return;
+
     units.forEach(unit => {
       console.log("================================");
       console.log("Unit: ", unit.displayName);
