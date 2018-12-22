@@ -1,11 +1,12 @@
+const config = require("./config");
 const Player = require("./Player");
 
 const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
 
 // Turn on verbose debugging - or player specific verbose debugging
-const debugActions = false;
-const debugPlayer = 1;
+const debugActions = config.debugActions;
+const debugPlayer = config.debugPlayer;
 
 const UnitManager = class {
 	constructor () {
