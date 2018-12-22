@@ -20,43 +20,50 @@ const unitMetaData = {
 		'displayName': 'Peon',
 		'hero': false,
 		'worker': true,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
 	'uaco': {
 		'displayName': 'Acolyte',
 		'hero': false,
 		'worker': true,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
 	'ewsp': {
 		'displayName': 'Wisp',
 		'hero': false,
 		'worker': true,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
 	'hpea': {
 		'displayName': 'Peasent',
 		'hero': false,
 		'worker': true,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
 	'Hamg': {
 		'displayName': 'Archmage',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Hblm': {
 		'displayName': 'Blood Mage',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Hmkg': {
 		'displayName':'Mountain King',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Hpal': {
 		'displayName':'Paladin',
@@ -68,121 +75,141 @@ const unitMetaData = {
 		'displayName':'Warden',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Ekee': {
 		'displayName':'Keeper of the Grove',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Emoo': {
 		'displayName':'Priestess of the Moon',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Edem': {
 		'displayName':'Demon Hunter',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Oshd': {
 		'displayName':'Shadow Hunter',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Obla': {
 		'displayName':'Blademaster',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
 	},
   'Ofar': {
 		'displayName':'Far Seer',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Otch': {
 		'displayName':'Tauren Chieftain',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Ucrl': {
 		'displayName':'Crypt Lord',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Udea': {
 		'displayName':'Death Knight',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Udre': {
 		'displayName':'Dread Lord',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Ulic': {
 		'displayName':'Lich',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Npbm': {
 		'displayName':'Pandaren Brewmaster',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Nbrn': {
 		'displayName':'Dark Ranger',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Nngs': {
 		'displayName':'Naga Sea Witch',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Nplh': {
 		'displayName':'Pit Lord',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Nbst': {
 		'displayName':'Beastmaster',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Ntin': {
 		'displayName':'Goblin Tinker',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Nfir': {
 		'displayName':'FireLord',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   },
   'Nalc': {
 		'displayName':'Goblin Alchemist',
 		'hero': true,
 		'worker': false,
-		'permanent': true
+		'permanent': true,
+        'playerShop': false
   }
 };
 
@@ -1035,7 +1062,13 @@ const specialBuildings = {
     'tree': 'LTlt',
     'merchant': 'nmer',
     'tavern': 'ntav',
-    'goldmine':'ngol'
+    'goldmine':'ngol',
+    'playerShops': {
+        'U': 'utom',
+        'O': 'ovln',
+        'E': 'eden',
+        'H': 'hvlt'
+    }
 };
 
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
@@ -1086,9 +1119,19 @@ const getUnitInfo = (itemId) => {
 	const isUnit = (inUnitList || isHero && !isBuilding);
     const isItem = (inItemList);
 
+    let isPlayerShop = false;
 	let displayName = `Unknown (${itemId})`;
 	if (isBuilding) {
 		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
+
+        const shopRace = Object.keys(specialBuildings.playerShops).find(key => {
+            return specialBuildings.playerShops[key] === itemId;
+        });
+
+        if (shopRace) { 
+            isPlayerShop = true;
+        }
+
 	} else if (isUnit) {
 		displayName = units[itemId] || heroes[itemId];
     } else if (isItem) {
@@ -1104,7 +1147,8 @@ const getUnitInfo = (itemId) => {
 	let meta = unitMetaData[itemId] || {
 		hero: false,
 		worker: false,
-		permanent: isBuilding
+		permanent: isBuilding,
+        playerShop: isPlayerShop
 	};
 
 	return {
