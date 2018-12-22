@@ -17,6 +17,7 @@ const Unit = class {
 		this.displayName = null;
 		this.isBuilding = false;
 		this.isUnit = false;
+		this.isItem = false;
 
 		// non-selectable things on the map
 		// like trees
@@ -51,12 +52,15 @@ const Unit = class {
 			displayName, 
 			isBuilding, 
 			isUnit,
+			isItem,
 			meta
 		} = mappings.getUnitInfo(this.itemId);
 
 		this.displayName = displayName;
 		this.isBuilding = isBuilding;
 		this.isUnit = isUnit;
+		this.isItem = isItem;
+		
 		this.meta = meta;
 	}
 

@@ -1,13 +1,10 @@
 const w3gMappings = require("./node_modules/w3gjs/lib/mappings");
 
-const {
-	buildings
-} = w3gMappings;
-
 let {
-	units
+	units,
+    buildings,
+    items
 } = w3gMappings;
-
 
 const extraUnits = {
 	'AOsf': 'Feral Spirit',
@@ -1034,7 +1031,11 @@ const heroAbilities = {
 };
 
 const specialBuildings = {
-    'tavern': 'ntav'
+    'tavern': 'ntav',
+    'tree': 'LTlt',
+    'merchant': 'nmer',
+    'tavern': 'ntav',
+    'goldmine':'ngol'
 };
 
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
@@ -1071,19 +1072,26 @@ const getUnitInfo = (itemId) => {
 	const inBuildingList = !!(buildings[itemId]);
 	const inUnitList = !!(units[itemId]);
 	const inHeroList = !!(heroes[itemId]);
+    const inItemList = !!(items[itemId]);
+
 	const isBuildingUpgrade = (inUnitList && units[itemId].startsWith("b"));
 	const isBuilding = (inBuildingList || isBuildingUpgrade);
 	const isHero = (inHeroList);
 	const isUnit = (inUnitList || isHero && !isBuilding);
+    const isItem = (inItemList);
 
 	let displayName = `Unknown (${itemId})`;
 	if (isBuilding) {
 		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
 	} else if (isUnit) {
 		displayName = units[itemId] || heroes[itemId];
+    } else if (isItem) {
+        displayName = items[itemId];
 	}
 
-	if (displayName.startsWith("u_") || displayName.startsWith("b_")) {
+	if (displayName.startsWith("u_") || 
+        displayName.startsWith("b_") ||
+        displayName.startsWith("i_")) {
 		displayName = displayName.substring(2);
 	}
 
@@ -1097,6 +1105,7 @@ const getUnitInfo = (itemId) => {
 		displayName: displayName,
 		isBuilding: isBuilding,
 		isUnit: isUnit,
+        isItem: isItem,
 		meta: meta
 	};
 };
