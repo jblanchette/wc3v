@@ -2,6 +2,7 @@ const W3GReplay = require('./node_modules/w3gjs');
 const { ActionBlockList } = require('./node_modules/w3gjs/parsers/actions');
 const Parser = new W3GReplay();
 
+const config = require("./config");
 const UnitManager = require("./UnitManager");
 
 let unitManager;
@@ -16,11 +17,7 @@ let hasParsedMeta = false;
 * To enable verbose debugging, configure the UnitManager.js debugActions
 * flag - or use player specific ID debugging.
 */
-const paths = [
-  {
-    'file': 'replays/test-buy-item-4.w3g'
-  }
-];
+const paths = config.replayPaths;
 
 W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   if (!hasParsedMeta) {
