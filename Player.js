@@ -80,6 +80,8 @@ const Player = class {
 		this.selection = null;
 		this.groupSelections = {};
 
+		this.heroSlotCount = 0;
+
 		this.buildMenuOpen = false;
 		this.tavernSelected = false;
 
@@ -198,6 +200,20 @@ const Player = class {
 		});
 
 		return bestGuess || null;
+	}
+
+	setHeroSlot (heroUnit) {
+		this.heroSlotCount++;
+		
+		const nextHeroSlot = this.heroSlotCount;
+		heroUnit.heroSlot = nextHeroSlot;
+
+		if (nextHeroSlot === 1) {
+			console.log(this.id, "Gave first hero a TP item.");
+			heroUnit.items['1'] = new Unit(null, null, 'stwp', false);
+		}
+
+		return heroUnit;
 	}
 
 	//
@@ -376,6 +392,15 @@ const Player = class {
 			}
 		} else {
 
+			if (firstGroupUnit.objectId1 === null) {
+				firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
+				firstGroupUnit.spawning = false;
+				firstGroupUnit.selected = true;
+
+				this.updatingSubgroup = false;
+				this.assignKnownUnits();
+			}
+
 			// if (firstGroupUnit) {
 			// 	// we're certain about this unit being our selection
 			// 	console.log("First unit before: ", firstGroupUnit.objectId1, firstGroupUnit.objectId2)
@@ -492,11 +517,26 @@ const Player = class {
 							}
 						break;
 
+						case 'HeroItem1':
+						case 'HeroItem2':
+						case 'HeroItem3':
+						case 'HeroItem4':
+						case 'HeroItem5':
+						case 'HeroItem6':
+							let itemSlot = Object.keys(abilityActions).find(key => {
+								let slotId = abilityActions[key];
+
+								return utils.isEqualItemId(slotId, itemId);
+							});
+
+							console.log("Used item slot: ", itemSlot);
+						break;
+
 						default:
-							// console.log("Unknown ability with no target.");
-							// console.log("Item ID: ", itemId);
-							// console.log("Action: ", action);
-							// console.log("***************************");
+							console.log("Unknown ability with no target.");
+							console.log("Item ID: ", itemId);
+							console.log("Action: ", action);
+							console.log("***************************");
 						break;
 					};
 				} else if (firstUnit.isBuilding) {
@@ -646,6 +686,7 @@ const Player = class {
 										return;	
 									}
 									
+									this.setHeroSlot(newUnit);
 								}
 
 								firstUnit.trainedUnits.push({
@@ -653,7 +694,7 @@ const Player = class {
 									completed: false
 								});
 
-								console.log(this.id, "Making trained unit: ", newUnit.displayName);		
+								console.log(this.id, "Making trained unit: ", newUnit);		
 								this.units.push(newUnit);
 								this.unregisteredUnitCount++;
 							}
@@ -661,9 +702,25 @@ const Player = class {
 					}
 				break;
 				case abilityFlagNames.CancelTrainOrResearch:
-					firstUnit.upgradeBuilding(itemId);
 
-					console.log(this.id, "Building researched upgrade: ", firstUnit.displayName, unitInfo.displayName);
+					if (unitInfo.isItem) {
+						console.log(this.id, "Hero bought an item: ", unitInfo.displayName);
+
+						let heroes = this.units.filter(unit => {
+							return unit.meta.hero;
+						});
+
+					} else {
+						firstUnit.upgradeBuilding(itemId);	
+						console.log(
+							this.id, 
+							"Building researched upgrade: ", 
+							firstUnit.displayName,
+							unitInfo.displayName
+						);
+					}
+					
+
 				break;
 				default:
 					console.log("No match for ability flag");
@@ -678,6 +735,7 @@ const Player = class {
 				case abilityFlagNames.Summon:
 					if (this.tavernSelected) {
 						let newTavernHero = new Unit(null, null, itemId, false);
+						this.setHeroSlot(newTavernHero);
 
 						console.log(this.id, "Creating tavern hero: ", unitInfo.displayName);
 						this.units.push(newTavernHero);
@@ -777,29 +835,32 @@ const Player = class {
 					objectId2
 				} = action;
 
-				if (objectId1 === -1 && objectId2 === -1) {
-					// clicked on ground
-				} else {
-					// clicked object directly
+				if (firstUnit.isBuilding) {
+					console.log(this.id, "Building used ability with target + object id");
 
-					let clickedUnit = this.units.find(unit => {
-						return unit.objectId1 === objectId1 &&
-									 unit.objectId2 === objectId2;
-					});
+					if (objectId1 === -1 && objectId2 === -1) {
+						// clicked on ground
+						console.log(this.id, "Set rally point maybe?");
+					} else {
+						// clicked object directly
+						console.log(this.id, "Clicked object directly.");
 
-					if (!clickedUnit) {
-						let unitGuess = this.guessUnitType(objectId1);
-						
-						if (!unitGuess) {
-							// todo: do something here, like maybe try to track
-							//       trees / goldmines
+						let clickedUnit = this.units.find(unit => {
+							return unit.objectId1 === objectId1 &&
+										 unit.objectId2 === objectId2;
+						});
+
+						if (clickedUnit) {
+							console.log(this.id, "Unit selected: ", firstUnit.displayName);
+							console.log(this.id, "Clicked ability on unit: ", clickedUnit.displayName);
 						}
 					}
+				} else {
+					units.forEach(unit => {
+						unit.moveTo(targetX, targetY);
+					});
 				}
 				
-				units.forEach(unit => {
-					unit.moveTo(targetX, targetY);
-				});
 			break;
 		}
 	}

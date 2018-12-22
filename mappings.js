@@ -1051,7 +1051,13 @@ const abilityActions = {
 	'RightClick': [3, 0, 13, 0],
 	'CastSkillObject': [-105, 0, 13, 0],
 	'CastSkillTarget': [154, 0, 13, 0],
-	'CastSummonSkill': [158, 0, 13, 0]
+	'CastSummonSkill': [158, 0, 13, 0],
+    'HeroItem1': [ 40, 0, 13, 0 ],
+    'HeroItem2': [ 41, 0, 13, 0 ],
+    'HeroItem3': [ 42, 0, 13, 0 ],
+    'HeroItem4': [ 43, 0, 13, 0 ],
+    'HeroItem5': [ 44, 0, 13, 0 ],
+    'HeroItem6': [ 45, 0, 13, 0 ]
 };
 
 const mapStartPositions = {

@@ -37,6 +37,9 @@ const Unit = class {
 
 		this.trainedUnits = [];
 
+		this.heroSlot = 0;
+		this.items = {};
+
 		this.learnedSkills = {};
 		this.knownLevel = 0;
 
@@ -60,7 +63,7 @@ const Unit = class {
 		this.isBuilding = isBuilding;
 		this.isUnit = isUnit;
 		this.isItem = isItem;
-		
+
 		this.meta = meta;
 	}
 
