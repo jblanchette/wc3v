@@ -1,6 +1,19 @@
 const mappings = require("./mappings");
 const utils = require("./utils");
 
+/*
+
+TODO - now that we have units, buildings, items, ect.
+       mapped it will be good to break out the not shared bits
+       
+       likely subclasses -
+				* PlayerUnit / EnemyUnit
+				* Building
+				* Item
+				* PlayerShop / MapShop
+				* Tavern
+*/
+
 const Unit = class {
 	constructor (itemId1, itemId2, knownItemId, isSpawnedAtStart = false ) {
 		this.itemId1 = itemId1;
@@ -35,14 +48,35 @@ const Unit = class {
 		this.path = [];
 		this.state = null;
 
-		this.trainedUnits = [];
+		// building stuff
+		this.rallyPoint = {
+			type: null,
+			pt: null,
+			objectId1: null,
+			objectId2: null
+		};
 
+		this.trainedUnits = [];
+		this.soldItems = {};
+
+		// hero stuff
 		this.heroSlot = 0;
-		this.items = {};
+		this.items = {
+			1: null,
+			2: null,
+			3: null,
+			4: null,
+			5: null,
+			6: null
+		};
 
 		this.learnedSkills = {};
 		this.knownLevel = 0;
 
+		// item stuff
+		this.knownOwner = false;
+
+		// set unit info + meta
 		this.setUnitMeta();
 	}
 
@@ -99,6 +133,23 @@ const Unit = class {
 
 		this.setUnitMeta();
 		this.hasBeenInGroup = true;
+	}
+
+	giveItem (itemId, knownOwner = true) {
+		let self = this;
+		let itemSlotId = Object.keys(self.items).find(key => {
+			return self.items[key] === null;
+		});
+
+		if (itemSlotId === -1) {
+			console.error("Unable to find item slot for unit. ", self.displayName, itemId);
+			return;
+		}
+
+		let newItem = new Unit(null, null, itemId, false);
+		newItem.knownOwner = knownOwner;
+		
+		this.items[itemSlotId] = newItem;
 	}
 
 	spawn () {

@@ -111,6 +111,13 @@ const Player = class {
 		});
 	}
 
+	findUnitByObjectId (objectId1, objectId2) {
+		return this.units.find(unit => {
+			return unit.objectId1 === objectId1 &&
+			       unit.objectId2 === objectId2;
+		});
+	}
+
 	findUnregisteredUnit () {
 		return this.units.find(unit => {
 			return unit.objectId1 === null;
@@ -210,7 +217,7 @@ const Player = class {
 
 		if (nextHeroSlot === 1) {
 			console.log(this.id, "Gave first hero a TP item.");
-			heroUnit.items['1'] = new Unit(null, null, 'stwp', false);
+			heroUnit.giveItem('stwp');
 		}
 
 		return heroUnit;
@@ -694,7 +701,7 @@ const Player = class {
 									completed: false
 								});
 
-								console.log(this.id, "Making trained unit: ", newUnit);		
+								console.log(this.id, "Making trained unit: ", newUnit.displayName);		
 								this.units.push(newUnit);
 								this.unregisteredUnitCount++;
 							}
@@ -706,10 +713,29 @@ const Player = class {
 					if (unitInfo.isItem) {
 						console.log(this.id, "Hero bought an item: ", unitInfo.displayName);
 
-						let heroes = this.units.filter(unit => {
-							return unit.meta.hero;
-						});
+						let rallyPoint = firstUnit.rallyPoint;
+						if (rallyPoint && rallyPoint.type === "unit") {							
+							let shopUnit = this.findUnitByObjectId(rallyPoint.objectId1, rallyPoint.objectId2);
 
+							shopUnit.giveItem(itemId);
+							console.log(this.id, "Shop has known unit rally, giving item: ", shopUnit.displayName );
+						} else {
+							console.log(this.id, "No known unit to give item to, try to find closest hero.");
+							console.log(this.id, "Shop position: ", firstUnit.currentX, firstUnit.currentY);
+
+							let heroes = this.units.filter(unit => {
+								return unit.meta.hero;
+							});
+
+							let closestHero = utils.closestToPoint(
+								firstUnit.currentX, 
+								firstUnit.currentY,
+								heroes
+							);
+
+							console.log(this.id, "Closest potential hero: ", closestHero.displayName);
+							closestHero.giveItem(itemId, false);
+						}
 					} else {
 						firstUnit.upgradeBuilding(itemId);	
 						console.log(
@@ -840,11 +866,19 @@ const Player = class {
 
 					if (objectId1 === -1 && objectId2 === -1) {
 						// clicked on ground
-						console.log(this.id, "Set rally point maybe?");
+						console.log(this.id, "Set rally point for: ", firstUnit.displayName);
+						firstUnit.rallyPoint = {
+								type: "ground",
+								pt: {
+									x: targetX,
+									y: targetY
+								},
+								objectId1: null,
+								objectId2: null
+							};
 					} else {
 						// clicked object directly
 						console.log(this.id, "Clicked object directly.");
-
 						let clickedUnit = this.units.find(unit => {
 							return unit.objectId1 === objectId1 &&
 										 unit.objectId2 === objectId2;
@@ -853,6 +887,18 @@ const Player = class {
 						if (clickedUnit) {
 							console.log(this.id, "Unit selected: ", firstUnit.displayName);
 							console.log(this.id, "Clicked ability on unit: ", clickedUnit.displayName);
+
+							firstUnit.rallyPoint = {
+								type: "unit",
+								pt: {
+									x: targetX,
+									y: targetY
+								},
+								objectId1: objectId1,
+								objectId2: objectId2
+							};
+						} else {
+							console.log(this.id, "Could not find unit that was clicked.");
 						}
 					}
 				} else {
@@ -897,8 +943,10 @@ const Player = class {
 					y: targetY
 				};
 
-				let building = new Unit(null, null, startingPosition);
+				let building = new Unit(null, null, fixedItemId, false);
 				building.registerUnit(fixedItemId, null, null);
+				building.currentX = targetX;
+				building.currentY = targetY;
 
 				this.unregisteredUnitCount++;
 				this.units.push(building);
