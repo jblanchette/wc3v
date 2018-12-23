@@ -848,6 +848,13 @@ const Player = class {
 		let units = this.getSelectionUnits();
 		let firstUnit = units[0];
 
+		if (!firstUnit) {
+			console.error("Trying to use ability without selected unit.");
+			console.error(this.selection);
+
+			return;
+		}
+
 		const abilityActionName = utils.findItemIdForObject(action.itemId, abilityActions);
 		switch (abilityActionName) {
 			case 'CastSkillTarget':
@@ -1151,16 +1158,48 @@ const Player = class {
 
 		let selection = this.getSelectionUnits();
 		let firstUnit = selection[0];
-		let itemUnit = this.findUnitByObjectId(itemObjectId1, itemObjectId2);
 
 		if (firstUnit) {
 			console.log(this.id, "Unit giveOrDropItem");
-			console.log(this.id, "Item: ", itemUnit);
+
+			const heroItems = firstUnit.getItemList();
+			const knownItem = heroItems.find(heroItem => {
+				const item = heroItem.item;
+				return item.objectId1 === itemObjectId1 &&
+							 item.objectId2 === itemObjectId2;
+			});
 
 			if (objectId1 === -1 && objectId2 === -1) {
 				console.log("Gave item to ground!");
 			} else {
-				console.log("Gave item to hero?");
+				let targetHero = this.findUnitByObjectId(objectId1, objectId2);
+				if (targetHero) {
+					if (knownItem) {
+						firstUnit.items[knownItem.slot] = null;
+						targetHero.tradeItem(knownItem.item);
+
+												console.log(this.id, `Hero ${firstUnit.displayName} gave known item to ${targetHero.displayName}`);	
+					} else {
+						// unkown item being traded
+						let potentialItem = heroItems.find(heroItem => {
+							return heroItem.item.objectId1 === null;
+						});
+
+						if (potentialItem) {
+							potentialItem.item.registerObjectIds(itemObjectId1, itemObjectId2);
+
+							firstUnit.items[potentialItem.slot] = null;
+							targetHero.tradeItem(potentialItem.item);
+
+							console.log(this.id, `Hero ${firstUnit.displayName} gave unknown item to ${targetHero.displayName}`);	
+						} else {
+							console.log("Trading hero: ", firstUnit, "Target: ", targetHero);
+							throw new Error("Unable to find potential item for trade.");
+						}
+					}
+				} else {
+					// can't find hero that is getting item
+				}
 			}
 		}
 
