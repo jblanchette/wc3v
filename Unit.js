@@ -75,6 +75,8 @@ const Unit = class {
 
 		// item stuff
 		this.knownOwner = false;
+		this.knownItemX = null;
+		this.knownItemY = null;
 
 		// set unit info + meta
 		this.setUnitMeta();
@@ -117,6 +119,11 @@ const Unit = class {
 		this.hasBeenInGroup = true;
 	}
 
+	registerKnownItem (x, y) {
+		this.knownItemX = x;
+		this.knownItemY = y;
+	}
+
 	registerUnit (itemId, objectId1, objectId2) {
 		this.itemId = itemId;
 		this.objectId1 = objectId1;
@@ -150,6 +157,19 @@ const Unit = class {
 		newItem.knownOwner = knownOwner;
 		
 		this.items[itemSlotId] = newItem;
+	}
+
+	getItemList () {
+		let knownItems = Object.keys(this.items).filter(key => {
+			return this.items[key] !== null;
+		});
+
+		return knownItems.map(key => {
+			return {
+				slot: key,
+				item: this.items[key]
+			};
+		});
 	}
 
 	spawn () {

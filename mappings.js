@@ -1090,7 +1090,13 @@ const abilityActions = {
     'HeroItem3': [ 42, 0, 13, 0 ],
     'HeroItem4': [ 43, 0, 13, 0 ],
     'HeroItem5': [ 44, 0, 13, 0 ],
-    'HeroItem6': [ 45, 0, 13, 0 ]
+    'HeroItem6': [ 45, 0, 13, 0 ],
+    'HeroMoveItem1': [ 34, 0, 13, 0 ],
+    'HeroMoveItem2': [ 35, 0, 13, 0 ],
+    'HeroMoveItem3': [ 36, 0, 13, 0 ],
+    'HeroMoveItem4': [ 37, 0, 13, 0 ],
+    'HeroMoveItem5': [ 38, 0, 13, 0 ],
+    'HeroMoveItem6': [ 39, 0, 13, 0 ]
 };
 
 const mapStartPositions = {

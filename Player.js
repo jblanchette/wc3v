@@ -85,6 +85,9 @@ const Player = class {
 		this.buildMenuOpen = false;
 		this.tavernSelected = false;
 
+		this.itemMoveSelected = false;
+		this.itemMoveObject = null;
+
 		this.possibleRegisterItem = null;
 		this.possibleSelectList = [];
 
@@ -490,7 +493,11 @@ const Player = class {
 		const isItemArray = Array.isArray(action.itemId);
 		const itemId = isItemArray ?
 			action.itemId : utils.fixItemId(action.itemId);
-		const abilityFlags = action.abilityFlags;
+		const {
+			abilityFlags,
+			unknownA,
+			unknownB
+		} = action;
 		
 		let selectedUnits = this.getSelectionUnits();
 
@@ -530,13 +537,26 @@ const Player = class {
 						case 'HeroItem4':
 						case 'HeroItem5':
 						case 'HeroItem6':
-							let itemSlot = Object.keys(abilityActions).find(key => {
-								let slotId = abilityActions[key];
+							let itemSlot = abilityActionName.substring(abilityActionName.length - 1);
 
-								return utils.isEqualItemId(slotId, itemId);
-							});
+							console.log(this.id, "Used item slot: ", itemSlot);
+							let heroItem = firstUnit.items[itemSlot];
 
-							console.log("Used item slot: ", itemSlot);
+							if (!heroItem) {
+								console.log("Used item but hero had null item slot.");
+
+								const heroItems = firstUnit.getItemList();
+
+								console.log("Possible items: ", heroItems.map(item => { return item.item.displayName; }));
+
+							} else if (heroItem &&
+								heroItem.objectId1 === unknownA &&
+								heroItem.objectId2 === unknownB) {
+								
+								console.log(this.id, "Item used: ", heroItem.displayName);
+							} else {
+								console.log(this.id, "Item object mismatch.", heroItem);
+							}
 						break;
 
 						default:
@@ -712,6 +732,7 @@ const Player = class {
 
 					if (unitInfo.isItem) {
 						console.log(this.id, "Hero bought an item: ", unitInfo.displayName);
+						console.log(this.id, "Item objectIds: ", unknownA, unknownB);
 
 						let rallyPoint = firstUnit.rallyPoint;
 						if (rallyPoint && rallyPoint.type === "unit") {							
@@ -733,7 +754,7 @@ const Player = class {
 								heroes
 							);
 
-							console.log(this.id, "Closest potential hero: ", closestHero.displayName);
+							console.log(this.id, `Giving item ${unitInfo.displayName} to ${closestHero.displayName}`);
 							closestHero.giveItem(itemId, false);
 						}
 					} else {
@@ -816,6 +837,14 @@ const Player = class {
 	} 
 
 	useAbilityWithTargetAndObjectId (action) {
+		const isItemArray = Array.isArray(action.itemId);
+		const { 
+			targetX, 
+			targetY,
+			objectId1,
+			objectId2
+		} = action;
+
 		let units = this.getSelectionUnits();
 		let firstUnit = units[0];
 
@@ -854,14 +883,7 @@ const Player = class {
 				}
 			break;
 			case 'RightClick':
-				let { 
-					targetX, 
-					targetY,
-					objectId1,
-					objectId2
-				} = action;
-
-				if (firstUnit.isBuilding) {
+				if (firstUnit && firstUnit.isBuilding) {
 					console.log(this.id, "Building used ability with target + object id");
 
 					if (objectId1 === -1 && objectId2 === -1) {
@@ -907,6 +929,127 @@ const Player = class {
 					});
 				}
 				
+			break;
+			case 'HeroMoveItem1':
+			case 'HeroMoveItem2':
+			case 'HeroMoveItem3':
+			case 'HeroMoveItem4':
+			case 'HeroMoveItem5':
+			case 'HeroMoveItem6':
+				const itemSlot = abilityActionName.substring(abilityActionName.length - 1);
+				const heroItems = firstUnit.getItemList();
+				const itemCount = heroItems.length;
+				console.log(this.id, "Hero moving item: ", firstUnit.displayName);
+
+				const knownItem = heroItems.find(heroItem => {
+					const item = heroItem.item;
+
+					return (item.objectId1 === objectId1 &&
+								  item.objectId2 === objectId2) ||
+								 (item.knownItemX === targetX &&
+								  item.knownItemY === targetY);
+				});
+
+				if (itemCount === 1) {
+					const slotItem = heroItems[0];
+					slotItem.item.registerObjectIds(objectId1, objectId2);
+					slotItem.item.registerKnownItem(targetX, targetY);
+
+					firstUnit.items[slotItem.slot] = null;
+					firstUnit.items[itemSlot] = slotItem.item;
+
+					console.log(this.id, `${firstUnit.displayName} moved only item ${slotItem.item.displayName} to slot ${itemSlot}`);
+				} else {
+					let destinationItem = firstUnit.items[itemSlot];
+
+					if (destinationItem) {
+						// we have an item to swap places with
+						// try to figure out what that item is
+
+						console.log(this.id, `${firstUnit.displayName} moving item ${destinationItem.displayName} in slot ${itemSlot}`);
+
+						let swapCandidates = heroItems.filter(heroItem => {
+							return heroItem.slot !== itemSlot;
+						});
+
+						if (swapCandidates.length === 1) {
+							const swapSlot = swapCandidates[0];
+							const swapItem = swapSlot.item;
+
+							console.log(this.id, "Swapping with only other item: ", swapItem.displayName);
+
+							swapItem.registerObjectIds(objectId1, objectId2);
+							swapItem.registerKnownItem(targetX, targetY);
+
+							firstUnit.items[swapSlot.slot] = destinationItem;
+							firstUnit.items[itemSlot] = swapItem;
+						}
+					} else {
+						console.log(this.id, "Hero has nothing to swap item with, just put it in place. Slot moved: ", itemSlot);
+
+						if (knownItem) {
+							console.log(this.id, "Found known swap item: ", knownItem.item.displayName);
+
+							console.log("known slot: ", knownItem.slot, "Moving slot: ", itemSlot);
+
+							firstUnit.items[knownItem.slot] = null;
+							firstUnit.items[itemSlot] = knownItem.item;
+
+							console.log(this.id, `Put item ${knownItem.item.displayName} into slot ${itemSlot}`);							
+						} else {
+							console.log(this.id, "Not a known item.");
+
+							let unregisteredSwapItem = heroItems.find(heroItem => {
+								const item = heroItem.item;
+
+								return heroItem.slot !== itemSlot &&
+											 item.knownItemX === targetX &&
+											 item.knownItemY === targetY;
+							});
+
+							console.log(this.id, "Looking for item registered with action objectId");
+
+							if (unregisteredSwapItem) {
+								console.log(this.id, "Found potential unregistered item to assign swap to: ", unregisteredSwapItem.item.displayName);	
+
+								unregisteredSwapItem.item.registerObjectIds(objectId1, objectId2);
+								unregisteredSwapItem.item.registerKnownItem(targetX, targetY);
+
+								firstUnit.items[unregisteredSwapItem.slot] = null;
+								firstUnit.items[itemSlot] = unregisteredSwapItem.item;	
+
+								console.log(this.id, `Put item ${unregisteredSwapItem.item.displayName} into slot ${itemSlot}`);							
+							} else {
+								console.error(this.id, "Unable to find unregistered item?");
+								
+
+								let unregisteredItems = heroItems.filter(heroItem => {
+									return heroItem.item.objectId1 === null ||
+									       heroItem.item.knownItemX === null;
+								});
+
+								if (unregisteredItems.length === 1) {
+									const swapSlot = unregisteredItems[0];
+									const swapItem = swapSlot.item;
+
+									swapItem.registerObjectIds(objectId1, objectId2);
+									swapItem.registerKnownItem(targetX, targetY);
+
+									firstUnit.items[swapSlot.slot] = null;
+									firstUnit.items[itemSlot] = swapItem;
+
+									console.log(this.id, `Put item ${swapItem.displayName} into slot ${itemSlot}`);							
+								} else {
+									console.error("%% more than one unregistered item?");
+								}
+
+							}
+						}
+
+					}
+
+				}
+
 			break;
 		}
 	}
@@ -994,6 +1137,33 @@ const Player = class {
 
 	giveOrDropItem (action ) {
 		// console.log("=========================== %%%%%% giveOrDropItem: ", action);
+		
+		const {
+			abilityFlags,
+			itemId,
+			targetX,
+			targetY,
+			objectId1,
+			objectId2,
+			itemObjectId1,
+			itemObjectId2
+		} = action;
+
+		let selection = this.getSelectionUnits();
+		let firstUnit = selection[0];
+		let itemUnit = this.findUnitByObjectId(itemObjectId1, itemObjectId2);
+
+		if (firstUnit) {
+			console.log(this.id, "Unit giveOrDropItem");
+			console.log(this.id, "Item: ", itemUnit);
+
+			if (objectId1 === -1 && objectId2 === -1) {
+				console.log("Gave item to ground!");
+			} else {
+				console.log("Gave item to hero?");
+			}
+		}
+
 	}
 };
 

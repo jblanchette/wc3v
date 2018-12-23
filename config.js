@@ -4,7 +4,7 @@ const config = {
 	debugPlayer: null,
 	replayPaths: [
 	  {
-	    'file': 'replays/test-buy-item-4.w3g'
+	    'file': 'replays/test-item-slot-2.w3g'
 	  }
 	]
 };
