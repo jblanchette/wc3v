@@ -1,10 +1,10 @@
 
 const config = {
-	debugActions: false,
+	debugActions: true,
 	debugPlayer: null,
 	replayPaths: [
 	  {
-	    'file': 'replays/test-item-slot-2.w3g'
+	    'file': 'replays/test-trade-item-2.w3g'
 	  }
 	]
 };

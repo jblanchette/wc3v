@@ -142,21 +142,35 @@ const Unit = class {
 		this.hasBeenInGroup = true;
 	}
 
-	giveItem (itemId, knownOwner = true) {
-		let self = this;
-		let itemSlotId = Object.keys(self.items).find(key => {
-			return self.items[key] === null;
+	getNextItemSlot () {
+		let itemSlotId = Object.keys(this.items).find(key => {
+			return this.items[key] === null;
 		});
 
 		if (itemSlotId === -1) {
 			console.error("Unable to find item slot for unit. ", self.displayName, itemId);
+			throw new Error("Unable to slot item.");
+
 			return;
 		}
+
+		return itemSlotId;
+	}
+
+	giveItem (itemId, knownOwner = true) {
+		const itemSlotId = this.getNextItemSlot();		
 
 		let newItem = new Unit(null, null, itemId, false);
 		newItem.knownOwner = knownOwner;
 		
 		this.items[itemSlotId] = newItem;
+	}
+
+	tradeItem (item) {
+		const itemSlotId = this.getNextItemSlot();
+
+		this.items[itemSlotId] = item;
+		item.knownOwner = true;
 	}
 
 	getItemList () {
