@@ -74,25 +74,31 @@ paths.forEach(path => {
     console.log(`Unit count: ${units.length}`);
     console.log(`Unregistered units: ${players[playerId].unregisteredUnitCount}`);
 
-    let sortedUnits = units.map(unit => { 
-      if (unit.meta.hero) {
-        return `${unit.displayName} - (${unit.knownLevel})`;
-      } else if (unit.isBuilding) {
-        return `Building - ${unit.displayName}`;
-      } else {
-        return unit.displayName;   
-      }
+    units.sort(unit => { 
+      return unit.displayName;
     });
 
-    sortedUnits = sortedUnits.sort();
-    console.log(sortedUnits);
-    return;
-
     units.forEach(unit => {
-      console.log("================================");
-      console.log("Unit: ", unit.displayName);
-      console.log("Path: ", unit.path);
-      console.log("================================");
+      if (unit.meta.hero) {
+        const items = Object.keys(unit.items).map(key => {
+          const item = unit.items[key];
+
+          if (!item) {
+            return `empty`;
+          } else {
+            return item.displayName;
+          }
+        });
+
+        console.log(unit.displayName, `(${unit.knownLevel})`, "items: ", items);
+        console.log("---");
+      } else {
+        if (unit.isBuilding) {
+          console.log(`${unit.displayName} (B)`);  
+        } else {
+          console.log(unit.displayName);
+        }
+      }
     });
     console.log("******************************");
   });
