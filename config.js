@@ -4,7 +4,7 @@ const config = {
 	debugPlayer: null,
 	replayPaths: [
 	  {
-	    'file': 'replays/test-trade-item-2.w3g'
+	    'file': 'replays/happy_vs_grubby.w3g'
 	  }
 	]
 };

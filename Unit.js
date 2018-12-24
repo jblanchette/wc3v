@@ -70,6 +70,9 @@ const Unit = class {
 			6: null
 		};
 
+		this.droppedItems = [];
+		this.tradedItems = [];
+
 		this.learnedSkills = {};
 		this.knownLevel = 0;
 

@@ -1,5 +1,6 @@
 const config = require("./config");
-const Player = require("./Player");
+const Player = require("./Player"),
+      World = require("./World");
 
 const ActionBlock = require("./ActionBlock");
 const ActionBlockNames = ActionBlock.ActionBlockNames;
@@ -12,6 +13,7 @@ const UnitManager = class {
 	constructor () {
 		this.meta = null;
 		this.players = {};
+		this.world = new World();
 	}
 
 	setMetaData (meta) {
@@ -23,7 +25,7 @@ const UnitManager = class {
 			return slot.playerId === id;
 		});
 
-		let player = new Player(id, playerSlot);
+		let player = new Player(id, playerSlot, this.world);
 		this.players[id] = player;
 	}
 
