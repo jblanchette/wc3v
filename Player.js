@@ -17,11 +17,13 @@ const SelectModes = {
 };
 
 const Player = class {
-	constructor (id, playerSlot) {
+	constructor (id, playerSlot, world) {
 		this.id = id;
 		this.playerSlot = playerSlot;
 		this.teamId = playerSlot.teamId;
 		this.race = playerSlot.raceFlag;
+
+		this.world = world;
 
 		switch (this.race) {
 			case 'O':
@@ -196,6 +198,10 @@ const Player = class {
 		});
 	}
 
+	registerKnownItem (unit, item) {
+
+	}
+
 	guessUnitType (objectId) {
 		const knownObjectIds = this.knownObjectIds;
 		const threshold = 6;
@@ -279,6 +285,46 @@ const Player = class {
 		});
 
 		return registeredUnits;
+	}
+
+	checkItemAssignments (hero, checkSlot, objectId1, objectId2) {
+		const heroItemId = hero.itemId;
+		const currentItem = hero.items[checkSlot];
+
+		console.log("Checking item assignments: ", hero.displayName, checkSlot);
+
+		let heroes = this.units.filter(unit => {
+			return unit.meta.hero;
+		});
+
+		let swapItem;
+		heroes.forEach(hero => {
+			const heroItems = hero.getItemList();
+
+			heroItems.forEach(heroItem => {
+				const { item, slot } = heroItem;
+
+				if (hero.itemId !== heroItemId ||
+				   (hero.itemId === heroItemId && slot !== checkSlot)) {
+					console.log("Checking other item: ", item);
+
+					if (item.objectId1 === objectId1 &&
+						  item.objectId2 === objectId2) {
+						swapItem = {
+							hero: hero,
+							slot: slot,
+							item: item
+						};
+					}
+				}
+			});
+		});
+
+		if (swapItem) {
+			const { hero, item, slot } = swapItem;
+			console.log(this.id, "Found an item to swap: ", hero.displayName, slot, item.displayName);
+		}
+
 	}
 
 	selectSubgroup (action) {
@@ -588,7 +634,6 @@ const Player = class {
 
 								if (buildingRemoveIndex === -1) {
 									console.error("Could not find building to cancel: ", firstUnit.itemId);
-
 									return;
 								}
 
@@ -608,7 +653,6 @@ const Player = class {
 
 							if (!removeItem) {
 								console.error("Nothing to remove from training list?");
-
 								console.log("Building: ", firstUnit);
 								return;
 							}
@@ -620,8 +664,7 @@ const Player = class {
 							});
 
 							if (unitRemoveIndex === -1) {
-								
-
+								// note: this is okay sometimes it seems.
 								return;
 							}
 
@@ -930,10 +973,30 @@ const Player = class {
 							console.log(this.id, "Could not find unit that was clicked.");
 						}
 					}
+				} else if (firstUnit && firstUnit.meta.hero) {
+
+					if (objectId1 === -1 && objectId2 === -1) {
+						units.forEach(unit => {
+							unit.moveTo(targetX, targetY);
+						});
+					} else {
+						console.log(this.id, "hero clicked on an object.");
+						let droppedItem = this.world.findDroppedItem(objectId1, objectId2);
+
+						if (droppedItem) {
+							console.log(this.id, "Found a dropped item in the world: ", droppedItem.displayName);
+
+							firstUnit.tradeItem(droppedItem);
+							this.world.removeDroppedItem(objectId1, objectId2);
+						} else {
+							// add unknown object to world track list
+							console.log(this.id, "Added unknown object to world.");
+							this.world.addUnknownObject(objectId1, objectId2);
+						}
+					}
+
 				} else {
-					units.forEach(unit => {
-						unit.moveTo(targetX, targetY);
-					});
+					console.log(this.id, "At bottom of right click.");
 				}
 				
 			break;
@@ -959,8 +1022,10 @@ const Player = class {
 
 				if (itemCount === 1) {
 					const slotItem = heroItems[0];
+
 					slotItem.item.registerObjectIds(objectId1, objectId2);
 					slotItem.item.registerKnownItem(targetX, targetY);
+					this.world.clearKnownItem(objectId1, objectId2);
 
 					firstUnit.items[slotItem.slot] = null;
 					firstUnit.items[itemSlot] = slotItem.item;
@@ -987,9 +1052,11 @@ const Player = class {
 
 							swapItem.registerObjectIds(objectId1, objectId2);
 							swapItem.registerKnownItem(targetX, targetY);
+							this.world.clearKnownItem(objectId1, objectId2);
 
 							firstUnit.items[swapSlot.slot] = destinationItem;
 							firstUnit.items[itemSlot] = swapItem;
+
 						}
 					} else {
 						console.log(this.id, "Hero has nothing to swap item with, just put it in place. Slot moved: ", itemSlot);
@@ -1001,6 +1068,7 @@ const Player = class {
 
 							firstUnit.items[knownItem.slot] = null;
 							firstUnit.items[itemSlot] = knownItem.item;
+							this.world.clearKnownItem(objectId1, objectId2);
 
 							console.log(this.id, `Put item ${knownItem.item.displayName} into slot ${itemSlot}`);							
 						} else {
@@ -1021,9 +1089,10 @@ const Player = class {
 
 								unregisteredSwapItem.item.registerObjectIds(objectId1, objectId2);
 								unregisteredSwapItem.item.registerKnownItem(targetX, targetY);
+								this.world.clearKnownItem(objectId1, objectId2);
 
 								firstUnit.items[unregisteredSwapItem.slot] = null;
-								firstUnit.items[itemSlot] = unregisteredSwapItem.item;	
+								firstUnit.items[itemSlot] = unregisteredSwapItem.item;
 
 								console.log(this.id, `Put item ${unregisteredSwapItem.item.displayName} into slot ${itemSlot}`);							
 							} else {
@@ -1041,6 +1110,7 @@ const Player = class {
 
 									swapItem.registerObjectIds(objectId1, objectId2);
 									swapItem.registerKnownItem(targetX, targetY);
+									this.world.clearKnownItem(objectId1, objectId2);
 
 									firstUnit.items[swapSlot.slot] = null;
 									firstUnit.items[itemSlot] = swapItem;
@@ -1171,30 +1241,80 @@ const Player = class {
 
 			if (objectId1 === -1 && objectId2 === -1) {
 				console.log("Gave item to ground!");
+
+				if (knownItem) { 
+					console.log("put known item on ground.");
+					this.world.droppedItems.push(knownItem.item);
+					firstUnit.items[knownItem.slot] = null;
+					firstUnit.droppedItems.push(knownItem);
+				} else {
+					console.log("Need to find potential item to put down.");
+					let potentialItem = heroItems.find(heroItem => {
+						const item = heroItem.item;
+						return item.objectId1 === null;
+					});
+
+					if (potentialItem) {
+						console.log("Dropping potential item: ", potentialItem.item.displayName);
+
+						// todo: track maybeSwapItem here
+						potentialItem.item.registerObjectIds(itemObjectId1, itemObjectId2);
+						firstUnit.items[potentialItem.slot] = null;
+						this.world.droppedItems.push(potentialItem.item);
+
+						firstUnit.droppedItems.push(potentialItem);
+
+						console.log(this.id, "Dropped items: ", this.world.droppedItems.length);
+					} else {
+						console.error("No potential items to drop.");
+					}
+				}
+
 			} else {
-				let targetHero = this.findUnitByObjectId(objectId1, objectId2);
+				const targetHero = this.findUnitByObjectId(objectId1, objectId2);
+
 				if (targetHero) {
 					if (knownItem) {
 						firstUnit.items[knownItem.slot] = null;
+						firstUnit.droppedItems.push(knownItem);
 						targetHero.tradeItem(knownItem.item);
 
-												console.log(this.id, `Hero ${firstUnit.displayName} gave known item to ${targetHero.displayName}`);	
+						console.log(this.id, `Hero ${firstUnit.displayName} gave known item to ${targetHero.displayName}`);	
+						
 					} else {
 						// unkown item being traded
-						let potentialItem = heroItems.find(heroItem => {
+						const unknownWorldUnit = this.world.findUnknownObject(objectId1, objectId2);
+						const potentialItem = heroItems.find(heroItem => {
 							return heroItem.item.objectId1 === null;
 						});
 
 						if (potentialItem) {
 							potentialItem.item.registerObjectIds(itemObjectId1, itemObjectId2);
 
+							firstUnit.droppedItems.push(potentialItem);
 							firstUnit.items[potentialItem.slot] = null;
 							targetHero.tradeItem(potentialItem.item);
 
-							console.log(this.id, `Hero ${firstUnit.displayName} gave unknown item to ${targetHero.displayName}`);	
+							console.log(this.id, `Hero ${firstUnit.displayName} gave unknown item ${potentialItem.item.displayName} to ${targetHero.displayName}`);	
 						} else {
-							console.log("Trading hero: ", firstUnit, "Target: ", targetHero);
-							throw new Error("Unable to find potential item for trade.");
+							console.log("Trading hero: ", firstUnit.displayName, "Target: ", targetHero.displayName);
+							
+							let unknownObject = this.world.findUnknownObject(itemObjectId1, itemObjectId2);
+							if (unknownObject) {
+								console.log(this.id, "Found a world item to register.");
+								unknownObject.meta.isItem = true;
+								targetHero.tradeItem(unknownObject);
+
+								this.world.clearKnownItem(itemObjectId1, itemObjectId2);
+							} else {
+
+								let newUnknownItem = new Unit(null, null, null, false);
+								newUnknownItem.registerObjectIds(itemObjectId1, itemObjectId2);
+								newUnknownItem.meta.isItem = true;
+
+								console.log(this.id, "Gave hero item but had to make new unknown item.");
+								targetHero.tradeItem(newUnknownItem);
+							}
 						}
 					}
 				} else {
