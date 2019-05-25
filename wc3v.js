@@ -91,6 +91,8 @@ paths.forEach(path => {
         });
 
         console.log(unit.displayName, `(${unit.knownLevel})`, "items: ", items);
+        console.log("IDs: ", unit.itemId1, unit.itemId2, unit.objectId1, unit.objectId2);
+        
         console.log("---");
       } else {
         if (unit.isBuilding) {

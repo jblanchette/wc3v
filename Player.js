@@ -9,7 +9,9 @@ const {
 } = mappings;
 
 const Unit = require("./Unit"),
-      SubGroup = require("./SubGroup");
+			Building = require("./Building"),
+      SubGroup = require("./SubGroup"),
+      PlayerActions = require("./PlayerActions");
 
 const SelectModes = {
 	select: 1,
@@ -120,6 +122,12 @@ const Player = class {
 		return this.units.find(unit => {
 			return unit.objectId1 === objectId1 &&
 			       unit.objectId2 === objectId2;
+		});
+	}
+
+	findUnitByItemId (fixedItemId) {
+		return this.units.find(unit => {
+			return unit.itemId === fixedItemId;
 		});
 	}
 
@@ -333,44 +341,22 @@ const Player = class {
 
 		if (!firstGroupItem) {
 			console.error("Empty selection during selectSubgroup.");
-			console.error("Num Units: ", this.selection.numberUnits);
-			console.error("Units: ");
-
-			if (!this.selection.units.length) {
-				console.error("Empty unit list.");
-			}
-
-			this.selection.units.forEach(badUnit => {
-				console.error(badUnit);
-			});
+			this.selection.printGroup();
 		}
 
 		const {itemId1, itemId2} = firstGroupItem;
 		const fixedItemId = utils.fixItemId(itemId);
 
-		if (fixedItemId === specialBuildings.tavern) {
+		if (Building.isTavern(fixedItemId)) {
 			this.tavernSelected = true;
 			return;
 		} else if (this.tavernSelected) {
 			this.tavernSelected = false;
 		}
 
-		if (!this.isPlayersRace(fixedItemId)) {
-			// do not take action when selecting other teams units
-			// TODO: eventually support skills like possesion maybe?
-
-			// NOTE: this does not work for mirror matches.
-			//       we need to do additional 'guessing' for that.
-
-			const hasExistingUnit = this.units.find(unit => {
-				return unit.itemId === fixedItemId;
-			});
-
-			// if you don't have this hero in your list
-			// of units, then we move on
-			if (!hasExistingUnit) {
-				return;
-			}
+		if (!this.isPlayersRace(fixedItemId) && !this.findUnitByItemId(fixedItemId)) {
+			console.log("Early exit. wrong race.");
+			return;
 		}
 
 		let newlyRegisteredUnits = this.assignPossibleSelectGroup(fixedItemId);
@@ -379,113 +365,31 @@ const Player = class {
 		// could not find registered unit by itemId1-2
 		// we didn't register any new units from possible select group
 		if (!firstGroupUnit && !newlyRegisteredUnits.length) {
-			// look for a unit by the itemId to maybe register
-			let unregisteredUnit = this.findUnregisteredUnitByItemId(fixedItemId);
-			
-			if (unregisteredUnit) {
-				// re-assign the objectIds1-2 / itemIds1-2
-				// because we're now certain for at least this unit
-
-				let existingUnits = this.units.filter(unit => {
-					return unit.itemId === fixedItemId;
-				});
-
-				// only one of these units is known to exist
-				// so we know to update it
-				if (existingUnits.length === 1) {
-					let existingUnit = existingUnits[0];
-
-					existingUnit.registerObjectIds(objectId1, objectId2);
-				} else {
-					unregisteredUnit.registerUnit(fixedItemId, objectId1, objectId2);
-					unregisteredUnit.registerItemIds(itemId1, itemId2);
-
-					if (unregisteredUnit.meta.hero && unregisteredUnit.knownLevel === 0) {
-						console.log(
-							this.id, 
-							'Registered unit 1', 
-							unregisteredUnit.displayName,
-							unregisteredUnit.knownLevel
-						);
-						console.log(action);
-						console.log("*************************");
-					}
-
-					unregisteredUnit.spawning = false;
-					unregisteredUnit.selected = true;
-
-					this.unregisteredUnitCount--;
-				}
-				
-				this.assignKnownUnits();
-				this.updatingSubgroup = false;
-			} else {
-
-				let existingUnits = this.units.filter(unit => {
-					return unit.itemId === fixedItemId;
-				});
-
-				// only one of these units is known to exist
-				// so we know to update it
-				if (existingUnits.length === 1) {
-					let existingUnit = existingUnits[0];
-					existingUnit.registerObjectIds(objectId1, objectId2);
-				} else {
-					// possibly spawned unit was selected?
-					let possibleUnit = mappings.getUnitInfo(fixedItemId);
-					if (possibleUnit.isUnit) {
-						console.log(1, "Selected a spawned unit", possibleUnit.displayName);
-
-						let newUnit = new Unit(null, null, fixedItemId, false);
-						this.units.push(newUnit);
-
-						this.unregisteredUnitCount++;
-					} else {
-						console.log("^^^^ Unknown action performed: ", fixedItemId);
-						console.log("Possible unit: ", possibleUnit);
-					}
-				}
-			}
+			PlayerActions.selectSubGroupWithNoKnowns(
+				this,
+				fixedItemId,
+				itemId1, 
+				itemId2,
+				objectId1,
+				objectId2
+			);
 		} else {
+			console.log("selectSubgroup 4");
 
-			if (firstGroupUnit.objectId1 === null) {
-				firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
-				firstGroupUnit.spawning = false;
-				firstGroupUnit.selected = true;
-
-				this.updatingSubgroup = false;
-				this.assignKnownUnits();
+			if (firstGroupUnit) {
+				PlayerActions.registerSubGroupFocusUnit(
+					this,
+					firstGroupUnit,
+					fixedItemId,
+					itemId1, 
+					itemId2,
+					objectId1,
+					objectId2
+				);
+			} else {
+				console.log("didn't find a first group unit");
+				throw new Error("stop");
 			}
-
-			// if (firstGroupUnit) {
-			// 	// we're certain about this unit being our selection
-			// 	console.log("First unit before: ", firstGroupUnit.objectId1, firstGroupUnit.objectId2)
-			// 	console.log("Changing to: ", objectId1, objectId2);
-
-			// 	firstGroupUnit.registerUnit(fixedItemId, objectId1, objectId2);
-
-			// 	if (firstGroupUnit.meta.hero && firstGroupUnit.knownLevel === 0) {
-			// 		console.log(
-			// 			this.id, 
-			// 			'Registered unit 2', 
-			// 			firstGroupUnit.displayName,
-			// 			firstGroupUnit.knownLevel
-			// 		);	
-
-			// 		console.log(action);
-			// 		console.log("*************************");
-					
-			// 	}
-
-			// 	this.unregisteredUnitCount--;
-
-			// 	this.assignKnownUnits();
-
-			// 	firstGroupUnit.spawning = false;
-			// 	firstGroupUnit.selected = true;
-
-			// 	this.updatingSubgroup = false;
-			// }
 		}
 	}
 
@@ -601,7 +505,7 @@ const Player = class {
 								
 								console.log(this.id, "Item used: ", heroItem.displayName);
 							} else {
-								console.log(this.id, "Item object mismatch.", heroItem);
+								console.log(this.id, "Item object mismatch. Item in wrong slot:", heroItem.displayName);
 							}
 						break;
 
@@ -818,26 +722,23 @@ const Player = class {
 				break;
 			};
 			
-		} else {
-			let unitInfo = mappings.getUnitInfo(itemId);
-			switch (abilityFlags) {
-				// learn skill
-				case abilityFlagNames.Summon:
-					if (this.tavernSelected) {
-						let newTavernHero = new Unit(null, null, itemId, false);
-						this.setHeroSlot(newTavernHero);
-
-						console.log(this.id, "Creating tavern hero: ", unitInfo.displayName);
-						this.units.push(newTavernHero);
-						this.unregisteredUnitCount++;
-					}
-				break;
-
-				default:
-					console.error("Empty selection, no match on ability.");
-				break;
-			}
 		}
+		
+		let unitInfo = mappings.getUnitInfo(itemId);
+		switch (abilityFlags) {
+			// learn skill
+			case abilityFlagNames.Summon:
+				if (this.tavernSelected) {
+					let newTavernHero = new Unit(null, null, itemId, false);
+					this.setHeroSlot(newTavernHero);
+
+					console.log(this.id, "Creating tavern hero: ", unitInfo.displayName);
+					this.units.push(newTavernHero);
+					this.unregisteredUnitCount++;
+				}
+			break;
+		}
+		
 
 		if (this.possibleRegisterItem) {
 			// todo: is this needed?
@@ -893,8 +794,11 @@ const Player = class {
 
 		if (!firstUnit) {
 			console.error("Trying to use ability without selected unit.");
-			console.error(this.selection);
-
+			
+			let firstSelectionItem = this.selection.units[0];
+			console.log("Selection units: ", this.selection.numberUnits, this.selection.units.length)
+			console.log("First sel item: ", firstSelectionItem);
+			
 			return;
 		}
 
@@ -934,11 +838,8 @@ const Player = class {
 			break;
 			case 'RightClick':
 				if (firstUnit && firstUnit.isBuilding) {
-					console.log(this.id, "Building used ability with target + object id");
-
 					if (objectId1 === -1 && objectId2 === -1) {
 						// clicked on ground
-						console.log(this.id, "Set rally point for: ", firstUnit.displayName);
 						firstUnit.rallyPoint = {
 								type: "ground",
 								pt: {
@@ -950,16 +851,12 @@ const Player = class {
 							};
 					} else {
 						// clicked object directly
-						console.log(this.id, "Clicked object directly.");
 						let clickedUnit = this.units.find(unit => {
 							return unit.objectId1 === objectId1 &&
 										 unit.objectId2 === objectId2;
 						});
 
 						if (clickedUnit) {
-							console.log(this.id, "Unit selected: ", firstUnit.displayName);
-							console.log(this.id, "Clicked ability on unit: ", clickedUnit.displayName);
-
 							firstUnit.rallyPoint = {
 								type: "unit",
 								pt: {
@@ -970,7 +867,19 @@ const Player = class {
 								objectId2: objectId2
 							};
 						} else {
-							console.log(this.id, "Could not find unit that was clicked.");
+							// unknown unit clicked as rally
+							// probably a tree or goldmine, maybe a unit
+							this.world.addUnknownObject(objectId1, objectId2);
+
+							firstUnit.rallyPoint = {
+								type: "unit",
+								pt: {
+									x: targetX,
+									y: targetY
+								},
+								objectId1: objectId1,
+								objectId2: objectId2
+							};
 						}
 					}
 				} else if (firstUnit && firstUnit.meta.hero) {
@@ -995,6 +904,11 @@ const Player = class {
 						}
 					}
 
+				} else if (firstUnit && firstUnit.isUnit) {
+					// moving non-hero units
+					units.forEach(unit => {
+						unit.moveTo(targetX, targetY);
+					});
 				} else {
 					console.log(this.id, "At bottom of right click.");
 				}
