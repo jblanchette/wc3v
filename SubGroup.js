@@ -28,6 +28,21 @@ const SubGroup = class {
 		this.numberUnits += otherGroup.numberUnits;
 		this.units = this.units.concat(otherGroup.units);
 	}
+
+	// debug method
+	printGroup () {
+		console.error("Num Units: ", this.numberUnits);
+		console.error("Has Unreg Units: ", this.hasUnregisteredUnit);
+		console.error("Units: ");
+
+		if (!this.units.length) {
+			console.error("Empty unit list.");
+		}
+
+		this.units.forEach(badUnit => {
+			console.error(badUnit);
+		});
+	}
 };
 
 module.exports = SubGroup;
