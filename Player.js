@@ -9,6 +9,7 @@ const {
 } = mappings;
 
 const Unit = require("./Unit"),
+			Hero = require("./Hero"),
 			Building = require("./Building"),
       SubGroup = require("./SubGroup"),
       PlayerActions = require("./PlayerActions");
@@ -249,15 +250,10 @@ const Player = class {
 
 	assignPossibleSelectGroup (itemId) {
 		let self = this;
-		let registeredUnits = [];
-		let hasFoundUnit = false;
+		const selectionUnits = this.selection.units;
 
-		this.selection.units.forEach(selectionUnit => {
-			if (hasFoundUnit) {
-				return;
-			}
-
-			const foundUnit = self.possibleSelectList.find(selectItem => {
+		return selectionUnits.reduce((registeredUnitsAcc, selectionUnit) => {
+			self.possibleSelectList.some(selectItem => {
 				const { itemId1, itemId2 } = selectItem;
 
 				const foundSelectionUnit = (
@@ -275,24 +271,18 @@ const Player = class {
 						foundPlayerUnit.registerItemIds(itemId1, itemId2);
 						self.unregisteredUnitCount--;
 
-						registeredUnits.push(foundPlayerUnit);
+						registeredUnitsAcc.push(foundPlayerUnit);
 						self.debugRegister.push(foundPlayerUnit.displayName);
 
-						return true;
-					} else {
-						return false;
+						return;
 					}
-				} else {
-					return false;
 				}
+
+				return;
 			});
 
-			if (foundUnit) {
-				hasFoundUnit = true;
-			}
-		});
-
-		return registeredUnits;
+			return registeredUnitsAcc;
+		}, []);
 	}
 
 	checkItemAssignments (hero, checkSlot, objectId1, objectId2) {
@@ -402,41 +392,44 @@ const Player = class {
     let hasUnregisteredUnitFlag = false;
     let subGroup = new SubGroup(numberUnits, subActions);
 
-    if (selectMode === SelectModes.select) {
-    	// register first-time selected units
-    	subActions.forEach(subAction => {
-    		const {itemId1, itemId2} = subAction;
-    		let unit = self.findUnit(itemId1, itemId2);
-    		
-    		if (!unit) {
-  			  // we can't know for sure
-  				// that this unit needs to be made or registered yet
-  				self.possibleSelectList.push({
-  					itemId1: itemId1,
-  					itemId2: itemId2
-  				});
-
-    			hasUnregisteredUnitFlag = true;
-    		} else {
-    			unit.setAliveFlags();
-    		}
-    	});
-
-    	if (this.selection === null) {
-    		// no sub-group yet.  assign our newly selected one
-    		this.selection = subGroup;	
-    	} else {
-    		// merge our selected sub groups
-    		this.selection.mergeGroups(subGroup);
-    	}
-
-    	if (hasUnregisteredUnitFlag) {
-    		this.selection.hasUnregisteredUnit = true;
-    	}	
-    } else {
+    if (selectMode === SelectModes.deselect) {
     	// de-selected unit
     	this.selection.deselect(subGroup);
+
+    	return;
     }
+
+  	// register first-time selected units
+  	subActions.forEach(subAction => {
+  		const {itemId1, itemId2} = subAction;
+  		let unit = self.findUnit(itemId1, itemId2);
+  		
+  		if (unit) {
+  			unit.setAliveFlags();
+  			return;
+  		}
+		  
+		  // we can't know for sure
+			// that this unit needs to be made or registered yet
+			self.possibleSelectList.push({
+				itemId1: itemId1,
+				itemId2: itemId2
+			});
+
+			hasUnregisteredUnitFlag = true;
+  	});
+
+  	if (this.selection === null) {
+  		// no sub-group yet.  assign our newly selected one
+  		this.selection = subGroup;	
+  	} else {
+  		// merge our selected sub groups
+  		this.selection.mergeGroups(subGroup);
+  	}
+
+  	if (hasUnregisteredUnitFlag) {
+  		this.selection.hasUnregisteredUnit = true;
+  	}
 	}
 
 	useAbilityNoTarget (action) {
@@ -449,282 +442,57 @@ const Player = class {
 			unknownB
 		} = action;
 		
+		const unitInfo = mappings.getUnitInfo(itemId);
 		let selectedUnits = this.getSelectionUnits();
 
 		if (selectedUnits.length) {
 			let firstUnit = selectedUnits[0];
 
-			if (isItemArray) {
-				if (firstUnit.meta.hero) {
-					const abilityActionName = utils.findItemIdForObject(itemId, abilityActions);
-
-					switch (abilityActionName) {
-						case 'CastSummonSkill':
-							console.log("Unit called summon skill: ", firstUnit.displayName);
-
-							let skill = firstUnit.getSkillForType("summon");
-							console.log("Skill: ", skill);
-
-							if (!skill) {
-								console.error("Cound not find skill.", firstUnit);
-								return;
-							}
-
-							const {summonCount, summonItemId } = skill;
-							for (let i = 0; i < summonCount; i++) {
-								console.log("Making unit: ", i, summonItemId);
-
-								let summonUnit = new Unit(null, null, summonItemId, false);
-								
-								this.units.push(summonUnit);
-								this.unregisteredUnitCount++;
-							}
-						break;
-
-						case 'HeroItem1':
-						case 'HeroItem2':
-						case 'HeroItem3':
-						case 'HeroItem4':
-						case 'HeroItem5':
-						case 'HeroItem6':
-							let itemSlot = abilityActionName.substring(abilityActionName.length - 1);
-
-							console.log(this.id, "Used item slot: ", itemSlot);
-							let heroItem = firstUnit.items[itemSlot];
-
-							if (!heroItem) {
-								console.log("Used item but hero had null item slot.");
-
-								const heroItems = firstUnit.getItemList();
-
-								console.log("Possible items: ", heroItems.map(item => { return item.item.displayName; }));
-
-							} else if (heroItem &&
-								heroItem.objectId1 === unknownA &&
-								heroItem.objectId2 === unknownB) {
-								
-								console.log(this.id, "Item used: ", heroItem.displayName);
-							} else {
-								console.log(this.id, "Item object mismatch. Item in wrong slot:", heroItem.displayName);
-							}
-						break;
-
-						default:
-							console.log("Unknown ability with no target.");
-							console.log("Item ID: ", itemId);
-							console.log("Action: ", action);
-							console.log("***************************");
-						break;
-					};
-				} else if (firstUnit.isBuilding) {
-					console.log("Building ability no target.");
-
-					switch (abilityFlags) {
-						case abilityFlagNames.CancelTrainOrResearch:
-							// TODO: support a backlog queue of trained units
-							//       we probably just need to remove the 'last added'
-							//       from list for most cases
-
-							if (!firstUnit.trainedUnits.length) {								
-								// buildings that have no record of training a unit
-								// should mean this building canceled itself while
-								// it was being made.
-
-								const buildingRemoveIndex = this.units.findIndex(unit => {
-									return unit.itemId === firstUnit.itemId &&
-												 (utils.isEqualItemId(unit.itemId1, firstUnit.itemId1) &&
-												  utils.isEqualItemId(unit.itemId2, firstUnit.itemId2))
-								});
-
-								if (buildingRemoveIndex === -1) {
-									console.error("Could not find building to cancel: ", firstUnit.itemId);
-									return;
-								}
-
-								const removeBuilding = this.units[buildingRemoveIndex];
-								console.log(this.id, "Removing canceled building: ", removeBuilding.displayName);
-
-								this.units.splice(buildingRemoveIndex, 1);
-								this.unregisteredUnitCount--;
-
-								return;
-							}
-
-							const removeIndex = firstUnit.trainedUnits.findIndex(unit => {
-								return !unit.completed;
-							});
-							const removeItem = firstUnit.trainedUnits[removeIndex];
-
-							if (!removeItem) {
-								console.error("Nothing to remove from training list?");
-								console.log("Building: ", firstUnit);
-								return;
-							}
-
-							const unitRemoveIndex = this.units.findIndex(unit => {
-								return unit.itemId === removeItem.itemId &&
-								       unit.itemId1 === null &&
-								       unit.objectId1 === null;
-							});
-
-							if (unitRemoveIndex === -1) {
-								// note: this is okay sometimes it seems.
-								return;
-							}
-
-							const removeUnit = this.units[unitRemoveIndex];
-							console.log("Removing non-finished unit: ", removeUnit.displayName);
-
-							this.units.splice(unitRemoveIndex, 1);
-							this.unregisteredUnitCount--;
-						break;
-
-						default:
-							console.log("Building used unknown ability.");
-						break;
-					}
+			if (firstUnit.meta.hero) {
+				if (isItemArray) {
+					Hero.doAbilityNoTargetItemArray(
+						this,
+						firstUnit,
+						itemId,
+						abilityFlags,
+						unknownA,
+						unknownB
+					);
+				} else {
+					Hero.doAbilityNoTargetItemId(
+						this,
+						firstUnit,
+						itemId,
+						abilityFlags,
+						unknownA,
+						unknownB
+					);
 				}
-
-				return;
 			}
 
-			// not an itemId array
-			// we have a string itemId now
-			let unitInfo = mappings.getUnitInfo(itemId);
-
-			switch (abilityFlags) {
-				// learn skill
-				case abilityFlagNames.LearnSkillOrTrain:
-					if (firstUnit.meta.hero) {
-						let spell = mappings.heroAbilities[itemId];
-						if (!firstUnit.learnedSkills[itemId]) {
-							// learning first level
-							spell.level = 1;
-
-							firstUnit.learnedSkills[itemId] = spell;
-							console.log("%% Learned spell: ", spell);
-						} else {
-							firstUnit.learnedSkills[itemId].level++;
-							console.log("Leveled up skill: ", firstUnit.learnedSkills[itemId]);
-						}
-
-						firstUnit.knownLevel++;
-
-						console.log(this.id, "Hero leveled up: ", firstUnit.displayName, firstUnit.knownLevel);
-					} else if (firstUnit.isBuilding) {
-						console.log(this.id, "Building is training a unit.", unitInfo.displayName);
-
-						// building spawned a unit into world
-						let newUnit = new Unit(null, null, itemId, false);
-						firstUnit.trainedUnits.push({
-							itemId: itemId,
-							completed: false
-						});
-
-						console.log(this.id, "Making trained unit: ", newUnit.displayName);	
-
-						this.units.push(newUnit);
-						this.unregisteredUnitCount++;
-					}
-				break;
-
-				case abilityFlagNames.TrainUnit:
-					if (firstUnit.isBuilding) {
-						if (unitInfo && unitInfo.isUnit) {
-							if (unitInfo.isBuilding) {
-								// building upgraded itself
-
-								console.log("Building upgraded itself: ", unitInfo.displayName);
-								firstUnit.upgradeBuilding(itemId);
-							} else if (unitInfo.isUnit) {
-								// building spawned a unit into world
-								let newUnit = new Unit(null, null, itemId, false);
-
-								// NOTE: for some unknown reason, TrainUnit actions
-								//       can show up in a replay even when there
-								//       was one previously issued - with no actions in between.
-								//       
-								//       heroes are unique units, so we just prevent
-								//       the command issued from doing anything,
-								//       and wait for an actual CancelTrainOrResearch action
-
-								if (unitInfo.meta.hero) {
-									console.log(1, "Making a hero.");
-
-									const inTraining = firstUnit.trainedUnits.filter(unit => {
-										return !unit.completed && unit.itemId === itemId;
-									});
-
-									if (inTraining.length) {
-										console.log(1, "Stopping double hero train.");
-										return;	
-									}
-									
-									this.setHeroSlot(newUnit);
-								}
-
-								firstUnit.trainedUnits.push({
-									itemId: itemId,
-									completed: false
-								});
-
-								console.log(this.id, "Making trained unit: ", newUnit.displayName);		
-								this.units.push(newUnit);
-								this.unregisteredUnitCount++;
-							}
-						}
-					}
-				break;
-				case abilityFlagNames.CancelTrainOrResearch:
-
-					if (unitInfo.isItem) {
-						console.log(this.id, "Hero bought an item: ", unitInfo.displayName);
-						console.log(this.id, "Item objectIds: ", unknownA, unknownB);
-
-						let rallyPoint = firstUnit.rallyPoint;
-						if (rallyPoint && rallyPoint.type === "unit") {							
-							let shopUnit = this.findUnitByObjectId(rallyPoint.objectId1, rallyPoint.objectId2);
-
-							shopUnit.giveItem(itemId);
-							console.log(this.id, "Shop has known unit rally, giving item: ", shopUnit.displayName );
-						} else {
-							console.log(this.id, "No known unit to give item to, try to find closest hero.");
-							console.log(this.id, "Shop position: ", firstUnit.currentX, firstUnit.currentY);
-
-							let heroes = this.units.filter(unit => {
-								return unit.meta.hero;
-							});
-
-							let closestHero = utils.closestToPoint(
-								firstUnit.currentX, 
-								firstUnit.currentY,
-								heroes
-							);
-
-							console.log(this.id, `Giving item ${unitInfo.displayName} to ${closestHero.displayName}`);
-							closestHero.giveItem(itemId, false);
-						}
-					} else {
-						firstUnit.upgradeBuilding(itemId);	
-						console.log(
-							this.id, 
-							"Building researched upgrade: ", 
-							firstUnit.displayName,
-							unitInfo.displayName
-						);
-					}
-					
-
-				break;
-				default:
-					console.log("No match for ability flag");
-					console.log("Unit info for itemId: ", unitInfo);
-				break;
-			};
-			
+			if (firstUnit.isBuilding || unitInfo.isItem) {
+				if (isItemArray) {
+					Building.doAbilityNoTargetItemArray(
+						this,
+						firstUnit,
+						itemId,
+						abilityFlags,
+						unknownA,
+						unknownB
+					);
+				} else {
+					Building.doAbilityNoTargetItemId(
+						this,
+						firstUnit,
+						itemId,
+						abilityFlags,
+						unknownA,
+						unknownB
+					);	
+				}
+			}
 		}
 		
-		let unitInfo = mappings.getUnitInfo(itemId);
 		switch (abilityFlags) {
 			// learn skill
 			case abilityFlagNames.Summon:
@@ -794,10 +562,7 @@ const Player = class {
 
 		if (!firstUnit) {
 			console.error("Trying to use ability without selected unit.");
-			
-			let firstSelectionItem = this.selection.units[0];
-			console.log("Selection units: ", this.selection.numberUnits, this.selection.units.length)
-			console.log("First sel item: ", firstSelectionItem);
+			this.selection.printGroup();
 			
 			return;
 		}
@@ -838,71 +603,26 @@ const Player = class {
 			break;
 			case 'RightClick':
 				if (firstUnit && firstUnit.isBuilding) {
-					if (objectId1 === -1 && objectId2 === -1) {
-						// clicked on ground
-						firstUnit.rallyPoint = {
-								type: "ground",
-								pt: {
-									x: targetX,
-									y: targetY
-								},
-								objectId1: null,
-								objectId2: null
-							};
-					} else {
-						// clicked object directly
-						let clickedUnit = this.units.find(unit => {
-							return unit.objectId1 === objectId1 &&
-										 unit.objectId2 === objectId2;
-						});
 
-						if (clickedUnit) {
-							firstUnit.rallyPoint = {
-								type: "unit",
-								pt: {
-									x: targetX,
-									y: targetY
-								},
-								objectId1: objectId1,
-								objectId2: objectId2
-							};
-						} else {
-							// unknown unit clicked as rally
-							// probably a tree or goldmine, maybe a unit
-							this.world.addUnknownObject(objectId1, objectId2);
-
-							firstUnit.rallyPoint = {
-								type: "unit",
-								pt: {
-									x: targetX,
-									y: targetY
-								},
-								objectId1: objectId1,
-								objectId2: objectId2
-							};
-						}
-					}
+					Building.doAbilityRightClickWithTargetAndObjectId(
+						this,
+						firstUnit,
+						objectId1,
+						objectId2,
+						targetX,
+						targetY
+					);
+					
 				} else if (firstUnit && firstUnit.meta.hero) {
 
-					if (objectId1 === -1 && objectId2 === -1) {
-						units.forEach(unit => {
-							unit.moveTo(targetX, targetY);
-						});
-					} else {
-						console.log(this.id, "hero clicked on an object.");
-						let droppedItem = this.world.findDroppedItem(objectId1, objectId2);
-
-						if (droppedItem) {
-							console.log(this.id, "Found a dropped item in the world: ", droppedItem.displayName);
-
-							firstUnit.tradeItem(droppedItem);
-							this.world.removeDroppedItem(objectId1, objectId2);
-						} else {
-							// add unknown object to world track list
-							console.log(this.id, "Added unknown object to world.");
-							this.world.addUnknownObject(objectId1, objectId2);
-						}
-					}
+					Hero.doAbilityRightClickWithTargetAndObjectId(
+						this,
+						firstUnit,
+						objectId1,
+						objectId2,
+						targetX,
+						targetY
+					);
 
 				} else if (firstUnit && firstUnit.isUnit) {
 					// moving non-hero units

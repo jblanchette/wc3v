@@ -1,6 +1,6 @@
 
 const config = {
-	debugActions: false,
+	debugActions: true,
 	debugPlayer: null,
 	replayPaths: [
 	  {
