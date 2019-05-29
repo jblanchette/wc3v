@@ -90,6 +90,11 @@ paths.forEach(path => {
           }
         });
 
+        if (unit.isIllusion) {
+          console.log(`${unit.displayName} (Illusion)`);
+          return;
+        }
+
         console.log(unit.displayName, `(${unit.knownLevel})`, "items: ", items);
         console.log("IDs: ", unit.itemId1, unit.itemId2, unit.objectId1, unit.objectId2);
         
