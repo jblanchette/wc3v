@@ -491,6 +491,8 @@ const Player = class {
 					);	
 				}
 			}
+
+			return;
 		}
 		
 		switch (abilityFlags) {
@@ -505,46 +507,6 @@ const Player = class {
 					this.unregisteredUnitCount++;
 				}
 			break;
-		}
-		
-
-		if (this.possibleRegisterItem) {
-			// todo: is this needed?
-
-			console.log("%%% unit called an ability that might be unreg.", itemId);
-
-			// note: we also have the possible reg item itemId
-			//       to use to verify the possible reg item is valid
-
-			// let targetItemId = null;
-			// let targetUnitInfo = mappings.getUnitInfo(itemId);
-
-			// if (targetUnitInfo.isUnit) {
-			// 	// ability is making a unit
-			// 	const meta = targetUnitInfo.meta;
-			// 	if (meta.hero) {
-			// 		// alter of storms
-			// 		targetItemId = "oalt";
-			// 	}
-			// }
-
-			// if (targetItemId) {
-			// 	// found a target to try and assign
-			// 	let possibleUnit = this.UnregisteredUnitByItemId(targetItemId);
-
-			// 	if (possibleUnit) {
-			// 		const { itemId, objectId1, objectId2 } = this.possibleRegisterItem;
-
-			// 		if (utils.fixItemId(itemId) === possibleUnit.itemId) {
-			// 			// note: maybe use this?
-			// 		}
-
-			// 		// TOOD: maybe swap object ids around here?
-
-			// 		possibleUnit.registerObjectIds(objectId1, objectId2);
-			// 		this.unregisteredUnitCount--;
-			// 	}
-			// }
 		}
 	} 
 
@@ -630,7 +592,7 @@ const Player = class {
 						unit.moveTo(targetX, targetY);
 					});
 				} else {
-					console.log(this.id, "At bottom of right click.");
+					console.log(this.id, "At bottom of right click.", firstUnit);
 				}
 				
 			break;
