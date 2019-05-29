@@ -12,7 +12,7 @@ const extraUnits = {
     'ucs1': 'Carrion Beetle (lvl 1)',
     'ucs2': 'Carrion Beetle (lvl 2)',
     'ucs3': 'Carrion Beetle (lvl 3)',
-    'ucs4': 'Carrion Beetle (lvl 4)',
+    'ucs4': 'Carrion Beetle (lvl 4)'
 };
 
 Object.keys(extraUnits).forEach(key => {

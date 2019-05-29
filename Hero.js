@@ -11,6 +11,12 @@ const {
 } = mappings;
 
 const Hero = class extends Unit {
+	constructor (itemId1, itemId2, knownItemId, isSpawnedAtStart = false) {
+		super(itemId1, itemId2, knownItemId, isSpawnedAtStart);
+
+		this.isIllusion = false;
+	}
+
 	static doAbilityRightClickWithTargetAndObjectId (
 		player,
 		focusUnit,

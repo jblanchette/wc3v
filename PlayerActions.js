@@ -72,7 +72,17 @@ const PlayerActions = class {
 				console.log("updating known unit: ", existingUnit.displayName);
 
 				if (existingUnit.meta.hero) {
-					console.log("Possible illusion of hero detected.");
+					console.log("Illusion of hero detected.");
+						
+					let newUnit = new Unit(null, null, fixedItemId, false);
+					newUnit.registerObjectIds(objectId1, objectId2);
+					newUnit.registerItemIds(itemId1, itemId2);
+
+					newUnit.isIllusion = true;
+
+					player.units.push(newUnit);
+					player.unregisteredUnitCount++;
+
 					return;
 				}
 
