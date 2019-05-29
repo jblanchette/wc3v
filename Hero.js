@@ -56,6 +56,7 @@ const Hero = class extends Unit {
 
 		switch (abilityActionName) {
 			case 'CastSummonSkill':
+			case 'CastSummonSkillNoTarget':
 				console.log("Unit called summon skill: ", focusUnit.displayName);
 
 				let skill = focusUnit.getSkillForType("summon");
@@ -109,7 +110,7 @@ const Hero = class extends Unit {
 				console.log("Unknown hero ability with no target.");
 				console.log("Hero: ", focusUnit.displayName);
 				console.log("Item ID: ", itemId);
-				console.log("Action: ", action);
+				console.log("Ability flags: ", abilityFlags);
 				console.log("***************************");
 			break;
 		};

@@ -8,7 +8,11 @@ let {
 
 const extraUnits = {
 	'AOsf': 'Feral Spirit',
-	'uske': 'Skeleton Warrior'
+	'uske': 'Skeleton Warrior',
+    'ucs1': 'Carrion Beetle (lvl 1)',
+    'ucs2': 'Carrion Beetle (lvl 2)',
+    'ucs3': 'Carrion Beetle (lvl 3)',
+    'ucs4': 'Carrion Beetle (lvl 4)',
 };
 
 Object.keys(extraUnits).forEach(key => {
@@ -265,7 +269,7 @@ const allItemIds = {
     'AUan': 'Animate Dead',
     'AUau': 'Unholy Aura',
     'AUav': 'Vampiric Aura',
-    'AUc': 'Carrion Beetles',
+    'ucs1': 'Carrion Beetles',
     'AUcs': 'Carrion Swarm',
     'AUdc': 'Death Coil',
     'AUdd': 'Death and Decay',
@@ -1011,7 +1015,12 @@ const heroAbilities = {
    'AUdd': { 'displayName': 'Death and Decay'},
    'AUim': { 'displayName': 'Impale'},
    'AUts': { 'displayName': 'Spiked Carapace'},
-   'AUc': { 'displayName': 'Carrion Beetles'},
+   'AUcb': { 
+      'displayName': 'Carrion Beetles',
+      'type': 'summon',
+      'summonCount': 1,
+      'summonItemId': 'ucs1'
+   },
    'AUls': { 'displayName': 'Locust Swarm'},
    'ANbf': { 'displayName': 'Breath of Fire'},
    'ANd': { 'displayName': 'Drunken Brawler'},
@@ -1085,6 +1094,7 @@ const abilityActions = {
 	'CastSkillObject': [-105, 0, 13, 0],
 	'CastSkillTarget': [154, 0, 13, 0],
 	'CastSummonSkill': [158, 0, 13, 0],
+    'CastSummonSkillNoTarget': [ 74, 2, 13, 0 ],
     'HeroItem1': [ 40, 0, 13, 0 ],
     'HeroItem2': [ 41, 0, 13, 0 ],
     'HeroItem3': [ 42, 0, 13, 0 ],
