@@ -33,20 +33,24 @@ const findItemIdForObject = (itemId, focusObject) => {
 };
 
 const distance = (pX, pY, qX, qY) => { 
-	const dx   = pX - qX;         
-  const dy   = pY - qY;         
-
-  return Math.sqrt( dx*dx + dy*dy ); 
+	console.log("unit 1: ", pX, pY, "unit 2: ", qX, qY);
+	console.log("r: ", Math.hypot(Math.abs(qX - pX), Math.abs(qY - pY)));
+	return Math.hypot(Math.abs(qX - pX), Math.abs(qY - pY)); 
 };
 
-const closestToPoint = (x, y, units) => {
+const closestToPoint = (x, y, units, filterFn) => {
+	if (filterFn) {
+		units = units.filter(filterFn);
+	}
+
 	let positions = units.map(unit => {
 
+		console.log(unit.displayName);
 		return {
 			unit: unit,
 			distance: distance(
-				x, unit.currentX,
-				y, unit.currentY
+				x, y,
+				unit.currentX, unit.currentY
 			)
 		};
 	});
@@ -54,7 +58,6 @@ const closestToPoint = (x, y, units) => {
 	positions.sort(item => {
 		return item.distance;
 	});
-	positions.reverse();
 
 	const winner = positions[0];
 	return winner && winner.unit || null;

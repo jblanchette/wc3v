@@ -1,4 +1,4 @@
-const w3gMappings = require("./node_modules/w3gjs/lib/mappings");
+const w3gMappings = require("../node_modules/w3gjs/lib/mappings");
 
 let {
 	units,
@@ -25,28 +25,36 @@ const unitMetaData = {
 		'hero': false,
 		'worker': true,
 		'permanent': true,
-        'playerShop': false
+        'playerShop': false,
+        'race': 'O',
+        'movespeed': 190
 	},
 	'uaco': {
 		'displayName': 'Acolyte',
 		'hero': false,
 		'worker': true,
 		'permanent': true,
-        'playerShop': false
+        'playerShop': false,
+        'race': 'U',
+        'movespeed': 235
 	},
 	'ewsp': {
 		'displayName': 'Wisp',
 		'hero': false,
 		'worker': true,
 		'permanent': true,
-        'playerShop': false
+        'playerShop': false,
+        'race': 'E',
+        'movespeed': 270
 	},
 	'hpea': {
 		'displayName': 'Peasent',
 		'hero': false,
 		'worker': true,
 		'permanent': true,
-        'playerShop': false
+        'playerShop': false,
+        'race': 'H',
+        'movespeed': 190
 	},
 	'Hamg': {
 		'displayName': 'Archmage',
@@ -1095,6 +1103,7 @@ const abilityActions = {
 	'CastSkillTarget': [154, 0, 13, 0],
 	'CastSummonSkill': [158, 0, 13, 0],
     'CastSummonSkillNoTarget': [ 74, 2, 13, 0 ],
+    'UnsummonBuilding': [ -14, 0, 13, 0 ],
     'HeroItem1': [ 40, 0, 13, 0 ],
     'HeroItem2': [ 41, 0, 13, 0 ],
     'HeroItem3': [ 42, 0, 13, 0 ],
