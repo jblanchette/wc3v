@@ -1,10 +1,10 @@
 
 const config = {
 	debugActions: true,
-	debugPlayer: null,
+	debugPlayer: 1,
 	replayPaths: [
 	  {
-	    'file': 'replays/happy_vs_grubby.w3g'
+	    'file': './replays/test-move-square.w3g'
 	  }
 	]
 };

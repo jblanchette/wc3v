@@ -1,0 +1,129 @@
+Parsing file:  replays/test-cancel-building.w3g
+====================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 7400
+====================================
+player time delta:  7400 ms
+====================================
+ActionName: SinglePlayerCheat-13 PID: 1
+Action: { actionId: 45 }
+Game Timer: 10000
+====================================
+player time delta:  2600 ms
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 10900
+====================================
+player time delta:  900 ms
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 10900
+====================================
+player time delta:  0 ms
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 13079,
+  objectId2: 13085 }
+Game Timer: 10900
+====================================
+player time delta:  0 ms
+assign possible select units
+assign possible sel group itemId:  uaco
+Looking for unit in group:  [ 23, 51, 0, 0 ] [ 29, 51, 0, 0 ]
+first group unit:  Acolyte
+selectSubgroup 4
+Registering unit:  uaco
+new itemIds:  [ 23, 51, 0, 0 ] [ 29, 51, 0, 0 ]
+new objIds:  13079 13085
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 8310.220703125,
+  targetY: 1529.576171875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 11500
+====================================
+player time delta:  600 ms
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 12498
+====================================
+player time delta:  998 ms
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'motu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 9088,
+  targetY: 1472 }
+Game Timer: 15996
+====================================
+player time delta:  3498 ms
+adding player building:  utom Tomb of Relics
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 8535.1689453125,
+  targetY: 1430.40380859375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 18296
+====================================
+player time delta:  2300 ms
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 21296
+====================================
+player time delta:  3000 ms
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'motu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 8896,
+  targetY: 1408 }
+Game Timer: 23096
+====================================
+player time delta:  1800 ms
+adding player building:  utom Tomb of Relics
+====================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 28596
+====================================
+player time delta:  5500 ms
+parse: 27.130ms
+************************************
+Inspecting player: 1
+Unit count: 6
+Unregistered units: 5
+Acolyte
+Acolyte
+Acolyte
+Necropolis (B)
+Tomb of Relics (B)
+Tomb of Relics (B)
+************************************

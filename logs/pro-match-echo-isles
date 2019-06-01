@@ -1,0 +1,151 @@
+Parsing file:  replays/test-unsummon.w3g
+assign possible select units
+assign possible sel group itemId:  uaco
+Looking for unit in group:  [ 23, 51, 0, 0 ] [ 29, 51, 0, 0 ]
+first group unit:  Acolyte
+selectSubgroup 4
+Registering unit:  uaco
+adding player building:  uaod Altar of Darkness
+assign possible select units
+assign possible sel group itemId:  uaod
+Looking for unit in group:  [ -47, 49, 0, 0 ] [ 7, 56, 0, 0 ]
+first group unit:  Altar of Darkness
+selectSubgroup 4
+Registering unit:  uaod
+JEFF
+1 'Making a hero.'
+1 'Gave first hero a TP item.'
+1 'Making trained unit: ' 'Death Knight'
+adding player unit:  Udea Death Knight
+assign possible select units
+assign possible sel group itemId:  Udea
+Looking for unit in group:  [ 42, 52, 0, 0 ] [ -115, 60, 0, 0 ]
+first group unit:  Death Knight
+selectSubgroup 4
+Registering unit:  Udea
+detected hero register
+1 'moving unit(s)'
+assign possible select units
+assign possible sel group itemId:  uaco
+Looking for unit in group:  [ 23, 51, 0, 0 ] [ 29, 51, 0, 0 ]
+first group unit:  Acolyte
+selectSubgroup 4
+Registering unit:  uaco
+assign possible select units
+assign possible sel group itemId:  Udea
+Looking for unit in group:  [ 42, 52, 0, 0 ] [ -115, 60, 0, 0 ]
+first group unit:  Death Knight
+selectSubgroup 4
+Registering unit:  Udea
+detected hero register
+1 'moving unit(s)'
+% Learned spell:  { displayName: 'Death Coil', level: 1 }
+1 'Hero leveled up: ' 'Death Knight' 1
+1 'moving unit(s)'
+assign possible select units
+assign possible sel group itemId:  uaco
+Looking for unit in group:  [ -2, 50, 0, 0 ] [ 4, 51, 0, 0 ]
+first group unit:  Acolyte
+selectSubgroup 4
+Registering unit:  uaco
+adding player building:  uaod Altar of Darkness
+assign possible select units
+assign possible sel group itemId:  unpl
+Looking for unit in group:  [ 102, 50, 0, 0 ] [ 102, 50, 0, 0 ]
+first group unit:  Necropolis
+selectSubgroup 4
+Registering unit:  unpl
+1 'Building researched upgrade: ' 'Halls of the Dead' 'Halls of the Dead'
+assign possible select units
+assign possible sel group itemId:  uaod
+Looking for unit in group:  [ -99, 48, 0, 0 ] [ 125, 70, 0, 0 ]
+first group unit:  Altar of Darkness
+selectSubgroup 4
+Registering unit:  uaod
+assign possible select units
+assign possible sel group itemId:  uaod
+Looking for unit in group:  [ -99, 48, 0, 0 ] [ 125, 70, 0, 0 ]
+first group unit:  Altar of Darkness
+selectSubgroup 4
+Registering unit:  uaod
+assign possible select units
+assign possible sel group itemId:  uaco
+Looking for unit in group:  [ -27, 50, 0, 0 ] [ -21, 50, 0, 0 ]
+selectSubgroup 1
+selectSubgroup 2
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Ziggurat
+assign possible select units
+assign possible sel group itemId:  uaod
+Looking for unit in group:  [ -99, 48, 0, 0 ] [ 125, 70, 0, 0 ]
+first group unit:  Altar of Darkness
+selectSubgroup 4
+Registering unit:  uaod
+1 'Making a hero.'
+1 'Making trained unit: ' 'Lich'
+adding player unit:  Ulic Lich
+assign possible select units
+assign possible sel group itemId:  Ulic
+Looking for unit in group:  [ 116, 53, 0, 0 ] [ -115, 88, 0, 0 ]
+first group unit:  Lich
+selectSubgroup 4
+Registering unit:  Ulic
+1 'moving unit(s)'
+% Learned spell:  { displayName: 'Frost Nova', level: 1 }
+1 'Hero leveled up: ' 'Lich' 1
+assign possible select units
+assign possible sel group itemId:  Udea
+Looking for unit in group:  [ 42, 52, 0, 0 ] [ -115, 60, 0, 0 ]
+first group unit:  Death Knight
+selectSubgroup 4
+Registering unit:  Udea
+detected hero register
+1 'moving unit(s)'
+assign possible select units
+assign possible sel group itemId:  Udea
+Looking for unit in group:  [ 42, 52, 0, 0 ] [ -115, 60, 0, 0 ]
+first group unit:  Death Knight
+selectSubgroup 4
+Registering unit:  Udea
+detected hero register
+% Learned spell:  { displayName: 'Unholy Aura', level: 1 }
+1 'Hero leveled up: ' 'Death Knight' 2
+1 'moving unit(s)'
+assign possible select units
+assign possible sel group itemId:  Ulic
+Looking for unit in group:  [ 116, 53, 0, 0 ] [ -115, 88, 0, 0 ]
+first group unit:  Lich
+selectSubgroup 4
+Registering unit:  Ulic
+1 'moving unit(s)'
+assign possible select units
+assign possible sel group itemId:  Udea
+Looking for unit in group:  [ 42, 52, 0, 0 ] [ -115, 60, 0, 0 ]
+first group unit:  Death Knight
+selectSubgroup 4
+Registering unit:  Udea
+detected hero register
+1 'moving unit(s)'
+parse: 43.152ms
+******************************
+Inspecting player: 1
+Unit count: 8
+Unregistered units: 0
+Acolyte
+Acolyte
+Acolyte
+Halls of the Dead (B)
+Altar of Darkness (B)
+Death Knight (2) items:  [ 'Scroll of Town Portal',
+  'empty',
+  'empty',
+  'empty',
+  'empty',
+  'empty' ]
+IDs:  [ 42, 52, 0, 0 ] [ -115, 60, 0, 0 ] 13354 15501
+---
+Altar of Darkness (B)
+Lich (1) items:  [ 'empty', 'empty', 'empty', 'empty', 'empty', 'empty' ]
+IDs:  [ 116, 53, 0, 0 ] [ -115, 88, 0, 0 ] 13684 22669
+---
+******************************

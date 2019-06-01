@@ -2,13 +2,14 @@ const W3GReplay = require('./node_modules/w3gjs');
 const { ActionBlockList } = require('./node_modules/w3gjs/parsers/actions');
 const Parser = new W3GReplay();
 
-const config = require("./config");
-const UnitManager = require("./UnitManager");
+const config = require("./config/config");
+const UnitManager = require("./lib/UnitManager");
 
 let unitManager;
 let actionCount = 0;
 let hasParsedMeta = false;
 
+let globalTime = 0;
 
 /*
 * For now - configure the replay files to parse here in the `paths`
@@ -31,6 +32,8 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
     console.log("###");
   }
 
+  globalTime += timeSlotBlock.timeIncrement;
+
   timeSlotBlock.actions.forEach(actionBlock => {
   	// try {
       unitManager.checkCreatePlayer(actionBlock);
@@ -42,7 +45,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
         // console.log(`Action ${actionCount} Player ${actionBlock.playerId}`);
         // console.log("================================");
 
-        unitManager.handleAction(actionBlock, action);
+        unitManager.handleAction(globalTime, actionBlock, action);
 	  	});
   	// } catch (ex) {
    //  	console.error(ex);
@@ -64,15 +67,26 @@ paths.forEach(path => {
   let players = unitManager.players;
 
   Object.keys(players).forEach(playerId => {
-    console.log("******************************");
+    console.log("************************************");
     console.log(`Inspecting player: ${playerId}`);
 
     // console.log(players[playerId]);
 
-    let units = players[playerId].units;;
+    let units = players[playerId].units;
 
     console.log(`Unit count: ${units.length}`);
     console.log(`Unregistered units: ${players[playerId].unregisteredUnitCount}`);
+
+    let removedBuildings = players[playerId].removedBuildings;
+    if (removedBuildings.length) {
+      console.log("Showing removed buildings:");
+
+      removedBuildings.forEach(building => {
+        console.log("(removed)", building.displayName);
+      });
+
+      console.log("------------------------------------");
+    }
 
     units.sort(unit => { 
       return unit.displayName;
@@ -107,7 +121,10 @@ paths.forEach(path => {
         }
       }
     });
-    console.log("******************************");
+
+    
+    
+    console.log("************************************");
   });
 });
 
