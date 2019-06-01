@@ -24,6 +24,10 @@ const Unit = class {
 
 		this.itemId = knownItemId || null;
 
+		if (this.itemId === "Udea") {
+			console.log("JEFF");
+		}
+
 		const spawnedAtStartCheck = (itemId1 !== null) && utils.isEqualItemId(itemId1, itemId2);
 		this.isSpawnedAtStart = isSpawnedAtStart || spawnedAtStartCheck;
 
@@ -47,6 +51,8 @@ const Unit = class {
 
 		this.path = [];
 		this.state = null;
+
+		this.isIllusion = false;
 
 		// building stuff
 		this.rallyPoint = {
@@ -85,6 +91,18 @@ const Unit = class {
 		this.setUnitMeta();
 	}
 
+	printUnit () {
+		const self = this;
+		console.log("unit data:");
+		console.log("display name: ", this.displayName);
+		console.log("itemId:       ", this.itemId);
+		console.log("itemid1:      ", this.itemId1);
+		console.log("itemid2:      ", this.itemId2);
+		console.log("objectid1:    ", this.objectId1);
+		console.log("objectid2:    ", this.objectId2);
+		console.log("items:        ", this.getItemList());
+	}
+
 	setAliveFlags () {
 		this.spawning = false;
 	}
@@ -110,6 +128,19 @@ const Unit = class {
 		this.itemId1 = itemId1;
 		this.itemId2 = itemId2;
 
+		const badA = [-34, -107, 0, 0];
+		const badB = [ 96, -123, 0, 0 ];
+
+		if (utils.isEqualItemId(this.itemId2, badA)) {
+			console.log("found bad one A");
+			//throw new Error("here 2");
+		}
+
+		if (utils.isEqualItemId(this.itemId2, badB)) {
+			console.log("found bad one B");
+			//throw new Error("here 2");
+		}
+
 		this.hasBeenInGroup = true;
 	}
 
@@ -128,6 +159,10 @@ const Unit = class {
 	}
 
 	registerUnit (itemId, objectId1, objectId2) {
+		if (itemId === "Udea") {
+			console.log("detected hero register");
+		}
+
 		this.itemId = itemId;
 		this.objectId1 = objectId1;
 		this.objectId2 = objectId2;
@@ -139,6 +174,10 @@ const Unit = class {
 	}
 
 	upgradeBuilding (newItemId) {
+		if (newItemId === "Udea") {
+			console.log("detected hero register");
+		}
+
 		this.itemId = newItemId;
 
 		this.setUnitMeta();

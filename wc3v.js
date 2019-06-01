@@ -110,3 +110,5 @@ paths.forEach(path => {
     console.log("******************************");
   });
 });
+
+process.exit();

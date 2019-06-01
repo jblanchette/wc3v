@@ -79,7 +79,7 @@ const Hero = class extends Unit {
 
 					let summonUnit = new Unit(null, null, summonItemId, false);
 					
-					player.units.push(summonUnit);
+					player.addPlayerUnit(summonUnit);
 					player.unregisteredUnitCount++;
 				}
 			break;

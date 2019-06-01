@@ -159,6 +159,27 @@ const Player = class {
 		return null;
 	}
 
+	addPlayerUnit (unit) {
+		console.log("adding player unit: ", unit.itemId, unit.displayName);
+
+		let heroFilter = this.units.filter(pUnit => {
+			return pUnit.itemId === "Udea";
+		});
+
+		if (heroFilter.length && unit.itemId === "Udea") {
+			console.log("detected hero add");
+			console.log(unit);
+		}
+
+		this.units.push(unit);
+	}
+
+	addPlayerBuilding (unit) {
+		console.log("adding player building: ", unit.itemId, unit.displayName);
+
+		this.units.push(unit);
+	}
+
 	getSelectionUnits () {
 		const self = this;
 		if (!this.selection) {
@@ -251,6 +272,8 @@ const Player = class {
 	assignPossibleSelectGroup (itemId) {
 		let self = this;
 		const selectionUnits = this.selection.units;
+
+		console.log("assign possible sel group itemId: ", itemId);
 
 		return selectionUnits.reduce((registeredUnitsAcc, selectionUnit) => {
 			self.possibleSelectList.some(selectItem => {
@@ -349,8 +372,15 @@ const Player = class {
 			return;
 		}
 
+		console.log("assign possible select units");
 		let newlyRegisteredUnits = this.assignPossibleSelectGroup(fixedItemId);
+		
+		console.log("Looking for unit in group: ", itemId1, itemId2);
 		let firstGroupUnit = this.findUnit(itemId1, itemId2);
+
+		if (firstGroupUnit) {
+			console.log("first group unit: ", firstGroupUnit.displayName);
+		}
 
 		// could not find registered unit by itemId1-2
 		// we didn't register any new units from possible select group
@@ -366,20 +396,48 @@ const Player = class {
 		} else {
 			console.log("selectSubgroup 4");
 
-			if (firstGroupUnit) {
-				PlayerActions.registerSubGroupFocusUnit(
-					this,
-					firstGroupUnit,
-					fixedItemId,
-					itemId1, 
-					itemId2,
-					objectId1,
-					objectId2
-				);
-			} else {
+			if (!firstGroupUnit) {
 				console.log("didn't find a first group unit");
 				throw new Error("stop");
 			}
+
+			let assignUnit;
+
+			if (fixedItemId !== firstGroupUnit.itemId) {
+				console.log(
+					"in sub 4, fixedItemId: ", fixedItemId, 
+					"firstUnitItemId: ", firstGroupUnit
+				);
+
+				const unitInfo = mappings.getUnitInfo(fixedItemId);
+
+				if (unitInfo.meta.hero) {
+					console.log("WARNING: hero switched itemId1/itemId2 ???");
+					const potentialUnits = this.units.filter(pUnit => {
+						return pUnit.itemId === fixedItemId && !pUnit.isIllusion;
+					});
+
+					if (potentialUnits.length > 1) {
+						console.log("more than one hero detected");
+						console.log(potentialUnits);
+						throw new Error("more than one hero detected");
+					}
+				}
+
+				console.log("WARNING: itemId mistmatch");
+				return;
+			}
+
+			PlayerActions.registerSubGroupFocusUnit(
+				this,
+				firstGroupUnit,
+				fixedItemId,
+				itemId1, 
+				itemId2,
+				objectId1,
+				objectId2
+			);
+				
 		}
 	}
 
@@ -503,7 +561,7 @@ const Player = class {
 					this.setHeroSlot(newTavernHero);
 
 					console.log(this.id, "Creating tavern hero: ", unitInfo.displayName);
-					this.units.push(newTavernHero);
+					this.addPlayerUnit(newTavernHero);
 					this.unregisteredUnitCount++;
 				}
 			break;
@@ -740,20 +798,16 @@ const Player = class {
 			return;
 		} else {
 			if (!firstUnit && this.selection.hasUnregisteredUnit) {
-				console.log("Unregistered unit used ability. Maybe worker?");
-				console.log("Selection: ", this.selection);
+				console.log("Unregistered unit used ability. Check if worker building.");
+				const possibleBuilding = mappings.getUnitInfo(fixedItemId);
 
-				let maybeUnits = this.units.find(unit => {
-					return unit.itemId === fixedItemId;
-				});
-
-				console.log("Maybe units: ", fixedItemId,  maybeUnits);
-
-				throw new Error("stop here.");
+				if (this.buildMenuOpen && possibleBuilding.isBuilding) {
+					console.log("Found a possible building: ", possibleBuilding.displayName);
+					firstUnit = possibleBuilding;
+				}
 			}
 
 			if (this.buildMenuOpen && firstUnit.meta.worker) {
-				
 				const startingPosition = {
 					x: targetX,
 					y: targetY
@@ -765,7 +819,7 @@ const Player = class {
 				building.currentY = targetY;
 
 				this.unregisteredUnitCount++;
-				this.units.push(building);
+				this.addPlayerBuilding(building);
 			}
 		}
 	}

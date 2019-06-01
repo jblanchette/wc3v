@@ -562,7 +562,7 @@ const allItemIds = {
     'ubon': 'Boneyard',
     'ubsp': 'Destroyer',
     'Ucrl': 'Crypt Lord',
-    'ucry': 'Pit Fiend',
+    'ucry': 'Crypt Fiend',
     'Udea': 'Death Knight',
     'Udre': 'Dread Lord',
     'Udth': 'Detheroc',
