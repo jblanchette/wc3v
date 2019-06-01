@@ -22,6 +22,7 @@ const PlayerActions = class {
 		console.log("selectSubgroup 1");
 		// look for a unit by the itemId to maybe register
 		let unregisteredUnit = player.findUnregisteredUnitByItemId(fixedItemId);
+
 		if (unregisteredUnit) {
 			console.log("selectSubgroup 2");
 			// re-assign the objectIds1-2 / itemIds1-2
@@ -36,21 +37,28 @@ const PlayerActions = class {
 			if (existingUnits.length === 1) {
 				let existingUnit = existingUnits[0];
 				existingUnit.registerObjectIds(objectId1, objectId2);
-			} else {
+			}
+
+			if (existingUnits.length > 1) {
+				if (unregisteredUnit.meta.hero) {
+
+					console.log("Trying to register a hero unit: ", unregisteredUnit);
+
+					let heroUnits = player.units.filter(unit => {
+						return (
+							unit.itemId === fixedItemId &&
+							unit.isIllusion === unregisteredUnit.isIllusion
+						);
+					});
+
+					console.log("hero unit check: ", heroUnits);
+					throw new Error("stop here");
+				}
+			}
+
+			if (!existingUnits.length) {
 				unregisteredUnit.registerUnit(fixedItemId, objectId1, objectId2);
 				unregisteredUnit.registerItemIds(itemId1, itemId2);
-
-				if (unregisteredUnit.meta.hero && unregisteredUnit.knownLevel === 0) {
-					console.log(
-						player.id, 
-						'Registered unit 1', 
-						unregisteredUnit.displayName,
-						unregisteredUnit.knownLevel
-					);
-					console.log(action);
-					console.log("*************************");
-				}
-
 				unregisteredUnit.spawning = false;
 				unregisteredUnit.selected = true;
 
@@ -61,13 +69,23 @@ const PlayerActions = class {
 			player.updatingSubgroup = false;
 		} else {
 			console.log("selectSubgroup 3");
+			console.log("Filter fixedItemId: ", fixedItemId);
+
+			const unitInfo = mappings.getUnitInfo(fixedItemId);
+
 			let existingUnits = player.units.filter(unit => {
 				return unit.itemId === fixedItemId;
 			});
 
+			const heroIllusionCheck = (unitInfo.meta.hero && existingUnits.length > 1);
+
 			// only one of these units is known to exist
 			// so we know to update it
-			if (existingUnits.length === 1) {
+			if (existingUnits.length === 1 || heroIllusionCheck) {
+				if (heroIllusionCheck) {
+					console.log("Using new hero illusion check.");
+				}
+
 				let existingUnit = existingUnits[0];
 				console.log("updating known unit: ", existingUnit.displayName);
 
@@ -80,7 +98,7 @@ const PlayerActions = class {
 
 					newUnit.isIllusion = true;
 
-					player.units.push(newUnit);
+					player.addPlayerUnit(newUnit);
 					player.unregisteredUnitCount++;
 
 					return;
@@ -90,16 +108,20 @@ const PlayerActions = class {
 				existingUnit.registerItemIds(itemId1, itemId2);
 			} else {
 				// possibly spawned unit was selected?
-				let possibleUnit = mappings.getUnitInfo(fixedItemId);
+				const possibleUnit = mappings.getUnitInfo(fixedItemId);
 				if (possibleUnit.isUnit) {
 					console.log(1, "Selected a spawned unit", possibleUnit.displayName);
+
+					if (possibleUnit.meta.hero) {
+						console.log("before exit: ", existingUnits.length);
+						throw new Error("here");
+					}
 
 					let newUnit = new Unit(null, null, fixedItemId, false);
 					newUnit.registerObjectIds(objectId1, objectId2);
 					newUnit.registerItemIds(itemId1, itemId2);
 
-					player.units.push(newUnit);
-
+					player.addPlayerUnit(newUnit);
 					player.unregisteredUnitCount++;
 				} else {
 					console.log("^^^^ Unknown action performed: ", fixedItemId);

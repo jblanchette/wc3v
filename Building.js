@@ -156,7 +156,7 @@ const Building = class extends Unit {
 
 				console.log(player.id, "Making trained unit: ", newUnit.displayName);	
 
-				player.units.push(newUnit);
+				player.addPlayerUnit(newUnit);
 				player.unregisteredUnitCount++;
 			break;
 
@@ -201,7 +201,7 @@ const Building = class extends Unit {
 						});
 
 						console.log(player.id, "Making trained unit: ", newUnit.displayName);		
-						player.units.push(newUnit);
+						player.addPlayerUnit(newUnit);
 						player.unregisteredUnitCount++;
 					}
 				}

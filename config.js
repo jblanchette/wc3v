@@ -4,7 +4,7 @@ const config = {
 	debugPlayer: null,
 	replayPaths: [
 	  {
-	    'file': 'replays/illusion-test.w3g'
+	    'file': 'replays/happy_vs_grubby.w3g'
 	  }
 	]
 };
