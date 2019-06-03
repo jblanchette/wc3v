@@ -33,9 +33,10 @@ const findItemIdForObject = (itemId, focusObject) => {
 };
 
 const distance = (pX, pY, qX, qY) => { 
-	console.log("unit 1: ", pX, pY, "unit 2: ", qX, qY);
-	console.log("r: ", Math.hypot(Math.abs(qX - pX), Math.abs(qY - pY)));
-	return Math.hypot(Math.abs(qX - pX), Math.abs(qY - pY)); 
+	return Math.sqrt(
+		Math.pow(qX - pX, 2) +
+		Math.pow(qY - pY, 2)
+	);
 };
 
 const closestToPoint = (x, y, units, filterFn) => {
@@ -63,10 +64,28 @@ const closestToPoint = (x, y, units, filterFn) => {
 	return winner && winner.unit || null;
 };
 
+const getRandomInt = (max) => {
+  return Math.floor(Math.random() * Math.floor(max));
+};
+
+// from https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+const uuidv4 = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 module.exports = {
 	fixItemId: fixItemId,
 	isEqualItemId: isEqualItemId,
 	findItemIdForObject: findItemIdForObject,
 	distance: distance,
-	closestToPoint: closestToPoint
+	closestToPoint: closestToPoint,
+	getRandomInt: getRandomInt,
+	uuidv4: uuidv4,
+
+	// constants
+	MS_TO_SECONDS: 0.001,
+	SECONDS_TO_MS: 1000
 };

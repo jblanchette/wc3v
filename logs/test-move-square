@@ -1,4 +1,28 @@
 Parsing file:  ./replays/test-move-square.w3g
+Clock tick:  100 100
+Clock tick:  200 100
+Clock tick:  300 100
+Clock tick:  400 100
+Clock tick:  500 100
+Clock tick:  600 100
+Clock tick:  700 100
+Clock tick:  800 100
+Clock tick:  900 100
+Clock tick:  1000 100
+Clock tick:  1100 100
+Clock tick:  1200 100
+Clock tick:  1300 100
+Clock tick:  1400 100
+Clock tick:  1500 100
+Clock tick:  1500 0
+set unit spawned:  true Necropolis
+adding player building:  unpl Necropolis
+set unit spawned:  true Acolyte
+adding player unit:  uaco Acolyte
+set unit spawned:  true Acolyte
+adding player unit:  uaco Acolyte
+set unit spawned:  true Acolyte
+adding player unit:  uaco Acolyte
 ====================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -7,13 +31,11 @@ Action: { actionId: 22,
   actions: [ { itemId1: [Array], itemId2: [Array] } ] }
 Game Timer: 1500
 ====================================
-player time delta:  1500 ms
 ====================================
 ActionName: UpdateSubgroup PID: 1
 Action: { actionId: 26 }
 Game Timer: 1500
 ====================================
-player time delta:  0 ms
 ====================================
 ActionName: SelectSubgroup PID: 1
 Action: { actionId: 25,
@@ -22,7 +44,6 @@ Action: { actionId: 25,
   objectId2: 13060 }
 Game Timer: 1500
 ====================================
-player time delta:  0 ms
 assign possible select units
 assign possible sel group itemId:  uaco
 Looking for unit in group:  [ -2, 50, 0, 0 ] [ 4, 51, 0, 0 ]
@@ -31,6 +52,13 @@ selectSubgroup 4
 Registering unit:  uaco
 new itemIds:  [ -2, 50, 0, 0 ] [ 4, 51, 0, 0 ]
 new objIds:  13054 13060
+Clock tick:  1600 100
+Clock tick:  1700 100
+Clock tick:  1800 100
+Clock tick:  1900 100
+Clock tick:  2000 100
+Clock tick:  2100 100
+Clock tick:  2100 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -44,7 +72,40 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 2100
 ====================================
-player time delta:  600 ms
+unit walking:  Acolyte d: 7710.765139840939 t:  32.811766552514634
+Clock tick:  2200 100
+Clock tick:  2300 100
+Clock tick:  2400 100
+Clock tick:  2499 99
+Clock tick:  2599 100
+Clock tick:  2699 100
+Clock tick:  2799 100
+Clock tick:  2899 100
+Clock tick:  2999 100
+Clock tick:  3099 100
+Clock tick:  3199 100
+Clock tick:  3299 100
+Clock tick:  3399 100
+Clock tick:  3499 100
+Clock tick:  3599 100
+Clock tick:  3699 100
+Clock tick:  3799 100
+Clock tick:  3898 99
+Clock tick:  3998 100
+Clock tick:  4098 100
+Clock tick:  4198 100
+Clock tick:  4298 100
+Clock tick:  4398 100
+Clock tick:  4498 100
+Clock tick:  4598 100
+Clock tick:  4698 100
+Clock tick:  4798 100
+Clock tick:  4898 100
+Clock tick:  4998 100
+Clock tick:  5098 100
+Clock tick:  5198 100
+Clock tick:  5298 100
+Clock tick:  5298 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -58,7 +119,41 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 5298
 ====================================
-player time delta:  3198 ms
+unit walking:  Acolyte d: 515.2284662173241 t:  2.192461558371592
+Added timer event:  271572fa-f1d8-46e1-b376-be1c9f55372d  at:  5298
+Clock tick:  5398 100
+Clock tick:  5498 100
+Clock tick:  5598 100
+Clock tick:  5698 100
+Clock tick:  5798 100
+Clock tick:  5898 100
+event finished 271572fa-f1d8-46e1-b376-be1c9f55372d
+start:  5298 goal:  2192.4615583715918 complete:  2800
+unit finished walking:  Acolyte
+Clock tick:  5998 100
+Clock tick:  6098 100
+Clock tick:  6198 100
+Clock tick:  6298 100
+Clock tick:  6398 100
+Clock tick:  6498 100
+Clock tick:  6598 100
+Clock tick:  6698 100
+Clock tick:  6798 100
+Clock tick:  6898 100
+Clock tick:  6998 100
+Clock tick:  7098 100
+Clock tick:  7198 100
+Clock tick:  7298 100
+Clock tick:  7398 100
+Clock tick:  7498 100
+Clock tick:  7598 100
+Clock tick:  7698 100
+Clock tick:  7798 100
+Clock tick:  7898 100
+Clock tick:  7998 100
+Clock tick:  8098 100
+Clock tick:  8198 100
+Clock tick:  8198 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -72,7 +167,43 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 8198
 ====================================
-player time delta:  2900 ms
+unit walking:  Acolyte d: 508.95045486162064 t:  2.165746616432428
+Added timer event:  a0d0560f-c794-4e8d-a89a-7d98b950c0d7  at:  8198
+Clock tick:  8298 100
+Clock tick:  8398 100
+Clock tick:  8498 100
+Clock tick:  8598 100
+Clock tick:  8698 100
+Clock tick:  8798 100
+event finished a0d0560f-c794-4e8d-a89a-7d98b950c0d7
+start:  8198 goal:  2165.7466164324283 complete:  2800
+unit finished walking:  Acolyte
+Clock tick:  8898 100
+Clock tick:  8998 100
+Clock tick:  9098 100
+Clock tick:  9198 100
+Clock tick:  9298 100
+Clock tick:  9398 100
+Clock tick:  9498 100
+Clock tick:  9598 100
+Clock tick:  9698 100
+Clock tick:  9798 100
+Clock tick:  9898 100
+Clock tick:  9998 100
+Clock tick:  10098 100
+Clock tick:  10198 100
+Clock tick:  10298 100
+Clock tick:  10398 100
+Clock tick:  10498 100
+Clock tick:  10598 100
+Clock tick:  10698 100
+Clock tick:  10798 100
+Clock tick:  10898 100
+Clock tick:  10998 100
+Clock tick:  11098 100
+Clock tick:  11198 100
+Clock tick:  11298 100
+Clock tick:  11298 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -86,7 +217,62 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 11298
 ====================================
-player time delta:  3100 ms
+unit walking:  Acolyte d: 473.2278648317484 t:  2.0137355950287166
+Added timer event:  97651876-477f-4c70-bdf6-9b1448d575b9  at:  11298
+Clock tick:  11398 100
+Clock tick:  11498 100
+Clock tick:  11598 100
+Clock tick:  11698 100
+Clock tick:  11798 100
+event finished 97651876-477f-4c70-bdf6-9b1448d575b9
+start:  11298 goal:  2013.7355950287165 complete:  2100
+unit finished walking:  Acolyte
+Clock tick:  11898 100
+Clock tick:  11998 100
+Clock tick:  12098 100
+Clock tick:  12198 100
+Clock tick:  12298 100
+Clock tick:  12398 100
+Clock tick:  12498 100
+Clock tick:  12598 100
+Clock tick:  12698 100
+Clock tick:  12798 100
+Clock tick:  12898 100
+Clock tick:  12998 100
+Clock tick:  13098 100
+Clock tick:  13198 100
+Clock tick:  13298 100
+Clock tick:  13398 100
+Clock tick:  13498 100
+Clock tick:  13598 100
+Clock tick:  13698 100
+Clock tick:  13798 100
+Clock tick:  13898 100
+Clock tick:  13998 100
+Clock tick:  14098 100
+Clock tick:  14198 100
+Clock tick:  14298 100
+Clock tick:  14398 100
+Clock tick:  14498 100
+Clock tick:  14598 100
+Clock tick:  14698 100
+Clock tick:  14798 100
+Clock tick:  14898 100
+Clock tick:  14998 100
+Clock tick:  15098 100
+Clock tick:  15198 100
+Clock tick:  15298 100
+Clock tick:  15398 100
+Clock tick:  15498 100
+Clock tick:  15598 100
+Clock tick:  15698 100
+Clock tick:  15798 100
+Clock tick:  15898 100
+Clock tick:  15998 100
+Clock tick:  16098 100
+Clock tick:  16198 100
+Clock tick:  16298 100
+Clock tick:  16298 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -100,7 +286,18 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 16298
 ====================================
-player time delta:  5000 ms
+unit walking:  Acolyte d: 572.1043401194718 t:  2.43448655369988
+Added timer event:  642150cc-cfd5-4486-8e0e-4ebb1c744b2a  at:  16298
+Clock tick:  16398 100
+Clock tick:  16498 100
+Clock tick:  16598 100
+Clock tick:  16698 100
+Clock tick:  16798 100
+Clock tick:  16898 100
+event finished 642150cc-cfd5-4486-8e0e-4ebb1c744b2a
+start:  16298 goal:  2434.48655369988 complete:  2700
+unit finished walking:  Acolyte
+Clock tick:  16898 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -114,7 +311,19 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 16898
 ====================================
-player time delta:  600 ms
+unit walking:  Acolyte d: 497.1810364951644 t:  2.115663985085806
+Added timer event:  89a3cff8-9ce5-4e52-baeb-5f8dfef821cc  at:  16898
+Clock tick:  16998 100
+Clock tick:  17098 100
+Clock tick:  17198 100
+Clock tick:  17298 100
+Clock tick:  17398 100
+Clock tick:  17498 100
+event finished 89a3cff8-9ce5-4e52-baeb-5f8dfef821cc
+start:  16898 goal:  2115.663985085806 complete:  2800
+unit finished walking:  Acolyte
+Clock tick:  17598 100
+Clock tick:  17598 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -128,7 +337,19 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 17598
 ====================================
-player time delta:  700 ms
+unit walking:  Acolyte d: 521.811969197573 t:  2.2204764646705235
+Added timer event:  1f78cf35-4a43-47e7-a0a9-c9f2bd0edc06  at:  17598
+Clock tick:  17698 100
+Clock tick:  17798 100
+Clock tick:  17898 100
+Clock tick:  17998 100
+Clock tick:  18098 100
+Clock tick:  18198 100
+event finished 1f78cf35-4a43-47e7-a0a9-c9f2bd0edc06
+start:  17598 goal:  2220.4764646705235 complete:  2800
+unit finished walking:  Acolyte
+Clock tick:  18298 100
+Clock tick:  18298 0
 ====================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -142,20 +363,57 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 18298
 ====================================
-player time delta:  700 ms
+unit walking:  Acolyte d: 532.7892308449489 t:  2.2671882163614847
+Added timer event:  6a001b33-09fe-41bf-8a57-2daa3e0a33ef  at:  18298
+Clock tick:  18398 100
+Clock tick:  18498 100
+Clock tick:  18598 100
+Clock tick:  18698 100
+Clock tick:  18798 100
+Clock tick:  18898 100
+event finished 6a001b33-09fe-41bf-8a57-2daa3e0a33ef
+start:  18298 goal:  2267.1882163614846 complete:  2800
+unit finished walking:  Acolyte
+Clock tick:  18998 100
+Clock tick:  19098 100
+Clock tick:  19198 100
+Clock tick:  19298 100
+Clock tick:  19398 100
+Clock tick:  19498 100
+Clock tick:  19598 100
+Clock tick:  19698 100
+Clock tick:  19798 100
+Clock tick:  19898 100
+Clock tick:  19998 100
+Clock tick:  20098 100
+Clock tick:  20198 100
+Clock tick:  20298 100
+Clock tick:  20398 100
+Clock tick:  20398 0
 ====================================
 ActionName: Pause PID: 1
 Action: { actionId: 1 }
 Game Timer: 20398
 ====================================
-player time delta:  2100 ms
-parse: 26.817ms
+Clock tick:  20498 100
+Clock tick:  20598 100
+Clock tick:  20698 100
+Clock tick:  20798 100
+Clock tick:  20898 100
+Clock tick:  20998 100
+Clock tick:  21098 100
+Clock tick:  21198 100
+Clock tick:  21298 100
+Clock tick:  21398 100
+Clock tick:  21498 100
+Clock tick:  21598 100
+parse: 36.402ms
 ************************************
 Inspecting player: 1
 Unit count: 4
 Unregistered units: 3
-Acolyte
-Acolyte
-Acolyte
 Necropolis (B)
+Acolyte
+Acolyte
+Acolyte
 ************************************
