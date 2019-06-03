@@ -1173,7 +1173,8 @@ const getUnitInfo = (itemId) => {
 		hero: false,
 		worker: false,
 		permanent: isBuilding,
-        playerShop: isPlayerShop
+        playerShop: isPlayerShop,
+        movespeed: 200 // default unknown ms
 	};
 
 	return {

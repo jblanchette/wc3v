@@ -33,6 +33,9 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   }
 
   globalTime += timeSlotBlock.timeIncrement;
+  unitManager.processTick(globalTime);
+
+  console.log("Clock tick: ", globalTime, timeSlotBlock.timeIncrement);
 
   timeSlotBlock.actions.forEach(actionBlock => {
   	// try {
@@ -45,7 +48,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
         // console.log(`Action ${actionCount} Player ${actionBlock.playerId}`);
         // console.log("================================");
 
-        unitManager.handleAction(globalTime, actionBlock, action);
+        unitManager.handleAction(actionBlock, action);
 	  	});
   	// } catch (ex) {
    //  	console.error(ex);
@@ -57,7 +60,7 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
 
 paths.forEach(path => {
   const {file} = path;
-
+  
   unitManager = new UnitManager();
   hasParsedMeta = false;
   
