@@ -1,0 +1,87 @@
+Parsing file:  ./replays/test-move-build.w3g
+setup player race:  U
+set unit spawned:  true Necropolis
+adding player building:  unpl Necropolis
+set unit spawned:  true Acolyte
+set unit spawned:  true Acolyte
+set unit spawned:  true Acolyte
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 1300
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 1300
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 13054,
+  objectId2: 13060 }
+Game Timer: 1300
+====================================
+assign possible select units
+assign possible sel group itemId:  uaco
+Looking for unit in group:  [ -2, 50, 0, 0 ] [ 4, 51, 0, 0 ]
+first group unit:  Acolyte
+selectSubgroup 4
+Registering unit:  uaco
+new itemIds:  [ -2, 50, 0, 0 ] [ 4, 51, 0, 0 ]
+new objIds:  13054 13060
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -7970.86767578125,
+  targetY: 1592.9034423828125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 2401
+====================================
+moving spawned unit to spot -7970.86767578125 1592.9034423828125
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 5298
+====================================
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'motu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8832,
+  targetY: 1088 }
+Game Timer: 5898
+====================================
+set unit spawned:  false Tomb of Relics
+moving unit to build:  Tomb of Relics
+running unit on complete extra
+unit finished moving to building, now build:  Tomb of Relics
+adding player building:  utom Tomb of Relics
+====================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 77796
+====================================
+parse: 31.433ms
+************************************
+Inspecting player: 1
+Unit count: 5
+Unregistered units: 3
+Necropolis (B)
+Acolyte
+Acolyte
+Acolyte
+Tomb of Relics (B)
+************************************

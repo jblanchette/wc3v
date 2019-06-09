@@ -35,8 +35,6 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   globalTime += timeSlotBlock.timeIncrement;
   unitManager.processTick(globalTime);
 
-  console.log("Clock tick: ", globalTime, timeSlotBlock.timeIncrement);
-
   timeSlotBlock.actions.forEach(actionBlock => {
   	// try {
       unitManager.checkCreatePlayer(actionBlock);

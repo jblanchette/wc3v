@@ -1,10 +1,10 @@
 
 const config = {
 	debugActions: true,
-	debugPlayer: 1,
+	debugPlayer: 2,
 	replayPaths: [
 	  {
-	    'file': './replays/test-move-square.w3g'
+	    'file': './replays/pro-match-echo-isles.w3g'
 	  }
 	]
 };
