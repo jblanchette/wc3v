@@ -45,8 +45,6 @@ const closestToPoint = (x, y, units, filterFn) => {
 	}
 
 	let positions = units.map(unit => {
-
-		console.log(unit.displayName);
 		return {
 			unit: unit,
 			distance: distance(
@@ -56,9 +54,13 @@ const closestToPoint = (x, y, units, filterFn) => {
 		};
 	});
 
-	positions.sort(item => {
-		return item.distance;
+	positions.sort((a, b) => {
+		return a.distance - b.distance;
 	});
+
+	console.log("closest check: ", positions.map(p => {
+		return `${p.unit.displayName} - dist: ${p.distance}`;
+	}));
 
 	const winner = positions[0];
 	return winner && winner.unit || null;

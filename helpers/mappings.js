@@ -19,6 +19,13 @@ Object.keys(extraUnits).forEach(key => {
 	units[key] = extraUnits[key];
 });
 
+const workerForRace = {
+    'O': 'opeo',
+    'U': 'uaco',
+    'E': 'ewsp',
+    'H': 'hpea'
+};
+
 const unitMetaData = {
 	'opeo': {
 		'displayName': 'Peon',
@@ -1115,7 +1122,9 @@ const abilityActions = {
     'HeroMoveItem3': [ 36, 0, 13, 0 ],
     'HeroMoveItem4': [ 37, 0, 13, 0 ],
     'HeroMoveItem5': [ 38, 0, 13, 0 ],
-    'HeroMoveItem6': [ 39, 0, 13, 0 ]
+    'HeroMoveItem6': [ 39, 0, 13, 0 ],
+    'NERoot': [ 197, 0, 13, 0 ],
+    'NEUpRoot': [ 198, 0, 13, 0 ]
 };
 
 const mapStartPositions = {
@@ -1195,5 +1204,6 @@ module.exports = {
 	heroAbilities: heroAbilities,
 	abilityActions: abilityActions,
 	abilityFlagNames: abilityFlagNames,
+    workerForRace: workerForRace,
 	mapStartPositions: mapStartPositions
 };
