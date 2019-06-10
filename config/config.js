@@ -1,7 +1,7 @@
 
 const config = {
 	debugActions: true,
-	debugPlayer: 2,
+	debugPlayer: null,
 	replayPaths: [
 	  {
 	    'file': './replays/pro-match-echo-isles.w3g'
