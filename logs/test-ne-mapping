@@ -1,0 +1,1161 @@
+Parsing file:  ./replays/test-ne-mapping.w3g
+setup player race:  E
+set unit spawned:  true Tree of Life
+adding player building:  etol Tree of Life
+adding building at:  0 0 Tree of Life
+set unit spawned:  true Wisp
+set unit spawned:  true Wisp
+set unit spawned:  true Wisp
+set unit spawned:  true Wisp
+set unit spawned:  true Wisp
+====================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 6400
+====================================
+====================================
+ActionName: SinglePlayerCheat-13 PID: 1
+Action: { actionId: 45 }
+Game Timer: 9500
+====================================
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 11000
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 11000
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13053,
+  objectId2: 13056 }
+Game Timer: 11000
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -3, 50, 0, 0 ] [ 0, 51, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -3, 50, 0, 0 ] [ 0, 51, 0, 0 ]
+new objIds:  13053 13056
+setting fully registered unit
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -7660.91845703125,
+  targetY: 1907.195556640625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 11300
+====================================
+looking for unit:  [ -3, 50, 0, 0 ] [ 0, 51, 0, 0 ]
+found unit
+calling unit.moveTo
+unit moveTo:  Wisp
+*** unit is walking long path time:  29.239812219102784
+adding event:  e73a17be-43ee-4c61-81ec-70395a3c302c
+moving spawned unit to spot -7660.91845703125 1907.195556640625
+cancelling event:  e73a17be-43ee-4c61-81ec-70395a3c302c
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 12000
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'wome',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -7712,
+  targetY: 1952 }
+Game Timer: 14100
+====================================
+looking for unit:  [ -3, 50, 0, 0 ] [ 0, 51, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Moon Well',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Moon Well
+moving unit to build:  Moon Well
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  7537655d-401b-4d10-94d1-db94dfb95614
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Moon Well
+adding player building:  emow Moon Well
+adding building at:  -7712 1952 Moon Well
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 14500
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'lote',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -7680,
+  targetY: 1600 }
+Game Timer: 18800
+====================================
+looking for unit:  [ -3, 50, 0, 0 ] [ 0, 51, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Tree of Life',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Tree of Life
+moving unit to build:  Tree of Life
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  c7bf3d56-cc2e-4e60-abfb-c0df6a8b45aa
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Tree of Life
+adding player building:  etol Tree of Life
+adding building at:  -7680 1600 Tree of Life
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 19700
+====================================
+removing from group:  { itemId1: [ -3, 50, 0, 0 ], itemId2: [ 0, 51, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 19900
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 19900
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'lote',
+  objectId1: 12907,
+  objectId2: 12907 }
+Game Timer: 19900
+====================================
+assign possible select units
+assign possible sel group itemId:  etol
+Looking for unit in group:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+first group unit:  Tree of Life
+selectSubgroup 4
+Registering unit:  etol
+new itemIds:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+new objIds:  12907 12907
+setting fully registered unit
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 64,
+  itemId: 'aote',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 21900
+====================================
+looking for unit:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Tree of Life
+building itemid ability
+1 'Building researched upgrade: ' 'Tree of Ages' 'Tree of Ages'
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 23601
+====================================
+removing from group:  { itemId1: [ 107, 50, 0, 0 ], itemId2: [ 107, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 23601
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 23601
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'lote',
+  objectId1: 12476,
+  objectId2: 15981 }
+Game Timer: 23601
+====================================
+assign possible select units
+assign possible sel group itemId:  etol
+Looking for unit in group:  [ -68, 48, 0, 0 ] [ 109, 62, 0, 0 ]
+first group unit:  Tree of Life
+selectSubgroup 4
+Registering unit:  etol
+new itemIds:  [ -68, 48, 0, 0 ] [ 109, 62, 0, 0 ]
+new objIds:  12476 15981
+setting fully registered unit
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 29900
+====================================
+removing from group:  { itemId1: [ -68, 48, 0, 0 ], itemId2: [ 109, 62, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 29900
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 29900
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13009,
+  objectId2: 13012 }
+Game Timer: 29900
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+new objIds:  13009 13012
+setting fully registered unit
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8234.45703125,
+  targetY: 1529.3160400390625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 30500
+====================================
+looking for unit:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+found unit
+calling unit.moveTo
+unit moveTo:  Wisp
+*** unit is walking long path time:  31.019505821727535
+adding event:  96a6026e-84a7-4240-9b4e-d7a7c8af1ae9
+moving spawned unit to spot -8234.45703125 1529.3160400390625
+cancelling event:  96a6026e-84a7-4240-9b4e-d7a7c8af1ae9
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 30800
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13009,
+  objectId2: 13012 }
+Game Timer: 30800
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+new objIds:  13009 13012
+not registering already registered unit...
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 30800
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'etae',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8032,
+  targetY: 1312 }
+Game Timer: 31100
+====================================
+looking for unit:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Altar of Elders',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Altar of Elders
+moving unit to build:  Altar of Elders
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  d83724f8-5fba-4b35-b46a-fb890c4eef84
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Altar of Elders
+adding player building:  eate Altar of Elders
+adding building at:  -8032 1312 Altar of Elders
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 32800
+====================================
+removing from group:  { itemId1: [ -47, 50, 0, 0 ], itemId2: [ -44, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 32800
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 32800
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 12987,
+  objectId2: 12990 }
+Game Timer: 32800
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -69, 50, 0, 0 ] [ -66, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -69, 50, 0, 0 ] [ -66, 50, 0, 0 ]
+new objIds:  12987 12990
+setting fully registered unit
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 33200
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'woae',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8384,
+  targetY: 1536 }
+Game Timer: 35300
+====================================
+looking for unit:  [ -69, 50, 0, 0 ] [ -66, 50, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Ancient of Wind',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Ancient of Wind
+moving unit to build:  Ancient of Wind
+calling this.moveTo
+unit moveTo:  Wisp
+*** unit is walking long path time:  31.56867054881277
+adding event:  77b383e7-53f5-4882-b0ba-c7cb5b0a4aa3
+moving spawned unit to spot -8384 1536
+cancelling event:  77b383e7-53f5-4882-b0ba-c7cb5b0a4aa3
+1 '*** setting build menu CLOSED'
+building move event was cancelled before build. builder:  Wisp
+stopped building:  Ancient of Wind
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 36700
+====================================
+removing from group:  { itemId1: [ -69, 50, 0, 0 ], itemId2: [ -66, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 2,
+  actions:
+   [ { itemId1: [Array], itemId2: [Array] },
+     { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 36700
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 36700
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13031,
+  objectId2: 13034 }
+Game Timer: 36700
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -25, 50, 0, 0 ] [ -22, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -25, 50, 0, 0 ] [ -22, 50, 0, 0 ]
+new objIds:  13031 13034
+setting fully registered unit
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 40800
+====================================
+removing from group:  { itemId1: [ 19, 51, 0, 0 ], itemId2: [ 22, 51, 0, 0 ] }
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8838.931640625,
+  targetY: 2020.8525390625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 41500
+====================================
+looking for unit:  [ -25, 50, 0, 0 ] [ -22, 50, 0, 0 ]
+found unit
+calling unit.moveTo
+unit moveTo:  Wisp
+*** unit is walking long path time:  33.581495478569586
+adding event:  4daeef6b-34ab-4de3-965e-76730d8cd753
+moving spawned unit to spot -8838.931640625 2020.8525390625
+cancelling event:  4daeef6b-34ab-4de3-965e-76730d8cd753
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 42700
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'nede',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8896,
+  targetY: 1920 }
+Game Timer: 44500
+====================================
+looking for unit:  [ -25, 50, 0, 0 ] [ -22, 50, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Ancient of Wonders',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: true,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Ancient of Wonders
+moving unit to build:  Ancient of Wonders
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  9a2d21b4-b7ba-4a96-bb05-45236affe12b
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Ancient of Wonders
+adding player building:  eden Ancient of Wonders
+adding building at:  -8896 1920 Ancient of Wonders
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 44800
+====================================
+removing from group:  { itemId1: [ -25, 50, 0, 0 ], itemId2: [ -22, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 46300
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 46300
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13009,
+  objectId2: 13012 }
+Game Timer: 46300
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+new objIds:  13009 13012
+not registering already registered unit...
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 47400
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'bode',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8640,
+  targetY: 1216 }
+Game Timer: 49198
+====================================
+looking for unit:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Hunter\'s Hall',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Hunter's Hall
+moving unit to build:  Hunter's Hall
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  47c4286f-8a5c-45b6-8387-cdef52588e36
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Hunter's Hall
+adding player building:  edob Hunter's Hall
+adding building at:  -8640 1216 Hunter's Hall
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 52698
+====================================
+removing from group:  { itemId1: [ -47, 50, 0, 0 ], itemId2: [ -44, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 52698
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 52698
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'aote',
+  objectId1: 12907,
+  objectId2: 12907 }
+Game Timer: 52698
+====================================
+assign possible select units
+assign possible sel group itemId:  etoa
+Looking for unit in group:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+first group unit:  Tree of Ages
+selectSubgroup 4
+Registering unit:  etoa
+new itemIds:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+new objIds:  12907 12907
+not registering already registered unit...
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 64,
+  itemId: 'eote',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 53798
+====================================
+looking for unit:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Tree of Ages
+building itemid ability
+1 'Building researched upgrade: ' 'Tree of Eternity' 'Tree of Eternity'
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 61698
+====================================
+removing from group:  { itemId1: [ 107, 50, 0, 0 ], itemId2: [ 107, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 61698
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 61698
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13009,
+  objectId2: 13012 }
+Game Timer: 61698
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+new objIds:  13009 13012
+not registering already registered unit...
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 62698
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13009,
+  objectId2: 13012 }
+Game Timer: 62698
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+new objIds:  13009 13012
+not registering already registered unit...
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 63998
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 66998
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13009,
+  objectId2: 13012 }
+Game Timer: 66998
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+new objIds:  13009 13012
+not registering already registered unit...
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'eoae',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8192,
+  targetY: 896 }
+Game Timer: 67798
+====================================
+looking for unit:  [ -47, 50, 0, 0 ] [ -44, 50, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Ancient of Lore',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Ancient of Lore
+moving unit to build:  Ancient of Lore
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  381f8839-a0c4-4764-a13b-63723ce03607
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Ancient of Lore
+adding player building:  eaoe Ancient of Lore
+adding building at:  -8192 896 Ancient of Lore
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 69798
+====================================
+removing from group:  { itemId1: [ -47, 50, 0, 0 ], itemId2: [ -44, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 76693
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 76693
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13075,
+  objectId2: 13078 }
+Game Timer: 76693
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ 19, 51, 0, 0 ] [ 22, 51, 0, 0 ]
+selectSubgroup 1
+selectSubgroup 2
+item ids:  [ 19, 51, 0, 0 ] [ 22, 51, 0, 0 ]
+====================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -8652.3603515625,
+  targetY: 1767.069580078125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 77493
+====================================
+looking for unit:  [ 19, 51, 0, 0 ] [ 22, 51, 0, 0 ]
+found unit
+calling unit.moveTo
+unit moveTo:  Wisp
+*** unit is walking long path time:  32.70726346007911
+adding event:  c28566f0-5f55-48b3-8ae7-e4ad0310caa7
+moving spawned unit to spot -8652.3603515625 1767.069580078125
+cancelling event:  c28566f0-5f55-48b3-8ae7-e4ad0310caa7
+====================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 79293
+====================================
+1 '*** setting build menu OPEN'
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 82993
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 13075,
+  objectId2: 13078 }
+Game Timer: 82993
+====================================
+assign possible select units
+assign possible sel group itemId:  ewsp
+Looking for unit in group:  [ 19, 51, 0, 0 ] [ 22, 51, 0, 0 ]
+first group unit:  Wisp
+selectSubgroup 4
+Registering unit:  ewsp
+new itemIds:  [ 19, 51, 0, 0 ] [ 22, 51, 0, 0 ]
+new objIds:  13075 13078
+setting fully registered unit
+====================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'sode',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -9024,
+  targetY: 1472 }
+Game Timer: 83493
+====================================
+looking for unit:  [ 19, 51, 0, 0 ] [ 22, 51, 0, 0 ]
+found unit
+ability unitInfo:  { displayName: 'Chimaera Roost',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     movespeed: 200 } }
+ability not item arraay
+set unit spawned:  false Chimaera Roost
+moving unit to build:  Chimaera Roost
+calling this.moveTo
+unit moveTo:  Wisp
+adding event:  824858f0-d0b7-46a4-9781-3260e5ee6254
+1 '*** setting build menu CLOSED'
+unit finished moving to building, now building:  Chimaera Roost
+adding player building:  edos Chimaera Roost
+adding building at:  -9024 1472 Chimaera Roost
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 89293
+====================================
+removing from group:  { itemId1: [ 19, 51, 0, 0 ], itemId2: [ 22, 51, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 89293
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 89293
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'eote',
+  objectId1: 12907,
+  objectId2: 12907 }
+Game Timer: 89293
+====================================
+assign possible select units
+assign possible sel group itemId:  etoe
+Looking for unit in group:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+first group unit:  Tree of Eternity
+selectSubgroup 4
+Registering unit:  etoe
+new itemIds:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+new objIds:  12907 12907
+not registering already registered unit...
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 91393
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'eote',
+  objectId1: 12907,
+  objectId2: 12907 }
+Game Timer: 91393
+====================================
+assign possible select units
+assign possible sel group itemId:  etoe
+Looking for unit in group:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+first group unit:  Tree of Eternity
+selectSubgroup 4
+Registering unit:  etoe
+new itemIds:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+new objIds:  12907 12907
+not registering already registered unit...
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'mpeR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 92093
+====================================
+looking for unit:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Tree of Eternity
+building itemid ability
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'bneR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 94093
+====================================
+looking for unit:  [ 107, 50, 0, 0 ] [ 107, 50, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Tree of Eternity
+building itemid ability
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 99594
+====================================
+removing from group:  { itemId1: [ 107, 50, 0, 0 ], itemId2: [ 107, 50, 0, 0 ] }
+====================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions: [ { itemId1: [Array], itemId2: [Array] } ] }
+Game Timer: 99594
+====================================
+====================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 99594
+====================================
+====================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'bode',
+  objectId1: 11688,
+  objectId2: 21976 }
+Game Timer: 99594
+====================================
+assign possible select units
+assign possible sel group itemId:  edob
+Looking for unit in group:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+first group unit:  Hunter's Hall
+selectSubgroup 4
+Registering unit:  edob
+new itemIds:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+new objIds:  11688 21976
+setting fully registered unit
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'mseR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 100694
+====================================
+looking for unit:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Hunter's Hall
+building itemid ability
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'wseR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 104994
+====================================
+looking for unit:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Hunter's Hall
+building itemid ability
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'vueR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 109194
+====================================
+looking for unit:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Hunter's Hall
+building itemid ability
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'sweR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 112594
+====================================
+looking for unit:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Hunter's Hall
+building itemid ability
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'ameR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 114894
+====================================
+looking for unit:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Hunter's Hall
+building itemid ability
+====================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'hreR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 119094
+====================================
+looking for unit:  [ -88, 45, 0, 0 ] [ -40, 85, 0, 0 ]
+found unit
+useAbilityNoTarget, sel units:  1
+has sel unit:  Hunter's Hall
+building itemid ability
+====================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 123593
+====================================
+parse: 56.525ms
+************************************
+Inspecting player: 1
+Unit count: 13
+Unregistered units: -2
+Tree of Eternity (B)
+Chimaera Roost (B)
+Wisp
+Wisp
+Wisp
+Wisp
+Wisp
+Tree of Life (B)
+Altar of Elders (B)
+Ancient of Wonders (B)
+Hunter's Hall (B)
+Ancient of Lore (B)
+Moon Well (B)
+************************************
