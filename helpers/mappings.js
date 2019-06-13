@@ -12,7 +12,8 @@ const extraUnits = {
     'ucs1': 'Carrion Beetle (lvl 1)',
     'ucs2': 'Carrion Beetle (lvl 2)',
     'ucs3': 'Carrion Beetle (lvl 3)',
-    'ucs4': 'Carrion Beetle (lvl 4)'
+    'ucs4': 'Carrion Beetle (lvl 4)',
+    'efon': 'Treant'
 };
 
 Object.keys(extraUnits).forEach(key => {
@@ -1124,7 +1125,8 @@ const abilityActions = {
     'HeroMoveItem5': [ 38, 0, 13, 0 ],
     'HeroMoveItem6': [ 39, 0, 13, 0 ],
     'NERoot': [ 197, 0, 13, 0 ],
-    'NEUpRoot': [ 198, 0, 13, 0 ]
+    'NEUpRoot': [ 198, 0, 13, 0 ],
+    'EatTree': [ -78, 0, 13, 0 ]
 };
 
 const mapStartPositions = {
@@ -1153,6 +1155,8 @@ const getUnitInfo = (itemId) => {
 	const isUnit = (inUnitList || isHero && !isBuilding);
     const isItem = (inItemList);
 
+    const isKnownId = !!(allItemIds[itemId]);
+
     let isPlayerShop = false;
 	let displayName = `Unknown (${itemId})`;
 	if (isBuilding) {
@@ -1170,7 +1174,9 @@ const getUnitInfo = (itemId) => {
 		displayName = units[itemId] || heroes[itemId];
     } else if (isItem) {
         displayName = items[itemId];
-	}
+	} else if (isKnownId) {
+        displayName = allItemIds[itemId];
+    }
 
 	if (displayName.startsWith("u_") || 
         displayName.startsWith("b_") ||
