@@ -1,10 +1,10 @@
 
 const config = {
 	debugActions: true,
-	debugPlayer: null,
+	debugPlayer: 2,
 	replayPaths: [
 	  {
-	    'file': './replays/pro-match-echo-isles.w3g'
+	    'file': './replays/happy-vs-grubby2.w3g'
 	  }
 	]
 };
