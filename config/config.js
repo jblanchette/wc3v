@@ -1,10 +1,10 @@
 
 const config = {
 	debugActions: true,
-	debugPlayer: 2,
+	debugPlayer: null,
 	replayPaths: [
 	  {
-	    'file': './replays/happy-vs-grubby2.w3g'
+	    'file': './replays/test-orc-stronghold.w3g'
 	  }
 	]
 };

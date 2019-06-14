@@ -1096,6 +1096,14 @@ const specialBuildings = {
     }
 };
 
+
+// building / resrach timings in seconds
+
+const buildTimings = {
+    'orge': 160,
+    'ostr': 160
+};
+
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
 	let item = unitMetaData[key];
 	if (item.hero) {
@@ -1211,5 +1219,6 @@ module.exports = {
 	abilityActions: abilityActions,
 	abilityFlagNames: abilityFlagNames,
     workerForRace: workerForRace,
-	mapStartPositions: mapStartPositions
+	mapStartPositions: mapStartPositions,
+    buildTimings: buildTimings
 };
