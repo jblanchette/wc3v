@@ -19,7 +19,7 @@ For specific player only debugging, set the debugPlayer to their playerId
 
 # Example output
 
-see the [me-vs-orc.wcg.wc3v.pp](output/me-vs-orc.wcg.wc3v.pp) file for a pretty-printed JSON dump
+see the [me-vs-orc.wcg.wc3v.pp](output/me-vs-orc.w3g.wc3v.pp) file for a pretty-printed JSON dump
 of the current output for a b.net game I won UD vs ORC
 
 # How It Works
