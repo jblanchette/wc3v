@@ -5,6 +5,9 @@ const Parser = new W3GReplay();
 const config = require("./config/config");
 const UnitManager = require("./lib/UnitManager");
 
+const fs = require('fs'),
+      path = require('path');
+
 let unitManager;
 let actionCount = 0;
 let hasParsedMeta = false;
@@ -19,6 +22,23 @@ let globalTime = 0;
 * flag - or use player specific ID debugging.
 */
 const paths = config.replayPaths;
+
+const writeOutput = (filename, replay, players) => {
+
+  const output = {
+    replay: replay,
+    players: players
+  };
+
+  console.log("about to write file", path.basename(filename));
+
+  try {
+    fs.writeFileSync(`./output/${path.basename(filename)}.wc3v`, JSON.stringify(output));
+    console.log("done");
+  } catch (e) {
+    console.log("file write error: ", e);
+  }
+};
 
 W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   if (!hasParsedMeta) {
@@ -66,6 +86,8 @@ paths.forEach(path => {
   
   const replay = Parser.parse(file);
   let players = unitManager.players;
+
+  writeOutput(file, replay, players);
 
   Object.keys(players).forEach(playerId => {
     console.log("************************************");

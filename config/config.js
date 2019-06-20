@@ -4,7 +4,7 @@ const config = {
 	debugPlayer: null,
 	replayPaths: [
 	  {
-	    'file': './replays/test-orc-stronghold.w3g'
+	    'file': './replays/me-vs-orc.w3g'
 	  }
 	]
 };

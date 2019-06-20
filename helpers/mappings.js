@@ -1100,8 +1100,8 @@ const specialBuildings = {
 // building / resrach timings in seconds
 
 const buildTimings = {
-    'orge': 160,
-    'ostr': 160
+    'orge': 150,
+    'ostr': 140
 };
 
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
@@ -1149,6 +1149,15 @@ const abilityFlagNames = {
 	'LearnSkillOrTrain': 66,  // 0x42
 	'Summon': 68,      // 0x44
     'TrainUnit': 70    // 0x46
+};
+
+const itemAbilityData = {
+    'rnec': { 
+     'type': 'summon',
+     'summonCount': 2,
+     'summonItemId': 'uske',
+     'summonDuration': 65
+   }
 };
 
 const getUnitInfo = (itemId) => {
@@ -1220,5 +1229,6 @@ module.exports = {
 	abilityFlagNames: abilityFlagNames,
     workerForRace: workerForRace,
 	mapStartPositions: mapStartPositions,
-    buildTimings: buildTimings
+    buildTimings: buildTimings,
+    itemAbilityData: itemAbilityData
 };
