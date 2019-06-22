@@ -2,43 +2,15 @@ const W3GReplay = require('./node_modules/w3gjs');
 const { ActionBlockList } = require('./node_modules/w3gjs/parsers/actions');
 const Parser = new W3GReplay();
 
-const config = require("./config/config");
-const UnitManager = require("./lib/UnitManager");
-
-const fs = require('fs'),
-      path = require('path');
+const utils = require("./helpers/utils"),
+      logManager = require("./helpers/logManager"),
+      UnitManager = require("./lib/UnitManager");
 
 let unitManager;
 let actionCount = 0;
 let hasParsedMeta = false;
 
 let globalTime = 0;
-
-/*
-* For now - configure the replay files to parse here in the `paths`
-*           list.
-*           
-* To enable verbose debugging, configure the UnitManager.js debugActions
-* flag - or use player specific ID debugging.
-*/
-const paths = config.replayPaths;
-
-const writeOutput = (filename, replay, players) => {
-
-  const output = {
-    replay: replay,
-    players: players
-  };
-
-  console.log("about to write file", path.basename(filename));
-
-  try {
-    fs.writeFileSync(`./output/${path.basename(filename)}.wc3v`, JSON.stringify(output));
-    console.log("done");
-  } catch (e) {
-    console.log("file write error: ", e);
-  }
-};
 
 W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   if (!hasParsedMeta) {
@@ -76,79 +48,51 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   });
 };
 
-paths.forEach(path => {
-  const {file} = path;
-  
-  unitManager = new UnitManager();
-  hasParsedMeta = false;
-  
-  console.log("Parsing file: ", file);
-  
-  const replay = Parser.parse(file);
-  let players = unitManager.players;
+const parseReplays = (paths) => {
+  paths.forEach(file => {
+    unitManager = new UnitManager();
+    hasParsedMeta = false;
+    
+    logManager.setLogger(file);
 
-  writeOutput(file, replay, players);
+    const logger = logManager.getLogger();
 
-  Object.keys(players).forEach(playerId => {
-    console.log("************************************");
-    console.log(`Inspecting player: ${playerId}`);
+    console.logger.info('test jeff ez');
+    return;
 
-    // console.log(players[playerId]);
+    const replay = Parser.parse(file);
+    let players = unitManager.players;
 
-    let units = players[playerId].units;
+    utils.writeOutput(file, replay, players);
 
-    console.log(`Unit count: ${units.length}`);
-    console.log(`Unregistered units: ${players[playerId].unregisteredUnitCount}`);
+    Object.keys(players).forEach(playerId => {
+      console.log("************************************");
+      console.log(`Inspecting player: ${playerId}`);
 
-    let removedBuildings = players[playerId].removedBuildings;
-    if (removedBuildings.length) {
-      console.log("Showing removed buildings:");
+      const player = players[playerId];
+      const { units, unregisteredUnitCount, removedBuildings } = player;
 
-      removedBuildings.forEach(building => {
-        console.log("(removed)", building.displayName);
-      });
+      console.log(`Unit count: ${units.length}`);
+      console.log(`Unregistered units: ${unregisteredUnitCount}`);
 
-      console.log("------------------------------------");
-    }
-
-    units.sort(unit => { 
-      return unit.displayName;
-    });
-
-    units.forEach(unit => {
-      if (unit.meta.hero) {
-        const items = Object.keys(unit.items).map(key => {
-          const item = unit.items[key];
-
-          if (!item) {
-            return `empty`;
-          } else {
-            return item.displayName;
-          }
+      if (removedBuildings.length) {
+        console.log("Showing removed buildings:");
+        removedBuildings.forEach(building => {
+          console.log("(removed)", building.displayName);
         });
-
-        if (unit.isIllusion) {
-          console.log(`${unit.displayName} (Illusion)`);
-          return;
-        }
-
-        console.log(unit.displayName, `(${unit.knownLevel})`, "items: ", items);
-        console.log("IDs: ", unit.itemId1, unit.itemId2, unit.objectId1, unit.objectId2);
-        
-        console.log("---");
-      } else {
-        if (unit.isBuilding) {
-          console.log(`${unit.displayName} (B)`);  
-        } else {
-          console.log(unit.displayName);
-        }
+        console.log("------------------------------------");
       }
+      console.log("************************************");
     });
-
-    
-    
-    console.log("************************************");
   });
-});
+};
 
-process.exit();
+const main = () => {
+  const options = utils.readCliArgs(process.argv);
+  
+  parseReplays(options.paths);
+};
+
+// main entry point
+main();
+//process.exit();

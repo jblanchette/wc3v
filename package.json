@@ -20,5 +20,8 @@
 		"w3gjs": "anXieTyPB/w3gjs#master"
 	},
 	"license": "MIT",
-	"readmeFilename": "README.md"
+	"readmeFilename": "README.md",
+	"devDependencies": {
+		"simple-node-logger": "^18.12.22"
+	}
 }
