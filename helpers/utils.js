@@ -1,20 +1,33 @@
-const isEqualItemId = (itemId1, itemId2) => {
+const fs = require('fs'),
+      path = require('path');
+
+////
+// check if two [itemId] lists are equal
+////
+const isEqualItemId = (itemIdA, itemIdB) => {
 	let isEqual = false;
 
-	if (itemId1 === null && itemId2 === null) {
+	if (itemIdA === null && itemIdB === null) {
+		// both null
 		return true;
-	} else if (itemId1 === null || itemId2 === null) {
+	} else if (itemIdA === null || itemIdB === null) {
+		// one is null and one isn't
 		return false;
 	}
 
-	for (let i = 0; i < itemId1.length; i++) {
-		if (itemId1[i] !== itemId2[i]) {
+	// check to ensure each position in the list is equal
+	for (let i = 0; i < itemIdA.length; i++) {
+		if (itemIdA[i] !== itemIdB[i]) {
 			return false;
 		}
 	}
 
 	return true;
 };
+
+////
+// the replay parsing engine returns the itemId (string) backwards
+////
 
 const fixItemId = (itemId) => {
 	if (Array.isArray(itemId)) {
@@ -24,6 +37,11 @@ const fixItemId = (itemId) => {
 	return itemId.split("").reverse().join("");
 };
 
+////
+// helper function for matching [itemId] lists to [abilityId] lists 
+// of a given focusObject
+////
+
 const findItemIdForObject = (itemId, focusObject) => {
 	return Object.keys(focusObject).find(abilityKey => {
 			const abilityItemId = focusObject[abilityKey];
@@ -32,12 +50,21 @@ const findItemIdForObject = (itemId, focusObject) => {
 	});
 };
 
+////
+// distance between p (x,y) and q (x,y)
+////
+
 const distance = (pX, pY, qX, qY) => { 
 	return Math.sqrt(
 		Math.pow(qX - pX, 2) +
 		Math.pow(qY - pY, 2)
 	);
 };
+
+////
+// finds the unit closest to a given point from a list of units
+// and and optional filter function
+////
 
 const closestToPoint = (x, y, units, filterFn) => {
 	if (filterFn) {
@@ -58,24 +85,70 @@ const closestToPoint = (x, y, units, filterFn) => {
 		return a.distance - b.distance;
 	});
 
-	console.log("closest check: ", positions.map(p => {
-		return `${p.unit.displayName} - dist: ${p.distance}`;
-	}));
-
 	const winner = positions[0];
 	return winner && winner.unit || null;
 };
+
+////
+// generate random int up to max val
+////
 
 const getRandomInt = (max) => {
   return Math.floor(Math.random() * Math.floor(max));
 };
 
-// from https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+////
+// uuid gen - from https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+////
 const uuidv4 = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+};
+
+
+////
+// write wc3v output to file
+////
+
+const writeOutput = (filename, replay, players) => {
+  const output = {
+    replay: replay,
+    players: players
+  };
+
+  try {
+  	const outputPath = `./output/${path.basename(filename)}.wc3v`;
+    fs.writeFileSync(outputPath, JSON.stringify(output));
+    console.log("created wc3v file: ", outputPath);
+  } catch (e) {
+    console.log("file write error: ", e);
+  }
+};
+
+const readCliArgs = (argv) => {
+	const userArgs = process.argv.slice(2);
+
+	console.log("user args: ", userArgs);
+
+	let options = {
+		paths: []
+	};
+
+	userArgs.forEach(rawArg => {
+		const parts = rawArg.split("=");
+		const flag = parts[0].substring(2);
+		const val = parts[1];
+
+		switch (flag) {
+			case "replay":
+				options.paths.push(`./replays/${val}.w3g`);
+			break;
+		};
+	});
+
+	return options;
 };
 
 module.exports = {
@@ -86,6 +159,8 @@ module.exports = {
 	closestToPoint: closestToPoint,
 	getRandomInt: getRandomInt,
 	uuidv4: uuidv4,
+	readCliArgs: readCliArgs,
+	writeOutput: writeOutput,
 
 	// constants
 	MS_TO_SECONDS: 0.001,

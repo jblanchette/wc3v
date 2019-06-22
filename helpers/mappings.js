@@ -62,7 +62,11 @@ const unitMetaData = {
 		'permanent': true,
         'playerShop': false,
         'race': 'H',
-        'movespeed': 190
+        'movespeed': 190,
+        'evolution': {
+            'itemId': 'hmil',
+            'time': 45
+        }
 	},
 	'Hamg': {
 		'displayName': 'Archmage',
@@ -1206,6 +1210,7 @@ const getUnitInfo = (itemId) => {
 		worker: false,
 		permanent: isBuilding,
         playerShop: isPlayerShop,
+        evolution: null,
         movespeed: 200 // default unknown ms
 	};
 
