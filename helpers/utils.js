@@ -1,6 +1,8 @@
 const fs = require('fs'),
       path = require('path');
 
+const config = require('../config/config');
+
 ////
 // check if two [itemId] lists are equal
 ////
@@ -54,7 +56,7 @@ const findItemIdForObject = (itemId, focusObject) => {
 // distance between p (x,y) and q (x,y)
 ////
 
-const distance = (pX, pY, qX, qY) => { 
+const distance = (pX, pY, qX, qY) => {
 	return Math.sqrt(
 		Math.pow(qX - pX, 2) +
 		Math.pow(qY - pY, 2)
@@ -114,16 +116,24 @@ const uuidv4 = () => {
 
 const writeOutput = (filename, replay, players) => {
   const output = {
-    replay: replay,
-    players: players
+  	replay: replay,
+    players: Object.keys(players).reduce((acc, playerId) => {
+    	const player = players[playerId];
+
+    	acc[playerId] = {
+    		units: player.units.map(unit => unit.exportUnit())
+    	};
+
+    	return acc;
+    }, {})
   };
 
   try {
-  	const outputPath = `./output/${path.basename(filename)}.wc3v`;
-    fs.writeFileSync(outputPath, JSON.stringify(output));
-    console.log("created wc3v file: ", outputPath);
+  	const outputPath = `./client/replays/${path.basename(filename)}.wc3v`;
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 4));
+    console.logger("created wc3v file: ", outputPath);
   } catch (e) {
-    console.log("file write error: ", e);
+    console.logger("file write error: ", e);
   }
 };
 
@@ -144,6 +154,11 @@ const readCliArgs = (argv) => {
 		switch (flag) {
 			case "replay":
 				options.paths.push(`./replays/${val}.w3g`);
+			break;
+
+			case "debug-player":
+				console.log("setting debug player to: ", val);
+				config.debugPlayer = val;
 			break;
 		};
 	});

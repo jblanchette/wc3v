@@ -1119,6 +1119,8 @@ const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
 
 const abilityActions = {
 	'RightClick': [3, 0, 13, 0],
+    'AttackCommand': [ 15, 0, 13, 0 ],
+    'MoveCommand': [ 18, 0, 13, 0 ],
 	'CastSkillObject': [-105, 0, 13, 0],
 	'CastSkillTarget': [154, 0, 13, 0],
 	'CastSummonSkill': [158, 0, 13, 0],

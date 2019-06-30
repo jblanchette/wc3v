@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
+    <script src="js/app.js"></script>
+
+    <style type="text/css">
+      html, body {
+        border: 0;
+        margin: 0;
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        width: calc(100vw);
+        height: calc(100vh);
+        min-height: 750px;
+      }
+
+      #menu {
+        flex: 1;
+        max-height: 3rem;
+        margin: 1rem;
+        margin-bottom: 0;
+        padding: 1rem;
+        border: 1px solid #000;
+      }
+
+      .menu-item {
+        display: inline-block;
+      }
+
+      #input-map-file {
+        width: 400px;
+        text-align: center;
+      }
+
+      #content {
+        display: flex;
+        width: calc(100vw);
+        height: calc(100vh);
+        justify-content: center;
+      }
+
+      .canvas-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem;
+        width: 100%;
+        border: 1px solid #000;
+      }
+
+      #main-canvas {
+        border: 1px solid #000;
+        height: 600px;
+        width: 800px;
+      }
+
+      .info-wrapper {
+        padding: 2rem;
+      }
+
+      #unit-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      #unit-list li {
+        list-style-type: none;
+        text-decoration: underline;
+        color: blue;
+        cursor: pointer;
+      }
+
+      #unit-list li:hover {
+        text-decoration: none;
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <div id="app">
+      <div id="menu">
+        <div class="menu-item">
+          <button onClick="wc3v.load()">open</button>
+        </div>
+        <div class="menu-item">
+          <input id="input-map-file" type="text" name="wc3v-file" value="happy-vs-grubby.w3g.wc3v" />
+        </div>
+      </div>
+
+      <div id="content">
+        <div class="canvas-wrapper">
+          <div class="info-wrapper">
+            <h3>Players:</h3>
+            <select id="player-list" placeholder="---"></select>
+            <h3>Units:</h3>
+            <ul id="unit-list" placeholder="---"></ul>
+          </div>
+        
+          <canvas id="main-canvas" width="800" height="600"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>

@@ -1,38 +1,53 @@
 const fs = require('fs'),
-      path = require('path');
+      path = require('path'),
+      util = require('util');
 
-const simpleLogger = require('simple-node-logger');
+const config = require("../config/config");
+const { debugPlayer, logToConsole } = config;
+
+let logDisabled = false;
 
 const Logger = class {
-  constructor (logFile, logToConsole = false) {
+  constructor (logFile) {
+    const self = this;
     const outputFile = `./logs/${path.basename(logFile)}.log`;
 
+    this.logDisabled = false;
+
     try {
+      // remove the old log file
       fs.unlinkSync(outputFile);
     } catch (err) { /* no op */ }
 
-    this.logger = simpleLogger.createSimpleFileLogger(
-      outputFile
-    );
+    this.logStream =  fs.createWriteStream(outputFile, { flags: 'a' })
 
-    this.logToConsole = logToConsole;
-    console.logger = this.logger;
-  }
+    console.logger = (...args) => {
+      if (logDisabled) {
+        return;
+      }
 
-  log () {
-    const args = Array.from(arguments);
+      const msg = args.map((arg, ind) => {
+        if (Array.isArray(arg) || typeof(arg) === 'object') {
+          return util.inspect(arg, true, 7);  
+        } else if (arg && arg.toString) {
+          return arg.toString();
+        }
+        
+        return arg
+      });
 
-    this.logger.info.apply(null, args);
+      this.logStream.write(msg.join(' ') + '\n');
 
-    if (this.logToConsole) {
-      console.log.apply(null, args);
+      if (logToConsole) {
+        console.log(args);
+      }
     }
   }
+
+
 };
 
 const setLogger = (filename) => {
-  console.log("making logger");
-  
   _logger = new Logger(filename);
 };
 
@@ -40,7 +55,12 @@ const getLogger = () => {
   return _logger;
 };
 
+const setDisabledState = (state) => {
+  logDisabled = state;
+};
+
 module.exports = {
   setLogger: setLogger,
-  getLogger: getLogger
+  getLogger: getLogger,
+  setDisabledState: setDisabledState
 };

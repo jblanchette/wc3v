@@ -18,31 +18,17 @@ W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
     hasParsedMeta = true;
   }
 
-  if (this.leaveEvents.length) {
-    console.log("###");
-    console.log("Found leave event:", this.leaveEvents);
-    console.log("###");
-  }
-
   globalTime += timeSlotBlock.timeIncrement;
   unitManager.processTick(globalTime);
 
   timeSlotBlock.actions.forEach(actionBlock => {
-  	// try {
-      unitManager.checkCreatePlayer(actionBlock);
+    unitManager.checkCreatePlayer(actionBlock);
 
-	  	ActionBlockList.parse(actionBlock.actions).forEach(action => {
-        actionCount++;
+  	ActionBlockList.parse(actionBlock.actions).forEach(action => {
+      actionCount++;
 
-        // console.log("================================");
-        // console.log(`Action ${actionCount} Player ${actionBlock.playerId}`);
-        // console.log("================================");
-
-        unitManager.handleAction(actionBlock, action);
-	  	});
-  	// } catch (ex) {
-   //  	console.error(ex);
-  	// }
+      unitManager.handleAction(actionBlock, action);
+  	});
 
     this.processCommandDataBlock(actionBlock);
   });
@@ -53,38 +39,47 @@ const parseReplays = (paths) => {
     unitManager = new UnitManager();
     hasParsedMeta = false;
     
-    logManager.setLogger(file);
+    logManager.setLogger(file, true);
 
-    const logger = logManager.getLogger();
+    try {
+      const replay = Parser.parse(file);
+      let players = unitManager.players;
 
-    console.logger.info('test jeff ez');
-    return;
+      // write our output wc3v file
+      utils.writeOutput(file, replay, players);
 
-    const replay = Parser.parse(file);
-    let players = unitManager.players;
+      // re-enable all logging
+      logManager.setDisabledState(false);
 
-    utils.writeOutput(file, replay, players);
+      Object.keys(players).forEach(playerId => {
+        console.logger("************************************");
+        console.logger(`Inspecting player: ${playerId}`);
 
-    Object.keys(players).forEach(playerId => {
-      console.log("************************************");
-      console.log(`Inspecting player: ${playerId}`);
+        const player = players[playerId];
+        const { units, unregisteredUnitCount, removedBuildings } = player;
 
-      const player = players[playerId];
-      const { units, unregisteredUnitCount, removedBuildings } = player;
+        console.logger(`Unit count: ${units.length}`);
+        console.logger(`Unregistered units: ${unregisteredUnitCount}`);
 
-      console.log(`Unit count: ${units.length}`);
-      console.log(`Unregistered units: ${unregisteredUnitCount}`);
+        if (removedBuildings.length) {
+          console.logger("Showing removed buildings:");
+          removedBuildings.forEach(building => {
+            console.logger("(removed)", building.displayName);
+          });
+          console.logger("------------------------------------");
+        }
+        console.logger("************************************");
+      });
 
-      if (removedBuildings.length) {
-        console.log("Showing removed buildings:");
-        removedBuildings.forEach(building => {
-          console.log("(removed)", building.displayName);
-        });
-        console.log("------------------------------------");
-      }
-      console.log("************************************");
-    });
+    } catch (e) {
+      console.log("error parsing replay: ", file);
+      console.log("error: ", e);
+
+      return;
+    }
   });
+
+  console.logger("wc3v completed.  enjoy!");
 };
 
 const main = () => {
