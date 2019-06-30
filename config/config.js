@@ -1,5 +1,6 @@
 
 const config = {
+  logToConsole: false,
 	debugActions: true,
 	debugPlayer: null
 };
