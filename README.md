@@ -5,7 +5,26 @@
  Goal is to simulate enough of wc3 to get a 'birds eye view'
  of the match from a given replay.
 
+ Examples:
+
+ ![Happy vs Grubby showmatch on Concealed Hill](/example-client.png)
+
 # Usage
+
+## Running the client viewer
+
+navigate to the `client` directory
+
+run `npm install -g http-server` to install `http-server`
+
+run `http-server` and follow the printed directions to see the locally hosted site
+
+## Running the map parser
+
+```
+note: currently built as a node project for ease of development, will eventually
+be ported to web.
+```
 
 run `node wc3v.js`
 
