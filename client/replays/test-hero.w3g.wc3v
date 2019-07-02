@@ -1,0 +1,487 @@
+{
+    "replay": {
+        "header": {
+            "magic": "Warcraft III recorded game\u001a",
+            "offset": 68,
+            "compressedSize": 16503,
+            "headerVersion": "01000000",
+            "decompressedSize": 35588,
+            "compressedDataBlockCount": 5,
+            "gameIdentifier": "PX3W",
+            "version": 10030,
+            "buildNo": 6061,
+            "flags": "0000",
+            "replayLengthMS": 131450,
+            "checksum": 4042095626
+        },
+        "meta": {
+            "meta": {
+                "player": {
+                    "playerId": 1,
+                    "playerName": "jblanch",
+                    "addDataFlagHost": 2,
+                    "additional": {}
+                },
+                "gameName": "Local Game",
+                "encodedString": "0103490701017501b15501015d6be94d9b6171732f47736f857b656f5569736fcd6f652f29332945bb63696f49736d651b732f773379016b29636d616f636901890179ad5bbba71987092701b5a1d75f6f7b490fcf71f7b9",
+                "playerCount": 24,
+                "gameType": "09000000",
+                "languageId": "00000000",
+                "playerList": [
+                    {
+                        "hasRecord": 25
+                    }
+                ],
+                "gameStartRecord": 25,
+                "dataByteCount": 6400,
+                "slotRecordCount": 2,
+                "playerSlotRecords": [
+                    {
+                        "playerId": 1,
+                        "slotStatus": 2,
+                        "computerFlag": 0,
+                        "teamId": 0,
+                        "color": 0,
+                        "raceFlag": "O",
+                        "aiStrength": 1,
+                        "handicapFlag": 100
+                    },
+                    {
+                        "playerId": 0,
+                        "slotStatus": 2,
+                        "computerFlag": 1,
+                        "teamId": 1,
+                        "color": 1,
+                        "raceFlag": "R",
+                        "aiStrength": 1,
+                        "handicapFlag": 100
+                    }
+                ],
+                "randomSeed": 214416919,
+                "selectMode": "00",
+                "startSpotCount": 2
+            },
+            "speed": 2,
+            "hideTerrain": 0,
+            "mapExplored": 1,
+            "alwaysVisible": 0,
+            "default": 0,
+            "observerMode": 2,
+            "teamsTogether": 0,
+            "empty": 0,
+            "fixedTeams": 0,
+            "fullSharedUnitControl": 0,
+            "randomHero": 0,
+            "randomRaces": 0,
+            "referees": 0,
+            "mapChecksum": "005d6be8",
+            "mapName": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+            "creator": "jblanch"
+        },
+        "playerActionTrackInterval": 60000,
+        "teams": {
+            "0": [
+                1
+            ],
+            "1": [
+                0
+            ]
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "detectedRace": null,
+                "units": {},
+                "upgrades": {},
+                "heroSkills": {},
+                "items": {},
+                "actions": {
+                    "timed": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "buildings": {},
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "O",
+                "detectedRace": null,
+                "units": {},
+                "upgrades": {},
+                "heroSkills": {},
+                "items": {},
+                "actions": {
+                    "timed": [
+                        4,
+                        0,
+                        0,
+                        2,
+                        4,
+                        3
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 5,
+                    "basic": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 5,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0,
+                    "buildtrain": 1
+                },
+                "buildings": {
+                    "oalt": 1
+                },
+                "currentTimePlayed": 312801,
+                "apm": 2
+            }
+        },
+        "chatlog": [],
+        "leaveEvents": [
+            {
+                "type": 23,
+                "reason": "0c000000",
+                "playerId": 1,
+                "result": "07000000"
+            }
+        ],
+        "w3mmd": [],
+        "totalTimeTracker": 314201,
+        "timeSegmentTracker": 13995,
+        "matchup": "OvR",
+        "observers": []
+    },
+    "players": {
+        "1": {
+            "units": [
+                {
+                    "displayName": "Altar of Storms",
+                    "itemId": "oalt",
+                    "itemId1": "121,61,0,0",
+                    "itemId2": "58,66,0,0",
+                    "objectId1": 15737,
+                    "objectId2": 16954,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Blademaster",
+                    "itemId": "Obla",
+                    "itemId1": "-51,44,0,0",
+                    "itemId2": "-39,76,0,0",
+                    "objectId1": 11469,
+                    "objectId2": 19673,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 90.0916077328548,
+                            "y": 53.54009914175931
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timerEvent": null,
+                            "timeElapsed": 2.096,
+                            "distance": 104.8,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": 4499.7080078125,
+                            "targetY": 2674.109375,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 5234.332154633944,
+                            "pathTime": 104.68664309267888,
+                            "xVelocity": 42.982637277125384,
+                            "yVelocity": 25.54394043022868,
+                            "onCompleteExtra": null
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Blademaster",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        "Scroll of Town Portal"
+                    ]
+                },
+                {
+                    "displayName": "Great Hall",
+                    "itemId": "ogre",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": "-76,62,0,0",
+                    "itemId2": "-76,62,0,0",
+                    "objectId1": 16052,
+                    "objectId2": 16052,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 4239.56494140625,
+                            "y": 3135.774169921875
+                        },
+                        {
+                            "x": 4192.375611456273,
+                            "y": 3167.7455186402544
+                        },
+                        {
+                            "x": 4870.362710903114,
+                            "y": 3259.6664035558288
+                        },
+                        {
+                            "x": 4538.910461928321,
+                            "y": 2749.7306401997494
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timerEvent": null,
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": 4239.56494140625,
+                            "targetY": 3135.774169921875,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 5273.233404387692,
+                            "pathTime": 27.753860023093115,
+                            "xVelocity": 152.75586667507298,
+                            "yVelocity": 112.9851547609124,
+                            "onCompleteExtra": null
+                        },
+                        {
+                            "timerEvent": null,
+                            "timeElapsed": 0.30000000000000004,
+                            "distance": 57.00000000000019,
+                            "startX": 4239.56494140625,
+                            "startY": 3135.774169921875,
+                            "targetX": 4192,
+                            "targetY": 3168,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 57.45370114452316,
+                            "pathTime": 0.3023879007606482,
+                            "xVelocity": 157.29776649992192,
+                            "yVelocity": 106.57116239459924
+                        },
+                        {
+                            "timerEvent": null,
+                            "timeElapsed": 3.6010000000000018,
+                            "distance": 684.1900000000018,
+                            "startX": 4192.375611456273,
+                            "startY": 3167.7455186402544,
+                            "targetX": 4878.11376953125,
+                            "targetY": 3260.71728515625,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 692.0119730244319,
+                            "pathTime": 3.6421682790759573,
+                            "xVelocity": 188.27745055452337,
+                            "yVelocity": 25.526488451978704,
+                            "onCompleteExtra": null
+                        },
+                        {
+                            "timerEvent": null,
+                            "timeElapsed": 3.201000000000002,
+                            "distance": 608.1899999999968,
+                            "startX": 4870.362710903114,
+                            "startY": 3259.6664035558288,
+                            "targetX": 4536.15234375,
+                            "targetY": 2745.4873046875,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 613.2509398489871,
+                            "pathTime": 3.2276365255209845,
+                            "xVelocity": 103.54646953289387,
+                            "yVelocity": 159.30514319152874,
+                            "onCompleteExtra": null
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                }
+            ]
+        }
+    }
+}

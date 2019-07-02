@@ -96,6 +96,7 @@ printing unit data:
  * itemid2:       [ -84, 62, 0, 0, [length]: 4 ]
  * objectid1:     null
  * objectid2:     null
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -187,6 +188,7 @@ printing unit data:
  * itemid2:       [ 13, 63, 0, 0, [length]: 4 ]
  * objectid1:     null
  * objectid2:     null
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -209,7 +211,7 @@ Game Timer: 8602
 ========================================================================
 looking for unit:  [ 13, 63, 0, 0, [length]: 4 ] [ 13, 63, 0, 0, [length]: 4 ]
 found unit Peasant
-calling unit.moveTo
+unit walk: Peasant
 *** unit is walking long path time:  29.2843516405181
 moving spawned unit to spot -4666.5048828125 3030.202392578125
 calling cancel event for spawn at start / no path
@@ -246,6 +248,7 @@ printing unit data:
  * itemid2:       [ 13, 63, 0, 0, [length]: 4 ]
  * objectid1:     16141
  * objectid2:     16141
+ * path len:      1
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -309,6 +312,7 @@ has worker in group
 set unit spawned:  false Arcane Sanctum
 moving unit to build:  Arcane Sanctum
 calling moveTo from build
+unit walk: Peasant
 1 *** setting build menu CLOSED
 move on complete.  Peasant 1
 recorded path for:  Peasant
@@ -385,6 +389,7 @@ printing unit data:
  * itemid2:       [ 59, 71, 0, 0, [length]: 4 ]
  * objectid1:     null
  * objectid2:     null
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -407,6 +412,8 @@ has sel unit:  Arcane Sanctum
 building itemid ability
 1 Building is training a unit. Priest
 set unit spawned:  false Priest
+setting unit spawn pos: -4672 2816
+recorded path for:  Priest
 1 Making trained unit: Priest hmpr
 adding unit Priest
 player units for id:  1
@@ -488,6 +495,7 @@ printing unit data:
  * itemid2:       [ -101, 74, 0, 0, [length]: 4 ]
  * objectid1:     null
  * objectid2:     null
+ * path len:      1
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -510,8 +518,7 @@ Game Timer: 29299
 ========================================================================
 looking for unit:  [ -89, 58, 0, 0, [length]: 4 ] [ -101, 74, 0, 0, [length]: 4 ]
 found unit Priest
-calling unit.moveTo
-*** unit is walking long path time:  27.1123982599577
+unit walk: Priest
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -580,6 +587,7 @@ printing unit data:
  * itemid2:       [ 59, 71, 0, 0, [length]: 4 ]
  * objectid1:     16139
  * objectid2:     18235
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -587,6 +595,8 @@ Registering unit:  hars
 new itemIds:  [ 11, 63, 0, 0, [length]: 4 ] [ 59, 71, 0, 0, [length]: 4 ]
 new objIds:  16139 18235
 not registering already registered unit...
+move on complete.  Priest 1
+recorded path for:  Priest
 ========================================================================
 ActionName: UseAbilityNoTarget PID: 1
 Action: { actionId: 16,
@@ -668,6 +678,7 @@ printing unit data:
  * itemid2:       [ -101, 74, 0, 0, [length]: 4 ]
  * objectid1:     15015
  * objectid2:     19099
+ * path len:      2
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -754,6 +765,7 @@ printing unit data:
  * itemid2:       [ 59, 71, 0, 0, [length]: 4 ]
  * objectid1:     16139
  * objectid2:     18235
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -829,6 +841,7 @@ printing unit data:
  * itemid2:       [ -84, 62, 0, 0, [length]: 4 ]
  * objectid1:     16044
  * objectid2:     16044
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -870,6 +883,7 @@ printing unit data:
  * itemid2:       [ -84, 62, 0, 0, [length]: 4 ]
  * objectid1:     16044
  * objectid2:     16044
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -947,6 +961,7 @@ printing unit data:
  * itemid2:       [ 13, 63, 0, 0, [length]: 4 ]
  * objectid1:     16141
  * objectid2:     16141
+ * path len:      2
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1010,6 +1025,7 @@ has worker in group
 set unit spawned:  false Altar of Kings
 moving unit to build:  Altar of Kings
 calling moveTo from build
+unit walk: Peasant
 1 *** setting build menu CLOSED
 move on complete.  Peasant 2
 recorded path for:  Peasant
@@ -1033,8 +1049,6 @@ Action: { actionId: 1 }
 Game Timer: 55496
 ========================================================================
 building upgrade complete, setting itemId:  hkee
-move on complete.  Priest 0
-recorded path for:  Priest
 ========================================================================
 ActionName: Resume PID: 1
 Action: { actionId: 2 }
@@ -1108,6 +1122,7 @@ printing unit data:
  * itemid2:       [ 59, 71, 0, 0, [length]: 4 ]
  * objectid1:     16139
  * objectid2:     18235
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1182,6 +1197,7 @@ printing unit data:
  * itemid2:       [ -84, 62, 0, 0, [length]: 4 ]
  * objectid1:     16044
  * objectid2:     16044
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1235,6 +1251,7 @@ printing unit data:
  * itemid2:       [ -84, 62, 0, 0, [length]: 4 ]
  * objectid1:     16044
  * objectid2:     16044
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1275,6 +1292,7 @@ printing unit data:
  * itemid2:       [ -84, 62, 0, 0, [length]: 4 ]
  * objectid1:     16044
  * objectid2:     16044
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1352,6 +1370,7 @@ printing unit data:
  * itemid2:       [ 59, 71, 0, 0, [length]: 4 ]
  * objectid1:     16139
  * objectid2:     18235
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1441,6 +1460,7 @@ printing unit data:
  * itemid2:       [ -101, 74, 0, 0, [length]: 4 ]
  * objectid1:     15015
  * objectid2:     19099
+ * path len:      2
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1475,8 +1495,8 @@ Game Timer: 130789
 ========================================================================
 looking for unit:  [ -89, 58, 0, 0, [length]: 4 ] [ -101, 74, 0, 0, [length]: 4 ]
 found unit Priest
-calling unit.moveTo
-move on complete.  Priest 1
+unit walk: Priest
+move on complete.  Priest 2
 recorded path for:  Priest
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
@@ -1509,7 +1529,7 @@ Game Timer: 138689
 ========================================================================
 looking for unit:  [ -89, 58, 0, 0, [length]: 4 ] [ -101, 74, 0, 0, [length]: 4 ]
 found unit Priest
-calling unit.moveTo
+unit walk: Priest
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -1578,6 +1598,7 @@ printing unit data:
  * itemid2:       [ 59, 71, 0, 0, [length]: 4 ]
  * objectid1:     16139
  * objectid2:     18235
+ * path len:      0
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1585,7 +1606,7 @@ Registering unit:  hars
 new itemIds:  [ 11, 63, 0, 0, [length]: 4 ] [ 59, 71, 0, 0, [length]: 4 ]
 new objIds:  16139 18235
 not registering already registered unit...
-move on complete.  Priest 2
+move on complete.  Priest 3
 recorded path for:  Priest
 ========================================================================
 ActionName: UseAbilityNoTarget PID: 1
@@ -1678,6 +1699,7 @@ printing unit data:
  * itemid2:       [ -101, 74, 0, 0, [length]: 4 ]
  * objectid1:     15015
  * objectid2:     19099
+ * path len:      4
 items:         [ [length]: 0 ]
 -----------------------------------------------------
 selectSubgroup 4
@@ -1712,8 +1734,8 @@ Game Timer: 175185
 ========================================================================
 looking for unit:  [ -89, 58, 0, 0, [length]: 4 ] [ -101, 74, 0, 0, [length]: 4 ]
 found unit Priest
-calling unit.moveTo
-move on complete.  Priest 3
+unit walk: Priest
+move on complete.  Priest 4
 recorded path for:  Priest
 ========================================================================
 ActionName: UseAbilityNoTarget PID: 1

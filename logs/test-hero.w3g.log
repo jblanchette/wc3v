@@ -1,0 +1,694 @@
+setup player race:  O
+set unit spawned:  true Great Hall
+adding player building:  ogre Great Hall
+adding building at:  0 0 Great Hall
+set unit spawned:  true Peon
+adding unit Peon
+player units for id:  1
+[ 'Great Hall - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 2 ]
+set unit spawned:  true Peon
+adding unit Peon
+player units for id:  1
+[ 'Great Hall - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 3 ]
+set unit spawned:  true Peon
+adding unit Peon
+player units for id:  1
+[ 'Great Hall - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 4 ]
+set unit spawned:  true Peon
+adding unit Peon
+player units for id:  1
+[ 'Great Hall - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 5 ]
+set unit spawned:  true Peon
+adding unit Peon
+player units for id:  1
+[ 'Great Hall - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 6 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 3200
+========================================================================
+didnt find unit yet:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 3200
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 16052,
+  objectId2: 16052 }
+Game Timer: 3200
+========================================================================
+raw sel:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+assign possible select units
+assign possible sel group itemId:  opeo
+found unit to register [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ] Peon
+new reg unit count:  1
+firstGroupItem:  { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+  itemId2: [ -76, 62, 0, 0, [length]: 4 ] }
+Looking for unit in group:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+found first unit in group
+-----------------------------------------------------
+printing unit data:
+ * display name:  Peon
+ * itemId:        opeo
+ * itemid1:       [ -76, 62, 0, 0, [length]: 4 ]
+ * itemid2:       [ -76, 62, 0, 0, [length]: 4 ]
+ * objectid1:     null
+ * objectid2:     null
+ * path len:      0
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+selectSubgroup 4
+Registering unit:  opeo
+new itemIds:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+new objIds:  16052 16052
+setting fully registered unit
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4239.56494140625,
+  targetY: 3135.774169921875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 3900
+========================================================================
+looking for unit:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+*** unit is walking long path time:  27.753860023093115
+moving spawned unit to spot 4239.56494140625 3135.774169921875
+calling cancel event for spawn at start / no path
+move on complete.  Peon 0
+recorded path for:  Peon
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 4100
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'tlao',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4192,
+  targetY: 3168 }
+Game Timer: 4400
+========================================================================
+looking for unit:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+found unit Peon
+ability unitInfo:  { displayName: 'Altar of Storms',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Peon
+selection is:  [ 'Peon', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Storms
+worker units:  [ 'itemId1: -76,62,0,0 id2: -76,62,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 5 ]
+has worker in group
+set unit spawned:  false Altar of Storms
+moving unit to build:  Altar of Storms
+calling moveTo from build
+unit walk: Peon
+1 *** setting build menu CLOSED
+move on complete.  Peon 1
+recorded path for:  Peon
+runnning on complete extra
+unit finished moving to building, now building:  Altar of Storms
+adding player building:  oalt Altar of Storms
+adding building at:  4192 3168 Altar of Storms
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 5700
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 18303
+========================================================================
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 22702
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 69415
+========================================================================
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 75410
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 171410
+========================================================================
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 174810
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 182411
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 207910
+========================================================================
+current units:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+new selection:  [ [length]: 0 ]
+new raw sel:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+       itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 207910
+========================================================================
+didnt find unit yet:  [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '121,61,0,0, 58,66,0,0 - Unregistered', [length]: 1 ]
+warning: cant check group validity with unknown first unit.
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 207910
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'tlao',
+  objectId1: 15737,
+  objectId2: 16954 }
+Game Timer: 207910
+========================================================================
+raw sel:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+assign possible select units
+assign possible sel group itemId:  oalt
+found unit to register [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ] Altar of Storms
+new reg unit count:  1
+firstGroupItem:  { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+  itemId2: [ 58, 66, 0, 0, [length]: 4 ] }
+Looking for unit in group:  [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ]
+found first unit in group
+-----------------------------------------------------
+printing unit data:
+ * display name:  Altar of Storms
+ * itemId:        oalt
+ * itemid1:       [ 121, 61, 0, 0, [length]: 4 ]
+ * itemid2:       [ 58, 66, 0, 0, [length]: 4 ]
+ * objectid1:     null
+ * objectid2:     null
+ * path len:      0
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+selectSubgroup 4
+Registering unit:  oalt
+new itemIds:  [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ]
+new objIds:  15737 16954
+setting fully registered unit
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 224010
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 227517
+========================================================================
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 228517
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 230018
+========================================================================
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'albO',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 237211
+========================================================================
+looking for unit:  [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ]
+found unit Altar of Storms
+has sel unit:  Altar of Storms
+building itemid ability
+set unit spawned:  false Blademaster
+1 Making a hero.
+1 Gave first hero a TP item.
+set unit spawned:  false Scroll of Town Portal
+1 Making trained unit:  Blademaster
+adding unit Blademaster
+player units for id:  1
+[ 'Altar of Storms - [15737, 16954] 121,61,0,0, 58,66,0,0',
+  'Blademaster - [null, null] null, null',
+  'Great Hall - [null, null] null, null',
+  'Peon - [16052, 16052] -76,62,0,0, -76,62,0,0',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 8 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+       itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 240111
+========================================================================
+current units:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+new selection:  [ [length]: 0 ]
+new raw sel:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 240111
+========================================================================
+set unit alive:  Peon [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-76,62,0,0, -76,62,0,0 [16052, 16052] - Peon', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 240111
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 16052,
+  objectId2: 16052 }
+Game Timer: 240111
+========================================================================
+raw sel:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+assign possible select units
+assign possible sel group itemId:  opeo
+new reg unit count:  0
+firstGroupItem:  { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+  itemId2: [ -76, 62, 0, 0, [length]: 4 ] }
+Looking for unit in group:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+found first unit in group
+-----------------------------------------------------
+printing unit data:
+ * display name:  Peon
+ * itemId:        opeo
+ * itemid1:       [ -76, 62, 0, 0, [length]: 4 ]
+ * itemid2:       [ -76, 62, 0, 0, [length]: 4 ]
+ * objectid1:     16052
+ * objectid2:     16052
+ * path len:      2
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+selectSubgroup 4
+Registering unit:  opeo
+new itemIds:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+new objIds:  16052 16052
+not registering already registered unit...
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4878.11376953125,
+  targetY: 3260.71728515625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 243811
+========================================================================
+looking for unit:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+*** unit is walking long path time:  3.6421682790759573
+move on complete.  Peon 2
+recorded path for:  Peon
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4536.15234375,
+  targetY: 2745.4873046875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 251112
+========================================================================
+looking for unit:  [ -76, 62, 0, 0, [length]: 4 ] [ -76, 62, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+*** unit is walking long path time:  3.2276365255209845
+move on complete.  Peon 3
+recorded path for:  Peon
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 254913
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 265109
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 279406
+========================================================================
+current units:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -76, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -76, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+new selection:  [ [length]: 0 ]
+new raw sel:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+       itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 279406
+========================================================================
+set unit alive:  Altar of Storms [ 121, 61, 0, 0, [length]: 4 ] [ 121, 61, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '121,61,0,0, 58,66,0,0 [15737, 16954] - Altar of Storms',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 279406
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'tlao',
+  objectId1: 15737,
+  objectId2: 16954 }
+Game Timer: 279406
+========================================================================
+raw sel:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+assign possible select units
+assign possible sel group itemId:  oalt
+new reg unit count:  0
+firstGroupItem:  { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+  itemId2: [ 58, 66, 0, 0, [length]: 4 ] }
+Looking for unit in group:  [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ]
+found first unit in group
+-----------------------------------------------------
+printing unit data:
+ * display name:  Altar of Storms
+ * itemId:        oalt
+ * itemid1:       [ 121, 61, 0, 0, [length]: 4 ]
+ * itemid2:       [ 58, 66, 0, 0, [length]: 4 ]
+ * objectid1:     15737
+ * objectid2:     16954
+ * path len:      0
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+selectSubgroup 4
+Registering unit:  oalt
+new itemIds:  [ 121, 61, 0, 0, [length]: 4 ] [ 58, 66, 0, 0, [length]: 4 ]
+new objIds:  15737 16954
+not registering already registered unit...
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 290206
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 292406
+========================================================================
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 293906
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 295206
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+       itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 306806
+========================================================================
+current units:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 121, 61, 0, 0, [length]: 4 ],
+    itemId2: [ 58, 66, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+new selection:  [ [length]: 0 ]
+new raw sel:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -51, 44, 0, 0, [length]: 4 ],
+       itemId2: [ -39, 76, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 306806
+========================================================================
+didnt find unit yet:  [ -51, 44, 0, 0, [length]: 4 ] [ -39, 76, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ -51, 44, 0, 0, [length]: 4 ],
+    itemId2: [ -39, 76, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-51,44,0,0, -39,76,0,0 - Unregistered', [length]: 1 ]
+warning: cant check group validity with unknown first unit.
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 306806
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'albO',
+  objectId1: 11469,
+  objectId2: 19673 }
+Game Timer: 306806
+========================================================================
+raw sel:  [ { itemId1: [ -51, 44, 0, 0, [length]: 4 ],
+    itemId2: [ -39, 76, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+assign possible select units
+assign possible sel group itemId:  Obla
+found unit to register [ -51, 44, 0, 0, [length]: 4 ] [ -39, 76, 0, 0, [length]: 4 ] Blademaster
+new reg unit count:  1
+firstGroupItem:  { itemId1: [ -51, 44, 0, 0, [length]: 4 ],
+  itemId2: [ -39, 76, 0, 0, [length]: 4 ] }
+Looking for unit in group:  [ -51, 44, 0, 0, [length]: 4 ] [ -39, 76, 0, 0, [length]: 4 ]
+found first unit in group
+-----------------------------------------------------
+printing unit data:
+ * display name:  Blademaster
+ * itemId:        Obla
+ * itemid1:       [ -51, 44, 0, 0, [length]: 4 ]
+ * itemid2:       [ -39, 76, 0, 0, [length]: 4 ]
+ * objectid1:     null
+ * objectid2:     null
+ * path len:      0
+items:         [ 'Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+selectSubgroup 4
+Registering unit:  Obla
+new itemIds:  [ -51, 44, 0, 0, [length]: 4 ] [ -39, 76, 0, 0, [length]: 4 ]
+new objIds:  11469 19673
+setting fully registered unit
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4499.7080078125,
+  targetY: 2674.109375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 308505
+========================================================================
+looking for unit:  [ -51, 44, 0, 0, [length]: 4 ] [ -39, 76, 0, 0, [length]: 4 ]
+found unit Blademaster
+moving hero fronted unit group from ground right click
+unit walk: Blademaster
+*** unit is walking long path time:  104.68664309267888
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4084.7978515625,
+  targetY: 3003.954833984375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 310601
+========================================================================
+looking for unit:  [ -51, 44, 0, 0, [length]: 4 ] [ -39, 76, 0, 0, [length]: 4 ]
+found unit Blademaster
+moving hero fronted unit group from ground right click
+unit walk: Blademaster
+stopping walking event before moveTo
+move on complete.  Blademaster 0
+recorded path for:  Blademaster
+*** unit is walking long path time:  99.32295823638756
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 312801
+========================================================================
+created wc3v file:  ./client/replays/test-hero.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 8
+Unregistered units: 4
+************************************
+wc3v completed.  enjoy!

@@ -114,7 +114,6 @@ const Wc3vViewer = class {
 
     const mapX = (middleX - (this.mapImage.width / 2));
     const mapY = (middleY - (this.mapImage.height / 2));
-
     
     ctx.drawImage(this.mapImage, mapX, mapY);
   }
@@ -123,16 +122,19 @@ const Wc3vViewer = class {
     const { ctx } = this;
     const unit = this.focusPlayer.units[this.renderUnitIndex];
 
+    const viewWidth = this.mapImage.width;
+    const viewHeight = this.mapImage.height;
+
     const middleX = (800 / 2);
     const middleY = (600 / 2);
 
     const drawPath = unit.path;
 
-    const viewXRange = [0, 800];
-    const viewYRange = [0, 600];
+    const viewXRange = [-(viewWidth / 2), (viewWidth / 2)];
+    const viewYRange = [-(viewHeight / 2), (viewHeight / 2)];
 
-    const xExtent = [-16000, 16000];
-    const yExtent = [-12000, 12000];
+    const xExtent = [-5200, 5200];
+    const yExtent = [-6400, 6400];
 
     const xScale = d3.scaleLinear()
       .domain(xExtent)
@@ -144,14 +146,22 @@ const Wc3vViewer = class {
 
     let penDown = false;
 
-    ctx.strokeStyle = "#FFFFFF";
+    ctx.strokeStyle = "#00FFFF";
     ctx.beginPath();
     ctx.moveTo(middleX, middleY);
 
+    /*
+    * wc3 coordinates are setup so ( 0 , 0 ) is in the center.
+    * depending on the map - ( 0 , 0 ) is likely the center of map.
+
+    * our draw points are translated by ( middleX, middleY ) so all coordinate values
+    * start at the center of our draw region
+    */
+
     drawPath.forEach(position => {
       const { x, y } = position;
-      const drawX = xScale(x);
-      const drawY = yScale(y);
+      const drawX = xScale(-x) + middleX;
+      const drawY = yScale(y) + middleY;
 
       if (!penDown) {
         ctx.moveTo(drawX, drawY);
