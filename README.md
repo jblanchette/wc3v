@@ -26,15 +26,7 @@ note: currently built as a node project for ease of development, will eventually
 be ported to web.
 ```
 
-run `node wc3v.js`
-
-A list of replays is provided in the `replays` folder.
-
-To configure a different replay parsing, edit the `replayPaths` const
-in the `config.js` file.
-
-To enable debugging turn on the `debugActions` config bool
-For specific player only debugging, set the debugPlayer to their playerId
+run `node wc3v.js --replay=[PATH TO REPLAY]`
 
 # Example output
 
