@@ -43,7 +43,7 @@ of the current output for a b.net game I won UD vs ORC
 
 # How It Works
 
-See the [DESIGN.md](DESIGN.md) file
+See the [DESIGN.md](/docs/DESIGN.md) file
 
 # Progress
 
