@@ -1,4 +1,8 @@
-const mapInputField = "input-map-file";
+const domMap = {
+  "mapInputFieldId": "input-map-file",
+  "playerListId": "player-list",
+  "unitListId": "unit-list"
+};
 
 const Wc3vViewer = class {
   constructor () {
@@ -13,7 +17,7 @@ const Wc3vViewer = class {
   }
 
   load () {
-    const filename = document.getElementById(mapInputField).value;
+    const filename = document.getElementById(domMap.mapInputFieldId).value;
     console.log('1 loading wc3v replay: ', filename);
 
     this.loadFile(filename);
@@ -64,14 +68,11 @@ const Wc3vViewer = class {
     const playerKeys = Object.keys(this.mapData.players);
     const { canvas, ctx } = this;
 
-    this.focusPlayer = this.mapData.players[playerKeys[0]];
+    // select first playerId as focus
+    this.selectFocusPlayer(playerKeys[0]);
 
     this.canvas = document.getElementById("main-canvas");
     this.ctx = this.canvas.getContext("2d");
-
-    this.selectRenderUnit(this.focusPlayer.units.findIndex(unit => {
-      return unit.path.length;
-    }));
 
     // finishes the setup promise
     return this.loadMapFile().then(() => {
@@ -79,23 +80,89 @@ const Wc3vViewer = class {
     })
   }
 
+  selectFocusPlayer (playerId) {
+    console.log("selecting: ", playerId);
+
+    this.focusPlayer = this.mapData.players[playerId];
+
+    this.selectRenderUnit(this.focusPlayer.units.findIndex(unit => {
+      // first unit with non-zero path length
+      return unit.path.length;
+    }));
+  }
+
   selectRenderUnit (unitIndex) {
     this.renderUnitIndex = unitIndex;
   }
 
+  renderPlayerlist () {
+    const self = this;
+    const playerList = document.getElementById(domMap.playerListId);
+
+    // clear the list
+    playerList.innerHTML = "";
+
+    playerList.addEventListener("change", (e) => {
+      const { target } = e;
+      const playerName = target.value;
+
+      const playerIdList = Object.keys(this.mapData.players);
+      const selectedPlayerId = playerIdList.find(playerId => {
+        const player = self.mapData.replay.players[playerId];
+
+        return player.name === playerName;
+      });
+
+      self.selectFocusPlayer(selectedPlayerId);
+      self.render();
+    });
+
+    const playerData = this.mapData.replay.players;
+    const playerIdList = Object.keys(this.mapData.players);
+
+    playerIdList.forEach(playerId => {
+      const optionItem = document.createElement("option");
+      optionItem.innerHTML = `${playerData[playerId].name}`;
+
+      playerList.append(optionItem);
+    });
+  }
+
   renderUnitList () {
-    const unitList = document.getElementById("unit-list");
+    const unitList = document.getElementById(domMap.unitListId);
 
     // clear the list
     unitList.innerHTML = "";
 
-    this.focusPlayer.units.forEach((unit, index) => {
+    // sort heroes first
+    const sortedUnits = this.focusPlayer.units.sort((a, b) => {
+      if (a.meta.hero && !b.meta.hero) {
+        return 1;
+      } else if (a.meta.hero && b.meta.hero) {
+        if (a.displayName === b.displayName) {
+          if (a.isIllusion && !b.isIllusion) {
+            return -1;
+          } else {
+            return (a.isIllusion && b.isIllusion) ? 0 : 1;
+          }
+        }
+
+        // sort by hero name when both are heroes
+        return (a.displayName > b.displayName) - (a.displayName < b.displayName);
+      } else {
+        return -1;
+      }
+    }).reverse();
+
+    sortedUnits.forEach((unit, index) => {
       if (!unit.path.length) {
         return;
       }
 
       const listItem = document.createElement("li");
-      listItem.innerHTML = `<a onClick="wc3v.selectRenderUnit('${index}'); wc3v.render()">${unit.displayName}</a>`;
+      listItem.innerHTML = `<a onClick="wc3v.selectRenderUnit('${index}'); wc3v.render()">
+        ${unit.displayName} ${unit.meta.hero ? "(H)" : ""} ${unit.isIllusion ? "(I)" : ""}
+      </a>`;
 
       unitList.append(listItem);
     });
@@ -178,6 +245,7 @@ const Wc3vViewer = class {
   render () {
     console.log("rendering scene");
 
+    this.renderPlayerlist();
     this.renderUnitList();
 
     this.clearCanvas();
