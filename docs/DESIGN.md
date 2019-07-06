@@ -86,3 +86,15 @@ locations, and then 'predict' where the player started based on their known move
 
 In probably 99% of scenarios we will be able to guess correctly based on the assumption that
 a player will build at least their buildings near their starting position.
+
+### Backfilling 
+
+As covered previously the `wc3v` map parser handles units in an unregistered state.  The actions units and buildings can take while still in an unregistered state are all important to determining the state of the game.
+
+One common example can be seen in the test replay `test-backfill.wc3g`:
+
+The sceanrio is that a newly spawned `Hero (DK)` is moving around the map - when a `Ghoul is then added to the selection group.  This `Ghoul` has yet to be selected directly - meaning we have not registered it yet.
+
+After a couple of movement actions to and from a creep camp, the player eventually selects the `Ghoul` directly and sends them back to base.  At this point the `wc3v` parser recognizes that we've stored some `backfill` data for this `itemId1 / itemId2` pair in our action selections and performs a backfill of the data.
+
+The backfill is performed by simulating the actions that we've stored in a compacted format alongside the gametime at which they occured.  Simulating the events allows for unit actions to be canceled or detected, in the same ways registered units have.
