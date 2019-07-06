@@ -6,7 +6,7 @@ This client aims to show the capabilities of the `wc3v` file format and it's abi
 
 ## Design
 
-![Drawing Diagram](client-drawing-diagram.jpg)
+![Drawing Diagram](docs/client-drawing-diagram.jpg)
 
 ## Setup
 
