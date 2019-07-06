@@ -11,7 +11,7 @@
 
 # Usage
 
-## Running the client viewer
+## Running the reference `wc3v` client viewer
 
 navigate to the `client` directory
 
@@ -19,7 +19,9 @@ run `npm install -g http-server` to install `http-server`
 
 run `http-server` and follow the printed directions to see the locally hosted site
 
-## Running the map parser
+Also see the [client README.md](client/README.md) for more information
+
+## Running the `wc3v` map parser
 
 ```
 note: currently built as a node project for ease of development, will eventually
