@@ -1,7 +1,14 @@
 const domMap = {
   "mapInputFieldId": "input-map-file",
   "playerListId": "player-list",
-  "unitListId": "unit-list"
+  "unitListId": "unit-list",
+  "unitInfoId": "unit-info"
+};
+
+const colorMap = {
+  "black": "#000000",
+  "buildingOutline": "#00FF00",
+  "unitPath": "#00FFFF"
 };
 
 const Wc3vViewer = class {
@@ -15,6 +22,9 @@ const Wc3vViewer = class {
     this.focusPlayer = null;
     this.focusPlayerId = null;
     this.renderUnitIndex = null;
+
+    this.xScale = null;
+    this.yScale = null;
   }
 
   load () {
@@ -77,8 +87,31 @@ const Wc3vViewer = class {
 
     // finishes the setup promise
     return this.loadMapFile().then(() => {
+      self.setupDrawing();
       self.render();
     })
+  }
+
+  setupDrawing () {
+    this.viewWidth = this.mapImage.width;
+    this.viewHeight = this.mapImage.height;
+
+    this.middleX = (800 / 2);
+    this.middleY = (600 / 2);
+
+    this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ];
+    this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
+
+    this.xExtent = [-5200, 5200];
+    this.yExtent = [-6400, 6400];
+
+    this.xScale = d3.scaleLinear()
+      .domain(this.xExtent)
+      .range(this.viewXRange);
+
+    this.yScale = d3.scaleLinear()
+      .domain(this.yExtent)
+      .range(this.viewYRange);
   }
 
   selectFocusPlayer (playerId) {
@@ -197,48 +230,53 @@ const Wc3vViewer = class {
 
   renderMapBackground () {
     const { ctx } = this;
-    const middleX = (800 / 2);
-    const middleY = (600 / 2);
 
-    const mapX = (middleX - (this.mapImage.width / 2));
-    const mapY = (middleY - (this.mapImage.height / 2));
+    const mapX = (this.middleX - (this.mapImage.width / 2));
+    const mapY = (this.middleY - (this.mapImage.height / 2));
     
     ctx.drawImage(this.mapImage, mapX, mapY);
+  }
+
+  renderBuildings () {
+    const { ctx } = this;
+    const buildings = this.focusPlayer.units.filter(unit => {
+      return unit.isBuilding;
+    });
+
+    console.log("buildings: ", buildings);
+
+    ctx.strokeStyle = colorMap.buildingOutline;
+
+    buildings.forEach(building => {
+      const { x, y } = building.lastPosition;
+      const drawX = this.xScale(-x) + this.middleX;
+      const drawY = this.yScale(y) + this.middleY;
+
+      console.log("drawing: ", drawX, drawY);
+      ctx.strokeRect(drawX, drawY, 10, 10);
+    });
+
+    ctx.strokeStyle = colorMap.black;
   }
 
   renderSelectedUnit () {
     const { ctx } = this;
     const unit = this.focusPlayer.units[this.renderUnitIndex];
-
+    const drawPath = unit.path;
+    
     console.log("render unit: ", unit.displayName);
 
-    const viewWidth = this.mapImage.width;
-    const viewHeight = this.mapImage.height;
-
-    const middleX = (800 / 2);
-    const middleY = (600 / 2);
-
-    const drawPath = unit.path;
-
-    const viewXRange = [-(viewWidth / 2), (viewWidth / 2)];
-    const viewYRange = [-(viewHeight / 2), (viewHeight / 2)];
-
-    const xExtent = [-5200, 5200];
-    const yExtent = [-6400, 6400];
-
-    const xScale = d3.scaleLinear()
-      .domain(xExtent)
-      .range(viewXRange);
-
-    const yScale = d3.scaleLinear()
-      .domain(yExtent)
-      .range(viewYRange);
+    // update the unit info dom section
+    const unitInfo = document.getElementById(domMap.unitInfoId);
+    unitInfo.innerHTML = `<ul>
+      <li>${unit.displayName}</li>
+    </ul>`;
 
     let penDown = false;
 
-    ctx.strokeStyle = "#00FFFF";
+    ctx.strokeStyle = colorMap.unitPath;
     ctx.beginPath();
-    ctx.moveTo(middleX, middleY);
+    ctx.moveTo(this.middleX, this.middleY);
 
     /*
     * wc3 coordinates are setup so ( 0 , 0 ) is in the center.
@@ -250,8 +288,8 @@ const Wc3vViewer = class {
 
     drawPath.forEach(position => {
       const { x, y } = position;
-      const drawX = xScale(-x) + middleX;
-      const drawY = yScale(y) + middleY;
+      const drawX = this.xScale(-x) + this.middleX;
+      const drawY = this.yScale(y) + this.middleY;
 
       if (!penDown) {
         ctx.moveTo(drawX, drawY);
@@ -262,7 +300,7 @@ const Wc3vViewer = class {
     });
 
     ctx.stroke();
-    ctx.strokeStyle = "#000000";
+    ctx.strokeStyle = colorMap.black;
   }
 
   render () {
@@ -273,6 +311,7 @@ const Wc3vViewer = class {
 
     this.clearCanvas();
     this.renderMapBackground();
+    this.renderBuildings();
     this.renderSelectedUnit();
   }
 };

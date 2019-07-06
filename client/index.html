@@ -15,7 +15,7 @@
           <button onClick="wc3v.load()">open</button>
         </div>
         <div class="menu-item">
-          <input id="input-map-file" type="text" name="wc3v-file" value="test-backfill.w3g.wc3v" />
+          <input id="input-map-file" type="text" name="wc3v-file" value="happy-vs-grubby.w3g.wc3v" />
         </div>
       </div>
 
@@ -24,6 +24,12 @@
           <div class="info-wrapper">
             <h3>Players:</h3>
             <select id="player-list" placeholder="---"></select>
+            <h3>Draw Controls:</h3>
+            <div id="draw-controls-wrapper">
+              Draw Buildings: <input type="checkbox" name="ctrlDrawBuilding" checked />
+            </div>
+            <h3>Selected Unit:</h3>
+            <div id="unit-info"></div>
             <h3>Units:</h3>
             <ul id="unit-list" placeholder="---"></ul>
           </div>

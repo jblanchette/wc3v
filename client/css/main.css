@@ -52,11 +52,12 @@ html, body {
 }
 
 .info-wrapper {
-  padding: 2rem;
+  padding: 1rem;
+  min-height: calc(600px - 1rem);
 }
 
 #unit-list {
-  max-height: 400px;
+  max-height: 300px;
   overflow-y: auto;
   margin: 0;
   padding: 0 2rem;

@@ -130,6 +130,7 @@ const writeOutput = (filename, replay, players) => {
     	const player = players[playerId];
 
     	acc[playerId] = {
+        startingPosition: player.startingPosition,
     		units: player.units.map(unit => unit.exportUnit())
     	};
 
