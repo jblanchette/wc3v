@@ -1,6 +1,6 @@
-# wc3v
+# WC3V
 
- (WIP) warcraft 3 replay viewer.
+ (WIP) **W**ar**c**raft **3** Replay **V**iewer.
 
  Goal is to simulate enough of wc3 to get a 'birds eye view'
  of the match from a given replay.
