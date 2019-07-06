@@ -13,6 +13,7 @@ const Wc3vViewer = class {
     this.mapImage = null;
 
     this.focusPlayer = null;
+    this.focusPlayerId = null;
     this.renderUnitIndex = null;
   }
 
@@ -81,14 +82,41 @@ const Wc3vViewer = class {
   }
 
   selectFocusPlayer (playerId) {
-    console.log("selecting: ", playerId);
-
+    this.focusPlayerId = playerId;
     this.focusPlayer = this.mapData.players[playerId];
 
+    console.log("focus: ", this.focusPlayerId);
+
+    // sort units for display
+    this.sortUnits();
+
+    // select first unit with non-zero path length
     this.selectRenderUnit(this.focusPlayer.units.findIndex(unit => {
-      // first unit with non-zero path length
       return unit.path.length;
     }));
+  }
+
+  sortUnits () {
+    // sort by: heroes, hero illusions, units
+
+    this.focusPlayer.units = this.focusPlayer.units.sort((a, b) => {
+      if (a.meta.hero && !b.meta.hero) {
+        return 1;
+      } else if (a.meta.hero && b.meta.hero) {
+        if (a.displayName === b.displayName) {
+          if (a.isIllusion && !b.isIllusion) {
+            return -1;
+          } else {
+            return (a.isIllusion && b.isIllusion) ? 0 : 1;
+          }
+        }
+
+        // sort by hero name when both are heroes
+        return (a.displayName > b.displayName) - (a.displayName < b.displayName);
+      } else {
+        return -1;
+      }
+    }).reverse();
   }
 
   selectRenderUnit (unitIndex) {
@@ -113,12 +141,25 @@ const Wc3vViewer = class {
         return player.name === playerName;
       });
 
+      console.log("selecting player: ", selectedPlayerId);
       self.selectFocusPlayer(selectedPlayerId);
       self.render();
     });
 
     const playerData = this.mapData.replay.players;
-    const playerIdList = Object.keys(this.mapData.players);
+    let playerIdList = Object.keys(this.mapData.players);
+
+    // put our focus player at the front
+    const focusPlayerIndex = playerIdList.findIndex(playerId => {
+      console.log("checking: ", playerId, self.focusPlayerId);
+      return playerId == self.focusPlayerId;
+    });
+
+    // delete the old list position, insert new id at the front
+    playerIdList.splice(focusPlayerIndex, 1);
+    playerIdList.unshift(this.focusPlayerId);
+    
+    console.log("player list: ", playerIdList);
 
     playerIdList.forEach(playerId => {
       const optionItem = document.createElement("option");
@@ -134,27 +175,7 @@ const Wc3vViewer = class {
     // clear the list
     unitList.innerHTML = "";
 
-    // sort heroes first
-    const sortedUnits = this.focusPlayer.units.sort((a, b) => {
-      if (a.meta.hero && !b.meta.hero) {
-        return 1;
-      } else if (a.meta.hero && b.meta.hero) {
-        if (a.displayName === b.displayName) {
-          if (a.isIllusion && !b.isIllusion) {
-            return -1;
-          } else {
-            return (a.isIllusion && b.isIllusion) ? 0 : 1;
-          }
-        }
-
-        // sort by hero name when both are heroes
-        return (a.displayName > b.displayName) - (a.displayName < b.displayName);
-      } else {
-        return -1;
-      }
-    }).reverse();
-
-    sortedUnits.forEach((unit, index) => {
+    this.focusPlayer.units.forEach((unit, index) => {
       if (!unit.path.length) {
         return;
       }
@@ -188,6 +209,8 @@ const Wc3vViewer = class {
   renderSelectedUnit () {
     const { ctx } = this;
     const unit = this.focusPlayer.units[this.renderUnitIndex];
+
+    console.log("render unit: ", unit.displayName);
 
     const viewWidth = this.mapImage.width;
     const viewHeight = this.mapImage.height;

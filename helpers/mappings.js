@@ -163,7 +163,8 @@ const unitMetaData = {
 		'hero': true,
 		'worker': false,
 		'permanent': true,
-        'playerShop': false
+        'playerShop': false,
+        'movespeed': 300
   },
   'Udre': {
 		'displayName':'Dread Lord',
@@ -1147,7 +1148,16 @@ const mapStartPositions = {
 	'EchoIsles': {
 		'0': { x: -5184.0, y: 2944.0 },
 		'1': { x: 4672.0, y: 2944.0 }
-	}
+	},
+    '(2)concealedhill.w3x': {
+        /*
+            call DefineStartLocation(0, 2176.0, 4224.0)
+            call DefineStartLocation(1, - 2304.0, - 4736.0)
+        */
+
+        '0': { x: 2176.0, y: 4224.0 },
+        '1': { x: -2304.0, y: -4736.0 }
+    }
 };
 
 const abilityFlagNames = {
