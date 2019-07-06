@@ -26,7 +26,13 @@ note: currently built as a node project for ease of development, will eventually
 be ported to web.
 ```
 
-run `node wc3v.js --replay=[PATH TO REPLAY]`
+run `node wc3v.js --replay=[REPLAY NAME]`
+
+where `REPLAY NAME` is the replay file path without any extension
+
+**example:**
+
+`node wc3v.js --replay=happy-vs-grubby`
 
 # Example output
 
