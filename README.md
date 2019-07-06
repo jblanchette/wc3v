@@ -30,8 +30,8 @@ run `node wc3v.js --replay=[PATH TO REPLAY]`
 
 # Example output
 
-see the [me-vs-orc.wcg.wc3v.pp](output/me-vs-orc.w3g.wc3v.pp) file for a pretty-printed JSON dump
-of the current output for a b.net game I won UD vs ORC
+see the [happy-vs-grubby.w3g.wc3v](client/replays/happy-vs-grubby.w3g.wc3v) file for a pretty-printed JSON dump
+of the current output for a Happy vs Grubby show match.
 
 # How It Works
 
@@ -39,10 +39,10 @@ See the [DESIGN.md](/docs/DESIGN.md) file
 
 # Progress
 
-Most basic game functionality works - some showstopper errors
+Most basic game functionality works - some show stopper errors
 are left in places where problems are still WIP.
 
-Patch `1.31` broke viewing of downloaded replays, so debbuging
+Patch `1.31` broke viewing of downloaded replays, so debugging
 is difficult at the moment.
 
 ## Implemented

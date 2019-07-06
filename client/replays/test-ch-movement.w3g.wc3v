@@ -1,0 +1,1486 @@
+{
+    "players": {
+        "1": {
+            "units": [
+                {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": "-108,71,0,0",
+                    "itemId2": "-108,71,0,0",
+                    "objectId1": 18324,
+                    "objectId2": 18324,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "19,72,0,0",
+                    "itemId2": "25,72,0,0",
+                    "objectId1": 18451,
+                    "objectId2": 18457,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 2752,
+                            "y": 4736
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "0.00",
+                            "distance": "0.00",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "2752.00",
+                            "targetY": "4736.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "5477.52",
+                            "pathTime": "23.31",
+                            "xVelocity": "118.07",
+                            "yVelocity": "203.19"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "44,72,0,0",
+                    "itemId2": "50,72,0,0",
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 2752,
+                            "y": 4736
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "0.00",
+                            "distance": "0.00",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "2752.00",
+                            "targetY": "4736.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "5477.52",
+                            "pathTime": "23.31",
+                            "xVelocity": "118.07",
+                            "yVelocity": "203.19"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "69,72,0,0",
+                    "itemId2": "75,72,0,0",
+                    "objectId1": 18501,
+                    "objectId2": 18507,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 2752,
+                            "y": 4736
+                        },
+                        {
+                            "x": 2853.2321003651014,
+                            "y": 4472.796539050734
+                        },
+                        {
+                            "x": 2638.947664337155,
+                            "y": 4376.3228095893655
+                        },
+                        {
+                            "x": 2751.6923877272734,
+                            "y": 4735.021328331343
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "0.00",
+                            "distance": "0.00",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "2752.00",
+                            "targetY": "4736.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "5477.52",
+                            "pathTime": "23.31",
+                            "xVelocity": "118.07",
+                            "yVelocity": "203.19"
+                        },
+                        {
+                            "timeElapsed": "1.20",
+                            "distance": "282.00",
+                            "startX": "2752.00",
+                            "startY": "4736.00",
+                            "targetX": "2912.00",
+                            "targetY": "4320.00",
+                            "xDirection": "1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "445.71",
+                            "pathTime": "1.90",
+                            "xVelocity": "84.36",
+                            "yVelocity": "219.34"
+                        },
+                        {
+                            "timeElapsed": "1.00",
+                            "distance": "235.00",
+                            "startX": "2853.23",
+                            "startY": "4472.80",
+                            "targetX": "2656.00",
+                            "targetY": "4384.00",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "216.30",
+                            "pathTime": "0.92",
+                            "xVelocity": "214.28",
+                            "yVelocity": "96.47"
+                        },
+                        {
+                            "timeElapsed": "1.60",
+                            "distance": "376.00",
+                            "startX": "2638.95",
+                            "startY": "4376.32",
+                            "targetX": "2752.00",
+                            "targetY": "4736.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "377.03",
+                            "pathTime": "1.60",
+                            "xVelocity": "70.47",
+                            "yVelocity": "224.19"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ghoul",
+                    "itemId": "ugho",
+                    "itemId1": "-3,71,0,0",
+                    "itemId2": "3,72,0,0",
+                    "objectId1": 18429,
+                    "objectId2": 18435,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 1727.4026755238892,
+                            "y": 4670.385011601622
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "24.90",
+                            "distance": "4979.60",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "1728.00",
+                            "targetY": "4672.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "4981.32",
+                            "pathTime": "24.91",
+                            "xVelocity": "69.38",
+                            "yVelocity": "187.58"
+                        }
+                    ],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "-115,71,0,0",
+                    "itemId2": "-6,85,0,0",
+                    "objectId1": 18317,
+                    "objectId2": 22010,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 0,
+                            "y": 0
+                        },
+                        {
+                            "x": 122.9668128340349,
+                            "y": 200.26023804399972
+                        },
+                        {
+                            "x": 2762.618717379521,
+                            "y": 4754.31994319219
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "1.00",
+                            "distance": "235.00",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "2240.00",
+                            "targetY": "3648.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "4280.83",
+                            "pathTime": "18.22",
+                            "xVelocity": "122.97",
+                            "yVelocity": "200.26"
+                        },
+                        {
+                            "timeElapsed": "22.40",
+                            "distance": "5263.76",
+                            "startX": "122.97",
+                            "startY": "200.26",
+                            "targetX": "2752.00",
+                            "targetY": "4736.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "5242.59",
+                            "pathTime": "22.31",
+                            "xVelocity": "117.85",
+                            "yVelocity": "203.32"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Altar of Darkness",
+                    "itemId": "uaod",
+                    "itemId1": "-122,73,0,0",
+                    "itemId2": "-38,80,0,0",
+                    "objectId1": 18822,
+                    "objectId2": 20698,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "-64,70,0,0",
+                    "itemId2": "-9,94,0,0",
+                    "objectId1": 18112,
+                    "objectId2": 24311,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 0,
+                            "y": 0
+                        },
+                        {
+                            "x": 477.95146414737957,
+                            "y": 995.7322169737076
+                        },
+                        {
+                            "x": 675.2343911647231,
+                            "y": 1448.0835148689039
+                        },
+                        {
+                            "x": 978.1715407494457,
+                            "y": 2136.3662208854685
+                        },
+                        {
+                            "x": 1405.6029114196767,
+                            "y": 2697.0153298359473
+                        },
+                        {
+                            "x": -2221.367120495074,
+                            "y": -4236.948955319938
+                        },
+                        {
+                            "x": -1452.4052614553386,
+                            "y": -4734.752752254187
+                        },
+                        {
+                            "x": -198.7739567244715,
+                            "y": -4537.852900048062
+                        },
+                        {
+                            "x": 1586.043705990789,
+                            "y": -4602.829133084723
+                        },
+                        {
+                            "x": 175.73892322678256,
+                            "y": -4581.241159280713
+                        },
+                        {
+                            "x": -442.9548899304953,
+                            "y": -2881.0476979987566
+                        },
+                        {
+                            "x": -1765.4294363091406,
+                            "y": -2668.159642484589
+                        },
+                        {
+                            "x": -1651.9349448950636,
+                            "y": -1145.1174957783182
+                        },
+                        {
+                            "x": -2634.4117210069376,
+                            "y": 701.2604813435912
+                        },
+                        {
+                            "x": -1685.093624575397,
+                            "y": 3924.88505653648
+                        },
+                        {
+                            "x": -2323.472728375207,
+                            "y": 4163.452384206793
+                        },
+                        {
+                            "x": -2657.456523605692,
+                            "y": 3569.400976899785
+                        },
+                        {
+                            "x": -2097.7945792435876,
+                            "y": 3180.52984396134
+                        },
+                        {
+                            "x": -2097.7945792435876,
+                            "y": 3180.52984396134
+                        },
+                        {
+                            "x": -2097.7945792435876,
+                            "y": 3180.52984396134
+                        },
+                        {
+                            "x": 2834.5432059962486,
+                            "y": 4161.7968679132755
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "4.70",
+                            "distance": "1104.50",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "2304.00",
+                            "targetY": "4800.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "5324.32",
+                            "pathTime": "22.66",
+                            "xVelocity": "101.69",
+                            "yVelocity": "211.86"
+                        },
+                        {
+                            "timeElapsed": "2.10",
+                            "distance": "493.50",
+                            "startX": "477.95",
+                            "startY": "995.73",
+                            "targetX": "1780.32",
+                            "targetY": "3981.93",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "3257.85",
+                            "pathTime": "13.86",
+                            "xVelocity": "93.94",
+                            "yVelocity": "215.41"
+                        },
+                        {
+                            "timeElapsed": "3.20",
+                            "distance": "752.00",
+                            "startX": "675.23",
+                            "startY": "1448.08",
+                            "targetX": "1728.00",
+                            "targetY": "3840.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "2613.35",
+                            "pathTime": "11.12",
+                            "xVelocity": "94.67",
+                            "yVelocity": "215.09"
+                        },
+                        {
+                            "timeElapsed": "3.00",
+                            "distance": "705.00",
+                            "startX": "978.17",
+                            "startY": "2136.37",
+                            "targetX": "1923.04",
+                            "targetY": "3375.72",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1558.45",
+                            "pathTime": "6.63",
+                            "xVelocity": "142.48",
+                            "yVelocity": "186.88"
+                        },
+                        {
+                            "timeElapsed": "33.30",
+                            "distance": "7825.27",
+                            "startX": "1405.60",
+                            "startY": "2697.02",
+                            "targetX": "-2215.67",
+                            "targetY": "-4226.06",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "7812.97",
+                            "pathTime": "33.25",
+                            "xVelocity": "108.92",
+                            "yVelocity": "208.23"
+                        },
+                        {
+                            "timeElapsed": "3.90",
+                            "distance": "916.03",
+                            "startX": "-2221.37",
+                            "startY": "-4236.95",
+                            "targetX": "-1442.34",
+                            "targetY": "-4741.27",
+                            "xDirection": "1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "928.02",
+                            "pathTime": "3.95",
+                            "xVelocity": "197.27",
+                            "yVelocity": "127.71"
+                        },
+                        {
+                            "timeElapsed": "5.40",
+                            "distance": "1269.00",
+                            "startX": "-1452.41",
+                            "startY": "-4734.75",
+                            "targetX": "-183.18",
+                            "targetY": "-4535.40",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1284.79",
+                            "pathTime": "5.47",
+                            "xVelocity": "232.15",
+                            "yVelocity": "36.46"
+                        },
+                        {
+                            "timeElapsed": "7.60",
+                            "distance": "1786.00",
+                            "startX": "-198.77",
+                            "startY": "-4537.85",
+                            "targetX": "1592.70",
+                            "targetY": "-4603.07",
+                            "xDirection": "1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "1792.66",
+                            "pathTime": "7.63",
+                            "xVelocity": "234.84",
+                            "yVelocity": "8.55"
+                        },
+                        {
+                            "timeElapsed": "6.00",
+                            "distance": "1410.47",
+                            "startX": "1586.04",
+                            "startY": "-4602.83",
+                            "targetX": "159.35",
+                            "targetY": "-4580.99",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1426.86",
+                            "pathTime": "6.07",
+                            "xVelocity": "234.97",
+                            "yVelocity": "3.60"
+                        },
+                        {
+                            "timeElapsed": "7.70",
+                            "distance": "1809.27",
+                            "startX": "175.74",
+                            "startY": "-4581.24",
+                            "targetX": "-448.27",
+                            "targetY": "-2866.44",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1824.81",
+                            "pathTime": "7.77",
+                            "xVelocity": "80.36",
+                            "yVelocity": "220.83"
+                        },
+                        {
+                            "timeElapsed": "5.70",
+                            "distance": "1339.50",
+                            "startX": "-442.95",
+                            "startY": "-2881.05",
+                            "targetX": "-2221.37",
+                            "targetY": "-2594.76",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1801.31",
+                            "pathTime": "7.67",
+                            "xVelocity": "232.01",
+                            "yVelocity": "37.35"
+                        },
+                        {
+                            "timeElapsed": "6.50",
+                            "distance": "1527.26",
+                            "startX": "-1765.43",
+                            "startY": "-2668.16",
+                            "targetX": "-1639.59",
+                            "targetY": "-979.52",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1693.33",
+                            "pathTime": "7.21",
+                            "xVelocity": "17.46",
+                            "yVelocity": "234.35"
+                        },
+                        {
+                            "timeElapsed": "8.90",
+                            "distance": "2091.50",
+                            "startX": "-1651.93",
+                            "startY": "-1145.12",
+                            "targetX": "-2965.68",
+                            "targetY": "1323.82",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "2796.71",
+                            "pathTime": "11.90",
+                            "xVelocity": "110.39",
+                            "yVelocity": "207.46"
+                        },
+                        {
+                            "timeElapsed": "14.30",
+                            "distance": "3360.50",
+                            "startX": "-2634.41",
+                            "startY": "701.26",
+                            "targetX": "-1687.43",
+                            "targetY": "3916.96",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "3352.24",
+                            "pathTime": "14.26",
+                            "xVelocity": "66.39",
+                            "yVelocity": "225.43"
+                        },
+                        {
+                            "timeElapsed": "2.90",
+                            "distance": "681.50",
+                            "startX": "-1685.09",
+                            "startY": "3924.89",
+                            "targetX": "-2342.03",
+                            "targetY": "4170.39",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "701.31",
+                            "pathTime": "2.98",
+                            "xVelocity": "220.13",
+                            "yVelocity": "82.26"
+                        },
+                        {
+                            "timeElapsed": "2.90",
+                            "distance": "681.50",
+                            "startX": "-2323.47",
+                            "startY": "4163.45",
+                            "targetX": "-2659.47",
+                            "targetY": "3565.81",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "685.62",
+                            "pathTime": "2.92",
+                            "xVelocity": "115.17",
+                            "yVelocity": "204.85"
+                        },
+                        {
+                            "timeElapsed": "2.90",
+                            "distance": "681.50",
+                            "startX": "-2657.46",
+                            "startY": "3569.40",
+                            "targetX": "-2081.39",
+                            "targetY": "3169.13",
+                            "xDirection": "1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "701.47",
+                            "pathTime": "2.98",
+                            "xVelocity": "192.99",
+                            "yVelocity": "134.09"
+                        },
+                        {
+                            "timeElapsed": "0.00",
+                            "distance": "0.00",
+                            "startX": "-2097.79",
+                            "startY": "3180.53",
+                            "targetX": "-1684.39",
+                            "targetY": "3853.29",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "789.63",
+                            "pathTime": "3.36",
+                            "xVelocity": "123.03",
+                            "yVelocity": "200.22"
+                        },
+                        {
+                            "timeElapsed": "3.30",
+                            "distance": "0.00",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "0.00",
+                            "targetY": "0.00",
+                            "xDirection": "0.00",
+                            "yDirection": "0.00",
+                            "pathDistance": "0.00",
+                            "pathTime": "0.00",
+                            "xVelocity": "0.00",
+                            "yVelocity": "0.00"
+                        },
+                        {
+                            "timeElapsed": "21.40",
+                            "distance": "5029.00",
+                            "startX": "-2097.79",
+                            "startY": "3180.53",
+                            "targetX": "2844.68",
+                            "targetY": "4163.81",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "5039.34",
+                            "pathTime": "21.44",
+                            "xVelocity": "230.48",
+                            "yVelocity": "45.85"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Crypt",
+                    "itemId": "usep",
+                    "itemId1": "-50,73,0,0",
+                    "itemId2": "7,87,0,0",
+                    "objectId1": 18894,
+                    "objectId2": 22279,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 0,
+                            "y": 0
+                        }
+                    ],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Graveyard",
+                    "itemId": "ugrv",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Death Knight",
+                    "itemId": "Udea",
+                    "itemId1": "-54,63,0,0",
+                    "itemId2": "-10,120,0,0",
+                    "objectId1": 16330,
+                    "objectId2": 30966,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 1,
+                    "path": [
+                        {
+                            "x": 2912,
+                            "y": 4320
+                        },
+                        {
+                            "x": 2713.2870800666765,
+                            "y": 4237.9136098273875
+                        },
+                        {
+                            "x": 2587.3794151138113,
+                            "y": 4082.519723505843
+                        },
+                        {
+                            "x": 2537.4544975694407,
+                            "y": 3883.537249131371
+                        },
+                        {
+                            "x": 2450.9866716786805,
+                            "y": 3549.5487536921923
+                        },
+                        {
+                            "x": 2382.497182250007,
+                            "y": 2938.374318822871
+                        },
+                        {
+                            "x": 2325.209998234008,
+                            "y": 2391.3659289900443
+                        },
+                        {
+                            "x": 2196.136415912289,
+                            "y": 1975.8517651560737
+                        },
+                        {
+                            "x": 1805.536281157737,
+                            "y": 1260.6070257628057
+                        },
+                        {
+                            "x": 1596.06224788165,
+                            "y": 1060.0562107979936
+                        },
+                        {
+                            "x": 1321.1672861795198,
+                            "y": 886.7782187424929
+                        },
+                        {
+                            "x": 878.4620545117766,
+                            "y": 931.9122176126521
+                        },
+                        {
+                            "x": 370.01393702190967,
+                            "y": 1523.4192013592574
+                        },
+                        {
+                            "x": 259.0896039159366,
+                            "y": 1631.6818095164354
+                        },
+                        {
+                            "x": 117.3821313157045,
+                            "y": 1725.5912989690714
+                        },
+                        {
+                            "x": -8.009461776346402,
+                            "y": 1807.913521860813
+                        },
+                        {
+                            "x": -236.17879776668943,
+                            "y": 2086.306690982702
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "4.30",
+                            "distance": "215.00",
+                            "startX": "2912.00",
+                            "startY": "4320.00",
+                            "targetX": "2042.14",
+                            "targetY": "3960.67",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "941.16",
+                            "pathTime": "18.82",
+                            "xVelocity": "46.21",
+                            "yVelocity": "19.09"
+                        },
+                        {
+                            "timeElapsed": "4.00",
+                            "distance": "200.00",
+                            "startX": "2713.29",
+                            "startY": "4237.91",
+                            "targetX": "2010.15",
+                            "targetY": "3370.11",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "1116.90",
+                            "pathTime": "22.34",
+                            "xVelocity": "31.48",
+                            "yVelocity": "38.85"
+                        },
+                        {
+                            "timeElapsed": "4.10",
+                            "distance": "205.15",
+                            "startX": "2587.38",
+                            "startY": "4082.52",
+                            "targetX": "2006.21",
+                            "targetY": "1766.20",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "2388.12",
+                            "pathTime": "47.76",
+                            "xVelocity": "12.17",
+                            "yVelocity": "48.50"
+                        },
+                        {
+                            "timeElapsed": "6.90",
+                            "distance": "345.00",
+                            "startX": "2537.45",
+                            "startY": "3883.54",
+                            "targetX": "1985.72",
+                            "targetY": "1752.43",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "2201.37",
+                            "pathTime": "44.03",
+                            "xVelocity": "12.53",
+                            "yVelocity": "48.40"
+                        },
+                        {
+                            "timeElapsed": "12.30",
+                            "distance": "615.00",
+                            "startX": "2450.99",
+                            "startY": "3549.55",
+                            "targetX": "1534.40",
+                            "targetY": "-4629.69",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "8230.43",
+                            "pathTime": "164.61",
+                            "xVelocity": "5.57",
+                            "yVelocity": "49.69"
+                        },
+                        {
+                            "timeElapsed": "11.00",
+                            "distance": "550.00",
+                            "startX": "2382.50",
+                            "startY": "2938.37",
+                            "targetX": "1592.70",
+                            "targetY": "-4603.07",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "7582.69",
+                            "pathTime": "151.65",
+                            "xVelocity": "5.21",
+                            "yVelocity": "49.73"
+                        },
+                        {
+                            "timeElapsed": "8.70",
+                            "distance": "435.10",
+                            "startX": "2325.21",
+                            "startY": "2391.37",
+                            "targetX": "159.35",
+                            "targetY": "-4580.99",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "7301.01",
+                            "pathTime": "146.02",
+                            "xVelocity": "14.83",
+                            "yVelocity": "47.75"
+                        },
+                        {
+                            "timeElapsed": "16.30",
+                            "distance": "814.95",
+                            "startX": "2196.14",
+                            "startY": "1975.85",
+                            "targetX": "-448.27",
+                            "targetY": "-2866.44",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "5517.31",
+                            "pathTime": "110.35",
+                            "xVelocity": "23.96",
+                            "yVelocity": "43.88"
+                        },
+                        {
+                            "timeElapsed": "5.80",
+                            "distance": "290.00",
+                            "startX": "1805.54",
+                            "startY": "1260.61",
+                            "targetX": "-2221.37",
+                            "targetY": "-2594.76",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "5574.93",
+                            "pathTime": "111.50",
+                            "xVelocity": "36.12",
+                            "yVelocity": "34.58"
+                        },
+                        {
+                            "timeElapsed": "6.50",
+                            "distance": "324.95",
+                            "startX": "1596.06",
+                            "startY": "1060.06",
+                            "targetX": "-1639.59",
+                            "targetY": "-979.52",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "3824.83",
+                            "pathTime": "76.50",
+                            "xVelocity": "42.30",
+                            "yVelocity": "26.66"
+                        },
+                        {
+                            "timeElapsed": "8.90",
+                            "distance": "445.00",
+                            "startX": "1321.17",
+                            "startY": "886.78",
+                            "targetX": "-2965.68",
+                            "targetY": "1323.82",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "4309.07",
+                            "pathTime": "86.18",
+                            "xVelocity": "49.74",
+                            "yVelocity": "5.07"
+                        },
+                        {
+                            "timeElapsed": "15.60",
+                            "distance": "780.00",
+                            "startX": "878.46",
+                            "startY": "931.91",
+                            "targetX": "-1687.43",
+                            "targetY": "3916.96",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "3936.28",
+                            "pathTime": "78.73",
+                            "xVelocity": "32.59",
+                            "yVelocity": "37.92"
+                        },
+                        {
+                            "timeElapsed": "3.10",
+                            "distance": "155.00",
+                            "startX": "370.01",
+                            "startY": "1523.42",
+                            "targetX": "-2342.03",
+                            "targetY": "4170.39",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "3789.68",
+                            "pathTime": "75.79",
+                            "xVelocity": "35.78",
+                            "yVelocity": "34.92"
+                        },
+                        {
+                            "timeElapsed": "3.40",
+                            "distance": "170.00",
+                            "startX": "259.09",
+                            "startY": "1631.68",
+                            "targetX": "-2659.47",
+                            "targetY": "3565.81",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "3501.27",
+                            "pathTime": "70.03",
+                            "xVelocity": "41.68",
+                            "yVelocity": "27.62"
+                        },
+                        {
+                            "timeElapsed": "3.00",
+                            "distance": "150.00",
+                            "startX": "117.38",
+                            "startY": "1725.59",
+                            "targetX": "-2081.39",
+                            "targetY": "3169.13",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "2630.29",
+                            "pathTime": "52.61",
+                            "xVelocity": "41.80",
+                            "yVelocity": "27.44"
+                        },
+                        {
+                            "timeElapsed": "7.20",
+                            "distance": "359.95",
+                            "startX": "-8.01",
+                            "startY": "1807.91",
+                            "targetX": "-1684.39",
+                            "targetY": "3853.29",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "2644.58",
+                            "pathTime": "52.89",
+                            "xVelocity": "31.69",
+                            "yVelocity": "38.67"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Death Knight",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        "Scroll of Town Portal",
+                        "Rod of Necromancy"
+                    ]
+                },
+                {
+                    "displayName": "Tomb of Relics",
+                    "itemId": "utom",
+                    "itemId1": "119,67,0,0",
+                    "itemId2": "70,100,0,0",
+                    "objectId1": 17271,
+                    "objectId2": 25670,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": true,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ghoul",
+                    "itemId": "ugho",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 2240,
+                            "y": 3648
+                        }
+                    ],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ghoul",
+                    "itemId": "ugho",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 2240,
+                            "y": 3648
+                        }
+                    ],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Skeleton Warrior",
+                    "itemId": "uske",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Skeleton Warrior",
+                    "itemId": "uske",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "header": {
+            "magic": "Warcraft III recorded game\u001a",
+            "offset": 68,
+            "compressedSize": 16849,
+            "headerVersion": "01000000",
+            "decompressedSize": 34942,
+            "compressedDataBlockCount": 5,
+            "gameIdentifier": "PX3W",
+            "version": 10031,
+            "buildNo": 6072,
+            "flags": "0000",
+            "replayLengthMS": 280200,
+            "checksum": 2770923426
+        },
+        "meta": {
+            "meta": {
+                "player": {
+                    "playerId": 1,
+                    "playerName": "jblanch",
+                    "addDataFlagHost": 2,
+                    "additional": {}
+                },
+                "gameName": "Local Game",
+                "encodedString": "0103490701015101f96301394dcdbd4d9b6171732f67736f857b656f7569736ffd6f652f636f6d6d6b756f6975792f29dd3329636f6f63654b616d656569696d196d2f773379016b29636d616f63690135010f67fd2599c91d599fb92f8bcf13cbb9b1fbdba541d1",
+                "playerCount": 24,
+                "gameType": "09000000",
+                "languageId": "00000000",
+                "playerList": [
+                    {
+                        "hasRecord": 25
+                    }
+                ],
+                "gameStartRecord": 25,
+                "dataByteCount": 6400,
+                "slotRecordCount": 2,
+                "playerSlotRecords": [
+                    {
+                        "playerId": 1,
+                        "slotStatus": 2,
+                        "computerFlag": 0,
+                        "teamId": 0,
+                        "color": 0,
+                        "raceFlag": "U",
+                        "aiStrength": 1,
+                        "handicapFlag": 100
+                    },
+                    {
+                        "playerId": 0,
+                        "slotStatus": 2,
+                        "computerFlag": 1,
+                        "teamId": 1,
+                        "color": 1,
+                        "raceFlag": "R",
+                        "aiStrength": 0,
+                        "handicapFlag": 100
+                    }
+                ],
+                "randomSeed": 3140627,
+                "selectMode": "00",
+                "startSpotCount": 2
+            },
+            "speed": 2,
+            "hideTerrain": 0,
+            "mapExplored": 1,
+            "alwaysVisible": 0,
+            "default": 0,
+            "observerMode": 2,
+            "teamsTogether": 0,
+            "empty": 0,
+            "fixedTeams": 0,
+            "fullSharedUnitControl": 0,
+            "randomHero": 0,
+            "randomRaces": 0,
+            "referees": 0,
+            "mapChecksum": "394dcdbd",
+            "mapName": "Maps/frozenthrone/community/(2)concealedhill.w3x",
+            "creator": "jblanch"
+        },
+        "playerActionTrackInterval": 60000,
+        "teams": {
+            "0": [
+                1
+            ],
+            "1": [
+                0
+            ]
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "detectedRace": null,
+                "units": {},
+                "upgrades": {},
+                "heroSkills": {},
+                "items": {},
+                "actions": {
+                    "timed": [
+                        0,
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "buildings": {},
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "U",
+                "detectedRace": "U",
+                "units": {
+                    "uaco": 3,
+                    "ugho": 2
+                },
+                "upgrades": {},
+                "heroSkills": {
+                    "AUdc": 1
+                },
+                "items": {
+                    "rnec": 1
+                },
+                "actions": {
+                    "timed": [
+                        38,
+                        26,
+                        20,
+                        8,
+                        5
+                    ],
+                    "assigngroup": 8,
+                    "rightclick": 32,
+                    "basic": 1,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 22,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 14,
+                    "esc": 0,
+                    "buildtrain": 9
+                },
+                "buildings": {
+                    "uaod": 1,
+                    "uzig": 1,
+                    "usep": 1,
+                    "ugrv": 1,
+                    "utom": 1
+                },
+                "currentTimePlayed": 280192,
+                "apm": 19
+            }
+        },
+        "chatlog": [],
+        "leaveEvents": [
+            {
+                "type": 23,
+                "reason": "0c000000",
+                "playerId": 1,
+                "result": "07000000"
+            }
+        ],
+        "w3mmd": [],
+        "totalTimeTracker": 281891,
+        "timeSegmentTracker": 41498,
+        "matchup": "RvU",
+        "observers": []
+    }
+}

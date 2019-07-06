@@ -27,6 +27,16 @@ const isEqualItemId = (itemIdA, itemIdB) => {
 	return true;
 };
 
+
+////
+// helper to check if two given Unit's have equal itemId1 / itemId2 lists
+////
+
+const isEqualUnitItemId = (unitA, unitB) => {
+  return isEqualItemId(unitA.itemId1, unitB.itemId1) &&
+         isEqualItemId(unitA.itemId2, unitB.itemId2);
+};
+
 ////
 // the replay parsing engine returns the itemId (string) backwards
 ////
@@ -116,7 +126,6 @@ const uuidv4 = () => {
 
 const writeOutput = (filename, replay, players) => {
   const output = {
-  	replay: replay,
     players: Object.keys(players).reduce((acc, playerId) => {
     	const player = players[playerId];
 
@@ -125,7 +134,8 @@ const writeOutput = (filename, replay, players) => {
     	};
 
     	return acc;
-    }, {})
+    }, {}),
+    replay: replay
   };
 
   try {
@@ -169,6 +179,7 @@ const readCliArgs = (argv) => {
 module.exports = {
 	fixItemId: fixItemId,
 	isEqualItemId: isEqualItemId,
+  isEqualUnitItemId: isEqualUnitItemId,
 	findItemIdForObject: findItemIdForObject,
 	distance: distance,
 	closestToPoint: closestToPoint,

@@ -1,0 +1,594 @@
+{
+    "players": {
+        "1": {
+            "units": [
+                {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "23,51,0,0",
+                    "itemId2": "29,51,0,0",
+                    "objectId1": 13079,
+                    "objectId2": 13085,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [
+                        {
+                            "x": 8842.0107421875,
+                            "y": 1604.7392578125
+                        },
+                        {
+                            "x": 8372.370834349254,
+                            "y": 1586.344775876325
+                        },
+                        {
+                            "x": 8306.17984848102,
+                            "y": 1264.0719824391635
+                        },
+                        {
+                            "x": 8599.914956265555,
+                            "y": 1347.1767758015508
+                        },
+                        {
+                            "x": 8325.48971606619,
+                            "y": 1412.0981708999766
+                        },
+                        {
+                            "x": 8013.063041387086,
+                            "y": 1661.0757260107969
+                        },
+                        {
+                            "x": 7947.959489812232,
+                            "y": 1362.5932682811358
+                        },
+                        {
+                            "x": 8487.284538147218,
+                            "y": 1398.2126764524803
+                        },
+                        {
+                            "x": 8281.963110815655,
+                            "y": 1555.2647744280632
+                        },
+                        {
+                            "x": 7635.6235344792185,
+                            "y": 2024.9946458022844
+                        },
+                        {
+                            "x": 8228.52603683872,
+                            "y": 1357.2255070306308
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": "0.00",
+                            "distance": "0.00",
+                            "startX": "0.00",
+                            "startY": "0.00",
+                            "targetX": "8842.01",
+                            "targetY": "1604.74",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "8986.45",
+                            "pathTime": "38.24",
+                            "xVelocity": "231.22",
+                            "yVelocity": "41.96"
+                        },
+                        {
+                            "timeElapsed": "2.00",
+                            "distance": "470.00",
+                            "startX": "8842.01",
+                            "startY": "1604.74",
+                            "targetX": "7904.00",
+                            "targetY": "1568.00",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "938.73",
+                            "pathTime": "3.99",
+                            "xVelocity": "234.82",
+                            "yVelocity": "9.20"
+                        },
+                        {
+                            "timeElapsed": "1.40",
+                            "distance": "329.00",
+                            "startX": "8372.37",
+                            "startY": "1586.34",
+                            "targetX": "8288.61",
+                            "targetY": "1178.53",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "416.33",
+                            "pathTime": "1.77",
+                            "xVelocity": "47.28",
+                            "yVelocity": "230.19"
+                        },
+                        {
+                            "timeElapsed": "1.30",
+                            "distance": "305.26",
+                            "startX": "8306.18",
+                            "startY": "1264.07",
+                            "targetX": "8928.00",
+                            "targetY": "1440.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "646.23",
+                            "pathTime": "2.75",
+                            "xVelocity": "226.12",
+                            "yVelocity": "63.98"
+                        },
+                        {
+                            "timeElapsed": "1.20",
+                            "distance": "282.00",
+                            "startX": "8599.91",
+                            "startY": "1347.18",
+                            "targetX": "8053.23",
+                            "targetY": "1476.51",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "561.78",
+                            "pathTime": "2.39",
+                            "xVelocity": "228.69",
+                            "yVelocity": "54.10"
+                        },
+                        {
+                            "timeElapsed": "1.70",
+                            "distance": "399.50",
+                            "startX": "8325.49",
+                            "startY": "1412.10",
+                            "targetX": "7648.00",
+                            "targetY": "1952.00",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "866.31",
+                            "pathTime": "3.69",
+                            "xVelocity": "183.78",
+                            "yVelocity": "146.46"
+                        },
+                        {
+                            "timeElapsed": "1.30",
+                            "distance": "305.50",
+                            "startX": "8013.06",
+                            "startY": "1661.08",
+                            "targetX": "7937.38",
+                            "targetY": "1314.08",
+                            "xDirection": "-1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "355.16",
+                            "pathTime": "1.51",
+                            "xVelocity": "50.08",
+                            "yVelocity": "229.60"
+                        },
+                        {
+                            "timeElapsed": "2.30",
+                            "distance": "540.50",
+                            "startX": "7947.96",
+                            "startY": "1362.59",
+                            "targetX": "9120.00",
+                            "targetY": "1440.00",
+                            "xDirection": "1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "1174.59",
+                            "pathTime": "5.00",
+                            "xVelocity": "234.49",
+                            "yVelocity": "15.49"
+                        },
+                        {
+                            "timeElapsed": "1.10",
+                            "distance": "258.50",
+                            "startX": "8487.28",
+                            "startY": "1398.21",
+                            "targetX": "7739.97",
+                            "targetY": "1969.84",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "940.87",
+                            "pathTime": "4.00",
+                            "xVelocity": "186.66",
+                            "yVelocity": "142.77"
+                        },
+                        {
+                            "timeElapsed": "3.40",
+                            "distance": "799.00",
+                            "startX": "8281.96",
+                            "startY": "1555.26",
+                            "targetX": "7648.00",
+                            "targetY": "2016.00",
+                            "xDirection": "-1.00",
+                            "yDirection": "1.00",
+                            "pathDistance": "783.70",
+                            "pathTime": "3.33",
+                            "xVelocity": "190.10",
+                            "yVelocity": "138.16"
+                        },
+                        {
+                            "timeElapsed": "3.80",
+                            "distance": "893.00",
+                            "startX": "7635.62",
+                            "startY": "2024.99",
+                            "targetX": "8230.67",
+                            "targetY": "1354.81",
+                            "xDirection": "1.00",
+                            "yDirection": "-1.00",
+                            "pathDistance": "896.23",
+                            "pathTime": "3.81",
+                            "xVelocity": "156.03",
+                            "yVelocity": "175.73"
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "header": {
+            "magic": "Warcraft III recorded game\u001a",
+            "offset": 68,
+            "compressedSize": 2117,
+            "headerVersion": "01000000",
+            "decompressedSize": 4056,
+            "compressedDataBlockCount": 1,
+            "gameIdentifier": "PX3W",
+            "version": 10031,
+            "buildNo": 6072,
+            "flags": "0000",
+            "replayLengthMS": 27725,
+            "checksum": 4105681254
+        },
+        "meta": {
+            "meta": {
+                "player": {
+                    "playerId": 1,
+                    "playerName": "jblanch",
+                    "addDataFlagHost": 2,
+                    "additional": {}
+                },
+                "gameName": "Local Game",
+                "encodedString": "010349070101a101914901b127c9434d9b6171732f293329ad636f6f757963613b792f77336d016b29636d616f636901ad015929359395b753bf7d9bb1270103f3cbbb9563236107",
+                "playerCount": 24,
+                "gameType": "09000000",
+                "languageId": "00000000",
+                "playerList": [
+                    {
+                        "hasRecord": 25
+                    }
+                ],
+                "gameStartRecord": 25,
+                "dataByteCount": 6400,
+                "slotRecordCount": 2,
+                "playerSlotRecords": [
+                    {
+                        "playerId": 1,
+                        "slotStatus": 2,
+                        "computerFlag": 0,
+                        "teamId": 0,
+                        "color": 0,
+                        "raceFlag": "U",
+                        "aiStrength": 1,
+                        "handicapFlag": 100
+                    },
+                    {
+                        "playerId": 0,
+                        "slotStatus": 2,
+                        "computerFlag": 1,
+                        "teamId": 1,
+                        "color": 1,
+                        "raceFlag": "R",
+                        "aiStrength": 1,
+                        "handicapFlag": 100
+                    }
+                ],
+                "randomSeed": 16709912,
+                "selectMode": "00",
+                "startSpotCount": 2
+            },
+            "speed": 2,
+            "hideTerrain": 0,
+            "mapExplored": 1,
+            "alwaysVisible": 0,
+            "default": 0,
+            "observerMode": 2,
+            "teamsTogether": 0,
+            "empty": 0,
+            "fixedTeams": 0,
+            "fullSharedUnitControl": 0,
+            "randomHero": 0,
+            "randomRaces": 0,
+            "referees": 0,
+            "mapChecksum": "b027c842",
+            "mapName": "Maps/(2)bootybay.w3m",
+            "creator": "jblanch"
+        },
+        "playerActionTrackInterval": 60000,
+        "teams": {
+            "0": [
+                1
+            ],
+            "1": [
+                0
+            ]
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "detectedRace": null,
+                "units": {},
+                "upgrades": {},
+                "heroSkills": {},
+                "items": {},
+                "actions": {
+                    "timed": [
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "buildings": {},
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "U",
+                "detectedRace": null,
+                "units": {},
+                "upgrades": {},
+                "heroSkills": {},
+                "items": {},
+                "actions": {
+                    "timed": [
+                        17
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 6,
+                    "basic": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 1,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "buildings": {
+                    "uzig": 5
+                },
+                "currentTimePlayed": 27700,
+                "apm": 17
+            }
+        },
+        "chatlog": [],
+        "leaveEvents": [
+            {
+                "type": 23,
+                "reason": "0c000000",
+                "playerId": 1,
+                "result": "07000000"
+            }
+        ],
+        "w3mmd": [],
+        "totalTimeTracker": 30000,
+        "timeSegmentTracker": 30000,
+        "matchup": "RvU",
+        "observers": []
+    }
+}
