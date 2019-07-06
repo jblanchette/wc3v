@@ -67,6 +67,7 @@ is difficult at the moment.
   * unit movement is simulated (turn rates and basic pathing around known buildings and terrian WIP)
   * building construction and upgrading is simulated
 * Rendering 'birds eye view' of game play
+* Player starting position detection
 
 ## Not implemented
 

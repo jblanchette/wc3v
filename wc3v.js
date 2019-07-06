@@ -14,7 +14,7 @@ let globalTime = 0;
 
 W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
   if (!hasParsedMeta) {
-    unitManager.setMetaData(this.gameMetaDataDecoded.meta);
+    unitManager.setMetaData(this.gameMetaDataDecoded.meta, this.meta);
     hasParsedMeta = true;
   }
 
