@@ -28,7 +28,7 @@ be ported to web.
 
 run `node wc3v.js --replay=[REPLAY NAME]`
 
-where `REPLAY NAME` is the replay file path without any extension
+where `REPLAY NAME` is the replay file path in the `replays` folder without any extension
 
 **example:**
 
