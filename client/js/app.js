@@ -65,7 +65,7 @@ const Wc3vViewer = class {
 
     return new Promise((resolve, reject) => {
       self.mapImage = new Image();   // Create new img element
-      self.mapImage.src = './maps/ConcealedHill/map.jpg'; // Set source path
+      self.mapImage.src = './maps/ConcealedHill/map2.jpg'; // Set source path
 
       self.mapImage.addEventListener('load', () => {
         resolve();

@@ -26,13 +26,11 @@ Action: { actionId: 25,
   objectId2: 18457 }
 Game Timer: 5799
 ========================================================================
-Unit backfill:  Acolyte [ [length]: 0 ]
-Unit backfill:  Acolyte [ [length]: 0 ]
-Unit backfill:  Acolyte [ [length]: 0 ]
 Registering unit:  uaco
 new itemIds:  [ 19, 72, 0, 0, [length]: 4 ] [ 25, 72, 0, 0, [length]: 4 ]
 new objIds:  18451 18457
 setting fully registered unit
+checking backfill:  Acolyte
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -48,13 +46,13 @@ Game Timer: 5999
 ========================================================================
 calling cancel event for spawn at start / no path
 calling eventtimer onComplete
-move on complete.  Acolyte 0
+Acolyte finished move at (2752, 4736)
 calling cancel event for spawn at start / no path
 calling eventtimer onComplete
-move on complete.  Acolyte 0
+Acolyte finished move at (2752, 4736)
 calling cancel event for spawn at start / no path
 calling eventtimer onComplete
-move on complete.  Acolyte 0
+Acolyte finished move at (2752, 4736)
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -119,6 +117,10 @@ existing unit count:  0
 1 Selected a spawned unit Ghoul
 creating new unit:  Ghoul
 setting fully registered unit
+checking backfill:  Ghoul
+found backfill:  { itemId1: [ -3, 71, 0, 0, [length]: 4 ],
+  itemId2: [ 3, 72, 0, 0, [length]: 4 ],
+  backfill: [ [length]: 0 ] }
 current selection units:  [ '-3,71,0,0, 3,72,0,0 [18429, 18435] - Ghoul', [length]: 1 ]
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
@@ -178,11 +180,11 @@ Action: { actionId: 25,
   objectId2: 18324 }
 Game Timer: 7199
 ========================================================================
-Unit backfill:  Necropolis [ [length]: 0 ]
 Registering unit:  unpl
 new itemIds:  [ -108, 71, 0, 0, [length]: 4 ] [ -108, 71, 0, 0, [length]: 4 ]
 new objIds:  18324 18324
 setting fully registered unit
+checking backfill:  Necropolis
 ========================================================================
 ActionName: UseAbilityNoTarget PID: 1
 Action: { actionId: 16,
@@ -193,7 +195,7 @@ Action: { actionId: 16,
 Game Timer: 7299
 ========================================================================
 1 Building is training a unit. Acolyte
-setting unit spawn pos: 0 0
+setting unit spawn pos: 2176 4224
 1 Making trained unit: Acolyte uaco
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
@@ -259,6 +261,7 @@ Registering unit:  uaco
 new itemIds:  [ 69, 72, 0, 0, [length]: 4 ] [ 75, 72, 0, 0, [length]: 4 ]
 new objIds:  18501 18507
 setting fully registered unit
+checking backfill:  Acolyte
 ========================================================================
 ActionName: ChooseBuilding PID: 1
 Action: { actionId: 103 }
@@ -309,6 +312,7 @@ worker units:  [ 'itemId1: 19,72,0,0 id2: 25,72,0,0',
   'itemId1: null id2: null',
   [length]: 4 ]
 has worker in group
+checking backfill:  Altar of Darkness
 moving unit to build:  Altar of Darkness 2912 4320
 calling moveTo from build
 1 *** setting build menu CLOSED
@@ -362,16 +366,17 @@ worker units:  [ 'itemId1: 19,72,0,0 id2: 25,72,0,0',
   'itemId1: null id2: null',
   [length]: 4 ]
 has worker in group
+checking backfill:  Ziggurat
 moving unit to build:  Ziggurat 2656 4384
 calling eventtimer onComplete
-move on complete.  Acolyte 1
+Acolyte finished move at (2853.2321003651014, 4472.796539050734)
 runnning on complete onCompleteExtra
 unit dist from building spot:  163.70842486988897
 unit finished moving to building, now building:  Altar of Darkness
 no on complete extra in walk cancel
 calling moveTo from build
 1 *** setting build menu CLOSED
-move on complete.  Acolyte 2
+Acolyte finished move at (2656, 4384)
 runnning on complete onCompleteExtra
 unit finished moving to building, now building:  Ziggurat
 ========================================================================
@@ -446,9 +451,9 @@ Action: { actionId: 16,
 Game Timer: 23797
 ========================================================================
 1 Building is training a unit. Acolyte
-setting unit spawn pos: 0 0
+setting unit spawn pos: 2176 4224
 1 Making trained unit: Acolyte uaco
-move on complete.  Acolyte 3
+Acolyte finished move at (2752, 4736)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -463,7 +468,7 @@ Action: { actionId: 18,
 Game Timer: 24497
 ========================================================================
 Building.doAbilityRightClickWithTargetAndObjectId
-move on complete.  Ghoul 0
+Ghoul finished move at (1728, 4672)
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -509,11 +514,11 @@ Action: { actionId: 25,
   objectId2: 22010 }
 Game Timer: 40897
 ========================================================================
-Unit backfill:  Acolyte [ [length]: 0 ]
 Registering unit:  uaco
 new itemIds:  [ -115, 71, 0, 0, [length]: 4 ] [ -6, 85, 0, 0, [length]: 4 ]
 new objIds:  18317 22010
 setting fully registered unit
+checking backfill:  Acolyte
 ========================================================================
 ActionName: ChooseBuilding PID: 1
 Action: { actionId: 103 }
@@ -565,6 +570,7 @@ worker units:  [ 'itemId1: 19,72,0,0 id2: 25,72,0,0',
   'itemId1: null id2: null',
   [length]: 5 ]
 has worker in group
+checking backfill:  Crypt
 moving unit to build:  Crypt 2240 3648
 calling moveTo from build
 1 *** setting build menu CLOSED
@@ -582,9 +588,9 @@ Action: { actionId: 18,
 Game Timer: 42397
 ========================================================================
 calling eventtimer onComplete
-move on complete.  Acolyte 1
+Acolyte finished move at (2201.9514086275885, 3990.437322351701)
 runnning on complete onCompleteExtra
-unit dist from building spot:  4045.8298260968045
+unit dist from building spot:  344.54464884079607
 unit finished moving to building, now building:  Crypt
 ========================================================================
 ActionName: ChangeSelection PID: 1
@@ -631,11 +637,11 @@ Action: { actionId: 25,
   objectId2: 22279 }
 Game Timer: 43197
 ========================================================================
-Unit backfill:  Crypt [ [length]: 0 ]
 Registering unit:  usep
 new itemIds:  [ -50, 73, 0, 0, [length]: 4 ] [ 7, 87, 0, 0, [length]: 4 ]
 new objIds:  18894 22279
 setting fully registered unit
+checking backfill:  Crypt
 ========================================================================
 ActionName: AssignGroupHotkey PID: 1
 Action: { actionId: 23,
@@ -703,11 +709,11 @@ Action: { actionId: 25,
   objectId2: 20698 }
 Game Timer: 44396
 ========================================================================
-Unit backfill:  Altar of Darkness [ [length]: 0 ]
 Registering unit:  uaod
 new itemIds:  [ -122, 73, 0, 0, [length]: 4 ] [ -38, 80, 0, 0, [length]: 4 ]
 new objIds:  18822 20698
 setting fully registered unit
+checking backfill:  Altar of Darkness
 ========================================================================
 ActionName: AssignGroupHotkey PID: 1
 Action: { actionId: 23,
@@ -967,6 +973,7 @@ Registering unit:  uaod
 new itemIds:  [ -122, 73, 0, 0, [length]: 4 ] [ -38, 80, 0, 0, [length]: 4 ]
 new objIds:  18822 20698
 not registering already registered unit...
+Acolyte finished move at (2752, 4736)
 ========================================================================
 ActionName: SelectGroupHotkey PID: 1
 Action: { actionId: 24, groupNumber: 5, unknown: 3 }
@@ -1111,9 +1118,8 @@ Action: { actionId: 16,
 Game Timer: 52796
 ========================================================================
 1 Building is training a unit. Acolyte
-setting unit spawn pos: 0 0
+setting unit spawn pos: 2176 4224
 1 Making trained unit: Acolyte uaco
-move on complete.  Acolyte 2
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -1159,11 +1165,11 @@ Action: { actionId: 25,
   objectId2: 24311 }
 Game Timer: 71894
 ========================================================================
-Unit backfill:  Acolyte [ [length]: 0 ]
 Registering unit:  uaco
 new itemIds:  [ -64, 70, 0, 0, [length]: 4 ] [ -9, 94, 0, 0, [length]: 4 ]
 new objIds:  18112 24311
 setting fully registered unit
+checking backfill:  Acolyte
 ========================================================================
 ActionName: ChooseBuilding PID: 1
 Action: { actionId: 103 }
@@ -1216,9 +1222,13 @@ worker units:  [ 'itemId1: 19,72,0,0 id2: 25,72,0,0',
   'itemId1: null id2: null',
   [length]: 6 ]
 has worker in group
+checking backfill:  Graveyard
 moving unit to build:  Graveyard 2304 4800
 calling moveTo from build
 1 *** setting build menu CLOSED
+Acolyte finished move at (2304, 4800)
+runnning on complete onCompleteExtra
+unit finished moving to building, now building:  Graveyard
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1232,11 +1242,6 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 77694
 ========================================================================
-calling eventtimer onComplete
-move on complete.  Acolyte 1
-runnning on complete onCompleteExtra
-unit dist from building spot:  4219.823055563027
-unit finished moving to building, now building:  Graveyard
 ========================================================================
 ActionName: ChooseBuilding PID: 1
 Action: { actionId: 103 }
@@ -1289,9 +1294,10 @@ worker units:  [ 'itemId1: 19,72,0,0 id2: 25,72,0,0',
   'itemId1: null id2: null',
   [length]: 6 ]
 has worker in group
+checking backfill:  Tomb of Relics
 moving unit to build:  Tomb of Relics 1728 3840
 calling eventtimer onComplete
-move on complete.  Acolyte 2
+Acolyte finished move at (2050.603202852075, 4404.159043054951)
 no on complete extra in walk cancel
 calling moveTo from build
 1 *** setting build menu CLOSED
@@ -1406,6 +1412,9 @@ Registering unit:  uaco
 new itemIds:  [ -64, 70, 0, 0, [length]: 4 ] [ -9, 94, 0, 0, [length]: 4 ]
 new objIds:  18112 24311
 not registering already registered unit...
+Acolyte finished move at (1728, 3840)
+runnning on complete onCompleteExtra
+unit finished moving to building, now building:  Tomb of Relics
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1419,11 +1428,7 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 82794
 ========================================================================
-calling eventtimer onComplete
-move on complete.  Acolyte 3
-runnning on complete onCompleteExtra
-unit dist from building spot:  1861.3464942460662
-unit finished moving to building, now building:  Tomb of Relics
+Acolyte finished move at (1923.036376953125, 3375.717529296875)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1437,8 +1442,6 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 85694
 ========================================================================
-calling eventtimer onComplete
-move on complete.  Acolyte 4
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -1773,7 +1776,6 @@ all groups:
 3 units:  [ '-50,73,0,0,7,87,0,0 - Crypt', [length]: 1 ]
 4 units:  [ '-122,73,0,0,-38,80,0,0 - Altar of Darkness', [length]: 1 ]
 5 units:  [ '-108,71,0,0,-108,71,0,0 - Necropolis', [length]: 1 ]
-move on complete.  Acolyte 5
 ========================================================================
 ActionName: SelectGroupHotkey PID: 1
 Action: { actionId: 24, groupNumber: 2, unknown: 3 }
@@ -1819,6 +1821,7 @@ all groups:
 3 units:  [ '-50,73,0,0,7,87,0,0 - Crypt', [length]: 1 ]
 4 units:  [ '-122,73,0,0,-38,80,0,0 - Altar of Darkness', [length]: 1 ]
 5 units:  [ '-108,71,0,0,-108,71,0,0 - Necropolis', [length]: 1 ]
+Acolyte finished move at (-2215.67041015625, -4226.05810546875)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1832,7 +1835,7 @@ Action: { actionId: 18,
   objectId2: -1 }
 Game Timer: 125993
 ========================================================================
-move on complete.  Acolyte 6
+Acolyte finished move at (-1442.34326171875, -4741.2666015625)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1891,12 +1894,12 @@ Action: { actionId: 25,
   objectId2: 30966 }
 Game Timer: 138090
 ========================================================================
-Unit backfill:  Death Knight [ [length]: 0 ]
 Registering unit:  Udea
 new itemIds:  [ -54, 63, 0, 0, [length]: 4 ] [ -10, 120, 0, 0, [length]: 4 ]
 new objIds:  16330 30966
 setting fully registered unit
-move on complete.  Acolyte 7
+checking backfill:  Death Knight
+Acolyte finished move at (-183.1778564453125, -4535.4033203125)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1956,11 +1959,11 @@ Action: { actionId: 25,
   objectId2: 25670 }
 Game Timer: 142090
 ========================================================================
-Unit backfill:  Tomb of Relics [ [length]: 0 ]
 Registering unit:  utom
 new itemIds:  [ 119, 67, 0, 0, [length]: 4 ] [ 70, 100, 0, 0, [length]: 4 ]
 new objIds:  17271 25670
 setting fully registered unit
+checking backfill:  Tomb of Relics
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -1975,6 +1978,7 @@ Action: { actionId: 18,
 Game Timer: 143090
 ========================================================================
 Building.doAbilityRightClickWithTargetAndObjectId
+Death Knight finished move at (2042.1405029296875, 3960.66943359375)
 ========================================================================
 ActionName: UseAbilityNoTarget PID: 1
 Action: { actionId: 16,
@@ -2050,8 +2054,7 @@ Action: { actionId: 18,
 Game Timer: 144490
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 1
+Death Knight finished move at (2010.154541015625, 3370.114990234375)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2066,8 +2069,6 @@ Action: { actionId: 18,
 Game Timer: 148390
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 2
 ========================================================================
 ActionName: SelectHeroSkill PID: 1
 Action: { actionId: 102 }
@@ -2098,7 +2099,8 @@ Action: { actionId: 18,
 Game Timer: 152393
 ========================================================================
 calling eventtimer onComplete
-move on complete.  Death Knight 3
+Death Knight finished move at (2007.2019543624572, 2169.2186199209173)
+Death Knight finished move at (1985.7210693359375, 1752.42529296875)
 ========================================================================
 ActionName: UseAbilityNoTarget PID: 1
 Action: { actionId: 16,
@@ -2195,8 +2197,6 @@ Action: { actionId: 18,
 Game Timer: 159193
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 4
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -2286,8 +2286,9 @@ Game Timer: 171393
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 5
-move on complete.  Acolyte 8
+Death Knight finished move at (1727.545648473873, -1898.457538903936)
+Acolyte finished move at (1592.6954345703125, -4603.0712890625)
+Death Knight finished move at (1592.6954345703125, -4603.0712890625)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2302,9 +2303,8 @@ Action: { actionId: 18,
 Game Timer: 182293
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 6
-move on complete.  Acolyte 9
+Death Knight finished move at (159.346435546875, -4580.990234375)
+Acolyte finished move at (159.346435546875, -4580.990234375)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2319,9 +2319,8 @@ Action: { actionId: 18,
 Game Timer: 190895
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 7
-move on complete.  Acolyte 10
+Death Knight finished move at (-448.271484375, -2866.4375)
+Acolyte finished move at (-448.271484375, -2866.4375)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2336,8 +2335,6 @@ Action: { actionId: 18,
 Game Timer: 207094
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 8
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2353,9 +2350,10 @@ Game Timer: 212794
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 9
+Death Knight finished move at (-2138.545876304188, -2607.4539484210914)
 calling eventtimer onComplete
-move on complete.  Acolyte 11
+Acolyte finished move at (-1772.3197580528597, -2663.5670512631887)
+Death Knight finished move at (-1639.5946044921875, -979.5159912109375)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2371,9 +2369,7 @@ Game Timer: 219193
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 10
-calling eventtimer onComplete
-move on complete.  Acolyte 12
+Acolyte finished move at (-1652.3234887519645, -1141.0233653287344)
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -2445,10 +2441,12 @@ Game Timer: 227993
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 11
+Death Knight finished move at (-2956.8041236621675, 1308.399890679819)
 calling eventtimer onComplete
-move on complete.  Acolyte 13
-move on complete.  Acolyte 14
+Acolyte finished move at (-2635.84476659534, 704.7984424385613)
+Death Knight finished move at (-1687.4276123046875, 3916.95947265625)
+Death Knight finished move at (0, 0)
+Acolyte finished move at (-1687.4276123046875, 3916.95947265625)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2463,9 +2461,7 @@ Action: { actionId: 18,
 Game Timer: 243493
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 12
-move on complete.  Acolyte 15
+Acolyte finished move at (-2342.033447265625, 4170.388671875)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2481,8 +2477,8 @@ Game Timer: 246493
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 13
-move on complete.  Acolyte 16
+Death Knight finished move at (-440.69038614593336, 784.7241448805745)
+Acolyte finished move at (-2659.473876953125, 3565.812744140625)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2498,7 +2494,7 @@ Game Timer: 249793
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 14
+Death Knight finished move at (-1076.8145881719438, 1582.0609617884418)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2514,11 +2510,12 @@ Game Timer: 252693
 ========================================================================
 moving hero fronted unit group from ground right click
 calling eventtimer onComplete
-move on complete.  Death Knight 15
+Death Knight finished move at (-1558.1673721204716, 2342.521018191804)
 calling eventtimer onComplete
-move on complete.  Acolyte 17
-move on complete.  Acolyte 18
-move on complete.  Acolyte 19
+Acolyte finished move at (-2097.5485607833307, 3180.2194492722115)
+Acolyte finished move at (-1684.3895263671875, 3853.29248046875)
+Acolyte finished move at (0, 0)
+Death Knight finished move at (-1684.3895263671875, 3853.29248046875)
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -2533,14 +2530,13 @@ Action: { actionId: 18,
 Game Timer: 259792
 ========================================================================
 moving hero fronted unit group from ground right click
-calling eventtimer onComplete
-move on complete.  Death Knight 16
+Death Knight finished move at (2844.6796875, 4163.8134765625)
 ========================================================================
 ActionName: Pause PID: 1
 Action: { actionId: 1 }
 Game Timer: 280192
 ========================================================================
-move on complete.  Acolyte 20
+Acolyte finished move at (2844.6796875, 4163.8134765625)
 created wc3v file:  ./client/replays/test-ch-movement.w3g.wc3v
 ************************************
 Inspecting player: 1
