@@ -93,7 +93,7 @@ As covered previously the `wc3v` map parser handles units in an unregistered sta
 
 One common example can be seen in the test replay `test-backfill.wc3g`:
 
-The sceanrio is that a newly spawned `Hero (DK)` is moving around the map - when a `Ghoul is then added to the selection group.  This `Ghoul` has yet to be selected directly - meaning we have not registered it yet.
+The sceanrio is that a newly spawned `Hero (DK)` is moving around the map - when a `Ghoul` is then added to the selection group.  This `Ghoul` has yet to be selected directly - meaning we have not registered it yet.
 
 After a couple of movement actions to and from a creep camp, the player eventually selects the `Ghoul` directly and sends them back to base.  At this point the `wc3v` parser recognizes that we've stored some `backfill` data for this `itemId1 / itemId2` pair in our action selections and performs a backfill of the data.
 
