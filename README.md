@@ -66,6 +66,7 @@ is difficult at the moment.
 * Game Time simulation
   * unit movement is simulated (turn rates and basic pathing around known buildings and terrian WIP)
   * building construction and upgrading is simulated
+* Rendering 'birds eye view' of game play
 
 ## Not implemented
 
@@ -73,7 +74,7 @@ is difficult at the moment.
 * Item unit spawns
 * Gold + Wood resource tracking
 * Food / Upkeep tracking
-* Rendering 'birds eye view' of game play
+
 
 # Credits
 
