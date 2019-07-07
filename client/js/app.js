@@ -55,14 +55,7 @@ const Wc3vViewer = class {
 
     const url = `http://localhost:8080/replays/${filename}`;
 
-    const rawLink = document.getElementById("raw-link");
-    rawLink.onclick = (e) => {
-      console.log("clicked...");
-
-      const w = window.open('');
-      w.document.title = `raw wc3v file - ${filename}`;
-      w.document.write(`<html><body><pre>${ JSON.stringify(self.mapData, null, 4) }</pre></body></html>`);
-    };
+    this.setupLinks(filename, url);
 
     req.open("GET", url);
     req.send();
@@ -74,7 +67,7 @@ const Wc3vViewer = class {
 
     return new Promise((resolve, reject) => {
       self.mapImage = new Image();   // Create new img element
-      self.mapImage.src = './maps/ConcealedHill/map2.jpg'; // Set source path
+      self.mapImage.src = './maps/ConcealedHill/map3.jpg'; // Set source path
 
       self.mapImage.addEventListener('load', () => {
         resolve();
@@ -101,12 +94,23 @@ const Wc3vViewer = class {
     })
   }
 
+  setupLinks (filename, url) {
+    const rawLink = document.getElementById("raw-link");
+    rawLink.onclick = (e) => {
+      console.log("clicked...");
+
+      const w = window.open('');
+      w.document.title = `raw wc3v file - ${filename}`;
+      w.document.write(`<html><body><pre>${ JSON.stringify(self.mapData, null, 4) }</pre></body></html>`);
+    };
+  }
+
   setupDrawing () {
     this.viewWidth = this.mapImage.width;
     this.viewHeight = this.mapImage.height;
 
-    this.middleX = (800 / 2);
-    this.middleY = (600 / 2);
+    this.middleX = (this.canvas.width / 2);
+    this.middleY = (this.canvas.height / 2);
 
     this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ];
     this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
@@ -258,8 +262,8 @@ const Wc3vViewer = class {
 
     buildings.forEach(building => {
       const { x, y } = building.lastPosition;
-      const drawX = this.xScale(-x) + this.middleX;
-      const drawY = this.yScale(y) + this.middleY;
+      const drawX = this.xScale(x) + this.middleX;
+      const drawY = this.yScale(-y) + this.middleY;
 
       ctx.strokeRect(drawX, drawY, 10, 10);
     });
@@ -296,8 +300,8 @@ const Wc3vViewer = class {
 
     drawPath.forEach(position => {
       const { x, y } = position;
-      const drawX = this.xScale(-x) + this.middleX;
-      const drawY = this.yScale(y) + this.middleY;
+      const drawX = this.xScale(x) + this.middleX;
+      const drawY = this.yScale(-y) + this.middleY;
 
       if (!penDown) {
         ctx.moveTo(drawX, drawY);

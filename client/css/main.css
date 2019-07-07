@@ -47,8 +47,8 @@ html, body {
 
 #main-canvas {
   border: 1px solid #000;
-  height: 600px;
-  width: 800px;
+  height: 768px;
+  width: 1024px;
 }
 
 .info-wrapper {
@@ -60,7 +60,7 @@ html, body {
   max-height: 300px;
   overflow-y: auto;
   margin: 0;
-  padding: 0 2rem;
+  padding: 0 0.5rem;
 }
 
 #unit-list li {
