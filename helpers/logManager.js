@@ -10,7 +10,7 @@ let logDisabled = false;
 const Logger = class {
   constructor (logFile) {
     const self = this;
-    const outputFile = `./logs/${path.basename(logFile)}.log`;
+    const outputFile = `./client/logs/${path.basename(logFile)}.log`;
 
     this.logDisabled = false;
 

@@ -55,6 +55,15 @@ const Wc3vViewer = class {
 
     const url = `http://localhost:8080/replays/${filename}`;
 
+    const rawLink = document.getElementById("raw-link");
+    rawLink.onclick = (e) => {
+      console.log("clicked...");
+
+      const w = window.open('');
+      w.document.title = `raw wc3v file - ${filename}`;
+      w.document.write(`<html><body><pre>${ JSON.stringify(self.mapData, null, 4) }</pre></body></html>`);
+    };
+
     req.open("GET", url);
     req.send();
   }
@@ -252,7 +261,6 @@ const Wc3vViewer = class {
       const drawX = this.xScale(-x) + this.middleX;
       const drawY = this.yScale(y) + this.middleY;
 
-      console.log("drawing: ", drawX, drawY);
       ctx.strokeRect(drawX, drawY, 10, 10);
     });
 

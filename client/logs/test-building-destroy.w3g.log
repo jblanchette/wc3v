@@ -1,0 +1,447 @@
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 12, 72, 0, 0, [length]: 4 ],
+       itemId2: [ 12, 72, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 1400
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 1400
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 18444,
+  objectId2: 18444 }
+Game Timer: 1400
+========================================================================
+Registering unit:  opeo
+new itemIds:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+new objIds:  18444 18444
+setting fully registered unit
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2574.144775390625,
+  targetY: 3531.65576171875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 2000
+========================================================================
+looking for unit:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+*** unit is walking long path time:  23.001152412386688
+moving spawned unit to spot 2574.144775390625 3531.65576171875
+calling cancel event for spawn at start / no path
+move on complete.  Peon 0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2642.615478515625,
+  targetY: 3071.041015625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 7500
+========================================================================
+looking for unit:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+move on complete.  Peon 1
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3220.177978515625,
+  targetY: 2790.9482421875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 10600
+========================================================================
+looking for unit:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+*** unit is walking long path time:  3.407377184641191
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3482.8271484375,
+  targetY: 2881.561767578125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 13400
+========================================================================
+looking for unit:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+stopping walking event before moveTo
+move on complete.  Peon 2
+move on complete.  Peon 3
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3123.01025390625,
+  targetY: 2760.353515625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 15800
+========================================================================
+looking for unit:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+move on complete.  Peon 4
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2585.343994140625,
+  targetY: 2639.007568359375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 18200
+========================================================================
+looking for unit:  [ 12, 72, 0, 0, [length]: 4 ] [ 12, 72, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+move on complete.  Peon 5
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 12, 72, 0, 0, [length]: 4 ],
+       itemId2: [ 12, 72, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 23800
+========================================================================
+current units:  [ { itemId1: [ 12, 72, 0, 0, [length]: 4 ],
+    itemId2: [ 12, 72, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 12, 72, 0, 0, [length]: 4 ],
+    itemId2: [ 12, 72, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+       itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 25500
+========================================================================
+added to units:  [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+    itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-10,71,0,0, -10,71,0,0 - Unregistered', [length]: 1 ]
+warning: cant check group validity with unknown first unit.
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 25500
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 18422,
+  objectId2: 18422 }
+Game Timer: 25500
+========================================================================
+Registering unit:  opeo
+new itemIds:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+new objIds:  18422 18422
+setting fully registered unit
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2504.1953125,
+  targetY: 3685.486328125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 26400
+========================================================================
+looking for unit:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+*** unit is walking long path time:  23.451372236541335
+moving spawned unit to spot 2504.1953125 3685.486328125
+calling cancel event for spawn at start / no path
+move on complete.  Peon 0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2536.3828125,
+  targetY: 3255.12353515625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 30400
+========================================================================
+looking for unit:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+move on complete.  Peon 1
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2765.829345703125,
+  targetY: 2830.4658203125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 33200
+========================================================================
+looking for unit:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+move on complete.  Peon 2
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3084.404296875,
+  targetY: 2680.819091796875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 36200
+========================================================================
+looking for unit:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 37401
+========================================================================
+1 *** setting build menu OPEN
+move on complete.  Peon 3
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'brto',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2912,
+  targetY: 2592 }
+Game Timer: 39999
+========================================================================
+looking for unit:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+found unit Peon
+ability unitInfo:  { displayName: 'Orc Burrow',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Peon
+selection is:  [ 'Peon', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+       itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+    itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Orc Burrow
+worker units:  [ 'itemId1: 12,72,0,0 id2: 12,72,0,0',
+  'itemId1: -10,71,0,0 id2: -10,71,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 5 ]
+has worker in group
+moving unit to build:  Orc Burrow 2912 2592
+calling moveTo from build
+unit walk: Peon
+1 *** setting build menu CLOSED
+move on complete.  Peon 4
+runnning on complete extra
+unit finished moving to building, now building:  Orc Burrow
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+       itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 42399
+========================================================================
+current units:  [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+    itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+    itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -68, 70, 0, 0, [length]: 4 ],
+       itemId2: [ 44, 83, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 42399
+========================================================================
+added to units:  [ { itemId1: [ -68, 70, 0, 0, [length]: 4 ],
+    itemId2: [ 44, 83, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-68,70,0,0, 44,83,0,0 - Unregistered', [length]: 1 ]
+warning: cant check group validity with unknown first unit.
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 42399
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'brto',
+  objectId1: 18108,
+  objectId2: 21292 }
+Game Timer: 42399
+========================================================================
+Registering unit:  otrb
+new itemIds:  [ -68, 70, 0, 0, [length]: 4 ] [ 44, 83, 0, 0, [length]: 4 ]
+new objIds:  18108 21292
+setting fully registered unit
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -68, 70, 0, 0, [length]: 4 ],
+       itemId2: [ 44, 83, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 42799
+========================================================================
+current units:  [ { itemId1: [ -68, 70, 0, 0, [length]: 4 ],
+    itemId2: [ 44, 83, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -68, 70, 0, 0, [length]: 4 ],
+    itemId2: [ 44, 83, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+       itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 47299
+========================================================================
+added to units:  [ { itemId1: [ -10, 71, 0, 0, [length]: 4 ],
+    itemId2: [ -10, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-10,71,0,0, -10,71,0,0 [18422, 18422] - Peon', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 47299
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 18422,
+  objectId2: 18422 }
+Game Timer: 47299
+========================================================================
+Registering unit:  opeo
+new itemIds:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+new objIds:  18422 18422
+not registering already registered unit...
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2501.840087890625,
+  targetY: 2412.390625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 49499
+========================================================================
+looking for unit:  [ -10, 71, 0, 0, [length]: 4 ] [ -10, 71, 0, 0, [length]: 4 ]
+found unit Peon
+unit walk: Peon
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 51699
+========================================================================
+move on complete.  Peon 5
+created wc3v file:  ./client/replays/test-building-destroy.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 7
+Unregistered units: 3
+************************************
+wc3v completed.  enjoy!

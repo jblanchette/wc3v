@@ -68,6 +68,15 @@ const unitMetaData = {
             'time': 45
         }
 	},
+    'hmil': {
+        'displayName': 'Militia',
+        'hero': false,
+        'worker': true,
+        'permanent': true,
+        'playerShop': false,
+        'race': 'H',
+        'movespeed': 190
+    },
 	'Hamg': {
 		'displayName': 'Archmage',
 		'hero': true,
