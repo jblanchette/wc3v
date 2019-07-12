@@ -1,4 +1,4 @@
-const w3gMappings = require("../node_modules/w3gjs/lib/mappings");
+const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 
 let {
 	units,
@@ -1154,7 +1154,7 @@ const abilityActions = {
 };
 
 const mapStartPositions = {
-	'EchoIsles': {
+	'(2)echoisles.w3x': {
 		'0': { x: -5184.0, y: 2944.0 },
 		'1': { x: 4672.0, y: 2944.0 }
 	},
@@ -1167,6 +1167,10 @@ const mapStartPositions = {
         '0': { x: 2176.0, y: 4224.0 },
         '1': { x: -2304.0, y: -4736.0 }
     }
+};
+
+const commonMapNames = {
+    'echoisles': '(2)echoisles.w3x'
 };
 
 const abilityFlagNames = {
@@ -1255,6 +1259,7 @@ module.exports = {
 	abilityFlagNames: abilityFlagNames,
     workerForRace: workerForRace,
 	mapStartPositions: mapStartPositions,
+    commonMapNames: commonMapNames,
     buildTimings: buildTimings,
     itemAbilityData: itemAbilityData
 };
