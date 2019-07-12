@@ -152,8 +152,6 @@ const Wc3vViewer = class {
     this.focusPlayerId = playerId;
     this.focusPlayer = this.mapData.players[playerId];
 
-    console.log("focus: ", this.focusPlayerId);
-
     // sort units for display
     this.sortUnits();
 
@@ -192,43 +190,40 @@ const Wc3vViewer = class {
 
   renderPlayerlist () {
     const self = this;
-    const playerList = document.getElementById(domMap.playerListId);
+    const playerData = this.mapData.replay.players;
 
+    const playerList = document.getElementById(domMap.playerListId);
+    
     // clear the list
     playerList.innerHTML = "";
-
     playerList.addEventListener("change", (e) => {
       const { target } = e;
       const playerName = target.value;
-
       const playerIdList = Object.keys(this.mapData.players);
+
+      // figure out which player id we just selected
       const selectedPlayerId = playerIdList.find(playerId => {
         const player = self.mapData.replay.players[playerId];
 
         return player.name === playerName;
       });
 
-      console.log("selecting player: ", selectedPlayerId);
       self.selectFocusPlayer(selectedPlayerId);
       self.render();
     });
 
-    const playerData = this.mapData.replay.players;
-
-    console.log("pd: ", playerData);
+    
+    // we mutate this list to put our selected player first
     let playerIdList = Object.keys(this.mapData.players);
 
     // put our focus player at the front
     const focusPlayerIndex = playerIdList.findIndex(playerId => {
-      console.log("checking: ", playerId, self.focusPlayerId);
       return playerId == self.focusPlayerId;
     });
 
     // delete the old list position, insert new id at the front
     playerIdList.splice(focusPlayerIndex, 1);
     playerIdList.unshift(this.focusPlayerId);
-    
-    console.log("player list: ", playerIdList);
 
     playerIdList.forEach(playerId => {
       const optionItem = document.createElement("option");
@@ -279,8 +274,6 @@ const Wc3vViewer = class {
       return unit.isBuilding;
     });
 
-    console.log("buildings: ", buildings);
-
     ctx.strokeStyle = colorMap.buildingOutline;
 
     buildings.forEach(building => {
@@ -298,8 +291,6 @@ const Wc3vViewer = class {
     const { ctx } = this;
     const unit = this.focusPlayer.units[this.renderUnitIndex];
     const drawPath = unit.path;
-    
-    console.log("render unit: ", unit.displayName);
 
     // update the unit info dom section
     const unitInfo = document.getElementById(domMap.unitInfoId);
