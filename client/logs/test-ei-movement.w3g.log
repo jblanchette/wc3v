@@ -1,0 +1,1053 @@
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 4,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     { itemId1: [ 43, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 49, 63, 0, 0, [length]: 4 ] },
+     { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     { itemId1: [ 93, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 99, 63, 0, 0, [length]: 4 ] },
+     [length]: 4 ] }
+Game Timer: 2300
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 2300
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ohgu',
+  objectId1: 16149,
+  objectId2: 16155 }
+Game Timer: 2300
+========================================================================
+selectSubgroup 1
+findUnreg by itemId: ugho
+match:  false unpl ugho
+no evo to check
+match:  false uaco ugho
+no evo to check
+match:  false uaco ugho
+no evo to check
+match:  false uaco ugho
+no evo to check
+selectSubgroup 3
+Filter fixedItemId:  ugho
+existing unit count:  0
+1 Selected a spawned unit Ghoul
+creating new unit:  Ghoul
+setting fully registered unit
+checking backfill:  Ghoul
+found backfill:  { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+  itemId2: [ 27, 63, 0, 0, [length]: 4 ],
+  backfill: [ [length]: 0 ] }
+current selection units:  [ '21,63,0,0, 27,63,0,0 [16149, 16155] - Ghoul',
+  '43,63,0,0, 49,63,0,0 - Unregistered',
+  '68,63,0,0, 74,63,0,0 - Unregistered',
+  '93,63,0,0, 99,63,0,0 - Unregistered',
+  [length]: 4 ]
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 24,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 5120,
+  targetY: 3584,
+  objectId1: 16090,
+  objectId2: 16102 }
+Game Timer: 2500
+========================================================================
+move sel unit.moveTo:  Ghoul
+unit moveTo called.  Ghoul current pos: (4672, 2944)
+moving to: (5120, 3584)
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 3,
+  actions:
+   [ { itemId1: [ 43, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 49, 63, 0, 0, [length]: 4 ] },
+     { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     { itemId1: [ 93, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 99, 63, 0, 0, [length]: 4 ] },
+     [length]: 3 ] }
+Game Timer: 3300
+========================================================================
+current units:  [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+  { itemId1: [ 43, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 49, 63, 0, 0, [length]: 4 ] },
+  { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  { itemId1: [ 93, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 99, 63, 0, 0, [length]: 4 ] },
+  [length]: 4 ]
+deselecting other group:  [ { itemId1: [ 43, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 49, 63, 0, 0, [length]: 4 ] },
+  { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  { itemId1: [ 93, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 99, 63, 0, 0, [length]: 4 ] },
+  [length]: 3 ]
+units after deselect:  [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4352,
+  targetY: 3392,
+  objectId1: 9728,
+  objectId2: 9728 }
+Game Timer: 3700
+========================================================================
+move sel unit.moveTo:  Ghoul
+unit moveTo called.  Ghoul current pos: (4809.630962647196, 3140.61566092457)
+moving to: (4352, 3392)
+cancelEvent calling eventTimer onComplete(false)
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 4200
+========================================================================
+current units:  [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 4200
+========================================================================
+added to units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 4200
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'lpnu',
+  objectId1: 16044,
+  objectId2: 16044 }
+Game Timer: 4200
+========================================================================
+Registering unit:  unpl
+new itemIds:  [ -84, 62, 0, 0, [length]: 4 ] [ -84, 62, 0, 0, [length]: 4 ]
+new objIds:  16044 16044
+setting fully registered unit
+checking backfill:  Necropolis
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 66,
+  itemId: 'ocau',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 4700
+========================================================================
+1 Building is training a unit. Acolyte
+setting unit spawn pos: 4672 2944
+1 Making trained unit: Acolyte uaco
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 5120,
+  targetY: 3584,
+  objectId1: 16090,
+  objectId2: 16102 }
+Game Timer: 5600
+========================================================================
+Building.doAbilityRightClickWithTargetAndObjectId
+Adding unknown object to world.
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 9500
+========================================================================
+current units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 9500
+========================================================================
+added to units:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 9500
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16196,
+  objectId2: 16202 }
+Game Timer: 9500
+========================================================================
+Registering unit:  uaco
+new itemIds:  [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+new objIds:  16196 16202
+setting fully registered unit
+checking backfill:  Acolyte
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 9500
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'doau',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 5152,
+  targetY: 3168 }
+Game Timer: 10200
+========================================================================
+ability unitInfo:  { displayName: 'Altar of Darkness',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Darkness
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 4 ]
+has worker in group
+checking backfill:  Altar of Darkness
+moving unit to build:  Altar of Darkness 5152 3168
+unit moveTo called.  Acolyte current pos: (5120, 3584)
+moving to: (5152, 3168)
+1 *** setting build menu CLOSED
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 11000
+========================================================================
+1 *** setting build menu OPEN
+process calling eventTimer onComplete(true)
+unit finished moving to building, now building:  Altar of Darkness
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'gizu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4768,
+  targetY: 3296 }
+Game Timer: 12300
+========================================================================
+ability unitInfo:  { displayName: 'Ziggurat',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Ziggurat
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 4 ]
+has worker in group
+checking backfill:  Ziggurat
+moving unit to build:  Ziggurat 4768 3296
+unit moveTo called.  Acolyte current pos: (5152, 3168)
+moving to: (4768, 3296)
+1 *** setting build menu CLOSED
+process calling eventTimer onComplete(true)
+unit finished moving to building, now building:  Ziggurat
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 5120,
+  targetY: 3584,
+  objectId1: 16090,
+  objectId2: 16102 }
+Game Timer: 14100
+========================================================================
+move sel unit.moveTo:  Acolyte
+unit moveTo called.  Acolyte current pos: (4768, 3296)
+moving to: (5120, 3584)
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 20801
+========================================================================
+current units:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 20801
+========================================================================
+added to units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 20801
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'lpnu',
+  objectId1: 16044,
+  objectId2: 16044 }
+Game Timer: 20801
+========================================================================
+Registering unit:  unpl
+new itemIds:  [ -84, 62, 0, 0, [length]: 4 ] [ -84, 62, 0, 0, [length]: 4 ]
+new objIds:  16044 16044
+not registering already registered unit...
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 66,
+  itemId: 'ocau',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 21301
+========================================================================
+1 Building is training a unit. Acolyte
+setting unit spawn pos: 4672 2944
+1 Making trained unit: Acolyte uaco
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4545.6357421875,
+  targetY: 2614.738525390625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 22301
+========================================================================
+Building.doAbilityRightClickWithTargetAndObjectId
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 36801
+========================================================================
+current units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+       itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 36801
+========================================================================
+added to units:  [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 36801
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16284,
+  objectId2: 18127 }
+Game Timer: 36801
+========================================================================
+Registering unit:  uaco
+new itemIds:  [ -100, 63, 0, 0, [length]: 4 ] [ -49, 70, 0, 0, [length]: 4 ]
+new objIds:  16284 18127
+setting fully registered unit
+checking backfill:  Acolyte
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 36801
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'pesu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4544,
+  targetY: 2432 }
+Game Timer: 37001
+========================================================================
+ability unitInfo:  { displayName: 'Crypt',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+       itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Crypt
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: -100,63,0,0 id2: -49,70,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 5 ]
+has worker in group
+checking backfill:  Crypt
+moving unit to build:  Crypt 4544 2432
+unit moveTo called.  Acolyte current pos: (4672, 2944)
+moving to: (4544, 2432)
+cancelEvent calling eventTimer onComplete(false)
+unit dist from building spot:  0
+unit finished moving to building, now building:  Crypt
+1 *** setting build menu CLOSED
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 5120,
+  targetY: 3584,
+  objectId1: 16090,
+  objectId2: 16102 }
+Game Timer: 38001
+========================================================================
+move sel unit.moveTo:  Acolyte
+unit moveTo called.  Acolyte current pos: (4538.3, 2409.202)
+moving to: (5120, 3584)
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+       itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 39801
+========================================================================
+current units:  [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -100, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -49, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 39801
+========================================================================
+added to units:  [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 39801
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pesu',
+  objectId1: 16071,
+  objectId2: 18193 }
+Game Timer: 39801
+========================================================================
+Registering unit:  usep
+new itemIds:  [ -57, 62, 0, 0, [length]: 4 ] [ 17, 71, 0, 0, [length]: 4 ]
+new objIds:  16071 18193
+setting fully registered unit
+checking backfill:  Crypt
+========================================================================
+ActionName: AssignGroupHotkey PID: 1
+Action: { actionId: 23,
+  groupNumber: 3,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 40601
+========================================================================
+setting group:  3
+before set:  [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+action:  { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+  itemId2: [ 17, 71, 0, 0, [length]: 4 ] }
+selection units:  [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+all groups: 
+3 units:  [ '-57,62,0,0,17,71,0,0 - Crypt', [length]: 1 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 40901
+========================================================================
+current units:  [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -57, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 17, 71, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 40901
+========================================================================
+added to units:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 40901
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'doau',
+  objectId1: 15909,
+  objectId2: 17273 }
+Game Timer: 40901
+========================================================================
+Registering unit:  uaod
+new itemIds:  [ 37, 62, 0, 0, [length]: 4 ] [ 121, 67, 0, 0, [length]: 4 ]
+new objIds:  15909 17273
+setting fully registered unit
+checking backfill:  Altar of Darkness
+========================================================================
+ActionName: AssignGroupHotkey PID: 1
+Action: { actionId: 23,
+  groupNumber: 4,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 41201
+========================================================================
+setting group:  4
+before set:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+action:  { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+  itemId2: [ 121, 67, 0, 0, [length]: 4 ] }
+selection units:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+all groups: 
+3 units:  [ '-57,62,0,0,17,71,0,0 - Crypt', [length]: 1 ]
+4 units:  [ '37,62,0,0,121,67,0,0 - Altar of Darkness', [length]: 1 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 41501
+========================================================================
+current units:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 41501
+========================================================================
+added to units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 41501
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'lpnu',
+  objectId1: 16044,
+  objectId2: 16044 }
+Game Timer: 41501
+========================================================================
+Registering unit:  unpl
+new itemIds:  [ -84, 62, 0, 0, [length]: 4 ] [ -84, 62, 0, 0, [length]: 4 ]
+new objIds:  16044 16044
+not registering already registered unit...
+========================================================================
+ActionName: AssignGroupHotkey PID: 1
+Action: { actionId: 23,
+  groupNumber: 5,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 41701
+========================================================================
+setting group:  5
+before set:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+action:  { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+  itemId2: [ -84, 62, 0, 0, [length]: 4 ] }
+selection units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+all groups: 
+3 units:  [ '-57,62,0,0,17,71,0,0 - Crypt', [length]: 1 ]
+4 units:  [ '37,62,0,0,121,67,0,0 - Altar of Darkness', [length]: 1 ]
+5 units:  [ '-84,62,0,0,-84,62,0,0 - Necropolis', [length]: 1 ]
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 53001
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 57801
+========================================================================
+current units:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -84, 62, 0, 0, [length]: 4 ],
+    itemId2: [ -84, 62, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 57801
+========================================================================
+added to units:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 57801
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'doau',
+  objectId1: 15909,
+  objectId2: 17273 }
+Game Timer: 57801
+========================================================================
+Registering unit:  uaod
+new itemIds:  [ 37, 62, 0, 0, [length]: 4 ] [ 121, 67, 0, 0, [length]: 4 ]
+new objIds:  15909 17273
+not registering already registered unit...
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'aedU',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 59101
+========================================================================
+1 Making a hero.
+1 Gave first hero a TP item.
+setting unit spawn pos: 5152 3168
+1 Making trained unit:  Death Knight
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 63200
+========================================================================
+current units:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 37, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 121, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 95, 60, 0, 0, [length]: 4 ],
+       itemId2: [ 25, 74, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 63200
+========================================================================
+added to units:  [ { itemId1: [ 95, 60, 0, 0, [length]: 4 ],
+    itemId2: [ 25, 74, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 63200
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'aedU',
+  objectId1: 15455,
+  objectId2: 18969 }
+Game Timer: 63200
+========================================================================
+Registering unit:  Udea
+new itemIds:  [ 95, 60, 0, 0, [length]: 4 ] [ 25, 74, 0, 0, [length]: 4 ]
+new objIds:  15455 18969
+setting fully registered unit
+checking backfill:  Death Knight
+========================================================================
+ActionName: SelectHeroSkill PID: 1
+Action: { actionId: 102 }
+Game Timer: 64600
+========================================================================
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 66,
+  itemId: 'cdUA',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 64900
+========================================================================
+%% Learned spell:  { displayName: 'Death Coil', level: 1 }
+1 Hero leveled up:  Death Knight 1
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4917.63037109375,
+  targetY: 2646.15380859375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 65400
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Death Knight
+unit moveTo called.  Death Knight current pos: (5152, 3168)
+moving to: (4917.63037109375, 2646.15380859375)
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3905.867919921875,
+  targetY: 2657.429443359375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 67100
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Death Knight
+unit moveTo called.  Death Knight current pos: (4943.05596597703, 2702.766305340851)
+moving to: (3905.867919921875, 2657.429443359375)
+cancelEvent calling eventTimer onComplete(false)
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4262.3681640625,
+  targetY: 776.0608520507812,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 71800
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Death Knight
+unit moveTo called.  Death Knight current pos: (3905.867919921875, 2657.429443359375)
+moving to: (4262.3681640625, 776.0608520507812)
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3650.9658203125,
+  targetY: -2506.716796875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 82100
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Death Knight
+unit moveTo called.  Death Knight current pos: (4262.3681640625, 776.0608520507812)
+moving to: (3650.9658203125, -2506.716796875)
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -373.603515625,
+  targetY: -595.66015625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 96900
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Death Knight
+unit moveTo called.  Death Knight current pos: (3650.9658203125, -2506.716796875)
+moving to: (-373.603515625, -595.66015625)
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 5066.6845703125,
+  targetY: 2972.33984375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 114795
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Death Knight
+unit moveTo called.  Death Knight current pos: (-373.603515625, -595.66015625)
+moving to: (5066.6845703125, 2972.33984375)
+process calling eventTimer onComplete(true)
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 142996
+========================================================================
+created wc3v file:  ./client/replays/test-ei-movement.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 11
+Unregistered units: 1
+************************************
+wc3v completed.  enjoy!

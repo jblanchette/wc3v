@@ -63,11 +63,11 @@ const Wc3vViewer = class {
 
   loadMapFile () {
     const self = this;
-    const { mapName } = this.mapData.replay.meta.meta;
+    const { name } = this.mapInfo;
 
     return new Promise((resolve, reject) => {
       self.mapImage = new Image();   // Create new img element
-      self.mapImage.src = './maps/ConcealedHill/map3.jpg'; // Set source path
+      self.mapImage.src = `./maps/${name}/map.jpg`; // Set source path
 
       self.mapImage.addEventListener('load', () => {
         resolve();
@@ -79,7 +79,26 @@ const Wc3vViewer = class {
   setup () {
     const self = this;
     const playerKeys = Object.keys(this.mapData.players);
-    const { canvas, ctx } = this;
+
+    const { maps } = window.gameData;
+
+    // extract map info from replay data
+    const { map } = this.mapData.replay;
+    const { file } = map;
+    const mapParts = file.split("/");
+
+    this.mapName = mapParts[mapParts.length - 1].toLowerCase();
+    
+    const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
+      const searchName = maps[mapItem].name.toLowerCase();
+
+      if (this.mapName.indexOf(searchName) !== -1) {
+        return mapItem;
+      }
+    });
+
+    this.mapInfo = maps[foundMapName];
+    console.log("game data: ", this.mapInfo);
 
     // select first playerId as focus
     this.selectFocusPlayer(playerKeys[0]);
@@ -115,8 +134,10 @@ const Wc3vViewer = class {
     this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ];
     this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
 
-    this.xExtent = [-5200, 5200];
-    this.yExtent = [-6400, 6400];
+    const { xExtent, yExtent } = this.mapInfo;
+
+    this.xExtent = xExtent;
+    this.yExtent = yExtent;
 
     this.xScale = d3.scaleLinear()
       .domain(this.xExtent)
@@ -193,6 +214,8 @@ const Wc3vViewer = class {
     });
 
     const playerData = this.mapData.replay.players;
+
+    console.log("pd: ", playerData);
     let playerIdList = Object.keys(this.mapData.players);
 
     // put our focus player at the front
@@ -263,7 +286,7 @@ const Wc3vViewer = class {
     buildings.forEach(building => {
       const { x, y } = building.lastPosition;
       const drawX = this.xScale(x) + this.middleX;
-      const drawY = this.yScale(-y) + this.middleY;
+      const drawY = this.yScale(y) + this.middleY;
 
       ctx.strokeRect(drawX, drawY, 10, 10);
     });
@@ -301,7 +324,7 @@ const Wc3vViewer = class {
     drawPath.forEach(position => {
       const { x, y } = position;
       const drawX = this.xScale(x) + this.middleX;
-      const drawY = this.yScale(-y) + this.middleY;
+      const drawY = this.yScale(y) + this.middleY;
 
       if (!penDown) {
         ctx.moveTo(drawX, drawY);

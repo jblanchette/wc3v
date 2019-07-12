@@ -1,0 +1,51 @@
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 5,
+  actions:
+   [ { itemId1: [ -91, -123, 0, 0, [length]: 4 ],
+       itemId2: [ -88, -123, 0, 0, [length]: 4 ] },
+     { itemId1: [ -69, -123, 0, 0, [length]: 4 ],
+       itemId2: [ -66, -123, 0, 0, [length]: 4 ] },
+     { itemId1: [ -47, -123, 0, 0, [length]: 4 ],
+       itemId2: [ -44, -123, 0, 0, [length]: 4 ] },
+     { itemId1: [ -25, -123, 0, 0, [length]: 4 ],
+       itemId2: [ -22, -123, 0, 0, [length]: 4 ] },
+     { itemId1: [ -3, -123, 0, 0, [length]: 4 ],
+       itemId2: [ 0, -122, 0, 0, [length]: 4 ] },
+     [length]: 5 ] }
+Game Timer: 886
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 886
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 34213,
+  objectId2: 34216 }
+Game Timer: 886
+========================================================================
+Registering unit:  ewsp
+new itemIds:  [ -91, -123, 0, 0, [length]: 4 ] [ -88, -123, 0, 0, [length]: 4 ]
+new objIds:  34213 34216
+setting fully registered unit
+checking backfill:  Wisp
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 24,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: -7104,
+  targetY: 6976,
+  objectId1: 28303,
+  objectId2: 34179 }
+Game Timer: 1264
+========================================================================
+wc3v completed.  enjoy!

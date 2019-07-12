@@ -1,49 +1,44 @@
 const W3GReplay = require('./node_modules/w3gjs');
-const { ActionBlockList } = require('./node_modules/w3gjs/parsers/actions');
+const { ActionBlockList } = require('./node_modules/w3gjs/dist/lib/parsers/actions');
 const Parser = new W3GReplay();
 
 const utils = require("./helpers/utils"),
       logManager = require("./helpers/logManager"),
-      UnitManager = require("./lib/UnitManager");
+      PlayerManager = require("./lib/PlayerManager");
 
-let unitManager;
+let playerManager;
 let actionCount = 0;
-let hasParsedMeta = false;
-
 let globalTime = 0;
 
-W3GReplay.prototype.processTimeSlot = function (timeSlotBlock) {
-  if (!hasParsedMeta) {
-    unitManager.setMetaData(this.gameMetaDataDecoded.meta, this.meta);
-    hasParsedMeta = true;
-  }
 
+Parser.on('gamemetadata', (gameMetaData) => {
+  playerManager.setMetaData(gameMetaData);
+});
+
+Parser.on('timeslotblock', (timeSlotBlock) => {
   globalTime += timeSlotBlock.timeIncrement;
-  unitManager.processTick(globalTime);
+  playerManager.processTick(globalTime);
 
   timeSlotBlock.actions.forEach(actionBlock => {
-    unitManager.checkCreatePlayer(actionBlock);
+    playerManager.checkCreatePlayer(actionBlock);
 
   	ActionBlockList.parse(actionBlock.actions).forEach(action => {
       actionCount++;
 
-      unitManager.handleAction(actionBlock, action);
+      playerManager.handleAction(actionBlock, action);
   	});
-
-    this.processCommandDataBlock(actionBlock);
   });
-};
+});
 
 const parseReplays = (paths) => {
   paths.forEach(file => {
-    unitManager = new UnitManager();
-    hasParsedMeta = false;
+    playerManager = new PlayerManager();
     
     logManager.setLogger(file, true);
 
     try {
       const replay = Parser.parse(file);
-      let players = unitManager.players;
+      let players = playerManager.players;
 
       // write our output wc3v file
       utils.writeOutput(file, replay, players);

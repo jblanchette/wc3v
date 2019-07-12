@@ -125,6 +125,18 @@ const uuidv4 = () => {
 ////
 
 const writeOutput = (filename, replay, players) => {
+
+  const savedPlayers = replay.players;
+
+  delete replay.players;
+
+  replay.players = savedPlayers.reduce((acc, player) => {
+    const { id } = player;
+
+    acc[id] = player;
+    return acc;
+  }, {});
+
   const output = {
     players: Object.keys(players).reduce((acc, playerId) => {
     	const player = players[playerId];

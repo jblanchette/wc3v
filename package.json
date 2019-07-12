@@ -15,13 +15,9 @@
 		"email": "jeff.blanchette5@gmail.com"
 	},
 	"contributors": [],
-	"main": "./lib/w3g_julas",
 	"dependencies": {
-		"w3gjs": "anXieTyPB/w3gjs#master"
+		"w3gjs": "^1.1.2"
 	},
 	"license": "MIT",
-	"readmeFilename": "README.md",
-	"devDependencies": {
-		"simple-node-logger": "^18.12.22"
-	}
+	"readmeFilename": "README.md"
 }

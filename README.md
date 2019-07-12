@@ -71,6 +71,7 @@ is difficult at the moment.
 
 ## Not implemented
 
+* Mirror matches
 * Neutral Creep tracking
 * Item unit spawns
 * Gold + Wood resource tracking
