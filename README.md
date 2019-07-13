@@ -82,7 +82,7 @@ is difficult at the moment.
 
 Replay parsing using:
 
-* https://github.com/anXieTyPB/w3gjs
+* https://github.com/PBug90/w3gjs
 
 Replay documentation from:
 
