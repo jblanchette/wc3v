@@ -227,7 +227,15 @@ const Wc3vViewer = class {
 
     playerIdList.forEach(playerId => {
       const optionItem = document.createElement("option");
-      optionItem.innerHTML = `${playerData[playerId].name}`;
+
+      const player = playerData[playerId];
+
+      if (!player) {
+        console.error("unable to find player for: ", playerId);
+        return;
+      }
+
+      optionItem.innerHTML = `${player.name}`;
 
       playerList.append(optionItem);
     });

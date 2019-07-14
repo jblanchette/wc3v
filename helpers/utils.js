@@ -141,6 +141,10 @@ const writeOutput = (filename, replay, players) => {
     players: Object.keys(players).reduce((acc, playerId) => {
     	const player = players[playerId];
 
+      if (!player.units.length) {
+        return acc;
+      }
+
     	acc[playerId] = {
         startingPosition: player.startingPosition,
     		units: player.units.map(unit => unit.exportUnit())
