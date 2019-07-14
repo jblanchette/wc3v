@@ -68,10 +68,10 @@ is difficult at the moment.
   * building construction and upgrading is simulated
 * Rendering 'birds eye view' of game play
 * Player starting position detection
+* Mirror matches
 
 ## Not implemented
 
-* Mirror matches
 * Neutral Creep tracking
 * Item unit spawns
 * Gold + Wood resource tracking
