@@ -304,6 +304,7 @@ const Wc3vViewer = class {
     const unitInfo = document.getElementById(domMap.unitInfoId);
     unitInfo.innerHTML = `<ul>
       <li>${unit.displayName}</li>
+      <li>${unit.level}</li>
     </ul>`;
 
     let penDown = false;
