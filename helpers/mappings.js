@@ -972,7 +972,12 @@ const allItemIds = {
 
 const heroAbilities = {
     'AHbz': { 'displayName': 'Blizzard'},
-   'AHwe': { 'displayName': 'Summon Water Elemental'},
+   'AHwe': { 
+     'displayName': 'Summon Water Elemental',
+     'type': 'summon',
+     'summonCount': 2,
+     'summonItemId': ['hwat', 'hwt2', 'hwt3']
+   },
    'AHa': { 'displayName': 'Brilliance Aura'},
    'AHmt': { 'displayName': 'Mass Teleport'},
    'AHt': { 'displayName': 'Storm Bolt'},
