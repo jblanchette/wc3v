@@ -38,7 +38,7 @@ really is.
 
 Because Warcraft 3 requires the player to actually perform actions in order for more units to "spawn" into the world - it's easy for us at this point to associate things when a user selects that unit.
 
-As a player begins a (normal) match they will select their existing town hall and produce a new unit.  We track this new unit as an "unregistered" unit, up until it has spawned and since been selected.  Because this unit is unregistered it means we need to increase our counter.
+As a player begins a (normal) match they will select their existing town hall and produce a new unit.  We track this new unit as an "unregistered" unit, up until it has spawned and since been selected.
 
 #### Selecting units 
 
@@ -48,7 +48,7 @@ The `Select Subgroup` action gives us the `objectId1` and `objectId2` pair for t
 
 #### Registering units
 
-Whenever a unit enters a players list of selected units we try to associate the `itemId1-2` with the `objectId1-2` by keeping units unregistered until they're registered.  A unit becomes "registered" when they are both in a selection group and also the focus of a `Select Subgroup` action.
+Whenever a unit enters a players list of selected units we try to associate the `itemId1-2` with the `objectId1-2` by tracking units in an unregistered state until there is registration action.  A unit becomes "registered" when they are both in a selection group and also the focus of a `Select Subgroup` action.
 
 Unit metadata is mapped to known `itemId` values - giving us the ability to simulate different actions and in-game results.
 
