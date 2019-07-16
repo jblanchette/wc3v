@@ -7,8 +7,8 @@ const gameData = {
     },
     '(2)echoisles.w3x': {
       'name': 'EchoIsles',
-      'xExtent': [-8912, 8912],
-      'yExtent': [5100, -5100]
+      'xExtent': [-7600, 7400],
+      'yExtent': [5100, -5700]
     }
   }
 };
