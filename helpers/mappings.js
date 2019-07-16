@@ -1153,6 +1153,7 @@ const abilityActions = {
     'HeroMoveItem4': [ 37, 0, 13, 0 ],
     'HeroMoveItem5': [ 38, 0, 13, 0 ],
     'HeroMoveItem6': [ 39, 0, 13, 0 ],
+    'HeroRevive': [ 59, 0, 13, 0 ],
     'NERoot': [ 197, 0, 13, 0 ],
     'NEUpRoot': [ 198, 0, 13, 0 ],
     'EatTree': [ -78, 0, 13, 0 ]
