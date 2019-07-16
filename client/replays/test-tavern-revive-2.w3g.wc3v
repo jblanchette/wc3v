@@ -1,0 +1,1637 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": -5184,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "68,63,0,0",
+                    "itemId2": "74,63,0,0",
+                    "objectId1": 16196,
+                    "objectId2": 16202,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 35.13336181640625,
+                        "y": -468.20843505859375
+                    },
+                    "path": [
+                        {
+                            "x": -4680.86,
+                            "y": 3116.99
+                        },
+                        {
+                            "x": -4704,
+                            "y": 3104
+                        },
+                        {
+                            "x": -4652.13,
+                            "y": 2709.18
+                        },
+                        {
+                            "x": -4640,
+                            "y": 2592
+                        },
+                        {
+                            "x": -4311.18,
+                            "y": 2581.06
+                        },
+                        {
+                            "x": 35.13,
+                            "y": -468.21
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -4680.86,
+                            "targetY": 3116.99,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 532.05,
+                            "pathTime": 2.26,
+                            "xVelocity": 222.23,
+                            "yVelocity": 76.41,
+                            "timerData": {
+                                "startTime": 4900,
+                                "endTime": 4900,
+                                "runLength": 2264.033515977667,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 23.5,
+                            "startX": -4680.86,
+                            "startY": 3116.99,
+                            "targetX": -4704,
+                            "targetY": 3104,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 26.54,
+                            "pathTime": 0.11,
+                            "xVelocity": 204.93,
+                            "yVelocity": 115.02,
+                            "timerData": {
+                                "startTime": 5200,
+                                "endTime": 5312.919315806227,
+                                "runLength": 112.91931580622756,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.6,
+                            "distance": 376,
+                            "startX": -4704,
+                            "startY": 3104,
+                            "targetX": -4652.13,
+                            "targetY": 2709.18,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 398.21,
+                            "pathTime": 1.69,
+                            "xVelocity": 30.61,
+                            "yVelocity": 233,
+                            "timerData": {
+                                "startTime": 9400,
+                                "endTime": 11094.52825632256,
+                                "runLength": 1694.5282563225587,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.5,
+                            "distance": 117.27,
+                            "startX": -4652.13,
+                            "startY": 2709.18,
+                            "targetX": -4640,
+                            "targetY": 2592,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 117.8,
+                            "pathTime": 0.5,
+                            "xVelocity": 24.2,
+                            "yVelocity": 233.75,
+                            "timerData": {
+                                "startTime": 11200,
+                                "endTime": 11701.29644478526,
+                                "runLength": 501.2964447852587,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.4,
+                            "distance": 329,
+                            "startX": -4640,
+                            "startY": 2592,
+                            "targetX": -4276.95,
+                            "targetY": 2579.92,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 363.25,
+                            "pathTime": 1.55,
+                            "xVelocity": 234.87,
+                            "yVelocity": 7.82,
+                            "timerData": {
+                                "startTime": 12299,
+                                "endTime": 13699,
+                                "runLength": 1545.729178402526,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 22.5,
+                            "distance": 5287.03,
+                            "startX": -4311.18,
+                            "startY": 2581.06,
+                            "targetX": 35.13,
+                            "targetY": -468.21,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 5309.28,
+                            "pathTime": 22.59,
+                            "xVelocity": 192.38,
+                            "yVelocity": 134.97,
+                            "timerData": {
+                                "startTime": 13699,
+                                "endTime": 36291.692807778854,
+                                "runLength": 22592.692807778854,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Altar of Darkness",
+                    "itemId": "uaod",
+                    "itemId1": "-85,61,0,0",
+                    "itemId2": "125,68,0,0",
+                    "objectId1": 15787,
+                    "objectId2": 17533,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4704,
+                        "y": 3104
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4640,
+                        "y": 2592
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ghoul",
+                    "itemId": "ugho",
+                    "itemId1": "21,63,0,0",
+                    "itemId2": "27,63,0,0",
+                    "objectId1": 16149,
+                    "objectId2": 16155,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5760,
+                        "y": 2752
+                    },
+                    "path": [
+                        {
+                            "x": -199.69,
+                            "y": 92.33
+                        },
+                        {
+                            "x": -5718.76,
+                            "y": 2644.42
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5735.46,
+                            "y": 2783.59
+                        },
+                        {
+                            "x": -5753.73,
+                            "y": 2748.47
+                        },
+                        {
+                            "x": -5705.12,
+                            "y": 2713.29
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5771.32,
+                            "y": 2775.67
+                        },
+                        {
+                            "x": -5696.6,
+                            "y": 2812.8
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5745.07,
+                            "y": 2738.69
+                        },
+                        {
+                            "x": -5772.61,
+                            "y": 2757.12
+                        },
+                        {
+                            "x": -5736.85,
+                            "y": 2708.94
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5721.72,
+                            "y": 2763.61
+                        },
+                        {
+                            "x": -5782.56,
+                            "y": 2779.08
+                        },
+                        {
+                            "x": -5755.92,
+                            "y": 2749.24
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5741.36,
+                            "y": 2716.61
+                        },
+                        {
+                            "x": -5797.76,
+                            "y": 2758.47
+                        },
+                        {
+                            "x": -5760.18,
+                            "y": 2772.17
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5745.53,
+                            "y": 2714.71
+                        },
+                        {
+                            "x": -5783.49,
+                            "y": 2730.99
+                        },
+                        {
+                            "x": -5759.15,
+                            "y": 2734.42
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5706.23,
+                            "y": 2778.62
+                        },
+                        {
+                            "x": -5788.01,
+                            "y": 2756.56
+                        },
+                        {
+                            "x": -5714.06,
+                            "y": 2787.08
+                        },
+                        {
+                            "x": -5760.09,
+                            "y": 2772.27
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        },
+                        {
+                            "x": -5738.96,
+                            "y": 2717.98
+                        },
+                        {
+                            "x": -5748.67,
+                            "y": 2755.97
+                        },
+                        {
+                            "x": -5739.85,
+                            "y": 2738.02
+                        },
+                        {
+                            "x": -5760,
+                            "y": 2752
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 1.1,
+                            "distance": 220,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": -5526.71,
+                            "targetY": 2555.31,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 6088.85,
+                            "pathTime": 30.44,
+                            "xVelocity": 181.54,
+                            "yVelocity": 83.93,
+                            "timerData": {
+                                "startTime": 25699,
+                                "endTime": 26799,
+                                "runLength": 30444.264133308734,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 30.4,
+                            "distance": 6079.4,
+                            "startX": -199.69,
+                            "startY": 92.33,
+                            "targetX": -5718.76,
+                            "targetY": 2644.42,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 6080.57,
+                            "pathTime": 30.4,
+                            "xVelocity": 181.53,
+                            "yVelocity": 83.94,
+                            "timerData": {
+                                "startTime": 26799,
+                                "endTime": 57201.86812060654,
+                                "runLength": 30402.86812060654,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.5,
+                            "distance": 100,
+                            "startX": -5718.76,
+                            "startY": 2644.42,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 115.21,
+                            "pathTime": 0.58,
+                            "xVelocity": 71.58,
+                            "yVelocity": 186.75,
+                            "timerData": {
+                                "startTime": 73498,
+                                "endTime": 74074.05452266119,
+                                "runLength": 576.0545226611831,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5691.59,
+                            "targetY": 2840.04,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 111.5,
+                            "pathTime": 0.56,
+                            "xVelocity": 122.72,
+                            "yVelocity": 157.93,
+                            "timerData": {
+                                "startTime": 74298,
+                                "endTime": 74498,
+                                "runLength": 557.5008310485,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5735.46,
+                            "startY": 2783.59,
+                            "targetX": -5753.73,
+                            "targetY": 2748.47,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 39.59,
+                            "pathTime": 0.2,
+                            "xVelocity": 92.32,
+                            "yVelocity": 177.42,
+                            "timerData": {
+                                "startTime": 74498,
+                                "endTime": 74695.95257495246,
+                                "runLength": 197.95257495245954,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 60,
+                            "startX": -5753.73,
+                            "startY": 2748.47,
+                            "targetX": -5679.75,
+                            "targetY": 2694.93,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 91.32,
+                            "pathTime": 0.46,
+                            "xVelocity": 162.03,
+                            "yVelocity": 117.25,
+                            "timerData": {
+                                "startTime": 75298,
+                                "endTime": 75598,
+                                "runLength": 456.6167959533706,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 60,
+                            "startX": -5705.12,
+                            "startY": 2713.29,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 67.15,
+                            "pathTime": 0.34,
+                            "xVelocity": 163.43,
+                            "yVelocity": 115.28,
+                            "timerData": {
+                                "startTime": 75598,
+                                "endTime": 75933.77331392429,
+                                "runLength": 335.7733139242983,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 0,
+                            "pathTime": 0,
+                            "xVelocity": null,
+                            "yVelocity": null,
+                            "timerData": {
+                                "startTime": 76398,
+                                "endTime": 76398,
+                                "runLength": 0,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5771.32,
+                            "targetY": 2775.67,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 26.24,
+                            "pathTime": 0.13,
+                            "xVelocity": 86.3,
+                            "yVelocity": 180.42,
+                            "timerData": {
+                                "startTime": 76598,
+                                "endTime": 76729.20676974929,
+                                "runLength": 131.20676974928335,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.4,
+                            "distance": 80,
+                            "startX": -5771.32,
+                            "startY": 2775.67,
+                            "targetX": -5696.6,
+                            "targetY": 2812.8,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 83.44,
+                            "pathTime": 0.42,
+                            "xVelocity": 179.11,
+                            "yVelocity": 89,
+                            "timerData": {
+                                "startTime": 77398,
+                                "endTime": 77815.19390375602,
+                                "runLength": 417.19390375601654,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.4,
+                            "distance": 80,
+                            "startX": -5696.6,
+                            "startY": 2812.8,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 87.84,
+                            "pathTime": 0.44,
+                            "xVelocity": 144.34,
+                            "yVelocity": 138.44,
+                            "timerData": {
+                                "startTime": 77898,
+                                "endTime": 78337.21848361571,
+                                "runLength": 439.21848361571443,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5647.89,
+                            "targetY": 2652.02,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 150.22,
+                            "pathTime": 0.75,
+                            "xVelocity": 149.27,
+                            "yVelocity": 133.11,
+                            "timerData": {
+                                "startTime": 78598,
+                                "endTime": 78698,
+                                "runLength": 751.0976644310427,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5745.07,
+                            "startY": 2738.69,
+                            "targetX": -5772.61,
+                            "targetY": 2757.12,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 33.14,
+                            "pathTime": 0.17,
+                            "xVelocity": 166.22,
+                            "yVelocity": 111.22,
+                            "timerData": {
+                                "startTime": 78698,
+                                "endTime": 78863.67718434225,
+                                "runLength": 165.67718434224483,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 60,
+                            "startX": -5772.61,
+                            "startY": 2757.12,
+                            "targetX": -5692.75,
+                            "targetY": 2649.51,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 134.01,
+                            "pathTime": 0.67,
+                            "xVelocity": 119.19,
+                            "yVelocity": 160.6,
+                            "timerData": {
+                                "startTime": 79498,
+                                "endTime": 79798,
+                                "runLength": 670.0377735667513,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5736.85,
+                            "startY": 2708.94,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 48.89,
+                            "pathTime": 0.24,
+                            "xVelocity": 94.68,
+                            "yVelocity": 176.17,
+                            "timerData": {
+                                "startTime": 79798,
+                                "endTime": 80042.4535153096,
+                                "runLength": 244.45351530958607,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5665.55,
+                            "targetY": 2780.64,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 98.7,
+                            "pathTime": 0.49,
+                            "xVelocity": 191.39,
+                            "yVelocity": 58.04,
+                            "timerData": {
+                                "startTime": 80498,
+                                "endTime": 80698,
+                                "runLength": 493.48603778880624,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 60,
+                            "startX": -5721.72,
+                            "startY": 2763.61,
+                            "targetX": -5782.56,
+                            "targetY": 2779.08,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 62.77,
+                            "pathTime": 0.31,
+                            "xVelocity": 193.83,
+                            "yVelocity": 49.29,
+                            "timerData": {
+                                "startTime": 80698,
+                                "endTime": 81011.86822780197,
+                                "runLength": 313.8682278019679,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5782.56,
+                            "startY": 2779.08,
+                            "targetX": -5672.61,
+                            "targetY": 2655.95,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 165.07,
+                            "pathTime": 0.83,
+                            "xVelocity": 133.21,
+                            "yVelocity": 149.18,
+                            "timerData": {
+                                "startTime": 81498,
+                                "endTime": 81698,
+                                "runLength": 825.3642060970915,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5755.92,
+                            "startY": 2749.24,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 4.93,
+                            "pathTime": 0.02,
+                            "xVelocity": 165.75,
+                            "yVelocity": 111.92,
+                            "timerData": {
+                                "startTime": 81698,
+                                "endTime": 81722.63811079005,
+                                "runLength": 24.63811079005385,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5696.61,
+                            "targetY": 2631.66,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 136.02,
+                            "pathTime": 0.68,
+                            "xVelocity": 93.21,
+                            "yVelocity": 176.95,
+                            "timerData": {
+                                "startTime": 82497,
+                                "endTime": 82697,
+                                "runLength": 680.075570006942,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 60,
+                            "startX": -5741.36,
+                            "startY": 2716.61,
+                            "targetX": -5797.76,
+                            "targetY": 2758.47,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 70.24,
+                            "pathTime": 0.35,
+                            "xVelocity": 160.61,
+                            "yVelocity": 119.19,
+                            "timerData": {
+                                "startTime": 82697,
+                                "endTime": 83048.18800973786,
+                                "runLength": 351.18800973785835,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5797.76,
+                            "startY": 2758.47,
+                            "targetX": -5686.72,
+                            "targetY": 2798.95,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 118.19,
+                            "pathTime": 0.59,
+                            "xVelocity": 187.9,
+                            "yVelocity": 68.51,
+                            "timerData": {
+                                "startTime": 83497,
+                                "endTime": 83697,
+                                "runLength": 590.9305855900266,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 19.8,
+                            "startX": -5760.18,
+                            "startY": 2772.17,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 20.17,
+                            "pathTime": 0.1,
+                            "xVelocity": 1.79,
+                            "yVelocity": 199.99,
+                            "timerData": {
+                                "startTime": 83697,
+                                "endTime": 83797.85244347695,
+                                "runLength": 100.85244347695351,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5709.11,
+                            "targetY": 2620.81,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 140.71,
+                            "pathTime": 0.7,
+                            "xVelocity": 72.33,
+                            "yVelocity": 186.46,
+                            "timerData": {
+                                "startTime": 84496,
+                                "endTime": 84696,
+                                "runLength": 703.5605073259974,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5745.53,
+                            "startY": 2714.71,
+                            "targetX": -5783.49,
+                            "targetY": 2730.99,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 41.3,
+                            "pathTime": 0.21,
+                            "xVelocity": 183.8,
+                            "yVelocity": 78.86,
+                            "timerData": {
+                                "startTime": 84696,
+                                "endTime": 84902.48831712616,
+                                "runLength": 206.48831712616698,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 19.8,
+                            "startX": -5783.49,
+                            "startY": 2730.99,
+                            "targetX": -5759.15,
+                            "targetY": 2734.42,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 24.57,
+                            "pathTime": 0.12,
+                            "xVelocity": 198.04,
+                            "yVelocity": 27.92,
+                            "timerData": {
+                                "startTime": 85397,
+                                "endTime": 85519.87313085786,
+                                "runLength": 122.87313085785608,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5759.15,
+                            "startY": 2734.42,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 17.6,
+                            "pathTime": 0.09,
+                            "xVelocity": 9.64,
+                            "yVelocity": 199.77,
+                            "timerData": {
+                                "startTime": 86294,
+                                "endTime": 86381.99287295877,
+                                "runLength": 87.99287295876785,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 60,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5629.87,
+                            "targetY": 2816.41,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 145.2,
+                            "pathTime": 0.73,
+                            "xVelocity": 179.25,
+                            "yVelocity": 88.72,
+                            "timerData": {
+                                "startTime": 86994,
+                                "endTime": 87294,
+                                "runLength": 726.0106966965274,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.4,
+                            "distance": 80,
+                            "startX": -5706.23,
+                            "startY": 2778.62,
+                            "targetX": -5788.01,
+                            "targetY": 2756.56,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 84.7,
+                            "pathTime": 0.42,
+                            "xVelocity": 193.1,
+                            "yVelocity": 52.08,
+                            "timerData": {
+                                "startTime": 87294,
+                                "endTime": 87717.51987775465,
+                                "runLength": 423.51987775464073,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.4,
+                            "distance": 80,
+                            "startX": -5788.01,
+                            "startY": 2756.56,
+                            "targetX": -5674.82,
+                            "targetY": 2803.27,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 122.45,
+                            "pathTime": 0.61,
+                            "xVelocity": 184.87,
+                            "yVelocity": 76.3,
+                            "timerData": {
+                                "startTime": 88094,
+                                "endTime": 88494,
+                                "runLength": 612.2289387307497,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5714.06,
+                            "startY": 2787.08,
+                            "targetX": -5760.09,
+                            "targetY": 2772.27,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 48.36,
+                            "pathTime": 0.24,
+                            "xVelocity": 190.39,
+                            "yVelocity": 61.25,
+                            "timerData": {
+                                "startTime": 88494,
+                                "endTime": 88735.79798855704,
+                                "runLength": 241.79798855703794,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5760.09,
+                            "startY": 2772.27,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 20.27,
+                            "pathTime": 0.1,
+                            "xVelocity": 0.93,
+                            "yVelocity": 200,
+                            "timerData": {
+                                "startTime": 89694,
+                                "endTime": 89795.34876296931,
+                                "runLength": 101.34876296930929,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 0,
+                            "pathTime": 0,
+                            "xVelocity": null,
+                            "yVelocity": null,
+                            "timerData": {
+                                "startTime": 92394,
+                                "endTime": 92394,
+                                "runLength": 0,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.2,
+                            "distance": 40,
+                            "startX": -5760,
+                            "startY": 2752,
+                            "targetX": -5677,
+                            "targetY": 2617.76,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 157.82,
+                            "pathTime": 0.79,
+                            "xVelocity": 105.18,
+                            "yVelocity": 170.11,
+                            "timerData": {
+                                "startTime": 93094,
+                                "endTime": 93294,
+                                "runLength": 789.1228031494654,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5738.96,
+                            "startY": 2717.98,
+                            "targetX": -5748.67,
+                            "targetY": 2755.97,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 39.21,
+                            "pathTime": 0.2,
+                            "xVelocity": 49.49,
+                            "yVelocity": 193.78,
+                            "timerData": {
+                                "startTime": 93294,
+                                "endTime": 93490.05797968645,
+                                "runLength": 196.05797968645166,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5748.67,
+                            "startY": 2755.97,
+                            "targetX": -5696.14,
+                            "targetY": 2648.96,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 119.21,
+                            "pathTime": 0.6,
+                            "xVelocity": 88.13,
+                            "yVelocity": 179.54,
+                            "timerData": {
+                                "startTime": 94294,
+                                "endTime": 94394,
+                                "runLength": 596.0537044940285,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 20,
+                            "startX": -5739.85,
+                            "startY": 2738.02,
+                            "targetX": -5760,
+                            "targetY": 2752,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 24.52,
+                            "pathTime": 0.12,
+                            "xVelocity": 164.3,
+                            "yVelocity": 114.04,
+                            "timerData": {
+                                "startTime": 94394,
+                                "endTime": 94516.61848556831,
+                                "runLength": 122.61848556831448,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Pit Lord",
+                    "itemId": "Nplh",
+                    "itemId1": "-11,55,0,0",
+                    "itemId2": "113,121,0,0",
+                    "objectId1": 14325,
+                    "objectId2": 31089,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 1,
+                    "lastPosition": {
+                        "x": -2288.91006779421,
+                        "y": -388.37285393276534
+                    },
+                    "path": [
+                        {
+                            "x": -309.87,
+                            "y": -682.99
+                        },
+                        {
+                            "x": -401.74,
+                            "y": -1123.52
+                        },
+                        {
+                            "x": -185.28,
+                            "y": -2723.05
+                        },
+                        {
+                            "x": -396.84,
+                            "y": -2304.61
+                        },
+                        {
+                            "x": -1114.73,
+                            "y": -1682.41
+                        },
+                        {
+                            "x": -1716.78,
+                            "y": -947.54
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 3,
+                            "distance": 750,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": -600.5,
+                            "targetY": -1323.59,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 1453.44,
+                            "pathTime": 5.81,
+                            "xVelocity": 103.29,
+                            "yVelocity": 227.66,
+                            "timerData": {
+                                "startTime": 143891,
+                                "endTime": 146891,
+                                "runLength": 5813.757045980336,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.8,
+                            "distance": 450,
+                            "startX": -309.87,
+                            "startY": -682.99,
+                            "targetX": -648.05,
+                            "targetY": -2304.5,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 1656.4,
+                            "pathTime": 6.63,
+                            "xVelocity": 51.04,
+                            "yVelocity": 244.73,
+                            "timerData": {
+                                "startTime": 146891,
+                                "endTime": 148691,
+                                "runLength": 6625.592167865207,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 6.4,
+                            "distance": 1601.25,
+                            "startX": -401.74,
+                            "startY": -1123.52,
+                            "targetX": -185.28,
+                            "targetY": -2723.05,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 1614.11,
+                            "pathTime": 6.46,
+                            "xVelocity": 33.53,
+                            "yVelocity": 247.74,
+                            "timerData": {
+                                "startTime": 148691,
+                                "endTime": 155147.4462582153,
+                                "runLength": 6456.446258215303,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -396.84,
+                            "startY": -2304.61,
+                            "targetX": -396.84,
+                            "targetY": -2304.61,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 0,
+                            "pathTime": 0,
+                            "xVelocity": null,
+                            "yVelocity": null,
+                            "timerData": {
+                                "startTime": 184195,
+                                "endTime": 184195,
+                                "runLength": 0,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 3.8,
+                            "distance": 950,
+                            "startX": -396.84,
+                            "startY": -2304.61,
+                            "targetX": -5208.61,
+                            "targetY": 1865.83,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 6367.55,
+                            "pathTime": 25.47,
+                            "xVelocity": 188.92,
+                            "yVelocity": 163.74,
+                            "timerData": {
+                                "startTime": 187694,
+                                "endTime": 191494,
+                                "runLength": 25470.211898894373,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 3.8,
+                            "distance": 950,
+                            "startX": -1114.73,
+                            "startY": -1682.41,
+                            "targetX": -4399.34,
+                            "targetY": 2326.87,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 5182.95,
+                            "pathTime": 20.73,
+                            "xVelocity": 158.43,
+                            "yVelocity": 193.39,
+                            "timerData": {
+                                "startTime": 191494,
+                                "endTime": 195294,
+                                "runLength": 20731.816008363716,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Pit Lord",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        "Scroll of Town Portal"
+                    ]
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "78d6280b8469d3d65bbf4b6ddfc170c4975332425ca92fb4f0495eb665a501c3",
+        "gamename": "Local Game",
+        "randomseed": 274974896,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "RvU",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/frozenthrone//(2)echoisles.w3x",
+            "file": "Maps/frozenthrone//(2)echoisles.w3x",
+            "checksum": "a636fc12"
+        },
+        "version": "1.10031",
+        "duration": 197300,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0,
+                        0,
+                        0,
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "U",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "uaod": 1,
+                        "uzig": 1
+                    },
+                    "order": [
+                        {
+                            "id": "uaod",
+                            "ms": 5200
+                        },
+                        {
+                            "id": "uzig",
+                            "ms": 11200
+                        }
+                    ]
+                },
+                "heroes": [
+                    {
+                        "level": 1,
+                        "abilities": {
+                            "ANrf": 1
+                        },
+                        "id": "Nplh"
+                    }
+                ],
+                "heroCollector": {
+                    "Nplh": {
+                        "level": 1,
+                        "abilities": {
+                            "ANrf": 1
+                        },
+                        "id": "Nplh"
+                    }
+                },
+                "heroSkills": {
+                    "ANrf": 1
+                },
+                "heroCount": 1,
+                "actions": {
+                    "timed": [
+                        13,
+                        37,
+                        10,
+                        6
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 37,
+                    "basic": 10,
+                    "buildtrain": 2,
+                    "ability": 3,
+                    "item": 0,
+                    "select": 9,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 197294,
+                "apm": 17
+            }
+        }
+    }
+}
