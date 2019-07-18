@@ -1024,7 +1024,7 @@ const heroAbilities = {
    	 'displayName': 'Feral Spirit',
    	 'type': 'summon',
    	 'summonCount': 2,
-   	 'summonItemId': 'AOsf'
+   	 'summonItemId': ['osw1', 'osw2', 'osw3']
    },
    'AOeq': { 'displayName': 'Earth Quake'},
    'AOsh': { 'displayName': 'Shockwave'},
@@ -1115,6 +1115,10 @@ const specialBuildings = {
     }
 };
 
+const buildingUpgrades = {
+    'unp1': 'unpl',
+    'unpl': 'unp2'
+};
 
 // building / resrach timings in seconds
 
@@ -1257,6 +1261,7 @@ const getUnitInfo = (itemId) => {
 module.exports = {
 	getUnitInfo: getUnitInfo,
 	buildings: buildings,
+    buildingUpgrades: buildingUpgrades,
 	units: units,
 	unitMetaData: unitMetaData,
     specialBuildings: specialBuildings,
