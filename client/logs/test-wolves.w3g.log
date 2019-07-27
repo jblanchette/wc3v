@@ -1,0 +1,1599 @@
+========================================================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 1500
+Game Clock: 0:1
+========================================================================
+========================================================================
+ActionName: SinglePlayerCheat-13 PID: 1
+Action: { actionId: 45 }
+Game Timer: 4600
+Game Clock: 0:4
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 14, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 14, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 5600
+Game Clock: 0:5
+========================================================================
+current selection units:  [ '14,63,0,0, 14,63,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 5600
+Game Clock: 0:5
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'oepo',
+  objectId1: 16142,
+  objectId2: 16142 }
+Game Timer: 5600
+Game Clock: 0:5
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ '14,63,0,0 - 14,63,0,0', [length]: 1 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 14, 63, 0, 0, [length]: 4 ] [ 14, 63, 0, 0, [length]: 4 ]
+first unit is:  Peon opeo
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  opeo
+new itemIds:  [ 14, 63, 0, 0, [length]: 4 ] [ 14, 63, 0, 0, [length]: 4 ]
+new objIds:  16142 16142
+setting fully registered unit f783f7fa-468e-42c7-bb52-d1c4cfa2352e
+unit reg: [ 14, 63, 0, 0, [length]: 4 ] [ 14, 63, 0, 0, [length]: 4 ] 16142 16142
+unit reg objectIds: 16142 16142
+checking backfill:  Peon
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4732.755859375,
+  targetY: 2552.20361328125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 6700
+Game Clock: 0:6
+========================================================================
+move sel unit.moveTo:  Peon
+unit moveTo called.  Peon current pos: (4672, 2944)
+moving to: (4732.755859375, 2552.20361328125)
+unit move info - time: 2.086732147459933 dist: 396.4791080173873
+unit uuid:  eadb17c4-5c39-4214-bc27-c46935598fdc
+cancel event:  eadb17c4-5c39-4214-bc27-c46935598fdc
+move on complete:  Peon
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 11200
+Game Clock: 0:11
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'tlao',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4640,
+  targetY: 2528 }
+Game Timer: 11800
+Game Clock: 0:11
+========================================================================
+ability unitInfo:  { displayName: 'Altar of Storms',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Peon
+selection is:  [ 'Peon', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 14, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 14, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 14, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Storms
+worker units:  [ 'itemId1: 14,63,0,0 id2: 14,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 5 ]
+has worker in group
+checking backfill:  Altar of Storms
+poss len:  0
+poss len after:  0
+moving unit to build: oalt Altar of Storms 4640 2528
+builder unit: Peon
+calling moveTo from moveToBuild
+unit moveTo called.  Peon current pos: (4732.755859375, 2552.20361328125)
+moving to: (4640, 2528)
+unit move info - time: 0.5045352306926222 dist: 95.86169383159822
+has onCompleteExtra
+unit uuid:  51749678-aee4-42c6-b7a0-a5104f792875
+1 *** setting build menu CLOSED
+complete event:  51749678-aee4-42c6-b7a0-a5104f792875
+move on complete:  Peon
+building callback: oalt
+1 unit finished moving to building, now building:  Altar of Storms
+player units for id:  1
+[ 'Altar of Storms - [null, null] null, null',
+  'Great Hall - [null, null] null, null',
+  'Peon - [16142, 16142] 14,63,0,0, 14,63,0,0',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  [length]: 7 ]
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 13000
+Game Clock: 0:13
+========================================================================
+========================================================================
+ActionName: Resume PID: 1
+Action: { actionId: 2 }
+Game Timer: 15700
+Game Clock: 0:15
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 14, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 14, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 18800
+Game Clock: 0:18
+========================================================================
+current units:  [ { itemId1: [ 14, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 14, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -47, 63, 0, 0, [length]: 4 ],
+       itemId2: [ -117, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 18800
+Game Clock: 0:18
+========================================================================
+added to units:  [ { itemId1: [ -47, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -117, 69, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+current selection units:  [ '-47,63,0,0, -117,69,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 18800
+Game Clock: 0:18
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'tlao',
+  objectId1: 16337,
+  objectId2: 17803 }
+Game Timer: 18800
+Game Clock: 0:18
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ '-47,63,0,0 - -117,69,0,0', [length]: 1 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -47, 63, 0, 0, [length]: 4 ] [ -117, 69, 0, 0, [length]: 4 ]
+first unit is:  Altar of Storms oalt
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  oalt
+new itemIds:  [ -47, 63, 0, 0, [length]: 4 ] [ -117, 69, 0, 0, [length]: 4 ]
+new objIds:  16337 17803
+setting fully registered unit 94559502-33ba-4779-956c-672f7291a834
+unit reg: [ -47, 63, 0, 0, [length]: 4 ] [ -117, 69, 0, 0, [length]: 4 ] 16337 17803
+unit reg objectIds: 16337 17803
+checking backfill:  Altar of Storms
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'rafO',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 20900
+Game Clock: 0:20
+========================================================================
+1 Making a hero.
+1 Gave first hero a TP item.
+setting unit spawn pos: 4640 2528
+1 Making trained unit:  Far Seer
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -47, 63, 0, 0, [length]: 4 ],
+       itemId2: [ -117, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 25200
+Game Clock: 0:25
+========================================================================
+current units:  [ { itemId1: [ -47, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -117, 69, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -47, 63, 0, 0, [length]: 4 ],
+    itemId2: [ -117, 69, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+       itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 25200
+Game Clock: 0:25
+========================================================================
+added to units:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+current selection units:  [ '-28,59,0,0, -14,73,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 25200
+Game Clock: 0:25
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'rafO',
+  objectId1: 15332,
+  objectId2: 18930 }
+Game Timer: 25200
+Game Clock: 0:25
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ '-28,59,0,0 - -14,73,0,0', [length]: 1 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ]
+first unit is:  Far Seer Ofar
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  Ofar
+new itemIds:  [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ]
+new objIds:  15332 18930
+setting fully registered unit 801cfcb0-4c3f-46d7-b9a4-7eca1e90c482
+unit reg: [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ] 15332 18930
+unit reg objectIds: 15332 18930
+checking backfill:  Far Seer
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4051.565673828125,
+  targetY: 2706.61572265625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 25500
+Game Clock: 0:25
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Far Seer
+unit moveTo called.  Far Seer current pos: (4640, 2528)
+moving to: (4051.565673828125, 2706.61572265625)
+unit move info - time: 2.459783836347781 dist: 614.9459590869453
+unit uuid:  c80617db-9639-40d7-a4fd-205a9d43bc7f
+complete event:  c80617db-9639-40d7-a4fd-205a9d43bc7f
+move on complete:  Far Seer
+========================================================================
+ActionName: SelectHeroSkill PID: 1
+Action: { actionId: 102 }
+Game Timer: 28400
+Game Clock: 0:28
+========================================================================
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 66,
+  itemId: 'fsOA',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 29599
+Game Clock: 0:29
+========================================================================
+%% Learned spell:  { displayName: 'Feral Spirit',
+  type: 'summon',
+  summonCount: 2,
+  summonItemId: [ 'osw1', 'osw2', 'osw3', [length]: 3 ],
+  level: 1 }
+1 Hero leveled up:  Far Seer 1
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 100,
+  itemId: [ 158, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 31099
+Game Clock: 0:31
+========================================================================
+Unit called summon skill:  Far Seer
+Skill:  { displayName: 'Feral Spirit',
+  type: 'summon',
+  summonCount: 2,
+  summonItemId: [ 'osw1', 'osw2', 'osw3', [length]: 3 ],
+  level: 1 }
+dynamically set skill to level based:  osw1
+Making unit:  0 osw1
+Making unit:  1 osw1
+player units for id:  1
+[ 'Altar of Storms - [16337, 17803] -47,63,0,0, -117,69,0,0',
+  'Far Seer - [15332, 18930] -28,59,0,0, -14,73,0,0',
+  'Great Hall - [null, null] null, null',
+  'Peon - [16142, 16142] 14,63,0,0, 14,63,0,0',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Unknown (osw1) - [null, null] null, null',
+  'Unknown (osw1) - [null, null] null, null',
+  [length]: 10 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+       itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 34895
+Game Clock: 0:34
+========================================================================
+current units:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 2,
+  actions:
+   [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+       itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+     { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+     [length]: 2 ] }
+Game Timer: 34895
+Game Clock: 0:34
+========================================================================
+added to units:  [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+    itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+  { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+  [length]: 2 ]
+selection size:  2
+current selection units:  [ '-107,58,0,0, -127,75,0,0 - Unregistered',
+  '69,59,0,0, 112,75,0,0 - Unregistered',
+  [length]: 2 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 34895
+Game Clock: 0:34
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: '1wso',
+  objectId1: 14997,
+  objectId2: 19329 }
+Game Timer: 34895
+Game Clock: 0:34
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ '-107,58,0,0 - -127,75,0,0',
+  '69,59,0,0 - 112,75,0,0',
+  [length]: 2 ]
+possible list before:  [ '69,59,0,0 - 112,75,0,0', [length]: 1 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -107, 58, 0, 0, [length]: 4 ] [ -127, 75, 0, 0, [length]: 4 ]
+first unit is:  Unknown (osw1) osw1
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  osw1
+new itemIds:  [ -107, 58, 0, 0, [length]: 4 ] [ -127, 75, 0, 0, [length]: 4 ]
+new objIds:  14997 19329
+setting fully registered unit 862fbe4d-2dc7-4ad4-9848-966cd49643f4
+unit reg: [ -107, 58, 0, 0, [length]: 4 ] [ -127, 75, 0, 0, [length]: 4 ] 14997 19329
+unit reg objectIds: 14997 19329
+checking backfill:  Unknown (osw1)
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 24,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3670.71435546875,
+  targetY: 2909.1630859375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 36595
+Game Clock: 0:36
+========================================================================
+1 At bottom of right click. Unit {
+  uuid: '862fbe4d-2dc7-4ad4-9848-966cd49643f4',
+  eventTimer:
+   EventTimer {
+     timer: { gameTime: 36595, lastGameTime: 36595, delta: 0 },
+     events: [ [length]: 0 ] },
+  itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+  itemId2: [ -127, 75, 0, 0, [length]: 4 ],
+  objectId1: 14997,
+  objectId2: 19329,
+  itemId: 'osw1',
+  isSpawnedAtStart: false,
+  summonDuration: null,
+  displayName: 'Unknown (osw1)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  hasBeenInGroup: true,
+  isRegistered: true,
+  abilityFlags: null,
+  spawning: false,
+  selected: true,
+  currentX: 0,
+  currentY: 0,
+  moveInfo:
+   { timerEvent: null,
+     timeElapsed: 0,
+     distance: 0,
+     startX: 0,
+     startY: 0,
+     targetX: 0,
+     targetY: 0,
+     xDirection: 0,
+     yDirection: 0,
+     pathDistance: 0,
+     pathTime: 0,
+     xVelocity: 0,
+     yVelocity: 0,
+     onCompleteExtra: null },
+  path: [ [length]: 0 ],
+  moveHistory: [ [length]: 0 ],
+  state: null,
+  isIllusion: false,
+  rallyPoint: { type: null, pt: null, objectId1: null, objectId2: null },
+  trainedUnits: [ [length]: 0 ],
+  soldItems: {},
+  heroSlot: 0,
+  items:
+   { '1': null, '2': null, '3': null, '4': null, '5': null, '6': null },
+  droppedItems: [ [length]: 0 ],
+  tradedItems: [ [length]: 0 ],
+  learnedSkills: {},
+  knownLevel: 0,
+  knownOwner: false,
+  knownItemX: null,
+  knownItemY: null,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+       itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 38695
+Game Clock: 0:38
+========================================================================
+current units:  [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+    itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+  { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+  [length]: 2 ]
+deselecting other group:  [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+    itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 38695
+Game Clock: 0:38
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: '1wso',
+  objectId1: 15173,
+  objectId2: 19312 }
+Game Timer: 38695
+Game Clock: 0:38
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 69, 59, 0, 0, [length]: 4 ] [ 112, 75, 0, 0, [length]: 4 ]
+first unit is:  Unknown (osw1) osw1
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  osw1
+new itemIds:  [ 69, 59, 0, 0, [length]: 4 ] [ 112, 75, 0, 0, [length]: 4 ]
+new objIds:  15173 19312
+setting fully registered unit cd5640ab-e0f9-4fa8-a37f-9e3b6c714f76
+unit reg: [ 69, 59, 0, 0, [length]: 4 ] [ 112, 75, 0, 0, [length]: 4 ] 15173 19312
+unit reg objectIds: 15173 19312
+checking backfill:  Unknown (osw1)
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3986.62060546875,
+  targetY: 3059.35546875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 39395
+Game Clock: 0:39
+========================================================================
+1 At bottom of right click. Unit {
+  uuid: 'cd5640ab-e0f9-4fa8-a37f-9e3b6c714f76',
+  eventTimer:
+   EventTimer {
+     timer: { gameTime: 39395, lastGameTime: 39395, delta: 0 },
+     events: [ [length]: 0 ] },
+  itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+  itemId2: [ 112, 75, 0, 0, [length]: 4 ],
+  objectId1: 15173,
+  objectId2: 19312,
+  itemId: 'osw1',
+  isSpawnedAtStart: false,
+  summonDuration: null,
+  displayName: 'Unknown (osw1)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  hasBeenInGroup: true,
+  isRegistered: true,
+  abilityFlags: null,
+  spawning: false,
+  selected: true,
+  currentX: 0,
+  currentY: 0,
+  moveInfo:
+   { timerEvent: null,
+     timeElapsed: 0,
+     distance: 0,
+     startX: 0,
+     startY: 0,
+     targetX: 0,
+     targetY: 0,
+     xDirection: 0,
+     yDirection: 0,
+     pathDistance: 0,
+     pathTime: 0,
+     xVelocity: 0,
+     yVelocity: 0,
+     onCompleteExtra: null },
+  path: [ [length]: 0 ],
+  moveHistory: [ [length]: 0 ],
+  state: null,
+  isIllusion: false,
+  rallyPoint: { type: null, pt: null, objectId1: null, objectId2: null },
+  trainedUnits: [ [length]: 0 ],
+  soldItems: {},
+  heroSlot: 0,
+  items:
+   { '1': null, '2': null, '3': null, '4': null, '5': null, '6': null },
+  droppedItems: [ [length]: 0 ],
+  tradedItems: [ [length]: 0 ],
+  learnedSkills: {},
+  knownLevel: 0,
+  knownOwner: false,
+  knownItemX: null,
+  knownItemY: null,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 40795
+Game Clock: 0:40
+========================================================================
+current units:  [ { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 69, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 112, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+       itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 40795
+Game Clock: 0:40
+========================================================================
+added to units:  [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+    itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+current selection units:  [ '-107,58,0,0, -127,75,0,0 [14997, 19329] - Unknown (osw1)',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 40795
+Game Clock: 0:40
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: '1wso',
+  objectId1: 14997,
+  objectId2: 19329 }
+Game Timer: 40795
+Game Clock: 0:40
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -107, 58, 0, 0, [length]: 4 ] [ -127, 75, 0, 0, [length]: 4 ]
+first unit is:  Unknown (osw1) osw1
+first is reg:  yes
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+jeff doing tab switch unit has no evo same first unit not object mismatch known unit by objectIds
+current selection units:  [ '-107,58,0,0, -127,75,0,0 [14997, 19329] - Unknown (osw1)',
+  [length]: 1 ]
+found tab switch by objectId, switching to:  Unknown (osw1)
+-----------------------------------------------------
+printing unit data:
+ * display name:  Unknown (osw1)
+ * uuid:          862fbe4d-2dc7-4ad4-9848-966cd49643f4
+ * itemId:        osw1
+ * itemId1:       [ -107, 58, 0, 0, [length]: 4 ]
+ * itemId2:       [ -127, 75, 0, 0, [length]: 4 ]
+ * objectId1:     14997
+ * objectId2:     19329
+ * path len:      0
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+current selection units:  [ '-107,58,0,0, -127,75,0,0 [14997, 19329] - Unknown (osw1)',
+  [length]: 1 ]
+1Registering objectIds to unit:  14997 19329
+swapping:  0 0
+current selection units:  [ '-107,58,0,0, -127,75,0,0 [14997, 19329] - Unknown (osw1)',
+  [length]: 1 ]
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3873.790283203125,
+  targetY: 3315.1689453125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 41695
+Game Clock: 0:41
+========================================================================
+1 At bottom of right click. Unit {
+  uuid: '862fbe4d-2dc7-4ad4-9848-966cd49643f4',
+  eventTimer:
+   EventTimer {
+     timer: { gameTime: 41695, lastGameTime: 41695, delta: 0 },
+     events: [ [length]: 0 ] },
+  itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+  itemId2: [ -127, 75, 0, 0, [length]: 4 ],
+  objectId1: 14997,
+  objectId2: 19329,
+  itemId: 'osw1',
+  isSpawnedAtStart: false,
+  summonDuration: null,
+  displayName: 'Unknown (osw1)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  hasBeenInGroup: true,
+  isRegistered: true,
+  abilityFlags: null,
+  spawning: false,
+  selected: true,
+  currentX: 0,
+  currentY: 0,
+  moveInfo:
+   { timerEvent: null,
+     timeElapsed: 0,
+     distance: 0,
+     startX: 0,
+     startY: 0,
+     targetX: 0,
+     targetY: 0,
+     xDirection: 0,
+     yDirection: 0,
+     pathDistance: 0,
+     pathTime: 0,
+     xVelocity: 0,
+     yVelocity: 0,
+     onCompleteExtra: null },
+  path: [ [length]: 0 ],
+  moveHistory: [ [length]: 0 ],
+  state: null,
+  isIllusion: false,
+  rallyPoint: { type: null, pt: null, objectId1: null, objectId2: null },
+  trainedUnits: [ [length]: 0 ],
+  soldItems: {},
+  heroSlot: 0,
+  items:
+   { '1': null, '2': null, '3': null, '4': null, '5': null, '6': null },
+  droppedItems: [ [length]: 0 ],
+  tradedItems: [ [length]: 0 ],
+  learnedSkills: {},
+  knownLevel: 0,
+  knownOwner: false,
+  knownItemX: null,
+  knownItemY: null,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+       itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 44795
+Game Clock: 0:44
+========================================================================
+current units:  [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+    itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -107, 58, 0, 0, [length]: 4 ],
+    itemId2: [ -127, 75, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+       itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 44795
+Game Clock: 0:44
+========================================================================
+added to units:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 44795
+Game Clock: 0:44
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'rafO',
+  objectId1: 15332,
+  objectId2: 18930 }
+Game Timer: 44795
+Game Clock: 0:44
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ]
+first unit is:  Far Seer Ofar
+first is reg:  yes
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+jeff doing tab switch unit has no evo same first unit not object mismatch known unit by objectIds
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+found tab switch by objectId, switching to:  Far Seer
+-----------------------------------------------------
+printing unit data:
+ * display name:  Far Seer
+ * uuid:          801cfcb0-4c3f-46d7-b9a4-7eca1e90c482
+ * itemId:        Ofar
+ * itemId1:       [ -28, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ -14, 73, 0, 0, [length]: 4 ]
+ * objectId1:     15332
+ * objectId2:     18930
+ * path len:      2
+items:         [ 'Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+1Registering objectIds to unit:  15332 18930
+swapping:  0 0
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 45695
+Game Clock: 0:45
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'rafO',
+  objectId1: 15332,
+  objectId2: 18930 }
+Game Timer: 45695
+Game Clock: 0:45
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ]
+first unit is:  Far Seer Ofar
+first is reg:  yes
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+jeff doing tab switch unit has no evo same first unit not object mismatch known unit by objectIds
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+found tab switch by objectId, switching to:  Far Seer
+-----------------------------------------------------
+printing unit data:
+ * display name:  Far Seer
+ * uuid:          801cfcb0-4c3f-46d7-b9a4-7eca1e90c482
+ * itemId:        Ofar
+ * itemId1:       [ -28, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ -14, 73, 0, 0, [length]: 4 ]
+ * objectId1:     15332
+ * objectId2:     18930
+ * path len:      2
+items:         [ 'Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+1Registering objectIds to unit:  15332 18930
+swapping:  0 0
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3705.339111328125,
+  targetY: 3113.792236328125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 48595
+Game Clock: 0:48
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Far Seer
+unit moveTo called.  Far Seer current pos: (4051.565673828125, 2706.61572265625)
+moving to: (3705.339111328125, 3113.792236328125)
+unit move info - time: 2.13790755970991 dist: 534.4768899274776
+unit uuid:  b9594eb5-d9b1-4c50-b77b-f292984299f8
+complete event:  b9594eb5-d9b1-4c50-b77b-f292984299f8
+move on complete:  Far Seer
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 73694
+Game Clock: 1:13
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'rafO',
+  objectId1: 15332,
+  objectId2: 18930 }
+Game Timer: 73694
+Game Clock: 1:13
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ]
+first unit is:  Far Seer Ofar
+first is reg:  yes
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+jeff doing tab switch unit has no evo same first unit not object mismatch known unit by objectIds
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+found tab switch by objectId, switching to:  Far Seer
+-----------------------------------------------------
+printing unit data:
+ * display name:  Far Seer
+ * uuid:          801cfcb0-4c3f-46d7-b9a4-7eca1e90c482
+ * itemId:        Ofar
+ * itemId1:       [ -28, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ -14, 73, 0, 0, [length]: 4 ]
+ * objectId1:     15332
+ * objectId2:     18930
+ * path len:      3
+items:         [ 'Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+1Registering objectIds to unit:  15332 18930
+swapping:  0 0
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 100,
+  itemId: [ 158, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 74594
+Game Clock: 1:14
+========================================================================
+Unit called summon skill:  Far Seer
+Skill:  { displayName: 'Feral Spirit',
+  type: 'summon',
+  summonCount: 2,
+  summonItemId: [ 'osw1', 'osw2', 'osw3', [length]: 3 ],
+  level: 1 }
+dynamically set skill to level based:  osw1
+Making unit:  0 osw1
+Making unit:  1 osw1
+player units for id:  1
+[ 'Altar of Storms - [16337, 17803] -47,63,0,0, -117,69,0,0',
+  'Far Seer - [15332, 18930] -28,59,0,0, -14,73,0,0',
+  'Great Hall - [null, null] null, null',
+  'Peon - [16142, 16142] 14,63,0,0, 14,63,0,0',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Peon - [null, null] null, null',
+  'Unknown (osw1) - [14997, 19329] -107,58,0,0, -127,75,0,0',
+  'Unknown (osw1) - [15173, 19312] 69,59,0,0, 112,75,0,0',
+  'Unknown (osw1) - [null, null] null, null',
+  'Unknown (osw1) - [null, null] null, null',
+  [length]: 12 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+       itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 78094
+Game Clock: 1:18
+========================================================================
+current units:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 2,
+  actions:
+   [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+     { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+       itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+     [length]: 2 ] }
+Game Timer: 78094
+Game Clock: 1:18
+========================================================================
+added to units:  [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+  { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+    itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+  [length]: 2 ]
+selection size:  2
+current selection units:  [ '1,52,0,0, 74,89,0,0 - Unregistered',
+  '-55,53,0,0, 91,89,0,0 - Unregistered',
+  [length]: 2 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 78094
+Game Clock: 1:18
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: '1wso',
+  objectId1: 13313,
+  objectId2: 22858 }
+Game Timer: 78094
+Game Clock: 1:18
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ '1,52,0,0 - 74,89,0,0', '-55,53,0,0 - 91,89,0,0', [length]: 2 ]
+possible list before:  [ '-55,53,0,0 - 91,89,0,0', [length]: 1 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 1, 52, 0, 0, [length]: 4 ] [ 74, 89, 0, 0, [length]: 4 ]
+first unit is:  Unknown (osw1) osw1
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  osw1
+new itemIds:  [ 1, 52, 0, 0, [length]: 4 ] [ 74, 89, 0, 0, [length]: 4 ]
+new objIds:  13313 22858
+setting fully registered unit 568eca51-e4d1-4d9b-94af-a14ebe3761e2
+unit reg: [ 1, 52, 0, 0, [length]: 4 ] [ 74, 89, 0, 0, [length]: 4 ] 13313 22858
+unit reg objectIds: 13313 22858
+checking backfill:  Unknown (osw1)
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 24,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3478.919677734375,
+  targetY: 2645.912109375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 78794
+Game Clock: 1:18
+========================================================================
+1 At bottom of right click. Unit {
+  uuid: '568eca51-e4d1-4d9b-94af-a14ebe3761e2',
+  eventTimer:
+   EventTimer {
+     timer: { gameTime: 78794, lastGameTime: 78794, delta: 0 },
+     events: [ [length]: 0 ] },
+  itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+  itemId2: [ 74, 89, 0, 0, [length]: 4 ],
+  objectId1: 13313,
+  objectId2: 22858,
+  itemId: 'osw1',
+  isSpawnedAtStart: false,
+  summonDuration: null,
+  displayName: 'Unknown (osw1)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  hasBeenInGroup: true,
+  isRegistered: true,
+  abilityFlags: null,
+  spawning: false,
+  selected: true,
+  currentX: 0,
+  currentY: 0,
+  moveInfo:
+   { timerEvent: null,
+     timeElapsed: 0,
+     distance: 0,
+     startX: 0,
+     startY: 0,
+     targetX: 0,
+     targetY: 0,
+     xDirection: 0,
+     yDirection: 0,
+     pathDistance: 0,
+     pathTime: 0,
+     xVelocity: 0,
+     yVelocity: 0,
+     onCompleteExtra: null },
+  path: [ [length]: 0 ],
+  moveHistory: [ [length]: 0 ],
+  state: null,
+  isIllusion: false,
+  rallyPoint: { type: null, pt: null, objectId1: null, objectId2: null },
+  trainedUnits: [ [length]: 0 ],
+  soldItems: {},
+  heroSlot: 0,
+  items:
+   { '1': null, '2': null, '3': null, '4': null, '5': null, '6': null },
+  droppedItems: [ [length]: 0 ],
+  tradedItems: [ [length]: 0 ],
+  learnedSkills: {},
+  knownLevel: 0,
+  knownOwner: false,
+  knownItemX: null,
+  knownItemY: null,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+       itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 81694
+Game Clock: 1:21
+========================================================================
+current units:  [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+  { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+    itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+  [length]: 2 ]
+deselecting other group:  [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+    itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3942.27099609375,
+  targetY: 2651.049072265625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 82094
+Game Clock: 1:22
+========================================================================
+1 At bottom of right click. Unit {
+  uuid: '568eca51-e4d1-4d9b-94af-a14ebe3761e2',
+  eventTimer:
+   EventTimer {
+     timer: { gameTime: 82094, lastGameTime: 82094, delta: 0 },
+     events: [ [length]: 0 ] },
+  itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+  itemId2: [ 74, 89, 0, 0, [length]: 4 ],
+  objectId1: 13313,
+  objectId2: 22858,
+  itemId: 'osw1',
+  isSpawnedAtStart: false,
+  summonDuration: null,
+  displayName: 'Unknown (osw1)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  hasBeenInGroup: true,
+  isRegistered: true,
+  abilityFlags: null,
+  spawning: false,
+  selected: true,
+  currentX: 0,
+  currentY: 0,
+  moveInfo:
+   { timerEvent: null,
+     timeElapsed: 0,
+     distance: 0,
+     startX: 0,
+     startY: 0,
+     targetX: 0,
+     targetY: 0,
+     xDirection: 0,
+     yDirection: 0,
+     pathDistance: 0,
+     pathTime: 0,
+     xVelocity: 0,
+     yVelocity: 0,
+     onCompleteExtra: null },
+  path: [ [length]: 0 ],
+  moveHistory: [ [length]: 0 ],
+  state: null,
+  isIllusion: false,
+  rallyPoint: { type: null, pt: null, objectId1: null, objectId2: null },
+  trainedUnits: [ [length]: 0 ],
+  soldItems: {},
+  heroSlot: 0,
+  items:
+   { '1': null, '2': null, '3': null, '4': null, '5': null, '6': null },
+  droppedItems: [ [length]: 0 ],
+  tradedItems: [ [length]: 0 ],
+  learnedSkills: {},
+  knownLevel: 0,
+  knownOwner: false,
+  knownItemX: null,
+  knownItemY: null,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 83994
+Game Clock: 1:23
+========================================================================
+current units:  [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 1, 52, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+       itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 83994
+Game Clock: 1:23
+========================================================================
+added to units:  [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+    itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+current selection units:  [ '-55,53,0,0, 91,89,0,0 [null, null] - Unknown (osw1)',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 83994
+Game Clock: 1:23
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: '1wso',
+  objectId1: 13769,
+  objectId2: 22875 }
+Game Timer: 83994
+Game Clock: 1:23
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -55, 53, 0, 0, [length]: 4 ] [ 91, 89, 0, 0, [length]: 4 ]
+first unit is:  Unknown (osw1) osw1
+first is reg:  no
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  osw1
+new itemIds:  [ -55, 53, 0, 0, [length]: 4 ] [ 91, 89, 0, 0, [length]: 4 ]
+new objIds:  13769 22875
+setting fully registered unit c96f09d1-50b6-4b91-8d0c-145bcb6595b1
+unit reg: [ -55, 53, 0, 0, [length]: 4 ] [ 91, 89, 0, 0, [length]: 4 ] 13769 22875
+unit reg objectIds: 13769 22875
+checking backfill:  Unknown (osw1)
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3822.025146484375,
+  targetY: 2297.892333984375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 84594
+Game Clock: 1:24
+========================================================================
+1 At bottom of right click. Unit {
+  uuid: 'c96f09d1-50b6-4b91-8d0c-145bcb6595b1',
+  eventTimer:
+   EventTimer {
+     timer: { gameTime: 84594, lastGameTime: 84594, delta: 0 },
+     events: [ [length]: 0 ] },
+  itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+  itemId2: [ 91, 89, 0, 0, [length]: 4 ],
+  objectId1: 13769,
+  objectId2: 22875,
+  itemId: 'osw1',
+  isSpawnedAtStart: false,
+  summonDuration: null,
+  displayName: 'Unknown (osw1)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  hasBeenInGroup: true,
+  isRegistered: true,
+  abilityFlags: null,
+  spawning: false,
+  selected: true,
+  currentX: 0,
+  currentY: 0,
+  moveInfo:
+   { timerEvent: null,
+     timeElapsed: 0,
+     distance: 0,
+     startX: 0,
+     startY: 0,
+     targetX: 0,
+     targetY: 0,
+     xDirection: 0,
+     yDirection: 0,
+     pathDistance: 0,
+     pathTime: 0,
+     xVelocity: 0,
+     yVelocity: 0,
+     onCompleteExtra: null },
+  path: [ [length]: 0 ],
+  moveHistory: [ [length]: 0 ],
+  state: null,
+  isIllusion: false,
+  rallyPoint: { type: null, pt: null, objectId1: null, objectId2: null },
+  trainedUnits: [ [length]: 0 ],
+  soldItems: {},
+  heroSlot: 0,
+  items:
+   { '1': null, '2': null, '3': null, '4': null, '5': null, '6': null },
+  droppedItems: [ [length]: 0 ],
+  tradedItems: [ [length]: 0 ],
+  learnedSkills: {},
+  knownLevel: 0,
+  knownOwner: false,
+  knownItemX: null,
+  knownItemY: null,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+       itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 86494
+Game Clock: 1:26
+========================================================================
+current units:  [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+    itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -55, 53, 0, 0, [length]: 4 ],
+    itemId2: [ 91, 89, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+       itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 86494
+Game Clock: 1:26
+========================================================================
+added to units:  [ { itemId1: [ -28, 59, 0, 0, [length]: 4 ],
+    itemId2: [ -14, 73, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 86494
+Game Clock: 1:26
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'rafO',
+  objectId1: 15332,
+  objectId2: 18930 }
+Game Timer: 86494
+Game Clock: 1:26
+========================================================================
+about to check assignPossibleSelectGroup
+possible list before:  [ [length]: 0 ]
+possible list after:  [ [length]: 0 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -28, 59, 0, 0, [length]: 4 ] [ -14, 73, 0, 0, [length]: 4 ]
+first unit is:  Far Seer Ofar
+first is reg:  yes
+is firstGroupUnit found for tab check: yes
+no building upgrade found
+jeff doing tab switch unit has no evo same first unit not object mismatch known unit by objectIds
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+found tab switch by objectId, switching to:  Far Seer
+-----------------------------------------------------
+printing unit data:
+ * display name:  Far Seer
+ * uuid:          801cfcb0-4c3f-46d7-b9a4-7eca1e90c482
+ * itemId:        Ofar
+ * itemId1:       [ -28, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ -14, 73, 0, 0, [length]: 4 ]
+ * objectId1:     15332
+ * objectId2:     18930
+ * path len:      3
+items:         [ 'Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+1Registering objectIds to unit:  15332 18930
+swapping:  0 0
+current selection units:  [ '-28,59,0,0, -14,73,0,0 [15332, 18930] - Far Seer',
+  [length]: 1 ]
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3657.601318359375,
+  targetY: 2544.38623046875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 86894
+Game Clock: 1:26
+========================================================================
+moving hero fronted unit group from ground right click
+move sel unit.moveTo:  Far Seer
+unit moveTo called.  Far Seer current pos: (3705.339111328125, 3113.792236328125)
+moving to: (3657.601318359375, 2544.38623046875)
+unit move info - time: 2.285614478029937 dist: 571.4036195074842
+unit uuid:  0f8e212d-665f-48bf-b5b1-04d7aa101c2f
+complete event:  0f8e212d-665f-48bf-b5b1-04d7aa101c2f
+move on complete:  Far Seer
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 89194
+Game Clock: 1:29
+========================================================================
+created wc3v file:  ./client/replays/test-wolves.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 12
+Unregistered units: 4
+************************************
+wc3v completed.  enjoy!

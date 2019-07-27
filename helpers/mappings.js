@@ -13,6 +13,9 @@ const extraUnits = {
     'ucs2': 'Carrion Beetle (lvl 2)',
     'ucs3': 'Carrion Beetle (lvl 3)',
     'ucs4': 'Carrion Beetle (lvl 4)',
+    'osw1': 'Spirit Wolf (lvl 1)',
+    'osw2': 'Spirit Wolf (lvl 2)',
+    'osw3': 'Spirit Wolf (lvl 3)',
     'efon': 'Treant'
 };
 
@@ -1024,6 +1027,7 @@ const heroAbilities = {
    	 'displayName': 'Feral Spirit',
    	 'type': 'summon',
    	 'summonCount': 2,
+     'summonDuration': 60,
    	 'summonItemId': ['osw1', 'osw2', 'osw3']
    },
    'AOeq': { 'displayName': 'Earth Quake'},

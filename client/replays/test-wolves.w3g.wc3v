@@ -1,0 +1,644 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": 4672,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Altar of Storms",
+                    "itemId": "oalt",
+                    "itemId1": "-47,63,0,0",
+                    "itemId2": "-117,69,0,0",
+                    "objectId1": 16337,
+                    "objectId2": 17803,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4640,
+                        "y": 2528
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Far Seer",
+                    "itemId": "Ofar",
+                    "itemId1": "-28,59,0,0",
+                    "itemId2": "-14,73,0,0",
+                    "objectId1": 15332,
+                    "objectId2": 18930,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 1,
+                    "lastPosition": {
+                        "x": 3657.601318359375,
+                        "y": 2544.38623046875
+                    },
+                    "path": [
+                        {
+                            "x": 4640,
+                            "y": 2528
+                        },
+                        {
+                            "x": 4051.57,
+                            "y": 2706.62
+                        },
+                        {
+                            "x": 3705.34,
+                            "y": 3113.79
+                        },
+                        {
+                            "x": 3657.6,
+                            "y": 2544.39
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 2.4,
+                            "distance": 600,
+                            "startX": 4640,
+                            "startY": 2528,
+                            "targetX": 4051.57,
+                            "targetY": 2706.62,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 614.95,
+                            "pathTime": 2.46,
+                            "xVelocity": 239.22,
+                            "yVelocity": 72.61,
+                            "timerData": {
+                                "startTime": 25500,
+                                "endTime": 27959.783836347782,
+                                "runLength": 2459.7838363477813,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 2.1,
+                            "distance": 525,
+                            "startX": 4051.57,
+                            "startY": 2706.62,
+                            "targetX": 3705.34,
+                            "targetY": 3113.79,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 534.48,
+                            "pathTime": 2.14,
+                            "xVelocity": 161.95,
+                            "yVelocity": 190.46,
+                            "timerData": {
+                                "startTime": 48595,
+                                "endTime": 50732.90755970991,
+                                "runLength": 2137.9075597099104,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 2.2,
+                            "distance": 550,
+                            "startX": 3705.34,
+                            "startY": 3113.79,
+                            "targetX": 3657.6,
+                            "targetY": 2544.39,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 571.4,
+                            "pathTime": 2.29,
+                            "xVelocity": 20.89,
+                            "yVelocity": 249.13,
+                            "timerData": {
+                                "startTime": 86894,
+                                "endTime": 89179.61447802994,
+                                "runLength": 2285.614478029937,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Far Seer",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        "Scroll of Town Portal"
+                    ]
+                },
+                {
+                    "displayName": "Great Hall",
+                    "itemId": "ogre",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": "14,63,0,0",
+                    "itemId2": "14,63,0,0",
+                    "objectId1": 16142,
+                    "objectId2": 16142,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4640,
+                        "y": 2528
+                    },
+                    "path": [
+                        {
+                            "x": 4732.76,
+                            "y": 2552.2
+                        },
+                        {
+                            "x": 4640,
+                            "y": 2528
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 4672,
+                            "startY": 2944,
+                            "targetX": 4732.76,
+                            "targetY": 2552.2,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 396.48,
+                            "pathTime": 2.09,
+                            "xVelocity": 29.12,
+                            "yVelocity": 187.76,
+                            "timerData": {
+                                "startTime": 6700,
+                                "endTime": 6700,
+                                "runLength": 2086.732147459933,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.5,
+                            "distance": 95,
+                            "startX": 4732.76,
+                            "startY": 2552.2,
+                            "targetX": 4640,
+                            "targetY": 2528,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 95.86,
+                            "pathTime": 0.5,
+                            "xVelocity": 183.84,
+                            "yVelocity": 47.97,
+                            "timerData": {
+                                "startTime": 11800,
+                                "endTime": 12304.535230692622,
+                                "runLength": 504.5352306926222,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Unknown (osw1)",
+                    "itemId": "osw1",
+                    "itemId1": "-107,58,0,0",
+                    "itemId2": "-127,75,0,0",
+                    "objectId1": 14997,
+                    "objectId2": 19329,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Unknown (osw1)",
+                    "itemId": "osw1",
+                    "itemId1": "69,59,0,0",
+                    "itemId2": "112,75,0,0",
+                    "objectId1": 15173,
+                    "objectId2": 19312,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Unknown (osw1)",
+                    "itemId": "osw1",
+                    "itemId1": "1,52,0,0",
+                    "itemId2": "74,89,0,0",
+                    "objectId1": 13313,
+                    "objectId2": 22858,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Unknown (osw1)",
+                    "itemId": "osw1",
+                    "itemId1": "-55,53,0,0",
+                    "itemId2": "91,89,0,0",
+                    "objectId1": 13769,
+                    "objectId2": 22875,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "16f6e4ca0054c7cfeb7a0514cfe98cacde17c6508419bb58b7a0699f08429b80",
+        "gamename": "Local Game",
+        "randomseed": 363543224,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "OvR",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/frozenthrone/(2)echoisles.w3x",
+            "file": "Maps/frozenthrone/(2)echoisles.w3x",
+            "checksum": "a636fc12"
+        },
+        "version": "1.10031",
+        "duration": 86525,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0,
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "O",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "oalt": 1
+                    },
+                    "order": [
+                        {
+                            "id": "oalt",
+                            "ms": 11800
+                        }
+                    ]
+                },
+                "heroes": [
+                    {
+                        "level": 1,
+                        "abilities": {
+                            "AOsf": 1
+                        },
+                        "id": "Ofar"
+                    }
+                ],
+                "heroCollector": {
+                    "Ofar": {
+                        "level": 1,
+                        "abilities": {
+                            "AOsf": 1
+                        },
+                        "id": "Ofar"
+                    }
+                },
+                "heroSkills": {
+                    "AOsf": 1
+                },
+                "heroCount": 1,
+                "actions": {
+                    "timed": [
+                        19,
+                        9
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 10,
+                    "basic": 0,
+                    "buildtrain": 4,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 11,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 89194,
+                "apm": 14
+            }
+        }
+    }
+}
