@@ -62,6 +62,11 @@ const findItemIdForObject = (itemId, focusObject) => {
 	});
 };
 
+
+const getDecimalPortion = (num) => {
+  return Math.abs(num) - Math.floor(num);
+};
+
 ////
 // distance between p (x,y) and q (x,y)
 ////
@@ -198,6 +203,7 @@ module.exports = {
 	isEqualItemId: isEqualItemId,
   isEqualUnitItemId: isEqualUnitItemId,
 	findItemIdForObject: findItemIdForObject,
+  getDecimalPortion: getDecimalPortion,
 	distance: distance,
 	closestToPoint: closestToPoint,
 	getRandomInt: getRandomInt,

@@ -1,0 +1,388 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": -5184,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "68,63,0,0",
+                    "itemId2": "74,63,0,0",
+                    "objectId1": 16196,
+                    "objectId2": 16202,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [
+                        {
+                            "x": -4704,
+                            "y": 3168
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": -4704,
+                            "targetY": 3168,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 5671.32,
+                            "pathTime": 24.13,
+                            "xVelocity": 194.92,
+                            "yVelocity": 131.27,
+                            "timerData": {
+                                "startTime": 5300,
+                                "endTime": 5300,
+                                "runLength": 24133.2651374166,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Altar of Darkness",
+                    "itemId": "uaod",
+                    "itemId1": "-65,61,0,0",
+                    "itemId2": "-116,68,0,0",
+                    "objectId1": 15807,
+                    "objectId2": 17548,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Death Knight",
+                    "itemId": "Udea",
+                    "itemId1": "-102,64,0,0",
+                    "itemId2": "54,72,0,0",
+                    "objectId1": 16538,
+                    "objectId2": 18486,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4663.2373046875,
+                        "y": 2584.935302734375
+                    },
+                    "path": [
+                        {
+                            "x": -4704,
+                            "y": 3168
+                        },
+                        {
+                            "x": -4663.24,
+                            "y": 2584.94
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 2.1,
+                            "distance": 630,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -4663.24,
+                            "targetY": 2584.94,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 632.55,
+                            "pathTime": 2.11,
+                            "xVelocity": 246.98,
+                            "yVelocity": 170.29,
+                            "timerData": {
+                                "startTime": 17496,
+                                "endTime": 19604.504582377427,
+                                "runLength": 2108.5045823774267,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Death Knight",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "movespeed": 300
+                    },
+                    "items": [
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "609654404669bbefeb57cab629ea3c7076d78416619ddc73808658adde80d3bb",
+        "gamename": "Local Game",
+        "randomseed": 615049123,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "RvU",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/frozenthrone/(2)echoisles.w3x",
+            "file": "Maps/frozenthrone/(2)echoisles.w3x",
+            "checksum": "a636fc12"
+        },
+        "version": "1.10031",
+        "duration": 27000,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "U",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "uaod": 1
+                    },
+                    "order": [
+                        {
+                            "id": "uaod",
+                            "ms": 5300
+                        }
+                    ]
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        8
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 1,
+                    "basic": 0,
+                    "buildtrain": 1,
+                    "ability": 1,
+                    "item": 0,
+                    "select": 3,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 26996,
+                "apm": 8
+            }
+        }
+    }
+}

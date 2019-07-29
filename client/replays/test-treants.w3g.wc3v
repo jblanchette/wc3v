@@ -1,0 +1,569 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": 4672,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Altar of Elders",
+                    "itemId": "eate",
+                    "itemId1": "16,62,0,0",
+                    "itemId2": "-12,67,0,0",
+                    "objectId1": 15888,
+                    "objectId2": 17396,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4768,
+                        "y": 2720
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Tree of Life",
+                    "itemId": "etol",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Wisp",
+                    "itemId": "ewsp",
+                    "itemId1": "67,63,0,0",
+                    "itemId2": "70,63,0,0",
+                    "objectId1": 16195,
+                    "objectId2": 16198,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4768,
+                        "y": 2720
+                    },
+                    "path": [
+                        {
+                            "x": 4783.42,
+                            "y": 2726.78
+                        },
+                        {
+                            "x": 4768,
+                            "y": 2720
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 4672,
+                            "startY": 2944,
+                            "targetX": 4783.42,
+                            "targetY": 2726.78,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 244.13,
+                            "pathTime": 0.9,
+                            "xVelocity": 123.22,
+                            "yVelocity": 240.24,
+                            "timerData": {
+                                "startTime": 5000,
+                                "endTime": 5000,
+                                "runLength": 904.1696001906729,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 4783.42,
+                            "startY": 2726.78,
+                            "targetX": 4768,
+                            "targetY": 2720,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 16.84,
+                            "pathTime": 0.06,
+                            "xVelocity": 247.14,
+                            "yVelocity": 108.72,
+                            "timerData": {
+                                "startTime": 5300,
+                                "endTime": 5362.37255535929,
+                                "runLength": 62.37255535929021,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Wisp",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "E",
+                        "movespeed": 270
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Wisp",
+                    "itemId": "ewsp",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Wisp",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "E",
+                        "movespeed": 270
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Wisp",
+                    "itemId": "ewsp",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Wisp",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "E",
+                        "movespeed": 270
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Wisp",
+                    "itemId": "ewsp",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Wisp",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "E",
+                        "movespeed": 270
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Wisp",
+                    "itemId": "ewsp",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Wisp",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "E",
+                        "movespeed": 270
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Keeper of the Grove",
+                    "itemId": "Ekee",
+                    "itemId1": "60,60,0,0",
+                    "itemId2": "-46,73,0,0",
+                    "objectId1": 15420,
+                    "objectId2": 18898,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 1,
+                    "lastPosition": {
+                        "x": 4727.83349609375,
+                        "y": 1951.3114013671875
+                    },
+                    "path": [
+                        {
+                            "x": 4768,
+                            "y": 2720
+                        },
+                        {
+                            "x": 4662.29,
+                            "y": 2248.85
+                        },
+                        {
+                            "x": 4727.83,
+                            "y": 1951.31
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 1.9,
+                            "distance": 475,
+                            "startX": 4768,
+                            "startY": 2720,
+                            "targetX": 4662.29,
+                            "targetY": 2248.85,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 482.86,
+                            "pathTime": 1.93,
+                            "xVelocity": 54.73,
+                            "yVelocity": 243.94,
+                            "timerData": {
+                                "startTime": 19097,
+                                "endTime": 21028.45386545916,
+                                "runLength": 1931.4538654591586,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.2,
+                            "distance": 300,
+                            "startX": 4662.29,
+                            "startY": 2248.85,
+                            "targetX": 4727.83,
+                            "targetY": 1951.31,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 304.67,
+                            "pathTime": 1.22,
+                            "xVelocity": 53.78,
+                            "yVelocity": 244.15,
+                            "timerData": {
+                                "startTime": 45592,
+                                "endTime": 46810.682930935385,
+                                "runLength": 1218.6829309353884,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Keeper of the Grove",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
+                    ]
+                },
+                {
+                    "displayName": "Treant",
+                    "itemId": "efon",
+                    "itemId1": "24,37,0,0",
+                    "itemId2": "-90,75,0,0",
+                    "objectId1": 9496,
+                    "objectId2": 19366,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 2049.9603359522275,
+                        "y": 1041.586761159438
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Treant",
+                    "itemId": "efon",
+                    "itemId1": "57,60,0,0",
+                    "itemId2": "-73,75,0,0",
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 2049.9603359522275,
+                        "y": 1041.586761159438
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "ba6ef9c4bfe674aceec43e040c2f368f69b6487573dca373c8c76a0e89ea7db1",
+        "gamename": "Local Game",
+        "randomseed": 631618084,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "NvR",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/frozenthrone/(2)echoisles.w3x",
+            "file": "Maps/frozenthrone/(2)echoisles.w3x",
+            "checksum": "a636fc12"
+        },
+        "version": "1.10031",
+        "duration": 48700,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "N",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "eate": 1
+                    },
+                    "order": [
+                        {
+                            "id": "eate",
+                            "ms": 5300
+                        }
+                    ]
+                },
+                "heroes": [
+                    {
+                        "level": 1,
+                        "abilities": {
+                            "AEfn": 1
+                        },
+                        "id": "Ekee"
+                    }
+                ],
+                "heroCollector": {
+                    "Ekee": {
+                        "level": 1,
+                        "abilities": {
+                            "AEfn": 1
+                        },
+                        "id": "Ekee"
+                    }
+                },
+                "heroSkills": {
+                    "AEfn": 1
+                },
+                "heroCount": 1,
+                "actions": {
+                    "timed": [
+                        15
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 4,
+                    "basic": 0,
+                    "buildtrain": 2,
+                    "ability": 1,
+                    "item": 0,
+                    "select": 5,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 48694,
+                "apm": 15
+            }
+        }
+    }
+}
