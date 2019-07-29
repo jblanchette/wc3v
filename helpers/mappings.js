@@ -16,11 +16,22 @@ const extraUnits = {
     'osw1': 'Spirit Wolf (lvl 1)',
     'osw2': 'Spirit Wolf (lvl 2)',
     'osw3': 'Spirit Wolf (lvl 3)',
+    'hwat': 'Elemental (lvl 1)',
+    'hwt2': 'Elemental (lvl 2)',
+    'hwt3': 'Elemental (lvl 3)',
     'efon': 'Treant'
+};
+
+const extraItems = {
+    'Jwid': 'Unknown Item'
 };
 
 Object.keys(extraUnits).forEach(key => {
 	units[key] = extraUnits[key];
+});
+
+Object.keys(extraItems).forEach(key => {
+    items[key] = extraItems[key];
 });
 
 const workerForRace = {
@@ -398,7 +409,6 @@ const allItemIds = {
     'hvlt': 'Arcane Vault',
     'Hvsh': 'Lady Vashj',
     'Hvwd': 'Sylvanus',
-    'hwat': 'Elemental',
     'hwtw': 'Watch Tower',
     'nbal': 'Doomgaurd',
     'Nbbc': 'Chaos Blademaster',
@@ -975,134 +985,142 @@ const allItemIds = {
 
 const heroAbilities = {
     'AHbz': { 'displayName': 'Blizzard'},
-   'AHwe': { 
+    'AHwe': { 
      'displayName': 'Summon Water Elemental',
      'type': 'summon',
-     'summonCount': 2,
-     'summonItemId': ['hwat', 'hwt2', 'hwt3']
-   },
-   'AHa': { 'displayName': 'Brilliance Aura'},
-   'AHmt': { 'displayName': 'Mass Teleport'},
-   'AHt': { 'displayName': 'Storm Bolt'},
-   'AHtc': { 'displayName': 'Thunder Clap'},
-   'AHbh': { 'displayName': 'Bash'},
-   'AHav': { 'displayName': 'Avatar'},
-   'AHh': { 'displayName': 'Holy Light'},
-   'AHds': { 'displayName': 'Divine Shield'},
-   'AHad': { 'displayName': 'Devotion Aura'},
-   'AHre': { 'displayName': 'Resurrection'},
-   'AHdr': { 'displayName': 'Siphon Mana'},
-   'AHfs': { 'displayName': 'Flame Strike'},
-   'AHbn': { 'displayName': 'Banish'},
-   'AHpx': { 'displayName': 'Summon Phoenix'},
-   'AEm': { 'displayName': 'Mana Burn'},
-   'AEim': { 'displayName': 'Immolation'},
-   'AEev': { 'displayName': 'Evasion'},
-   'AEme': { 'displayName': 'Metamorphosis'},
-   'AEer': { 'displayName': 'Entangling Roots'},
-   'AEfn': { 'displayName': 'Force of Nature'},
-   'AEah': { 'displayName': 'Thorns Aura'},
-   'AEtq': { 'displayName': 'Tranquility'},
-   'AEst': { 'displayName': 'Scout'},
-   'AHfa': { 'displayName': 'Searing Arrows'},
-   'AEar': { 'displayName': 'Trueshot Aura'},
-   'AEsf': { 'displayName': 'Starfall'},
-   'AEbl': { 'displayName': 'Blink'},
-   'AEfk': { 'displayName': 'Fan of Knives'},
-   'AEsh': { 'displayName': 'Shadow Strike'},
-   'AEsv': { 'displayName': 'Spirit of Vengeance'},
-   'AOwk': { 'displayName': 'Wind Walk'},
-   'AOmi': { 'displayName': 'Mirror Image'},
-   'AOcr': { 'displayName': 'Critical Strike'},
-   'AOww': { 'displayName': 'Bladestorm'},
-   'AOcl': { 
-   	'displayName': 'Chain Lighting',
-   	'type': 'objectTarget'
-   },
-   'AOfs': { 
-   	'displayName': 'Far Sight',
-   	'type': 'pointTarget'
-   },
-   'AOsf': { 
-   	 'displayName': 'Feral Spirit',
-   	 'type': 'summon',
-   	 'summonCount': 2,
-     'summonDuration': 60,
-   	 'summonItemId': ['osw1', 'osw2', 'osw3']
-   },
-   'AOeq': { 'displayName': 'Earth Quake'},
-   'AOsh': { 'displayName': 'Shockwave'},
-   'AOae': { 'displayName': 'Endurance Aura'},
-   'AOws': { 'displayName': 'War Stomp'},
-   'AOre': { 'displayName': 'Reincarnation'},
-   'AOhw': { 'displayName': 'Healing Wave'},
-   'AOhx': { 'displayName': 'Hex'},
-   'AOsw': { 'displayName': 'Serpent Ward'},
-   'AOvd': { 'displayName': 'Big Bad Voodoo'},
-   'AUdc': { 'displayName': 'Death Coil'},
-   'AUdp': { 'displayName': 'Death Pact'},
-   'AUau': { 'displayName': 'Unholy Aura'},
-   'AUan': { 'displayName': 'Animate Dead'},
-   'AUcs': { 'displayName': 'Carrion Swarm'},
-   'AUsl': { 'displayName': 'Sleep'},
-   'AUav': { 'displayName': 'Vampiric Aura'},
-   'AUin': { 'displayName': 'Inferno'},
-   'AUfn': { 'displayName': 'Frost Nova'},
-   'AUfa': { 'displayName': 'Frost Armor'},
-   'AUfu': { 'displayName': 'Frost Armor'},
-   'AUdr': { 'displayName': 'Dark Ritual'},
-   'AUdd': { 'displayName': 'Death and Decay'},
-   'AUim': { 'displayName': 'Impale'},
-   'AUts': { 'displayName': 'Spiked Carapace'},
-   'AUcb': { 
+     'summonCount': 1,
+     'summonItemId': ['hwat', 'hwt2', 'hwt3'],
+     'summonDuration': 60
+    },
+    'AHa': { 'displayName': 'Brilliance Aura'},
+    'AHmt': { 'displayName': 'Mass Teleport'},
+    'AHt': { 'displayName': 'Storm Bolt'},
+    'AHtc': { 'displayName': 'Thunder Clap'},
+    'AHbh': { 'displayName': 'Bash'},
+    'AHav': { 'displayName': 'Avatar'},
+    'AHh': { 'displayName': 'Holy Light'},
+    'AHds': { 'displayName': 'Divine Shield'},
+    'AHad': { 'displayName': 'Devotion Aura'},
+    'AHre': { 'displayName': 'Resurrection'},
+    'AHdr': { 'displayName': 'Siphon Mana'},
+    'AHfs': { 'displayName': 'Flame Strike'},
+    'AHbn': { 'displayName': 'Banish'},
+    'AHpx': { 'displayName': 'Summon Phoenix'},
+    'AEm': { 'displayName': 'Mana Burn'},
+    'AEim': { 'displayName': 'Immolation'},
+    'AEev': { 'displayName': 'Evasion'},
+    'AEme': { 'displayName': 'Metamorphosis'},
+    'AEer': { 'displayName': 'Entangling Roots'},
+    'AEfn': { 
+        'displayName': 'Force of Nature',
+        'type': 'summon',
+        'summonCount': 2,
+        'summonItemId': 'efon',
+        'summonDuration': 60
+    },
+    'AEah': { 'displayName': 'Thorns Aura'},
+    'AEtq': { 'displayName': 'Tranquility'},
+    'AEst': { 'displayName': 'Scout'},
+    'AHfa': { 'displayName': 'Searing Arrows'},
+    'AEar': { 'displayName': 'Trueshot Aura'},
+    'AEsf': { 'displayName': 'Starfall'},
+    'AEbl': { 'displayName': 'Blink'},
+    'AEfk': { 'displayName': 'Fan of Knives'},
+    'AEsh': { 'displayName': 'Shadow Strike'},
+    'AEsv': { 'displayName': 'Spirit of Vengeance'},
+    'AOwk': { 'displayName': 'Wind Walk'},
+    'AOmi': { 'displayName': 'Mirror Image'},
+    'AOcr': { 'displayName': 'Critical Strike'},
+    'AOww': { 'displayName': 'Bladestorm'},
+    'AOcl': { 
+    	'displayName': 'Chain Lighting',
+    	'type': 'objectTarget'
+    },
+    'AOfs': { 
+    	'displayName': 'Far Sight',
+    	'type': 'pointTarget'
+    },
+    'AOsf': { 
+        'displayName': 'Feral Spirit',
+        'type': 'summon',
+        'summonCount': 2,
+        'summonDuration': 60,
+        'summonItemId': ['osw1', 'osw2', 'osw3']
+    },
+    'AOeq': { 'displayName': 'Earth Quake'},
+    'AOsh': { 'displayName': 'Shockwave'},
+    'AOae': { 'displayName': 'Endurance Aura'},
+    'AOws': { 'displayName': 'War Stomp'},
+    'AOre': { 'displayName': 'Reincarnation'},
+    'AOhw': { 'displayName': 'Healing Wave'},
+    'AOhx': { 'displayName': 'Hex'},
+    'AOsw': { 'displayName': 'Serpent Ward'},
+    'AOvd': { 'displayName': 'Big Bad Voodoo'},
+    'AUdc': { 'displayName': 'Death Coil'},
+    'AUdp': { 'displayName': 'Death Pact'},
+    'AUau': { 'displayName': 'Unholy Aura'},
+    'AUan': { 'displayName': 'Animate Dead'},
+    'AUcs': { 'displayName': 'Carrion Swarm'},
+    'AUsl': { 'displayName': 'Sleep'},
+    'AUav': { 'displayName': 'Vampiric Aura'},
+    'AUin': { 'displayName': 'Inferno'},
+    'AUfn': { 'displayName': 'Frost Nova'},
+    'AUfa': { 'displayName': 'Frost Armor'},
+    'AUfu': { 'displayName': 'Frost Armor'},
+    'AUdr': { 'displayName': 'Dark Ritual'},
+    'AUdd': { 'displayName': 'Death and Decay'},
+    'AUim': { 'displayName': 'Impale'},
+    'AUts': { 'displayName': 'Spiked Carapace'},
+    'AUcb': { 
       'displayName': 'Carrion Beetles',
       'type': 'summon',
       'summonCount': 1,
-      'summonItemId': 'ucs1'
-   },
-   'AUls': { 'displayName': 'Locust Swarm'},
-   'ANbf': { 'displayName': 'Breath of Fire'},
-   'ANd': { 'displayName': 'Drunken Brawler'},
-   'ANdh': { 'displayName': 'Drunken Haze'},
-   'ANef': { 'displayName': 'Storm Earth and Fire'},
-   'ANdr': { 'displayName': 'Life Drain'},
-   'ANsi': { 'displayName': 'Silence'},
-   'ANba': { 'displayName': 'Black Arrow'},
-   'ANch': { 'displayName': 'Charm'},
-   'ANms': { 'displayName': 'Mana Shield'},
-   'ANfa': { 'displayName': 'Frost Arrows'},
-   'ANfl': { 'displayName': 'Forked Lightning'},
-   'ANto': { 'displayName': 'Tornado'},
-   'ANrf': { 'displayName': 'Rain of Fire'},
-   'ANca': { 'displayName': 'Cleaving Attack'},
-   'ANht': { 'displayName': 'Howl of Terror'},
-   'ANdo': { 'displayName': 'Doom'},
-   'ANsg': { 'displayName': 'Summon Bear'},
-   'ANsq': { 'displayName': 'Summon Quilbeast'},
-   'ANsw': { 'displayName': 'Summon Hawk'},
-   'ANst': { 'displayName': 'Stampede'},
-   'ANeg': { 'displayName': 'Engineering Upgrade'},
-   'ANcs': { 'displayName': 'Cluster Rockets'},
-   'ANc1': { 'displayName': 'Cluster Rockets 1'},
-   'ANc2': { 'displayName': 'Cluster Rockets 2'},
-   'ANc3': { 'displayName': 'Cluster Rockets 3'},
-   'ANsy': { 'displayName': 'Pocket Factory'},
-   'ANs1': { 'displayName': 'Pocket Factory 1'},
-   'ANs2': { 'displayName': 'Pocket Factory 2'},
-   'ANs3': { 'displayName': 'Pocket Factory 3'},
-   'ANrg': { 'displayName': 'Robo-Goblin'},
-   'ANg1': { 'displayName': 'Robo-Goblin 1'},
-   'ANg2': { 'displayName': 'Robo-Goblin 2'},
-   'ANg3': { 'displayName': 'Robo-Goblin 3'},
-   'ANic': { 'displayName': 'Incinerate'},
-   'ANia': { 'displayName': 'Incinerate'},
-   'ANso': { 'displayName': 'Soul Burn'},
-   'ANlm': { 'displayName': 'Summon Lava Spawn'},
-   'ANvc': { 'displayName': 'Volcano'},
-   'ANhs': { 'displayName': 'Healing Spray'},
-   'ANa': { 'displayName': 'Acid Bom'},
-   'ANcr': { 'displayName': 'Chemical Rage'},
-   'ANtm': { 'displayName': 'Transmute'}
+      'summonItemId': 'ucs1',
+      'summonDuration': 60
+    },
+    'AUls': { 'displayName': 'Locust Swarm'},
+    'ANbf': { 'displayName': 'Breath of Fire'},
+    'ANd':  { 'displayName': 'Drunken Brawler'},
+    'ANdh': { 'displayName': 'Drunken Haze'},
+    'ANef': { 'displayName': 'Storm Earth and Fire'},
+    'ANdr': { 'displayName': 'Life Drain'},
+    'ANsi': { 'displayName': 'Silence'},
+    'ANba': { 'displayName': 'Black Arrow'},
+    'ANch': { 'displayName': 'Charm'},
+    'ANms': { 'displayName': 'Mana Shield'},
+    'ANfa': { 'displayName': 'Frost Arrows'},
+    'ANfl': { 'displayName': 'Forked Lightning'},
+    'ANto': { 'displayName': 'Tornado'},
+    'ANrf': { 'displayName': 'Rain of Fire'},
+    'ANca': { 'displayName': 'Cleaving Attack'},
+    'ANht': { 'displayName': 'Howl of Terror'},
+    'ANdo': { 'displayName': 'Doom'},
+    'ANsg': { 'displayName': 'Summon Bear'},
+    'ANsq': { 'displayName': 'Summon Quilbeast'},
+    'ANsw': { 'displayName': 'Summon Hawk'},
+    'ANst': { 'displayName': 'Stampede'},
+    'ANeg': { 'displayName': 'Engineering Upgrade'},
+    'ANcs': { 'displayName': 'Cluster Rockets'},
+    'ANc1': { 'displayName': 'Cluster Rockets 1'},
+    'ANc2': { 'displayName': 'Cluster Rockets 2'},
+    'ANc3': { 'displayName': 'Cluster Rockets 3'},
+    'ANsy': { 'displayName': 'Pocket Factory'},
+    'ANs1': { 'displayName': 'Pocket Factory 1'},
+    'ANs2': { 'displayName': 'Pocket Factory 2'},
+    'ANs3': { 'displayName': 'Pocket Factory 3'},
+    'ANrg': { 'displayName': 'Robo-Goblin'},
+    'ANg1': { 'displayName': 'Robo-Goblin 1'},
+    'ANg2': { 'displayName': 'Robo-Goblin 2'},
+    'ANg3': { 'displayName': 'Robo-Goblin 3'},
+    'ANic': { 'displayName': 'Incinerate'},
+    'ANia': { 'displayName': 'Incinerate'},
+    'ANso': { 'displayName': 'Soul Burn'},
+    'ANlm': { 'displayName': 'Summon Lava Spawn'},
+    'ANvc': { 'displayName': 'Volcano'},
+    'ANhs': { 'displayName': 'Healing Spray'},
+    'ANa':  { 'displayName': 'Acid Bom'},
+    'ANcr': { 'displayName': 'Chemical Rage'},
+    'ANtm': { 'displayName': 'Transmute'}
 };
 
 const specialBuildings = {
@@ -1164,7 +1182,9 @@ const abilityActions = {
     'HeroRevive': [ 59, 0, 13, 0 ],
     'NERoot': [ 197, 0, 13, 0 ],
     'NEUpRoot': [ 198, 0, 13, 0 ],
-    'EatTree': [ -78, 0, 13, 0 ]
+    'EatTree': [ -78, 0, 13, 0 ],
+    'SummonElemental': [ 129, 0, 13, 0 ],
+    'SummonTreants': [ 208, 0, 13, 0 ]
 };
 
 const mapStartPositions = {
@@ -1196,11 +1216,26 @@ const abilityFlagNames = {
 
 const itemAbilityData = {
     'rnec': { 
-     'type': 'summon',
-     'summonCount': 2,
-     'summonItemId': 'uske',
-     'summonDuration': 65
-   }
+        'ability': 0x10,
+        'type': 'summon',
+        'uses': 2,
+        'stockCount': 1,
+        'stockReplenish': 60,
+        'cooldown': 22,
+        'summonCount': 2,
+        'summonItemId': 'uske',
+        'summonDuration': 65
+    },
+    'stwp': {
+        'ability': 0x12
+    },
+    'AHwe': {
+        'ability': 0x10,
+        'type': 'summon',
+        'summonCount': 1,
+        'summonItemId': ['hwat', 'hwt2', 'hwt3'],
+        'summonDuration': 60
+    }
 };
 
 const getUnitInfo = (itemId) => {

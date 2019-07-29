@@ -1,0 +1,982 @@
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 1400
+Game Clock: 0:1
+========================================================================
+adding to possibleSelectList: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+raw sel:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '68,63,0,0, 74,63,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 1400
+Game Clock: 0:1
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16196,
+  objectId2: 16202 }
+Game Timer: 1400
+Game Clock: 0:1
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+first unit is:  Acolyte uaco
+-----------------------------------------------------
+printing unit data:
+ * display name:  Acolyte
+ * uuid:          36b21766-04c9-4b67-b9f4-d3cc1ec56cf2
+ * itemId:        uaco
+ * itemId1:       [ 68, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 74, 63, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 16196 16202
+is firstGroupUnit found for tab check: yes
+no building upgrade found uaco uaco
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  uaco
+new itemIds:  [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+new objIds:  16196 16202
+setting fully registered unit 36b21766-04c9-4b67-b9f4-d3cc1ec56cf2
+unit reg: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ] 16196 16202
+unit reg objectIds: 16196 16202
+checking backfill:  Acolyte
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4019.763427734375,
+  targetY: 3151.690673828125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 3500
+Game Clock: 0:3
+========================================================================
+unit move info - time: 2.9127899294849695 dist: 684.5056334289678
+removed 1 events
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 4200
+Game Clock: 0:4
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'doau',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4064,
+  targetY: 3168 }
+Game Timer: 4500
+Game Clock: 0:4
+========================================================================
+ability unitInfo:  { displayName: 'Altar of Darkness',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Darkness
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 3 ]
+has worker in group
+checking backfill:  Altar of Darkness
+poss len:  0
+poss len after:  0
+moving unit to build: uaod Altar of Darkness 4064 3168
+builder unit: Acolyte
+unit move info - time: 0.20062683327243783 dist: 47.14730581902289
+1 *** setting build menu CLOSED
+building callback: uaod
+1 unit finished moving to building, now building:  Altar of Darkness
+player units for id:  1
+[ 'Acolyte - [16196, 16202] 68,63,0,0, 74,63,0,0',
+  'Acolyte - [null, null] null, null',
+  'Acolyte - [null, null] null, null',
+  'Altar of Darkness - [null, null] null, null',
+  'Necropolis - [null, null] null, null',
+  [length]: 5 ]
+removed 1 events
+========================================================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 5800
+Game Clock: 0:5
+========================================================================
+========================================================================
+ActionName: SinglePlayerCheat-13 PID: 1
+Action: { actionId: 45 }
+Game Timer: 8100
+Game Clock: 0:8
+========================================================================
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4423.95947265625,
+  targetY: 2717.1884765625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 9200
+Game Clock: 0:9
+========================================================================
+unit move info - time: 2.4548502506616314 dist: 576.8898089054834
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 9300
+Game Clock: 0:9
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'motu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4096,
+  targetY: 2752 }
+Game Timer: 9700
+Game Clock: 0:9
+========================================================================
+ability unitInfo:  { displayName: 'Tomb of Relics',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: true,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Tomb of Relics
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 3 ]
+has worker in group
+checking backfill:  Tomb of Relics
+poss len:  0
+poss len after:  0
+moving unit to build: utom Tomb of Relics 4096 2752
+builder unit: Acolyte
+unit move info - time: 1.390645259168004 dist: 326.801635904481
+1 *** setting build menu CLOSED
+removed 1 events
+building callback: utom
+1 unit finished moving to building, now building:  Tomb of Relics
+player units for id:  1
+[ 'Acolyte - [16196, 16202] 68,63,0,0, 74,63,0,0',
+  'Acolyte - [null, null] null, null',
+  'Acolyte - [null, null] null, null',
+  'Altar of Darkness - [null, null] null, null',
+  'Necropolis - [null, null] null, null',
+  'Tomb of Relics - [null, null] null, null',
+  [length]: 6 ]
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 15100
+Game Clock: 0:15
+========================================================================
+units before deselect
+current selection units:  [ '68,63,0,0, 74,63,0,0 [16196, 16202] - Acolyte', [length]: 1 ]
+current units:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 30, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 14, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 15100
+Game Clock: 0:15
+========================================================================
+adding to possibleSelectList: [ 30, 62, 0, 0, [length]: 4 ] [ 14, 67, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ 30, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ 30, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '30,62,0,0, 14,67,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 15100
+Game Clock: 0:15
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'doau',
+  objectId1: 15902,
+  objectId2: 17166 }
+Game Timer: 15100
+Game Clock: 0:15
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 30, 62, 0, 0, [length]: 4 ] [ 14, 67, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 30, 62, 0, 0, [length]: 4 ] [ 14, 67, 0, 0, [length]: 4 ]
+first unit is:  Altar of Darkness uaod
+-----------------------------------------------------
+printing unit data:
+ * display name:  Altar of Darkness
+ * uuid:          a472e873-02da-4a67-828f-ed4c8e0dd859
+ * itemId:        uaod
+ * itemId1:       [ 30, 62, 0, 0, [length]: 4 ]
+ * itemId2:       [ 14, 67, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 15902 17166
+is firstGroupUnit found for tab check: yes
+no building upgrade found uaod uaod
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  uaod
+new itemIds:  [ 30, 62, 0, 0, [length]: 4 ] [ 14, 67, 0, 0, [length]: 4 ]
+new objIds:  15902 17166
+setting fully registered unit a472e873-02da-4a67-828f-ed4c8e0dd859
+unit reg: [ 30, 62, 0, 0, [length]: 4 ] [ 14, 67, 0, 0, [length]: 4 ] 15902 17166
+unit reg objectIds: 15902 17166
+checking backfill:  Altar of Darkness
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'aedU',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 15800
+Game Clock: 0:15
+========================================================================
+1 Making a hero.
+1 Gave first hero a TP item.
+put hero Death Knight item Scroll of Town Portal in slot 1
+setting unit spawn pos: 4064 3168
+1 Making trained unit:  Death Knight
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 30, 62, 0, 0, [length]: 4 ],
+       itemId2: [ 14, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 19902
+Game Clock: 0:19
+========================================================================
+units before deselect
+current selection units:  [ '30,62,0,0, 14,67,0,0 [15902, 17166] - Altar of Darkness',
+  [length]: 1 ]
+current units:  [ { itemId1: [ 30, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ 30, 62, 0, 0, [length]: 4 ],
+    itemId2: [ 14, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 19902
+Game Clock: 0:19
+========================================================================
+adding to possibleSelectList: [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-33,59,0,0, 92,70,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 19902
+Game Clock: 0:19
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'aedU',
+  objectId1: 15327,
+  objectId2: 18012 }
+Game Timer: 19902
+Game Clock: 0:19
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ]
+first unit is:  Death Knight Udea
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          638cbf2d-34fd-4c25-bab0-0d178d6684b9
+ * itemId:        Udea
+ * itemId1:       [ -33, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ 92, 70, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      1
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 15327 18012
+is firstGroupUnit found for tab check: yes
+no building upgrade found Udea Udea
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  Udea
+new itemIds:  [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ]
+new objIds:  15327 18012
+setting fully registered unit 638cbf2d-34fd-4c25-bab0-0d178d6684b9
+unit reg: [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ] 15327 18012
+unit reg objectIds: 15327 18012
+checking backfill:  Death Knight
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3855.742919921875,
+  targetY: 2667.20751953125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 20402
+Game Clock: 0:20
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 1.8078966289792553 dist: 542.3689886937766
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 22302
+Game Clock: 0:22
+========================================================================
+units before deselect
+current selection units:  [ '-33,59,0,0, 92,70,0,0 [15327, 18012] - Death Knight',
+  [length]: 1 ]
+current units:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 22302
+Game Clock: 0:22
+========================================================================
+adding to possibleSelectList: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+added to units:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-128,61,0,0, -25,67,0,0 - Unregistered', [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 22302
+Game Clock: 0:22
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'motu',
+  objectId1: 15744,
+  objectId2: 17383 }
+Game Timer: 22302
+Game Clock: 0:22
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+first unit is:  Tomb of Relics utom
+-----------------------------------------------------
+printing unit data:
+ * display name:  Tomb of Relics
+ * uuid:          d56f41de-aa6a-4e80-b2db-a66f502d2732
+ * itemId:        utom
+ * itemId1:       [ -128, 61, 0, 0, [length]: 4 ]
+ * itemId2:       [ -25, 67, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 15744 17383
+is firstGroupUnit found for tab check: yes
+no building upgrade found utom utom
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  utom
+new itemIds:  [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+new objIds:  15744 17383
+setting fully registered unit d56f41de-aa6a-4e80-b2db-a66f502d2732
+unit reg: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ] 15744 17383
+unit reg objectIds: 15744 17383
+checking backfill:  Tomb of Relics
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 26600
+Game Clock: 0:26
+========================================================================
+units before deselect
+current selection units:  [ '-128,61,0,0, -25,67,0,0 [15744, 17383] - Tomb of Relics',
+  [length]: 1 ]
+current units:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 26600
+Game Clock: 0:26
+========================================================================
+added to units:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-33,59,0,0, 92,70,0,0 [15327, 18012] - Death Knight',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 26600
+Game Clock: 0:26
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'aedU',
+  objectId1: 15327,
+  objectId2: 18012 }
+Game Timer: 26600
+Game Clock: 0:26
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ]
+first unit is:  Death Knight Udea
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          638cbf2d-34fd-4c25-bab0-0d178d6684b9
+ * itemId:        Udea
+ * itemId1:       [ -33, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ 92, 70, 0, 0, [length]: 4 ]
+ * objectId1:     15327
+ * objectId2:     18012
+ * registered:    yes
+ * path len:      2
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 2878.562255859375,
+  targetY: 3257.37939453125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 27000
+Game Clock: 0:27
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 3.8052374612114757 dist: 1141.5712383634427
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 28300
+Game Clock: 0:28
+========================================================================
+units before deselect
+current selection units:  [ '-33,59,0,0, 92,70,0,0 [15327, 18012] - Death Knight',
+  [length]: 1 ]
+current units:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 28300
+Game Clock: 0:28
+========================================================================
+added to units:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-128,61,0,0, -25,67,0,0 [15744, 17383] - Tomb of Relics',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 28300
+Game Clock: 0:28
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'motu',
+  objectId1: 15744,
+  objectId2: 17383 }
+Game Timer: 28300
+Game Clock: 0:28
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+first unit is:  Tomb of Relics utom
+-----------------------------------------------------
+printing unit data:
+ * display name:  Tomb of Relics
+ * uuid:          d56f41de-aa6a-4e80-b2db-a66f502d2732
+ * itemId:        utom
+ * itemId1:       [ -128, 61, 0, 0, [length]: 4 ]
+ * itemId2:       [ -25, 67, 0, 0, [length]: 4 ]
+ * objectId1:     15744
+ * objectId2:     17383
+ * registered:    yes
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 31600
+Game Clock: 0:31
+========================================================================
+units before deselect
+current selection units:  [ '-128,61,0,0, -25,67,0,0 [15744, 17383] - Tomb of Relics',
+  [length]: 1 ]
+current units:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 31600
+Game Clock: 0:31
+========================================================================
+added to units:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-33,59,0,0, 92,70,0,0 [15327, 18012] - Death Knight',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 31600
+Game Clock: 0:31
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'aedU',
+  objectId1: 15327,
+  objectId2: 18012 }
+Game Timer: 31600
+Game Clock: 0:31
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -33, 59, 0, 0, [length]: 4 ] [ 92, 70, 0, 0, [length]: 4 ]
+first unit is:  Death Knight Udea
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          638cbf2d-34fd-4c25-bab0-0d178d6684b9
+ * itemId:        Udea
+ * itemId1:       [ -33, 59, 0, 0, [length]: 4 ]
+ * itemId2:       [ 92, 70, 0, 0, [length]: 4 ]
+ * objectId1:     15327
+ * objectId2:     18012
+ * registered:    yes
+ * path len:      3
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3771.212890625,
+  targetY: 2617.778564453125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 32100
+Game Clock: 0:32
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 3.660471095340507 dist: 1098.141328602152
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+       itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 34500
+Game Clock: 0:34
+========================================================================
+units before deselect
+current selection units:  [ '-33,59,0,0, 92,70,0,0 [15327, 18012] - Death Knight',
+  [length]: 1 ]
+current units:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+deselecting other group:  [ { itemId1: [ -33, 59, 0, 0, [length]: 4 ],
+    itemId2: [ 92, 70, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+units after deselect:  [ [length]: 0 ]
+units after deselect
+current selection units:  [ [length]: 0 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 34500
+Game Clock: 0:34
+========================================================================
+added to units:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+selection size:  1
+raw sel:  [ { itemId1: [ -128, 61, 0, 0, [length]: 4 ],
+    itemId2: [ -25, 67, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+current selection units:  [ '-128,61,0,0, -25,67,0,0 [15744, 17383] - Tomb of Relics',
+  [length]: 1 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 34500
+Game Clock: 0:34
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'motu',
+  objectId1: 15744,
+  objectId2: 17383 }
+Game Timer: 34500
+Game Clock: 0:34
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+first unit is:  Tomb of Relics utom
+-----------------------------------------------------
+printing unit data:
+ * display name:  Tomb of Relics
+ * uuid:          d56f41de-aa6a-4e80-b2db-a66f502d2732
+ * itemId:        utom
+ * itemId1:       [ -128, 61, 0, 0, [length]: 4 ]
+ * itemId2:       [ -25, 67, 0, 0, [length]: 4 ]
+ * objectId1:     15744
+ * objectId2:     17383
+ * registered:    yes
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 35000
+Game Clock: 0:35
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'motu',
+  objectId1: 15744,
+  objectId2: 17383 }
+Game Timer: 35000
+Game Clock: 0:35
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -128, 61, 0, 0, [length]: 4 ] [ -25, 67, 0, 0, [length]: 4 ]
+first unit is:  Tomb of Relics utom
+-----------------------------------------------------
+printing unit data:
+ * display name:  Tomb of Relics
+ * uuid:          d56f41de-aa6a-4e80-b2db-a66f502d2732
+ * itemId:        utom
+ * itemId1:       [ -128, 61, 0, 0, [length]: 4 ]
+ * itemId2:       [ -25, 67, 0, 0, [length]: 4 ]
+ * objectId1:     15744
+ * objectId2:     17383
+ * registered:    yes
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+removed 1 events
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 64,
+  itemId: 'cenr',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 36200
+Game Clock: 0:36
+========================================================================
+1 Hero bought an item:  Rod of Necromancy
+1 Item objectIds:  -1 -1
+1 No known unit to give item to, try to find closest hero.
+1 Shop position:  4096 2752
+giving shop initial stock of:  rnec
+buying stock replenish on item:  rnec 60
+stock left: 0
+1 Giving item Rod of Necromancy to Death Knight
+put hero Death Knight item Rod of Necromancy in slot 2
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 37800
+Game Clock: 0:37
+========================================================================
+created wc3v file:  ./client/replays/test-shop-range.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 7
+Unregistered units: 1
+************************************
+wc3v completed.  enjoy!

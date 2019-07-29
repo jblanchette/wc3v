@@ -1,0 +1,915 @@
+========================================================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 1300
+Game Clock: 0:1
+========================================================================
+========================================================================
+ActionName: SinglePlayerCheat-13 PID: 1
+Action: { actionId: 45 }
+Game Timer: 6800
+Game Clock: 0:6
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 8000
+Game Clock: 0:8
+========================================================================
+adding to possibleSelectList: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 8000
+Game Clock: 0:8
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16196,
+  objectId2: 16202 }
+Game Timer: 8000
+Game Clock: 0:8
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+first unit is:  Acolyte uaco
+-----------------------------------------------------
+printing unit data:
+ * display name:  Acolyte
+ * uuid:          4d4f276a-8d39-4cbb-96c5-04bcb597bbbe
+ * itemId:        uaco
+ * itemId1:       [ 68, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 74, 63, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 16196 16202
+is firstGroupUnit found for tab check: yes
+no building upgrade found uaco uaco
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  uaco
+new itemIds:  [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+new objIds:  16196 16202
+setting fully registered unit 4d4f276a-8d39-4cbb-96c5-04bcb597bbbe
+unit reg: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ] 16196 16202
+unit reg objectIds: 16196 16202
+checking backfill:  Acolyte
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4575.6630859375,
+  targetY: 2500.63330078125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 8700
+Game Clock: 0:8
+========================================================================
+unit move info - time: 1.9306905436457296 dist: 453.71227775674646
+removed 1 events
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 9000
+Game Clock: 0:9
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'pesu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4608,
+  targetY: 2496 }
+Game Timer: 9300
+Game Clock: 0:9
+========================================================================
+ability unitInfo:  { displayName: 'Crypt',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Crypt
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 3 ]
+has worker in group
+checking backfill:  Crypt
+poss len:  0
+poss len after:  0
+moving unit to build: usep Crypt 4608 2496
+builder unit: Acolyte
+unit move info - time: 0.13900920091710275 dist: 32.66716221551915
+1 *** setting build menu CLOSED
+building callback: usep
+1 unit finished moving to building, now building:  Crypt
+player units for id:  1
+[ 'Acolyte - [16196, 16202] 68,63,0,0, 74,63,0,0',
+  'Acolyte - [null, null] null, null',
+  'Acolyte - [null, null] null, null',
+  'Crypt - [null, null] null, null',
+  'Necropolis - [null, null] null, null',
+  [length]: 5 ]
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4193.04248046875,
+  targetY: 2756.585693359375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 16200
+Game Clock: 0:16
+========================================================================
+unit move info - time: 2.0850831375131262 dist: 489.9945373155847
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 17300
+Game Clock: 0:17
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'doau',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4128,
+  targetY: 2784 }
+Game Timer: 17600
+Game Clock: 0:17
+========================================================================
+ability unitInfo:  { displayName: 'Altar of Darkness',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Darkness
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 3 ]
+has worker in group
+checking backfill:  Altar of Darkness
+poss len:  0
+poss len after:  0
+moving unit to build: uaod Altar of Darkness 4128 2784
+builder unit: Acolyte
+unit move info - time: 0.9827067676214529 dist: 230.93609039104143
+1 *** setting build menu CLOSED
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 18400
+Game Clock: 0:18
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -120, 64, 0, 0, [length]: 4 ],
+       itemId2: [ 125, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 18400
+Game Clock: 0:18
+========================================================================
+adding to possibleSelectList: [ -120, 64, 0, 0, [length]: 4 ] [ 125, 69, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 18400
+Game Clock: 0:18
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pesu',
+  objectId1: 16520,
+  objectId2: 17789 }
+Game Timer: 18400
+Game Clock: 0:18
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ -120, 64, 0, 0, [length]: 4 ] [ 125, 69, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -120, 64, 0, 0, [length]: 4 ] [ 125, 69, 0, 0, [length]: 4 ]
+first unit is:  Crypt usep
+-----------------------------------------------------
+printing unit data:
+ * display name:  Crypt
+ * uuid:          3949b720-a13b-4d79-b68e-b805cde94275
+ * itemId:        usep
+ * itemId1:       [ -120, 64, 0, 0, [length]: 4 ]
+ * itemId2:       [ 125, 69, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 16520 17789
+is firstGroupUnit found for tab check: yes
+no building upgrade found usep usep
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  usep
+new itemIds:  [ -120, 64, 0, 0, [length]: 4 ] [ 125, 69, 0, 0, [length]: 4 ]
+new objIds:  16520 17789
+setting fully registered unit 3949b720-a13b-4d79-b68e-b805cde94275
+unit reg: [ -120, 64, 0, 0, [length]: 4 ] [ 125, 69, 0, 0, [length]: 4 ] 16520 17789
+unit reg objectIds: 16520 17789
+checking backfill:  Crypt
+poss len:  0
+poss len after:  0
+building callback: uaod
+1 unit finished moving to building, now building:  Altar of Darkness
+player units for id:  1
+[ 'Acolyte - [16196, 16202] 68,63,0,0, 74,63,0,0',
+  'Acolyte - [null, null] null, null',
+  'Acolyte - [null, null] null, null',
+  'Altar of Darkness - [null, null] null, null',
+  'Crypt - [16520, 17789] -120,64,0,0, 125,69,0,0',
+  'Necropolis - [null, null] null, null',
+  [length]: 6 ]
+removed 1 events
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'cauR',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 21900
+Game Clock: 0:21
+========================================================================
+First unit:  Crypt
+current selection units:  [ '-120,64,0,0, 125,69,0,0 [16520, 17789] - Crypt',
+  [length]: 1 ]
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -120, 64, 0, 0, [length]: 4 ],
+       itemId2: [ 125, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 23099
+Game Clock: 0:23
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 23099
+Game Clock: 0:23
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 23099
+Game Clock: 0:23
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16196,
+  objectId2: 16202 }
+Game Timer: 23099
+Game Clock: 0:23
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+first unit is:  Acolyte uaco
+-----------------------------------------------------
+printing unit data:
+ * display name:  Acolyte
+ * uuid:          4d4f276a-8d39-4cbb-96c5-04bcb597bbbe
+ * itemId:        uaco
+ * itemId1:       [ 68, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 74, 63, 0, 0, [length]: 4 ]
+ * objectId1:     16196
+ * objectId2:     16202
+ * registered:    yes
+ * path len:      4
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4176.240234375,
+  targetY: 3272.83251953125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 23598
+Game Clock: 0:23
+========================================================================
+unit move info - time: 2.090242707023691 dist: 491.20703615056743
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 23799
+Game Clock: 0:23
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'vrgu',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4096,
+  targetY: 3136 }
+Game Timer: 24498
+Game Clock: 0:24
+========================================================================
+ability unitInfo:  { displayName: 'Graveyard',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Graveyard
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 3 ]
+has worker in group
+checking backfill:  Graveyard
+poss len:  0
+poss len after:  0
+moving unit to build: ugrv Graveyard 4096 3136
+builder unit: Acolyte
+unit move info - time: 0.6427272855304852 dist: 151.040912099664
+1 *** setting build menu CLOSED
+removed 1 events
+building callback: ugrv
+1 unit finished moving to building, now building:  Graveyard
+player units for id:  1
+[ 'Acolyte - [16196, 16202] 68,63,0,0, 74,63,0,0',
+  'Acolyte - [null, null] null, null',
+  'Acolyte - [null, null] null, null',
+  'Altar of Darkness - [null, null] null, null',
+  'Crypt - [16520, 17789] -120,64,0,0, 125,69,0,0',
+  'Graveyard - [null, null] null, null',
+  'Necropolis - [null, null] null, null',
+  [length]: 7 ]
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3670.337158203125,
+  targetY: 2771.7197265625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 28198
+Game Clock: 0:28
+========================================================================
+unit move info - time: 2.384076390437631 dist: 560.2579517528433
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 29498
+Game Clock: 0:29
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 29498
+Game Clock: 0:29
+========================================================================
+adding to possibleSelectList: [ 21, 63, 0, 0, [length]: 4 ] [ 27, 63, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 29498
+Game Clock: 0:29
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ohgu',
+  objectId1: 16149,
+  objectId2: 16155 }
+Game Timer: 29498
+Game Clock: 0:29
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff nothing for first group unit at: [ 21, 63, 0, 0, [length]: 4 ] [ 27, 63, 0, 0, [length]: 4 ]
+new reg list: [ [length]: 0 ]
+no unit known by objectIds: 16149 16155
+no first group unit, no newly reg. call select sub group with no knowns
+selectSubgroup 1
+findUnreg by itemId: ugho { displayName: 'Ghoul',
+  isBuilding: false,
+  isUnit: true,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+selectSubgroup 3
+Filter fixedItemId:  ugho
+existing unit count:  0
+1 Selected a spawned unit Ghoul
+creating new unit:  Ghoul
+setting fully registered unit 7e06210a-ffde-4a19-ba7b-7fec05a78333
+unit reg: [ 21, 63, 0, 0, [length]: 4 ] [ 27, 63, 0, 0, [length]: 4 ] 16149 16155
+unit reg objectIds: 16149 16155
+checking backfill:  Ghoul
+poss len:  1
+found backfill... [ 21, 63, 0, 0, [length]: 4 ] [ 27, 63, 0, 0, [length]: 4 ]
+poss len after:  0
+current selection units:  [ '21,63,0,0, 27,63,0,0 [16149, 16155] - Ghoul', [length]: 1 ]
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3822.822265625,
+  targetY: 3186.0439453125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 30998
+Game Clock: 0:30
+========================================================================
+unit move info - time: 24.882145253183403 dist: 4976.429050636681
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 36998
+Game Clock: 0:36
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -120, 64, 0, 0, [length]: 4 ],
+       itemId2: [ 125, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 36998
+Game Clock: 0:36
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 36998
+Game Clock: 0:36
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pesu',
+  objectId1: 16520,
+  objectId2: 17789 }
+Game Timer: 36998
+Game Clock: 0:36
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -120, 64, 0, 0, [length]: 4 ] [ 125, 69, 0, 0, [length]: 4 ]
+first unit is:  Crypt usep
+-----------------------------------------------------
+printing unit data:
+ * display name:  Crypt
+ * uuid:          3949b720-a13b-4d79-b68e-b805cde94275
+ * itemId:        usep
+ * itemId1:       [ -120, 64, 0, 0, [length]: 4 ]
+ * itemId2:       [ 125, 69, 0, 0, [length]: 4 ]
+ * objectId1:     16520
+ * objectId2:     17789
+ * registered:    yes
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -120, 64, 0, 0, [length]: 4 ],
+       itemId2: [ 125, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 41098
+Game Clock: 0:41
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 41098
+Game Clock: 0:41
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 41098
+Game Clock: 0:41
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ohgu',
+  objectId1: 16149,
+  objectId2: 16155 }
+Game Timer: 41098
+Game Clock: 0:41
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 21, 63, 0, 0, [length]: 4 ] [ 27, 63, 0, 0, [length]: 4 ]
+first unit is:  Ghoul ugho
+-----------------------------------------------------
+printing unit data:
+ * display name:  Ghoul
+ * uuid:          7e06210a-ffde-4a19-ba7b-7fec05a78333
+ * itemId:        ugho
+ * itemId1:       [ 21, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 27, 63, 0, 0, [length]: 4 ]
+ * objectId1:     16149
+ * objectId2:     16155
+ * registered:    yes
+ * path len:      0
+ * spawnAtStart:  no
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 61697
+Game Clock: 1:1
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 61697
+Game Clock: 1:1
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 61697
+Game Clock: 1:1
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16196,
+  objectId2: 16202 }
+Game Timer: 61697
+Game Clock: 1:1
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+first unit is:  Acolyte uaco
+-----------------------------------------------------
+printing unit data:
+ * display name:  Acolyte
+ * uuid:          4d4f276a-8d39-4cbb-96c5-04bcb597bbbe
+ * itemId:        uaco
+ * itemId1:       [ 68, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 74, 63, 0, 0, [length]: 4 ]
+ * objectId1:     16196
+ * objectId2:     16202
+ * registered:    yes
+ * path len:      7
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3784.4287109375,
+  targetY: 3122.9501953125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 62797
+Game Clock: 1:2
+========================================================================
+unit move info - time: 1.5714734291423496 dist: 369.2962558484521
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 15, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3782.82421875,
+  targetY: 3190.193359375,
+  objectId1: 16149,
+  objectId2: 16155 }
+Game Timer: 63497
+Game Clock: 1:3
+========================================================================
+unit move info - time: 1.1454449032462717 dist: 269.17955226287387
+removed 1 events
+removed 1 events
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3465.1884765625,
+  targetY: 3065.410400390625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 70497
+Game Clock: 1:10
+========================================================================
+unit move info - time: 1.4522005379134053 dist: 341.26712640965025
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 71197
+Game Clock: 1:11
+========================================================================
+ERROR jeff? last action had same actionId? NaN
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 21, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 27, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 71197
+Game Clock: 1:11
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 71197
+Game Clock: 1:11
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ohgu',
+  objectId1: 16149,
+  objectId2: 16155 }
+Game Timer: 71197
+Game Clock: 1:11
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 21, 63, 0, 0, [length]: 4 ] [ 27, 63, 0, 0, [length]: 4 ]
+first unit is:  Ghoul ugho
+-----------------------------------------------------
+printing unit data:
+ * display name:  Ghoul
+ * uuid:          7e06210a-ffde-4a19-ba7b-7fec05a78333
+ * itemId:        ugho
+ * itemId1:       [ 21, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 27, 63, 0, 0, [length]: 4 ]
+ * objectId1:     16149
+ * objectId2:     16155
+ * registered:    yes
+ * path len:      1
+ * spawnAtStart:  no
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3988.812255859375,
+  targetY: 3404.5634765625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 72697
+Game Clock: 1:12
+========================================================================
+unit move info - time: 1.3720738172172775 dist: 274.4147634434555
+removed 1 events
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 32,
+  itemId: [ 220, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 74897
+Game Clock: 1:14
+========================================================================
+First unit:  Ghoul
+current selection units:  [ '21,63,0,0, 27,63,0,0 [16149, 16155] - Ghoul', [length]: 1 ]
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 78398
+Game Clock: 1:18
+========================================================================
+created wc3v file:  ./client/replays/test-ghoul-lumber.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 8
+Unregistered units: 3
+************************************
+wc3v completed.  enjoy!

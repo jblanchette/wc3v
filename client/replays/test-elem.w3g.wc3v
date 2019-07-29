@@ -1,0 +1,561 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": 4672,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Altar of Kings",
+                    "itemId": "halt",
+                    "itemId1": "92,64,0,0",
+                    "itemId2": "120,69,0,0",
+                    "objectId1": 16476,
+                    "objectId2": 17784,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4192,
+                        "y": 3104
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peasant",
+                    "itemId": "hpea",
+                    "itemId1": "35,63,0,0",
+                    "itemId2": "35,63,0,0",
+                    "objectId1": 16163,
+                    "objectId2": 16163,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4192,
+                        "y": 3104
+                    },
+                    "path": [
+                        {
+                            "x": 4191.52,
+                            "y": 3113.18
+                        },
+                        {
+                            "x": 4192,
+                            "y": 3104
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 4672,
+                            "startY": 2944,
+                            "targetX": 4191.52,
+                            "targetY": 3113.18,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 509.4,
+                            "pathTime": 2.68,
+                            "xVelocity": 179.21,
+                            "yVelocity": 63.1,
+                            "timerData": {
+                                "startTime": 6400,
+                                "endTime": 6400,
+                                "runLength": 2681.0552912897906,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 4191.52,
+                            "startY": 3113.18,
+                            "targetX": 4192,
+                            "targetY": 3104,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 9.2,
+                            "pathTime": 0.05,
+                            "xVelocity": 10.02,
+                            "yVelocity": 189.74,
+                            "timerData": {
+                                "startTime": 7500,
+                                "endTime": 7548.4033064742425,
+                                "runLength": 48.40330647424249,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Peasent",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "H",
+                        "movespeed": 190,
+                        "evolution": {
+                            "itemId": "hmil",
+                            "time": 45
+                        }
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peasant",
+                    "itemId": "hpea",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peasent",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "H",
+                        "movespeed": 190,
+                        "evolution": {
+                            "itemId": "hmil",
+                            "time": 45
+                        }
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peasant",
+                    "itemId": "hpea",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peasent",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "H",
+                        "movespeed": 190,
+                        "evolution": {
+                            "itemId": "hmil",
+                            "time": 45
+                        }
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peasant",
+                    "itemId": "hpea",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peasent",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "H",
+                        "movespeed": 190,
+                        "evolution": {
+                            "itemId": "hmil",
+                            "time": 45
+                        }
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peasant",
+                    "itemId": "hpea",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peasent",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "H",
+                        "movespeed": 190,
+                        "evolution": {
+                            "itemId": "hmil",
+                            "time": 45
+                        }
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Town Hall",
+                    "itemId": "htow",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Archmage",
+                    "itemId": "Hamg",
+                    "itemId1": "-73,60,0,0",
+                    "itemId2": "-71,73,0,0",
+                    "objectId1": 15543,
+                    "objectId2": 18873,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 1,
+                    "lastPosition": {
+                        "x": 3782.532470703125,
+                        "y": 2509.7373046875
+                    },
+                    "path": [
+                        {
+                            "x": 4192,
+                            "y": 3104
+                        },
+                        {
+                            "x": 4116.85,
+                            "y": 2712.92
+                        },
+                        {
+                            "x": 3782.53,
+                            "y": 2509.74
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 1.5,
+                            "distance": 375,
+                            "startX": 4192,
+                            "startY": 3104,
+                            "targetX": 4116.85,
+                            "targetY": 2712.92,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 398.23,
+                            "pathTime": 1.59,
+                            "xVelocity": 47.18,
+                            "yVelocity": 245.51,
+                            "timerData": {
+                                "startTime": 22800,
+                                "endTime": 24392.92615591355,
+                                "runLength": 1592.9261559135477,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.5,
+                            "distance": 375,
+                            "startX": 4116.85,
+                            "startY": 2712.92,
+                            "targetX": 3782.53,
+                            "targetY": 2509.74,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 391.22,
+                            "pathTime": 1.56,
+                            "xVelocity": 213.64,
+                            "yVelocity": 129.84,
+                            "timerData": {
+                                "startTime": 30200,
+                                "endTime": 31764.865740457284,
+                                "runLength": 1564.8657404572857,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Archmage",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
+                    ]
+                },
+                {
+                    "displayName": "Elemental (lvl 1)",
+                    "itemId": "hwat",
+                    "itemId1": "16,59,0,0",
+                    "itemId2": "-112,77,0,0",
+                    "objectId1": 15120,
+                    "objectId2": 19856,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 669.6094776622858,
+                        "y": 506.8403964019056
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "dabd8da3ba40ac853edeffba628d2e02673140710f5316b25e84572d4cd916e1",
+        "gamename": "Local Game",
+        "randomseed": 626418303,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "HvR",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/frozenthrone/(2)echoisles.w3x",
+            "file": "Maps/frozenthrone/(2)echoisles.w3x",
+            "checksum": "a636fc12"
+        },
+        "version": "1.10031",
+        "duration": 35300,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "H",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "halt": 1
+                    },
+                    "order": [
+                        {
+                            "id": "halt",
+                            "ms": 7500
+                        }
+                    ]
+                },
+                "heroes": [
+                    {
+                        "level": 1,
+                        "abilities": {
+                            "AHwe": 1
+                        },
+                        "id": "Hamg"
+                    }
+                ],
+                "heroCollector": {
+                    "Hamg": {
+                        "level": 1,
+                        "abilities": {
+                            "AHwe": 1
+                        },
+                        "id": "Hamg"
+                    }
+                },
+                "heroSkills": {
+                    "AHwe": 1
+                },
+                "heroCount": 1,
+                "actions": {
+                    "timed": [
+                        14
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 4,
+                    "basic": 0,
+                    "buildtrain": 3,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 4,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 35299,
+                "apm": 14
+            }
+        }
+    }
+}

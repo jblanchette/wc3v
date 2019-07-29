@@ -1,0 +1,515 @@
+========================================================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 1500
+Game Clock: 0:1
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 2800
+Game Clock: 0:2
+========================================================================
+adding to possibleSelectList: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 2800
+Game Clock: 0:2
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'ocau',
+  objectId1: 16196,
+  objectId2: 16202 }
+Game Timer: 2800
+Game Clock: 0:2
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+first unit is:  Acolyte uaco
+-----------------------------------------------------
+printing unit data:
+ * display name:  Acolyte
+ * uuid:          5cebad8b-271a-4465-81dc-54fcd0b6f645
+ * itemId:        uaco
+ * itemId1:       [ 68, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 74, 63, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 16196 16202
+is firstGroupUnit found for tab check: yes
+no building upgrade found uaco uaco
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  uaco
+new itemIds:  [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ]
+new objIds:  16196 16202
+setting fully registered unit 5cebad8b-271a-4465-81dc-54fcd0b6f645
+unit reg: [ 68, 63, 0, 0, [length]: 4 ] [ 74, 63, 0, 0, [length]: 4 ] 16196 16202
+unit reg objectIds: 16196 16202
+checking backfill:  Acolyte
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4709.0107421875,
+  targetY: 2580.68701171875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 3400
+Game Clock: 0:3
+========================================================================
+unit move info - time: 1.554013903461771 dist: 365.1932673135162
+removed 1 events
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 3600
+Game Clock: 0:3
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'doau',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4704,
+  targetY: 2528 }
+Game Timer: 7100
+Game Clock: 0:7
+========================================================================
+ability unitInfo:  { displayName: 'Altar of Darkness',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Acolyte
+selection is:  [ 'Acolyte', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Darkness
+worker units:  [ 'itemId1: 68,63,0,0 id2: 74,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 3 ]
+has worker in group
+checking backfill:  Altar of Darkness
+poss len:  0
+poss len after:  0
+moving unit to build: uaod Altar of Darkness 4704 2528
+builder unit: Acolyte
+unit move info - time: 0.22521168518504853 dist: 52.9247460184864
+1 *** setting build menu CLOSED
+building callback: uaod
+1 unit finished moving to building, now building:  Altar of Darkness
+player units for id:  1
+[ 'Acolyte - [16196, 16202] 68,63,0,0, 74,63,0,0',
+  'Acolyte - [null, null] null, null',
+  'Acolyte - [null, null] null, null',
+  'Altar of Darkness - [null, null] null, null',
+  'Necropolis - [null, null] null, null',
+  [length]: 5 ]
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 68, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 74, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 10400
+Game Clock: 0:10
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -108, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -39, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 10400
+Game Clock: 0:10
+========================================================================
+adding to possibleSelectList: [ -108, 61, 0, 0, [length]: 4 ] [ -39, 67, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 10400
+Game Clock: 0:10
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'doau',
+  objectId1: 15764,
+  objectId2: 17369 }
+Game Timer: 10400
+Game Clock: 0:10
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ -108, 61, 0, 0, [length]: 4 ] [ -39, 67, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -108, 61, 0, 0, [length]: 4 ] [ -39, 67, 0, 0, [length]: 4 ]
+first unit is:  Altar of Darkness uaod
+-----------------------------------------------------
+printing unit data:
+ * display name:  Altar of Darkness
+ * uuid:          a9f2cdda-f5d5-49fd-9807-8699b55a3352
+ * itemId:        uaod
+ * itemId1:       [ -108, 61, 0, 0, [length]: 4 ]
+ * itemId2:       [ -39, 67, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 15764 17369
+is firstGroupUnit found for tab check: yes
+no building upgrade found uaod uaod
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  uaod
+new itemIds:  [ -108, 61, 0, 0, [length]: 4 ] [ -39, 67, 0, 0, [length]: 4 ]
+new objIds:  15764 17369
+setting fully registered unit a9f2cdda-f5d5-49fd-9807-8699b55a3352
+unit reg: [ -108, 61, 0, 0, [length]: 4 ] [ -39, 67, 0, 0, [length]: 4 ] 15764 17369
+unit reg objectIds: 15764 17369
+checking backfill:  Altar of Darkness
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'aedU',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 11800
+Game Clock: 0:11
+========================================================================
+First unit:  Altar of Darkness
+1 Making a hero.
+1 Gave first hero a TP item.
+put hero Death Knight item Scroll of Town Portal in slot 1
+setting unit spawn pos: 4704 2528
+1 Making trained unit:  Death Knight
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -108, 61, 0, 0, [length]: 4 ],
+       itemId2: [ -39, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 16100
+Game Clock: 0:16
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ -40, 64, 0, 0, [length]: 4 ],
+       itemId2: [ 11, 69, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 16100
+Game Clock: 0:16
+========================================================================
+adding to possibleSelectList: [ -40, 64, 0, 0, [length]: 4 ] [ 11, 69, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 16100
+Game Clock: 0:16
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'aedU',
+  objectId1: 16600,
+  objectId2: 17675 }
+Game Timer: 16100
+Game Clock: 0:16
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ -40, 64, 0, 0, [length]: 4 ] [ 11, 69, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ -40, 64, 0, 0, [length]: 4 ] [ 11, 69, 0, 0, [length]: 4 ]
+first unit is:  Death Knight Udea
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          2b3d37b5-f920-4a1d-ad1b-8feaa6fcddb4
+ * itemId:        Udea
+ * itemId1:       [ -40, 64, 0, 0, [length]: 4 ]
+ * itemId2:       [ 11, 69, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      1
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 16600 17675
+is firstGroupUnit found for tab check: yes
+no building upgrade found Udea Udea
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  Udea
+new itemIds:  [ -40, 64, 0, 0, [length]: 4 ] [ 11, 69, 0, 0, [length]: 4 ]
+new objIds:  16600 17675
+setting fully registered unit 2b3d37b5-f920-4a1d-ad1b-8feaa6fcddb4
+unit reg: [ -40, 64, 0, 0, [length]: 4 ] [ 11, 69, 0, 0, [length]: 4 ] 16600 17675
+unit reg objectIds: 16600 17675
+checking backfill:  Death Knight
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4254.71435546875,
+  targetY: 2546.94482421875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 17500
+Game Clock: 0:17
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 1.4989496201842294 dist: 449.6848860552688
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 66,
+  itemId: [ 35, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4560,
+  targetY: 2352,
+  objectId1: 16609,
+  objectId2: 17702 }
+Game Timer: 19696
+Game Clock: 0:19
+========================================================================
+1 Hero moving item:  Death Knight Dest slot: 2
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          2b3d37b5-f920-4a1d-ad1b-8feaa6fcddb4
+ * itemId:        Udea
+ * itemId1:       [ -40, 64, 0, 0, [length]: 4 ]
+ * itemId2:       [ 11, 69, 0, 0, [length]: 4 ]
+ * objectId1:     16600
+ * objectId2:     17675
+ * registered:    yes
+ * path len:      2
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+1 Death Knight moved only item Scroll of Town Portal to slot 2
+-----------------------------------------------------
+printing unit data:
+ * display name:  Scroll of Town Portal
+ * uuid:          3f84bf1b-58d0-4b3d-94cc-cc6d0475ffc1
+ * itemId:        stwp
+ * itemId1:       null
+ * itemId2:       null
+ * objectId1:     16609
+ * objectId2:     17702
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+* item slot:    2
+* item x:    4560
+* item y:    2352
+-----------------------------------------------------
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4199.46826171875,
+  targetY: 2954.24365234375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 21195
+Game Clock: 0:21
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 1.3700951559274677 dist: 411.0285467782403
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 66,
+  itemId: [ 36, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4560,
+  targetY: 2352,
+  objectId1: 16609,
+  objectId2: 17702 }
+Game Timer: 29395
+Game Clock: 0:29
+========================================================================
+1 Hero moving item:  Death Knight Dest slot: 3
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          2b3d37b5-f920-4a1d-ad1b-8feaa6fcddb4
+ * itemId:        Udea
+ * itemId1:       [ -40, 64, 0, 0, [length]: 4 ]
+ * itemId2:       [ 11, 69, 0, 0, [length]: 4 ]
+ * objectId1:     16600
+ * objectId2:     17675
+ * registered:    yes
+ * path len:      3
+ * spawnAtStart:  no
+items:         [ '[2] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+1 Death Knight moved only item Scroll of Town Portal to slot 3
+-----------------------------------------------------
+printing unit data:
+ * display name:  Scroll of Town Portal
+ * uuid:          3f84bf1b-58d0-4b3d-94cc-cc6d0475ffc1
+ * itemId:        stwp
+ * itemId1:       null
+ * itemId2:       null
+ * objectId1:     16609
+ * objectId2:     17702
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+* item slot:    3
+* item x:    4560
+* item y:    2352
+-----------------------------------------------------
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 3730.618896484375,
+  targetY: 2962.28515625,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 32595
+Game Clock: 0:32
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 1.5630610746073823 dist: 468.9183223822147
+removed 1 events
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 66,
+  itemId: [ 34, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4560,
+  targetY: 2352,
+  objectId1: 16609,
+  objectId2: 17702 }
+Game Timer: 34695
+Game Clock: 0:34
+========================================================================
+1 Hero moving item:  Death Knight Dest slot: 1
+-----------------------------------------------------
+printing unit data:
+ * display name:  Death Knight
+ * uuid:          2b3d37b5-f920-4a1d-ad1b-8feaa6fcddb4
+ * itemId:        Udea
+ * itemId1:       [ -40, 64, 0, 0, [length]: 4 ]
+ * itemId2:       [ 11, 69, 0, 0, [length]: 4 ]
+ * objectId1:     16600
+ * objectId2:     17675
+ * registered:    yes
+ * path len:      4
+ * spawnAtStart:  no
+items:         [ '[3] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+1 Death Knight moved only item Scroll of Town Portal to slot 1
+-----------------------------------------------------
+printing unit data:
+ * display name:  Scroll of Town Portal
+ * uuid:          3f84bf1b-58d0-4b3d-94cc-cc6d0475ffc1
+ * itemId:        stwp
+ * itemId1:       null
+ * itemId2:       null
+ * objectId1:     16609
+ * objectId2:     17702
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+* item slot:    1
+* item x:    4560
+* item y:    2352
+-----------------------------------------------------
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 35695
+Game Clock: 0:35
+========================================================================
+created wc3v file:  ./client/replays/test-dk-tp-2.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 6
+Unregistered units: 2
+************************************
+wc3v completed.  enjoy!

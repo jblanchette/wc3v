@@ -1,0 +1,579 @@
+========================================================================
+ActionName: SinglePlayerCheat-3 PID: 1
+Action: { actionId: 35 }
+Game Timer: 1700
+Game Clock: 0:1
+========================================================================
+========================================================================
+ActionName: SinglePlayerCheat-13 PID: 1
+Action: { actionId: 45 }
+Game Timer: 3400
+Game Clock: 0:3
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 67, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 70, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 4300
+Game Clock: 0:4
+========================================================================
+adding to possibleSelectList: [ 67, 63, 0, 0, [length]: 4 ] [ 70, 63, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 4300
+Game Clock: 0:4
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'pswe',
+  objectId1: 16195,
+  objectId2: 16198 }
+Game Timer: 4300
+Game Clock: 0:4
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 67, 63, 0, 0, [length]: 4 ] [ 70, 63, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 67, 63, 0, 0, [length]: 4 ] [ 70, 63, 0, 0, [length]: 4 ]
+first unit is:  Wisp ewsp
+-----------------------------------------------------
+printing unit data:
+ * display name:  Wisp
+ * uuid:          7689b5b4-a592-43cc-a0db-b79e3741f381
+ * itemId:        ewsp
+ * itemId1:       [ 67, 63, 0, 0, [length]: 4 ]
+ * itemId2:       [ 70, 63, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 16195 16198
+is firstGroupUnit found for tab check: yes
+no building upgrade found ewsp ewsp
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  ewsp
+new itemIds:  [ 67, 63, 0, 0, [length]: 4 ] [ 70, 63, 0, 0, [length]: 4 ]
+new objIds:  16195 16198
+setting fully registered unit 7689b5b4-a592-43cc-a0db-b79e3741f381
+unit reg: [ 67, 63, 0, 0, [length]: 4 ] [ 70, 63, 0, 0, [length]: 4 ] 16195 16198
+unit reg objectIds: 16195 16198
+checking backfill:  Wisp
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4783.4150390625,
+  targetY: 2726.781005859375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 5000
+Game Clock: 0:5
+========================================================================
+unit move info - time: 0.9041696001906729 dist: 244.12579205148168
+removed 1 events
+========================================================================
+ActionName: ChooseBuilding PID: 1
+Action: { actionId: 103 }
+Game Timer: 5000
+Game Clock: 0:5
+========================================================================
+1 *** setting build menu OPEN
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 4,
+  itemId: 'etae',
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4768,
+  targetY: 2720 }
+Game Timer: 5300
+Game Clock: 0:5
+========================================================================
+ability unitInfo:  { displayName: 'Altar of Elders',
+  isBuilding: true,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: true,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+ability not item arraay
+menu open:  is open
+first unit is:  Wisp
+selection is:  [ 'Wisp', [length]: 1 ]
+raw selection:  SubGroup {
+  numberUnits: 1,
+  units:
+   [ { itemId1: [ 67, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 70, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ],
+  hasUnregisteredUnit: true }
+raw selection:  [ { itemId1: [ 67, 63, 0, 0, [length]: 4 ],
+    itemId2: [ 70, 63, 0, 0, [length]: 4 ] },
+  [length]: 1 ]
+Unregistered unit used ability. Check if worker building.
+Found a possible building:  Altar of Elders
+worker units:  [ 'itemId1: 67,63,0,0 id2: 70,63,0,0',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  'itemId1: null id2: null',
+  [length]: 5 ]
+has worker in group
+checking backfill:  Altar of Elders
+poss len:  0
+poss len after:  0
+moving unit to build: eate Altar of Elders 4768 2720
+builder unit: Wisp
+unit move info - time: 0.06237255535929021 dist: 16.840589947008358
+1 *** setting build menu CLOSED
+building callback: eate
+1 unit finished moving to building, now building:  Altar of Elders
+player units for id:  1
+[ 'Altar of Elders - [null, null] null, null',
+  'Tree of Life - [null, null] null, null',
+  'Wisp - [16195, 16198] 67,63,0,0, 70,63,0,0',
+  'Wisp - [null, null] null, null',
+  'Wisp - [null, null] null, null',
+  'Wisp - [null, null] null, null',
+  'Wisp - [null, null] null, null',
+  [length]: 7 ]
+removed 1 events
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 67, 63, 0, 0, [length]: 4 ],
+       itemId2: [ 70, 63, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 12197
+Game Clock: 0:12
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 16, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -12, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 12197
+Game Clock: 0:12
+========================================================================
+adding to possibleSelectList: [ 16, 62, 0, 0, [length]: 4 ] [ -12, 67, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 12197
+Game Clock: 0:12
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'etae',
+  objectId1: 15888,
+  objectId2: 17396 }
+Game Timer: 12197
+Game Clock: 0:12
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 16, 62, 0, 0, [length]: 4 ] [ -12, 67, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 16, 62, 0, 0, [length]: 4 ] [ -12, 67, 0, 0, [length]: 4 ]
+first unit is:  Altar of Elders eate
+-----------------------------------------------------
+printing unit data:
+ * display name:  Altar of Elders
+ * uuid:          c82cf001-f2ce-4096-ba3e-185032053b13
+ * itemId:        eate
+ * itemId1:       [ 16, 62, 0, 0, [length]: 4 ]
+ * itemId2:       [ -12, 67, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 15888 17396
+is firstGroupUnit found for tab check: yes
+no building upgrade found eate eate
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  eate
+new itemIds:  [ 16, 62, 0, 0, [length]: 4 ] [ -12, 67, 0, 0, [length]: 4 ]
+new objIds:  15888 17396
+setting fully registered unit c82cf001-f2ce-4096-ba3e-185032053b13
+unit reg: [ 16, 62, 0, 0, [length]: 4 ] [ -12, 67, 0, 0, [length]: 4 ] 15888 17396
+unit reg objectIds: 15888 17396
+checking backfill:  Altar of Elders
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 70,
+  itemId: 'eekE',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 14097
+Game Clock: 0:14
+========================================================================
+First unit:  Altar of Elders
+current selection units:  [ '16,62,0,0, -12,67,0,0 [15888, 17396] - Altar of Elders',
+  [length]: 1 ]
+1 Making a hero.
+1 Gave first hero a TP item.
+put hero Keeper of the Grove item Scroll of Town Portal in slot 1
+setting unit spawn pos: 4768 2720
+1 Making trained unit:  Keeper of the Grove
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 16, 62, 0, 0, [length]: 4 ],
+       itemId2: [ -12, 67, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 18297
+Game Clock: 0:18
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 60, 60, 0, 0, [length]: 4 ],
+       itemId2: [ -46, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 18297
+Game Clock: 0:18
+========================================================================
+adding to possibleSelectList: [ 60, 60, 0, 0, [length]: 4 ] [ -46, 73, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 18297
+Game Clock: 0:18
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'eekE',
+  objectId1: 15420,
+  objectId2: 18898 }
+Game Timer: 18297
+Game Clock: 0:18
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 60, 60, 0, 0, [length]: 4 ] [ -46, 73, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 60, 60, 0, 0, [length]: 4 ] [ -46, 73, 0, 0, [length]: 4 ]
+first unit is:  Keeper of the Grove Ekee
+-----------------------------------------------------
+printing unit data:
+ * display name:  Keeper of the Grove
+ * uuid:          e9bac52e-2cfc-4d15-b81a-510eff4b7fc4
+ * itemId:        Ekee
+ * itemId1:       [ 60, 60, 0, 0, [length]: 4 ]
+ * itemId2:       [ -46, 73, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      1
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 15420 18898
+is firstGroupUnit found for tab check: yes
+no building upgrade found Ekee Ekee
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  Ekee
+new itemIds:  [ 60, 60, 0, 0, [length]: 4 ] [ -46, 73, 0, 0, [length]: 4 ]
+new objIds:  15420 18898
+setting fully registered unit e9bac52e-2cfc-4d15-b81a-510eff4b7fc4
+unit reg: [ 60, 60, 0, 0, [length]: 4 ] [ -46, 73, 0, 0, [length]: 4 ] 15420 18898
+unit reg objectIds: 15420 18898
+checking backfill:  Keeper of the Grove
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4662.29296875,
+  targetY: 2248.84912109375,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 19097
+Game Clock: 0:19
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 1.9314538654591586 dist: 482.86346636478964
+========================================================================
+ActionName: SelectHeroSkill PID: 1
+Action: { actionId: 102 }
+Game Timer: 19897
+Game Clock: 0:19
+========================================================================
+removed 1 events
+========================================================================
+ActionName: UseAbilityNoTarget PID: 1
+Action: { actionId: 16,
+  abilityFlags: 66,
+  itemId: 'nfEA',
+  unknownA: -1,
+  unknownB: -1 }
+Game Timer: 21997
+Game Clock: 0:21
+========================================================================
+First unit:  Keeper of the Grove
+current selection units:  [ '60,60,0,0, -46,73,0,0 [15420, 18898] - Keeper of the Grove',
+  [length]: 1 ]
+hero doing ability with no target
+%% Learned spell:  { displayName: 'Force of Nature',
+  type: 'summon',
+  summonCount: 2,
+  summonItemId: 'efon',
+  level: 1 }
+1 Hero leveled up:  Keeper of the Grove 1
+========================================================================
+ActionName: UseAbilityWithTarget PID: 1
+Action: { actionId: 17,
+  abilityFlags: 68,
+  itemId: [ 208, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4989.1845703125,
+  targetY: 2121.75244140625 }
+Game Timer: 23897
+Game Clock: 0:23
+========================================================================
+ability unitInfo:  { displayName: 'Unknown (208,0,13,0)',
+  isBuilding: false,
+  isUnit: false,
+  isItem: false,
+  meta:
+   { hero: false,
+     worker: false,
+     permanent: false,
+     playerShop: false,
+     evolution: null,
+     movespeed: 200 } }
+Use ability with target item array.
+maybe action name:  SummonTreants
+summon treant detected
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 60, 60, 0, 0, [length]: 4 ],
+       itemId2: [ -46, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 35697
+Game Clock: 0:35
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 2,
+  actions:
+   [ { itemId1: [ 24, 37, 0, 0, [length]: 4 ],
+       itemId2: [ -90, 75, 0, 0, [length]: 4 ] },
+     { itemId1: [ 57, 60, 0, 0, [length]: 4 ],
+       itemId2: [ -73, 75, 0, 0, [length]: 4 ] },
+     [length]: 2 ] }
+Game Timer: 35697
+Game Clock: 0:35
+========================================================================
+adding to possibleSelectList: [ 24, 37, 0, 0, [length]: 4 ] [ -90, 75, 0, 0, [length]: 4 ]
+adding to possibleSelectList: [ 57, 60, 0, 0, [length]: 4 ] [ -73, 75, 0, 0, [length]: 4 ]
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 35697
+Game Clock: 0:35
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'nofe',
+  objectId1: 9496,
+  objectId2: 19366 }
+Game Timer: 35697
+Game Clock: 0:35
+========================================================================
+about to check assignPossibleSelectGroup
+assign calling registerItemIds: [ 24, 37, 0, 0, [length]: 4 ] [ -90, 75, 0, 0, [length]: 4 ]
+assign calling registerItemIds: [ 57, 60, 0, 0, [length]: 4 ] [ -73, 75, 0, 0, [length]: 4 ]
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 24, 37, 0, 0, [length]: 4 ] [ -90, 75, 0, 0, [length]: 4 ]
+first unit is:  Treant efon
+-----------------------------------------------------
+printing unit data:
+ * display name:  Treant
+ * uuid:          4634a3aa-985c-4aaa-87b7-8054e28dc107
+ * itemId:        efon
+ * itemId1:       [ 24, 37, 0, 0, [length]: 4 ]
+ * itemId2:       [ -90, 75, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  no
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 9496 19366
+is firstGroupUnit found for tab check: yes
+no building upgrade found efon efon
+calling registerSubGroupFocusUnit, is reg: no
+Registering unit:  efon
+new itemIds:  [ 24, 37, 0, 0, [length]: 4 ] [ -90, 75, 0, 0, [length]: 4 ]
+new objIds:  9496 19366
+setting fully registered unit 4634a3aa-985c-4aaa-87b7-8054e28dc107
+unit reg: [ 24, 37, 0, 0, [length]: 4 ] [ -90, 75, 0, 0, [length]: 4 ] 9496 19366
+unit reg objectIds: 9496 19366
+checking backfill:  Treant
+poss len:  0
+poss len after:  0
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 24,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4340.98291015625,
+  targetY: 2205.657470703125,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 39097
+Game Clock: 0:39
+========================================================================
+unit move info - time: 24.34597374533268 dist: 4869.194749066536
+unit move info - time: 24.34597374533268 dist: 4869.194749066536
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 2,
+  numberUnits: 2,
+  actions:
+   [ { itemId1: [ 24, 37, 0, 0, [length]: 4 ],
+       itemId2: [ -90, 75, 0, 0, [length]: 4 ] },
+     { itemId1: [ 57, 60, 0, 0, [length]: 4 ],
+       itemId2: [ -73, 75, 0, 0, [length]: 4 ] },
+     [length]: 2 ] }
+Game Timer: 45092
+Game Clock: 0:45
+========================================================================
+========================================================================
+ActionName: ChangeSelection PID: 1
+Action: { actionId: 22,
+  selectMode: 1,
+  numberUnits: 1,
+  actions:
+   [ { itemId1: [ 60, 60, 0, 0, [length]: 4 ],
+       itemId2: [ -46, 73, 0, 0, [length]: 4 ] },
+     [length]: 1 ] }
+Game Timer: 45092
+Game Clock: 0:45
+========================================================================
+========================================================================
+ActionName: UpdateSubgroup PID: 1
+Action: { actionId: 26 }
+Game Timer: 45092
+Game Clock: 0:45
+========================================================================
+========================================================================
+ActionName: SelectSubgroup PID: 1
+Action: { actionId: 25,
+  itemId: 'eekE',
+  objectId1: 15420,
+  objectId2: 18898 }
+Game Timer: 45092
+Game Clock: 0:45
+========================================================================
+about to check assignPossibleSelectGroup
+about to check firstGroupUnit
+jeff first group unit found unit at: [ 60, 60, 0, 0, [length]: 4 ] [ -46, 73, 0, 0, [length]: 4 ]
+first unit is:  Keeper of the Grove Ekee
+-----------------------------------------------------
+printing unit data:
+ * display name:  Keeper of the Grove
+ * uuid:          e9bac52e-2cfc-4d15-b81a-510eff4b7fc4
+ * itemId:        Ekee
+ * itemId1:       [ 60, 60, 0, 0, [length]: 4 ]
+ * itemId2:       [ -46, 73, 0, 0, [length]: 4 ]
+ * objectId1:     15420
+ * objectId2:     18898
+ * registered:    yes
+ * path len:      2
+ * spawnAtStart:  no
+items:         [ '[1] - Scroll of Town Portal', [length]: 1 ]
+-----------------------------------------------------
+first is reg:  yes
+both first group unit and knownUnitByObjectIds
+same uuid for first and knownUnitByObjectIds
+========================================================================
+ActionName: UseAbilityWithTargetAndObjectId PID: 1
+Action: { actionId: 18,
+  abilityFlags: 0,
+  itemId: [ 3, 0, 13, 0, [length]: 4 ],
+  unknownA: -1,
+  unknownB: -1,
+  targetX: 4727.83349609375,
+  targetY: 1951.3114013671875,
+  objectId1: -1,
+  objectId2: -1 }
+Game Timer: 45592
+Game Clock: 0:45
+========================================================================
+moving hero fronted unit group from ground right click
+unit move info - time: 1.2186829309353884 dist: 304.6707327338471
+removed 1 events
+========================================================================
+ActionName: Pause PID: 1
+Action: { actionId: 1 }
+Game Timer: 48694
+Game Clock: 0:48
+========================================================================
+created wc3v file:  ./client/replays/test-treants.w3g.wc3v
+************************************
+Inspecting player: 1
+Unit count: 10
+Unregistered units: 4
+************************************
+wc3v completed.  enjoy!
