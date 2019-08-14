@@ -38,6 +38,28 @@ const isEqualUnitItemId = (unitA, unitB) => {
 };
 
 ////
+// helper to check if a given unit is in a list
+////
+
+const isUnitInList = (data, unit) => {
+  return data.find(item => {
+    const listUnit = { itemId1: item.itemId1, itemId2: item.itemId2 };
+
+    return isEqualUnitItemId(unit, listUnit);
+  });
+}
+
+////
+// helper to check if a given itemId is in a list
+////
+
+const isItemIdInList = (data, itemId1, itemId2) => {
+  const unit = { itemId1, itemId2 };
+
+  return isUnitInList(data, unit);
+}
+
+////
 // the replay parsing engine returns the itemId (string) backwards
 ////
 
@@ -202,6 +224,8 @@ module.exports = {
 	fixItemId: fixItemId,
 	isEqualItemId: isEqualItemId,
   isEqualUnitItemId: isEqualUnitItemId,
+  isUnitInList: isUnitInList,
+  isItemIdInList: isItemIdInList,
 	findItemIdForObject: findItemIdForObject,
   getDecimalPortion: getDecimalPortion,
 	distance: distance,
