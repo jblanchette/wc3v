@@ -1,0 +1,1034 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": -5184,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Altar of Storms",
+                    "itemId": "oalt",
+                    "itemId1": "31,52,0,0",
+                    "itemId2": "21,57,0,0",
+                    "objectId1": 13343,
+                    "objectId2": 14613,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -7712,
+                        "y": 2016
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Barracks",
+                    "itemId": "obar",
+                    "itemId1": "-56,51,0,0",
+                    "itemId2": "22,59,0,0",
+                    "objectId1": 13256,
+                    "objectId2": 15126,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -8512,
+                        "y": 2240
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Far Seer",
+                    "itemId": "Ofar",
+                    "itemId1": "45,49,0,0",
+                    "itemId2": "124,63,0,0",
+                    "objectId1": 12589,
+                    "objectId2": 16252,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 1,
+                    "lastPosition": {
+                        "x": -9132.943359375,
+                        "y": 1105.53076171875
+                    },
+                    "path": [
+                        {
+                            "x": -7712,
+                            "y": 2016
+                        },
+                        {
+                            "x": -8122.85,
+                            "y": 1180.56
+                        },
+                        {
+                            "x": -8529.83,
+                            "y": 1242.27
+                        },
+                        {
+                            "x": -9132.94,
+                            "y": 1105.53
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 3.7,
+                            "distance": 925,
+                            "startX": -7712,
+                            "startY": 2016,
+                            "targetX": -8122.85,
+                            "targetY": 1180.56,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 931,
+                            "pathTime": 3.72,
+                            "xVelocity": 110.33,
+                            "yVelocity": 224.34,
+                            "timerData": {
+                                "startTime": 25599,
+                                "endTime": 29322.998940919937,
+                                "runLength": 3723.9989409199366,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.6,
+                            "distance": 400,
+                            "startX": -8122.85,
+                            "startY": 1180.56,
+                            "targetX": -8529.83,
+                            "targetY": 1242.27,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 411.63,
+                            "pathTime": 1.65,
+                            "xVelocity": 247.17,
+                            "yVelocity": 37.48,
+                            "timerData": {
+                                "startTime": 30299,
+                                "endTime": 31945.50842117232,
+                                "runLength": 1646.5084211723192,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 2.4,
+                            "distance": 600,
+                            "startX": -8529.83,
+                            "startY": 1242.27,
+                            "targetX": -9132.94,
+                            "targetY": 1105.53,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 618.42,
+                            "pathTime": 2.47,
+                            "xVelocity": 243.81,
+                            "yVelocity": 55.28,
+                            "timerData": {
+                                "startTime": 48201,
+                                "endTime": 50674.69050712502,
+                                "runLength": 2473.6905071250194,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Far Seer",
+                        "hero": true,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false
+                    },
+                    "items": [
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
+                    ]
+                },
+                {
+                    "displayName": "Great Hall",
+                    "itemId": "ogre",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Grunt",
+                    "itemId": "ogru",
+                    "itemId1": "-97,46,0,0",
+                    "itemId2": "-26,63,0,0",
+                    "objectId1": 11935,
+                    "objectId2": 16358,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -9132.943359375,
+                        "y": 1105.53076171875
+                    },
+                    "path": [
+                        {
+                            "x": -8512,
+                            "y": 2240
+                        },
+                        {
+                            "x": -8200.18,
+                            "y": 1316.71
+                        },
+                        {
+                            "x": -8529.83,
+                            "y": 1242.27
+                        },
+                        {
+                            "x": -9132.94,
+                            "y": 1105.53
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 4.8,
+                            "distance": 960,
+                            "startX": -8512,
+                            "startY": 2240,
+                            "targetX": -8200.18,
+                            "targetY": 1316.71,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 974.52,
+                            "pathTime": 4.87,
+                            "xVelocity": 63.99,
+                            "yVelocity": 189.49,
+                            "timerData": {
+                                "startTime": 24199,
+                                "endTime": 29071.620308860307,
+                                "runLength": 4872.620308860305,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.6,
+                            "distance": 320,
+                            "startX": -8200.18,
+                            "startY": 1316.71,
+                            "targetX": -8529.83,
+                            "targetY": 1242.27,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 337.95,
+                            "pathTime": 1.69,
+                            "xVelocity": 195.09,
+                            "yVelocity": 44.05,
+                            "timerData": {
+                                "startTime": 30299,
+                                "endTime": 31988.73470910867,
+                                "runLength": 1689.7347091086694,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 3,
+                            "distance": 600,
+                            "startX": -8529.83,
+                            "startY": 1242.27,
+                            "targetX": -9132.94,
+                            "targetY": 1105.53,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 618.42,
+                            "pathTime": 3.09,
+                            "xVelocity": 195.05,
+                            "yVelocity": 44.22,
+                            "timerData": {
+                                "startTime": 48201,
+                                "endTime": 51293.11313390628,
+                                "runLength": 3092.1131339062745,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Orc Burrow",
+                    "itemId": "otrb",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -8032,
+                        "y": 2080
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": "-122,50,0,0",
+                    "itemId2": "-122,50,0,0",
+                    "objectId1": 12934,
+                    "objectId2": 12934,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -9132.943359375,
+                        "y": 1105.53076171875
+                    },
+                    "path": [
+                        {
+                            "x": -8032,
+                            "y": 2080
+                        },
+                        {
+                            "x": -8077.4,
+                            "y": 1534.18
+                        },
+                        {
+                            "x": -8529.83,
+                            "y": 1242.27
+                        },
+                        {
+                            "x": -9132.94,
+                            "y": 1105.53
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -8032,
+                            "targetY": 2080,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 2976.17,
+                            "pathTime": 15.66,
+                            "xVelocity": 181.82,
+                            "yVelocity": 55.16,
+                            "timerData": {
+                                "startTime": 13301,
+                                "endTime": 13301,
+                                "runLength": 15664.063358095389,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 2.8,
+                            "distance": 531.81,
+                            "startX": -8032,
+                            "startY": 2080,
+                            "targetX": -8077.4,
+                            "targetY": 1534.18,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 547.7,
+                            "pathTime": 2.88,
+                            "xVelocity": 15.75,
+                            "yVelocity": 189.35,
+                            "timerData": {
+                                "startTime": 19100,
+                                "endTime": 21982.636651797853,
+                                "runLength": 2882.636651797852,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 2.8,
+                            "distance": 532,
+                            "startX": -8077.4,
+                            "startY": 1534.18,
+                            "targetX": -8529.83,
+                            "targetY": 1242.27,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 538.43,
+                            "pathTime": 2.83,
+                            "xVelocity": 159.65,
+                            "yVelocity": 103.01,
+                            "timerData": {
+                                "startTime": 30299,
+                                "endTime": 33132.83968931274,
+                                "runLength": 2833.83968931274,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 3.2,
+                            "distance": 608,
+                            "startX": -8529.83,
+                            "startY": 1242.27,
+                            "targetX": -9132.94,
+                            "targetY": 1105.53,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 618.42,
+                            "pathTime": 3.25,
+                            "xVelocity": 185.3,
+                            "yVelocity": 42.01,
+                            "timerData": {
+                                "startTime": 48201,
+                                "endTime": 51455.85593042766,
+                                "runLength": 3254.8559304276573,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": "-56,50,0,0",
+                    "itemId2": "-56,50,0,0",
+                    "objectId1": 13000,
+                    "objectId2": 13000,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -7712,
+                        "y": 2016
+                    },
+                    "path": [
+                        {
+                            "x": -7732.9,
+                            "y": 1988.28
+                        },
+                        {
+                            "x": -7712,
+                            "y": 2016
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -7732.9,
+                            "targetY": 1988.28,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 2722.18,
+                            "pathTime": 14.33,
+                            "xVelocity": 177.91,
+                            "yVelocity": 66.71,
+                            "timerData": {
+                                "startTime": 7100,
+                                "endTime": 7100,
+                                "runLength": 14327.28162106846,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.1,
+                            "distance": 19,
+                            "startX": -7732.9,
+                            "startY": 1988.28,
+                            "targetX": -7712,
+                            "targetY": 2016,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 34.72,
+                            "pathTime": 0.18,
+                            "xVelocity": 114.38,
+                            "yVelocity": 151.72,
+                            "timerData": {
+                                "startTime": 7400,
+                                "endTime": 7582.713346708261,
+                                "runLength": 182.71334670826084,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Peon",
+                    "itemId": "opeo",
+                    "itemId1": "-100,50,0,0",
+                    "itemId2": "-100,50,0,0",
+                    "objectId1": 12956,
+                    "objectId2": 12956,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -9132.943359375,
+                        "y": 1105.53076171875
+                    },
+                    "path": [
+                        {
+                            "x": -8512,
+                            "y": 2240
+                        },
+                        {
+                            "x": -8179.86,
+                            "y": 1397.94
+                        },
+                        {
+                            "x": -8529.83,
+                            "y": 1242.27
+                        },
+                        {
+                            "x": -9132.94,
+                            "y": 1105.53
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -8512,
+                            "targetY": 2240,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 3401.65,
+                            "pathTime": 17.9,
+                            "xVelocity": 185.89,
+                            "yVelocity": 39.32,
+                            "timerData": {
+                                "startTime": 9901,
+                                "endTime": 9901,
+                                "runLength": 17903.40347407941,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 4.7,
+                            "distance": 892.62,
+                            "startX": -8512,
+                            "startY": 2240,
+                            "targetX": -8179.86,
+                            "targetY": 1397.94,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 905.19,
+                            "pathTime": 4.76,
+                            "xVelocity": 69.72,
+                            "yVelocity": 176.75,
+                            "timerData": {
+                                "startTime": 20401,
+                                "endTime": 25165.17934614748,
+                                "runLength": 4764.179346147481,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 2,
+                            "distance": 380,
+                            "startX": -8179.86,
+                            "startY": 1397.94,
+                            "targetX": -8529.83,
+                            "targetY": 1242.27,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 383.03,
+                            "pathTime": 2.02,
+                            "xVelocity": 173.6,
+                            "yVelocity": 77.22,
+                            "timerData": {
+                                "startTime": 30299,
+                                "endTime": 32314.951222674652,
+                                "runLength": 2015.9512226746506,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 3.2,
+                            "distance": 608,
+                            "startX": -8529.83,
+                            "startY": 1242.27,
+                            "targetX": -9132.94,
+                            "targetY": 1105.53,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 618.42,
+                            "pathTime": 3.25,
+                            "xVelocity": 185.3,
+                            "yVelocity": 42.01,
+                            "timerData": {
+                                "startTime": 48201,
+                                "endTime": 51455.85593042766,
+                                "runLength": 3254.8559304276573,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Peon",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "O",
+                        "movespeed": 190
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Spirit Wolf (lvl 1)",
+                    "itemId": "osw1",
+                    "itemId1": "19,43,0,0",
+                    "itemId2": "17,77,0,0",
+                    "objectId1": 11027,
+                    "objectId2": 19729,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -2629.318879997503,
+                        "y": 393.9776510810248
+                    },
+                    "path": [
+                        {
+                            "x": -1516.16,
+                            "y": 272.19
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 7.7,
+                            "distance": 1540.4,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": -8717.45,
+                            "targetY": 1565,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 8856.81,
+                            "pathTime": 44.28,
+                            "xVelocity": 196.85,
+                            "yVelocity": 35.34,
+                            "timerData": {
+                                "startTime": 40499,
+                                "endTime": 48201,
+                                "runLength": 44284.06100389307,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Spirit Wolf (lvl 1)",
+                    "itemId": "osw1",
+                    "itemId1": "77,53,0,0",
+                    "itemId2": "34,77,0,0",
+                    "objectId1": 13645,
+                    "objectId2": 19746,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -2078.789148353,
+                        "y": 292.3933871742758
+                    },
+                    "path": [
+                        {
+                            "x": -966.36,
+                            "y": 164.16
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 4.9,
+                            "distance": 980.2,
+                            "startX": 0,
+                            "startY": 0,
+                            "targetX": -8873.49,
+                            "targetY": 1507.41,
+                            "xDirection": -1,
+                            "yDirection": 1,
+                            "pathDistance": 9000.62,
+                            "pathTime": 45,
+                            "xVelocity": 197.18,
+                            "yVelocity": 33.5,
+                            "timerData": {
+                                "startTime": 43300,
+                                "endTime": 48201,
+                                "runLength": 45003.091405377614,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "ba00d1e821539549f9a4dee283fc829234f4b0413cac85f079b46c8d46e63304",
+        "gamename": "Local Game",
+        "randomseed": 344687338,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "OvR",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/(2)bootybay.w3m",
+            "file": "Maps/(2)bootybay.w3m",
+            "checksum": "b027c842"
+        },
+        "version": "1.10031",
+        "duration": 52725,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "O",
+                "raceDetected": "O",
+                "units": {
+                    "summary": {
+                        "ogru": 1
+                    },
+                    "order": [
+                        {
+                            "id": "ogru",
+                            "ms": 17800
+                        }
+                    ]
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "oalt": 1,
+                        "obar": 1,
+                        "otrb": 1
+                    },
+                    "order": [
+                        {
+                            "id": "oalt",
+                            "ms": 7400
+                        },
+                        {
+                            "id": "obar",
+                            "ms": 9901
+                        },
+                        {
+                            "id": "otrb",
+                            "ms": 13301
+                        }
+                    ]
+                },
+                "heroes": [
+                    {
+                        "level": 1,
+                        "abilities": {
+                            "AOsf": 1
+                        },
+                        "id": "Ofar"
+                    }
+                ],
+                "heroCollector": {
+                    "Ofar": {
+                        "level": 1,
+                        "abilities": {
+                            "AOsf": 1
+                        },
+                        "id": "Ofar"
+                    }
+                },
+                "heroSkills": {
+                    "AOsf": 1
+                },
+                "heroCount": 1,
+                "actions": {
+                    "timed": [
+                        37
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 11,
+                    "basic": 0,
+                    "buildtrain": 4,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 14,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 52701,
+                "apm": 37
+            }
+        }
+    }
+}

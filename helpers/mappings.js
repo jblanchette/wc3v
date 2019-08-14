@@ -1045,12 +1045,13 @@ const heroAbilities = {
         'type': 'summon',
         'summonCount': 2,
         'summonDuration': 60,
+        'summonUnique': true,
         'summonItemId': ['osw1', 'osw2', 'osw3']
     },
     'AOeq': { 'displayName': 'Earth Quake'},
     'AOsh': { 'displayName': 'Shockwave'},
     'AOae': { 'displayName': 'Endurance Aura'},
-    'AOws': { 'displayName': 'War Stomp'},
+    'AOws': { 'displayName': 'War Stomp', 'type': 'summon', 'summonCount': 0, 'summonItemId': 'none'},
     'AOre': { 'displayName': 'Reincarnation'},
     'AOhw': { 'displayName': 'Healing Wave'},
     'AOhx': { 'displayName': 'Hex'},
@@ -1129,6 +1130,7 @@ const specialBuildings = {
     'merchant': 'nmer',
     'tavern': 'ntav',
     'goldmine':'ngol',
+    'neutralShop': 'ngme',
     'playerShops': {
         'U': 'utom',
         'O': 'ovln',
@@ -1159,12 +1161,12 @@ const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
 }, {});
 
 const abilityActions = {
-	'RightClick': [3, 0, 13, 0],
+	'RightClick': [ 3, 0, 13, 0 ],
     'AttackCommand': [ 15, 0, 13, 0 ],
     'MoveCommand': [ 18, 0, 13, 0 ],
-	'CastSkillObject': [-105, 0, 13, 0],
-	'CastSkillTarget': [154, 0, 13, 0],
-	'CastSummonSkill': [158, 0, 13, 0],
+	'CastSkillObject': [ -105, 0, 13, 0 ],
+	'CastSkillTarget': [ 154, 0, 13, 0 ],
+	'CastSummonSkill': [ 158, 0, 13, 0 ],
     'CastSummonSkillNoTarget': [ 74, 2, 13, 0 ],
     'UnsummonBuilding': [ -14, 0, 13, 0 ],
     'HeroItem1': [ 40, 0, 13, 0 ],
@@ -1188,6 +1190,10 @@ const abilityActions = {
 };
 
 const mapStartPositions = {
+    '(2)bootybay.w3m': {
+        '0': { x: -5184.0, y: 2944.0 },
+        '1': { x: 4672.0, y: 2944.0 }
+    },
 	'(2)echoisles.w3x': {
 		'0': { x: -5184.0, y: 2944.0 },
 		'1': { x: 4672.0, y: 2944.0 }
@@ -1218,7 +1224,7 @@ const itemAbilityData = {
     'rnec': { 
         'ability': 0x10,
         'type': 'summon',
-        'uses': 2,
+        'uses': 4,
         'stockCount': 1,
         'stockReplenish': 60,
         'cooldown': 22,
