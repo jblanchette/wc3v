@@ -1,0 +1,465 @@
+{
+    "players": {
+        "1": {
+            "startingPosition": {
+                "x": -5184,
+                "y": 2944
+            },
+            "units": [
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "68,63,0,0",
+                    "itemId2": "74,63,0,0",
+                    "objectId1": 16196,
+                    "objectId2": 16202,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4767.57666015625,
+                        "y": 2666.352294921875
+                    },
+                    "path": [
+                        {
+                            "x": -4768.02,
+                            "y": 3148.16
+                        },
+                        {
+                            "x": -4736,
+                            "y": 3072
+                        },
+                        {
+                            "x": -4767.58,
+                            "y": 2666.35
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -4768.02,
+                            "targetY": 3148.16,
+                            "xDirection": 1,
+                            "yDirection": 1,
+                            "pathDistance": 463.38,
+                            "pathTime": 1.97,
+                            "xVelocity": 210.96,
+                            "yVelocity": 103.54,
+                            "timerData": {
+                                "startTime": 3700,
+                                "endTime": 3700,
+                                "runLength": 1971.846520396235,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 0.3,
+                            "distance": 70.5,
+                            "startX": -4768.02,
+                            "startY": 3148.16,
+                            "targetX": -4736,
+                            "targetY": 3072,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 82.62,
+                            "pathTime": 0.35,
+                            "xVelocity": 91.07,
+                            "yVelocity": 216.64,
+                            "timerData": {
+                                "startTime": 6700,
+                                "endTime": 7051.559449182193,
+                                "runLength": 351.5594491821928,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 1.7,
+                            "distance": 399.5,
+                            "startX": -4736,
+                            "startY": 3072,
+                            "targetX": -4767.58,
+                            "targetY": 2666.35,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 406.87,
+                            "pathTime": 1.73,
+                            "xVelocity": 18.24,
+                            "yVelocity": 234.29,
+                            "timerData": {
+                                "startTime": 19300,
+                                "endTime": 21031.382353703964,
+                                "runLength": 1731.3823537039643,
+                                "completed": true,
+                                "cancelled": false
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": "-63,63,0,0",
+                    "itemId2": "71,78,0,0",
+                    "objectId1": 16321,
+                    "objectId2": 20039,
+                    "isRegistered": true,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4875.38720703125,
+                        "y": 2581.4189453125
+                    },
+                    "path": [
+                        {
+                            "x": -4875.39,
+                            "y": 2581.42
+                        }
+                    ],
+                    "moveHistory": [
+                        {
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
+                            "targetX": -4875.39,
+                            "targetY": 2581.42,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 476.14,
+                            "pathTime": 2.03,
+                            "xVelocity": 152.32,
+                            "yVelocity": 178.95,
+                            "timerData": {
+                                "startTime": 48800,
+                                "endTime": 48800,
+                                "runLength": 2026.1168349189336,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        }
+                    ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Crypt",
+                    "itemId": "usep",
+                    "itemId1": "77,64,0,0",
+                    "itemId2": "0,68,0,0",
+                    "objectId1": 16461,
+                    "objectId2": 17408,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4736,
+                        "y": 3072
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ghoul",
+                    "itemId": "ugho",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": "-84,62,0,0",
+                    "itemId2": "-84,62,0,0",
+                    "objectId1": 16044,
+                    "objectId2": 16044,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [
+                        {
+                            "x": -5184,
+                            "y": 2944
+                        }
+                    ],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                }
+            ]
+        }
+    },
+    "replay": {
+        "id": "8d436a4b31cbfbc5d259f4fd07ee8869f760c88ceece46faba6e52575c708112",
+        "gamename": "Local Game",
+        "randomseed": 230992,
+        "startSpots": 2,
+        "observers": [],
+        "matchup": "RvU",
+        "creator": "jblanch",
+        "type": "1on1",
+        "chat": [],
+        "apm": {
+            "trackingInterval": 60000
+        },
+        "map": {
+            "path": "Maps/frozenthrone/(2)echoisles.w3x",
+            "file": "Maps/frozenthrone/(2)echoisles.w3x",
+            "checksum": "a636fc12"
+        },
+        "version": "1.10031",
+        "duration": 51225,
+        "expansion": true,
+        "settings": {
+            "referees": false,
+            "fixedTeams": false,
+            "fullSharedUnitControl": false,
+            "alwaysVisible": false,
+            "hideTerrain": false,
+            "mapExplored": true,
+            "teamsTogether": false,
+            "randomHero": false,
+            "randomRaces": false,
+            "speed": 2
+        },
+        "players": {
+            "0": {
+                "id": 0,
+                "name": "Computer",
+                "teamid": 1,
+                "color": "#0000FF",
+                "race": "R",
+                "raceDetected": "",
+                "units": {
+                    "summary": {},
+                    "order": []
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {},
+                    "order": []
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        0
+                    ],
+                    "assigngroup": 0,
+                    "rightclick": 0,
+                    "basic": 0,
+                    "buildtrain": 0,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 0,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 0,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 0,
+                "apm": 0
+            },
+            "1": {
+                "id": 1,
+                "name": "jblanch",
+                "teamid": 0,
+                "color": "#ff0000",
+                "race": "U",
+                "raceDetected": "U",
+                "units": {
+                    "summary": {
+                        "uaco": 1
+                    },
+                    "order": [
+                        {
+                            "id": "uaco",
+                            "ms": 41000
+                        }
+                    ]
+                },
+                "upgrades": {
+                    "summary": {},
+                    "order": []
+                },
+                "items": {
+                    "summary": {},
+                    "order": []
+                },
+                "buildings": {
+                    "summary": {
+                        "usep": 1
+                    },
+                    "order": [
+                        {
+                            "id": "usep",
+                            "ms": 6700
+                        }
+                    ]
+                },
+                "heroes": [],
+                "heroCollector": {},
+                "heroSkills": {},
+                "heroCount": 0,
+                "actions": {
+                    "timed": [
+                        15
+                    ],
+                    "assigngroup": 1,
+                    "rightclick": 3,
+                    "basic": 0,
+                    "buildtrain": 1,
+                    "ability": 0,
+                    "item": 0,
+                    "select": 7,
+                    "removeunit": 0,
+                    "subgroup": 0,
+                    "selecthotkey": 1,
+                    "esc": 0
+                },
+                "_lastActionWasDeselect": false,
+                "currentTimePlayed": 51200,
+                "apm": 15
+            }
+        }
+    }
+}
