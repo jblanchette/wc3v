@@ -24,6 +24,7 @@ html, body {
 }
 
 #input-map-file {
+  font-size: 18px;
   width: 400px;
   text-align: center;
 }
@@ -72,3 +73,5 @@ html, body {
 #unit-list li:hover {
   text-decoration: none;
 }
+
+
