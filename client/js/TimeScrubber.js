@@ -50,7 +50,9 @@ const TimeScrubber = class {
     this.domEl.setAttribute("id", `${this.wrapperId}-scrubber`);
     this.domEl.className = "time-scrubber";
 
-    this.domEl.innerHTML = `<div class="time-scrubber-track">
+    this.domEl.innerHTML = `
+    <div id="${this.wrapperId}-play" class="time-scrubber-control play-button"></div>
+    <div class="time-scrubber-track">
       <div id="${this.wrapperId}-tracker"></div>
     </div>`;
 
