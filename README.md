@@ -42,35 +42,36 @@ to run wc3v in testing mode against a set of known test maps, run:
 
 `node wc3v.js --test`
 
-Example output:
+Latest test output:
 
 ```
 user args:  [ '--test' ]
-parse: 1017.427ms
+parse: 940.131ms
 TEST PASSED:  ./replays/happy-vs-grubby.w3g
-No potential items to drop.
-TEST FAILED:  ./replays/happy-vs-lucifer.w3g
+parse: 2429.193ms
+TEST PASSED:  ./replays/happy-vs-lucifer.w3g
 TEST FAILED:  ./replays/cash-vs-foggy.w3g
-parse: 467.348ms
+parse: 456.645ms
 TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
-parse: 1605.342ms
+parse: 1398.697ms
 TEST PASSED:  ./replays/crow-vs-john.w3g
 TEST FAILED:  ./replays/chae-vs-hawk.w3g
-parse: 5.086ms
+parse: 5.388ms
 TEST PASSED:  ./replays/test-hero-revive.w3g
-parse: 9.522ms
-TEST PASSED:  ./replays/test-hero-revive-2.w3g
-parse: 14.206ms
-TEST PASSED:  ./replays/test-ch-movement.w3g
 parse: 8.543ms
+TEST PASSED:  ./replays/test-hero-revive-2.w3g
+parse: 12.890ms
+TEST PASSED:  ./replays/test-ch-movement.w3g
+parse: 7.287ms
 TEST PASSED:  ./replays/test-ei-movement.w3g
-parse: 11.681ms
+parse: 9.657ms
 TEST PASSED:  ./replays/test-tavern-revive-2.w3g
-parse: 1464.462ms
+parse: 1394.553ms
 TEST PASSED:  ./replays/soin-vs-chae.w3g
 TEST FAILED:  ./replays/joker-vs-lil.w3g
-parse: 712.431ms
+parse: 685.217ms
 TEST PASSED:  ./replays/bnet-ud-vs-orc-2.w3g
+
 ```
 
 # Example output
