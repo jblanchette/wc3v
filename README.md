@@ -36,6 +36,43 @@ where `REPLAY NAME` is the replay file path in the `replays` folder without any 
 
 `node wc3v.js --replay=happy-vs-grubby`
 
+### Testing mode
+
+to run wc3v in testing mode against a set of known test maps, run:
+
+`node wc3v.js --test`
+
+Example output:
+
+```
+user args:  [ '--test' ]
+parse: 1017.427ms
+TEST PASSED:  ./replays/happy-vs-grubby.w3g
+No potential items to drop.
+TEST FAILED:  ./replays/happy-vs-lucifer.w3g
+TEST FAILED:  ./replays/cash-vs-foggy.w3g
+parse: 467.348ms
+TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
+parse: 1605.342ms
+TEST PASSED:  ./replays/crow-vs-john.w3g
+TEST FAILED:  ./replays/chae-vs-hawk.w3g
+parse: 5.086ms
+TEST PASSED:  ./replays/test-hero-revive.w3g
+parse: 9.522ms
+TEST PASSED:  ./replays/test-hero-revive-2.w3g
+parse: 14.206ms
+TEST PASSED:  ./replays/test-ch-movement.w3g
+parse: 8.543ms
+TEST PASSED:  ./replays/test-ei-movement.w3g
+parse: 11.681ms
+TEST PASSED:  ./replays/test-tavern-revive-2.w3g
+parse: 1464.462ms
+TEST PASSED:  ./replays/soin-vs-chae.w3g
+TEST FAILED:  ./replays/joker-vs-lil.w3g
+parse: 712.431ms
+TEST PASSED:  ./replays/bnet-ud-vs-orc-2.w3g
+```
+
 # Example output
 
 see the [happy-vs-grubby.w3g.wc3v](client/replays/happy-vs-grubby.w3g.wc3v) file for a pretty-printed JSON dump

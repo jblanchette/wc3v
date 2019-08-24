@@ -214,6 +214,31 @@ const readCliArgs = (argv) => {
 				console.log("setting debug player to: ", val);
 				config.debugPlayer = val;
 			break;
+
+      case "test":
+        config.debugPlayer = 1000000; // hack to turn off all logs for now
+        const testMaps = [
+          'happy-vs-grubby',
+          'happy-vs-lucifer',
+          'cash-vs-foggy',
+          'foggy-vs-cash-2',
+          'crow-vs-john',
+          'chae-vs-hawk',
+          'test-hero-revive',
+          'test-hero-revive-2',
+          'test-ch-movement',
+          'test-ei-movement',
+          'test-tavern-revive-2',
+          'soin-vs-chae',
+          'joker-vs-lil',
+          'bnet-ud-vs-orc-2',
+        ];
+
+        options.inTestMode = true;
+        options.paths = testMaps.map(mapName => {
+          return `./replays/${mapName}.w3g`;
+        })
+      break;
 		};
 	});
 

@@ -2,7 +2,7 @@
 const config = {
   logToConsole: false,
 	debugActions: true,
-	debugPlayer: 100
+	debugPlayer: null
 };
 
 module.exports = config;
