@@ -76,7 +76,7 @@ html, body {
 
 .time-scrubber {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
   position: relative;
   top: -2.25rem;
@@ -87,9 +87,19 @@ html, body {
   opacity: 0.5;
 }
 
+.time-scrubber-control {
+  text-align: center;
+}
+
+.time-scrubber-control.play-button {
+  background: url('/assets/play-icon.svg');
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
 .time-scrubber-track {
   height: 0.35rem;
-  width: calc(100%  - 1rem);
+  width: calc(100%  - 3rem);
   background-color: #333;
   border: 1px solid #555;
   border-radius: 2rem;
