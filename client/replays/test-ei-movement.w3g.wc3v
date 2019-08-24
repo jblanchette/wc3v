@@ -24,10 +24,6 @@
                     },
                     "path": [
                         {
-                            "x": 5120,
-                            "y": 3584
-                        },
-                        {
                             "x": 5152,
                             "y": 3168
                         },
@@ -42,24 +38,24 @@
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 1.7,
-                            "distance": 399.5,
-                            "startX": 5120,
-                            "startY": 3584,
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": 4672,
+                            "startY": 2944,
                             "targetX": 5152,
                             "targetY": 3168,
                             "xDirection": 1,
-                            "yDirection": -1,
-                            "pathDistance": 417.23,
-                            "pathTime": 1.78,
-                            "xVelocity": 18.02,
-                            "yVelocity": 234.31,
+                            "yDirection": 1,
+                            "pathDistance": 529.69,
+                            "pathTime": 2.25,
+                            "xVelocity": 212.95,
+                            "yVelocity": 99.38,
                             "timerData": {
-                                "startTime": 10200,
-                                "endTime": 11975.442357161573,
-                                "runLength": 1775.4423571615725,
+                                "startTime": 5580075,
+                                "endTime": 5580075,
+                                "runLength": 2254.018091199571,
                                 "completed": true,
-                                "cancelled": false
+                                "cancelled": true
                             }
                         },
                         {
@@ -76,8 +72,8 @@
                             "xVelocity": 222.94,
                             "yVelocity": 74.31,
                             "timerData": {
-                                "startTime": 12300,
-                                "endTime": 14022.43208724065,
+                                "startTime": 5582175,
+                                "endTime": 5583897.432087241,
                                 "runLength": 1722.4320872406493,
                                 "completed": true,
                                 "cancelled": false
@@ -97,43 +93,14 @@
                             "xVelocity": 181.88,
                             "yVelocity": 148.81,
                             "timerData": {
-                                "startTime": 14100,
-                                "endTime": 16035.342352824087,
+                                "startTime": 5583975,
+                                "endTime": 5585910.342352824,
                                 "runLength": 1935.3423528240878,
                                 "completed": true,
                                 "cancelled": false
                             }
                         }
                     ],
-                    "meta": {
-                        "displayName": "Acolyte",
-                        "hero": false,
-                        "worker": true,
-                        "permanent": true,
-                        "playerShop": false,
-                        "race": "U",
-                        "movespeed": 235
-                    },
-                    "items": []
-                },
-                {
-                    "displayName": "Acolyte",
-                    "itemId": "uaco",
-                    "itemId1": "68,63,0,0",
-                    "itemId2": "74,63,0,0",
-                    "objectId1": null,
-                    "objectId2": null,
-                    "isRegistered": false,
-                    "isUnit": true,
-                    "isBuilding": false,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": 4672,
-                        "y": 2944
-                    },
-                    "path": [],
-                    "moveHistory": [],
                     "meta": {
                         "displayName": "Acolyte",
                         "hero": false,
@@ -186,8 +153,8 @@
                             "xVelocity": 57,
                             "yVelocity": 227.98,
                             "timerData": {
-                                "startTime": 37001,
-                                "endTime": 37001,
+                                "startTime": 5606876,
+                                "endTime": 5606876,
                                 "runLength": 2245.7766811874917,
                                 "completed": true,
                                 "cancelled": true
@@ -207,14 +174,43 @@
                             "xVelocity": 105.1,
                             "yVelocity": 210.19,
                             "timerData": {
-                                "startTime": 38001,
-                                "endTime": 43481.745340595226,
+                                "startTime": 5607876,
+                                "endTime": 5613356.745340595,
                                 "runLength": 5480.745340595229,
                                 "completed": true,
                                 "cancelled": false
                             }
                         }
                     ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
                     "meta": {
                         "displayName": "Acolyte",
                         "hero": false,
@@ -368,8 +364,8 @@
                     },
                     "path": [
                         {
-                            "x": 4809.63,
-                            "y": 3140.62
+                            "x": 5120,
+                            "y": 3584
                         },
                         {
                             "x": 4352,
@@ -378,8 +374,8 @@
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 1.2,
-                            "distance": 240,
+                            "timeElapsed": 0,
+                            "distance": 0,
                             "startX": 4672,
                             "startY": 2944,
                             "targetX": 5120,
@@ -391,30 +387,30 @@
                             "xVelocity": 114.69,
                             "yVelocity": 163.85,
                             "timerData": {
-                                "startTime": 2500,
-                                "endTime": 3700,
+                                "startTime": 5572375,
+                                "endTime": 5572375,
                                 "runLength": 3906.097797034785,
                                 "completed": true,
                                 "cancelled": true
                             }
                         },
                         {
-                            "timeElapsed": 2.6,
-                            "distance": 520,
-                            "startX": 4809.63,
-                            "startY": 3140.62,
+                            "timeElapsed": 3.9,
+                            "distance": 780,
+                            "startX": 5120,
+                            "startY": 3584,
                             "targetX": 4352,
                             "targetY": 3392,
                             "xDirection": -1,
-                            "yDirection": 1,
-                            "pathDistance": 522.13,
-                            "pathTime": 2.61,
-                            "xVelocity": 175.29,
-                            "yVelocity": 96.29,
+                            "yDirection": -1,
+                            "pathDistance": 791.64,
+                            "pathTime": 3.96,
+                            "xVelocity": 194.03,
+                            "yVelocity": 48.51,
                             "timerData": {
-                                "startTime": 3700,
-                                "endTime": 6310.652140298425,
-                                "runLength": 2610.652140298425,
+                                "startTime": 5573575,
+                                "endTime": 5577533.181400593,
+                                "runLength": 3958.181400592954,
                                 "completed": true,
                                 "cancelled": false
                             }
@@ -547,8 +543,8 @@
                             "xVelocity": 122.91,
                             "yVelocity": 273.67,
                             "timerData": {
-                                "startTime": 65400,
-                                "endTime": 67100,
+                                "startTime": 5635275,
+                                "endTime": 5636975,
                                 "runLength": 1906.866453515534,
                                 "completed": true,
                                 "cancelled": true
@@ -568,8 +564,8 @@
                             "xVelocity": 299.71,
                             "yVelocity": 13.1,
                             "timerData": {
-                                "startTime": 67100,
-                                "endTime": 70560.59480104863,
+                                "startTime": 5636975,
+                                "endTime": 5640435.594801049,
                                 "runLength": 3460.5948010486372,
                                 "completed": true,
                                 "cancelled": false
@@ -589,8 +585,8 @@
                             "xVelocity": 55.85,
                             "yVelocity": 294.75,
                             "timerData": {
-                                "startTime": 71800,
-                                "endTime": 78182.82434910267,
+                                "startTime": 5641675,
+                                "endTime": 5648057.824349103,
                                 "runLength": 6382.824349102665,
                                 "completed": true,
                                 "cancelled": false
@@ -610,8 +606,8 @@
                             "xVelocity": 54.93,
                             "yVelocity": 294.93,
                             "timerData": {
-                                "startTime": 82100,
-                                "endTime": 93230.75914263896,
+                                "startTime": 5651975,
+                                "endTime": 5663105.759142639,
                                 "runLength": 11130.75914263896,
                                 "completed": true,
                                 "cancelled": false
@@ -631,8 +627,8 @@
                             "xVelocity": 271,
                             "yVelocity": 128.68,
                             "timerData": {
-                                "startTime": 96900,
-                                "endTime": 111750.84951683285,
+                                "startTime": 5666775,
+                                "endTime": 5681625.849516833,
                                 "runLength": 14850.849516832855,
                                 "completed": true,
                                 "cancelled": false
@@ -652,8 +648,8 @@
                             "xVelocity": 250.86,
                             "yVelocity": 164.53,
                             "timerData": {
-                                "startTime": 114795,
-                                "endTime": 136481.49309746956,
+                                "startTime": 5684670,
+                                "endTime": 5706356.493097469,
                                 "runLength": 21686.493097469556,
                                 "completed": true,
                                 "cancelled": false
@@ -669,7 +665,15 @@
                         "movespeed": 300
                     },
                     "items": [
-                        "Scroll of Town Portal"
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
                     ]
                 }
             ]

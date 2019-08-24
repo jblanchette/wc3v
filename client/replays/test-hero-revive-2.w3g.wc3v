@@ -47,8 +47,8 @@
                             "xVelocity": 68.36,
                             "yVelocity": 224.84,
                             "timerData": {
-                                "startTime": 5701,
-                                "endTime": 5701,
+                                "startTime": 5199794,
+                                "endTime": 5199794,
                                 "runLength": 1482.0236252063062,
                                 "completed": true,
                                 "cancelled": true
@@ -68,8 +68,8 @@
                             "xVelocity": 150.86,
                             "yVelocity": 180.19,
                             "timerData": {
-                                "startTime": 6099,
-                                "endTime": 6558.441791676097,
+                                "startTime": 5200192,
+                                "endTime": 5200651.441791676,
                                 "runLength": 459.4417916760967,
                                 "completed": true,
                                 "cancelled": false
@@ -174,6 +174,34 @@
                     "items": []
                 },
                 {
+                    "displayName": "Ghoul",
+                    "itemId": "ugho",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
                     "displayName": "Necropolis",
                     "itemId": "unpl",
                     "itemId1": null,
@@ -266,8 +294,8 @@
                             "xVelocity": 247.02,
                             "yVelocity": 170.24,
                             "timerData": {
-                                "startTime": 19601,
-                                "endTime": 21198.15615129159,
+                                "startTime": 5213694,
+                                "endTime": 5215291.156151292,
                                 "runLength": 1597.15615129159,
                                 "completed": true,
                                 "cancelled": false
@@ -287,8 +315,8 @@
                             "xVelocity": 125.91,
                             "yVelocity": 272.3,
                             "timerData": {
-                                "startTime": 22001,
-                                "endTime": 28718.40353678897,
+                                "startTime": 5216094,
+                                "endTime": 5222811.403536789,
                                 "runLength": 6717.40353678897,
                                 "completed": true,
                                 "cancelled": false
@@ -308,8 +336,8 @@
                             "xVelocity": 128.94,
                             "yVelocity": 270.88,
                             "timerData": {
-                                "startTime": 31398,
-                                "endTime": 35477.63058489919,
+                                "startTime": 5225491,
+                                "endTime": 5229570.630584899,
                                 "runLength": 4079.630584899193,
                                 "completed": true,
                                 "cancelled": false
@@ -329,8 +357,8 @@
                             "xVelocity": null,
                             "yVelocity": null,
                             "timerData": {
-                                "startTime": 56992,
-                                "endTime": 56992,
+                                "startTime": 5251085,
+                                "endTime": 5251085,
                                 "runLength": 0,
                                 "completed": true,
                                 "cancelled": false
@@ -350,8 +378,8 @@
                             "xVelocity": 270.65,
                             "yVelocity": 129.41,
                             "timerData": {
-                                "startTime": 61892,
-                                "endTime": 64749.407159290095,
+                                "startTime": 5255985,
+                                "endTime": 5258842.40715929,
                                 "runLength": 2857.4071592900973,
                                 "completed": true,
                                 "cancelled": false
@@ -371,8 +399,8 @@
                             "xVelocity": 291.5,
                             "yVelocity": 70.92,
                             "timerData": {
-                                "startTime": 65992,
-                                "endTime": 73151.85011929112,
+                                "startTime": 5260085,
+                                "endTime": 5267244.850119291,
                                 "runLength": 7159.850119291115,
                                 "completed": true,
                                 "cancelled": false
@@ -392,8 +420,8 @@
                             "xVelocity": 193.48,
                             "yVelocity": 229.27,
                             "timerData": {
-                                "startTime": 76593,
-                                "endTime": 88286.97378932156,
+                                "startTime": 5270686,
+                                "endTime": 5282379.973789321,
                                 "runLength": 11693.973789321568,
                                 "completed": true,
                                 "cancelled": false
@@ -409,7 +437,15 @@
                         "movespeed": 300
                     },
                     "items": [
-                        "Scroll of Town Portal"
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
                     ]
                 }
             ]
