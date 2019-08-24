@@ -74,4 +74,23 @@ html, body {
   text-decoration: none;
 }
 
+.time-scrubber {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  top: -2.25rem;
+  height: 2.25rem;
+  width: 100%;
+  border-top: 1px solid #333;
+  background-color: #CCC;
+  opacity: 0.5;
+}
 
+.time-scrubber-track {
+  height: 0.35rem;
+  width: calc(100%  - 1rem);
+  background-color: #333;
+  border: 1px solid #555;
+  border-radius: 2rem;
+}
