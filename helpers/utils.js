@@ -218,20 +218,17 @@ const readCliArgs = (argv) => {
       case "test":
         config.debugPlayer = 1000000; // hack to turn off all logs for now
         const testMaps = [
+          'test-ch-movement',
+          'test-ei-movement',
           'happy-vs-grubby',
           'happy-vs-lucifer',
           'cash-vs-foggy',
           'foggy-vs-cash-2',
           'crow-vs-john',
           'chae-vs-hawk',
-          'test-hero-revive',
-          'test-hero-revive-2',
-          'test-ch-movement',
-          'test-ei-movement',
-          'test-tavern-revive-2',
           'soin-vs-chae',
           'joker-vs-lil',
-          'bnet-ud-vs-orc-2',
+          'bnet-ud-vs-orc-2'
         ];
 
         options.inTestMode = true;
