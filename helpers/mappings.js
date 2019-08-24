@@ -42,6 +42,19 @@ const workerForRace = {
 };
 
 const unitMetaData = {
+    'uobs': {
+        'displayName': 'Obsidian Statue',
+        'hero': false,
+        'worker': true,
+        'permanent': true,
+        'playerShop': false,
+        'race': 'H',
+        'movespeed': 190,
+        'evolution': {
+            'itemId': 'ubsp',
+            'time': 45
+        } 
+    },
 	'opeo': {
 		'displayName': 'Peon',
 		'hero': false,
