@@ -30,10 +30,11 @@ Parser.on('timeslotblock', (timeSlotBlock) => {
   });
 });
 
-const parseReplays = (paths) => {
+const parseReplays = (options) => {
+  const { paths } = options;
+
   paths.forEach(file => {
     playerManager = new PlayerManager();
-    
     logManager.setLogger(file, true);
 
     try {
@@ -66,9 +67,16 @@ const parseReplays = (paths) => {
         console.logger("************************************");
       });
 
+      if (options.inTestMode) {
+        console.log("TEST PASSED: ", file);
+      }
     } catch (e) {
-      console.log("error parsing replay: ", file);
-      console.log("error: ", e);
+      if (options.inTestMode) {
+        console.log("TEST FAILED: ", file);
+      } else {
+        console.log("error parsing replay: ", file);
+        console.log("error: ", e);
+      }
 
       return;
     }
@@ -80,7 +88,7 @@ const parseReplays = (paths) => {
 const main = () => {
   const options = utils.readCliArgs(process.argv);
   
-  parseReplays(options.paths);
+  parseReplays(options);
 };
 
 // main entry point

@@ -63,8 +63,8 @@
                             "xVelocity": 222.23,
                             "yVelocity": 76.41,
                             "timerData": {
-                                "startTime": 4900,
-                                "endTime": 4900,
+                                "startTime": 5719071,
+                                "endTime": 5719071,
                                 "runLength": 2264.033515977667,
                                 "completed": true,
                                 "cancelled": true
@@ -84,8 +84,8 @@
                             "xVelocity": 204.93,
                             "yVelocity": 115.02,
                             "timerData": {
-                                "startTime": 5200,
-                                "endTime": 5312.919315806227,
+                                "startTime": 5719371,
+                                "endTime": 5719483.919315807,
                                 "runLength": 112.91931580622756,
                                 "completed": true,
                                 "cancelled": false
@@ -105,8 +105,8 @@
                             "xVelocity": 30.61,
                             "yVelocity": 233,
                             "timerData": {
-                                "startTime": 9400,
-                                "endTime": 11094.52825632256,
+                                "startTime": 5723571,
+                                "endTime": 5725265.528256322,
                                 "runLength": 1694.5282563225587,
                                 "completed": true,
                                 "cancelled": false
@@ -126,8 +126,8 @@
                             "xVelocity": 24.2,
                             "yVelocity": 233.75,
                             "timerData": {
-                                "startTime": 11200,
-                                "endTime": 11701.29644478526,
+                                "startTime": 5725371,
+                                "endTime": 5725872.296444785,
                                 "runLength": 501.2964447852587,
                                 "completed": true,
                                 "cancelled": false
@@ -147,8 +147,8 @@
                             "xVelocity": 234.87,
                             "yVelocity": 7.82,
                             "timerData": {
-                                "startTime": 12299,
-                                "endTime": 13699,
+                                "startTime": 5726470,
+                                "endTime": 5727870,
                                 "runLength": 1545.729178402526,
                                 "completed": true,
                                 "cancelled": true
@@ -168,8 +168,8 @@
                             "xVelocity": 192.38,
                             "yVelocity": 134.97,
                             "timerData": {
-                                "startTime": 13699,
-                                "endTime": 36291.692807778854,
+                                "startTime": 5727870,
+                                "endTime": 5750462.692807779,
                                 "runLength": 22592.692807778854,
                                 "completed": true,
                                 "cancelled": false
@@ -274,62 +274,6 @@
                     "items": []
                 },
                 {
-                    "displayName": "Necropolis",
-                    "itemId": "unpl",
-                    "itemId1": null,
-                    "itemId2": null,
-                    "objectId1": null,
-                    "objectId2": null,
-                    "isRegistered": false,
-                    "isUnit": false,
-                    "isBuilding": true,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": -5184,
-                        "y": 2944
-                    },
-                    "path": [],
-                    "moveHistory": [],
-                    "meta": {
-                        "hero": false,
-                        "worker": false,
-                        "permanent": true,
-                        "playerShop": false,
-                        "evolution": null,
-                        "movespeed": 200
-                    },
-                    "items": []
-                },
-                {
-                    "displayName": "Ziggurat",
-                    "itemId": "uzig",
-                    "itemId1": null,
-                    "itemId2": null,
-                    "objectId1": null,
-                    "objectId2": null,
-                    "isRegistered": false,
-                    "isUnit": false,
-                    "isBuilding": true,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": -4640,
-                        "y": 2592
-                    },
-                    "path": [],
-                    "moveHistory": [],
-                    "meta": {
-                        "hero": false,
-                        "worker": false,
-                        "permanent": true,
-                        "playerShop": false,
-                        "evolution": null,
-                        "movespeed": 200
-                    },
-                    "items": []
-                },
-                {
                     "displayName": "Ghoul",
                     "itemId": "ugho",
                     "itemId1": "21,63,0,0",
@@ -347,8 +291,8 @@
                     },
                     "path": [
                         {
-                            "x": -199.69,
-                            "y": 92.33
+                            "x": -5526.71,
+                            "y": 2555.31
                         },
                         {
                             "x": -5718.76,
@@ -497,43 +441,43 @@
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 1.1,
-                            "distance": 220,
-                            "startX": 0,
-                            "startY": 0,
+                            "timeElapsed": 0,
+                            "distance": 0,
+                            "startX": -5184,
+                            "startY": 2944,
                             "targetX": -5526.71,
                             "targetY": 2555.31,
                             "xDirection": -1,
-                            "yDirection": 1,
-                            "pathDistance": 6088.85,
-                            "pathTime": 30.44,
-                            "xVelocity": 181.54,
-                            "yVelocity": 83.93,
+                            "yDirection": -1,
+                            "pathDistance": 518.2,
+                            "pathTime": 2.59,
+                            "xVelocity": 132.27,
+                            "yVelocity": 150.02,
                             "timerData": {
-                                "startTime": 25699,
-                                "endTime": 26799,
-                                "runLength": 30444.264133308734,
+                                "startTime": 5739870,
+                                "endTime": 5739870,
+                                "runLength": 2590.9967061284765,
                                 "completed": true,
                                 "cancelled": true
                             }
                         },
                         {
-                            "timeElapsed": 30.4,
-                            "distance": 6079.4,
-                            "startX": -199.69,
-                            "startY": 92.33,
+                            "timeElapsed": 1,
+                            "distance": 200,
+                            "startX": -5526.71,
+                            "startY": 2555.31,
                             "targetX": -5718.76,
                             "targetY": 2644.42,
                             "xDirection": -1,
                             "yDirection": 1,
-                            "pathDistance": 6080.57,
-                            "pathTime": 30.4,
-                            "xVelocity": 181.53,
-                            "yVelocity": 83.94,
+                            "pathDistance": 211.72,
+                            "pathTime": 1.06,
+                            "xVelocity": 181.42,
+                            "yVelocity": 84.18,
                             "timerData": {
-                                "startTime": 26799,
-                                "endTime": 57201.86812060654,
-                                "runLength": 30402.86812060654,
+                                "startTime": 5740970,
+                                "endTime": 5742028.604916534,
+                                "runLength": 1058.6049165347904,
                                 "completed": true,
                                 "cancelled": false
                             }
@@ -552,8 +496,8 @@
                             "xVelocity": 71.58,
                             "yVelocity": 186.75,
                             "timerData": {
-                                "startTime": 73498,
-                                "endTime": 74074.05452266119,
+                                "startTime": 5787669,
+                                "endTime": 5788245.0545226615,
                                 "runLength": 576.0545226611831,
                                 "completed": true,
                                 "cancelled": false
@@ -573,8 +517,8 @@
                             "xVelocity": 122.72,
                             "yVelocity": 157.93,
                             "timerData": {
-                                "startTime": 74298,
-                                "endTime": 74498,
+                                "startTime": 5788469,
+                                "endTime": 5788669,
                                 "runLength": 557.5008310485,
                                 "completed": true,
                                 "cancelled": true
@@ -594,8 +538,8 @@
                             "xVelocity": 92.32,
                             "yVelocity": 177.42,
                             "timerData": {
-                                "startTime": 74498,
-                                "endTime": 74695.95257495246,
+                                "startTime": 5788669,
+                                "endTime": 5788866.9525749525,
                                 "runLength": 197.95257495245954,
                                 "completed": true,
                                 "cancelled": false
@@ -615,8 +559,8 @@
                             "xVelocity": 162.03,
                             "yVelocity": 117.25,
                             "timerData": {
-                                "startTime": 75298,
-                                "endTime": 75598,
+                                "startTime": 5789469,
+                                "endTime": 5789769,
                                 "runLength": 456.6167959533706,
                                 "completed": true,
                                 "cancelled": true
@@ -636,8 +580,8 @@
                             "xVelocity": 163.43,
                             "yVelocity": 115.28,
                             "timerData": {
-                                "startTime": 75598,
-                                "endTime": 75933.77331392429,
+                                "startTime": 5789769,
+                                "endTime": 5790104.773313925,
                                 "runLength": 335.7733139242983,
                                 "completed": true,
                                 "cancelled": false
@@ -657,8 +601,8 @@
                             "xVelocity": null,
                             "yVelocity": null,
                             "timerData": {
-                                "startTime": 76398,
-                                "endTime": 76398,
+                                "startTime": 5790569,
+                                "endTime": 5790569,
                                 "runLength": 0,
                                 "completed": true,
                                 "cancelled": false
@@ -678,8 +622,8 @@
                             "xVelocity": 86.3,
                             "yVelocity": 180.42,
                             "timerData": {
-                                "startTime": 76598,
-                                "endTime": 76729.20676974929,
+                                "startTime": 5790769,
+                                "endTime": 5790900.2067697495,
                                 "runLength": 131.20676974928335,
                                 "completed": true,
                                 "cancelled": false
@@ -699,8 +643,8 @@
                             "xVelocity": 179.11,
                             "yVelocity": 89,
                             "timerData": {
-                                "startTime": 77398,
-                                "endTime": 77815.19390375602,
+                                "startTime": 5791569,
+                                "endTime": 5791986.193903756,
                                 "runLength": 417.19390375601654,
                                 "completed": true,
                                 "cancelled": false
@@ -720,8 +664,8 @@
                             "xVelocity": 144.34,
                             "yVelocity": 138.44,
                             "timerData": {
-                                "startTime": 77898,
-                                "endTime": 78337.21848361571,
+                                "startTime": 5792069,
+                                "endTime": 5792508.218483616,
                                 "runLength": 439.21848361571443,
                                 "completed": true,
                                 "cancelled": false
@@ -741,8 +685,8 @@
                             "xVelocity": 149.27,
                             "yVelocity": 133.11,
                             "timerData": {
-                                "startTime": 78598,
-                                "endTime": 78698,
+                                "startTime": 5792769,
+                                "endTime": 5792869,
                                 "runLength": 751.0976644310427,
                                 "completed": true,
                                 "cancelled": true
@@ -762,8 +706,8 @@
                             "xVelocity": 166.22,
                             "yVelocity": 111.22,
                             "timerData": {
-                                "startTime": 78698,
-                                "endTime": 78863.67718434225,
+                                "startTime": 5792869,
+                                "endTime": 5793034.677184342,
                                 "runLength": 165.67718434224483,
                                 "completed": true,
                                 "cancelled": false
@@ -783,8 +727,8 @@
                             "xVelocity": 119.19,
                             "yVelocity": 160.6,
                             "timerData": {
-                                "startTime": 79498,
-                                "endTime": 79798,
+                                "startTime": 5793669,
+                                "endTime": 5793969,
                                 "runLength": 670.0377735667513,
                                 "completed": true,
                                 "cancelled": true
@@ -804,8 +748,8 @@
                             "xVelocity": 94.68,
                             "yVelocity": 176.17,
                             "timerData": {
-                                "startTime": 79798,
-                                "endTime": 80042.4535153096,
+                                "startTime": 5793969,
+                                "endTime": 5794213.45351531,
                                 "runLength": 244.45351530958607,
                                 "completed": true,
                                 "cancelled": false
@@ -825,8 +769,8 @@
                             "xVelocity": 191.39,
                             "yVelocity": 58.04,
                             "timerData": {
-                                "startTime": 80498,
-                                "endTime": 80698,
+                                "startTime": 5794669,
+                                "endTime": 5794869,
                                 "runLength": 493.48603778880624,
                                 "completed": true,
                                 "cancelled": true
@@ -846,8 +790,8 @@
                             "xVelocity": 193.83,
                             "yVelocity": 49.29,
                             "timerData": {
-                                "startTime": 80698,
-                                "endTime": 81011.86822780197,
+                                "startTime": 5794869,
+                                "endTime": 5795182.868227802,
                                 "runLength": 313.8682278019679,
                                 "completed": true,
                                 "cancelled": false
@@ -867,8 +811,8 @@
                             "xVelocity": 133.21,
                             "yVelocity": 149.18,
                             "timerData": {
-                                "startTime": 81498,
-                                "endTime": 81698,
+                                "startTime": 5795669,
+                                "endTime": 5795869,
                                 "runLength": 825.3642060970915,
                                 "completed": true,
                                 "cancelled": true
@@ -888,8 +832,8 @@
                             "xVelocity": 165.75,
                             "yVelocity": 111.92,
                             "timerData": {
-                                "startTime": 81698,
-                                "endTime": 81722.63811079005,
+                                "startTime": 5795869,
+                                "endTime": 5795893.63811079,
                                 "runLength": 24.63811079005385,
                                 "completed": true,
                                 "cancelled": false
@@ -909,8 +853,8 @@
                             "xVelocity": 93.21,
                             "yVelocity": 176.95,
                             "timerData": {
-                                "startTime": 82497,
-                                "endTime": 82697,
+                                "startTime": 5796668,
+                                "endTime": 5796868,
                                 "runLength": 680.075570006942,
                                 "completed": true,
                                 "cancelled": true
@@ -930,8 +874,8 @@
                             "xVelocity": 160.61,
                             "yVelocity": 119.19,
                             "timerData": {
-                                "startTime": 82697,
-                                "endTime": 83048.18800973786,
+                                "startTime": 5796868,
+                                "endTime": 5797219.188009738,
                                 "runLength": 351.18800973785835,
                                 "completed": true,
                                 "cancelled": false
@@ -951,8 +895,8 @@
                             "xVelocity": 187.9,
                             "yVelocity": 68.51,
                             "timerData": {
-                                "startTime": 83497,
-                                "endTime": 83697,
+                                "startTime": 5797668,
+                                "endTime": 5797868,
                                 "runLength": 590.9305855900266,
                                 "completed": true,
                                 "cancelled": true
@@ -972,8 +916,8 @@
                             "xVelocity": 1.79,
                             "yVelocity": 199.99,
                             "timerData": {
-                                "startTime": 83697,
-                                "endTime": 83797.85244347695,
+                                "startTime": 5797868,
+                                "endTime": 5797968.852443477,
                                 "runLength": 100.85244347695351,
                                 "completed": true,
                                 "cancelled": false
@@ -993,8 +937,8 @@
                             "xVelocity": 72.33,
                             "yVelocity": 186.46,
                             "timerData": {
-                                "startTime": 84496,
-                                "endTime": 84696,
+                                "startTime": 5798667,
+                                "endTime": 5798867,
                                 "runLength": 703.5605073259974,
                                 "completed": true,
                                 "cancelled": true
@@ -1014,8 +958,8 @@
                             "xVelocity": 183.8,
                             "yVelocity": 78.86,
                             "timerData": {
-                                "startTime": 84696,
-                                "endTime": 84902.48831712616,
+                                "startTime": 5798867,
+                                "endTime": 5799073.488317126,
                                 "runLength": 206.48831712616698,
                                 "completed": true,
                                 "cancelled": false
@@ -1035,8 +979,8 @@
                             "xVelocity": 198.04,
                             "yVelocity": 27.92,
                             "timerData": {
-                                "startTime": 85397,
-                                "endTime": 85519.87313085786,
+                                "startTime": 5799568,
+                                "endTime": 5799690.873130858,
                                 "runLength": 122.87313085785608,
                                 "completed": true,
                                 "cancelled": false
@@ -1056,8 +1000,8 @@
                             "xVelocity": 9.64,
                             "yVelocity": 199.77,
                             "timerData": {
-                                "startTime": 86294,
-                                "endTime": 86381.99287295877,
+                                "startTime": 5800465,
+                                "endTime": 5800552.992872959,
                                 "runLength": 87.99287295876785,
                                 "completed": true,
                                 "cancelled": false
@@ -1077,8 +1021,8 @@
                             "xVelocity": 179.25,
                             "yVelocity": 88.72,
                             "timerData": {
-                                "startTime": 86994,
-                                "endTime": 87294,
+                                "startTime": 5801165,
+                                "endTime": 5801465,
                                 "runLength": 726.0106966965274,
                                 "completed": true,
                                 "cancelled": true
@@ -1098,8 +1042,8 @@
                             "xVelocity": 193.1,
                             "yVelocity": 52.08,
                             "timerData": {
-                                "startTime": 87294,
-                                "endTime": 87717.51987775465,
+                                "startTime": 5801465,
+                                "endTime": 5801888.519877755,
                                 "runLength": 423.51987775464073,
                                 "completed": true,
                                 "cancelled": false
@@ -1119,8 +1063,8 @@
                             "xVelocity": 184.87,
                             "yVelocity": 76.3,
                             "timerData": {
-                                "startTime": 88094,
-                                "endTime": 88494,
+                                "startTime": 5802265,
+                                "endTime": 5802665,
                                 "runLength": 612.2289387307497,
                                 "completed": true,
                                 "cancelled": true
@@ -1140,8 +1084,8 @@
                             "xVelocity": 190.39,
                             "yVelocity": 61.25,
                             "timerData": {
-                                "startTime": 88494,
-                                "endTime": 88735.79798855704,
+                                "startTime": 5802665,
+                                "endTime": 5802906.797988557,
                                 "runLength": 241.79798855703794,
                                 "completed": true,
                                 "cancelled": false
@@ -1161,8 +1105,8 @@
                             "xVelocity": 0.93,
                             "yVelocity": 200,
                             "timerData": {
-                                "startTime": 89694,
-                                "endTime": 89795.34876296931,
+                                "startTime": 5803865,
+                                "endTime": 5803966.3487629695,
                                 "runLength": 101.34876296930929,
                                 "completed": true,
                                 "cancelled": false
@@ -1182,8 +1126,8 @@
                             "xVelocity": null,
                             "yVelocity": null,
                             "timerData": {
-                                "startTime": 92394,
-                                "endTime": 92394,
+                                "startTime": 5806565,
+                                "endTime": 5806565,
                                 "runLength": 0,
                                 "completed": true,
                                 "cancelled": false
@@ -1203,8 +1147,8 @@
                             "xVelocity": 105.18,
                             "yVelocity": 170.11,
                             "timerData": {
-                                "startTime": 93094,
-                                "endTime": 93294,
+                                "startTime": 5807265,
+                                "endTime": 5807465,
                                 "runLength": 789.1228031494654,
                                 "completed": true,
                                 "cancelled": true
@@ -1224,8 +1168,8 @@
                             "xVelocity": 49.49,
                             "yVelocity": 193.78,
                             "timerData": {
-                                "startTime": 93294,
-                                "endTime": 93490.05797968645,
+                                "startTime": 5807465,
+                                "endTime": 5807661.057979686,
                                 "runLength": 196.05797968645166,
                                 "completed": true,
                                 "cancelled": false
@@ -1245,8 +1189,8 @@
                             "xVelocity": 88.13,
                             "yVelocity": 179.54,
                             "timerData": {
-                                "startTime": 94294,
-                                "endTime": 94394,
+                                "startTime": 5808465,
+                                "endTime": 5808565,
                                 "runLength": 596.0537044940285,
                                 "completed": true,
                                 "cancelled": true
@@ -1266,8 +1210,8 @@
                             "xVelocity": 164.3,
                             "yVelocity": 114.04,
                             "timerData": {
-                                "startTime": 94394,
-                                "endTime": 94516.61848556831,
+                                "startTime": 5808565,
+                                "endTime": 5808687.618485568,
                                 "runLength": 122.61848556831448,
                                 "completed": true,
                                 "cancelled": false
@@ -1278,6 +1222,62 @@
                         "hero": false,
                         "worker": false,
                         "permanent": false,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -5184,
+                        "y": 2944
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Ziggurat",
+                    "itemId": "uzig",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": -4640,
+                        "y": 2592
+                    },
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
                         "playerShop": false,
                         "evolution": null,
                         "movespeed": 200
@@ -1297,8 +1297,8 @@
                     "isIllusion": false,
                     "level": 1,
                     "lastPosition": {
-                        "x": -2288.91006779421,
-                        "y": -388.37285393276534
+                        "x": -4547.22900390625,
+                        "y": 1818.7451171875
                     },
                     "path": [
                         {
@@ -1314,16 +1314,20 @@
                             "y": -2723.05
                         },
                         {
-                            "x": -396.84,
-                            "y": -2304.61
+                            "x": -4704,
+                            "y": 3104
                         },
                         {
-                            "x": -1114.73,
-                            "y": -1682.41
+                            "x": -5062.54,
+                            "y": 2224.25
                         },
                         {
-                            "x": -1716.78,
-                            "y": -947.54
+                            "x": -4399.34,
+                            "y": 2326.87
+                        },
+                        {
+                            "x": -4547.23,
+                            "y": 1818.75
                         }
                     ],
                     "moveHistory": [
@@ -1341,8 +1345,8 @@
                             "xVelocity": 103.29,
                             "yVelocity": 227.66,
                             "timerData": {
-                                "startTime": 143891,
-                                "endTime": 146891,
+                                "startTime": 5858062,
+                                "endTime": 5861062,
                                 "runLength": 5813.757045980336,
                                 "completed": true,
                                 "cancelled": true
@@ -1362,8 +1366,8 @@
                             "xVelocity": 51.04,
                             "yVelocity": 244.73,
                             "timerData": {
-                                "startTime": 146891,
-                                "endTime": 148691,
+                                "startTime": 5861062,
+                                "endTime": 5862862,
                                 "runLength": 6625.592167865207,
                                 "completed": true,
                                 "cancelled": true
@@ -1383,8 +1387,8 @@
                             "xVelocity": 33.53,
                             "yVelocity": 247.74,
                             "timerData": {
-                                "startTime": 148691,
-                                "endTime": 155147.4462582153,
+                                "startTime": 5862862,
+                                "endTime": 5869318.446258215,
                                 "runLength": 6456.446258215303,
                                 "completed": true,
                                 "cancelled": false
@@ -1393,10 +1397,10 @@
                         {
                             "timeElapsed": 0,
                             "distance": 0,
-                            "startX": -396.84,
-                            "startY": -2304.61,
-                            "targetX": -396.84,
-                            "targetY": -2304.61,
+                            "startX": -4704,
+                            "startY": 3104,
+                            "targetX": -4704,
+                            "targetY": 3104,
                             "xDirection": -1,
                             "yDirection": -1,
                             "pathDistance": 0,
@@ -1404,8 +1408,8 @@
                             "xVelocity": null,
                             "yVelocity": null,
                             "timerData": {
-                                "startTime": 184195,
-                                "endTime": 184195,
+                                "startTime": 5898366,
+                                "endTime": 5898366,
                                 "runLength": 0,
                                 "completed": true,
                                 "cancelled": false
@@ -1414,43 +1418,64 @@
                         {
                             "timeElapsed": 3.8,
                             "distance": 950,
-                            "startX": -396.84,
-                            "startY": -2304.61,
+                            "startX": -4704,
+                            "startY": 3104,
                             "targetX": -5208.61,
                             "targetY": 1865.83,
                             "xDirection": -1,
-                            "yDirection": 1,
-                            "pathDistance": 6367.55,
-                            "pathTime": 25.47,
-                            "xVelocity": 188.92,
-                            "yVelocity": 163.74,
+                            "yDirection": -1,
+                            "pathDistance": 1337.04,
+                            "pathTime": 5.35,
+                            "xVelocity": 94.35,
+                            "yVelocity": 231.51,
                             "timerData": {
-                                "startTime": 187694,
-                                "endTime": 191494,
-                                "runLength": 25470.211898894373,
+                                "startTime": 5901865,
+                                "endTime": 5905665,
+                                "runLength": 5348.179831287873,
                                 "completed": true,
                                 "cancelled": true
                             }
                         },
                         {
-                            "timeElapsed": 3.8,
-                            "distance": 950,
-                            "startX": -1114.73,
-                            "startY": -1682.41,
+                            "timeElapsed": 2.6,
+                            "distance": 650,
+                            "startX": -5062.54,
+                            "startY": 2224.25,
                             "targetX": -4399.34,
                             "targetY": 2326.87,
-                            "xDirection": -1,
+                            "xDirection": 1,
                             "yDirection": 1,
-                            "pathDistance": 5182.95,
-                            "pathTime": 20.73,
-                            "xVelocity": 158.43,
-                            "yVelocity": 193.39,
+                            "pathDistance": 671.09,
+                            "pathTime": 2.68,
+                            "xVelocity": 247.06,
+                            "yVelocity": 38.23,
                             "timerData": {
-                                "startTime": 191494,
-                                "endTime": 195294,
-                                "runLength": 20731.816008363716,
+                                "startTime": 5905665,
+                                "endTime": 5908349.346826379,
+                                "runLength": 2684.346826379102,
                                 "completed": true,
-                                "cancelled": true
+                                "cancelled": false
+                            }
+                        },
+                        {
+                            "timeElapsed": 2.1,
+                            "distance": 525,
+                            "startX": -4399.34,
+                            "startY": 2326.87,
+                            "targetX": -4547.23,
+                            "targetY": 1818.75,
+                            "xDirection": -1,
+                            "yDirection": -1,
+                            "pathDistance": 529.21,
+                            "pathTime": 2.12,
+                            "xVelocity": 69.86,
+                            "yVelocity": 240.04,
+                            "timerData": {
+                                "startTime": 5909465,
+                                "endTime": 5911581.839645427,
+                                "runLength": 2116.8396454265894,
+                                "completed": true,
+                                "cancelled": false
                             }
                         }
                     ],
@@ -1462,7 +1487,15 @@
                         "playerShop": false
                     },
                     "items": [
-                        "Scroll of Town Portal"
+                        {
+                            "slot": "1",
+                            "itemId": "stwp",
+                            "displayName": "Scroll of Town Portal",
+                            "knownItemX": null,
+                            "knownItemY": null,
+                            "objectId1": null,
+                            "objectId2": null
+                        }
                     ]
                 }
             ]
