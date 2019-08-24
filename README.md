@@ -46,31 +46,27 @@ Latest test output:
 
 ```
 user args:  [ '--test' ]
-parse: 940.131ms
+parse: 76.962ms
+TEST PASSED:  ./replays/test-ch-movement.w3g
+parse: 22.853ms
+TEST PASSED:  ./replays/test-ei-movement.w3g
+parse: 849.267ms
 TEST PASSED:  ./replays/happy-vs-grubby.w3g
-parse: 2429.193ms
+parse: 2317.975ms
 TEST PASSED:  ./replays/happy-vs-lucifer.w3g
-TEST FAILED:  ./replays/cash-vs-foggy.w3g
-parse: 456.645ms
+parse: 1732.055ms
+TEST PASSED:  ./replays/cash-vs-foggy.w3g
+parse: 454.778ms
 TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
-parse: 1398.697ms
+parse: 1384.555ms
 TEST PASSED:  ./replays/crow-vs-john.w3g
 TEST FAILED:  ./replays/chae-vs-hawk.w3g
-parse: 5.388ms
-TEST PASSED:  ./replays/test-hero-revive.w3g
-parse: 8.543ms
-TEST PASSED:  ./replays/test-hero-revive-2.w3g
-parse: 12.890ms
-TEST PASSED:  ./replays/test-ch-movement.w3g
-parse: 7.287ms
-TEST PASSED:  ./replays/test-ei-movement.w3g
-parse: 9.657ms
-TEST PASSED:  ./replays/test-tavern-revive-2.w3g
-parse: 1394.553ms
+parse: 1306.988ms
 TEST PASSED:  ./replays/soin-vs-chae.w3g
 TEST FAILED:  ./replays/joker-vs-lil.w3g
-parse: 685.217ms
+parse: 706.573ms
 TEST PASSED:  ./replays/bnet-ud-vs-orc-2.w3g
+
 
 ```
 
