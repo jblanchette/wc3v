@@ -52,8 +52,9 @@ const TimeScrubber = class {
 
     this.domEl.innerHTML = `
     <div id="${this.wrapperId}-play" class="time-scrubber-control play-button"></div>
+    <div id="${this.wrapperId}-play" class="time-scrubber-control speed-button">1x</div>
     <div class="time-scrubber-track">
-      <div id="${this.wrapperId}-tracker"></div>
+      <div id="${this.wrapperId}-tracker" class="time-scrubber-tracker"></div>
     </div>`;
 
     this.wrapperEl.append(this.domEl);
