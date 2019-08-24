@@ -25,6 +25,10 @@ const Wc3vViewer = class {
 
     this.xScale = null;
     this.yScale = null;
+
+    this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
+
+    console.log(this.scrubber);
   }
 
   load () {
@@ -32,6 +36,7 @@ const Wc3vViewer = class {
     console.log('1 loading wc3v replay: ', filename);
 
     this.loadFile(filename);
+    this.scrubber.init();
   }
 
   loadFile (filename) {
