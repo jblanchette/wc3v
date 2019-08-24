@@ -1,6 +1,7 @@
 <html>
   <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
+    <script src="js/TimeScrubber.js"></script>
     <script src="js/gameData.js"></script>
     <script src="js/app.js"></script>
 
@@ -52,8 +53,10 @@
             <h3>Units:</h3>
             <ul id="unit-list" placeholder="---"></ul>
           </div>
-        
-          <canvas id="main-canvas" width="1024" height="768"></canvas>
+          
+          <div id="main-wrapper">
+            <canvas id="main-canvas" width="1024" height="768"></canvas>
+          </div>
         </div>
       </div>
     </div>
