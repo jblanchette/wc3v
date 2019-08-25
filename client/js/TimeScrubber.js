@@ -1,9 +1,11 @@
 
+const svgCache = {};
+
 const ScrubStates = {
   stopped: 0,
   paused: 1,
-  playing: 1,
-  finished: 2
+  playing: 2,
+  finished: 3
 };
 
 const ScrubSpeeds = {
@@ -52,21 +54,73 @@ const TimeScrubber = class {
 
     this.domEl.innerHTML = `
     <div id="${this.wrapperId}-play" class="time-scrubber-control play-button"></div>
-    <div id="${this.wrapperId}-play" class="time-scrubber-control speed-button">1x</div>
+    <div id="${this.wrapperId}-speed" class="time-scrubber-control speed-button">1x</div>
     <div class="time-scrubber-track">
       <div id="${this.wrapperId}-tracker" class="time-scrubber-tracker"></div>
     </div>`;
 
     this.wrapperEl.append(this.domEl);
+    this.loadSvg(`#${this.wrapperId}-play`, 'play-icon');
+    this.loadSvg(`#${this.wrapperId}-play`, 'pause-icon', false);
+
+    this.setupControls();
   }
 
+  setupControls () {
+    const domMap = {
+      "play": (e) => { this.togglePlay(e); }
+    };
+
+    Object.keys(domMap).forEach(ctrlName => {
+      const el = document.getElementById(`${this.wrapperId}-${ctrlName}`);
+      el.addEventListener("click", domMap[ctrlName]);
+    });
+  }
+
+  loadSvg(selector, svgFile, updateDom = true) {
+    const target = document.querySelector(selector);
+    if (svgCache[svgFile] && updateDom) {
+      target.innerHTML = svgCache[svgFile].responseText;
+
+      return;
+    }
+
+    // Request the SVG file
+    const ajax = new XMLHttpRequest();
+    ajax.open("GET", `/assets/${svgFile}.svg`, true);
+    ajax.send();
+
+    // Append the SVG to the target
+    ajax.onload = (e) => {
+      svgCache[svgFile] = {
+        responseText: ajax.responseText
+      };
+
+      if (updateDom) {
+        target.innerHTML = ajax.responseText;
+      }
+    }
+  }
+
+  togglePlay () {
+    switch (this.state) {
+      case ScrubStates.playing:
+        this.pause();
+      break;
+      default:
+        this.play();
+      break;
+    }
+  }
 
   play () {
-
+    this.loadSvg(`#${this.wrapperId}-play`, 'pause-icon');
+    this.state = ScrubStates.playing;
   }
 
   pause () {
-
+    this.loadSvg(`#${this.wrapperId}-play`, 'play-icon');
+    this.state = ScrubStates.paused;
   }
 
 
