@@ -1,3 +1,10 @@
+warning - no player data for:  1
+warning - no player data for:  1
+warning - no player data for:  1
+warning - no player data for:  1
+warning - no player data for:  1
+warning - no player data for:  1
+jeff og len:  0
 ========================================================================
 ActionName: ChangeSelection PID: 1
 Action: { actionId: 22,
@@ -12,11 +19,31 @@ Action: { actionId: 22,
        itemId2: [ -7, 67, 0, 0, [length]: 4 ] },
      [length]: 3 ] }
 Game Timer: 1413
+Game Clock: 0:1
 ========================================================================
+set last change time:  1413
+adding to possibleSelectList: [ -98, 67, 0, 0, [length]: 4 ] [ -95, 67, 0, 0, [length]: 4 ]
+adding to possibleSelectList: [ -54, 67, 0, 0, [length]: 4 ] [ -51, 67, 0, 0, [length]: 4 ]
+adding to possibleSelectList: [ -10, 67, 0, 0, [length]: 4 ] [ -7, 67, 0, 0, [length]: 4 ]
+assigned first selection
+selection len after sel:  3
+raw:  [ { itemId1: [ -98, 67, 0, 0, [length]: 4 ],
+    itemId2: [ -95, 67, 0, 0, [length]: 4 ] },
+  { itemId1: [ -54, 67, 0, 0, [length]: 4 ],
+    itemId2: [ -51, 67, 0, 0, [length]: 4 ] },
+  { itemId1: [ -10, 67, 0, 0, [length]: 4 ],
+    itemId2: [ -7, 67, 0, 0, [length]: 4 ] },
+  [length]: 3 ]
+selection index:  0
+current selection units:  [ '-98,67,0,0, -95,67,0,0 - Unregistered',
+  '-54,67,0,0, -51,67,0,0 - Unregistered',
+  '-10,67,0,0, -7,67,0,0 - Unregistered',
+  [length]: 3 ]
 ========================================================================
 ActionName: UpdateSubgroup PID: 1
 Action: { actionId: 26 }
 Game Timer: 1413
+Game Clock: 0:1
 ========================================================================
 ========================================================================
 ActionName: SelectSubgroup PID: 1
@@ -25,12 +52,79 @@ Action: { actionId: 25,
   objectId1: 17310,
   objectId2: 17313 }
 Game Timer: 1413
+Game Clock: 0:1
 ========================================================================
+checking:  1 ewsp 17310 17313
+jeff8 not other players unit?
+unknown unit len:  3
+WARNING - unable to register unit in multi-unit group with no knowns.
+unknown units:  3 sel len:  3
+selection index:  0
+current selection units:  [ '-98,67,0,0, -95,67,0,0 - Unregistered',
+  '-54,67,0,0, -51,67,0,0 - Unregistered',
+  '-10,67,0,0, -7,67,0,0 - Unregistered',
+  [length]: 3 ]
+about to assignPossibleSelectGroup
+checking assign possible, raw:  { itemId1: [ -98, 67, 0, 0, [length]: 4 ],
+  itemId2: [ -95, 67, 0, 0, [length]: 4 ] }
+clearing poss: 3
+after clearing poss: 3
+found unit to reg: [ -98, 67, 0, 0, [length]: 4 ] [ -95, 67, 0, 0, [length]: 4 ]
+performing backfill for Wisp
+found unit from assign possible:
+-----------------------------------------------------
+printing unit data:
+ * display name:  Wisp
+ * uuid:          031c6ca0-cbae-4b75-8d0a-0c760f411b1c
+ * itemId:        ewsp
+ * itemId1:       [ -98, 67, 0, 0, [length]: 4 ]
+ * itemId2:       [ -95, 67, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+about to check firstGroupUnit
+first unit is:  Wisp ewsp
+-----------------------------------------------------
+printing unit data:
+ * display name:  Wisp
+ * uuid:          031c6ca0-cbae-4b75-8d0a-0c760f411b1c
+ * itemId:        ewsp
+ * itemId1:       [ -98, 67, 0, 0, [length]: 4 ]
+ * itemId2:       [ -95, 67, 0, 0, [length]: 4 ]
+ * objectId1:     null
+ * objectId2:     null
+ * registered:    no
+ * path len:      0
+ * spawnAtStart:  yes
+items:         [ [length]: 0 ]
+-----------------------------------------------------
+first is reg:  no
+no unit known by objectIds: 17310 17313
+is firstGroupUnit found for tab check: yes
+no building upgrade found ewsp ewsp
+calling registerSubGroupFocusUnit, is reg: no
 Registering unit:  ewsp
 new itemIds:  [ -98, 67, 0, 0, [length]: 4 ] [ -95, 67, 0, 0, [length]: 4 ]
 new objIds:  17310 17313
-setting fully registered unit
+set selection to: [ -98, 67, 0, 0, [length]: 4 ] [ -95, 67, 0, 0, [length]: 4 ]
+setting selected unit index:  0
+setting selection index: 0
+selection index:  0
+current selection units:  [ '-98,67,0,0, -95,67,0,0 [null, null] - Wisp',
+  '-54,67,0,0, -51,67,0,0 - Unregistered',
+  '-10,67,0,0, -7,67,0,0 - Unregistered',
+  [length]: 3 ]
+objid reg: 17310 17313
+setting fully registered unit 031c6ca0-cbae-4b75-8d0a-0c760f411b1c
+unit reg: [ -98, 67, 0, 0, [length]: 4 ] [ -95, 67, 0, 0, [length]: 4 ] 17310 17313
+unit reg objectIds: 17310 17313
 checking backfill:  Wisp
+found backfill data for unit.
+performing backfill for Wisp
 ========================================================================
 ActionName: UseAbilityWithTargetAndObjectId PID: 1
 Action: { actionId: 18,
@@ -43,5 +137,15 @@ Action: { actionId: 18,
   objectId1: -1,
   objectId2: -1 }
 Game Timer: 1616
+Game Clock: 0:1
 ========================================================================
+getting selection unit:  0 { itemId1: [ -98, 67, 0, 0, [length]: 4 ],
+  itemId2: [ -95, 67, 0, 0, [length]: 4 ] }
+ability selection
+selection index:  0
+current selection units:  [ '-98,67,0,0, -95,67,0,0 [17310, 17313] - Wisp',
+  '-54,67,0,0, -51,67,0,0 - Unregistered',
+  '-10,67,0,0, -7,67,0,0 - Unregistered',
+  [length]: 3 ]
+normal unit right click
 wc3v completed.  enjoy!
