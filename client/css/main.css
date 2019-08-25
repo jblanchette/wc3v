@@ -83,19 +83,27 @@ html, body {
   height: 2.25rem;
   width: 100%;
   border-top: 1px solid #333;
-  background-color: #CCC;
-  opacity: 0.5;
+  background-color: rgba(200, 200, 200, 0.5);
+  cursor: pointer;
 }
 
 .time-scrubber-control {
   text-align: center;
+  user-select: none;
 }
 
 .time-scrubber-control.play-button {
-  background: url('/assets/play-icon.svg');
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.play-button path {
   color: #000;
+  opacity: 0.5;
+}
+
+.play-button:hover path {
+  opacity: 1;
 }
 
 .time-scrubber-control.speed-button {
@@ -108,9 +116,10 @@ html, body {
   align-items: center;
   height: 0.35rem;
   width: calc(100%  - 6rem);
-  background-color: #333;
+  background-color: #000;
   border: 1px solid #555;
   border-radius: 2rem;
+  opacity: 0.5;
 }
 
 .time-scrubber-tracker {
@@ -119,6 +128,6 @@ html, body {
   height: 0.75rem;
   width: 0.75rem;
   background-color: #FFF;
-  border: 2px solid #333;
+  border: 2px solid #000;
   border-radius: 100%;
 }
