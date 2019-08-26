@@ -11,24 +11,28 @@ const colorMap = {
   "unitPath": "#00FFFF"
 };
 
-const Wc3vViewer = class {
+const ScrubStates = {
+  stopped: 0,
+  paused: 1,
+  playing: 2,
+  finished: 3
+};
+
+const Wc3vViewer = class extends LegacyApp {
   constructor () {
+    super();
+
     this.canvas = null;
     this.ctx = null;
 
     this.mapData = null;
     this.mapImage = null;
 
-    this.focusPlayer = null;
-    this.focusPlayerId = null;
-    this.renderUnitIndex = null;
-
     this.xScale = null;
     this.yScale = null;
 
+    this.state = ScrubStates.stopped;
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
-
-    console.log(this.scrubber);
   }
 
   load () {
@@ -37,6 +41,9 @@ const Wc3vViewer = class {
 
     this.loadFile(filename);
     this.scrubber.init();
+    this.scrubber.setupControls({
+      "play": (e) => { this.togglePlay(e); }
+    });
   }
 
   loadFile (filename) {
@@ -81,6 +88,31 @@ const Wc3vViewer = class {
     });
   }
 
+  togglePlay () {
+    switch (this.state) {
+      case ScrubStates.playing:
+        this.pause();
+      break;
+      default:
+        this.play();
+      break;
+    }
+  }
+
+  play () {
+    this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'pause-icon');
+    this.state = ScrubStates.playing;
+
+    this.startRenderLoop();
+  }
+
+  pause () {
+    this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'play-icon');
+    this.state = ScrubStates.paused;
+
+    this.stopRenderLoop();
+  }
+
   setup () {
     const self = this;
     const playerKeys = Object.keys(this.mapData.players);
@@ -118,17 +150,6 @@ const Wc3vViewer = class {
     })
   }
 
-  setupLinks (filename, url) {
-    const rawLink = document.getElementById("raw-link");
-    rawLink.onclick = (e) => {
-      console.log("clicked...");
-
-      const w = window.open('');
-      w.document.title = `raw wc3v file - ${filename}`;
-      w.document.write(`<html><body><pre>${ JSON.stringify(self.mapData, null, 4) }</pre></body></html>`);
-    };
-  }
-
   setupDrawing () {
     this.viewWidth = this.mapImage.width;
     this.viewHeight = this.mapImage.height;
@@ -153,119 +174,6 @@ const Wc3vViewer = class {
       .range(this.viewYRange);
   }
 
-  selectFocusPlayer (playerId) {
-    this.focusPlayerId = playerId;
-    this.focusPlayer = this.mapData.players[playerId];
-
-    // sort units for display
-    this.sortUnits();
-
-    // select first unit with non-zero path length
-    this.selectRenderUnit(this.focusPlayer.units.findIndex(unit => {
-      return unit.path.length;
-    }));
-  }
-
-  sortUnits () {
-    // sort by: heroes, hero illusions, units
-
-    this.focusPlayer.units = this.focusPlayer.units.sort((a, b) => {
-      if (a.meta.hero && !b.meta.hero) {
-        return 1;
-      } else if (a.meta.hero && b.meta.hero) {
-        if (a.displayName === b.displayName) {
-          if (a.isIllusion && !b.isIllusion) {
-            return -1;
-          } else {
-            return (a.isIllusion && b.isIllusion) ? 0 : 1;
-          }
-        }
-
-        // sort by hero name when both are heroes
-        return (a.displayName > b.displayName) - (a.displayName < b.displayName);
-      } else {
-        return -1;
-      }
-    }).reverse();
-  }
-
-  selectRenderUnit (unitIndex) {
-    this.renderUnitIndex = unitIndex;
-  }
-
-  renderPlayerlist () {
-    const self = this;
-    const playerData = this.mapData.replay.players;
-
-    const playerList = document.getElementById(domMap.playerListId);
-    
-    // clear the list
-    playerList.innerHTML = "";
-    playerList.addEventListener("change", (e) => {
-      const { target } = e;
-      const playerName = target.value;
-      const playerIdList = Object.keys(this.mapData.players);
-
-      // figure out which player id we just selected
-      const selectedPlayerId = playerIdList.find(playerId => {
-        const player = self.mapData.replay.players[playerId];
-
-        return player.name === playerName;
-      });
-
-      self.selectFocusPlayer(selectedPlayerId);
-      self.render();
-    });
-
-    
-    // we mutate this list to put our selected player first
-    let playerIdList = Object.keys(this.mapData.players);
-
-    // put our focus player at the front
-    const focusPlayerIndex = playerIdList.findIndex(playerId => {
-      return playerId == self.focusPlayerId;
-    });
-
-    // delete the old list position, insert new id at the front
-    playerIdList.splice(focusPlayerIndex, 1);
-    playerIdList.unshift(this.focusPlayerId);
-
-    playerIdList.forEach(playerId => {
-      const optionItem = document.createElement("option");
-
-      const player = playerData[playerId];
-
-      if (!player) {
-        console.error("unable to find player for: ", playerId);
-        return;
-      }
-
-      optionItem.innerHTML = `${player.name}`;
-
-      playerList.append(optionItem);
-    });
-  }
-
-  renderUnitList () {
-    const unitList = document.getElementById(domMap.unitListId);
-
-    // clear the list
-    unitList.innerHTML = "";
-
-    this.focusPlayer.units.forEach((unit, index) => {
-      if (!unit.path.length) {
-        return;
-      }
-
-      const listItem = document.createElement("li");
-      listItem.innerHTML = `<a onClick="wc3v.selectRenderUnit('${index}'); wc3v.render()">
-        ${unit.displayName} ${unit.meta.hero ? "(H)" : ""} ${unit.isIllusion ? "(I)" : ""}
-      </a>`;
-
-      unitList.append(listItem);
-    });
-  }
-
   clearCanvas () {
     const { ctx, canvas } = this;
 
@@ -281,78 +189,16 @@ const Wc3vViewer = class {
     ctx.drawImage(this.mapImage, mapX, mapY);
   }
 
-  renderBuildings () {
-    const { ctx } = this;
-    const buildings = this.focusPlayer.units.filter(unit => {
-      return unit.isBuilding;
-    });
+  startRenderLoop () {
 
-    ctx.strokeStyle = colorMap.buildingOutline;
-
-    buildings.forEach(building => {
-      const { x, y } = building.lastPosition;
-      const drawX = this.xScale(x) + this.middleX;
-      const drawY = this.yScale(y) + this.middleY;
-
-      ctx.strokeRect(drawX, drawY, 10, 10);
-    });
-
-    ctx.strokeStyle = colorMap.black;
   }
 
-  renderSelectedUnit () {
-    const { ctx } = this;
-    const unit = this.focusPlayer.units[this.renderUnitIndex];
-    const drawPath = unit.path;
-
-    // update the unit info dom section
-    const unitInfo = document.getElementById(domMap.unitInfoId);
-    unitInfo.innerHTML = `<ul>
-      <li>${unit.displayName}</li>
-      <li>${unit.level}</li>
-    </ul>`;
-
-    let penDown = false;
-
-    ctx.strokeStyle = colorMap.unitPath;
-    ctx.beginPath();
-    ctx.moveTo(this.middleX, this.middleY);
-
-    /*
-    * wc3 coordinates are setup so ( 0 , 0 ) is in the center.
-    * depending on the map - ( 0 , 0 ) is likely the center of map.
-
-    * our draw points are translated by ( middleX, middleY ) so all coordinate values
-    * start at the center of our draw region
-    */
-
-    drawPath.forEach(position => {
-      const { x, y } = position;
-      const drawX = this.xScale(x) + this.middleX;
-      const drawY = this.yScale(y) + this.middleY;
-
-      if (!penDown) {
-        ctx.moveTo(drawX, drawY);
-        penDown = true;
-      }
-
-      ctx.lineTo(drawX, drawY);
-    });
-
-    ctx.stroke();
-    ctx.strokeStyle = colorMap.black;
+  stopRenderLoop () {
+    
   }
 
   render () {
-    console.log("rendering scene");
-
-    this.renderPlayerlist();
-    this.renderUnitList();
-
-    this.clearCanvas();
-    this.renderMapBackground();
-    this.renderBuildings();
-    this.renderSelectedUnit();
+    super.render();
   }
 };
 
