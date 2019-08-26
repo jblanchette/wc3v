@@ -32,6 +32,13 @@ const Wc3vViewer = class extends LegacyApp {
     this.yScale = null;
 
     this.state = ScrubStates.stopped;
+
+    this.gameTime = 0;
+
+    this.lastFrameId = null;
+    this.lastFrameDelta = 0;
+    this.lastFrameTimestamp = 0;
+
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
   }
 
@@ -190,15 +197,48 @@ const Wc3vViewer = class extends LegacyApp {
   }
 
   startRenderLoop () {
-
+    this.lastFrameTimestamp = 0;
+    this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
   }
 
   stopRenderLoop () {
-    
+    cancelAnimationFrame(this.lastFrameId);
+  }
+
+  mainLoop(timestamp) {
+    const timeStep = this.scrubber.getTimeStep();
+
+    if (this.lastFrameTimestamp === 0) {
+      this.lastFrameTimestamp = timestamp;
+    }
+
+    this.lastFrameDelta += timestamp - this.lastFrameTimestamp; 
+    this.lastFrameTimestamp = timestamp;
+ 
+    while (this.lastFrameDelta >= timeStep) {
+        this.update(timeStep);
+        this.lastFrameDelta -= timeStep;
+    }
+
+    this.render();
+    this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
+  }
+
+  update (dt) {
+    this.gameTime += dt;
+
+    if (this.gameTime % 10 === 0) {
+      console.log("gt: ", this.gameTime);
+    }
   }
 
   render () {
     super.render();
+    const { ctx } = this;
+
+    const gt = this.gameTime * 0.001;
+
+    ctx.fillText("Game Time: " + gt.toFixed(2), 10, 10);
   }
 };
 
