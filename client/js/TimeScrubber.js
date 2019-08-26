@@ -17,11 +17,8 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    this.time = 0;
-    this.startTime = 0;
-    this.endTime = 0;
-
     this.speed = ScrubSpeeds.get('1x');
+    this.timeStep = this.getTimeStep();
 
     this.wrapperEl = null;
     this.domEl = null;
@@ -52,6 +49,10 @@ const TimeScrubber = class {
     this.wrapperEl.append(this.domEl);
     this.loadSvg(`#${this.wrapperId}-play`, 'play-icon');
     this.loadSvg(`#${this.wrapperId}-play`, 'pause-icon', false);
+  }
+
+  getTimeStep () {
+    return (1000 * this.speed) / 60;
   }
 
   setupControls (domMap) {
