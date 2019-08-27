@@ -17,6 +17,12 @@ const LegacyApp = class {
     };
   }
 
+  setup () {
+    const playerKeys = Object.keys(this.mapData.players);
+    // select first playerId as focus
+    this.selectFocusPlayer(playerKeys[0]);
+  }
+
   selectFocusPlayer (playerId) {
     this.focusPlayerId = playerId;
     this.focusPlayer = this.mapData.players[playerId];
