@@ -5,7 +5,7 @@ const domMap = {
   "unitInfoId": "unit-info"
 };
 
-const colorMap = {
+window.colorMap = {
   "black": "#000000",
   "buildingOutline": "#00FF00",
   "unitPath": "#00FFFF"
@@ -24,6 +24,7 @@ const Wc3vViewer = class extends LegacyApp {
 
     this.canvas = null;
     this.ctx = null;
+    this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
 
     this.mapData = null;
     this.mapImage = null;
@@ -39,12 +40,14 @@ const Wc3vViewer = class extends LegacyApp {
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
 
-    this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
+    this.players = [];
   }
 
   load () {
     const filename = document.getElementById(domMap.mapInputFieldId).value;
     console.log('1 loading wc3v replay: ', filename);
+
+    this.pause();
 
     this.loadFile(filename);
     this.scrubber.init();
@@ -121,9 +124,34 @@ const Wc3vViewer = class extends LegacyApp {
   }
 
   setup () {
-    const self = this;
-    const playerKeys = Object.keys(this.mapData.players);
+    super.setup();
+    ///
 
+    this.gameTime = 0;
+
+    this.setupPlayers();
+    this.setupMap();
+
+    this.canvas = document.getElementById("main-canvas");
+    this.ctx = this.canvas.getContext("2d");
+
+    // finishes the setup promise
+    return this.loadMapFile().then(() => {
+      this.setupDrawing();
+      this.clearCanvas();
+      this.renderMapBackground();
+    });
+  }
+
+  setupPlayers () {
+    Object.keys(this.mapData.players).forEach(playerId => {
+      const { startingPosition, units } = this.mapData.players[playerId];
+
+      this.players.push(new ClientPlayer(playerId, startingPosition, units));
+    });
+  }
+
+  setupMap () {
     const { maps } = window.gameData;
 
     // extract map info from replay data
@@ -142,19 +170,6 @@ const Wc3vViewer = class extends LegacyApp {
     });
 
     this.mapInfo = maps[foundMapName];
-    console.log("game data: ", this.mapInfo);
-
-    // select first playerId as focus
-    this.selectFocusPlayer(playerKeys[0]);
-
-    this.canvas = document.getElementById("main-canvas");
-    this.ctx = this.canvas.getContext("2d");
-
-    // finishes the setup promise
-    return this.loadMapFile().then(() => {
-      self.setupDrawing();
-      self.render();
-    })
   }
 
   setupDrawing () {
@@ -226,19 +241,27 @@ const Wc3vViewer = class extends LegacyApp {
 
   update (dt) {
     this.gameTime += dt;
-
-    if (this.gameTime % 10 === 0) {
-      console.log("gt: ", this.gameTime);
-    }
   }
 
   render () {
-    super.render();
-    const { ctx } = this;
+    const { 
+      ctx,
+      gameTime, 
+      xScale, 
+      yScale,
+      middleX,
+      middleY
+    } = this;
 
-    const gt = this.gameTime * 0.001;
+    this.clearCanvas();
+    this.renderMapBackground();
 
-    ctx.fillText("Game Time: " + gt.toFixed(2), 10, 10);
+    this.players.forEach(player => {
+      player.render(ctx, this.gameTime, xScale, yScale, middleX, middleY);
+    });
+
+    const gt = this.gameTime.toFixed(2);
+    ctx.fillText(`Game Time: ${gt}`, 10, 10);
   }
 };
 

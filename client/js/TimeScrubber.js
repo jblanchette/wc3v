@@ -63,7 +63,7 @@ const TimeScrubber = class {
   }
 
   loadSvg(selector, svgFile, updateDom = true) {
-    const target = document.querySelector(selector);
+    let target = document.querySelector(selector);
     if (this.svgCache[svgFile] && updateDom) {
       target.innerHTML = this.svgCache[svgFile].responseText;
 
@@ -82,6 +82,7 @@ const TimeScrubber = class {
       };
 
       if (updateDom) {
+        target = document.querySelector(selector);
         target.innerHTML = ajax.responseText;
       }
     }
