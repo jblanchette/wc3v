@@ -5,7 +5,7 @@ const ScrubSpeeds = {
   '2x': 2,
   '3x': 3,
   '4x': 4,
-  '5x': 5,
+  '5x': 10,
   get: (speed) => {
     return ScrubSpeeds[speed];
   }
@@ -21,6 +21,7 @@ const TimeScrubber = class {
     this.timeStep = this.getTimeStep();
 
     this.wrapperEl = null;
+    this.trackerEl = null;
     this.domEl = null;
     this.canvas = null;
     this.ctx = null;
@@ -47,8 +48,11 @@ const TimeScrubber = class {
     </div>`;
 
     this.wrapperEl.append(this.domEl);
+    this.trackerEl = document.getElementById(`${this.wrapperId}-tracker`);
+
     this.loadSvg(`#${this.wrapperId}-play`, 'play-icon');
     this.loadSvg(`#${this.wrapperId}-play`, 'pause-icon', false);
+    this.loadSvg(`#${this.wrapperId}-play`, 'stop-icon', false);
   }
 
   getTimeStep () {
@@ -92,8 +96,12 @@ const TimeScrubber = class {
     
   }
 
-  render () {
-    
+  render (gameTime, matchEndTime) {
+    const scrubberBox = this.wrapperEl.getBoundingClientRect();
+    const { width } = scrubberBox;
+    const matchPercentDone = (gameTime / matchEndTime) * 100;
+
+    this.trackerEl.style.left = `${matchPercentDone}%`;
   }
 };
 

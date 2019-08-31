@@ -1,5 +1,5 @@
 const ClientUnit = class {
-  constructor (unitData) {
+  constructor (unitData, playerColor) {
     const dataFields = [ 
       "displayName", "itemId", "itemId1", "itemId2",
       "objectId1", "objectId2", "isRegistered", "isUnit",
@@ -12,6 +12,7 @@ const ClientUnit = class {
       this[field] = unitData[field] || null;
     });
 
+    this.playerColor = playerColor;
     this.setup();
   }
 
@@ -31,10 +32,11 @@ const ClientUnit = class {
     }
 
     this.currentMoveRecordIndex = -1;
+    this.decayLevel = 1;
   }
 
-  getCurrentMoveRecord (gameTime) { 
-    const record = this.moveHistory.find(record => {
+  getCurrentMoveRecord (gameTime) {
+    const index = this.moveHistory.findIndex(record => {
       const { startTime, endTime } = record.timerData;
 
       if (gameTime >= startTime && gameTime <= endTime) {
@@ -42,11 +44,20 @@ const ClientUnit = class {
       }
     });
 
-    if (!record) {
+    if (index === -1) {
       return false;
     }
 
-    const { targetX, targetY } = record;
+    if (this.currentMoveRecordIndex !== index) {
+      this.initMove(index);
+    }
+
+    this.currentMoveRecordIndex = index;
+    return true;
+  }
+
+  initMove (index) {
+    const { targetX, targetY } = this.moveHistory[index];
 
     const pathDistance = Helpers.distance(
       this.currentX, this.currentY,
@@ -56,6 +67,7 @@ const ClientUnit = class {
     const ms = (this.meta.movespeed || 250);
     const pathTime = (pathDistance / ms);
 
+    this.decayLevel = 1;
     this.moveInfo = {
       startX: this.currentX,
       startY: this.currentY,
@@ -68,8 +80,16 @@ const ClientUnit = class {
       xVelocity: (Math.abs(targetX - this.currentX) / pathTime),
       yVelocity: (Math.abs(targetY - this.currentY) / pathTime)
     };
+  }
 
-    return true;
+  decay (dt) {
+    this.decayLevel -= 0.005;
+
+    if (this.meta.worker) {
+      this.decayLevel = Math.max(0.2, this.decayLevel);
+    } else {
+      this.decayLevel = Math.max(0.0, this.decayLevel);
+    }
   }
 
   update (gameTime, dt) {
@@ -79,6 +99,8 @@ const ClientUnit = class {
 
     const hasRecord = this.getCurrentMoveRecord(gameTime);
     if (!hasRecord) {
+      this.decay();
+
       return;
     }
 
@@ -122,9 +144,11 @@ const ClientUnit = class {
 
     // draw code
 
-    ctx.strokeStyle = colorMap.unitPath;
+    ctx.strokeStyle = "#FFFC01";
 
+    ctx.globalAlpha = this.decayLevel;
     ctx.beginPath();
+    ctx.fillStyle = this.playerColor;
     ctx.arc(drawX, drawY, 10, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
@@ -132,8 +156,9 @@ const ClientUnit = class {
     ctx.strokeStyle = colorMap.black;
 
     ctx.fillStyle = "#FFF";
-    ctx.fillText(this.displayName, drawX, drawY);
+    ctx.fillText(this.displayName, drawX - 12, drawY + 18);
     ctx.fillStyle = "#000";
+    ctx.globalAlpha = 1;
   }
 
   render (ctx, gameTime, xScale, yScale, middleX, middleY) {
