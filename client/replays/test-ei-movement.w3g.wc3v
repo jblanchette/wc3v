@@ -23,11 +23,18 @@
                         "y": 3584
                     },
                     "spawnTime": 2300,
-                    "spawnPosition": null,
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
                     "path": [
                         {
-                            "x": 5152,
-                            "y": 3168
+                            "x": 4672,
+                            "y": 2944
+                        },
+                        {
+                            "x": 5119.2,
+                            "y": 3152.69
                         },
                         {
                             "x": 4768,
@@ -40,8 +47,8 @@
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 0,
-                            "distance": 0,
+                            "timeElapsed": 2.1,
+                            "distance": 493.5,
                             "startX": 4672,
                             "startY": 2944,
                             "targetX": 5152,
@@ -54,29 +61,29 @@
                             "yVelocity": 99.38,
                             "timerData": {
                                 "startTime": 10200,
-                                "endTime": 10200,
+                                "endTime": 12300,
                                 "runLength": 2254.018091199571,
                                 "completed": true,
                                 "cancelled": true
                             }
                         },
                         {
-                            "timeElapsed": 1.7,
-                            "distance": 399.5,
-                            "startX": 5152,
-                            "startY": 3168,
+                            "timeElapsed": 1.6,
+                            "distance": 376,
+                            "startX": 5119.2,
+                            "startY": 3152.69,
                             "targetX": 4768,
                             "targetY": 3296,
                             "xDirection": -1,
                             "yDirection": 1,
-                            "pathDistance": 404.77,
-                            "pathTime": 1.72,
-                            "xVelocity": 222.94,
-                            "yVelocity": 74.31,
+                            "pathDistance": 379.31,
+                            "pathTime": 1.61,
+                            "xVelocity": 217.58,
+                            "yVelocity": 88.78,
                             "timerData": {
                                 "startTime": 12300,
-                                "endTime": 14022.43208724065,
-                                "runLength": 1722.4320872406493,
+                                "endTime": 13914.101648720802,
+                                "runLength": 1614.1016487208024,
                                 "completed": true,
                                 "cancelled": false
                             }
@@ -131,11 +138,18 @@
                         "y": 3584
                     },
                     "spawnTime": 2300,
-                    "spawnPosition": null,
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
                     "path": [
                         {
-                            "x": 4544,
-                            "y": 2432
+                            "x": 4672,
+                            "y": 2944
+                        },
+                        {
+                            "x": 4615,
+                            "y": 2716.02
                         },
                         {
                             "x": 5120,
@@ -144,8 +158,8 @@
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 0,
-                            "distance": 0,
+                            "timeElapsed": 1,
+                            "distance": 235,
                             "startX": 4672,
                             "startY": 2944,
                             "targetX": 4544,
@@ -158,29 +172,29 @@
                             "yVelocity": 227.98,
                             "timerData": {
                                 "startTime": 37001,
-                                "endTime": 37001,
+                                "endTime": 38001,
                                 "runLength": 2245.7766811874917,
                                 "completed": true,
                                 "cancelled": true
                             }
                         },
                         {
-                            "timeElapsed": 5.4,
-                            "distance": 1269,
-                            "startX": 4544,
-                            "startY": 2432,
+                            "timeElapsed": 4.2,
+                            "distance": 987,
+                            "startX": 4615,
+                            "startY": 2716.02,
                             "targetX": 5120,
                             "targetY": 3584,
                             "xDirection": 1,
                             "yDirection": 1,
-                            "pathDistance": 1287.98,
-                            "pathTime": 5.48,
-                            "xVelocity": 105.1,
-                            "yVelocity": 210.19,
+                            "pathDistance": 1004.2,
+                            "pathTime": 4.27,
+                            "xVelocity": 118.18,
+                            "yVelocity": 203.12,
                             "timerData": {
                                 "startTime": 38001,
-                                "endTime": 43481.745340595226,
-                                "runLength": 5480.745340595229,
+                                "endTime": 42274.18836472099,
+                                "runLength": 4273.188364720989,
                                 "completed": true,
                                 "cancelled": false
                             }
@@ -214,8 +228,16 @@
                         "y": 2944
                     },
                     "spawnTime": 2300,
-                    "spawnPosition": null,
-                    "path": [],
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [
+                        {
+                            "x": 4672,
+                            "y": 2944
+                        }
+                    ],
                     "moveHistory": [],
                     "meta": {
                         "displayName": "Acolyte",
@@ -383,11 +405,18 @@
                         "y": 3392
                     },
                     "spawnTime": 2300,
-                    "spawnPosition": null,
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
                     "path": [
                         {
-                            "x": 5120,
-                            "y": 3584
+                            "x": 4672,
+                            "y": 2944
+                        },
+                        {
+                            "x": 4809.63,
+                            "y": 3140.62
                         },
                         {
                             "x": 4352,
@@ -396,8 +425,8 @@
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 0,
-                            "distance": 0,
+                            "timeElapsed": 1.2,
+                            "distance": 240,
                             "startX": 4672,
                             "startY": 2944,
                             "targetX": 5120,
@@ -410,29 +439,29 @@
                             "yVelocity": 163.85,
                             "timerData": {
                                 "startTime": 2500,
-                                "endTime": 2500,
+                                "endTime": 3700,
                                 "runLength": 3906.097797034785,
                                 "completed": true,
                                 "cancelled": true
                             }
                         },
                         {
-                            "timeElapsed": 3.9,
-                            "distance": 780,
-                            "startX": 5120,
-                            "startY": 3584,
+                            "timeElapsed": 2.6,
+                            "distance": 520,
+                            "startX": 4809.63,
+                            "startY": 3140.62,
                             "targetX": 4352,
                             "targetY": 3392,
                             "xDirection": -1,
-                            "yDirection": -1,
-                            "pathDistance": 791.64,
-                            "pathTime": 3.96,
-                            "xVelocity": 194.03,
-                            "yVelocity": 48.51,
+                            "yDirection": 1,
+                            "pathDistance": 522.13,
+                            "pathTime": 2.61,
+                            "xVelocity": 175.29,
+                            "yVelocity": 96.29,
                             "timerData": {
                                 "startTime": 3700,
-                                "endTime": 7658.181400592954,
-                                "runLength": 3958.181400592954,
+                                "endTime": 6310.652140298425,
+                                "runLength": 2610.652140298425,
                                 "completed": true,
                                 "cancelled": false
                             }
@@ -465,8 +494,16 @@
                         "y": 2944
                     },
                     "spawnTime": 2300,
-                    "spawnPosition": null,
-                    "path": [],
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [
+                        {
+                            "x": 4672,
+                            "y": 2944
+                        }
+                    ],
                     "moveHistory": [],
                     "meta": {
                         "hero": false,
