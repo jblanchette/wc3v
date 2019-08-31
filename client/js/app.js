@@ -213,6 +213,7 @@ const Wc3vViewer = class {
 
   mainLoop(timestamp) {
     const timeStep = this.scrubber.getTimeStep();
+    const { speed } = this.scrubber;
 
     if (this.lastFrameTimestamp === 0) {
       this.lastFrameTimestamp = timestamp;
@@ -222,7 +223,7 @@ const Wc3vViewer = class {
     this.lastFrameTimestamp = timestamp;
  
     while (this.lastFrameDelta >= timeStep) {
-        this.update(timeStep);
+        this.update(timeStep * speed);
         this.lastFrameDelta -= timeStep;
     }
 

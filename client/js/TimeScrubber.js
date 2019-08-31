@@ -17,7 +17,7 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    this.speed = ScrubSpeeds.get('1x');
+    this.speed = ScrubSpeeds.get('5x');
     this.timeStep = this.getTimeStep();
 
     this.wrapperEl = null;
@@ -52,7 +52,7 @@ const TimeScrubber = class {
   }
 
   getTimeStep () {
-    return (10000 * this.speed) / 60;
+    return (1000 / 60);
   }
 
   setupControls (domMap) {
