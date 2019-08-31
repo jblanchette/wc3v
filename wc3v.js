@@ -37,6 +37,9 @@ const parseReplays = (options) => {
     playerManager = new PlayerManager();
     logManager.setLogger(file, true);
 
+    globalTime = 0;
+    actionCount = 0;
+
     try {
       const replay = Parser.parse(file);
       let players = playerManager.players;
