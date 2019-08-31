@@ -52,7 +52,7 @@ const TimeScrubber = class {
   }
 
   getTimeStep () {
-    return (1000 * this.speed) / 60;
+    return (10000 * this.speed) / 60;
   }
 
   setupControls (domMap) {

@@ -18,10 +18,8 @@ const ScrubStates = {
   finished: 3
 };
 
-const Wc3vViewer = class extends LegacyApp {
+const Wc3vViewer = class {
   constructor () {
-    super();
-
     this.canvas = null;
     this.ctx = null;
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
@@ -75,11 +73,7 @@ const Wc3vViewer = class extends LegacyApp {
       }
     });
 
-    const url = `http://localhost:8080/replays/${filename}`;
-
-    this.setupLinks(filename, url);
-
-    req.open("GET", url);
+    req.open("GET", `http://localhost:8080/replays/${filename}`);
     req.send();
   }
 
@@ -124,9 +118,6 @@ const Wc3vViewer = class extends LegacyApp {
   }
 
   setup () {
-    super.setup();
-    ///
-
     this.gameTime = 0;
 
     this.setupPlayers();
@@ -241,6 +232,11 @@ const Wc3vViewer = class extends LegacyApp {
 
   update (dt) {
     this.gameTime += dt;
+
+    this.players.forEach(player => {
+      player.update(this.gameTime, dt);
+    });
+
   }
 
   render () {
