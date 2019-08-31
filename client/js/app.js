@@ -20,6 +20,10 @@ const ScrubStates = {
 
 const Wc3vViewer = class {
   constructor () {
+    this.reset();
+  }
+
+  reset () {
     this.canvas = null;
     this.ctx = null;
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
@@ -117,6 +121,13 @@ const Wc3vViewer = class {
     this.stopRenderLoop();
   }
 
+  stop () {
+    this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'stop-icon');
+    this.state = ScrubStates.stopped;
+
+    this.stopRenderLoop();
+  }
+
   setup () {
     this.gameTime = 0;
 
@@ -135,10 +146,25 @@ const Wc3vViewer = class {
   }
 
   setupPlayers () {
-    Object.keys(this.mapData.players).forEach(playerId => {
+    const colorMap = [
+     "#959697",
+     "#4E2A04",
+      "#1CE6B9",
+      "#0042FF",
+      "#7EBFF1",
+      "#540081",
+      "#FFFC01",
+      "#FF0303",
+      "#fEBA0E",
+      "#20C000",
+      "#E55BB0",
+      "#106246"
+    ];
+
+    Object.keys(this.mapData.players).forEach((playerId, index) => {
       const { startingPosition, units } = this.mapData.players[playerId];
 
-      this.players.push(new ClientPlayer(playerId, startingPosition, units));
+      this.players.push(new ClientPlayer(playerId, startingPosition, units, colorMap[index]));
     });
   }
 
@@ -150,6 +176,7 @@ const Wc3vViewer = class {
     const { file } = map;
     const mapParts = file.split("/");
 
+    this.matchEndTime = this.mapData.replay.duration;
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
     
     const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
@@ -227,6 +254,13 @@ const Wc3vViewer = class {
         this.lastFrameDelta -= timeStep;
     }
 
+    if (this.gameTime >= this.matchEndTime) {
+      console.log("match replay completed.");
+
+      this.stop();
+      return;
+    }
+
     this.render();
     this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
   }
@@ -237,13 +271,13 @@ const Wc3vViewer = class {
     this.players.forEach(player => {
       player.update(this.gameTime, dt);
     });
-
   }
 
   render () {
     const { 
       ctx,
-      gameTime, 
+      gameTime,
+      matchEndTime, 
       xScale, 
       yScale,
       middleX,
@@ -254,8 +288,10 @@ const Wc3vViewer = class {
     this.renderMapBackground();
 
     this.players.forEach(player => {
-      player.render(ctx, this.gameTime, xScale, yScale, middleX, middleY);
+      player.render(ctx, gameTime, xScale, yScale, middleX, middleY);
     });
+
+    this.scrubber.render(gameTime, matchEndTime);
 
     const gt = this.gameTime.toFixed(2);
     ctx.fillText(`Game Time: ${gt}`, 10, 10);

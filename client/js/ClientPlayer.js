@@ -1,9 +1,9 @@
 
 const ClientPlayer = class {
-  constructor (playerId, startingPosition, units) {
+  constructor (playerId, startingPosition, units, playerColor) {
     this.playerId = playerId;
     this.startingPosition = startingPosition;
-    this.units = units.map(unitData => new ClientUnit(unitData));
+    this.units = units.map(unitData => new ClientUnit(unitData, playerColor));
 
     const sortedUnits = this.units.sort((a, b) => {
       return a.spawnTime - b.spawnTime;
