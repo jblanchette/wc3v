@@ -8,14 +8,10 @@ const ClientPlayer = class {
     const sortedUnits = this.units.sort((a, b) => {
       return a.spawnTime - b.spawnTime;
     });
-
-    console.log("sorted: ", sortedUnits
-      .filter(u => { return u.isBuilding })
-      .map(u => u.spawnTime));
   }
 
-  update (dt) {
-    units.forEach(unit => unit.update(dt));
+  update (gameTime, dt) {
+    this.units.forEach(unit => unit.update(gameTime, dt));
   }
 
   render (ctx, gameTime, xScale, yScale, middleX, middleY) {
