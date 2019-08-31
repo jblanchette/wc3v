@@ -5,7 +5,8 @@ const fs = require('fs'),
 const config = require("../config/config");
 const { debugPlayer, logToConsole } = config;
 
-let logDisabled = false;
+let logDisabled = false,
+    testMode = false;
 
 const Logger = class {
   constructor (logFile) {
@@ -22,7 +23,7 @@ const Logger = class {
     this.logStream =  fs.createWriteStream(outputFile, { flags: 'a' })
 
     console.logger = (...args) => {
-      if (logDisabled) {
+      if (logDisabled || testMode) {
         return;
       }
 
@@ -59,8 +60,13 @@ const setDisabledState = (state) => {
   logDisabled = state;
 };
 
+const setTestMode = () => {
+  testMode = true;
+}
+
 module.exports = {
   setLogger: setLogger,
   getLogger: getLogger,
-  setDisabledState: setDisabledState
+  setDisabledState: setDisabledState,
+  setTestMode: setTestMode
 };

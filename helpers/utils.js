@@ -3,6 +3,8 @@ const fs = require('fs'),
 
 const config = require('../config/config');
 
+const logManager = require("./logManager");
+
 ////
 // check if two [itemId] lists are equal
 ////
@@ -216,7 +218,9 @@ const readCliArgs = (argv) => {
 			break;
 
       case "test":
-        config.debugPlayer = 1000000; // hack to turn off all logs for now
+        config.debugPlayer = null; // hack to turn off all logs for now
+        logManager.setTestMode();
+
         const testMaps = [
           // simple test mpas
           'test-ch-movement',
