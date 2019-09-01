@@ -17,7 +17,8 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    this.speed = ScrubSpeeds.get('5x');
+    this.speedKey = '5x';
+    this.speed = ScrubSpeeds.get(this.speedKey);
     this.timeStep = this.getTimeStep();
 
     this.wrapperEl = null;
@@ -31,9 +32,10 @@ const TimeScrubber = class {
     this.wrapperEl = document.getElementById(this.wrapperId);
     this.canvas = document.getElementById(this.canvasId);
 
-    if (this.domEl) {
-      // clear out the old one
-      this.domEl.remove();
+    const existingDomEl = document.getElementById(`${this.wrapperId}-scrubber`);
+
+    if (existingDomEl) {
+      existingDomEl.remove();
     }
 
     this.domEl = document.createElement("div");
@@ -42,7 +44,7 @@ const TimeScrubber = class {
 
     this.domEl.innerHTML = `
     <div id="${this.wrapperId}-play" class="time-scrubber-control play-button"></div>
-    <div id="${this.wrapperId}-speed" class="time-scrubber-control speed-button">1x</div>
+    <div id="${this.wrapperId}-speed" class="time-scrubber-control speed-button">${this.speedKey}</div>
     <div class="time-scrubber-track">
       <div id="${this.wrapperId}-tracker" class="time-scrubber-tracker"></div>
     </div>`;
