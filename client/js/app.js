@@ -50,6 +50,7 @@ const Wc3vViewer = class {
     console.log('1 loading wc3v replay: ', filename);
 
     this.pause();
+    this.reset();
 
     this.loadFile(filename);
     this.scrubber.init();
