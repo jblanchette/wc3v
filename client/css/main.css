@@ -100,7 +100,39 @@ html, body {
   opacity: 1;
 }
 
+.speed-modal {
+  display: none;
+  position: absolute;
+  left: 2.35rem;
+  top: -7.75rem;
+  width: 2rem;
+  padding: 0.2rem 0.15rem;
+  background-color: #FFF;
+  border: 1px solid #333;
+  border-radius: 0.5rem;
+  font-size: 14px;
+}
+
+.speed-modal ul {
+  margin: 0;
+  padding: 0;
+}
+
+.speed-modal li {
+  list-style-type: none;
+  margin-bottom: 0.1rem;
+}
+
+.speed-modal li:last-child {
+  margin-bottom: 0;
+}
+
+.speed-modal li:hover {
+  color: #0033FF;
+}
+
 .time-scrubber-control.speed-button {
+  width: 1.75rem;
   font-size: 18px;
   font-weight: bold;
 }
