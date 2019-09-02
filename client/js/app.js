@@ -55,7 +55,8 @@ const Wc3vViewer = class {
     this.loadFile(filename);
     this.scrubber.init();
     this.scrubber.setupControls({
-      "play": (e) => { this.togglePlay(e); }
+      "play": (e) => { this.togglePlay(e); },
+      "speed": (e) => { this.toggleSpeed(e); }
     });
   }
 
@@ -106,6 +107,11 @@ const Wc3vViewer = class {
         this.play();
       break;
     }
+  }
+
+  toggleSpeed () {
+    const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
+    speedModal.style.display = speedModal.style.display !== "block" ? "block" : "none";
   }
 
   play () {

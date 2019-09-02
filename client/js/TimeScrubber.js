@@ -5,10 +5,7 @@ const ScrubSpeeds = {
   '2x': 2,
   '3x': 3,
   '4x': 4,
-  '5x': 10,
-  get: (speed) => {
-    return ScrubSpeeds[speed];
-  }
+  '5x': 10
 };
 
 const TimeScrubber = class {
@@ -17,8 +14,10 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    this.speedKey = '5x';
-    this.speed = ScrubSpeeds.get(this.speedKey);
+    const startingSpeed = '1x';
+    this.speedKey = startingSpeed;
+    this.setSpeed(startingSpeed);
+
     this.timeStep = this.getTimeStep();
 
     this.wrapperEl = null;
@@ -29,36 +28,61 @@ const TimeScrubber = class {
   }
 
   init () {
-    this.wrapperEl = document.getElementById(this.wrapperId);
-    this.canvas = document.getElementById(this.canvasId);
+    const { wrapperId, canvasId, speedKey } = this;
 
-    const existingDomEl = document.getElementById(`${this.wrapperId}-scrubber`);
+    this.wrapperEl = document.getElementById(wrapperId);
+    this.canvas = document.getElementById(canvasId);
+
+    const existingDomEl = document.getElementById(`${wrapperId}-scrubber`);
 
     if (existingDomEl) {
       existingDomEl.remove();
     }
 
+    const scrubSpeeds = Object
+      .keys(ScrubSpeeds)
+      .map(speed => { return `<li onClick="wc3v.scrubber.setSpeed('${speed}');">${speed}</li>` })
+      .join("\n");
+
     this.domEl = document.createElement("div");
-    this.domEl.setAttribute("id", `${this.wrapperId}-scrubber`);
+    this.domEl.setAttribute("id", `${wrapperId}-scrubber`);
     this.domEl.className = "time-scrubber";
 
     this.domEl.innerHTML = `
-    <div id="${this.wrapperId}-play" class="time-scrubber-control play-button"></div>
-    <div id="${this.wrapperId}-speed" class="time-scrubber-control speed-button">${this.speedKey}</div>
+    <div id="${wrapperId}-play" class="time-scrubber-control play-button"></div>
+    <div id="${wrapperId}-speed" class="time-scrubber-control speed-button">
+      <span id="${wrapperId}-speed-key">${speedKey}</span>
+
+      <div id="${wrapperId}-speed-modal" class="speed-modal">
+        <ul>${scrubSpeeds}</ul>
+      </div>
+    </div>
     <div class="time-scrubber-track">
-      <div id="${this.wrapperId}-tracker" class="time-scrubber-tracker"></div>
+      <div id="${wrapperId}-tracker" class="time-scrubber-tracker"></div>
     </div>`;
 
     this.wrapperEl.append(this.domEl);
-    this.trackerEl = document.getElementById(`${this.wrapperId}-tracker`);
+    this.trackerEl = document.getElementById(`${wrapperId}-tracker`);
 
-    this.loadSvg(`#${this.wrapperId}-play`, 'play-icon');
-    this.loadSvg(`#${this.wrapperId}-play`, 'pause-icon', false);
-    this.loadSvg(`#${this.wrapperId}-play`, 'stop-icon', false);
+    this.loadSvg(`#${wrapperId}-play`, 'play-icon');
+    this.loadSvg(`#${wrapperId}-play`, 'pause-icon', false);
+    this.loadSvg(`#${wrapperId}-play`, 'stop-icon', false);
   }
 
   getTimeStep () {
     return (1000 / 60);
+  }
+
+  setSpeed (speedKey) {
+    this.speedKey = speedKey;
+    this.speed = ScrubSpeeds[speedKey];
+
+    const speedKeyEl = document.getElementById(`${this.wrapperId}-speed-key`);
+
+    // don't worry about setting this during init since we already do
+    if (speedKeyEl) {
+      speedKeyEl.innerHTML = speedKey;
+    }
   }
 
   setupControls (domMap) {
@@ -92,10 +116,6 @@ const TimeScrubber = class {
         target.innerHTML = ajax.responseText;
       }
     }
-  }
-
-  renderScrubber () {
-    
   }
 
   render (gameTime, matchEndTime) {
