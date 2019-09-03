@@ -3,9 +3,9 @@ const ScrubSpeeds = {
   '1/2x': 0.5,
   '1x': 1,
   '2x': 2,
-  '3x': 3,
-  '4x': 4,
-  '5x': 10
+  '5x': 5,
+  '10x': 10,
+  '20x': 20
 };
 
 const TimeScrubber = class {
@@ -14,7 +14,7 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    const startingSpeed = '5x';
+    const startingSpeed = '10x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
 
