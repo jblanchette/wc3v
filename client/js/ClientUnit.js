@@ -1,3 +1,12 @@
+const _iconCache = {};
+
+const IconSizes = {
+  'hero': 30,
+  'unit': 20,
+  'worker': 10,
+  'building': 20
+};
+
 const ClientUnit = class {
   constructor (unitData, playerColor) {
     const dataFields = [ 
@@ -14,6 +23,29 @@ const ClientUnit = class {
 
     this.playerColor = playerColor;
     this.setup();
+
+    this.loadIcon();
+  }
+
+  loadIcon () {
+    const img = new Image();
+    const imgSrc = `/assets/wc3icons/${this.itemId}.jpg`;
+    
+    this.icon = null;
+
+    if (_iconCache[imgSrc]) {
+      this.icon = _iconCache[imgSrc];
+      return;
+    }
+
+    img.src = imgSrc;
+    img.onload = () => {
+      if (!_iconCache[imgSrc]) {
+        _iconCache[imgSrc] = img;
+      }
+
+      this.icon = img;
+    };
   }
 
   setup () {
@@ -33,6 +65,16 @@ const ClientUnit = class {
 
     this.currentMoveRecordIndex = -1;
     this.decayLevel = 1;
+
+    if (this.meta.hero) {
+      this.iconSize = IconSizes.hero;
+    } else if (this.isBuilding) {
+      this.iconSize = IconSizes.building;
+    } else if (this.meta.worker) {
+      this.iconSize = IconSizes.worker;
+    } else {
+      this.iconSize = IconSizes.unit;
+    }
   }
 
   getCurrentMoveRecord (gameTime) {
@@ -123,14 +165,16 @@ const ClientUnit = class {
   }
 
   renderBuilding (ctx, xScale, yScale, middleX, middleY) {
-    ctx.strokeStyle = colorMap.buildingOutline;
-
     const { x, y } = this.lastPosition;
     const drawX = xScale(x) + middleX;
     const drawY = yScale(y) + middleY;
+    const iconSize = this.iconSize;
 
-    ctx.strokeRect(drawX, drawY, 10, 10);
-    ctx.strokeStyle = colorMap.black;
+    ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize);
+
+    ctx.strokeStyle = "#FFFC01";
+    ctx.strokeRect(drawX, drawY, iconSize, iconSize);
+    ctx.strokeStyle = "#000000";
   }
 
   renderUnit (ctx, gameTime, xScale, yScale, middleX, middleY) {
@@ -142,23 +186,42 @@ const ClientUnit = class {
     const drawX = xScale(currentX) + middleX;
     const drawY = yScale(currentY) + middleY;
 
+    const iconSize = this.iconSize;
+    const halfIconSize = iconSize / 2;
     // draw code
 
     ctx.strokeStyle = "#FFFC01";
-
     ctx.globalAlpha = this.decayLevel;
+
+    // clip our initial circle
+    ctx.save();
     ctx.beginPath();
-    ctx.fillStyle = this.playerColor;
-    ctx.arc(drawX, drawY, 10, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.clip();
+
+    // draw the icons
+    ctx.drawImage(
+      this.icon, 
+      (drawX - halfIconSize), 
+      (drawY - halfIconSize), 
+      iconSize, 
+      iconSize
+    );
+
+    // draw the icon ring
+    ctx.beginPath();
+    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
     ctx.stroke();
-    
-    ctx.strokeStyle = colorMap.black;
+    ctx.closePath();
+
+    ctx.restore();
 
     ctx.fillStyle = "#FFF";
     ctx.fillText(this.displayName, drawX - 12, drawY + 18);
     ctx.fillStyle = "#000";
     ctx.globalAlpha = 1;
+    ctx.strokeStyle = colorMap.black;
   }
 
   render (ctx, gameTime, xScale, yScale, middleX, middleY) {
