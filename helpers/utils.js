@@ -174,10 +174,13 @@ const writeOutput = (filename, replay, players) => {
         return acc;
       }
 
+      const { race, parseConfidence, startingPosition, units } = player;
+
     	acc[playerId] = {
-        race: player.race,
-        startingPosition: player.startingPosition,
-    		units: player.units.map(unit => unit.exportUnit())
+        parseConfidence,
+        race,
+        startingPosition,
+    		units: units.map(unit => unit.exportUnit())
     	};
 
     	return acc;

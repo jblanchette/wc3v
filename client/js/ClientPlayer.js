@@ -22,13 +22,14 @@ const ClientPlayer = class {
     const starterMap = {
       'O': 'ogre',
       'H': 'htow',
-      'E': 'etol',
+      'N': 'etol',
       'U': 'unpl'
     };
 
     const img = new Image();
     const imgSrc = `/assets/wc3icons/${starterMap[this.race]}.jpg`;
     
+    console.log("img src: ", imgSrc, this.race);
     this.icon = null;
 
     img.src = imgSrc;
@@ -42,6 +43,11 @@ const ClientPlayer = class {
   }
 
   renderPlayerIcon (ctx, gameTime, xScale, yScale, middleX, middleY) {
+    // check if it isn't loaded yet
+    if (!this.icon) {
+      return;
+    }
+
     const iconSize = 45;
     const halfIconSize = iconSize / 2;
 
