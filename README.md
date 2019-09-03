@@ -13,11 +13,15 @@
 
 ## Running the reference `wc3v` client viewer
 
+(NOTE: in order to show wc3 icons, you must follow the instructions on war3observer
+ and put the resulting icons in the `client/assets/wc3icons` folder).
+
 navigate to the `client` directory
 
 run `npm install -g http-server` to install `http-server`
 
 run `http-server` and follow the printed directions to see the locally hosted site
+
 
 Also see the [client README.md](client/README.md) for more information
 
@@ -121,3 +125,7 @@ Replay parsing using:
 Replay documentation from:
 
 * https://github.com/scopatz/w3g/blob/master/w3g_format.txt
+
+Icon extraction from:
+
+* https://github.com/warlockbrawl/war3observer
