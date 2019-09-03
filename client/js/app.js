@@ -70,12 +70,9 @@ const Wc3vViewer = class {
         const jsonData = JSON.parse(target.responseText);
         
         self.mapData = jsonData;
-        // setup the map units
         self.setup();
       } catch (e) {
         console.error("Error loading wc3v replay: ", e);
-
-        reject(e);
       }
     });
 
@@ -154,8 +151,8 @@ const Wc3vViewer = class {
 
   setupPlayers () {
     const colorMap = [
-     "#959697",
-     "#4E2A04",
+      "#959697",
+      "#4E2A04",
       "#1CE6B9",
       "#0042FF",
       "#7EBFF1",
@@ -170,8 +167,19 @@ const Wc3vViewer = class {
 
     Object.keys(this.mapData.players).forEach((playerId, index) => {
       const { startingPosition, units } = this.mapData.players[playerId];
+      const { race, name } = this.mapData.replay.players[playerId];
 
-      this.players.push(new ClientPlayer(playerId, startingPosition, units, colorMap[index]));
+      const player = new ClientPlayer(
+        index,
+        playerId, 
+        startingPosition, 
+        units, 
+        name,
+        race,
+        colorMap[index]
+      );
+
+      this.players.push(player);
     });
   }
 

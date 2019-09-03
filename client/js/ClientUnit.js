@@ -125,7 +125,7 @@ const ClientUnit = class {
   }
 
   decay (dt) {
-    this.decayLevel -= 0.005;
+    this.decayLevel -= 0.0025;
 
     if (this.meta.worker) {
       this.decayLevel = Math.max(0.2, this.decayLevel);
