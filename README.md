@@ -9,8 +9,6 @@
 
  ![Happy vs Grubby showmatch on Concealed Hill](/example-client-v2.png)
 
- ![Battle.net match with title commentary](/wc3v-beta-preview.webm)
-
 # Usage
 
 ## Running the reference `wc3v` client viewer
