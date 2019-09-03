@@ -125,7 +125,7 @@ const ClientUnit = class {
   }
 
   decay (dt) {
-    this.decayLevel -= 0.0025;
+    this.decayLevel -= this.meta.hero ? 0.0005 : 0.0025;
 
     if (this.meta.worker) {
       this.decayLevel = Math.max(0.2, this.decayLevel);
@@ -217,8 +217,11 @@ const ClientUnit = class {
 
     ctx.restore();
 
+    const drawTextX = drawX - (this.displayName.length * 2);
+    const drawTextY = drawY + halfIconSize;
+
     ctx.fillStyle = "#FFF";
-    ctx.fillText(this.displayName, drawX - 12, drawY + 18);
+    ctx.fillText(this.displayName, drawTextX, drawTextY );
     ctx.fillStyle = "#000";
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;

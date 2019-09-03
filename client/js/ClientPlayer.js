@@ -85,7 +85,7 @@ const ClientPlayer = class {
     // adjust text by length, ensure we don't go out of the map bounds
     const drawTextX = Math.max(
       xScale(minXExtent) + middleX, 
-      (drawX - (this.displayName.length * 2))
+      (drawX - (this.displayName.length * 2.5))
     );
     const drawTextY = (drawY + halfIconSize + 10);
 
