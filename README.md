@@ -86,14 +86,6 @@ of the current output for a Happy vs Grubby show match.
 
 See the [DESIGN.md](/docs/DESIGN.md) file
 
-# Progress
-
-Most basic game functionality works - some show stopper errors
-are left in places where problems are still WIP.
-
-Patch `1.31` broke viewing of downloaded replays, so debugging
-is difficult at the moment.
-
 ## Implemented
 	
 * unit selection / deselection
@@ -117,7 +109,6 @@ is difficult at the moment.
 * Item unit spawns
 * Gold + Wood resource tracking
 * Food / Upkeep tracking
-
 
 # Credits
 
