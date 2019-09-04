@@ -49,29 +49,32 @@ to run wc3v in testing mode against a set of known test maps, run:
 Latest test output:
 
 ```
+$ node wc3v.js --test
 user args:  [ '--test' ]
-parse: 76.962ms
+parse: 97.790ms
 TEST PASSED:  ./replays/test-ch-movement.w3g
-parse: 22.853ms
+parse: 23.388ms
 TEST PASSED:  ./replays/test-ei-movement.w3g
-parse: 849.267ms
-TEST PASSED:  ./replays/happy-vs-grubby.w3g
-parse: 2317.975ms
-TEST PASSED:  ./replays/happy-vs-lucifer.w3g
-parse: 1732.055ms
-TEST PASSED:  ./replays/cash-vs-foggy.w3g
-parse: 454.778ms
-TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
-parse: 1384.555ms
-TEST PASSED:  ./replays/crow-vs-john.w3g
-TEST FAILED:  ./replays/chae-vs-hawk.w3g
-parse: 1306.988ms
-TEST PASSED:  ./replays/soin-vs-chae.w3g
-TEST FAILED:  ./replays/joker-vs-lil.w3g
-parse: 706.573ms
+parse: 700.738ms
 TEST PASSED:  ./replays/bnet-ud-vs-orc-2.w3g
-
-
+parse: 706.537ms
+TEST PASSED:  ./replays/happy-vs-grubby.w3g
+parse: 1425.998ms
+TEST PASSED:  ./replays/grubby-vs-thorzain.w3g
+parse: 1575.497ms
+TEST PASSED:  ./replays/happy-vs-lucifer.w3g
+parse: 1185.854ms
+TEST PASSED:  ./replays/cash-vs-foggy.w3g
+parse: 297.573ms
+TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
+parse: 982.399ms
+TEST PASSED:  ./replays/crow-vs-john.w3g
+parse: 905.581ms
+TEST PASSED:  ./replays/chae-vs-hawk.w3g
+parse: 938.540ms
+TEST PASSED:  ./replays/soin-vs-chae.w3g
+parse: 1090.073ms
+TEST PASSED:  ./replays/joker-vs-lil.w3g
 ```
 
 # Example output
