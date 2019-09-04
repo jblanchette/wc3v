@@ -9,6 +9,44 @@
             },
             "units": [
                 {
+                    "displayName": "Necropolis",
+                    "itemId": "unpl",
+                    "itemId1": "-84,62,0,0",
+                    "itemId2": "-84,62,0,0",
+                    "objectId1": 16044,
+                    "objectId2": 16044,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "spawnTime": 2300,
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [
+                        {
+                            "x": 4672,
+                            "y": 2944
+                        }
+                    ],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
                     "displayName": "Acolyte",
                     "itemId": "uaco",
                     "itemId1": "68,63,0,0",
@@ -253,144 +291,6 @@
                     "items": []
                 },
                 {
-                    "displayName": "Acolyte",
-                    "itemId": "uaco",
-                    "itemId1": null,
-                    "itemId2": null,
-                    "objectId1": null,
-                    "objectId2": null,
-                    "isRegistered": false,
-                    "isUnit": true,
-                    "isBuilding": false,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": 4672,
-                        "y": 2944
-                    },
-                    "spawnTime": 4700,
-                    "spawnPosition": {
-                        "x": 4672,
-                        "y": 2944
-                    },
-                    "path": [
-                        {
-                            "x": 4672,
-                            "y": 2944
-                        }
-                    ],
-                    "moveHistory": [],
-                    "meta": {
-                        "displayName": "Acolyte",
-                        "hero": false,
-                        "worker": true,
-                        "permanent": true,
-                        "playerShop": false,
-                        "race": "U",
-                        "movespeed": 235
-                    },
-                    "items": []
-                },
-                {
-                    "displayName": "Acolyte",
-                    "itemId": "uaco",
-                    "itemId1": null,
-                    "itemId2": null,
-                    "objectId1": null,
-                    "objectId2": null,
-                    "isRegistered": false,
-                    "isUnit": true,
-                    "isBuilding": false,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": 4672,
-                        "y": 2944
-                    },
-                    "spawnTime": 21301,
-                    "spawnPosition": {
-                        "x": 4672,
-                        "y": 2944
-                    },
-                    "path": [
-                        {
-                            "x": 4672,
-                            "y": 2944
-                        }
-                    ],
-                    "moveHistory": [],
-                    "meta": {
-                        "displayName": "Acolyte",
-                        "hero": false,
-                        "worker": true,
-                        "permanent": true,
-                        "playerShop": false,
-                        "race": "U",
-                        "movespeed": 235
-                    },
-                    "items": []
-                },
-                {
-                    "displayName": "Altar of Darkness",
-                    "itemId": "uaod",
-                    "itemId1": "37,62,0,0",
-                    "itemId2": "121,67,0,0",
-                    "objectId1": 15909,
-                    "objectId2": 17273,
-                    "isRegistered": true,
-                    "isUnit": false,
-                    "isBuilding": true,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": 5152,
-                        "y": 3168
-                    },
-                    "spawnTime": 10200,
-                    "spawnPosition": null,
-                    "path": [],
-                    "moveHistory": [],
-                    "meta": {
-                        "hero": false,
-                        "worker": false,
-                        "permanent": true,
-                        "playerShop": false,
-                        "evolution": null,
-                        "movespeed": 200
-                    },
-                    "items": []
-                },
-                {
-                    "displayName": "Crypt",
-                    "itemId": "usep",
-                    "itemId1": "-57,62,0,0",
-                    "itemId2": "17,71,0,0",
-                    "objectId1": 16071,
-                    "objectId2": 18193,
-                    "isRegistered": true,
-                    "isUnit": false,
-                    "isBuilding": true,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": 4544,
-                        "y": 2432
-                    },
-                    "spawnTime": 37001,
-                    "spawnPosition": null,
-                    "path": [],
-                    "moveHistory": [],
-                    "meta": {
-                        "hero": false,
-                        "worker": false,
-                        "permanent": true,
-                        "playerShop": false,
-                        "evolution": null,
-                        "movespeed": 200
-                    },
-                    "items": []
-                },
-                {
                     "displayName": "Ghoul",
                     "itemId": "ugho",
                     "itemId1": "21,63,0,0",
@@ -480,22 +380,22 @@
                     "items": []
                 },
                 {
-                    "displayName": "Necropolis",
-                    "itemId": "unpl",
-                    "itemId1": "-84,62,0,0",
-                    "itemId2": "-84,62,0,0",
-                    "objectId1": 16044,
-                    "objectId2": 16044,
-                    "isRegistered": true,
-                    "isUnit": false,
-                    "isBuilding": true,
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
                     "isIllusion": false,
                     "level": 0,
                     "lastPosition": {
                         "x": 4672,
                         "y": 2944
                     },
-                    "spawnTime": 2300,
+                    "spawnTime": 4700,
                     "spawnPosition": {
                         "x": 4672,
                         "y": 2944
@@ -506,6 +406,37 @@
                             "y": 2944
                         }
                     ],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Altar of Darkness",
+                    "itemId": "uaod",
+                    "itemId1": "37,62,0,0",
+                    "itemId2": "121,67,0,0",
+                    "objectId1": 15909,
+                    "objectId2": 17273,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 5152,
+                        "y": 3168
+                    },
+                    "spawnTime": 10200,
+                    "spawnPosition": null,
+                    "path": [],
                     "moveHistory": [],
                     "meta": {
                         "hero": false,
@@ -534,6 +465,75 @@
                         "y": 3296
                     },
                     "spawnTime": 12300,
+                    "spawnPosition": null,
+                    "path": [],
+                    "moveHistory": [],
+                    "meta": {
+                        "hero": false,
+                        "worker": false,
+                        "permanent": true,
+                        "playerShop": false,
+                        "evolution": null,
+                        "movespeed": 200
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "spawnTime": 21301,
+                    "spawnPosition": {
+                        "x": 4672,
+                        "y": 2944
+                    },
+                    "path": [
+                        {
+                            "x": 4672,
+                            "y": 2944
+                        }
+                    ],
+                    "moveHistory": [],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Crypt",
+                    "itemId": "usep",
+                    "itemId1": "-57,62,0,0",
+                    "itemId2": "17,71,0,0",
+                    "objectId1": 16071,
+                    "objectId2": 18193,
+                    "isRegistered": true,
+                    "isUnit": false,
+                    "isBuilding": true,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 4544,
+                        "y": 2432
+                    },
+                    "spawnTime": 37001,
                     "spawnPosition": null,
                     "path": [],
                     "moveHistory": [],

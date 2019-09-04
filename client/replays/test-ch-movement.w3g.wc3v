@@ -11,10 +11,10 @@
                 {
                     "displayName": "Acolyte",
                     "itemId": "uaco",
-                    "itemId1": "19,72,0,0",
-                    "itemId2": "25,72,0,0",
-                    "objectId1": 18451,
-                    "objectId2": 18457,
+                    "itemId1": "-115,71,0,0",
+                    "itemId2": "-6,85,0,0",
+                    "objectId1": 18317,
+                    "objectId2": 22010,
                     "isRegistered": true,
                     "isUnit": true,
                     "isBuilding": false,
@@ -35,28 +35,53 @@
                             "y": 4224
                         },
                         {
+                            "x": 2201.95,
+                            "y": 3990.44
+                        },
+                        {
                             "x": 2752,
                             "y": 4736
                         }
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 3.2,
-                            "distance": 752,
+                            "timeElapsed": 1,
+                            "distance": 235,
                             "startX": 2176,
                             "startY": 4224,
+                            "targetX": 2240,
+                            "targetY": 3648,
+                            "xDirection": 1,
+                            "yDirection": -1,
+                            "pathDistance": 579.54,
+                            "pathTime": 2.47,
+                            "xVelocity": 25.95,
+                            "yVelocity": 233.56,
+                            "timerData": {
+                                "startTime": 41397,
+                                "endTime": 42397,
+                                "runLength": 2466.147441875722,
+                                "completed": true,
+                                "cancelled": true
+                            }
+                        },
+                        {
+                            "timeElapsed": 3.9,
+                            "distance": 916.27,
+                            "startX": 2201.95,
+                            "startY": 3990.44,
                             "targetX": 2752,
                             "targetY": 4736,
                             "xDirection": 1,
                             "yDirection": 1,
-                            "pathDistance": 770.66,
-                            "pathTime": 3.28,
-                            "xVelocity": 175.64,
-                            "yVelocity": 156.13,
+                            "pathDistance": 926.51,
+                            "pathTime": 3.94,
+                            "xVelocity": 139.51,
+                            "yVelocity": 189.1,
                             "timerData": {
-                                "startTime": 5999,
-                                "endTime": 9278.412991671094,
-                                "runLength": 3279.4129916710936,
+                                "startTime": 42397,
+                                "endTime": 46339.587429489016,
+                                "runLength": 3942.5874294890136,
                                 "completed": true,
                                 "cancelled": false
                             }
@@ -204,7 +229,7 @@
                         "x": 2176,
                         "y": 4224
                     },
-                    "spawnTime": 52796,
+                    "spawnTime": 23797,
                     "spawnPosition": {
                         "x": 2176,
                         "y": 4224
@@ -230,10 +255,10 @@
                 {
                     "displayName": "Acolyte",
                     "itemId": "uaco",
-                    "itemId1": "-115,71,0,0",
-                    "itemId2": "-6,85,0,0",
-                    "objectId1": 18317,
-                    "objectId2": 22010,
+                    "itemId1": "19,72,0,0",
+                    "itemId2": "25,72,0,0",
+                    "objectId1": 18451,
+                    "objectId2": 18457,
                     "isRegistered": true,
                     "isUnit": true,
                     "isBuilding": false,
@@ -254,58 +279,72 @@
                             "y": 4224
                         },
                         {
-                            "x": 2201.95,
-                            "y": 3990.44
-                        },
-                        {
                             "x": 2752,
                             "y": 4736
                         }
                     ],
                     "moveHistory": [
                         {
-                            "timeElapsed": 1,
-                            "distance": 235,
+                            "timeElapsed": 3.2,
+                            "distance": 752,
                             "startX": 2176,
                             "startY": 4224,
-                            "targetX": 2240,
-                            "targetY": 3648,
-                            "xDirection": 1,
-                            "yDirection": -1,
-                            "pathDistance": 579.54,
-                            "pathTime": 2.47,
-                            "xVelocity": 25.95,
-                            "yVelocity": 233.56,
-                            "timerData": {
-                                "startTime": 41397,
-                                "endTime": 42397,
-                                "runLength": 2466.147441875722,
-                                "completed": true,
-                                "cancelled": true
-                            }
-                        },
-                        {
-                            "timeElapsed": 3.9,
-                            "distance": 916.27,
-                            "startX": 2201.95,
-                            "startY": 3990.44,
                             "targetX": 2752,
                             "targetY": 4736,
                             "xDirection": 1,
                             "yDirection": 1,
-                            "pathDistance": 926.51,
-                            "pathTime": 3.94,
-                            "xVelocity": 139.51,
-                            "yVelocity": 189.1,
+                            "pathDistance": 770.66,
+                            "pathTime": 3.28,
+                            "xVelocity": 175.64,
+                            "yVelocity": 156.13,
                             "timerData": {
-                                "startTime": 42397,
-                                "endTime": 46339.587429489016,
-                                "runLength": 3942.5874294890136,
+                                "startTime": 5999,
+                                "endTime": 9278.412991671094,
+                                "runLength": 3279.4129916710936,
                                 "completed": true,
                                 "cancelled": false
                             }
                         }
                     ],
+                    "meta": {
+                        "displayName": "Acolyte",
+                        "hero": false,
+                        "worker": true,
+                        "permanent": true,
+                        "playerShop": false,
+                        "race": "U",
+                        "movespeed": 235
+                    },
+                    "items": []
+                },
+                {
+                    "displayName": "Acolyte",
+                    "itemId": "uaco",
+                    "itemId1": null,
+                    "itemId2": null,
+                    "objectId1": null,
+                    "objectId2": null,
+                    "isRegistered": false,
+                    "isUnit": true,
+                    "isBuilding": false,
+                    "isIllusion": false,
+                    "level": 0,
+                    "lastPosition": {
+                        "x": 2176,
+                        "y": 4224
+                    },
+                    "spawnTime": 52796,
+                    "spawnPosition": {
+                        "x": 2176,
+                        "y": 4224
+                    },
+                    "path": [
+                        {
+                            "x": 2176,
+                            "y": 4224
+                        }
+                    ],
+                    "moveHistory": [],
                     "meta": {
                         "displayName": "Acolyte",
                         "hero": false,
@@ -821,45 +860,6 @@
                             }
                         }
                     ],
-                    "meta": {
-                        "displayName": "Acolyte",
-                        "hero": false,
-                        "worker": true,
-                        "permanent": true,
-                        "playerShop": false,
-                        "race": "U",
-                        "movespeed": 235
-                    },
-                    "items": []
-                },
-                {
-                    "displayName": "Acolyte",
-                    "itemId": "uaco",
-                    "itemId1": null,
-                    "itemId2": null,
-                    "objectId1": null,
-                    "objectId2": null,
-                    "isRegistered": false,
-                    "isUnit": true,
-                    "isBuilding": false,
-                    "isIllusion": false,
-                    "level": 0,
-                    "lastPosition": {
-                        "x": 2176,
-                        "y": 4224
-                    },
-                    "spawnTime": 23797,
-                    "spawnPosition": {
-                        "x": 2176,
-                        "y": 4224
-                    },
-                    "path": [
-                        {
-                            "x": 2176,
-                            "y": 4224
-                        }
-                    ],
-                    "moveHistory": [],
                     "meta": {
                         "displayName": "Acolyte",
                         "hero": false,
@@ -1494,7 +1494,7 @@
                         "x": 2240,
                         "y": 3648
                     },
-                    "spawnTime": 108893,
+                    "spawnTime": 105292,
                     "spawnPosition": {
                         "x": 2240,
                         "y": 3648
@@ -1532,7 +1532,7 @@
                         "x": 2240,
                         "y": 3648
                     },
-                    "spawnTime": 105292,
+                    "spawnTime": 108893,
                     "spawnPosition": {
                         "x": 2240,
                         "y": 3648
