@@ -7,6 +7,92 @@
                 "x": 4672,
                 "y": 2944
             },
+            "eventStream": [
+                {
+                    "key": "dropItem",
+                    "gameTime": 445768,
+                    "type": "potentialItem",
+                    "slot": "1",
+                    "item": {
+                        "displayName": "Healing Salve",
+                        "itemId": "hslv",
+                        "itemId1": null,
+                        "itemId2": null,
+                        "objectId1": 16809,
+                        "objectId2": 80643,
+                        "isRegistered": false,
+                        "isUnit": false,
+                        "isBuilding": false,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "onCooldown": false,
+                        "expires": false,
+                        "usesLeft": 0,
+                        "knownItemX": null,
+                        "knownItemY": null
+                    }
+                },
+                {
+                    "key": "dropItem",
+                    "gameTime": 567209,
+                    "type": "potentialUnregisteredItem",
+                    "slot": "1",
+                    "item": {
+                        "displayName": "Healing Salve",
+                        "itemId": "hslv",
+                        "itemId1": null,
+                        "itemId2": null,
+                        "objectId1": 13673,
+                        "objectId2": 34356,
+                        "isRegistered": false,
+                        "isUnit": false,
+                        "isBuilding": false,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "onCooldown": false,
+                        "expires": false,
+                        "usesLeft": 0,
+                        "knownItemX": 4140.51220703125,
+                        "knownItemY": 2199.6630859375
+                    }
+                },
+                {
+                    "key": "dropItem",
+                    "gameTime": 568115,
+                    "type": "knownItem",
+                    "slot": "4",
+                    "item": {
+                        "displayName": "Healing Salve",
+                        "itemId": "hslv",
+                        "itemId1": null,
+                        "itemId2": null,
+                        "objectId1": 16809,
+                        "objectId2": 80643,
+                        "isRegistered": false,
+                        "isUnit": false,
+                        "isBuilding": false,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "onCooldown": false,
+                        "expires": false,
+                        "usesLeft": 0,
+                        "knownItemX": null,
+                        "knownItemY": null
+                    }
+                }
+            ],
             "units": [
                 {
                     "displayName": "Stronghold",
@@ -40052,6 +40138,189 @@
                 "x": -5184,
                 "y": 2944
             },
+            "eventStream": [
+                {
+                    "key": "buildingAbility",
+                    "gameTime": 109763,
+                    "ability": "EatTree",
+                    "unit": {
+                        "displayName": "Ancient of War",
+                        "itemId": "eaom",
+                        "itemId1": "92,60,0,0",
+                        "itemId2": "-57,73,0,0",
+                        "objectId1": 15452,
+                        "objectId2": 18887,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": -3840,
+                            "y": 3776
+                        }
+                    }
+                },
+                {
+                    "key": "buildingAbility",
+                    "gameTime": 259733,
+                    "ability": "EatTree",
+                    "unit": {
+                        "displayName": "Tree of Life",
+                        "itemId": "etol",
+                        "itemId1": "-54,53,0,0",
+                        "itemId2": "-58,121,0,0",
+                        "objectId1": 13770,
+                        "objectId2": 31174,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": -2816,
+                            "y": -2752
+                        }
+                    }
+                },
+                {
+                    "key": "buildingAbility",
+                    "gameTime": 302156,
+                    "ability": "EatTree",
+                    "unit": {
+                        "displayName": "Tree of Life",
+                        "itemId": "etol",
+                        "itemId1": "-54,53,0,0",
+                        "itemId2": "-58,121,0,0",
+                        "objectId1": 13770,
+                        "objectId2": 31174,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": -2816,
+                            "y": -2752
+                        }
+                    }
+                },
+                {
+                    "key": "buildingAbility",
+                    "gameTime": 365553,
+                    "ability": "EatTree",
+                    "unit": {
+                        "displayName": "Tree of Life",
+                        "itemId": "etol",
+                        "itemId1": "-54,53,0,0",
+                        "itemId2": "-58,121,0,0",
+                        "objectId1": 13770,
+                        "objectId2": 31174,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": -4358.8505859375,
+                            "y": -3138.12548828125
+                        }
+                    }
+                },
+                {
+                    "key": "makeTavernHero",
+                    "gameTime": 432771,
+                    "unit": {
+                        "displayName": "Naga Sea Witch",
+                        "itemId": "Nngs",
+                        "itemId1": null,
+                        "itemId2": null,
+                        "objectId1": null,
+                        "objectId2": null,
+                        "isRegistered": false,
+                        "isUnit": true,
+                        "isBuilding": false,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": 0,
+                            "y": 0
+                        }
+                    }
+                },
+                {
+                    "key": "buildingAbility",
+                    "gameTime": 436195,
+                    "ability": "EatTree",
+                    "unit": {
+                        "displayName": "Ancient Protector",
+                        "itemId": "etrp",
+                        "itemId1": "18,47,0,0",
+                        "itemId2": "-120,-14,0,0",
+                        "objectId1": 12050,
+                        "objectId2": 62088,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": 3296,
+                            "y": 3936
+                        }
+                    }
+                },
+                {
+                    "key": "heroRevive",
+                    "gameTime": 493131,
+                    "spot": {
+                        "x": -4768,
+                        "y": 3168
+                    },
+                    "unit": {
+                        "displayName": "Altar of Elders",
+                        "itemId": "eate",
+                        "itemId1": "-37,59,0,0",
+                        "itemId2": "-7,66,0,0",
+                        "objectId1": 15323,
+                        "objectId2": 17145,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": -4768,
+                            "y": 3168
+                        }
+                    }
+                },
+                {
+                    "key": "heroRevive",
+                    "gameTime": 493232,
+                    "spot": {
+                        "x": -4768,
+                        "y": 3168
+                    },
+                    "unit": {
+                        "displayName": "Altar of Elders",
+                        "itemId": "eate",
+                        "itemId1": "-37,59,0,0",
+                        "itemId2": "-7,66,0,0",
+                        "objectId1": 15323,
+                        "objectId2": 17145,
+                        "isRegistered": true,
+                        "isUnit": false,
+                        "isBuilding": true,
+                        "isIllusion": false,
+                        "level": 0,
+                        "lastPosition": {
+                            "x": -4768,
+                            "y": 3168
+                        }
+                    }
+                }
+            ],
             "units": [
                 {
                     "displayName": "Altar of Elders",
