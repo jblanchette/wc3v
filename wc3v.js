@@ -76,6 +76,7 @@ const parseReplays = (options) => {
     } catch (e) {
       if (options.inTestMode) {
         console.log("TEST FAILED: ", file);
+        console.log(e);
       } else {
         console.log("error parsing replay: ", file);
         console.log("error: ", e);
