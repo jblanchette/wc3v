@@ -153,7 +153,7 @@ const uuidv4 = () => {
 // write wc3v output to file
 ////
 
-const writeOutput = (filename, replay, players) => {
+const writeOutput = (filename, replay, players, jsonPadding = 0) => {
 
   const savedPlayers = replay.players;
 
@@ -179,7 +179,9 @@ const writeOutput = (filename, replay, players) => {
         parseConfidence, 
         startingPosition, 
         units,
-        eventStream
+        eventStream,
+        selectionStream,
+        groupStream
       } = player;
 
     	acc[playerId] = {
@@ -187,6 +189,8 @@ const writeOutput = (filename, replay, players) => {
         race,
         startingPosition,
         eventStream,
+        selectionStream,
+        groupStream,
     		units: units.map(unit => unit.exportUnit())
     	};
 
@@ -197,7 +201,7 @@ const writeOutput = (filename, replay, players) => {
 
   try {
   	const outputPath = `./client/replays/${path.basename(filename)}.wc3v`;
-    fs.writeFileSync(outputPath, JSON.stringify(output, null, 4));
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, jsonPadding));
     console.logger("created wc3v file: ", outputPath);
   } catch (e) {
     console.logger("file write error: ", e);
@@ -210,7 +214,8 @@ const readCliArgs = (argv) => {
 	console.log("user args: ", userArgs);
 
 	let options = {
-		paths: []
+		paths: [],
+    jsonPadding: 0
 	};
 
 	userArgs.forEach(rawArg => {
@@ -227,6 +232,10 @@ const readCliArgs = (argv) => {
 				console.log("setting debug player to: ", val);
 				config.debugPlayer = val;
 			break;
+
+      case "pretty-print":
+        options.jsonPadding = 4;
+      break;
 
       case "test":
         config.debugPlayer = null; // hack to turn off all logs for now

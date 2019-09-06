@@ -31,7 +31,7 @@ Parser.on('timeslotblock', (timeSlotBlock) => {
 });
 
 const parseReplays = (options) => {
-  const { paths } = options;
+  const { paths, jsonPadding } = options;
 
   paths.forEach(file => {
     playerManager = new PlayerManager();
@@ -45,7 +45,7 @@ const parseReplays = (options) => {
       let players = playerManager.players;
 
       // write our output wc3v file
-      utils.writeOutput(file, replay, players);
+      utils.writeOutput(file, replay, players, jsonPadding);
 
       // re-enable all logging
       logManager.setDisabledState(false);
