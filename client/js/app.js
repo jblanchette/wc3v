@@ -248,7 +248,7 @@ const Wc3vViewer = class {
       this.render();
     });
 
-    d3.select("#main-canvas")
+    d3.select("#main-wrapper")
       .call(this.zoom);
   }
 
