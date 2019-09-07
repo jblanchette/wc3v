@@ -42,6 +42,10 @@ const ClientPlayer = class {
     this.units.forEach(unit => unit.update(gameTime, dt));
   }
 
+  renderSelectedUnit () {
+    
+  }
+
   renderPlayerIcon (ctx, gameTime, xScale, yScale, middleX, middleY) {
     // check if it isn't loaded yet
     if (!this.icon) {
@@ -65,28 +69,7 @@ const ClientPlayer = class {
     ctx.globalAlpha = this.decayLevel;
 
     // clip our initial circle
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.clip();
-
-    // draw the icons
-    ctx.drawImage(
-      this.icon, 
-      (drawX - halfIconSize), 
-      (drawY - halfIconSize), 
-      iconSize, 
-      iconSize
-    );
-
-    // draw the icon ring
-    ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
-    ctx.stroke();
-    ctx.closePath();
-
-    ctx.restore();
+    Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
     // adjust text by length, ensure we don't go out of the map bounds
     const drawTextX = Math.max(
