@@ -37,12 +37,13 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
+  border: 1px solid #000;
+  overflow: hidden;
 }
 
 #main-canvas {
-  border: 1px solid #000;
-  height: 768px;
-  width: 1024px;
+  height: 600px;
+  width: 800px;
 }
 
 .info-wrapper {
@@ -73,10 +74,10 @@ html, body {
   justify-content: space-evenly;
   align-items: center;
   position: relative;
-  top: -2.25rem;
+  top: 0rem;
   height: 2.25rem;
-  width: 100%;
-  border-top: 1px solid #333;
+  border: 1px solid #333;
+  border-top: none;
   background-color: rgba(200, 200, 200, 0.5);
   cursor: pointer;
 }
