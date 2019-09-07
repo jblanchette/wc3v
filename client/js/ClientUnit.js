@@ -188,34 +188,13 @@ const ClientUnit = class {
 
     const iconSize = this.iconSize;
     const halfIconSize = iconSize / 2;
+    
     // draw code
 
     ctx.strokeStyle = "#FFFC01";
     ctx.globalAlpha = this.decayLevel;
 
-    // clip our initial circle
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.clip();
-
-    // draw the icons
-    ctx.drawImage(
-      this.icon, 
-      (drawX - halfIconSize), 
-      (drawY - halfIconSize), 
-      iconSize, 
-      iconSize
-    );
-
-    // draw the icon ring
-    ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
-    ctx.stroke();
-    ctx.closePath();
-
-    ctx.restore();
+    Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
     const drawTextX = drawX - (this.displayName.length * 2);
     const drawTextY = drawY + halfIconSize;

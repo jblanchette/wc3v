@@ -18,6 +18,8 @@ const ScrubStates = {
   finished: 3
 };
 
+const infoPanelHeight = 50;
+
 const Wc3vViewer = class {
   constructor () {
     this.reset();
@@ -210,7 +212,7 @@ const Wc3vViewer = class {
     this.viewHeight = this.mapImage.height;
 
     this.middleX = (this.canvas.width / 2);
-    this.middleY = (this.canvas.height / 2);
+    this.middleY = ((this.canvas.height - infoPanelHeight) / 2);
 
     this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ];
     this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
@@ -227,12 +229,37 @@ const Wc3vViewer = class {
     this.yScale = d3.scaleLinear()
       .domain(this.yExtent)
       .range(this.viewYRange);
+
+    this.zoomScale = 1.0;
+    this.zoomK = 1.0;
+
+    this.zoom = d3.zoom().on("zoom", () => {
+      if (!this.ctx) {
+        console.log("no ctx for zoom");
+        return;
+      }
+
+      const canvas = this.canvas;
+      const { x, y, k } = d3.event.transform;
+
+      canvas.style.transformOrigin = "0 0";
+      canvas.style.transform = `translate(${x}px, ${y}px) scale(${k})`;
+      
+      this.render();
+    });
+
+    d3.select("#main-canvas")
+      .call(this.zoom);
   }
 
   clearCanvas () {
     const { ctx, canvas } = this;
+    ctx.save();
 
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.restore();
   }
 
   renderMapBackground () {
@@ -242,6 +269,17 @@ const Wc3vViewer = class {
     const mapY = (this.middleY - (this.mapImage.height / 2));
     
     ctx.drawImage(this.mapImage, mapX, mapY);
+  }
+
+  renderInfoPanel () {
+    const { ctx } = this;
+
+    const borderSize = 1;
+    const mapX = (this.middleX - (this.mapImage.width / 2)) + borderSize;
+    const mapY = (this.middleY + (this.mapImage.height / 2));
+
+    // offset by size of left + right border
+    ctx.strokeRect(mapX, mapY, this.mapImage.width - (borderSize * 2), infoPanelHeight);
   }
 
   startRenderLoop () {
@@ -301,6 +339,7 @@ const Wc3vViewer = class {
 
     this.clearCanvas();
     this.renderMapBackground();
+    this.renderInfoPanel();
 
     this.players.forEach(player => {
       player.render(ctx, gameTime, xScale, yScale, middleX, middleY);
