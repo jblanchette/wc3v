@@ -4,8 +4,12 @@ const IconSizes = {
   'hero': 30,
   'unit': 20,
   'worker': 10,
-  'building': 20
+  'building': 16
 };
+
+const minimumIconSize = 12,
+      maximumBuildingSize = 20,
+      minimumTextZoom = 0.75;
 
 const ClientUnit = class {
   constructor (unitData, playerColor) {
@@ -164,11 +168,13 @@ const ClientUnit = class {
     this.currentY += yDelta;
   }
 
-  renderBuilding (ctx, xScale, yScale, middleX, middleY) {
+  renderBuilding (ctx, transform, xScale, yScale, middleX, middleY) {
     const { x, y } = this.lastPosition;
-    const drawX = xScale(x) + middleX;
-    const drawY = yScale(y) + middleY;
-    const iconSize = this.iconSize;
+    const drawX = transform.x + xScale(x) + middleX;
+    const drawY = transform.y + yScale(y) + middleY;
+
+    const dynamicSize = this.iconSize * (2.0 - transform.k); // inverse zoom scale
+    const iconSize = Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // bounds
 
     ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize);
 
@@ -177,18 +183,21 @@ const ClientUnit = class {
     ctx.strokeStyle = "#000000";
   }
 
-  renderUnit (ctx, gameTime, xScale, yScale, middleX, middleY) {
+  renderUnit (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
     if (!this.currentX || !this.currentY) {
       return;
     }
 
     const { currentX, currentY } = this;
-    const drawX = xScale(currentX) + middleX;
-    const drawY = yScale(currentY) + middleY;
+    const drawX = transform.x + xScale(currentX) + middleX;
+    const drawY = transform.y + yScale(currentY) + middleY;
 
-    const iconSize = this.iconSize;
+    const inverseK = (2.0 - transform.k);
+    const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
+    const iconSize = Math.max(minimumIconSize, dynamicSize); // minimum scaling
     const halfIconSize = iconSize / 2;
     
+    const fontSize = halfIconSize;
     // draw code
 
     ctx.strokeStyle = "#FFFC01";
@@ -197,24 +206,29 @@ const ClientUnit = class {
     Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
     const drawTextX = drawX - (this.displayName.length * 2);
-    const drawTextY = drawY + halfIconSize;
+    const drawTextY = drawY + iconSize;
 
-    ctx.fillStyle = "#FFF";
-    ctx.fillText(this.displayName, drawTextX, drawTextY );
-    ctx.fillStyle = "#000";
+    if (inverseK > minimumTextZoom) {
+      ctx.fillStyle = "#FFF";
+      ctx.font = `${Math.ceil(fontSize)}px Arial`;
+      ctx.fillText(this.displayName, drawTextX, drawTextY );
+      ctx.font = `12px Arial`;
+      ctx.fillStyle = "#000";
+    }
+
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;
   }
 
-  render (ctx, gameTime, xScale, yScale, middleX, middleY) {
+  render (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
     if (gameTime < this.spawnTime) {
       return;
     }
 
     if (this.isBuilding) {
-      this.renderBuilding(ctx, xScale, yScale, middleX, middleY);
+      this.renderBuilding(ctx, transform, xScale, yScale, middleX, middleY);
     } else {
-      this.renderUnit(ctx, gameTime, xScale, yScale, middleX, middleY);
+      this.renderUnit(ctx, transform, gameTime, xScale, yScale, middleX, middleY);
     }
   }
 }

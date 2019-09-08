@@ -42,8 +42,8 @@ html, body {
 }
 
 #main-canvas {
-  height: 600px;
-  width: 800px;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
 }
 
 .info-wrapper {
