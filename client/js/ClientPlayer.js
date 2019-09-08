@@ -29,9 +29,7 @@ const ClientPlayer = class {
     const img = new Image();
     const imgSrc = `/assets/wc3icons/${starterMap[this.race]}.jpg`;
     
-    console.log("img src: ", imgSrc, this.race);
     this.icon = null;
-
     img.src = imgSrc;
     img.onload = () => {
       this.icon = img;
@@ -46,7 +44,7 @@ const ClientPlayer = class {
     
   }
 
-  renderPlayerIcon (ctx, gameTime, xScale, yScale, middleX, middleY) {
+  renderPlayerIcon (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
     // check if it isn't loaded yet
     if (!this.icon) {
       return;
@@ -62,8 +60,8 @@ const ClientPlayer = class {
     const yMargin = 20;
     const slotOffset = (this.slot * (iconSize + yMargin)) + halfIconSize;
 
-    const drawX = xScale(minXExtent) + middleX + halfIconSize + padding;
-    const drawY = yScale(minYExtent) + middleY + slotOffset + padding;
+    const drawX = transform.x + xScale(minXExtent) + middleX + halfIconSize + padding;
+    const drawY = transform.y + yScale(minYExtent) + middleY + slotOffset + padding;
 
     ctx.strokeStyle = "#FFFC01";
     ctx.globalAlpha = this.decayLevel;
@@ -73,7 +71,7 @@ const ClientPlayer = class {
 
     // adjust text by length, ensure we don't go out of the map bounds
     const drawTextX = Math.max(
-      xScale(minXExtent) + middleX, 
+      transform.x + xScale(minXExtent) + middleX + 2, 
       (drawX - (this.displayName.length * 2.5))
     );
     const drawTextY = (drawY + halfIconSize + 10);
@@ -84,10 +82,10 @@ const ClientPlayer = class {
     ctx.globalAlpha = 1;
   }
 
-  render (ctx, gameTime, xScale, yScale, middleX, middleY) {
-    this.renderPlayerIcon(ctx, gameTime, xScale, yScale, middleX, middleY);
+  render (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
+    this.renderPlayerIcon(ctx, transform, gameTime, xScale, yScale, middleX, middleY);
     this.units.forEach(unit => 
-      unit.render(ctx, gameTime, xScale, yScale, middleX, middleY));
+      unit.render(ctx, transform, gameTime, xScale, yScale, middleX, middleY));
   }
 }
 
