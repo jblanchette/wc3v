@@ -172,8 +172,9 @@ const ClientUnit = class {
     const { x, y } = this.lastPosition;
 
     const inverseK = (2.0 - transform.k);
-    const drawX = wc3v.middleX + (transform.x / 2) + xScale(x);
-    const drawY = wc3v.middleY + (transform.y / 2) + yScale(y);
+
+    const drawX = (transform.x + xScale(x) + wc3v.middleX);
+    const drawY = (transform.y + yScale(y) + wc3v.middleY);
 
     const dynamicSize = this.iconSize * (2.0 - transform.k); // inverse zoom scale
     const iconSize = Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // bounds
@@ -191,12 +192,13 @@ const ClientUnit = class {
     }
 
     const { currentX, currentY } = this;
-    const drawX = transform.x + xScale(currentX) + wc3v.middleX;
-    const drawY = transform.y + yScale(currentY) + wc3v.middleY;
+
+    const drawX = (transform.x + xScale(currentX) + wc3v.middleX);
+    const drawY = (transform.y + yScale(currentY) + wc3v.middleY);
 
     const inverseK = (2.0 - transform.k);
     const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
-    const iconSize = Math.max(minimumIconSize, dynamicSize); // minimum scaling
+    const iconSize = Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // minimum scaling
     const halfIconSize = iconSize / 2;
     
     const fontSize = halfIconSize;
