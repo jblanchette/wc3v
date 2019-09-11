@@ -249,11 +249,10 @@ const Wc3vViewer = class {
     this.setupScales();
     this.setupMiddle();
 
+    const drawX = (this.xScale(xExtent[0]));
+    const drawY = (this.yScale(yExtent[0]));
+
     this.zoom = d3.zoom()
-      .extent([
-        [ this.xScale(xExtent[0]), this.yScale(yExtent[0]) ],
-        [ this.xScale(xExtent[1]), this.yScale(yExtent[1]) ]
-      ])
       .on("zoom", () => {
         if (!this.ctx) {
           return;
@@ -325,12 +324,18 @@ const Wc3vViewer = class {
   }
 
   renderMapBackground () {
-    const { ctx, transform } = this;
+    const { ctx, transform, xExtent, yExtent, middleX, middleY, xScale, yScale } = this;
     const { width, height } = this.mapImage;
     const { x, y, k } = transform;
 
     const mapX = (this.middleX - (width / 2));
     const mapY = (this.middleY - (height / 2));
+
+    const minXExtent = xExtent[0];
+    const minYExtent = yExtent[0];
+
+    const drawX = (transform.x + xScale(minXExtent) + middleX);
+    const drawY = (transform.y + yScale(minYExtent) + middleY);
 
     ctx.drawImage(
       this.mapImage, 
@@ -338,8 +343,8 @@ const Wc3vViewer = class {
       0,               // sourceY
       width,           // sourceWidth
       height,          // sourceHeight
-      mapX + x,            // destX
-      mapY + y,            // destY
+      drawX,            // destX
+      drawY,            // destY
       width * k,       // destWidth
       height * k       // destHeight
     );
@@ -373,7 +378,7 @@ const Wc3vViewer = class {
     this.renderMapBackground();
 
     this.ctx.globalAlpha = 0.4;
-    this.ctx.fillRect(x, y, w, h);
+    //this.ctx.fillRect(x, y, w, h);
     this.ctx.globalAlpha = 1.0;
 
     this.players.forEach(player => {
