@@ -18,8 +18,6 @@ const ScrubStates = {
   finished: 3
 };
 
-const infoPanelHeight = 50;
-
 const Wc3vViewer = class {
   constructor () {
     this.reset();
@@ -80,7 +78,11 @@ const Wc3vViewer = class {
       }
     });
 
-    req.open("GET", `http://localhost:8080/replays/${filename}`);
+    console.log("host: ", window.location.hostname);
+    const url = window.location.hostname.indexOf("ngrok") !== -1 ? 
+      `http://3d393e0b.ngrok.io/replays/${filename}` : `http://localhost:8080/replays/${filename}`;
+
+    req.open("GET", url);
     req.send();
   }
 
@@ -208,21 +210,17 @@ const Wc3vViewer = class {
     this.mapInfo = maps[foundMapName];
   }
 
-  setupDrawing () {
-    this.viewWidth = this.mapImage.width;
-    this.viewHeight = this.mapImage.height;
+  setupView () {
+    const { x, y, k } = this.transform;
 
-    this.middleX = (this.canvas.width / 2);
-    this.middleY = ((this.canvas.height - infoPanelHeight) / 2);
+    this.viewWidth = this.mapImage.width * k;
+    this.viewHeight = this.mapImage.height * k;
 
-    this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ];
+    this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2) ];
     this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
+  }
 
-    const { xExtent, yExtent } = this.mapInfo;
-
-    this.xExtent = xExtent;
-    this.yExtent = yExtent;
-
+  setupScales () {
     this.xScale = d3.scaleLinear()
       .domain(this.xExtent)
       .range(this.viewXRange);
@@ -230,18 +228,44 @@ const Wc3vViewer = class {
     this.yScale = d3.scaleLinear()
       .domain(this.yExtent)
       .range(this.viewYRange);
+  }
 
+  setupMiddle () {
+    this.middleX = (this.canvas.width / 2);
+    this.middleY = (this.canvas.height / 2);
+  }
+
+  setupDrawing () {
+    const { xExtent, yExtent } = this.mapInfo;
+    const { width, height } = this.canvas;
+
+    this.xExtent = xExtent;
+    this.yExtent = yExtent;
+    
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
 
-    this.zoom = d3.zoom().on("zoom", () => {
-      if (!this.ctx) {
-        return;
-      }
+    this.setupView();
+    this.setupScales();
+    this.setupMiddle();
 
-      this.transform = d3.event.transform;
-      this.render();
-    });
+    this.zoom = d3.zoom()
+      .extent([
+        [ this.xScale(xExtent[0]), this.yScale(yExtent[0]) ],
+        [ this.xScale(xExtent[1]), this.yScale(yExtent[1]) ]
+      ])
+      .on("zoom", () => {
+        if (!this.ctx) {
+          return;
+        }
+
+        this.transform = d3.event.transform;
+
+        this.setupView();
+        this.setupScales();
+
+        this.render();
+      });
 
     d3.select("#main-wrapper")
       .call(this.zoom);
@@ -249,11 +273,10 @@ const Wc3vViewer = class {
 
   clearCanvas () {
     const { ctx, canvas } = this;
+    
     ctx.save();
-
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.restore();
   }
 
@@ -306,31 +329,20 @@ const Wc3vViewer = class {
     const { width, height } = this.mapImage;
     const { x, y, k } = transform;
 
-    const mapX = (this.middleX - (width / 2)) + x;
-    const mapY = (this.middleY - (height / 2)) + y;
-    
+    const mapX = (this.middleX - (width / 2));
+    const mapY = (this.middleY - (height / 2));
+
     ctx.drawImage(
       this.mapImage, 
-      0,      // sourceX
-      0,     // sourceY
-      width,          // sourceWidth
-      height,         // sourceHeight
-      mapX,           // destX
-      mapY,           // destY
-      width,          // destWidth
-      height          // destHeight
+      0,               // sourceX
+      0,               // sourceY
+      width,           // sourceWidth
+      height,          // sourceHeight
+      mapX + x,            // destX
+      mapY + y,            // destY
+      width * k,       // destWidth
+      height * k       // destHeight
     );
-  }
-
-  renderInfoPanel () {
-    const { ctx } = this;
-
-    const borderSize = 1;
-    const mapX = (this.middleX - (this.mapImage.width / 2)) + borderSize;
-    const mapY = (this.middleY + (this.mapImage.height / 2));
-
-    // offset by size of left + right border
-    //ctx.strokeRect(mapX, mapY, this.mapImage.width - (borderSize * 2), infoPanelHeight);
   }
 
   render () {
@@ -346,11 +358,26 @@ const Wc3vViewer = class {
     } = this;
 
     this.clearCanvas();
+
+    const { width, height } = this.mapImage;
+    const { xExtent, yExtent } = this;
+
+    const mapX = (this.middleX - (width / 2));
+    const mapY = (this.middleY - (height / 2));
+
+    const x = mapX + transform.x;
+    const y = mapY + transform.y;
+    const w = xScale(xExtent[1] - xExtent[0]);
+    const h = yScale(yExtent[1] - yExtent[0]);
+
     this.renderMapBackground();
-    this.renderInfoPanel();
+
+    this.ctx.globalAlpha = 0.4;
+    this.ctx.fillRect(x, y, w, h);
+    this.ctx.globalAlpha = 1.0;
 
     this.players.forEach(player => {
-      player.render(ctx, transform, gameTime, xScale, yScale, middleX, middleY);
+      player.render(ctx, transform, gameTime, xScale, yScale, mapX, mapY);
     });
 
     this.scrubber.render(gameTime, matchEndTime);
