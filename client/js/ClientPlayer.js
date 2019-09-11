@@ -44,13 +44,13 @@ const ClientPlayer = class {
     
   }
 
-  renderPlayerIcon (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
+  renderPlayerIcon (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
     // check if it isn't loaded yet
     if (!this.icon) {
       return;
     }
 
-    const iconSize = 45;
+    const iconSize = Math.min(25 * (2.0 - transform.k), 30);
     const halfIconSize = iconSize / 2;
 
     const minXExtent = wc3v.xExtent[0];
@@ -60,8 +60,8 @@ const ClientPlayer = class {
     const yMargin = 20;
     const slotOffset = (this.slot * (iconSize + yMargin)) + halfIconSize;
 
-    const drawX = transform.x + xScale(minXExtent) + middleX + halfIconSize + padding;
-    const drawY = transform.y + yScale(minYExtent) + middleY + slotOffset + padding;
+    const drawX = (transform.x + xScale(minXExtent) + wc3v.middleX);
+    const drawY = (transform.y + yScale(minYExtent) + wc3v.middleY + slotOffset);
 
     ctx.strokeStyle = "#FFFC01";
     ctx.globalAlpha = this.decayLevel;
@@ -70,10 +70,7 @@ const ClientPlayer = class {
     Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
     // adjust text by length, ensure we don't go out of the map bounds
-    const drawTextX = Math.max(
-      transform.x + xScale(minXExtent) + middleX + 2, 
-      (drawX - (this.displayName.length * 2.5))
-    );
+    const drawTextX = drawX;
     const drawTextY = (drawY + halfIconSize + 10);
 
     ctx.strokeText(this.displayName, drawTextX, drawTextY);
@@ -82,10 +79,10 @@ const ClientPlayer = class {
     ctx.globalAlpha = 1;
   }
 
-  render (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
-    this.renderPlayerIcon(ctx, transform, gameTime, xScale, yScale, middleX, middleY);
+  render (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
+    this.renderPlayerIcon(ctx, transform, gameTime, xScale, yScale, mapX, mapY);
     this.units.forEach(unit => 
-      unit.render(ctx, transform, gameTime, xScale, yScale, middleX, middleY));
+      unit.render(ctx, transform, gameTime, xScale, yScale, mapX, mapY));
   }
 }
 

@@ -7,7 +7,7 @@ const IconSizes = {
   'building': 16
 };
 
-const minimumIconSize = 12,
+const minimumIconSize = 20,
       maximumBuildingSize = 20,
       minimumTextZoom = 0.75;
 
@@ -168,10 +168,12 @@ const ClientUnit = class {
     this.currentY += yDelta;
   }
 
-  renderBuilding (ctx, transform, xScale, yScale, middleX, middleY) {
+  renderBuilding (ctx, transform, xScale, yScale, mapX, mapY) {
     const { x, y } = this.lastPosition;
-    const drawX = transform.x + xScale(x) + middleX;
-    const drawY = transform.y + yScale(y) + middleY;
+
+    const inverseK = (2.0 - transform.k);
+    const drawX = wc3v.middleX + (transform.x / 2) + xScale(x);
+    const drawY = wc3v.middleY + (transform.y / 2) + yScale(y);
 
     const dynamicSize = this.iconSize * (2.0 - transform.k); // inverse zoom scale
     const iconSize = Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // bounds
@@ -183,14 +185,14 @@ const ClientUnit = class {
     ctx.strokeStyle = "#000000";
   }
 
-  renderUnit (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
+  renderUnit (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
     if (!this.currentX || !this.currentY) {
       return;
     }
 
     const { currentX, currentY } = this;
-    const drawX = transform.x + xScale(currentX) + middleX;
-    const drawY = transform.y + yScale(currentY) + middleY;
+    const drawX = transform.x + xScale(currentX) + wc3v.middleX;
+    const drawY = transform.y + yScale(currentY) + wc3v.middleY;
 
     const inverseK = (2.0 - transform.k);
     const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
@@ -220,15 +222,15 @@ const ClientUnit = class {
     ctx.strokeStyle = colorMap.black;
   }
 
-  render (ctx, transform, gameTime, xScale, yScale, middleX, middleY) {
+  render (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
     if (gameTime < this.spawnTime) {
       return;
     }
 
     if (this.isBuilding) {
-      this.renderBuilding(ctx, transform, xScale, yScale, middleX, middleY);
+      this.renderBuilding(ctx, transform, xScale, yScale, mapX, mapY);
     } else {
-      this.renderUnit(ctx, transform, gameTime, xScale, yScale, middleX, middleY);
+      this.renderUnit(ctx, transform, gameTime, xScale, yScale, mapX, mapY);
     }
   }
 }
