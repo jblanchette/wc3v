@@ -50,7 +50,7 @@ const ClientPlayer = class {
       return;
     }
 
-    const iconSize = Math.min(25 * (2.0 - transform.k), 30);
+    const iconSize = Math.max(8, Math.min(25 * (2.0 - transform.k), 30));
     const halfIconSize = iconSize / 2;
 
     const minXExtent = wc3v.xExtent[0];
