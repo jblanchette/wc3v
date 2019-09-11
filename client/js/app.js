@@ -249,16 +249,27 @@ const Wc3vViewer = class {
     this.setupScales();
     this.setupMiddle();
 
-    const drawX = (this.xScale(xExtent[0]));
-    const drawY = (this.yScale(yExtent[0]));
+    const mapX = (this.middleX - (this.viewWidth / 2));
+    const mapY = (this.middleY - (this.viewHeight / 2));
+
+    const zoomContainer = d3.select("#main-canvas");
 
     this.zoom = d3.zoom()
+      .scaleExtent([1, 5])
       .on("zoom", () => {
         if (!this.ctx) {
           return;
         }
 
+        const oldTransform = this.transform;
         this.transform = d3.event.transform;
+
+        if (oldTransform.k !== this.transform.k) {
+          console.log("zoomed");
+
+          this.transform.x = oldTransform.x;
+          this.transform.y = oldTransform.y;
+        }
 
         this.setupView();
         this.setupScales();
@@ -266,7 +277,7 @@ const Wc3vViewer = class {
         this.render();
       });
 
-    d3.select("#main-wrapper")
+    zoomContainer
       .call(this.zoom);
   }
 
@@ -328,14 +339,8 @@ const Wc3vViewer = class {
     const { width, height } = this.mapImage;
     const { x, y, k } = transform;
 
-    const mapX = (this.middleX - (width / 2));
-    const mapY = (this.middleY - (height / 2));
-
-    const minXExtent = xExtent[0];
-    const minYExtent = yExtent[0];
-
-    const drawX = (transform.x + xScale(minXExtent) + middleX);
-    const drawY = (transform.y + yScale(minYExtent) + middleY);
+    const drawX = (transform.x + xScale(xExtent[0]) + middleX);
+    const drawY = (transform.y + yScale(yExtent[0]) + middleY);
 
     ctx.drawImage(
       this.mapImage, 

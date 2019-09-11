@@ -29,7 +29,6 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  min-height: 900px;
   margin-top: 0.5rem; 
 }
 
@@ -42,6 +41,7 @@ html, body {
 }
 
 #main-canvas {
+  transform-origin: 50% 50% 0;
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
 }
