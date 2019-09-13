@@ -44,24 +44,25 @@ const ClientPlayer = class {
     
   }
 
-  renderPlayerIcon (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
+  renderPlayerIcon (ctx, transform, gameTime, xScale, yScale) {
     // check if it isn't loaded yet
     if (!this.icon) {
       return;
     }
 
-    const iconSize = Math.max(8, Math.min(25 * (2.0 - transform.k), 30));
+    const iconSize = Math.max(15, Math.min(25 * (2.0 - transform.k), 30));
     const halfIconSize = iconSize / 2;
 
     const minXExtent = wc3v.xExtent[0];
     const minYExtent = wc3v.yExtent[0];
 
-    const padding = 5;
+    const padding = 20;
     const yMargin = 20;
     const slotOffset = (this.slot * (iconSize + yMargin)) + halfIconSize;
 
-    const drawX = (transform.x + xScale(minXExtent) + wc3v.middleX);
-    const drawY = (transform.y + yScale(minYExtent) + wc3v.middleY + slotOffset);
+    const translate = wc3v.translate;
+    const drawX = (translate.x + xScale(minXExtent) + wc3v.middleX + padding);
+    const drawY = (translate.y + yScale(minYExtent) + wc3v.middleY + yMargin + slotOffset);
 
     ctx.strokeStyle = "#FFFC01";
     ctx.globalAlpha = this.decayLevel;
@@ -79,10 +80,10 @@ const ClientPlayer = class {
     ctx.globalAlpha = 1;
   }
 
-  render (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
-    this.renderPlayerIcon(ctx, transform, gameTime, xScale, yScale, mapX, mapY);
+  render (ctx, transform, gameTime, xScale, yScale) {
+    this.renderPlayerIcon(ctx, transform, gameTime, xScale, yScale);
     this.units.forEach(unit => 
-      unit.render(ctx, transform, gameTime, xScale, yScale, mapX, mapY));
+      unit.render(ctx, transform, gameTime, xScale, yScale));
   }
 }
 
