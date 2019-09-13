@@ -2,7 +2,7 @@ const gameData = {
   'maps': {
     '(2)concealedhill.w3x': {
       'name': 'ConcealedHill',
-      'xExtent': [ -5600,  5600 ],
+      'xExtent': [ -5000,  5000 ],
       'yExtent': [  6400, -6400 ]
     },
     '(2)echoisles.w3x': {

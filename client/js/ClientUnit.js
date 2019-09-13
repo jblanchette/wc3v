@@ -1,14 +1,15 @@
 const _iconCache = {};
 
 const IconSizes = {
-  'hero': 30,
-  'unit': 20,
+  'hero': 40,
+  'unit': 30,
   'worker': 10,
   'building': 16
 };
 
 const minimumIconSize = 20,
       maximumBuildingSize = 20,
+      minimumUnitSize = 10,
       minimumTextZoom = 0.75;
 
 const ClientUnit = class {
@@ -168,37 +169,39 @@ const ClientUnit = class {
     this.currentY += yDelta;
   }
 
-  renderBuilding (ctx, transform, xScale, yScale, mapX, mapY) {
+  renderBuilding (ctx, transform, xScale, yScale) {
     const { x, y } = this.lastPosition;
 
     const inverseK = (2.0 - transform.k);
 
-    const drawX = (transform.x + xScale(x) + wc3v.middleX);
-    const drawY = (transform.y + yScale(y) + wc3v.middleY);
+    const translate = wc3v.translate;
+    const drawX = (xScale(x) + wc3v.middleX) * translate.k + (translate.x);
+    const drawY = (yScale(y) + wc3v.middleY) * translate.k + (translate.y);
 
-    const dynamicSize = this.iconSize * (2.0 - transform.k); // inverse zoom scale
-    const iconSize = Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // bounds
+    const dynamicSize = this.iconSize;// * inverseK; // inverse zoom scale
+    const iconSize = Math.max(dynamicSize, 2.0); //Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // bounds
 
-    ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize);
+    ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize); 
 
     ctx.strokeStyle = "#FFFC01";
     ctx.strokeRect(drawX, drawY, iconSize, iconSize);
     ctx.strokeStyle = "#000000";
   }
 
-  renderUnit (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
+  renderUnit (ctx, transform, gameTime, xScale, yScale) {
     if (!this.currentX || !this.currentY) {
       return;
     }
 
     const { currentX, currentY } = this;
 
-    const drawX = (transform.x + xScale(currentX) + wc3v.middleX);
-    const drawY = (transform.y + yScale(currentY) + wc3v.middleY);
+    const translate = wc3v.translate;
+    const drawX = (xScale(currentX) + wc3v.middleX) * translate.k + (translate.x);
+    const drawY = (yScale(currentY) + wc3v.middleY) * translate.k + (translate.y);
 
     const inverseK = (2.0 - transform.k);
-    const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
-    const iconSize = Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // minimum scaling
+    const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
+    const iconSize = Math.max(dynamicSize, 2.0); // minimum scaling
     const halfIconSize = iconSize / 2;
     
     const fontSize = halfIconSize;
@@ -224,15 +227,15 @@ const ClientUnit = class {
     ctx.strokeStyle = colorMap.black;
   }
 
-  render (ctx, transform, gameTime, xScale, yScale, mapX, mapY) {
+  render (ctx, transform, gameTime, xScale, yScale) {
     if (gameTime < this.spawnTime) {
       return;
     }
 
     if (this.isBuilding) {
-      this.renderBuilding(ctx, transform, xScale, yScale, mapX, mapY);
+      this.renderBuilding(ctx, transform, xScale, yScale);
     } else {
-      this.renderUnit(ctx, transform, gameTime, xScale, yScale, mapX, mapY);
+      this.renderUnit(ctx, transform, gameTime, xScale, yScale);
     }
   }
 }

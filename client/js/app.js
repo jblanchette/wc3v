@@ -49,7 +49,6 @@ const Wc3vViewer = class {
 
   load () {
     const filename = document.getElementById(domMap.mapInputFieldId).value;
-    console.log('1 loading wc3v replay: ', filename);
 
     this.pause();
     this.reset();
@@ -78,7 +77,6 @@ const Wc3vViewer = class {
       }
     });
 
-    console.log("host: ", window.location.hostname);
     const url = window.location.hostname.indexOf("ngrok") !== -1 ? 
       `http://3d393e0b.ngrok.io/replays/${filename}` : `http://localhost:8080/replays/${filename}`;
 
@@ -213,10 +211,10 @@ const Wc3vViewer = class {
   setupView () {
     const { x, y, k } = this.transform;
 
-    this.viewWidth = this.mapImage.width * k;
-    this.viewHeight = this.mapImage.height * k;
+    this.viewWidth = this.mapImage.width;
+    this.viewHeight = this.mapImage.height;
 
-    this.viewXRange = [ -(this.viewWidth / 2),  (this.viewWidth / 2) ];
+    this.viewXRange = [ -(this.viewWidth / 2), (this.viewWidth / 2) ];
     this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
   }
 
@@ -245,34 +243,31 @@ const Wc3vViewer = class {
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
 
+    this.translate = { x: 0.0, y: 0.0, k: 1.0 };
+
     this.setupView();
     this.setupScales();
     this.setupMiddle();
 
-    const mapX = (this.middleX - (this.viewWidth / 2));
-    const mapY = (this.middleY - (this.viewHeight / 2));
-
-    const zoomContainer = d3.select("#main-canvas");
+    const zoomContainer = d3.select("#main-wrapper");
 
     this.zoom = d3.zoom()
-      .scaleExtent([1, 5])
+      .scaleExtent([0.5, 2.5])
       .on("zoom", () => {
         if (!this.ctx) {
           return;
         }
 
-        const oldTransform = this.transform;
-        this.transform = d3.event.transform;
-
-        if (oldTransform.k !== this.transform.k) {
-          console.log("zoomed");
-
-          this.transform.x = oldTransform.x;
-          this.transform.y = oldTransform.y;
-        }
-
-        this.setupView();
-        this.setupScales();
+        const { sourceEvent, transform } = d3.event;
+        const didZoom = (this.transform.k !== transform.k);
+        
+        // update our transform object from the zoom
+        this.transform = transform;
+        this.translate = {
+          x: transform.x,
+          y: transform.y,
+          k: transform.k
+        };
 
         this.render();
       });
@@ -367,30 +362,22 @@ const Wc3vViewer = class {
       middleY
     } = this;
 
-    this.clearCanvas();
-
     const { width, height } = this.mapImage;
     const { xExtent, yExtent } = this;
 
-    const mapX = (this.middleX - (width / 2));
-    const mapY = (this.middleY - (height / 2));
+    this.clearCanvas();
 
-    const x = mapX + transform.x;
-    const y = mapY + transform.y;
-    const w = xScale(xExtent[1] - xExtent[0]);
-    const h = yScale(yExtent[1] - yExtent[0]);
-
+    this.ctx.save();    
+    this.ctx.translate(this.transform.x, this.transform.y);
+    this.ctx.scale(this.transform.k, this.transform.k);
     this.renderMapBackground();
 
-    this.ctx.globalAlpha = 0.4;
-    //this.ctx.fillRect(x, y, w, h);
-    this.ctx.globalAlpha = 1.0;
-
     this.players.forEach(player => {
-      player.render(ctx, transform, gameTime, xScale, yScale, mapX, mapY);
+      player.render(ctx, transform, gameTime, xScale, yScale, 0, 0);
     });
 
     this.scrubber.render(gameTime, matchEndTime);
+    this.ctx.restore();
   }
 };
 
