@@ -10,8 +10,6 @@ const IconSizes = {
 const minimumIconSize = 15,
       maximumBuildingSize = 20,
       minimumUnitSize = 10;
-      
-const minimumShowTextZoom = 0.65;
 
 const buildingAlpha = 0.65;
 
@@ -22,7 +20,7 @@ const ClientUnit = class {
       "objectId1", "objectId2", "isRegistered", "isUnit",
       "isBuilding", "isIllusion", "level", "lastPosition",
       "path", "moveHistory", "meta", "items", "spawnTime",
-      "spawnPosition"
+      "spawnPosition", "levelStream"
     ];
 
     dataFields.forEach(field => {
@@ -71,7 +69,11 @@ const ClientUnit = class {
       this.currentY = y;
     }
 
-    this.currentMoveRecordIndex = -1;
+    this.recordIndexes = {
+      move: -1,
+      level: -1
+    };
+
     this.decayLevel = 1;
 
     if (this.meta.hero) {
@@ -82,6 +84,23 @@ const ClientUnit = class {
       this.iconSize = IconSizes.worker;
     } else {
       this.iconSize = IconSizes.unit;
+    }
+
+    this.fullName = this.getFullName();
+  }
+
+  getFullName () {
+    if (!this.meta.hero) {
+      return this.displayName;
+    } else {
+      if (this.isIllusion) {
+        return `${this.displayName} (I)`;
+      }
+
+      const levelRecord = this.levelStream && this.levelStream[this.recordIndexes.level];
+      const heroLevel = levelRecord ? levelRecord.newLevel : 1;
+
+      return `${this.displayName} (${heroLevel})`;
     }
   }
 
@@ -98,12 +117,31 @@ const ClientUnit = class {
       return false;
     }
 
-    if (this.currentMoveRecordIndex !== index) {
+    if (this.recordIndexes.move !== index) {
       this.initMove(index);
     }
 
-    this.currentMoveRecordIndex = index;
+    this.recordIndexes.move = index;
     return true;
+  }
+
+  getCurrentLevelRecord (gameTime) {
+    if (!this.meta.hero) {
+      return;
+    }
+
+    const index = this.levelStream.findIndex(record => {
+      return record.gameTime >= gameTime;
+    });
+
+    if (index === -1) {
+      return;
+    }
+
+    if (this.recordIndexes.level !== index) {
+      this.recordIndexes.level = index;
+      this.fullName = this.getFullName();
+    }
   }
 
   initMove (index) {
@@ -138,6 +176,8 @@ const ClientUnit = class {
     if (this.meta.worker) {
       // don't fully decay workers, since they often idle
       this.decayLevel = Math.max(0.2, this.decayLevel);
+    } else if (this.isBuilding) {
+      this.decayLevel = Math.max(0.4, this.decayLevel);
     } else {
       this.decayLevel = Math.max(0.0, this.decayLevel);
     }
@@ -149,11 +189,14 @@ const ClientUnit = class {
     }
 
     const hasRecord = this.getCurrentMoveRecord(gameTime);
-    if (!hasRecord) {
+    if (this.isBuilding || !hasRecord) {
       this.decay();
 
       return;
     }
+
+    // checks and updates current level record, setting this.fullName
+    this.getCurrentLevelRecord(gameTime);
 
     const secondsPassed = (dt * Helpers.MS_TO_SECONDS);
     const {
@@ -222,17 +265,9 @@ const ClientUnit = class {
 
     Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
-    const drawTextX = drawX - (this.displayName.length * 2);
-    const drawTextY = drawY + iconSize;
-
-    if (inverseK > minimumShowTextZoom) {
-      ctx.fillStyle = "#FFF";
-      ctx.font = `${Math.ceil(fontSize)}px Arial`;
-      ctx.fillText(this.displayName, drawTextX, drawTextY );
-      ctx.font = `12px Arial`;
-      ctx.fillStyle = "#000";
-    }
-
+    // todo: optimize to not use fillText
+    Drawing.drawCenteredText(ctx, drawX, drawY + iconSize, this.fullName, fontSize);
+    
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;
   }

@@ -256,7 +256,8 @@ const readCliArgs = (argv) => {
           'crow-vs-john',
           'chae-vs-hawk',
           'soin-vs-chae',
-          'joker-vs-lil'
+          'joker-vs-lil',
+          '2v2-synergy'
         ];
 
         options.inTestMode = true;
