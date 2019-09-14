@@ -23,17 +23,6 @@ that a 'normal' game player will eventually select and interact with these units
 
 The engine keeps track of how many 'unregistered' units we know about - registering a unit is a concept we talk more about later.
 
-#### Known Object IDs
-
-Units with equal `objectId1-2` field were spawned at the start of game.  
-
-Once we identify the `itemId` of a worker, we know the rest of the worker ID's are within `6` positions of this unit, because the game spawns them in sequentially.
-
-With this information we are able to associate "known object IDs" for the 'worker' and 'town hall' groups.
-
-These known object IDs become useful later when determining what an "unregistered" unit
-really is.
-
 #### Player actions required to make more units
 
 Because Warcraft 3 requires the player to actually perform actions in order for more units to "spawn" into the world - it's easy for us at this point to associate things when a user selects that unit.
@@ -53,6 +42,17 @@ Whenever a unit enters a players list of selected units we try to associate the 
 Unit metadata is mapped to known `itemId` values - giving us the ability to simulate different actions and in-game results.
 
 Luckily because Warcraft 3 forces you to interact with these units by selecting them "first" to do anything actually worth tracking - we eventually register all the known units that have done something meaningful.
+
+#### Known Object IDs
+
+Units with equal `objectId1-2` field were spawned at the start of game.  
+
+Once we identify the `itemId` of a worker, we know the rest of the worker ID's are within `6` positions of this unit, because the game spawns them in sequentially.
+
+With this information we are able to associate "known object IDs" for the 'worker' and 'town hall' groups.
+
+These known object IDs become useful later when determining what an "unregistered" unit
+really is.
 
 #### Skills and Abilities
 
@@ -74,22 +74,24 @@ and a notable mention for another active command:
 
 The replay contains an action for when a hero skill is learned, allowing us to keep track
 of which skills a hero has taken and the level of the given skill.  This is also a good way
-to infer hero level - but may not always be accurate.
+to infer hero level - but will not be done at the exact time a hero leveled up.
 
 ### Player Position
 
-Warcraft 3 uses a starting random seed to encode where the player 'starting positions'
-should be on a given map.
+Warcraft 3 uses a random seed to determine game outcomes such as where the player 'starting positions' should be on a given map.  This game seed is not currently understood.
 
-The engine will need to read the map `JASS` file and determine the possible list of starting
-locations, and then 'predict' where the player started based on their known movements.
+The engine can be told to read the map `JASS` file and determine the possible list of starting
+locations, and then 'predict' where the player started based on their known movements. Currently this is done manually - but for future proofing the wc3v engine should learn more about map + scripting data.
 
-In probably 99% of scenarios we will be able to guess correctly based on the assumption that
-a player will build at least their buildings near their starting position.
+In almost 99% of real game scenarios we will be able to guess correctly based on the assumption that a player will build at least their buildings near their starting position, as well as being able to rule out positions already set by other players.
 
 ### Backfilling 
 
-As covered previously the `wc3v` map parser handles units in an unregistered state.  The actions units and buildings can take while still in an unregistered state are all important to determining the state of the game.
+We previously mentioned the `wc3v` map parser sometimes handles units in an unregistered state. The actions units or buildings perform while still unregistered can be important to determining the state of the game.
+
+The backfill is performed by simulating the actions that we've stored in a compacted format alongside the gametime at which they occured.  Simulating the events allows for unit actions to be canceled or detected, in the same ways registered units have.
+
+### Backfilling exampmles
 
 One common example can be seen in the test replay `test-backfill.wc3g`:
 
@@ -97,9 +99,7 @@ The sceanrio is that a newly spawned `Hero (DK)` is moving around the map, then 
 
 After a couple of movement actions to and from a creep camp, the player eventually selects the `Ghoul` directly and sends them back to base.  At this point the `wc3v` parser recognizes that we've stored some `backfill` data for this `itemId1 / itemId2` pair in our action selections and performs a backfill of the data.
 
-The backfill is performed by simulating the actions that we've stored in a compacted format alongside the gametime at which they occured.  Simulating the events allows for unit actions to be canceled or detected, in the same ways registered units have.
-
-### Quirky stuff about WC3 Replays
+## Quirky stuff about WC3 Replays
 
 Wc3 is an old and glorious game and therefore the replay files can contain some 'funny' things...
 
@@ -127,3 +127,8 @@ Another fun trick is applied when figuring out moving of items - the game for wh
 gives items a target X,Y coordinate, and it turns out that coordinates with a non-zero decimal 
 portion are bought from the shop! neat.
 
+## Replay parsing uncertainty tracking
+
+The wc3v exports a percentage confidence marked as `parseConfidence` which tracks how many times the `wc3v` engine encountered something it wasn't confident about.  These situations can occur for lots of reasons:  from tiny or minor actions that likely have no effect or have yet to be implemented, up to major confidence breakers where the engine couldn't find things it needed.
+
+Viewers (and developers) can consider this mechanism as a way to handle ensuring _some_ result is generated from map replay files, without throwing fatal errors, and indicates when the representation of the game might be a little off.
