@@ -7,7 +7,7 @@
 
  Examples:
 
- ![Happy vs Grubby showmatch on Concealed Hill](/example-client-v2.png)
+ ![Happy vs Grubby showmatch on Concealed Hill](/example-client-v3.png)
 
 # Usage
 
