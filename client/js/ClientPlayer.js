@@ -60,9 +60,8 @@ const ClientPlayer = class {
     const yMargin = 20;
     const slotOffset = (this.slot * (iconSize + yMargin)) + halfIconSize;
 
-    const translate = wc3v.translate;
-    const drawX = (translate.x + xScale(minXExtent) + wc3v.middleX + padding);
-    const drawY = (translate.y + yScale(minYExtent) + wc3v.middleY + yMargin + slotOffset);
+    const drawX = (transform.x + xScale(minXExtent) + wc3v.middleX + padding);
+    const drawY = (transform.y + yScale(minYExtent) + wc3v.middleY + yMargin + slotOffset);
 
     ctx.strokeStyle = "#FFFC01";
     ctx.globalAlpha = this.decayLevel;
