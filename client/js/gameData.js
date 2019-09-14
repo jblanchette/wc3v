@@ -7,8 +7,8 @@ const gameData = {
     },
     '(2)echoisles.w3x': {
       'name': 'EchoIsles',
-      'xExtent': [ -7600,  7400 ],
-      'yExtent': [  5700, -5700 ]
+      'xExtent': [ -6912,  6912 ],
+      'yExtent': [  4864, -5376 ]
     },
     '(4)synergybigpaved.w3x': {
       'name': 'SynergyBigPaved',

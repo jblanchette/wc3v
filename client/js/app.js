@@ -246,6 +246,8 @@ const Wc3vViewer = class {
     
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
+    // how far the camera will zoom
+    const zoomScaleExtent = [ 1.0, 1.75 ];
 
     this.setupView();
     this.setupScales();
@@ -254,7 +256,7 @@ const Wc3vViewer = class {
     const zoomContainer = d3.select("#main-wrapper");
 
     this.zoom = d3.zoom()
-      .scaleExtent([1.0, 2.5])
+      .scaleExtent(zoomScaleExtent)
       .on("zoom", () => {
         if (!this.ctx) {
           return;
