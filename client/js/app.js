@@ -93,6 +93,10 @@ const Wc3vViewer = class {
       self.mapImage.src = `./maps/${name}/map.jpg`; // Set source path
 
       self.mapImage.addEventListener('load', () => {
+
+        self.canvas.width = self.mapImage.width;
+        self.canvas.height = self.mapImage.height;
+
         resolve();
       }, false);
       
@@ -243,8 +247,6 @@ const Wc3vViewer = class {
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
 
-    this.translate = { x: 0.0, y: 0.0, k: 1.0 };
-
     this.setupView();
     this.setupScales();
     this.setupMiddle();
@@ -252,23 +254,15 @@ const Wc3vViewer = class {
     const zoomContainer = d3.select("#main-wrapper");
 
     this.zoom = d3.zoom()
-      .scaleExtent([0.5, 2.5])
+      .scaleExtent([1.0, 2.5])
       .on("zoom", () => {
         if (!this.ctx) {
           return;
         }
 
-        const { sourceEvent, transform } = d3.event;
-        const didZoom = (this.transform.k !== transform.k);
-        
+        const { transform } = d3.event;
         // update our transform object from the zoom
         this.transform = transform;
-        this.translate = {
-          x: transform.x,
-          y: transform.y,
-          k: transform.k
-        };
-
         this.render();
       });
 
