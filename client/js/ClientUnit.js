@@ -7,10 +7,13 @@ const IconSizes = {
   'building': 16
 };
 
-const minimumIconSize = 20,
+const minimumIconSize = 15,
       maximumBuildingSize = 20,
-      minimumUnitSize = 10,
-      minimumTextZoom = 0.45;
+      minimumUnitSize = 10;
+      
+const minimumShowTextZoom = 0.65;
+
+const buildingAlpha = 0.65;
 
 const ClientUnit = class {
   constructor (unitData, playerColor) {
@@ -133,6 +136,7 @@ const ClientUnit = class {
     this.decayLevel -= this.meta.hero ? 0.0005 : 0.0025;
 
     if (this.meta.worker) {
+      // don't fully decay workers, since they often idle
       this.decayLevel = Math.max(0.2, this.decayLevel);
     } else {
       this.decayLevel = Math.max(0.0, this.decayLevel);
@@ -165,6 +169,7 @@ const ClientUnit = class {
     const yDelta = (yDirection * yVelocity * secondsPassed);
 
     // update the postion
+
     this.currentX += xDelta;
     this.currentY += yDelta;
   }
@@ -183,17 +188,22 @@ const ClientUnit = class {
     const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
     const iconSize = Math.max(dynamicSize, minimumIconSize);
 
+    ctx.globalAlpha = buildingAlpha;
     ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize); 
 
     ctx.strokeStyle = "#FFFC01";
     ctx.strokeRect(drawX, drawY, iconSize, iconSize);
     ctx.strokeStyle = "#000000";
+    ctx.globalAlpha = 1.0;
   }
 
   renderUnit (ctx, transform, gameTime, xScale, yScale) {
     if (!this.currentX || !this.currentY) {
       return;
     }
+
+    // (x * scale) + transform.x
+    // (y * scale) + transform.y
 
     const { currentX, currentY } = this;
     const drawX = ((xScale(currentX) + wc3v.middleX) * transform.k) + transform.x;
@@ -215,7 +225,7 @@ const ClientUnit = class {
     const drawTextX = drawX - (this.displayName.length * 2);
     const drawTextY = drawY + iconSize;
 
-    if (inverseK > minimumTextZoom) {
+    if (inverseK > minimumShowTextZoom) {
       ctx.fillStyle = "#FFF";
       ctx.font = `${Math.ceil(fontSize)}px Arial`;
       ctx.fillText(this.displayName, drawTextX, drawTextY );

@@ -11,8 +11,10 @@ const ClientPlayer = class {
     // make new ClientUnit instances
     this.units = units.map(unitData => new ClientUnit(unitData, playerColor));
     
-    const sortedUnits = this.units.sort((a, b) => {
-      return a.spawnTime - b.spawnTime;
+    // sort buildings first so they get drawn first
+    this.units = this.units.sort((a, b) => {
+      // magical js
+      return b.isBuilding - a.isBuilding;
     });
 
     this.setup();
