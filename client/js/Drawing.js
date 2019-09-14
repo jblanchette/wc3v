@@ -1,5 +1,15 @@
 
 const Drawing = class {
+  static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12) {
+      const drawTextX = (drawX - (textStr.length * fontSize) * 0.25);
+
+      ctx.fillStyle = "#FFF";
+      ctx.font = `${Math.ceil(fontSize)}px Arial`;
+      ctx.fillText(textStr, drawTextX, drawY);
+      ctx.font = `12px Arial`;
+      ctx.fillStyle = "#000";
+  }
+
   static drawImageCircle (ctx, icon, drawX, drawY, iconSize) {
     const halfIconSize = (iconSize / 2);
 
