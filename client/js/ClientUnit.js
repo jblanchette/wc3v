@@ -10,7 +10,7 @@ const IconSizes = {
 const minimumIconSize = 20,
       maximumBuildingSize = 20,
       minimumUnitSize = 10,
-      minimumTextZoom = 0.75;
+      minimumTextZoom = 0.45;
 
 const ClientUnit = class {
   constructor (unitData, playerColor) {
@@ -174,12 +174,14 @@ const ClientUnit = class {
 
     const inverseK = (2.0 - transform.k);
 
-    const translate = wc3v.translate;
-    const drawX = (xScale(x) + wc3v.middleX) * translate.k + (translate.x);
-    const drawY = (yScale(y) + wc3v.middleY) * translate.k + (translate.y);
+    // (x * scale) + transform.x
+    // (y * scale) + transform.y
 
-    const dynamicSize = this.iconSize;// * inverseK; // inverse zoom scale
-    const iconSize = Math.max(dynamicSize, 2.0); //Math.min(maximumBuildingSize, Math.max(minimumIconSize, dynamicSize)); // bounds
+    const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
+    const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
+
+    const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
+    const iconSize = Math.max(dynamicSize, minimumIconSize);
 
     ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize); 
 
@@ -194,14 +196,12 @@ const ClientUnit = class {
     }
 
     const { currentX, currentY } = this;
-
-    const translate = wc3v.translate;
-    const drawX = (xScale(currentX) + wc3v.middleX) * translate.k + (translate.x);
-    const drawY = (yScale(currentY) + wc3v.middleY) * translate.k + (translate.y);
+    const drawX = ((xScale(currentX) + wc3v.middleX) * transform.k) + transform.x;
+    const drawY = ((yScale(currentY) + wc3v.middleY) * transform.k) + transform.y;
 
     const inverseK = (2.0 - transform.k);
     const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
-    const iconSize = Math.max(dynamicSize, 2.0); // minimum scaling
+    const iconSize = Math.max(dynamicSize, minimumIconSize); // minimum scaling
     const halfIconSize = iconSize / 2;
     
     const fontSize = halfIconSize;
