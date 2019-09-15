@@ -156,6 +156,11 @@ const Wc3vViewer = class {
     this.playerStatusCanvas = document.getElementById("player-status-canvas");
     this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
 
+    this.playerStatusCtx.lineWidth = 1;
+    this.playerStatusCtx.fillStyle = "#29373E";
+    this.playerStatusCtx.strokeStyle = "#FFF";
+    this.playerStatusCtx.font = '12px Arial';
+
     // finishes the setup promise
     return this.loadMapFile().then(() => {
       this.setupDrawing();
