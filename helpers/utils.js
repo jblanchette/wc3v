@@ -257,6 +257,7 @@ const readCliArgs = (argv) => {
           'chae-vs-hawk',
           'soin-vs-chae',
           'joker-vs-lil',
+          'terenas-stand-lv_sonik-vs-tgw',
           '2v2-synergy'
         ];
 

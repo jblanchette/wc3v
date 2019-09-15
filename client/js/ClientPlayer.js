@@ -17,6 +17,12 @@ const ClientPlayer = class {
       return b.isBuilding - a.isBuilding;
     });
 
+    this.heroes = this.units.filter(unit => {
+      return unit.meta.hero && !unit.isIllusion;
+    }).sort((a, b) => {
+      return a.spawnTime - b.spawnTime;
+    })
+
     this.setup();
   }
 
@@ -42,60 +48,68 @@ const ClientPlayer = class {
     this.units.forEach(unit => unit.update(gameTime, dt));
   }
 
-  renderSelectedUnit () {
-    
-  }
-
   renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
     if (!this.icon) {
       return;
     }
 
-    const xPadding = 15;
-    const yPadding = 15;
+    const yMargin = 20;
+    const xPadding = 6;
+    const yPadding = 25;
 
-    const boxHeight = 50 + wc3v.playerSlotOffset;
+    const boxHeight = 100 + wc3v.playerSlotOffset;
 
     const drawX = xPadding;
-    const drawY = yPadding + (this.slot * boxHeight);
+    const drawY = yMargin + this.slot * (yPadding + boxHeight);
 
-    playerStatusCtx.fillRect(drawX, drawY, 50, boxHeight);
+    const iconSize = 30;
+    const halfIconSize = iconSize / 2;
+    const iconPadding = 2;
+
+    playerStatusCtx.fillRect(drawX, drawY, 75, boxHeight);
+
+    const drawIconX = drawX + iconPadding + halfIconSize;
+    const drawIconY = drawY + iconPadding + halfIconSize;
+
+    Drawing.drawImageCircle(
+      playerStatusCtx, 
+      this.icon, 
+      drawIconX,
+      drawIconY,
+      iconSize
+    );
+
+    const drawTextX = drawIconX - halfIconSize;
+    const drawTextY = (drawIconY + halfIconSize + 10);
+
+    playerStatusCtx.strokeText(this.displayName, drawTextX, drawTextY);
+
+    const boxTextOffset = 10;
+    this.renderHeroBox(playerStatusCtx, drawTextX, drawTextY + boxTextOffset);
   }
 
-  renderPlayerIconOld (ctx, transform, gameTime, xScale, yScale) {
-    // check if it isn't loaded yet
-    if (!this.icon) {
-      return;
+  renderHeroBox (playerStatusCtx, offsetX, offsetY) {
+    const boxHeight = 65;
+    const subBoxWidth = 45;
+    const boxWidth = subBoxWidth * 3;
+
+    const skillBoxHeight = 20;
+    const skillBoxOffset = offsetY + (boxHeight - skillBoxHeight);
+
+    for (let heroSlot = 0; heroSlot < this.heroes.length; heroSlot++) {
+      const boxX = offsetX + (subBoxWidth * heroSlot);
+      const hero = this.heroes[heroSlot];
+
+      if (hero) {
+        playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight);
+        playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+      }
     }
 
-    const iconSize = Math.max(15, Math.min(25 * (2.0 - transform.k), 30));
-    const halfIconSize = iconSize / 2;
-
-    const minXExtent = wc3v.xExtent[0];
-    const minYExtent = wc3v.yExtent[0];
-
-    const padding = 20;
-    const yMargin = 20;
-
-    const slotOffset = (this.slot * (iconSize + yMargin)) + halfIconSize;
-
-    const drawX = (transform.x + xScale(minXExtent) + wc3v.middleX + padding);
-    const drawY = (transform.y + yScale(minYExtent) + wc3v.middleY + yMargin + slotOffset);
-
-    ctx.strokeStyle = "#FFFC01";
-    ctx.globalAlpha = this.decayLevel;
-
-    // clip our initial circle
-    Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
-
-    // adjust text by length, ensure we don't go out of the map bounds
-    const drawTextX = drawX;
-    const drawTextY = (drawY + halfIconSize + 10);
-
-    ctx.strokeText(this.displayName, drawTextX, drawTextY);
-
-    ctx.strokeStyle = "#000000";
-    ctx.globalAlpha = 1;
+    playerStatusCtx.beginPath();
+    playerStatusCtx.moveTo(offsetX, skillBoxOffset);
+    playerStatusCtx.lineTo(offsetX + (this.heroes.length * subBoxWidth), skillBoxOffset);
+    playerStatusCtx.stroke();
   }
 
   render (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
