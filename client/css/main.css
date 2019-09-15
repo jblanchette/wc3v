@@ -40,10 +40,25 @@ html, body {
   overflow: hidden;
 }
 
+#main-wrapper {
+  /* so we can position: absolute; sub-canvas elements */
+  position: relative;
+}
+
+/* main canvas element */
 #main-canvas {
   transform-origin: 50% 50% 0;
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
+  z-index: 1;
+}
+
+/* sub-canvas element */
+#player-status-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
 }
 
 .info-wrapper {

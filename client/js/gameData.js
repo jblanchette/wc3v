@@ -10,6 +10,11 @@ const gameData = {
       'xExtent': [ -6912,  6912 ],
       'yExtent': [  4864, -5376 ]
     },
+    '(2)terenasstand_lv.w3x': {
+      'name': 'TerenasStandLV',
+      'xExtent': [ -4864,  4864 ],
+      'yExtent': [  4864, -5376 ]
+    },
     '(4)synergybigpaved.w3x': {
       'name': 'SynergyBigPaved',
       'xExtent': [ -7424, 7424 ],
