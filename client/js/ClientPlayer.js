@@ -46,7 +46,23 @@ const ClientPlayer = class {
     
   }
 
-  renderPlayerIcon (ctx, transform, gameTime, xScale, yScale) {
+  renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
+    if (!this.icon) {
+      return;
+    }
+
+    const xPadding = 15;
+    const yPadding = 15;
+
+    const boxHeight = 50 + wc3v.playerSlotOffset;
+
+    const drawX = xPadding;
+    const drawY = yPadding + (this.slot * boxHeight);
+
+    playerStatusCtx.fillRect(drawX, drawY, 50, boxHeight);
+  }
+
+  renderPlayerIconOld (ctx, transform, gameTime, xScale, yScale) {
     // check if it isn't loaded yet
     if (!this.icon) {
       return;
@@ -60,6 +76,7 @@ const ClientPlayer = class {
 
     const padding = 20;
     const yMargin = 20;
+
     const slotOffset = (this.slot * (iconSize + yMargin)) + halfIconSize;
 
     const drawX = (transform.x + xScale(minXExtent) + wc3v.middleX + padding);
@@ -81,8 +98,8 @@ const ClientPlayer = class {
     ctx.globalAlpha = 1;
   }
 
-  render (ctx, transform, gameTime, xScale, yScale) {
-    this.renderPlayerIcon(ctx, transform, gameTime, xScale, yScale);
+  render (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
+    this.renderPlayerIcon(ctx, playerStatusCtx, transform, gameTime, xScale, yScale);
     this.units.forEach(unit => 
       unit.render(ctx, transform, gameTime, xScale, yScale));
   }

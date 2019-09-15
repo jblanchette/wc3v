@@ -26,6 +26,10 @@ const Wc3vViewer = class {
   reset () {
     this.canvas = null;
     this.ctx = null;
+
+    this.playerStatusCanvas = null;
+    this.playerStatusCtx = null;
+
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
 
     this.mapData = null;
@@ -149,6 +153,9 @@ const Wc3vViewer = class {
     this.canvas = document.getElementById("main-canvas");
     this.ctx = this.canvas.getContext("2d");
 
+    this.playerStatusCanvas = document.getElementById("player-status-canvas");
+    this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
+
     // finishes the setup promise
     return this.loadMapFile().then(() => {
       this.setupDrawing();
@@ -246,6 +253,8 @@ const Wc3vViewer = class {
     
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
+    // player ui toggle offsets
+    this.playerSlotOffset = 0;
     // how far the camera will zoom
     const zoomScaleExtent = [ 1.0, 1.75 ];
 
@@ -273,8 +282,13 @@ const Wc3vViewer = class {
   }
 
   clearCanvas () {
-    const { ctx, canvas } = this;
+    const { ctx, playerStatusCtx, canvas } = this;
     
+    playerStatusCtx.save();
+    playerStatusCtx.setTransform(1, 0, 0, 1, 0, 0);
+    playerStatusCtx.clearRect(0, 0, canvas.width, canvas.height);
+    playerStatusCtx.restore();
+
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -349,6 +363,7 @@ const Wc3vViewer = class {
   render () {
     const { 
       ctx,
+      playerStatusCtx,
       transform,
       gameTime,
       matchEndTime, 
@@ -359,17 +374,16 @@ const Wc3vViewer = class {
     } = this;
 
     const { width, height } = this.mapImage;
-    const { xExtent, yExtent } = this;
 
     this.clearCanvas();
 
     this.ctx.save();    
-    this.ctx.translate(this.transform.x, this.transform.y);
-    this.ctx.scale(this.transform.k, this.transform.k);
+    this.ctx.translate(transform.x, transform.y);
+    this.ctx.scale(transform.k, transform.k);
     this.renderMapBackground();
 
     this.players.forEach(player => {
-      player.render(ctx, transform, gameTime, xScale, yScale, 0, 0);
+      player.render(ctx, playerStatusCtx, transform, gameTime, xScale, yScale);
     });
 
     this.scrubber.render(gameTime, matchEndTime);

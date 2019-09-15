@@ -1220,6 +1220,15 @@ const mapStartPositions = {
         '0': { x: 2176.0, y: 4224.0 },
         '1': { x: -2304.0, y: -4736.0 }
     },
+    '(2)terenasstand_lv.w3x': {
+        /*
+            call DefineStartLocation(0, - 4096.0, 3968.0)
+            call DefineStartLocation(1, 4096.0, - 4608.0)
+        */
+
+        '0': { x: -4096.0, y: 3968.0 },
+        '1': { x: 4096.0, y: -4608.0}
+    },
     '(4)synergybigpaved.w3x': {
         '0': { x: 768.0,  y: -4736.0 },
         '1': { x: -448.0, y: -4736.0 },
