@@ -37,7 +37,6 @@ html, body {
   justify-content: center;
   align-items: center;
   border: 1px solid #000;
-  overflow: hidden;
 }
 
 #main-wrapper {
@@ -47,6 +46,7 @@ html, body {
 
 /* main canvas element */
 #main-canvas {
+  background-color: #73A9C2;
   transform-origin: 50% 50% 0;
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
@@ -55,9 +55,13 @@ html, body {
 
 /* sub-canvas element */
 #player-status-canvas {
+  background-color: #29373E;
+  border-top-left-radius: 0.75rem;
+  border-bottom-left-radius: 0.75rem;
+  border-right: 0;
   position: absolute;
-  top: 0;
-  left: 0;
+  top: 20px;
+  left: -150px;
   z-index: 2;
 }
 
