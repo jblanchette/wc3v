@@ -13,10 +13,27 @@ html, body {
   max-height: 3rem;
   padding: 0.15rem;
   border-bottom: 1px solid #000;
+  background-color: #5fa5cb;
 }
 
 .menu-item {
   display: inline-block;
+  vertical-align: top;
+  font: 14px Verdana;
+}
+
+.menu-item select {
+  font: 14px Verdana;
+}
+
+.menu-item-button {
+  height: 26px;
+  font: 14px Verdana;
+}
+
+.wc3v-logo {
+  font: 20px Verdana;
+  color: #FFFFFF;
 }
 
 #input-map-file {
@@ -42,6 +59,23 @@ html, body {
 #main-wrapper {
   /* so we can position: absolute; sub-canvas elements */
   position: relative;
+}
+
+#mega-play-button {
+  position: absolute;
+  left: calc(50% - 40px);
+  top: calc(50% - 40px);
+  background: url('/assets/mega-play-icon.svg');
+  background-color: rgba(0, 0, 0, 0.65);
+  border-radius: 4rem;
+  height: 80px;
+  width: 80px;
+  display: none;
+}
+
+#mega-play-button:hover {
+  cursor: pointer;
+  background-color: rgba(0, 0, 0, 0.85);
 }
 
 /* main canvas element */
