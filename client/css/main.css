@@ -61,6 +61,29 @@ html, body {
   position: relative;
 }
 
+#player-status-toggles {
+  font: 12px Verdana;
+  position: absolute;
+  top: 40px;
+  left: -173px;
+  width: 170px;
+  text-align: center;
+  z-index: 3;
+}
+
+.status-toggle {
+  text-selection: none;
+  cursor: pointer;
+  border: 1px solid #CCC;
+  display: inline-block;
+  color: #FFFFFF;
+  padding: 0.15rem 0.25rem;
+}
+
+.status-toggle.selected {
+  border: 1px solid #FFF;
+}
+
 #mega-play-button {
   position: absolute;
   left: calc(50% - 40px);
@@ -201,6 +224,7 @@ html, body {
   border: 1px solid #555;
   border-radius: 2rem;
   opacity: 0.5;
+  margin-right: 0.65rem;
 }
 
 .time-scrubber-tracker {
