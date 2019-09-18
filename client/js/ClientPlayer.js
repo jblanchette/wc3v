@@ -72,7 +72,7 @@ const ClientPlayer = class {
       return;
     }
 
-    const yMargin = 10;
+    const yMargin = 50;
     const xPadding = 10;
     const yPadding = 15;
 

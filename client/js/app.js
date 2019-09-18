@@ -164,7 +164,9 @@ const Wc3vViewer = class {
     this.megaPlayButton = document.getElementById("mega-play-button");
 
     this.playerStatusCanvas = document.getElementById("player-status-canvas");
-    this.playerStatusCanvas.height = this.players.length * 145;
+
+    // player-status-toggles + player boxes
+    this.playerStatusCanvas.height = 50 + (this.players.length * 140);
 
     this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
 
@@ -178,9 +180,6 @@ const Wc3vViewer = class {
     });
 
     this.clearCanvas();
-
-    this.ctx.font = "20px Arial";
-    this.ctx.fillText("Loading...", 200, 200);
 
     // finishes the setup promise
     return this.loadMapFile()
@@ -292,7 +291,7 @@ const Wc3vViewer = class {
 
     this.toggleMegaPlayButton(true);
 
-    const zoomContainer = d3.select("#main-wrapper");
+    const zoomContainer = d3.select("#main-canvas");
 
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)
