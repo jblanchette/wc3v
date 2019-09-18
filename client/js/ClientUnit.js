@@ -61,6 +61,10 @@ const ClientUnit = class {
         this[prop] = img;
         return resolve(true);
       };
+
+      img.onerror = (e) => {
+        console.log("img error: ", e);
+      };
     });
   }
 
@@ -71,7 +75,7 @@ const ClientUnit = class {
 
   loadSpellIcons () {
     return this.spellList.map((spellId, index) => {
-      const imgSrc = `/assets/wc3icons/${spellId.toLowerCase()}.jpg`;
+      const imgSrc = `/assets/wc3icons/${spellId}.jpg`;
       
       return this.loadAsset(imgSrc, `spell-${index}`);
     });
