@@ -1,5 +1,6 @@
 <html>
   <head>
+    <title>WC3Viewer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="js/Helpers.js"></script>
     <script src="js/Drawing.js"></script>
@@ -20,7 +21,7 @@
     <div id="app">
       <div id="menu">
         <div class="menu-item">
-          <button onClick="wc3v.load()">open</button>
+          <button class="menu-item-button" onClick="wc3v.load()">load wc3v replay</button>
         </div>
         <div class="menu-item">
           <select id="input-map-file">
@@ -45,14 +46,17 @@
           </select>
         </div>
 
-        <a href="#" id="raw-link">raw wc3v</a> |
-        <a href="#" id="log-link">log</a>
+        <div class="menu-item">
+          <span class="wc3v-logo">WC3Viewer</span>
+        </div>
       </div>
 
       <div id="content">
         <div class="canvas-wrapper">          
           <div id="main-wrapper">
-            <canvas id="player-status-canvas" width="180" height="600"></canvas>
+            <div id="mega-play-button" onClick="wc3v.play()"></div>
+
+            <canvas id="player-status-canvas" width="180" height="200"></canvas>
             <canvas id="main-canvas" width="692" height="750"></canvas>
           </div>
         </div>
