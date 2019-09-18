@@ -1,6 +1,8 @@
 # WC3V
 
- (WIP) **W**ar**c**raft **3** Replay **V**iewer.
+ **W**ar**c**raft **3** Replay **V**iewer.
+
+ http://wc3v.com
 
  Goal is to simulate enough of wc3 to get a 'birds eye view'
  of the match from a given replay.
