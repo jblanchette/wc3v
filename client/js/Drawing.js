@@ -1,5 +1,23 @@
 
 const Drawing = class {
+
+  static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 10) {
+    const padding = 4;
+    const drawX = (boxX + boxWidth) - size - padding;
+    const drawY = (boxY + boxHeight) - size  - padding;
+
+    ctx.fillStyle = "#FFF";
+    ctx.strokeStyle = "#000";
+    ctx.fillRect(drawX, drawY, size, size);
+    ctx.strokeRect(drawX, drawY, size, size);
+
+    ctx.fillStyle = "#000";
+    ctx.font = `10px Arial`;
+    ctx.fillText(textStr, drawX + 2, drawY + size - 1);
+
+    ctx.strokeStyle = "#FFF";
+  }
+
   static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12) {
       const drawTextX = (drawX - (textStr.length * fontSize) * 0.25);
 

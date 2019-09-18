@@ -53,11 +53,11 @@ const ClientPlayer = class {
       return;
     }
 
-    const yMargin = 20;
-    const xPadding = 6;
-    const yPadding = 25;
+    const yMargin = 10;
+    const xPadding = 10;
+    const yPadding = 15;
 
-    const boxHeight = 100 + wc3v.playerSlotOffset;
+    const boxHeight = 120 + wc3v.playerSlotOffset;
 
     const drawX = xPadding;
     const drawY = yMargin + this.slot * (yPadding + boxHeight);
@@ -65,8 +65,6 @@ const ClientPlayer = class {
     const iconSize = 30;
     const halfIconSize = iconSize / 2;
     const iconPadding = 2;
-
-    playerStatusCtx.fillRect(drawX, drawY, 75, boxHeight);
 
     const drawIconX = drawX + iconPadding + halfIconSize;
     const drawIconY = drawY + iconPadding + halfIconSize;
@@ -79,37 +77,60 @@ const ClientPlayer = class {
       iconSize
     );
 
-    const drawTextX = drawIconX - halfIconSize;
-    const drawTextY = (drawIconY + halfIconSize + 10);
+    const drawTextX = drawIconX + halfIconSize + xPadding;
+    const drawTextY = drawIconY + (halfIconSize / 2);
 
     playerStatusCtx.strokeText(this.displayName, drawTextX, drawTextY);
 
-    const boxTextOffset = 10;
-    this.renderHeroBox(playerStatusCtx, drawTextX, drawTextY + boxTextOffset);
+    const boxTextOffset = 5;
+    this.renderHeroBox(
+      playerStatusCtx, 
+      gameTime,
+      (drawIconX - halfIconSize), 
+      (drawIconY + halfIconSize + boxTextOffset)
+    );
   }
 
-  renderHeroBox (playerStatusCtx, offsetX, offsetY) {
-    const boxHeight = 65;
-    const subBoxWidth = 45;
+  renderHeroBox (playerStatusCtx, gameTime, offsetX, offsetY) {
+    const boxHeight = 75;
+    const subBoxWidth = 50;
     const boxWidth = subBoxWidth * 3;
 
     const skillBoxHeight = 20;
     const skillBoxOffset = offsetY + (boxHeight - skillBoxHeight);
+
+    const skillSubBoxWidth = (subBoxWidth / 2);
 
     for (let heroSlot = 0; heroSlot < this.heroes.length; heroSlot++) {
       const boxX = offsetX + (subBoxWidth * heroSlot);
       const hero = this.heroes[heroSlot];
 
       if (hero) {
-        playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight);
+
+        playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.25;
+        playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
         playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+
+        Drawing.drawBoxedLevel(playerStatusCtx, hero.getHeroLevel(), boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+
+        hero.spellList.forEach((spellId, spellSlot) => {
+          const spellX = boxX + (skillSubBoxWidth * spellSlot);
+
+          const spellRowOffsetY = (spellSlot > 1) ? skillBoxHeight : 0;
+          const spellRowOffsetX = (spellSlot > 1) ? -(skillSubBoxWidth * 2) : 0;
+
+          playerStatusCtx.drawImage(
+            hero[`spell-${spellSlot}`], 
+            spellX + spellRowOffsetX,
+            skillBoxOffset + spellRowOffsetY,
+            skillSubBoxWidth,
+            skillBoxHeight
+          );
+        });
+
+        playerStatusCtx.globalAlpha = 1.0;
       }
     }
-
-    playerStatusCtx.beginPath();
-    playerStatusCtx.moveTo(offsetX, skillBoxOffset);
-    playerStatusCtx.lineTo(offsetX + (this.heroes.length * subBoxWidth), skillBoxOffset);
-    playerStatusCtx.stroke();
   }
 
   render (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
