@@ -167,6 +167,11 @@ const Wc3vViewer = class {
       return player.setup();
     });
 
+    this.clearCanvas();
+
+    this.ctx.font = "20px Arial";
+    this.ctx.fillText("Loading...", 200, 200);
+
     // finishes the setup promise
     return this.loadMapFile()
     .then(playerLoaders)
