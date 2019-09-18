@@ -20,7 +20,7 @@ const ClientUnit = class {
       "objectId1", "objectId2", "isRegistered", "isUnit",
       "isBuilding", "isIllusion", "level", "lastPosition",
       "path", "moveHistory", "meta", "items", "spawnTime",
-      "spawnPosition", "levelStream"
+      "spawnPosition", "levelStream", "spellList"
     ];
 
     dataFields.forEach(field => {
@@ -31,16 +31,19 @@ const ClientUnit = class {
     this.setup();
 
     this.loadIcon();
+
+    if (this.meta.hero) {
+      this.loadSpellIcons();
+    }
   }
 
-  loadIcon () {
+  loadAsset (imgSrc, prop) {
     const img = new Image();
-    const imgSrc = `/assets/wc3icons/${this.itemId}.jpg`;
     
-    this.icon = null;
+    this[prop] = null;
 
     if (_iconCache[imgSrc]) {
-      this.icon = _iconCache[imgSrc];
+      this[prop] = _iconCache[imgSrc];
       return;
     }
 
@@ -50,8 +53,20 @@ const ClientUnit = class {
         _iconCache[imgSrc] = img;
       }
 
-      this.icon = img;
+      this[prop] = img;
     };
+  }
+
+  loadIcon () {
+    const imgSrc = `/assets/wc3icons/${this.itemId}.jpg`;
+    this.loadAsset(imgSrc, 'icon');
+  }
+
+  loadSpellIcons () {
+    this.spellList.forEach((spellId, index) => {
+      const imgSrc = `/assets/wc3icons/${spellId.toLowerCase()}.jpg`;
+      this.loadAsset(imgSrc, `spell-${index}`);
+    });
   }
 
   setup () {
@@ -102,6 +117,13 @@ const ClientUnit = class {
 
       return `${this.displayName} (${heroLevel})`;
     }
+  }
+
+  getHeroLevel () {
+    const levelRecord = this.levelStream && this.levelStream[this.recordIndexes.level];
+    const heroLevel = levelRecord ? levelRecord.newLevel : 1;    
+
+    return heroLevel;
   }
 
   getCurrentMoveRecord (gameTime) {

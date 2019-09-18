@@ -3,7 +3,8 @@ const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 let {
 	units,
     buildings,
-    items
+    items,
+    abilityToHero
 } = w3gMappings;
 
 const extraUnits = {
@@ -1345,5 +1346,6 @@ module.exports = {
 	mapStartPositions: mapStartPositions,
     commonMapNames: commonMapNames,
     buildTimings: buildTimings,
-    itemAbilityData: itemAbilityData
+    itemAbilityData: itemAbilityData,
+    abilityToHero: abilityToHero
 };
