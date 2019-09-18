@@ -81,8 +81,10 @@ const Wc3vViewer = class {
       }
     });
 
-    const url = window.location.hostname.indexOf("ngrok") !== -1 ? 
-      `http://3d393e0b.ngrok.io/replays/${filename}` : `http://localhost:8080/replays/${filename}`;
+    console.log();
+
+    const port = window.location.hostname === "localhost" ? ":8080" : "";
+    const url = `http://${window.location.hostname}${port}/replays/${filename}`;
 
     req.open("GET", url);
     req.send();
