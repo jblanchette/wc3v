@@ -125,9 +125,15 @@ const Wc3vViewer = class {
     speedModal.style.display = speedModal.style.display !== "block" ? "block" : "none";
   }
 
+  toggleMegaPlayButton (state) {
+    this.megaPlayButton.style.display = state ? "block" : "none";
+  }
+
   play () {
     this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'pause-icon');
     this.state = ScrubStates.playing;
+
+    this.toggleMegaPlayButton(false);
 
     this.startRenderLoop();
   }
@@ -155,7 +161,11 @@ const Wc3vViewer = class {
     this.canvas = document.getElementById("main-canvas");
     this.ctx = this.canvas.getContext("2d");
 
+    this.megaPlayButton = document.getElementById("mega-play-button");
+
     this.playerStatusCanvas = document.getElementById("player-status-canvas");
+    this.playerStatusCanvas.height = this.players.length * 145;
+
     this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
 
     this.playerStatusCtx.lineWidth = 1;
@@ -279,6 +289,8 @@ const Wc3vViewer = class {
     this.setupView();
     this.setupScales();
     this.setupMiddle();
+
+    this.toggleMegaPlayButton(true);
 
     const zoomContainer = d3.select("#main-wrapper");
 
