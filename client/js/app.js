@@ -163,8 +163,14 @@ const Wc3vViewer = class {
     this.playerStatusCtx.strokeStyle = "#FFF";
     this.playerStatusCtx.font = '12px Arial';
 
+    const playerLoaders = this.players.map(player => {
+      return player.setup();
+    });
+
     // finishes the setup promise
-    return this.loadMapFile().then(() => {
+    return this.loadMapFile()
+    .then(playerLoaders)
+    .then(() => {
       this.setupDrawing();
       this.render();
     });

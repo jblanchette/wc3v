@@ -8,6 +8,8 @@ const ClientPlayer = class {
     this.race = race;
     this.playerColor = playerColor;
 
+    this.assetsLoaded = false;
+
     // make new ClientUnit instances
     this.units = units.map(unitData => new ClientUnit(unitData, playerColor));
     
@@ -21,9 +23,7 @@ const ClientPlayer = class {
       return unit.meta.hero && !unit.isIllusion;
     }).sort((a, b) => {
       return a.spawnTime - b.spawnTime;
-    })
-
-    this.setup();
+    });
   }
 
   setup () {
@@ -34,14 +34,33 @@ const ClientPlayer = class {
       'U': 'unpl'
     };
 
+    let unitLoaders = this.units.reduce((acc, unit) => {
+      acc.concat(unit.loaders);
+
+      return acc;
+    }, []);
+
     const img = new Image();
     const imgSrc = `/assets/wc3icons/${starterMap[this.race]}.jpg`;
     
-    this.icon = null;
-    img.src = imgSrc;
-    img.onload = () => {
-      this.icon = img;
-    };
+    const iconPromise = new Promise((resolve, reject) => {
+      this.icon = null;
+      img.src = imgSrc;
+      img.onload = () => {
+        this.icon = img;
+
+        return resolve(true);
+      };
+    });
+
+    unitLoaders.push(iconPromise);
+
+    return Promise.allSettled(unitLoaders).then((e) => {
+      console.log("player assets loaded: ", this.playerId);
+      this.assetsLoaded = true;
+
+      return true;
+    });
   }
 
   update (gameTime, dt) {

@@ -30,42 +30,50 @@ const ClientUnit = class {
     this.playerColor = playerColor;
     this.setup();
 
-    this.loadIcon();
+    this.loaders = [];
+
+    this.loaders.concat(this.loadIcon());
 
     if (this.meta.hero) {
-      this.loadSpellIcons();
+      this.loaders.concat(this.loadSpellIcons());
     }
   }
 
   loadAsset (imgSrc, prop) {
-    const img = new Image();
-    
-    this[prop] = null;
+    return new Promise((resolve, reject) => {
+        
+      const img = new Image();
+      
+      this[prop] = null;
 
-    if (_iconCache[imgSrc]) {
-      this[prop] = _iconCache[imgSrc];
-      return;
-    }
-
-    img.src = imgSrc;
-    img.onload = () => {
-      if (!_iconCache[imgSrc]) {
-        _iconCache[imgSrc] = img;
+      if (_iconCache[imgSrc]) {
+        this[prop] = _iconCache[imgSrc];
+        
+        return resolve(true);
       }
 
-      this[prop] = img;
-    };
+      img.src = imgSrc;
+      img.onload = () => {
+        if (!_iconCache[imgSrc]) {
+          _iconCache[imgSrc] = img;
+        }
+
+        this[prop] = img;
+        return resolve(true);
+      };
+    });
   }
 
   loadIcon () {
     const imgSrc = `/assets/wc3icons/${this.itemId}.jpg`;
-    this.loadAsset(imgSrc, 'icon');
+    return [ this.loadAsset(imgSrc, 'icon') ];
   }
 
   loadSpellIcons () {
-    this.spellList.forEach((spellId, index) => {
+    return this.spellList.map((spellId, index) => {
       const imgSrc = `/assets/wc3icons/${spellId.toLowerCase()}.jpg`;
-      this.loadAsset(imgSrc, `spell-${index}`);
+      
+      return this.loadAsset(imgSrc, `spell-${index}`);
     });
   }
 
