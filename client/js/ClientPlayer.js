@@ -1,4 +1,10 @@
 
+const StatusTabs = {
+  heroes: 1,
+  units: 2,
+  groups: 3
+};
+
 const ClientPlayer = class {
   constructor (slot, playerId, startingPosition, units, displayName, race, playerColor) {
     this.slot = slot;
@@ -9,6 +15,8 @@ const ClientPlayer = class {
     this.playerColor = playerColor;
 
     this.assetsLoaded = false;
+
+    this.tab = StatusTabs.heroes;
 
     // make new ClientUnit instances
     this.units = units.map(unitData => new ClientUnit(unitData, playerColor));
@@ -101,13 +109,15 @@ const ClientPlayer = class {
 
     playerStatusCtx.strokeText(this.displayName, drawTextX, drawTextY);
 
-    const boxTextOffset = 5;
-    this.renderHeroBox(
-      playerStatusCtx, 
-      gameTime,
-      (drawIconX - halfIconSize), 
-      (drawIconY + halfIconSize + boxTextOffset)
-    );
+    if (this.tab === StatusTabs.heroes) {
+      const boxTextOffset = 5;
+      this.renderHeroBox(
+        playerStatusCtx, 
+        gameTime,
+        (drawIconX - halfIconSize), 
+        (drawIconY + halfIconSize + boxTextOffset)
+      );
+    }
   }
 
   renderHeroBox (playerStatusCtx, gameTime, offsetX, offsetY) {
