@@ -63,7 +63,7 @@ const ClientPlayer = class {
 
     unitLoaders.push(iconPromise);
 
-    return Promise.allSettled(unitLoaders).then((e) => {
+    return Promise.all(unitLoaders).then((e) => {
       console.log("player assets loaded: ", this.playerId);
       this.assetsLoaded = true;
 
