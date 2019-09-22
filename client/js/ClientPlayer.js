@@ -15,8 +15,11 @@ const ClientPlayer = class {
     this.playerColor = playerColor;
 
     this.assetsLoaded = false;
-
     this.tab = StatusTabs.heroes;
+
+    this.recordIndexes = {
+      selection: -1
+    };
 
     // make new ClientUnit instances
     this.units = units.map(unitData => new ClientUnit(unitData, playerColor));
@@ -32,6 +35,20 @@ const ClientPlayer = class {
     }).sort((a, b) => {
       return a.spawnTime - b.spawnTime;
     });
+  }
+
+  getSelectionRecord (gameTime) {
+    const index = this.selectionStream.findIndex(record => {
+      return record.gameTime >= gameTime;
+    });
+
+    if (index === -1) {
+      return;
+    }
+
+    if (this.recordIndexes.selection !== index) {
+      this.recordIndexes.selection = index;
+    }
   }
 
   setup () {

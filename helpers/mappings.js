@@ -1235,6 +1235,27 @@ const mapStartPositions = {
         '1': { x: -448.0, y: -4736.0 },
         '2': { x: 448.0,  y: 4608.0 },
         '3': { x: -768.0, y: 4608.0 }
+    },
+    '(8)friends.w3x': {
+        /*
+            call DefineStartLocation(0, 1088.0, 7296.0)
+            call DefineStartLocation(1, - 832.0, 7296.0)
+            call DefineStartLocation(2, 320.0, - 7488.0)
+            call DefineStartLocation(3, - 1536.0, - 7488.0)
+            call DefineStartLocation(4, - 6592.0, - 960.0)
+            call DefineStartLocation(5, - 6592.0, 896.0)
+            call DefineStartLocation(6, 7168.0, 896.0)
+            call DefineStartLocation(7, 7232.0, - 1024.0)
+        */
+
+        '0': { x: 1088, y: 7296 },
+        '1': { x: -832, y: 7296 },
+        '2': { x: 320, y: -7488 },
+        '3': { x: -1536, y: -7488 },
+        '4': { x: -6592, y: -960 },
+        '5': { x: -6592, y: 896 },
+        '6': { x: 7168, y: 896 },
+        '7': { x: 7232, y: -1024 }
     }
 };
 
