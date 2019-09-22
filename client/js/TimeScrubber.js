@@ -57,7 +57,7 @@ const TimeScrubber = class {
         <ul>${scrubSpeeds}</ul>
       </div>
     </div>
-    <div class="time-scrubber-track">
+    <div id="${wrapperId}-track" class="time-scrubber-track">
       <div id="${wrapperId}-tracker" class="time-scrubber-tracker"></div>
     </div>`;
 
@@ -92,6 +92,22 @@ const TimeScrubber = class {
     });
   }
 
+  findTrackerPosition (e, matchEndTime) {
+    const scrubberBox = this.wrapperEl.getBoundingClientRect();
+    const { width } = scrubberBox;
+
+    const trackPosition = e.offsetX === 0 ? 0 : (e.offsetX / width);
+
+    return {
+      gameTime: Math.floor(matchEndTime * trackPosition),
+      matchPercentage: trackPosition * 100
+    };
+  }
+
+  moveTracker (matchPercentDone) {
+    this.trackerEl.style.left = `${matchPercentDone}%`;
+  }
+
   loadSvg(selector, svgFile, updateDom = true) {
     let target = document.querySelector(selector);
     if (this.svgCache[svgFile] && updateDom) {
@@ -123,7 +139,7 @@ const TimeScrubber = class {
     const { width } = scrubberBox;
     const matchPercentDone = (gameTime / matchEndTime) * 100;
 
-    this.trackerEl.style.left = `${matchPercentDone}%`;
+    this.moveTracker(matchPercentDone);
   }
 };
 

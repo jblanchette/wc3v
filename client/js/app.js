@@ -42,6 +42,7 @@ const Wc3vViewer = class {
 
     this.state = ScrubStates.stopped;
 
+    this.gameLoaded = false;
     this.gameTime = 0;
 
     this.lastFrameId = null;
@@ -61,7 +62,17 @@ const Wc3vViewer = class {
     this.scrubber.init();
     this.scrubber.setupControls({
       "play": (e) => { this.togglePlay(e); },
-      "speed": (e) => { this.toggleSpeed(e); }
+      "speed": (e) => { this.toggleSpeed(e); },
+      "track": (e) => { 
+        if (!this.gameLoaded) {
+          return;
+        }
+        
+        const trackerPosition = this.scrubber.findTrackerPosition(e, this.matchEndTime);
+
+        this.gameTime = trackerPosition.gameTime;
+        this.scrubber.moveTracker(trackerPosition.matchPercentage); 
+      }
     });
   }
 
@@ -80,8 +91,6 @@ const Wc3vViewer = class {
         console.error("Error loading wc3v replay: ", e);
       }
     });
-
-    console.log();
 
     const port = window.location.hostname === "localhost" ? ":8080" : "";
     const url = `http://${window.location.hostname}${port}/replays/${filename}`;
@@ -290,6 +299,7 @@ const Wc3vViewer = class {
     this.setupMiddle();
 
     this.toggleMegaPlayButton(true);
+    this.gameLoaded = true;
 
     const zoomContainer = d3.select("#main-canvas");
 
