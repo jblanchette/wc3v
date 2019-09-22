@@ -19,6 +19,11 @@ const gameData = {
       'name': 'SynergyBigPaved',
       'xExtent': [ -7424, 7424 ],
       'yExtent': [ 6784, -6784 ]
+    },
+    '(8)friends.w3x': {
+      'name': 'Friends',
+      'xExtent': [ -8832, 8832 ],
+      'yExtent': [ 8832, -9344 ]
     }
   }
 };

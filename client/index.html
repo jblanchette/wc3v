@@ -45,6 +45,8 @@
             <option>terenas-stand-lv_sonik-vs-tgw.w3g.wc3v</option>
             <option disabled>Synergy Paved (2v2)</option>
             <option>2v2-synergy.w3g.wc3v</option>
+            <option disabled>Friends (4v4)</option>
+            <option>orctower.w3g.wc3v</option>
           </select>
         </div>
 
@@ -59,9 +61,9 @@
             <div id="mega-play-button" onClick="wc3v.play()"></div>
 
             <div id="player-status-toggles">
-              <div class="status-toggle selected">Heroes</div>
-              <div class="status-toggle">Units</div>
-              <div class="status-toggle">Groups</div>
+              <div onClick="wc3v.selectStatusTab('heroes')" class="status-toggle selected">Heroes</div>
+              <div onClick="wc3v.selectStatusTab('units')" class="status-toggle">Units</div>
+              <div onClick="wc3v.selectStatusTab('groups')" class="status-toggle">Groups</div>
             </div>
 
             <canvas id="player-status-canvas" width="180" height="200"></canvas>

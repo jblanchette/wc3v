@@ -35,6 +35,10 @@ const isEqualItemId = (itemIdA, itemIdB) => {
 ////
 
 const isEqualUnitItemId = (unitA, unitB) => {
+  if (!unitA || !unitB) {
+    return false;
+  }
+  
   return isEqualItemId(unitA.itemId1, unitB.itemId1) &&
          isEqualItemId(unitA.itemId2, unitB.itemId2);
 };
