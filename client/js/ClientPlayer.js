@@ -195,12 +195,22 @@ const ClientPlayer = class {
       return;
     } 
 
-    const iconSize = 35;
+    const iconSize = 26;
+    const maxRow = 6;
 
-    this.currentGroup.forEach((unit, ind) => {
-      const drawX = offsetX + (ind * iconSize);
+    let c = 0, row = 0;
 
-      playerStatusCtx.drawImage(unit.icon, drawX, offsetY, iconSize, iconSize);
+    this.currentGroup.forEach(unit => {
+      const drawX = offsetX + (c * iconSize);
+      const drawY = offsetY + (row * iconSize);
+
+      playerStatusCtx.drawImage(unit.icon, drawX, drawY, iconSize, iconSize);
+      c++;
+
+      if (c === maxRow) {
+        c = 0;
+        row++;
+      }
     });
   }
 
