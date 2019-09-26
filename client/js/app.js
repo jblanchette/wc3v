@@ -45,6 +45,10 @@ const Wc3vViewer = class {
     this.gameLoaded = false;
     this.gameTime = 0;
 
+    this.viewOptions = {
+      displayText: true
+    };
+
     this.lastFrameId = null;
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
@@ -138,6 +142,17 @@ const Wc3vViewer = class {
     this.megaPlayButton.style.display = state ? "block" : "none";
   }
 
+  toggleViewOption (el, optionKey) {
+    this.viewOptions[optionKey] = !this.viewOptions[optionKey];
+    this.viewOptions[optionKey] ?
+      el.classList.add('on') :
+      el.classList.remove('on');
+
+    if (this.gameLoaded) {
+      this.render();
+    }
+  }
+
   play () {
     this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'pause-icon');
     this.state = ScrubStates.playing;
@@ -180,6 +195,7 @@ const Wc3vViewer = class {
   setup () {
     this.gameTime = 0;
 
+    this.setStatusTab('heroes');
     this.setupPlayers();
     this.setupMap();
 
@@ -426,7 +442,8 @@ const Wc3vViewer = class {
       xScale, 
       yScale,
       middleX,
-      middleY
+      middleY,
+      viewOptions
     } = this;
 
     const { width, height } = this.mapImage;
@@ -439,7 +456,15 @@ const Wc3vViewer = class {
     this.renderMapBackground();
 
     this.players.forEach(player => {
-      player.render(ctx, playerStatusCtx, transform, gameTime, xScale, yScale);
+      player.render(
+        ctx, 
+        playerStatusCtx, 
+        transform, 
+        gameTime, 
+        xScale, 
+        yScale,
+        viewOptions
+      );
     });
 
     this.scrubber.render(gameTime, matchEndTime);

@@ -276,7 +276,7 @@ const ClientUnit = class {
     ctx.globalAlpha = 1.0;
   }
 
-  renderUnit (ctx, transform, gameTime, xScale, yScale) {
+  renderUnit (ctx, transform, gameTime, xScale, yScale, viewOptions) {
     if (!this.currentX || !this.currentY) {
       return;
     }
@@ -301,22 +301,24 @@ const ClientUnit = class {
 
     Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
-    // todo: optimize to not use fillText
-    Drawing.drawCenteredText(ctx, drawX, drawY + iconSize, this.fullName, fontSize);
-    
+    if (viewOptions.displayText) {
+      // todo: optimize to not use fillText
+      Drawing.drawCenteredText(ctx, drawX, drawY + iconSize, this.fullName, fontSize);
+    }
+
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;
   }
 
-  render (ctx, transform, gameTime, xScale, yScale) {
+  render (ctx, transform, gameTime, xScale, yScale, viewOptions) {
     if (gameTime < this.spawnTime) {
       return;
     }
 
     if (this.isBuilding) {
-      this.renderBuilding(ctx, transform, xScale, yScale);
+      this.renderBuilding(ctx, transform, xScale, yScale, viewOptions);
     } else {
-      this.renderUnit(ctx, transform, gameTime, xScale, yScale);
+      this.renderUnit(ctx, transform, gameTime, xScale, yScale, viewOptions);
     }
   }
 }
