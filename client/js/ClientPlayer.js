@@ -6,12 +6,13 @@ const StatusTabs = {
 };
 
 const ClientPlayer = class {
-  constructor (slot, playerId, startingPosition, units, displayName, race, playerColor) {
+  constructor (slot, playerId, startingPosition, units, displayName, race, selectionStream, playerColor) {
     this.slot = slot;
     this.playerId = playerId;
     this.startingPosition = startingPosition;
     this.displayName = displayName;
     this.race = race;
+    this.selectionStream = selectionStream;
     this.playerColor = playerColor;
 
     this.assetsLoaded = false;
@@ -21,14 +22,31 @@ const ClientPlayer = class {
       selection: -1
     };
 
+    this.currentGroup = null;
+
+    this.setupUnits(units);
+  }
+
+  setupUnits (rawUnits) {
     // make new ClientUnit instances
-    this.units = units.map(unitData => new ClientUnit(unitData, playerColor));
+    this.units = rawUnits.map(unitData => new ClientUnit(unitData, this.playerColor));
     
     // sort buildings first so they get drawn first
     this.units = this.units.sort((a, b) => {
       // magical js
       return b.isBuilding - a.isBuilding;
     });
+
+    this.unitsByItemId = this.units.reduce((acc, unit) => {
+      const { itemIdHash } = unit;
+      
+      if (itemIdHash === "unregistered") {
+        return acc;
+      }
+
+      acc[itemIdHash] = unit;
+      return acc;
+    }, {});
 
     this.heroes = this.units.filter(unit => {
       return unit.meta.hero && !unit.isIllusion;
@@ -48,7 +66,34 @@ const ClientPlayer = class {
 
     if (this.recordIndexes.selection !== index) {
       this.recordIndexes.selection = index;
+      this.enrichSelectionGroup();
     }
+  }
+
+  enrichSelectionGroup () {
+    const item = this.selectionStream[this.recordIndexes.selection];
+    const { selection } = item;
+
+    this.currentGroup = selection.units.reduce((acc, unit) => {
+      const { itemId1, itemId2 } = unit;
+      if (!itemId1 || !itemId2) {
+        return acc;
+      }
+
+      const itemIdHash = Helpers.makeItemIdHash(itemId1, itemId2);
+
+      if (!this.unitsByItemId[itemIdHash]) {
+        // some units don't end up registered at all
+        return acc;
+      }
+
+      acc.push(this.unitsByItemId[itemIdHash]);
+      return acc;
+    }, []);
+  }
+
+  setStatusTab (tab) {
+    this.tab = StatusTabs[tab];
   }
 
   setup () {
@@ -90,6 +135,7 @@ const ClientPlayer = class {
 
   update (gameTime, dt) {
     this.units.forEach(unit => unit.update(gameTime, dt));
+    this.getSelectionRecord(gameTime);
   }
 
   renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
@@ -121,20 +167,41 @@ const ClientPlayer = class {
       iconSize
     );
 
+    const boxTextOffset = 5;
     const drawTextX = drawIconX + halfIconSize + xPadding;
     const drawTextY = drawIconY + (halfIconSize / 2);
 
     playerStatusCtx.strokeText(this.displayName, drawTextX, drawTextY);
 
     if (this.tab === StatusTabs.heroes) {
-      const boxTextOffset = 5;
       this.renderHeroBox(
         playerStatusCtx, 
         gameTime,
         (drawIconX - halfIconSize), 
         (drawIconY + halfIconSize + boxTextOffset)
       );
+    } else if (this.tab === StatusTabs.units) {
+      this.renderUnitsBox(
+        playerStatusCtx, 
+        gameTime,
+        (drawIconX - halfIconSize), 
+        (drawIconY + halfIconSize + boxTextOffset)
+      );
     }
+  }
+
+  renderUnitsBox (playerStatusCtx, gameTime, offsetX, offsetY) {
+    if (!this.currentGroup) {
+      return;
+    } 
+
+    const iconSize = 35;
+
+    this.currentGroup.forEach((unit, ind) => {
+      const drawX = offsetX + (ind * iconSize);
+
+      playerStatusCtx.drawImage(unit.icon, drawX, offsetY, iconSize, iconSize);
+    });
   }
 
   renderHeroBox (playerStatusCtx, gameTime, offsetX, offsetY) {

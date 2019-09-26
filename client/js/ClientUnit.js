@@ -114,6 +114,8 @@ const ClientUnit = class {
     }
 
     this.fullName = this.getFullName();
+    this.itemIdHash = this.itemId1 ? 
+      Helpers.makeItemIdHash(this.itemId1, this.itemId2) : `unregistered`;
   }
 
   getFullName () {
