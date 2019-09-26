@@ -138,7 +138,7 @@ const ClientPlayer = class {
     this.getSelectionRecord(gameTime);
   }
 
-  renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
+  renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (!this.icon) {
       return;
     }
@@ -256,10 +256,12 @@ const ClientPlayer = class {
     }
   }
 
-  render (ctx, playerStatusCtx, transform, gameTime, xScale, yScale) {
-    this.renderPlayerIcon(ctx, playerStatusCtx, transform, gameTime, xScale, yScale);
+  render (ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+    this.renderPlayerIcon(
+      ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
+
     this.units.forEach(unit => 
-      unit.render(ctx, transform, gameTime, xScale, yScale));
+      unit.render(ctx, transform, gameTime, xScale, yScale, viewOptions));
   }
 }
 
