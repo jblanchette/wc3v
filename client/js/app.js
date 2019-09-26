@@ -161,6 +161,22 @@ const Wc3vViewer = class {
     this.stopRenderLoop();
   }
 
+  setStatusTab (tab) {
+    const el = document.getElementById(`${tab}-toggle`);
+    const oldList = Array.from(document.getElementsByClassName("status-toggle selected"));
+
+    oldList.forEach(oldEl => oldEl.classList.remove('selected'));
+    el.classList.add('selected');
+
+    this.players.forEach(player => player.setStatusTab(tab));
+
+    if (!this.gameLoaded) {
+      return;
+    }
+
+    this.render();
+  }
+
   setup () {
     this.gameTime = 0;
 
@@ -216,7 +232,7 @@ const Wc3vViewer = class {
     ];
 
     Object.keys(this.mapData.players).forEach((playerId, index) => {
-      const { startingPosition, units } = this.mapData.players[playerId];
+      const { startingPosition, units, selectionStream } = this.mapData.players[playerId];
       const { race, name } = this.mapData.replay.players[playerId];
 
       const player = new ClientPlayer(
@@ -226,6 +242,7 @@ const Wc3vViewer = class {
         units, 
         name,
         race,
+        selectionStream,
         colorMap[index]
       );
 

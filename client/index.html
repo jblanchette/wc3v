@@ -61,9 +61,15 @@
             <div id="mega-play-button" onClick="wc3v.play()"></div>
 
             <div id="player-status-toggles">
-              <div onClick="wc3v.selectStatusTab('heroes')" class="status-toggle selected">Heroes</div>
-              <div onClick="wc3v.selectStatusTab('units')" class="status-toggle">Units</div>
-              <div onClick="wc3v.selectStatusTab('groups')" class="status-toggle">Groups</div>
+              <div 
+                id="heroes-toggle" 
+                onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
+              <div 
+                id="units-toggle"
+                onClick="wc3v.setStatusTab('units')" class="status-toggle">Units</div>
+              <div 
+                id="groups-toggle"
+                onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
             </div>
 
             <canvas id="player-status-canvas" width="180" height="200"></canvas>
