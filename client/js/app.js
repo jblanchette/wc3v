@@ -45,10 +45,6 @@ const Wc3vViewer = class {
     this.gameLoaded = false;
     this.gameTime = 0;
 
-    this.viewOptions = {
-      displayText: true
-    };
-
     this.lastFrameId = null;
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
@@ -67,16 +63,7 @@ const Wc3vViewer = class {
     this.scrubber.setupControls({
       "play": (e) => { this.togglePlay(e); },
       "speed": (e) => { this.toggleSpeed(e); },
-      "track": (e) => { 
-        if (!this.gameLoaded) {
-          return;
-        }
-        
-        const trackerPosition = this.scrubber.findTrackerPosition(e, this.matchEndTime);
-
-        this.gameTime = trackerPosition.gameTime;
-        this.scrubber.moveTracker(trackerPosition.matchPercentage); 
-      }
+      "track": (e) => { this.moveTracker(e); }
     });
   }
 
@@ -122,6 +109,21 @@ const Wc3vViewer = class {
     });
   }
 
+  moveTracker (e) {
+    if (!this.gameLoaded) {
+      return;
+    }
+    
+    const trackerPosition = this.scrubber.findTrackerPosition(e, this.matchEndTime);
+    const { gameTime, matchPercentage } = trackerPosition;
+
+    this.gameTime = gameTime;
+    this.scrubber.moveTracker(matchPercentage);
+
+    this.players.forEach(player => player.moveTracker(gameTime));
+    this.render();
+  }
+
   togglePlay () {
     switch (this.state) {
       case ScrubStates.playing:
@@ -135,15 +137,22 @@ const Wc3vViewer = class {
 
   toggleSpeed () {
     const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
-    speedModal.style.display = speedModal.style.display !== "block" ? "block" : "none";
+    speedModal.style.display = speedModal.style.display !== "block" ? 
+      "block" : "none";
   }
 
   toggleMegaPlayButton (state) {
     this.megaPlayButton.style.display = state ? "block" : "none";
   }
 
-  toggleViewOption (el, optionKey) {
+  toggleViewOption (optionKey) {
     this.viewOptions[optionKey] = !this.viewOptions[optionKey];
+
+    const el = document.getElementById(`viewer-option-${optionKey}`);
+    if (!el) {
+      return;
+    }
+
     this.viewOptions[optionKey] ?
       el.classList.add('on') :
       el.classList.remove('on');
@@ -158,7 +167,6 @@ const Wc3vViewer = class {
     this.state = ScrubStates.playing;
 
     this.toggleMegaPlayButton(false);
-
     this.startRenderLoop();
   }
 
@@ -196,6 +204,8 @@ const Wc3vViewer = class {
     this.gameTime = 0;
 
     this.setStatusTab('heroes');
+    this.setupViewOptions();
+
     this.setupPlayers();
     this.setupMap();
 
@@ -228,6 +238,24 @@ const Wc3vViewer = class {
     .then(() => {
       this.setupDrawing();
       this.render();
+    });
+  }
+
+  setupViewOptions () {
+    this.viewOptions = {
+      displayText: true,
+      displayPath: false
+    };    
+
+    Object.keys(this.viewOptions).forEach(optionKey => {
+      const el = document.getElementById(`viewer-option-${optionKey}`);
+      if (!el) {
+        return;
+      }
+
+      this.viewOptions[optionKey] ?
+        el.classList.add('on') :
+        el.classList.remove('on');
     });
   }
 
