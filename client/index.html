@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>WC3Viewer</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="js/Helpers.js?v=3"></script>
     <script src="js/Drawing.js?v=3"></script>
@@ -17,6 +18,12 @@
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
   </head>
   <body>
 
@@ -74,8 +81,14 @@
 
             <div id="viewer-options">
               <div 
-                onClick="wc3v.toggleViewOption(this, 'displayText')"
+                id="viewer-option-displayText"
+                onClick="wc3v.toggleViewOption('displayText')"
                 class="viewer-option on">T</div>
+
+              <div 
+                id="viewer-option-displayPath"
+                onClick="wc3v.toggleViewOption('displayPath')"
+                class="viewer-option on">P</div>
             </div>
 
             <canvas id="player-status-canvas" width="180" height="200"></canvas>
