@@ -138,6 +138,10 @@ const ClientPlayer = class {
     this.getSelectionRecord(gameTime);
   }
 
+  moveTracker (gameTime) {
+    this.units.forEach(unit => unit.jump(gameTime));
+  }
+
   renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (!this.icon) {
       return;

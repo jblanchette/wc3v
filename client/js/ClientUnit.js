@@ -180,6 +180,15 @@ const ClientUnit = class {
     }
   }
 
+  jump (gameTime) {
+    // calculate decay
+
+    const moveRecord = this.getCurrentMoveRecord(gameTime);
+    if (!moveRecord) {
+      this.decayLevel = 0;
+    }
+  }
+
   initMove (index) {
     const { targetX, targetY } = this.moveHistory[index];
 
@@ -206,8 +215,9 @@ const ClientUnit = class {
     };
   }
 
-  decay (dt) {
-    this.decayLevel -= this.meta.hero ? 0.0005 : 0.0025;
+  decay (dt = 1.0) {
+    const amount = this.meta.hero ? 0.0005 : 0.0025;
+    this.decayLevel -= amount * dt;
 
     if (this.meta.worker) {
       // don't fully decay workers, since they often idle
