@@ -13,6 +13,8 @@ const minimumIconSize = 15,
 
 const buildingAlpha = 0.65;
 
+const pathDecayTime = 1000 * 240;
+
 const ClientUnit = class {
   constructor (unitData, playerColor) {
     const dataFields = [ 
@@ -133,11 +135,10 @@ const ClientUnit = class {
     }
   }
 
-  getHeroLevel () {
+  getHeroLevelRecord () {
     const levelRecord = this.levelStream && this.levelStream[this.recordIndexes.level];
-    const heroLevel = levelRecord ? levelRecord.newLevel : 1;    
 
-    return heroLevel;
+    return levelRecord || null;
   }
 
   getCurrentMoveRecord (gameTime) {
@@ -339,6 +340,14 @@ const ClientUnit = class {
     path.forEach((item, ind) => {
       if (item.gameTime > gameTime) {
         return;
+      }
+
+      if (viewOptions.decayEffects) {
+        const delta = (gameTime - item.gameTime);
+
+        if (delta > pathDecayTime) {
+          return;
+        }
       }
 
       const { x, y } = item;

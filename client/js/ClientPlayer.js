@@ -237,7 +237,10 @@ const ClientPlayer = class {
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
         playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
 
-        Drawing.drawBoxedLevel(playerStatusCtx, hero.getHeroLevel(), boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+        const heroLevelRecord = hero.getHeroLevelRecord();
+        const heroLevel = heroLevelRecord ? heroLevelRecord.newLevel : 1;
+
+        Drawing.drawBoxedLevel(playerStatusCtx, heroLevel, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
 
         hero.spellList.forEach((spellId, spellSlot) => {
           const spellX = boxX + (skillSubBoxWidth * spellSlot);
@@ -252,6 +255,26 @@ const ClientPlayer = class {
             skillSubBoxWidth,
             skillBoxHeight
           );
+
+          if (heroLevelRecord) {
+            const skillRecord = heroLevelRecord.learnedSkills[spellId];
+            
+            if (!skillRecord) {
+              return;
+            }  
+
+            Drawing.drawBoxedLevel(
+              playerStatusCtx, 
+              skillRecord.level,
+              spellX + spellRowOffsetX + 1,
+              skillBoxOffset + spellRowOffsetY + 1,
+              skillSubBoxWidth,
+              skillBoxHeight, 
+              10,
+              8
+            );
+          }
+          
         });
 
         playerStatusCtx.globalAlpha = 1.0;

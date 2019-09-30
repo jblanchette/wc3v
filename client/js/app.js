@@ -64,8 +64,7 @@ const Wc3vViewer = class {
     this.pause();
     this.reset();
 
-    this.loadingIcon = document.getElementById("loading-icon");
-    this.loadingIcon.style.display = "block";
+    this.setLoadingStatus(true);
 
     this.loadFile(filename);
     this.scrubber.init();
@@ -140,6 +139,16 @@ const Wc3vViewer = class {
 
     this.players.forEach(player => player.moveTracker(gameTime));
     this.render();
+  }
+
+  setLoadingStatus (isLoading) {
+    const loadingIcon = document.getElementById("loading-icon");
+    const viewerOptionsPanel = document.getElementById("viewer-options");
+
+    loadingIcon.style.display = isLoading ? "block" : "none";
+    isLoading ? 
+      viewerOptionsPanel.classList.add("disabled") :
+      viewerOptionsPanel.classList.remove("disabled");
   }
 
   togglePlay () {
@@ -267,7 +276,8 @@ const Wc3vViewer = class {
   setupViewOptions () {
     this.viewOptions = {
       displayText: true,
-      displayPath: true
+      displayPath: true,
+      decayEffects: true
     };    
 
     Object.keys(this.viewOptions).forEach(optionKey => {
@@ -385,7 +395,7 @@ const Wc3vViewer = class {
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
 
-    this.loadingIcon.style.display = "none";
+    this.setLoadingStatus(false);
 
     const zoomContainer = d3.select("#main-canvas");
 
