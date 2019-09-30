@@ -64,6 +64,8 @@ const Wc3vViewer = class {
     this.pause();
     this.reset();
 
+    this.loadingIcon.style.display = "block";
+
     this.loadFile(filename);
     this.scrubber.init();
     this.scrubber.setupControls({
@@ -253,7 +255,6 @@ const Wc3vViewer = class {
     });
 
     this.clearCanvas();
-    this.loadingIcon.style.display = "block";
 
     // finishes the setup promise
     return this.loadMapFile()
