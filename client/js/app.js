@@ -238,6 +238,8 @@ const Wc3vViewer = class {
 
     this.megaPlayButton = document.getElementById("mega-play-button");
 
+    this.loadingIcon = document.getElementById("loading-icon");
+
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);
 
@@ -251,6 +253,7 @@ const Wc3vViewer = class {
     });
 
     this.clearCanvas();
+    this.loadingIcon.style.display = "block";
 
     // finishes the setup promise
     return this.loadMapFile()
@@ -381,6 +384,8 @@ const Wc3vViewer = class {
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
+
+    this.loadingIcon.style.display = "none";
 
     const zoomContainer = d3.select("#main-canvas");
 

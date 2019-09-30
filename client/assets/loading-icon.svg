@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   width="200"
+   height="200"
+   viewBox="0 0 200 200"
+   version="1.1">
+  <g>
+    <circle
+       style="fill:none;fill-opacity:1;stroke:#006699;stroke-width:15;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;
+stroke-dasharray:10, 34.87989505128276;stroke-dashoffset:5;stroke-opacity:1"
+       id="path4487"
+       cx="100"
+       cy="100"
+       r="50">
+      <animateTransform
+         attributeType="xml"
+         attributeName="transform"
+         type="rotate"
+         from="0 100 100"
+         to="360 100 100"
+         dur="4s"
+         repeatCount="indefinite" />
+    </circle>
+    <circle
+       style="fill:none;fill-opacity:1;stroke:#990000;stroke-width:8;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;
+stroke-dasharray:5, 15.943951023931954;stroke-dashoffset:0;stroke-opacity:1"
+       id="path4487"
+       cx="100"
+       cy="100"
+       r="20">
+      <animateTransform
+         attributeType="xml"
+         attributeName="transform"
+         type="rotate"
+         from="360 100 100"
+         to="0 100 100"
+         dur="4s"
+         repeatCount="indefinite" />
+    </circle>
+  </g>
+</svg>

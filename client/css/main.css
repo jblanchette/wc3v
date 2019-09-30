@@ -159,6 +159,13 @@ html, body {
   background-color: rgba(0, 0, 0, 0.85);
 }
 
+#loading-icon {
+  display: none;
+  position: absolute;
+  top: calc(50% - 100px);
+  left: calc(50% - 100px);
+}
+
 /* main canvas element (Z=1) */
 #main-canvas {
   background-color: #73A9C2;
