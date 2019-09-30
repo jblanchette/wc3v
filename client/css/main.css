@@ -126,6 +126,22 @@ html, body {
   background-image :         linear-gradient(rgb(200,200,200),rgb(184,240,184));
 }
 
+.option-tooltip {
+  display: none;
+  border: 1px solid #333;
+  background-color: rgba(33, 33, 33, 0.6);
+  font-size: 14px;
+  color: #FFF;
+  width: 180px;
+  position: relative;
+  top: -18px;
+  left: 24px;
+}
+
+.viewer-option:hover .option-tooltip {
+  display: block;
+}
+
 #mega-play-button {
   position: absolute;
   left: calc(50% - 40px);
@@ -143,13 +159,38 @@ html, body {
   background-color: rgba(0, 0, 0, 0.85);
 }
 
-/* main canvas element */
+/* main canvas element (Z=1) */
 #main-canvas {
   background-color: #73A9C2;
   transform-origin: 50% 50% 0;
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
   z-index: 1;
+}
+
+/* utility canvas element (Z=2) */
+#utility-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50% 0;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  z-index: 2;
+  pointer-events: none;
+}
+
+
+/* player canvas element  (Z=3) */
+#player-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50% 0;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  z-index: 3;
+  pointer-events: none;
 }
 
 /* sub-canvas element */

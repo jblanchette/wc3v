@@ -18,7 +18,7 @@ const Drawing = class {
     ctx.strokeStyle = "#FFF";
   }
 
-  static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12) {
+  static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12, fontColor) {
       const drawTextX = (drawX - (textStr.length * fontSize) * 0.25);
 
       ctx.fillStyle = "#FFF";
@@ -51,7 +51,6 @@ const Drawing = class {
     ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
     ctx.stroke();
     ctx.closePath();
-
     ctx.restore();
   }
 

@@ -142,7 +142,7 @@ const ClientPlayer = class {
     this.units.forEach(unit => unit.jump(gameTime));
   }
 
-  renderPlayerIcon (ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+  renderPlayerIcon (playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (!this.icon) {
       return;
     }
@@ -233,7 +233,6 @@ const ClientPlayer = class {
       const hero = this.heroes[heroSlot];
 
       if (hero) {
-
         playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.25;
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
         playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
@@ -260,12 +259,17 @@ const ClientPlayer = class {
     }
   }
 
-  render (ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+  render (playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     this.renderPlayerIcon(
-      ctx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
+      playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
 
     this.units.forEach(unit => 
-      unit.render(ctx, transform, gameTime, xScale, yScale, viewOptions));
+      unit.render(playerCtx, transform, gameTime, xScale, yScale, viewOptions));
+
+    if (viewOptions.displayPath) {
+      this.heroes.forEach(hero => 
+        hero.renderPath(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
+    }
   }
 }
 
