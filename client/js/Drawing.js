@@ -1,10 +1,10 @@
 
 const Drawing = class {
 
-  static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 10) {
+  static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 10, fontSize = 10) {
     const padding = 4;
     const drawX = (boxX + boxWidth) - size - padding;
-    const drawY = (boxY + boxHeight) - size  - padding;
+    const drawY = (boxY + boxHeight) - size - padding;
 
     ctx.fillStyle = "#FFF";
     ctx.strokeStyle = "#000";
@@ -12,8 +12,8 @@ const Drawing = class {
     ctx.strokeRect(drawX, drawY, size, size);
 
     ctx.fillStyle = "#000";
-    ctx.font = `10px Arial`;
-    ctx.fillText(textStr, drawX + 2, drawY + size - 1);
+    ctx.font = `${fontSize}px Arial`;
+    ctx.fillText(textStr, drawX + 3, drawY + size - 1.5);
 
     ctx.strokeStyle = "#FFF";
   }

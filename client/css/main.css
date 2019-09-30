@@ -94,12 +94,16 @@ html, body {
   right: -32px; /* extra padding for canvas border */
   top: 20px;
   width: 30px;
-  height: 80px;
+  height: 100px;
   border: 1px solid #333;
   border-left: none;
   border-top-right-radius: 0.75rem;
   border-bottom-right-radius: 0.75rem;
   user-select: none;
+}
+
+#viewer-options.disabled {
+  opacity: 0.4;
 }
 
 .viewer-option {
