@@ -112,6 +112,12 @@ const Wc3vViewer = class {
         self.canvas.width = mapWidth;
         self.canvas.height = mapHeight;
 
+        self.playerCanvas.width = mapWidth;
+        self.playerCanvas.height = mapHeight;
+
+        self.utilityCanvas.width = mapWidth;
+        self.utilityCanvas.height = mapHeight;
+
         resolve();
       }, false);
       
