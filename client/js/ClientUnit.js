@@ -309,15 +309,53 @@ const ClientUnit = class {
     ctx.strokeStyle = "#FFFC01";
     ctx.globalAlpha = this.decayLevel;
 
-    Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
+    ctx.fillStyle = this.playerColor;
+    ctx.beginPath();
+    ctx.arc(drawX, drawY, halfIconSize + 2, 0, Math.PI * 2, true);
+    ctx.fill();
+    ctx.fillStyle = "#000";
 
     if (viewOptions.displayText) {
       // todo: optimize to not use fillText
-      Drawing.drawCenteredText(ctx, drawX, drawY + iconSize, this.fullName, fontSize);
+      Drawing.drawCenteredText(ctx, drawX, drawY + iconSize, this.fullName, fontSize, this.playerColor);
     }
+
+    Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;
+  }
+
+  renderPath (ctx, transform, gameTime, xScale, yScale, viewOptions) {
+    const path = this.path;
+
+    if (!path.length) {
+      return;
+    }
+
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = this.playerColor;
+    ctx.beginPath();
+    path.forEach((item, ind) => {
+      if (item.gameTime > gameTime) {
+        return;
+      }
+
+      const { x, y } = item;
+
+      const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
+
+      if (ind === 0) {
+        ctx.moveTo(drawX, drawY);  
+      } else {
+        ctx.lineTo(drawX, drawY);
+      }
+      
+    });
+
+    ctx.stroke();
+    ctx.lineWidth = 1;
   }
 
   render (ctx, transform, gameTime, xScale, yScale, viewOptions) {

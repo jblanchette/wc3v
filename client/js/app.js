@@ -30,6 +30,12 @@ const Wc3vViewer = class {
     this.playerStatusCanvas = null;
     this.playerStatusCtx = null;
 
+    this.playerCanvas = null;
+    this.playerCtx = null;
+
+    this.utilityCanvas = null;
+    this.utilityCtx = null;
+
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
 
     this.mapData = null;
@@ -100,8 +106,11 @@ const Wc3vViewer = class {
 
       self.mapImage.addEventListener('load', () => {
 
-        self.canvas.width = self.mapImage.width;
-        self.canvas.height = self.mapImage.height;
+        const mapWidth = self.mapImage.width;
+        const mapHeight = self.mapImage.height;
+
+        self.canvas.width = mapWidth;
+        self.canvas.height = mapHeight;
 
         resolve();
       }, false);
@@ -212,14 +221,19 @@ const Wc3vViewer = class {
     this.canvas = document.getElementById("main-canvas");
     this.ctx = this.canvas.getContext("2d");
 
-    this.megaPlayButton = document.getElementById("mega-play-button");
-
     this.playerStatusCanvas = document.getElementById("player-status-canvas");
+    this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
+
+    this.playerCanvas = document.getElementById("player-canvas");
+    this.playerCtx = this.playerCanvas.getContext("2d");
+
+    this.utilityCanvas = document.getElementById("utility-canvas");
+    this.utilityCtx = this.utilityCanvas.getContext("2d");
+
+    this.megaPlayButton = document.getElementById("mega-play-button");
 
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);
-
-    this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
 
     this.playerStatusCtx.lineWidth = 1;
     this.playerStatusCtx.fillStyle = "#29373E";
@@ -244,7 +258,7 @@ const Wc3vViewer = class {
   setupViewOptions () {
     this.viewOptions = {
       displayText: true,
-      displayPath: false
+      displayPath: true
     };    
 
     Object.keys(this.viewOptions).forEach(optionKey => {
@@ -382,7 +396,13 @@ const Wc3vViewer = class {
   }
 
   clearCanvas () {
-    const { ctx, playerStatusCtx, canvas } = this;
+    const { 
+      ctx, 
+      playerCtx,
+      playerStatusCtx,
+      utilityCtx,
+      canvas
+    } = this;
     
     playerStatusCtx.save();
     playerStatusCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -393,6 +413,16 @@ const Wc3vViewer = class {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
+
+    playerCtx.save();
+    playerCtx.setTransform(1, 0, 0, 1, 0, 0);
+    playerCtx.clearRect(0, 0, canvas.width, canvas.height);
+    playerCtx.restore();
+
+    utilityCtx.save();
+    utilityCtx.setTransform(1, 0, 0, 1, 0, 0);
+    utilityCtx.clearRect(0, 0, canvas.width, canvas.height);
+    utilityCtx.restore();
   }
 
   startRenderLoop () {
@@ -447,6 +477,10 @@ const Wc3vViewer = class {
     const drawX = (transform.x + xScale(xExtent[0]) + middleX);
     const drawY = (transform.y + yScale(yExtent[0]) + middleY);
 
+    ctx.save();    
+    ctx.translate(transform.x, transform.y);
+    ctx.scale(transform.k, transform.k);
+
     ctx.drawImage(
       this.mapImage, 
       0,               // sourceX
@@ -458,12 +492,16 @@ const Wc3vViewer = class {
       width * k,       // destWidth
       height * k       // destHeight
     );
+
+    ctx.restore();
   }
 
   render () {
     const { 
       ctx,
+      playerCtx,
       playerStatusCtx,
+      utilityCtx,
       transform,
       gameTime,
       matchEndTime, 
@@ -478,14 +516,20 @@ const Wc3vViewer = class {
 
     this.clearCanvas();
 
-    this.ctx.save();    
-    this.ctx.translate(transform.x, transform.y);
-    this.ctx.scale(transform.k, transform.k);
+    playerCtx.save();    
+    playerCtx.translate(transform.x, transform.y);
+    playerCtx.scale(transform.k, transform.k);
+
+    utilityCtx.save();    
+    utilityCtx.translate(transform.x, transform.y);
+    utilityCtx.scale(transform.k, transform.k);
+
     this.renderMapBackground();
 
     this.players.forEach(player => {
       player.render(
-        ctx, 
+        playerCtx,
+        utilityCtx,
         playerStatusCtx, 
         transform, 
         gameTime, 
@@ -494,9 +538,11 @@ const Wc3vViewer = class {
         viewOptions
       );
     });
+    
+    playerCtx.restore();
+    utilityCtx.restore();
 
     this.scrubber.render(gameTime, matchEndTime);
-    this.ctx.restore();
   }
 };
 
