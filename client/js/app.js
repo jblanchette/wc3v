@@ -64,6 +64,7 @@ const Wc3vViewer = class {
     this.pause();
     this.reset();
 
+    this.loadingIcon = document.getElementById("loading-icon");
     this.loadingIcon.style.display = "block";
 
     this.loadFile(filename);
@@ -239,8 +240,6 @@ const Wc3vViewer = class {
     this.utilityCtx = this.utilityCanvas.getContext("2d");
 
     this.megaPlayButton = document.getElementById("mega-play-button");
-
-    this.loadingIcon = document.getElementById("loading-icon");
 
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);
