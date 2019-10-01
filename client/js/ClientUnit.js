@@ -13,7 +13,7 @@ const minimumIconSize = 15,
 
 const buildingAlpha = 0.65;
 
-const pathDecayTime = 1000 * 240;
+const pathDecayTime = 1000 * 160;
 
 const ClientUnit = class {
   constructor (unitData, playerColor) {
@@ -84,8 +84,20 @@ const ClientUnit = class {
   }
 
   setup () {
-    // figure out initial position
+    this.recordIndexes = {
+      move: -1,
+      level: -1
+    };
 
+    this.decayLevel = 1;
+
+    this.fullName = this.getFullName();
+    this.itemIdHash = this.itemId1 ? 
+      Helpers.makeItemIdHash(this.itemId1, this.itemId2) : `unregistered`;
+
+    //
+    // figure out initial position
+    //
     if (this.spawnPosition) {
       const { x, y } = this.spawnPosition;
 
@@ -98,26 +110,25 @@ const ClientUnit = class {
       this.currentY = y;
     }
 
-    this.recordIndexes = {
-      move: -1,
-      level: -1
-    };
-
-    this.decayLevel = 1;
+    //
+    // setup defaults for different unit / building types
+    //
 
     if (this.meta.hero) {
       this.iconSize = IconSizes.hero;
+      this.minDecayLevel = 0.0;
     } else if (this.isBuilding) {
       this.iconSize = IconSizes.building;
+      this.decayLevel = 0.4;
     } else if (this.meta.worker) {
       this.iconSize = IconSizes.worker;
+
+      // don't fully decay workers, since they often idle
+      this.minDecayLevel = 0.2;
     } else {
       this.iconSize = IconSizes.unit;
+      this.minDecayLevel = 0.0;
     }
-
-    this.fullName = this.getFullName();
-    this.itemIdHash = this.itemId1 ? 
-      Helpers.makeItemIdHash(this.itemId1, this.itemId2) : `unregistered`;
   }
 
   getFullName () {
@@ -162,14 +173,23 @@ const ClientUnit = class {
     return true;
   }
 
-  getCurrentLevelRecord (gameTime) {
+  getCurrentLevelRecord (gameTime, verbose = false) {
     if (!this.meta.hero) {
       return;
     }
 
-    const index = this.levelStream.findIndex(record => {
-      return record.gameTime >= gameTime;
-    });
+    const { levelStream } = this;
+
+    let index = -1;
+    for (let i = 0; i < levelStream.length; i++) {
+      const record = levelStream[i];
+
+      if (record.gameTime > gameTime) {
+        break;
+      }
+      
+      index = i;
+    }
 
     if (index === -1) {
       return;
@@ -183,11 +203,24 @@ const ClientUnit = class {
 
   jump (gameTime) {
     // calculate decay
+    this.getCurrentLevelRecord(gameTime);
 
-    const moveRecord = this.getCurrentMoveRecord(gameTime);
-    if (!moveRecord) {
+    const hasMoveRecord = this.getCurrentMoveRecord(gameTime);
+    if (!hasMoveRecord) {
       this.decayLevel = 0;
-    }
+
+      return;
+    }    
+
+    const moveRecord = this.moveHistory[this.recordIndexes.move];
+    const { timerData, startX, startY } = moveRecord;
+
+    const moveJumpDelta = (gameTime - timerData.startTime);
+
+    this.currentX = startX;
+    this.currentY = startY;
+
+    this.update(gameTime, moveJumpDelta);
   }
 
   initMove (index) {
@@ -218,16 +251,7 @@ const ClientUnit = class {
 
   decay (dt = 1.0) {
     const amount = this.meta.hero ? 0.0005 : 0.0025;
-    this.decayLevel -= amount * dt;
-
-    if (this.meta.worker) {
-      // don't fully decay workers, since they often idle
-      this.decayLevel = Math.max(0.2, this.decayLevel);
-    } else if (this.isBuilding) {
-      this.decayLevel = Math.max(0.4, this.decayLevel);
-    } else {
-      this.decayLevel = Math.max(0.0, this.decayLevel);
-    }
+    this.decayLevel = Math.max(this.minDecayLevel, this.decayLevel - (amount * dt));
   }
 
   update (gameTime, dt) {
@@ -235,15 +259,15 @@ const ClientUnit = class {
       return;
     }
 
+    // checks and updates current level record, setting this.fullName
+    this.getCurrentLevelRecord(gameTime);
+
     const hasRecord = this.getCurrentMoveRecord(gameTime);
     if (this.isBuilding || !hasRecord) {
       this.decay();
 
       return;
     }
-
-    // checks and updates current level record, setting this.fullName
-    this.getCurrentLevelRecord(gameTime);
 
     const secondsPassed = (dt * Helpers.MS_TO_SECONDS);
     const {
@@ -329,13 +353,16 @@ const ClientUnit = class {
 
   renderPath (ctx, transform, gameTime, xScale, yScale, viewOptions) {
     const path = this.path;
-
-    if (!path.length) {
+    if (!path.length || gameTime < this.spawnTime) {
       return;
     }
 
+    let levelRecordIndex = -1;
+
     ctx.lineWidth = 4;
     ctx.strokeStyle = this.playerColor;
+    ctx.fillStyle = "#FFF";
+
     ctx.beginPath();
     path.forEach((item, ind) => {
       if (item.gameTime > gameTime) {
@@ -360,20 +387,45 @@ const ClientUnit = class {
       } else {
         ctx.lineTo(drawX, drawY);
       }
-      
     });
+
+
+    const drawPadding = 4;
 
     ctx.stroke();
     ctx.lineWidth = 1;
+
+    this.levelStream.some(levelRecord => {
+      if (gameTime < levelRecord.gameTime) {
+        return true;
+      }
+
+      const { x, y } = levelRecord.position;
+
+      const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
+
+      ctx.globalAlpha = 0.6;
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, 10, 0, Math.PI * 2, true);
+      ctx.fillStyle = "#FFF";
+      ctx.fill();
+      
+      ctx.font = `bold 12px Arial`;
+      ctx.fillStyle = "#000";
+      ctx.fillText(levelRecord.newLevel, drawX - drawPadding, drawY + drawPadding);
+      
+      ctx.globalAlpha = 1.0;
+    });
   }
 
-  render (ctx, transform, gameTime, xScale, yScale, viewOptions) {
+  render (ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (gameTime < this.spawnTime) {
       return;
     }
 
     if (this.isBuilding) {
-      this.renderBuilding(ctx, transform, xScale, yScale, viewOptions);
+      this.renderBuilding(buildingCtx, transform, xScale, yScale, viewOptions);
     } else {
       this.renderUnit(ctx, transform, gameTime, xScale, yScale, viewOptions);
     }

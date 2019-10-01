@@ -19,7 +19,7 @@ const Drawing = class {
   }
 
   static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12, fontColor) {
-      const drawTextX = (drawX - (textStr.length * fontSize) * 0.25);
+      const drawTextX = (drawX - (textStr.length * fontSize) * 0.225);
 
       ctx.fillStyle = "#FFF";
       ctx.font = `${Math.ceil(fontSize)}px Arial`;

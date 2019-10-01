@@ -498,10 +498,6 @@ const Wc3vViewer = class {
     const drawX = (transform.x + xScale(xExtent[0]) + middleX);
     const drawY = (transform.y + yScale(yExtent[0]) + middleY);
 
-    ctx.save();    
-    ctx.translate(transform.x, transform.y);
-    ctx.scale(transform.k, transform.k);
-
     ctx.drawImage(
       this.mapImage, 
       0,               // sourceX
@@ -513,8 +509,6 @@ const Wc3vViewer = class {
       width * k,       // destWidth
       height * k       // destHeight
     );
-
-    ctx.restore();
   }
 
   render () {
@@ -537,6 +531,10 @@ const Wc3vViewer = class {
 
     this.clearCanvas();
 
+    ctx.save();    
+    ctx.translate(transform.x, transform.y);
+    ctx.scale(transform.k, transform.k);
+
     playerCtx.save();    
     playerCtx.translate(transform.x, transform.y);
     playerCtx.scale(transform.k, transform.k);
@@ -549,6 +547,7 @@ const Wc3vViewer = class {
 
     this.players.forEach(player => {
       player.render(
+        ctx,
         playerCtx,
         utilityCtx,
         playerStatusCtx, 
@@ -560,6 +559,7 @@ const Wc3vViewer = class {
       );
     });
     
+    ctx.restore();
     playerCtx.restore();
     utilityCtx.restore();
 
