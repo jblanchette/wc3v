@@ -56,9 +56,19 @@ const ClientPlayer = class {
   }
 
   getSelectionRecord (gameTime) {
-    const index = this.selectionStream.findIndex(record => {
-      return record.gameTime >= gameTime;
-    });
+    const { selectionStream } = this;
+
+    // todo: refactor to helper method
+    let index = -1;
+    for (let i = 0; i < selectionStream.length; i++) {
+      const record = selectionStream[i];
+
+      if (record.gameTime > gameTime) {
+        break;
+      }
+
+      index = i;
+    }
 
     if (index === -1) {
       return;
@@ -269,9 +279,7 @@ const ClientPlayer = class {
               spellX + spellRowOffsetX + 1,
               skillBoxOffset + spellRowOffsetY + 1,
               skillSubBoxWidth,
-              skillBoxHeight, 
-              10,
-              8
+              skillBoxHeight
             );
           }
           
@@ -282,12 +290,12 @@ const ClientPlayer = class {
     }
   }
 
-  render (playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+  render (mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     this.renderPlayerIcon(
       playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
 
     this.units.forEach(unit => 
-      unit.render(playerCtx, transform, gameTime, xScale, yScale, viewOptions));
+      unit.render(playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
 
     if (viewOptions.displayPath) {
       this.heroes.forEach(hero => 
