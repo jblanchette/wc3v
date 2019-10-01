@@ -65,8 +65,8 @@ html, body {
   font: 12px Verdana;
   position: absolute;
   top: 40px;
-  left: -173px;
-  width: 170px;
+  left: -183px;
+  width: 180px;
   text-align: center;
   z-index: 3;
 }
@@ -82,6 +82,18 @@ html, body {
 
 .status-toggle.selected {
   border: 1px solid #FFF;
+}
+
+#player-status-bg-icon {
+  position: absolute;
+  top: 60px;
+  left: -220px;
+  background-image: url('/assets/wc3v.svg');
+  width: 267px;
+  height: 123px;
+  transform: scale(0.45);
+  z-index: 10;
+  opacity: 0.4;
 }
 
 #viewer-options {
@@ -214,7 +226,7 @@ html, body {
   border-right: 0;
   position: absolute;
   top: 20px;
-  left: -180px;
+  left: -190px;
   z-index: 2;
 }
 

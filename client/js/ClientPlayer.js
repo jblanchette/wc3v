@@ -135,7 +135,7 @@ const ClientPlayer = class {
 
     unitLoaders.push(iconPromise);
 
-    return Promise.all(unitLoaders).then((e) => {
+    return Promise.allSettled(unitLoaders).then((e) => {
       console.log("player assets loaded: ", this.playerId);
       this.assetsLoaded = true;
 
@@ -243,6 +243,10 @@ const ClientPlayer = class {
       const hero = this.heroes[heroSlot];
 
       if (hero) {
+        //
+        // draw the main hero icon and box outline
+        //
+
         playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.25;
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
         playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
@@ -250,7 +254,15 @@ const ClientPlayer = class {
         const heroLevelRecord = hero.getHeroLevelRecord();
         const heroLevel = heroLevelRecord ? heroLevelRecord.newLevel : 1;
 
+        //
+        // draw hero level box
+        //
+
         Drawing.drawBoxedLevel(playerStatusCtx, heroLevel, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+
+        //
+        // draw hero spell boxes
+        //
 
         hero.spellList.forEach((spellId, spellSlot) => {
           const spellX = boxX + (skillSubBoxWidth * spellSlot);
@@ -270,9 +282,11 @@ const ClientPlayer = class {
             const skillRecord = heroLevelRecord.learnedSkills[spellId];
             
             if (!skillRecord) {
+              // unlearned skill, no level box to draw
               return;
             }  
 
+            // draw skill level box
             Drawing.drawBoxedLevel(
               playerStatusCtx, 
               skillRecord.level,

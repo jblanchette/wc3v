@@ -13,7 +13,7 @@ const minimumIconSize = 15,
 
 const buildingAlpha = 0.65;
 
-const pathDecayTime = 1000 * 160;
+const pathDecayTime = 1000 * 240;
 
 const ClientUnit = class {
   constructor (unitData, playerColor) {
@@ -405,7 +405,7 @@ const ClientUnit = class {
       const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
       const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
 
-      ctx.globalAlpha = 0.6;
+      ctx.globalAlpha = 0.75;
       ctx.beginPath();
       ctx.arc(drawX, drawY, 10, 0, Math.PI * 2, true);
       ctx.fillStyle = "#FFF";
@@ -416,6 +416,15 @@ const ClientUnit = class {
       ctx.fillText(levelRecord.newLevel, drawX - drawPadding, drawY + drawPadding);
       
       ctx.globalAlpha = 1.0;
+        
+      // draw which spell was leveled up
+      Drawing.drawImageCircle(
+        ctx, 
+        this[`spell-${levelRecord.slot}`],
+        drawX + 10,
+        drawY + 10,
+        12
+      );
     });
   }
 
