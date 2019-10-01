@@ -201,6 +201,10 @@ const ClientPlayer = class {
         (drawIconX - halfIconSize), 
         (drawIconY + halfIconSize + boxTextOffset)
       );
+    } else {
+      playerStatusCtx.fillStyle = "#FFF";
+      playerStatusCtx.fillText("Coming Soon", drawIconX, drawIconY + 40);
+      playerStatusCtx.fillStyle = "#000";
     }
   }
 
