@@ -143,9 +143,12 @@ const Wc3vViewer = class {
 
   setLoadingStatus (isLoading) {
     const loadingIcon = document.getElementById("loading-icon");
+    const logoIcon = document.getElementById("player-status-bg-icon");
     const viewerOptionsPanel = document.getElementById("viewer-options");
 
     loadingIcon.style.display = isLoading ? "block" : "none";
+    logoIcon.style.display = isLoading ? "block" : "none";
+
     isLoading ? 
       viewerOptionsPanel.classList.add("disabled") :
       viewerOptionsPanel.classList.remove("disabled");
