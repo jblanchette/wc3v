@@ -214,7 +214,6 @@ const ClientUnit = class {
 
     const moveRecord = this.moveHistory[this.recordIndexes.move];
     const { timerData, startX, startY } = moveRecord;
-
     const moveJumpDelta = (gameTime - timerData.startTime);
 
     this.currentX = startX;
