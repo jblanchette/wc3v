@@ -261,7 +261,7 @@ const Wc3vViewer = class {
     this.playerStatusCtx.strokeStyle = "#FFF";
     this.playerStatusCtx.font = '12px Arial';
 
-    const playerLoaders = this.players.map(player => {
+    const playerLoadedPromiseList = this.players.map(player => {
       return player.setup();
     });
 
@@ -269,7 +269,7 @@ const Wc3vViewer = class {
 
     // finishes the setup promise
     return this.loadMapFile()
-    .then(playerLoaders)
+    .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
       this.render();
