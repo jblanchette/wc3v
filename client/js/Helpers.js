@@ -26,6 +26,34 @@ const distance = (pX, pY, qX, qY) => {
 };
 
 ////
+// finds the unit closest to a given point from a list of units
+// and and optional filter function
+////
+
+const closestToPoint = (x, y, units, filterFn) => {
+  if (filterFn) {
+    units = units.filter(filterFn);
+  }
+
+  let positions = units.map(unit => {
+    return {
+      unit: unit,
+      distance: distance(
+        x, y,
+        unit.x, unit.y
+      )
+    };
+  });
+
+  positions.sort((a, b) => {
+    return a.distance - b.distance;
+  });
+
+  const winner = positions[0];
+  return winner && winner.distance || null;
+};
+
+////
 // check if two [itemId] lists are equal
 ////
 
@@ -70,6 +98,7 @@ const makeItemIdHash = (itemId1, itemId2) => {
 
 const Helpers = {
   distance,
+  closestToPoint,
   isEqualItemId,
   isEqualUnitItemId,
   makeItemIdHash,

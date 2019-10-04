@@ -11,12 +11,14 @@ const minimumIconSize = 15,
       maximumBuildingSize = 20,
       minimumUnitSize = 10;
 
+const minNeighborDrawDistance = 15;
+
 const buildingAlpha = 0.65;
 
 const pathDecayTime = 1000 * 240;
 
 const ClientUnit = class {
-  constructor (unitData, playerColor) {
+  constructor (unitData, playerId, playerColor) {
     const dataFields = [ 
       "displayName", "itemId", "itemId1", "itemId2",
       "objectId1", "objectId2", "isRegistered", "isUnit",
@@ -29,6 +31,7 @@ const ClientUnit = class {
       this[field] = unitData[field] || null;
     });
 
+    this.playerId = playerId;
     this.playerColor = playerColor;
     this.setup();
 
@@ -201,6 +204,23 @@ const ClientUnit = class {
     }
   }
 
+  hasDrawingNeighbor (units, x, y) {
+    if (!units.length) {
+      return false;
+    }
+
+    const ownerId = this.playerId;
+    const closestUnitDistance = Helpers.closestToPoint(x, y, units, (unit) => {
+      return unit.playerId === ownerId;
+    });
+    
+    if (closestUnitDistance === null) {
+      return false;
+    }
+
+    return closestUnitDistance <= minNeighborDrawDistance;
+  }
+
   jump (gameTime) {
     // calculate decay
     this.getCurrentLevelRecord(gameTime);
@@ -310,7 +330,7 @@ const ClientUnit = class {
     ctx.globalAlpha = 1.0;
   }
 
-  renderUnit (ctx, transform, gameTime, xScale, yScale, viewOptions) {
+  renderUnit (ctx, frameData, transform, gameTime, xScale, yScale, viewOptions) {
     if (!this.currentX || !this.currentY) {
       return;
     }
@@ -321,6 +341,15 @@ const ClientUnit = class {
     const { currentX, currentY } = this;
     const drawX = ((xScale(currentX) + wc3v.middleX) * transform.k) + transform.x;
     const drawY = ((yScale(currentY) + wc3v.middleY) * transform.k) + transform.y;
+
+    const { unitDrawPositions } = frameData;
+
+    if (!this.meta.hero && 
+         this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY)) {
+      return;
+    }
+
+    unitDrawPositions.push({ playerId: this.playerId, x: drawX, y: drawY });
 
     const inverseK = (2.0 - transform.k);
     const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
@@ -427,7 +456,7 @@ const ClientUnit = class {
     });
   }
 
-  render (ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
+  render (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (gameTime < this.spawnTime) {
       return;
     }
@@ -435,7 +464,7 @@ const ClientUnit = class {
     if (this.isBuilding) {
       this.renderBuilding(buildingCtx, transform, xScale, yScale, viewOptions);
     } else {
-      this.renderUnit(ctx, transform, gameTime, xScale, yScale, viewOptions);
+      this.renderUnit(ctx, frameData, transform, gameTime, xScale, yScale, viewOptions);
     }
   }
 }

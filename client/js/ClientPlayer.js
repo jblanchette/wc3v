@@ -29,7 +29,8 @@ const ClientPlayer = class {
 
   setupUnits (rawUnits) {
     // make new ClientUnit instances
-    this.units = rawUnits.map(unitData => new ClientUnit(unitData, this.playerColor));
+    this.units = rawUnits.map(unitData => 
+      new ClientUnit(unitData, this.playerId, this.playerColor));
     
     // sort buildings first so they get drawn first
     this.units = this.units.sort((a, b) => {
@@ -312,8 +313,9 @@ const ClientPlayer = class {
     this.renderPlayerIcon(
       playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
 
+    let frameData = { unitDrawPositions: [] };
     this.units.forEach(unit => 
-      unit.render(playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
+      unit.render(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
 
     if (viewOptions.displayPath) {
       this.heroes.forEach(hero => 
