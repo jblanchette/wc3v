@@ -127,7 +127,7 @@ const ClientUnit = class {
       this.iconSize = IconSizes.worker;
 
       // don't fully decay workers, since they often idle
-      this.minDecayLevel = 0.2;
+      this.minDecayLevel = 0.325;
     } else {
       this.iconSize = IconSizes.unit;
       this.minDecayLevel = 0.0;
@@ -213,7 +213,7 @@ const ClientUnit = class {
     const closestUnitDistance = Helpers.closestToPoint(x, y, units, (unit) => {
       return unit.playerId === ownerId;
     });
-    
+
     if (closestUnitDistance === null) {
       return false;
     }
