@@ -12,7 +12,7 @@ const minimumIconSize = 18,
       minimumUnitSize = 10,
       maxFontSize = 13;
 
-const minNeighborDrawDistance = 18;
+const minNeighborDrawDistance = 20;
 
 const buildingAlpha = 0.65;
 
@@ -366,10 +366,11 @@ const ClientUnit = class {
     // add unit to draw frame unit positions
     unitDrawPositions.push({ 
       itemId: this.itemId,
-      fullName: this.meta.hero ? this.fullName : this.displayName,
+      fullName: this.fullName,
       playerId: this.playerId,
       iconSize: iconSize,
       fontSize: fontSize,
+      decayLevel: this.decayLevel,
       isHero: this.meta.hero,
       x: drawX, 
       y: drawY,
@@ -402,6 +403,7 @@ const ClientUnit = class {
 
     let levelRecordIndex = -1;
 
+    ctx.globalAlpha = 0.75;
     ctx.lineWidth = 4;
     ctx.strokeStyle = this.playerColor;
     ctx.fillStyle = "#FFF";
@@ -437,6 +439,7 @@ const ClientUnit = class {
 
     ctx.stroke();
     ctx.lineWidth = 1;
+    ctx.globalAlpha = 1;
 
     this.levelStream.some(levelRecord => {
       if (gameTime < levelRecord.gameTime) {
