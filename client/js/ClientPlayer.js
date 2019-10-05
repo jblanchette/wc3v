@@ -248,9 +248,9 @@ const ClientPlayer = class {
       const hero = this.heroes[heroSlot];
 
       if (hero) {
-        //
+        ////
         // draw the main hero icon and box outline
-        //
+        ////
 
         playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.25;
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
@@ -259,15 +259,15 @@ const ClientPlayer = class {
         const heroLevelRecord = hero.getHeroLevelRecord();
         const heroLevel = heroLevelRecord ? heroLevelRecord.newLevel : 1;
 
-        //
+        ////
         // draw hero level box
-        //
+        ////
 
         Drawing.drawBoxedLevel(playerStatusCtx, heroLevel, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
 
-        //
+        ////
         // draw hero spell boxes
-        //
+        ////
 
         hero.spellList.forEach((spellId, spellSlot) => {
           const spellX = boxX + (skillSubBoxWidth * spellSlot);
@@ -310,23 +310,42 @@ const ClientPlayer = class {
   }
 
   render (mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+    ////
+    // render player status 
+    ////
+
     this.renderPlayerIcon(
       playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
 
+    ////
+    // render main game
+    ////
+
+    // stored data about each frame
     let frameData = { unitDrawPositions: [] };
+
+    // draw units / buildings
     this.units.forEach(unit => 
       unit.render(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
 
+    ////
+    // render optional details
+    ////
 
     if (viewOptions.displayText) {
       frameData.unitDrawPositions.forEach(item => {
-        const { x, y, iconSize, fontSize, isHero, fullName, count } = item;
+        const { x, y, iconSize, fontSize, isHero, fullName, decayLevel, count } = item;
+
+        // don't draw decayed unit nameplates
+        if (decayLevel < 0.65) {
+          return;
+        }
 
         Drawing.drawCenteredText(
-          utilityCtx, 
+          playerCtx, 
           x, 
           y + iconSize, 
-          isHero ? fullName : `${fullName} (${count})`,
+          count === 1 ? fullName : `${fullName} [${count}]`,
           fontSize, 
           this.playerColor
         ); 
