@@ -92,8 +92,23 @@ const isEqualUnitItemId = (unitA, unitB) => {
          isEqualItemId(unitA.itemId2, unitB.itemId2);
 };
 
+////
+// creates a string hash of the itemId1-2 arrays 
+////
+
 const makeItemIdHash = (itemId1, itemId2) => {
   return `[${itemId1.toString()}]-[${itemId2.toString()}]`;
+};
+
+////
+// check rectangle collision
+////
+
+const isBoxCollision = (boxA, boxB) => {
+  return (boxA.x < boxB.x + boxB.width  &&
+          boxA.x + boxA.width > boxB.x  &&
+          boxA.y < boxB.y + boxB.height &&
+          boxA.y + boxA.height > boxB.y);
 };
 
 const Helpers = {
@@ -102,6 +117,7 @@ const Helpers = {
   isEqualItemId,
   isEqualUnitItemId,
   makeItemIdHash,
+  isBoxCollision,
 
   // constants
   MS_TO_SECONDS: 0.001,
