@@ -50,7 +50,7 @@ const closestToPoint = (x, y, units, filterFn) => {
   });
 
   const winner = positions[0];
-  return winner && winner.distance || null;
+  return winner || null;
 };
 
 ////

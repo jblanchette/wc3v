@@ -19,13 +19,13 @@ const Drawing = class {
   }
 
   static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12, fontColor) {
-      const drawTextX = (drawX - (textStr.length * fontSize) * 0.225);
-
+      ctx.textAlign = "center";
       ctx.fillStyle = "#FFF";
       ctx.font = `${Math.ceil(fontSize)}px Arial`;
-      ctx.fillText(textStr, drawTextX, drawY);
+      ctx.fillText(textStr, drawX, drawY);
       ctx.font = `12px Arial`;
       ctx.fillStyle = "#000";
+      ctx.textAlign = "left";
   }
 
   static drawImageCircle (ctx, icon, drawX, drawY, iconSize) {

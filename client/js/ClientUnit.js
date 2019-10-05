@@ -7,11 +7,12 @@ const IconSizes = {
   'building': 16
 };
 
-const minimumIconSize = 15,
+const minimumIconSize = 18,
       maximumBuildingSize = 20,
-      minimumUnitSize = 10;
+      minimumUnitSize = 10,
+      maxFontSize = 13;
 
-const minNeighborDrawDistance = 15;
+const minNeighborDrawDistance = 18;
 
 const buildingAlpha = 0.65;
 
@@ -210,15 +211,16 @@ const ClientUnit = class {
     }
 
     const ownerId = this.playerId;
-    const closestUnitDistance = Helpers.closestToPoint(x, y, units, (unit) => {
+    const neighbor = Helpers.closestToPoint(x, y, units, (unit) => {
       return unit.playerId === ownerId;
     });
 
-    if (closestUnitDistance === null) {
+    if (neighbor === null) {
       return false;
     }
 
-    return closestUnitDistance <= minNeighborDrawDistance;
+    return neighbor.distance <= minNeighborDrawDistance ?
+      neighbor : false;
   }
 
   jump (gameTime) {
@@ -344,19 +346,37 @@ const ClientUnit = class {
 
     const { unitDrawPositions } = frameData;
 
-    if (!this.meta.hero && 
-         this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY)) {
-      return;
-    }
-
-    unitDrawPositions.push({ playerId: this.playerId, x: drawX, y: drawY });
-
     const inverseK = (2.0 - transform.k);
     const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
     const iconSize = Math.max(dynamicSize, minimumIconSize); // minimum scaling
     const halfIconSize = iconSize / 2;
     
-    const fontSize = halfIconSize;
+    const fontSize = Math.min(halfIconSize, maxFontSize);
+
+    if (!this.meta.hero) {
+      const neighbor = this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY)
+      
+      if (neighbor && neighbor.unit.itemId === this.itemId) {        
+        neighbor.unit.count += 1;
+
+        return;
+      }
+    }
+
+    // add unit to draw frame unit positions
+    unitDrawPositions.push({ 
+      itemId: this.itemId,
+      fullName: this.meta.hero ? this.fullName : this.displayName,
+      playerId: this.playerId,
+      iconSize: iconSize,
+      fontSize: fontSize,
+      isHero: this.meta.hero,
+      x: drawX, 
+      y: drawY,
+      count: 1
+    });
+
+
     // draw code
 
     ctx.strokeStyle = "#FFFC01";
@@ -367,11 +387,6 @@ const ClientUnit = class {
     ctx.arc(drawX, drawY, halfIconSize + 2, 0, Math.PI * 2, true);
     ctx.fill();
     ctx.fillStyle = "#000";
-
-    if (viewOptions.displayText) {
-      // todo: optimize to not use fillText
-      Drawing.drawCenteredText(ctx, drawX, drawY + iconSize, this.fullName, fontSize, this.playerColor);
-    }
 
     Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
