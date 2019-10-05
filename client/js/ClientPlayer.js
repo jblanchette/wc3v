@@ -137,7 +137,6 @@ const ClientPlayer = class {
     unitLoaders.push(iconPromise);
 
     return Promise.allSettled(unitLoaders).then((e) => {
-      console.log("player assets loaded: ", this.playerId);
       this.assetsLoaded = true;
 
       return true;
@@ -309,6 +308,66 @@ const ClientPlayer = class {
     }
   }
 
+  renderNameplates (frameData, ctx) {
+    const tree = new rbush();
+    const nameplateBoxes = frameData.unitDrawPositions.forEach(item => {
+      const { x, y, iconSize, fontSize, isHero, fullName, decayLevel, count } = item;
+
+      // don't draw decayed unit nameplates
+      if (decayLevel < 0.65) {
+        return;
+      }
+
+      ctx.font = `${Math.ceil(fontSize)}px Arial`;
+      ctx.textAlign = 'center';
+
+      const nameStr = count === 1 ? fullName : `${fullName} [${count}]`;
+      const textMetrics = ctx.measureText(nameStr);
+
+      const { actualBoundingBoxLeft, width } = textMetrics;
+      const drawY = (y + iconSize);
+
+      const nameBox = {
+        minX:     (x - actualBoundingBoxLeft),
+        maxX:     (x - actualBoundingBoxLeft) + width,
+        minY:     drawY - fontSize,
+        maxY:     drawY,
+        drawX:    x,
+        drawY:    drawY,
+        nameStr:  nameStr,
+        fontSize: fontSize,
+        count:    count
+      };
+
+      if (!tree.collides(nameBox)) {
+        tree.insert(nameBox);
+      }
+    }, []);
+
+    ctx.font = `12px Arial`; // todo make default font constant
+
+    /* 
+      cull nameplates based on heiarchy:
+      
+      no collision always drawn
+
+      if collides with other nameplate:
+        winner is -
+          1 - hero
+          2 - group with highest count
+          3 - lowest list index
+     */
+
+    tree.all().forEach(nameBox => {
+      const { drawX, drawY, minX, minY, nameStr, fontSize, maxX, maxY } = nameBox;
+
+      ctx.strokeRect(minX, minY, (maxX - minX), (maxY - minY));
+
+      Drawing.drawCenteredText (
+        ctx, drawX, drawY, nameStr, fontSize, this.playerColor);
+    });
+  }
+
   render (mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     ////
     // render player status 
@@ -333,23 +392,7 @@ const ClientPlayer = class {
     ////
 
     if (viewOptions.displayText) {
-      frameData.unitDrawPositions.forEach(item => {
-        const { x, y, iconSize, fontSize, isHero, fullName, decayLevel, count } = item;
-
-        // don't draw decayed unit nameplates
-        if (decayLevel < 0.65) {
-          return;
-        }
-
-        Drawing.drawCenteredText(
-          playerCtx, 
-          x, 
-          y + iconSize, 
-          count === 1 ? fullName : `${fullName} [${count}]`,
-          fontSize, 
-          this.playerColor
-        ); 
-      });
+      this.renderNameplates(frameData, playerCtx);
     }
 
     if (viewOptions.displayPath) {
