@@ -317,6 +317,22 @@ const ClientPlayer = class {
     this.units.forEach(unit => 
       unit.render(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
 
+
+    if (viewOptions.displayText) {
+      frameData.unitDrawPositions.forEach(item => {
+        const { x, y, iconSize, fontSize, isHero, fullName, count } = item;
+
+        Drawing.drawCenteredText(
+          utilityCtx, 
+          x, 
+          y + iconSize, 
+          isHero ? fullName : `${fullName} (${count})`,
+          fontSize, 
+          this.playerColor
+        ); 
+      });
+    }
+
     if (viewOptions.displayPath) {
       this.heroes.forEach(hero => 
         hero.renderPath(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
