@@ -309,8 +309,9 @@ const ClientPlayer = class {
   }
 
   renderNameplates (frameData, ctx) {
-    const tree = new rbush();
-    const nameplateBoxes = frameData.unitDrawPositions.forEach(item => {
+    const { nameplateTree, unitDrawPositions } = frameData;
+    
+    const nameplateBoxes = unitDrawPositions.forEach(item => {
       const { x, y, iconSize, fontSize, isHero, fullName, decayLevel, count } = item;
 
       // don't draw decayed unit nameplates
@@ -330,21 +331,22 @@ const ClientPlayer = class {
       const nameBox = {
         minX:     (x - actualBoundingBoxLeft),
         maxX:     (x - actualBoundingBoxLeft) + width,
-        minY:     drawY - fontSize,
+        minY:     y - (iconSize / 2),
         maxY:     drawY,
         drawX:    x,
         drawY:    drawY,
         nameStr:  nameStr,
         fontSize: fontSize,
+        isHero:   isHero,
         count:    count
       };
 
-      if (!tree.collides(nameBox)) {
-        tree.insert(nameBox);
-      }
-    }, []);
+      const collisions = nameplateTree.search(nameBox);
+      if (!collisions.length) {
+        nameplateTree.insert(nameBox);
 
-    ctx.font = `12px Arial`; // todo make default font constant
+        return;
+      }
 
     /* 
       cull nameplates based on heiarchy:
@@ -358,17 +360,30 @@ const ClientPlayer = class {
           3 - lowest list index
      */
 
-    tree.all().forEach(nameBox => {
-      const { drawX, drawY, minX, minY, nameStr, fontSize, maxX, maxY } = nameBox;
+      const allBoxes = collisions;
 
-      ctx.strokeRect(minX, minY, (maxX - minX), (maxY - minY));
+      allBoxes.push(nameBox);
+      allBoxes.sort((boxA, boxB) => {
+        return boxB.isHero - boxA.isHero;
+      });
+
+      allBoxes.forEach((box, ind) => {
+        if (ind > 0) {
+          nameplateTree.remove(box);
+        }
+      })
+
+    });
+
+    nameplateTree.all().forEach(nameBox => {
+      const { drawX, drawY, minX, minY, nameStr, fontSize, maxX, maxY } = nameBox;
 
       Drawing.drawCenteredText (
         ctx, drawX, drawY, nameStr, fontSize, this.playerColor);
     });
   }
 
-  render (mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+  render (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     ////
     // render player status 
     ////
@@ -379,9 +394,6 @@ const ClientPlayer = class {
     ////
     // render main game
     ////
-
-    // stored data about each frame
-    let frameData = { unitDrawPositions: [] };
 
     // draw units / buildings
     this.units.forEach(unit => 
