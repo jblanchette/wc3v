@@ -17,6 +17,7 @@ const minimumUnitSize     = 12,
       minimumHeroIconSize = 22;
       
 const maximumBuildingSize = 20,
+      minFontSize         = 8,
       maxFontSize         = 11;
 
 //// 
@@ -365,7 +366,7 @@ const ClientUnit = class {
 
     const halfIconSize = iconSize / 2.5;
     
-    const fontSize = Math.min(halfIconSize, maxFontSize);
+    const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
 
     if (!this.meta.hero) {
       const neighbor = this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY)

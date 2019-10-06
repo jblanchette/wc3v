@@ -340,6 +340,7 @@ const ClientPlayer = class {
         drawY:    drawY,
         nameStr:  nameStr,
         fontSize: fontSize,
+        iconSize: iconSize,
         isHero:   isHero,
         count:    count
       };
@@ -359,13 +360,31 @@ const ClientPlayer = class {
     const treeItems = nameplateTree.all().reverse();
 
     treeItems.forEach(nameBox => {
-      const collisions = nameplateTree.search(nameBox);
-      if (collisions.length > 1) {
+      const { 
+        drawX, 
+        drawY, 
+        minX, 
+        minY, 
+        maxX, 
+        maxY, 
+        nameStr,
+        iconSize,
+        fontSize 
+      } = nameBox;
 
+      const textPadding = 2;
+
+      const searchBox = {
+        minX,
+        minY: drawY - fontSize,
+        maxX,
+        maxY
+      };
+
+      const collisions = nameplateTree.search(searchBox);
+      if (collisions.length > 1) {
         return;
       }
-
-      const { drawX, drawY, minX, minY, nameStr, fontSize, maxX, maxY } = nameBox;
 
       Drawing.drawCenteredText (
         ctx, drawX, drawY, nameStr, fontSize, this.playerColor);
