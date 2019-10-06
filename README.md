@@ -1,6 +1,6 @@
 # WC3V
 
- **W**ar**c**raft **3** Replay **V**iewer.
+ **W**ar**c**raft **3**™ Replay **V**iewer.
 
  http://wc3v.com
 
@@ -15,7 +15,7 @@
 
 ## Running the reference `wc3v` client viewer
 
-(NOTE: in order to show wc3 icons, you must follow the instructions on war3observer
+(NOTE: in order to show WC3 icons, you must follow the instructions on war3observer
  and put the resulting icons in the `client/assets/wc3icons` folder).
 
 navigate to the `client` directory
