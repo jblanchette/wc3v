@@ -293,9 +293,10 @@ const Wc3vViewer = class {
 
   setupViewOptions () {
     this.viewOptions = {
+      displayPath: false,
+      displayLeveLDots: true,
+      decayEffects: true,
       displayText: true,
-      displayPath: true,
-      decayEffects: true
     };    
 
     Object.keys(this.viewOptions).forEach(optionKey => {

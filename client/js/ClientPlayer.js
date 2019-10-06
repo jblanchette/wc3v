@@ -311,12 +311,12 @@ const ClientPlayer = class {
   renderNameplates (frameData, ctx) {
     const { nameplateTree, unitDrawPositions } = frameData;
     
-    const nameplateBoxes = unitDrawPositions.forEach(item => {
+    const nameplateBoxes = unitDrawPositions.reduce((acc, item) => {
       const { x, y, iconSize, fontSize, isHero, fullName, decayLevel, count } = item;
 
       // don't draw decayed unit nameplates
       if (decayLevel < 0.65) {
-        return;
+        return acc;
       }
 
       ctx.font = `${Math.ceil(fontSize)}px Arial`;
@@ -341,41 +341,28 @@ const ClientPlayer = class {
         count:    count
       };
 
-      const collisions = nameplateTree.search(nameBox);
-      if (!collisions.length) {
-        nameplateTree.insert(nameBox);
+      acc.push(nameBox);
+      return acc;
+    }, []);
 
+    // bulk load our nameplate boxes
+    nameplateTree.load(nameplateBoxes);
+
+    ////
+    // heroes are drawn first, 
+    // check nameplate collisions last
+    ////
+
+    const treeItems = nameplateTree.all().reverse();
+
+    treeItems.forEach(nameBox => {
+      const collisions = nameplateTree.search(nameBox);
+      if (collisions.length > 1) {
+
+        nameplateTree.remove(nameBox);
         return;
       }
 
-    /* 
-      cull nameplates based on heiarchy:
-      
-      no collision always drawn
-
-      if collides with other nameplate:
-        winner is -
-          1 - hero
-          2 - group with highest count
-          3 - lowest list index
-     */
-
-      const allBoxes = collisions;
-
-      allBoxes.push(nameBox);
-      allBoxes.sort((boxA, boxB) => {
-        return boxB.isHero - boxA.isHero;
-      });
-
-      allBoxes.forEach((box, ind) => {
-        if (ind > 0) {
-          nameplateTree.remove(box);
-        }
-      })
-
-    });
-
-    nameplateTree.all().forEach(nameBox => {
       const { drawX, drawY, minX, minY, nameStr, fontSize, maxX, maxY } = nameBox;
 
       Drawing.drawCenteredText (
@@ -410,6 +397,11 @@ const ClientPlayer = class {
     if (viewOptions.displayPath) {
       this.heroes.forEach(hero => 
         hero.renderPath(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
+    }
+    
+    if (viewOptions.displayLeveLDots) {
+      this.heroes.forEach(hero => 
+        hero.renderLevelDots(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
     }
   }
 }

@@ -1,8 +1,8 @@
 const _iconCache = {};
 
 const IconSizes = {
-  'hero': 40,
-  'unit': 30,
+  'hero': 36,
+  'unit': 24,
   'worker': 10,
   'building': 16
 };
@@ -10,7 +10,7 @@ const IconSizes = {
 const minimumIconSize = 18,
       maximumBuildingSize = 20,
       minimumUnitSize = 10,
-      maxFontSize = 13;
+      maxFontSize = 11;
 
 const minNeighborDrawDistance = 20;
 
@@ -348,8 +348,9 @@ const ClientUnit = class {
 
     const inverseK = (2.0 - transform.k);
     const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
+
     const iconSize = Math.max(dynamicSize, minimumIconSize); // minimum scaling
-    const halfIconSize = iconSize / 2;
+    const halfIconSize = iconSize / 2.5;
     
     const fontSize = Math.min(halfIconSize, maxFontSize);
 
@@ -434,12 +435,15 @@ const ClientUnit = class {
       }
     });
 
-
-    const drawPadding = 4;
-
     ctx.stroke();
     ctx.lineWidth = 1;
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0;
+  }
+
+  renderLevelDots (ctx, transform, gameTime, xScale, yScale, viewOptions) {
+    const drawPadding = 4;
+
+    ctx.globalAlpha = 0.75;
 
     this.levelStream.some(levelRecord => {
       if (gameTime < levelRecord.gameTime) {
@@ -472,6 +476,8 @@ const ClientUnit = class {
         12
       );
     });
+
+    ctx.globalAlpha = 1;
   }
 
   render (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
