@@ -1,29 +1,36 @@
 # TODO
 
-Things left to finish
+Things left to finish, list sorted by priority
 
 ## wc3v engine
 
-* add building meta data so we can detect alters from each race and such
+* implement correct starting position mappings for all maps
+* read and parse needed information from WC3 map files
+* unit pathing based on WC3 pathfinding (currently walking straight lines)
+* backfill action support improvements:
+  * simulate backfilled actions with retroactive timings
+  * support abilities, shop events, item events
+  * export backfill actions to correct record streams
+* improved support for duplicate / corrupted / invalid actions (usually network related)
 
-* FIX - starting position based on team ID is wrong.  need to estimate based on action targets.
-* Add itemId mappings for units / buildings with extra metadata
- * isBuilding
- * isClickable
- * isPermanent
- * isSpawnedAtStart
-* support simulating actions over time by reading time blocks
 
-## map parser
+## wc3v client
 
-* read possible starting positions, neutral spawns from `j` file
-* determine pathable grid, map size
-* shop item loot tables / timings
+* implement support for all ladder 1v1, 2v2 maps
+* implement support for all ladder 4v4 maps
+* player status window groups rendering and selection
+* load replay files based on minified hash ID schema
+* create page for replay listings
+* create page for replay uploads
+* implement support for social features:
+  * user profiles, reputation, rewards
+  * user comments
+  * replay commentating support
 
-## wc3v renderer
+## wc3v webserver
 
-* determine best way to draw mini-size map
-* draw known unit icons on screen at known position over time
-* add start / stop / pause / seek
-* support for 'highlights' checkpoints / seeking
-* winner/loser and game result stats determination
+* create golang webserver that accepts W3G files for parsing
+* host API to download WC3V files
+* persist WC3V in a datastore versioned by parser version
+* create WC3V user community
+* add social features API for commenting, sharing, and commentating
