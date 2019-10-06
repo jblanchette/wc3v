@@ -22,4 +22,4 @@ Then from the `wc3v` client directory simply run `http-server`
 
 ## Application Performance Profile
 
-![Application Performance Profile](client/application-profile.png)
+![Application Performance Profile](./application-profile.png)
