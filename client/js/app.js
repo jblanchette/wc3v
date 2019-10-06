@@ -126,10 +126,16 @@ const Wc3vViewer = class {
     });
   }
 
+  ////
+  // handle click event on time scrubber tracker
+  ////
   moveTracker (e) {
     if (!this.gameLoaded) {
       return;
     }
+
+    // make sure mega play button is hidden
+    this.toggleMegaPlayButton(false);
     
     const trackerPosition = this.scrubber.findTrackerPosition(e, this.matchEndTime);
     const { gameTime, matchPercentage } = trackerPosition;
@@ -141,6 +147,9 @@ const Wc3vViewer = class {
     this.render();
   }
 
+  ////
+  // show / hide loading indicators
+  ////
   setLoadingStatus (isLoading) {
     const loadingIcon = document.getElementById("loading-icon");
     const logoIcon = document.getElementById("player-status-bg-icon");
@@ -193,7 +202,9 @@ const Wc3vViewer = class {
   }
 
   play () {
-    this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'pause-icon');
+    const { wrapperId } = this.scrubber;
+
+    this.scrubber.loadSvg(`#${wrapperId}-play`, 'pause-icon');
     this.state = ScrubStates.playing;
 
     this.toggleMegaPlayButton(false);
@@ -201,14 +212,18 @@ const Wc3vViewer = class {
   }
 
   pause () {
-    this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'play-icon');
+    const { wrapperId } = this.scrubber;
+
+    this.scrubber.loadSvg(`#${wrapperId}-play`, 'play-icon');
     this.state = ScrubStates.paused;
 
     this.stopRenderLoop();
   }
 
   stop () {
-    this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'stop-icon');
+    const { wrapperId } = this.scrubber;
+
+    this.scrubber.loadSvg(`#${wrapperId}-play`, 'stop-icon');
     this.state = ScrubStates.stopped;
 
     this.stopRenderLoop();
@@ -548,8 +563,12 @@ const Wc3vViewer = class {
 
     this.renderMapBackground();
 
+    // stored data about each frame
+    let frameData = { nameplateTree: new rbush(), unitDrawPositions: [] };
+
     this.players.forEach(player => {
       player.render(
+        frameData,
         ctx,
         playerCtx,
         utilityCtx,
