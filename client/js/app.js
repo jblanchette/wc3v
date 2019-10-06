@@ -420,6 +420,7 @@ const Wc3vViewer = class {
 
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)
+      .translateExtent([[0, 0], [width, height]])
       .on("zoom", () => {
         if (!this.ctx) {
           return;
