@@ -359,7 +359,6 @@ const ClientPlayer = class {
       const collisions = nameplateTree.search(nameBox);
       if (collisions.length > 1) {
 
-        nameplateTree.remove(nameBox);
         return;
       }
 
@@ -398,7 +397,7 @@ const ClientPlayer = class {
       this.heroes.forEach(hero => 
         hero.renderPath(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
     }
-    
+
     if (viewOptions.displayLeveLDots) {
       this.heroes.forEach(hero => 
         hero.renderLevelDots(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));

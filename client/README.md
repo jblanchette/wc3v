@@ -1,6 +1,6 @@
 # WC3V reference web client
 
-A stripped down example implementation of a birds eye view style drawing of a Warcraft 3 match.
+A stripped down example implementation of a birds eye view style drawing of a Warcraft 3™ (WC3) match.
 
 This client aims to show the capabilities of the `wc3v` file format and it's ability to represent rich data from a WC3 match.
 
@@ -19,3 +19,7 @@ A suggested way to run the `wc3v` client is to install the NPM `http-server` pac
 `npm install -g http-server`
 
 Then from the `wc3v` client directory simply run `http-server`
+
+## Application Performance Profile
+
+![Application Performance Profile](/application-profile.png)
