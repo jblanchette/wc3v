@@ -1,21 +1,30 @@
 const _iconCache = {};
 
+
+////
+// drawing sizes
+////
+
 const IconSizes = {
-  'hero': 40,
-  'unit': 24,
-  'worker': 12,
+  'hero': 36,
+  'unit': 22,
+  'worker': 14,
   'building': 16
 };
 
-const minimumIconSize = 16,
-      maximumBuildingSize = 20,
-      minimumUnitSize = 10,
-      maxFontSize = 11;
+const minimumUnitSize     = 12,
+      minimumBuildingSize = 12,
+      minimumHeroIconSize = 22;
+      
+const maximumBuildingSize = 20,
+      maxFontSize         = 11;
 
-const minNeighborDrawDistance = 20;
+//// 
+// drawing constants
+////
 
 const buildingAlpha = 0.65;
-
+const minNeighborDrawDistance = 20;
 const pathDecayTime = 1000 * 240;
 
 const ClientUnit = class {
@@ -321,7 +330,7 @@ const ClientUnit = class {
     const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
 
     const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
-    const iconSize = Math.max(dynamicSize, minimumIconSize);
+    const iconSize = Math.max(dynamicSize, minimumBuildingSize);
 
     ctx.globalAlpha = buildingAlpha;
     ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize); 
@@ -349,7 +358,11 @@ const ClientUnit = class {
     const inverseK = (2.0 - transform.k);
     const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
 
-    const iconSize = Math.max(dynamicSize, minimumIconSize); // minimum scaling
+    const minimumIconSize = this.meta.hero ? 
+      minimumHeroIconSize : minimumUnitSize;
+    const iconSize = (dynamicSize < minimumIconSize) ?
+      minimumIconSize : dynamicSize;
+
     const halfIconSize = iconSize / 2.5;
     
     const fontSize = Math.min(halfIconSize, maxFontSize);

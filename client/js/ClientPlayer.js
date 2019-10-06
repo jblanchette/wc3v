@@ -32,11 +32,14 @@ const ClientPlayer = class {
     this.units = rawUnits.map(unitData => 
       new ClientUnit(unitData, this.playerId, this.playerColor));
     
-    // sort buildings first so they get drawn first
-    this.units = this.units.sort((a, b) => {
-      // magical js
+    // drawing sort order: buildings, heroes, units
+    this.units = this.units
+    .sort((a, b) => {
       return b.isBuilding - a.isBuilding;
-    });
+    })
+    .sort((a, b) => {
+      return b.isHero - a.isHero;
+    })
 
     this.unitsByItemId = this.units.reduce((acc, unit) => {
       const { itemIdHash } = unit;
