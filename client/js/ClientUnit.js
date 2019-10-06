@@ -24,7 +24,7 @@ const maximumBuildingSize = 20,
 // drawing constants
 ////
 
-const buildingAlpha = 0.65;
+const buildingAlpha = 0.55;
 const minNeighborDrawDistance = 20;
 const pathDecayTime = 1000 * 240;
 
