@@ -1,13 +1,13 @@
 const _iconCache = {};
 
 const IconSizes = {
-  'hero': 36,
+  'hero': 40,
   'unit': 24,
-  'worker': 10,
+  'worker': 12,
   'building': 16
 };
 
-const minimumIconSize = 18,
+const minimumIconSize = 16,
       maximumBuildingSize = 20,
       minimumUnitSize = 10,
       maxFontSize = 11;
