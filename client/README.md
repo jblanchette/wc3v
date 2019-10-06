@@ -8,6 +8,8 @@ This client aims to show the capabilities of the `wc3v` file format and it's abi
 
 ![Drawing Diagram](docs/client-drawing-diagram.jpg)
 
+The WC3V viewer reduces cutter and makes unit groupings based on collision checks via spacial indexing done with [RBush](https://github.com/mourner/rbush)
+
 ## Setup
 
 Vendor libraries:
