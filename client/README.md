@@ -15,6 +15,8 @@ The WC3V viewer reduces cutter and makes unit groupings based on collision check
 Vendor libraries:
 
 * CDN delivered version of `d3` [ref link](https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js)
+* CDN delivered version of `rbush` [ref link](https://unpkg.com/rbush@2.0.1/rbush.min.js)
+
 
 A suggested way to run the `wc3v` client is to install the NPM `http-server` package:  
 
