@@ -1204,93 +1204,93 @@ const abilityActions = {
 };
 
 const mapStartPositions = {
-    '(2)bootybay.w3m': {
-        '0': { x: -5184.0, y: 2944.0 },
-        '1': { x: 4672.0, y: 2944.0 }
-    },
+  '(2)bootybay.w3m': {
+      '0': { x: -5184.0, y: 2944.0 },
+      '1': { x: 4672.0, y: 2944.0 }
+  },
 	'(2)echoisles.w3x': {
 		'0': { x: -5184.0, y: 2944.0 },
 		'1': { x: 4672.0, y: 2944.0 }
 	},
-    '(2)concealedhill.w3x': {
-        /*
-            call DefineStartLocation(0, 2176.0, 4224.0)
-            call DefineStartLocation(1, - 2304.0, - 4736.0)
-        */
+  '(2)concealedhill.w3x': {
+    /*
+        call DefineStartLocation(0, 2176.0, 4224.0)
+        call DefineStartLocation(1, - 2304.0, - 4736.0)
+    */
 
-        '0': { x: 2176.0, y: 4224.0 },
-        '1': { x: -2304.0, y: -4736.0 }
-    },
-    '(2)terenasstand_lv.w3x': {
-        /*
-            call DefineStartLocation(0, - 4096.0, 3968.0)
-            call DefineStartLocation(1, 4096.0, - 4608.0)
-        */
+    '0': { x: 2176.0, y: 4224.0 },
+    '1': { x: -2304.0, y: -4736.0 }
+  },
+  '(2)terenasstand_lv.w3x': {
+    /*
+        call DefineStartLocation(0, - 4096.0, 3968.0)
+        call DefineStartLocation(1, 4096.0, - 4608.0)
+    */
 
-        '0': { x: -4096.0, y: 3968.0 },
-        '1': { x: 4096.0, y: -4608.0}
-    },
-    '(4)synergybigpaved.w3x': {
-        '0': { x: 768.0,  y: -4736.0 },
-        '1': { x: -448.0, y: -4736.0 },
-        '2': { x: 448.0,  y: 4608.0 },
-        '3': { x: -768.0, y: 4608.0 }
-    },
-    '(8)friends.w3x': {
-        /*
-            call DefineStartLocation(0, 1088.0, 7296.0)
-            call DefineStartLocation(1, - 832.0, 7296.0)
-            call DefineStartLocation(2, 320.0, - 7488.0)
-            call DefineStartLocation(3, - 1536.0, - 7488.0)
-            call DefineStartLocation(4, - 6592.0, - 960.0)
-            call DefineStartLocation(5, - 6592.0, 896.0)
-            call DefineStartLocation(6, 7168.0, 896.0)
-            call DefineStartLocation(7, 7232.0, - 1024.0)
-        */
+    '0': { x: -4096.0, y: 3968.0 },
+    '1': { x: 4096.0, y: -4608.0}
+  },
+  '(4)synergybigpaved.w3x': {
+    '0': { x: 768.0,  y: -4736.0 },
+    '1': { x: -448.0, y: -4736.0 },
+    '2': { x: 448.0,  y: 4608.0 },
+    '3': { x: -768.0, y: 4608.0 }
+  },
+  '(8)friends.w3x': {
+    /*
+        call DefineStartLocation(0, 1088.0, 7296.0)
+        call DefineStartLocation(1, - 832.0, 7296.0)
+        call DefineStartLocation(2, 320.0, - 7488.0)
+        call DefineStartLocation(3, - 1536.0, - 7488.0)
+        call DefineStartLocation(4, - 6592.0, - 960.0)
+        call DefineStartLocation(5, - 6592.0, 896.0)
+        call DefineStartLocation(6, 7168.0, 896.0)
+        call DefineStartLocation(7, 7232.0, - 1024.0)
+    */
 
-        '0': { x: 1088, y: 7296 },
-        '1': { x: -832, y: 7296 },
-        '2': { x: 320, y: -7488 },
-        '3': { x: -1536, y: -7488 },
-        '4': { x: -6592, y: -960 },
-        '5': { x: -6592, y: 896 },
-        '6': { x: 7168, y: 896 },
-        '7': { x: 7232, y: -1024 }
-    }
+    '0': { x: 1088, y: 7296 },
+    '1': { x: -832, y: 7296 },
+    '2': { x: 320, y: -7488 },
+    '3': { x: -1536, y: -7488 },
+    '4': { x: -6592, y: -960 },
+    '5': { x: -6592, y: 896 },
+    '6': { x: 7168, y: 896 },
+    '7': { x: 7232, y: -1024 }
+  }
 };
 
 const commonMapNames = {
-    'echoisles': '(2)echoisles.w3x'
+  'echoisles': '(2)echoisles.w3x'
 };
 
 const abilityFlagNames = {
-    'CancelTrainOrResearch': 64, // 0x40
+  'CancelTrainOrResearch': 64, // 0x40
 	'LearnSkillOrTrain': 66,  // 0x42
 	'Summon': 68,      // 0x44
-    'TrainUnit': 70    // 0x46
+  'TrainUnit': 70    // 0x46
 };
 
 const itemAbilityData = {
     'rnec': { 
-        'ability': 0x10,
-        'type': 'summon',
-        'uses': 4,
-        'stockCount': 1,
-        'stockReplenish': 60,
-        'cooldown': 22,
-        'summonCount': 2,
-        'summonItemId': 'uske',
-        'summonDuration': 65
+      'ability': 0x10,
+      'type': 'summon',
+      'uses': 4,
+      'stockCount': 1,
+      'stockReplenish': 60,
+      'cooldown': 22,
+      'summonCount': 2,
+      'summonItemId': 'uske',
+      'summonDuration': 65
     },
     'stwp': {
-        'ability': 0x12
+      'ability': 0x12
     },
     'AHwe': {
-        'ability': 0x10,
-        'type': 'summon',
-        'summonCount': 1,
-        'summonItemId': ['hwat', 'hwt2', 'hwt3'],
-        'summonDuration': 60
+      'ability': 0x10,
+      'type': 'summon',
+      'summonCount': 1,
+      'summonItemId': ['hwat', 'hwt2', 'hwt3'],
+      'summonDuration': 60
     }
 };
 
@@ -1298,40 +1298,41 @@ const getUnitInfo = (itemId) => {
 	const inBuildingList = !!(buildings[itemId]);
 	const inUnitList = !!(units[itemId]);
 	const inHeroList = !!(heroes[itemId]);
-    const inItemList = !!(items[itemId]);
+  const inItemList = !!(items[itemId]);
 
 	const isBuildingUpgrade = (inUnitList && units[itemId].startsWith("b"));
 	const isBuilding = (inBuildingList || isBuildingUpgrade);
 	const isHero = (inHeroList);
 	const isUnit = (inUnitList || isHero && !isBuilding);
-    const isItem = (inItemList);
+  const isItem = (inItemList);
 
-    const isKnownId = !!(allItemIds[itemId]);
+  const isKnownId = !!(allItemIds[itemId]);
 
-    let isPlayerShop = false;
+  let isPlayerShop = false;
 	let displayName = `Unknown (${itemId})`;
+
 	if (isBuilding) {
 		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
 
-        const shopRace = Object.keys(specialBuildings.playerShops).find(key => {
-            return specialBuildings.playerShops[key] === itemId;
-        });
+    const shopRace = Object.keys(specialBuildings.playerShops).find(key => {
+        return specialBuildings.playerShops[key] === itemId;
+    });
 
-        if (shopRace) { 
-            isPlayerShop = true;
-        }
+    if (shopRace) { 
+        isPlayerShop = true;
+    }
 
 	} else if (isUnit) {
 		displayName = units[itemId] || heroes[itemId];
-    } else if (isItem) {
-        displayName = items[itemId];
+  } else if (isItem) {
+    displayName = items[itemId];
 	} else if (isKnownId) {
-        displayName = allItemIds[itemId];
-    }
+    displayName = allItemIds[itemId];
+}
 
 	if (displayName.startsWith("u_") || 
-        displayName.startsWith("b_") ||
-        displayName.startsWith("i_")) {
+      displayName.startsWith("b_") ||
+      displayName.startsWith("i_")) {
 		displayName = displayName.substring(2);
 	}
 
@@ -1348,25 +1349,25 @@ const getUnitInfo = (itemId) => {
 		displayName: displayName,
 		isBuilding: isBuilding,
 		isUnit: isUnit,
-        isItem: isItem,
+    isItem: isItem,
 		meta: meta
 	};
 };
 
 module.exports = {
-	getUnitInfo: getUnitInfo,
-	buildings: buildings,
-    buildingUpgrades: buildingUpgrades,
-	units: units,
-	unitMetaData: unitMetaData,
-    specialBuildings: specialBuildings,
-	heroAbilities: heroAbilities,
-	abilityActions: abilityActions,
-	abilityFlagNames: abilityFlagNames,
-    workerForRace: workerForRace,
-	mapStartPositions: mapStartPositions,
-    commonMapNames: commonMapNames,
-    buildTimings: buildTimings,
-    itemAbilityData: itemAbilityData,
-    abilityToHero: abilityToHero
+	getUnitInfo,
+	buildings,
+  buildingUpgrades,
+	units,
+	unitMetaData,
+  specialBuildings,
+	heroAbilities,
+	abilityActions,
+	abilityFlagNames,
+  workerForRace,
+	mapStartPositions,
+  commonMapNames,
+  buildTimings,
+  itemAbilityData,
+  abilityToHero
 };

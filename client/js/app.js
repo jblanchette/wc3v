@@ -1,4 +1,4 @@
-const domMap = {
+ const domMap = {
   "mapInputFieldId": "input-map-file",
   "playerListId": "player-list",
   "unitListId": "unit-list",
@@ -59,6 +59,7 @@ const Wc3vViewer = class {
   }
 
   load () {
+    const self = this;
     const filename = document.getElementById(domMap.mapInputFieldId).value;
 
     this.pause();
@@ -66,20 +67,7 @@ const Wc3vViewer = class {
 
     this.setLoadingStatus(true);
 
-    this.loadFile(filename);
-    this.scrubber.init();
-    this.scrubber.setupControls({
-      "play": (e) => { this.togglePlay(e); },
-      "speed": (e) => { this.toggleSpeed(e); },
-      "track": (e) => { this.moveTracker(e); }
-    });
-  }
-
-  loadFile (filename) {
-    const self = this;
-    const req = new XMLHttpRequest();
-
-    req.addEventListener("load", (res) => {
+    this.loadFile(filename, (res) => {
       try {
         const { target } = res;
         const jsonData = JSON.parse(target.responseText);
@@ -91,6 +79,20 @@ const Wc3vViewer = class {
       }
     });
 
+    this.scrubber.init();
+    this.scrubber.setupControls({
+      "play": (e) => { this.togglePlay(e); },
+      "speed": (e) => { this.toggleSpeed(e); },
+      "track": (e) => { this.moveTracker(e); }
+    });
+  }
+
+  loadFile (filename, cb) {
+    const self = this;
+    const req = new XMLHttpRequest();
+
+    req.addEventListener("load", cb);
+
     const port = window.location.hostname === "localhost" ? ":8080" : "";
     const url = `http://${window.location.hostname}${port}/replays/${filename}`;
 
@@ -98,9 +100,20 @@ const Wc3vViewer = class {
     req.send();
   }
 
-  loadMapFile () {
+  loadMapFile (mapType) {
     const self = this;
     const { name } = this.mapInfo;
+
+    if (mapType === "grid") {
+      return new Promise((resolve, reject) => {
+        self.gridMapImage = new Image();
+        self.gridMapImage.src = `./maps/${name}/gridmap.jpg`;
+
+        self.gridMapImage.addEventListener('load', () => {
+          resolve();
+        }, false);
+      });
+    }
 
     return new Promise((resolve, reject) => {
       self.mapImage = new Image();   // Create new img element
@@ -124,6 +137,39 @@ const Wc3vViewer = class {
       }, false);
       
     });
+  }
+
+  loadGridFile () {
+    const self = this;
+    const { name } = this.mapInfo;
+
+    return new Promise((resolve, reject) => {
+      this.loadFile(`../maps/${name}/wpm.json`, (res) => {
+        const { target } = res;
+        const jsonData = JSON.parse(target.responseText);
+          
+        self.gridData = jsonData.grid;
+
+        resolve(true);
+      });
+    })
+  }
+
+  loadDoodadFile () {
+    const self = this;
+    const { name } = this.mapInfo;
+
+    return new Promise((resolve, reject) => {
+      this.loadFile(`../maps/${name}/doo.json`, (res) => {
+        const { target } = res;
+        const jsonData = JSON.parse(target.responseText);
+          
+        self.doodadData = jsonData.grid;
+        
+        console.log("set grid data", jsonData);
+        resolve(true);
+      });
+    })
   }
 
   ////
@@ -154,6 +200,7 @@ const Wc3vViewer = class {
     const loadingIcon = document.getElementById("loading-icon");
     const logoIcon = document.getElementById("player-status-bg-icon");
     const viewerOptionsPanel = document.getElementById("viewer-options");
+    const mapOptionsPanel = document.getElementById("map-options");
 
     loadingIcon.style.display = isLoading ? "block" : "none";
     logoIcon.style.display = isLoading ? "block" : "none";
@@ -161,6 +208,10 @@ const Wc3vViewer = class {
     isLoading ? 
       viewerOptionsPanel.classList.add("disabled") :
       viewerOptionsPanel.classList.remove("disabled");
+
+    isLoading ? 
+      mapOptionsPanel.classList.add("disabled") :
+      mapOptionsPanel.classList.remove("disabled");
   }
 
   togglePlay () {
@@ -284,6 +335,9 @@ const Wc3vViewer = class {
 
     // finishes the setup promise
     return this.loadMapFile()
+    .then(() => { return this.loadMapFile("grid"); })
+    .then(() => { return this.loadGridFile(); })
+    .then(() => { return this.loadDoodadFile(); })
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
@@ -297,6 +351,12 @@ const Wc3vViewer = class {
       displayLeveLDots: true,
       decayEffects: true,
       displayText: true,
+
+      displayMapGrid: false,
+      displayTreeGrid: false,
+      displayWalkGrid: false,
+      displayBuildGrid: false,
+      displayWaterGrid: false
     };    
 
     Object.keys(this.viewOptions).forEach(optionKey => {
@@ -370,22 +430,62 @@ const Wc3vViewer = class {
 
   setupView () {
     const { x, y, k } = this.transform;
+    const { bounds } = this.mapInfo;
 
-    this.viewWidth = this.mapImage.width;
+    this.viewWidth  = this.mapImage.width;
     this.viewHeight = this.mapImage.height;
 
-    this.viewXRange = [ -(this.viewWidth / 2), (this.viewWidth / 2) ];
-    this.viewYRange = [ -(this.viewHeight / 2), (this.viewHeight / 2) ];
+    const cameraRatio =  {
+      x: (bounds.camera[0][0] / bounds.map[0][0]),
+      y: (bounds.camera[0][0] / bounds.map[0][0])
+    };
+
+    this.sceneWidth  = this.mapImage.width * cameraRatio.x;
+    this.sceneHeight = this.mapImage.height * cameraRatio.y;
+
+    ////
+    // map range is the full sized range of map image
+    ////
+
+    this.mapRange = {
+      x: [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ],
+      y: [ -(this.viewHeight / 2), (this.viewHeight / 2) ]
+    };
+
+    ////
+    // camera range is the restricted inner camera range 
+    // always <= than map range
+    ////
+
+    this.cameraRange = {
+      x: [ -(this.sceneWidth / 2),  (this.sceneWidth / 2)  ],
+      y: [ -(this.sceneHeight / 2), (this.sceneHeight / 2) ]
+    };
   }
 
   setupScales () {
+    const { 
+      cameraExtent,
+      cameraRange,
+      mapExtent,
+      mapRange
+    } = this;
+
     this.xScale = d3.scaleLinear()
-      .domain(this.xExtent)
-      .range(this.viewXRange);
+      .domain(mapExtent.x)
+      .range(mapRange.x);
 
     this.yScale = d3.scaleLinear()
-      .domain(this.yExtent)
-      .range(this.viewYRange);
+      .domain(mapExtent.y)
+      .range(mapRange.y);
+
+    this.unitXScale = d3.scaleLinear()
+      .domain(cameraExtent.x)
+      .range(cameraRange.x);
+
+    this.unitYScale = d3.scaleLinear()
+      .domain(cameraExtent.y)
+      .range(cameraRange.y);
   }
 
   setupMiddle () {
@@ -394,11 +494,18 @@ const Wc3vViewer = class {
   }
 
   setupDrawing () {
-    const { xExtent, yExtent } = this.mapInfo;
+    const { bounds } = this.mapInfo;
     const { width, height } = this.canvas;
 
-    this.xExtent = xExtent;
-    this.yExtent = yExtent;
+    this.mapExtent = {
+      x: bounds.map[0],
+      y: bounds.map[1]
+    };
+
+    this.cameraExtent = {
+      x: bounds.camera[0],
+      y: bounds.camera[1]
+    };
     
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
@@ -511,24 +618,118 @@ const Wc3vViewer = class {
   }
 
   renderMapBackground () {
-    const { ctx, transform, xExtent, yExtent, middleX, middleY, xScale, yScale } = this;
+    const { 
+      ctx, 
+      transform, 
+      mapExtent, 
+      middleX, 
+      middleY, 
+      xScale, 
+      yScale,
+      viewOptions
+    } = this;
+
     const { width, height } = this.mapImage;
     const { x, y, k } = transform;
 
-    const drawX = (transform.x + xScale(xExtent[0]) + middleX);
-    const drawY = (transform.y + yScale(yExtent[0]) + middleY);
+    const drawX = (transform.x + xScale(mapExtent.x[0]) + middleX);
+    const drawY = (transform.y + yScale(mapExtent.y[0]) + middleY);
+
+    const bgImage = viewOptions.displayMapGrid ? 
+      this.gridMapImage : this.mapImage;
 
     ctx.drawImage(
-      this.mapImage, 
+      bgImage, 
       0,               // sourceX
       0,               // sourceY
       width,           // sourceWidth
       height,          // sourceHeight
-      drawX,            // destX
-      drawY,            // destY
+      drawX,           // destX
+      drawY,           // destY
       width * k,       // destWidth
       height * k       // destHeight
     );
+  }
+
+  renderMapTrees (ctx) {
+    const { transform, middleX, middleY, xScale, yScale, viewOptions } = this;
+    if (!viewOptions.displayTreeGrid) {
+      return;
+    }
+
+    const treeSize = 4 * transform.k;
+
+    ctx.strokeStyle = "#FFF";
+    this.doodadData.forEach(tree => {
+      const { x, y } = tree;
+
+      // (x * scale) + transform.x
+      const drawX = ((xScale(x) + middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
+
+      ctx.strokeRect(
+        drawX,
+        drawY,
+        treeSize, 
+        treeSize
+      );
+    });
+  }
+
+  renderMapGrid (ctx) {
+    const { transform, viewOptions } = this;
+
+
+    if (!viewOptions.displayWalkGrid  &&
+        !viewOptions.displayWaterGrid &&
+        !viewOptions.displayBuildGrid) {
+      return;
+    }
+
+    const gridHeight = this.gridData.length    / 4;
+    const gridWidth  = this.gridData[0].length / 4;
+
+    const { width, height } = this.canvas;
+
+    const tileHeight = (height / gridHeight) * transform.k;
+    const tileWidth  = (width  / gridWidth)  * transform.k;
+
+    
+    ctx.lineWidth = 1;
+
+    for (let col = 0; col < gridHeight; col++) {
+      for (let row = 0; row < gridWidth; row++) {
+        const data = this.gridData[col][row];
+        const drawX = (row * tileWidth)  + transform.x;
+        const drawY = (col * tileHeight) + transform.y;
+
+        if (!data) {
+          console.error("bad grid data: ", col, row);
+          return;
+        }
+
+        const { 
+          NoWater, 
+          NoWalk, 
+          NoBuild
+        } = data;
+
+        if (viewOptions.displayWalkGrid && NoWalk) {
+          ctx.strokeStyle = "#FFF";
+          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
+        }
+
+        if (viewOptions.displayWaterGrid && !NoWater) {
+          ctx.strokeStyle = "#0000AA";
+          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
+        }
+
+        if (viewOptions.displayBuildGrid && NoBuild) {
+          ctx.strokeStyle = "#00AA00";
+          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
+        }
+      }
+    }
   }
 
   render () {
@@ -542,6 +743,8 @@ const Wc3vViewer = class {
       matchEndTime, 
       xScale, 
       yScale,
+      unitXScale,
+      unitYScale,
       middleX,
       middleY,
       viewOptions
@@ -577,12 +780,15 @@ const Wc3vViewer = class {
         playerStatusCtx, 
         transform, 
         gameTime, 
-        xScale, 
-        yScale,
+        unitXScale, 
+        unitYScale,
         viewOptions
       );
     });
-    
+
+    this.renderMapGrid(utilityCtx);
+    this.renderMapTrees(utilityCtx);
+
     ctx.restore();
     playerCtx.restore();
     utilityCtx.restore();
