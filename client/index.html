@@ -50,11 +50,11 @@
             <option>bnet-ud-vs-orc-2.w3g.wc3v</option>
             <option>test-ei-movement.w3g.wc3v</option>
             <option disabled>Terenas Stand LV</option>
-            <option>terenas-stand-lv_sonik-vs-tgw.w3g.wc3v</option>
+            <option disabled>terenas-stand-lv_sonik-vs-tgw.w3g.wc3v</option>
             <option disabled>Synergy Paved (2v2)</option>
-            <option>2v2-synergy.w3g.wc3v</option>
+            <option disabled>2v2-synergy.w3g.wc3v</option>
             <option disabled>Friends (4v4)</option>
-            <option>orctower.w3g.wc3v</option>
+            <option disabled>orctower.w3g.wc3v</option>
           </select>
         </div>
 
@@ -102,6 +102,34 @@
                 id="viewer-option-displayText"
                 onClick="wc3v.toggleViewOption('displayText')"
                 class="viewer-option on">T<span class="option-tooltip">Show Text</span></div>
+            </div>
+
+            <div id="map-options" class="disabled">
+              <div 
+                id="viewer-option-displayMapGrid"
+                onClick="wc3v.toggleViewOption('displayMapGrid')"
+                class="viewer-option on">G<span class="option-tooltip">Show Map Grid</span></div>
+
+              <div 
+                id="viewer-option-displayTreeGrid"
+                onClick="wc3v.toggleViewOption('displayTreeGrid')"
+                class="viewer-option on">T<span class="option-tooltip">Show Tree Grid</span></div>
+
+              <div 
+                id="viewer-option-displayWalkGrid"
+                onClick="wc3v.toggleViewOption('displayWalkGrid')"
+                class="viewer-option on">M<span class="option-tooltip">Show Movement Grid</span></div>
+
+              <div 
+                id="viewer-option-displayBuildGrid"
+                onClick="wc3v.toggleViewOption('displayBuildGrid')"
+                class="viewer-option on">B<span class="option-tooltip">Show Build Grid</span></div>
+
+              <div 
+                id="viewer-option-displayWaterGrid"
+                onClick="wc3v.toggleViewOption('displayWaterGrid')"
+                class="viewer-option on">W<span class="option-tooltip">Show Water Grid</span></div>
+
             </div>
 
             <canvas id="player-status-canvas" width="190" height="200"></canvas>

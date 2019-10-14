@@ -2,13 +2,37 @@ const gameData = {
   'maps': {
     '(2)concealedhill.w3x': {
       'name': 'ConcealedHill',
-      'xExtent': [ -4608,  4608 ],
-      'yExtent': [  5760, -6272 ]
+      'bounds': {
+        'camera': [
+          [ -4864,  4864 ],
+          [  6912, -7424 ]
+        ],
+        'map': [
+          [ -6144,  6144 ],
+          [  8192, -8192 ]
+        ]
+      },
+      'gridSize': {
+        'full':     [ 96, 128 ],
+        'playable': [ 84, 116 ]
+      }
     },
     '(2)echoisles.w3x': {
       'name': 'EchoIsles',
-      'xExtent': [ -6912,  6912 ],
-      'yExtent': [  4864, -5376 ]
+      'bounds': {
+        'camera': [
+          [ -6912,  6912 ],
+          [  4864, -5376 ]
+        ],
+        'map': [
+          [ -8192,  8192 ],
+          [  6144, -6144 ]
+        ]
+      },
+      'gridSize': {
+        'full':     [ 128, 96 ],
+        'playable': [ 116, 84 ]
+      }
     },
     '(2)terenasstand_lv.w3x': {
       'name': 'TerenasStandLV',

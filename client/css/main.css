@@ -118,6 +118,28 @@ html, body {
   opacity: 0.4;
 }
 
+#map-options {
+  display: flex;
+  background-color: #99c5de;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-direction: column;
+  position: absolute;
+  right: -32px; /* extra padding for canvas border */
+  top: 220px;
+  width: 30px;
+  height: 150px;
+  border: 1px solid #333;
+  border-left: none;
+  border-top-right-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
+  user-select: none;
+}
+
+#map-options.disabled {
+  opacity: 0.4;
+}
+
 .viewer-option {
   cursor: pointer;
   border: 1px solid #333;
