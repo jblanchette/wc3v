@@ -183,6 +183,10 @@ const ClientPlayer = class {
     const drawIconX = drawX + iconPadding + halfIconSize;
     const drawIconY = drawY + iconPadding + halfIconSize;
 
+    if (!this.icon) {
+      console.error("missing icon for unit: ", this);
+    }
+    
     Drawing.drawImageCircle(
       playerStatusCtx, 
       this.icon, 
