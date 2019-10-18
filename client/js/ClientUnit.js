@@ -404,6 +404,10 @@ const ClientUnit = class {
     ctx.fill();
     ctx.fillStyle = "#000";
 
+    if (!this.icon) {
+      console.error("missing icon for unit: ", this);
+    }
+    
     Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
 
     ctx.globalAlpha = 1;

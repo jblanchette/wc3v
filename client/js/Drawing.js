@@ -31,6 +31,10 @@ const Drawing = class {
   static drawImageCircle (ctx, icon, drawX, drawY, iconSize) {
     const halfIconSize = (iconSize / 2);
 
+    if (!icon) {
+      return;
+    }
+
     ctx.save();
     ctx.beginPath();
     ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);

@@ -34,6 +34,25 @@ const gameData = {
         'playable': [ 116, 84 ]
       }
     },
+
+    '(2)northernisles.w3x': {
+      'name': 'NorthernIsles',
+      'bounds': {
+        'camera': [
+          [ -4352,  8448 ],
+          [  5248, -5248 ]
+        ],
+        'map': [
+          [ -6144,  10240 ],
+          [  6144, -6144  ]
+        ]
+      },
+      'gridSize': {
+        'full': [ 128, 96 ],
+        'playable': [ 108, 86 ]
+      }
+    },
+
     '(2)terenasstand_lv.w3x': {
       'name': 'TerenasStandLV',
       'xExtent': [ -4864,  4864 ],

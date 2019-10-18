@@ -1221,6 +1221,15 @@ const mapStartPositions = {
     '0': { x: 2176.0, y: 4224.0 },
     '1': { x: -2304.0, y: -4736.0 }
   },
+  '(2)northernisles.w3x': {
+    /*
+        call DefineStartLocation(0, - 2752.0, - 3328.0)
+        call DefineStartLocation(1, 6912.0, 3264.0)
+    */
+
+    '0': { x: -2752.0, y: -3328.0 },
+    '1': { x:  6912.0, y:  3264.0 }
+  },
   '(2)terenasstand_lv.w3x': {
     /*
         call DefineStartLocation(0, - 4096.0, 3968.0)
