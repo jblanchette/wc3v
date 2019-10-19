@@ -124,7 +124,7 @@ const Wc3vViewer = class {
 
         const cameraRatio =  {
           x: (bounds.camera[0][0] / bounds.map[0][0]),
-          y: (bounds.camera[0][0] / bounds.map[0][0])
+          y: (bounds.camera[1][0] / bounds.map[1][0])
         };
 
         const mapWidth = self.mapImage.width * cameraRatio.x;
@@ -441,7 +441,7 @@ const Wc3vViewer = class {
 
     const cameraRatio =  {
       x: (bounds.camera[0][0] / bounds.map[0][0]),
-      y: (bounds.camera[0][0] / bounds.map[0][0])
+      y: (bounds.camera[1][0] / bounds.map[1][0])
     };
 
     this.sceneWidth  = this.mapImage.width * cameraRatio.x;

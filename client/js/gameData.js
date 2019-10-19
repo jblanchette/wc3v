@@ -55,8 +55,20 @@ const gameData = {
 
     '(2)terenasstand_lv.w3x': {
       'name': 'TerenasStandLV',
-      'xExtent': [ -4864,  4864 ],
-      'yExtent': [  4864, -5376 ]
+      'bounds': {
+        'camera': [
+          [ -4864,  4864 ],
+          [  4864, -5376 ]
+        ],
+        'map': [
+          [ -6144,  6144 ],
+          [  6144, -6144  ]
+        ]
+      },
+      'gridSize': {
+        'full': [ 96, 96 ],
+        'playable': [ 84, 84 ]
+      }
     },
     '(4)synergybigpaved.w3x': {
       'name': 'SynergyBigPaved',
