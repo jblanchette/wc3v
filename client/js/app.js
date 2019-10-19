@@ -120,9 +120,15 @@ const Wc3vViewer = class {
       self.mapImage.src = `./maps/${name}/map.jpg`; // Set source path
 
       self.mapImage.addEventListener('load', () => {
+        const { bounds } = this.mapInfo;
 
-        const mapWidth = self.mapImage.width;
-        const mapHeight = self.mapImage.height;
+        const cameraRatio =  {
+          x: (bounds.camera[0][0] / bounds.map[0][0]),
+          y: (bounds.camera[0][0] / bounds.map[0][0])
+        };
+
+        const mapWidth = self.mapImage.width * cameraRatio.x;
+        const mapHeight = self.mapImage.height * cameraRatio.y;
 
         self.canvas.width = mapWidth;
         self.canvas.height = mapHeight;
@@ -165,8 +171,6 @@ const Wc3vViewer = class {
         const jsonData = JSON.parse(target.responseText);
           
         self.doodadData = jsonData.grid;
-        
-        console.log("set grid data", jsonData);
         resolve(true);
       });
     })
@@ -598,6 +602,8 @@ const Wc3vViewer = class {
         this.lastFrameDelta -= timeStep;
     }
 
+    this.render();
+    
     if (this.gameTime >= this.matchEndTime) {
       console.log("match replay completed.");
 
@@ -605,7 +611,6 @@ const Wc3vViewer = class {
       return;
     }
 
-    this.render();
     this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
   }
 
@@ -638,16 +643,19 @@ const Wc3vViewer = class {
     const bgImage = viewOptions.displayMapGrid ? 
       this.gridMapImage : this.mapImage;
 
+    const offsetX = (this.viewWidth - this.sceneWidth) / 2;
+    const offsetY = (this.viewHeight - this.sceneHeight) / 2;
+
     ctx.drawImage(
       bgImage, 
-      0,               // sourceX
-      0,               // sourceY
-      width,           // sourceWidth
-      height,          // sourceHeight
-      drawX,           // destX
-      drawY,           // destY
-      width * k,       // destWidth
-      height * k       // destHeight
+      offsetX,               // sourceX
+      offsetY,               // sourceY
+      this.sceneWidth,           // sourceWidth
+      this.sceneHeight,          // sourceHeight
+      drawX + offsetX,           // destX
+      drawY + offsetY,           // destY
+      this.sceneWidth * k,       // destWidth
+      this.sceneHeight * k       // destHeight
     );
   }
 
@@ -657,22 +665,32 @@ const Wc3vViewer = class {
       return;
     }
 
-    const treeSize = 4 * transform.k;
+    const treeSize = (3 * transform.k);
 
     ctx.strokeStyle = "#FFF";
     this.doodadData.forEach(tree => {
-      const { x, y } = tree;
+      const { x, y, flags } = tree;
 
-      // (x * scale) + transform.x
+      /*
+        flags :
+          0 = invisible and non-solid tree
+          1 = visible but non-solid tree
+          2 = normal tree (visible and solid)
+       */
+
+      if (flags === 0) {
+        return;
+      }
+
+      // (x * transform.k) + transform.x
+      // (y * transform.k) + transform.y
+
       const drawX = ((xScale(x) + middleX) * transform.k) + transform.x;
       const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
 
-      ctx.strokeRect(
-        drawX,
-        drawY,
-        treeSize, 
-        treeSize
-      );
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, treeSize * tree.yScale, 0, Math.PI * 2, true);
+      ctx.stroke();
     });
   }
 
@@ -714,7 +732,7 @@ const Wc3vViewer = class {
           NoBuild
         } = data;
 
-        if (viewOptions.displayWalkGrid && NoWalk) {
+        if (viewOptions.displayWalkGrid && !NoWalk) {
           ctx.strokeStyle = "#FFF";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
