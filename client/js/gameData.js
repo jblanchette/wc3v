@@ -72,8 +72,20 @@ const gameData = {
     },
     '(4)synergybigpaved.w3x': {
       'name': 'SynergyBigPaved',
-      'xExtent': [ -7424, 7424 ],
-      'yExtent': [ 6784, -6784 ]
+      'bounds': {
+        'camera': [
+          [ -7424,  7424 ],
+          [  6784, -6784 ]
+        ],
+        'map': [
+          [ -10240,  10240 ],
+          [  10240, -10240  ]
+        ]
+      },
+      'gridSize': {
+        'full': [ 160, 160 ],
+        'playable': [ 124, 110 ]
+      }
     },
     '(8)friends.w3x': {
       'name': 'Friends',

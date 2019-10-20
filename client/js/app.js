@@ -44,7 +44,7 @@ const Wc3vViewer = class {
     this.xScale = null;
     this.yScale = null;
 
-    this.k = 1.0;
+    this.cameraRatio = { x: 1, y: 1 };
 
     this.state = ScrubStates.stopped;
 
@@ -60,7 +60,8 @@ const Wc3vViewer = class {
 
   load () {
     const self = this;
-    const filename = document.getElementById(domMap.mapInputFieldId).value;
+    const rawFile = document.getElementById(domMap.mapInputFieldId).value;
+    const filename = rawFile.replace('.wc3v', '.w3g.wc3v');
 
     this.pause();
     this.reset();
@@ -121,14 +122,25 @@ const Wc3vViewer = class {
 
       self.mapImage.addEventListener('load', () => {
         const { bounds } = this.mapInfo;
+        const { map, camera } = bounds;
 
-        const cameraRatio =  {
-          x: (bounds.camera[0][0] / bounds.map[0][0]),
-          y: (bounds.camera[1][0] / bounds.map[1][0])
+        /*
+          bound index selection - 
+          not all camera grids are centered in the map grid,
+          try to adjust so we show the lower ratio so enough
+          of the actual map is shown
+         */
+
+        const xBoundIndex = (map[0][0] < camera[0][1]) ? 0 : 1;
+        const yBoundIndex = (map[1][0] < camera[1][1]) ? 0 : 1;
+
+        self.cameraRatio =  {
+          x: (camera[0][xBoundIndex] / map[0][xBoundIndex]),
+          y: (camera[1][yBoundIndex] / map[1][yBoundIndex])
         };
 
-        const mapWidth = self.mapImage.width * cameraRatio.x;
-        const mapHeight = self.mapImage.height * cameraRatio.y;
+        const mapWidth = self.mapImage.width * self.cameraRatio.x;
+        const mapHeight = self.mapImage.height * self.cameraRatio.y;
 
         self.canvas.width = mapWidth;
         self.canvas.height = mapHeight;
@@ -433,16 +445,12 @@ const Wc3vViewer = class {
   }
 
   setupView () {
+    const { cameraRatio } = this;
     const { x, y, k } = this.transform;
     const { bounds } = this.mapInfo;
 
     this.viewWidth  = this.mapImage.width;
     this.viewHeight = this.mapImage.height;
-
-    const cameraRatio =  {
-      x: (bounds.camera[0][0] / bounds.map[0][0]),
-      y: (bounds.camera[1][0] / bounds.map[1][0])
-    };
 
     this.sceneWidth  = this.mapImage.width * cameraRatio.x;
     this.sceneHeight = this.mapImage.height * cameraRatio.y;
