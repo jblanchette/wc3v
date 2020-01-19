@@ -1206,65 +1206,39 @@ const abilityActions = {
 const mapStartPositions = {
   '(2)bootybay.w3m': {
       '0': { x: -5184.0, y: 2944.0 },
-      '1': { x: 4672.0, y: 2944.0 }
+      '1': { x:  4672.0, y: 2944.0 }
   },
 	'(2)echoisles.w3x': {
 		'0': { x: -5184.0, y: 2944.0 },
-		'1': { x: 4672.0, y: 2944.0 }
+		'1': { x:  4672.0, y: 2944.0 }
 	},
   '(2)concealedhill.w3x': {
-    /*
-        call DefineStartLocation(0, 2176.0, 4224.0)
-        call DefineStartLocation(1, - 2304.0, - 4736.0)
-    */
-
-    '0': { x: 2176.0, y: 4224.0 },
+    '0': { x:  2176.0, y:  4224.0 },
     '1': { x: -2304.0, y: -4736.0 }
   },
   '(2)northernisles.w3x': {
-    /*
-        call DefineStartLocation(0, - 2752.0, - 3328.0)
-        call DefineStartLocation(1, 6912.0, 3264.0)
-    */
-
     '0': { x: -2752.0, y: -3328.0 },
     '1': { x:  6912.0, y:  3264.0 }
   },
   '(2)terenasstand_lv.w3x': {
-    /*
-        call DefineStartLocation(0, - 4096.0, 3968.0)
-        call DefineStartLocation(1, 4096.0, - 4608.0)
-    */
-
-    '0': { x: -4096.0, y: 3968.0 },
-    '1': { x: 4096.0, y: -4608.0}
+    '0': { x: -4096.0, y:  3968.0 },
+    '1': { x:  4096.0, y: -4608.0 }
   },
   '(4)synergybigpaved.w3x': {
-    '0': { x: 768.0,  y: -4736.0 },
+    '0': { x:  768.0, y: -4736.0 },
     '1': { x: -448.0, y: -4736.0 },
-    '2': { x: 448.0,  y: 4608.0 },
-    '3': { x: -768.0, y: 4608.0 }
+    '2': { x:  448.0, y:  4608.0 },
+    '3': { x: -768.0, y:  4608.0 }
   },
   '(8)friends.w3x': {
-    /*
-        call DefineStartLocation(0, 1088.0, 7296.0)
-        call DefineStartLocation(1, - 832.0, 7296.0)
-        call DefineStartLocation(2, 320.0, - 7488.0)
-        call DefineStartLocation(3, - 1536.0, - 7488.0)
-        call DefineStartLocation(4, - 6592.0, - 960.0)
-        call DefineStartLocation(5, - 6592.0, 896.0)
-        call DefineStartLocation(6, 7168.0, 896.0)
-        call DefineStartLocation(7, 7232.0, - 1024.0)
-    */
-
-    '0': { x: 1088, y: 7296 },
-    '1': { x: -832, y: 7296 },
-    '2': { x: 320, y: -7488 },
+    '0': { x:  1088, y:  7296 },
+    '1': { x: -832,  y:  7296 },
+    '2': { x:  320,  y: -7488 },
     '3': { x: -1536, y: -7488 },
-    '4': { x: -6592, y: -960 },
-    '5': { x: -6592, y: 896 },
-    '6': { x: 7168, y: 896 },
-    '7': { x: 7232, y: -1024 }
+    '4': { x: -6592, y: -960  },
+    '5': { x: -6592, y:  896  },
+    '6': { x:  7168, y:  896  },
+    '7': { x:  7232, y: -1024 }
   }
 };
 
@@ -1272,11 +1246,100 @@ const commonMapNames = {
   'echoisles': '(2)echoisles.w3x'
 };
 
+const mapDataByFile = {
+  '(2)concealedhill.w3x': {
+    'name': 'ConcealedHill',
+    'bounds': {
+      'camera': [
+        [ -4864,  4864 ],
+        [  6912, -7424 ]
+      ],
+      'map': [
+        [ -6144,  6144 ],
+        [  8192, -8192 ]
+      ]
+    },
+    'gridSize': {
+      'full':     [ 96, 128 ],
+      'playable': [ 84, 116 ]
+    }
+  },
+  '(2)echoisles.w3x': {
+    'name': 'EchoIsles',
+    'bounds': {
+      'camera': [
+        [ -6912,  6912 ],
+        [  4864, -5376 ]
+      ],
+      'map': [
+        [ -8192,  8192 ],
+        [  6144, -6144 ]
+      ]
+    },
+    'gridSize': {
+      'full':     [ 128, 96 ],
+      'playable': [ 116, 84 ]
+    }
+  },
+
+  '(2)northernisles.w3x': {
+    'name': 'NorthernIsles',
+    'bounds': {
+      'camera': [
+        [ -4352,  8448 ],
+        [  5248, -5248 ]
+      ],
+      'map': [
+        [ -6144,  10240 ],
+        [  6144, -6144  ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 128, 96 ],
+      'playable': [ 108, 86 ]
+    }
+  },
+  '(2)terenasstand_lv.w3x': {
+    'name': 'TerenasStandLV',
+    'bounds': {
+      'camera': [
+        [ -4864,  4864 ],
+        [  4864, -5376 ]
+      ],
+      'map': [
+        [ -6144,  6144 ],
+        [  6144, -6144  ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 96, 96 ],
+      'playable': [ 84, 84 ]
+    }
+  },
+  '(4)synergybigpaved.w3x': {
+    'name': 'SynergyBigPaved',
+    'bounds': {
+      'camera': [
+        [ -7424,  7424 ],
+        [  6784, -6784 ]
+      ],
+      'map': [
+        [ -10240,  10240 ],
+        [  10240, -10240  ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 160, 160 ],
+      'playable': [ 124, 110 ]
+    }
+  }
+};
+
 const abilityFlagNames = {
   'CancelTrainOrResearch': 64, // 0x40
-	'LearnSkillOrTrain': 66,  // 0x42
-	'Summon': 68,      // 0x44
-  'TrainUnit': 70    // 0x46
+	'LearnSkillOrTrain': 66,     // 0x42
+	'Summon': 68,                // 0x44
+  'TrainUnit': 70              // 0x46
 };
 
 const itemAbilityData = {
@@ -1375,6 +1438,7 @@ module.exports = {
 	abilityFlagNames,
   workerForRace,
 	mapStartPositions,
+  mapDataByFile,
   commonMapNames,
   buildTimings,
   itemAbilityData,

@@ -47,6 +47,7 @@ const parseReplays = (options) => {
       // write our output wc3v file
       utils.writeOutput(file, replay, players, jsonPadding);
 
+
       // re-enable all logging
       logManager.setDisabledState(false);
 
@@ -56,6 +57,20 @@ const parseReplays = (options) => {
 
         const player = players[playerId];
         const { units, unregisteredUnitCount, removedBuildings } = player;
+
+        // console.log("cache stats: ", player.world.pathFinder.cacheHitCount,
+        //  player.world.pathFinder.cacheMissCount);
+
+        // const pathFindTotal = player.world.pathFinder.timers.reduce((acc, timer) => {
+        //   acc += timer;
+
+        //   return acc;
+        // }, 0);
+
+        // const pathFindAvg = pathFindTotal / player.world.pathFinder.timers.length;
+
+        // console.log("pathfind tot time: ", pathFindTotal);
+        // console.log("pathfind avg time: ", pathFindAvg.toFixed(2));
 
         console.logger(`Unit count: ${units.length}`);
         console.logger(`Unregistered units: ${unregisteredUnitCount}`);
