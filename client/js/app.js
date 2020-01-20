@@ -390,17 +390,17 @@ const Wc3vViewer = class {
   setupPlayers () {
     const colorMap = [
       "#959697",
-      "#4E2A04",
+      "#7EBFF1",
       "#1CE6B9",
       "#0042FF",
-      "#7EBFF1",
       "#540081",
       "#FFFC01",
       "#FF0303",
       "#fEBA0E",
       "#20C000",
       "#E55BB0",
-      "#106246"
+      "#106246",
+      "#4E2A04"
     ];
 
     Object.keys(this.mapData.players).forEach((playerId, index) => {

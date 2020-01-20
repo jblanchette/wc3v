@@ -100,7 +100,8 @@ const ClientUnit = class {
   setup () {
     this.recordIndexes = {
       move: -1,
-      level: -1
+      level: -1,
+      path: -1
     };
 
     this.decayLevel = 1;
@@ -187,6 +188,28 @@ const ClientUnit = class {
     return true;
   }
 
+  getCurrentMovePath (gameTime) {
+    const { path } = this;
+
+    let index = -1;
+    for (let i = 0; i < path.length; i++) {
+      const record = path[i];
+
+      if (record.gameTime > gameTime) {
+        break;
+      }
+      
+      index = i;
+    }
+
+    if (index === -1) {
+      return false;
+    }
+
+    this.recordIndexes.path = index;
+    return true;
+  }
+
   getCurrentLevelRecord (gameTime, verbose = false) {
     if (!this.meta.hero) {
       return;
@@ -236,6 +259,7 @@ const ClientUnit = class {
   jump (gameTime) {
     // calculate decay
     this.getCurrentLevelRecord(gameTime);
+    this.getCurrentMovePath(gameTime);
 
     const hasMoveRecord = this.getCurrentMoveRecord(gameTime);
     if (!hasMoveRecord) {
@@ -292,7 +316,8 @@ const ClientUnit = class {
 
     // checks and updates current level record, setting this.fullName
     this.getCurrentLevelRecord(gameTime);
-
+    this.getCurrentMovePath(gameTime);
+    
     const hasRecord = this.getCurrentMoveRecord(gameTime);
     if (this.isBuilding || !hasRecord) {
       this.decay();
@@ -324,9 +349,6 @@ const ClientUnit = class {
 
     const inverseK = (2.0 - transform.k);
 
-    // (x * scale) + transform.x
-    // (y * scale) + transform.y
-
     const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
     const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
 
@@ -350,7 +372,11 @@ const ClientUnit = class {
     // (x * scale) + transform.x
     // (y * scale) + transform.y
 
-    const { currentX, currentY } = this;
+    const pathNode = this.path[this.recordIndexes.path];
+
+    const currentX = pathNode && pathNode.x;
+    const currentY = pathNode && pathNode.y;
+
     const drawX = ((xScale(currentX) + wc3v.middleX) * transform.k) + transform.x;
     const drawY = ((yScale(currentY) + wc3v.middleY) * transform.k) + transform.y;
 
@@ -392,7 +418,6 @@ const ClientUnit = class {
       count: 1
     });
 
-
     // draw code
 
     ctx.strokeStyle = "#FFFC01";
@@ -428,6 +453,7 @@ const ClientUnit = class {
     ctx.fillStyle = "#FFF";
 
     ctx.beginPath();
+
     path.forEach((item, ind) => {
       if (item.gameTime > gameTime) {
         return;
