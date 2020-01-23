@@ -53,30 +53,34 @@ Latest test output:
 ```
 $ node wc3v.js --test
 user args:  [ '--test' ]
-parse: 97.790ms
+parse: 404.044ms
 TEST PASSED:  ./replays/test-ch-movement.w3g
-parse: 23.388ms
+parse: 286.320ms
 TEST PASSED:  ./replays/test-ei-movement.w3g
-parse: 700.738ms
+parse: 4746.978ms
 TEST PASSED:  ./replays/bnet-ud-vs-orc-2.w3g
-parse: 706.537ms
+parse: 4265.524ms
 TEST PASSED:  ./replays/happy-vs-grubby.w3g
-parse: 1425.998ms
+parse: 8102.156ms
 TEST PASSED:  ./replays/grubby-vs-thorzain.w3g
-parse: 1575.497ms
+parse: 11543.821ms
 TEST PASSED:  ./replays/happy-vs-lucifer.w3g
-parse: 1185.854ms
+parse: 7434.809ms
 TEST PASSED:  ./replays/cash-vs-foggy.w3g
-parse: 297.573ms
+parse: 2646.344ms
 TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
-parse: 982.399ms
+parse: 6350.330ms
 TEST PASSED:  ./replays/crow-vs-john.w3g
-parse: 905.581ms
+parse: 8031.555ms
 TEST PASSED:  ./replays/chae-vs-hawk.w3g
-parse: 938.540ms
+parse: 6523.733ms
 TEST PASSED:  ./replays/soin-vs-chae.w3g
-parse: 1090.073ms
+parse: 8551.837ms
 TEST PASSED:  ./replays/joker-vs-lil.w3g
+parse: 5771.456ms
+TEST PASSED:  ./replays/terenas-stand-lv_sonik-vs-tgw.w3g
+parse: 10894.642ms
+TEST PASSED:  ./replays/2v2-synergy.w3g
 ```
 
 # Example output
