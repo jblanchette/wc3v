@@ -673,7 +673,7 @@ const Wc3vViewer = class {
       return;
     }
 
-    const treeSize = (3 * transform.k);
+    const treeSize = (4 * transform.k);
 
     ctx.strokeStyle = "#FFF";
     this.doodadData.forEach(tree => {
