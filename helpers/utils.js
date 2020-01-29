@@ -1,5 +1,6 @@
 const fs = require('fs'),
-      path = require('path');
+      path = require('path'),
+      zlib = require('zlib');
 
 const config = require('../config/config');
 
@@ -207,6 +208,22 @@ const writeOutput = (filename, replay, players, jsonPadding = 0) => {
   	const outputPath = `./client/replays/${path.basename(filename)}.wc3v`;
     fs.writeFileSync(outputPath, JSON.stringify(output, null, jsonPadding));
     console.logger("created wc3v file: ", outputPath);
+
+    const gzip = zlib.createGzip();
+    const inputFile = fs.createReadStream(outputPath);
+    const outputFile = fs.createWriteStream(`${outputPath}.gz`);
+
+    console.logger("writing wc3v gzipped file: ", `${outputPath}.gz`);
+    
+    inputFile.pipe(gzip)
+      .on('error', () => {
+        console.logger("file write error for: ", outputPath);
+      })
+      .pipe(outputFile)
+      .on('error', () => {
+        console.logger("file write error for: ", outputPath);
+      });
+
   } catch (e) {
     console.logger("file write error: ", e);
   }
