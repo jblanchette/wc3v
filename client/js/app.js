@@ -61,7 +61,7 @@ const Wc3vViewer = class {
   load () {
     const self = this;
     const rawFile = document.getElementById(domMap.mapInputFieldId).value;
-    const filename = rawFile.replace('.wc3v', '.w3g.wc3v');
+    const filename = rawFile.replace('.wc3v', '.w3g.wc3v.gz');
 
     this.pause();
     this.reset();
