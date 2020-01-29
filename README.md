@@ -85,7 +85,7 @@ TEST PASSED:  ./replays/2v2-synergy.w3g
 
 # Example output
 
-see the [happy-vs-grubby.w3g.wc3v](client/replays/happy-vs-grubby.w3g.wc3v) file for a pretty-printed JSON dump
+see the [happy-vs-grubby.w3g.wc3v](docs/happy-vs-grubby.w3g.wc3v) file for a pretty-printed JSON dump
 of the current output for a Happy vs Grubby show match.
 
 # How It Works
