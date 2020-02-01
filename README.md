@@ -22,7 +22,7 @@ navigate to the `client` directory
 
 run `npm install -g http-server` to install `http-server`
 
-run `http-server --gzip` and follow the printed directions to see the locally hosted site
+run `http-server` and follow the printed directions to see the locally hosted site
 
 
 Also see the [client README.md](client/README.md) for more information

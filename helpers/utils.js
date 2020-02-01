@@ -75,7 +75,7 @@ const fixItemId = (itemId) => {
 		return itemId;
 	}
 	
-	return itemId.value;
+	return itemId.split("").reverse().join("");
 };
 
 ////
