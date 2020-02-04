@@ -75,7 +75,12 @@ const fixItemId = (itemId) => {
 		return itemId;
 	}
 	
-	return itemId.split("").reverse().join("");
+  // TODO: new version of parser doesn't have this bug anymore, remove this
+	return itemId;
+};
+
+const unpackItemId = (obj, optKey = 'itemId') => {
+  return obj[optKey];
 };
 
 ////
@@ -307,6 +312,8 @@ module.exports = {
 	uuidv4: uuidv4,
 	readCliArgs: readCliArgs,
 	writeOutput: writeOutput,
+
+  unpackItemId,
 
 	// constants
 	MS_TO_SECONDS: 0.001,
