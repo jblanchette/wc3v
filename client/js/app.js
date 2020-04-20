@@ -88,8 +88,63 @@ const Wc3vViewer = class {
     });
   }
 
-  loadFile (filename, cb) {
+  claimUploadTicket () {
     const self = this;
+    const req = new XMLHttpRequest();
+    const port = window.location.hostname === "10.0.0.81" ? ":8085" : "";
+    const url = `http://${window.location.hostname}${port}/ticket`;
+
+    req.addEventListener("load", (res) => {
+      const { target } = res;
+      const ticketData = JSON.parse(target.responseText);
+
+      try {
+        const { claimed, ticket } = ticketData;
+
+        if (!claimed) {
+          self.showTickedFailed();
+
+          return;
+        }
+
+        self.showUpload(ticket.id);
+      } catch (err) {
+        self.showTickedFailed();
+      }
+    });
+
+    req.open("GET", url);
+    req.send();
+  }
+
+  showTickedFailed () {
+    console.log("show ticked failed here");
+  }
+
+  showUpload (ticketId) {
+    const inputFile = document.createElement("input");
+
+    inputFile.setAttribute("type", "file");
+    inputFile.setAttribute("accept", ".w3g")
+    inputFile.click();
+
+    inputFile.onchange = () => {
+      const form = document.createElement("form");
+      form.setAttribute("enctype", "multipart/form-data");
+      form.setAttribute("action", "http://10.0.0.81:8085/upload");
+
+      const formData = new FormData(form);
+      formData.append("file", inputFile);
+
+      const req = new XMLHttpRequest();
+      req.open('POST', form.getAttribute('action'), true);
+      req.setRequestHeader("ticketid", ticketId);
+      
+      req.send(formData);
+    };
+  }
+
+  loadFile (filename, cb) {
     const req = new XMLHttpRequest();
 
     req.addEventListener("load", cb);
