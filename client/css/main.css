@@ -6,10 +6,11 @@ html, body {
 #app {
   display: flex;
   flex-direction: column;
+  min-width: 810px;
 }
 
 #menu {
-  flex: 1;
+  display: flex;
   max-height: 3rem;
   padding: 0.15rem;
   border-bottom: 1px solid #000;
@@ -20,6 +21,10 @@ html, body {
   display: inline-block;
   vertical-align: top;
   font: 14px Verdana;
+}
+
+.menu-item:last-child {
+  margin-left: auto;
 }
 
 .menu-item select {
