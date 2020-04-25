@@ -102,14 +102,15 @@ const Wc3vViewer = class {
         const { claimed, ticket } = ticketData;
 
         if (!claimed) {
-          self.showTickedFailed();
+          self.showUploadContents("upload-no-ticket");
 
           return;
         }
 
         self.showUpload(ticket.id);
       } catch (err) {
-        self.showTickedFailed();
+        console.log("ticket error: ", err);
+        self.showUploadContents("upload-error")
       }
     });
 
@@ -117,11 +118,36 @@ const Wc3vViewer = class {
     req.send();
   }
 
-  showTickedFailed () {
-    console.log("show ticked failed here");
+  toggleUploadWrapper (isOpen) {
+    const uploadWrapperEl = document.getElementById("upload-wrapper");
+
+    uploadWrapperEl.style.display = isOpen ? "block" : "none";
+  }
+
+  hideUploadContents () {
+    const uploadContentIds = [
+      "upload-finished",
+      "upload-error",
+      "upload-no-ticket",
+      "upload-progress-loader"
+    ];
+
+    uploadContentIds.forEach(id => {
+      const el = document.getElementById(id);
+
+      el.style.display = "none";
+    });
+  }
+
+  showUploadContents (which) {
+    this.hideUploadContents();
+    this.toggleUploadWrapper(true);
+    
+    document.getElementById(which).style.display = "flex";
   }
 
   showUpload (ticketId) {
+    const self = this;
     const inputFile = document.createElement("input");
 
     inputFile.setAttribute("type", "file");
@@ -129,18 +155,26 @@ const Wc3vViewer = class {
     inputFile.click();
 
     inputFile.onchange = () => {
-      const form = document.createElement("form");
-      form.setAttribute("enctype", "multipart/form-data");
-      form.setAttribute("action", "http://10.0.0.81:8085/upload");
+      const { size } = inputFile.files[0];
 
-      const formData = new FormData(form);
-      formData.append("file", inputFile);
+      self.showUploadContents("upload-progress-loader");
 
       const req = new XMLHttpRequest();
-      req.open('POST', form.getAttribute('action'), true);
-      req.setRequestHeader("ticketid", ticketId);
+      req.open('POST', "http://10.0.0.81:8085/upload", true);
       
-      req.send(formData);
+      req.setRequestHeader("ticketid", ticketId);
+      req.setRequestHeader("Content-Type", "application/octet-stream");
+      req.setRequestHeader("Content-Disposition", "attachment");
+      
+      req.addEventListener("load", (res) => {
+        const { target } = res;
+        const jsonData = JSON.parse(target.responseText);
+
+        console.log("upload data: ", jsonData);
+        self.showUploadContents("upload-finished");
+      });
+
+      req.send(inputFile.files[0]);
     };
   }
 
