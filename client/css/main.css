@@ -36,6 +36,41 @@ html, body {
   font: 14px Verdana;
 }
 
+#upload-wrapper {
+  display: none;
+  z-index: 10;
+  position: absolute;
+  left: calc(50% - (325px /2));
+  top: 125px;
+  width: 325px;
+  height: 65px;
+  background: #EEE;
+  border: 1px solid #000;
+  border-radius: 1.25rem;
+}
+
+#upload-finished,
+#upload-error,
+#upload-no-ticket,
+#upload-progress-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#upload-finished,
+#upload-error,
+#upload-no-ticket {
+  display: none;
+  padding: 1rem;
+}
+
+#uploading-icon {
+  display: inline-block;
+  width: 65px;
+  height: 65px;
+}
+
 .wc3v-logo {
   font: 20px Verdana;
   color: #FFFFFF;

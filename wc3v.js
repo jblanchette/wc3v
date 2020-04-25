@@ -110,6 +110,6 @@ const main = () => {
   parseReplays(options);
 };
 
-// main entry point
-main();
-//process.exit();
+module.exports = {
+  parseReplays
+};
