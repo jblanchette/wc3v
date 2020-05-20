@@ -21,6 +21,11 @@ const ScrubStates = {
 const Wc3vViewer = class {
   constructor () {
     this.reset();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const replay = urlParams.get('r');
+
+    console.log("replay url param at start: ", replay);
   }
 
   reset () {
