@@ -252,7 +252,7 @@ const Wc3vViewer = class {
     const { name } = this.mapInfo;
 
     return new Promise((resolve, reject) => {
-      this.loadFile(`${window.location.hostname}/maps/${name}/wpm.json`, (res) => {
+      this.loadFile(`http://${window.location.hostname}/maps/${name}/wpm.json`, (res) => {
         const { target } = res;
         const jsonData = JSON.parse(target.responseText);
           
@@ -268,7 +268,7 @@ const Wc3vViewer = class {
     const { name } = this.mapInfo;
 
     return new Promise((resolve, reject) => {
-      this.loadFile(`${window.location.hostname}/maps/${name}/doo.json`, (res) => {
+      this.loadFile(`http://${window.location.hostname}/maps/${name}/doo.json`, (res) => {
         const { target } = res;
         const jsonData = JSON.parse(target.responseText);
           
