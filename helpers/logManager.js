@@ -67,7 +67,7 @@ const setTestMode = () => {
   testMode = true;
 }
 
-const setProductionMode () => {
+const setProductionMode = () => {
   productionMode = true;
 };
 
