@@ -35,13 +35,18 @@ const Wc3vViewer = class {
     const m = re.exec(hrefPath);
     if (m) {
       console.log("initial replay: ", encodeURI(m[1]));
+
+      setTimeout(() => {
+        this.load(`${encodeURI(m[1])}.wc3v`);
+      });
+
     } else {
       if (!this.isDev) {
         return;
       }
 
       const params = new URLSearchParams(window.location.search);
-      const localReplay = params.get('r');
+      const localReplay = encodeURI(params.get('r'));
 
       if (localReplay) {
         console.log('loading local replay: ', localReplay);
