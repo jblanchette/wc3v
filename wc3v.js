@@ -91,6 +91,8 @@ const parseReplays = (options) => {
       if (options.inTestMode) {
         console.log("TEST PASSED: ", file);
       }
+
+      return { passed: true, error: null };
     } catch (e) {
       if (options.inTestMode) {
         console.log("TEST FAILED: ", file);
