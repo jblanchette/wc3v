@@ -39,7 +39,11 @@ const parseReplays = (options) => {
 
   const results = paths.map((file, ind) => {
     playerManager = new PlayerManager();
-    logManager.setLogger(file, true);
+
+    if (!isProduction) {
+      logManager.setLogger(file, true);
+    }
+    
     globalTime = 0;
     actionCount = 0;
 
