@@ -100,7 +100,7 @@ const parseReplays = (options) => {
       } else {
         console.log("error parsing replay: ", file);
         
-        throw e;
+        return { passed: false, error: e.message };
       }
 
       return { passed: true, error: null };
