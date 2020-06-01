@@ -11,20 +11,31 @@ html, body {
 
 #menu {
   display: flex;
+  align-items: center;
   max-height: 3rem;
   padding: 0.15rem;
   border-bottom: 1px solid #000;
   background-color: #5fa5cb;
 }
 
+#menu-target svg:hover {
+  cursor: pointer;
+  fill: #FFF;
+}
+
+#menu-target svg:active {
+  fill: #EEE;
+}
+
 .menu-item {
   display: inline-block;
   vertical-align: top;
   font: 14px Verdana;
+  padding-left: 0.25rem;
 }
 
 .menu-item:last-child {
-  margin-left: auto;
+  margin-left: 0.5rem;
 }
 
 .menu-item select {
@@ -34,6 +45,39 @@ html, body {
 .menu-item-button {
   height: 26px;
   font: 14px Verdana;
+}
+
+#panel {
+  background: #CCC;
+  border: 1px solid #333;
+  position: absolute;
+  top: 2.35rem;
+  z-index: 20;
+  padding: 0.55rem;
+}
+
+#panel ul {
+  margin: 0;
+  padding: 0;
+  margin-top: 0.45rem;
+}
+
+#panel li {
+  display: block;
+  list-style: none;
+  padding: 0.45rem 0;
+  padding-left: 0.15rem;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  user-select: none;
+}
+
+#panel li:hover {
+  background-color: #EEE;
+}
+
+#panel li:last-child {
+  border-bottom: none;
 }
 
 #upload-wrapper {
@@ -52,7 +96,8 @@ html, body {
 #upload-finished,
 #upload-error,
 #upload-no-ticket,
-#upload-progress-loader {
+#upload-progress-loader,
+#upload-not-found {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,15 +105,47 @@ html, body {
 
 #upload-finished,
 #upload-error,
-#upload-no-ticket {
+#upload-no-ticket,
+#upload-not-found {
   display: none;
   padding: 1rem;
+}
+
+#upload-finished {
+  flex-direction: column;
 }
 
 #uploading-icon {
   display: inline-block;
   width: 65px;
   height: 65px;
+}
+
+.side-panel {
+  display: none;
+  overflow: hidden;
+  background: #EEE;
+  z-index: 20;
+  border: 1px solid #333;
+  border-right: none;
+  float: right;
+  position: absolute;
+  right: 0;
+  top: 60px;
+  min-height: 400px;
+}
+
+.side-panel h3 {
+  background: #CCC;
+  margin: 0;
+  padding: 0.25rem 0.35rem;
+  border-bottom: 1px solid #333;
+  width: 100%;
+}
+
+.side-panel td {
+  padding: 0.25rem;
+  border-bottom: 1px solid #C3C3C3;
 }
 
 .wc3v-logo {
