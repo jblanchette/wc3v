@@ -42,10 +42,10 @@ const parseReplays = (options) => {
 
   const results = paths.map((file, ind) => {
     playerManager = new PlayerManager();
+    logManager.setLogger(file, true);
 
     if (!isProduction) {
-      console.log("***** NOT IN PRODUCTION MODE, MAKING LOGS?");
-      logManager.setLogger(file, true);
+      console.log("***** NOT IN PRODUCTION MODE, MAKING LOGS?");  
       logManager.getLogger().init();
     }
     
