@@ -21,11 +21,121 @@ const ScrubStates = {
 const Wc3vViewer = class {
   constructor () {
     this.reset();
+  }
+
+  bootstrap () {
+    this.setupControls();
 
     const urlParams = new URLSearchParams(window.location.search);
     const replay = urlParams.get('r');
 
-    console.log("replay url param at start: ", replay);
+    const hrefPath = window.location.href;
+    const re = new RegExp('replay/(.*)', 'i');
+
+    const m = re.exec(hrefPath);
+    if (m) {
+      console.log("initial replay: ", encodeURI(m[1]));
+    } else {
+      if (!this.isDev) {
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const localReplay = params.get('r');
+
+      if (localReplay) {
+        console.log('loading local replay: ', localReplay);
+        setTimeout(() => {
+          this.load(`${localReplay}.wc3v`);
+        });
+      }
+    }
+  }
+
+  setupControls () {
+    const self = this;
+    const menuPanel = document.getElementById("panel");
+    const menuTarget = document.getElementById("menu-target");
+
+    const searchButton = document.getElementById("search-submit");
+
+    menuTarget.addEventListener("click", (e) => {
+      console.log("clicked target");
+
+      menuPanel.style.display = (menuPanel.style.display === "none") ? "block" : "none";
+    });
+
+    searchButton.addEventListener("click", (e) => {
+      const searchText = document.getElementById("main-search").value;
+
+      if (searchText && searchText.trim().length > 0) {
+        const replayId = searchText.trim();
+        const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
+        const url = `http://${window.location.hostname}${urlPath}`;
+
+        window.location.href = url;
+      }
+    });
+
+    const proGames = [
+      {
+        id: "happy-vs-grubby",
+        map: "Concealed Hills",
+        players: [["happy"], ["grubby"]]
+      },
+      {
+        id: "grubby-vs-thorzain",
+        map: "Concealed Hills",
+        players: [["grubby"], ["thorzain"]]
+      },
+      {
+        id: "grubby-vs-thorzain",
+        map: "Concealed Hills",
+        players: [["grubby"], ["thorzain"]]
+      },
+      {
+        id: "happy-vs-lucifer",
+        map: "Echo Isles",
+        players: [["happy"], ["lucifer"]]
+      },
+      {
+        id: "foggy-vs-cash-2",
+        map: "Echo Isles",
+        players: [["foggy"], ["cash"]]
+      },
+      {
+        id: "terenas-stand-lv_sonik-vs-tgw",
+        map: "Terenas Stand",
+        players: [["sonik"], ["tgw"]]
+      },
+      {
+        id: "terenas-stand-lv_sonik-vs-tgw",
+        map: "2v2-synergy",
+        players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
+      }
+    ];
+
+    const proGamesTable = document.getElementById("pro-replays-table");
+
+    proGames.forEach((game) => {
+      const row = document.createElement("tr");
+
+      const playersStr = game.players.map(team => {
+        return team.join(", ");
+      }).join(" vs ");
+
+      const replayId = game.id;
+      const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
+      const url = `http://${window.location.hostname}${urlPath}`;
+
+      row.innerHTML = `
+       <td>${playersStr}</td>
+       <td>${game.map}</td>
+       <td><a href="${url}">link</a></td>
+      `;
+
+      proGamesTable.append(row);
+    });
   }
 
   reset () {
@@ -42,6 +152,8 @@ const Wc3vViewer = class {
     this.utilityCtx = null;
 
     this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
+
+    this.replayId = null;
 
     this.mapData = null;
     this.mapImage = null;
@@ -60,13 +172,15 @@ const Wc3vViewer = class {
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
 
+    this.isDev = (window.location.hostname === "10.0.0.81");
+
     this.players = [];
   }
 
-  load () {
+  load (mapId = null) {
     const self = this;
-    const rawFile = document.getElementById(domMap.mapInputFieldId).value;
-    const filename = rawFile.replace('.wc3v', '.w3g.wc3v');
+    const rawFile = mapId || document.getElementById(domMap.mapInputFieldId).value;
+    const filename = mapId || rawFile.replace('.wc3v', '.w3g.wc3v');
 
     this.pause();
     this.reset();
@@ -75,9 +189,17 @@ const Wc3vViewer = class {
 
     this.loadFile(filename, (res) => {
       try {
+
+        if (res.target.status >= 300) {
+          self.showUploadContents("upload-error");
+
+          return;
+        }
+
         const { target } = res;
         const jsonData = JSON.parse(target.responseText);
         
+        self.replayId = filename;
         self.mapData = jsonData;
         self.setup();
       } catch (e) {
@@ -96,7 +218,7 @@ const Wc3vViewer = class {
   claimUploadTicket () {
     const self = this;
     const req = new XMLHttpRequest();
-    const port = window.location.hostname === "10.0.0.81" ? ":8085" : "";
+    const port = this.isDev ? ":8085" : "";
     const url = `http://${window.location.hostname}${port}/ticket`;
 
     req.addEventListener("load", (res) => {
@@ -115,7 +237,7 @@ const Wc3vViewer = class {
         self.showUpload(ticket.id);
       } catch (err) {
         console.log("ticket error: ", err);
-        self.showUploadContents("upload-error")
+        self.showUploadContents("upload-error");
       }
     });
 
@@ -129,12 +251,40 @@ const Wc3vViewer = class {
     uploadWrapperEl.style.display = isOpen ? "block" : "none";
   }
 
+  toggleSidePanel (id, isOpen) {
+    const el = document.getElementById(id);
+
+    el.style.display = el.style.display === "block" ? "none" : "block";
+  }
+
+  showSidePanel (id) {
+    this.hideSidePanels();
+
+    const el = document.getElementById(id);
+
+    el.style.display = "block";
+  }
+
+  hideSidePanels () {
+    const panels = [
+      "pro-replays",
+      "about-wc3v"
+    ];
+
+    panels.forEach(id => {
+      const el = document.getElementById(id);
+
+      el.style.display = "none";
+    });
+  }
+
   hideUploadContents () {
     const uploadContentIds = [
       "upload-finished",
       "upload-error",
       "upload-no-ticket",
-      "upload-progress-loader"
+      "upload-progress-loader",
+      "upload-not-found"
     ];
 
     uploadContentIds.forEach(id => {
@@ -151,6 +301,15 @@ const Wc3vViewer = class {
     document.getElementById(which).style.display = "flex";
   }
 
+  showUploadLink (replayId) {
+    const el = document.getElementById("upload-finished-text");
+
+    const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
+    const url = `http://${window.location.hostname}${urlPath}`;
+
+    el.innerHTML = `<a href="${url}">view replay</a>`;
+  }
+
   showUpload (ticketId) {
     const self = this;
     const inputFile = document.createElement("input");
@@ -164,7 +323,7 @@ const Wc3vViewer = class {
 
       self.showUploadContents("upload-progress-loader");
 
-      const port = window.location.hostname === "10.0.0.81" ? ":8080" : "";
+      const port = window.location.hostname === "10.0.0.81" ? ":8085" : "";
       const req = new XMLHttpRequest();
       req.open('POST', `http://${window.location.hostname}${port}/upload`, true);
       
@@ -174,10 +333,33 @@ const Wc3vViewer = class {
       
       req.addEventListener("load", (res) => {
         const { target } = res;
-        const jsonData = JSON.parse(target.responseText);
 
-        console.log("upload data: ", jsonData);
+        if (target.status >= 300) {
+          console.log("upload error: ", target.status, target.statusText);
+          
+          switch (target.status) {
+            case 404:
+              self.showUploadContents("upload-not-found");
+            break;
+
+            default:
+              self.showUploadContents("upload-error");
+            break;
+          }
+
+          return;
+        }
+
+        const jsonData = JSON.parse(target.responseText);
+        const { replayId, timer } = jsonData;
+
         self.showUploadContents("upload-finished");
+        self.showUploadLink(replayId);
+      });
+
+      req.addEventListener('error', (err) => {
+        console.log("req error: ", err);
+        showUploadContents("upload-error");
       });
 
       req.send(inputFile.files[0]);
@@ -189,7 +371,7 @@ const Wc3vViewer = class {
 
     req.addEventListener("load", cb);
 
-    const port = window.location.hostname === "localhost" ? ":8080" : "";
+    const port = this.isDev ? ":8080" : "";
     const url = `http://${window.location.hostname}${port}/replays/${filename}`;
 
     req.open("GET", url);
@@ -219,6 +401,8 @@ const Wc3vViewer = class {
         const { bounds } = this.mapInfo;
         const { map, camera } = bounds;
 
+        console.log("Map info: ", this.mapInfo);
+
         /*
           bound index selection - 
           not all camera grids are centered in the map grid,
@@ -240,6 +424,9 @@ const Wc3vViewer = class {
         self.canvas.width = mapWidth;
         self.canvas.height = mapHeight;
 
+        self.canvas.style.width = mapWidth + "px";
+        self.canvas.style.height = mapHeight + "px";
+        
         self.playerCanvas.width = mapWidth;
         self.playerCanvas.height = mapHeight;
 
@@ -429,6 +616,8 @@ const Wc3vViewer = class {
     this.utilityCtx = this.utilityCanvas.getContext("2d");
 
     this.megaPlayButton = document.getElementById("mega-play-button");
+
+    document.getElementById("wc3v-title").innerHTML = `current replay: ${this.replayId}`;
 
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);

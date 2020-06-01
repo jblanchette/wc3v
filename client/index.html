@@ -15,6 +15,13 @@
     
     <script src="/js/app.js?v=0.15"></script>
 
+    <script>
+      document.addEventListener('DOMContentLoaded', (event) => {
+          console.log("dom loaded, bootstrapping");
+          wc3v.bootstrap();   
+      });
+    </script>
+
     <style type="text/css">
       @import "/css/main.css?v=0.15";  
     </style>
@@ -30,38 +37,16 @@
 
     <div id="app">
       <div id="menu">
-        <div class="menu-item">
-          <button class="menu-item-button" onClick="wc3v.load()">load wc3v replay</button>
-        </div>
-        <div class="menu-item">
-          <select id="input-map-file">
-            <option disabled>Concealed Hill</option>            
-            <option>happy-vs-grubby.wc3v</option>
-            <option>grubby-vs-thorzain.wc3v</option>
-            <option>cash-vs-foggy.wc3v</option>
-            <option>test-ch-movement.wc3v</option>
-            <option disabled>Echo Isles</option>
-            <option>happy-vs-lucifer.wc3v</option>
-            <option>foggy-vs-cash-2.wc3v</option>
-            <option>bnet-ud-vs-orc-2.wc3v</option>
-            <option disabled>Northern Isles</option>
-            <option>bnet-alch-vs-kotg.wc3v</option>
-            <option>bnet-alch-vs-warden.wc3v</option>
-            <option disabled>Terenas Stand LV</option>
-            <option>terenas-stand-lv_sonik-vs-tgw.wc3v</option>
-            <option disabled>Synergy Paved (2v2)</option>
-            <option>2v2-synergy.wc3v</option>
-            <option disabled>Reforged Replays</option>
-            <option>bnet-reforged.wc3v</option>
-          </select>
+        <div class="menu-item" id="menu-target">
+          <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg height="32px" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
         </div>
 
         <div class="menu-item">
           <span class="wc3v-logo">WC3Viewer</span>
         </div>
 
-        <div class="menu-item" style="display: none !important">
-          <button class="menu-item-button" onClick="wc3v.claimUploadTicket()">upload WC3 replay</button>
+        <div class="menu-item">
+          <span id="wc3v-title"></span>
         </div>
       </div>
 
@@ -74,6 +59,7 @@
 
           <div id="upload-finished">
             <div>Replay uploaded succesfully</div>
+            <div id="upload-finished-text"></div>
           </div>
 
           <div id="upload-no-ticket">
@@ -83,7 +69,48 @@
           <div id="upload-error">
             <div>An unexpected error occurred when uploading the replay, sorry.</div>
           </div>
+
+          <div id="upload-not-found">
+            <div>An error occured when viewing the replay, sorry.</div>
+          </div>
         </div>
+      </div>
+
+      <div id="panel">
+        <div id="panel-search">
+          <input type="text" id="main-search" placeholder="enter replay id here">
+          <button id="search-submit">search</button>
+        </div>
+
+        <ul>
+          <li onClick="wc3v.claimUploadTicket()">Upload New Replay</li>
+          <li onClick="wc3v.toggleSidePanel('pro-replays')">Browse Pro Replays</li>
+          <li onClick="wc3v.toggleSidePanel('about-wc3v')">About WC3v</li>
+        </ul>
+      </div>
+
+      <div id="about-wc3v" class="side-panel">
+        <h3>About WC3v</h3>
+
+        <div>Coming Soon</div>
+      </div>
+
+      <div id="pro-replays" class="side-panel">
+        <h3>Pro Replays</h3>
+
+        <table id="pro-replays-table">
+          <th>Players</th>
+          <th>Map</th>
+          <th>Replay Link</th>
+
+          <tr>
+            <td>
+              Happy vs Grubby
+            </td>
+            <td>Concealed Hills</td>
+            <td><a href="http://wc3v.com/replay/happy-vs-grubby">link</a></td>
+          </tr>
+        </table>
       </div>
 
       <div id="content">

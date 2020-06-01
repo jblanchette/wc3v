@@ -31,12 +31,15 @@ Parser.on('timeslotblock', (timeSlotBlock) => {
 });
 
 const parseReplays = (options) => {
-  const { paths, jsonPadding } = options;
+  const { paths, hashes, jsonPadding, isProduction } = options;
 
-  paths.forEach(file => {
+  if (isProduction) {
+    logManager.setTestMode(true);
+  }
+
+  const results = paths.map((file, ind) => {
     playerManager = new PlayerManager();
     logManager.setLogger(file, true);
-
     globalTime = 0;
     actionCount = 0;
 
@@ -45,8 +48,8 @@ const parseReplays = (options) => {
       let players = playerManager.players;
 
       // write our output wc3v file
-      utils.writeOutput(file, replay, players, jsonPadding);
-
+      const replayHash = hashes[ind] || null;
+      utils.writeOutput(file, replayHash, replay, players, jsonPadding);
 
       // re-enable all logging
       logManager.setDisabledState(false);
@@ -92,16 +95,20 @@ const parseReplays = (options) => {
       if (options.inTestMode) {
         console.log("TEST FAILED: ", file);
         console.log(e);
+
+        return { passed: false, error: e.message };
       } else {
         console.log("error parsing replay: ", file);
-        console.log("error: ", e);
+        
+        throw e;
       }
 
-      return;
+      return { passed: true, error: null };
     }
   });
 
   console.logger("wc3v completed.  enjoy!");
+  return results;
 };
 
 const main = () => {

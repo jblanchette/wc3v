@@ -163,7 +163,7 @@ const uuidv4 = () => {
 // write wc3v output to file
 ////
 
-const writeOutput = (filename, replay, players, jsonPadding = 0) => {
+const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
 
   const savedPlayers = replay.players;
 
@@ -210,7 +210,8 @@ const writeOutput = (filename, replay, players, jsonPadding = 0) => {
   };
 
   try {
-  	const outputPath = `./client/replays/${path.basename(filename)}.wc3v`;
+    const baseFile = fileHash || path.basename(filename);
+  	const outputPath = `${__dirname}\\..\\client\\replays\\${baseFile}.wc3v`;
     fs.writeFileSync(outputPath, JSON.stringify(output, null, jsonPadding));
     console.logger("created wc3v file: ", outputPath);
 
@@ -227,6 +228,10 @@ const writeOutput = (filename, replay, players, jsonPadding = 0) => {
       .pipe(outputFile)
       .on('error', () => {
         console.logger("file write error for: ", outputPath);
+      })
+      .on('finish', () => {
+        console.logger("erasing non zipped wc3v file");
+        fs.unlinkSync(outputPath);
       });
 
   } catch (e) {
@@ -263,6 +268,10 @@ const readCliArgs = (argv) => {
         options.jsonPadding = 4;
       break;
 
+      case "prod":
+        logManager.setTestMode();
+      break;
+
       case "test":
         config.debugPlayer = null; // hack to turn off all logs for now
         logManager.setTestMode();
@@ -290,7 +299,7 @@ const readCliArgs = (argv) => {
         options.inTestMode = true;
         options.paths = testMaps.map(mapName => {
           return `./replays/${mapName}.w3g`;
-        })
+        });
       break;
 		};
 	});
