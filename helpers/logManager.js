@@ -19,6 +19,8 @@ const Logger = class {
     this.logStream = null;
 
     console.logger = (...args) => {
+      return;
+
       if (logDisabled || testMode || productionMode) {
         return;
       }
@@ -42,6 +44,8 @@ const Logger = class {
   }
 
   init () {
+    return;
+    
     try {
       // remove the old log file
       fs.unlinkSync(this.outputFile);
