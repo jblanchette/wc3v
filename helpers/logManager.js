@@ -12,19 +12,14 @@ let logDisabled = false,
 const Logger = class {
   constructor (logFile) {
     const self = this;
-    const outputFile = `${__dirname}/../client/logs/${path.basename(logFile)}.log`;
+    
+    this.outputFile = `${__dirname}/../client/logs/${path.basename(logFile)}.log`;
 
     this.logDisabled = false;
-
-    try {
-      // remove the old log file
-      fs.unlinkSync(outputFile);
-    } catch (err) { /* no op */ }
-
-    this.logStream = productionMode ? fs.createWriteStream(outputFile, { flags: 'a' }) : {};
+    this.logStream = null;
 
     console.logger = (...args) => {
-      if (logDisabled || testMode) {
+      if (logDisabled || testMode || productionMode) {
         return;
       }
 
@@ -38,9 +33,7 @@ const Logger = class {
         return arg
       });
 
-      if (!productionMode) {
-        this.logStream.write(msg.join(' ') + '\n');
-      }
+      this.logStream.write(msg.join(' ') + '\n');
 
       if (logToConsole) {
         console.log(args);
@@ -48,6 +41,14 @@ const Logger = class {
     }
   }
 
+  init () {
+    try {
+      // remove the old log file
+      fs.unlinkSync(this.outputFile);
+    } catch (err) { /* no op */ }
+
+    this.logStream = fs.createWriteStream(this.outputFile, { flags: 'a' });
+  }
 
 };
 
