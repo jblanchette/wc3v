@@ -6,7 +6,8 @@ const config = require("../config/config");
 const { debugPlayer, logToConsole } = config;
 
 let logDisabled = false,
-    testMode = false;
+    testMode = false,
+    productionMode = false;
 
 const Logger = class {
   constructor (logFile) {
@@ -20,7 +21,7 @@ const Logger = class {
       fs.unlinkSync(outputFile);
     } catch (err) { /* no op */ }
 
-    this.logStream =  fs.createWriteStream(outputFile, { flags: 'a' })
+    this.logStream = productionMode ? fs.createWriteStream(outputFile, { flags: 'a' }) : {};
 
     console.logger = (...args) => {
       if (logDisabled || testMode) {
@@ -37,7 +38,9 @@ const Logger = class {
         return arg
       });
 
-      this.logStream.write(msg.join(' ') + '\n');
+      if (!productionMode) {
+        this.logStream.write(msg.join(' ') + '\n');
+      }
 
       if (logToConsole) {
         console.log(args);
@@ -64,9 +67,14 @@ const setTestMode = () => {
   testMode = true;
 }
 
+const setProductionMode () => {
+  productionMode = true;
+};
+
 module.exports = {
-  setLogger: setLogger,
-  getLogger: getLogger,
-  setDisabledState: setDisabledState,
-  setTestMode: setTestMode
+  setLogger,
+  getLogger,
+  setDisabledState,
+  setTestMode,
+  setProductionMode
 };
