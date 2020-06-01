@@ -35,6 +35,7 @@ const parseReplays = (options) => {
 
   if (isProduction) {
     logManager.setTestMode(true);
+    logManager.setProductionMode(true);
   }
 
   const results = paths.map((file, ind) => {
