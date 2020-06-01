@@ -42,8 +42,8 @@ const parseReplays = (options) => {
     playerManager = new PlayerManager();
 
     if (!isProduction) {
-      logManager.getLogger().init();
       logManager.setLogger(file, true);
+      logManager.getLogger().init();
     }
     
     globalTime = 0;
