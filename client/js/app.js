@@ -347,6 +347,10 @@ const Wc3vViewer = class {
               self.showUploadContents("upload-not-found");
             break;
 
+            case 406:
+              self.showUploadContents("upload-not-supported");
+            break;
+
             default:
               self.showUploadContents("upload-error");
             break;
