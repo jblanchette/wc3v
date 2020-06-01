@@ -42,6 +42,7 @@ const parseReplays = (options) => {
     playerManager = new PlayerManager();
 
     if (!isProduction) {
+      console.log("***** NOT IN PRODUCTION MODE, MAKING LOGS?");
       logManager.setLogger(file, true);
       logManager.getLogger().init();
     }
