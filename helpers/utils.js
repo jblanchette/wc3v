@@ -211,7 +211,7 @@ const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
 
   try {
     const baseFile = fileHash || path.basename(filename);
-  	const outputPath = `${__dirname}\\..\\client\\replays\\${baseFile}.wc3v`;
+  	const outputPath = `${__dirname}/../client/replays/${baseFile}.wc3v`;
     fs.writeFileSync(outputPath, JSON.stringify(output, null, jsonPadding));
     console.logger("created wc3v file: ", outputPath);
 
