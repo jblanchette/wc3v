@@ -31,7 +31,9 @@ Parser.on('timeslotblock', (timeSlotBlock) => {
 });
 
 const parseReplays = (options) => {
-  const { paths, hashes, jsonPadding, isProduction } = options;
+  const { paths, hashes, jsonPadding } = options;
+
+  const isProduction = true
 
   if (isProduction) {
     logManager.setTestMode(true);
