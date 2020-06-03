@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(6)gnollwood.w3x': {
+      'name': 'GnollWood',
+      'bounds': {
+        'camera': [
+          [ -7424,  7936 ],
+          [  7680, -8192 ]
+        ],
+        'map': [
+          [ -9984,   10496 ],
+          [  9984,  -10496 ]
+        ]
+      }
+    },
     '(2)concealedhill.w3x': {
       'name': 'ConcealedHill',
       'bounds': {
