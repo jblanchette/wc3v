@@ -31,9 +31,7 @@ Parser.on('timeslotblock', (timeSlotBlock) => {
 });
 
 const parseReplays = (options) => {
-  const { paths, hashes, jsonPadding } = options;
-
-  const isProduction = true
+  const { paths, hashes, jsonPadding, isProduction } = options;
 
   if (isProduction) {
     logManager.setTestMode(true);
@@ -57,7 +55,7 @@ const parseReplays = (options) => {
       let players = playerManager.players;
 
       // write our output wc3v file
-      const replayHash = hashes[ind] || null;
+      const replayHash = hashes && hashes[ind] || null;
       utils.writeOutput(file, replayHash, replay, players, jsonPadding);
 
       // re-enable all logging
@@ -110,6 +108,7 @@ const parseReplays = (options) => {
         return { passed: false, error: e.message };
       } else {
         console.log("error parsing replay: ", file);
+        console.log(e);
         
         return { passed: false, error: e.message };
       }
@@ -131,3 +130,5 @@ const main = () => {
 module.exports = {
   parseReplays
 };
+
+main();

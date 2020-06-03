@@ -1204,6 +1204,14 @@ const abilityActions = {
 };
 
 const mapStartPositions = {
+  '(6)gnollwood.w3x': {
+    '0': { x:  576.0,  y: 6528.0 },
+    '1': { x: -6400.0, y: 3520.0 },
+    '2': { x: -6976.0, y: -3328.0 },
+    '3': { x:  192.0,  y: -7040.0 },
+    '4': { x:  6720.0, y: -2944.0 },
+    '5': { x:  7360.0, y: 3328.0 }
+  },
   '(2)bootybay.w3m': {
       '0': { x: -5184.0, y: 2944.0 },
       '1': { x:  4672.0, y: 2944.0 }
@@ -1247,6 +1255,23 @@ const commonMapNames = {
 };
 
 const mapDataByFile = {
+  '(6)gnollwood.w3x': {
+    'name': 'GnollWood',
+    'bounds': {
+      'camera': [
+        [ -7424,  7936 ],
+        [  7680, -8192 ]
+      ],
+      'map': [
+        [ -9984,   10496 ],
+        [  9984,  -10496 ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 160, 160 ],
+      'playable': [ 128, 128 ]
+    }
+  },
   '(2)concealedhill.w3x': {
     'name': 'ConcealedHill',
     'bounds': {
