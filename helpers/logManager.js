@@ -47,7 +47,6 @@ const Logger = class {
       fs.unlinkSync(this.outputFile);
     } catch (err) { /* no op */ }
 
-    console.log("***** ABOUT TO MAKE LOG STREAM???? ******");
     this.logStream = fs.createWriteStream(this.outputFile, { flags: 'a' });
   }
 

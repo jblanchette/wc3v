@@ -43,7 +43,6 @@ const parseReplays = (options) => {
     logManager.setLogger(file, true);
 
     if (!isProduction) {
-      console.log("***** NOT IN PRODUCTION MODE, MAKING LOGS?");  
       logManager.getLogger().init();
     }
     
