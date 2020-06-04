@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(6)upperkingdom.w3x': {
+      'name': 'UpperKingdom',
+      'bounds': {
+        'camera': [
+          [ -7936,  7936 ],
+          [  7936, -8448 ]
+        ],
+        'map': [
+          [ -10240,   10240 ],
+          [  10240,  -10240 ]
+        ]
+      }
+    },
     '(6)gnollwood.w3x': {
       'name': 'GnollWood',
       'bounds': {
