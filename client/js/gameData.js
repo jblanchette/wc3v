@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(8)battleground_lv.w3x': {
+      'name': 'Battleground',
+      'bounds': {
+        'camera': [
+          [ -7680,  7680 ],
+          [  7808, -8064 ]
+        ],
+        'map': [
+          [ -10240,   10240 ],
+          [  10240,  -10240 ]
+        ]
+      }
+    },
     '(4)twistedmeadows.w3x': {
       'name': 'TwistedMeadows',
       'bounds': {

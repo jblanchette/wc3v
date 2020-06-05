@@ -48,6 +48,8 @@ const Wc3vViewer = class {
       const params = new URLSearchParams(window.location.search);
       const localReplay = params.get('r');
 
+      console.log("Val: ", localReplay);
+
       if (localReplay) {
         console.log('loading local replay: ', localReplay);
         setTimeout(() => {
