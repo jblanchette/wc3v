@@ -129,3 +129,5 @@ const main = () => {
 module.exports = {
   parseReplays
 };
+
+main();

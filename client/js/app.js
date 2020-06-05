@@ -46,12 +46,12 @@ const Wc3vViewer = class {
       }
 
       const params = new URLSearchParams(window.location.search);
-      const localReplay = encodeURI(params.get('r'));
+      const localReplay = params.get('r');
 
       if (localReplay) {
         console.log('loading local replay: ', localReplay);
         setTimeout(() => {
-          this.load(`${localReplay}.wc3v`);
+          this.load(`${encodeURI(localReplay)}.wc3v`);
         });
       }
     }
