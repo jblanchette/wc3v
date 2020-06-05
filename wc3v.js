@@ -130,4 +130,8 @@ module.exports = {
   parseReplays
 };
 
-main();
+const isCLI = !module.parent;
+
+if (isCLI) {
+  main();
+}
