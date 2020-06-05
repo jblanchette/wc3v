@@ -1204,6 +1204,16 @@ const abilityActions = {
 };
 
 const mapStartPositions = {
+  '(8)battleground_lv.w3x': {
+    '0': { x: -4224.0, y: -5696.0 },
+    '1': { x:  -576.0, y: -5760.0 },
+    '2': { x:  -832.0, y:  6912.0 },
+    '3': { x:  6528.0, y: -5312.0 },
+    '4': { x:  6720.0, y:  -384.0 },
+    '5': { x:  5696.0, y:  4352.0 },
+    '6': { x: -5248.0, y:  4800.0 },
+    '7': { x: -6848.0, y:  -512.0 }
+  },
   '(4)twistedmeadows.w3x': {
     '0': { x: -4608.0, y: -3904.0 },
     '1': { x: -3584.0, y:  4480.0 },
@@ -1269,6 +1279,23 @@ const commonMapNames = {
 };
 
 const mapDataByFile = {
+  '(8)battleground_lv.w3x': {
+    'name': 'Battleground',
+    'bounds': {
+      'camera': [
+        [ -7680,  7680 ],
+        [  7808, -8064 ]
+      ],
+      'map': [
+        [ -10240,   10240 ],
+        [  10240,  -10240 ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 160, 160 ],
+      'playable': [ 128, 128 ]
+    }
+  },
   '(4)twistedmeadows.w3x': {
     'name': 'TwistedMeadows',
     'bounds': {
@@ -1282,8 +1309,8 @@ const mapDataByFile = {
       ]
     },
     'gridSize': {
-      'full': [ 124, 124 ],
-      'playable': [ 160, 160 ]
+      'full': [ 160, 160 ],
+      'playable': [ 124, 124 ]
     }
   },
   '(6)upperkingdom.w3x': {
