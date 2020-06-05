@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(4)twistedmeadows.w3x': {
+      'name': 'TwistedMeadows',
+      'bounds': {
+        'camera': [
+          [ -7424,  7424 ],
+          [  7424, -7936 ]
+        ],
+        'map': [
+          [ -10240,   10240 ],
+          [  10240,  -10240 ]
+        ]
+      }
+    },
     '(6)upperkingdom.w3x': {
       'name': 'UpperKingdom',
       'bounds': {

@@ -1204,6 +1204,12 @@ const abilityActions = {
 };
 
 const mapStartPositions = {
+  '(4)twistedmeadows.w3x': {
+    '0': { x: -4608.0, y: -3904.0 },
+    '1': { x: -3584.0, y:  4480.0 },
+    '2': { x:  4672.0, y:  3456.0 },
+    '3': { x:  3840.0, y: -5056.0 }
+  },
   '(6)upperkingdom.w3x': {
     '0': { x: -6784.0,  y:  320.0  },
     '1': { x: -4224.0,  y: -4416.0 },
@@ -1263,6 +1269,23 @@ const commonMapNames = {
 };
 
 const mapDataByFile = {
+  '(4)twistedmeadows.w3x': {
+    'name': 'TwistedMeadows',
+    'bounds': {
+      'camera': [
+        [ -7424,  7424 ],
+        [  7424, -7936 ]
+      ],
+      'map': [
+        [ -10240,   10240 ],
+        [  10240,  -10240 ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 124, 124 ],
+      'playable': [ 160, 160 ]
+    }
+  },
   '(6)upperkingdom.w3x': {
     'name': 'UpperKingdom',
     'bounds': {
