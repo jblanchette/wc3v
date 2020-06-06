@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(2)lastrefuge.w3x': {
+      'name': 'LastRefuge',
+      'bounds': {
+        'camera': [
+          [ -4864,  4864 ],
+          [  4864, -5376 ]
+        ],
+        'map': [
+          [ -6144,   6144 ],
+          [  6144,  -6144 ]
+        ]
+      }
+    },
     '(2)amazonia.w3x': {
       'name': 'Amazonia',
       'bounds': {
