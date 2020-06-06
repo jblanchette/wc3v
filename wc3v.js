@@ -50,7 +50,7 @@ const parseReplays = (options) => {
     actionCount = 0;
 
     try {
-      const replay = Parser.parse(file, 'netease');
+      const replay = Parser.parse(file);
       let players = playerManager.players;
 
       // write our output wc3v file
