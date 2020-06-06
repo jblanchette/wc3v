@@ -1271,6 +1271,10 @@ const mapStartPositions = {
     '5': { x: -6592, y:  896  },
     '6': { x:  7168, y:  896  },
     '7': { x:  7232, y: -1024 }
+  },
+  '(2)amazonia.w3x': {
+   0: { x:  3328.0, y: 3072.0 },
+   1: { x: -3392.0, y: -584.0 }
   }
 };
 
@@ -1279,6 +1283,23 @@ const commonMapNames = {
 };
 
 const mapDataByFile = {
+  '(2)amazonia.w3x': {
+    'name': 'Amazonia',
+    'bounds': {
+      'camera': [
+        [ -4608,  4608 ],
+        [  4608, -5120 ]
+      ],
+      'map': [
+        [ -6144,   6144 ],
+        [  6144,  -6144 ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 96, 96 ],
+      'playable': [ 80, 80 ]
+    }
+  },
   '(8)battleground_lv.w3x': {
     'name': 'Battleground',
     'bounds': {

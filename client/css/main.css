@@ -145,6 +145,15 @@ html, body {
   width: 100%;
 }
 
+.side-panel h4 {
+  padding: 0.25rem;
+}
+
+.side-panel p {
+  padding: 0.25rem;
+  width: 325px;
+}
+
 .side-panel td {
   padding: 0.25rem;
   border-bottom: 1px solid #C3C3C3;

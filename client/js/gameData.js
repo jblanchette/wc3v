@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(2)amazonia.w3x': {
+      'name': 'Amazonia',
+      'bounds': {
+        'camera': [
+          [ -4608,  4608 ],
+          [  4608, -5120 ]
+        ],
+        'map': [
+          [ -6144,   6144 ],
+          [  6144,  -6144 ]
+        ]
+      }
+    },
     '(8)battleground_lv.w3x': {
       'name': 'Battleground',
       'bounds': {
