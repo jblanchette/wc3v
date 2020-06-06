@@ -1275,6 +1275,10 @@ const mapStartPositions = {
   '(2)amazonia.w3x': {
    0: { x:  3328.0, y: 3072.0 },
    1: { x: -3392.0, y: -584.0 }
+  },
+  '(2)lastrefuge.w3x': {
+    '0': { x: -3840.0, y: -3968.0 },
+    '1': { x:  3840.0, y:  3264.0 }
   }
 };
 
@@ -1283,6 +1287,23 @@ const commonMapNames = {
 };
 
 const mapDataByFile = {
+  '(2)lastrefuge.w3x': {
+    'name': 'LastRefuge',
+    'bounds': {
+      'camera': [
+        [ -4864,  4864 ],
+        [  4864, -5376 ]
+      ],
+      'map': [
+        [ -6144,   6144 ],
+        [  6144,  -6144 ]
+      ]
+    },
+    'gridSize': {
+      'full': [ 96, 96 ],
+      'playable': [ 84, 84 ]
+    }
+  },
   '(2)amazonia.w3x': {
     'name': 'Amazonia',
     'bounds': {
