@@ -32,14 +32,11 @@ const Wc3vViewer = class {
     const hrefPath = window.location.href;
     const re = new RegExp('replay/(.*)', 'i');
 
-    const m = re.exec(hrefPath);
-    if (m) {
-      console.log("initial replay: ", encodeURI(m[1]));
-
+    const match = re.exec(hrefPath);
+    if (match) {
       setTimeout(() => {
-        this.load(`${encodeURI(m[1])}.wc3v`);
+        this.load(`${encodeURI(match[1])}.wc3v`);
       });
-
     } else {
       if (!this.isDev) {
         return;
@@ -47,8 +44,6 @@ const Wc3vViewer = class {
 
       const params = new URLSearchParams(window.location.search);
       const localReplay = params.get('r');
-
-      console.log("Val: ", localReplay);
 
       if (localReplay) {
         console.log('loading local replay: ', localReplay);
@@ -67,8 +62,6 @@ const Wc3vViewer = class {
     const searchButton = document.getElementById("search-submit");
 
     menuTarget.addEventListener("click", (e) => {
-      console.log("clicked target");
-
       menuPanel.style.display = (menuPanel.style.display === "none") ? "block" : "none";
     });
 
