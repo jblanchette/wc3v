@@ -35,7 +35,9 @@ html, body {
 }
 
 .menu-item:last-child {
-  margin-left: 0.5rem;
+  margin-left: auto;
+  margin-right: 0.25rem;
+  float: right;
 }
 
 .menu-item select {
@@ -45,6 +47,10 @@ html, body {
 .menu-item-button {
   height: 26px;
   font: 14px Verdana;
+}
+
+.spacer {
+  margin-left: 0.25rem;
 }
 
 #panel {

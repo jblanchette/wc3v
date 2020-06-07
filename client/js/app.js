@@ -61,6 +61,9 @@ const Wc3vViewer = class {
 
     const searchButton = document.getElementById("search-submit");
 
+    // call out to get wc3v
+    this.loadInfo();
+
     menuTarget.addEventListener("click", (e) => {
       menuPanel.style.display = (menuPanel.style.display === "none") ? "block" : "none";
     });
@@ -368,6 +371,31 @@ const Wc3vViewer = class {
 
       req.send(inputFile.files[0]);
     };
+  }
+
+  loadInfo () {
+    const req = new XMLHttpRequest();
+
+    req.addEventListener("load", (res) => {
+      const { target } = res;
+
+      try {
+        if (target.status === 200) {
+          const data = JSON.parse(target.responseText);
+
+          const titleCount = document.getElementById("wc3v-title-count");
+          titleCount.innerHTML = `Replays Uploaded: ${data.replayCount}`;
+        }
+      } catch (e) {
+        console.log("error loading wc3v info stats");
+      }
+    });
+
+    const port = this.isDev ? ":8085" : "";
+    const url = `http://${window.location.hostname}${port}/info`;
+
+    req.open("GET", url);
+    req.send();
   }
 
   loadFile (filename, cb) {
