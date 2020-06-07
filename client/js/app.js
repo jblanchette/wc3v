@@ -109,7 +109,7 @@ const Wc3vViewer = class {
         players: [["sonik"], ["tgw"]]
       },
       {
-        id: "terenas-stand-lv_sonik-vs-tgw",
+        id: "2v2-synergy",
         map: "2v2-synergy",
         players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
       }
@@ -624,7 +624,7 @@ const Wc3vViewer = class {
     document.getElementById("wc3v-title").innerHTML = `current replay: ${this.replayId}`;
 
     // player-status-toggles + player boxes
-    this.playerStatusCanvas.height = 50 + (this.players.length * 140);
+    this.playerStatusCanvas.height = Math.min(50 + (this.players.length * 140), 650);
 
     this.playerStatusCtx.lineWidth = 1;
     this.playerStatusCtx.fillStyle = "#29373E";
