@@ -368,16 +368,23 @@ html, body {
 
 /* sub-canvas element */
 #player-status-canvas {
+  transform: scaleX(-1);
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
   background-color: #29373E;
   border-top-left-radius: 0.75rem;
   border-bottom-left-radius: 0.75rem;
   border-right: 0;
+}
+
+#player-status-wrapper {
+  transform: scaleX(-1);
   position: absolute;
   top: 20px;
   left: -190px;
   z-index: 2;
+  overflow-y: auto;
+  max-height: 650px;
 }
 
 .info-wrapper {
