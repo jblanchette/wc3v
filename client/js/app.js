@@ -721,7 +721,7 @@ const Wc3vViewer = class {
 
     Object.keys(this.mapData.players).forEach((playerId, index) => {
       const { startingPosition, units, selectionStream } = this.mapData.players[playerId];
-      const { race, name } = this.mapData.replay.players[playerId];
+      const { raceDetected, name } = this.mapData.replay.players[playerId];
 
       const player = new ClientPlayer(
         index,
@@ -729,7 +729,7 @@ const Wc3vViewer = class {
         startingPosition, 
         units, 
         name,
-        race,
+        raceDetected,
         selectionStream,
         colorMap[index]
       );
