@@ -165,6 +165,8 @@ const uuidv4 = () => {
 
 const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
 
+  console.logger("JDEBUG writeOutput players: ", Object.keys(replay.players));
+
   const savedPlayers = replay.players;
 
   delete replay.players;
@@ -181,6 +183,8 @@ const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
     	const player = players[playerId];
 
       if (!player.units.length) {
+        console.logger("no units for player: ", playerId);
+
         return acc;
       }
 
@@ -208,6 +212,8 @@ const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
     }, {}),
     replay: replay
   };
+
+  console.logger("JDEBUGG writeOutput2 output players: ", Object.keys(output.players));
 
   try {
     const baseFile = fileHash || path.basename(filename);
