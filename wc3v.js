@@ -51,7 +51,17 @@ const parseReplays = (options) => {
     actionCount = 0;
 
     try {
-      const replay = Parser.parse(file);
+
+      let replay;
+
+      try {
+        replay = Parser.parse(file);
+      } catch (e) {
+        console.logger("trying backup replay type");
+        replay = Parser.parse(file, 'netease');
+      }
+
+
       let players = playerManager.players;
 
       // write our output wc3v file
@@ -117,7 +127,6 @@ const parseReplays = (options) => {
     }
   });
 
-  console.logger("wc3v completed.  enjoy!");
   return results;
 };
 
