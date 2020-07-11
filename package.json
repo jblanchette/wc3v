@@ -16,7 +16,11 @@
 		"email": "jeff.blanchette5@gmail.com"
 	},
 	"contributors": [],
-	"dependencies": {},
+	"dependencies": {
+		"d3": "^5.12.0",
+		"rbush": "^3.0.1",
+		"w3gjs": "^1.6.2"
+	},
 	"license": "GNU v3.0",
 	"readmeFilename": "README.md"
 }
