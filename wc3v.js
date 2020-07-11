@@ -57,7 +57,7 @@ const parseReplays = (options) => {
       try {
         replay = Parser.parse(file);
       } catch (e) {
-        console.logger("trying backup replay type");
+        console.log("trying backup replay type");
         replay = Parser.parse(file, 'netease');
       }
 
