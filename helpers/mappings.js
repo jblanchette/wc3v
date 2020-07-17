@@ -1279,6 +1279,14 @@ const mapStartPositions = {
   '(2)lastrefuge.w3x': {
     '0': { x: -3840.0, y: -3968.0 },
     '1': { x:  3840.0, y:  3264.0 }
+  },
+  '(6)guardians.w3x': {
+    0: { x: 0.0,     y:- 5632.0  },
+    1: { x: 5440.0,  y: - 4352.0 },
+    2: { x: -5440.0, y: - 4352.0 },
+    3: { x: 0.0,     y: 5632.0   },
+    4: { x: -5440.0, y: 4352.0   },
+    5: { x: 5440.0,  y: 4352.0   }
   }
 };
 
@@ -1287,6 +1295,19 @@ const commonMapNames = {
 };
 
 const mapDataByFile = {
+  '(6)guardians.w3x': {
+    'name': 'Guardians',
+    'bounds': {
+      'camera': [
+        [ -7040,  7040 ],
+        [  7296, -7296 ]
+      ],
+      'map': [
+        [ -10240,  10240 ],
+        [  10240, -10240 ]
+      ]
+    }
+  },
   '(2)lastrefuge.w3x': {
     'name': 'LastRefuge',
     'bounds': {
