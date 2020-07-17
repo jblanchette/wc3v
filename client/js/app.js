@@ -1014,7 +1014,10 @@ const Wc3vViewer = class {
       const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
 
       ctx.beginPath();
-      ctx.arc(drawX, drawY, treeSize * tree.yScale, 0, Math.PI * 2, true);
+
+      const treeRadius = Math.min(5, Math.max(1.5, treeSize * tree.yScale));
+
+      ctx.arc(drawX, drawY, treeRadius, 0, Math.PI * 2, true);
       ctx.stroke();
     });
   }

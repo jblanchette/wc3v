@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(6)guardians.w3x': {
+      'name': 'Guardians',
+      'bounds': {
+        'camera': [
+          [ -7040,  7040 ],
+          [  7296, -7296 ]
+        ],
+        'map': [
+          [ -10240,  10240 ],
+          [  10240, -10240 ]
+        ]
+      }
+    },
     '(2)lastrefuge.w3x': {
       'name': 'LastRefuge',
       'bounds': {
