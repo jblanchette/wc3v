@@ -287,7 +287,8 @@ const Wc3vViewer = class {
       "upload-error",
       "upload-no-ticket",
       "upload-progress-loader",
-      "upload-not-found"
+      "upload-not-found",
+      "upload-not-supported"
     ];
 
     uploadContentIds.forEach(id => {

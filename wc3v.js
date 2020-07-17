@@ -57,6 +57,11 @@ const parseReplays = (options) => {
       try {
         replay = Parser.parse(file);
       } catch (e) {
+        if (e.message === "missing-map-data") {
+          throw e;
+        }
+
+        console.log("normal parse failed: ", e.message);
         console.log("trying backup replay type");
         replay = Parser.parse(file, 'netease');
       }
