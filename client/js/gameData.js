@@ -1,5 +1,18 @@
 const gameData = {
   'maps': {
+    '(6)monsoon_lv.w3x': {
+      'name': 'MonsoonLV',
+      'bounds': {
+        'camera': [
+          [ -7680,  7680 ],
+          [  7424, -8192 ]
+        ],
+        'map': [
+          [ -9984,  10496 ],
+          [  10496, -9984 ]
+        ]
+      }
+    },
     '(6)guardians.w3x': {
       'name': 'Guardians',
       'bounds': {
