@@ -6,6 +6,8 @@ const utils = require("./helpers/utils"),
       logManager = require("./helpers/logManager"),
       PlayerManager = require("./lib/PlayerManager");
 
+const fs = require('fs');
+
 let playerManager;
 let actionCount = 0;
 let globalTime = 0;

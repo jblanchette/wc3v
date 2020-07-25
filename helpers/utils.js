@@ -165,10 +165,7 @@ const uuidv4 = () => {
 
 const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
 
-  console.logger("JDEBUG writeOutput players: ", Object.keys(replay.players));
-
   const savedPlayers = replay.players;
-
   delete replay.players;
 
   replay.players = savedPlayers.reduce((acc, player) => {
@@ -213,10 +210,12 @@ const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
     replay: replay
   };
 
-  console.logger("JDEBUGG writeOutput2 output players: ", Object.keys(output.players));
-
   try {
-    const baseFile = fileHash || path.basename(filename);
+    let baseFile = fileHash || path.basename(filename);
+    if (baseFile.endsWith('.w3g')) {
+      baseFile = baseFile.substring(0, baseFile.length - 4);
+    }
+
   	const outputPath = `${__dirname}/../client/replays/${baseFile}.wc3v`;
     fs.writeFileSync(outputPath, JSON.stringify(output, null, jsonPadding));
     console.logger("created wc3v file: ", outputPath);
@@ -224,16 +223,15 @@ const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
     const gzip = zlib.createGzip();
     const inputFile = fs.createReadStream(outputPath);
     const outputFile = fs.createWriteStream(`${outputPath}.gz`);
-
     console.logger("writing wc3v gzipped file: ", `${outputPath}.gz`);
     
     inputFile.pipe(gzip)
-      .on('error', () => {
-        console.logger("file write error for: ", outputPath);
+      .on('error', (e) => {
+        console.logger("file write error for: ", outputPath, e);
       })
       .pipe(outputFile)
-      .on('error', () => {
-        console.logger("file write error for: ", outputPath);
+      .on('error', (e) => {
+        console.logger("file write error for: ", outputPath, e);
       })
       .on('finish', () => {
         console.logger("erasing non zipped wc3v file");
