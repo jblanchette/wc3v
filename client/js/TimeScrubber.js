@@ -5,16 +5,18 @@ const ScrubSpeeds = {
   '2x': 2,
   '5x': 5,
   '10x': 10,
-  '20x': 20
+  '20x': 20,
+  '40x': 40
 };
 
 const TimeScrubber = class {
   constructor (wrapperId, canvasId) {
+    this.isDev = (window.location.hostname === "10.0.0.81");
     this.wrapperId = wrapperId;
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    const startingSpeed = '5x';
+    const startingSpeed = this.isDev ? '40x' : '5x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
 

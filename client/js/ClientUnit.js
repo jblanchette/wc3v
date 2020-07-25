@@ -26,7 +26,7 @@ const maximumBuildingSize = 20,
 
 const buildingAlpha = 0.55;
 const minNeighborDrawDistance = 20;
-const pathDecayTime = 1000 * 180;
+const pathDecayTime = 1000 * 220;
 
 const ClientUnit = class {
   constructor (unitData, playerId, playerColor) {
