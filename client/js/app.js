@@ -84,32 +84,32 @@ const Wc3vViewer = class {
       {
         id: "happy-vs-grubby",
         map: "Concealed Hills",
-        players: [["happy"], ["grubby"]]
+        players: [["Happy"], ["Grubby"]]
       },
       {
         id: "grubby-vs-thorzain",
         map: "Concealed Hills",
-        players: [["grubby"], ["thorzain"]]
+        players: [["Grubby"], ["Thorzain"]]
       },
       {
-        id: "grubby-vs-thorzain",
+        id: "cash-vs-foggy",
         map: "Concealed Hills",
-        players: [["grubby"], ["thorzain"]]
+        players: [["Cash"], ["Foggy"]]
       },
       {
         id: "happy-vs-lucifer",
         map: "Echo Isles",
-        players: [["happy"], ["lucifer"]]
+        players: [["Happy"], ["lucifer"]]
       },
       {
         id: "foggy-vs-cash-2",
         map: "Echo Isles",
-        players: [["foggy"], ["cash"]]
+        players: [["Foggy"], ["Cash"]]
       },
       {
         id: "terenas-stand-lv_sonik-vs-tgw",
         map: "Terenas Stand",
-        players: [["sonik"], ["tgw"]]
+        players: [["Sonik"], ["TGW"]]
       },
       {
         id: "2v2-synergy",
