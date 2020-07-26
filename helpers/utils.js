@@ -297,7 +297,8 @@ const readCliArgs = (argv) => {
           'soin-vs-chae',
           'joker-vs-lil',
           'terenas-stand-lv_sonik-vs-tgw',
-          '2v2-synergy'
+          '2v2-synergy',
+          'lado-hatuey-tom-leo-speo'
         ];
 
         options.inTestMode = true;
