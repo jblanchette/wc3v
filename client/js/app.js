@@ -991,8 +991,13 @@ const Wc3vViewer = class {
     }
 
     const treeSize = (4 * transform.k);
+    const oldFillStyle = ctx.fillStyle;
+    const oldAlpha = ctx.globalAlpha;
 
-    ctx.strokeStyle = "#FFF";
+    ctx.fillStyle = "#FFF";
+    ctx.strokeStyle = "#333";
+    ctx.globalAlpha = 0.75;
+
     this.doodadData.forEach(tree => {
       const { x, y, flags } = tree;
 
@@ -1018,8 +1023,12 @@ const Wc3vViewer = class {
       const treeRadius = Math.min(5, Math.max(1.5, treeSize * tree.yScale));
 
       ctx.arc(drawX, drawY, treeRadius, 0, Math.PI * 2, true);
+      ctx.fill();
       ctx.stroke();
     });
+
+    ctx.fillStyle = oldFillStyle;
+    ctx.globalAlpha = oldAlpha;
   }
 
   renderMapGrid (ctx) {
@@ -1037,9 +1046,14 @@ const Wc3vViewer = class {
 
     const { width, height } = this.canvas;
 
-    const tileHeight = (height / gridHeight) * transform.k;
-    const tileWidth  = (width  / gridWidth)  * transform.k;
+    const rawTileHeight = 16 * transform.k;
+    const rawTileWidth  = 16 * transform.k;
 
+    const tileMapWidth = rawTileWidth * gridWidth;
+    const tileMapHeight = rawTileHeight * gridHeight;
+
+    const tileWidth = rawTileWidth * (width / tileMapWidth);
+    const tileHeight = rawTileHeight * (height / tileMapHeight);
     
     ctx.lineWidth = 1;
 
