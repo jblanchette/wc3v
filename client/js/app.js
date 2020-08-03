@@ -1041,40 +1041,45 @@ const Wc3vViewer = class {
       return;
     }
 
-    const gridHeight = this.gridData.length    / 4;
-    const gridWidth  = this.gridData[0].length / 4;
+    const gridHeight = this.gridData.length;
+    const gridWidth  = this.gridData[0].length;
 
     const { width, height } = this.canvas;
 
-    const rawTileHeight = 16 * transform.k;
-    const rawTileWidth  = 16 * transform.k;
+    const tileHeight = (height / gridHeight) * transform.k;
+    const tileWidth  = (width  / gridWidth)  * transform.k;
 
-    const tileMapWidth = rawTileWidth * gridWidth;
-    const tileMapHeight = rawTileHeight * gridHeight;
-
-    const tileWidth = rawTileWidth * (width / tileMapWidth);
-    const tileHeight = rawTileHeight * (height / tileMapHeight);
-    
     ctx.lineWidth = 1;
 
+    let rCol = gridHeight - 1;
+    let rRow = gridWidth - 1;
+
     for (let col = 0; col < gridHeight; col++) {
+      rRow = gridWidth - 1;
+
       for (let row = 0; row < gridWidth; row++) {
-        const data = this.gridData[col][row];
-        const drawX = (row * tileWidth)  + transform.x;
-        const drawY = (col * tileHeight) + transform.y;
+        const data = this.gridData[col][rRow];
+        const drawX = (rRow * tileWidth)  + transform.x;
+        const drawY = (rCol * tileHeight) + transform.y;
+
+        rRow--;
 
         if (!data) {
-          console.error("bad grid data: ", col, row);
+          console.error("bad grid data: ", col, rRow);
           return;
         }
 
         const { 
           NoWater, 
-          NoWalk, 
-          NoBuild
+          NoWalk,
+          NoFly,
+          NoBuild,
+          Blight
         } = data;
 
-        if (viewOptions.displayWalkGrid && !NoWalk) {
+        const canWalk = (NoWalk && NoFly || NoWater);
+
+        if (viewOptions.displayWalkGrid && (canWalk || NoBuild)) {
           ctx.strokeStyle = "#FFF";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
@@ -1089,6 +1094,8 @@ const Wc3vViewer = class {
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
       }
+
+      rCol--;
     }
   }
 
