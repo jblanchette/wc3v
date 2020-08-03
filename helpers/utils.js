@@ -298,7 +298,16 @@ const readCliArgs = (argv) => {
           'joker-vs-lil',
           'terenas-stand-lv_sonik-vs-tgw',
           '2v2-synergy',
-          'lado-hatuey-tom-leo-speo'
+          'lado-hatuey-tom-leo-speo',
+          'guardians',
+          'monsoon',
+          'lastrefuge',
+          'gnollwood',
+          'upperkingdom2',
+          'twistedmeadows5',
+          'northernisles',
+          'battleground',
+          'amazonia'
         ];
 
         options.inTestMode = true;
