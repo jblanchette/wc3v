@@ -1041,6 +1041,9 @@ const Wc3vViewer = class {
       return;
     }
 
+    const { gridSize } = this.mapInfo;
+    const { full, playable } = gridSize;
+
     const gridHeight = this.gridData.length;
     const gridWidth  = this.gridData[0].length;
 
