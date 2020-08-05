@@ -11,6 +11,10 @@ const gameData = {
           [ -9984,  10496 ],
           [  10496, -9984 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 160, 160 ],
+        'playable': [ 128, 126 ]
       }
     },
     '(6)guardians.w3x': {
@@ -24,6 +28,10 @@ const gameData = {
           [ -10240,  10240 ],
           [  10240, -10240 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 160, 160 ],
+        'playable': [ 118, 118 ]
       }
     },
     '(2)lastrefuge.w3x': {
@@ -37,6 +45,10 @@ const gameData = {
           [ -6144,   6144 ],
           [  6144,  -6144 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 96, 96 ],
+        'playable': [ 84, 84 ]
       }
     },
     '(2)amazonia.w3x': {
@@ -50,6 +62,10 @@ const gameData = {
           [ -6144,   6144 ],
           [  6144,  -6144 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 96, 96 ],
+        'playable': [ 80, 80 ]
       }
     },
     '(8)battleground_lv.w3x': {
@@ -63,6 +79,10 @@ const gameData = {
           [ -10240,   10240 ],
           [  10240,  -10240 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 160, 160 ],
+        'playable': [ 128, 128 ]
       }
     },
     '(4)twistedmeadows.w3x': {
@@ -76,6 +96,10 @@ const gameData = {
           [ -10240,   10240 ],
           [  10240,  -10240 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 160, 160 ],
+        'playable': [ 124, 124 ]
       }
     },
     '(6)upperkingdom.w3x': {
@@ -89,7 +113,11 @@ const gameData = {
           [ -10240,   10240 ],
           [  10240,  -10240 ]
         ]
-      }
+      },
+        'gridSize': {
+          'full': [ 160, 160 ],
+          'playable': [ 132, 132 ]
+        }
     },
     '(6)gnollwood.w3x': {
       'name': 'GnollWood',
@@ -102,6 +130,10 @@ const gameData = {
           [ -9984,   10496 ],
           [  9984,  -10496 ]
         ]
+      },
+      'gridSize': {
+        'full': [ 160, 160 ],
+        'playable': [ 128, 128 ]
       }
     },
     '(2)concealedhill.w3x': {
