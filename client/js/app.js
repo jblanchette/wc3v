@@ -998,7 +998,7 @@ const Wc3vViewer = class {
     ctx.strokeStyle = "#333";
     ctx.globalAlpha = 0.75;
 
-    this.doodadData.forEach(tree => {
+    this.doodadData.forEach((tree, treeIndex) => {
       const { x, y, flags } = tree;
 
       /*
@@ -1008,7 +1008,7 @@ const Wc3vViewer = class {
           2 = normal tree (visible and solid)
        */
 
-      if (flags === 0) {
+      if (flags !== 2) {
         return;
       }
 

@@ -14,7 +14,6 @@ let globalTime = 0;
 
 
 Parser.on('gamemetadata', (gameMetaData) => {
-  console.logger("JDEBUG metadata: ", gameMetaData);
   playerManager.setMetaData(gameMetaData);
 });
 
