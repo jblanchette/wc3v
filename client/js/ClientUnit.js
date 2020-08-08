@@ -467,13 +467,13 @@ const ClientUnit = class {
         }
       }
 
-      const { x, y } = item;
+      const { x, y, isJump } = item;
 
       const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
       const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
 
-      if (ind === 0) {
-        ctx.moveTo(drawX, drawY);  
+      if (ind === 0 || isJump) {
+        ctx.moveTo(drawX, drawY);        
       } else {
         ctx.lineTo(drawX, drawY);
       }
