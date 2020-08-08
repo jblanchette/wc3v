@@ -748,6 +748,9 @@ const Wc3vViewer = class {
     const mapParts = file.split("/");
 
     this.matchEndTime = this.mapData.replay.duration;
+
+    console.log("end time: ", this.matchEndTime, this.mapData.replay);
+    
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
     
     const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
@@ -1080,9 +1083,11 @@ const Wc3vViewer = class {
           Blight
         } = data;
 
-        const canWalk = (NoWalk && NoFly || NoWater);
+        //const canWalk = (NoWalk && NoFly || NoWater);
 
-        if (viewOptions.displayWalkGrid && (canWalk || NoBuild)) {
+        const canWalk = (!NoWalk && NoBuild) || NoWater;
+
+        if (viewOptions.displayWalkGrid && canWalk) {
           ctx.strokeStyle = "#FFF";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }

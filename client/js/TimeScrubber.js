@@ -139,7 +139,7 @@ const TimeScrubber = class {
   render (gameTime, matchEndTime) {
     const scrubberBox = this.wrapperEl.getBoundingClientRect();
     const { width } = scrubberBox;
-    const matchPercentDone = (gameTime / matchEndTime) * 100;
+    const matchPercentDone = Math.min(100, (gameTime / matchEndTime) * 100);
 
     this.moveTracker(matchPercentDone);
   }
