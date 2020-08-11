@@ -1,5 +1,11 @@
 const _iconCache = {};
 
+const HighlightModes = {
+  'all': 0,
+  'single': 1,
+  'group': 2,
+  'none': 3
+};
 
 ////
 // drawing sizes
@@ -44,6 +50,9 @@ const ClientUnit = class {
 
     this.playerId = playerId;
     this.playerColor = playerColor;
+
+    this.highlightMode = HighlightModes.all;
+
     this.setup();
 
     this.loaders = [];
@@ -82,6 +91,10 @@ const ClientUnit = class {
         console.log("img error: ", e);
       };
     });
+  }
+
+  setHighlightMode (mode) {
+    this.highlightMode = mode;
   }
 
   loadIcon () {
@@ -365,6 +378,10 @@ const ClientUnit = class {
   }
 
   renderUnit (ctx, frameData, transform, gameTime, xScale, yScale, viewOptions) {
+    if (this.highlightMode === HighlightModes.none) {
+      return;
+    }
+
     if (!this.currentX || !this.currentY) {
       return;
     }
@@ -440,6 +457,7 @@ const ClientUnit = class {
   }
 
   renderPath (ctx, transform, gameTime, xScale, yScale, viewOptions) {
+    const self = this;
     const path = this.path;
     if (!path.length || gameTime < this.spawnTime) {
       return;
@@ -453,6 +471,23 @@ const ClientUnit = class {
     ctx.fillStyle = "#FFF";
 
     ctx.beginPath();
+
+    let lastX = 0,
+        lastY = 0,
+        lastGT = 0;
+
+    /**
+     * gaps -
+     *  min: if there is a large distance delta and a small time delta
+     *  max: if there is a small distance delta and a large time delta
+     */
+
+    
+    const minTimeGap = (5 * 1000);   // small time delta     - 5 seconds
+    const minGapThreshold = 1500;    // large distance delta - 1500 units
+    
+    const maxTimeGap = (300 * 1000); // large time delta     - 500 seconds
+    const maxGapThreshold = 500;     // small distance delta - 500 units
 
     path.forEach((item, ind) => {
       if (item.gameTime > gameTime) {
@@ -472,11 +507,26 @@ const ClientUnit = class {
       const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
       const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
 
-      if (ind === 0 || isJump) {
+      const spotDiffs = {
+        dist: Helpers.distance(x, y, lastX, lastY),
+        timeDelta: (item.gameTime - lastGT)
+      };
+
+      const isMinDistanceGap = (spotDiffs.dist > minGapThreshold);
+      const isMaxDistanceGap = (spotDiffs.dist > maxGapThreshold);
+
+      const isGap = (isMinDistanceGap && spotDiffs.timeDelta < minTimeGap) ||
+                    (isMaxDistanceGap && spotDiffs.timeDelta > maxTimeGap);
+
+      if (ind === 0 || isJump || isGap) {
         ctx.moveTo(drawX, drawY);        
       } else {
         ctx.lineTo(drawX, drawY);
       }
+
+      lastX = x;
+      lastY = y;
+      lastGT = item.gameTime;
     });
 
     ctx.stroke();
