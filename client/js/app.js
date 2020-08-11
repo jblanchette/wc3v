@@ -655,6 +655,12 @@ const Wc3vViewer = class {
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);
 
+    // this.playerStatusCanvas.addEventListener('mousemove', (e) => {
+    //   this.players.forEach(player => {
+    //     player.handleStatusMouse(e);
+    //   });
+    // });
+
     this.playerStatusCtx.lineWidth = 1;
     this.playerStatusCtx.fillStyle = "#29373E";
     this.playerStatusCtx.strokeStyle = "#FFF";
