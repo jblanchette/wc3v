@@ -434,8 +434,6 @@ const Wc3vViewer = class {
         const { bounds } = this.mapInfo;
         const { map, camera } = bounds;
 
-        console.log("Map info: ", this.mapInfo);
-
         /*
           bound index selection - 
           not all camera grids are centered in the map grid,
@@ -755,8 +753,6 @@ const Wc3vViewer = class {
 
     this.matchEndTime = this.mapData.replay.duration;
 
-    console.log("end time: ", this.matchEndTime, this.mapData.replay);
-    
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
     
     const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
@@ -1152,6 +1148,9 @@ const Wc3vViewer = class {
     // stored data about each frame
     let frameData = { nameplateTree: new rbush(), unitDrawPositions: [] };
 
+    this.renderMapGrid(utilityCtx);
+    this.renderMapTrees(utilityCtx);
+
     this.players.forEach(player => {
       player.render(
         frameData,
@@ -1166,9 +1165,6 @@ const Wc3vViewer = class {
         viewOptions
       );
     });
-
-    this.renderMapGrid(utilityCtx);
-    this.renderMapTrees(utilityCtx);
 
     ctx.restore();
     playerCtx.restore();
