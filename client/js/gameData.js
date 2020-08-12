@@ -1,5 +1,22 @@
 const gameData = {
   'maps': {
+    '(6)bloodstonemesa_lv.w3x': {
+      'name': 'BloodstoneMesa',
+      'bounds': {
+        'camera': [
+          [ -8960,  4864 ],
+          [  4864, -9472 ]
+        ],
+        'map': [
+          [ -10240,   6144  ],
+          [  6144,  -10240  ]
+        ]
+      },
+      'gridSize': {
+        'full':     [ 128, 128 ],
+        'playable': [ 116, 116 ]
+      }
+    },
     '(6)monsoon_lv.w3x': {
       'name': 'MonsoonLV',
       'bounds': {
