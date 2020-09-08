@@ -142,6 +142,8 @@ const Wc3vViewer = class {
   }
 
   reset () {
+    this.players = [];
+
     this.canvas = null;
     this.ctx = null;
 
@@ -161,11 +163,6 @@ const Wc3vViewer = class {
     this.mapData = null;
     this.mapImage = null;
 
-    this.xScale = null;
-    this.yScale = null;
-
-    this.cameraRatio = { x: 1, y: 1 };
-
     this.state = ScrubStates.stopped;
 
     this.gameLoaded = false;
@@ -176,8 +173,6 @@ const Wc3vViewer = class {
     this.lastFrameTimestamp = 0;
 
     this.isDev = (window.location.hostname === "10.0.0.81");
-
-    this.players = [];
   }
 
   load (mapId = null) {
@@ -486,6 +481,38 @@ const Wc3vViewer = class {
     })
   }
 
+  loadGridTestFile () {
+    const self = this;
+    const { name } = this.mapInfo;
+
+    return new Promise((resolve, reject) => {
+      this.loadFile(`../gridtest`, (res) => {
+        const { target } = res;
+          
+        const rawGrid = target.responseText;
+        const gridLines = rawGrid.split("\n");
+
+        const gridData = gridLines.map(line => {
+          const spots = line.split(" ");
+
+          return spots.map(spot => { return spot != "0"; });
+        });
+
+        self.gridTestData = [];
+
+        for (let col = 0; col < gridData[0].length; col++) {
+          self.gridTestData.push([]);
+
+          for (let row = 0; row < gridData.length; row++) {
+            self.gridTestData[col][row] = gridData[row][col];
+          }
+        }
+
+        resolve(true);
+      });
+    })
+  }
+
   loadDoodadFile () {
     const self = this;
     const { name } = this.mapInfo;
@@ -675,6 +702,7 @@ const Wc3vViewer = class {
     .then(() => { return this.loadMapFile("grid"); })
     .then(() => { return this.loadGridFile(); })
     .then(() => { return this.loadDoodadFile(); })
+    .then(() => { return this.loadGridTestFile(); })
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
@@ -766,91 +794,20 @@ const Wc3vViewer = class {
     this.mapInfo = maps[foundMapName];
   }
 
-  setupView () {
-    const { cameraRatio } = this;
-    const { x, y, k } = this.transform;
-    const { bounds } = this.mapInfo;
-
-    this.viewWidth  = this.mapImage.width;
-    this.viewHeight = this.mapImage.height;
-
-    this.sceneWidth  = this.mapImage.width * cameraRatio.x;
-    this.sceneHeight = this.mapImage.height * cameraRatio.y;
-
-    ////
-    // map range is the full sized range of map image
-    ////
-
-    this.mapRange = {
-      x: [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ],
-      y: [ -(this.viewHeight / 2), (this.viewHeight / 2) ]
-    };
-
-    ////
-    // camera range is the restricted inner camera range 
-    // always <= than map range
-    ////
-
-    this.cameraRange = {
-      x: [ -(this.sceneWidth / 2),  (this.sceneWidth / 2)  ],
-      y: [ -(this.sceneHeight / 2), (this.sceneHeight / 2) ]
-    };
-  }
-
-  setupScales () {
-    const { 
-      cameraExtent,
-      cameraRange,
-      mapExtent,
-      mapRange
-    } = this;
-
-    this.xScale = d3.scaleLinear()
-      .domain(mapExtent.x)
-      .range(mapRange.x);
-
-    this.yScale = d3.scaleLinear()
-      .domain(mapExtent.y)
-      .range(mapRange.y);
-
-    this.unitXScale = d3.scaleLinear()
-      .domain(cameraExtent.x)
-      .range(cameraRange.x);
-
-    this.unitYScale = d3.scaleLinear()
-      .domain(cameraExtent.y)
-      .range(cameraRange.y);
-  }
-
-  setupMiddle () {
-    this.middleX = (this.canvas.width / 2);
-    this.middleY = (this.canvas.height / 2);
-  }
-
   setupDrawing () {
     const { bounds } = this.mapInfo;
     const { width, height } = this.canvas;
 
-    this.mapExtent = {
-      x: bounds.map[0],
-      y: bounds.map[1]
-    };
-
-    this.cameraExtent = {
-      x: bounds.camera[0],
-      y: bounds.camera[1]
-    };
-    
-    // camera transform
-    this.transform = { x: 0.0, y: 0.0, k: 1.0 };
     // player ui toggle offsets
     this.playerSlotOffset = 0;
     // how far the camera will zoom
     const zoomScaleExtent = [ 1.0, 1.75 ];
+    // camera transform
+    this.transform = { x: 0.0, y: 0.0, k: 1.0 };
 
-    this.setupView();
-    this.setupScales();
-    this.setupMiddle();
+    this.gameScaler = new GameScaler();
+    this.gameScaler.addDependency('_d3', d3);
+    this.gameScaler.setup(this.mapInfo, this.mapImage, this.canvas, this.cameraRatio);
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
@@ -955,14 +912,21 @@ const Wc3vViewer = class {
   renderMapBackground () {
     const { 
       ctx, 
-      transform, 
+      transform,
+      viewOptions
+    } = this;
+
+    const {
       mapExtent, 
       middleX, 
       middleY, 
       xScale, 
       yScale,
-      viewOptions
-    } = this;
+      viewWidth,
+      viewHeight,
+      sceneWidth,
+      sceneHeight
+    } = this.gameScaler;
 
     const { width, height } = this.mapImage;
     const { x, y, k } = transform;
@@ -973,29 +937,38 @@ const Wc3vViewer = class {
     const bgImage = viewOptions.displayMapGrid ? 
       this.gridMapImage : this.mapImage;
 
-    const offsetX = (this.viewWidth - this.sceneWidth) / 2;
-    const offsetY = (this.viewHeight - this.sceneHeight) / 2;
+    const offsetX = (viewWidth - sceneWidth) / 2;
+    const offsetY = (viewHeight - sceneHeight) / 2;
 
     ctx.drawImage(
       bgImage, 
       offsetX,               // sourceX
       offsetY,               // sourceY
-      this.sceneWidth,           // sourceWidth
-      this.sceneHeight,          // sourceHeight
+      sceneWidth,           // sourceWidth
+      sceneHeight,          // sourceHeight
       drawX + offsetX,           // destX
       drawY + offsetY,           // destY
-      this.sceneWidth * k,       // destWidth
-      this.sceneHeight * k       // destHeight
+      sceneWidth * k,       // destWidth
+      sceneHeight * k       // destHeight
     );
   }
 
   renderMapTrees (ctx) {
-    const { transform, middleX, middleY, xScale, yScale, viewOptions } = this;
+    const { transform, viewOptions, doodadData } = this;
+    const {
+      middleX, 
+      middleY, 
+      xScale, 
+      yScale
+    } = this.gameScaler;
+
     if (!viewOptions.displayTreeGrid) {
       return;
     }
 
     const treeSize = (4 * transform.k);
+    const treeRadius = Math.min(5, Math.max(1.5, treeSize));
+
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
 
@@ -1003,7 +976,7 @@ const Wc3vViewer = class {
     ctx.strokeStyle = "#333";
     ctx.globalAlpha = 0.75;
 
-    this.doodadData.forEach((tree, treeIndex) => {
+    doodadData.forEach((tree, treeIndex) => {
       const { x, y, flags } = tree;
 
       /*
@@ -1013,10 +986,14 @@ const Wc3vViewer = class {
           2 = normal tree (visible and solid)
        */
 
-      if (flags !== 2) {
+      if (flags === 0) {
         return;
       }
 
+      // drawing algo:
+      // x = GameScaler.xScale(x) + middleX
+      // y = GameScaler.yScale(y) + middleY
+      // finally -
       // (x * transform.k) + transform.x
       // (y * transform.k) + transform.y
 
@@ -1024,9 +1001,6 @@ const Wc3vViewer = class {
       const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
 
       ctx.beginPath();
-
-      const treeRadius = Math.min(5, Math.max(1.5, treeSize * tree.yScale));
-
       ctx.arc(drawX, drawY, treeRadius, 0, Math.PI * 2, true);
       ctx.fill();
       ctx.stroke();
@@ -1037,8 +1011,7 @@ const Wc3vViewer = class {
   }
 
   renderMapGrid (ctx) {
-    const { transform, viewOptions } = this;
-
+    const { transform, viewOptions, gridTestData } = this;
 
     if (!viewOptions.displayWalkGrid  &&
         !viewOptions.displayWaterGrid &&
@@ -1062,13 +1035,24 @@ const Wc3vViewer = class {
     let rCol = gridHeight - 1;
     let rRow = gridWidth - 1;
 
+    ctx.globalAlpha = 1;
+
     for (let col = 0; col < gridHeight; col++) {
       rRow = gridWidth - 1;
 
       for (let row = 0; row < gridWidth; row++) {
         const data = this.gridData[col][rRow];
+        const testData = gridTestData[col][rRow];
         const drawX = (rRow * tileWidth)  + transform.x;
         const drawY = (rCol * tileHeight) + transform.y;
+
+        if (!testData) {
+          ctx.strokeStyle = "#FF0000";
+          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
+        } else {
+          //ctx.strokeStyle = "#00FF00";
+          //ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
+        }
 
         rRow--;
 
@@ -1090,8 +1074,8 @@ const Wc3vViewer = class {
         const canWalk = (!NoWalk && NoBuild) || NoWater;
 
         if (viewOptions.displayWalkGrid && canWalk) {
-          ctx.strokeStyle = "#FFF";
-          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
+          //ctx.strokeStyle = "#FFF";
+          //ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
 
         if (viewOptions.displayWaterGrid && !NoWater) {
@@ -1112,20 +1096,24 @@ const Wc3vViewer = class {
   render () {
     const { 
       ctx,
+      players,
       playerCtx,
       playerStatusCtx,
       utilityCtx,
       transform,
       gameTime,
-      matchEndTime, 
+      matchEndTime,
+      viewOptions
+    } = this;
+
+    const {
       xScale, 
       yScale,
       unitXScale,
       unitYScale,
       middleX,
       middleY,
-      viewOptions
-    } = this;
+    } = this.gameScaler;
 
     const { width, height } = this.mapImage;
 
@@ -1151,7 +1139,7 @@ const Wc3vViewer = class {
     this.renderMapGrid(utilityCtx);
     this.renderMapTrees(utilityCtx);
 
-    this.players.forEach(player => {
+    players.forEach(player => {
       player.render(
         frameData,
         ctx,

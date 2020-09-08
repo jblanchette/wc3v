@@ -362,8 +362,8 @@ const ClientUnit = class {
 
     const inverseK = (2.0 - transform.k);
 
-    const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
-    const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
+    const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
+    const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
     const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
     const iconSize = Math.max(dynamicSize, minimumBuildingSize);
@@ -394,8 +394,8 @@ const ClientUnit = class {
     const currentX = pathNode && pathNode.x;
     const currentY = pathNode && pathNode.y;
 
-    const drawX = ((xScale(currentX) + wc3v.middleX) * transform.k) + transform.x;
-    const drawY = ((yScale(currentY) + wc3v.middleY) * transform.k) + transform.y;
+    const drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
+    const drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
     const { unitDrawPositions } = frameData;
 
@@ -504,8 +504,8 @@ const ClientUnit = class {
 
       const { x, y, isJump } = item;
 
-      const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
+      const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
       const spotDiffs = {
         dist: Helpers.distance(x, y, lastX, lastY),
@@ -546,8 +546,8 @@ const ClientUnit = class {
 
       const { x, y } = levelRecord.position;
 
-      const drawX = ((xScale(x) + wc3v.middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(y) + wc3v.middleY) * transform.k) + transform.y;
+      const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
       ctx.globalAlpha = 0.75;
       ctx.beginPath();
