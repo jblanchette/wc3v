@@ -293,11 +293,15 @@ const Wc3vViewer = class {
     });
   }
 
-  showUploadContents (which) {
+  showUploadContents (which, optText = null) {
     this.hideUploadContents();
     this.toggleUploadWrapper(true);
     
     document.getElementById(which).style.display = "flex";
+
+    if (optText) {
+      document.getElementById("upload-progress-opt-text").innerHTML = optText;
+    }
   }
 
   showUploadLink (replayId) {
@@ -320,7 +324,7 @@ const Wc3vViewer = class {
     inputFile.onchange = () => {
       const { size } = inputFile.files[0];
 
-      self.showUploadContents("upload-progress-loader");
+      self.showUploadContents("upload-progress-loader", "Uploading replay... 0%");
 
       const port = window.location.hostname === "10.0.0.81" ? ":8085" : "";
       const req = new XMLHttpRequest();
@@ -330,6 +334,17 @@ const Wc3vViewer = class {
       req.setRequestHeader("Content-Type", "application/octet-stream");
       req.setRequestHeader("Content-Disposition", "attachment");
       
+      req.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentage = (e.loaded / e.total) * 100;
+          const optText = percentage === 100 ? 
+            `Done uploading, now parsing...` :
+            `Uploading replay... ${percentage}%`;
+
+          self.showUploadContents("upload-progress-loader", optText);
+        }
+      };
+
       req.addEventListener("load", (res) => {
         const { target } = res;
 
