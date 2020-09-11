@@ -1050,7 +1050,7 @@ const Wc3vViewer = class {
         const drawX = (rRow * tileWidth)  + transform.x;
         const drawY = (rCol * tileHeight) + transform.y;
 
-        if (!this.isDev && !testData) {
+        if (this.isDev && !testData) {
           ctx.strokeStyle = "#FF0000";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
         }
@@ -1070,13 +1070,11 @@ const Wc3vViewer = class {
           Blight
         } = data;
 
-        //const canWalk = (NoWalk && NoFly || NoWater);
-
         const canWalk = (!NoWalk && NoBuild) || NoWater;
 
         if (viewOptions.displayWalkGrid && canWalk) {
-          //ctx.strokeStyle = "#FFF";
-          //ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
+          ctx.strokeStyle = "#FFF";
+          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
 
         if (viewOptions.displayWaterGrid && !NoWater) {
