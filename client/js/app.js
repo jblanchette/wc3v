@@ -486,6 +486,10 @@ const Wc3vViewer = class {
     const { name } = this.mapInfo;
 
     return new Promise((resolve, reject) => {
+      if (!self.isDev) {
+        resolve(true);
+      }
+
       this.loadFile(`../gridtest`, (res) => {
         const { target } = res;
           
@@ -1042,16 +1046,13 @@ const Wc3vViewer = class {
 
       for (let row = 0; row < gridWidth; row++) {
         const data = this.gridData[col][rRow];
-        const testData = gridTestData[col][rRow];
+        const testData = this.isDev ? gridTestData[col][rRow] : null;
         const drawX = (rRow * tileWidth)  + transform.x;
         const drawY = (rCol * tileHeight) + transform.y;
 
-        if (!testData) {
+        if (!this.isDev && !testData) {
           ctx.strokeStyle = "#FF0000";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
-        } else {
-          //ctx.strokeStyle = "#00FF00";
-          //ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
         }
 
         rRow--;
@@ -1148,8 +1149,8 @@ const Wc3vViewer = class {
         playerStatusCtx, 
         transform, 
         gameTime, 
-        unitXScale, 
-        unitYScale,
+        xScale, 
+        yScale,
         viewOptions
       );
     });
