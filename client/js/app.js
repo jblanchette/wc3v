@@ -336,9 +336,11 @@ const Wc3vViewer = class {
       
       req.upload.onprogress = (e) => {
         if (e.lengthComputable) {
-          const percentage = (e.loaded / e.total) * 100;
+          const percentage = Math.ceil((e.loaded / e.total) * 100);
+          const estTimeLeft = Math.ceil(((e.total / 1024) / 2) * 60);
+
           const optText = percentage === 100 ? 
-            `Done uploading, now parsing...` :
+            `Parsing... (est ~${estTimeLeft} min)` :
             `Uploading replay... ${percentage}%`;
 
           self.showUploadContents("upload-progress-loader", optText);
