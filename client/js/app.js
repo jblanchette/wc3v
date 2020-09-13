@@ -251,8 +251,9 @@ const Wc3vViewer = class {
 
   toggleSidePanel (id, isOpen) {
     const el = document.getElementById(id);
+    const currentDisplay = window.getComputedStyle(el).display;
 
-    el.style.display = el.style.display === "block" ? "none" : "block";
+    el.style.display = currentDisplay === "block" ? "none" : "block";
   }
 
   showSidePanel (id) {
@@ -334,12 +335,14 @@ const Wc3vViewer = class {
       req.setRequestHeader("Content-Type", "application/octet-stream");
       req.setRequestHeader("Content-Disposition", "attachment");
       
+      const uploadStart = new Date();
+
       req.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const percentage = Math.ceil((e.loaded / e.total) * 100);
 
-          // kb / (300 kb/min)
-          const estTimeLeft = ((e.total / 1024) / 300).toFixed(2);
+          // kb / (225 kb/min)
+          const estTimeLeft = ((e.total / 1024) / 225).toFixed(2);
           const optText = percentage === 100 ? 
             `Parsing... (est ~${estTimeLeft} min)` :
             `Uploading replay... ${percentage}%`;
@@ -396,9 +399,33 @@ const Wc3vViewer = class {
       try {
         if (target.status === 200) {
           const data = JSON.parse(target.responseText);
+          const { recentMatches, replayCount } = data;
 
           const titleCount = document.getElementById("wc3v-title-count");
-          titleCount.innerHTML = `Replays Uploaded: ${data.replayCount}`;
+          titleCount.innerHTML = `Replays Uploaded: ${replayCount}`;
+
+          const tableStr = recentMatches.reduce((acc, match) => {
+            const duration = parseInt(match.duration || 0) / (60 * 1000);
+
+            acc += `
+             <tr>
+              <td><a href="/replay/${match.replayHash}">link</a></td>
+              <td>${Math.round(duration)} min</td>
+              <td>${match.mapFile}</td>
+              <td>${match.matchup}</td>
+              <td>${match.matchupType}</td>
+             </tr>`;
+
+            return acc;
+          }, "");
+
+          document.getElementById("recent-replays-data").innerHTML = `<table>
+           <th></th>
+           <th>duration</th>
+           <th>map</th>
+           <th>matchup</th>
+           <th>matchup type</th>
+           ${tableStr}</table>`;
         }
       } catch (e) {
         console.log("error loading wc3v info stats");
