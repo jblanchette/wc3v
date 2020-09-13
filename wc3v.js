@@ -77,59 +77,23 @@ const parseReplays = (options) => {
       // re-enable all logging
       logManager.setDisabledState(false);
 
-      Object.keys(players).forEach(playerId => {
-        console.logger("************************************");
-        console.logger(`Inspecting player: ${playerId}`);
-
-        const player = players[playerId];
-        const { units, unregisteredUnitCount, removedBuildings } = player;
-
-        // console.log("cache stats: ", player.world.pathFinder.cacheHitCount,
-        //  player.world.pathFinder.cacheMissCount);
-
-        // const pathFindTotal = player.world.pathFinder.timers.reduce((acc, timer) => {
-        //   acc += timer;
-
-        //   return acc;
-        // }, 0);
-
-        // const pathFindAvg = pathFindTotal / player.world.pathFinder.timers.length;
-
-        // console.log("pathfind tot time: ", pathFindTotal);
-        // console.log("pathfind avg time: ", pathFindAvg.toFixed(2));
-
-        console.logger(`Unit count: ${units.length}`);
-        console.logger(`Unregistered units: ${unregisteredUnitCount}`);
-
-        if (removedBuildings.length) {
-          console.logger("Showing removed buildings:");
-          removedBuildings.forEach(building => {
-            console.logger("(removed)", building.displayName);
-          });
-          console.logger("------------------------------------");
-        }
-        console.logger("************************************");
-      });
-
       if (options.inTestMode) {
         console.log("TEST PASSED: ", file);
       }
 
-      return { passed: true, error: null };
+      return { 
+        passed: true, 
+        error: null, 
+        wc3vOutput: {
+          replayHash,
+          ...replay
+        }
+      };
     } catch (e) {
-      if (options.inTestMode) {
-        console.log("TEST FAILED: ", file);
-        console.log(e);
-
-        return { passed: false, error: e.message };
-      } else {
-        console.log("error parsing replay: ", file);
-        console.log(e);
+      console.log("error parsing replay: ", file);
+      console.log(e);
         
-        return { passed: false, error: e.message };
-      }
-
-      return { passed: true, error: null };
+      return { passed: false, error: e.message, wc3vOutput: null };
     }
   });
 
