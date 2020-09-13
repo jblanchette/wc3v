@@ -1068,12 +1068,16 @@ const Wc3vViewer = class {
         const drawX = (rRow * tileWidth)  + transform.x;
         const drawY = (rCol * tileHeight) + transform.y;
 
-        if (this.isDev && !testData) {
-          ctx.strokeStyle = "#FF0000";
-          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
-        }
-
         rRow--;
+
+        if (this.isDev) {
+          if (!testData) {
+            ctx.strokeStyle = "#FF0000";
+            ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
+          }
+
+          continue;
+        }
 
         if (!data) {
           console.error("bad grid data: ", col, rRow);
