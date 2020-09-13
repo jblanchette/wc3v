@@ -5,16 +5,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
-    <script src="/js/Helpers.js?v=1.00"></script>
-    <script src="/js/Drawing.js?v=1.00"></script>
+    <script src="/js/Helpers.js?v=1.01"></script>
+    <script src="/js/Drawing.js?v=1.01"></script>
 
-    <script src="/js/TimeScrubber.js?v=1.00"></script>
-    <script src="/js/GameScaler.js?v=1.00"></script>
-    <script src="/js/ClientUnit.js?v=1.00"></script>
-    <script src="/js/ClientPlayer.js?v=1.00"></script>
-    <script src="/js/gameData.js?v=1.00"></script>
+    <script src="/js/TimeScrubber.js?v=1.01"></script>
+    <script src="/js/GameScaler.js?v=1.01"></script>
+    <script src="/js/ClientUnit.js?v=1.01"></script>
+    <script src="/js/ClientPlayer.js?v=1.01"></script>
+    <script src="/js/gameData.js?v=1.01"></script>
     
-    <script src="/js/app.js?v=1.00"></script>
+    <script src="/js/app.js?v=1.01"></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
@@ -24,7 +24,7 @@
     </script>
 
     <style type="text/css">
-      @import "/css/main.css?v=1.00";  
+      @import "/css/main.css?v=1.01";  
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -93,6 +93,7 @@
 
         <ul>
           <li onClick="wc3v.claimUploadTicket()">Upload New Replay</li>
+          <li onClick="wc3v.toggleSidePanel('recent-replays')">View Recent Replays</li>
           <li onClick="wc3v.toggleSidePanel('pro-replays')">Browse Pro Replays</li>
           <li onClick="wc3v.toggleSidePanel('about-wc3v')">About WC3v</li>
         </ul>
@@ -134,6 +135,11 @@
           <th>Map</th>
           <th>Replay Link</th>
         </table>
+      </div>
+
+      <div id="recent-replays" class="side-panel shown">
+        <h3>Recent Replays</h3>
+        <div id="recent-replays-data"></div>
       </div>
 
       <div id="content">

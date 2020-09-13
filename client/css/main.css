@@ -165,6 +165,10 @@ html, body {
   border-bottom: 1px solid #C3C3C3;
 }
 
+.shown {
+  display: block;
+}
+
 .wc3v-logo {
   font: 20px Verdana;
   color: #FFFFFF;
