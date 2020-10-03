@@ -411,7 +411,7 @@ const Wc3vViewer = class {
              <tr>
               <td><a href="/replay/${match.replayHash}">link</a></td>
               <td>${Math.round(duration)} min</td>
-              <td>${match.mapFile}</td>
+              <td>${encodeURI(match.mapFile)}</td>
               <td>${match.matchup}</td>
               <td>${match.matchupType}</td>
              </tr>`;
