@@ -3,7 +3,11 @@ const GameScaler = class {
     this.xScale = null;
     this.yScale = null;
 
+    this.gridXScale = null;
+    this.gridYScale = null;
+
     this.cameraRatio = { x: 1, y: 1 };
+    this.cameraBox = {};
     this.canvas = null;
 
     // dependencies
@@ -31,6 +35,19 @@ const GameScaler = class {
     this.cameraExtent = {
       x: bounds.camera[0],
       y: bounds.camera[1]
+    };
+
+    this.cameraBox = {
+      left:   bounds.map[0][0],
+      right:  bounds.map[0][1],
+      top:    bounds.map[1][0],
+      bottom: bounds.map[1][1],
+      innerBox: {
+        left:   bounds.camera[0][0],
+        right:  bounds.camera[0][1],
+        top:    bounds.camera[1][0],
+        bottom: bounds.camera[1][1]
+      }
     };
 
     this.setupView();
@@ -73,10 +90,13 @@ const GameScaler = class {
     const { 
       cameraExtent,
       cameraRange,
+      cameraBox,
       mapExtent,
       mapRange,
       _d3
     } = this;
+
+    const { innerBox } = cameraBox;
 
     this.xScale = _d3.scaleLinear()
       .domain(mapExtent.x)
@@ -87,12 +107,20 @@ const GameScaler = class {
       .range(mapRange.y);
 
     this.unitXScale = _d3.scaleLinear()
-      .domain(cameraExtent.x)
-      .range(cameraRange.x);
+      .range([ cameraBox.left, cameraBox.right ])
+      .domain(cameraRange.x);
 
     this.unitYScale = _d3.scaleLinear()
-      .domain(cameraExtent.y)
-      .range(cameraRange.y);
+      .range([ cameraBox.top, cameraBox.bottom ])
+      .domain(cameraRange.y);
+
+    this.gridXScale = _d3.scaleLinear()
+      .domain([ 0, Math.abs(innerBox.left) + Math.abs(innerBox.right) ])
+      .range([ innerBox.left, innerBox.right ]);
+
+    this.gridYScale = _d3.scaleLinear()
+      .domain([ 0, Math.abs(innerBox.top) + Math.abs(innerBox.bottom) ])
+      .range([ innerBox.top, innerBox.bottom ]);
   }
 
   setupMiddle () {

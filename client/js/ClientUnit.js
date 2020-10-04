@@ -318,7 +318,7 @@ const ClientUnit = class {
   }
 
   decay (dt = 1.0) {
-    const amount = this.meta.hero ? 0.0005 : 0.0025;
+    const amount = this.meta.hero ? 0.0015 : 0.0035;
     this.decayLevel = Math.max(this.minDecayLevel, this.decayLevel - (amount * dt));
   }
 
