@@ -1060,7 +1060,8 @@ const Wc3vViewer = class {
   }
 
   renderMapGrid (ctx) {
-    const { transform, viewOptions, gridTestData } = this;
+    const { transform, viewOptions, gridTestData, gameScaler} = this;
+    const { gridXScale, gridYScale, xScale, yScale, middleX, middleY } = gameScaler;
 
     if (!viewOptions.displayWalkGrid  &&
         !viewOptions.displayWaterGrid &&
@@ -1091,9 +1092,15 @@ const Wc3vViewer = class {
 
       for (let row = 0; row < gridWidth; row++) {
         const data = this.gridData[col][rRow];
-        const testData = this.isDev ? gridTestData[col][rRow] : null;
-        const drawX = (rRow * tileWidth)  + transform.x;
-        const drawY = (rCol * tileHeight) + transform.y;
+        const testData = this.isDev ? gridTestData[col][row] : null;
+
+        const gridPosition = {
+          x: gridXScale(row * 32),
+          y: gridYScale(col * 32),
+        };
+
+        const drawX = ((xScale(gridPosition.x) + middleX) * transform.k) + transform.x;
+        const drawY = ((yScale(gridPosition.y) + middleY) * transform.k) + transform.y;
 
         rRow--;
 
