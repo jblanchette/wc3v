@@ -531,11 +531,7 @@ const Wc3vViewer = class {
     const { name } = this.mapInfo;
 
     return new Promise((resolve, reject) => {
-      if (!self.isDev) {
-        resolve(true);
-      }
-
-      this.loadFile(`../gridtest`, (res) => {
+      this.loadFile(`../maps/${name}/grid`, (res) => {
         const { target } = res;
           
         const rawGrid = target.responseText;
@@ -1091,8 +1087,8 @@ const Wc3vViewer = class {
       rRow = gridWidth - 1;
 
       for (let row = 0; row < gridWidth; row++) {
-        const data = this.gridData[col][rRow];
-        const testData = this.isDev ? gridTestData[col][row] : null;
+        const data = this.gridData[rCol][row];
+        const testData = gridTestData[rCol][row];
 
         const gridPosition = {
           x: gridXScale(row * 32),
@@ -1103,15 +1099,6 @@ const Wc3vViewer = class {
         const drawY = ((yScale(gridPosition.y) + middleY) * transform.k) + transform.y;
 
         rRow--;
-
-        if (this.isDev) {
-          if (!testData) {
-            ctx.strokeStyle = "#FF0000";
-            ctx.strokeRect(drawX, drawY, tileWidth, tileHeight); 
-          }
-
-          continue;
-        }
 
         if (!data) {
           console.error("bad grid data: ", col, rRow);
@@ -1126,9 +1113,7 @@ const Wc3vViewer = class {
           Blight
         } = data;
 
-        const canWalk = (!NoWalk && NoBuild) || NoWater;
-
-        if (viewOptions.displayWalkGrid && canWalk) {
+        if (viewOptions.displayWalkGrid && !testData) {
           ctx.strokeStyle = "#FFF";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
