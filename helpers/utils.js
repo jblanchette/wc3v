@@ -71,16 +71,41 @@ const isItemIdInList = (data, itemId1, itemId2) => {
 ////
 
 const fixItemId = (itemId) => {
-	if (Array.isArray(itemId)) {
-		return itemId;
-	}
-	
   // TODO: new version of parser doesn't have this bug anymore, remove this
 	return itemId;
 };
 
+//
+// parser library incorrectly formats itemIds and
+// it seems this will not ever change for unknown reasons
+//
+const fixBrokenActionFormat = (action) => {
+  if (action && action.itemId) {
+    const { itemId } = action;
+    
+    const itemValue = itemId[3];
+
+    if (itemValue >= 0x41 && itemValue <= 0x7A) { 
+      action.itemId = itemId.map(e => String.fromCharCode(parseInt(e, 10))).reverse().join('');
+    }
+  }
+
+  return action;
+};
+
 const unpackItemId = (obj, optKey = 'itemId') => {
   return obj[optKey];
+};
+
+const RaceFlagMapping = {
+  65: 'H',
+  66: 'O',
+  68: 'E',
+  72: 'U'
+};
+
+const getRaceFromFlag = (raceFlag) => {
+  return RaceFlagMapping[raceFlag] || 'R';
 };
 
 ////
@@ -163,21 +188,31 @@ const uuidv4 = () => {
 // write wc3v output to file
 ////
 
-const writeOutput = (filename, fileHash, replay, players, jsonPadding = 0) => {
+const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) => {
 
-  const savedPlayers = replay.players;
+  const savedPlayers = replay.metadata.slotRecords;
   delete replay.players;
 
   replay.players = savedPlayers.reduce((acc, player) => {
-    const { id } = player;
+    const { playerId, raceFlag } = player;
 
-    acc[id] = player;
+    const record = replay.metadata.playerRecords.find(playerRecord => {
+      return playerRecord.playerId === playerId;
+    });
+
+    const wc3vRecord = wc3vPlayers[playerId];
+
+    acc[playerId] = {
+      name: record && record.playerName || `Unknown ${playerId}`,
+      raceDetected: wc3vRecord && wc3vRecord.race || 'R'
+    };
+
     return acc;
   }, {});
 
   const output = {
-    players: Object.keys(players).reduce((acc, playerId) => {
-    	const player = players[playerId];
+    players: Object.keys(wc3vPlayers).reduce((acc, playerId) => {
+    	const player = wc3vPlayers[playerId];
 
       if (!player.units.length) {
         console.logger("no units for player: ", playerId);
@@ -337,6 +372,8 @@ module.exports = {
 	writeOutput: writeOutput,
 
   unpackItemId,
+  getRaceFromFlag,
+  fixBrokenActionFormat,
 
 	// constants
 	MS_TO_SECONDS: 0.001,

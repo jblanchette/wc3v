@@ -1,6 +1,4 @@
-const W3GReplay = require('./node_modules/w3gjs');
-const { ActionBlockList } = require('./node_modules/w3gjs/dist/lib/parsers/actions');
-const Parser = new W3GReplay();
+const ReplayParser = require('./node_modules/w3gjs/dist/lib/parsers/ReplayParser').default;
 
 const utils = require("./helpers/utils"),
       logManager = require("./helpers/logManager"),
@@ -8,31 +6,53 @@ const utils = require("./helpers/utils"),
 
 const fs = require('fs');
 
-let playerManager;
-let actionCount = 0;
-let globalTime = 0;
+const doParsing = async (file) => {
+  let actionCount = 0;
+  let globalTime = 0;
+  let playerManager = new PlayerManager();
 
+  const buffer = fs.readFileSync(file);
+  const parser = new ReplayParser();
 
-Parser.on('gamemetadata', (gameMetaData) => {
-  playerManager.setMetaData(gameMetaData);
-});
-
-Parser.on('timeslotblock', (timeSlotBlock) => {
-  globalTime += timeSlotBlock.timeIncrement;
-  playerManager.processTick(globalTime);
-
-  timeSlotBlock.actions.forEach(actionBlock => {
-    playerManager.checkCreatePlayer(actionBlock);
-
-  	ActionBlockList.parse(actionBlock.actions).forEach(action => {
-      actionCount++;
-
-      playerManager.handleAction(actionBlock, action);
-  	});
+  parser.on("basic_replay_information", (info) => {
+    playerManager.setMetaData(info.metadata);
   });
-});
 
-const parseReplays = (options) => {
+  parser.on("gamedatablock", (block) => {
+    const commandBlocks = block.commandBlocks || [];
+    
+    if (block.timeIncrement) {
+      globalTime += block.timeIncrement;
+      playerManager.processTick(globalTime);
+    }
+
+    commandBlocks.forEach((actionBlock) => {
+      // check each block to see if we've found a new playerId
+      playerManager.checkCreatePlayer(actionBlock);
+
+      // handle each action in the block
+      const actions = actionBlock.actions || [];
+      actions.forEach(action => {
+        actionCount++;
+
+        // all action itemIds must be fixed due to parser bug
+        action = utils.fixBrokenActionFormat(action);
+
+        playerManager.handleAction(actionBlock, action);
+      });
+
+    });
+  });
+
+  const replay = await parser.parse(buffer);
+
+  return {
+    replay,
+    players: playerManager.players
+  };
+};
+
+const parseReplays = async (options) => {
   const { paths, hashes, jsonPadding, isProduction } = options;
 
   if (isProduction) {
@@ -40,8 +60,8 @@ const parseReplays = (options) => {
     logManager.setProductionMode(true);
   }
 
-  const results = paths.map((file, ind) => {
-    playerManager = new PlayerManager();
+  const results = paths.map(async (file, ind) => {
+    
     logManager.setLogger(file, true);
 
     if (!isProduction) {
@@ -52,28 +72,13 @@ const parseReplays = (options) => {
     actionCount = 0;
 
     try {
-
-      let replay;
-
-      try {
-        replay = Parser.parse(file);
-      } catch (e) {
-        if (e.message === "missing-map-data") {
-          throw e;
-        }
-
-        console.log("normal parse failed: ", e.message);
-        console.log("trying backup replay type");
-        replay = Parser.parse(file, 'netease');
-      }
-
-
-      let players = playerManager.players;
+      const result = await doParsing(file);
+      const { replay, players } = result;
 
       // write our output wc3v file
       const replayHash = hashes && hashes[ind] || null;
       utils.writeOutput(file, replayHash, replay, players, jsonPadding);
-
+ 
       // re-enable all logging
       logManager.setDisabledState(false);
 
@@ -100,10 +105,10 @@ const parseReplays = (options) => {
   return results;
 };
 
-const main = () => {
+const main = async () => {
   const options = utils.readCliArgs(process.argv);
   
-  parseReplays(options);
+  await parseReplays(options);
 };
 
 module.exports = {
