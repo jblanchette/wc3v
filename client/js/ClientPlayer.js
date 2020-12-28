@@ -25,6 +25,8 @@ const ClientPlayer = class {
     this.currentGroup = null;
 
     this.setupUnits(units);
+
+    console.log("setup player: ", this);
   }
 
   setupUnits (rawUnits) {
@@ -121,7 +123,7 @@ const ClientPlayer = class {
     const starterMap = {
       'O': 'ogre',
       'H': 'htow',
-      'N': 'etol',
+      'E': 'etol',
       'U': 'unpl'
     };
 

@@ -250,6 +250,8 @@ const Wc3vViewer = class {
   }
 
   toggleSidePanel (id, isOpen) {
+    this.hideSidePanels();
+
     const el = document.getElementById(id);
     const currentDisplay = window.getComputedStyle(el).display;
 
@@ -267,7 +269,8 @@ const Wc3vViewer = class {
   hideSidePanels () {
     const panels = [
       "pro-replays",
-      "about-wc3v"
+      "about-wc3v",
+      "recent-replays"
     ];
 
     panels.forEach(id => {
@@ -526,38 +529,6 @@ const Wc3vViewer = class {
     })
   }
 
-  loadGridTestFile () {
-    const self = this;
-    const { name } = this.mapInfo;
-
-    return new Promise((resolve, reject) => {
-      this.loadFile(`../maps/${name}/grid`, (res) => {
-        const { target } = res;
-          
-        const rawGrid = target.responseText;
-        const gridLines = rawGrid.split("\n");
-
-        const gridData = gridLines.map(line => {
-          const spots = line.split(" ");
-
-          return spots.map(spot => { return spot != "0"; });
-        });
-
-        self.gridTestData = [];
-
-        for (let col = 0; col < gridData[0].length; col++) {
-          self.gridTestData.push([]);
-
-          for (let row = 0; row < gridData.length; row++) {
-            self.gridTestData[col][row] = gridData[row][col];
-          }
-        }
-
-        resolve(true);
-      });
-    })
-  }
-
   loadDoodadFile () {
     const self = this;
     const { name } = this.mapInfo;
@@ -745,9 +716,8 @@ const Wc3vViewer = class {
     // finishes the setup promise
     return this.loadMapFile()
     .then(() => { return this.loadMapFile("grid"); })
-    .then(() => { return this.loadGridFile(); })
     .then(() => { return this.loadDoodadFile(); })
-    .then(() => { return this.loadGridTestFile(); })
+    .then(() => { return this.loadGridFile(); })
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
@@ -820,11 +790,13 @@ const Wc3vViewer = class {
     const { maps } = window.gameData;
 
     // extract map info from replay data
-    const { map } = this.mapData.replay;
-    const { file } = map;
+    
+    const { map, metadata, subheader } = this.mapData.replay;
+
+    const file = metadata.map.mapName;
     const mapParts = file.split("/");
 
-    this.matchEndTime = this.mapData.replay.duration;
+    this.matchEndTime = subheader.replayLengthMS;
 
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
     
@@ -1056,7 +1028,7 @@ const Wc3vViewer = class {
   }
 
   renderMapGrid (ctx) {
-    const { transform, viewOptions, gridTestData, gameScaler} = this;
+    const { transform, viewOptions, gameScaler} = this;
     const { gridXScale, gridYScale, xScale, yScale, middleX, middleY } = gameScaler;
 
     if (!viewOptions.displayWalkGrid  &&
@@ -1088,7 +1060,6 @@ const Wc3vViewer = class {
 
       for (let row = 0; row < gridWidth; row++) {
         const data = this.gridData[rCol][row];
-        const testData = gridTestData[rCol][row];
 
         const gridPosition = {
           x: gridXScale(row * 32),
@@ -1113,7 +1084,9 @@ const Wc3vViewer = class {
           Blight
         } = data;
 
-        if (viewOptions.displayWalkGrid && !testData) {
+        const canWalk = (!NoWalk && NoBuild) || NoWater || Blight;
+
+        if (viewOptions.displayWalkGrid && !canWalk) {
           ctx.strokeStyle = "#FFF";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
