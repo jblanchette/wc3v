@@ -60,40 +60,37 @@ const parseReplays = async (options) => {
     logManager.setProductionMode(true);
   }
 
-  const results = paths.map(async (file, ind) => {
-    
-    logManager.setLogger(file, true);
+  const file = paths[0];
+  logManager.setLogger(file, true);
 
-    if (!isProduction) {
-      logManager.getLogger().init();
-    }
-    
-    globalTime = 0;
-    actionCount = 0;
+  if (!isProduction) {
+    logManager.getLogger().init();
+  }
 
+  const result = await doParsing(file).then(result => {    
     try {
-      const result = await doParsing(file);
-      const { replay, players } = result;
+        const { replay, players } = result;
 
-      // write our output wc3v file
-      const replayHash = hashes && hashes[ind] || null;
-      utils.writeOutput(file, replayHash, replay, players, jsonPadding);
- 
-      // re-enable all logging
-      logManager.setDisabledState(false);
+        // write our output wc3v file
+        const replayHash = hashes && hashes[0] || null;
+        utils.writeOutput(file, replayHash, replay, players, jsonPadding);
+   
+        // re-enable all logging
+        logManager.setDisabledState(false);
 
-      if (options.inTestMode) {
-        console.log("TEST PASSED: ", file);
-      }
-
-      return { 
-        passed: true, 
-        error: null, 
-        wc3vOutput: {
-          replayHash,
-          ...replay
+        if (options.inTestMode) {
+          console.log("TEST PASSED: ", file);
         }
-      };
+
+        return { 
+          passed: true, 
+          error: null, 
+          wc3vOutput: {
+            replayHash,
+            ...replay
+          }
+        };
+      
     } catch (e) {
       console.log("error parsing replay: ", file);
       console.log(e);
@@ -102,7 +99,7 @@ const parseReplays = async (options) => {
     }
   });
 
-  return results;
+  return [ result ];
 };
 
 const main = async () => {

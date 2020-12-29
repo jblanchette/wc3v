@@ -194,7 +194,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
   delete replay.players;
 
   replay.players = savedPlayers.reduce((acc, player) => {
-    const { playerId, raceFlag } = player;
+    const { playerId, raceFlag, slotStatus } = player;
 
     const record = replay.metadata.playerRecords.find(playerRecord => {
       return playerRecord.playerId === playerId;
@@ -202,9 +202,19 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
 
     const wc3vRecord = wc3vPlayers[playerId];
 
+    if (slotStatus !== 2) {
+      console.logger("slot is not status 2 so not player");
+      return acc;
+    }
+
+    if (record && record.playerName == 'Blizzard') {
+      return acc;
+    }
+
     acc[playerId] = {
       name: record && record.playerName || `Unknown ${playerId}`,
-      raceDetected: wc3vRecord && wc3vRecord.race || 'R'
+      raceDetected: wc3vRecord && wc3vRecord.race || 'R',
+      teamId: player && player.teamId
     };
 
     return acc;
@@ -217,6 +227,11 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
       if (!player.units.length) {
         console.logger("no units for player: ", playerId);
 
+        return acc;
+      }
+
+      if (savedPlayers[playerId] && savedPlayers[playerId].slotStatus !== 2) {
+        console.logger("slot is not status 2 so not player");
         return acc;
       }
 
