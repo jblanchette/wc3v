@@ -322,7 +322,7 @@ const Wc3vViewer = class {
     const inputFile = document.createElement("input");
 
     inputFile.setAttribute("type", "file");
-    inputFile.setAttribute("accept", ".w3g")
+    inputFile.setAttribute("accept", ".w3g,.nwg")
     inputFile.click();
 
     inputFile.onchange = () => {
