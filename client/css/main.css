@@ -395,8 +395,8 @@ html, body {
   transform: scaleX(-1);
   position: absolute;
   top: 20px;
-  left: -208px;
-  z-index: -1;
+  left: -228px;
+  z-index: 1;
   overflow-y: auto;
   max-height: 650px;
 }
