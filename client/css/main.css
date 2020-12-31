@@ -207,7 +207,7 @@ html, body {
   font: 12px Verdana;
   position: absolute;
   top: 40px;
-  left: -183px;
+  left: -180px;
   width: 180px;
   text-align: center;
   z-index: 3;
@@ -395,8 +395,8 @@ html, body {
   transform: scaleX(-1);
   position: absolute;
   top: 20px;
-  left: -190px;
-  z-index: 2;
+  left: -208px;
+  z-index: -1;
   overflow-y: auto;
   max-height: 650px;
 }
