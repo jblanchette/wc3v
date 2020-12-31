@@ -297,7 +297,7 @@ const Wc3vViewer = class {
     });
   }
 
-  showUploadContents (which, optText = null) {
+  showUploadContents (which, optText = null, data = null) {
     this.hideUploadContents();
     this.toggleUploadWrapper(true);
     
@@ -305,6 +305,11 @@ const Wc3vViewer = class {
 
     if (optText) {
       document.getElementById("upload-progress-opt-text").innerHTML = optText;
+    }
+
+    if (data) {
+      const missingMapText = `Missing map: ${encodeURI(data.error.data.mapName)}`;
+      document.getElementById(`${which}-opt`).innerHTML = `WC3V does not (yet) support this map, sorry. ${missingMapText}`;
     }
   }
 
@@ -360,13 +365,24 @@ const Wc3vViewer = class {
         if (target.status >= 300) {
           console.log("upload error: ", target.status, target.statusText);
           
+          let data = null;
+          const { responseText } = target;
+
+          if (responseText && responseText != "") {
+            try { 
+              data = JSON.parse(responseText);
+            } catch (err) {
+              data = null;
+            }
+          }
+
           switch (target.status) {
             case 404:
               self.showUploadContents("upload-not-found");
             break;
 
             case 406:
-              self.showUploadContents("upload-not-supported");
+              self.showUploadContents("upload-not-supported", null, data);
             break;
 
             default:
