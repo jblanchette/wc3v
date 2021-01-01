@@ -104,6 +104,7 @@ const parseReplays = async (options) => {
       await parseReplays(options);
     }
   }
+  
   return [ result ];
 };
 
