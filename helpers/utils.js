@@ -203,7 +203,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
     const wc3vRecord = wc3vPlayers[playerId];
 
     if (slotStatus !== 2) {
-      console.logger("slot is not status 2 so not player");
+      console.logger("slot is not status 2 so not player", player, wc3vRecord, playerId);
       return acc;
     }
 
@@ -230,8 +230,12 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
         return acc;
       }
 
-      if (savedPlayers[playerId] && savedPlayers[playerId].slotStatus !== 2) {
-        console.logger("slot is not status 2 so not player");
+      const slot = savedPlayers.find(slot => {
+        return slot.playerId === playerId;
+      });
+
+      if (slot && slot.slotStatus !== 2) {
+        console.log("jdebug slot is not status 2 so not player", playerId, slot);
         return acc;
       }
 
