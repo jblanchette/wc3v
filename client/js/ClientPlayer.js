@@ -38,16 +38,11 @@ const ClientPlayer = class {
     this.units = this.units
     .sort((a, b) => {
       return b.isBuilding - a.isBuilding;
-    })
+    });
+
+    this.units = this.units
     .sort((a, b) => {
-      if (!a.isHero && b.isHero) {
-        return 1;
-      } else if (!a.isHero && !b.isHero ||
-                  a.isHero && b.isHero) {
-        return 0;
-      } else if (a.isHero && !b.isHero) {
-        return -1;
-      }
+      return a.meta.hero - b.meta.hero;
     });
 
     this.unitsByItemId = this.units.reduce((acc, unit) => {
