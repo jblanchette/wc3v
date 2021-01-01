@@ -194,7 +194,12 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
   delete replay.players;
 
   replay.players = savedPlayers.reduce((acc, player) => {
-    const { playerId, raceFlag, slotStatus } = player;
+    const { playerId, raceFlag, slotStatus } = player; 
+
+    if (player && player.teamId === 24) {
+      console.logger("not adding player on team 24 cause its bugged or who knkows waht");
+      return acc;
+    }
 
     const record = replay.metadata.playerRecords.find(playerRecord => {
       return playerRecord.playerId === playerId;
