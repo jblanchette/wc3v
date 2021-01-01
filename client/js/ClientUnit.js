@@ -402,7 +402,7 @@ const ClientUnit = class {
       }
     } else {
       if (neighbor) {
-        drawY -= halfIconSize * neighbor.unit.count;
+        drawX -= iconSize * (neighbor.unit.count - 1);
         neighbor.unit.count += 1;
       }
     }
