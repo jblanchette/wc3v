@@ -53,14 +53,14 @@ const doParsing = async (file) => {
 };
 
 const parseReplays = async (options) => {
-  const { paths, hashes, jsonPadding, isProduction } = options;
+  const { paths, hashes, jsonPadding, isProduction, inTestMode } = options;
 
   if (isProduction) {
     logManager.setTestMode(true);
     logManager.setProductionMode(true);
   }
 
-  const file = paths[0];
+  const file = paths.shift();
   logManager.setLogger(file, true);
 
   if (!isProduction) {
@@ -99,6 +99,11 @@ const parseReplays = async (options) => {
     }
   });
 
+  if (inTestMode) {
+    if (paths.length) {
+      await parseReplays(options);
+    }
+  }
   return [ result ];
 };
 

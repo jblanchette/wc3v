@@ -32,7 +32,7 @@ const maximumBuildingSize = 20,
 
 const buildingAlpha = 0.55;
 const minNeighborDrawDistance = 20;
-const pathDecayTime = 1000 * 140;
+const pathDecayTime = 1000 * 100;
 
 const ClientUnit = class {
   constructor (unitData, playerId, playerColor) {
@@ -329,32 +329,14 @@ const ClientUnit = class {
 
     // checks and updates current level record, setting this.fullName
     this.getCurrentLevelRecord(gameTime);
-    this.getCurrentMovePath(gameTime);
+    const hasRecord = this.getCurrentMovePath(gameTime);
     
-    const hasRecord = this.getCurrentMoveRecord(gameTime);
+    this.getCurrentMoveRecord(gameTime);
     if (this.isBuilding || !hasRecord) {
       this.decay();
 
       return;
     }
-
-    const secondsPassed = (dt * Helpers.MS_TO_SECONDS);
-    const {
-      xDirection,
-      yDirection,
-      xVelocity,
-      yVelocity
-    } = this.moveInfo;
-
-    // direction vector * velocity * time delta
-
-    const xDelta = (xDirection * xVelocity * secondsPassed);
-    const yDelta = (yDirection * yVelocity * secondsPassed);
-
-    // update the postion
-
-    this.currentX += xDelta;
-    this.currentY += yDelta;
   }
 
   renderBuilding (ctx, transform, xScale, yScale) {
@@ -394,8 +376,8 @@ const ClientUnit = class {
     const currentX = pathNode && pathNode.x;
     const currentY = pathNode && pathNode.y;
 
-    const drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
-    const drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
+    let drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
+    let drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
     const { unitDrawPositions } = frameData;
 
@@ -410,14 +392,18 @@ const ClientUnit = class {
     const halfIconSize = iconSize / 2.5;
     
     const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
+    const neighbor = this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY);
 
-    if (!this.meta.hero) {
-      const neighbor = this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY)
-      
+    if (!this.meta.hero) {  
       if (neighbor && neighbor.unit.itemId === this.itemId) {        
         neighbor.unit.count += 1;
 
         return;
+      }
+    } else {
+      if (neighbor) {
+        drawY -= halfIconSize * neighbor.unit.count;
+        neighbor.unit.count += 1;
       }
     }
 
