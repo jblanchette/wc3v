@@ -400,6 +400,7 @@ const ClientUnit = class {
       }
     } else {
       if (neighbor) {
+        const neighborCount = Math.min(neighbor.unit.count, 3);
         drawX -= iconSize * (neighbor.unit.count - 1);
         neighbor.unit.count += 1;
       }
