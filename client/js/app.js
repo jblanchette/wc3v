@@ -349,8 +349,8 @@ const Wc3vViewer = class {
         if (e.lengthComputable) {
           const percentage = Math.ceil((e.loaded / e.total) * 100);
 
-          // kb / (225 kb/min)
-          const estTimeLeft = ((e.total / 1024) / 225).toFixed(2);
+          // kb / (245 kb/min)
+          const estTimeLeft = ((e.total / 1024) / 245).toFixed(2);
           const optText = percentage === 100 ? 
             `Parsing... (est ~${estTimeLeft} min)` :
             `Uploading replay... ${percentage}%`;
