@@ -33,6 +33,7 @@ const maximumBuildingSize = 20,
 const buildingAlpha = 0.55;
 const minNeighborDrawDistance = 20;
 const pathDecayTime = 1000 * 100;
+const idleDecayTime = 1000 * 2;
 
 const ClientUnit = class {
   constructor (unitData, playerId, playerColor) {
@@ -204,16 +205,11 @@ const ClientUnit = class {
   getCurrentMovePath (gameTime) {
     const { path } = this;
 
-    let index = -1;
-    for (let i = 0; i < path.length; i++) {
-      const record = path[i];
-
-      if (record.gameTime > gameTime) {
-        break;
+    const index = path.findIndex(record => {
+      if (gameTime >= record.gameTime && gameTime <= (record.gameTime + idleDecayTime)) {
+        return record;
       }
-      
-      index = i;
-    }
+    });
 
     if (index === -1) {
       return false;
@@ -336,6 +332,8 @@ const ClientUnit = class {
       this.decay();
 
       return;
+    } else {
+      this.decayLevel = 1;
     }
   }
 
