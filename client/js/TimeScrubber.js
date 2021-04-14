@@ -95,14 +95,12 @@ const TimeScrubber = class {
   }
 
   findTrackerPosition (e, matchEndTime) {
-    const scrubberBox = this.wrapperEl.getBoundingClientRect();
-    const { width } = scrubberBox;
-
+    const width = e.target.scrollWidth;
     const trackPosition = e.offsetX === 0 ? 0 : (e.offsetX / width);
 
     return {
       gameTime: Math.floor(matchEndTime * trackPosition),
-      matchPercentage: trackPosition * 100
+      matchPercentage: (trackPosition * 100).toPrecision(2)
     };
   }
 

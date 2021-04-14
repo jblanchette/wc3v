@@ -111,6 +111,37 @@ const isBoxCollision = (boxA, boxB) => {
           boxA.y + boxA.height > boxB.y);
 };
 
+const findIndexFrom = (arr, fn, start = 0, gameTime = 0) => {
+  start = Math.max(0, start);
+
+  for (let i = start; i < arr.length; i++) {
+    const curNode = arr[i];
+    const nextNode = (i < arr.length - 1) ? arr[i + 1] : null;
+
+    if (fn(curNode, nextNode, gameTime)) {
+      return i;
+    }
+  }
+
+  return -1;
+};
+
+const StandardStreamSearch = (record, nextRecord, gameTime) => {
+  // is the gameTime before the next record in the sequence
+  let isBeforeNextStep;    
+
+  if (!nextRecord) {
+    // there is no next record, so this one is always our last valid one
+    isBeforeNextStep = true;
+  } else {
+    isBeforeNextStep = (gameTime < nextRecord.gameTime);
+  }
+
+  if (gameTime >= record.gameTime && isBeforeNextStep) {
+    return record;
+  }
+};
+
 const Helpers = {
   distance,
   closestToPoint,
@@ -118,6 +149,8 @@ const Helpers = {
   isEqualUnitItemId,
   makeItemIdHash,
   isBoxCollision,
+  findIndexFrom,
+  StandardStreamSearch,
 
   // constants
   MS_TO_SECONDS: 0.001,
