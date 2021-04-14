@@ -151,12 +151,23 @@ const ClientPlayer = class {
   }
 
   update (gameTime, dt) {
-    this.units.forEach(unit => unit.update(gameTime, dt));
+    this.units.forEach(unit => {
+      unit.update(gameTime, dt);
+    });
+    
     this.getSelectionRecord(gameTime);
   }
 
   moveTracker (gameTime) {
-    this.units.forEach(unit => unit.jump(gameTime));
+    this.units.forEach(unit => {
+      // reset a units record indexes, decay status, full name
+      unit.jump(gameTime);
+
+      // update the unit at the new gameTime to prepare for rendering
+      unit.update(gameTime, 1);
+    });
+
+    this.getSelectionRecord(gameTime);
   }
 
   renderPlayerIcon (playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {

@@ -495,7 +495,7 @@ html, body {
 .time-scrubber-track {
   display: flex;
   align-items: center;
-  height: 0.35rem;
+  height: 0.75rem;
   width: calc(100%  - 6rem);
   background-color: #000;
   border: 1px solid #555;
@@ -505,10 +505,11 @@ html, body {
 }
 
 .time-scrubber-tracker {
+  pointer-events: none;
   position: relative;
   left: 0;
-  height: 0.75rem;
-  width: 0.75rem;
+  height: 0.95rem;
+  width: 0.95rem;
   background-color: #FFF;
   border: 2px solid #000;
   border-radius: 100%;

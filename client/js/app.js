@@ -172,7 +172,7 @@ const Wc3vViewer = class {
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
 
-    this.isDev = (window.location.hostname === "10.0.0.81");
+    this.isDev = (window.location.hostname === "127.0.0.1");
   }
 
   load (mapId = null) {
@@ -335,7 +335,7 @@ const Wc3vViewer = class {
 
       self.showUploadContents("upload-progress-loader", "Uploading replay... 0%");
 
-      const port = window.location.hostname === "10.0.0.81" ? ":8085" : "";
+      const port = window.location.hostname === "127.0.0.1" ? ":8085" : "";
       const req = new XMLHttpRequest();
       req.open('POST', `http://${window.location.hostname}${port}/upload`, true);
       
@@ -577,7 +577,11 @@ const Wc3vViewer = class {
     this.gameTime = gameTime;
     this.scrubber.moveTracker(matchPercentage);
 
-    this.players.forEach(player => player.moveTracker(gameTime));
+    this.players.forEach(player => {
+      // jump + update
+      player.moveTracker(gameTime);
+    });
+
     this.render();
   }
 
@@ -918,7 +922,10 @@ const Wc3vViewer = class {
     this.lastFrameTimestamp = timestamp;
  
     while (this.lastFrameDelta >= timeStep) {
-        this.update(timeStep * speed);
+        if (this.state === ScrubStates.playing) {
+          this.update(timeStep * speed);
+        }
+        
         this.lastFrameDelta -= timeStep;
     }
 

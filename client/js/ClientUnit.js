@@ -41,7 +41,7 @@ const ClientUnit = class {
       "displayName", "itemId", "itemId1", "itemId2",
       "objectId1", "objectId2", "isRegistered", "isUnit",
       "isBuilding", "isIllusion", "level", "lastPosition",
-      "path", "moveHistory", "meta", "items", "spawnTime",
+      "path", "meta", "items", "spawnTime",
       "spawnPosition", "levelStream", "spellList"
     ];
 
@@ -181,42 +181,24 @@ const ClientUnit = class {
     return levelRecord || null;
   }
 
-  getCurrentMoveRecord (gameTime) {
-    const index = this.moveHistory.findIndex(record => {
-      const { startTime, endTime } = record.timerData;
-
-      if (gameTime >= startTime && gameTime <= endTime) {
-        return record;
-      }
-    });
-
-    if (index === -1) {
-      return false;
-    }
-
-    if (this.recordIndexes.move !== index) {
-      this.initMove(index);
-    }
-
-    this.recordIndexes.move = index;
-    return true;
-  }
-
   getCurrentMovePath (gameTime) {
     const { path } = this;
 
-    const index = path.findIndex(record => {
-      if (gameTime >= record.gameTime && gameTime <= (record.gameTime + idleDecayTime)) {
-        return record;
-      }
-    });
+    const index = Helpers.findIndexFrom(
+      path, 
+      Helpers.StandardStreamSearch, 
+      this.recordIndexes.path,
+      gameTime
+    );
 
     if (index === -1) {
-      return false;
+      return null;
     }
 
     this.recordIndexes.path = index;
-    return true;
+
+    // return back the new record
+    return path[index];
   }
 
   getCurrentLevelRecord (gameTime, verbose = false) {
@@ -226,16 +208,12 @@ const ClientUnit = class {
 
     const { levelStream } = this;
 
-    let index = -1;
-    for (let i = 0; i < levelStream.length; i++) {
-      const record = levelStream[i];
-
-      if (record.gameTime > gameTime) {
-        break;
-      }
-      
-      index = i;
-    }
+    const index = Helpers.findIndexFrom(
+      levelStream, 
+      Helpers.StandardStreamSearch, 
+      this.recordIndexes.level,
+      gameTime
+    );
 
     if (index === -1) {
       return;
@@ -266,51 +244,24 @@ const ClientUnit = class {
   }
 
   jump (gameTime) {
-    // calculate decay
-    this.getCurrentLevelRecord(gameTime);
-    this.getCurrentMovePath(gameTime);
-
-    const hasMoveRecord = this.getCurrentMoveRecord(gameTime);
-    if (!hasMoveRecord) {
-      this.decayLevel = 0;
-
+    if (this.isBuilding) {
       return;
-    }    
+    }
 
-    const moveRecord = this.moveHistory[this.recordIndexes.move];
-    const { timerData, startX, startY } = moveRecord;
-    const moveJumpDelta = (gameTime - timerData.startTime);
+    // reset unit
+    this.resetDecay();
 
-    this.currentX = startX;
-    this.currentY = startY;
-
-    this.update(gameTime, moveJumpDelta);
+    this.recordIndexes = {
+      move: -1,
+      level: -1,
+      path: -1
+    };
+    
+    this.fullName = this.getFullName();
   }
 
-  initMove (index) {
-    const { targetX, targetY } = this.moveHistory[index];
-
-    const pathDistance = Helpers.distance(
-      this.currentX, this.currentY,
-      targetX, targetY
-    );
-
-    const ms = (this.meta.movespeed || 250);
-    const pathTime = (pathDistance / ms);
-
+  resetDecay (index) {
     this.decayLevel = 1;
-    this.moveInfo = {
-      startX: this.currentX,
-      startY: this.currentY,
-      targetX: targetX,
-      targetY: targetY,
-      xDirection: (targetX > this.currentX) ? 1 : -1,
-      yDirection: (targetY > this.currentY) ? 1 : -1,
-      pathDistance: pathDistance,
-      pathTime: pathTime,
-      xVelocity: (Math.abs(targetX - this.currentX) / pathTime),
-      yVelocity: (Math.abs(targetY - this.currentY) / pathTime)
-    };
   }
 
   decay (dt = 1.0) {
@@ -325,16 +276,25 @@ const ClientUnit = class {
 
     // checks and updates current level record, setting this.fullName
     this.getCurrentLevelRecord(gameTime);
-    const hasRecord = this.getCurrentMovePath(gameTime);
-    
-    this.getCurrentMoveRecord(gameTime);
-    if (this.isBuilding || !hasRecord) {
-      this.decay();
 
+    // early exit for buildings
+    if (this.isBuilding) {
       return;
-    } else {
-      this.decayLevel = 1;
     }
+
+    const currentMoveRecord = this.getCurrentMovePath(gameTime);
+
+    if (currentMoveRecord) {
+      if ((gameTime - currentMoveRecord.gameTime) > idleDecayTime) {
+        // idle detected, increment the decay level for the
+        this.decay();
+
+        return;
+      }
+    }
+
+    // we have an active record so reset the units visual decay
+    this.resetDecay();
   }
 
   renderBuilding (ctx, transform, xScale, yScale) {
@@ -374,6 +334,11 @@ const ClientUnit = class {
     const currentX = pathNode && pathNode.x;
     const currentY = pathNode && pathNode.y;
 
+    if (isNaN(currentX) || isNaN(currentY)) {
+      // some kind of drawing error, just return out
+      return;
+    }
+
     let drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
     let drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
@@ -392,17 +357,20 @@ const ClientUnit = class {
     const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
     const neighbor = this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY);
 
-    if (!this.meta.hero) {  
+    if (!this.meta.hero) {
       if (neighbor && neighbor.unit.itemId === this.itemId) {        
         neighbor.unit.count += 1;
 
         return;
       }
+
+      drawY += iconSize * 2;
     } else {
       if (neighbor) {
-        const neighborCount = Math.min(neighbor.unit.count, 3);
-        drawX -= iconSize * (neighbor.unit.count - 1);
+        const neighborCount = Math.min(neighbor.unit.count, 5);
         neighbor.unit.count += 1;
+        
+        drawX -= iconSize;
       }
     }
 
@@ -476,6 +444,10 @@ const ClientUnit = class {
 
     path.forEach((item, ind) => {
       if (item.gameTime > gameTime) {
+        return;
+      }
+
+      if (ind > this.recordIndexes.path) {
         return;
       }
 
