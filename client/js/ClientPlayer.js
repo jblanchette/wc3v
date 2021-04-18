@@ -128,6 +128,32 @@ const ClientPlayer = class {
       return acc;
     }, []);
 
+    let firstHero = null;
+    let heroes = [];
+
+    this.units.forEach(unit => {
+      if (!unit.meta.hero || unit.isIllusion) {
+        return;
+      }
+
+      heroes.push(unit);
+
+      if (!firstHero) {
+        firstHero = unit;
+      }
+
+      if (unit.spawnTime < firstHero.spawnTime) {
+        firstHero = unit;
+      }
+    });
+
+    heroes = heroes.sort(hero => hero.spawnTime);
+    heroes.forEach((hero, ind) => { hero.heroRank = ind + 1; });
+
+    if (firstHero) {
+      firstHero.isMainHero = true;
+    }
+
     const img = new Image();
     const imgSrc = `/assets/wc3icons/${starterMap[this.race]}.jpg`;
     
@@ -330,6 +356,112 @@ const ClientPlayer = class {
     }
   }
 
+  renderDrawnUnits (frameData, ctx) {
+    const { nameplateTree, unitTree, unitDrawPositions } = frameData;
+
+    const drawBoxes = unitDrawPositions.reduce((acc, item) => {
+      const { 
+        x, 
+        y,
+        icon,
+        iconSize, 
+        halfIconSize, 
+        fontSize, 
+        heroRank,
+        isHero,
+        isMainHero,
+        fullName, 
+        decayLevel, 
+        itemId,
+        playerId,
+        count,
+        drawSlots
+      } = item;
+
+      // don't draw decayed unit nameplates
+      if (decayLevel < 0.65) {
+        return acc;
+      }
+
+      const unitBox = {
+        minX:     x - (iconSize / 2),
+        maxX:     x + (iconSize / 2),
+        minY:     y - (iconSize / 2),
+        maxY:     y + (iconSize / 2),
+        drawX:    x,
+        drawY:    y,
+        icon,
+        iconSize,
+        halfIconSize,
+        heroRank,
+        isHero,
+        isMainHero,
+        itemId,
+        playerId,
+        count,
+        drawSlots
+      };
+
+      acc.push(unitBox);
+      return acc;
+    }, []);
+
+    unitTree.load(drawBoxes);
+
+    const treeItems = unitTree.all();
+    treeItems.forEach((unitBox, ind) => {
+      const { 
+        drawX, 
+        drawY, 
+        minX, 
+        minY, 
+        maxX, 
+        maxY,
+        isHero,
+        isMainHero,
+        itemId,
+        playerId,
+        heroRank,
+        drawSlots
+      } = unitBox;
+
+      const collisions = unitTree.search(unitBox);
+      if (!isMainHero && collisions.length > 1) {
+        const mainHero = collisions.find(collision => {
+          return collision.isMainHero;
+        });
+
+        if (mainHero) {
+          const drawSlot = Drawing.assignDrawSlot(mainHero, mainHero.drawSlots, itemId, isHero, heroRank);
+          if (!drawSlot) {
+            // some error or overlap
+            return;
+          }
+
+          unitBox = { 
+            ...unitBox, 
+            ...Drawing.getUnitBounds(mainHero, drawSlot.xOffset, drawSlot.yOffset) 
+          };
+        } else {
+          // did with collide with another hero?
+          const otherHero = collisions.find(collision => {
+            return collision.isHero;
+          });
+
+          if (!isHero && otherHero) {
+            // don't draw because we're a unit who is colliding with a non-main hero
+            // somewhere outside of the main pack
+            return;
+          }
+        }
+
+
+      }
+
+      Drawing.drawUnit(ctx, unitBox);
+    });
+  }
+
   renderNameplates (frameData, ctx) {
     const { nameplateTree, unitDrawPositions } = frameData;
     
@@ -425,6 +557,8 @@ const ClientPlayer = class {
     // draw units / buildings
     this.units.forEach(unit => 
       unit.render(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
+
+    this.renderDrawnUnits(frameData, playerCtx);
 
     ////
     // render optional details

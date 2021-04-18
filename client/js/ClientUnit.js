@@ -12,7 +12,7 @@ const HighlightModes = {
 ////
 
 const IconSizes = {
-  'hero': 36,
+  'hero': 32,
   'unit': 22,
   'worker': 14,
   'building': 16
@@ -32,7 +32,7 @@ const maximumBuildingSize = 20,
 
 const buildingAlpha = 0.55;
 const minNeighborDrawDistance = 20;
-const pathDecayTime = 1000 * 100;
+const pathDecayTime = 1000 * 20;
 const idleDecayTime = 1000 * 2;
 
 const ClientUnit = class {
@@ -326,9 +326,6 @@ const ClientUnit = class {
       return;
     }
 
-    // (x * scale) + transform.x
-    // (y * scale) + transform.y
-
     const pathNode = this.path[this.recordIndexes.path];
 
     const currentX = pathNode && pathNode.x;
@@ -355,58 +352,26 @@ const ClientUnit = class {
     const halfIconSize = iconSize / 2.5;
     
     const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
-    const neighbor = this.hasDrawingNeighbor(unitDrawPositions, drawX, drawY);
-
-    if (!this.meta.hero) {
-      if (neighbor && neighbor.unit.itemId === this.itemId) {        
-        neighbor.unit.count += 1;
-
-        return;
-      }
-
-      drawY += iconSize * 2;
-    } else {
-      if (neighbor) {
-        const neighborCount = Math.min(neighbor.unit.count, 5);
-        neighbor.unit.count += 1;
-        
-        drawX -= iconSize;
-      }
-    }
 
     // add unit to draw frame unit positions
     unitDrawPositions.push({ 
       itemId: this.itemId,
       fullName: this.fullName,
       playerId: this.playerId,
+      playerColor: this.playerColor,
+      icon: this.icon,
       iconSize: iconSize,
+      halfIconSize: halfIconSize,
       fontSize: fontSize,
       decayLevel: this.decayLevel,
       isHero: this.meta.hero,
+      isMainHero: this.isMainHero,
+      heroRank: this.heroRank,
       x: drawX, 
       y: drawY,
-      count: 1
+      count: 1,
+      drawSlots: []
     });
-
-    // draw code
-
-    ctx.strokeStyle = "#FFFC01";
-    ctx.globalAlpha = this.decayLevel;
-
-    ctx.fillStyle = this.playerColor;
-    ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize + 2, 0, Math.PI * 2, true);
-    ctx.fill();
-    ctx.fillStyle = "#000";
-
-    if (!this.icon) {
-      console.error("missing icon for unit: ", this);
-    }
-    
-    Drawing.drawImageCircle(ctx, this.icon, drawX, drawY, iconSize);
-
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = colorMap.black;
   }
 
   renderPath (ctx, transform, gameTime, xScale, yScale, viewOptions) {

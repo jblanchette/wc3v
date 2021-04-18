@@ -1,4 +1,6 @@
 
+const DRAW_SPOTS_PER_UNIT = 4;
+
 const Drawing = class {
 
   static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 10, fontSize = 10) {
@@ -56,6 +58,120 @@ const Drawing = class {
     ctx.stroke();
     ctx.closePath();
     ctx.restore();
+  }
+
+  static drawUnit (ctx, unit) {
+    const { 
+      drawX, 
+      drawY, 
+      iconSize, 
+      halfIconSize, 
+      decayLevel, 
+      icon, 
+      playerColor 
+    } = unit;
+
+    ctx.strokeStyle = "#FFFC01";
+    ctx.globalAlpha = decayLevel;
+
+    ctx.fillStyle = playerColor;
+    ctx.beginPath();
+    ctx.arc(drawX, drawY, halfIconSize + 2, 0, Math.PI * 2, true);
+    ctx.fill();
+    ctx.fillStyle = "#000";
+
+    if (!icon) {
+      console.error("missing icon for unit: ", unit);
+    }
+    
+    Drawing.drawImageCircle(ctx, icon, drawX, drawY, iconSize);
+
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = colorMap.black;
+  }
+
+  static getUnitBounds (unit, offsetX = 0, offsetY = 0) {
+    let {
+      drawX,
+      drawY,
+      iconSize
+    } = unit;
+
+    drawX += offsetX;
+    drawY += offsetY;
+
+    return {
+      minX:     drawX - (iconSize / 2),
+      maxX:     drawX + (iconSize / 2),
+      minY:     drawY - (iconSize / 2),
+      maxY:     drawY + (iconSize / 2),
+      drawX:    drawX,
+      drawY:    drawY
+    };
+  }
+
+  static assignDrawSlot (unit, drawSlots, newItemId, isHero, heroRank) {
+    let spot = -1;
+
+    for (let i = 0; i <= DRAW_SPOTS_PER_UNIT; i++) {
+      // found an empty slot in order
+      if (!drawSlots[i]) {
+        drawSlots[i] = {
+          count: 1,
+          itemId: newItemId
+        };
+
+        spot = i;
+        break;
+      }
+
+      // found a slot with this unit
+      if (drawSlots[i].itemId === newItemId) {
+        drawSlots[i].count = drawSlots[i].count + 1;
+
+        spot = i;
+        break;
+      }
+    }
+
+    if (spot === -1) {
+      return null;
+    }
+
+    const { iconSize, halfIconSize } = unit;
+
+    if (isHero) {
+      // heroes are always drawn left + right of main hero
+      return {
+        xOffset: (heroRank > 2) ? iconSize : -(iconSize),
+        yOffset: 0,
+        spot: null
+      };
+    }
+
+    // units are in one of 5 slots.  this could be a loop but i'm lazy
+    // note: they are intentionally mixed order indexes so it draws the
+    //       two 'inner' slots first
+
+
+    /*********************************************************************
+     *   drawing layout -
+     *
+     *                  [ 2 ] [ 1 ] [ 0 ] [ 3 ] [ 5 ]
+     *
+     *             ( alt hero)  ( main hero ) ( alt hero )
+     *
+     *********************************************************************/
+
+    const spotMap = {
+      2: { spot, xOffset: -(iconSize),                yOffset: -(iconSize) },
+      1: { spot, xOffset: -(iconSize) + halfIconSize, yOffset: -(iconSize) },
+      0: { spot, xOffset: 0,                          yOffset: -(iconSize) },
+      3: { spot, xOffset:  (iconSize) + halfIconSize, yOffset: -(iconSize) },
+      4: { spot, xOffset: -(iconSize),                yOffset: -(iconSize) }
+    };
+
+    return spotMap[spot];
   }
 
   static rescaleX (x, transform) {

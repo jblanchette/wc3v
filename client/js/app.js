@@ -1170,7 +1170,11 @@ const Wc3vViewer = class {
     this.renderMapBackground();
 
     // stored data about each frame
-    let frameData = { nameplateTree: new rbush(), unitDrawPositions: [] };
+    let frameData = { 
+      nameplateTree: new rbush(),
+      unitTree: new rbush(),
+      unitDrawPositions: []
+    };
 
     this.renderMapGrid(utilityCtx);
     this.renderMapTrees(utilityCtx);
