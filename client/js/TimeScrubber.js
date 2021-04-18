@@ -11,12 +11,12 @@ const ScrubSpeeds = {
 
 const TimeScrubber = class {
   constructor (wrapperId, canvasId) {
-    this.isDev = (window.location.hostname === "10.0.0.81");
+    this.isDev = (window.location.hostname === "127.0.0.1");
     this.wrapperId = wrapperId;
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    const startingSpeed = this.isDev ? '40x' : '10x';
+    const startingSpeed = this.isDev ? '40x' : '5x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
 
