@@ -14,7 +14,7 @@ const HighlightModes = {
 const IconSizes = {
   'hero': 32,
   'unit': 22,
-  'worker': 14,
+  'worker': 20,
   'building': 16
 };
 
