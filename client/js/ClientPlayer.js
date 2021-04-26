@@ -6,7 +6,7 @@ const StatusTabs = {
 };
 
 const ClientPlayer = class {
-  constructor (slot, playerId, startingPosition, units, displayName, race, selectionStream, playerColor) {
+  constructor (slot, playerId, startingPosition, units, displayName, race, selectionStream, playerColor, isNeutralPlayer) {
     this.slot = slot;
     this.playerId = playerId;
     this.startingPosition = startingPosition;
@@ -14,6 +14,7 @@ const ClientPlayer = class {
     this.race = race;
     this.selectionStream = selectionStream;
     this.playerColor = playerColor;
+    this.isNeutralPlayer = isNeutralPlayer;
 
     this.assetsLoaded = false;
     this.tab = StatusTabs.heroes;
@@ -32,7 +33,7 @@ const ClientPlayer = class {
   setupUnits (rawUnits) {
     // make new ClientUnit instances
     this.units = rawUnits.map(unitData => 
-      new ClientUnit(unitData, this.playerId, this.playerColor));
+      new ClientUnit(unitData, this.playerId, this.playerColor, this.isNeutralPlayer));
     
     // drawing sort order: buildings, heroes, units
     this.units = this.units
@@ -197,6 +198,10 @@ const ClientPlayer = class {
   }
 
   renderPlayerIcon (playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+    if (this.isNeutralPlayer) {
+      return;
+    }
+
     if (!this.icon) {
       return;
     }
@@ -357,6 +362,7 @@ const ClientPlayer = class {
   }
 
   renderDrawnUnits (frameData, ctx) {
+    const { isNeutralPlayer } = this;
     const { nameplateTree, unitTree, unitDrawPositions } = frameData;
 
     const drawBoxes = unitDrawPositions.reduce((acc, item) => {
@@ -399,7 +405,8 @@ const ClientPlayer = class {
         itemId,
         playerId,
         count,
-        drawSlots
+        drawSlots,
+        decayLevel
       };
 
       acc.push(unitBox);
@@ -422,8 +429,15 @@ const ClientPlayer = class {
         itemId,
         playerId,
         heroRank,
-        drawSlots
+        drawSlots,
+        decayLevel
       } = unitBox;
+
+      if (isNeutralPlayer) {
+        Drawing.drawUnit(ctx, unitBox);
+
+        return;
+      }
 
       const collisions = unitTree.search(unitBox);
       if (!isMainHero && collisions.length > 1) {
@@ -454,8 +468,6 @@ const ClientPlayer = class {
             return;
           }
         }
-
-
       }
 
       Drawing.drawUnit(ctx, unitBox);

@@ -251,7 +251,8 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
         units,
         eventStream,
         selectionStream,
-        groupStream
+        groupStream,
+        isNeutralPlayer
       } = player;
 
     	acc[playerId] = {
@@ -261,6 +262,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
         eventStream,
         selectionStream,
         groupStream,
+        isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit())
     	};
 
@@ -340,33 +342,28 @@ const readCliArgs = (argv) => {
         logManager.setTestMode();
 
         const testMaps = [
-          // simple test mpas
-          'test-ch-movement',
-          'test-ei-movement',
-          // normal bnet games
-          'bnet-ud-vs-orc-2',
-          // pro mactches
-          'happy-vs-grubby',
-          'grubby-vs-thorzain',
-          'happy-vs-lucifer',
-          'cash-vs-foggy',
-          'foggy-vs-cash-2',
-          'crow-vs-john',
-          'chae-vs-hawk',
-          'soin-vs-chae',
-          'joker-vs-lil',
-          'terenas-stand-lv_sonik-vs-tgw',
-          '2v2-synergy',
-          'lado-hatuey-tom-leo-speo',
-          'guardians',
-          'monsoon',
-          'lastrefuge',
+          // pro mactches on site
+          // 'happy-vs-grubby',
+          // 'grubby-vs-thorzain',
+          // 'cash-vs-foggy',
+          // 'happy-vs-lucifer',
+          // 'foggy-vs-cash-2',
+          // 'terenas-stand-lv_sonik-vs-tgw',
+          // '2v2-synergy',
+          // standard maps
+          'amazonia',
+          'battleground',
+          'mesa',
+          // concealed hill and echo done by pro matches
           'gnollwood',
+          'guardians',
+          'lastrefuge',
+          'monsoon',
+          'northernisles',
+          // synergy done by pro match
           'upperkingdom2',
           'twistedmeadows5',
-          'northernisles',
-          'battleground',
-          'amazonia'
+          'northernisles'
         ];
 
         options.inTestMode = true;
