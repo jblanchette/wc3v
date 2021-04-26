@@ -82,6 +82,7 @@ const Drawing = class {
 
     if (!icon) {
       console.error("missing icon for unit: ", unit);
+      return;
     }
     
     Drawing.drawImageCircle(ctx, icon, drawX, drawY, iconSize);

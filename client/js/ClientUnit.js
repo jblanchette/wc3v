@@ -15,7 +15,8 @@ const IconSizes = {
   'hero': 32,
   'unit': 22,
   'worker': 20,
-  'building': 16
+  'building': 16,
+  'neutral': 14
 };
 
 const minimumUnitSize     = 12,
@@ -36,7 +37,7 @@ const pathDecayTime = 1000 * 20;
 const idleDecayTime = 1000 * 2;
 
 const ClientUnit = class {
-  constructor (unitData, playerId, playerColor) {
+  constructor (unitData, playerId, playerColor, isNeutralPlayer) {
     const dataFields = [ 
       "displayName", "itemId", "itemId1", "itemId2",
       "objectId1", "objectId2", "isRegistered", "isUnit",
@@ -51,6 +52,7 @@ const ClientUnit = class {
 
     this.playerId = playerId;
     this.playerColor = playerColor;
+    this.isNeutralPlayer = isNeutralPlayer;
 
     this.highlightMode = HighlightModes.all;
 
@@ -142,6 +144,14 @@ const ClientUnit = class {
     //
     // setup defaults for different unit / building types
     //
+
+    if (this.isNeutralPlayer) {
+      this.iconSize = IconSizes.neutral;
+      this.minDecayLevel = 0.75;
+      this.decayLevel = 0.75;
+
+      return;
+    }
 
     if (this.meta.hero) {
       this.iconSize = IconSizes.hero;
