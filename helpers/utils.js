@@ -337,6 +337,27 @@ const readCliArgs = (argv) => {
         logManager.setTestMode();
       break;
 
+      case "promaps":
+        config.debugPlayer = null; // hack to turn off all logs for now
+        logManager.setTestMode();
+
+        const proMaps = [
+          // pro mactches on site
+          'happy-vs-grubby',
+          'grubby-vs-thorzain',
+          'cash-vs-foggy',
+          'happy-vs-lucifer',
+          'foggy-vs-cash-2',
+          'terenas-stand-lv_sonik-vs-tgw',
+          '2v2-synergy'
+        ];
+
+        options.inTestMode = true;
+        options.paths = proMaps.map(mapName => {
+          return `./replays/${mapName}.w3g`;
+        });
+      break;
+
       case "test":
         config.debugPlayer = null; // hack to turn off all logs for now
         logManager.setTestMode();
