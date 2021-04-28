@@ -48,7 +48,8 @@ const doParsing = async (file) => {
 
   return {
     replay,
-    players: playerManager.players
+    players: playerManager.players,
+    world: playerManager.world
   };
 };
 
@@ -69,11 +70,11 @@ const parseReplays = async (options) => {
 
   const result = await doParsing(file).then(result => {    
     try {
-        const { replay, players } = result;
+        const { replay, players, world } = result;
 
         // write our output wc3v file
         const replayHash = hashes && hashes[0] || null;
-        utils.writeOutput(file, replayHash, replay, players, jsonPadding);
+        utils.writeOutput(file, replayHash, replay, players, world, jsonPadding);
    
         // re-enable all logging
         logManager.setDisabledState(false);

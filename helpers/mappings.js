@@ -1,4 +1,5 @@
 const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
+const unitBalanceMap = require("./UnitBalance.json").output;
 
 let {
 	units,
@@ -38,6 +39,14 @@ Object.keys(extraUnits).forEach(key => {
 
 Object.keys(extraItems).forEach(key => {
     items[key] = extraItems[key];
+});
+
+Object.keys(unitBalanceMap).forEach(unitId => {
+  const unit = unitBalanceMap[unitId];
+
+  if (!units[unitId] && unit.level) {
+    units[unitId] = unit.displayName;
+  }
 });
 
 const abilityActions = {
@@ -1686,6 +1695,8 @@ const getUnitInfo = (itemId) => {
     movespeed: 200 // default unknown ms
 	};
 
+  const balanceInfo = unitBalanceMap[itemId] || {};
+
 	return {
 		displayName,
 		isBuilding,
@@ -1696,7 +1707,8 @@ const getUnitInfo = (itemId) => {
     isInteractiveShop,
     isPlayerShop,
     isGoldmine,
-		meta
+		meta,
+    balanceInfo
 	};
 };
 

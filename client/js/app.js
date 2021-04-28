@@ -535,10 +535,14 @@ const Wc3vViewer = class {
 
     return new Promise((resolve, reject) => {
       this.loadFile(`../maps/${name}/wpm.json`, (res) => {
-        const { target } = res;
-        const jsonData = JSON.parse(target.responseText);
-          
-        self.gridData = jsonData.grid;
+        try {
+          const { target } = res;
+          const jsonData = JSON.parse(target.responseText);
+            
+          self.gridData = jsonData.grid;
+        } catch (e) {
+          self.gridData = [];
+        }
 
         resolve(true);
       });
@@ -1051,6 +1055,48 @@ const Wc3vViewer = class {
     ctx.globalAlpha = oldAlpha;
   }
 
+  renderNeutralGroups (ctx) {
+    const { transform, mapData } = this;
+    const { world } = mapData;
+    
+    const {
+      middleX, 
+      middleY, 
+      xScale, 
+      yScale
+    } = this.gameScaler;
+
+    const iconSize = (14 * transform.k);
+
+    const oldFillStyle = ctx.fillStyle;
+    const oldAlpha = ctx.globalAlpha;
+    const oldWidth = ctx.lineWidith;
+
+    ctx.fillStyle = "#FFF";
+    ctx.strokeStyle = "#FFF";
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 2.5;
+
+    world.neutralGroups.forEach((neutralGroup) => {
+      const { bounds } = neutralGroup;
+
+      const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
+      const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
+
+      const drawX = ((xScale(bounds.minX) + middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(bounds.minY) + middleY) * transform.k) + transform.y;
+
+      ctx.beginPath();
+      ctx.strokeRect(drawX, drawY, rectWidth, rectHeight);
+      ctx.fill();
+      ctx.stroke();
+    });
+
+    ctx.fillStyle = oldFillStyle;
+    ctx.globalAlpha = oldAlpha;
+    ctx.lineWidth = oldWidth;
+  }
+
   renderMapGrid (ctx) {
     const { transform, viewOptions, gameScaler} = this;
     const { gridXScale, gridYScale, xScale, yScale, middleX, middleY } = gameScaler;
@@ -1179,6 +1225,7 @@ const Wc3vViewer = class {
 
     this.renderMapGrid(utilityCtx);
     this.renderMapTrees(utilityCtx);
+    this.renderNeutralGroups(utilityCtx);
 
     players.forEach(player => {
       player.render(

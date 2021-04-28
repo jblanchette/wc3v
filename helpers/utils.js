@@ -188,7 +188,7 @@ const uuidv4 = () => {
 // write wc3v output to file
 ////
 
-const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) => {
+const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding = 0) => {
 
   const savedPlayers = replay.metadata.slotRecords;
   delete replay.players;
@@ -268,6 +268,10 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, jsonPadding = 0) =
 
     	return acc;
     }, {}),
+
+    world: {
+      neutralGroups: world.neutralGroups
+    },
     replay: replay
   };
 
