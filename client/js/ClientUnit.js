@@ -43,7 +43,8 @@ const ClientUnit = class {
       "objectId1", "objectId2", "isRegistered", "isUnit",
       "isBuilding", "isIllusion", "level", "lastPosition",
       "path", "meta", "items", "spawnTime",
-      "spawnPosition", "levelStream", "spellList"
+      "spawnPosition", "levelStream", "spellList",
+      "neutralGroupId"
     ];
 
     dataFields.forEach(field => {
@@ -53,6 +54,7 @@ const ClientUnit = class {
     this.playerId = playerId;
     this.playerColor = playerColor;
     this.isNeutralPlayer = isNeutralPlayer;
+    this.isNeutralGroupHidden = false;
 
     this.highlightMode = HighlightModes.all;
 
@@ -293,7 +295,6 @@ const ClientUnit = class {
     }
 
     const currentMoveRecord = this.getCurrentMovePath(gameTime);
-
     if (currentMoveRecord) {
       if ((gameTime - currentMoveRecord.gameTime) > idleDecayTime) {
         // idle detected, increment the decay level for the
@@ -333,6 +334,10 @@ const ClientUnit = class {
     }
 
     if (!this.currentX || !this.currentY) {
+      return;
+    }
+
+    if (this.isNeutralPlayer && this.isNeutralGroupHidden) {
       return;
     }
 

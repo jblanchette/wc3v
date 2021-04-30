@@ -41,14 +41,6 @@ Object.keys(extraItems).forEach(key => {
     items[key] = extraItems[key];
 });
 
-Object.keys(unitBalanceMap).forEach(unitId => {
-  const unit = unitBalanceMap[unitId];
-
-  if (!units[unitId] && unit.level) {
-    units[unitId] = unit.displayName;
-  }
-});
-
 const abilityActions = {
   'RightClick': [ 3, 0, 13, 0 ],
   'AttackCommand': [ 15, 0, 13, 0 ],
@@ -75,7 +67,8 @@ const abilityActions = {
   'NEUpRoot': [ 198, 0, 13, 0 ],
   'EatTree': [ -78, 0, 13, 0 ],
   'SummonElemental': [ 129, 0, 13, 0 ],
-  'SummonTreants': [ 208, 0, 13, 0 ]
+  'SummonTreants': [ 208, 0, 13, 0 ],
+  'DeathCoil': [ 254, 0, 13, 0 ]
 };
 
 const mapStartPositions = {
@@ -1633,6 +1626,14 @@ const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
 
 	return acc;
 }, {});
+
+Object.keys(unitBalanceMap).forEach(unitId => {
+  const unit = unitBalanceMap[unitId];
+
+  if (!units[unitId] && !heroes[unitId] && unit.level) {
+    units[unitId] = unit.displayName;
+  }
+});
 
 const getUnitInfo = (itemId) => {
 	const inBuildingList = !!(buildings[itemId]);
