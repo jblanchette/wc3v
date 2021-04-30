@@ -225,6 +225,11 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
     return acc;
   }, {});
 
+
+  Object.values(world.neutralGroups).forEach(neutralGroup => {
+    neutralGroup.calculateClaims();
+  });
+
   const output = {
     players: Object.keys(wc3vPlayers).reduce((acc, playerId) => {
     	const player = wc3vPlayers[playerId];

@@ -1055,7 +1055,7 @@ const Wc3vViewer = class {
     ctx.globalAlpha = oldAlpha;
   }
 
-  renderNeutralGroups (ctx) {
+  renderNeutralGroups (ctx, gameTime) {
     const { transform, mapData } = this;
     const { world } = mapData;
     
@@ -1065,6 +1065,12 @@ const Wc3vViewer = class {
       xScale, 
       yScale
     } = this.gameScaler;
+
+    const colorMap = {
+      0: '#FFF',
+      1: '#eaff00',
+      2: '#7B68EE'
+    };
 
     const iconSize = (14 * transform.k);
 
@@ -1077,14 +1083,40 @@ const Wc3vViewer = class {
     ctx.globalAlpha = 0.55;
     ctx.lineWidth = 2.5;
 
-    world.neutralGroups.forEach((neutralGroup) => {
-      const { bounds } = neutralGroup;
+    const groups = Object.values(world.neutralGroups);
+    groups.forEach((neutralGroup) => {
+      const { bounds, claimState, claimTime, uuid } = neutralGroup;
 
       const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
       const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
 
       const drawX = ((xScale(bounds.minX) + middleX) * transform.k) + transform.x;
       const drawY = ((yScale(bounds.minY) + middleY) * transform.k) + transform.y;
+
+      let claimColor = colorMap[0];
+      if (gameTime >= claimTime) {
+
+        if (!neutralGroup.isHidden) {
+          // hide the units from rendering now that its been claimed
+          neutralGroup.isHidden = true;
+
+          const neutralPlayer = this.players.find(player => {
+            return player.playerId === "1042";
+          });
+
+          if (neutralPlayer) {
+            neutralPlayer.units.forEach(unit => {
+              if (unit.neutralGroupId === uuid) {
+                unit.isNeutralGroupHidden = true;
+              }
+            });
+          }
+        }
+
+        claimColor = colorMap[claimState];
+      }
+
+      ctx.strokeStyle = claimColor;
 
       ctx.beginPath();
       ctx.strokeRect(drawX, drawY, rectWidth, rectHeight);
@@ -1225,7 +1257,7 @@ const Wc3vViewer = class {
 
     this.renderMapGrid(utilityCtx);
     this.renderMapTrees(utilityCtx);
-    this.renderNeutralGroups(utilityCtx);
+    this.renderNeutralGroups(utilityCtx, gameTime);
 
     players.forEach(player => {
       player.render(
