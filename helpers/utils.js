@@ -392,8 +392,7 @@ const readCliArgs = (argv) => {
           'northernisles',
           // synergy done by pro match
           'upperkingdom2',
-          'twistedmeadows5',
-          'northernisles'
+          'twistedmeadows5'
         ];
 
         options.inTestMode = true;
