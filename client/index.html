@@ -5,16 +5,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
-    <script src="/js/Helpers.js?v=3.00"></script>
-    <script src="/js/Drawing.js?v=3.00"></script>
+    <script src="/js/Helpers.js?v=3.01"></script>
+    <script src="/js/Drawing.js?v=3.01"></script>
 
-    <script src="/js/TimeScrubber.js?v=3.00"></script>
-    <script src="/js/GameScaler.js?v=3.00"></script>
-    <script src="/js/ClientUnit.js?v=3.00"></script>
-    <script src="/js/ClientPlayer.js?v=3.00"></script>
-    <script src="/js/gameData.js?v=3.00"></script>
+    <script src="/js/TimeScrubber.js?v=3.01"></script>
+    <script src="/js/GameScaler.js?v=3.01"></script>
+    <script src="/js/ClientUnit.js?v=3.01"></script>
+    <script src="/js/ClientPlayer.js?v=3.01"></script>
+    <script src="/js/gameData.js?v=3.01"></script>
     
-    <script src="/js/app.js?v=3.00"></script>
+    <script src="/js/app.js?v=3.01"></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
@@ -84,7 +84,7 @@
         </div>
       </div>
 
-      <div id="panel">
+      <div id="panel" style="display: none">
         <div id="panel-search">
           <input type="text" id="main-search" placeholder="enter replay id here">
           <button id="search-submit">search</button>
@@ -146,18 +146,6 @@
           <div id="main-wrapper">
             <div id="mega-play-button" onClick="wc3v.play()"></div>
 
-            <div id="player-status-toggles">
-              <div 
-                id="heroes-toggle" 
-                onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
-              <div 
-                id="units-toggle"
-                onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
-              <div 
-                id="groups-toggle"
-                onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
-            </div>
-
             <div id="player-status-bg-icon"></div>
 
             <div id="viewer-options" class="disabled">
@@ -211,7 +199,18 @@
             </div>
 
             <div id="player-status-wrapper">
-              <canvas id="player-status-canvas" width="210" height="200"></canvas>
+              <div id="player-status-toggles">
+                <div 
+                  id="heroes-toggle" 
+                  onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
+                <div 
+                  id="units-toggle"
+                  onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
+                <div 
+                  id="groups-toggle"
+                  onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
+              </div>
+              <canvas id="player-status-canvas" width="265" height="200"></canvas>
             </div>
             
             <canvas id="main-canvas" width="550" height="650"></canvas>

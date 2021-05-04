@@ -1554,6 +1554,13 @@ const heroAbilities = {
     'ANtm': { 'displayName': 'Transmute'}
 };
 
+const tierBuildings = {
+  'U': ['unp1', 'unp2'],
+  'O': ['ostr', 'ofrt'],
+  'E': [],
+  'H': []
+};
+
 const specialBuildings = {
     'Tree': 'LTlt',
     'Merchant': 'nmer',
@@ -1730,6 +1737,7 @@ module.exports = {
   buildTimings,
   itemAbilityData,
   abilityToHero,
+  tierBuildings,
 
   NEUTRAL_PLAYER_ID: 1042,
   NEUTRAL_PLAYER_SLOT: 1044,

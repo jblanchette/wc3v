@@ -206,9 +206,9 @@ html, body {
 #player-status-toggles {
   font: 12px Verdana;
   position: absolute;
-  top: 40px;
-  left: -180px;
-  width: 180px;
+  top: 8px;
+  left: 16px;
+  width: 220px;
   text-align: center;
   z-index: 3;
 }
@@ -219,11 +219,14 @@ html, body {
   border: 1px solid #CCC;
   display: inline-block;
   color: #FFFFFF;
-  padding: 0.15rem 0.15rem;
+  font-size: 13px;
+  padding: 0.45rem 0.35rem;
 }
 
 .status-toggle.selected {
-  border: 1px solid #FFF;
+  border: 1px solid #000033;
+  background-color: #CCC;
+  color: #000;
 }
 
 #player-status-bg-icon {
@@ -382,20 +385,16 @@ html, body {
 
 /* sub-canvas element */
 #player-status-canvas {
-  transform: scaleX(-1);
   backface-visibility: hidden;
   -webkit-font-smoothing: subpixel-antialiased;
   background-color: #29373E;
-  border-top-left-radius: 0.75rem;
-  border-bottom-left-radius: 0.75rem;
-  border-right: 0;
 }
 
 #player-status-wrapper {
-  transform: scaleX(-1);
   position: absolute;
   top: 20px;
-  left: -210px;
+  left: -275px;
+  width: 265px;
   z-index: 1;
   overflow-y: auto;
   max-height: 650px;
