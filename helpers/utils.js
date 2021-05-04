@@ -250,22 +250,26 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
       }
 
       const { 
+        teamId,
         race, 
         parseConfidence, 
         startingPosition, 
         units,
         eventStream,
         selectionStream,
+        tierStream,
         groupStream,
         isNeutralPlayer
       } = player;
 
     	acc[playerId] = {
+        teamId,
         parseConfidence,
         race,
         startingPosition,
         eventStream,
         selectionStream,
+        tierStream,
         groupStream,
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit())

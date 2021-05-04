@@ -5,26 +5,40 @@ const StatusTabs = {
   groups: 3
 };
 
+const TierColors = {
+  1: "#FFFFFF",
+  2: "#21a5e3",
+  3: "#FFFF33"
+};
+
+const TeamColors = {
+
+};
+
 const ClientPlayer = class {
-  constructor (slot, playerId, startingPosition, units, displayName, race, selectionStream, playerColor, isNeutralPlayer) {
+  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer) {
     this.slot = slot;
+    this.teamColor = teamColor;
     this.playerId = playerId;
     this.startingPosition = startingPosition;
     this.displayName = displayName;
     this.race = race;
     this.selectionStream = selectionStream;
+    this.tierStream = tierStream;
     this.playerColor = playerColor;
     this.isNeutralPlayer = isNeutralPlayer;
 
     this.assetsLoaded = false;
     this.tab = StatusTabs.heroes;
 
+    this.tier = 1;
+
     this.recordIndexes = {
-      selection: -1
+      selection: -1,
+      tier: -1
     };
 
     this.currentGroup = null;
-
     this.setupUnits(units);
 
     console.log("setup player: ", this);
@@ -64,8 +78,29 @@ const ClientPlayer = class {
     });
   }
 
+  getCurrentTier (gameTime) {
+    const { tierStream } = this;
+
+    const index = Helpers.findIndexFrom(
+      tierStream, 
+      Helpers.StandardStreamSearch, 
+      this.recordIndexes.tier,
+      gameTime
+    );
+
+    if (index === -1) {
+      return null;
+    }
+
+    this.recordIndexes.path = index;
+
+    // return back the new record
+    return tierStream[index];
+  }
+
   getSelectionRecord (gameTime) {
     const { selectionStream } = this;
+
 
     // todo: refactor to helper method
     let index = -1;
@@ -182,7 +217,14 @@ const ClientPlayer = class {
       unit.update(gameTime, dt);
     });
     
-    this.getSelectionRecord(gameTime);
+    const tierEvent = this.getCurrentTier(gameTime);
+    if (tierEvent) {
+      this.tier = tierEvent.tier;
+    }
+
+    // parser apparently is skipping the needed block for this
+
+    //this.getSelectionRecord(gameTime);
   }
 
   moveTracker (gameTime) {
@@ -208,12 +250,15 @@ const ClientPlayer = class {
 
     const yMargin = 50;
     const xPadding = 10;
-    const yPadding = 15;
+    const yPadding = 35;
 
     const boxHeight = 120 + wc3v.playerSlotOffset;
 
-    const drawX = xPadding;
+    const drawX = 40 + xPadding; // leave room for tier + status
     const drawY = yMargin + this.slot * (yPadding + boxHeight);
+
+    const drawBoxWidth = 265; // should match #player-status-wrapper width
+    const drawBoxHeight = 115;
 
     const iconSize = 30;
     const halfIconSize = iconSize / 2;
@@ -222,10 +267,33 @@ const ClientPlayer = class {
     const drawIconX = drawX + iconPadding + halfIconSize;
     const drawIconY = drawY + iconPadding + halfIconSize;
 
+    const drawBoxX = drawX;
+    const drawBoxY = drawY + iconPadding + iconSize + 4;
+
     if (!this.icon) {
       console.error("missing icon for unit: ", this);
     }
+
+    if (this.slot === 0) {
+      playerStatusCtx.fillStyle = "#5fa5cb";
+      playerStatusCtx.fillRect(0, 0, drawBoxWidth, drawY);
+    }
+
+    playerStatusCtx.fillStyle = this.playerColor;
+    playerStatusCtx.fillRect(drawX, drawBoxY, drawBoxWidth, drawBoxHeight);
+
+    // draw team color box
+    playerStatusCtx.fillStyle = this.teamColor;
+    playerStatusCtx.fillRect(0, drawBoxY, drawX, drawBoxHeight);
     
+
+    playerStatusCtx.lineWidth = 2;
+    playerStatusCtx.beginPath();
+    playerStatusCtx.moveTo(0, drawBoxY + drawBoxHeight);
+    playerStatusCtx.lineTo(drawBoxWidth, drawBoxY + drawBoxHeight);
+    playerStatusCtx.stroke();
+    playerStatusCtx.lineWidth = 1;
+
     Drawing.drawImageCircle(
       playerStatusCtx, 
       this.icon, 
@@ -238,7 +306,27 @@ const ClientPlayer = class {
     const drawTextX = drawIconX + halfIconSize + xPadding;
     const drawTextY = drawIconY + (halfIconSize / 2);
 
+    const statusXOffset = 80;
+
+    const oldFont = playerStatusCtx.font;
+    const oldStyle = playerStatusCtx.strokeStyle;
+    const oldFill = playerStatusCtx.fillStyle;
+
+    // player name
+    playerStatusCtx.font = `16px Arial`;
     playerStatusCtx.strokeText(this.displayName, drawTextX, drawTextY);
+
+    // which tier
+    playerStatusCtx.strokeStyle = TierColors[this.tier];
+    playerStatusCtx.font = `12px Arial`;
+    playerStatusCtx.strokeText(`Tier ${this.tier}`, drawTextX - statusXOffset, drawTextY - 4);
+
+    // box around tier
+    playerStatusCtx.strokeRect(drawTextX - statusXOffset - 2, drawTextY - 16, 34, 18);
+
+    playerStatusCtx.font = oldFont;
+    playerStatusCtx.strokeStyle = oldStyle;
+    playerStatusCtx.fillStyle = oldFill;
 
     if (this.tab === StatusTabs.heroes) {
       this.renderHeroBox(
@@ -307,6 +395,9 @@ const ClientPlayer = class {
         playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.25;
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
         playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+
+        // draw team color square
+
 
         const heroLevelRecord = hero.getHeroLevelRecord();
         const heroLevel = heroLevelRecord ? heroLevelRecord.newLevel : 1;

@@ -18,6 +18,13 @@ const ScrubStates = {
   finished: 3
 };
 
+const TeamColorList = [
+  "#FF0000",
+  "#1CE6B9",
+  "#0042FF",
+  "#FFFC01"
+];
+
 const Wc3vViewer = class {
   constructor () {
     this.reset();
@@ -171,6 +178,8 @@ const Wc3vViewer = class {
     this.lastFrameId = null;
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
+
+    this.teamColorMap = {};
 
     this.isDev = (window.location.hostname === "127.0.0.1");
   }
@@ -777,35 +786,64 @@ const Wc3vViewer = class {
 
   setupPlayers () {
     const colorMap = [
-      "#959697",
-      "#7EBFF1",
-      "#1CE6B9",
+      "#FF0303",
       "#0042FF",
+      "#1CE6B9",
       "#540081",
       "#FFFC01",
-      "#FF0303",
       "#fEBA0E",
       "#20C000",
       "#E55BB0",
+      "#959697",
+      "#7EBFF1",
       "#106246",
       "#4E2A04"
     ];
 
-    Object.keys(this.mapData.players).forEach((playerId, index) => {
-      const { startingPosition, units, selectionStream, isNeutralPlayer } = this.mapData.players[playerId];
+    const teamIdList = [];
+    const playerList = Object.keys(this.mapData.players).sort((a, b) => {
+      const playerA = this.mapData.players[a];
+      const playerB = this.mapData.players[b];
+
+      return playerA.teamId - playerB.teamId;
+    });
+
+    console.log(playerList);
+
+    let slotCounter = 0;
+
+    playerList.forEach((playerId, index) => {
+      const { 
+        startingPosition, 
+        units, 
+        selectionStream,
+        tierStream,
+        teamId,
+        isNeutralPlayer 
+      } = this.mapData.players[playerId];
+
       const { raceDetected, name } = this.mapData.replay.players[playerId];
 
+      if (!teamIdList.includes(teamId)) {
+        teamIdList.push(teamId);
+        this.teamColorMap[teamId] = TeamColorList.shift();
+      }
+
       const player = new ClientPlayer(
-        index,
+        slotCounter,
+        this.teamColorMap[teamId],
         playerId, 
         startingPosition, 
         units, 
         name,
         raceDetected,
         selectionStream,
+        tierStream,
         colorMap[index],
         isNeutralPlayer
       );
+
+      slotCounter++;
 
       this.players.push(player);
     });
@@ -1066,10 +1104,9 @@ const Wc3vViewer = class {
       yScale
     } = this.gameScaler;
 
-    const colorMap = {
+    const campColorMap = {
       0: '#FFF',
-      1: '#eaff00',
-      2: '#7B68EE'
+      1: '#eaff00'
     };
 
     const iconSize = (14 * transform.k);
@@ -1083,9 +1120,27 @@ const Wc3vViewer = class {
     ctx.globalAlpha = 0.55;
     ctx.lineWidth = 2.5;
 
+    const neutralPlayer = this.players.find(player => {
+      return player.playerId === "1042";
+    });
+
+    if (!neutralPlayer) {
+      return;
+    }
+
     const groups = Object.values(world.neutralGroups);
+    const claimPaths = groups.reduce((acc, group) => {
+      if (group.claimOwnerId == null) {
+        return acc;
+      }
+
+      acc[group.claimOwnerId] = [];
+
+      return acc;
+    }, {});
+
     groups.forEach((neutralGroup) => {
-      const { bounds, claimState, claimTime, uuid } = neutralGroup;
+      const { bounds, claimState, claimTime, claimOwnerId, uuid } = neutralGroup;
 
       const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
       const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
@@ -1094,35 +1149,64 @@ const Wc3vViewer = class {
       const drawY = ((yScale(bounds.minY) + middleY) * transform.k) + transform.y;
 
       let claimColor = colorMap[0];
+      let claimColorFill = null;
+
       if (gameTime >= claimTime) {
 
         if (!neutralGroup.isHidden) {
           // hide the units from rendering now that its been claimed
           neutralGroup.isHidden = true;
-
-          const neutralPlayer = this.players.find(player => {
-            return player.playerId === "1042";
+          neutralPlayer.units.forEach(unit => {
+            if (unit.neutralGroupId === uuid) {
+              unit.isNeutralGroupHidden = true;
+            }
           });
-
-          if (neutralPlayer) {
-            neutralPlayer.units.forEach(unit => {
-              if (unit.neutralGroupId === uuid) {
-                unit.isNeutralGroupHidden = true;
-              }
-            });
-          }
         }
 
-        claimColor = colorMap[claimState];
+        if (claimState > 1) {
+          claimColorFill = this.teamColorMap[claimOwnerId];
+
+          claimPaths[claimOwnerId].push({
+            drawX,
+            drawY,
+            rectWidth,
+            rectHeight
+          });
+        }
+
+        claimColor = campColorMap[claimState];
       }
 
       ctx.strokeStyle = claimColor;
 
       ctx.beginPath();
       ctx.strokeRect(drawX, drawY, rectWidth, rectHeight);
+      if (claimColorFill) {
+        ctx.fillStyle = claimColorFill;
+        ctx.fillRect(drawX, drawY, rectWidth, rectHeight);
+      }
       ctx.fill();
       ctx.stroke();
     });
+
+    ctx.beginPath();
+    Object.keys(claimPaths).forEach(teamClaimId => {
+      const claimPath = claimPaths[teamClaimId];
+
+      claimPath.forEach((step, ind) => {
+        const midX = (step.drawX + (step.rectWidth / 2));
+        const midY = (step.drawY + (step.rectHeight / 2));
+        
+        if (ind == 0) {
+          ctx.moveTo(midX, midY);
+          
+          return;
+        }
+
+        ctx.lineTo(midX, midY);
+      });
+    });
+    ctx.stroke();
 
     ctx.fillStyle = oldFillStyle;
     ctx.globalAlpha = oldAlpha;
