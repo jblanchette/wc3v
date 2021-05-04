@@ -62,6 +62,10 @@ html, body {
   padding: 0.55rem;
 }
 
+#panel input {
+  width: 110px;
+}
+
 #panel ul {
   margin: 0;
   padding: 0;
@@ -232,7 +236,7 @@ html, body {
 #player-status-bg-icon {
   position: absolute;
   top: 60px;
-  left: -230px;
+  left: -275px;
   background-image: url('/assets/wc3v.svg');
   width: 267px;
   height: 123px;

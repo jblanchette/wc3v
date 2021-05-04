@@ -1167,6 +1167,7 @@ const Wc3vViewer = class {
           claimColorFill = this.teamColorMap[claimOwnerId];
 
           claimPaths[claimOwnerId].push({
+            claimTime,
             drawX,
             drawY,
             rectWidth,
@@ -1191,7 +1192,9 @@ const Wc3vViewer = class {
 
     ctx.beginPath();
     Object.keys(claimPaths).forEach(teamClaimId => {
-      const claimPath = claimPaths[teamClaimId];
+      const claimPath = claimPaths[teamClaimId].sort((a, b) => {
+        return a.claimTime - b.claimTime;
+      })
 
       claimPath.forEach((step, ind) => {
         const midX = (step.drawX + (step.rectWidth / 2));
