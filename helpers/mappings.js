@@ -1566,7 +1566,7 @@ const specialBuildings = {
     'Merchant': 'nmer',
     'Tavern': 'ntav',
     'Goldmine':'ngol',
-    'Neutral Shop': 'ngme',
+    'NeutralShop': 'ngme',
     'playerShops': {
         'U': 'utom',
         'O': 'ovln',

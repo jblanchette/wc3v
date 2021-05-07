@@ -1163,6 +1163,12 @@ const Wc3vViewer = class {
           });
         }
 
+        claimColor = campColorMap[claimState];
+
+        if (claimState == 1) {
+          claimColorFill = campColorMap[claimState];
+        }
+
         if (claimState > 1) {
           claimColorFill = this.teamColorMap[claimOwnerId];
 
@@ -1174,8 +1180,6 @@ const Wc3vViewer = class {
             rectHeight
           });
         }
-
-        claimColor = campColorMap[claimState];
       }
 
       ctx.strokeStyle = claimColor;
