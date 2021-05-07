@@ -268,7 +268,14 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         race,
         startingPosition,
         eventStream,
-        selectionStream,
+        selectionStream: selectionStream.map(item => {
+          return {
+            gameTime: item.gameTime,
+            selection: {
+              units: item.selection.units
+            }
+          }
+        }),
         tierStream,
         groupStream,
         isNeutralPlayer,

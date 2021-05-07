@@ -101,31 +101,32 @@ const ClientPlayer = class {
   getSelectionRecord (gameTime) {
     const { selectionStream } = this;
 
-
-    // todo: refactor to helper method
-    let index = -1;
-    for (let i = 0; i < selectionStream.length; i++) {
-      const record = selectionStream[i];
-
-      if (record.gameTime > gameTime) {
-        break;
-      }
-
-      index = i;
-    }
+    const index = Helpers.findIndexFrom(
+      selectionStream, 
+      Helpers.StandardStreamSearch, 
+      this.recordIndexes.selection,
+      gameTime
+    );
 
     if (index === -1) {
-      return;
+      return null;
     }
 
     if (this.recordIndexes.selection !== index) {
-      this.recordIndexes.selection = index;
       this.enrichSelectionGroup();
+      this.recordIndexes.selection = index;
     }
+
+    // return back the new record
+    return selectionStream[index];
   }
 
   enrichSelectionGroup () {
     const item = this.selectionStream[this.recordIndexes.selection];
+    if (!item) {
+      return;
+    }
+
     const { selection } = item;
 
     this.currentGroup = selection.units.reduce((acc, unit) => {
@@ -224,7 +225,7 @@ const ClientPlayer = class {
 
     // parser apparently is skipping the needed block for this
 
-    //this.getSelectionRecord(gameTime);
+    this.getSelectionRecord(gameTime);
   }
 
   moveTracker (gameTime) {
@@ -279,18 +280,36 @@ const ClientPlayer = class {
       playerStatusCtx.fillRect(0, 0, drawBoxWidth, drawY);
     }
 
+    ////
+    // draw player color box
+    ////
     playerStatusCtx.fillStyle = this.playerColor;
     playerStatusCtx.fillRect(drawX, drawBoxY, drawBoxWidth, drawBoxHeight);
 
+    ////
     // draw team color box
+    ////
     playerStatusCtx.fillStyle = this.teamColor;
     playerStatusCtx.fillRect(0, drawBoxY, drawX, drawBoxHeight);
-    
 
+    ////
+    // border lines between boxes
+    ////
     playerStatusCtx.lineWidth = 2;
     playerStatusCtx.beginPath();
+
+    // border between team color and player color
+    playerStatusCtx.moveTo(drawBoxX, drawBoxY);
+    playerStatusCtx.lineTo(drawBoxX, drawBoxY + drawBoxHeight);
+    
+    // top border of player color
+    playerStatusCtx.moveTo(0, drawBoxY);
+    playerStatusCtx.lineTo(drawBoxWidth, drawBoxY);
+
+    // bottom border of player color
     playerStatusCtx.moveTo(0, drawBoxY + drawBoxHeight);
     playerStatusCtx.lineTo(drawBoxWidth, drawBoxY + drawBoxHeight);
+
     playerStatusCtx.stroke();
     playerStatusCtx.lineWidth = 1;
 
@@ -354,14 +373,17 @@ const ClientPlayer = class {
       return;
     } 
 
-    const iconSize = 26;
+    const iconSize = 32;
     const maxRow = 6;
 
     let c = 0, row = 0;
 
+    const xPadding = 4;
+    const yPadding = 6;
+
     this.currentGroup.forEach(unit => {
-      const drawX = offsetX + (c * iconSize);
-      const drawY = offsetY + (row * iconSize);
+      const drawX = xPadding + offsetX + (c * iconSize);
+      const drawY = yPadding + offsetY + (row * iconSize);
 
       playerStatusCtx.drawImage(unit.icon, drawX, drawY, iconSize, iconSize);
       c++;
@@ -374,6 +396,10 @@ const ClientPlayer = class {
   }
 
   renderHeroBox (playerStatusCtx, gameTime, offsetX, offsetY) {
+
+    offsetY += 7.5;
+    offsetX += 5;
+
     const boxHeight = 75;
     const subBoxWidth = 50;
     const boxWidth = subBoxWidth * 3;
@@ -392,7 +418,7 @@ const ClientPlayer = class {
         // draw the main hero icon and box outline
         ////
 
-        playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.25;
+        playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.35;
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
         playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
 
