@@ -265,7 +265,6 @@ const calculateExperienceGains = (world, wc3vPlayers) => {
       neutralCampUnits.forEach(neutralCampUnit => {
         if (neutralCampUnit.isFountain) {
           // no xp credit for fountains
-          console.log("ignoring fountain xp credit");
 
           return;
         }
