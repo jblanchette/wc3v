@@ -319,8 +319,8 @@ const mapDataByFile = {
     'name': 'ConcealedHill',
     'bounds': {
       'camera': [
-        [ -4864,  4864 ],
-        [  6912, -7424 ]
+        [ -4608,  4608 ],
+        [  5760, -6272 ]
       ],
       'map': [
         [ -6144,  6144 ],
@@ -329,7 +329,7 @@ const mapDataByFile = {
     },
     'gridSize': {
       'full':     [ 96, 128 ],
-      'playable': [ 84, 116 ]
+      'playable': [ 80, 98 ]
     }
   },
   '(2)echoisles.w3x': {

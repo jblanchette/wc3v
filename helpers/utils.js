@@ -185,6 +185,150 @@ const uuidv4 = () => {
 
 
 ////
+// optimized findIndex with lambda filter and optional start index
+////
+
+const findIndexFrom = (arr, fn, start = 0, gameTime = 0) => {
+  start = Math.max(0, start);
+
+  for (let i = start; i < arr.length; i++) {
+    const curNode = arr[i];
+    const nextNode = (i < arr.length - 1) ? arr[i + 1] : null;
+
+    if (fn(curNode, nextNode, gameTime)) {
+      return i;
+    }
+  }
+
+  return -1;
+};
+
+////
+//
+////
+
+const StandardStreamSearch = (record, nextRecord, gameTime) => {
+  // is the gameTime before the next record in the sequence
+  let isBeforeNextStep;    
+
+  if (!nextRecord) {
+    // there is no next record, so this one is always our last valid one
+    isBeforeNextStep = true;
+  } else {
+    isBeforeNextStep = (gameTime < nextRecord.gameTime);
+  }
+
+  if (gameTime >= record.gameTime && isBeforeNextStep) {
+    return record;
+  }
+};
+
+const calculateExperienceGains = (world, wc3vPlayers) => {
+  Object.values(world.neutralGroups).forEach(neutralGroup => {
+    neutralGroup.calculateClaims();
+
+    if (!neutralGroup.claimers) {
+      return;
+    }
+
+    if (!neutralGroup.isClaimed()) {
+      return;
+    }
+
+    Object.keys(neutralGroup.claimers).forEach(claimTeamId => {
+      const claim = neutralGroup.claimers[claimTeamId];
+      const neutralCampUnits = neutralGroup.units;
+
+      const claimPlayers =  Object.keys(claim.players).reduce((acc, playerId) => {
+        const wc3vPlayer = wc3vPlayers[playerId];
+        const claimPlayer = claim.players[playerId];
+
+        if (+wc3vPlayer.teamId !== +neutralGroup.claimOwnerId) {
+          // do not credit players who are not on the claiming team
+          return acc;
+        }
+
+        const record = {
+          tier: wc3vPlayer.tier,
+          campUnits: claimPlayer.units
+        };
+        
+        acc.push(record);
+        return acc;
+      }, []);
+
+      // 
+      // determine how much experience each claiming players units shoould get
+      // for each unit in the camp
+      //
+
+      neutralCampUnits.forEach(neutralCampUnit => {
+        if (neutralCampUnit.isFountain) {
+          // no xp credit for fountains
+          console.log("ignoring fountain xp credit");
+
+          return;
+        }
+
+        claimPlayers.forEach(player => {
+          const { tier, campUnits } = player;
+
+          const heroes = campUnits.filter(unit => {
+            return unit.meta.hero && !unit.isIllusion;
+          });
+
+          ////
+          // turn our list of hero Unit records
+          // into a report back of their level at the given time
+          ////
+          const heroClaimRecords = heroes.reduce((acc, hero) => {
+            const { levelStream, uuid } = hero;
+
+            const levelIndex = findIndexFrom(
+              levelStream, 
+              StandardStreamSearch, 
+              0,
+              claim.timeClaimed
+            );
+
+            const levelRecord = (levelIndex !== -1) ? levelStream[levelIndex] : { newLevel: 1 };
+            const playerRecord = {
+              tier,
+              level: levelRecord.newLevel,
+              heroCount: heroes.length
+            };
+
+            const xpGained = neutralGroup.experienceGivenForUnit(neutralCampUnit, playerRecord);
+
+            const heroExperienceRecord = {
+              uuid,
+              xpGained,
+              gameTime: neutralGroup.claimTime
+            };
+
+            // add record to hero stream
+            hero.xpStream.push(heroExperienceRecord);
+
+            acc.push(heroExperienceRecord);
+            return acc;
+          }, []);
+
+          neutralGroup.heroClaimRecords = heroClaimRecords;
+        
+        // loop for each hero that was seen claiming the camp
+        });
+      
+      // loop for each neutral in the camp
+      });
+
+    // loop for each claimer in the group
+    });
+  
+  // loop for each neutral group
+  });
+};
+
+////
 // write wc3v output to file
 ////
 
@@ -225,10 +369,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
     return acc;
   }, {});
 
-
-  Object.values(world.neutralGroups).forEach(neutralGroup => {
-    neutralGroup.calculateClaims();
-  });
+  calculateExperienceGains(world, wc3vPlayers);
 
   const output = {
     players: Object.keys(wc3vPlayers).reduce((acc, playerId) => {
@@ -418,20 +559,22 @@ const readCliArgs = (argv) => {
 };
 
 module.exports = {
-	fixItemId: fixItemId,
-	isEqualItemId: isEqualItemId,
-  isEqualUnitItemId: isEqualUnitItemId,
-  isUnitInList: isUnitInList,
-  isItemIdInList: isItemIdInList,
-	findItemIdForObject: findItemIdForObject,
-  getDecimalPortion: getDecimalPortion,
-	distance: distance,
-	closestToPoint: closestToPoint,
-	getRandomInt: getRandomInt,
-	uuidv4: uuidv4,
-	readCliArgs: readCliArgs,
-	writeOutput: writeOutput,
+	fixItemId,
+	isEqualItemId,
+  isEqualUnitItemId,
+  isUnitInList,
+  isItemIdInList,
+	findItemIdForObject,
+  getDecimalPortion,
+	distance,
+	closestToPoint,
+	getRandomInt,
+	uuidv4,
+	readCliArgs,
+	writeOutput,
 
+  findIndexFrom,
+  StandardStreamSearch,
   unpackItemId,
   getRaceFromFlag,
   fixBrokenActionFormat,

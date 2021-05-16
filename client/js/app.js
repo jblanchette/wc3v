@@ -808,8 +808,6 @@ const Wc3vViewer = class {
       return playerA.teamId - playerB.teamId;
     });
 
-    console.log(playerList);
-
     let slotCounter = 0;
 
     playerList.forEach((playerId, index) => {
