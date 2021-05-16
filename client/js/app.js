@@ -208,8 +208,12 @@ const Wc3vViewer = class {
         
         self.replayId = filename;
         self.mapData = jsonData;
-        self.setup();
+
+        self.setup(); 
+        // removing loading status indicator
+        self.setLoadingStatus(false);
       } catch (e) {
+        console.log("raw: ", res);
         console.error("Error loading wc3v replay: ", e);
       }
     });
@@ -889,8 +893,6 @@ const Wc3vViewer = class {
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
-
-    this.setLoadingStatus(false);
 
     const zoomContainer = d3.select("#main-canvas");
 
