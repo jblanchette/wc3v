@@ -224,7 +224,11 @@ const StandardStreamSearch = (record, nextRecord, gameTime) => {
 };
 
 const calculateExperienceGains = (world, wc3vPlayers) => {
-  Object.values(world.neutralGroups).forEach(neutralGroup => {
+  const groups = Object.values(world.neutralGroups).sort((a, b) => {
+    return a.claimTime - b.claimTime;
+  }).reverse();
+
+  groups.forEach(neutralGroup => {
     neutralGroup.calculateClaims();
 
     if (!neutralGroup.claimers) {
@@ -248,8 +252,39 @@ const calculateExperienceGains = (world, wc3vPlayers) => {
           return acc;
         }
 
+        const hasHeroInGroup = claimPlayer.units.find(unit => {
+          return unit.meta.hero;
+        });
+
+        if (!hasHeroInGroup) {
+          const allHeroes = wc3vPlayer.units.filter(unit => {
+            // has to be a hero that isn't an illusion and 
+            // was alive before the camp was taken
+
+            return unit.meta.hero && !unit.isIllusion && unit.spawnTime <= neutralGroup.claimTime;
+          });
+
+          const record = {
+            tier: wc3vPlayer.tier,
+            campUnits: allHeroes
+          };
+          
+          acc.push(record);
+          return acc;
+        }
+
+        const tierIndex = findIndexFrom(
+          wc3vPlayer.tierStream, 
+          StandardStreamSearch, 
+          0,
+          claim.timeClaimed
+        );
+
+        const tierRecord = wc3vPlayer.tierStream[tierIndex];
+        const playerTier = tierRecord && tierRecord.tier || 1;
+
         const record = {
-          tier: wc3vPlayer.tier,
+          tier: playerTier,
           campUnits: claimPlayer.units
         };
         
@@ -281,7 +316,7 @@ const calculateExperienceGains = (world, wc3vPlayers) => {
           // into a report back of their level at the given time
           ////
           const heroClaimRecords = heroes.reduce((acc, hero) => {
-            const { levelStream, uuid } = hero;
+            const { levelStream, uuid, xpTotal, displayName } = hero;
 
             const levelIndex = findIndexFrom(
               levelStream, 
@@ -298,10 +333,10 @@ const calculateExperienceGains = (world, wc3vPlayers) => {
             };
 
             const xpGained = neutralGroup.experienceGivenForUnit(neutralCampUnit, playerRecord);
-
             const heroExperienceRecord = {
               uuid,
               xpGained,
+              displayName,
               gameTime: neutralGroup.claimTime
             };
 
@@ -312,7 +347,7 @@ const calculateExperienceGains = (world, wc3vPlayers) => {
             return acc;
           }, []);
 
-          neutralGroup.heroClaimRecords = heroClaimRecords;
+          neutralGroup.heroClaimRecords = neutralGroup.heroClaimRecords.concat(heroClaimRecords);
         
         // loop for each hero that was seen claiming the camp
         });
@@ -320,12 +355,74 @@ const calculateExperienceGains = (world, wc3vPlayers) => {
       // loop for each neutral in the camp
       });
 
+      const heroStats = {};
+      neutralGroup.heroClaimRecords.forEach(record => {
+        const { uuid, xpGained, startingXp, xpTotal, displayName } = record;
+
+        if (!heroStats[uuid]) {
+          heroStats[uuid] = {
+            displayName,
+            total: 0
+          };
+        }
+
+        heroStats[uuid].total += xpGained;
+      });
+
+      neutralGroup.heroStats = heroStats;
+
     // loop for each claimer in the group
     });
   
   // loop for each neutral group
   });
 };
+
+const assignCampOrder = (world, wc3vPlayers) => {
+
+  const teamList = Object.values(wc3vPlayers).reduce((acc, player) => {
+    if (!acc.includes(player.teamId)) {
+      acc.push(player.teamId);
+    }
+
+    return acc;
+  }, []);
+
+  teamList.forEach(teamId => {
+    const orderedCamps = Object.values(world.neutralGroups)
+      .filter(camp => {
+        return camp.claimOwnerId != null && +camp.claimOwnerId == +teamId;
+      })
+      .sort((a, b) => {
+        return a.claimTime - b.claimTime;
+      });
+
+    const heroMap = {};
+
+    orderedCamps.forEach((camp, ind) => {
+      camp.order = (ind + 1);
+      camp.xpSnapshot = {};
+
+      if (!camp.heroStats) {
+        return;
+      }
+
+      Object.keys(camp.heroStats).forEach(uuid => {
+        const hero = camp.heroStats[uuid];
+
+        if (!heroMap[uuid]) {
+          heroMap[uuid] = 0;
+        }
+
+        // save in our snapshot for this camp
+        camp.xpSnapshot[uuid] = heroMap[uuid];
+
+        // continue with the sum
+        heroMap[uuid] += hero.total;
+      });
+    });  
+  });
+}
 
 ////
 // write wc3v output to file
@@ -369,6 +466,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
   }, {});
 
   calculateExperienceGains(world, wc3vPlayers);
+  assignCampOrder(world, wc3vPlayers);
 
   const output = {
     players: Object.keys(wc3vPlayers).reduce((acc, playerId) => {
@@ -426,7 +524,10 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
     }, {}),
 
     world: {
-      neutralGroups: world.neutralGroups
+      neutralGroups: Object.keys(world.neutralGroups).reduce((acc, neutralGroupKey) => {
+        acc[neutralGroupKey] = world.neutralGroups[neutralGroupKey].exportGroup();
+        return acc;
+      }, {})
     },
     replay: replay
   };

@@ -44,7 +44,7 @@ const ClientUnit = class {
       "isBuilding", "isIllusion", "level", "lastPosition",
       "path", "meta", "items", "spawnTime",
       "spawnPosition", "levelStream", "spellList",
-      "neutralGroupId", "xpStream"
+      "neutralGroupId", "xpStream", "uuid"
     ];
 
     dataFields.forEach(field => {
