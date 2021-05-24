@@ -706,6 +706,8 @@ const Wc3vViewer = class {
   }
 
   setup () {
+    const self = this;
+
     this.gameTime = 0;
 
     this.setStatusTab('heroes');
@@ -789,7 +791,7 @@ const Wc3vViewer = class {
   }
 
   setupPlayers () {
-    const colorMap = [
+    this.playerColorMap = [
       "#FF0303",
       "#0042FF",
       "#1CE6B9",
@@ -803,6 +805,8 @@ const Wc3vViewer = class {
       "#106246",
       "#4E2A04"
     ];
+
+    this.assignedPlayerColors = [];
 
     const teamIdList = [];
     const playerList = Object.keys(this.mapData.players).sort((a, b) => {
@@ -841,9 +845,11 @@ const Wc3vViewer = class {
         raceDetected,
         selectionStream,
         tierStream,
-        colorMap[index],
+        this.playerColorMap[index],
         isNeutralPlayer
       );
+
+      this.assignedPlayerColors[playerId] = this.playerColorMap[index];
 
       slotCounter++;
 
@@ -877,6 +883,8 @@ const Wc3vViewer = class {
   }
 
   setupDrawing () {
+    const self = this;
+    const { world } = this.mapData;
     const { bounds } = this.mapInfo;
     const { width, height } = this.canvas;
 
@@ -890,6 +898,18 @@ const Wc3vViewer = class {
     this.gameScaler = new GameScaler();
     this.gameScaler.addDependency('_d3', d3);
     this.gameScaler.setup(this.mapInfo, this.mapImage, this.canvas, this.cameraRatio);
+
+    this.gameDisplayBox = new GameDisplayBox(this.teamColorMap, this.assignedPlayerColors);
+    this.gameDisplayBox.setData(
+      world.neutralGroups, GameDisplayBox.neutralCampHandler(this.gameScaler, this.transform));
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      self.gameDisplayBox.handleMouse(e, 'down', self.transform);
+    });
+
+    this.canvas.addEventListener('mousemove', (e) => {
+      self.gameDisplayBox.handleMouse(e, 'move', self.transform);
+    });
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
@@ -907,6 +927,9 @@ const Wc3vViewer = class {
         const { transform } = d3.event;
         // update our transform object from the zoom
         this.transform = transform;
+
+        this.gameDisplayBox.hide();
+
         this.render();
       });
 

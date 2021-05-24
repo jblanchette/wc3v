@@ -387,6 +387,81 @@ html, body {
   pointer-events: none;
 }
 
+#game-display-box {
+  display: none;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 200px;
+  min-height: 160px;
+  border: 2px solid #000;
+  background: #FFF;
+  border-radius: 0.35rem;
+  opacity: 0.925;
+  padding: 0.25rem;
+  font-size: 12px;
+  z-index: 100;
+}
+
+.game-display-box-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 0.25rem;
+}
+
+.game-display-box-content ul {
+  margin: 0;
+  padding: 0;
+}
+
+.game-display-box-content li {
+  display: block;
+  border: 1px solid #333;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.25rem;
+  background-color: #5fa5cb;
+  color: #000;
+  font-size: 14px;
+}
+
+.camp-spot-circle {
+  float: right;
+  border: 1px solid #000; 
+  border-radius: 100%;
+  width: 30px; 
+  height: 30px; 
+  text-align: center;
+}
+
+.camp-spot-square {
+  display: inline-block;
+  border: 1px solid #000; 
+  width: 14px; 
+  height: 14px; 
+}
+
+.camp-spot-circle span {
+  display: block;
+  margin: 0.5rem;
+  font-size: 14px;
+}
+
+.camp-spot-circle.green {
+  background-color: #5BAC39;
+  color: #00008B;
+}
+
+.camp-spot-circle.yellow {
+  background-color: #FDFA1F;
+  color: #00008B;
+}
+
+.camp-spot-circle.red {
+  background-color: #BA1B1B;
+  color: #FFF;
+}
+
 /* sub-canvas element */
 #player-status-canvas {
   backface-visibility: hidden;
