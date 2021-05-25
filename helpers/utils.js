@@ -610,7 +610,8 @@ const readCliArgs = (argv) => {
           'happy-vs-lucifer',
           'foggy-vs-cash-2',
           'terenas-stand-lv_sonik-vs-tgw',
-          '2v2-synergy'
+          '2v2-synergy',
+          'insup-vs-kiwi'
         ];
 
         options.inTestMode = true;

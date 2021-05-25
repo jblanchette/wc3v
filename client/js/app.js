@@ -124,9 +124,9 @@ const Wc3vViewer = class {
         players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
       },
       {
-        id: "insup-vs-ethereal",
+        id: "insup-vs-kiwi",
         map: "Concealed Hills",
-        players: [["INSUPERABLE"], ["Ethereal"]]
+        players: [["INSUPERABLE"], ["KiWiKaKi"]]
       }
     ];
 
