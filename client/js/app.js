@@ -122,6 +122,11 @@ const Wc3vViewer = class {
         id: "2v2-synergy",
         map: "2v2-synergy",
         players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
+      },
+      {
+        id: "insup-vs-ethereal",
+        map: "Concealed Hills",
+        players: [["INSUPERABLE"], ["Ethereal"]]
       }
     ];
 
@@ -864,7 +869,13 @@ const Wc3vViewer = class {
     
     const { map, metadata, subheader } = this.mapData.replay;
 
-    const file = metadata.map.mapName;
+    let file = metadata.map.mapName;
+
+    file = file.trim();
+    file = file.replace(new RegExp(' ', 'g'), "");
+
+    console.log(file);
+
     const mapParts = file.split("/");
 
     this.matchEndTime = subheader.replayLengthMS;
