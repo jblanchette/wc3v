@@ -16,7 +16,7 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    const startingSpeed = this.isDev ? '40x' : '5x';
+    const startingSpeed = this.isDev ? '40x' : '10x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
 
