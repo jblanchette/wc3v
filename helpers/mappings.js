@@ -1521,8 +1521,8 @@ const heroAbilities = {
     'AUcb': { 
       'displayName': 'Carrion Beetles',
       'type': 'summon',
-      'summonCount': 1,
-      'summonItemId': 'ucs1',
+      'summonCount': 2,
+      'summonItemId': ['ucs1', 'ucs1', 'ucs1'],
       'summonDuration': 60
     },
     'AUls': { 'displayName': 'Locust Swarm'},

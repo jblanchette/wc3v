@@ -5,7 +5,8 @@
         ".*",
         "node_modules",
         "build",
-        "dist"
+        "dist",
+        "client/logs"
       ],
       "follow_symlinks": true,
       "path": "."

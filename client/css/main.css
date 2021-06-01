@@ -392,22 +392,41 @@ html, body {
   position: absolute;
   left: 0px;
   top: 0px;
-  width: 200px;
+  width: 280px;
   min-height: 160px;
   border: 2px solid #000;
   background: #FFF;
   border-radius: 0.35rem;
   opacity: 0.925;
-  padding: 0.25rem;
+  padding: 0.35rem 0.25rem;
   font-size: 12px;
   z-index: 100;
+}
+
+.game-display-box-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 98%;
+}
+
+#game-display-box h3 {
+  border: 1px solid #5fa5cb;
+  background-color: #ded599;
+  border-radius: 0.75rem;
+  padding: 0.35rem 0.55rem;
+  width: 13.25rem;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0.25rem;
 }
 
 .game-display-box-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: 0.25rem;
+  text-align: center;
 }
 
 .game-display-box-content ul {
@@ -422,6 +441,33 @@ html, body {
   padding: 0.35rem 0.25rem;
   background-color: #5fa5cb;
   color: #000;
+  font-size: 14px;
+  margin-top: 0.35rem;
+}
+
+.game-display-box-content .game-stat {
+  width: 90%;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid #000;
+}
+
+.game-stat .game-stat-title {
+  font-weight: 700;
+  float: left;
+}
+
+.game-stat .game-stat-text {
+  font-weight: 700;
+  float: right;
+}
+
+.game-xp {
+  margin-top: 0.5rem;
+  width: 90%;
+}
+
+.game-xp .game-xp-title {
+  
   font-size: 14px;
 }
 
