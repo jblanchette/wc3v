@@ -3,14 +3,16 @@ const DisplayModes = {
 };
 
 const boxDesignSize = {
-  width: 200,
-  height: 160
+  width: 280,
+  height: 260
 };
 
 const formatGameTime = (gameTime) => {
   const timerDate = new Date(Math.round(gameTime * 1000) / 1000);
+  // ensure leading zero
+  const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
 
-  return `${timerDate.getUTCMinutes()}:${timerDate.getUTCSeconds()}`;
+  return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
 };
 
 const GameDisplayBox = class {
@@ -33,7 +35,8 @@ const GameDisplayBox = class {
       return;
     }
 
-    const { offsetX, offsetY } = e;
+    let { offsetX, offsetY, target } = e;
+    const drawBounds = target.getBoundingClientRect();
 
     const hitBox = {
       minX: offsetX,
@@ -52,6 +55,21 @@ const GameDisplayBox = class {
       const searchHit = searchHits[0];
 
       if (type == 'down') {
+
+        // clipping if needed
+        if (drawBounds) {
+          const boxRight = (drawBounds.x + offsetX + boxDesignSize.width);
+          const boxBottom = (drawBounds.y + offsetY + boxDesignSize.height);
+
+          if (boxRight > drawBounds.right) {
+            offsetX -= boxDesignSize.width;
+          }
+
+          if (boxBottom > drawBounds.bottom) {
+            offsetY -= boxDesignSize.height;
+          }
+        }
+
         this.box.style.display = "block";
         this.box.style.left = `${offsetX}px`;
         this.box.style.top = `${offsetY}px`;
@@ -103,7 +121,7 @@ const GameDisplayBox = class {
   }
 
   static renderContestedCamp (rawGroup, teamColorMap, playerColorMap) {
-    let contestedClaimStr = '';
+    let contestedClaimStr = '<h4>Camp contested or unfinished</h4>';
 
     Object.keys(rawGroup.claimers).forEach(teamId => {
       if (+rawGroup.claimOwnerId != +teamId) {
@@ -177,7 +195,7 @@ const GameDisplayBox = class {
 
     switch (rawGroup.claimState) {
       case 0:
-        return `<b>Team:</b> UNCLAIMED`;
+        return `<h4>Camp left unclaimed</h4>`;
       case 1:
         // Contested camp - show which teams were involved      
         return GameDisplayBox.renderContestedCamp(rawGroup, teamColorMap, playerColorMap);
@@ -185,29 +203,12 @@ const GameDisplayBox = class {
         // Claimed camp - show full team and player info
         return GameDisplayBox.renderClaimedCamp(rawGroup, teamColorMap, playerColorMap);
     }
-
   }
 
-  static renderNeutralCamp (camp, teamColorMap, playerColorMap) {
-    const { rawGroup } = camp;
-
-    const levelMap = {
-      9:  'green',
-      19: 'yellow',
-      20: 'red'
-    };
-
-    const spotColorKey = Object.keys(levelMap).find(levelMapMin => {
-      return (rawGroup.totalLevel <= levelMapMin);
-    }) || 20;
-
-    const spotColor = levelMap[spotColorKey]; 
-
-    //
-    // drawing
-    //
-
-    const teamClaimStr = GameDisplayBox.renderTeamClaims(rawGroup, teamColorMap, playerColorMap);
+  static renderTeamStats(rawGroup, teamColorMap, playerColorMap) {
+    // if (rawGroup.claimState <= 1) {
+    //   return '';
+    // }
 
     let xpGainedStr = '';
 
@@ -230,10 +231,70 @@ const GameDisplayBox = class {
 
     if (rawGroup.claimers) {
       Object.keys(rawGroup.claimers).forEach(playerId => {
-        console.log(playerId, formatGameTime(rawGroup.claimers[playerId].timeClaimed));
-      })
+        const playerColor = playerColorMap[playerId];
+        const playerTotal = formatGameTime(rawGroup.claimers[playerId].timeClaimed);
+
+        totalClaimTimeStr += `${playerTotal} <span class="camp-spot-square" style="background-color: ${playerColor}"></span> `;
+      });
     }
 
+    return `
+      <div class="game-stat">
+        <span class="game-stat-title">Order Taken:</span> 
+        <span class="game-stat-text">#${rawGroup.order || 'N/A'}</span>
+      </div>
+
+      <div class="game-stat">
+        <span class="game-stat-title">Claim Time:</span> 
+        <span class="game-stat-text">${formatGameTime(rawGroup.claimTime)}</span>
+      </div>
+
+      <div class="game-stat">
+        <span class="game-stat-title">Total Time Claimed:</span> 
+        <span class="game-stat-text">${totalClaimTimeStr}</span>
+      </div>
+
+      <div class="game-stat">
+        <span class="game-stat-title">Neutral Count:</span> 
+        <span class="game-stat-text">${rawGroup.units.length}</span>
+      </div>
+
+      <div class="game-xp">
+        <span class="game-xp-title">
+          <b>Experience Gained:</b>
+        </span>
+
+        <ul>
+          ${xpGainedStr}
+        </ul>
+      </div>
+    `;
+  }
+
+  static renderNeutralCamp (camp, teamColorMap, playerColorMap) {
+    const { rawGroup } = camp;
+
+    const levelMap = {
+      9:  'green',
+      19: 'yellow',
+      20: 'red'
+    };
+
+    const spotColorKey = Object.keys(levelMap).find(levelMapMin => {
+      return (rawGroup.totalLevel <= levelMapMin);
+    }) || 20;
+
+    const spotColor = levelMap[spotColorKey]; 
+
+    //
+    // drawing
+    //
+
+    // aggregated stats for team and player claims
+    const teamClaimStr = GameDisplayBox.renderTeamClaims(rawGroup, teamColorMap, playerColorMap);
+
+    // individual stats about the claims if not contested
+    const teamStatsStr = GameDisplayBox.renderTeamStats(rawGroup, teamColorMap, playerColorMap);
 
     const renderStr = `
       <div class="game-display-box-content">
@@ -246,36 +307,7 @@ const GameDisplayBox = class {
         </div>
 
         ${teamClaimStr}
-
-        <div class="game-stat">
-          <span class="game-stat-title">Order Taken:</span> 
-          <span class="game-stat-text">#${rawGroup.order || 'N/A'}</span>
-        </div>
-
-        <div class="game-stat">
-          <span class="game-stat-title">Claim Time:</span> 
-          <span class="game-stat-text">${formatGameTime(rawGroup.claimTime)}</span>
-        </div>
-
-        <div class="game-stat">
-          <span class="game-stat-title">Total Time Claimed:</span> 
-          <span class="game-stat-text">0</span>
-        </div>
-
-        <div class="game-stat">
-          <span class="game-stat-title">Neutral Count:</span> 
-          <span class="game-stat-text">${rawGroup.units.length}</span>
-        </div>
-
-        <div class="game-xp">
-          <span class="game-xp-title">
-            <b>Experience Gained:</b>
-          </span>
-
-          <ul>
-            ${xpGainedStr}
-          </ul>
-        </div>
+        ${teamStatsStr}
       </div>
     `;
 

@@ -387,13 +387,28 @@ html, body {
   pointer-events: none;
 }
 
+
+#tutorial-wrapper {
+  display: none;
+  position: absolute;
+  left: 13.33%;
+  top: 13.33%;
+  width: 70%;
+  height: 70%;
+  border: 2px solid #000;
+  background: #FFF;
+  border-radius: 0.35rem;
+  padding: 0.5rem;
+  z-index: 200;
+}
+
 #game-display-box {
   display: none;
   position: absolute;
   left: 0px;
   top: 0px;
   width: 280px;
-  min-height: 160px;
+  min-height: 260px;
   border: 2px solid #000;
   background: #FFF;
   border-radius: 0.35rem;
