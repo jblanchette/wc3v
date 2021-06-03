@@ -874,7 +874,7 @@ const Wc3vViewer = class {
     file = file.trim();
     file = file.replace(new RegExp(' ', 'g'), "");
 
-    console.log(file);
+    console.log("map name: ", encodeURI(file));
 
     const mapParts = file.split("/");
 
