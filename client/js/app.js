@@ -153,6 +153,7 @@ const Wc3vViewer = class {
     });
 
     this.tutorialWindow = document.getElementById("tutorial-wrapper");
+    this.tutorialWindow.style.display = "block";
   }
 
   reset () {
@@ -239,6 +240,8 @@ const Wc3vViewer = class {
     const port = this.isDev ? ":8085" : "";
     const url = `http://${window.location.hostname}${port}/ticket`;
 
+    this.hideTutorial();
+
     req.addEventListener("load", (res) => {
       const { target } = res;
       const ticketData = JSON.parse(target.responseText);
@@ -314,7 +317,7 @@ const Wc3vViewer = class {
       if (!el) {
         return;
       }
-      
+
       el.style.display = (nextSlide == i) ? "flex" : "none";
     }
   }
