@@ -45,6 +45,10 @@ const Wc3vViewer = class {
         this.load(`${encodeURI(match[1])}.wc3v`);
       });
     } else {
+
+      // if we have no match to load show the tutorial
+      this.tutorialWindow.style.display = "block";
+
       if (!this.isDev) {
         return;
       }
@@ -153,7 +157,6 @@ const Wc3vViewer = class {
     });
 
     this.tutorialWindow = document.getElementById("tutorial-wrapper");
-    this.tutorialWindow.style.display = "block";
   }
 
   reset () {
