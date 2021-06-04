@@ -772,6 +772,7 @@ const Wc3vViewer = class {
       return player.setup();
     });
 
+    this.hideTutorial();
     this.clearCanvas();
 
     // finishes the setup promise
