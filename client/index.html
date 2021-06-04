@@ -43,7 +43,7 @@
         </div>
 
         <div class="menu-item">
-          <span class="wc3v-logo">WC3Viewer</span>
+          <span class="wc3v-logo">WC3<span class="logo-colors">V</span>iewer</span>
         </div>
 
         <div class="menu-item spacer">
@@ -223,10 +223,97 @@
             <div id="game-display-box"></div>
 
             <div id="tutorial-wrapper">
-              <h2>WC3V Tutorial</h2>
+              <div id="tutorial-content">
+                <div class="tutorial-slide slide-1">
+                  <h2>Welcome to WC3<span class="logo-colors">V</span></h2>
+                  <h4>A free and open source web based viewer for Warcraft III</h4>
 
-              <div class="tutorial-slide">
-                <img src="tutorial/slide-1.jpg">
+                  <div class="github-button">
+                    <a target="_blank" href="https://github.com/jblanchette/wc3v"><img src="tutorial/github-logo.png" width="50px" /></a>
+                  </div>
+
+                  <div class="upload-button" onClick="wc3v.claimUploadTicket()">
+                    UPLOAD REPLAY
+                    <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
+                  </div>
+
+                  <div class="tutorial-button-wrapper">
+                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(2)">Start Tutorial</div>
+                  </div>
+                </div>
+
+                <div class="tutorial-slide slide-2">
+                  <img src="tutorial/slide-2.gif" class="tutorial-img" alt="Slide 2 - WC3V Neutral Camp Pop-Up" height="325px">
+
+                  <h5>Neutral Camp Pop-Up Details</h5>
+                  <div class="tutorial-text tutorial-text-small">
+                    <b>WC3V</b> analyzes and records information about neutral camps.
+                    Viewers may click on the camp box to show a pop-up of details about the camp. <br><br>
+
+                    The total level of the camp and the color (green, yellow, red) are displayed in the top right. <br><br>
+
+                    Experienced gained by players is displayed <b>as if they only killed these neutral camps.</b> <br><br>
+
+                    Camps can be displayed as unclaimed or contested.  A contested camp means that two players interacted with a camp at the same time and no clear winner was determined.
+                  </div>
+
+                  <div class="tutorial-button-wrapper">
+                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(3)">Next Tutorial (2/4)</div>
+                  </div>
+                </div>
+
+                <div class="tutorial-slide slide-3">
+                  <img src="tutorial/slide-3.gif" class="tutorial-img" alt="Slide 3 - WC3V Time Scrubber Controls">
+
+                  <h5>Time Scrubber Controls</h5>
+                  <div class="tutorial-text">
+                    WC3V shows a replay like a video player.<br><br>
+
+                    Some of the featured controls:
+
+                    <ul>
+                      <li>change playback speed</li>
+                      <li>pause playback</li>
+                      <li>seek to time (click or drag the tracking dot)</li>
+                      <li>zoom and Pan (double click or mouse-wheel to zoom)</li>
+                    </ul>
+                  </div>
+
+                  <div class="tutorial-button-wrapper">
+                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(4)">Next Tutorial (3/4)</div>
+                  </div>
+                </div>
+
+                <div class="tutorial-slide slide-4">
+                  <img src="tutorial/slide-4.jpg" class="tutorial-img" alt="Slide 4 - WC3V Player Status Window">
+
+                  <h5>Player Status</h5>
+                  <div class="tutorial-text">
+                    When a replay has been selected each player in the match
+                    will have an entry in the <b>Player Status</b> window. 
+                    <br><br>
+
+                    Displaying team color, player color, and player name
+                    alongside other information with each of the three selectable tabs.
+                  </div>
+
+                  <div class="tutorial-button-wrapper">
+                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Finish Tutorial</div>
+
+                    <div class="tutorial-continue" onClick="wc3v.claimUploadTicket()">Upload A Replay</div>
+                  </div>
+                </div>
+
+                <div class="tutorial-slide slide-5">
+                  <img src="tutorial/slide-1.jpg">
+
+                  <div class="tutorial-button-wrapper">
+                    <div class="tutorial-finish" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

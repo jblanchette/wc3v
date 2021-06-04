@@ -1513,7 +1513,7 @@ const heroAbilities = {
     'AUin': { 'displayName': 'Inferno'},
     'AUfn': { 'displayName': 'Frost Nova'},
     'AUfa': { 'displayName': 'Frost Armor'},
-    'AUfu': { 'displayName': 'Frost Armor'},
+    'AUfu': { 'displayName': 'Frost Armor', isAutocast: true },
     'AUdr': { 'displayName': 'Dark Ritual'},
     'AUdd': { 'displayName': 'Death and Decay'},
     'AUim': { 'displayName': 'Impale'},
@@ -1702,7 +1702,7 @@ const getUnitInfo = (itemId) => {
     displayName = items[itemId];
 	} else if (isKnownId) {
     displayName = allItemIds[itemId];
-}
+  }
 
 	if (displayName.startsWith("u_") || 
       displayName.startsWith("b_") ||
@@ -1723,6 +1723,7 @@ const getUnitInfo = (itemId) => {
 
 	return {
 		displayName,
+    isKnownId,
 		isBuilding,
 		isUnit,
     isItem,

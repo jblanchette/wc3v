@@ -1,6 +1,7 @@
 html, body {
   border: 0;
   margin: 0;
+  font-family: verdana;
 }
 
 #app {
@@ -387,20 +388,152 @@ html, body {
   pointer-events: none;
 }
 
+.logo-colors {
+  color: #ded599;
+}
 
 #tutorial-wrapper {
-  display: none;
+  /*display: none;*/
   position: absolute;
-  left: 13.33%;
-  top: 13.33%;
-  width: 70%;
-  height: 70%;
+  left: 8%;
+  top: 1%;
+  width: 80%;
+  height: 95%;
   border: 2px solid #000;
   background: #FFF;
   border-radius: 0.35rem;
   padding: 0.5rem;
   z-index: 200;
 }
+
+#tutorial-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem;
+  height: 600px;
+}
+
+#tutorial-content h2 {
+  text-align: center;
+}
+
+#tutorial-content h5 {
+  margin: 0;
+  margin-top: 0.25rem;
+  padding: 0;
+}
+
+#tutorial-content .tutorial-slide {
+  height: 100%;
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#tutorial-content .tutorial-button-wrapper {
+  width: 24rem;
+  border-top: 1px solid #333;
+  padding-top: 0.5rem;
+  margin-top: 0.65rem;
+}
+
+#tutorial-content .tutorial-text {
+  padding: 0.45rem;
+  text-align: center;
+  border: 1px solid #ded599;
+  background: #EEE;
+  width: 400px;
+}
+
+#tutorial-content .tutorial-text-small {
+  font-size: 12px;
+}
+
+#tutorial-content .tutorial-img {
+  padding: 0.25rem;
+  margin: 0.15rem;
+  border: 1px solid #CCC;
+}
+
+.tutorial-button-wrapper .tutorial-hide,
+.tutorial-button-wrapper .tutorial-continue {
+  background-color: #EEE;
+  border: 1px solid #333;
+  border-radius: 0.55rem;
+  padding: 0.25rem;
+  text-align: center;
+  width: 10.5rem;
+  display: inline-block;
+}
+
+.tutorial-button-wrapper .tutorial-hide:hover,
+.tutorial-button-wrapper .tutorial-continue:hover {
+  border: 1px solid #5fa5cb;
+  color: #FF00FF;
+  cursor: pointer;
+}
+
+.tutorial-button-wrapper .tutorial-continue {
+  float: right;
+  background-color: #90EE90;
+}
+
+#tutorial-content .slide-1 h4 {
+  margin-top: 0;
+  margin-bottom: 0;
+  width: 14rem;
+  text-align: center;
+  color: #29373E;
+}
+
+.slide-1 .github-button {
+  margin-top: 0.35rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid #333;
+  border-radius: 0.35rem;
+  width: 50px;
+}
+
+.slide-1 .github-button:hover {
+  border: 1px solid #CCC;
+}
+
+.slide-1 .upload-button {
+  border: 1px solid #666;
+  border-radius: 0.45rem;
+  padding: 0.25rem;
+  text-align: center;
+  background-color: #ded599;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+  width: 12rem;
+}
+
+.slide-1 .upload-button:hover {
+  color: #0000FF;
+  cursor: pointer;
+}
+
+.slide-1 .upload-button-subtext {
+  font-size: 13px;
+}
+
+.slide-3 li {
+  text-align: left;
+}
+
+#tutorial-content .slide-2,
+#tutorial-content .slide-3,
+#tutorial-content .slide-4,
+#tutorial-content .slide-5 {
+  display: none;
+}
+
 
 #game-display-box {
   display: none;
