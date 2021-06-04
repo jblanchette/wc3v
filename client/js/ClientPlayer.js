@@ -220,7 +220,7 @@ const ClientPlayer = class {
     
     const tierEvent = this.getCurrentTier(gameTime);
     if (tierEvent) {
-      this.tier = tierEvent.tier;
+      this.tier = Math.min(3, tierEvent.tier);
     }
 
     // parser apparently is skipping the needed block for this

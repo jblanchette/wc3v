@@ -151,6 +151,8 @@ const Wc3vViewer = class {
 
       proGamesTable.append(row);
     });
+
+    this.tutorialWindow = document.getElementById("tutorial-wrapper");
   }
 
   reset () {
@@ -296,6 +298,21 @@ const Wc3vViewer = class {
 
       el.style.display = "none";
     });
+  }
+
+  hideTutorial() {
+    console.log(this.tutorialWindow);
+
+    this.tutorialWindow.style.display = "none";
+  }
+
+  advanceTutorial (nextSlide) {
+    for (let i = 1; i <= 5; i++) {
+      const items = document.getElementsByClassName(`slide-${i}`);
+      const el = items[0];
+
+      el.style.display = (nextSlide == i) ? "flex" : "none";
+    }
   }
 
   hideUploadContents () {
