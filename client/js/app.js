@@ -307,10 +307,14 @@ const Wc3vViewer = class {
   }
 
   advanceTutorial (nextSlide) {
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 4; i++) {
       const items = document.getElementsByClassName(`slide-${i}`);
       const el = items[0];
 
+      if (!el) {
+        return;
+      }
+      
       el.style.display = (nextSlide == i) ? "flex" : "none";
     }
   }
