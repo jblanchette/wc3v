@@ -102,6 +102,7 @@ html, body {
   background: #EEE;
   border: 1px solid #000;
   border-radius: 1.25rem;
+  font-size: 11px;
 }
 
 #upload-finished,
@@ -527,9 +528,19 @@ html, body {
   text-align: left;
 }
 
+.slide-5 table {
+  text-align: center;
+}
+
+.slide-5 td {
+  border-bottom: 1px solid #CCC;
+  height: 2rem;
+}
+
 #tutorial-content .slide-2,
 #tutorial-content .slide-3,
-#tutorial-content .slide-4 {
+#tutorial-content .slide-4,
+#tutorial-content .slide-5 {
   display: none;
 }
 

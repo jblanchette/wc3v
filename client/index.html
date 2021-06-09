@@ -5,17 +5,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
-    <script src="/js/Helpers.js?v=3.06"></script>
-    <script src="/js/Drawing.js?v=3.06"></script>
+    <script src="/js/Helpers.js?v=3.07"></script>
+    <script src="/js/Drawing.js?v=3.07"></script>
 
-    <script src="/js/TimeScrubber.js?v=3.06"></script>
-    <script src="/js/GameScaler.js?v=3.06"></script>
-    <script src="/js/ClientUnit.js?v=3.06"></script>
-    <script src="/js/ClientPlayer.js?v=3.06"></script>
-    <script src="/js/GameDisplayBox.js?v=3.06"></script>
-    <script src="/js/gameData.js?v=3.06"></script>
+    <script src="/js/TimeScrubber.js?v=3.07"></script>
+    <script src="/js/GameScaler.js?v=3.07"></script>
+    <script src="/js/ClientUnit.js?v=3.07"></script>
+    <script src="/js/ClientPlayer.js?v=3.07"></script>
+    <script src="/js/GameDisplayBox.js?v=3.07"></script>
+    <script src="/js/gameData.js?v=3.07"></script>
     
-    <script src="/js/app.js?v=3.06"></script>
+    <script src="/js/app.js?v=3.07"></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
@@ -24,7 +24,7 @@
     </script>
 
     <style type="text/css">
-      @import "/css/main.css?v=3.06";  
+      @import "/css/main.css?v=3.07";  
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -299,6 +299,65 @@
                     Displaying team color, player color, and player name
                     alongside other information with each of the three selectable tabs.
                   </div>
+
+                  <div class="tutorial-button-wrapper">
+                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(5)">Next Tutorial (4/4)</div>
+                  </div>
+
+                  
+                </div>
+
+                <div class="tutorial-slide slide-5">
+                  <h5>Pro Replays</h5>
+
+                  <div class="tutorial-text">
+                    WC3V is pre-loaded with various pro-matches to get an example
+                    of high level play on some available maps.
+                  </div>
+
+                  <table>
+                    <tbody>
+                      <tr>
+                        <th>Players</th>
+                        <th>Map</th>
+                        <th>Replay Link</th>
+                      </tr>
+                    </tbody>
+                    <tr>
+                     <td>Happy vs Grubby</td>
+                     <td>Concealed Hills</td>
+                     <td><a href="http://wc3v.com/replay/happy-vs-grubby">link</a></td>
+                    </tr><tr>
+                     <td>Grubby vs Thorzain</td>
+                     <td>Concealed Hills</td>
+                     <td><a href="http://wc3v.com/replay/grubby-vs-thorzain">link</a></td>
+                    </tr><tr>
+                     <td>Cash vs Foggy</td>
+                     <td>Concealed Hills</td>
+                     <td><a href="http://wc3v.com/replay/cash-vs-foggy">link</a></td>
+                    </tr><tr>
+                     <td>Happy vs lucifer</td>
+                     <td>Echo Isles</td>
+                     <td><a href="http://wc3v.com/replay/happy-vs-lucifer">link</a></td>
+                    </tr><tr>
+                     <td>Foggy vs Cash</td>
+                     <td>Echo Isles</td>
+                     <td><a href="http://wc3v.com/replay/foggy-vs-cash-2">link</a></td>
+                    </tr><tr>
+                     <td>Sonik vs TGW</td>
+                     <td>Terenas Stand</td>
+                     <td><a href="http://wc3v.com/replay/terenas-stand-lv_sonik-vs-tgw">link</a></td>
+                    </tr><tr>
+                     <td>Thorzain, Starshaped vs KNOIF, LILD.C</td>
+                     <td>2v2-synergy</td>
+                     <td><a href="http://wc3v.com/replay/2v2-synergy">link</a></td>
+                    </tr><tr>
+                     <td>INSUPERABLE vs KiWiKaKi</td>
+                     <td>Concealed Hills</td>
+                     <td><a href="http://wc3v.com/replay/insup-vs-kiwi">link</a></td>
+                    </tr>
+                  </table>
 
                   <div class="tutorial-button-wrapper">
                     <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Finish Tutorial</div>
