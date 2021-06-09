@@ -313,7 +313,7 @@ const Wc3vViewer = class {
   }
 
   advanceTutorial (nextSlide) {
-    for (let i = 1; i <= 4; i++) {
+    for (let i = 1; i <= 5; i++) {
       const items = document.getElementsByClassName(`slide-${i}`);
       const el = items[0];
 
