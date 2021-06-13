@@ -55,6 +55,7 @@ html, body {
 }
 
 #panel {
+  font-size: 12px;
   background: #CCC;
   border: 1px solid #333;
   position: absolute;
@@ -64,7 +65,7 @@ html, body {
 }
 
 #panel input {
-  width: 110px;
+  width: 60px;
 }
 
 #panel ul {
@@ -149,16 +150,59 @@ html, body {
   min-height: 400px;
 }
 
-.side-panel h3 {
-  background: #CCC;
-  margin: 0;
-  padding: 0.25rem 0.35rem;
+.side-panel-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  align-items: center;
+  height: 1.75rem;
   border-bottom: 1px solid #333;
-  width: 100%;
+  padding: 0.15rem 0.25rem;
+  font-size: 13px;
 }
 
-.side-panel h3 a {
+.side-panel-header .panel-header-item {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  height: 100%;
+  background-color: #99c5de;
+}
+
+.side-panel-header .panel-header-item div {
+  padding: 0 0.5rem;
+}
+
+.side-panel-header .panel-header-item:hover {
+  cursor: pointer;
+  background-color: #5fa5cb;
+}
+
+.side-panel-header .shown-header {
+  background-color: #C3C3C3;
+}
+
+#recent-replays,
+#about-wc3v {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#pro-replays {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#about-wc3v {
+  padding: 0.5rem;
   font-size: 14px;
+}
+
+.side-panel table {
+  font-size: 12px;
 }
 
 .side-panel h4 {
@@ -173,6 +217,7 @@ html, body {
 .side-panel td {
   padding: 0.25rem;
   border-bottom: 1px solid #C3C3C3;
+  max-width: 150px;
 }
 
 .shown {
