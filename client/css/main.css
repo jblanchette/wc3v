@@ -41,6 +41,10 @@ html, body {
   float: right;
 }
 
+.menu-item a {
+  text-decoration: none;
+}
+
 .menu-item select {
   font: 14px Verdana;
 }
