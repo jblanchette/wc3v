@@ -230,11 +230,18 @@ const GameDisplayBox = class {
     let totalClaimTimeStr = '';
 
     if (rawGroup.claimers) {
-      Object.keys(rawGroup.claimers).forEach(playerId => {
-        const playerColor = playerColorMap[playerId];
-        const playerTotal = formatGameTime(rawGroup.claimers[playerId].timeClaimed);
+      Object.keys(rawGroup.claimers).forEach(claimIndex => {
+        Object.keys(rawGroup.claimers[claimIndex].players).forEach(playerId => {
+          const playerClaim = rawGroup.claimers[claimIndex].players[playerId];
+          const playerColor = playerColorMap[playerId];
+          const playerTotal = formatGameTime(playerClaim.timeClaimed);
 
-        totalClaimTimeStr += `${playerTotal} <span class="camp-spot-square" style="background-color: ${playerColor}"></span> `;
+          if (playerTotal == "0:00") {
+            return;
+          }
+
+          totalClaimTimeStr += `${playerTotal} <span class="camp-spot-square test" style="background-color: ${playerColor}"></span> `;
+        });
       });
     }
 
