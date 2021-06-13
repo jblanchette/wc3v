@@ -5,17 +5,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
-    <script src="/js/Helpers.js?v=3.07"></script>
-    <script src="/js/Drawing.js?v=3.07"></script>
+    <script src="/js/Helpers.js?v=3.08"></script>
+    <script src="/js/Drawing.js?v=3.08"></script>
 
-    <script src="/js/TimeScrubber.js?v=3.07"></script>
-    <script src="/js/GameScaler.js?v=3.07"></script>
-    <script src="/js/ClientUnit.js?v=3.07"></script>
-    <script src="/js/ClientPlayer.js?v=3.07"></script>
-    <script src="/js/GameDisplayBox.js?v=3.07"></script>
-    <script src="/js/gameData.js?v=3.07"></script>
+    <script src="/js/TimeScrubber.js?v=3.08"></script>
+    <script src="/js/GameScaler.js?v=3.08"></script>
+    <script src="/js/ClientUnit.js?v=3.08"></script>
+    <script src="/js/ClientPlayer.js?v=3.08"></script>
+    <script src="/js/GameDisplayBox.js?v=3.08"></script>
+    <script src="/js/gameData.js?v=3.08"></script>
     
-    <script src="/js/app.js?v=3.07"></script>
+    <script src="/js/app.js?v=3.08"></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
@@ -24,7 +24,7 @@
     </script>
 
     <style type="text/css">
-      @import "/css/main.css?v=3.07";  
+      @import "/css/main.css?v=3.08";  
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -87,59 +87,73 @@
 
       <div id="panel">
         <div id="panel-search">
-          <input type="text" id="main-search" placeholder="enter replay id">
+          <input type="text" id="main-search" placeholder="replay id">
           <button id="search-submit">search</button>
         </div>
 
         <ul>
           <li onClick="wc3v.claimUploadTicket()">Upload New Replay</li>
-          <li onClick="wc3v.toggleSidePanel('recent-replays')">View Recent Replays</li>
-          <li onClick="wc3v.toggleSidePanel('pro-replays')">Browse Pro Replays</li>
-          <li onClick="wc3v.toggleSidePanel('about-wc3v')">About WC3v</li>
+          <li onClick="wc3v.showSidePanel('about-wc3v')">About WC3v</li>
         </ul>
       </div>
 
-      <div id="about-wc3v" class="side-panel">
-        <h3>About WC3v</h3>
+      <div  class="side-panel shown">
+        <div class="side-panel-header">
+          <div id="pro-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('pro-replays')">
+            <div>Pro Replays</div>
+          </div>
+          <div id="recent-replays-header" class="panel-header-item" onClick="wc3v.showSidePanel('recent-replays')">
+            <div>Recent Replays</div>
+          </div>
+          
+          <div id="about-wc3v-header" class="panel-header-item" onClick="wc3v.showSidePanel('about-wc3v')">
+            <div>About WC3V</div>
+          </div>
+        </div>
 
-        <p>A community site to share replays without needing to launch the game client.</p>
-        <p>All services are free and the code is <a href="https://github.com/jblanchette/wc3v">open source</a> with a GNU v3.0 license.</p>
-        <p>Replay uploads are limited by a ticketing system on an hourly basis.</p>
-        <p>All materials and assets are used strictly for educational use, no profits are made from this website.</p>
+        <div id="recent-replays">
+          <div id="recent-replays-data"></div>
+        </div>
 
-        <h4>Supported Maps:</h4>
-          <ul>
-            <li>Amazonia</li>
-            <li>Battleground</li>
-            <li>Concealed Hill</li>
-            <li>Echo Isles</li>
-            <li>Friendss</li>
-            <li>Gnoll Wood</li>
-            <li>Last Refuge</li>
-            <li>Northern Isles</li>
-            <li>Synergy Big Paved</li>
-            <li>Terenas Stand</li>
-            <li>Twisted Meadows</li>
-            <li>Upper Kingdom</li>
-            <li>Guardians</li>
-            <li>Monsoon</li>
-            <li>Bloodstone Mesa</li>
-          </ul>
-      </div>
+        <div id="pro-replays">
+          <table id="pro-replays-table">
+            <th>Players</th>
+            <th>Map</th>
+            <th>Link</th>
+          </table>
+        </div>
 
-      <div id="pro-replays" class="side-panel">
-        <h3>Pro Replays <a href="#" onClick="wc3v.hideSidePanels()">[close]</a></h3>
+        <div id="about-wc3v">
+          <h3>About WC3v</h3>
 
-        <table id="pro-replays-table">
-          <th>Players</th>
-          <th>Map</th>
-          <th>Replay Link</th>
-        </table>
-      </div>
+          <p>A community site to share replays without needing to launch the game client.</p>
+          <p>All services are free and the code is <a href="https://github.com/jblanchette/wc3v">open source</a> with a GNU v3.0 license.</p>
+          <p>Replay uploads are limited by a ticketing system on an hourly basis.</p>
+          <p>All materials and assets are used strictly for educational use, no profits are made from this website.</p>
 
-      <div id="recent-replays" class="side-panel shown">
-        <h3>Recent Replays <a href="#" onClick="wc3v.hideSidePanels()">[close]</a></h3>
-        <div id="recent-replays-data"></div>
+          <h4>Currently Supported Maps:</h4>
+            <ul>
+              <li>Amazonia</li>
+              <li>Battleground</li>
+              <li>Concealed Hill</li>
+              <li>Echo Isles</li>
+              <li>Friendss</li>
+              <li>Gnoll Wood</li>
+              <li>Last Refuge</li>
+              <li>Northern Isles</li>
+              <li>Synergy Big Paved</li>
+              <li>Terenas Stand</li>
+              <li>Twisted Meadows</li>
+              <li>Upper Kingdom</li>
+              <li>Guardians</li>
+              <li>Monsoon</li>
+              <li>Bloodstone Mesa</li>
+            </ul>
+
+          New maps are in development and tooling is being created on to import them automatically.
+
+          If you have a request for a map please open a github issue with the request.
+        </div>
       </div>
 
       <div id="content">

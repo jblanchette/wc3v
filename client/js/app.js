@@ -275,21 +275,14 @@ const Wc3vViewer = class {
     uploadWrapperEl.style.display = isOpen ? "block" : "none";
   }
 
-  toggleSidePanel (id, isOpen) {
-    this.hideSidePanels();
-
-    const el = document.getElementById(id);
-    const currentDisplay = window.getComputedStyle(el).display;
-
-    el.style.display = currentDisplay === "block" ? "none" : "block";
-  }
-
   showSidePanel (id) {
     this.hideSidePanels();
 
     const el = document.getElementById(id);
-
-    el.style.display = "block";
+    const headerEl = document.getElementById(`${id}-header`);
+    
+    el.style.display = "flex";
+    headerEl.classList.add("shown-header");
   }
 
   hideSidePanels () {
@@ -301,8 +294,10 @@ const Wc3vViewer = class {
 
     panels.forEach(id => {
       const el = document.getElementById(id);
+      const headerEl = document.getElementById(`${id}-header`);
 
       el.style.display = "none";
+      headerEl.classList.remove("shown-header");
     });
   }
 
