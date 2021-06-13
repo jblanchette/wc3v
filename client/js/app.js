@@ -483,7 +483,7 @@ const Wc3vViewer = class {
            <th>duration</th>
            <th>map</th>
            <th>matchup</th>
-           <th>matchup type</th>
+           <th>type</th>
            ${tableStr}</table>`;
         }
       } catch (e) {
