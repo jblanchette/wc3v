@@ -482,9 +482,21 @@ const ClientPlayer = class {
     const { isNeutralPlayer } = this;
     const { nameplateTree, unitTree, unitDrawPositions } = frameData;
 
-    const unitMap = {};
+    const filteredDrawPositions = [];
 
-    const drawBoxes = unitDrawPositions.reduce((acc, item) => {
+    unitDrawPositions.forEach(drawPositionUnit => {
+      const hasUnit = filteredDrawPositions.find(unit => {
+        return unit.uuid == drawPositionUnit.uuid;
+      });
+
+      if (hasUnit) {
+        return;
+      }
+
+      filteredDrawPositions.push(drawPositionUnit);
+    });
+
+    const drawBoxes = filteredDrawPositions.reduce((acc, item) => {
       const { 
         uuid,
         x, 
@@ -494,6 +506,7 @@ const ClientPlayer = class {
         halfIconSize, 
         fontSize, 
         heroRank,
+        spawnTime,
         isHero,
         isMainHero,
         fullName, 
@@ -504,31 +517,24 @@ const ClientPlayer = class {
         drawSlots
       } = item;
 
-      // don't draw decayed unit nameplates
-      if (decayLevel < 0.45) {
-        return acc;
-      }
-
       const unitBox = {
         uuid,
-        minX:     x - (iconSize / 2),
-        maxX:     x + (iconSize / 2),
-        minY:     y - (iconSize / 2),
-        maxY:     y + (iconSize / 2),
+        minX:     x - (halfIconSize),
+        maxX:     x + (halfIconSize),
+        minY:     y - (halfIconSize),
+        maxY:     y + (halfIconSize),
         drawX:    x,
         drawY:    y,
+
         icon,
         iconSize,
         halfIconSize,
-        heroRank,
+        uuid, 
         isHero,
         isMainHero,
         itemId,
-        playerId,
-        count,
-        drawSlots,
-        decayLevel,
-        fullName
+        heroRank,
+        spawnTime
       };
 
       acc.push(unitBox);
@@ -536,69 +542,91 @@ const ClientPlayer = class {
     }, []);
 
     unitTree.load(drawBoxes);
-
     const treeItems = unitTree.all();
 
-    treeItems.forEach((unitBox, ind) => {
+    // sorted by units first, heroes last sorted by spawnTime desc
+    const sortedDrawTree = treeItems.sort((a, b) => {
+      if (a.isHero && b.isHero) {
+        return b.spawnTime - a.spawnTime;
+      }
+
+      return a.isHero - b.isHero;
+    });
+
+    sortedDrawTree.forEach((unitBox, ind) => {
       const {
         uuid, 
         isHero,
         isMainHero,
         itemId,
-        heroRank
+        heroRank,
+        icon
       } = unitBox;
 
-      if (unitMap[uuid]) {
-        return;
-      } else {
-        unitMap[uuid] = true;
-      }
+      Drawing.drawUnit(ctx, unitBox);
+      return;
 
-      if (isNeutralPlayer) {
+      if (isMainHero) {
         Drawing.drawUnit(ctx, unitBox);
 
         return;
       }
 
       const collisions = unitTree.search(unitBox);
-
-      if (!isMainHero && collisions.length > 1) {
-        const mainHero = collisions.find(collision => {
-          return collision.isMainHero;
-        });
-
-        if (mainHero) {
-          const { iconSize, halfIconSize } = mainHero;
-
-          const spotMap = {
-            2: { xOffset: -(iconSize),                yOffset: -(iconSize) },
-            1: { xOffset: -(iconSize) + halfIconSize, yOffset: -(iconSize) },
-            0: { xOffset: 0,                          yOffset: -(iconSize) },
-            3: { xOffset:  (iconSize) + halfIconSize, yOffset: -(iconSize) },
-            4: { xOffset: -(iconSize),                yOffset: -(iconSize) }
-          };
-
-          const drawSlot = spotMap[heroRank || 3];
-          unitBox = { 
-            ...unitBox, 
-            ...Drawing.getUnitBounds(mainHero, drawSlot.xOffset, drawSlot.yOffset) 
-          };
-        } else {
-          // did with collide with another hero?
-          const otherHero = collisions.find(collision => {
-            return collision.isHero;
-          });
-
-          if (!isHero && otherHero) {
-            // don't draw because we're a unit who is colliding with a non-main hero
-            // somewhere outside of the main pack
-            return;
-          }
-        }
+      if (collisions.length <= 1) {
+        Drawing.drawUnit(ctx, unitBox);
       }
 
-      Drawing.drawUnit(ctx, unitBox);
+
+      return;
+
+      // if (!isMainHero && collisions.length > 1) {
+      //   const mainHero = collisions.find(collision => {
+      //     return collision.isMainHero;
+      //   });
+
+      //   if (mainHero) {
+      //     const { iconSize, halfIconSize } = mainHero;
+
+      //     // const spotMap = {
+      //     //   2: { xOffset: -(iconSize),                yOffset: -(iconSize) },
+      //     //   1: { xOffset: -(iconSize) + halfIconSize, yOffset: -(iconSize) },
+      //     //   0: { xOffset: 0,                          yOffset: -(iconSize) },
+      //     //   3: { xOffset:  (iconSize) + halfIconSize, yOffset: -(iconSize) },
+      //     //   4: { xOffset: -(iconSize),                yOffset: -(iconSize) }
+      //     // };
+
+      //     const spotMap = {
+      //       2: { xOffset: iconSize,       yOffset: 0 },
+      //       1: { xOffset: halfIconSize,   yOffset: 0 },
+      //       0: { xOffset: 0,              yOffset: 0 },
+      //       3: { xOffset: -halfIconSize,  yOffset: 0 },
+      //       4: { xOffset: -iconSize,      yOffset: 0 }
+      //     };
+
+      //     const drawSlot = spotMap[heroRank || 3];
+      //     unitBox = { 
+      //       ...unitBox, 
+      //       ...Drawing.getUnitBounds(mainHero, drawSlot.xOffset, drawSlot.yOffset) 
+      //     };
+      //   } else {
+      //     // did with collide with another hero?
+      //     const otherHero = collisions.find(collision => {
+      //       return collision.isHero;
+      //     });
+
+      //     if (!isHero && otherHero) {
+      //       // don't draw because we're a unit who is colliding with a non-main hero
+      //       // somewhere outside of the main pack
+      //       return;
+      //     }
+      //   }
+      // }
+
+      // Drawing.drawUnit(ctx, unitBox);
     });
+
+    console.log("---- next tree");
   }
 
   renderNameplates (frameData, ctx) {

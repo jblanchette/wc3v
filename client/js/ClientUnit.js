@@ -393,6 +393,7 @@ const ClientUnit = class {
       isHero: this.meta.hero,
       isMainHero: this.isMainHero,
       heroRank: this.heroRank,
+      spawnTime: this.spawnTime,
       x: drawX, 
       y: drawY,
       count: 1,
