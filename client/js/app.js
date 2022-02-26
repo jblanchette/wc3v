@@ -91,72 +91,76 @@ const Wc3vViewer = class {
       }
     });
 
-    const proGames = [
-      {
-        id: "happy-vs-grubby",
-        map: "Concealed Hills",
-        players: [["Happy"], ["Grubby"]]
-      },
-      {
-        id: "grubby-vs-thorzain",
-        map: "Concealed Hills",
-        players: [["Grubby"], ["Thorzain"]]
-      },
-      {
-        id: "cash-vs-foggy",
-        map: "Concealed Hills",
-        players: [["Cash"], ["Foggy"]]
-      },
-      {
-        id: "happy-vs-lucifer",
-        map: "Echo Isles",
-        players: [["Happy"], ["lucifer"]]
-      },
-      {
-        id: "foggy-vs-cash-2",
-        map: "Echo Isles",
-        players: [["Foggy"], ["Cash"]]
-      },
-      {
-        id: "terenas-stand-lv_sonik-vs-tgw",
-        map: "Terenas Stand",
-        players: [["Sonik"], ["TGW"]]
-      },
-      {
-        id: "2v2-synergy",
-        map: "2v2-synergy",
-        players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
-      },
-      {
-        id: "insup-vs-kiwi",
-        map: "Concealed Hills",
-        players: [["INSUPERABLE"], ["KiWiKaKi"]]
-      }
-    ];
+    // temp disabled
+    // const proGames = [
+    //   {
+    //     id: "happy-vs-grubby",
+    //     map: "Concealed Hills",
+    //     players: [["Happy"], ["Grubby"]]
+    //   },
+    //   {
+    //     id: "grubby-vs-thorzain",
+    //     map: "Concealed Hills",
+    //     players: [["Grubby"], ["Thorzain"]]
+    //   },
+    //   {
+    //     id: "cash-vs-foggy",
+    //     map: "Concealed Hills",
+    //     players: [["Cash"], ["Foggy"]]
+    //   },
+    //   {
+    //     id: "happy-vs-lucifer",
+    //     map: "Echo Isles",
+    //     players: [["Happy"], ["lucifer"]]
+    //   },
+    //   {
+    //     id: "foggy-vs-cash-2",
+    //     map: "Echo Isles",
+    //     players: [["Foggy"], ["Cash"]]
+    //   },
+    //   {
+    //     id: "terenas-stand-lv_sonik-vs-tgw",
+    //     map: "Terenas Stand",
+    //     players: [["Sonik"], ["TGW"]]
+    //   },
+    //   {
+    //     id: "2v2-synergy",
+    //     map: "2v2-synergy",
+    //     players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
+    //   },
+    //   {
+    //     id: "insup-vs-kiwi",
+    //     map: "Concealed Hills",
+    //     players: [["INSUPERABLE"], ["KiWiKaKi"]]
+    //   }
+    // ];
 
-    const proGamesTable = document.getElementById("pro-replays-table");
+    // const proGamesTable = document.getElementById("pro-replays-table");
 
-    proGames.forEach((game) => {
-      const row = document.createElement("tr");
+    // proGames.forEach((game) => {
+    //   const row = document.createElement("tr");
 
-      const playersStr = game.players.map(team => {
-        return team.join(", ");
-      }).join(" vs ");
+    //   const playersStr = game.players.map(team => {
+    //     return team.join(", ");
+    //   }).join(" vs ");
 
-      const replayId = game.id;
-      const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
-      const url = `http://${window.location.hostname}${urlPath}`;
+    //   const replayId = game.id;
+    //   const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
+    //   const url = `http://${window.location.hostname}${urlPath}`;
 
-      row.innerHTML = `
-       <td>${playersStr}</td>
-       <td>${game.map}</td>
-       <td><a href="${url}">link</a></td>
-      `;
+    //   row.innerHTML = `
+    //    <td>${playersStr}</td>
+    //    <td>${game.map}</td>
+    //    <td><a href="${url}">link</a></td>
+    //   `;
 
-      proGamesTable.append(row);
-    });
+    //   proGamesTable.append(row);
+    // });
 
     this.tutorialWindow = document.getElementById("tutorial-wrapper");
+    this.tutorialBackdrop = document.getElementById("modal-backdrop");
+
+    this.emptyGameWrapper = document.getElementById("empty-game-wrapper");
   }
 
   reset () {
@@ -287,7 +291,7 @@ const Wc3vViewer = class {
 
   hideSidePanels () {
     const panels = [
-      "pro-replays",
+      //"pro-replays",
       "about-wc3v",
       "recent-replays"
     ];
@@ -301,10 +305,15 @@ const Wc3vViewer = class {
     });
   }
 
-  hideTutorial() {
-    console.log(this.tutorialWindow);
+  showTutorial() {
+    this.advanceTutorial(1);
+    this.tutorialWindow.style.display = "block";
+    this.tutorialBackdrop.style.display = "block";
+  }
 
+  hideTutorial() {
     this.tutorialWindow.style.display = "none";
+    this.tutorialBackdrop.style.display = "none";
   }
 
   advanceTutorial (nextSlide) {
@@ -642,6 +651,8 @@ const Wc3vViewer = class {
     const viewerOptionsPanel = document.getElementById("viewer-options");
     const mapOptionsPanel = document.getElementById("map-options");
 
+    this.emptyGameWrapper.style.display = "none";
+
     loadingIcon.style.display = isLoading ? "block" : "none";
     logoIcon.style.display = isLoading ? "block" : "none";
 
@@ -901,13 +912,16 @@ const Wc3vViewer = class {
     file = file.trim();
     file = file.replace(new RegExp(' ', 'g'), "");
 
-    console.log("map name: ", encodeURI(file));
+
 
     const mapParts = file.split("/");
 
     this.matchEndTime = subheader.replayLengthMS;
 
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
+
+    console.log("map name: ", this.mapName);
+    console.log(maps);
     
     const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
       const searchName = maps[mapItem].name.toLowerCase();
@@ -984,10 +998,6 @@ const Wc3vViewer = class {
       canvas
     } = this;
 
-    if (!this.viewOptions.displayTreeGrid) {
-      return;
-    }
-    
     playerStatusCtx.save();
     playerStatusCtx.setTransform(1, 0, 0, 1, 0, 0);
     playerStatusCtx.clearRect(0, 0, canvas.width, canvas.height);

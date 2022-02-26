@@ -22,8 +22,16 @@ const MAP_OUTPUT_DIR = "mapdata";
 
 const CLIENT_OUTPUT_DIR = "../client/maps";
 
+const CLIENT_GAMEDATA_DIR = "../client/js";
+
 const sjs = require('@wowserhq/stormjs');
 const { FS, MPQ } = sjs;
+
+const PNG = require('pngjs').PNG;
+const war3model = require('war3-model');
+const { decodeBLP, getBLPImageData } = war3model;
+
+const { Image } = require('image-js');
 
 async function main() {
   FS.mkdir('/stormjs');
@@ -79,7 +87,8 @@ async function readMapFile(mapFilePath) {
     'war3map.doo', 
     'war3map.wpm', 
     'war3mapUnits.doo',
-    'war3map.w3e'
+    'war3map.w3e',
+    'war3mapMap.blp'
   ];
 
   // maps must have at least one of these files
@@ -139,12 +148,10 @@ async function readMapFile(mapFilePath) {
   });
 
   mpq.close();
-  parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap);
+  await parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap);
 };
 
-function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap) {
-  // parse the files and extract the needed data
-  
+async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap) {
   const doo = new DOOFile(`${outputDirectory}/war3map.doo`);
   const unitFile = new UNITFile(`${outputDirectory}/war3mapUnits.doo`);
 
@@ -153,9 +160,41 @@ function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap)
     fs.mkdirSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}`);
   }
 
-  // write the client data files
+  //
+  // parse and write the client data files as json used by the web client
+  //
+
   doo.write(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/doo.json`);
   unitFile.write(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/wpm.json`)
+
+  //
+  // convert the blp map file
+  //
+
+  let blp = decodeBLP(new Uint8Array(fs.readFileSync(`${outputDirectory}/war3mapMap.blp`)).buffer);
+  let imageData = getBLPImageData(blp, 0);
+  let png = new PNG({width: blp.width, height: blp.height, inputHasAlpha: true});
+
+  png.data = Buffer.from(imageData.data.buffer);
+
+  fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`, PNG.sync.write(png));
+
+  //
+  // resize and convert to png
+  //
+
+  let gridImage = await Image.load(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`);
+  let mapJpg = gridImage.resize({ factor: 4 });
+
+  mapJpg.save(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.jpg`);
+  mapJpg.save(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/gridmap.jpg`);
+
+  // clean up the png
+  fs.unlinkSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`);
+
+  //
+  // parse game files and create configs and game data
+  //
 
   const scriptFileName = isLuaMap ? 'war3map.lua' : 'war3map.j';
   const luaJassFile = new LUAJASSFile(`${outputDirectory}/${scriptFileName}`);
@@ -192,6 +231,11 @@ function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap)
 
   // write the new config file
   writeMapConfiguration(mapConfig);
+
+  const gameData = readGameData();
+
+  gameData.maps[mapFilePath] = output.info;
+  writeGameData(gameData);
 };
 
 function readMapConfiguration() {
@@ -203,6 +247,26 @@ function readMapConfiguration() {
 function writeMapConfiguration(mapConfig) {
   fs.writeFileSync(
       `../mapdata/mapConfiguration.json`, JSON.stringify(mapConfig) , 'utf-8');
+};
+
+function readGameData() {
+  const rawData = fs.readFileSync(`${CLIENT_GAMEDATA_DIR}/gameData.json`);
+
+  return JSON.parse(rawData);
+};
+
+function writeGameData(gameData) {
+  const rawJsonStr = JSON.stringify(gameData);
+  const output = `const gameData = ${rawJsonStr};
+
+  window.gameData = gameData;
+  `;
+
+  fs.writeFileSync(
+    `${CLIENT_GAMEDATA_DIR}/gameData.json`, rawJsonStr, 'utf-8');
+
+  fs.writeFileSync(
+    `${CLIENT_GAMEDATA_DIR}/gameData.js`, output, 'utf-8');
 };
 
 

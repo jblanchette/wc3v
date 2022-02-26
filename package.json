@@ -19,9 +19,12 @@
 	"dependencies": {
 		"@wowserhq/stormjs": "^0.4.1",
 		"d3": "^5.12.0",
+		"image-js": "^0.33.1",
 		"image-size": "^0.9.1",
+		"pngjs": "^6.0.0",
 		"rbush": "^3.0.1",
-		"w3gjs": "^2.4.0"
+		"w3gjs": "^2.4.0",
+		"war3-model": "^2.0.0"
 	},
 	"license": "GNU v3.0",
 	"readmeFilename": "README.md"
