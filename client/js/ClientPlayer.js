@@ -625,8 +625,6 @@ const ClientPlayer = class {
 
       // Drawing.drawUnit(ctx, unitBox);
     });
-
-    console.log("---- next tree");
   }
 
   renderNameplates (frameData, ctx) {
