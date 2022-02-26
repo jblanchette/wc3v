@@ -1,6 +1,8 @@
 const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 const unitBalanceMap = require("./UnitBalance.json").output;
 
+const mapConfiguration = require("../mapdata/mapConfiguration");
+
 let {
 	units,
     buildings,
@@ -68,111 +70,17 @@ const abilityActions = {
   'EatTree': [ -78, 0, 13, 0 ],
   'SummonElemental': [ 129, 0, 13, 0 ],
   'SummonTreants': [ 208, 0, 13, 0 ],
-  'DeathCoil': [ 254, 0, 13, 0 ]
+  'DeathCoil': [ 254, 0, 13, 0 ],
+  'HarvestLumber': [ 116, 108, 84, 76 ]
 };
 
-const mapStartPositions = {
-  '(8)battleground_lv.w3x': {
-    '0': { x: -4224.0, y: -5696.0 },
-    '1': { x:  -576.0, y: -5760.0 },
-    '2': { x:  -832.0, y:  6912.0 },
-    '3': { x:  6528.0, y: -5312.0 },
-    '4': { x:  6720.0, y:  -384.0 },
-    '5': { x:  5696.0, y:  4352.0 },
-    '6': { x: -5248.0, y:  4800.0 },
-    '7': { x: -6848.0, y:  -512.0 }
-  },
-  '(4)twistedmeadows.w3x': {
-    '0': { x: -4608.0, y: -3904.0 },
-    '1': { x: -3584.0, y:  4480.0 },
-    '2': { x:  4672.0, y:  3456.0 },
-    '3': { x:  3840.0, y: -5056.0 }
-  },
-  '(6)upperkingdom.w3x': {
-    '0': { x: -6784.0,  y:  320.0  },
-    '1': { x: -4224.0,  y: -4416.0 },
-    '2': { x:   576.0,  y: -7104.0 },
-    '3': { x:  -768.0,  y:  6528.0 },
-    '4': { x:  4288.0,  y:  4032.0 },
-    '5': { x:  6784.0,  y: -896.0  }
-  },
-  '(6)gnollwood.w3x': {
-    '0': { x:  576.0,  y: 6528.0  },
-    '1': { x: -6400.0, y: 3520.0  },
-    '2': { x: -6976.0, y: -3328.0 },
-    '3': { x:  192.0,  y: -7040.0 },
-    '4': { x:  6720.0, y: -2944.0 },
-    '5': { x:  7360.0, y: 3328.0  }
-  },
-  '(2)bootybay.w3m': {
-      '0': { x: -5184.0, y: 2944.0 },
-      '1': { x:  4672.0, y: 2944.0 }
-  },
-  '(2)echoisles.w3x': {
-    '0': { x: -5184.0, y: 2944.0 },
-    '1': { x:  4672.0, y: 2944.0 }
-  },
-  '(2)concealedhill.w3x': {
-    '0': { x:  2176.0, y:  4224.0 },
-    '1': { x: -2304.0, y: -4736.0 }
-  },
-  '(2)northernisles.w3x': {
-    '0': { x: -2752.0, y: -3328.0 },
-    '1': { x:  6912.0, y:  3264.0 }
-  },
-  '(2)terenasstand_lv.w3x': {
-    '0': { x: -4096.0, y:  3968.0 },
-    '1': { x:  4096.0, y: -4608.0 }
-  },
-  '(4)synergybigpaved.w3x': {
-    '0': { x:  768.0, y: -4736.0 },
-    '1': { x: -448.0, y: -4736.0 },
-    '2': { x:  448.0, y:  4608.0 },
-    '3': { x: -768.0, y:  4608.0 }
-  },
-  '(8)friends.w3x': {
-    '0': { x:  1088, y:  7296 },
-    '1': { x: -832,  y:  7296 },
-    '2': { x:  320,  y: -7488 },
-    '3': { x: -1536, y: -7488 },
-    '4': { x: -6592, y: -960  },
-    '5': { x: -6592, y:  896  },
-    '6': { x:  7168, y:  896  },
-    '7': { x:  7232, y: -1024 }
-  },
-  '(2)amazonia.w3x': {
-   0: { x:  3328.0, y: 3072.0 },
-   1: { x: -3392.0, y: -584.0 }
-  },
-  '(2)lastrefuge.w3x': {
-    '0': { x: -3840.0, y: -3968.0 },
-    '1': { x:  3840.0, y:  3264.0 }
-  },
-  '(6)guardians.w3x': {
-    0: { x:     0.0, y: -5632.0 },
-    1: { x:  5440.0, y: -4352.0 },
-    2: { x: -5440.0, y: -4352.0 },
-    3: { x:     0.0, y:  5632.0 },
-    4: { x: -5440.0, y:  4352.0 },
-    5: { x:  5440.0, y:  4352.0 }
-  },
-  '(6)monsoon_lv.w3x': {
-    0: { x: -6144.0, y:  4992.0 },
-    1: { x: -6720.0, y: -3456.0 },
-    2: { x: -6336.0, y: -6848.0 },
-    3: { x:  6912.0, y: -4608.0 },
-    4: { x:  4608.0, y:  6144.0 },
-    5: { x:  6464.0, y:  1984.0 }
-  },
-  '(6)bloodstonemesa_lv.w3x': {
-    0: { x:  -4672.0,  y: -8384.0 },
-    1: { x:   1856.0,  y: -8256.0 },
-    2: { x:   4032.0,  y: -1984.0 },
-    3: { x:   -640.0,  y:  3648.0 },
-    4: { x:  -7936.0,  y:  2368.0 },
-    5: { x:  -7936.0,  y: -4672.0 } 
-  }
-};
+
+
+const mapStartPositions = Object.keys(mapConfiguration.maps).reduce((acc, mapKey) => {
+  acc[mapKey] = mapConfiguration.maps[mapKey].startingPositions;
+
+  return acc;
+}, {});
 
 const commonMapNames = {
   'echoisles':         '(2)echoisles.w3x',
@@ -194,247 +102,13 @@ const commonMapNames = {
   'bloodstonemesa_lv': '(6)bloodstonemesa_lv.w3x'
 };
 
-const mapDataByFile = {
-  '(6)monsoon_lv.w3x': {
-    'name': 'MonsoonLV',
-    'bounds': {
-      'camera': [
-        [ -7680,  7680 ],
-        [  7424, -8192 ]
-      ],
-      'map': [
-        [ -9984,  10496 ],
-        [  10496, -9984 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 128, 126 ]
-    }
-  },
-  '(6)guardians.w3x': {
-    'name': 'Guardians',
-    'bounds': {
-      'camera': [
-        [ -7040,  7040 ],
-        [  7296, -7296 ]
-      ],
-      'map': [
-        [ -10240,  10240 ],
-        [  10240, -10240 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 118, 118 ]
-    }
-  },
-  '(2)lastrefuge.w3x': {
-    'name': 'LastRefuge',
-    'bounds': {
-      'camera': [
-        [ -4864,  4864 ],
-        [  4864, -5376 ]
-      ],
-      'map': [
-        [ -6144,   6144 ],
-        [  6144,  -6144 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 96, 96 ],
-      'playable': [ 84, 84 ]
-    }
-  },
-  '(2)amazonia.w3x': {
-    'name': 'Amazonia',
-    'bounds': {
-      'camera': [
-        [ -4608,  4608 ],
-        [  4608, -5120 ]
-      ],
-      'map': [
-        [ -6144,   6144 ],
-        [  6144,  -6144 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 96, 96 ],
-      'playable': [ 80, 80 ]
-    }
-  },
-  '(8)battleground_lv.w3x': {
-    'name': 'Battleground',
-    'bounds': {
-      'camera': [
-        [ -7680,  7680 ],
-        [  7808, -8064 ]
-      ],
-      'map': [
-        [ -10240,   10240 ],
-        [  10240,  -10240 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 128, 128 ]
-    }
-  },
-  '(4)twistedmeadows.w3x': {
-    'name': 'TwistedMeadows',
-    'bounds': {
-      'camera': [
-        [ -7424,  7424 ],
-        [  7424, -7936 ]
-      ],
-      'map': [
-        [ -10240,   10240 ],
-        [  10240,  -10240 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 124, 124 ]
-    }
-  },
-  '(6)upperkingdom.w3x': {
-    'name': 'UpperKingdom',
-    'bounds': {
-      'camera': [
-        [ -7936,  7936 ],
-        [  7936, -8448 ]
-      ],
-      'map': [
-        [ -10240,   10240 ],
-        [  10240,  -10240 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 132, 132 ]
-    }
-  },
-  '(6)gnollwood.w3x': {
-    'name': 'GnollWood',
-    'bounds': {
-      'camera': [
-        [ -7424,  7936 ],
-        [  7680, -8192 ]
-      ],
-      'map': [
-        [ -9984,   10496 ],
-        [  9984,  -10496 ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 128, 128 ]
-    }
-  },
-  '(2)concealedhill.w3x': {
-    'name': 'ConcealedHill',
-    'bounds': {
-      'camera': [
-        [ -4608,  4608 ],
-        [  5760, -6272 ]
-      ],
-      'map': [
-        [ -6144,  6144 ],
-        [  8192, -8192 ]
-      ]
-    },
-    'gridSize': {
-      'full':     [ 96, 128 ],
-      'playable': [ 80, 98 ]
-    }
-  },
-  '(2)echoisles.w3x': {
-    'name': 'EchoIsles',
-    'bounds': {
-      'camera': [
-        [ -6912,  6912 ],
-        [  4864, -5376 ]
-      ],
-      'map': [
-        [ -8192,  8192 ],
-        [  6144, -6144 ]
-      ]
-    },
-    'gridSize': {
-      'full':     [ 128, 96 ],
-      'playable': [ 116, 84 ]
-    }
-  },
 
-  '(2)northernisles.w3x': {
-    'name': 'NorthernIsles',
-    'bounds': {
-      'camera': [
-        [ -4352,  8448 ],
-        [  5248, -5248 ]
-      ],
-      'map': [
-        [ -6144,  10240 ],
-        [  6144, -6144  ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 128, 96 ],
-      'playable': [ 108, 86 ]
-    }
-  },
-  '(2)terenasstand_lv.w3x': {
-    'name': 'TerenasStandLV',
-    'bounds': {
-      'camera': [
-        [ -4864,  4864 ],
-        [  4864, -5376 ]
-      ],
-      'map': [
-        [ -6144,  6144 ],
-        [  6144, -6144  ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 96, 96 ],
-      'playable': [ 84, 84 ]
-    }
-  },
-  '(4)synergybigpaved.w3x': {
-    'name': 'SynergyBigPaved',
-    'bounds': {
-      'camera': [
-        [ -7424,  7424 ],
-        [  6784, -6784 ]
-      ],
-      'map': [
-        [ -10240,  10240 ],
-        [  10240, -10240  ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 160, 160 ],
-      'playable': [ 124, 110 ]
-    }
-  },
-  '(6)bloodstonemesa_lv.w3x': {
-    'name': 'BloodstoneMesa',
-    'bounds': {
-      'camera': [
-        [ -8960,  4864 ],
-        [  4864, -9472 ]
-      ],
-      'map': [
-        [ -10240,   6144  ],
-        [  6144,  -10240  ]
-      ]
-    },
-    'gridSize': {
-      'full': [ 128, 128 ],
-      'playable': [ 116, 116 ]
-    }
-  }
-};
+const mapDataByFile = Object.keys(mapConfiguration.maps).reduce((acc, mapKey) => {
+  const item = { ...mapConfiguration.maps[mapKey].info };
+
+  acc[mapKey] = item;
+  return acc;
+}, {});
 
 const abilityFlagNames = {
   'CancelTrainOrResearch': 64, // 0x40
