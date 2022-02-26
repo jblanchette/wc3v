@@ -4,6 +4,17 @@ html, body {
   font-family: verdana;
 }
 
+#modal-backdrop {
+  display: block;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  position: absolute;
+  background: rgba(80, 80, 80, 0.9);
+  margin-top: 0px;
+  margin-left: 0px;
+}
+
 #app {
   display: flex;
   flex-direction: column;
@@ -297,7 +308,7 @@ html, body {
 }
 
 #viewer-options {
-  display: flex;
+  display: none;
   background-color: #99c5de;
   justify-content: space-evenly;
   align-items: center;
@@ -319,7 +330,7 @@ html, body {
 }
 
 #map-options {
-  display: flex;
+  display: none;
   background-color: #99c5de;
   justify-content: space-evenly;
   align-items: center;
@@ -442,6 +453,24 @@ html, body {
   color: #ded599;
 }
 
+#empty-game-wrapper {
+  position: absolute;
+  left: 25%;
+  top: 30%;
+  width: 38%;
+  height: 18%;
+  border: 2px solid #000;
+  background: #FFF;
+  border-radius: 0.35rem;
+  padding: 0.5rem;
+  z-index: 500;
+}
+
+.empty-game-label {
+  text-align: center;
+}
+
+
 #tutorial-wrapper {
   display: none;
   position: absolute;
@@ -453,7 +482,7 @@ html, body {
   background: #FFF;
   border-radius: 0.35rem;
   padding: 0.5rem;
-  z-index: 200;
+  z-index: 2000;
 }
 
 #tutorial-content {
@@ -551,7 +580,7 @@ html, body {
   border: 1px solid #CCC;
 }
 
-.slide-1 .upload-button {
+.upload-button {
   border: 1px solid #666;
   border-radius: 0.45rem;
   padding: 0.25rem;
@@ -564,12 +593,12 @@ html, body {
   width: 12rem;
 }
 
-.slide-1 .upload-button:hover {
+.upload-button:hover {
   color: #0000FF;
   cursor: pointer;
 }
 
-.slide-1 .upload-button-subtext {
+.upload-button-subtext {
   font-size: 13px;
 }
 

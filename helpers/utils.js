@@ -626,25 +626,15 @@ const readCliArgs = (argv) => {
 
         const testMaps = [
           // pro mactches on site
-          // 'happy-vs-grubby',
-          // 'grubby-vs-thorzain',
-          // 'cash-vs-foggy',
-          // 'happy-vs-lucifer',
-          // 'foggy-vs-cash-2',
-          // 'terenas-stand-lv_sonik-vs-tgw',
-          // '2v2-synergy',
-          // standard maps
+          'happy-vs-grubby',
+          'grubby-vs-thorzain',
+          'happy-vs-lucifer',
+          'foggy-vs-cash-2',
           'amazonia',
           'battleground',
-          'mesa',
-          // concealed hill and echo done by pro matches
           'gnollwood',
-          'guardians',
           'lastrefuge',
-          'monsoon',
           'northernisles',
-          // synergy done by pro match
-          'upperkingdom2',
           'twistedmeadows5'
         ];
 

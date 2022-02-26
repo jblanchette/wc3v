@@ -83,25 +83,22 @@ const mapStartPositions = Object.keys(mapConfiguration.maps).reduce((acc, mapKey
 }, {});
 
 const commonMapNames = {
-  'echoisles':         '(2)echoisles.w3x',
-  'battleground_lv':   '(8)battleground_lv.w3x',
-  'twistedmeadows':    '(4)twistedmeadows.w3x',
-  'upperkingdom':      '(6)upperkingdom.w3x',
-  'gnollwood':         '(6)gnollwood.w3x',
-  'bootybaym':         '(2)bootybay.w3m',
-  'echoisles':         '(2)echoisles.w3x',
-  'concealedhill':     '(2)concealedhill.w3x',
-  'northernisles':     '(2)northernisles.w3x',
-  'terenasstand_lv':   '(2)terenasstand_lv.w3x',
-  'synergybigpavedx':  '(4)synergybigpaved.w3x',
-  'friends':           '(8)friends.w3x',
-  'amazonia':          '(2)amazonia.w3x',
-  'lastrefuge':        '(2)lastrefuge.w3x',
-  'guardiansx':        '(6)guardians.w3x',
-  'monsoon_lv':        '(6)monsoon_lv.w3x',
-  'bloodstonemesa_lv': '(6)bloodstonemesa_lv.w3x'
+  'w3c_EchoIsles.w3x':         '(2)echoisles.w3x',
+  'w3c_Battleground.w3x':      '(8)battleground_lv.w3x',
+  'w3c_TwistedMeadows.w3x':    '(4)twistedmeadows.w3x',
+  'w3c_UpperKingdom.w3x':      '(6)upperkingdom.w3x',
+  'w3c_GnollWood.w3x':         '(6)gnollwood.w3x',
+  'w3c_ConcealedHill.w3x':     '(2)concealedhill.w3x',
+  'w3c_NorthernIsles.w3x':     '(2)northernisles.w3x',
+  'w3c_TerenasStand_LV.w3x':   '(2)terenasstand_LV.w3x',
+  'w3c_SynergyBigPaved.w3x':   '(4)synergybigpaved.w3x',
+  'w3c_Friends.w3x':           '(8)friends.w3x',
+  'w3c_Amazonia.w3x':          '(2)amazonia.w3x',
+  'w3c_LastRefuge.w3x':        '(2)lastrefuge.w3x',
+  'w3c_Guardians.w3x':         '(6)guardians.w3x',
+  'w3c_Monsoon_LV.w3x':        '(6)monsoon_LV.w3x',
+  'w3c_BloodstoneMesa_LV.w3x': '(6)bloodstonemesa_lv.w3x'
 };
-
 
 const mapDataByFile = Object.keys(mapConfiguration.maps).reduce((acc, mapKey) => {
   const item = { ...mapConfiguration.maps[mapKey].info };

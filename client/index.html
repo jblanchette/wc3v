@@ -36,6 +36,8 @@
   </head>
   <body>
 
+    <div id="modal-backdrop"></div>
+
     <div id="app">
       <div id="menu">
         <div class="menu-item" id="menu-target">
@@ -95,16 +97,17 @@
 
         <ul>
           <li onClick="wc3v.claimUploadTicket()">Upload New Replay</li>
+          <li onClick="wc3v.showTutorial()">Show Tutorial</li>
           <li onClick="wc3v.showSidePanel('about-wc3v')">About WC3v</li>
         </ul>
       </div>
 
       <div  class="side-panel shown">
         <div class="side-panel-header">
-          <div id="pro-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('pro-replays')">
+          <!-- <div id="pro-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('pro-replays')">
             <div>Pro Replays</div>
-          </div>
-          <div id="recent-replays-header" class="panel-header-item" onClick="wc3v.showSidePanel('recent-replays')">
+          </div> -->
+          <div id="recent-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('recent-replays')">
             <div>Recent Replays</div>
           </div>
           
@@ -134,30 +137,7 @@
           <p>All materials and assets are used strictly for educational use, no profits are made from this website.</p>
 
           <h4>Currently Supported Maps:</h4>
-            <ul>
-              <li>Amazonia</li>
-              <li>Battleground</li>
-              <li>Concealed Hill</li>
-              <li>Echo Isles</li>
-              <li>Friendss</li>
-              <li>Gnoll Wood</li>
-              <li>Last Refuge</li>
-              <li>Northern Isles</li>
-              <li>Synergy Big Paved</li>
-              <li>Terenas Stand</li>
-              <li>Twisted Meadows</li>
-              <li>Upper Kingdom</li>
-              <li>Guardians</li>
-              <li>Monsoon</li>
-              <li>Bloodstone Mesa</li>
-            </ul>
-
-          <p>
-            New maps are in development and tooling is being created on to import them automatically.
-          </p>
-          <p>
-            If you have a request for a map please open a github issue with the request
-          </p>
+          <b>All Current W3Champions Maps</b>
         </div>
       </div>
 
@@ -240,6 +220,15 @@
             <img id="loading-icon" src="/assets/loading-icon.svg" />
 
             <div id="game-display-box"></div>
+
+            <div id="empty-game-wrapper">
+              <div class="empty-game-label">No currently selected match.</div>
+
+              <div class="upload-button" onClick="wc3v.claimUploadTicket()">
+                UPLOAD REPLAY
+                <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
+              </div>
+            </div>
 
             <div id="tutorial-wrapper">
               <div id="tutorial-content">
@@ -351,11 +340,7 @@
                      <td>Grubby vs Thorzain</td>
                      <td>Concealed Hills</td>
                      <td><a href="http://wc3v.com/replay/grubby-vs-thorzain">link</a></td>
-                    </tr><tr>
-                     <td>Cash vs Foggy</td>
-                     <td>Concealed Hills</td>
-                     <td><a href="http://wc3v.com/replay/cash-vs-foggy">link</a></td>
-                    </tr><tr>
+                    </tr>
                      <td>Happy vs lucifer</td>
                      <td>Echo Isles</td>
                      <td><a href="http://wc3v.com/replay/happy-vs-lucifer">link</a></td>
@@ -363,18 +348,6 @@
                      <td>Foggy vs Cash</td>
                      <td>Echo Isles</td>
                      <td><a href="http://wc3v.com/replay/foggy-vs-cash-2">link</a></td>
-                    </tr><tr>
-                     <td>Sonik vs TGW</td>
-                     <td>Terenas Stand</td>
-                     <td><a href="http://wc3v.com/replay/terenas-stand-lv_sonik-vs-tgw">link</a></td>
-                    </tr><tr>
-                     <td>Thorzain, Starshaped vs KNOIF, LILD.C</td>
-                     <td>2v2-synergy</td>
-                     <td><a href="http://wc3v.com/replay/2v2-synergy">link</a></td>
-                    </tr><tr>
-                     <td>INSUPERABLE vs KiWiKaKi</td>
-                     <td>Concealed Hills</td>
-                     <td><a href="http://wc3v.com/replay/insup-vs-kiwi">link</a></td>
                     </tr>
                   </table>
 
