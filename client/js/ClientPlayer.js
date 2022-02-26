@@ -482,8 +482,11 @@ const ClientPlayer = class {
     const { isNeutralPlayer } = this;
     const { nameplateTree, unitTree, unitDrawPositions } = frameData;
 
+    const unitMap = {};
+
     const drawBoxes = unitDrawPositions.reduce((acc, item) => {
       const { 
+        uuid,
         x, 
         y,
         icon,
@@ -502,11 +505,12 @@ const ClientPlayer = class {
       } = item;
 
       // don't draw decayed unit nameplates
-      if (decayLevel < 0.65) {
+      if (decayLevel < 0.45) {
         return acc;
       }
 
       const unitBox = {
+        uuid,
         minX:     x - (iconSize / 2),
         maxX:     x + (iconSize / 2),
         minY:     y - (iconSize / 2),
@@ -523,7 +527,8 @@ const ClientPlayer = class {
         playerId,
         count,
         drawSlots,
-        decayLevel
+        decayLevel,
+        fullName
       };
 
       acc.push(unitBox);
@@ -533,22 +538,21 @@ const ClientPlayer = class {
     unitTree.load(drawBoxes);
 
     const treeItems = unitTree.all();
+
     treeItems.forEach((unitBox, ind) => {
-      const { 
-        drawX, 
-        drawY, 
-        minX, 
-        minY, 
-        maxX, 
-        maxY,
+      const {
+        uuid, 
         isHero,
         isMainHero,
         itemId,
-        playerId,
-        heroRank,
-        drawSlots,
-        decayLevel
+        heroRank
       } = unitBox;
+
+      if (unitMap[uuid]) {
+        return;
+      } else {
+        unitMap[uuid] = true;
+      }
 
       if (isNeutralPlayer) {
         Drawing.drawUnit(ctx, unitBox);
@@ -557,18 +561,24 @@ const ClientPlayer = class {
       }
 
       const collisions = unitTree.search(unitBox);
+
       if (!isMainHero && collisions.length > 1) {
         const mainHero = collisions.find(collision => {
           return collision.isMainHero;
         });
 
         if (mainHero) {
-          const drawSlot = Drawing.assignDrawSlot(mainHero, mainHero.drawSlots, itemId, isHero, heroRank);
-          if (!drawSlot) {
-            // some error or overlap
-            return;
-          }
+          const { iconSize, halfIconSize } = mainHero;
 
+          const spotMap = {
+            2: { xOffset: -(iconSize),                yOffset: -(iconSize) },
+            1: { xOffset: -(iconSize) + halfIconSize, yOffset: -(iconSize) },
+            0: { xOffset: 0,                          yOffset: -(iconSize) },
+            3: { xOffset:  (iconSize) + halfIconSize, yOffset: -(iconSize) },
+            4: { xOffset: -(iconSize),                yOffset: -(iconSize) }
+          };
+
+          const drawSlot = spotMap[heroRank || 3];
           unitBox = { 
             ...unitBox, 
             ...Drawing.getUnitBounds(mainHero, drawSlot.xOffset, drawSlot.yOffset) 

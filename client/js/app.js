@@ -466,6 +466,10 @@ const Wc3vViewer = class {
           const tableStr = recentMatches.reduce((acc, match) => {
             const duration = parseInt(match.duration || 0) / (60 * 1000);
 
+            const formattedMapFile = encodeURI(match.mapFile)
+              .replace("%20", " ")
+              .substring(0, 22);
+
             acc += `
              <tr>
               <td><a href="/replay/${match.replayHash}">link</a></td>
@@ -979,6 +983,10 @@ const Wc3vViewer = class {
       utilityCtx,
       canvas
     } = this;
+
+    if (!this.viewOptions.displayTreeGrid) {
+      return;
+    }
     
     playerStatusCtx.save();
     playerStatusCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1196,8 +1204,8 @@ const Wc3vViewer = class {
       return acc;
     }, {});
 
-    groups.forEach((neutralGroup) => {
-      const { bounds, claimState, claimTime, claimOwnerId, uuid } = neutralGroup;
+    groups.forEach((neutralGroup, campNumber) => {
+      const { bounds, claimState, claimTime, claimOwnerId, uuid, order } = neutralGroup;
 
       const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
       const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
@@ -1249,6 +1257,10 @@ const Wc3vViewer = class {
       }
       ctx.fill();
       ctx.stroke();
+
+      if (claimState > 0 && claimColorFill) {
+        Drawing.drawBoxedLevel(ctx, `${order}`, drawX - 8, drawY - 24, 30, 30, 20, 20);
+      }
     });
 
     ctx.beginPath();
@@ -1400,7 +1412,8 @@ const Wc3vViewer = class {
     let frameData = { 
       nameplateTree: new rbush(),
       unitTree: new rbush(),
-      unitDrawPositions: []
+      unitDrawPositions: [],
+      drawnUnits: {}
     };
 
     this.renderMapGrid(utilityCtx);

@@ -160,12 +160,12 @@ const ClientUnit = class {
       this.minDecayLevel = 0.0;
     } else if (this.isBuilding) {
       this.iconSize = IconSizes.building;
-      this.decayLevel = 0.4;
+      this.decayLevel = 0.475;
     } else if (this.meta.worker) {
       this.iconSize = IconSizes.worker;
 
       // don't fully decay workers, since they often idle
-      this.minDecayLevel = 0.325;
+      this.minDecayLevel = 0.475;
     } else {
       this.iconSize = IconSizes.unit;
       this.minDecayLevel = 0.0;
@@ -341,6 +341,10 @@ const ClientUnit = class {
       return;
     }
 
+    if (this.isIllusion) {
+      return;
+    }
+
     const pathNode = this.path[this.recordIndexes.path];
 
     const currentX = pathNode && pathNode.x;
@@ -354,7 +358,13 @@ const ClientUnit = class {
     let drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
     let drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
-    const { unitDrawPositions } = frameData;
+    const { unitDrawPositions, drawnUnits } = frameData;
+
+    if (drawnUnits[this.uuid]) {
+      return;
+    }
+
+    drawnUnits[this.uuid] = true;
 
     const inverseK = (2.0 - transform.k);
     const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
@@ -369,7 +379,8 @@ const ClientUnit = class {
     const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
 
     // add unit to draw frame unit positions
-    unitDrawPositions.push({ 
+    unitDrawPositions.push({
+      uuid: this.uuid, 
       itemId: this.itemId,
       fullName: this.fullName,
       playerId: this.playerId,

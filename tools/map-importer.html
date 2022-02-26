@@ -1,0 +1,72 @@
+<html>
+    <head>
+        <title>WC3V map import tool</title>
+
+        <script src="map-importer.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', (event) => {
+                mapImporter.bootstrap();   
+            });
+        </script>
+
+
+        <style type="text/css">
+            @import "map-importer.css?v=1.0";  
+        </style>
+    </head>
+    <body>
+        <div id="app">
+
+            <div id="controls">
+                <div>
+                    Map File
+                    <input type="file" id="ctl-import-file-map" />
+                </div>
+                <div>
+                    Grid File
+                    <input type="file" id="ctl-import-file-grid" />
+                </div>
+                <div>
+                    Show Map: <input type="checkbox" id="chk-show-map" checked />
+                </div>
+                <div>
+                    Show Grid: <input type="checkbox" id="chk-show-grid" checked />
+                </div>
+
+                <hr>
+
+                <div>
+                    <div>small movements</div>
+                    <button id="ctl-left"><--</button>
+                    <button id="ctl-right">--></button>
+                    <button id="ctl-up">/\</button>
+                    <button id="ctl-down">\/</button>
+                </div>
+
+                <div>
+                    <div>big movements</div>
+                    <button id="ctl-left-big"><--</button>
+                    <button id="ctl-right-big">--></button>
+                    <button id="ctl-up-big">/\</button>
+                    <button id="ctl-down-big">\/</button>
+                </div>
+
+                <div>
+                    <div>map position</div>
+
+                    <div id="map-x-position">x: 0</div>
+                    <div id="map-y-position">y: 0</div>
+                </div>
+
+                <div>
+                    <button id="ctl-save">save and export</button>
+                </div>
+            </div>
+
+            <div id="content">
+                <canvas id="main-canvas" width="900" height="900"></canvas>
+            </div>
+
+        </div>
+    </body>
+</html>
