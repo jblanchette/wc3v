@@ -375,6 +375,8 @@ const Wc3vViewer = class {
     const self = this;
     const inputFile = document.createElement("input");
 
+    this.emptyGameWrapper.style.display = "none";
+
     inputFile.setAttribute("type", "file");
     inputFile.setAttribute("accept", ".w3g,.nwg")
     inputFile.click();
