@@ -1137,12 +1137,12 @@ const Wc3vViewer = class {
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
 
-    ctx.fillStyle = "#FFF";
-    ctx.strokeStyle = "#333";
-    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = "#013f01";
+    ctx.strokeStyle = "#906739";
+    ctx.globalAlpha = 0.65;
 
     doodadData.forEach((tree, treeIndex) => {
-      const { flags, position } = tree;
+      const { flags, position, scale } = tree;
       const { solid, visible } = flags;
       const { x, y } = position;
 
@@ -1153,11 +1153,16 @@ const Wc3vViewer = class {
       // (x * transform.k) + transform.x
       // (y * transform.k) + transform.y
 
+      const scaledSize = (8 * scale[0]) * transform.k;
+      const halfSize = scaledSize / 2;
+
       const drawX = ((xScale(x) + middleX) * transform.k) + transform.x;
       const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
 
+      //ctx.fillRect(drawX, drawY, scaledSize, scaledSize);
+
       ctx.beginPath();
-      ctx.arc(drawX, drawY, treeRadius, 0, Math.PI * 2, true);
+      ctx.arc(drawX + halfSize, drawY + halfSize, scaledSize, 0, Math.PI * 2, true);
       ctx.fill();
       ctx.stroke();
     });
