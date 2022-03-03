@@ -8,30 +8,43 @@
 const fs = require('fs');
 const os = require("os");
 const path = require("path");
+const zlib = require('zlib');
 
 const WPMFile = require("../lib/parsers/WPMFile"),
       DOOFile = require("../lib/parsers/DOOFile"),
-      UNITFile = require("../lib/parsers/UNITFile"),
       LISTFile = require("../lib/parsers/LISTFile"),
       LUAJASSFile = require("../lib/parsers/LUAJASSFile"),
       INFOFile = require("../lib/parsers/INFOFile"),
       TERRAINFile = require("../lib/parsers/TERRAINFile");
 
 const mappings = require("../helpers/mappings.js");
+
+const sjs = require('@wowserhq/stormjs');
+const { FS, MPQ } = sjs;
+
+const war3model = require('war3-model');
+const { decodeBLP, getBLPImageData } = war3model;
+
+const GameScaler = require("../client/js/GameScaler");
+
+const { createCanvas } = require("canvas");
+
+const d3 = require("d3");
+const rbush = require("rbush");
+
+//
+// constants
+//
+
 const MAP_OUTPUT_DIR = "mapdata";
 
 const CLIENT_OUTPUT_DIR = "../client/maps";
 
 const CLIENT_GAMEDATA_DIR = "../client/js";
 
-const sjs = require('@wowserhq/stormjs');
-const { FS, MPQ } = sjs;
-
-const PNG = require('pngjs').PNG;
-const war3model = require('war3-model');
-const { decodeBLP, getBLPImageData } = war3model;
-
-const { Image } = require('image-js');
+//
+// main entry code
+//
 
 async function main() {
   FS.mkdir('/stormjs');
@@ -48,22 +61,23 @@ async function main() {
   // read all the maps in 
   const maps = FS.readdir('./stormjs');
 
-  maps.forEach(async (map, i) => {
+  for (let i = 0; i < maps.length; i++) {
+    const map = maps[i];
+
     if (map == "." || map == "..") {
-      return;
+      continue;
     }
 
     try {
+      console.log(`reading map: ${map} (${(i+1)}/${maps.length})`);
       await readMapFile(map);
-
-      if (i == maps.length - 1) {
-        console.log("finished data extraction");
-      }
     } catch (err) {
       console.log("failed on map: ", map);
       console.log(err);
     }
-  });
+  }
+
+  console.log("finished data extraction");
 };
 
 async function readMapFile(mapFilePath) {
@@ -153,7 +167,6 @@ async function readMapFile(mapFilePath) {
 
 async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap) {
   const doo = new DOOFile(`${outputDirectory}/war3map.doo`);
-  const unitFile = new UNITFile(`${outputDirectory}/war3mapUnits.doo`);
 
   if (!fs.existsSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}`)){
     console.log("making map output directory: ", `${CLIENT_OUTPUT_DIR}/${normalizedMapName}`);
@@ -165,32 +178,22 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
   //
 
   doo.write(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/doo.json`);
-  unitFile.write(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/wpm.json`)
+  zipGameFile(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/doo.json`);
 
-  //
-  // convert the blp map file
-  //
+  // //
+  // // convert the blp map file
+  // //
 
-  let blp = decodeBLP(new Uint8Array(fs.readFileSync(`${outputDirectory}/war3mapMap.blp`)).buffer);
-  let imageData = getBLPImageData(blp, 0);
-  let png = new PNG({width: blp.width, height: blp.height, inputHasAlpha: true});
+  // let blp = decodeBLP(new Uint8Array(fs.readFileSync(`${outputDirectory}/war3mapMap.blp`)).buffer);
+  // let imageData = getBLPImageData(blp, 0);
+  // let png = new PNG({width: blp.width, height: blp.height, inputHasAlpha: true});
 
-  png.data = Buffer.from(imageData.data.buffer);
+  // png.data = Buffer.from(imageData.data.buffer);
 
-  fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`, PNG.sync.write(png));
+  // fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`, PNG.sync.write(png));
 
-  //
-  // resize and convert to png
-  //
-
-  let gridImage = await Image.load(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`);
-  let mapJpg = gridImage.resize({ factor: 4 });
-
-  mapJpg.save(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.jpg`);
-  mapJpg.save(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/gridmap.jpg`);
-
-  // clean up the png
-  fs.unlinkSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`);
+  // // clean up the png
+  // fs.unlinkSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`);
 
   //
   // parse game files and create configs and game data
@@ -222,7 +225,23 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
 
   output.startingPositions = luaJassFile.startingPositions;
   output.info.name = normalizedMapName;
-  
+
+  // now process teh WPM since it needs the map data info
+
+  const wpm = new WPMFile(`${outputDirectory}/war3map.wpm`, output.info);
+  wpm.write(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/wpm.json`);
+  zipGameFile(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/wpm.json`);
+
+  //
+  // resize and convert to png
+  //
+
+  const canvas = drawBackgroundMap(output, wpm, doo);
+  const buffer = canvas.toBuffer('image/png');
+
+  fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.jpg`, buffer);
+  fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/gridmap.jpg`, buffer);
+
   // read in and parse the current config file
   const mapConfig = readMapConfiguration();
 
@@ -236,6 +255,192 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
 
   gameData.maps[mapFilePath] = output.info;
   writeGameData(gameData);
+};
+
+function drawBackgroundMap (output, wpm, doo) {
+
+  const gameScaler = new GameScaler();
+  gameScaler.addDependency('_d3', d3);
+  gameScaler.setup(output.info);
+
+  const canvas = createCanvas(gameScaler.mapImage.width, gameScaler.mapImage.height);
+  const ctx = canvas.getContext('2d');
+
+  
+
+  // setup
+
+  const { grid } = wpm;
+  const dooGrid = doo.grid;
+
+  const dooTree = new rbush();
+
+  const gridTileSize = 16;
+  const treeSize = 8;
+
+  // drawing
+
+  const tileSize = gameScaler.pixelsPerTile;
+
+  const colors = {
+    'empty': '#000',
+    'grass': '#2c6818',
+    'water': '#051459',
+    'shallowwater': '#0A27A6',
+    'ground': '#906739',
+    'trees': '#013f01'
+  };
+
+  // black background
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, gameScaler.mapImage.width, gameScaler.mapImage.height);
+
+  const { xScale, yScale, middleX, middleY, } = gameScaler;
+
+  let rCol = grid.length - 1;
+
+  for (let col = 0; col < grid.length; col++) {
+    for (let row = 0; row < grid[col].length; row++) {
+      const data = grid[col][row];
+
+      const { 
+          NoWater, 
+          NoWalk,
+          NoFly,
+          NoBuild,
+          Blight
+      } = data;
+
+      const drawX = row * tileSize;
+      const drawY = rCol * tileSize;
+
+      // in game coords for tree map collisions
+      const gridX = drawX;
+      const gridY = drawY;
+
+      const gridHitBox = {
+        minX: gridX,
+        minY: gridY,
+        maxX: gridX + gridTileSize,
+        maxY: gridY + gridTileSize
+      };
+
+      // const collisions = dooTree.search(gridHitBox);
+      // if (collisions.length) {
+      //   ctx.fillStyle = colors.trees;
+      //   ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+      //   continue;
+      // }
+
+      // const flagTable = {
+      //   'NoWalk':  0x02,  // 1=no walk  , 0=walk ok
+      //   'NoFly':   0x04,  // 1=no fly   , 0=fly ok
+      //   'NoBuild': 0x08,  // 1=no build , 0=build ok
+
+      //   'Blight':  0x20,  // 1=blight   , 0=normal
+      //   'NoWater': 0x40,  // 1=no water , 0=water
+      //   'Unknown': 0x80   // 1=unknown  , 0=normal
+      // };
+
+      // can't walk and can't fly
+      if (NoWalk && NoFly) {
+        ctx.fillStyle = colors.empty;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }
+
+      if (!NoWater && !NoBuild) {
+        ctx.fillStyle = colors.water;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }
+
+      if (!NoWater && NoBuild) {
+        ctx.fillStyle = colors.shallowwater;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }
+
+      // can walk and can build
+      if (!NoWalk && !NoBuild) {
+        ctx.fillStyle = colors.grass;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }
+
+      // can walk
+      if (!NoWalk) {
+        ctx.fillStyle = colors.ground;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }
+
+      // can't walk and can fly
+      if (NoWalk && !NoFly) {
+        ctx.fillStyle = colors.ground;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }
+
+      if (Blight) {
+        ctx.fillStyle = colors.grass;
+        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+
+        continue;
+      }  
+    }
+
+    rCol--;
+  }
+
+  dooGrid.forEach((item, index) => {
+    const x = parseFloat(item.position.x);
+    const y = parseFloat(item.position.y);
+
+    const newTree = {
+      minX: xScale(x) + middleX,
+      maxX: xScale(x) + middleX,
+
+      minY: yScale(y) + middleY,
+      maxY: yScale(y) + middleY
+    };
+
+    ctx.fillStyle = colors.trees;
+    ctx.fillRect(newTree.minX, newTree.minY, 8, 8);
+    
+    //dooTree.insert(newTree);
+  });
+
+  return canvas;
+};
+
+function zipGameFile (outputPath) {
+  const gzip = zlib.createGzip();
+  const inputFile = fs.createReadStream(outputPath);
+  const outputFile = fs.createWriteStream(`${outputPath}.gz`, { autoClose: true });
+
+  inputFile.pipe(gzip)
+    .on('error', (e) => {
+      console.log("file write error for: ", outputPath, e);
+    })
+    .pipe(outputFile)
+    .on('error', (e) => {
+      console.log("file write error for: ", outputPath, e);
+    })
+    .on('finish', () => {
+      try {
+        fs.unlinkSync(outputPath);
+      } catch (e) {
+        // do nothing
+      }
+    });
 };
 
 function readMapConfiguration() {

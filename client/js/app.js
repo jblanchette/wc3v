@@ -559,24 +559,12 @@ const Wc3vViewer = class {
         const yBoundIndex = (map[1][0] < camera[1][1]) ? 0 : 1;
 
         self.cameraRatio =  {
-          x: (camera[0][xBoundIndex] / map[0][xBoundIndex]),
-          y: (camera[1][yBoundIndex] / map[1][yBoundIndex])
+          x: 1, //(camera[0][xBoundIndex] / map[0][xBoundIndex]),
+          y: 1, //(camera[1][yBoundIndex] / map[1][yBoundIndex])
         };
 
-        const mapWidth = self.mapImage.width * self.cameraRatio.x;
-        const mapHeight = self.mapImage.height * self.cameraRatio.y;
-
-        self.canvas.width = mapWidth;
-        self.canvas.height = mapHeight;
-
-        self.canvas.style.width = mapWidth + "px";
-        self.canvas.style.height = mapHeight + "px";
-        
-        self.playerCanvas.width = mapWidth;
-        self.playerCanvas.height = mapHeight;
-
-        self.utilityCanvas.width = mapWidth;
-        self.utilityCanvas.height = mapHeight;
+        const mapWidth = self.mapImage.width;// * self.cameraRatio.x;
+        const mapHeight = self.mapImage.height;// * self.cameraRatio.y;
 
         resolve();
       }, false);
@@ -940,7 +928,7 @@ const Wc3vViewer = class {
     const self = this;
     const { world } = this.mapData;
     const { bounds } = this.mapInfo;
-    const { width, height } = this.canvas;
+    
 
     // player ui toggle offsets
     this.playerSlotOffset = 0;
@@ -951,7 +939,24 @@ const Wc3vViewer = class {
 
     this.gameScaler = new GameScaler();
     this.gameScaler.addDependency('_d3', d3);
-    this.gameScaler.setup(this.mapInfo, this.mapImage, this.canvas, this.cameraRatio);
+    this.gameScaler.setup(this.mapInfo);
+
+    const mapWidth = this.gameScaler.mapImage.width;
+    const mapHeight = this.gameScaler.mapImage.height;
+
+    self.canvas.width = mapWidth;
+    self.canvas.height = mapHeight;
+
+    self.canvas.style.width = mapWidth + "px";
+    self.canvas.style.height = mapHeight + "px";
+    
+    self.playerCanvas.width = mapWidth;
+    self.playerCanvas.height = mapHeight;
+
+    self.utilityCanvas.width = mapWidth;
+    self.utilityCanvas.height = mapHeight;
+
+    const { width, height } = this.canvas;
 
     this.gameDisplayBox = new GameDisplayBox(this.teamColorMap, this.assignedPlayerColors);
     this.gameDisplayBox.setData(
@@ -1097,19 +1102,19 @@ const Wc3vViewer = class {
     const bgImage = viewOptions.displayMapGrid ? 
       this.gridMapImage : this.mapImage;
 
-    const offsetX = (viewWidth - sceneWidth) / 2;
-    const offsetY = (viewHeight - sceneHeight) / 2;
+    const offsetX = 0;//(viewWidth - sceneWidth) / 2;
+    const offsetY = 0;//(viewHeight - sceneHeight) / 2;
 
     ctx.drawImage(
       bgImage, 
       offsetX,               // sourceX
       offsetY,               // sourceY
-      sceneWidth,           // sourceWidth
-      sceneHeight,          // sourceHeight
+      viewWidth,           // sourceWidth
+      viewHeight,          // sourceHeight
       drawX + offsetX,           // destX
       drawY + offsetY,           // destY
-      sceneWidth * k,       // destWidth
-      sceneHeight * k       // destHeight
+      viewWidth * k,       // destWidth
+      viewHeight * k       // destHeight
     );
   }
 
@@ -1126,8 +1131,8 @@ const Wc3vViewer = class {
       return;
     }
 
-    const treeSize = (4 * transform.k);
-    const treeRadius = Math.min(5, Math.max(1.5, treeSize));
+    const treeSize = (6 * transform.k);
+    const treeRadius = Math.min(8, Math.max(3.5, treeSize));
 
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
@@ -1137,18 +1142,9 @@ const Wc3vViewer = class {
     ctx.globalAlpha = 0.75;
 
     doodadData.forEach((tree, treeIndex) => {
-      const { x, y, flags } = tree;
-
-      /*
-        flags :
-          0 = invisible and non-solid tree
-          1 = visible but non-solid tree
-          2 = normal tree (visible and solid)
-       */
-
-      if (flags === 0) {
-        return;
-      }
+      const { flags, position } = tree;
+      const { solid, visible } = flags;
+      const { x, y } = position;
 
       // drawing algo:
       // x = GameScaler.xScale(x) + middleX
@@ -1334,33 +1330,22 @@ const Wc3vViewer = class {
 
       for (let row = 0; row < gridWidth; row++) {
         const data = this.gridData[rCol][row];
-
-        const gridPosition = {
-          x: gridXScale(row * 32),
-          y: gridYScale(col * 32),
-        };
-
-        const drawX = ((xScale(gridPosition.x) + middleX) * transform.k) + transform.x;
-        const drawY = ((yScale(gridPosition.y) + middleY) * transform.k) + transform.y;
-
-        rRow--;
-
-        if (!data) {
-          console.error("bad grid data: ", col, rRow);
-          return;
-        }
-
         const { 
           NoWater, 
           NoWalk,
           NoFly,
           NoBuild,
-          Blight
+          Blight,
+          x,
+          y
         } = data;
+
+        const drawX = row * tileWidth;
+        const drawY = col * tileHeight;
 
         const canWalk = (!NoWalk && NoBuild) || NoWater || Blight;
 
-        if (viewOptions.displayWalkGrid && !canWalk) {
+        if (viewOptions.displayWalkGrid && canWalk) {
           ctx.strokeStyle = "#FFF";
           ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
         }
@@ -1445,6 +1430,9 @@ const Wc3vViewer = class {
         yScale,
         viewOptions
       );
+
+      frameData.unitTree = new rbush();
+      frameData.unitDrawPositions = [];
     });
 
     ctx.restore();
