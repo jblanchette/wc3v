@@ -537,6 +537,10 @@ const ClientPlayer = class {
         spawnTime
       };
 
+      if (decayLevel < 0.65) {
+        return acc;
+      }
+
       acc.push(unitBox);
       return acc;
     }, []);
@@ -547,83 +551,29 @@ const ClientPlayer = class {
     // sorted by units first, heroes last sorted by spawnTime desc
     const sortedDrawTree = treeItems.sort((a, b) => {
       if (a.isHero && b.isHero) {
-        return b.spawnTime - a.spawnTime;
+        return a.spawnTime - b.spawnTime;
       }
 
-      return a.isHero - b.isHero;
+      return b.isHero - a.isHero;
     });
 
     sortedDrawTree.forEach((unitBox, ind) => {
-      const {
-        uuid, 
-        isHero,
-        isMainHero,
-        itemId,
-        heroRank,
-        icon
-      } = unitBox;
-
       Drawing.drawUnit(ctx, unitBox);
       return;
 
-      if (isMainHero) {
-        Drawing.drawUnit(ctx, unitBox);
-
+      
+      if (drawnMap[unitBox.uuid]) {
         return;
       }
 
       const collisions = unitTree.search(unitBox);
-      if (collisions.length <= 1) {
-        Drawing.drawUnit(ctx, unitBox);
+      if (collisions.length > 1) {
+        unitBox.drawY -= unitBox.iconSize;
+        unitBox.drawX -= unitBox.halfIconSize;
       }
 
-
-      return;
-
-      // if (!isMainHero && collisions.length > 1) {
-      //   const mainHero = collisions.find(collision => {
-      //     return collision.isMainHero;
-      //   });
-
-      //   if (mainHero) {
-      //     const { iconSize, halfIconSize } = mainHero;
-
-      //     // const spotMap = {
-      //     //   2: { xOffset: -(iconSize),                yOffset: -(iconSize) },
-      //     //   1: { xOffset: -(iconSize) + halfIconSize, yOffset: -(iconSize) },
-      //     //   0: { xOffset: 0,                          yOffset: -(iconSize) },
-      //     //   3: { xOffset:  (iconSize) + halfIconSize, yOffset: -(iconSize) },
-      //     //   4: { xOffset: -(iconSize),                yOffset: -(iconSize) }
-      //     // };
-
-      //     const spotMap = {
-      //       2: { xOffset: iconSize,       yOffset: 0 },
-      //       1: { xOffset: halfIconSize,   yOffset: 0 },
-      //       0: { xOffset: 0,              yOffset: 0 },
-      //       3: { xOffset: -halfIconSize,  yOffset: 0 },
-      //       4: { xOffset: -iconSize,      yOffset: 0 }
-      //     };
-
-      //     const drawSlot = spotMap[heroRank || 3];
-      //     unitBox = { 
-      //       ...unitBox, 
-      //       ...Drawing.getUnitBounds(mainHero, drawSlot.xOffset, drawSlot.yOffset) 
-      //     };
-      //   } else {
-      //     // did with collide with another hero?
-      //     const otherHero = collisions.find(collision => {
-      //       return collision.isHero;
-      //     });
-
-      //     if (!isHero && otherHero) {
-      //       // don't draw because we're a unit who is colliding with a non-main hero
-      //       // somewhere outside of the main pack
-      //       return;
-      //     }
-      //   }
-      // }
-
-      // Drawing.drawUnit(ctx, unitBox);
+      
+      drawnMap[unitBox.uuid] = true;
     });
   }
 
