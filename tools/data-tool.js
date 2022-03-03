@@ -412,8 +412,10 @@ function drawBackgroundMap (output, wpm, doo) {
       maxY: yScale(y) + middleY
     };
 
+    const scaledSize = 10 * item.scale[0];
+
     ctx.fillStyle = colors.trees;
-    ctx.fillRect(newTree.minX, newTree.minY, 8, 8);
+    ctx.fillRect(newTree.minX, newTree.minY, scaledSize, scaledSize);
     
     //dooTree.insert(newTree);
   });
