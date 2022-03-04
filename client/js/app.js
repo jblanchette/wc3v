@@ -582,8 +582,10 @@ const Wc3vViewer = class {
           const { target } = res;
           const jsonData = JSON.parse(target.responseText);
             
+          console.log("grid: ", jsonData);
           self.gridData = jsonData.grid;
         } catch (e) {
+          console.log("no grid: ", e);
           self.gridData = [];
         }
 
@@ -1326,13 +1328,10 @@ const Wc3vViewer = class {
     ctx.lineWidth = 1;
 
     let rCol = gridHeight - 1;
-    let rRow = gridWidth - 1;
 
     ctx.globalAlpha = 1;
 
     for (let col = 0; col < gridHeight; col++) {
-      rRow = gridWidth - 1;
-
       for (let row = 0; row < gridWidth; row++) {
         const data = this.gridData[rCol][row];
         const { 
@@ -1345,8 +1344,8 @@ const Wc3vViewer = class {
           y
         } = data;
 
-        const drawX = row * tileWidth;
-        const drawY = col * tileHeight;
+        const drawX = (row * tileWidth) + transform.x;
+        const drawY = (col * tileHeight) + transform.y;
 
         const canWalk = (!NoWalk && NoBuild) || NoWater || Blight;
 
