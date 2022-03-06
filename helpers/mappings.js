@@ -149,7 +149,7 @@ const unitMetaData = {
     'uobs': {
         'displayName': 'Obsidian Statue',
         'hero': false,
-        'worker': true,
+        'worker': false,
         'permanent': true,
         'playerShop': false,
         'race': 'H',

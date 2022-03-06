@@ -647,7 +647,7 @@ const ClientPlayer = class {
 
         const iconBufferSize = focusUnit.halfIconSize * 1.25;
 
-        spotUnit.drawY = focusUnit.drawY + (focusUnit.iconSize + (focusUnit.iconSize * spotCol));
+        spotUnit.drawY = focusUnit.drawY + (focusUnit.iconSize + (spotUnit.iconSize * spotCol));
         spotUnit.drawX = focusUnit.drawX + (iconBufferSize * spotOffset[spotRow]);
 
         Drawing.drawUnit(ctx, spotUnit);
