@@ -391,6 +391,7 @@ const ClientUnit = class {
       fontSize: fontSize,
       decayLevel: this.decayLevel,
       isHero: this.meta.hero,
+      isWorker: this.meta.worker,
       isMainHero: this.isMainHero,
       heroRank: this.heroRank,
       spawnTime: this.spawnTime,
@@ -523,7 +524,7 @@ const ClientUnit = class {
     ctx.globalAlpha = 1;
   }
 
-  render (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
+  preRender (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (gameTime < this.spawnTime) {
       return;
     }

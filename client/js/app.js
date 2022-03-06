@@ -810,7 +810,8 @@ const Wc3vViewer = class {
       displayTreeGrid: false,
       displayWalkGrid: false,
       displayBuildGrid: false,
-      displayWaterGrid: false
+      displayWaterGrid: false,
+      displayCreepRoute: false
     };    
 
     Object.keys(this.viewOptions).forEach(optionKey => {
@@ -1174,7 +1175,7 @@ const Wc3vViewer = class {
   }
 
   renderNeutralGroups (ctx, gameTime) {
-    const { transform, mapData } = this;
+    const { transform, mapData, viewOptions } = this;
     const { world } = mapData;
     
     const {
@@ -1277,6 +1278,10 @@ const Wc3vViewer = class {
         Drawing.drawBoxedLevel(ctx, `${order}`, drawX - 8, drawY - 24, 30, 30, 20, 20);
       }
     });
+
+    if (!viewOptions.displayCreepRoute) {
+      return;
+    }
 
     ctx.beginPath();
     Object.keys(claimPaths).forEach(teamClaimId => {
@@ -1412,7 +1417,6 @@ const Wc3vViewer = class {
     // stored data about each frame
     let frameData = { 
       nameplateTree: new rbush(),
-      unitTree: new rbush(),
       unitDrawPositions: [],
       drawnUnits: {}
     };
@@ -1420,6 +1424,21 @@ const Wc3vViewer = class {
     this.renderMapGrid(utilityCtx);
     this.renderMapTrees(utilityCtx);
     this.renderNeutralGroups(utilityCtx, gameTime);
+
+    players.forEach(player => {
+      player.preRender(
+        frameData,
+        ctx,
+        playerCtx,
+        utilityCtx,
+        playerStatusCtx, 
+        transform, 
+        gameTime, 
+        xScale, 
+        yScale,
+        viewOptions
+      );
+    });
 
     players.forEach(player => {
       player.render(
@@ -1434,9 +1453,6 @@ const Wc3vViewer = class {
         yScale,
         viewOptions
       );
-
-      frameData.unitTree = new rbush();
-      frameData.unitDrawPositions = [];
     });
 
     ctx.restore();

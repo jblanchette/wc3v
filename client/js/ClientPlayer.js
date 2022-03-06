@@ -480,23 +480,11 @@ const ClientPlayer = class {
 
   renderDrawnUnits (frameData, ctx) {
     const { isNeutralPlayer } = this;
-    const { nameplateTree, unitTree, unitDrawPositions } = frameData;
+    const { nameplateTree, unitDrawPositions } = frameData;
 
-    const filteredDrawPositions = [];
+    const owningPlayerId = this.playerId;
 
-    unitDrawPositions.forEach(drawPositionUnit => {
-      const hasUnit = filteredDrawPositions.find(unit => {
-        return unit.uuid == drawPositionUnit.uuid;
-      });
-
-      if (hasUnit) {
-        return;
-      }
-
-      filteredDrawPositions.push(drawPositionUnit);
-    });
-
-    const drawBoxes = filteredDrawPositions.reduce((acc, item) => {
+    const drawBoxes = unitDrawPositions.reduce((acc, item) => {
       const { 
         uuid,
         x, 
@@ -514,8 +502,13 @@ const ClientPlayer = class {
         itemId,
         playerId,
         count,
-        drawSlots
+        drawSlots,
+        isWorker
       } = item;
+
+      if (decayLevel < 0.45 || playerId != owningPlayerId) {
+        return acc;
+      }
 
       const unitBox = {
         uuid,
@@ -526,6 +519,7 @@ const ClientPlayer = class {
         drawX:    x,
         drawY:    y,
 
+        fullName,
         icon,
         iconSize,
         halfIconSize,
@@ -534,22 +528,16 @@ const ClientPlayer = class {
         isMainHero,
         itemId,
         heroRank,
-        spawnTime
+        spawnTime,
+        isWorker
       };
-
-      if (decayLevel < 0.65) {
-        return acc;
-      }
 
       acc.push(unitBox);
       return acc;
     }, []);
 
-    unitTree.load(drawBoxes);
-    const treeItems = unitTree.all();
-
-    // sorted by units first, heroes last sorted by spawnTime desc
-    const sortedDrawTree = treeItems.sort((a, b) => {
+    // sorted by units last, heroes first sorted by spawnTime desc
+    const sortedDrawTree = drawBoxes.sort((a, b) => {
       if (a.isHero && b.isHero) {
         return a.spawnTime - b.spawnTime;
       }
@@ -557,23 +545,124 @@ const ClientPlayer = class {
       return b.isHero - a.isHero;
     });
 
-    sortedDrawTree.forEach((unitBox, ind) => {
-      Drawing.drawUnit(ctx, unitBox);
-      return;
+    /*
+      because we render the 'most visually important' units first, every unit
+      that collides with a hero will be adjusted to offset of the 'focus' unit
+    */
 
-      
-      if (drawnMap[unitBox.uuid]) {
+    const unitTree = new rbush();
+
+    const drawSlots = [];
+    const alwaysDrawSlots = [];
+
+    const addDrawSlotParent = (unitBox) => {
+      drawSlots.push({
+        focusUnit: unitBox,
+        unitList: [ unitBox.uuid ],
+        spots: []
+      });
+
+      unitTree.insert(unitBox);
+    };
+
+    const findDrawSlotOrCreate = (unitBox, collisions) => {
+      const drawSlot = drawSlots.find(slot => {
+        const hasFocusCollision = collisions.find(collision => {
+          return slot.unitList.includes(collision.uuid);
+        });
+
+        return hasFocusCollision;
+      });
+
+      if (drawSlot) {
+        drawSlot.unitList.push(unitBox.uuid);
+        drawSlot.spots.push(unitBox);
+
+        unitTree.insert(unitBox);
+
         return;
       }
 
+      // don't expect this to happen but here is a fallback... might bite us?
+      addDrawSlotParent(unitBox);
+    };
+
+    sortedDrawTree.forEach((unitBox, ind) => {
+      const { isMainHero, isHero, isWorker } = unitBox;
       const collisions = unitTree.search(unitBox);
-      if (collisions.length > 1) {
-        unitBox.drawY -= unitBox.iconSize;
-        unitBox.drawX -= unitBox.halfIconSize;
+
+      if (isNeutralPlayer || isWorker) {
+        alwaysDrawSlots.push(unitBox);
+
+        return;
       }
 
-      
-      drawnMap[unitBox.uuid] = true;
+      if (isMainHero) {
+        addDrawSlotParent(unitBox);
+
+        return;
+      }
+
+      if (!collisions.length) {
+        addDrawSlotParent(unitBox);
+
+        return;
+      }
+
+      findDrawSlotOrCreate(unitBox, collisions);
+    });
+
+
+    const spotOffset = [ -2, -1, 0, 1, 2 ];
+
+    // draw our slots
+    drawSlots.forEach(drawSlot => {
+      const { spots, focusUnit } = drawSlot;
+
+      Drawing.drawUnit(ctx, focusUnit);
+
+      if (spots.length) {
+        // const drawX = focusUnit.drawX - (focusUnit.halfIconSize * 4);
+        // const drawY = focusUnit.drawY + focusUnit.iconSize;
+
+        // ctx.fillStyle = "#CCC";
+        // ctx.fillRect(drawX, drawY, focusUnit.iconSize * 4, focusUnit.iconSize * 2);
+      }
+
+      let spotCol = 0;
+      let spotRow = 0;
+
+      let hasHeroSpot = false;
+
+      spots.forEach((spotUnit, ind) => {
+        if (spotUnit.isHero) {
+          const drawSide = hasHeroSpot ? -1 : 1;
+          spotUnit.drawX = focusUnit.drawX - (focusUnit.iconSize * drawSide);
+
+          hasHeroSpot = true;
+
+          Drawing.drawUnit(ctx, spotUnit);
+          return;
+        }
+
+        const iconBufferSize = focusUnit.halfIconSize * 1.25;
+
+        spotUnit.drawY = focusUnit.drawY + (focusUnit.iconSize + (focusUnit.iconSize * spotCol));
+        spotUnit.drawX = focusUnit.drawX + (iconBufferSize * spotOffset[spotRow]);
+
+        Drawing.drawUnit(ctx, spotUnit);
+
+        spotRow++;
+        if (spotRow > spotOffset.length) {
+          spotRow = 0;
+          spotCol++;
+        }
+      });
+    });
+
+    // always draw any unit in this list
+    alwaysDrawSlots.forEach(unitBox => {
+      Drawing.drawUnit(ctx, unitBox);
     });
   }
 
@@ -595,12 +684,12 @@ const ClientPlayer = class {
       const textMetrics = ctx.measureText(nameStr);
 
       const { actualBoundingBoxLeft, width } = textMetrics;
-      const drawY = (y + iconSize);
+      const drawY = (y - iconSize);
 
       const nameBox = {
         minX:     (x - actualBoundingBoxLeft),
         maxX:     (x - actualBoundingBoxLeft) + width,
-        minY:     y - (iconSize / 2),
+        minY:     drawY - (iconSize / 2),
         maxY:     drawY,
         drawX:    x,
         drawY:    drawY,
@@ -657,6 +746,12 @@ const ClientPlayer = class {
     });
   }
 
+  preRender (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+    // draw units / buildings
+    this.units.forEach(unit => 
+      unit.preRender(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
+  }
+
   render (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     ////
     // render player status 
@@ -666,12 +761,8 @@ const ClientPlayer = class {
       playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions);
 
     ////
-    // render main game
+    // render drawn units
     ////
-
-    // draw units / buildings
-    this.units.forEach(unit => 
-      unit.render(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
 
     this.renderDrawnUnits(frameData, playerCtx);
 
