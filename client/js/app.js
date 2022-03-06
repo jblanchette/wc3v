@@ -91,71 +91,65 @@ const Wc3vViewer = class {
       }
     });
 
-    // temp disabled
-    // const proGames = [
-    //   {
-    //     id: "happy-vs-grubby",
-    //     map: "Concealed Hills",
-    //     players: [["Happy"], ["Grubby"]]
-    //   },
-    //   {
-    //     id: "grubby-vs-thorzain",
-    //     map: "Concealed Hills",
-    //     players: [["Grubby"], ["Thorzain"]]
-    //   },
-    //   {
-    //     id: "cash-vs-foggy",
-    //     map: "Concealed Hills",
-    //     players: [["Cash"], ["Foggy"]]
-    //   },
-    //   {
-    //     id: "happy-vs-lucifer",
-    //     map: "Echo Isles",
-    //     players: [["Happy"], ["lucifer"]]
-    //   },
-    //   {
-    //     id: "foggy-vs-cash-2",
-    //     map: "Echo Isles",
-    //     players: [["Foggy"], ["Cash"]]
-    //   },
-    //   {
-    //     id: "terenas-stand-lv_sonik-vs-tgw",
-    //     map: "Terenas Stand",
-    //     players: [["Sonik"], ["TGW"]]
-    //   },
-    //   {
-    //     id: "2v2-synergy",
-    //     map: "2v2-synergy",
-    //     players: [["Thorzain", "Starshaped"], ["KNOIF", "LILD.C"]]
-    //   },
-    //   {
-    //     id: "insup-vs-kiwi",
-    //     map: "Concealed Hills",
-    //     players: [["INSUPERABLE"], ["KiWiKaKi"]]
-    //   }
-    // ];
+    const proGames = [
+      {
+        id: "happy-vs-grubby",
+        map: "Concealed Hills",
+        players: [["Happy"], ["Grubby"]]
+      },
+      {
+        id: "grubby-vs-thorzain",
+        map: "Concealed Hills",
+        players: [["Grubby"], ["Thorzain"]]
+      },
+      {
+        id: "cash-vs-foggy",
+        map: "Concealed Hills",
+        players: [["Cash"], ["Foggy"]]
+      },
+      {
+        id: "happy-vs-lucifer",
+        map: "Echo Isles",
+        players: [["Happy"], ["lucifer"]]
+      },
+      {
+        id: "foggy-vs-cash-2",
+        map: "Echo Isles",
+        players: [["Foggy"], ["Cash"]]
+      },
+      {
+        id: "terenas-stand-lv_sonik-vs-tgw",
+        map: "Terenas Stand",
+        players: [["Sonik"], ["TGW"]]
+      },
+      {
+        id: "insup-vs-kiwi",
+        map: "Concealed Hills",
+        players: [["INSUPERABLE"], ["KiWiKaKi"]]
+      }
+    ];
 
-    // const proGamesTable = document.getElementById("pro-replays-table");
+    const proGamesTable = document.getElementById("pro-replays-table");
 
-    // proGames.forEach((game) => {
-    //   const row = document.createElement("tr");
+    proGames.forEach((game) => {
+      const row = document.createElement("tr");
 
-    //   const playersStr = game.players.map(team => {
-    //     return team.join(", ");
-    //   }).join(" vs ");
+      const playersStr = game.players.map(team => {
+        return team.join(", ");
+      }).join(" vs ");
 
-    //   const replayId = game.id;
-    //   const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
-    //   const url = `http://${window.location.hostname}${urlPath}`;
+      const replayId = game.id;
+      const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
+      const url = `http://${window.location.hostname}${urlPath}`;
 
-    //   row.innerHTML = `
-    //    <td>${playersStr}</td>
-    //    <td>${game.map}</td>
-    //    <td><a href="${url}">link</a></td>
-    //   `;
+      row.innerHTML = `
+       <td>${playersStr}</td>
+       <td>${game.map}</td>
+       <td><a href="${url}">link</a></td>
+      `;
 
-    //   proGamesTable.append(row);
-    // });
+      proGamesTable.append(row);
+    });
 
     this.tutorialWindow = document.getElementById("tutorial-wrapper");
     this.tutorialBackdrop = document.getElementById("modal-backdrop");
@@ -291,7 +285,7 @@ const Wc3vViewer = class {
 
   hideSidePanels () {
     const panels = [
-      //"pro-replays",
+      "pro-replays",
       "about-wc3v",
       "recent-replays"
     ];

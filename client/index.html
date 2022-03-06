@@ -98,19 +98,22 @@
         <ul>
           <li onClick="wc3v.claimUploadTicket()">Upload New Replay</li>
           <li onClick="wc3v.showTutorial()">Show Tutorial</li>
+          <li onClick="wc3v.toggleSidePanel('pro-replays')">Browse Pro Replays</li>
+          <li onClick="wc3v.toggleSidePanel('recent-replays')">View Recent Replays</li>
           <li onClick="wc3v.showSidePanel('about-wc3v')">About WC3v</li>
         </ul>
       </div>
 
       <div  class="side-panel shown">
         <div class="side-panel-header">
-          <!-- <div id="pro-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('pro-replays')">
-            <div>Pro Replays</div>
-          </div> -->
           <div id="recent-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('recent-replays')">
             <div>Recent Replays</div>
           </div>
           
+          <div id="pro-replays-header" class="panel-header-item" onClick="wc3v.showSidePanel('pro-replays')">
+            <div>Pro Replays</div>
+          </div>
+
           <div id="about-wc3v-header" class="panel-header-item" onClick="wc3v.showSidePanel('about-wc3v')">
             <div>About WC3V</div>
           </div>
@@ -130,6 +133,14 @@
 
           <h4>Currently Supported Maps:</h4>
           <b>All Current W3Champions Maps</b>
+        </div>
+
+        <div id="pro-replays">
+          <table id="pro-replays-table">
+            <th>Players</th>
+            <th>Map</th>
+            <th>Link</th>
+          </table>
         </div>
       </div>
 
