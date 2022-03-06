@@ -630,6 +630,10 @@ const readCliArgs = (argv) => {
           'grubby-vs-thorzain',
           'happy-vs-lucifer',
           'foggy-vs-cash-2',
+          'cash-vs-foggy',
+          'terenas-stand-lv_sonik-vs-tgw',
+          'insup-vs-kiwi',
+
           'amazonia',
           'battleground',
           'gnollwood',
