@@ -801,7 +801,7 @@ const Wc3vViewer = class {
 
   setupViewOptions () {
     this.viewOptions = {
-      displayPath: true,
+      displayPath: false,
       displayLeveLDots: true,
       decayEffects: true,
       displayText: true,
