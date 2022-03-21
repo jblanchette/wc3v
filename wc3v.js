@@ -9,6 +9,7 @@ const fs = require('fs');
 const doParsing = async (file) => {
   let actionCount = 0;
   let globalTime = 0;
+
   let playerManager = new PlayerManager();
 
   const buffer = fs.readFileSync(file);

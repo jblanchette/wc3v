@@ -263,22 +263,167 @@ html, body {
   border: 1px solid #000;
 }
 
+#build-wrapper {
+  display: none;
+  position: absolute;
+  top: 60px;
+  z-index: 5;
+  background: #FFF;
+}
+
+#build-wrapper h1 {
+  margin: 0;
+}
+
+#build-content {
+  padding: 1rem;
+}
+
+#build-content-players {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  border: 1px solid #333;
+  overflow: auto;
+  flex-wrap: wrap;
+  height: 100px;
+  max-height: 100px;
+  background: #29373E;
+}
+
+.player-selector {
+  background: #FFF;
+  width: 8rem;
+  max-width: 8rem;
+  padding: 0.25rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  cursor: pointer;
+}
+
+.player-selector img {
+  margin-bottom: 5px;
+}
+
+.player-selector:hover {
+  background-color: #EEE;
+}
+
+.player-selector.selected {
+  background: #CCC;
+}
+
+.player-selector-color-icon {
+  display: inline-block;
+  vertical-align: bottom;
+  width: 10px;
+  height: 20px;
+  margin-right: 2px;
+}
+
+.tooltip {  
+  position: absolute;     
+  text-align: center;     
+  width: 100px;         
+  height: 32px;         
+  padding: 2px;       
+  font: 12px sans-serif;    
+  background: #A5CB5F; 
+  border: 1px solid #333;    
+  border-radius: 8px;     
+  pointer-events: none;
+  z-index: 9999999;     
+}
+
+.tooltip-header {
+  font-weight: 700;
+}
+
+#build-order-wrapper {
+  border: 1px solid #333;
+  color: #000;
+}
+
+#build-order-wrapper span {
+  display: block;
+  margin: 2rem;
+  padding: 1rem;
+  border: 1px solid #333;
+  background: #A5CB5F;
+  font-size: 18px;
+}
+
+#build-order-wrapper .x.axis-grid,
+#build-order-wrapper .y.axis-grid {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+#build-order-wrapper circle,
+#build-order-wrapper text {
+  fill: #000;
+  stroke: #000;
+  color: #000;
+}
+
 #main-wrapper {
   /* so we can position: absolute; sub-canvas elements */
   position: relative;
 }
 
+#view-selector {
+  display: none;
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 50
+}
+
+#view-selector ul {
+  margin: 0;
+  padding: 0;
+}
+
+#view-selector li {
+  display: inline-block;
+  width: 8rem;
+  height: 2.25rem;
+}
+
+#view-selector li:hover {
+  cursor: pointer;
+  background-color: #ccc;
+}
+
+#view-selector li div {
+  text-align: center;
+  padding-top: 0.35rem;
+}
+
+
+#view-type-toggles {
+  font: 12px Verdana;
+  position: absolute;
+  top: 6px;
+  left: 16px;
+  width: 230px;
+  text-align: center;
+  z-index: 3;
+}
+
 #player-status-toggles {
   font: 12px Verdana;
   position: absolute;
-  top: 8px;
+  top: 56px;
   left: 16px;
   width: 220px;
   text-align: center;
   z-index: 3;
 }
 
-.status-toggle {
+.status-toggle,
+.view-type-toggle {
   text-selection: none;
   cursor: pointer;
   border: 1px solid #CCC;
@@ -288,10 +433,19 @@ html, body {
   padding: 0.45rem 0.35rem;
 }
 
-.status-toggle.selected {
+.view-type-toggle {
+  font-size: 16px;
+}
+
+.status-toggle.selected,
+.view-type-toggle {
   border: 1px solid #000033;
   background-color: #CCC;
   color: #000;
+}
+
+.view-type-toggle.selected {
+  background-color: #A5CB5F;
 }
 
 #player-status-bg-icon {
@@ -617,7 +771,8 @@ html, body {
 #tutorial-content .slide-2,
 #tutorial-content .slide-3,
 #tutorial-content .slide-4,
-#tutorial-content .slide-5 {
+#tutorial-content .slide-5,
+#tutorial-content .slide-6 {
   display: none;
 }
 
@@ -757,6 +912,7 @@ html, body {
   width: 265px;
   z-index: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 650px;
 }
 

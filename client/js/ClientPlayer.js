@@ -16,7 +16,7 @@ const TeamColors = {
 };
 
 const ClientPlayer = class {
-  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer) {
+  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer, eventStream) {
     this.slot = slot;
     this.teamColor = teamColor;
     this.playerId = playerId;
@@ -27,6 +27,7 @@ const ClientPlayer = class {
     this.tierStream = tierStream;
     this.playerColor = playerColor;
     this.isNeutralPlayer = isNeutralPlayer;
+    this.eventStream = eventStream;
 
     this.assetsLoaded = false;
     this.tab = StatusTabs.heroes;
@@ -249,7 +250,7 @@ const ClientPlayer = class {
       return;
     }
 
-    const yMargin = 50;
+    const yMargin = 100;
     const xPadding = 10;
     const yPadding = 35;
 
@@ -276,8 +277,13 @@ const ClientPlayer = class {
     }
 
     if (this.slot === 0) {
+      const halfDrawY = (drawY / 2);
+
+      playerStatusCtx.fillStyle = "#5F5F5F";
+      playerStatusCtx.fillRect(0, 0, drawBoxWidth, halfDrawY);
+
       playerStatusCtx.fillStyle = "#5fa5cb";
-      playerStatusCtx.fillRect(0, 0, drawBoxWidth, drawY);
+      playerStatusCtx.fillRect(0, halfDrawY, drawBoxWidth, halfDrawY - 4);
     }
 
     ////
