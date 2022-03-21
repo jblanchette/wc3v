@@ -25,6 +25,11 @@ const TeamColorList = [
   "#FFFC01"
 ];
 
+const ViewModes = {
+  gameplay: 0,
+  buildOrder: 1
+};
+
 const Wc3vViewer = class {
   constructor () {
     this.reset();
@@ -46,8 +51,15 @@ const Wc3vViewer = class {
       });
     } else {
 
-      // if we have no match to load show the tutorial
-      this.tutorialWindow.style.display = "block";
+      const cookieData = document.cookie;
+
+      if (cookieData && cookieData.indexOf("shownTutorial=1") != -1) {
+        console.log("not showing tutorial");
+        this.hideTutorial();
+      } else {
+        // if we have no match to load show the tutorial
+        this.tutorialWindow.style.display = "block";
+      }
 
       if (!this.isDev) {
         return;
@@ -57,7 +69,7 @@ const Wc3vViewer = class {
       const localReplay = params.get('r');
 
       if (localReplay) {
-        console.log('loading local replay: ', localReplay);
+        console.log('loading local replay: ', encodeURI(localReplay));
         setTimeout(() => {
           this.load(`${encodeURI(localReplay)}.wc3v`);
         });
@@ -222,7 +234,6 @@ const Wc3vViewer = class {
         // removing loading status indicator
         self.setLoadingStatus(false);
       } catch (e) {
-        console.log("raw: ", res);
         console.error("Error loading wc3v replay: ", e);
       }
     });
@@ -308,10 +319,12 @@ const Wc3vViewer = class {
   hideTutorial() {
     this.tutorialWindow.style.display = "none";
     this.tutorialBackdrop.style.display = "none";
+
+    document.cookie = "shownTutorial=1; Secure";
   }
 
   advanceTutorial (nextSlide) {
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 6; i++) {
       const items = document.getElementsByClassName(`slide-${i}`);
       const el = items[0];
 
@@ -570,22 +583,22 @@ const Wc3vViewer = class {
     const self = this;
     const { name } = this.mapInfo;
 
-    return new Promise((resolve, reject) => {
-      this.loadFile(`../maps/${name}/wpm.json`, (res) => {
-        try {
-          const { target } = res;
-          const jsonData = JSON.parse(target.responseText);
+    // return new Promise((resolve, reject) => {
+    //   this.loadFile(`../maps/${name}/wpm.json`, (res) => {
+    //     try {
+    //       const { target } = res;
+    //       const jsonData = JSON.parse(target.responseText);
             
-          console.log("grid: ", jsonData);
-          self.gridData = jsonData.grid;
-        } catch (e) {
-          console.log("no grid: ", e);
-          self.gridData = [];
-        }
+    //       console.log("grid: ", jsonData);
+    //       self.gridData = jsonData.grid;
+    //     } catch (e) {
+    //       console.log("no grid: ", e);
+    //       self.gridData = [];
+    //     }
 
-        resolve(true);
-      });
-    })
+    //     resolve(true);
+    //   });
+    // })
   }
 
   loadDoodadFile () {
@@ -717,6 +730,24 @@ const Wc3vViewer = class {
     this.stopRenderLoop();
   }
 
+  setViewType (tab) {
+    const el = document.getElementById(`${tab}-toggle`);
+    const oldList = Array.from(document.getElementsByClassName("view-type-toggle selected"));
+
+    oldList.forEach(oldEl => oldEl.classList.remove('selected'));
+    el.classList.add('selected');
+
+    this.viewMode = (tab == 'gameplay') ? ViewModes.gameplay : ViewModes.buildOrder;
+
+    this.buildWrapper.style.display = (this.viewMode == ViewModes.buildOrder) ? 'block' : 'none';
+
+    if (!this.gameLoaded) {
+      return;
+    }
+
+    this.render();
+  }
+
   setStatusTab (tab) {
     const el = document.getElementById(`${tab}-toggle`);
     const oldList = Array.from(document.getElementsByClassName("status-toggle selected"));
@@ -738,11 +769,19 @@ const Wc3vViewer = class {
 
     this.gameTime = 0;
 
+    this.viewMode = ViewModes.gameplay;
+
+    // reference to which players build order we are viewing
+    this.buildOrderPlayers = [];
+
     this.setStatusTab('heroes');
     this.setupViewOptions();
 
     this.setupPlayers();
     this.setupMap();
+
+    this.buildWrapper = document.getElementById("build-wrapper");
+    this.mainWrapper = document.getElementById("main-wrapper");
 
     this.canvas = document.getElementById("main-canvas");
     this.ctx = this.canvas.getContext("2d");
@@ -789,7 +828,55 @@ const Wc3vViewer = class {
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
+      this.setupBuildOrder();
       this.render();
+    });
+  }
+
+  setupBuildOrder () {
+    const buildOrderPlayersWrapper = document.getElementById("build-content-players");
+
+    this.players.forEach(player => {
+      const { playerId, playerColor, isNeutralPlayer, icon } = player;
+      if (isNeutralPlayer) {
+        return;
+      }
+
+      const wrapper = document.createElement("div");
+      const content = document.createElement("div");
+      const colorIcon = document.createElement("span");
+
+      const newIcon = new Image();
+
+      wrapper.classList.add('player-selector');
+      content.classList.add('player-selector-content');
+      colorIcon.classList.add('player-selector-color-icon');
+
+      content.innerHTML = `<span class="player-selector-color-icon" style="background: ${playerColor};"></span>${player.displayName}`;
+
+      newIcon.src = icon.src;
+      wrapper.id = `player-selector-id-${playerId}`;
+
+      wrapper.append(newIcon);
+      wrapper.append(content);
+
+
+      wrapper.addEventListener('click', (e) => {
+        const el = document.getElementById(`player-selector-id-${playerId}`);
+        const toggled = el.classList.toggle('selected');
+
+        if (toggled) {
+          this.buildOrderPlayers.push(player);
+        } else {
+          this.buildOrderPlayers = this.buildOrderPlayers.filter(buildPlayer => {
+            return buildPlayer.playerId != playerId;
+          });
+        }
+
+        this.renderBuildOrder();
+      });
+
+      buildOrderPlayersWrapper.append(wrapper);
     });
   }
 
@@ -853,6 +940,7 @@ const Wc3vViewer = class {
         startingPosition, 
         units, 
         selectionStream,
+        eventStream,
         tierStream,
         teamId,
         isNeutralPlayer 
@@ -876,7 +964,8 @@ const Wc3vViewer = class {
         selectionStream,
         tierStream,
         this.playerColorMap[index],
-        isNeutralPlayer
+        isNeutralPlayer,
+        eventStream
       );
 
       this.assignedPlayerColors[playerId] = this.playerColorMap[index];
@@ -906,9 +995,6 @@ const Wc3vViewer = class {
     this.matchEndTime = subheader.replayLengthMS;
 
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
-
-    console.log("map name: ", this.mapName);
-    console.log(maps);
     
     const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
       const searchName = maps[mapItem].name.toLowerCase();
@@ -946,6 +1032,9 @@ const Wc3vViewer = class {
 
     self.canvas.style.width = mapWidth + "px";
     self.canvas.style.height = mapHeight + "px";
+
+    self.buildWrapper.style.width = mapWidth + "px";
+    self.buildWrapper.style.height = (mapHeight - 38) + "px";
     
     self.playerCanvas.width = mapWidth;
     self.playerCanvas.height = mapHeight;
@@ -1313,6 +1402,8 @@ const Wc3vViewer = class {
       return;
     }
 
+    return;
+
     const { gridSize } = this.mapInfo;
     const { full, playable } = gridSize;
 
@@ -1366,6 +1457,349 @@ const Wc3vViewer = class {
 
       rCol--;
     }
+  }
+
+  renderBuildOrder () {
+    const { 
+      buildOrderPlayers,
+      players
+    } = this;
+
+    const allPlayers = players.filter(player => !player.isNeutralPlayer);
+    const buildPlayerData = {};
+
+    buildOrderPlayers.forEach(player => {
+      const { eventStream, tierStream } = player;
+
+      const buildingEvents = eventStream.reduce((acc, item) => {
+        if (item.key == 'addBuilding') {
+          const { gameTime, building } = item;
+          const { displayName, itemId} = building;
+
+          const imgSrc = `/assets/wc3icons/${itemId}.jpg`;
+
+          acc.push({
+            itemId,
+            displayName,
+            gameTime,
+            bucketOffset: 0,
+            imgSrc: imgSrc
+          });
+        }
+
+        return acc;
+      }, []);
+
+      const d3Data = buildingEvents.map((item, ind) => {
+        return { date: new Date(item.gameTime), value: 0, data: item };
+      });
+
+      const tierData = tierStream.reduce((acc, item) => {
+        if (item.tier != 1) {
+          acc.push({ 
+            date: new Date(item.gameTime), 
+            value: item.tier 
+          });
+        }
+
+        return acc;
+      }, []);
+
+      buildPlayerData[player.playerId] = {
+        buildingEvents,
+        d3Data,
+        tierData
+      };
+    });
+
+    const chartProperties = {
+      height: this.gameScaler.mapImage.height - 200,
+      width: this.gameScaler.mapImage.width - 60,
+      axisMargin: 50,
+      yMargin: 50,
+      xMargin: 10,
+      padding: 50,
+      playerLanePadding: 10,
+      tierBandHeight: 40
+    };
+
+    const iconSizes = {
+      building: 50
+    };
+
+    const computedChartSize = {
+      left:   chartProperties.xMargin + chartProperties.axisMargin, 
+      right:  chartProperties.width - chartProperties.xMargin,
+      top:    chartProperties.yMargin,
+      bottom: chartProperties.height - chartProperties.yMargin
+    };
+
+    const wrapper = document.getElementById('build-order-wrapper');
+    wrapper.innerHTML = '';
+
+    const MIN_IN_MS = (60 * 1000);
+
+    // how many 5 minute slices do we have in our game
+    const gameSlices = (this.matchEndTime <= 0) ? 1 : Math.ceil(this.matchEndTime / (5 * MIN_IN_MS));
+
+    // ensure the early game is always stepped out and visually clear
+    const yDomainPreset = [ 0, 0.25, 0.5, 1, 2.5 ];
+    const yDomain = [].concat(yDomainPreset);
+
+    for (let i = 1; i <= gameSlices; i++) {
+      yDomain.push(5 * i);
+    }
+
+    if (gameSlices > 1) {
+      yDomain.push((gameSlices + 1) * 5);
+    }
+
+    const yScale = d3.scalePow()
+      .exponent(0.5)
+      .domain([
+        0,
+        1.5 * MIN_IN_MS,
+        Math.max(this.matchEndTime, 10 * MIN_IN_MS)
+      ])
+      .rangeRound([ 
+        computedChartSize.top, 
+        computedChartSize.bottom * 0.35,
+        computedChartSize.bottom
+      ]);
+
+    const xScale = d3.scaleLinear()
+      .domain([0, allPlayers.length])
+      .range([ 
+        computedChartSize.left,
+        computedChartSize.right
+      ]);
+
+    // TODO: remove this in favor of xScale now that we dont need it
+    const xPlayerScale = d3.scaleLinear()
+      .domain([0, allPlayers.length])
+      .range([
+        computedChartSize.left,
+        computedChartSize.right
+      ]);
+
+    const parent = d3.create("div")
+      .append("svg")
+      .attr("width", chartProperties.width)
+      .attr("height", chartProperties.height);
+
+    // render yAxis and tick labels
+    parent
+      .append("g")
+      .attr("class", "y axis")
+      .attr("transform", `translate(${computedChartSize.left}, 0)`)
+      .call(
+        d3
+          .axisLeft(yScale)
+          .tickFormat((d, i) => {
+            const timerDate = new Date(Math.round(d * 1000) / 1000);
+            // ensure leading zero
+            const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
+
+            return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
+          })
+      );
+
+    ////
+    // Player drawing routines
+    ////
+
+    //
+    // draw background color rects
+    //
+
+    const bgData = buildOrderPlayers.map(player => { 
+      return { date: 0, value: player.slot, playerColor: player.playerColor }
+    });
+
+    // render bg rects
+    parent
+        .append('g')
+        .selectAll("rect")
+        .data(bgData)
+        .enter()
+          .append("rect")
+          .attr("class", "player-bg-rect")
+          .attr("x", d => xPlayerScale(d.value))
+          .attr("width", d => xPlayerScale(d.value + 1) - xPlayerScale(d.value))
+          .attr("y", d => yScale(d.date))
+          .attr("height", computedChartSize.bottom - chartProperties.yMargin)
+          .attr("fill", d => d.playerColor);
+
+    //
+    // x and y grid lines
+    //
+
+    const yAxisGrid = d3
+      .axisLeft(yScale)
+      // each tick is the full width of the chart
+      .tickSize(-computedChartSize.right + computedChartSize.left)
+      .tickFormat('')
+      .ticks(15);
+
+    const xAxisGrid = d3
+      .axisBottom(xScale)
+      // each tick is the full height of the chart
+      .tickSize(-computedChartSize.bottom + computedChartSize.top)
+      .tickFormat('')
+      .ticks(15);
+
+    parent.append('g')
+      .attr('class', 'y axis-grid')
+      // translate left to clear the yAxis and tick labels
+      .attr('transform', `translate(${computedChartSize.left}, 0)`)
+      .call(yAxisGrid);
+
+    parent.append('g')
+      .attr('class', 'x axis-grid')
+      // translate to the bottom  to render back upward to the origin
+      .attr('transform', `translate(0, ${computedChartSize.bottom})`)
+      .call(xAxisGrid);
+
+    //
+    // bucket generation
+    //
+    // how WC3V draws buildings 'staggered' so buildings that were made
+    // close together can be easily seen
+    // -------------------------------------------------------------------------
+    //
+    // utilizes d3 historgram and its bin algorithm to
+    // group buildings that are close together on the yScale
+    // using its ticks as the thresholds for the histogram bins
+    // so that we keep the properties of the sqrt scale
+    //
+    // every building that is in a group gets a `bucketOffset`
+    // index added to its data record for use in a localized
+    // `xBucketScale` to give horizontal visual clearence
+    // to buildings
+    //
+
+    const bucketGenerator = d3.histogram()
+      .value(function(d) { return d.data.gameTime; })
+      .thresholds(yScale.ticks(15)); // then the numbers of bins
+
+    const bucketCounts = [];
+
+    buildOrderPlayers.forEach((buildPlayer, ind) => {
+      const { playerId } = buildPlayer;
+      const data = buildPlayerData[playerId].d3Data;
+      const buckets = [];
+
+      bucketGenerator(data).forEach(bucket => {
+        bucket.forEach((item, ind) => {
+          item.data.bucketOffset = ind;
+        });
+
+        bucketCounts.push(bucket.length);
+
+        const { x0, x1 } = bucket;
+        if (bucket.length) {
+          buckets.push({
+            x0,
+            x1
+          });
+        }
+      });
+
+      buildPlayerData[playerId].buckets = buckets;
+    });
+
+    const playerSlotPadding = (xPlayerScale(1) - xPlayerScale(0)) - 
+                              (iconSizes.building) - 
+                              chartProperties.playerLanePadding;
+
+    const tooltip = d3.select("body")
+      .append("div") 
+      .attr("class", "tooltip")       
+      .style("opacity", 0);
+
+    const TierColors = {
+      2: "#21a5e3",
+      3: "#FFFF33"
+    };
+
+    buildOrderPlayers.forEach((buildPlayer, ind) => {
+      const { playerId, slot } = buildPlayer;
+      const data = buildPlayerData[playerId];
+
+      // parent
+      //   .append('g')
+      //   .selectAll("rect")
+      //   .data(data.buckets)
+      //   .enter()
+      //     .append("rect")
+      //     .attr("x", d => xPlayerScale(slot) + xBucketScale(0) - 5)
+      //     .attr("width", xBucketScale(maxBucketSlot) - xBucketScale(0) + 5)
+      //     .attr("y", d => (yScale(d.x0)) | 0)
+      //     .attr("height", d => (yScale(d.x1) | 0) - (yScale(d.x0) | 0) - 2);
+
+      const tierBar = parent
+        .append('g')
+        .selectAll('rect')
+        .data(data.tierData)
+        .enter()
+          .append('g');
+
+      tierBar
+        .append('rect')
+        .attr("x", d => xPlayerScale(slot))
+        .attr("width", d => xPlayerScale(1) - xPlayerScale(0))
+        .attr("y", d => yScale(d.date))
+        .attr("height", chartProperties.tierBandHeight)
+        .attr("fill", d => TierColors[d.value])
+      
+      tierBar.append('text')
+            .attr('x', d => xPlayerScale(slot + 1) - 50)
+            .attr('y', d => yScale(d.date) + chartProperties.tierBandHeight - 4)
+            .text(d => `Tier ${d.value}`);
+
+      const maxBucketSlot = d3.max(data.d3Data.map(d => d.data.bucketOffset));
+      const xBucketScale = d3.scaleLinear()
+        .domain([0, maxBucketSlot])
+        .range([chartProperties.playerLanePadding, playerSlotPadding]);
+
+      parent
+        .append('g')
+        .selectAll("dot")
+        .data(data.d3Data)
+        .enter()
+          .append("image")
+          .attr("xlink:href", d => d.data.imgSrc)
+          .attr("x", d => {
+            return xPlayerScale(slot) + xBucketScale(d.data.bucketOffset);
+          })
+          .attr("y", d => yScale(d.date) - (iconSizes.building / 2))
+          .attr("width", iconSizes.building)
+          .attr("height", iconSizes.building)
+          .on("mouseover", d => {    
+            tooltip.transition()    
+                .duration(200)    
+                .style("opacity", 0.95);
+
+
+            const timerDate = new Date(Math.round(d.date * 1000) / 1000);
+            // ensure leading zero
+            const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
+            const timeStr = `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
+
+            tooltip.html(`<div class='tooltip-header'>${d.data.displayName}</div>
+              <div class='tooltip-timer'>${timeStr}</div>`)  
+                .style("left", (d3.event.pageX) + "px")   
+                .style("top", (d3.event.pageY - 28) + "px");  
+          })          
+          .on("mouseout", d => {   
+              tooltip.transition()    
+                  .duration(500)    
+                  .style("opacity", 0); 
+          });
+    })
+    
+
+    wrapper.append(parent.node());
   }
 
   render () {
