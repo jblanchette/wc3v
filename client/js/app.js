@@ -321,7 +321,7 @@ const Wc3vViewer = class {
     this.tutorialBackdrop.style.display = "none";
 
     console.log("setting do-not-show cookie");
-    document.cookie = "shownTutorial=1; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
+    document.cookie = "shownTutorial=1; path=/; expires=Tue, 19 Jan 2038 03:14:07 GMT";
   }
 
   advanceTutorial (nextSlide) {
