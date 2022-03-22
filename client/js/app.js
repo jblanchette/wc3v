@@ -320,7 +320,8 @@ const Wc3vViewer = class {
     this.tutorialWindow.style.display = "none";
     this.tutorialBackdrop.style.display = "none";
 
-    document.cookie = "shownTutorial=1; Secure";
+    console.log("setting do-not-show cookie");
+    document.cookie = "shownTutorial=1; expires=Fri, 31 Dec 9999 23:59:59 GMT; SameSite=None; Secure";
   }
 
   advanceTutorial (nextSlide) {
