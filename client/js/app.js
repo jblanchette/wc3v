@@ -1504,7 +1504,7 @@ const Wc3vViewer = class {
       });
 
       const tierData = tierStream.reduce((acc, item) => {
-        if (item.tier > 1 && item.tier < 4) {
+        if (item.tier != 1 && item.tier != 4) {
           acc.push({ 
             date: new Date(item.gameTime), 
             value: item.tier 
@@ -1513,6 +1513,8 @@ const Wc3vViewer = class {
 
         return acc;
       }, []);
+
+      console.log("tier data: ", tierData, tierStream);
 
       buildPlayerData[player.playerId] = {
         buildingEvents,
