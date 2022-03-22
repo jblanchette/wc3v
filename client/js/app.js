@@ -769,7 +769,10 @@ const Wc3vViewer = class {
 
     this.gameTime = 0;
 
-    this.viewMode = ViewModes.gameplay;
+    const params = new URLSearchParams(window.location.search);
+    const hasBuildParam = params.has('showBuildOrder');
+
+    this.viewMode = hasBuildParam ? ViewModes.buildOrder : ViewModes.gameplay;
 
     // reference to which players build order we are viewing
     this.buildOrderPlayers = [];
@@ -829,6 +832,11 @@ const Wc3vViewer = class {
     .then(() => {
       this.setupDrawing();
       this.setupBuildOrder();
+
+      if (hasBuildParam) {
+        this.setViewType('build-order');
+      }
+
       this.render();
     });
   }
