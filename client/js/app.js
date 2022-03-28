@@ -30,6 +30,11 @@ const ViewModes = {
   buildOrder: 1
 };
 
+const BuildView = {
+  live: 0,
+  static: 1
+};
+
 const Wc3vViewer = class {
   constructor () {
     this.reset();
@@ -749,6 +754,22 @@ const Wc3vViewer = class {
     this.render();
   }
 
+  setBuildView (tab) {
+    // note that we render it first because the controls are added by the render
+    this.buildViewMode = (tab == 'live') ? BuildView.live : BuildView.static;
+    this.renderBuildOrder();
+
+    const el = document.getElementById(`build-order-control-${tab}`);
+    const oldList = Array.from(document.getElementsByClassName("build-order-control selected"));
+
+    oldList.forEach(oldEl => oldEl.classList.remove('selected'));
+    el.classList.add('selected');
+
+    if (!this.gameLoaded) {
+      return;
+    }
+  }
+
   setStatusTab (tab) {
     const el = document.getElementById(`${tab}-toggle`);
     const oldList = Array.from(document.getElementsByClassName("status-toggle selected"));
@@ -774,6 +795,7 @@ const Wc3vViewer = class {
     const hasBuildParam = params.has('showBuildOrder');
 
     this.viewMode = hasBuildParam ? ViewModes.buildOrder : ViewModes.gameplay;
+    this.buildViewMode = BuildView.live;
 
     // reference to which players build order we are viewing
     this.buildOrderPlayers = [];
@@ -1471,19 +1493,51 @@ const Wc3vViewer = class {
   renderBuildOrder () {
     const { 
       buildOrderPlayers,
+      buildViewMode,
       players
     } = this;
 
     const allPlayers = players.filter(player => !player.isNeutralPlayer);
     const buildPlayerData = {};
 
+    const isStaticView = buildViewMode == BuildView.static;
+
+    const modeKeyFilters = {};
+    modeKeyFilters[BuildView.live] = ['addBuilding'];
+    modeKeyFilters[BuildView.static] = ['addBuilding', 'addUnit'];
+
+    const filterKeys = modeKeyFilters[buildViewMode];
+
+    let maxEventCount = 0;
+    
     buildOrderPlayers.forEach(player => {
       const { eventStream, tierStream } = player;
 
-      const buildingEvents = eventStream.reduce((acc, item) => {
-        if (item.key == 'addBuilding') {
-          const { gameTime, building } = item;
-          const { displayName, itemId} = building;
+      const rawBuildingEvents = eventStream.reduce((acc, item) => {
+
+        if (filterKeys.includes(item.key)) {
+          const { gameTime } = item;
+          let displayName, itemId, isUnit;
+
+          if (item.key == 'addBuilding') {
+            const { building } = item;
+            displayName = building.displayName;
+            itemId = building.itemId;
+
+            isUnit = false;
+          } else {
+            const { unit } = item;
+
+            if (unit.isHero || unit.isIllusion || unit.isSummon) {
+              // bail out
+              return acc;
+            }
+
+            displayName = unit.displayName;
+            itemId = unit.itemId;
+
+            isUnit = true;
+          }
 
           const imgSrc = `/assets/wc3icons/${itemId}.jpg`;
 
@@ -1491,6 +1545,8 @@ const Wc3vViewer = class {
             itemId,
             displayName,
             gameTime,
+            isUnit,
+            count: 1,
             bucketOffset: 0,
             imgSrc: imgSrc
           });
@@ -1498,6 +1554,76 @@ const Wc3vViewer = class {
 
         return acc;
       }, []);
+
+
+      //
+      // Algorithm to group units of the same itemId together and show a multiplier text
+      //
+
+      let buildingEvents;
+      if (isStaticView) {
+        let lastUnit;
+        buildingEvents = [];
+
+        for (let i = 0; i < rawBuildingEvents.length; i++) {
+          const item = rawBuildingEvents[i];
+
+          if (!item.isUnit) {
+            if (lastUnit) {
+              buildingEvents.push(lastUnit);
+              lastUnit = null;
+            }
+
+            buildingEvents.push(item);
+            continue;
+          }
+
+          if (lastUnit) {
+            if (lastUnit.itemId == item.itemId) {
+              lastUnit.count += 1;
+
+              continue;
+            }
+
+            // we have a lastUnit but it doenst match, so push it in
+            buildingEvents.push(lastUnit);
+          }
+
+          // now assign the new lastUnit
+          lastUnit = item;
+          continue;
+        
+          // end of lastUnit for loop
+        }
+
+        if (lastUnit) {
+          // we had a remaining unit at the end
+          buildingEvents.push(lastUnit);
+        }
+
+        // add the tier icons
+        tierStream.forEach(tierItem => {
+          if (tierItem.tier != 1 && tierItem.tier != 4) {
+            buildingEvents.push({
+              itemId: 'asdf',
+              displayName: `Tier ${tierItem.tier}`,
+              gameTime: tierItem.gameTime,
+              isUnit: false,
+              count: 1,
+              bucketOffset: 0,
+              imgSrc: player.icon.src
+            });
+          }
+        });
+
+        buildingEvents = buildingEvents.sort((a, b) => {
+          return a.gameTime - b.gameTime;
+        });
+
+      } else {
+        // no need for processing, just use raw
+        buildingEvents = rawBuildingEvents;
+      }
 
       const d3Data = buildingEvents.map((item, ind) => {
         return { date: new Date(item.gameTime), value: 0, data: item };
@@ -1514,7 +1640,10 @@ const Wc3vViewer = class {
         return acc;
       }, []);
 
-      console.log("tier data: ", tierData, tierStream);
+      const totalEvents = buildingEvents.length + tierData.length;
+      if (totalEvents > maxEventCount) {
+        maxEventCount = totalEvents;
+      }
 
       buildPlayerData[player.playerId] = {
         buildingEvents,
@@ -1527,7 +1656,7 @@ const Wc3vViewer = class {
       height: this.gameScaler.mapImage.height - 200,
       width: this.gameScaler.mapImage.width - 60,
       axisMargin: 50,
-      yMargin: 50,
+      yMargin: 20,
       xMargin: 10,
       padding: 50,
       playerLanePadding: 10,
@@ -1535,7 +1664,7 @@ const Wc3vViewer = class {
     };
 
     const iconSizes = {
-      building: 50
+      building: isStaticView ? 75 : 50
     };
 
     const computedChartSize = {
@@ -1546,7 +1675,20 @@ const Wc3vViewer = class {
     };
 
     const wrapper = document.getElementById('build-order-wrapper');
-    wrapper.innerHTML = '';
+    wrapper.style.maxHeight = `${chartProperties.height}px`;
+
+    wrapper.innerHTML = `<div id='build-order-controls'>
+      <div 
+        id='build-order-control-live' 
+        onClick='wc3v.setBuildView("live")' 
+        class='build-order-control ${isStaticView ? "" : "selected"}'>Live Timing
+      </div>
+      <div 
+        id='build-order-control-static' 
+        onClick='wc3v.setBuildView("static")' 
+        class='build-order-control ${isStaticView ? "selected" : ""}'>Static
+      </div>
+    </div>`;
 
     const MIN_IN_MS = (60 * 1000);
 
@@ -1565,18 +1707,26 @@ const Wc3vViewer = class {
       yDomain.push((gameSlices + 1) * 5);
     }
 
-    const yScale = d3.scalePow()
-      .exponent(0.5)
-      .domain([
-        0,
-        1.5 * MIN_IN_MS,
-        Math.max(this.matchEndTime, 10 * MIN_IN_MS)
-      ])
-      .rangeRound([ 
-        computedChartSize.top, 
-        computedChartSize.bottom * 0.35,
-        computedChartSize.bottom
-      ]);
+    let yScale;
+
+    if (isStaticView) {
+      yScale = d3.scaleLinear()
+        .domain([0, Math.max(this.matchEndTime, 10 * MIN_IN_MS)])
+        .range([computedChartSize.top, maxEventCount * iconSizes.building]);
+    } else {
+      yScale = d3.scalePow()
+        .exponent(0.5)
+        .domain([
+          0,
+          1.5 * MIN_IN_MS,
+          Math.max(this.matchEndTime, 10 * MIN_IN_MS)
+        ])
+        .rangeRound([ 
+          computedChartSize.top, 
+          computedChartSize.bottom * 0.35,
+          computedChartSize.bottom
+        ]);
+    }
 
     const xScale = d3.scaleLinear()
       .domain([0, allPlayers.length])
@@ -1593,27 +1743,32 @@ const Wc3vViewer = class {
         computedChartSize.right
       ]);
 
+    const computedChartHeight = isStaticView ? (maxEventCount * iconSizes.building) : chartProperties.height;
+
     const parent = d3.create("div")
       .append("svg")
       .attr("width", chartProperties.width)
-      .attr("height", chartProperties.height);
+      .attr("height", computedChartHeight);
 
     // render yAxis and tick labels
-    parent
-      .append("g")
-      .attr("class", "y axis")
-      .attr("transform", `translate(${computedChartSize.left}, 0)`)
-      .call(
-        d3
-          .axisLeft(yScale)
-          .tickFormat((d, i) => {
-            const timerDate = new Date(Math.round(d * 1000) / 1000);
-            // ensure leading zero
-            const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
 
-            return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
-          })
-      );
+    if (!isStaticView) {
+      parent
+        .append("g")
+        .attr("class", "y axis")
+        .attr("transform", `translate(${computedChartSize.left}, 0)`)
+        .call(
+          d3
+            .axisLeft(yScale)
+            .tickFormat((d, i) => {
+              const timerDate = new Date(Math.round(d * 1000) / 1000);
+              // ensure leading zero
+              const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
+
+              return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
+            })
+        );
+    }
 
     ////
     // Player drawing routines
@@ -1638,7 +1793,7 @@ const Wc3vViewer = class {
           .attr("x", d => xPlayerScale(d.value))
           .attr("width", d => xPlayerScale(d.value + 1) - xPlayerScale(d.value))
           .attr("y", d => yScale(d.date))
-          .attr("height", computedChartSize.bottom - chartProperties.yMargin)
+          .attr("height", isStaticView ? computedChartHeight : computedChartSize.bottom - chartProperties.yMargin)
           .attr("fill", d => d.playerColor);
 
     //
@@ -1665,11 +1820,13 @@ const Wc3vViewer = class {
       .attr('transform', `translate(${computedChartSize.left}, 0)`)
       .call(yAxisGrid);
 
-    parent.append('g')
-      .attr('class', 'x axis-grid')
-      // translate to the bottom  to render back upward to the origin
-      .attr('transform', `translate(0, ${computedChartSize.bottom})`)
-      .call(xAxisGrid);
+    if (!isStaticView) {
+      parent.append('g')
+        .attr('class', 'x axis-grid')
+        // translate to the bottom  to render back upward to the origin
+        .attr('transform', `translate(0, ${computedChartSize.bottom})`)
+        .call(xAxisGrid);
+    }
 
     //
     // bucket generation
@@ -1737,41 +1894,34 @@ const Wc3vViewer = class {
       const { playerId, slot } = buildPlayer;
       const data = buildPlayerData[playerId];
 
-      // parent
-      //   .append('g')
-      //   .selectAll("rect")
-      //   .data(data.buckets)
-      //   .enter()
-      //     .append("rect")
-      //     .attr("x", d => xPlayerScale(slot) + xBucketScale(0) - 5)
-      //     .attr("width", xBucketScale(maxBucketSlot) - xBucketScale(0) + 5)
-      //     .attr("y", d => (yScale(d.x0)) | 0)
-      //     .attr("height", d => (yScale(d.x1) | 0) - (yScale(d.x0) | 0) - 2);
+      if (!isStaticView) {
+        const tierBar = parent
+          .append('g')
+          .selectAll('rect')
+          .data(data.tierData)
+          .enter()
+            .append('g');
 
-      const tierBar = parent
-        .append('g')
-        .selectAll('rect')
-        .data(data.tierData)
-        .enter()
-          .append('g');
-
-      tierBar
-        .append('rect')
-        .attr("x", d => xPlayerScale(slot))
-        .attr("width", d => xPlayerScale(1) - xPlayerScale(0))
-        .attr("y", d => yScale(d.date))
-        .attr("height", chartProperties.tierBandHeight)
-        .attr("fill", d => TierColors[d.value])
-      
-      tierBar.append('text')
-            .attr('x', d => xPlayerScale(slot + 1) - 50)
-            .attr('y', d => yScale(d.date) + chartProperties.tierBandHeight - 4)
-            .text(d => `Tier ${d.value}`);
+        tierBar
+          .append('rect')
+          .attr("x", d => xPlayerScale(slot))
+          .attr("width", d => xPlayerScale(1) - xPlayerScale(0))
+          .attr("y", d => yScale(d.date))
+          .attr("height", chartProperties.tierBandHeight)
+          .attr("fill", d => TierColors[d.value])
+        
+        tierBar.append('text')
+              .attr('x', d => xPlayerScale(slot + 1) - 50)
+              .attr('y', d => yScale(d.date) + chartProperties.tierBandHeight - 4)
+              .text(d => `Tier ${d.value}`);
+      }
 
       const maxBucketSlot = d3.max(data.d3Data.map(d => d.data.bucketOffset));
+
+      const bucketRange = isStaticView ? [0, 0] : [chartProperties.playerLanePadding, playerSlotPadding];
       const xBucketScale = d3.scaleLinear()
         .domain([0, maxBucketSlot])
-        .range([chartProperties.playerLanePadding, playerSlotPadding]);
+        .range(bucketRange);
 
       parent
         .append('g')
@@ -1781,9 +1931,19 @@ const Wc3vViewer = class {
           .append("image")
           .attr("xlink:href", d => d.data.imgSrc)
           .attr("x", d => {
-            return xPlayerScale(slot) + xBucketScale(d.data.bucketOffset);
+            if (isStaticView) {
+              return xPlayerScale(slot) + (xPlayerScale(1) - xPlayerScale(0)) / 2 - (iconSizes.building / 2);
+            } else {
+              return xPlayerScale(slot) + xBucketScale(d.data.bucketOffset);
+            }
           })
-          .attr("y", d => yScale(d.date) - (iconSizes.building / 2))
+          .attr("y", (d, i) => {
+            if (isStaticView) {
+              return computedChartSize.top + (i * iconSizes.building);
+            } else {
+              return yScale(d.date) - (iconSizes.building / 2);  
+            }
+          })
           .attr("width", iconSizes.building)
           .attr("height", iconSizes.building)
           .on("mouseover", d => {    
@@ -1807,9 +1967,53 @@ const Wc3vViewer = class {
                   .duration(500)    
                   .style("opacity", 0); 
           });
-    })
-    
+      
+      if (!isStaticView) {
+        return;
+      }
 
+      const groupTexts = parent
+        .selectAll("dot")
+        .data(data.d3Data)
+        .enter()
+          .append("g");
+
+      groupTexts
+          .append("rect")
+          .attr("fill", "#FFFFFF")
+          .attr("height", "22")
+          .attr("width", "22")
+          .attr("display", d => {
+            return d.data.count > 1 ? "block" : "none";
+          })
+          .attr("x", d => {
+            return xPlayerScale(slot) + (xPlayerScale(1) - xPlayerScale(0)) / 2 - 
+              (iconSizes.building / 2) + iconSizes.building - 22;
+          })
+          .attr("y", (d, i) => {
+            return computedChartSize.top + (i * iconSizes.building) + iconSizes.building - 22;
+          });
+
+      groupTexts
+          .append("text")
+          .attr("class", "build-order-static-text")
+          .attr("display", d => {
+            return d.data.count > 1 ? "block" : "none";
+          })
+          .attr("x", d => {
+            return xPlayerScale(slot) + (xPlayerScale(1) - xPlayerScale(0)) / 2 - 
+              (iconSizes.building / 2) + iconSizes.building - 20;
+          })
+          .attr("y", (d, i) => {
+            return computedChartSize.top + (i * iconSizes.building) + iconSizes.building - 2;
+          })
+          .text(d => {
+            return `x${d.data.count}`;
+          });
+
+    // end of buildOrderPlayers loop
+    });
+    
     wrapper.append(parent.node());
   }
 

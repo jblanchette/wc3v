@@ -1309,7 +1309,16 @@ const buildingUpgrades = {
 
 const buildTimings = {
     'orge': 150,
-    'ostr': 140
+    'ostr': 140,
+
+    'unp1': 140,
+    'unp2': 140,
+
+    'hkee': 140,
+    'hcas': 140,
+
+    'etoa': 140,
+    'etoe': 140
 };
 
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {

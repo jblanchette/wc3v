@@ -286,8 +286,8 @@ html, body {
   border: 1px solid #333;
   overflow: auto;
   flex-wrap: wrap;
-  height: 100px;
-  max-height: 100px;
+  height: 85px;
+  max-height: 85px;
   background: #29373E;
 }
 
@@ -304,6 +304,7 @@ html, body {
 }
 
 .player-selector img {
+  width: 50px;
   margin-bottom: 5px;
 }
 
@@ -344,6 +345,7 @@ html, body {
 #build-order-wrapper {
   border: 1px solid #333;
   color: #000;
+  overflow-y: auto;
 }
 
 #build-order-wrapper span {
@@ -365,6 +367,39 @@ html, body {
   fill: #000;
   stroke: #000;
   color: #000;
+}
+
+#build-order-controls {
+  display: flex;
+  justify-content: space-evenly;
+  align-content: center;
+  position: relative;
+  left: calc(50% - 150px);
+  width: 300px;
+}
+
+.build-order-control {
+  padding: 0.15rem;
+  margin-top: 0.75rem;
+  text-align: center;
+  border: 1px solid #333;
+  width: 125px;
+  cursor: pointer;
+}
+
+.build-order-control.selected {
+  background: #A5CB5F;
+}
+
+.build-order-control:hover:not(.selected) {
+  background: #C9DF9F;
+}
+
+.build-order-static-text {
+  background: #FFF;
+  border: 1px solid #333;
+  text-align: center;
+  font-size: 16px;
 }
 
 #main-wrapper {
@@ -446,6 +481,11 @@ html, body {
 
 .view-type-toggle.selected {
   background-color: #A5CB5F;
+}
+
+.view-type-toggle:hover:not(.selected),
+.status-toggle:hover:not(.selected) {
+  background: #C9DF9F;
 }
 
 #player-status-bg-icon {
