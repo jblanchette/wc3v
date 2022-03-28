@@ -1528,7 +1528,7 @@ const Wc3vViewer = class {
           } else {
             const { unit } = item;
 
-            if (unit.isHero || unit.isIllusion || (unit.isSummon != false)) {
+            if (unit.isHero || unit.isIllusion || (unit.isSummon == true || unit.isSummon == null)) {
               // bail out
               return acc;
             }
