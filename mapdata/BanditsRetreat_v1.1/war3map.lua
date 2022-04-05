@@ -10762,13 +10762,13 @@ end
 ____exports.tsGlobals = tsGlobals
 return ____exports
 end,
-["src.player_features.badping"] = function() require("lualib_bundle");
+["src.player_features.draw"] = function() require("lualib_bundle");
 local ____exports = {}
 local ____index = require("node_modules.w3ts.index")
 local MapPlayer = ____index.MapPlayer
 local getElapsedTime = ____index.getElapsedTime
-function ____exports.enableBadPing()
-    local badPingTrigger = CreateTrigger()
+function ____exports.enableDraw()
+    local drawTrigger = CreateTrigger()
     local players = {}
     local playerCount = 0
     do
@@ -10779,7 +10779,7 @@ function ____exports.enableBadPing()
             ) == PLAYER_SLOT_STATE_PLAYING then
                 playerCount = playerCount + 1
                 TriggerRegisterPlayerChatEvent(
-                    badPingTrigger,
+                    drawTrigger,
                     Player(i),
                     "-draw",
                     true
@@ -10792,10 +10792,10 @@ function ____exports.enableBadPing()
     if playerCount == 4 then
         requiredPlayers = 3
     elseif playerCount == 8 then
-        requiredPlayers = 6
+        requiredPlayers = 7
     end
     TriggerAddAction(
-        badPingTrigger,
+        drawTrigger,
         function()
             local triggerPlayer = MapPlayer:fromEvent()
             if getElapsedTime(nil) > 120 then
@@ -12032,8 +12032,8 @@ end
 return ____exports
 end,
 ["src.main"] = function() local ____exports = {}
-local ____badping = require("src.player_features.badping")
-local enableBadPing = ____badping.enableBadPing
+local ____draw = require("src.player_features.draw")
+local enableDraw = ____draw.enableDraw
 local ____buildingCancel = require("src.observer_features.buildingCancel")
 local enableBuildingCancelTrigger = ____buildingCancel.enableBuildingCancelTrigger
 local ____itemSoldBought = require("src.observer_features.itemSoldBought")
@@ -12069,7 +12069,7 @@ local function init()
     if gg_trg_InitializeTimers ~= nil then
         initMatchEndTimers(1500, 300)
     else
-        enableBadPing()
+        enableDraw()
     end
     if getGameMode() == MapGameMode.FFA then
         anonymizePlayerNames()

@@ -11013,7 +11013,7 @@ function ____exports.enableDraw()
     if playerCount == 4 then
         requiredPlayers = 3
     elseif playerCount == 8 then
-        requiredPlayers = 6
+        requiredPlayers = 7
     end
     TriggerAddAction(
         drawTrigger,

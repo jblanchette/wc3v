@@ -4600,7 +4600,9 @@ __TS__ObjectDefineProperty(
     "eyePoint",
     {
         get = function(self)
-            return GetCameraEyePositionLoc()
+            return Point:fromHandle(
+                GetCameraEyePositionLoc()
+            )
         end
     }
 )
@@ -4623,6 +4625,9 @@ function Camera.endCinematicScene(self)
 end
 function Camera.forceCinematicSubtitles(self, flag)
     ForceCinematicSubtitles(flag)
+end
+function Camera.getField(self, field)
+    return GetCameraField(field)
 end
 function Camera.getMargin(self, whichMargin)
     return GetCameraMargin(whichMargin)
@@ -4734,7 +4739,9 @@ __TS__SetDescriptor(
     "destPoint",
     {
         get = function(self)
-            return CameraSetupGetDestPositionLoc(self.handle)
+            return Point:fromHandle(
+                CameraSetupGetDestPositionLoc(self.handle)
+            )
         end
     },
     true
@@ -5774,7 +5781,7 @@ ____exports.Frame = __TS__Class()
 local Frame = ____exports.Frame
 Frame.name = "Frame"
 __TS__ClassExtends(Frame, Handle)
-function Frame.prototype.____constructor(self, name, owner, priority, createContext)
+function Frame.prototype.____constructor(self, name, owner, priority, createContext, typeName, inherits)
     if Handle:initFromHandle() then
         Handle.prototype.____constructor(self)
     else
@@ -5784,10 +5791,17 @@ function Frame.prototype.____constructor(self, name, owner, priority, createCont
                 BlzCreateSimpleFrame(name, owner.handle, priority)
             )
         else
-            Handle.prototype.____constructor(
-                self,
-                BlzCreateFrame(name, owner.handle, priority, createContext)
-            )
+            if typeName and inherits then
+                Handle.prototype.____constructor(
+                    self,
+                    BlzCreateFrameByType(typeName, name, owner.handle, inherits, createContext)
+                )
+            else
+                Handle.prototype.____constructor(
+                    self,
+                    BlzCreateFrame(name, owner.handle, priority, createContext)
+                )
+            end
         end
     end
 end
@@ -6270,6 +6284,45 @@ __TS__SetDescriptor(
 )
 __TS__SetDescriptor(
     Item.prototype,
+    "description",
+    {
+        get = function(self)
+            return BlzGetItemDescription(self.handle)
+        end,
+        set = function(self, description)
+            BlzSetItemDescription(self.handle, description)
+        end
+    },
+    true
+)
+__TS__SetDescriptor(
+    Item.prototype,
+    "extendedTooltip",
+    {
+        get = function(self)
+            return BlzGetItemExtendedTooltip(self.handle)
+        end,
+        set = function(self, tooltip)
+            BlzSetItemExtendedTooltip(self.handle, tooltip)
+        end
+    },
+    true
+)
+__TS__SetDescriptor(
+    Item.prototype,
+    "icon",
+    {
+        get = function(self)
+            return BlzGetItemIconPath(self.handle)
+        end,
+        set = function(self, path)
+            BlzSetItemIconPath(self.handle, path)
+        end
+    },
+    true
+)
+__TS__SetDescriptor(
+    Item.prototype,
     "name",
     {
         get = function(self)
@@ -6277,6 +6330,19 @@ __TS__SetDescriptor(
         end,
         set = function(self, value)
             BlzSetItemName(self.handle, value)
+        end
+    },
+    true
+)
+__TS__SetDescriptor(
+    Item.prototype,
+    "tooltip",
+    {
+        get = function(self)
+            return BlzGetItemTooltip(self.handle)
+        end,
+        set = function(self, tooltip)
+            BlzSetItemTooltip(self.handle, tooltip)
         end
     },
     true
@@ -6392,6 +6458,15 @@ __TS__SetDescriptor(
 function Item.prototype.addAbility(self, abilCode)
     BlzItemAddAbility(self.handle, abilCode)
 end
+function Item.prototype.getAbility(self, abilCode)
+    return BlzGetItemAbility(self.handle, abilCode)
+end
+function Item.prototype.getAbilityByIndex(self, index)
+    return BlzGetItemAbilityByIndex(self.handle, index)
+end
+function Item.prototype.removeAbility(self, abilCode)
+    BlzItemRemoveAbility(self.handle, abilCode)
+end
 function Item.prototype.destroy(self)
     RemoveItem(self.handle)
 end
@@ -6406,38 +6481,38 @@ function Item.prototype.getField(self, field)
             true
         ) or 0) - 1
     )
-    local ____switch30 = fieldType
-    if ____switch30 == "unitbooleanfield" then
-        goto ____switch30_case_0
-    elseif ____switch30 == "unitintegerfield" then
-        goto ____switch30_case_1
-    elseif ____switch30 == "unitrealfield" then
-        goto ____switch30_case_2
-    elseif ____switch30 == "unitstringfield" then
-        goto ____switch30_case_3
+    local ____switch41 = fieldType
+    if ____switch41 == "unitbooleanfield" then
+        goto ____switch41_case_0
+    elseif ____switch41 == "unitintegerfield" then
+        goto ____switch41_case_1
+    elseif ____switch41 == "unitrealfield" then
+        goto ____switch41_case_2
+    elseif ____switch41 == "unitstringfield" then
+        goto ____switch41_case_3
     end
-    goto ____switch30_case_default
-    ::____switch30_case_0::
+    goto ____switch41_case_default
+    ::____switch41_case_0::
     do
         return BlzGetItemBooleanField(self.handle, field)
     end
-    ::____switch30_case_1::
+    ::____switch41_case_1::
     do
         return BlzGetItemIntegerField(self.handle, field)
     end
-    ::____switch30_case_2::
+    ::____switch41_case_2::
     do
         return BlzGetItemRealField(self.handle, field)
     end
-    ::____switch30_case_3::
+    ::____switch41_case_3::
     do
         return BlzGetItemStringField(self.handle, field)
     end
-    ::____switch30_case_default::
+    ::____switch41_case_default::
     do
         return 0
     end
-    ::____switch30_end::
+    ::____switch41_end::
 end
 function Item.prototype.isOwned(self)
     return IsItemOwned(self.handle)
@@ -7063,8 +7138,8 @@ __TS__SetDescriptor(
         get = function(self)
             return GetUnitPropWindow(self.handle)
         end,
-        set = function(self, value)
-            SetUnitPropWindow(self.handle, value)
+        set = function(self, newPropWindowAngle)
+            SetUnitPropWindow(self.handle, newPropWindowAngle)
         end
     },
     true
@@ -8796,6 +8871,12 @@ end
 function TimerDialog.prototype.setTitle(self, title)
     TimerDialogSetTitle(self.handle, title)
 end
+function TimerDialog.prototype.setTitleColor(self, red, green, blue, alpha)
+    TimerDialogSetTitleColor(self.handle, red, green, blue, alpha)
+end
+function TimerDialog.prototype.setTimeColor(self, red, green, blue, alpha)
+    TimerDialogSetTimeColor(self.handle, red, green, blue, alpha)
+end
 function TimerDialog.fromHandle(self, handle)
     return self:getObject(handle)
 end
@@ -8895,6 +8976,9 @@ function Trigger.prototype.eval(self)
 end
 function Trigger.prototype.exec(self)
     return TriggerExecute(self.handle)
+end
+function Trigger.prototype.execWait(self)
+    TriggerExecuteWait(self.handle)
 end
 function Trigger.prototype.registerAnyUnitEvent(self, whichPlayerUnitEvent)
     return TriggerRegisterAnyUnitEventBJ(self.handle, whichPlayerUnitEvent)
@@ -9069,6 +9153,35 @@ function Ubersplat.prototype.show(self, flag)
     ShowUbersplat(self.handle, flag)
 end
 function Ubersplat.fromHandle(self, handle)
+    return self:getObject(handle)
+end
+return ____exports
+end,
+["node_modules.w3ts.handles.weathereffect"] = function() require("lualib_bundle");
+local ____exports = {}
+local ____handle = require("node_modules.w3ts.handles.handle")
+local Handle = ____handle.Handle
+____exports.WeatherEffect = __TS__Class()
+local WeatherEffect = ____exports.WeatherEffect
+WeatherEffect.name = "WeatherEffect"
+__TS__ClassExtends(WeatherEffect, Handle)
+function WeatherEffect.prototype.____constructor(self, where, effectID)
+    if Handle:initFromHandle() then
+        Handle.prototype.____constructor(self)
+    else
+        Handle.prototype.____constructor(
+            self,
+            AddWeatherEffect(where.handle, effectID)
+        )
+    end
+end
+function WeatherEffect.prototype.destroy(self)
+    RemoveWeatherEffect(self.handle)
+end
+function WeatherEffect.prototype.enable(self, flag)
+    EnableWeatherEffect(self.handle, flag)
+end
+function WeatherEffect.fromHandle(self, handle)
     return self:getObject(handle)
 end
 return ____exports
@@ -9283,6 +9396,14 @@ do
     end
 end
 do
+    local ____export = require("node_modules.w3ts.handles.weathereffect")
+    for ____exportKey, ____exportValue in pairs(____export) do
+        if ____exportKey ~= "default" then
+            ____exports[____exportKey] = ____exportValue
+        end
+    end
+end
+do
     local ____export = require("node_modules.w3ts.handles.widget")
     for ____exportKey, ____exportValue in pairs(____export) do
         if ____exportKey ~= "default" then
@@ -9357,7 +9478,10 @@ function ____exports.base64Encode(input)
             input,
             math.floor(idx) | 0
         ) > 0) or (function()
-            map = "="
+            (function()
+                map = "="
+                return map
+            end)()
             return idx % 1
         end)() do
             charCode = string.byte(
@@ -9418,7 +9542,10 @@ function ____exports.base64Decode(input)
             buffer = (string.find(chars, buffer, nil, true) or 0) - 1
             idx = idx + 1;
             (((~buffer and ((function()
-                bs = ((((bc % 4) ~= 0) and (function() return (bs * 64) + buffer end)) or (function() return buffer end))()
+                (function()
+                    bs = ((((bc % 4) ~= 0) and (function() return (bs * 64) + buffer end)) or (function() return buffer end))()
+                    return bs
+                end)()
                 return (function()
                     local ____tmp = bc
                     bc = ____tmp + 1
@@ -10267,7 +10394,7 @@ function ____exports.enableDraw()
     if playerCount == 4 then
         requiredPlayers = 3
     elseif playerCount == 8 then
-        requiredPlayers = 6
+        requiredPlayers = 7
     end
     TriggerAddAction(
         drawTrigger,

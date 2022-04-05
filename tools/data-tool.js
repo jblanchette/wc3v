@@ -49,11 +49,13 @@ const CLIENT_GAMEDATA_DIR = "../client/js";
 async function main() {
   FS.mkdir('/stormjs');
 
+  const w3ChampionsVersion = 'v11';
+
   const homedir = require('os').homedir();
-  const mapDirectoryPath = `${homedir}\\Documents\\Warcraft III\\Maps\\W3Champions\\v10`;
+  const mapDirectoryPath = `${homedir}\\Documents\\Warcraft III\\Maps\\W3Champions\\${w3ChampionsVersion}`;
   // assumes wc3v is relative to `${homedir}/[some dir]/wc3v/tools`
   // change if you need to run this in a different place
-  const mapDirectoryPathPosix = `../../../Documents/Warcraft III/Maps/W3Champions/v10`;
+  const mapDirectoryPathPosix = `../../../Documents/Warcraft III/Maps/W3Champions/${w3ChampionsVersion}`;
 
   // mount our w3c folder to stomjs
   FS.mount(FS.filesystems.NODEFS, { root: mapDirectoryPathPosix }, '/stormjs');

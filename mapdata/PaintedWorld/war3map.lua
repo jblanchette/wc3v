@@ -1,9 +1,9 @@
-gg_rct_LU = nil
-gg_rct_RU = nil
-gg_rct_RO = nil
-gg_rct_LO = nil
-gg_rct_MR = nil
-gg_rct_ML = nil
+gg_rct_Bottom_left = nil
+gg_rct_Bottom_right = nil
+gg_rct_Top_right = nil
+gg_rct_Top_left = nil
+gg_rct_Middle_right = nil
+gg_rct_Middle_left = nil
 gg_trg_Melee_Initialization = nil
 function InitGlobals()
 end
@@ -178,11 +178,7 @@ function Unit000039_DropItems()
     end
     if (canDrop) then
         RandomDistReset()
-        RandomDistAddItem(FourCC("spsh"), 20)
-        RandomDistAddItem(FourCC("rhth"), 20)
-        RandomDistAddItem(FourCC("odef"), 20)
-        RandomDistAddItem(FourCC("pmna"), 20)
-        RandomDistAddItem(FourCC("ssil"), 20)
+        RandomDistAddItem(ChooseRandomItemEx(ITEM_TYPE_PERMANENT, 6), 100)
         itemID = RandomDistChoose()
         if (trigUnit ~= nil) then
             UnitDropItem(trigUnit, itemID)
@@ -1919,7 +1915,7 @@ function CreateNeutralHostile()
     TriggerRegisterUnitEvent(t, u, EVENT_UNIT_DEATH)
     TriggerRegisterUnitEvent(t, u, EVENT_UNIT_CHANGE_OWNER)
     TriggerAddAction(t, Unit000020_DropItems)
-    u = BlzCreateUnitWithSkin(p, FourCC("nlrv"), 243.3, 487.2, 272.857, FourCC("nlrv"))
+    u = BlzCreateUnitWithSkin(p, FourCC("nlrv"), 243.3, 487.2, 272.860, FourCC("nlrv"))
     SetUnitAcquireRange(u, 200.0)
     t = CreateTrigger()
     TriggerRegisterUnitEvent(t, u, EVENT_UNIT_DEATH)
@@ -2425,20 +2421,20 @@ function CreateNeutralPassiveBuildings()
     u = BlzCreateUnitWithSkin(p, FourCC("ntav"), -3968.0, -3072.0, 270.000, FourCC("ntav"))
     SetUnitColor(u, ConvertPlayerColor(0))
     u = BlzCreateUnitWithSkin(p, FourCC("nwgt"), -4480.0, -8448.0, 270.000, FourCC("nwgt"))
-    WaygateSetDestination(u, GetRectCenterX(gg_rct_RU), GetRectCenterY(gg_rct_RU))
+    WaygateSetDestination(u, GetRectCenterX(gg_rct_Bottom_right), GetRectCenterY(gg_rct_Bottom_right))
     WaygateActivate(u, true)
     SetUnitColor(u, ConvertPlayerColor(7))
     u = BlzCreateUnitWithSkin(p, FourCC("ntav"), 4480.0, -3072.0, 270.000, FourCC("ntav"))
     SetUnitColor(u, ConvertPlayerColor(0))
     u = BlzCreateUnitWithSkin(p, FourCC("nmoo"), 256.0, 256.0, 270.000, FourCC("nmoo"))
     u = BlzCreateUnitWithSkin(p, FourCC("nwgt"), -4800.0, 256.0, 270.000, FourCC("nwgt"))
-    WaygateSetDestination(u, GetRectCenterX(gg_rct_MR), GetRectCenterY(gg_rct_MR))
+    WaygateSetDestination(u, GetRectCenterX(gg_rct_Middle_right), GetRectCenterY(gg_rct_Middle_right))
     WaygateActivate(u, true)
     SetUnitColor(u, ConvertPlayerColor(1))
     u = BlzCreateUnitWithSkin(p, FourCC("nmrk"), -8960.0, 256.0, 270.000, FourCC("nmrk"))
     SetUnitColor(u, ConvertPlayerColor(0))
     u = BlzCreateUnitWithSkin(p, FourCC("nwgt"), 4992.0, -8448.0, 270.000, FourCC("nwgt"))
-    WaygateSetDestination(u, GetRectCenterX(gg_rct_LU), GetRectCenterY(gg_rct_LU))
+    WaygateSetDestination(u, GetRectCenterX(gg_rct_Bottom_left), GetRectCenterY(gg_rct_Bottom_left))
     WaygateActivate(u, true)
     SetUnitColor(u, ConvertPlayerColor(6))
     u = BlzCreateUnitWithSkin(p, FourCC("nmrk"), 9472.0, 256.0, 270.000, FourCC("nmrk"))
@@ -2446,7 +2442,7 @@ function CreateNeutralPassiveBuildings()
     u = BlzCreateUnitWithSkin(p, FourCC("ngol"), 7936.0, -2688.0, 270.000, FourCC("ngol"))
     SetResourceAmount(u, 12500)
     u = BlzCreateUnitWithSkin(p, FourCC("nwgt"), 5312.0, 256.0, 270.000, FourCC("nwgt"))
-    WaygateSetDestination(u, GetRectCenterX(gg_rct_ML), GetRectCenterY(gg_rct_ML))
+    WaygateSetDestination(u, GetRectCenterX(gg_rct_Middle_left), GetRectCenterY(gg_rct_Middle_left))
     WaygateActivate(u, true)
     SetUnitColor(u, ConvertPlayerColor(0))
     u = BlzCreateUnitWithSkin(p, FourCC("ngol"), -576.0, 4096.0, 270.000, FourCC("ngol"))
@@ -2456,7 +2452,7 @@ function CreateNeutralPassiveBuildings()
     u = BlzCreateUnitWithSkin(p, FourCC("ntav"), -3968.0, 3584.0, 270.000, FourCC("ntav"))
     SetUnitColor(u, ConvertPlayerColor(0))
     u = BlzCreateUnitWithSkin(p, FourCC("nwgt"), -4480.0, 8960.0, 270.000, FourCC("nwgt"))
-    WaygateSetDestination(u, GetRectCenterX(gg_rct_RO), GetRectCenterY(gg_rct_RO))
+    WaygateSetDestination(u, GetRectCenterX(gg_rct_Top_right), GetRectCenterY(gg_rct_Top_right))
     WaygateActivate(u, true)
     SetUnitColor(u, ConvertPlayerColor(3))
     u = BlzCreateUnitWithSkin(p, FourCC("ngol"), 1088.0, 4096.0, 270.000, FourCC("ngol"))
@@ -2478,7 +2474,7 @@ function CreateNeutralPassiveBuildings()
     u = BlzCreateUnitWithSkin(p, FourCC("ngol"), -6912.0, 7424.0, 270.000, FourCC("ngol"))
     SetResourceAmount(u, 12500)
     u = BlzCreateUnitWithSkin(p, FourCC("nwgt"), 4992.0, 8960.0, 270.000, FourCC("nwgt"))
-    WaygateSetDestination(u, GetRectCenterX(gg_rct_LO), GetRectCenterY(gg_rct_LO))
+    WaygateSetDestination(u, GetRectCenterX(gg_rct_Top_left), GetRectCenterY(gg_rct_Top_left))
     WaygateActivate(u, true)
     SetUnitColor(u, ConvertPlayerColor(2))
     u = BlzCreateUnitWithSkin(p, FourCC("ngol"), 7936.0, 3200.0, 270.000, FourCC("ngol"))
@@ -2528,12 +2524,12 @@ end
 
 function CreateRegions()
     local we
-    gg_rct_LU = Rect(-8416.0, -4512.0, -7776.0, -3872.0)
-    gg_rct_RU = Rect(8288.0, -4512.0, 8928.0, -3872.0)
-    gg_rct_RO = Rect(8288.0, 4384.0, 8928.0, 5024.0)
-    gg_rct_LO = Rect(-8416.0, 4384.0, -7776.0, 5024.0)
-    gg_rct_MR = Rect(3968.0, -64.0, 4608.0, 576.0)
-    gg_rct_ML = Rect(-4096.0, -64.0, -3456.0, 576.0)
+    gg_rct_Bottom_left = Rect(-8416.0, -4512.0, -7776.0, -3872.0)
+    gg_rct_Bottom_right = Rect(8288.0, -4512.0, 8928.0, -3872.0)
+    gg_rct_Top_right = Rect(8288.0, 4384.0, 8928.0, 5024.0)
+    gg_rct_Top_left = Rect(-8416.0, 4384.0, -7776.0, 5024.0)
+    gg_rct_Middle_right = Rect(3968.0, -64.0, 4608.0, 576.0)
+    gg_rct_Middle_left = Rect(-4096.0, -64.0, -3456.0, 576.0)
 end
 
 function Trig_Melee_Initialization_Actions()
@@ -10521,7 +10517,7 @@ function ____exports.enableDraw()
     if playerCount == 4 then
         requiredPlayers = 3
     elseif playerCount == 8 then
-        requiredPlayers = 6
+        requiredPlayers = 7
     end
     TriggerAddAction(
         drawTrigger,
