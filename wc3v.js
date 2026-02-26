@@ -76,7 +76,7 @@ const parseReplays = async (options) => {
         // write our output wc3v file
         const replayHash = hashes && hashes[0] || null;
         utils.writeOutput(file, replayHash, replay, players, world, jsonPadding);
-   
+
         // re-enable all logging
         logManager.setDisabledState(false);
 

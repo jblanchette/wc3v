@@ -71,9 +71,9 @@ const abilityActions = {
   'SummonElemental': [ 129, 0, 13, 0 ],
   'SummonTreants': [ 208, 0, 13, 0 ],
   'DeathCoil': [ 254, 0, 13, 0 ],
-  'HarvestLumber': [ 116, 108, 84, 76 ]
+  'HarvestLumber': [ 116, 108, 84, 76 ],
+  'TeleportScroll': [ 40, 0, 13, 0 ],
 };
-
 
 
 const mapStartPositions = Object.keys(mapConfiguration.maps).reduce((acc, mapKey) => {
