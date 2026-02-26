@@ -2,8 +2,6 @@
 
  **W**ar**c**raft **3**™ Replay **V**iewer.
 
- http://wc3v.com
-
  Goal is to simulate enough of wc3 to get a 'birds eye view'
  of the match from a given replay.
 
@@ -129,3 +127,11 @@ Replay documentation from:
 Icon extraction from:
 
 * https://github.com/warlockbrawl/war3observer
+
+---
+
+All code, assets, names, and concepts are used for educational purposes only and have no commerical or retail usage.  All copyright and trademark are respective to their original owners.
+
+All software learned from public sources and from rightfully owned copies of the game.
+
+For Educational use only.
