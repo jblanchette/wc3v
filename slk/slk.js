@@ -78,6 +78,9 @@ const Slk = class {
       'level': 'level',
       'goldCost': 'goldcost',
       'lumberCost': 'lumbercost',
+      'foodMade': 'fmade',
+      'foodUsed': 'fused',
+      'buildTime': 'bldtm',
       'hp': 'HP',
       'hpRegen': 'regenHP',
       'mana': 'mana0',
@@ -133,6 +136,11 @@ const Slk = class {
 
         result[mapping.key] = formattedValue;
       });
+
+      // Normalize food/build fields: null (from dash values like " - ") means 0
+      if (result.foodMade === null) result.foodMade = 0;
+      if (result.foodUsed === null) result.foodUsed = 0;
+      if (result.buildTime === null) result.buildTime = 0;
 
       this.output[result.itemId] = result;
     }
