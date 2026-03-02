@@ -5,17 +5,23 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
-    <script src="/js/Helpers.js?v=4.00"></script>
-    <script src="/js/Drawing.js?v=4.00"></script>
+    <script src="/js/Helpers.js?v=5.03"></script>
+    <script src="/js/Drawing.js?v=5.03"></script>
+    <script src="/js/Constants.js?v=5.03"></script>
 
-    <script src="/js/TimeScrubber.js?v=4.00"></script>
-    <script src="/js/GameScaler.js?v=4.00"></script>
-    <script src="/js/ClientUnit.js?v=4.00"></script>
-    <script src="/js/ClientPlayer.js?v=4.00"></script>
-    <script src="/js/GameDisplayBox.js?v=4.00"></script>
-    <script src="/js/gameData.js?v=4.00"></script>
-    
-    <script src="/js/app.js?v=4.00"></script>
+    <script src="/js/TimeScrubber.js?v=5.03"></script>
+    <script src="/js/GameScaler.js?v=5.03"></script>
+    <script src="/js/ClientUnit.js?v=5.03"></script>
+    <script src="/js/ClientPlayer.js?v=5.03"></script>
+    <script src="/js/GameDisplayBox.js?v=5.03"></script>
+    <script src="/js/gameData.js?v=5.03"></script>
+
+    <script src="/js/BuildOrderData.js?v=5.03"></script>
+    <script src="/js/MapRenderer.js?v=5.03"></script>
+    <script src="/js/TimelineSpline.js?v=5.03"></script>
+    <script src="/js/BuildOrderRenderer.js?v=5.03"></script>
+
+    <script src="/js/app.js?v=5.03"></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
@@ -24,7 +30,7 @@
     </script>
 
     <style type="text/css">
-      @import "/css/main.css?v=4.00";  
+      @import "/css/main.css?v=5.03";  
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -38,7 +44,7 @@
 
     <div id="modal-backdrop" onClick="wc3v.hideTutorial()"></div>
 
-    <div id="app">
+    <div id="app" class="layout-mode-live-bo">
       <div id="menu">
         <div class="menu-item" id="menu-target">
           <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg height="32px" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
@@ -51,7 +57,11 @@
         </div>
         
         <div class="menu-item spacer">
-          <span id="wc3v-title"></span>
+          <div id="mode-switcher">
+            <div id="mode-default" class="mode-btn selected" onClick="wc3v.setLayoutMode('default')">Default</div>
+            <div id="mode-build" class="mode-btn" onClick="wc3v.setLayoutMode('build')">Build Only</div>
+            <div id="mode-replay" class="mode-btn" onClick="wc3v.setLayoutMode('replay')">Replay Only</div>
+          </div>
         </div>
 
         <div class="menu-item">
@@ -145,256 +155,225 @@
       </div>
 
       <div id="content">
-        <div class="canvas-wrapper">
-          <div id="build-wrapper">          
-            <div id="build-content">
-              <h1>Build Order</h1>
-
-              <div id="build-content-players"></div>
-              <div id="build-order-wrapper">
-                <span>Click a player icon to load their build order for the match.</span>
-              </div>
+        <div id="gameplay-area">
+          <div id="player-status-wrapper">
+            <div id="player-status-toggles">
+              <div
+                id="heroes-toggle"
+                onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
+              <div
+                id="units-toggle"
+                onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
+              <div
+                id="groups-toggle"
+                onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
             </div>
+            <canvas id="player-status-canvas" width="265" height="200"></canvas>
           </div>
 
-          <div id="main-wrapper">
-            <div id="mega-play-button" onClick="wc3v.play()"></div>
+          <div id="map-container">
+            <div id="main-wrapper">
+              <div id="mega-play-button" onClick="wc3v.play()"></div>
 
-            <div id="player-status-bg-icon"></div>
+              <canvas id="main-canvas" width="550" height="650"></canvas>
+              <canvas id="player-canvas" width="550" height="650"></canvas>
+              <canvas id="utility-canvas" width="550" height="650"></canvas>
 
-            <div id="viewer-options" class="disabled">
-              <div 
-                id="viewer-option-displayPath"
-                onClick="wc3v.toggleViewOption('displayPath')"
-                class="viewer-option on">P<span class="option-tooltip">Show Hero Path</span></div>
+              <img id="loading-icon" src="/assets/loading-icon.svg" />
 
-              <div 
-                id="viewer-option-displayLeveLDots"
-                onClick="wc3v.toggleViewOption('displayLeveLDots')"
-                class="viewer-option on">D<span class="option-tooltip">Show Hero Level Dots</span></div>
+              <div id="game-display-box"></div>
 
-              <div 
-                id="viewer-option-decayEffects"
-                onClick="wc3v.toggleViewOption('decayEffects')"
-                class="viewer-option on">F<span class="option-tooltip">Fade Away Effects</span></div>
-
-              <div 
-                id="viewer-option-displayText"
-                onClick="wc3v.toggleViewOption('displayText')"
-                class="viewer-option on">T<span class="option-tooltip">Show Text</span></div>
-
-              <div 
-                id="viewer-option-displayCreepRoute"
-                onClick="wc3v.toggleViewOption('displayCreepRoute')"
-                class="viewer-option on">C<span class="option-tooltip">Show Creep Routes</span></div>
-            </div>
-
-            <div id="map-options" class="disabled">
-              <div 
-                id="viewer-option-displayTreeGrid"
-                onClick="wc3v.toggleViewOption('displayTreeGrid')"
-                class="viewer-option on">T<span class="option-tooltip">Show Tree Grid</span></div>
-
-              <!-- <div 
-                id="viewer-option-displayBuildGrid"
-                onClick="wc3v.toggleViewOption('displayBuildGrid')"
-                class="viewer-option on">B<span class="option-tooltip">Show Build Grid</span></div>
-
-              <div 
-                id="viewer-option-displayWaterGrid"
-                onClick="wc3v.toggleViewOption('displayWaterGrid')"
-                class="viewer-option on">W<span class="option-tooltip">Show Water Grid</span></div> -->
-            </div>
-
-            <div id="player-status-wrapper">
-              <div id="view-type-toggles">
-                <div
-                  id="gameplay-toggle" 
-                  onClick="wc3v.setViewType('gameplay')" class="view-type-toggle selected">Gameplay</div>
-                <div 
-                  id="build-order-toggle"
-                  onClick="wc3v.setViewType('build-order')" class="view-type-toggle">Build Order</div>
+              <div id="match-complete-banner">
+                <div class="mcb-text">Match Complete</div>
+                <div class="mcb-restart" onClick="wc3v.restart()">Replay Again</div>
               </div>
 
-              <div id="player-status-toggles">
-                <div 
-                  id="heroes-toggle" 
-                  onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
-                <div 
-                  id="units-toggle"
-                  onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
-                <div 
-                  id="groups-toggle"
-                  onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
+              <div id="empty-game-wrapper">
+                <div class="empty-game-label">No currently selected match.</div>
+
+                <div class="upload-button" onClick="wc3v.claimUploadTicket()">
+                  UPLOAD REPLAY
+                  <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
+                </div>
               </div>
-              <canvas id="player-status-canvas" width="265" height="200"></canvas>
-            </div>
-            
-            <canvas id="main-canvas" width="550" height="650"></canvas>
-            <canvas id="player-canvas" width="550" height="650"></canvas>
-            <canvas id="utility-canvas" width="550" height="650"></canvas>
 
-            <img id="loading-icon" src="/assets/loading-icon.svg" />
+              <div id="tutorial-wrapper">
+                <div id="tutorial-content">
+                  <div class="tutorial-slide slide-1">
+                    <h2>Welcome to WC3<span class="logo-colors">V</span></h2>
+                    <h4>A free and open source web based viewer for Warcraft III</h4>
 
-            <div id="game-display-box"></div>
+                    <div class="github-button">
+                      <a target="_blank" href="https://github.com/jblanchette/wc3v"><img src="/tutorial/github-logo.png" width="50px" /></a>
+                    </div>
 
-            <div id="empty-game-wrapper">
-              <div class="empty-game-label">No currently selected match.</div>
+                    <div class="upload-button" onClick="wc3v.claimUploadTicket()">
+                      UPLOAD REPLAY
+                      <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
+                    </div>
 
-              <div class="upload-button" onClick="wc3v.claimUploadTicket()">
-                UPLOAD REPLAY
-                <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
-              </div>
-            </div>
-
-            <div id="tutorial-wrapper">
-              <div id="tutorial-content">
-                <div class="tutorial-slide slide-1">
-                  <h2>Welcome to WC3<span class="logo-colors">V</span></h2>
-                  <h4>A free and open source web based viewer for Warcraft III</h4>
-
-                  <div class="github-button">
-                    <a target="_blank" href="https://github.com/jblanchette/wc3v"><img src="/tutorial/github-logo.png" width="50px" /></a>
+                    <div class="tutorial-button-wrapper">
+                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(2)">Start Tutorial</div>
+                    </div>
                   </div>
 
-                  <div class="upload-button" onClick="wc3v.claimUploadTicket()">
-                    UPLOAD REPLAY
-                    <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
+                  <div class="tutorial-slide slide-2">
+                    <img src="/tutorial/slide-2.gif" class="tutorial-img" alt="Slide 2 - WC3V Neutral Camp Pop-Up" height="325px">
+
+                    <h5>Neutral Camp Pop-Up Details</h5>
+                    <div class="tutorial-text tutorial-text-small">
+                      <b>WC3V</b> analyzes and records information about neutral camps.
+                      Viewers may click on the camp box to show a pop-up of details about the camp. <br><br>
+
+                      The total level of the camp and the color (green, yellow, red) are displayed in the top right. <br><br>
+
+                      Experienced gained by players is displayed <b>as if they only killed these neutral camps.</b> <br><br>
+
+                      Camps can be displayed as unclaimed or contested.  A contested camp means that two players interacted with a camp at the same time and no clear winner was determined.
+                    </div>
+
+                    <div class="tutorial-button-wrapper">
+                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(3)">Next Tutorial (2/6)</div>
+                    </div>
                   </div>
 
-                  <div class="tutorial-button-wrapper">
-                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(2)">Start Tutorial</div>
-                  </div>
-                </div>
+                  <div class="tutorial-slide slide-3">
+                    <img src="/tutorial/slide-3.gif" class="tutorial-img" alt="Slide 3 - WC3V Time Scrubber Controls">
 
-                <div class="tutorial-slide slide-2">
-                  <img src="/tutorial/slide-2.gif" class="tutorial-img" alt="Slide 2 - WC3V Neutral Camp Pop-Up" height="325px">
+                    <h5>Time Scrubber Controls</h5>
+                    <div class="tutorial-text">
+                      WC3V shows a replay like a video player.<br><br>
 
-                  <h5>Neutral Camp Pop-Up Details</h5>
-                  <div class="tutorial-text tutorial-text-small">
-                    <b>WC3V</b> analyzes and records information about neutral camps.
-                    Viewers may click on the camp box to show a pop-up of details about the camp. <br><br>
+                      Some of the featured controls:
 
-                    The total level of the camp and the color (green, yellow, red) are displayed in the top right. <br><br>
+                      <ul>
+                        <li>change playback speed</li>
+                        <li>pause playback</li>
+                        <li>seek to time (click or drag the tracking dot)</li>
+                        <li>zoom and Pan (double click or mouse-wheel to zoom)</li>
+                      </ul>
+                    </div>
 
-                    Experienced gained by players is displayed <b>as if they only killed these neutral camps.</b> <br><br>
-
-                    Camps can be displayed as unclaimed or contested.  A contested camp means that two players interacted with a camp at the same time and no clear winner was determined.
-                  </div>
-
-                  <div class="tutorial-button-wrapper">
-                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(3)">Next Tutorial (2/6)</div>
-                  </div>
-                </div>
-
-                <div class="tutorial-slide slide-3">
-                  <img src="/tutorial/slide-3.gif" class="tutorial-img" alt="Slide 3 - WC3V Time Scrubber Controls">
-
-                  <h5>Time Scrubber Controls</h5>
-                  <div class="tutorial-text">
-                    WC3V shows a replay like a video player.<br><br>
-
-                    Some of the featured controls:
-
-                    <ul>
-                      <li>change playback speed</li>
-                      <li>pause playback</li>
-                      <li>seek to time (click or drag the tracking dot)</li>
-                      <li>zoom and Pan (double click or mouse-wheel to zoom)</li>
-                    </ul>
+                    <div class="tutorial-button-wrapper">
+                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(4)">Next Tutorial (3/6)</div>
+                    </div>
                   </div>
 
-                  <div class="tutorial-button-wrapper">
-                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(4)">Next Tutorial (3/6)</div>
-                  </div>
-                </div>
+                  <div class="tutorial-slide slide-4">
+                    <img src="/tutorial/slide-4.jpg" class="tutorial-img" alt="Slide 4 - WC3V Player Status Window">
 
-                <div class="tutorial-slide slide-4">
-                  <img src="/tutorial/slide-4.jpg" class="tutorial-img" alt="Slide 4 - WC3V Player Status Window">
+                    <h5>Player Status</h5>
+                    <div class="tutorial-text">
+                      When a replay has been selected each player in the match
+                      will have an entry in the <b>Player Status</b> window.
+                      <br><br>
 
-                  <h5>Player Status</h5>
-                  <div class="tutorial-text">
-                    When a replay has been selected each player in the match
-                    will have an entry in the <b>Player Status</b> window. 
-                    <br><br>
+                      Displaying team color, player color, and player name
+                      alongside other information with each of the three selectable tabs.
+                    </div>
 
-                    Displaying team color, player color, and player name
-                    alongside other information with each of the three selectable tabs.
-                  </div>
-
-                  <div class="tutorial-button-wrapper">
-                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(5)">Next Tutorial (4/6)</div>
+                    <div class="tutorial-button-wrapper">
+                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(5)">Next Tutorial (4/6)</div>
+                    </div>
                   </div>
 
-                  
-                </div>
+                  <div class="tutorial-slide slide-5">
+                    <img src="/tutorial/slide-5.gif" width="420px" class="tutorial-img" alt="Slide 5 - WC3V Build Order Timeline">
 
-                <div class="tutorial-slide slide-5">
-                  <img src="/tutorial/slide-5.gif" width="420px" class="tutorial-img" alt="Slide 4 - WC3V Player Status Window">
+                    <h5>Build Order Timeline</h5>
+                    <div class="tutorial-text">
+                      To display the timeline of each players build order switch the tab above
+                      the player status window to "Build Order" and select the desired players.
+                    </div>
 
-                  <h5>Build Order Timeline</h5>
-                  <div class="tutorial-text">
-                    To display the timeline of each players build order switch the tab above
-                    the player status window to "Build Order" and select the desired players.
+                    <div class="tutorial-button-wrapper">
+                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
+                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(6)">Next Tutorial (5/6)</div>
+                    </div>
                   </div>
 
-                  <div class="tutorial-button-wrapper">
-                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                    <div class="tutorial-continue" onClick="wc3v.advanceTutorial(6)">Next Tutorial (5/6)</div>
-                  </div>                
-                </div>
+                  <div class="tutorial-slide slide-6">
+                    <h5>Pro Replays</h5>
 
-                <div class="tutorial-slide slide-6">
-                  <h5>Pro Replays</h5>
+                    <div class="tutorial-text">
+                      WC3V is pre-loaded with various pro-matches to get an example
+                      of high level play on some available maps.
+                    </div>
 
-                  <div class="tutorial-text">
-                    WC3V is pre-loaded with various pro-matches to get an example
-                    of high level play on some available maps.
-                  </div>
-
-                  <table>
-                    <tbody>
+                    <table>
+                      <tbody>
+                        <tr>
+                          <th>Players</th>
+                          <th>Map</th>
+                          <th>Replay Link</th>
+                        </tr>
+                      </tbody>
                       <tr>
-                        <th>Players</th>
-                        <th>Map</th>
-                        <th>Replay Link</th>
+                       <td>Happy vs Grubby</td>
+                       <td>Concealed Hills</td>
+                       <td><a href="http://wc3v.com/replay/happy-vs-grubby">link</a></td>
+                      </tr><tr>
+                       <td>Grubby vs Thorzain</td>
+                       <td>Concealed Hills</td>
+                       <td><a href="http://wc3v.com/replay/grubby-vs-thorzain">link</a></td>
                       </tr>
-                    </tbody>
-                    <tr>
-                     <td>Happy vs Grubby</td>
-                     <td>Concealed Hills</td>
-                     <td><a href="http://wc3v.com/replay/happy-vs-grubby">link</a></td>
-                    </tr><tr>
-                     <td>Grubby vs Thorzain</td>
-                     <td>Concealed Hills</td>
-                     <td><a href="http://wc3v.com/replay/grubby-vs-thorzain">link</a></td>
-                    </tr>
-                     <td>Happy vs lucifer</td>
-                     <td>Echo Isles</td>
-                     <td><a href="http://wc3v.com/replay/happy-vs-lucifer">link</a></td>
-                    </tr><tr>
-                     <td>Foggy vs Cash</td>
-                     <td>Echo Isles</td>
-                     <td><a href="http://wc3v.com/replay/foggy-vs-cash-2">link</a></td>
-                    </tr>
-                  </table>
+                       <td>Happy vs lucifer</td>
+                       <td>Echo Isles</td>
+                       <td><a href="http://wc3v.com/replay/happy-vs-lucifer">link</a></td>
+                      </tr><tr>
+                       <td>Foggy vs Cash</td>
+                       <td>Echo Isles</td>
+                       <td><a href="http://wc3v.com/replay/foggy-vs-cash-2">link</a></td>
+                      </tr>
+                    </table>
 
-                  <div class="tutorial-button-wrapper">
-                    <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Finish Tutorial</div>
+                    <div class="tutorial-button-wrapper">
+                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Finish Tutorial</div>
 
-                    <div class="tutorial-continue" onClick="wc3v.claimUploadTicket()">Upload A Replay</div>
+                      <div class="tutorial-continue" onClick="wc3v.claimUploadTicket()">Upload A Replay</div>
+                    </div>
                   </div>
                 </div>
-
-
               </div>
+            </div>
+
+            <div id="viewer-controls" class="disabled">
+              <div class="vc-btn" id="viewer-option-displayPath"
+                onClick="wc3v.toggleViewOption('displayPath')">Hero Paths</div>
+              <div class="vc-btn on" id="viewer-option-displayLeveLDots"
+                onClick="wc3v.toggleViewOption('displayLeveLDots')">Level Dots</div>
+              <div class="vc-btn on" id="viewer-option-displayText"
+                onClick="wc3v.toggleViewOption('displayText')">Labels</div>
+              <div class="vc-btn on" id="viewer-option-decayEffects"
+                onClick="wc3v.toggleViewOption('decayEffects')">Fade FX</div>
+              <div class="vc-btn" id="viewer-option-displayCreepRoute"
+                onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes</div>
+              <div class="vc-btn" id="viewer-option-displayTreeGrid"
+                onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid</div>
             </div>
           </div>
         </div>
+
+        <div id="build-area">
+          <div id="build-wrapper">
+            <div id="bo-content">
+              <div id="bo-columns">
+                <div class="bo-side bo-side-left"></div>
+                <div id="bo-timeline-gap"></div>
+                <div class="bo-side bo-side-right"></div>
+              </div>
+            </div>
+            <div id="bo-empty">
+              <span>Load a replay to view the build order.</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="scrubber-bar"></div>
       </div>
     </div>
 

@@ -145,6 +145,65 @@ const workerForRace = {
     'H': 'hpea'
 };
 
+// Worker state constants
+const WorkerRole = Object.freeze({ GOLD: 'gold', LUMBER: 'lumber' });
+
+const WorkerTask = Object.freeze({
+  GOLD: 'gold', LUMBER: 'lumber', BUILD: 'build',
+  BURROW: 'burrow', REPAIR: 'repair', MILITIA: 'militia', IDLE: 'idle'
+});
+
+const GHOUL_ID  = 'ugho';
+const BURROW_ID = 'otr';
+
+const WORKER_IDS = new Set(['opeo', 'hpea', 'ewsp', 'uaco', GHOUL_ID]);
+
+// NE buildings that permanently destroy the wisp on construction complete
+const ANCIENT_BUILDING_IDS = new Set([
+  'eaoe', // Ancient of Lore
+  'eaom', // Ancient of War
+  'eaow', // Ancient of Wind
+  'eden', // Ancient of Wonders
+  'etrp', // Ancient Protector
+  'etol', // Tree of Life
+  'etoa', // Tree of Ages
+  'etoe', // Tree of Eternity
+]);
+
+// How each race's workers interact with buildings during construction
+const BuildMechanic = Object.freeze({
+  CONSUMED_PERMANENT:  'consumed_permanent',   // NE ancient: wisp destroyed forever
+  CONSUMED_TEMPORARY:  'consumed_temporary',   // NE non-ancient / Orc: consumed, released on complete
+  SUMMONER:            'summoner',             // Undead: acolyte starts summon, walks away free
+  BUILDER:             'builder'               // Human: peasant works on-site, can be pulled away
+});
+
+const raceBuildMechanic = (race, buildingItemId) => {
+  switch (race) {
+    case 'E':
+      return ANCIENT_BUILDING_IDS.has(buildingItemId)
+        ? BuildMechanic.CONSUMED_PERMANENT
+        : BuildMechanic.CONSUMED_TEMPORARY;
+    case 'O': return BuildMechanic.CONSUMED_TEMPORARY;
+    case 'U': return BuildMechanic.SUMMONER;
+    case 'H': return BuildMechanic.BUILDER;
+    default:  return BuildMechanic.BUILDER;
+  }
+};
+
+const getBuildTime = (itemId) => {
+  if (buildTimings[itemId]) return buildTimings[itemId];
+  const balance = unitBalanceMap[itemId];
+  if (balance && balance.buildTime) return balance.buildTime;
+  return 60; // safe default
+};
+
+const isWorkerUnit = (unit) =>
+  (unit.meta && unit.meta.worker) || unit.itemId === GHOUL_ID;
+
+const defaultWorkerRole = (unit) =>
+  unit.itemId === GHOUL_ID ? WorkerRole.LUMBER : WorkerRole.GOLD;
+
 const unitMetaData = {
     'uobs': {
         'displayName': 'Obsidian Statue',
@@ -387,14 +446,14 @@ const allItemIds = {
     'AEfk': 'Fan of Knives',
     'AEfn': 'Force of Nature',
     'AEim': 'Immolation',
-    'AEm': 'Mana Burn',
+    'AEmb': 'Mana Burn',
     'AEme': 'Metamorphosis',
     'AEsf': 'Starfall',
     'AEsh': 'Shadow Strike',
     'AEst': 'Scout',
     'AEsv': 'Vengence',
     'AEtq': 'Tranquility',
-    'AHa': 'Brilliance Aura',
+    'AHab': 'Brilliance Aura',
     'AHad': 'Devotion Aura',
     'AHav': 'Avatar',
     'AHbh': 'Bash',
@@ -404,11 +463,11 @@ const allItemIds = {
     'AHds': 'Divine Shield',
     'AHfa': 'Searing Arrows',
     'AHfs': 'Flame Strike',
-    'AHh': 'Holy Bolt',
+    'AHhb': 'Holy Light',
     'AHmt': 'Mass Teleport',
     'AHpx': 'Summon Phoenix',
     'AHre': 'Resurrection',
-    'AHt': 'Storm Bolt',
+    'AHtb': 'Storm Bolt',
     'AHtc': 'Thunder Clap',
     'AHwe': 'Summon Water Elemental',
     'AOae': 'Endurance Aura',
@@ -443,6 +502,40 @@ const allItemIds = {
     'AUls': 'Locust Swarm',
     'AUsl': 'Sleep',
     'AUts': 'Spiked Carapace',
+    'AUfa': 'Frost Armor',
+    'AUcb': 'Carrion Beetles',
+    'ANbf': 'Breath of Fire',
+    'ANdb': 'Drunken Brawler',
+    'ANdh': 'Drunken Haze',
+    'ANef': 'Storm Earth and Fire',
+    'ANdr': 'Life Drain',
+    'ANsi': 'Silence',
+    'ANba': 'Black Arrow',
+    'ANch': 'Charm',
+    'ANms': 'Mana Shield',
+    'ANfa': 'Frost Arrows',
+    'ANfl': 'Forked Lightning',
+    'ANto': 'Tornado',
+    'ANrf': 'Rain of Fire',
+    'ANca': 'Cleaving Attack',
+    'ANht': 'Howl of Terror',
+    'ANdo': 'Doom',
+    'ANsg': 'Summon Bear',
+    'ANsq': 'Summon Quilbeast',
+    'ANsw': 'Summon Hawk',
+    'ANst': 'Stampede',
+    'ANeg': 'Engineering Upgrade',
+    'ANcs': 'Cluster Rockets',
+    'ANsy': 'Pocket Factory',
+    'ANrg': 'Robo-Goblin',
+    'ANic': 'Incinerate',
+    'ANso': 'Soul Burn',
+    'ANlm': 'Summon Lava Spawn',
+    'ANvc': 'Volcano',
+    'ANhs': 'Healing Spray',
+    'ANab': 'Acid Bomb',
+    'ANcr': 'Chemical Rage',
+    'ANtm': 'Transmute',
     'eaoe': 'Ancient of Lore',
     'eaom': 'Ancient of War',
     'eaow': 'Ancient of Wind',
@@ -1109,13 +1202,13 @@ const heroAbilities = {
      'summonItemId': ['hwat', 'hwt2', 'hwt3'],
      'summonDuration': 60
     },
-    'AHa': { 'displayName': 'Brilliance Aura'},
+    'AHab': { 'displayName': 'Brilliance Aura'},
     'AHmt': { 'displayName': 'Mass Teleport'},
-    'AHt': { 'displayName': 'Storm Bolt'},
+    'AHtb': { 'displayName': 'Storm Bolt'},
     'AHtc': { 'displayName': 'Thunder Clap'},
     'AHbh': { 'displayName': 'Bash'},
     'AHav': { 'displayName': 'Avatar'},
-    'AHh': { 'displayName': 'Holy Light'},
+    'AHhb': { 'displayName': 'Holy Light'},
     'AHds': { 'displayName': 'Divine Shield'},
     'AHad': { 'displayName': 'Devotion Aura'},
     'AHre': { 'displayName': 'Resurrection'},
@@ -1123,7 +1216,7 @@ const heroAbilities = {
     'AHfs': { 'displayName': 'Flame Strike'},
     'AHbn': { 'displayName': 'Banish'},
     'AHpx': { 'displayName': 'Summon Phoenix'},
-    'AEm': { 'displayName': 'Mana Burn'},
+    'AEmb': { 'displayName': 'Mana Burn'},
     'AEim': { 'displayName': 'Immolation'},
     'AEev': { 'displayName': 'Evasion'},
     'AEme': { 'displayName': 'Metamorphosis'},
@@ -1198,7 +1291,7 @@ const heroAbilities = {
     },
     'AUls': { 'displayName': 'Locust Swarm'},
     'ANbf': { 'displayName': 'Breath of Fire'},
-    'ANd':  { 'displayName': 'Drunken Brawler'},
+    'ANdb': { 'displayName': 'Drunken Brawler'},
     'ANdh': { 'displayName': 'Drunken Haze'},
     'ANef': { 'displayName': 'Storm Earth and Fire'},
     'ANdr': { 'displayName': 'Life Drain'},
@@ -1236,7 +1329,7 @@ const heroAbilities = {
     'ANlm': { 'displayName': 'Summon Lava Spawn'},
     'ANvc': { 'displayName': 'Volcano'},
     'ANhs': { 'displayName': 'Healing Spray'},
-    'ANa':  { 'displayName': 'Acid Bom'},
+    'ANab': { 'displayName': 'Acid Bomb'},
     'ANcr': { 'displayName': 'Chemical Rage'},
     'ANtm': { 'displayName': 'Transmute'}
 };
@@ -1244,8 +1337,8 @@ const heroAbilities = {
 const tierBuildings = {
   'U': ['unp1', 'unp2'],
   'O': ['ostr', 'ofrt'],
-  'E': [],
-  'H': []
+  'E': ['etoa', 'etoe'],
+  'H': ['hkee', 'hcas']
 };
 
 const specialBuildings = {
@@ -1301,8 +1394,18 @@ specialBuildingList = {
 };
 
 const buildingUpgrades = {
+    // Undead: Necropolis -> Halls of the Dead -> Black Citadel
     'unp1': 'unpl',
-    'unpl': 'unp2'
+    'unpl': 'unp2',
+    // Human: Town Hall -> Keep -> Castle
+    'htow': 'hkee',
+    'hkee': 'hcas',
+    // Orc: Great Hall -> Stronghold -> Fortress
+    'ogre': 'ostr',
+    'ostr': 'ofrt',
+    // Night Elf: Tree of Life -> Tree of Ages -> Tree of Eternity
+    'etol': 'etoa',
+    'etoa': 'etoe'
 };
 
 // building / resrach timings in seconds
@@ -1320,6 +1423,135 @@ const buildTimings = {
     'etoa': 140,
     'etoe': 140
 };
+
+// research upgrade costs and timings
+// format: { gold: [lvl1, lvl2, lvl3], lumber: [lvl1, lvl2, lvl3], time: [lvl1, lvl2, lvl3] }
+const researchCosts = {
+    // Human - attack / armor
+    'Rhme': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Melee Weapons
+    'Rhra': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Ranged Weapons
+    'Rhar': { gold: [125, 175, 225], lumber: [75, 125, 175], time: [60, 75, 90] },     // Plating
+    'Rhla': { gold: [100, 150, 200], lumber: [100, 150, 200], time: [60, 75, 90] },    // Leather Armor
+    'Rhac': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Masonry
+    // Human - unit upgrades
+    'Rhlh': { gold: [0, 0], lumber: [100, 100], time: [60, 75] },                       // Lumber Harvesting
+    'Rhde': { gold: [150], lumber: [75], time: [45] },                                   // Defend
+    'Rhpt': { gold: [100], lumber: [50], time: [30] },                                   // Priest Training
+    'Rhst': { gold: [100], lumber: [50], time: [30] },                                   // Sorceress Training
+    'Rhss': { gold: [75], lumber: [75], time: [45] },                                    // Control Magic
+    'Rhfc': { gold: [100], lumber: [150], time: [40] },                                  // Flak Cannons
+    'Rhfs': { gold: [50], lumber: [100], time: [60] },                                   // Fragmentation Shards
+    'Rhse': { gold: [50], lumber: [50], time: [30] },                                    // Magic Sentry
+    'Rhan': { gold: [150], lumber: [75], time: [40] },                                   // Animal War Training
+    'Rhri': { gold: [75], lumber: [125], time: [40] },                                   // Long Rifles
+    'Rhcd': { gold: [50], lumber: [100], time: [30] },                                   // Cloud
+    'Rhrt': { gold: [50], lumber: [150], time: [60] },                                   // Barrage
+    'Rhsr': { gold: [50], lumber: [50], time: [30] },                                    // Flare
+    'Rhh':  { gold: [100], lumber: [75], time: [40] },                                   // Storm Hammers
+    'Rhg':  { gold: [150], lumber: [100], time: [35] },                                  // Flying Machine Bombs
+
+    // Orc - attack / armor
+    'Rome': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Melee Weapons
+    'Rora': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Ranged Weapons
+    'Roar': { gold: [150, 225, 300], lumber: [75, 125, 175], time: [60, 75, 90] },     // Unit Armor
+    // Orc - unit upgrades
+    'Ropg': { gold: [75], lumber: [25], time: [45] },                                    // Pillage
+    'Roen': { gold: [50], lumber: [75], time: [40] },                                    // Ensnare
+    'Robk': { gold: [75], lumber: [0], time: [40] },                                     // Berserker Upgrade
+    'Robs': { gold: [50], lumber: [150], time: [60] },                                   // Berserker Strength
+    'Rotr': { gold: [100], lumber: [0], time: [60] },                                    // Troll Regeneration
+    'Rost': { gold: [100], lumber: [50], time: [30] },                                   // Shaman Training
+    'Rowd': { gold: [100], lumber: [50], time: [30] },                                   // Witch Doctor Training
+    'Rowt': { gold: [100], lumber: [50], time: [30] },                                   // Spirit Walker Training
+    'Rosp': { gold: [25], lumber: [75], time: [40] },                                    // Spiked Barricades
+    'Ror':  { gold: [75], lumber: [175], time: [60] },                                   // Reinforced Defenses
+    'Robf': { gold: [50], lumber: [150], time: [60] },                                   // Burning Oil
+    'Rolf': { gold: [75], lumber: [125], time: [60] },                                   // Liquid Fire
+    'Rows': { gold: [150], lumber: [0], time: [60] },                                    // Pulverize
+    'Rovs': { gold: [100], lumber: [150], time: [40] },                                  // Envenomed Spears
+
+    // Night Elf - attack / armor
+    'Resm': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Strength of the Moon
+    'Resw': { gold: [100, 175, 250], lumber: [50, 100, 150], time: [60, 75, 90] },     // Strength of the Wild
+    'Rema': { gold: [150, 225, 300], lumber: [75, 125, 175], time: [60, 75, 90] },     // Moon Armor
+    'Rerh': { gold: [150, 225, 300], lumber: [75, 125, 175], time: [60, 75, 90] },     // Reinforced Hides
+    // Night Elf - unit upgrades
+    'Rei':  { gold: [50, 100], lumber: [100, 175], time: [60, 75] },                    // Improved Bows
+    'Remk': { gold: [100], lumber: [175], time: [60] },                                  // Marksmanship
+    'Remg': { gold: [100], lumber: [150], time: [40] },                                  // Moon Glaive
+    'Repd': { gold: [100], lumber: [75], time: [40] },                                   // Vorpal Blades
+    'Redc': { gold: [100], lumber: [50], time: [30] },                                   // Druid of the Claw
+    'Redt': { gold: [100], lumber: [50], time: [30] },                                   // Druid of the Talon
+    'Resi': { gold: [50], lumber: [50], time: [30] },                                    // Abolish Magic
+    'Reht': { gold: [75], lumber: [50], time: [30] },                                    // Hippogryph Taming
+    'Ren':  { gold: [150], lumber: [200], time: [60] },                                  // Nature's Blessing
+    'Reuv': { gold: [50], lumber: [50], time: [30] },                                    // Ultravision
+    'Rews': { gold: [75], lumber: [0], time: [30] },                                     // Well Sprint
+
+    // Undead - attack / armor
+    'Rume': { gold: [125, 175, 225], lumber: [50, 100, 150], time: [60, 75, 90] },     // Unholy Strength
+    'Rura': { gold: [100, 150, 200], lumber: [75, 125, 175], time: [60, 75, 90] },     // Creature Attack
+    'Ruar': { gold: [125, 175, 225], lumber: [50, 100, 150], time: [60, 75, 90] },     // Unholy Armor
+    'Rucr': { gold: [150, 225, 300], lumber: [75, 125, 175], time: [60, 75, 90] },     // Creature Carapace
+    // Undead - unit upgrades
+    'Ruac': { gold: [0], lumber: [0], time: [30] },                                      // Cannibalize
+    'Rugf': { gold: [100], lumber: [150], time: [60] },                                  // Ghoul Frenzy
+    'Rune': { gold: [100], lumber: [50], time: [30] },                                   // Necromancer Training
+    'Ruba': { gold: [100], lumber: [50], time: [30] },                                   // Banshee Training
+    'Rubu': { gold: [75], lumber: [75], time: [40] },                                    // Burrow
+    'Ruex': { gold: [75], lumber: [0], time: [30] },                                     // Exhume Corpses
+    'Rusf': { gold: [100], lumber: [150], time: [60] },                                  // Stone Form
+    'Rusp': { gold: [75], lumber: [150], time: [60] },                                   // Destroyer Form
+    'Rusl': { gold: [100], lumber: [75], time: [40] },                                   // Skeletal Longevity
+    'Ruf':  { gold: [50], lumber: [200], time: [60] },                                   // Freezing Breath
+};
+
+// unit and building costs: { gold, lumber, food, foodProvided }
+// generated from UnitBalance.json with overrides for tier upgrades and heroes
+const unitCosts = Object.keys(unitBalanceMap).reduce((acc, id) => {
+    const entry = unitBalanceMap[id];
+    acc[id] = {
+        gold: entry.goldCost || 0,
+        lumber: entry.lumberCost || 0,
+        food: entry.foodUsed || 0,
+        foodProvided: entry.foodMade || 0
+    };
+    return acc;
+}, {});
+
+// tier building upgrade costs - UnitBalance has cumulative costs, we need upgrade-only
+// Human: Town Hall (385g/205l) -> Keep -> Castle
+unitCosts['hkee'] = { gold: 320, lumber: 210, food: 0, foodProvided: 0 };
+unitCosts['hcas'] = { gold: 320, lumber: 210, food: 0, foodProvided: 0 };
+// Orc: Great Hall (385g/185l) -> Stronghold -> Fortress
+unitCosts['ostr'] = { gold: 315, lumber: 190, food: 0, foodProvided: 0 };
+unitCosts['ofrt'] = { gold: 325, lumber: 190, food: 0, foodProvided: 0 };
+// Undead: Necropolis (225g/0l) -> Halls of the Dead -> Black Citadel
+unitCosts['unp1'] = { gold: 320, lumber: 210, food: 0, foodProvided: 0 };
+unitCosts['unp2'] = { gold: 325, lumber: 230, food: 0, foodProvided: 0 };
+// Night Elf: Tree of Life (340g/185l) -> Tree of Ages -> Tree of Eternity
+unitCosts['etoa'] = { gold: 320, lumber: 180, food: 0, foodProvided: 0 };
+unitCosts['etoe'] = { gold: 330, lumber: 200, food: 0, foodProvided: 0 };
+
+// tower upgrade costs - also cumulative in UnitBalance
+// Human: Scout Tower (30g/20l) -> Guard/Cannon/Arcane Tower
+unitCosts['hgtw'] = { gold: 70, lumber: 50, food: 0, foodProvided: 0 };
+unitCosts['hctw'] = { gold: 120, lumber: 100, food: 0, foodProvided: 0 };
+unitCosts['hatw'] = { gold: 70, lumber: 50, food: 0, foodProvided: 0 };
+// Undead: Ziggurat (150g/50l) -> Spirit Tower / Nerubian Tower
+unitCosts['uzg1'] = { gold: 145, lumber: 40, food: 0, foodProvided: 0 };
+unitCosts['uzg2'] = { gold: 100, lumber: 20, food: 0, foodProvided: 0 };
+
+// heroes cost 0 gold/lumber to initially summon (UnitBalance has revive costs)
+Object.keys(unitMetaData).forEach(id => {
+    if (unitMetaData[id].hero && unitCosts[id]) {
+        unitCosts[id].gold = 0;
+        unitCosts[id].lumber = 0;
+    }
+});
+
+// missing from UnitBalance
+unitCosts['orbr'] = { gold: 160, lumber: 40, food: 0, foodProvided: 10 };
 
 const heroes = Object.keys(unitMetaData).reduce((acc, key) => {
 	let item = unitMetaData[key];
@@ -1362,6 +1594,7 @@ const getUnitInfo = (itemId) => {
   );
 
 	const isHero = (inHeroList);
+  const isResearch = (inUnitList && units[itemId] && units[itemId].startsWith("Upgrade"));
 	const isUnit = (inUnitList || isHero || isCritter && !isBuilding);
   const isItem = (inItemList);
   
@@ -1407,6 +1640,7 @@ const getUnitInfo = (itemId) => {
 		isBuilding,
 		isUnit,
     isItem,
+    isResearch,
     isFountain,
     isCritter,
     isInteractiveShop,
@@ -1432,9 +1666,24 @@ module.exports = {
   mapDataByFile,
   commonMapNames,
   buildTimings,
+  researchCosts,
+  unitCosts,
   itemAbilityData,
   abilityToHero,
   tierBuildings,
+
+  WorkerRole,
+  WorkerTask,
+  GHOUL_ID,
+  BURROW_ID,
+  WORKER_IDS,
+  isWorkerUnit,
+  defaultWorkerRole,
+
+  ANCIENT_BUILDING_IDS,
+  BuildMechanic,
+  raceBuildMechanic,
+  getBuildTime,
 
   NEUTRAL_PLAYER_ID: 1042,
   NEUTRAL_PLAYER_SLOT: 1044,

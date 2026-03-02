@@ -1,41 +1,4 @@
- const domMap = {
-  "mapInputFieldId": "input-map-file",
-  "playerListId": "player-list",
-  "unitListId": "unit-list",
-  "unitInfoId": "unit-info"
-};
-
-window.colorMap = {
-  "black": "#000000",
-  "buildingOutline": "#00FF00",
-  "unitPath": "#00FFFF"
-};
-
-const ScrubStates = {
-  stopped: 0,
-  paused: 1,
-  playing: 2,
-  finished: 3
-};
-
-const TeamColorList = [
-  "#FF0000",
-  "#1CE6B9",
-  "#0042FF",
-  "#FFFC01"
-];
-
-const ViewModes = {
-  gameplay: 0,
-  buildOrder: 1
-};
-
-const BuildView = {
-  live: 0,
-  static: 1
-};
-
-const Wc3vViewer = class {
+ const Wc3vViewer = class {
   constructor () {
     this.reset();
   }
@@ -189,7 +152,7 @@ const Wc3vViewer = class {
     this.utilityCanvas = null;
     this.utilityCtx = null;
 
-    this.scrubber = new window.TimeScrubber("main-wrapper", "main-canvas");
+    this.scrubber = new window.TimeScrubber("scrubber-bar", "main-canvas");
 
     this.replayId = null;
 
@@ -206,6 +169,11 @@ const Wc3vViewer = class {
     this.lastFrameTimestamp = 0;
 
     this.teamColorMap = {};
+
+    this.layoutMode = LayoutMode.liveBuildOrder;
+    this.boData = new BuildOrderData();
+    this.mapRenderer = new MapRenderer();
+    this.displayScale = 1.0;
 
     this.isDev = (window.location.hostname === "127.0.0.1");
   }
@@ -630,9 +598,10 @@ const Wc3vViewer = class {
       return;
     }
 
-    // make sure mega play button is hidden
+    // make sure mega play button and match complete banner are hidden
     this.toggleMegaPlayButton(false);
-    
+    this.hideMatchCompleteBanner();
+
     const trackerPosition = this.scrubber.findTrackerPosition(e, this.matchEndTime);
     const { gameTime, matchPercentage } = trackerPosition;
 
@@ -652,22 +621,15 @@ const Wc3vViewer = class {
   ////
   setLoadingStatus (isLoading) {
     const loadingIcon = document.getElementById("loading-icon");
-    const logoIcon = document.getElementById("player-status-bg-icon");
-    const viewerOptionsPanel = document.getElementById("viewer-options");
-    const mapOptionsPanel = document.getElementById("map-options");
+    const viewerControlsPanel = document.getElementById("viewer-controls");
 
     this.emptyGameWrapper.style.display = "none";
 
     loadingIcon.style.display = isLoading ? "block" : "none";
-    logoIcon.style.display = isLoading ? "block" : "none";
 
-    isLoading ? 
-      viewerOptionsPanel.classList.add("disabled") :
-      viewerOptionsPanel.classList.remove("disabled");
-
-    isLoading ? 
-      mapOptionsPanel.classList.add("disabled") :
-      mapOptionsPanel.classList.remove("disabled");
+    isLoading ?
+      viewerControlsPanel.classList.add("disabled") :
+      viewerControlsPanel.classList.remove("disabled");
   }
 
   togglePlay () {
@@ -715,6 +677,7 @@ const Wc3vViewer = class {
     this.state = ScrubStates.playing;
 
     this.toggleMegaPlayButton(false);
+    this.hideMatchCompleteBanner();
     this.startRenderLoop();
   }
 
@@ -736,38 +699,181 @@ const Wc3vViewer = class {
     this.stopRenderLoop();
   }
 
-  setViewType (tab) {
-    const el = document.getElementById(`${tab}-toggle`);
-    const oldList = Array.from(document.getElementsByClassName("view-type-toggle selected"));
+  restart () {
+    this.hideMatchCompleteBanner();
+    this.gameTime = 0;
+    this.scrubber.moveTracker(0);
 
-    oldList.forEach(oldEl => oldEl.classList.remove('selected'));
-    el.classList.add('selected');
+    this.players.forEach(player => {
+      player.moveTracker(0);
+    });
 
-    this.viewMode = (tab == 'gameplay') ? ViewModes.gameplay : ViewModes.buildOrder;
+    this.play();
+  }
 
-    this.buildWrapper.style.display = (this.viewMode == ViewModes.buildOrder) ? 'block' : 'none';
+  showMatchCompleteBanner () {
+    const el = document.getElementById('match-complete-banner');
+    if (el) el.style.display = 'flex';
+  }
 
-    if (!this.gameLoaded) {
-      return;
+  hideMatchCompleteBanner () {
+    const el = document.getElementById('match-complete-banner');
+    if (el) el.style.display = 'none';
+  }
+
+  setLayoutMode (mode) {
+    if (mode === 'default') {
+      this.layoutMode = LayoutMode.liveBuildOrder;
+    } else if (mode === 'build') {
+      this.layoutMode = LayoutMode.staticBuildOrder;
+    } else if (mode === 'replay') {
+      this.layoutMode = LayoutMode.gameplay;
     }
 
-    this.render();
+    this.applyLayoutMode();
+  }
+
+  setViewType (tab) {
+    if (tab === 'gameplay') {
+      this.layoutMode = LayoutMode.gameplay;
+    } else if (tab === 'build-order') {
+      this.layoutMode = LayoutMode.staticBuildOrder;
+    }
+
+    this.applyLayoutMode();
   }
 
   setBuildView (tab) {
-    // note that we render it first because the controls are added by the render
-    this.buildViewMode = (tab == 'live') ? BuildView.live : BuildView.static;
-    this.renderBuildOrder();
-
-    const el = document.getElementById(`build-order-control-${tab}`);
-    const oldList = Array.from(document.getElementsByClassName("build-order-control selected"));
-
-    oldList.forEach(oldEl => oldEl.classList.remove('selected'));
-    el.classList.add('selected');
-
-    if (!this.gameLoaded) {
-      return;
+    if (tab === 'live') {
+      this.layoutMode = LayoutMode.liveBuildOrder;
+    } else {
+      this.layoutMode = LayoutMode.staticBuildOrder;
     }
+
+    this.applyLayoutMode();
+  }
+
+  applyLayoutMode () {
+    const app = document.getElementById('app');
+
+    // Remove all layout mode classes
+    app.classList.remove('layout-mode-gameplay', 'layout-mode-static-bo', 'layout-mode-live-bo');
+
+    // Apply current mode
+    app.classList.add(`layout-mode-${this.layoutMode}`);
+
+    // Update mode switcher button states
+    const oldModes = Array.from(document.getElementsByClassName("mode-btn selected"));
+    oldModes.forEach(el => el.classList.remove('selected'));
+
+    if (this.layoutMode === LayoutMode.liveBuildOrder) {
+      const el = document.getElementById('mode-default');
+      if (el) el.classList.add('selected');
+    } else if (this.layoutMode === LayoutMode.staticBuildOrder) {
+      const el = document.getElementById('mode-build');
+      if (el) el.classList.add('selected');
+    } else if (this.layoutMode === LayoutMode.gameplay) {
+      const el = document.getElementById('mode-replay');
+      if (el) el.classList.add('selected');
+    }
+
+    // Keep old viewMode/buildViewMode in sync for any code still reading them
+    this.viewMode = (this.layoutMode === LayoutMode.gameplay) ? ViewModes.gameplay : ViewModes.buildOrder;
+    this.buildViewMode = (this.layoutMode === LayoutMode.liveBuildOrder) ? BuildView.live : BuildView.static;
+
+    // Handle render loop — stop RAF when canvas is not visible
+    if (this.layoutMode === LayoutMode.staticBuildOrder) {
+      if (this.state === ScrubStates.playing) {
+        this.pause();
+      }
+    }
+
+    // In live mode, scale the canvases via CSS to fit the half-viewport
+    if (this.layoutMode === LayoutMode.liveBuildOrder) {
+      this.scaleLiveModeCanvas();
+    } else if (this.gameScaler) {
+      this.resetCanvasScale();
+    }
+
+    // Re-render build order if in a BO mode
+    if (this.layoutMode !== LayoutMode.gameplay && this.gameLoaded) {
+      this.boRenderer.renderBuildOrder();
+    } else if (this.timelineSpline) {
+      this.timelineSpline.destroy();
+    }
+
+    // Re-render canvas if visible
+    if (this.layoutMode !== LayoutMode.staticBuildOrder && this.gameLoaded) {
+      this.render();
+    }
+  }
+
+  scaleLiveModeCanvas () {
+    if (!this.gameScaler) return;
+
+    const gameplayArea = document.getElementById('gameplay-area');
+    if (!gameplayArea) return;
+
+    requestAnimationFrame(() => {
+      const availableWidth = gameplayArea.clientWidth;
+      const availableHeight = gameplayArea.clientHeight;
+
+      const mapWidth = this.gameScaler.mapImage.width;
+      const mapHeight = this.gameScaler.mapImage.height;
+
+      const scaleX = availableWidth / mapWidth;
+      const scaleY = availableHeight / mapHeight;
+      const scale = Math.min(scaleX, scaleY, 1.0);
+
+      const displayWidth = Math.floor(mapWidth * scale);
+      const displayHeight = Math.floor(mapHeight * scale);
+
+      this.canvas.style.width = displayWidth + 'px';
+      this.canvas.style.height = displayHeight + 'px';
+      this.playerCanvas.style.width = displayWidth + 'px';
+      this.playerCanvas.style.height = displayHeight + 'px';
+      this.utilityCanvas.style.width = displayWidth + 'px';
+      this.utilityCanvas.style.height = displayHeight + 'px';
+
+      this.displayScale = scale;
+
+      if (this.gameLoaded) {
+        this.render();
+      }
+    });
+  }
+
+  resetCanvasScale () {
+    if (!this.gameScaler) return;
+
+    const mapWidth = this.gameScaler.mapImage.width;
+    const mapHeight = this.gameScaler.mapImage.height;
+
+    this.canvas.style.width = mapWidth + 'px';
+    this.canvas.style.height = mapHeight + 'px';
+    this.playerCanvas.style.width = mapWidth + 'px';
+    this.playerCanvas.style.height = mapHeight + 'px';
+    this.utilityCanvas.style.width = mapWidth + 'px';
+    this.utilityCanvas.style.height = mapHeight + 'px';
+
+    this.displayScale = 1.0;
+  }
+
+  seekToGameTime (gameTime) {
+    if (!this.gameLoaded) return;
+
+    this.toggleMegaPlayButton(false);
+    this.hideMatchCompleteBanner();
+    this.gameTime = gameTime;
+
+    const matchPercentage = ((gameTime / this.matchEndTime) * 100).toPrecision(2);
+    this.scrubber.moveTracker(matchPercentage);
+
+    this.players.forEach(player => {
+      player.moveTracker(gameTime);
+    });
+
+    this.render();
   }
 
   setStatusTab (tab) {
@@ -794,6 +900,7 @@ const Wc3vViewer = class {
     const params = new URLSearchParams(window.location.search);
     const hasBuildParam = params.has('showBuildOrder');
 
+    this.layoutMode = hasBuildParam ? LayoutMode.staticBuildOrder : LayoutMode.liveBuildOrder;
     this.viewMode = hasBuildParam ? ViewModes.buildOrder : ViewModes.gameplay;
     this.buildViewMode = BuildView.live;
 
@@ -823,7 +930,7 @@ const Wc3vViewer = class {
 
     this.megaPlayButton = document.getElementById("mega-play-button");
 
-    document.getElementById("wc3v-title").innerHTML = `current replay: ${this.replayId}`;
+    // Mode switcher is in the menu bar now; no title text needed
 
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);
@@ -854,61 +961,20 @@ const Wc3vViewer = class {
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
+      this.timelineSpline = new TimelineSpline(this);
+      this.boRenderer = new BuildOrderRenderer(this);
       this.setupBuildOrder();
 
-      if (hasBuildParam) {
-        this.setViewType('build-order');
-      }
+      this.timelineSpline.observeResize();
+
+      this.applyLayoutMode();
 
       this.render();
     });
   }
 
   setupBuildOrder () {
-    const buildOrderPlayersWrapper = document.getElementById("build-content-players");
-
-    this.players.forEach(player => {
-      const { playerId, playerColor, isNeutralPlayer, icon } = player;
-      if (isNeutralPlayer) {
-        return;
-      }
-
-      const wrapper = document.createElement("div");
-      const content = document.createElement("div");
-      const colorIcon = document.createElement("span");
-
-      const newIcon = new Image();
-
-      wrapper.classList.add('player-selector');
-      content.classList.add('player-selector-content');
-      colorIcon.classList.add('player-selector-color-icon');
-
-      content.innerHTML = `<span class="player-selector-color-icon" style="background: ${playerColor};"></span>${player.displayName}`;
-
-      newIcon.src = icon.src;
-      wrapper.id = `player-selector-id-${playerId}`;
-
-      wrapper.append(newIcon);
-      wrapper.append(content);
-
-
-      wrapper.addEventListener('click', (e) => {
-        const el = document.getElementById(`player-selector-id-${playerId}`);
-        const toggled = el.classList.toggle('selected');
-
-        if (toggled) {
-          this.buildOrderPlayers.push(player);
-        } else {
-          this.buildOrderPlayers = this.buildOrderPlayers.filter(buildPlayer => {
-            return buildPlayer.playerId != playerId;
-          });
-        }
-
-        this.renderBuildOrder();
-      });
-
-      buildOrderPlayersWrapper.append(wrapper);
-    });
+    this.boRenderer.setupBuildOrder();
   }
 
   setupViewOptions () {
@@ -1064,9 +1130,6 @@ const Wc3vViewer = class {
     self.canvas.style.width = mapWidth + "px";
     self.canvas.style.height = mapHeight + "px";
 
-    self.buildWrapper.style.width = mapWidth + "px";
-    self.buildWrapper.style.height = (mapHeight - 38) + "px";
-    
     self.playerCanvas.width = mapWidth;
     self.playerCanvas.height = mapHeight;
 
@@ -1080,17 +1143,19 @@ const Wc3vViewer = class {
       world.neutralGroups, GameDisplayBox.neutralCampHandler(this.gameScaler, this.transform));
 
     this.canvas.addEventListener('mousedown', (e) => {
+      if (self.layoutMode === LayoutMode.liveBuildOrder) return;
       self.gameDisplayBox.handleMouse(e, 'down', self.transform);
     });
 
     this.canvas.addEventListener('mousemove', (e) => {
+      if (self.layoutMode === LayoutMode.liveBuildOrder) return;
       self.gameDisplayBox.handleMouse(e, 'move', self.transform);
     });
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
 
-    const zoomContainer = d3.select("#main-canvas");
+    this.zoomContainer = d3.select("#main-canvas");
 
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)
@@ -1105,12 +1170,31 @@ const Wc3vViewer = class {
         this.transform = transform;
 
         this.gameDisplayBox.hide();
+        this.scrubber.updateZoomDisplay(transform.k);
 
         this.render();
       });
 
-    zoomContainer
+    this.zoomContainer
       .call(this.zoom);
+
+    this.scrubber.onZoomChange = (k) => {
+      this.zoomContainer.call(this.zoom.scaleTo, k);
+    };
+
+    // ResizeObserver for live mode canvas rescaling
+    const gameplayArea = document.getElementById('gameplay-area');
+    if (gameplayArea && typeof ResizeObserver !== 'undefined') {
+      let resizeTimeout;
+      new ResizeObserver(() => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          if (self.layoutMode === LayoutMode.liveBuildOrder) {
+            self.scaleLiveModeCanvas();
+          }
+        }, 100);
+      }).observe(gameplayArea);
+    }
   }
 
   clearCanvas () {
@@ -1153,6 +1237,11 @@ const Wc3vViewer = class {
   }
 
   mainLoop(timestamp) {
+    if (this.layoutMode === LayoutMode.staticBuildOrder) {
+      this.stopRenderLoop();
+      return;
+    }
+
     const timeStep = this.scrubber.getTimeStep();
     const { speed } = this.scrubber;
 
@@ -1174,9 +1263,8 @@ const Wc3vViewer = class {
     this.render();
     
     if (this.gameTime >= this.matchEndTime) {
-      console.log("match replay completed.");
-
       this.stop();
+      this.showMatchCompleteBanner();
       return;
     }
 
@@ -1191,834 +1279,15 @@ const Wc3vViewer = class {
     });
   }
 
-  renderMapBackground () {
-    const { 
-      ctx, 
-      transform,
-      viewOptions
-    } = this;
 
-    const {
-      mapExtent, 
-      middleX, 
-      middleY, 
-      xScale, 
-      yScale,
-      viewWidth,
-      viewHeight,
-      sceneWidth,
-      sceneHeight
-    } = this.gameScaler;
-
-    const { width, height } = this.mapImage;
-    const { x, y, k } = transform;
-
-    const drawX = (transform.x + xScale(mapExtent.x[0]) + middleX);
-    const drawY = (transform.y + yScale(mapExtent.y[0]) + middleY);
-
-    const bgImage = viewOptions.displayMapGrid ? 
-      this.gridMapImage : this.mapImage;
-
-    const offsetX = 0;//(viewWidth - sceneWidth) / 2;
-    const offsetY = 0;//(viewHeight - sceneHeight) / 2;
-
-    ctx.drawImage(
-      bgImage, 
-      offsetX,               // sourceX
-      offsetY,               // sourceY
-      viewWidth,           // sourceWidth
-      viewHeight,          // sourceHeight
-      drawX + offsetX,           // destX
-      drawY + offsetY,           // destY
-      viewWidth * k,       // destWidth
-      viewHeight * k       // destHeight
-    );
-  }
-
-  renderMapTrees (ctx) {
-    const { transform, viewOptions, doodadData } = this;
-    const {
-      middleX, 
-      middleY, 
-      xScale, 
-      yScale
-    } = this.gameScaler;
-
-    if (!viewOptions.displayTreeGrid) {
-      return;
-    }
-
-    const treeSize = (6 * transform.k);
-    const treeRadius = Math.min(8, Math.max(3.5, treeSize));
-
-    const oldFillStyle = ctx.fillStyle;
-    const oldAlpha = ctx.globalAlpha;
-
-    ctx.fillStyle = "#013f01";
-    ctx.strokeStyle = "#906739";
-    ctx.globalAlpha = 0.65;
-
-    doodadData.forEach((tree, treeIndex) => {
-      const { flags, position, scale } = tree;
-      const { solid, visible } = flags;
-      const { x, y } = position;
-
-      // drawing algo:
-      // x = GameScaler.xScale(x) + middleX
-      // y = GameScaler.yScale(y) + middleY
-      // finally -
-      // (x * transform.k) + transform.x
-      // (y * transform.k) + transform.y
-
-      const scaledSize = (8 * scale[0]) * transform.k;
-      const halfSize = scaledSize / 2;
-
-      const drawX = ((xScale(x) + middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
-
-      //ctx.fillRect(drawX, drawY, scaledSize, scaledSize);
-
-      ctx.beginPath();
-      ctx.arc(drawX + halfSize, drawY + halfSize, scaledSize, 0, Math.PI * 2, true);
-      ctx.fill();
-      ctx.stroke();
-    });
-
-    ctx.fillStyle = oldFillStyle;
-    ctx.globalAlpha = oldAlpha;
-  }
-
-  renderNeutralGroups (ctx, gameTime) {
-    const { transform, mapData, viewOptions } = this;
-    const { world } = mapData;
-    
-    const {
-      middleX, 
-      middleY, 
-      xScale, 
-      yScale
-    } = this.gameScaler;
-
-    const campColorMap = {
-      0: '#FFF',
-      1: '#eaff00'
-    };
-
-    const iconSize = (14 * transform.k);
-
-    const oldFillStyle = ctx.fillStyle;
-    const oldAlpha = ctx.globalAlpha;
-    const oldWidth = ctx.lineWidith;
-
-    ctx.fillStyle = "#FFF";
-    ctx.strokeStyle = "#FFF";
-    ctx.globalAlpha = 0.55;
-    ctx.lineWidth = 2.5;
-
-    const neutralPlayer = this.players.find(player => {
-      return player.playerId === "1042";
-    });
-
-    if (!neutralPlayer) {
-      return;
-    }
-
-    const groups = Object.values(world.neutralGroups);
-    const claimPaths = groups.reduce((acc, group) => {
-      if (group.claimOwnerId == null) {
-        return acc;
-      }
-
-      acc[group.claimOwnerId] = [];
-
-      return acc;
-    }, {});
-
-    groups.forEach((neutralGroup, campNumber) => {
-      const { bounds, claimState, claimTime, claimOwnerId, uuid, order } = neutralGroup;
-
-      const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
-      const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
-
-      const drawX = ((xScale(bounds.minX) + middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(bounds.minY) + middleY) * transform.k) + transform.y;
-
-      let claimColor = colorMap[0];
-      let claimColorFill = null;
-
-      if (gameTime >= claimTime) {
-
-        if (!neutralGroup.isHidden) {
-          // hide the units from rendering now that its been claimed
-          neutralGroup.isHidden = true;
-          neutralPlayer.units.forEach(unit => {
-            if (unit.neutralGroupId === uuid) {
-              unit.isNeutralGroupHidden = true;
-            }
-          });
-        }
-
-        claimColor = campColorMap[claimState];
-
-        if (claimState == 1) {
-          claimColorFill = campColorMap[claimState];
-        }
-
-        if (claimState > 1) {
-          claimColorFill = this.teamColorMap[claimOwnerId];
-
-          claimPaths[claimOwnerId].push({
-            claimTime,
-            drawX,
-            drawY,
-            rectWidth,
-            rectHeight
-          });
-        }
-      }
-
-      ctx.strokeStyle = claimColor;
-
-      ctx.beginPath();
-      ctx.strokeRect(drawX, drawY, rectWidth, rectHeight);
-      if (claimColorFill) {
-        ctx.fillStyle = claimColorFill;
-        ctx.fillRect(drawX, drawY, rectWidth, rectHeight);
-      }
-      ctx.fill();
-      ctx.stroke();
-
-      if (claimState > 0 && claimColorFill) {
-        Drawing.drawBoxedLevel(ctx, `${order}`, drawX - 8, drawY - 24, 30, 30, 20, 20);
-      }
-    });
-
-    if (!viewOptions.displayCreepRoute) {
-      return;
-    }
-
-    ctx.beginPath();
-    Object.keys(claimPaths).forEach(teamClaimId => {
-      const claimPath = claimPaths[teamClaimId].sort((a, b) => {
-        return a.claimTime - b.claimTime;
-      })
-
-      claimPath.forEach((step, ind) => {
-        const midX = (step.drawX + (step.rectWidth / 2));
-        const midY = (step.drawY + (step.rectHeight / 2));
-        
-        if (ind == 0) {
-          ctx.moveTo(midX, midY);
-          
-          return;
-        }
-
-        ctx.lineTo(midX, midY);
-      });
-    });
-    ctx.stroke();
-
-    ctx.fillStyle = oldFillStyle;
-    ctx.globalAlpha = oldAlpha;
-    ctx.lineWidth = oldWidth;
-  }
-
-  renderMapGrid (ctx) {
-    const { transform, viewOptions, gameScaler} = this;
-    const { gridXScale, gridYScale, xScale, yScale, middleX, middleY } = gameScaler;
-
-    if (!viewOptions.displayWalkGrid  &&
-        !viewOptions.displayWaterGrid &&
-        !viewOptions.displayBuildGrid) {
-      return;
-    }
-
-    return;
-
-    const { gridSize } = this.mapInfo;
-    const { full, playable } = gridSize;
-
-    const gridHeight = this.gridData.length;
-    const gridWidth  = this.gridData[0].length;
-
-    const { width, height } = this.canvas;
-
-    const tileHeight = (height / gridHeight) * transform.k;
-    const tileWidth  = (width  / gridWidth)  * transform.k;
-
-    ctx.lineWidth = 1;
-
-    let rCol = gridHeight - 1;
-
-    ctx.globalAlpha = 1;
-
-    for (let col = 0; col < gridHeight; col++) {
-      for (let row = 0; row < gridWidth; row++) {
-        const data = this.gridData[rCol][row];
-        const { 
-          NoWater, 
-          NoWalk,
-          NoFly,
-          NoBuild,
-          Blight,
-          x,
-          y
-        } = data;
-
-        const drawX = (row * tileWidth) + transform.x;
-        const drawY = (col * tileHeight) + transform.y;
-
-        const canWalk = (!NoWalk && NoBuild) || NoWater || Blight;
-
-        if (viewOptions.displayWalkGrid && canWalk) {
-          ctx.strokeStyle = "#FFF";
-          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
-        }
-
-        if (viewOptions.displayWaterGrid && !NoWater) {
-          ctx.strokeStyle = "#0000AA";
-          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
-        }
-
-        if (viewOptions.displayBuildGrid && NoBuild) {
-          ctx.strokeStyle = "#00AA00";
-          ctx.strokeRect(drawX, drawY, tileWidth, tileHeight);
-        }
-      }
-
-      rCol--;
-    }
-  }
-
-  renderBuildOrder () {
-    const { 
-      buildOrderPlayers,
-      buildViewMode,
-      players
-    } = this;
-
-    const allPlayers = players.filter(player => !player.isNeutralPlayer);
-    const buildPlayerData = {};
-
-    const isStaticView = buildViewMode == BuildView.static;
-
-    const modeKeyFilters = {};
-    modeKeyFilters[BuildView.live] = ['addBuilding'];
-    modeKeyFilters[BuildView.static] = ['addBuilding', 'addUnit'];
-
-    const filterKeys = modeKeyFilters[buildViewMode];
-
-    let maxEventCount = 0;
-    
-    buildOrderPlayers.forEach(player => {
-      const { eventStream, tierStream } = player;
-
-      const rawBuildingEvents = eventStream.reduce((acc, item) => {
-
-        if (filterKeys.includes(item.key)) {
-          const { gameTime } = item;
-          let displayName, itemId, isUnit;
-
-          if (item.key == 'addBuilding') {
-            const { building } = item;
-            displayName = building.displayName;
-            itemId = building.itemId;
-
-            isUnit = false;
-          } else {
-            const { unit } = item;
-
-            if (unit.isHero || unit.isIllusion || unit.isSummon) {
-              // bail out
-              return acc;
-            }
-
-            displayName = unit.displayName;
-            itemId = unit.itemId;
-
-            isUnit = true;
-          }
-
-          const imgSrc = `/assets/wc3icons/${itemId}.jpg`;
-
-          acc.push({
-            itemId,
-            displayName,
-            gameTime,
-            isUnit,
-            count: 1,
-            bucketOffset: 0,
-            imgSrc: imgSrc
-          });
-        }
-
-        return acc;
-      }, []);
-
-
-      //
-      // Algorithm to group units of the same itemId together and show a multiplier text
-      //
-
-      let buildingEvents;
-      if (isStaticView) {
-        let lastUnit;
-        buildingEvents = [];
-
-        for (let i = 0; i < rawBuildingEvents.length; i++) {
-          const item = rawBuildingEvents[i];
-
-          if (!item.isUnit) {
-            if (lastUnit) {
-              buildingEvents.push(lastUnit);
-              lastUnit = null;
-            }
-
-            buildingEvents.push(item);
-            continue;
-          }
-
-          if (lastUnit) {
-            if (lastUnit.itemId == item.itemId) {
-              lastUnit.count += 1;
-
-              continue;
-            }
-
-            // we have a lastUnit but it doenst match, so push it in
-            buildingEvents.push(lastUnit);
-          }
-
-          // now assign the new lastUnit
-          lastUnit = item;
-          continue;
-        
-          // end of lastUnit for loop
-        }
-
-        if (lastUnit) {
-          // we had a remaining unit at the end
-          buildingEvents.push(lastUnit);
-        }
-
-        // add the tier icons
-        tierStream.forEach(tierItem => {
-          if (tierItem.tier != 1 && tierItem.tier != 4) {
-            buildingEvents.push({
-              itemId: 'asdf',
-              displayName: `Tier ${tierItem.tier}`,
-              gameTime: tierItem.gameTime,
-              isUnit: false,
-              count: 1,
-              bucketOffset: 0,
-              imgSrc: player.icon.src
-            });
-          }
-        });
-
-        buildingEvents = buildingEvents.sort((a, b) => {
-          return a.gameTime - b.gameTime;
-        });
-
-      } else {
-        // no need for processing, just use raw
-        buildingEvents = rawBuildingEvents;
-      }
-
-      const d3Data = buildingEvents.map((item, ind) => {
-        return { date: new Date(item.gameTime), value: 0, data: item };
-      });
-
-      const tierData = tierStream.reduce((acc, item) => {
-        if (item.tier != 1 && item.tier != 4) {
-          acc.push({ 
-            date: new Date(item.gameTime), 
-            value: item.tier 
-          });
-        }
-
-        return acc;
-      }, []);
-
-      const totalEvents = buildingEvents.length + tierData.length;
-      if (totalEvents > maxEventCount) {
-        maxEventCount = totalEvents;
-      }
-
-      buildPlayerData[player.playerId] = {
-        buildingEvents,
-        d3Data,
-        tierData
-      };
-    });
-
-    const chartProperties = {
-      height: this.gameScaler.mapImage.height - 200,
-      width: this.gameScaler.mapImage.width - 60,
-      axisMargin: 50,
-      yMargin: 20,
-      xMargin: 10,
-      padding: 50,
-      playerLanePadding: 10,
-      tierBandHeight: 40
-    };
-
-    const iconSizes = {
-      building: isStaticView ? 75 : 50
-    };
-
-    const computedChartSize = {
-      left:   chartProperties.xMargin + chartProperties.axisMargin, 
-      right:  chartProperties.width - chartProperties.xMargin,
-      top:    chartProperties.yMargin,
-      bottom: chartProperties.height - chartProperties.yMargin
-    };
-
-    const wrapper = document.getElementById('build-order-wrapper');
-    wrapper.style.maxHeight = `${chartProperties.height}px`;
-
-    wrapper.innerHTML = `<div id='build-order-controls'>
-      <div 
-        id='build-order-control-live' 
-        onClick='wc3v.setBuildView("live")' 
-        class='build-order-control ${isStaticView ? "" : "selected"}'>Live Timing
-      </div>
-      <div 
-        id='build-order-control-static' 
-        onClick='wc3v.setBuildView("static")' 
-        class='build-order-control ${isStaticView ? "selected" : ""}'>Static
-      </div>
-    </div>`;
-
-    const MIN_IN_MS = (60 * 1000);
-
-    // how many 5 minute slices do we have in our game
-    const gameSlices = (this.matchEndTime <= 0) ? 1 : Math.ceil(this.matchEndTime / (5 * MIN_IN_MS));
-
-    // ensure the early game is always stepped out and visually clear
-    const yDomainPreset = [ 0, 0.25, 0.5, 1, 2.5 ];
-    const yDomain = [].concat(yDomainPreset);
-
-    for (let i = 1; i <= gameSlices; i++) {
-      yDomain.push(5 * i);
-    }
-
-    if (gameSlices > 1) {
-      yDomain.push((gameSlices + 1) * 5);
-    }
-
-    let yScale;
-
-    if (isStaticView) {
-      yScale = d3.scaleLinear()
-        .domain([0, Math.max(this.matchEndTime, 10 * MIN_IN_MS)])
-        .range([computedChartSize.top, maxEventCount * iconSizes.building]);
-    } else {
-      yScale = d3.scalePow()
-        .exponent(0.5)
-        .domain([
-          0,
-          1.5 * MIN_IN_MS,
-          Math.max(this.matchEndTime, 10 * MIN_IN_MS)
-        ])
-        .rangeRound([ 
-          computedChartSize.top, 
-          computedChartSize.bottom * 0.35,
-          computedChartSize.bottom
-        ]);
-    }
-
-    const xScale = d3.scaleLinear()
-      .domain([0, allPlayers.length])
-      .range([ 
-        computedChartSize.left,
-        computedChartSize.right
-      ]);
-
-    // TODO: remove this in favor of xScale now that we dont need it
-    const xPlayerScale = d3.scaleLinear()
-      .domain([0, allPlayers.length])
-      .range([
-        computedChartSize.left,
-        computedChartSize.right
-      ]);
-
-    const computedChartHeight = isStaticView ? (maxEventCount * iconSizes.building) : chartProperties.height;
-
-    const parent = d3.create("div")
-      .append("svg")
-      .attr("width", chartProperties.width)
-      .attr("height", computedChartHeight);
-
-    // render yAxis and tick labels
-
-    if (!isStaticView) {
-      parent
-        .append("g")
-        .attr("class", "y axis")
-        .attr("transform", `translate(${computedChartSize.left}, 0)`)
-        .call(
-          d3
-            .axisLeft(yScale)
-            .tickFormat((d, i) => {
-              const timerDate = new Date(Math.round(d * 1000) / 1000);
-              // ensure leading zero
-              const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
-
-              return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
-            })
-        );
-    }
-
-    ////
-    // Player drawing routines
-    ////
-
-    //
-    // draw background color rects
-    //
-
-    const bgData = buildOrderPlayers.map(player => { 
-      return { date: 0, value: player.slot, playerColor: player.playerColor }
-    });
-
-    // render bg rects
-    parent
-        .append('g')
-        .selectAll("rect")
-        .data(bgData)
-        .enter()
-          .append("rect")
-          .attr("class", "player-bg-rect")
-          .attr("x", d => xPlayerScale(d.value))
-          .attr("width", d => xPlayerScale(d.value + 1) - xPlayerScale(d.value))
-          .attr("y", d => yScale(d.date))
-          .attr("height", isStaticView ? computedChartHeight : computedChartSize.bottom - chartProperties.yMargin)
-          .attr("fill", d => d.playerColor);
-
-    //
-    // x and y grid lines
-    //
-
-    const yAxisGrid = d3
-      .axisLeft(yScale)
-      // each tick is the full width of the chart
-      .tickSize(-computedChartSize.right + computedChartSize.left)
-      .tickFormat('')
-      .ticks(15);
-
-    const xAxisGrid = d3
-      .axisBottom(xScale)
-      // each tick is the full height of the chart
-      .tickSize(-computedChartSize.bottom + computedChartSize.top)
-      .tickFormat('')
-      .ticks(15);
-
-    parent.append('g')
-      .attr('class', 'y axis-grid')
-      // translate left to clear the yAxis and tick labels
-      .attr('transform', `translate(${computedChartSize.left}, 0)`)
-      .call(yAxisGrid);
-
-    if (!isStaticView) {
-      parent.append('g')
-        .attr('class', 'x axis-grid')
-        // translate to the bottom  to render back upward to the origin
-        .attr('transform', `translate(0, ${computedChartSize.bottom})`)
-        .call(xAxisGrid);
-    }
-
-    //
-    // bucket generation
-    //
-    // how WC3V draws buildings 'staggered' so buildings that were made
-    // close together can be easily seen
-    // -------------------------------------------------------------------------
-    //
-    // utilizes d3 historgram and its bin algorithm to
-    // group buildings that are close together on the yScale
-    // using its ticks as the thresholds for the histogram bins
-    // so that we keep the properties of the sqrt scale
-    //
-    // every building that is in a group gets a `bucketOffset`
-    // index added to its data record for use in a localized
-    // `xBucketScale` to give horizontal visual clearence
-    // to buildings
-    //
-
-    const bucketGenerator = d3.histogram()
-      .value(function(d) { return d.data.gameTime; })
-      .thresholds(yScale.ticks(15)); // then the numbers of bins
-
-    const bucketCounts = [];
-
-    buildOrderPlayers.forEach((buildPlayer, ind) => {
-      const { playerId } = buildPlayer;
-      const data = buildPlayerData[playerId].d3Data;
-      const buckets = [];
-
-      bucketGenerator(data).forEach(bucket => {
-        bucket.forEach((item, ind) => {
-          item.data.bucketOffset = ind;
-        });
-
-        bucketCounts.push(bucket.length);
-
-        const { x0, x1 } = bucket;
-        if (bucket.length) {
-          buckets.push({
-            x0,
-            x1
-          });
-        }
-      });
-
-      buildPlayerData[playerId].buckets = buckets;
-    });
-
-    const playerSlotPadding = (xPlayerScale(1) - xPlayerScale(0)) - 
-                              (iconSizes.building) - 
-                              chartProperties.playerLanePadding;
-
-    const tooltip = d3.select("body")
-      .append("div") 
-      .attr("class", "tooltip")       
-      .style("opacity", 0);
-
-    const TierColors = {
-      2: "#21a5e3",
-      3: "#FFFF33"
-    };
-
-    buildOrderPlayers.forEach((buildPlayer, ind) => {
-      const { playerId, slot } = buildPlayer;
-      const data = buildPlayerData[playerId];
-
-      if (!isStaticView) {
-        const tierBar = parent
-          .append('g')
-          .selectAll('rect')
-          .data(data.tierData)
-          .enter()
-            .append('g');
-
-        tierBar
-          .append('rect')
-          .attr("x", d => xPlayerScale(slot))
-          .attr("width", d => xPlayerScale(1) - xPlayerScale(0))
-          .attr("y", d => yScale(d.date))
-          .attr("height", chartProperties.tierBandHeight)
-          .attr("fill", d => TierColors[d.value])
-        
-        tierBar.append('text')
-              .attr('x', d => xPlayerScale(slot + 1) - 50)
-              .attr('y', d => yScale(d.date) + chartProperties.tierBandHeight - 4)
-              .text(d => `Tier ${d.value}`);
-      }
-
-      const maxBucketSlot = d3.max(data.d3Data.map(d => d.data.bucketOffset));
-
-      const bucketRange = isStaticView ? [0, 0] : [chartProperties.playerLanePadding, playerSlotPadding];
-      const xBucketScale = d3.scaleLinear()
-        .domain([0, maxBucketSlot])
-        .range(bucketRange);
-
-      parent
-        .append('g')
-        .selectAll("dot")
-        .data(data.d3Data)
-        .enter()
-          .append("image")
-          .attr("xlink:href", d => d.data.imgSrc)
-          .attr("x", d => {
-            if (isStaticView) {
-              return xPlayerScale(slot) + (xPlayerScale(1) - xPlayerScale(0)) / 2 - (iconSizes.building / 2);
-            } else {
-              return xPlayerScale(slot) + xBucketScale(d.data.bucketOffset);
-            }
-          })
-          .attr("y", (d, i) => {
-            if (isStaticView) {
-              return computedChartSize.top + (i * iconSizes.building);
-            } else {
-              return yScale(d.date) - (iconSizes.building / 2);  
-            }
-          })
-          .attr("width", iconSizes.building)
-          .attr("height", iconSizes.building)
-          .on("mouseover", d => {    
-            tooltip.transition()    
-                .duration(200)    
-                .style("opacity", 0.95);
-
-
-            const timerDate = new Date(Math.round(d.date * 1000) / 1000);
-            // ensure leading zero
-            const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
-            const timeStr = `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
-
-            tooltip.html(`<div class='tooltip-header'>${d.data.displayName}</div>
-              <div class='tooltip-timer'>${timeStr}</div>`)  
-                .style("left", (d3.event.pageX) + "px")   
-                .style("top", (d3.event.pageY - 28) + "px");  
-          })          
-          .on("mouseout", d => {   
-              tooltip.transition()    
-                  .duration(500)    
-                  .style("opacity", 0); 
-          });
-      
-      if (!isStaticView) {
-        return;
-      }
-
-      const groupTexts = parent
-        .selectAll("dot")
-        .data(data.d3Data)
-        .enter()
-          .append("g");
-
-      groupTexts
-          .append("rect")
-          .attr("fill", "#FFFFFF")
-          .attr("height", "22")
-          .attr("width", "22")
-          .attr("display", d => {
-            return d.data.count > 1 ? "block" : "none";
-          })
-          .attr("x", d => {
-            return xPlayerScale(slot) + (xPlayerScale(1) - xPlayerScale(0)) / 2 - 
-              (iconSizes.building / 2) + iconSizes.building - 22;
-          })
-          .attr("y", (d, i) => {
-            return computedChartSize.top + (i * iconSizes.building) + iconSizes.building - 22;
-          });
-
-      groupTexts
-          .append("text")
-          .attr("class", "build-order-static-text")
-          .attr("display", d => {
-            return d.data.count > 1 ? "block" : "none";
-          })
-          .attr("x", d => {
-            return xPlayerScale(slot) + (xPlayerScale(1) - xPlayerScale(0)) / 2 - 
-              (iconSizes.building / 2) + iconSizes.building - 20;
-          })
-          .attr("y", (d, i) => {
-            return computedChartSize.top + (i * iconSizes.building) + iconSizes.building - 2;
-          })
-          .text(d => {
-            return `x${d.data.count}`;
-          });
-
-    // end of buildOrderPlayers loop
-    });
-    
-    wrapper.append(parent.node());
-  }
 
   render () {
-    const { 
+    // No canvas rendering needed in static BO mode
+    if (this.layoutMode === LayoutMode.staticBuildOrder) {
+      return;
+    }
+
+    const {
       ctx,
       players,
       playerCtx,
@@ -2031,7 +1300,7 @@ const Wc3vViewer = class {
     } = this;
 
     const {
-      xScale, 
+      xScale,
       yScale,
       unitXScale,
       unitYScale,
@@ -2055,18 +1324,18 @@ const Wc3vViewer = class {
     utilityCtx.translate(transform.x, transform.y);
     utilityCtx.scale(transform.k, transform.k);
 
-    this.renderMapBackground();
+    this.mapRenderer.renderMapBackground(ctx, transform, viewOptions, this.gameScaler, this.mapImage, this.gridMapImage);
 
     // stored data about each frame
-    let frameData = { 
+    let frameData = {
       nameplateTree: new rbush(),
       unitDrawPositions: [],
       drawnUnits: {}
     };
 
-    this.renderMapGrid(utilityCtx);
-    this.renderMapTrees(utilityCtx);
-    this.renderNeutralGroups(utilityCtx, gameTime);
+    this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
+    this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler);
+    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap);
 
     players.forEach(player => {
       player.preRender(
@@ -2103,7 +1372,10 @@ const Wc3vViewer = class {
     utilityCtx.restore();
 
     this.scrubber.render(gameTime, matchEndTime);
+
+    this.boRenderer.updateLiveBoHighlight();
   }
+
 };
 
 window.wc3v = new Wc3vViewer();

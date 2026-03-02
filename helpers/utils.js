@@ -556,8 +556,12 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         console.logger("file write error for: ", outputPath, e);
       })
       .on('finish', () => {
-        console.logger("erasing non zipped wc3v file");
-        fs.unlinkSync(outputPath);
+        if (config.debugOutput) {
+          console.log("debug: keeping uncompressed wc3v at", outputPath);
+        } else {
+          console.logger("erasing non zipped wc3v file");
+          fs.unlinkSync(outputPath);
+        }
       });
 
   } catch (e) {
@@ -591,6 +595,11 @@ const readCliArgs = (argv) => {
 			break;
 
       case "pretty-print":
+        options.jsonPadding = 4;
+      break;
+
+      case "debug":
+        config.debugOutput = true;
         options.jsonPadding = 4;
       break;
 

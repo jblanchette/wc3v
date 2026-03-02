@@ -16,7 +16,7 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    const startingSpeed = this.isDev ? '40x' : '5x';
+    const startingSpeed = '5x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
 
@@ -27,6 +27,10 @@ const TimeScrubber = class {
     this.domEl = null;
     this.canvas = null;
     this.ctx = null;
+
+    this.onZoomChange = null;
+    this.zoomLabelEl = null;
+    this.zoomSliderEl = null;
   }
 
   init () {
@@ -61,6 +65,13 @@ const TimeScrubber = class {
     </div>
     <div id="${wrapperId}-track" class="time-scrubber-track">
       <div id="${wrapperId}-tracker" class="time-scrubber-tracker"></div>
+    </div>
+    <div class="zoom-control">
+      <span id="${wrapperId}-zoom-label" class="zoom-label">100%</span>
+      <div id="${wrapperId}-zoom-out" class="zoom-btn">−</div>
+      <input id="${wrapperId}-zoom-slider" class="zoom-slider" type="range"
+        min="100" max="175" step="5" value="100" />
+      <div id="${wrapperId}-zoom-in" class="zoom-btn">+</div>
     </div>`;
 
     this.wrapperEl.append(this.domEl);
@@ -69,6 +80,33 @@ const TimeScrubber = class {
     this.loadSvg(`#${wrapperId}-play`, 'play-icon');
     this.loadSvg(`#${wrapperId}-play`, 'pause-icon', false);
     this.loadSvg(`#${wrapperId}-play`, 'stop-icon', false);
+
+    this.zoomLabelEl = document.getElementById(`${wrapperId}-zoom-label`);
+    this.zoomSliderEl = document.getElementById(`${wrapperId}-zoom-slider`);
+
+    const zoomSlider = this.zoomSliderEl;
+    const zoomOut = document.getElementById(`${wrapperId}-zoom-out`);
+    const zoomIn = document.getElementById(`${wrapperId}-zoom-in`);
+
+    zoomSlider.addEventListener('input', () => {
+      const k = parseInt(zoomSlider.value, 10) / 100;
+      this.zoomLabelEl.textContent = zoomSlider.value + '%';
+      if (this.onZoomChange) this.onZoomChange(k);
+    });
+
+    zoomOut.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const step = parseInt(zoomSlider.step, 10);
+      zoomSlider.value = Math.max(parseInt(zoomSlider.min, 10), parseInt(zoomSlider.value, 10) - step);
+      zoomSlider.dispatchEvent(new Event('input'));
+    });
+
+    zoomIn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const step = parseInt(zoomSlider.step, 10);
+      zoomSlider.value = Math.min(parseInt(zoomSlider.max, 10), parseInt(zoomSlider.value, 10) + step);
+      zoomSlider.dispatchEvent(new Event('input'));
+    });
   }
 
   getTimeStep () {
@@ -108,6 +146,13 @@ const TimeScrubber = class {
     this.trackerEl.style.left = `${matchPercentDone}%`;
   }
 
+  updateZoomDisplay (k) {
+    if (!this.zoomLabelEl || !this.zoomSliderEl) return;
+    const pct = Math.round(k * 100);
+    this.zoomLabelEl.textContent = pct + '%';
+    this.zoomSliderEl.value = pct;
+  }
+
   loadSvg(selector, svgFile, updateDom = true) {
     let target = document.querySelector(selector);
     if (this.svgCache[svgFile] && updateDom) {
@@ -129,7 +174,9 @@ const TimeScrubber = class {
 
       if (updateDom) {
         target = document.querySelector(selector);
-        target.innerHTML = ajax.responseText;
+        if (target) {
+          target.innerHTML = ajax.responseText;
+        }
       }
     }
   }

@@ -11,6 +11,13 @@ const TierColors = {
   3: "#FFFF33"
 };
 
+const RaceLabels = {
+  'O': { label: 'ORC', accent: '#FF4444' },
+  'H': { label: 'HU',  accent: '#4488FF' },
+  'U': { label: 'UD',  accent: '#AA66FF' },
+  'E': { label: 'NE',  accent: '#44DD88' }
+};
+
 const TeamColors = {
 
 };

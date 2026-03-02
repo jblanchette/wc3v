@@ -7,14 +7,6 @@ const boxDesignSize = {
   height: 260
 };
 
-const formatGameTime = (gameTime) => {
-  const timerDate = new Date(Math.round(gameTime * 1000) / 1000);
-  // ensure leading zero
-  const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
-
-  return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
-};
-
 const GameDisplayBox = class {
   constructor (teamColorMap, playerColorMap) {
     this.box = document.getElementById("game-display-box");

@@ -4,11 +4,18 @@ const utils = require("./helpers/utils"),
       logManager = require("./helpers/logManager"),
       PlayerManager = require("./lib/PlayerManager");
 
+const config = require("./config/config");
 const fs = require('fs');
+const path = require('path');
 
 const doParsing = async (file) => {
   let actionCount = 0;
   let globalTime = 0;
+
+  // enable worker tracer if configured
+  if (config.debugWorkers) {
+    logManager.getTracer().enable();
+  }
 
   let playerManager = new PlayerManager();
 
@@ -46,6 +53,22 @@ const doParsing = async (file) => {
   });
 
   const replay = await parser.parse(buffer);
+
+  // post-process: update worker assignments with final per-unit primaryRole
+  Object.values(playerManager.players).forEach(player => {
+    if (player.postProcessWorkerAssignments) {
+      player.postProcessWorkerAssignments();
+    }
+  });
+
+  // output worker trace if enabled
+  if (config.debugWorkers) {
+    const tracer = logManager.getTracer();
+    tracer.printSummary();
+    const tracePath = path.join(__dirname, 'client', 'logs', 'worker-trace.json');
+    tracer.writeToFile(tracePath);
+    console.log(`Worker trace written to ${tracePath}`);
+  }
 
   return {
     replay,
@@ -117,6 +140,7 @@ const main = async () => {
 };
 
 module.exports = {
+  doParsing,
   parseReplays
 };
 
