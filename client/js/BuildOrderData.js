@@ -15,7 +15,7 @@ const BuildOrderData = class {
     workerNames: { 'O': 'Peon', 'H': 'Peasant', 'E': 'Wisp', 'U': 'Acolyte' },
     raceStarterIcons: { 'O': 'ogre', 'H': 'htow', 'E': 'etol', 'U': 'unpl' },
     defaultStartWorkers: { 'O': 5, 'H': 5, 'E': 5, 'U': 4 },
-    defaultStartSupply: { 'O': { used: 5, max: 10 }, 'H': { used: 5, max: 10 }, 'E': { used: 5, max: 10 }, 'U': { used: 4, max: 10 } },
+    defaultStartSupply: { 'O': { used: 5, max: 11 }, 'H': { used: 5, max: 12 }, 'E': { used: 5, max: 10 }, 'U': { used: 4, max: 10 } },
     heroBuildTime: 55,
     tierUpgradeIds: {
       'ostr': 2, 'ofrt': 3, 'hkee': 2, 'hcas': 3,
@@ -27,6 +27,7 @@ const BuildOrderData = class {
       'unp1': { gold: 320, lumber: 210 }, 'unp2': { gold: 325, lumber: 230 },
       'etoa': { gold: 320, lumber: 180 }, 'etoe': { gold: 330, lumber: 200 }
     },
+    expansionBuildingIds: { 'H': 'htow', 'O': 'ogre', 'E': 'etol', 'U': 'ugol' },
     verbs: { building: 'Build', unit: 'Train', workerAssign: 'Train' },
     assignLabels: { gold: 'Gold', lumber: 'Lumber', build: 'Build' },
     assignClasses: { gold: 'assign-gold', lumber: 'assign-lumber', build: 'assign-build' }
@@ -76,8 +77,19 @@ const BuildOrderData = class {
       const w = workers || {};
 
       if (key === 'addBuilding') {
-        const { building } = event;
+        const { building, isExpansion } = event;
         if (!building) return;
+
+        if (isExpansion) {
+          events.push(create('expansion', gameTime, supplyUsed, supplyMax, w, {
+            displayName: building.displayName,
+            itemId: building.itemId,
+            goldCost: building.goldCost,
+            lumberCost: building.lumberCost
+          }));
+          return;
+        }
+
         const tierTarget = cfg.tierUpgradeIds[building.itemId];
         const costOvr = cfg.tierUpgradeCosts[building.itemId];
         const isSupply = building.foodMade > 0;
@@ -445,6 +457,29 @@ const BuildOrderData = class {
     return { heroes, tierProd };
   }
 
+  tagSupplyChanges (grouped) {
+    if (!grouped.length) return;
+    let runUsed = grouped[0].supplyUsed || 0;
+    let runMax = grouped[0].supplyMax || 0;
+    let lastUsed = -1, lastMax = -1;
+
+    for (const event of grouped) {
+      runMax = Math.max(runMax, event.supplyMax || 0);
+
+      const count = event.count || 1;
+      if (event.type === 'unit' || event.type === 'heroTraining' ||
+          (event.type === 'workerAssign' && !event.isInitialWorkers)) {
+        runUsed += (event.foodCost || 0) * count;
+      }
+
+      event.displaySupplyUsed = runUsed;
+      event.displaySupplyMax = runMax;
+      event.supplyChanged = runUsed !== lastUsed || runMax !== lastMax;
+      lastUsed = runUsed;
+      lastMax = runMax;
+    }
+  }
+
   processBuildOrderData (player) {
     const { tierStream, race, displayName, playerColor } = player;
     const raceInfo = RaceLabels[race] || { label: '??', accent: '#8B949E' };
@@ -456,6 +491,7 @@ const BuildOrderData = class {
 
     const events = this.extractBoEvents(player);
     const grouped = this.groupConsecutiveEvents(events);
+    this.tagSupplyChanges(grouped);
     const tiers = this.bucketByTier(grouped, tier2Time, tier3Time);
     const { snapshots, finalSnapshot } = this.buildTierSnapshots(grouped, tier2Time, tier3Time);
     const production = this.buildProductionSummary(grouped);

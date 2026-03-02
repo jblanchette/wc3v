@@ -357,7 +357,7 @@ html, body {
 
 #gameplay-area {
   justify-content: center;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 0;
   padding: 0;
 }
@@ -645,6 +645,26 @@ html, body {
 
 .bo-player-header.collapsed .bo-hdr-chevron::after {
   transform: rotate(-90deg);
+}
+
+.bo-hdr-collapse-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 3px 10px;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.bo-hdr-toggle:hover .bo-hdr-collapse-btn {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .bo-hdr-player-name {
@@ -972,11 +992,45 @@ html, body {
   color: var(--bo-tier3);
 }
 
+/* --- Expansion Made bar --- */
+
+.bo-expansion-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  margin: 3px 0;
+  background: linear-gradient(90deg, rgba(255, 200, 50, 0.15), rgba(255, 200, 50, 0.04));
+  border-left: 4px solid #f5c542;
+  border-radius: 0 3px 3px 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #f5c542;
+}
+
+.bo-expansion-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.bo-expansion-label {
+  flex: 1;
+}
+
+.bo-expansion-cost {
+  color: #aaa;
+  font-weight: 400;
+  font-size: 11px;
+}
+
 /* --- Column header (sticky icon labels for grid columns) --- */
 
 .bo-col-header {
   display: grid;
-  grid-template-columns: 44px 1fr 48px 44px 42px;
+  grid-template-columns: 1fr 52px 50px 78px;
   align-items: center;
   height: 26px;
   padding: 0 6px;
@@ -1009,14 +1063,14 @@ html, body {
 
 .bo-col-h-sep { color: var(--bo-text-dim); font-size: 10px; }
 .bo-col-h-cost { display: flex; align-items: center; justify-content: center; gap: 2px; }
-.bo-col-h-time, .bo-col-h-desc { text-align: left; padding-left: 2px; }
-.bo-col-h-supply { text-align: center; color: var(--bo-food); }
+.bo-col-h-desc { text-align: left; padding-left: 2px; }
+.bo-col-h-supply { text-align: center; color: #8CB4FF; font-size: 11px; }
 
 /* --- Build order rows (5-column grid: time | desc | workers | cost | supply) --- */
 
 .bo-row {
   display: grid;
-  grid-template-columns: 44px 1fr 48px 44px 42px;
+  grid-template-columns: 1fr 52px 50px 78px;
   align-items: center;
   min-height: 38px;
   padding: 3px 6px;
@@ -1025,45 +1079,78 @@ html, body {
 
 .bo-row:hover { background: var(--bo-row-hover); }
 
-.bo-row-time {
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--bo-font-mono);
-  color: var(--bo-text-dim);
-  text-align: center;
-}
-
 .bo-row-supply {
-  font-size: 12px;
-  font-weight: 600;
   font-family: var(--bo-font-mono);
-  color: var(--bo-food);
   text-align: center;
   white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 4px 5px;
+  margin: 2px 0;
 }
-.bo-row-supply.bo-supply-unchanged { opacity: 0.3; }
+.bo-supply-nums {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+.bo-supply-used { font-size: 22px; font-weight: 800; }
+.bo-supply-sep { font-size: 15px; margin: 0 1px; font-weight: 600; }
+.bo-supply-cap { font-size: 18px; font-weight: 700; }
+.bo-supply-upkeep {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-top: 0;
+}
+
+/* WC3-style upkeep coloring + borders */
+.bo-row-supply.bo-upkeep-none {
+  color: #E8F0FF;
+  border-color: rgba(140, 180, 255, 0.35);
+}
+.bo-row-supply.bo-upkeep-low {
+  color: #FF8C00;
+  border-color: rgba(255, 140, 0, 0.4);
+}
+.bo-row-supply.bo-upkeep-high {
+  color: #FF4444;
+  border-color: rgba(255, 68, 68, 0.45);
+}
+
+/* Glow on the used number */
+.bo-row-supply.bo-upkeep-none .bo-supply-used { text-shadow: 0 0 10px rgba(140, 180, 255, 0.6); }
+.bo-row-supply.bo-upkeep-low  .bo-supply-used { text-shadow: 0 0 10px rgba(255, 140, 0, 0.6); }
+.bo-row-supply.bo-upkeep-high .bo-supply-used { text-shadow: 0 0 10px rgba(255, 68, 68, 0.6); }
 
 .bo-row-desc {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 15px;
+  font-size: 16px;
   color: var(--bo-text);
   padding: 2px 6px;
   min-width: 0;
 }
 
 .bo-row-icon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 3px;
   border: 2px solid var(--bo-border-solid);
   object-fit: cover;
   flex-shrink: 0;
 }
 
-.bo-row.building-row .bo-row-icon { width: 38px; height: 38px; border-color: var(--bo-food); border-width: 2px; }
-.bo-row.worker-row .bo-row-icon { width: 28px; height: 28px; opacity: 0.85; }
+.bo-row.building-row .bo-row-icon { border-color: var(--bo-food); }
+.bo-row.worker-row .bo-row-icon { opacity: 0.85; }
 
 .bo-row-text {
   flex: 1;
@@ -1084,7 +1171,7 @@ html, body {
   line-height: 1.1;
 }
 .bo-cost-gold, .bo-cost-lumber {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   font-family: var(--bo-font-mono);
 }
@@ -1127,13 +1214,41 @@ html, body {
 .bo-assign-lumber { color: var(--bo-lumber); }
 .bo-assign-build { color: var(--bo-food); }
 
+/* Worker assignment target pill */
+.bo-assign-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+.bo-assign-tag.tag-gold {
+  background: rgba(255, 215, 0, 0.2);
+  color: var(--bo-gold);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+}
+.bo-assign-tag.tag-lumber {
+  background: rgba(68, 221, 136, 0.15);
+  color: var(--bo-lumber);
+  border: 1px solid rgba(68, 221, 136, 0.3);
+}
+.bo-assign-tag.tag-build {
+  background: rgba(88, 166, 255, 0.15);
+  color: var(--bo-food);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+}
+
 /* Worker economy column — compact numeric display */
 .bo-row-workers {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   font-family: var(--bo-font-mono);
   background: rgba(255, 255, 255, 0.03);
@@ -1146,12 +1261,11 @@ html, body {
 .bo-wk-sep {
   color: var(--bo-text-dim);
   font-weight: 400;
-  font-size: 11px;
+  font-size: 12px;
   margin: 0 1px;
 }
-.bo-row-workers.bo-wk-unchanged { opacity: 0.35; }
-.bo-row-workers.bo-wk-empty { opacity: 0.2; }
-.bo-wk-dim { color: var(--bo-text-dim); font-size: 11px; }
+.bo-row-workers.bo-wk-empty { opacity: 0.4; }
+.bo-wk-dim { color: var(--bo-text-dim); font-size: 12px; }
 
 /* Consumed worker note on building rows */
 .bo-consumed-note {
@@ -1327,13 +1441,6 @@ html, body {
 .bo-skill.active .bo-skill-level { color: #f0b232; }
 .bo-skill-level.hidden { display: none; }
 
-.bo-level-time {
-  font-size: 12px;
-  color: var(--bo-text-dim);
-  font-family: var(--bo-font-mono);
-  margin-left: auto;
-  flex-shrink: 0;
-}
 
 .bo-hero-level-card.bo-live-active {
   outline: 1px solid var(--bo-accent);
@@ -1360,13 +1467,6 @@ html, body {
   display: block;
 }
 
-.bo-hero-card-time {
-  font-size: 13px;
-  font-family: var(--bo-font-mono);
-  color: var(--bo-text-dim);
-  display: block;
-  margin-top: 2px;
-}
 
 .bo-hero-card-badge {
   display: inline-flex;
@@ -1554,18 +1654,16 @@ html, body {
 /* Medium: hide workers column */
 .bo-medium .bo-row-workers,
 .bo-medium .bo-col-h-workers { display: none; }
-.bo-medium .bo-row { grid-template-columns: 44px 1fr 44px 42px; }
-.bo-medium .bo-col-header { grid-template-columns: 44px 1fr 44px 42px; }
+.bo-medium .bo-row { grid-template-columns: 1fr 50px 78px; }
+.bo-medium .bo-col-header { grid-template-columns: 1fr 50px 78px; }
 
-/* Narrow: hide time, supply, workers */
-.bo-narrow .bo-row-time,
+/* Narrow: hide supply, workers */
 .bo-narrow .bo-row-supply,
 .bo-narrow .bo-row-workers,
-.bo-narrow .bo-col-h-time,
 .bo-narrow .bo-col-h-supply,
 .bo-narrow .bo-col-h-workers { display: none; }
-.bo-narrow .bo-row { grid-template-columns: 1fr 44px; }
-.bo-narrow .bo-col-header { grid-template-columns: 1fr 44px; }
+.bo-narrow .bo-row { grid-template-columns: 1fr 50px; }
+.bo-narrow .bo-col-header { grid-template-columns: 1fr 50px; }
 
 #main-wrapper {
   /* so we can position: absolute; sub-canvas elements */

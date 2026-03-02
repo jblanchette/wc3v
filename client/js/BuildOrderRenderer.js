@@ -203,7 +203,8 @@ const BuildOrderRenderer = class {
     // Note: workerAssign, building, and unit are handled explicitly in the event loop below
     const renderers = {
       heroTraining: (event, pc) => this.renderHeroTrainingCard(event, pc),
-      heroLevel:    (event, pc) => this.renderHeroLevelCard(event, pc)
+      heroLevel:    (event, pc) => this.renderHeroLevelCard(event, pc),
+      expansion:    (event)     => this.renderExpansionCard(event)
     };
 
     buildOrderPlayers.forEach(player => {
@@ -236,8 +237,14 @@ const BuildOrderRenderer = class {
         <span class="bo-hdr-race-badge">${raceInfo.label}</span>`;
       toggleBar.append(econSummary);
 
+      const collapseBtn = document.createElement('span');
+      collapseBtn.classList.add('bo-hdr-collapse-btn');
+      collapseBtn.textContent = 'HIDE ▲';
+      toggleBar.append(collapseBtn);
+
       toggleBar.addEventListener('click', () => {
-        header.classList.toggle('collapsed');
+        const isCollapsed = header.classList.toggle('collapsed');
+        collapseBtn.textContent = isCollapsed ? 'SHOW ▼' : 'HIDE ▲';
       });
       header.append(toggleBar);
 
@@ -264,7 +271,6 @@ const BuildOrderRenderer = class {
       const colHeader = document.createElement('div');
       colHeader.classList.add('bo-col-header');
       colHeader.innerHTML = `
-        <span class="bo-col-h-time">TIME</span>
         <span class="bo-col-h-desc">ACTION</span>
         <span class="bo-col-h-workers" title="Workers on gold / lumber">
           <img class="bo-col-h-icon" src="/assets/wc3icons/gold.jpg" alt="Gold" />
@@ -279,8 +285,6 @@ const BuildOrderRenderer = class {
       column.append(colHeader);
 
       // --- Tier Sections ---
-      let prevWorkers = { onGold: -1, onLumber: -1 };
-      let prevSupply = { used: -1, max: -1 };
       let lastArmySummary = null;
 
       [1, 2, 3].forEach(tierNum => {
@@ -320,19 +324,18 @@ const BuildOrderRenderer = class {
             onBuild: event.workersBuilding || 0
           };
 
-          const supply = { used: event.supplyUsed || 0, max: event.supplyMax || 0 };
+          const supply = event.supplyChanged
+            ? { used: event.displaySupplyUsed, max: event.displaySupplyMax }
+            : null;
 
           let el;
           if (event.type === 'workerAssign' || event.type === 'building' || event.type === 'unit' || event.type === 'supplyComplete' || event.type === 'heroComplete') {
-            el = this.renderBoRow(event, race, workerDots, prevWorkers, supply, prevSupply, tierNum);
+            el = this.renderBoRow(event, race, workerDots, supply, tierNum);
           } else {
             const renderer = renderers[event.type];
             if (!renderer) return;
             el = renderer(event, isCard ? playerColor : race);
           }
-          // Update prev state so next row can detect changes
-          prevWorkers = { onGold: workerDots.onGold, onLumber: workerDots.onLumber };
-          prevSupply = { used: supply.used, max: supply.max };
           el.dataset.gametime = event.gameTime;
           if (liveMode) el.addEventListener('click', () => this.viewer.seekToGameTime(event.gameTime));
 
@@ -417,13 +420,24 @@ const BuildOrderRenderer = class {
     return bar;
   }
 
+  // --- Expansion Made bar (second town hall / haunt placed at a new gold mine) ---
+  renderExpansionCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-expansion-bar');
+    const costStr = this.buildInlineCost(event);
+    bar.innerHTML = `
+      <img class="bo-expansion-icon" src="/assets/wc3icons/${event.itemId}.jpg" />
+      <span class="bo-expansion-label">EXPANSION MADE</span>
+      ${costStr ? `<span class="bo-expansion-cost">${costStr}</span>` : ''}`;
+    return bar;
+  }
+
   // --- Combined hero training card (portrait + badge + costs + first skill, shown at click-time) ---
   renderHeroTrainingCard (event, playerColor) {
     const card = document.createElement('div');
     card.classList.add('bo-hero-training-card');
     card.style.borderLeftColor = playerColor;
 
-    const timeStr = formatGameTime(event.gameTime);
     const badgeText = event.isTavern ? 'TAVERN' : `HERO Lv ${event.level || 1}`;
     const badgeClass = event.isTavern ? 'tavern' : '';
     const badgeBg = event.isTavern ? '' : `style="background:${playerColor}"`;
@@ -473,7 +487,6 @@ const BuildOrderRenderer = class {
         style="border-color:${playerColor}" />
       <div class="bo-hero-card-info">
         <span class="bo-hero-card-name">${event.displayName}</span>
-        <span class="bo-hero-card-time">${timeStr}</span>
         ${skillsHtml}
       </div>
       ${costHtml}`;
@@ -487,8 +500,6 @@ const BuildOrderRenderer = class {
     const card = document.createElement('div');
     card.classList.add('bo-hero-level-card');
     card.style.borderLeftColor = playerColor;
-
-    const timeStr = formatGameTime(event.gameTime);
 
     // Build skill bar from spellList + learnedSkills
     let skillsHtml = '';
@@ -525,30 +536,32 @@ const BuildOrderRenderer = class {
       <div class="bo-level-info">
         <span class="bo-level-title">${event.displayName} -> Lv ${event.level}</span>
         <div class="bo-level-skills">${skillsHtml}</div>
-      </div>
-      <span class="bo-level-time">${timeStr}</span>`;
+      </div>`;
     return card;
   }
 
   // --- Standard build order row (5-column grid: time | desc | workers | cost | supply) ---
-  renderBoRow (event, race, workerDots, prevWorkers, supply, prevSupply, tierNum) {
+  renderBoRow (event, race, workerDots, supply, tierNum) {
     const cfg = BuildOrderData.CONFIG;
-    const { type, itemId, gameTime } = event;
-    const timeStr = formatGameTime(gameTime);
+    const { type, itemId } = event;
     const count = event.count || 1;
 
     const row = document.createElement('div');
     row.classList.add('bo-row');
 
-    const timeCellHtml = `<div class="bo-row-time">${timeStr}</div>`;
-
-    // Supply column
+    // Supply column — WC3-style upkeep coloring
     const sUsed = supply ? supply.used : 0;
     const sMax = supply ? supply.max : 0;
-    const supplyChanged = !prevSupply || prevSupply.used !== sUsed || prevSupply.max !== sMax;
-    const supplyCls = supplyChanged ? '' : ' bo-supply-unchanged';
+    const upkeepCls = sUsed <= 50 ? 'bo-upkeep-none' : (sUsed <= 80 ? 'bo-upkeep-low' : 'bo-upkeep-high');
+    const upkeepLabel = sUsed <= 50 ? '' : (sUsed <= 80 ? 'low' : 'high');
+    const upkeepHtml = upkeepLabel ? `<span class="bo-supply-upkeep">${upkeepLabel}</span>` : '';
     const supplyHtml = (sUsed || sMax)
-      ? `<div class="bo-row-supply${supplyCls}" title="Food: ${sUsed} used / ${sMax} max">${sUsed}/${sMax}</div>`
+      ? `<div class="bo-row-supply ${upkeepCls}" title="Food: ${sUsed}/${sMax}${upkeepLabel ? ' — ' + upkeepLabel + ' upkeep' : ''}">` +
+        `<span class="bo-supply-nums">` +
+        `<span class="bo-supply-used">${sUsed}</span>` +
+        `<span class="bo-supply-sep">/</span>` +
+        `<span class="bo-supply-cap">${sMax}</span>` +
+        `</span>${upkeepHtml}</div>`
       : `<div class="bo-row-supply"></div>`;
 
     // Cost column (stacked gold / lumber)
@@ -583,19 +596,17 @@ const BuildOrderRenderer = class {
         const goldWorkers = event.totalWorkers - ghoulsLumber;
         const parts = [];
         if (goldWorkers > 0) {
-          const plural = goldWorkers > 1 ? 's' : '';
-          parts.push(`Send <span class="bo-assign-gold">${goldWorkers} ${workerName}${plural} to Gold</span>`);
+          parts.push(`${goldWorkers} ${workerName} <span class="bo-assign-tag tag-gold">gold</span>`);
         }
         if (ghoulsLumber > 0) {
-          const plural = ghoulsLumber > 1 ? 's' : '';
-          parts.push(`Send <span class="bo-assign-lumber">${ghoulsLumber} Ghoul${plural} to Lumber</span>`);
+          parts.push(`${ghoulsLumber} Ghoul <span class="bo-assign-tag tag-lumber">lumber</span>`);
         }
-        descText = parts.join(', ');
+        descText = parts.join(' ');
       } else {
-        const targetLabel = cfg.assignLabels[event.assignTarget] || 'Gold';
-        const targetClass = cfg.assignClasses[event.assignTarget] || 'assign-gold';
+        const tagClass = event.assignTarget === 'lumber' ? 'tag-lumber' : (event.assignTarget === 'build' ? 'tag-build' : 'tag-gold');
+        const tagLabel = cfg.assignLabels[event.assignTarget] || 'Gold';
         const countPrefix = count > 1 ? `<span class="bo-unit-count">${count}x</span> ` : '';
-        descText = `${countPrefix}Train ${event.displayName} -> <span class="${targetClass}">${targetLabel}</span>`;
+        descText = `${countPrefix}${event.displayName} <span class="bo-assign-tag ${tagClass}">${tagLabel}</span>`;
       }
     } else if (type === 'building') {
       row.classList.add('building-row');
@@ -642,19 +653,15 @@ const BuildOrderRenderer = class {
       if (gCount === 0 && lCount === 0) {
         workersHtml = `<div class="bo-row-workers bo-wk-empty" title="${title}"><span class="bo-wk-dim">&mdash;</span></div>`;
       } else {
-        const unchanged = prevWorkers &&
-          prevWorkers.onGold === gCount &&
-          prevWorkers.onLumber === lCount;
-        const cls = unchanged ? ' bo-wk-unchanged' : '';
-        workersHtml = `<div class="bo-row-workers${cls}" title="${title}">` +
+        workersHtml = `<div class="bo-row-workers" title="${title}">` +
           `<span class="bo-wk-gold">${gCount}</span>` +
           `<span class="bo-wk-sep">/</span>` +
           `<span class="bo-wk-lumber">${lCount}</span></div>`;
       }
     }
 
-    // Column order: time | desc | workers | cost | supply
-    row.innerHTML = `${timeCellHtml}
+    // Column order: desc | workers | cost | supply
+    row.innerHTML = `
       <div class="bo-row-desc">
         <img class="bo-row-icon" src="/assets/wc3icons/${itemId}.jpg" />
         <span class="bo-row-text">${descText}</span>

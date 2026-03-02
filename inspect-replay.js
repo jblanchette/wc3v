@@ -8,13 +8,14 @@
  *   --replay=NAME       Replay name (looks in client/replays/NAME.wc3v.gz or .wc3v)
  *   --player=ID         Filter to a specific player ID (e.g. 1, 2)
  *   --show=SECTION      What to display (comma-separated). Options:
- *                          players   - player names, races, team IDs
- *                          events    - eventStream entries (addUnit, addBuilding, etc.)
- *                          units     - exported unit list with flags
- *                          workers   - worker snapshots from events
- *                          tiers     - tier transition data
- *                          summary   - compact build order overview
- *                          all       - everything
+ *                          players    - player names, races, team IDs
+ *                          events     - eventStream entries (addUnit, addBuilding, etc.)
+ *                          expansions - only addBuilding events flagged as expansions
+ *                          units      - exported unit list with flags
+ *                          workers    - worker snapshots from events
+ *                          tiers      - tier transition data
+ *                          summary    - compact build order overview
+ *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
  *   --limit=N           Limit output to N entries per section (default: 50)
  *   --search=TEXT       Search events/units by displayName (case-insensitive)
@@ -150,7 +151,8 @@ if (showAll || showSections.includes('events')) {
         console.log(`    [${time}] ${e.key}: ${u.displayName} (${u.itemId}) flags=[${flags}] food=${u.foodUsed||0} | workers: ${wStr}`);
       } else if (e.key === 'addBuilding' && e.building) {
         const b = e.building;
-        console.log(`    [${time}] ${e.key}: ${b.displayName} (${b.itemId}) gold=${b.goldCost||0} lum=${b.lumberCost||0} food+${b.foodMade||0} | workers: ${wStr}`);
+        const expoTag = e.isExpansion ? ' [EXPANSION]' : '';
+        console.log(`    [${time}] ${e.key}: ${b.displayName} (${b.itemId}) gold=${b.goldCost||0} lum=${b.lumberCost||0} food+${b.foodMade||0}${expoTag} | workers: ${wStr}`);
       } else if (e.key === 'HeroLevel') {
         console.log(`    [${time}] ${e.key}: ${(e.unit||{}).displayName} -> Lv${e.newLevel} spell=${(e.spell||{}).displayName||'?'}`);
       } else {
@@ -163,6 +165,32 @@ if (showAll || showSections.includes('events')) {
       console.log(`    ... (${events.length - limit} more, use --limit to see more)`);
     }
   }
+  console.log('');
+}
+
+// --- Expansions ---
+if (showAll || showSections.includes('expansions')) {
+  console.log('=== EXPANSIONS ===');
+  let found = 0;
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    const expansions = (pdata.eventStream || []).filter(e => e.key === 'addBuilding' && e.isExpansion);
+    if (!expansions.length) continue;
+
+    found++;
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+    expansions.forEach(e => {
+      const b = e.building;
+      const time = formatTime(e.gameTime || 0);
+      const w = e.workers || {};
+      const wStr = `g=${w.onGold||0} l=${w.onLumber||0} b=${w.onBuild||0}`;
+      console.log(`    [${time}] EXPANSION: ${b.displayName} (${b.itemId}) gold=${b.goldCost||0} lum=${b.lumberCost||0} | workers: ${wStr}`);
+    });
+  }
+  if (!found) console.log('  (no expansions detected in this replay)');
   console.log('');
 }
 
