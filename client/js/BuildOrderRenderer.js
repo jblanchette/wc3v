@@ -368,7 +368,7 @@ const BuildOrderRenderer = class {
     }
 
     // Trigger timeline spline computation (after DOM layout)
-    if (this.viewer.timelineSpline && buildOrderPlayers.length >= 2) {
+    if (this.viewer.timelineSpline && buildOrderPlayers.length >= 1) {
       this.viewer.timelineSpline.compute();
     }
   }

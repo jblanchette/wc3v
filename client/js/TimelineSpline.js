@@ -2,20 +2,25 @@
  * TimelineSpline — Adaptive SVG overlay for the build order panel.
  *
  * This is a pure overlay: it reads DOM positions from already-rendered
- * event elements, builds an adaptive time→Y mapping, then draws:
- *   - A vertical spine line in the #bo-timeline-gap
- *   - Time markers (1:00, 2:00, …) along the spine
- *   - Connector arms from each event to the spine
+ * event elements, builds an adaptive time->Y mapping, then draws:
+ *   - A vertical spine line (with glow) in or beside the #bo-timeline-gap
+ *   - Time markers (1:00, 2:00, ...) with diamond shapes and label pills
+ *   - Directional arrow nodes at each event's position on the spine
+ *   - Connector arms (dashed beziers) from each event to the spine
  *
  * The spine adapts to event density — it stretches where events are
  * dense and compresses where they're sparse, so connector arms stay
  * roughly horizontal.
+ *
+ * Works in both multi-player (spine centered in gap) and single-player
+ * (spine positioned to the left of the column) modes.
  */
 
 const TimelineSpline = class {
   constructor (viewer) {
     this.viewer = viewer;
     this.svg = null;
+    this._isSinglePlayer = false;
     this._resizeObserver = null;
     this._resizeTimeout = null;
   }
@@ -31,7 +36,7 @@ const TimelineSpline = class {
   _render () {
     const boContent = document.getElementById('bo-content');
     const gap = document.getElementById('bo-timeline-gap');
-    if (!boContent || !gap) return;
+    if (!boContent) return;
 
     // Remove previous SVG
     if (this.svg && this.svg.parentElement) {
@@ -47,27 +52,45 @@ const TimelineSpline = class {
     const controlPoints = this._buildControlPoints(anchors);
     if (controlPoints.length < 2) return;
 
-    // Compute spine X from the gap element
+    // Compute spine X position
     const contentRect = boContent.getBoundingClientRect();
-    const gapRect = gap.getBoundingClientRect();
-    const spineX = gapRect.left + gapRect.width / 2 - contentRect.left;
+    const isSinglePlayer = !gap || gap.style.display === 'none' || gap.offsetWidth === 0;
+    this._isSinglePlayer = isSinglePlayer;
+
+    let spineX;
+    if (isSinglePlayer) {
+      // Single-player: place spine to the left of the column
+      const leftSide = boContent.querySelector('.bo-side-left');
+      if (leftSide) {
+        const sideRect = leftSide.getBoundingClientRect();
+        spineX = sideRect.left - contentRect.left - 24;
+      } else {
+        spineX = 24;
+      }
+    } else {
+      // Multi-player: center in the gap
+      const gapRect = gap.getBoundingClientRect();
+      spineX = gapRect.left + gapRect.width / 2 - contentRect.left;
+    }
+
     const svgHeight = Math.max(
       contentRect.height,
       controlPoints[controlPoints.length - 1].y + 20
     );
 
-    // Create SVG
+    // Create SVG and add reusable defs
     this.svg = this._createSvg(contentRect.width, svgHeight);
+    this._addDefs();
     boContent.appendChild(this.svg);
 
-    // Draw spine
+    // Draw spine (with glow)
     this._renderSpine(spineX, controlPoints);
 
     // Draw time markers
     const maxTime = Math.max(...anchors.map(a => a.gameTime));
     this._renderTimeMarkers(spineX, controlPoints, maxTime);
 
-    // Draw connector arms
+    // Draw connector arms with arrow nodes
     this._renderConnectors(anchors, spineX, controlPoints);
   }
 
@@ -102,8 +125,11 @@ const TimelineSpline = class {
 
   /**
    * Determine which side of the spine an element is on.
+   * In single-player mode, the spine is left of the column,
+   * so all events are on the 'right' side.
    */
   _determineSide (el) {
+    if (this._isSinglePlayer) return 'right';
     if (el.closest('.bo-side-left')) return 'left';
     if (el.closest('.bo-side-right')) return 'right';
     return 'left';
@@ -114,7 +140,7 @@ const TimelineSpline = class {
    * Enforce monotonicity so the spine always goes downward.
    */
   _buildControlPoints (anchors) {
-    const BUCKET_SIZE = 2; // seconds
+    const BUCKET_SIZE = 2000; // 2 seconds in ms (gameTime is milliseconds)
     const buckets = {};
 
     anchors.forEach(a => {
@@ -178,12 +204,48 @@ const TimelineSpline = class {
     return svg;
   }
 
+  _addDefs () {
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+
+    // Glow filter for the spine line
+    const filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+    filter.setAttribute('id', 'bo-spine-glow');
+    filter.setAttribute('x', '-50%');
+    filter.setAttribute('y', '-10%');
+    filter.setAttribute('width', '200%');
+    filter.setAttribute('height', '120%');
+
+    const blur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+    blur.setAttribute('in', 'SourceGraphic');
+    blur.setAttribute('stdDeviation', '2');
+    blur.setAttribute('result', 'blur');
+    filter.appendChild(blur);
+
+    const merge = document.createElementNS('http://www.w3.org/2000/svg', 'feMerge');
+    const mn1 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+    mn1.setAttribute('in', 'blur');
+    merge.appendChild(mn1);
+    const mn2 = document.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode');
+    mn2.setAttribute('in', 'SourceGraphic');
+    merge.appendChild(mn2);
+    filter.appendChild(merge);
+    defs.appendChild(filter);
+
+    this.svg.appendChild(defs);
+  }
+
   // ── Spine ──
 
   _renderSpine (spineX, controlPoints) {
     if (controlPoints.length < 2) return;
     const y1 = controlPoints[0].y - 8;
     const y2 = controlPoints[controlPoints.length - 1].y + 8;
+
+    // Glow layer behind the main spine
+    const glow = this._svgLine(spineX, y1, spineX, y2, 'bo-spline-glow');
+    glow.setAttribute('filter', 'url(#bo-spine-glow)');
+
+    // Main spine line
     this._svgLine(spineX, y1, spineX, y2, 'bo-spline-line');
   }
 
@@ -192,21 +254,27 @@ const TimelineSpline = class {
   _renderTimeMarkers (spineX, controlPoints, maxTime) {
     let lastLabelY = -Infinity;
 
-    for (let t = 60; t <= maxTime; t += 60) {
+    // gameTime is in milliseconds — step every 60 seconds (60000 ms)
+    for (let t = 60000; t <= maxTime; t += 60000) {
       const y = this._getSplineY(t, controlPoints);
 
-      // Tick
-      this._svgLine(spineX - 8, y, spineX + 8, y, 'bo-time-marker-tick');
+      // Tick marks
+      this._svgLine(spineX - 12, y, spineX + 12, y, 'bo-time-marker-tick');
 
-      // Dot
-      this._svgCircle(spineX, y, 2.5, 'bo-time-marker-dot');
+      // Diamond marker at each minute
+      this._svgDiamond(spineX, y, 5, 'bo-time-marker-diamond');
 
       // Label (skip if too close to previous)
-      if (y - lastLabelY > 18) {
-        const minutes = Math.floor(t / 60);
-        const secs = t % 60;
+      if (y - lastLabelY > 22) {
+        const totalSecs = Math.floor(t / 1000);
+        const minutes = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
         const label = `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-        const text = this._svgText(spineX, y - 5, label, 'bo-time-marker-label');
+
+        // Background pill for readability
+        this._svgRect(spineX - 16, y - 18, 32, 14, 3, 'bo-time-label-bg');
+
+        const text = this._svgText(spineX, y - 8, label, 'bo-time-marker-label');
         text.setAttribute('text-anchor', 'middle');
         lastLabelY = y;
       }
@@ -222,15 +290,20 @@ const TimelineSpline = class {
       const cardEdgeX = anchor.edgeX;
 
       const dy = cardY - spineY;
+      const dx = cardEdgeX - spineX;
       let d;
 
       if (Math.abs(dy) < 3) {
         // Nearly horizontal — straight line
         d = `M ${spineX},${spineY} L ${cardEdgeX},${cardY}`;
       } else {
-        // Cubic bezier with horizontal tangents at both ends
-        const midX = (spineX + cardEdgeX) / 2;
-        d = `M ${spineX},${spineY} C ${midX},${spineY} ${midX},${cardY} ${cardEdgeX},${cardY}`;
+        // Flowing S-curve: control points at 70% horizontal spread
+        // to keep tangents mostly horizontal at both endpoints
+        const cpOffset = Math.abs(dx) * 0.7;
+        const sign = dx > 0 ? 1 : -1;
+        const cp1x = spineX + sign * cpOffset;
+        const cp2x = cardEdgeX - sign * cpOffset;
+        d = `M ${spineX},${spineY} C ${cp1x},${spineY} ${cp2x},${cardY} ${cardEdgeX},${cardY}`;
       }
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -239,8 +312,9 @@ const TimelineSpline = class {
       path.classList.add('bo-connector');
       this.svg.appendChild(path);
 
-      // Small dot on the spine
-      this._svgCircle(spineX, spineY, 1.5, 'bo-time-marker-dot');
+      // Arrow node on the spine pointing toward the event
+      const pointsRight = cardEdgeX > spineX;
+      this._svgArrowNode(spineX, spineY, pointsRight, 'bo-spine-node');
     });
   }
 
@@ -272,6 +346,42 @@ const TimelineSpline = class {
     el.setAttribute('cx', cx);
     el.setAttribute('cy', cy);
     el.setAttribute('r', r);
+    if (className) el.setAttribute('class', className);
+    this.svg.appendChild(el);
+    return el;
+  }
+
+  _svgDiamond (cx, cy, size, className) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const points = `${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`;
+    el.setAttribute('points', points);
+    if (className) el.setAttribute('class', className);
+    this.svg.appendChild(el);
+    return el;
+  }
+
+  _svgRect (x, y, w, h, rx, className) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    el.setAttribute('x', x);
+    el.setAttribute('y', y);
+    el.setAttribute('width', w);
+    el.setAttribute('height', h);
+    if (rx) el.setAttribute('rx', rx);
+    if (className) el.setAttribute('class', className);
+    this.svg.appendChild(el);
+    return el;
+  }
+
+  _svgArrowNode (cx, cy, pointsRight, className) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    const size = 4;
+    let points;
+    if (pointsRight) {
+      points = `${cx - size},${cy - size} ${cx + size},${cy} ${cx - size},${cy + size}`;
+    } else {
+      points = `${cx + size},${cy - size} ${cx - size},${cy} ${cx + size},${cy + size}`;
+    }
+    el.setAttribute('points', points);
     if (className) el.setAttribute('class', className);
     this.svg.appendChild(el);
     return el;

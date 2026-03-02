@@ -481,6 +481,7 @@ html, body {
 
 #bo-columns.bo-single {
   justify-content: center;
+  padding-left: 40px;
 }
 
 .bo-side {
@@ -492,7 +493,7 @@ html, body {
 }
 
 #bo-timeline-gap {
-  width: 48px;
+  width: 96px;
   flex-shrink: 0;
 }
 
@@ -513,30 +514,48 @@ html, body {
 }
 
 .bo-spline-line {
-  stroke: rgba(160, 170, 180, 0.25);
-  stroke-width: 1.5;
+  stroke: rgba(160, 180, 200, 0.55);
+  stroke-width: 2.5;
+}
+
+.bo-spline-glow {
+  stroke: rgba(100, 160, 220, 0.15);
+  stroke-width: 6;
 }
 
 .bo-connector {
   fill: none;
-  stroke: rgba(160, 170, 180, 0.12);
-  stroke-width: 1;
+  stroke: rgba(170, 190, 210, 0.55);
+  stroke-width: 2;
 }
 
 .bo-time-marker-label {
-  fill: rgba(180, 190, 200, 0.55);
-  font-size: 10px;
+  fill: rgba(200, 210, 220, 0.85);
+  font-size: 11px;
+  font-weight: 600;
   font-family: 'Consolas', 'Cascadia Mono', monospace;
   user-select: none;
 }
 
-.bo-time-marker-dot {
-  fill: rgba(180, 190, 200, 0.35);
+.bo-time-label-bg {
+  fill: rgba(15, 25, 35, 0.85);
+  stroke: rgba(80, 100, 120, 0.25);
+  stroke-width: 0.5;
+}
+
+.bo-time-marker-diamond {
+  fill: rgba(180, 200, 220, 0.50);
+  stroke: rgba(200, 220, 240, 0.30);
+  stroke-width: 0.5;
 }
 
 .bo-time-marker-tick {
-  stroke: rgba(180, 190, 200, 0.2);
-  stroke-width: 1;
+  stroke: rgba(180, 200, 220, 0.30);
+  stroke-width: 1.5;
+}
+
+.bo-spine-node {
+  fill: rgba(180, 200, 220, 0.55);
 }
 
 /* --- Build Order Theme Variables --- */
