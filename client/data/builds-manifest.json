@@ -1,0 +1,1272 @@
+{
+  "builds": [
+
+    {
+      "id": "udo-dk-fast-fiend",
+      "name": "DK Standard Fiend",
+      "race": "U",
+      "matchups": ["UvO", "UvH", "UvU"],
+      "heroOpener": "Death Knight",
+      "heroItemId": "udea",
+      "heroItemIds": ["udea", "ulic"],
+      "keyUnits": ["ucry"],
+      "description": "The bread-and-butter Undead build. Death Knight opener into fast Crypt Fiend production, Lich second for Frost Nova. Works in every matchup with adjustments.",
+      "strategyPoints": [
+        "Open DK for Unholy Aura speed and Death Coil sustain — creep efficiently to level 3",
+        "Rush to tier 2 around 5:30–6:00, start Fiend production immediately from Crypt",
+        "Lich second hero with Frost Nova — obliterates clumped melee and provides burst damage",
+        "Add Obsidian Statues at T2 for mana/HP regen sustain in prolonged fights",
+        "T3 for Orb of Corruption on DK — armor debuff makes Fiend focus fire lethal",
+        "Wins against: most standard openers, BM Grunt builds, AM Rifle builds",
+        "Loses to: very fast Orc harassment preventing creeping, well-timed NE Bear timing pushes"
+      ],
+      "tags": ["standard", "fiends", "tech"],
+      "playstyleTags": ["standard", "tech"],
+      "opener": "standard",
+      "gamePlan": "map-control",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["usep", "ugrv", "uaod", "utom"],
+          "units": ["ucry"],
+          "goal": "DK + 3-4 Fiends, creep to level 3"
+        },
+        "t2": {
+          "buildings": ["uslh"],
+          "units": ["ucry", "uobs"],
+          "timing": "5:30-6:00",
+          "goal": "Lich second hero, add Statues for sustain, continue Fiend production"
+        },
+        "t3": {
+          "buildings": ["unpl"],
+          "units": ["ubsp"],
+          "timing": "8:00-9:00",
+          "goal": "Orb of Corruption on DK, Destroyers if facing casters",
+          "notes": "Standard UD T3 for the orb — not a T3-focused build"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Facing mass casters (HU Priests, NE Dryads)",
+            "adjustment": "Rush Destroyers for Devour Magic"
+          },
+          {
+            "condition": "Opponent expands early",
+            "adjustment": "Push with DK/Lich + 5 Fiends before expo pays off"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "happy-vs-grubby",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "FollowGrubby",
+          "map": "Concealed Hill",
+          "outcome": "win",
+          "notes": "Textbook DK opener — clean expansion timing at ~6:00, Lich transitions, dominant late game"
+        },
+        {
+          "replayId": "insup-vs-kiwi",
+          "playerSlot": "6",
+          "playerName": "iNSUPERABLE",
+          "opponentName": "KiWiKaKi",
+          "map": "Concealed Hill",
+          "outcome": "win",
+          "notes": "DK into Dark Ranger variant — shows how to adapt hero choice to counter Orc summoners"
+        },
+        {
+          "replayId": "happy-vs-moon",
+          "playerSlot": "1",
+          "playerName": "Happy",
+          "opponentName": "Interview",
+          "map": "Autumn Leaves",
+          "outcome": "win",
+          "notes": "DK Fiend vs NE — shows the standard Fiend/Statue composition against Night Elf expansion"
+        }
+      ]
+    },
+
+    {
+      "id": "ud-dk-expand",
+      "name": "DK Fast Expand",
+      "race": "U",
+      "matchups": ["UvO", "UvH"],
+      "heroOpener": "Death Knight",
+      "heroItemId": "udea",
+      "heroItemIds": ["udea", "ulic"],
+      "keyUnits": ["ucry"],
+      "description": "Death Knight opener with an early expansion to goldmine two. The gold lead funds a dominant mid-game army. Riskier than standard Fiend but snowballs hard if uncontested.",
+      "strategyPoints": [
+        "Same T1 opener as standard DK Fiend — Crypt, Graveyard, Altar, Rod of Necromancy",
+        "Take expansion at 5:30-6:30 while pressuring with DK coil to deny opponent scouting",
+        "Lich second for Frost Armor on Fiends — huge survivability boost vs Orc melee",
+        "Double gold income allows faster Statue production and earlier T3",
+        "Wins against: passive opponents who don't punish the expansion window",
+        "Loses to: fast Orc push that hits before expansion defenses are up"
+      ],
+      "tags": ["expansion", "fiends", "macro"],
+      "playstyleTags": ["macro-expand", "standard"],
+      "opener": "expand",
+      "gamePlan": "economic",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["usep", "ugrv", "uaod", "utom"],
+          "units": ["ucry"],
+          "goal": "DK + 2-3 Fiends, scout for expansion timing"
+        },
+        "t2": {
+          "buildings": ["uslh", "ugol"],
+          "units": ["ucry", "uobs"],
+          "timing": "5:30-6:00",
+          "goal": "Expand to second mine, Lich with Frost Armor, defend expansion"
+        },
+        "t3": {
+          "buildings": ["unpl"],
+          "units": ["ubsp"],
+          "timing": "8:30-9:30",
+          "goal": "Orb on DK, Destroyers — funded by double gold income"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Expansion gets pressured",
+            "adjustment": "Nerubian towers at expo, pull army back to defend"
+          },
+          {
+            "condition": "Opponent also expands",
+            "adjustment": "Your earlier expo gives the advantage — push before they catch up"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "happy-vs-life-echo-isles",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Life",
+          "map": "Echo Isles",
+          "outcome": "win",
+          "notes": "DK fast expand at 6:39 — mass Acolytes for double gold mining, Lich second, Destroyer transition"
+        }
+      ]
+    },
+
+    {
+      "id": "ud-dk-destroyer",
+      "name": "DK Lich Destroyer",
+      "race": "U",
+      "matchups": ["UvN", "UvH"],
+      "heroOpener": "Death Knight",
+      "heroItemId": "udea",
+      "heroItemIds": ["udea", "ulic", "nbrn"],
+      "keyUnits": ["ucry", "ubsp"],
+      "description": "DK Fiend opener that priorities a fast T3 for Destroyer tech. Destroyers' Devour Magic hard-counters caster-heavy armies like NE Dryads or HU Priests.",
+      "strategyPoints": [
+        "Standard DK Fiend T1 — creep efficiently, build 4-5 Fiends before teching",
+        "Lich second with Frost Nova for burst damage in engagements",
+        "Rush T3 for Destroyers — they eat buffs/debuffs and counter caster compositions",
+        "Destroyers absorb mana for healing — self-sustaining vs magic-heavy armies",
+        "Dark Ranger third hero — Silence shuts down NE bears/dryads, Black Arrow raises skeletons",
+        "Wins against: NE Dryad/Bear compositions, HU Priest/Breaker armies",
+        "Loses to: fast timing pushes that hit before Destroyers are online"
+      ],
+      "tags": ["tech", "fiends", "destroyer", "anti-caster"],
+      "playstyleTags": ["tech", "standard"],
+      "opener": "standard",
+      "gamePlan": "tech-scale",
+      "army": "mixed",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["usep", "ugrv", "uaod", "utom"],
+          "units": ["ucry"],
+          "goal": "DK + 4-5 Fiends, creep aggressively"
+        },
+        "t2": {
+          "buildings": ["uslh"],
+          "units": ["ucry", "uobs"],
+          "timing": "5:30-6:00",
+          "goal": "Lich second, Statues for sustain, begin T3 upgrade immediately"
+        },
+        "t3": {
+          "buildings": ["unpl"],
+          "units": ["ubsp", "uobs"],
+          "timing": "8:00-9:00",
+          "goal": "Destroyers ASAP — Devour Magic is the win condition",
+          "notes": "Rushed Destroyers specifically to counter caster-heavy compositions"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "NE goes mass bears instead of casters",
+            "adjustment": "Skip Destroyers, mass Fiends with Web upgrade instead"
+          },
+          {
+            "condition": "Opponent has heavy air",
+            "adjustment": "Destroyers double as anti-air, prioritize Frost Armor on them"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "happy-vs-lucifer",
+          "playerSlot": "4",
+          "playerName": "Happy",
+          "opponentName": "Lucifer",
+          "map": "Echo Isles",
+          "outcome": "win",
+          "notes": "Happy shows the full DK→Lich→Destroyer progression in a UD mirror — watch the Destroyer timing"
+        }
+      ]
+    },
+
+    {
+      "id": "ud-cl-fiend-push",
+      "name": "Crypt Lord Fast Fiend Push",
+      "race": "U",
+      "matchups": ["UvH"],
+      "heroOpener": "Crypt Lord",
+      "heroItemId": "ucrl",
+      "heroItemIds": ["ucrl", "nbrn"],
+      "keyUnits": ["ucry"],
+      "description": "Crypt Lord first for Impale stun and Carrion Beetles. Fast tech to T2 with aggressive timing push at CL level 3 plus tavern hero.",
+      "strategyPoints": [
+        "CL first — Impale stuns in a line, Carrion Beetles provide free meat shields",
+        "Skip DK opener entirely — CL can solo creep with beetles + Rod of Necromancy",
+        "Fast tech to T2 by 2:45, get CL to level 3 before buying tavern hero",
+        "Dark Ranger from tavern — Silence + Black Arrow combo with CL Impale is devastating",
+        "Push with CL3 + DR + 4-5 Fiends + 6 Beetles at ~7:00 timing window",
+        "Wins against: Human builds that expect standard DK opener and don't scout early",
+        "Loses to: early aggression that punishes the greedy fast tech"
+      ],
+      "tags": ["aggressive", "fiends", "timing-push", "crypt-lord"],
+      "playstyleTags": ["timing-attack", "tech"],
+      "opener": "standard",
+      "gamePlan": "timing-push",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["usep", "uaod", "utom"],
+          "units": ["ucry"],
+          "goal": "CL first, creep with beetles, fast tech to T2"
+        },
+        "t2": {
+          "buildings": ["uslh"],
+          "units": ["ucry"],
+          "timing": "4:30-5:00",
+          "goal": "CL level 3 + tavern hero (Dark Ranger), mass Fiends"
+        },
+        "t3": {
+          "buildings": [],
+          "units": [],
+          "timing": null,
+          "goal": "Usually wins or loses before T3",
+          "notes": "This is a timing push build — T3 is a fallback plan, not the goal"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Push fails to do damage",
+            "adjustment": "Transition to standard DK Fiend with expo — buy DK from tavern"
+          },
+          {
+            "condition": "Opponent towers up",
+            "adjustment": "Don't force it — creep to CL5 and outscale with Locust Swarm"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "ud-dk-ghoul-rush",
+      "name": "DK Ghoul Rush",
+      "race": "U",
+      "matchups": ["UvN"],
+      "heroOpener": "Death Knight",
+      "heroItemId": "udea",
+      "heroItemIds": ["udea", "udre"],
+      "keyUnits": ["ugho"],
+      "description": "Aggressive DK opener into mass Ghouls. Unholy Aura speed bonus makes Ghouls extremely fast, surrounding and killing NE units before they can retreat. Dreadlord second for Vampiric Aura.",
+      "strategyPoints": [
+        "DK first with Unholy Aura — the speed bonus is the core of the build",
+        "Rush Ghouls from double Crypt — quantity over quality, surround enemy units",
+        "Ghouls are cheap and expendable — trade aggressively, replace constantly",
+        "Dreadlord second for Vampiric Aura — heals Ghouls in combat, sustains pressure",
+        "Can transition to Gargoyles or Frost Wyrms at T3 if game goes late",
+        "Wins against: NE Archer builds that get surrounded, slow DH openers",
+        "Loses to: NE Mass Huntresses with Moon Glaive upgrade, well-timed Bear timing"
+      ],
+      "tags": ["aggressive", "ghouls", "rush", "melee"],
+      "playstyleTags": ["rush", "harass"],
+      "opener": "rush",
+      "gamePlan": "timing-push",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["usep", "usep", "uaod"],
+          "units": ["ugho"],
+          "goal": "DK + mass Ghouls from double Crypt, pressure NE base"
+        },
+        "t2": {
+          "buildings": ["ugrv"],
+          "units": ["ugho", "ugar"],
+          "timing": "6:00-7:00",
+          "goal": "Dreadlord second, Ghoul Frenzy upgrade, add Gargoyles"
+        },
+        "t3": {
+          "buildings": ["unpl"],
+          "units": ["ugar", "ufro"],
+          "timing": "10:00+",
+          "goal": "Frost Wyrms if game goes late — fallback air army",
+          "notes": "Usually decided before T3 — this is an aggro build"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "NE goes mass Huntress",
+            "adjustment": "Add Nerubian towers defensively, transition to Fiends with Web"
+          },
+          {
+            "condition": "Early Ghoul pressure works",
+            "adjustment": "Keep producing Ghouls, don't tech — ride the momentum"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "orc-bm-wind-rider",
+      "name": "BM Wind Rider",
+      "race": "O",
+      "matchups": ["OvU"],
+      "heroOpener": "Blademaster",
+      "heroItemId": "obla",
+      "heroItemIds": ["obla", "oshd"],
+      "keyUnits": ["owyv"],
+      "description": "Blademaster opener with heavy early harassment, transitioning into Wind Rider air superiority. Denies expansion and wins on economic disruption.",
+      "strategyPoints": [
+        "BM's Mirror Image and Wind Walk make him nearly impossible to catch early game",
+        "Constant worker harassment forces UD to divert Acolytes and delays expansion",
+        "Wind Riders fly over Undead army positioning and attack buildings directly",
+        "Shadow Hunter second hero for Serpent Wards and Healing Wave sustain",
+        "Wins against: UD expansions that come too early or are poorly defended",
+        "Loses to: well-timed Lich Nova + DK coil that kills Wind Riders before critical mass"
+      ],
+      "tags": ["aggressive", "harassment", "air", "wind-rider"],
+      "playstyleTags": ["harass", "air", "timing-attack"],
+      "opener": "harass",
+      "gamePlan": "timing-push",
+      "army": "air",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["oalt", "otrb", "obar", "ovln"],
+          "units": ["ogru"],
+          "goal": "BM harass enemy base, Grunts for creeping"
+        },
+        "t2": {
+          "buildings": ["obea"],
+          "units": ["owyv"],
+          "timing": "4:30-5:30",
+          "goal": "Shadow Hunter second, start Wind Rider production from Bestiary"
+        },
+        "t3": {
+          "buildings": ["ofrt"],
+          "units": ["owyv"],
+          "timing": "8:00-9:00",
+          "goal": "Mass Wind Riders with Envenomed Weapons upgrade",
+          "notes": "T3 mainly for unit upgrades — army is already Wind Riders at T2"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "UD builds anti-air (Gargoyles/Destroyers)",
+            "adjustment": "Add Bat Riders to counter anti-air, or pivot to ground Raiders"
+          },
+          {
+            "condition": "UD turtles with towers",
+            "adjustment": "Expand yourself and outscale — WRs can harass expansions"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "happy-vs-grubby",
+          "playerSlot": "1",
+          "playerName": "FollowGrubby",
+          "opponentName": "Happy",
+          "map": "Concealed Hill",
+          "outcome": "loss",
+          "notes": "Classic Grubby BM aggression — watch the worker harassment micro and Wind Rider transition timing"
+        }
+      ]
+    },
+
+    {
+      "id": "orc-fs-wind-rider",
+      "name": "FS Expansion Wind Rider",
+      "race": "O",
+      "matchups": ["OvH"],
+      "heroOpener": "Far Seer",
+      "heroItemId": "ofar",
+      "heroItemIds": ["ofar", "oshd"],
+      "keyUnits": ["owyv", "otbr"],
+      "description": "Far Seer opener with early expansion, scaling into a dominant Wind Rider and Bat Rider air force. Strong economic play that snowballs hard.",
+      "strategyPoints": [
+        "Far Seer Spirit Wolves provide cheap harassment and goldmine pressure",
+        "Fast expansion fueled by FS Farsight scouting — always know where to expand safely",
+        "Wind Riders counter Human Sorceress Slow with Ensnare, grounding flying units",
+        "Bat Riders add oil fire splash damage that melts Human melee deathballs",
+        "Wins against: standard Human defensive AM play on open maps",
+        "Loses to: fast Human tower rushes that deny the expansion"
+      ],
+      "tags": ["expansion", "air", "wind-rider", "far-seer"],
+      "playstyleTags": ["macro-expand", "air"],
+      "opener": "expand",
+      "gamePlan": "economic",
+      "army": "air",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["oalt", "otrb", "obar", "ovln"],
+          "units": ["ogru"],
+          "goal": "FS + Grunts, harass with wolves, scout with Farsight"
+        },
+        "t2": {
+          "buildings": ["obea", "ogre"],
+          "units": ["owyv"],
+          "timing": "5:00-6:00",
+          "goal": "Expand, Shadow Hunter second, start Wind Rider production"
+        },
+        "t3": {
+          "buildings": ["ofrt"],
+          "units": ["owyv", "otbr"],
+          "timing": "8:30-9:30",
+          "goal": "Add Bat Riders for splash damage, double Bestiary for mass air",
+          "notes": "Double gold income from expansion makes mass air production viable"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Human pushes your expansion early",
+            "adjustment": "Burrow defense + wolves to delay, pull WRs back to defend"
+          },
+          {
+            "condition": "Human goes mass anti-air (Flying Machines)",
+            "adjustment": "Add Bat Riders — they melt Flying Machines with Unstable Concoction"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "grubby-vs-thorzain",
+          "playerSlot": "1",
+          "playerName": "FollowGrubby",
+          "opponentName": "Thorzain",
+          "map": "Concealed Hill",
+          "outcome": "win",
+          "notes": "Grubby vs Thorzain — a masterclass in FS expansion timing and Wind Rider escalation"
+        }
+      ]
+    },
+
+    {
+      "id": "orc-fs-headhunter-shaman",
+      "name": "FS Headhunter Shaman",
+      "race": "O",
+      "matchups": ["OvU", "OvH"],
+      "heroOpener": "Far Seer",
+      "heroItemId": "ofar",
+      "heroItemIds": ["ofar", "otch"],
+      "keyUnits": ["ohun", "oshm"],
+      "description": "Far Seer opener with Headhunters and Shamans. The most versatile Orc opener — Bloodlust makes Headhunters burst targets down, Hex and Purge shut down enemy heroes.",
+      "strategyPoints": [
+        "Far Seer Spirit Wolves are free tanks that absorb Death Coil and Holy Light",
+        "Headhunters with Berserker Upgrade have extreme DPS under Bloodlust",
+        "Shaman Hex removes key enemy units from fights for several seconds",
+        "Purge removes Unholy Aura speed, Brilliance Aura, Devotion Aura",
+        "Tauren Chieftain second — Endurance Aura stacks with Bloodlust for insane attack speed",
+        "Wins against: DK openers that rely on Death Coil micro, standard AM play",
+        "Loses to: fast T2 pushes that arrive before Shamans get Bloodlust upgrade"
+      ],
+      "tags": ["standard", "headhunter", "shaman", "far-seer"],
+      "playstyleTags": ["standard"],
+      "opener": "standard",
+      "gamePlan": "map-control",
+      "army": "mixed",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["oalt", "otrb", "obar", "ovln", "ofor"],
+          "units": ["ohun"],
+          "goal": "FS + 2-3 Headhunters, creep with wolves tanking"
+        },
+        "t2": {
+          "buildings": ["osld"],
+          "units": ["ohun", "oshm"],
+          "timing": "5:00-6:00",
+          "goal": "TC second hero, Shamans for Bloodlust + Purge, continue HH production"
+        },
+        "t3": {
+          "buildings": ["ofrt"],
+          "units": ["ohun", "oshm", "okod"],
+          "timing": "9:00-10:00",
+          "goal": "Master Bloodlust upgrade, Kodo Beasts for Devour",
+          "notes": "T3 mainly for Shaman Master Training — the army composition stays HH/Shaman"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Enemy masses air units",
+            "adjustment": "Headhunters already counter air — add more and skip Shamans"
+          },
+          {
+            "condition": "Enemy goes heavy melee",
+            "adjustment": "Add Kodo Beasts — Devour removes key enemy units permanently"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "insup-vs-kiwi",
+          "playerSlot": "3",
+          "playerName": "KiWiKaKi",
+          "opponentName": "iNSUPERABLE",
+          "map": "Concealed Hill",
+          "outcome": "loss",
+          "notes": "KiWiKaKi shows the full FS Headhunter Shaman progression — see how Bloodlust timing decides fights"
+        }
+      ]
+    },
+
+    {
+      "id": "orc-bm-grunt-push",
+      "name": "BM Grunt Push",
+      "race": "O",
+      "matchups": ["OvN", "OvU"],
+      "heroOpener": "Blademaster",
+      "heroItemId": "obla",
+      "heroItemIds": ["obla", "oshd"],
+      "keyUnits": ["ogru"],
+      "description": "Blademaster opener into mass Grunts for an aggressive ground push. BM harasses workers while Grunts pressure the front door. Transitions into Spirit Walkers or Raiders at T2.",
+      "strategyPoints": [
+        "BM Wind Walk into enemy base for worker kills while Grunts creep",
+        "Mass Grunts are cost-effective and trade well in melee engagements",
+        "Shadow Hunter second — Healing Wave keeps Grunts alive in sustained fights",
+        "Push timing at 50-60 food with BM3 + SH + 5-6 Grunts",
+        "Wins against: greedy NE fast expansions, NE Archer openers without Huntresses",
+        "Loses to: well-positioned Ancient Protectors, NE mass Huntress with Moon Glaive"
+      ],
+      "tags": ["aggressive", "grunts", "push", "blademaster"],
+      "playstyleTags": ["timing-attack", "standard"],
+      "opener": "harass",
+      "gamePlan": "timing-push",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["oalt", "otrb", "obar", "ovln"],
+          "units": ["ogru"],
+          "goal": "BM + 4-5 Grunts, harass with BM while Grunts creep"
+        },
+        "t2": {
+          "buildings": ["otto", "obea"],
+          "units": ["ogru", "ospm", "orai"],
+          "timing": "4:30-5:30",
+          "goal": "SH second, Spirit Walkers for Disenchant, Raiders for Ensnare"
+        },
+        "t3": {
+          "buildings": ["ofrt"],
+          "units": ["otau"],
+          "timing": "9:00+",
+          "goal": "Taurens if game goes late — Pulverize is devastating in melee",
+          "notes": "Usually decided at T2 timing push — T3 is the fallback"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "NE builds Ancient Protectors at expansion",
+            "adjustment": "Don't force it — take your own expansion and outscale"
+          },
+          {
+            "condition": "NE goes mass air (Hippogryphs)",
+            "adjustment": "Add Headhunters or transition to Wind Riders"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "foggy-vs-cash-2",
+          "playerSlot": "1",
+          "playerName": "Cash",
+          "opponentName": "Foggywc3",
+          "map": "Echo Isles",
+          "outcome": "win",
+          "notes": "Cash BM Grunt push into Spirit Walker transition — shows the T2 tech path against NE"
+        }
+      ]
+    },
+
+    {
+      "id": "orc-fs-fast-tech",
+      "name": "FS Fast Tech",
+      "race": "O",
+      "matchups": ["OvH"],
+      "heroOpener": "Far Seer",
+      "heroItemId": "ofar",
+      "heroItemIds": ["ofar", "oshd"],
+      "keyUnits": ["owyv"],
+      "description": "Far Seer fast tech build that skips Barracks entirely to rush Stronghold. FS harasses constantly while base techs. Fastest T2 timing of any Orc build.",
+      "strategyPoints": [
+        "No Barracks — saves lumber for faster Stronghold, but no T1 army units",
+        "FS solo creeps with Spirit Wolves as tanks — efficient mana usage is critical",
+        "Chain Lightning harasses HU hero + army from range — kite and poke",
+        "Stronghold arrives 30-45s before standard builds — surprise T2 timing advantage",
+        "Shadow Hunter second from Altar as soon as Stronghold completes",
+        "Wins against: Human players who expect standard opener and play passively",
+        "Loses to: aggressive HU AM push that punishes the lack of T1 units"
+      ],
+      "tags": ["tech", "fast-tech", "far-seer", "risky"],
+      "playstyleTags": ["tech"],
+      "opener": "fast-tech",
+      "gamePlan": "tech-scale",
+      "army": "mixed",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["oalt", "otrb", "ovln"],
+          "units": [],
+          "goal": "FS only — no combat units, just tech to Stronghold ASAP"
+        },
+        "t2": {
+          "buildings": ["obea", "osld"],
+          "units": ["owyv", "oshm"],
+          "timing": "4:00-4:30",
+          "goal": "Fastest possible T2 — Bestiary for Wind Riders, Spirit Lodge for Shamans"
+        },
+        "t3": {
+          "buildings": ["ofrt"],
+          "units": ["owyv", "otbr"],
+          "timing": "8:00-9:00",
+          "goal": "Mass Wind Riders + Bat Riders — the payoff for the greedy fast tech"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "HU scouts and pushes immediately",
+            "adjustment": "Build emergency Barracks + Burrow defense, delay with wolves"
+          },
+          {
+            "condition": "HU plays passively",
+            "adjustment": "Punish with early WR harassment on workers and supply buildings"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "hu-am-rifles",
+      "name": "AM Rifle Caster",
+      "race": "H",
+      "matchups": ["HvN", "HvO", "HvH"],
+      "heroOpener": "Archmage",
+      "heroItemId": "hamg",
+      "heroItemIds": ["hamg", "hmkg", "hpal"],
+      "keyUnits": ["hrif", "hmpr", "hspt"],
+      "description": "The standard Human build. Archmage with Water Elementals into Riflemen, then Priests and Spell Breakers at T2. Works in every matchup with adjustments.",
+      "strategyPoints": [
+        "Archmage Water Elementals are free units that trade well early — micro them aggressively",
+        "Brilliance Aura gives permanent mana regen to all nearby units — enables Blizzard spam",
+        "Riflemen have the longest range of any T1 ground unit — kite melee effectively",
+        "Mountain King second for Storm Bolt stun and Bash — shuts down enemy hero plays",
+        "Priests with Inner Fire buff Riflemen damage, Heal sustains the army between fights",
+        "Spell Breakers at T2 — Control Magic steals summons, Spell Immunity blocks nukes",
+        "Wins against: most standard openers, NE Archer builds, Orc Grunt builds",
+        "Loses to: mass Mountain Giants with Taunt, UD Destroyer transitions"
+      ],
+      "tags": ["standard", "rifles", "archmage", "ranged", "casters"],
+      "playstyleTags": ["standard", "timing-attack"],
+      "opener": "standard",
+      "gamePlan": "timing-push",
+      "army": "mixed",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["halt", "hbar", "hhou", "hbla"],
+          "units": ["hfoo", "hrif"],
+          "goal": "AM + Footmen for creeping, transition to Rifles"
+        },
+        "t2": {
+          "buildings": ["hars", "hkee"],
+          "units": ["hrif", "hmpr", "hspt"],
+          "timing": "5:00-6:00",
+          "goal": "MK second hero, Arcane Sanctum for Priests + Spell Breakers"
+        },
+        "t3": {
+          "buildings": ["hcas"],
+          "units": ["hkni"],
+          "timing": "10:00-12:00",
+          "goal": "Castle for Knight production and Master Training upgrades",
+          "notes": "T3 is optional — many games end at T2 with Rifle/Caster army"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Opponent goes mass air",
+            "adjustment": "Add Flying Machines from Workshop, Riflemen already counter air"
+          },
+          {
+            "condition": "Opponent masses casters",
+            "adjustment": "More Spell Breakers with Control Magic — steal their summons"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "cash-vs-foggy",
+          "playerSlot": "7",
+          "playerName": "mTwCash",
+          "opponentName": "Foggy",
+          "map": "Concealed Hill",
+          "outcome": "win",
+          "notes": "Cash shows the AM Rifle opening — notice hero positioning and how Water Elementals buy space"
+        }
+      ]
+    },
+
+    {
+      "id": "hu-am-dragonhawk",
+      "name": "AM Dragonhawk Riders",
+      "race": "H",
+      "matchups": ["HvO"],
+      "heroOpener": "Archmage",
+      "heroItemId": "hamg",
+      "heroItemIds": ["hamg", "hmkg"],
+      "keyUnits": ["hdhw"],
+      "description": "Archmage opener scaling into Dragonhawk Rider air superiority. Cloud and Aerial Shackles control the battlefield while Dragonhawks deal sustained damage.",
+      "strategyPoints": [
+        "Archmage Brilliance Aura gives permanent mana regen — spam Blizzard all game",
+        "Sorceress Slow shuts down Orc Grunt melee even with Bloodlust active",
+        "Dragonhawks' Cloud disables enemy buildings — shuts down production during pushes",
+        "Aerial Shackles lock down enemy air units, preventing escape",
+        "Mountain King second for Storm Bolt — stun Chain Lightning combo is devastating",
+        "Wins against: Orc armies that lack anti-air (no Bat Riders or Headhunters)",
+        "Loses to: Orc Fast Wind Rider with Ensnare — grounds your entire army at once"
+      ],
+      "tags": ["air", "dragonhawk", "archmage", "anti-orc"],
+      "playstyleTags": ["air", "tech"],
+      "opener": "standard",
+      "gamePlan": "tech-scale",
+      "army": "air",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["halt", "hbar", "hhou", "hbla"],
+          "units": ["hfoo"],
+          "goal": "AM + Footmen for creeping, fast tech to Keep"
+        },
+        "t2": {
+          "buildings": ["hgra", "hkee"],
+          "units": ["hdhw"],
+          "timing": "5:30-6:30",
+          "goal": "MK second, Gryphon Aviary for Dragonhawk production"
+        },
+        "t3": {
+          "buildings": ["hcas"],
+          "units": ["hdhw", "hgry"],
+          "timing": "10:00+",
+          "goal": "Mass Dragonhawks, add Gryphon Riders for damage",
+          "notes": "T3 unlocks Gryphon Riders — devastating combined with Dragonhawks"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Orc builds Headhunters or Bat Riders",
+            "adjustment": "Add Sorceresses for Slow, Priests for healing — support the air army"
+          },
+          {
+            "condition": "Orc expands",
+            "adjustment": "Cloud the expansion buildings — shut down production while you push"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "grubby-vs-thorzain",
+          "playerSlot": "2",
+          "playerName": "Thorzain",
+          "opponentName": "FollowGrubby",
+          "map": "Concealed Hill",
+          "outcome": "loss",
+          "notes": "Thorzain's AM into Dragonhawk build — even in a loss the build order execution is textbook"
+        }
+      ]
+    },
+
+    {
+      "id": "hu-mk-fast-expand",
+      "name": "MK Fast Expand",
+      "race": "H",
+      "matchups": ["HvU", "HvN"],
+      "heroOpener": "Mountain King",
+      "heroItemId": "hmkg",
+      "heroItemIds": ["hmkg", "hamg", "hpal"],
+      "keyUnits": ["hrif", "hfoo"],
+      "description": "Mountain King first into fast expansion. Storm Bolt stuns harassers, Bash provides melee dominance. Build army to 60 food then upgrade to Castle for Knights.",
+      "strategyPoints": [
+        "MK first — Storm Bolt is the best anti-harass stun in the game",
+        "Fast expansion with militia to defend the new Town Hall",
+        "MK + Footmen + Rifles can defend expo against most early aggression",
+        "AM second for Brilliance Aura mana sustain and Water Elementals",
+        "Build to 60 food on two bases, then tech to Castle for Knights",
+        "Paladin third hero for Holy Light healing and Divine Shield safety",
+        "Wins against: opponents who don't punish the expansion window",
+        "Loses to: fast timing attacks that hit before the expansion pays off"
+      ],
+      "tags": ["expansion", "mountain-king", "macro", "rifles"],
+      "playstyleTags": ["macro-expand", "standard"],
+      "opener": "expand",
+      "gamePlan": "economic",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["halt", "hbar", "hhou", "hbla"],
+          "units": ["hfoo"],
+          "goal": "MK + Footmen, scout for expansion timing"
+        },
+        "t2": {
+          "buildings": ["hkee", "htow", "hars"],
+          "units": ["hrif", "hmpr"],
+          "timing": "5:00-6:00",
+          "goal": "Expand, AM second, Rifles + Priests for army sustain"
+        },
+        "t3": {
+          "buildings": ["hcas"],
+          "units": ["hkni"],
+          "timing": "10:00-12:00",
+          "goal": "Knights with double gold income — the payoff for expanding",
+          "notes": "Castle timing is faster with double gold — that's the whole point"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Expansion gets rushed",
+            "adjustment": "Militia + Scout Towers to defend, pull MK back"
+          },
+          {
+            "condition": "Opponent also expands",
+            "adjustment": "Your MK is better in defensive fights — just outscale"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "hu-paladin-rifle",
+      "name": "Paladin Rifle",
+      "race": "H",
+      "matchups": ["HvO", "HvN"],
+      "heroOpener": "Paladin",
+      "heroItemId": "hpal",
+      "heroItemIds": ["hpal", "hamg"],
+      "keyUnits": ["hrif", "hmpr"],
+      "description": "Paladin first with Riflemen as primary army. Holy Light keeps expensive Rifles alive, Divine Shield at level 6 is a panic button. Sustain-focused build that wins through attrition.",
+      "strategyPoints": [
+        "Paladin first — Holy Light is the strongest single-target heal in the game",
+        "Rifles live longer with Paladin healing — more value per gold spent",
+        "Divine Shield at level 6 — panic button that saves Paladin from any burst",
+        "AM second for Brilliance Aura — enables constant Blizzard + Holy Light spam",
+        "Priests add Inner Fire buff and additional healing — double sustain layer",
+        "Wins against: Orc builds relying on focus fire to trade heroes",
+        "Loses to: mana drain (NE DH Manaburn), Undead Destroyers (Devour Magic)"
+      ],
+      "tags": ["standard", "paladin", "rifles", "sustain"],
+      "playstyleTags": ["standard"],
+      "opener": "standard",
+      "gamePlan": "map-control",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["halt", "hbar", "hhou", "hbla"],
+          "units": ["hfoo", "hrif"],
+          "goal": "Paladin + Footmen, transition to Rifles immediately"
+        },
+        "t2": {
+          "buildings": ["hars", "hkee"],
+          "units": ["hrif", "hmpr"],
+          "timing": "5:30-6:30",
+          "goal": "AM second, Priests for double healing, Inner Fire on Rifles"
+        },
+        "t3": {
+          "buildings": ["hcas", "hgra"],
+          "units": ["hgry"],
+          "timing": "11:00+",
+          "goal": "Gryphon Riders for late-game air damage",
+          "notes": "T3 Gryphons are the payoff — strong with Paladin sustain keeping them alive"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Opponent focuses Paladin hard",
+            "adjustment": "Play defensive until Divine Shield — then push aggressively"
+          },
+          {
+            "condition": "Facing NE with Manaburn",
+            "adjustment": "Keep Paladin at range, use Scroll of Replenishment, prioritize level 6"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "ne-kotg-mountain-giant",
+      "name": "KotG Mountain Giant",
+      "race": "E",
+      "matchups": ["EvH"],
+      "heroOpener": "Keeper of the Grove",
+      "heroItemId": "ekee",
+      "heroItemIds": ["ekee", "edem"],
+      "keyUnits": ["emtg"],
+      "description": "Keeper of the Grove opener into Mountain Giant tank line. Entangle roots Human heroes, Giants taunt Human armies, and Treant summons provide free reinforcements.",
+      "strategyPoints": [
+        "KotG Entangling Roots roots Human heroes — removes Divine Shield timing windows",
+        "Mountain Giants have the highest HP of any unit in the game at Tier 3",
+        "Giant Taunt forces Human Sorceresses to polymorph their own units if poorly positioned",
+        "Force of Nature summons free Treants from enemy trees — punishes Human passive play",
+        "DH second hero for Manaburn — drains AM/MK mana, shuts down their abilities",
+        "Wins against: Human AM Rifle builds that rely on kiting, not tanking hits",
+        "Loses to: Archmage Blizzard with Mass Teleport that kills Giants before Taunt activates"
+      ],
+      "tags": ["tank", "mountain-giant", "keeper", "summons"],
+      "playstyleTags": ["macro-expand", "standard"],
+      "opener": "standard",
+      "gamePlan": "tech-scale",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["eate", "eaom", "emow", "edob"],
+          "units": ["earc"],
+          "goal": "KotG + Archers, creep with Entangle for free kills"
+        },
+        "t2": {
+          "buildings": ["etoa", "eaoe"],
+          "units": ["edry"],
+          "timing": "5:00-6:00",
+          "goal": "Tree of Ages, Ancient of Lore for Dryads, tech to T3 for Giants"
+        },
+        "t3": {
+          "buildings": ["etoe"],
+          "units": ["emtg", "edry"],
+          "timing": "9:00-10:00",
+          "goal": "Mountain Giants with Hardened Skin — the army anchor",
+          "notes": "Giants are the entire build's purpose — everything else supports them"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Human pushes before T3",
+            "adjustment": "Defend with Dryads + Archers, delay until Giants are online"
+          },
+          {
+            "condition": "Human goes air (Gryphons)",
+            "adjustment": "Add Hippogryph Riders — Giants can't hit air, you need anti-air"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "cash-vs-foggy",
+          "playerSlot": "10",
+          "playerName": "Foggy",
+          "opponentName": "mTwCash",
+          "map": "Concealed Hill",
+          "outcome": "loss",
+          "notes": "Foggy shows the KotG Mountain Giant build — the build order timing and giant production queue is the key lesson here"
+        }
+      ]
+    },
+
+    {
+      "id": "ne-dh-fast-bear",
+      "name": "DH Fast Bear Tech",
+      "race": "E",
+      "matchups": ["EvU", "EvO", "EvH"],
+      "heroOpener": "Demon Hunter",
+      "heroItemId": "edem",
+      "heroItemIds": ["edem", "ekee"],
+      "keyUnits": ["edoc", "edry"],
+      "description": "The standard Night Elf build. Demon Hunter first for Manaburn harassment, fast tech to T3 for Druid of the Claw (bears). Bears in Bear Form have massive HP and Roar aura.",
+      "strategyPoints": [
+        "DH first — Manaburn drains enemy hero mana, shutting down their abilities",
+        "Immolation provides passive AoE damage — good for fast creeping",
+        "Fast tech through T2 to T3 — the goal is Bears as fast as possible",
+        "Druids of the Claw in Bear Form have 960 HP and Roar gives 25% damage aura",
+        "KotG second hero for Entangle + Treants — lockdown and free reinforcements",
+        "Dryads provide Abolish Magic to remove debuffs and Slow Poison for kiting",
+        "Wins against: most standard openers across all matchups",
+        "Loses to: fast timing pushes that hit during the vulnerable T2 transition"
+      ],
+      "tags": ["standard", "bears", "tech", "demon-hunter"],
+      "playstyleTags": ["standard", "tech"],
+      "opener": "standard",
+      "gamePlan": "tech-scale",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["eate", "eaom", "emow", "edob"],
+          "units": ["earc"],
+          "goal": "DH + 3-4 Archers, creep aggressively with Immolation"
+        },
+        "t2": {
+          "buildings": ["etoa", "eaoe"],
+          "units": ["edry"],
+          "timing": "4:30-5:30",
+          "goal": "Tree of Ages, Ancient of Lore x2, Dryads while teching to T3"
+        },
+        "t3": {
+          "buildings": ["etoe"],
+          "units": ["edoc", "edry"],
+          "timing": "8:00-9:00",
+          "goal": "Master Bears — Bear Form with Roar and Rejuvenation",
+          "notes": "Bears are arguably the best T3 unit in the game — the entire build leads here"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Facing UD with Destroyers",
+            "adjustment": "Keep Dryads to bait Devour Magic, then re-buff Bears"
+          },
+          {
+            "condition": "Facing Orc BM harassment",
+            "adjustment": "Manaburn the BM — he can't harass without mana for Wind Walk"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "ne-kotg-expand-huntress",
+      "name": "KotG Fast Expand",
+      "race": "E",
+      "matchups": ["EvO", "EvH"],
+      "heroOpener": "Keeper of the Grove",
+      "heroItemId": "ekee",
+      "heroItemIds": ["ekee", "edem"],
+      "keyUnits": ["esen"],
+      "description": "Keeper of the Grove with fast expansion into Huntress map control. Entangle roots enemy heroes and creeps for safe expansion. Huntresses provide aggressive map presence.",
+      "strategyPoints": [
+        "KotG first for Entangling Roots — roots give free creep kills and hero lockdown",
+        "Fast expansion at 3:00-4:00 — KotG Treants provide free defense at the expansion",
+        "Huntresses with Moon Glaive upgrade bounce attacks between clumped enemies",
+        "Ancient Protectors at expansion for defense — they uproot to reposition",
+        "DH second hero for Manaburn — drains enemy hero mana during engagements",
+        "Wins against: Orc players who don't scout and pressure the expansion",
+        "Loses to: fast BM harassment that kills wisps before expansion completes"
+      ],
+      "tags": ["expansion", "keeper", "huntress", "map-control"],
+      "playstyleTags": ["macro-expand"],
+      "opener": "expand",
+      "gamePlan": "economic",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["eate", "eaom", "emow", "edob"],
+          "units": ["earc", "esen"],
+          "goal": "KotG + Archers, transition to Huntresses, scout for expansion"
+        },
+        "t2": {
+          "buildings": ["etoa", "etol", "etrp"],
+          "units": ["esen"],
+          "timing": "5:00-6:00",
+          "goal": "Expand, Ancient Protectors for defense, DH second hero"
+        },
+        "t3": {
+          "buildings": ["etoe", "eaoe"],
+          "units": ["edoc", "edry"],
+          "timing": "9:00-10:00",
+          "goal": "Bears + Dryads funded by double gold income",
+          "notes": "The expansion makes T3 Bears affordable faster"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Orc pushes expansion hard",
+            "adjustment": "Uproot Protectors to block, Entangle key units, delay until army arrives"
+          },
+          {
+            "condition": "Opponent also expands",
+            "adjustment": "Your earlier expo gives advantage — push before they catch up"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "foggy-vs-cash-2",
+          "playerSlot": "2",
+          "playerName": "Foggy",
+          "opponentName": "Cash",
+          "map": "Echo Isles",
+          "outcome": "loss",
+          "notes": "Foggy KotG expansion into Huntresses with Ancient Protector defense vs ORC BM Grunt push"
+        }
+      ]
+    },
+
+    {
+      "id": "ne-potm-mass-hunts",
+      "name": "PotM Mass Huntress",
+      "race": "E",
+      "matchups": ["EvH", "EvE"],
+      "heroOpener": "Priestess of the Moon",
+      "heroItemId": "emoo",
+      "heroItemIds": ["emoo", "edem"],
+      "keyUnits": ["esen"],
+      "description": "Priestess of the Moon first with Trueshot Aura boosting Huntress DPS. Mass Huntresses provide aggressive map control and deny Human expansion. Searing Arrows steal creep kills.",
+      "strategyPoints": [
+        "PotM first — Trueshot Aura gives all ranged units bonus damage passively",
+        "Searing Arrows let PotM last-hit creeps from enemy — denies XP and items",
+        "Mass Huntresses with Moon Glaive — bouncing attacks shred clumped units",
+        "Huntresses are fast and can raid enemy lumber line, pressure expansions",
+        "Shadowmeld keeps PotM safe — hide and ambush when enemy hero walks past",
+        "DH second for Manaburn — removes enemy hero's ability to cast spells",
+        "Wins against: Human AM Rifle builds without early anti-Huntress tech",
+        "Loses to: mass AoE (Blizzard, Thunder Clap) that shreds low-HP Huntresses"
+      ],
+      "tags": ["aggressive", "huntress", "priestess", "map-control"],
+      "playstyleTags": ["harass", "timing-attack"],
+      "opener": "harass",
+      "gamePlan": "map-control",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["eate", "eaom", "emow", "edob"],
+          "units": ["earc", "esen"],
+          "goal": "PotM + Archers, transition to mass Huntresses with Moon Glaive"
+        },
+        "t2": {
+          "buildings": ["etoa", "eaoe"],
+          "units": ["esen", "edry"],
+          "timing": "5:30-6:30",
+          "goal": "DH second, Huntresses for map pressure, Dryads for utility"
+        },
+        "t3": {
+          "buildings": ["etoe"],
+          "units": ["edoc"],
+          "timing": "10:00+",
+          "goal": "Bears as late-game transition if Huntress pressure stalls",
+          "notes": "Games are often decided at T1/T2 — this is a pressure build, not a T3 build"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Human towers up defensively",
+            "adjustment": "Don't force — expand yourself and transition to Bears at T3"
+          },
+          {
+            "condition": "Human goes mass AoE",
+            "adjustment": "Spread Huntresses, don't clump — Moon Glaive works in spread formations"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "ne-dh-mass-talons",
+      "name": "DH Mass Talons",
+      "race": "E",
+      "matchups": ["EvO"],
+      "heroOpener": "Demon Hunter",
+      "heroItemId": "edem",
+      "heroItemIds": ["edem", "nbst"],
+      "keyUnits": ["edot"],
+      "description": "Demon Hunter into mass Druids of the Talon with Cyclone spam. Exploits Orc's limited dispel options. Cyclone removes key units from fights, Faerie Fire reduces armor.",
+      "strategyPoints": [
+        "DH first for Manaburn — drains Blademaster's mana, preventing Wind Walk escapes",
+        "Druids of the Talon cast Cyclone — removes Grunts and key units from fights for 6 seconds",
+        "Mass Cyclone means Orc can never fight at full strength — always 2-3 units disabled",
+        "Faerie Fire reduces armor and reveals invisible units — BM can't hide",
+        "Beastmaster from tavern for Quilbeast summons and Stampede ultimate",
+        "Orc Spirit Walkers can Ethereal Form to avoid Cyclone — but NE can just focus other units",
+        "Wins against: Orc melee compositions without heavy dispel",
+        "Loses to: FS Headhunter builds that outrange Talons, mass Spirit Walkers"
+      ],
+      "tags": ["casters", "talons", "cyclone", "anti-orc"],
+      "playstyleTags": ["tech"],
+      "opener": "fast-tech",
+      "gamePlan": "tech-scale",
+      "army": "caster",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["eate", "eaom", "emow", "edob"],
+          "units": ["earc"],
+          "goal": "DH + Archers, creep to DH level 3 for Evasion"
+        },
+        "t2": {
+          "buildings": ["etoa", "eaow"],
+          "units": ["edot"],
+          "timing": "5:00-6:00",
+          "goal": "Ancient of Wind for Druid of the Talon production, start massing Talons"
+        },
+        "t3": {
+          "buildings": ["etoe", "eaow"],
+          "units": ["edot"],
+          "timing": "9:00-10:00",
+          "goal": "Double Ancient of Wind, Master Talon upgrade for Storm Crow Form",
+          "notes": "Storm Crow Form lets Talons fly — attack and Cyclone from the air"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Orc builds mass Spirit Walkers",
+            "adjustment": "Mix in Dryads for Abolish Magic, focus fire Spirit Walkers first"
+          },
+          {
+            "condition": "Orc switches to Headhunter ranged",
+            "adjustment": "Add Mountain Giants — Taunt forces Headhunters into melee range"
+          }
+        ]
+      },
+      "replays": []
+    },
+
+    {
+      "id": "ne-dh-huntress",
+      "name": "DH Mass Huntress",
+      "race": "E",
+      "matchups": ["EvH", "EvO"],
+      "heroOpener": "Demon Hunter",
+      "heroItemId": "edem",
+      "heroItemIds": ["edem", "ekee"],
+      "keyUnits": ["esen"],
+      "description": "Demon Hunter opener into fast Huntress production. Huntresses provide early map control and pressure while DH burns enemy hero mana. Transitions to bears at T3.",
+      "strategyPoints": [
+        "DH first for Manaburn — shuts down enemy hero casting immediately",
+        "1 Ancient of War into fast Huntress Hall — Huntresses come online quickly",
+        "Sentinel upgrade gives vision across the map — no more hidden expansions or creep routes",
+        "Moon Glaive upgrade — bouncing attacks make Huntresses devastating vs clumped units",
+        "KotG second for Entangle root and Treant summons — supports Huntress aggression",
+        "Wins against: builds that rely on hero abilities (AM, FS, DK)",
+        "Loses to: massed ranged units that kite Huntresses (Rifles, Fiends with Web)"
+      ],
+      "tags": ["aggressive", "huntress", "demon-hunter", "map-control"],
+      "playstyleTags": ["harass", "standard"],
+      "opener": "harass",
+      "gamePlan": "map-control",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["eate", "eaom", "emow", "edob"],
+          "units": ["earc", "esen"],
+          "goal": "DH + Archers, fast Huntress Hall, transition to Huntresses"
+        },
+        "t2": {
+          "buildings": ["etoa", "eaoe"],
+          "units": ["esen", "edry"],
+          "timing": "5:30-6:30",
+          "goal": "KotG second, Huntress pressure, Dryads for utility/anti-magic"
+        },
+        "t3": {
+          "buildings": ["etoe"],
+          "units": ["edoc"],
+          "timing": "9:00-10:00",
+          "goal": "Bears for late-game transition if needed",
+          "notes": "Most games decided before T3 — Huntresses are the core army"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Opponent builds ranged army",
+            "adjustment": "Mix in Archers to trade at range, don't force melee engagements"
+          },
+          {
+            "condition": "Opponent turtles behind towers",
+            "adjustment": "Add Glaive Throwers for siege, maintain map control with Sentinels"
+          }
+        ]
+      },
+      "replays": []
+    }
+
+  ]
+}

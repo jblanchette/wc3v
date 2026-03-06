@@ -7,133 +7,92 @@
     this.setupControls();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const replay = urlParams.get('r');
+    const replay    = urlParams.get('r');
+    const buildId   = urlParams.get('buildId');
+    if (buildId)     this.renderBuildContext(buildId);
 
     const hrefPath = window.location.href;
     const re = new RegExp('replay/(.*)', 'i');
-
     const match = re.exec(hrefPath);
+
     if (match) {
+      // Legacy path-based URL: /replay/name
       setTimeout(() => {
         this.load(`${encodeURI(match[1])}.wc3v`);
       });
+    } else if (replay) {
+      // Query-param URL: /viewer?r=name  (works in both dev and production)
+      setTimeout(() => {
+        this.load(`${encodeURI(replay)}.wc3v`);
+      });
     } else {
+      // No replay specified — redirect to browse page
+      window.location.href = '/builds';
+    }
+  }
 
-      const cookieData = document.cookie;
+  // Render rich build context bar: back link, matchup badges, build name, match info, replay switcher pills
+  async renderBuildContext (buildId) {
+    const bar = document.getElementById('viewer-breadcrumb');
+    if (!bar) return;
 
-      if (cookieData && cookieData.indexOf("shownTutorial=1") != -1) {
-        console.log("not showing tutorial");
-        this.hideTutorial();
-      } else {
-        // if we have no match to load show the tutorial
-        this.tutorialWindow.style.display = "block";
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentReplayId = urlParams.get('r');
+
+    const RACE_COLORS = { H: '#4488FF', O: '#FF4444', E: '#44DD88', U: '#AA66FF' };
+    const RACE_ABBR   = { H: 'HU',     O: 'ORC',     E: 'NE',      U: 'UD'      };
+
+    try {
+      const res = await fetch('/data/builds-manifest.json');
+      const manifest = await res.json();
+      const build = (manifest.builds || []).find(b => b.id === buildId);
+      if (!build) return;
+
+      // Load summary for current replay
+      let summary = null;
+      try {
+        const sr = await fetch(`/data/summaries/${currentReplayId}.json`);
+        summary = await sr.json();
+      } catch (e) { /* non-critical */ }
+
+      const currentReplay = (build.replays || []).find(r => r.replayId === currentReplayId);
+      const otherReplays  = (build.replays || []).filter(r => r.replayId !== currentReplayId);
+
+      const rc = RACE_COLORS[build.race] || '#888';
+
+      // Match summary line
+      let matchLine = '';
+      if (currentReplay) {
+        const map = (summary && summary.map) || currentReplay.map || '';
+        const dur = (summary && summary.durationFormatted) ? ' · ' + summary.durationFormatted : '';
+        matchLine = `${currentReplay.playerName} vs ${currentReplay.opponentName}${map ? ' · ' + map : ''}${dur}`;
       }
 
-      if (!this.isDev) {
-        return;
-      }
+      // Other replay switcher pills
+      const otherHtml = otherReplays.map(r => {
+        const url = `/viewer?r=${r.replayId}&buildId=${build.id}`;
+        return `<a class="vbc-replay-pill" href="${url}">${r.playerName}</a>`;
+      }).join('');
 
-      const params = new URLSearchParams(window.location.search);
-      const localReplay = params.get('r');
-
-      if (localReplay) {
-        console.log('loading local replay: ', encodeURI(localReplay));
-        setTimeout(() => {
-          this.load(`${encodeURI(localReplay)}.wc3v`);
-        });
-      }
+      bar.style.display = 'flex';
+      bar.innerHTML = `
+        <a class="vbc-back" href="/">← Builds</a>
+        <div class="vbc-sep"></div>
+        <span class="vbc-badge" style="--rc:${rc}">${RACE_ABBR[build.race] || build.race}</span>
+        <span class="vbc-name">${build.name}</span>
+        ${matchLine ? `<div class="vbc-sep"></div><span class="vbc-match">${matchLine}</span>` : ''}
+        ${otherReplays.length ? `<div class="vbc-sep"></div><span class="vbc-also">Also:</span>${otherHtml}` : ''}
+      `;
+    } catch (e) {
+      // breadcrumb is non-critical — fail silently
     }
   }
 
   setupControls () {
     const self = this;
-    const menuPanel = document.getElementById("panel");
-    const menuTarget = document.getElementById("menu-target");
 
-    const searchButton = document.getElementById("search-submit");
-
-    // call out to get wc3v
-    this.loadInfo();
-
-    menuTarget.addEventListener("click", (e) => {
-      menuPanel.style.display = (menuPanel.style.display === "none") ? "block" : "none";
-    });
-
-    searchButton.addEventListener("click", (e) => {
-      const searchText = document.getElementById("main-search").value;
-
-      if (searchText && searchText.trim().length > 0) {
-        const replayId = searchText.trim();
-        const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
-        const url = `http://${window.location.hostname}${urlPath}`;
-
-        window.location.href = url;
-      }
-    });
-
-    const proGames = [
-      {
-        id: "happy-vs-grubby",
-        map: "Concealed Hills",
-        players: [["Happy"], ["Grubby"]]
-      },
-      {
-        id: "grubby-vs-thorzain",
-        map: "Concealed Hills",
-        players: [["Grubby"], ["Thorzain"]]
-      },
-      {
-        id: "cash-vs-foggy",
-        map: "Concealed Hills",
-        players: [["Cash"], ["Foggy"]]
-      },
-      {
-        id: "happy-vs-lucifer",
-        map: "Echo Isles",
-        players: [["Happy"], ["lucifer"]]
-      },
-      {
-        id: "foggy-vs-cash-2",
-        map: "Echo Isles",
-        players: [["Foggy"], ["Cash"]]
-      },
-      {
-        id: "terenas-stand-lv_sonik-vs-tgw",
-        map: "Terenas Stand",
-        players: [["Sonik"], ["TGW"]]
-      },
-      {
-        id: "insup-vs-kiwi",
-        map: "Concealed Hills",
-        players: [["INSUPERABLE"], ["KiWiKaKi"]]
-      }
-    ];
-
-    const proGamesTable = document.getElementById("pro-replays-table");
-
-    proGames.forEach((game) => {
-      const row = document.createElement("tr");
-
-      const playersStr = game.players.map(team => {
-        return team.join(", ");
-      }).join(" vs ");
-
-      const replayId = game.id;
-      const urlPath = this.isDev ? `:8080?r=${replayId}` : `/replay/${replayId}`;
-      const url = `http://${window.location.hostname}${urlPath}`;
-
-      row.innerHTML = `
-       <td>${playersStr}</td>
-       <td>${game.map}</td>
-       <td><a href="${url}">link</a></td>
-      `;
-
-      proGamesTable.append(row);
-    });
-
-    this.tutorialWindow = document.getElementById("tutorial-wrapper");
+    this.tutorialWindow  = document.getElementById("tutorial-wrapper");
     this.tutorialBackdrop = document.getElementById("modal-backdrop");
-
     this.emptyGameWrapper = document.getElementById("empty-game-wrapper");
   }
 
@@ -253,6 +212,7 @@
 
   toggleUploadWrapper (isOpen) {
     const uploadWrapperEl = document.getElementById("upload-wrapper");
+    if (!uploadWrapperEl) return;
 
     uploadWrapperEl.style.display = isOpen ? "block" : "none";
   }
@@ -284,12 +244,14 @@
   }
 
   showTutorial() {
+    if (!this.tutorialWindow || !this.tutorialBackdrop) { return; }
     this.advanceTutorial(1);
     this.tutorialWindow.style.display = "block";
     this.tutorialBackdrop.style.display = "block";
   }
 
   hideTutorial() {
+    if (!this.tutorialWindow || !this.tutorialBackdrop) { return; }
     this.tutorialWindow.style.display = "none";
     this.tutorialBackdrop.style.display = "none";
 
@@ -322,12 +284,12 @@
 
     uploadContentIds.forEach(id => {
       const el = document.getElementById(id);
-
-      el.style.display = "none";
+      if (el) el.style.display = "none";
     });
   }
 
   showUploadContents (which, optText = null, data = null) {
+    if (!document.getElementById("upload-wrapper")) return;
     this.hideUploadContents();
     this.toggleUploadWrapper(true);
     
@@ -499,8 +461,10 @@
 
     req.addEventListener("load", cb);
 
-    const port = this.isDev ? ":8080" : "";
-    const url = `http://${window.location.hostname}${port}/replays/${filename}`;
+    // Use absolute URL for dev (with port), relative for production to avoid mixed-content issues
+    const url = this.isDev
+      ? `http://127.0.0.1:8080/replays/${filename}`
+      : `/replays/${filename}`;
 
     req.open("GET", url);
     req.send();

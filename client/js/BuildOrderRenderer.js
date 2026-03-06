@@ -4,6 +4,33 @@ const BuildOrderRenderer = class {
     this.boData = new BuildOrderData();
     this.liveBoEventElements = [];
     this.currentLiveBoEvent = null;
+    this._responsiveObserver = null;
+    this._responsiveTimeout = null;
+  }
+
+  _updateResponsiveClass () {
+    const wrapper = document.getElementById('build-wrapper');
+    if (!wrapper) return;
+    const w = wrapper.offsetWidth;
+    wrapper.classList.remove('bo-wide', 'bo-medium', 'bo-narrow');
+    if (w > 600) wrapper.classList.add('bo-wide');
+    else if (w > 400) wrapper.classList.add('bo-medium');
+    else wrapper.classList.add('bo-narrow');
+  }
+
+  _observeResponsive () {
+    if (this._responsiveObserver) return;
+    const wrapper = document.getElementById('build-wrapper');
+    if (!wrapper || typeof ResizeObserver === 'undefined') return;
+
+    this._responsiveObserver = new ResizeObserver(() => {
+      if (this._responsiveTimeout) clearTimeout(this._responsiveTimeout);
+      this._responsiveTimeout = setTimeout(() => {
+        this._responsiveTimeout = null;
+        this._updateResponsiveClass();
+      }, 80);
+    });
+    this._responsiveObserver.observe(wrapper);
   }
 
   setupBuildOrder () {
@@ -154,15 +181,9 @@ const BuildOrderRenderer = class {
     emptyEl.style.display = 'none';
     columnsEl.style.display = 'flex';
 
-    // responsive class
-    const wrapper = document.getElementById('build-wrapper');
-    const wrapperWidth = wrapper ? wrapper.offsetWidth : 800;
-    if (wrapper) {
-      wrapper.classList.remove('bo-wide', 'bo-medium', 'bo-narrow');
-      if (wrapperWidth > 600) wrapper.classList.add('bo-wide');
-      else if (wrapperWidth > 400) wrapper.classList.add('bo-medium');
-      else wrapper.classList.add('bo-narrow');
-    }
+    // responsive class (also observed dynamically on resize)
+    this._updateResponsiveClass();
+    this._observeResponsive();
 
     const timelineGap = document.getElementById('bo-timeline-gap');
 
@@ -562,7 +583,7 @@ const BuildOrderRenderer = class {
         `<span class="bo-supply-sep">/</span>` +
         `<span class="bo-supply-cap">${sMax}</span>` +
         `</span>${upkeepHtml}</div>`
-      : `<div class="bo-row-supply"></div>`;
+      : '';
 
     // Cost column (stacked gold / lumber)
     const gold = event.goldCost || 0;
@@ -615,22 +636,6 @@ const BuildOrderRenderer = class {
       const verb = cfg.verbs[type] || 'Build';
       descText = `${verb} ${event.displayName}`;
 
-      // consumed worker annotation
-      const consumed = event.consumedByBuildings || event.consumedWorkerCount || 0;
-      if (consumed > 0) {
-        const mechanic = event.buildMechanic;
-        let annotation = '';
-        if (mechanic === 'consumed_permanent') {
-          annotation = 'wisp consumed';
-        } else if (mechanic === 'consumed_temporary') {
-          annotation = race === 'O' ? 'peon inside' : 'wisp building';
-        } else if (mechanic === 'builder') {
-          annotation = consumed === 1 ? '1 peasant' : `${consumed} peasants`;
-        }
-        if (annotation) {
-          descText += ` <span class="bo-consumed-note">(${annotation})</span>`;
-        }
-      }
     } else {
       const verb = cfg.verbs[type] || 'Train';
       row.classList.add('unit-row');

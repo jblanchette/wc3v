@@ -1,381 +1,442 @@
-<html>
-  <head>
-    <title>WC3Viewer</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
-    <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WC3V — Pro Build Orders for Warcraft 3</title>
+  <meta name="description" content="Browse curated pro Warcraft 3 build orders. Learn how the best players open each matchup, with real replay walkthroughs.">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { margin: 0; }
+  </style>
+</head>
+<body class="site-page">
+  <script src="js/SiteNav.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => SiteNav.render('home'));</script>
 
-    <script src="/js/Helpers.js?v=5.03"></script>
-    <script src="/js/Drawing.js?v=5.03"></script>
-    <script src="/js/Constants.js?v=5.03"></script>
+  <main class="site-content">
+    <div class="site-browse-layout">
 
-    <script src="/js/TimeScrubber.js?v=5.03"></script>
-    <script src="/js/GameScaler.js?v=5.03"></script>
-    <script src="/js/ClientUnit.js?v=5.03"></script>
-    <script src="/js/ClientPlayer.js?v=5.03"></script>
-    <script src="/js/GameDisplayBox.js?v=5.03"></script>
-    <script src="/js/gameData.js?v=5.03"></script>
+      <!-- Sidebar Filters -->
+      <aside class="site-filter-panel" id="filter-panel">
 
-    <script src="/js/BuildOrderData.js?v=5.03"></script>
-    <script src="/js/MapRenderer.js?v=5.03"></script>
-    <script src="/js/TimelineSpline.js?v=5.03"></script>
-    <script src="/js/BuildOrderRenderer.js?v=5.03"></script>
-
-    <script src="/js/app.js?v=5.03"></script>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', (event) => {
-          wc3v.bootstrap();   
-      });
-    </script>
-
-    <style type="text/css">
-      @import "/css/main.css?v=5.03";  
-    </style>
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-  </head>
-  <body>
-
-    <div id="modal-backdrop" onClick="wc3v.hideTutorial()"></div>
-
-    <div id="app" class="layout-mode-live-bo">
-      <div id="menu">
-        <div class="menu-item" id="menu-target">
-          <?xml version="1.0" ?><!DOCTYPE svg  PUBLIC '-//W3C//DTD SVG 1.1//EN'  'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg height="32px" id="Layer_1" style="enable-background:new 0 0 32 32;" version="1.1" viewBox="0 0 32 32" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/></svg>
+        <!-- Race picker (single column) -->
+        <div class="site-filter-section">
+          <div class="site-filter-section-title">Race</div>
+          <div class="site-race-filter-list" id="race-filter"></div>
         </div>
 
-        <div class="menu-item">
-          <a href="http://wc3v.com">
-            <span class="wc3v-logo">WC3<span class="logo-colors">V</span>iewer</span>
-          </a>
-        </div>
-        
-        <div class="menu-item spacer">
-          <div id="mode-switcher">
-            <div id="mode-default" class="mode-btn selected" onClick="wc3v.setLayoutMode('default')">Default</div>
-            <div id="mode-build" class="mode-btn" onClick="wc3v.setLayoutMode('build')">Build Only</div>
-            <div id="mode-replay" class="mode-btn" onClick="wc3v.setLayoutMode('replay')">Replay Only</div>
-          </div>
+        <!-- Matchup filter (appears when race selected) -->
+        <div class="site-filter-section" id="matchup-section" style="display:none">
+          <div class="site-filter-section-title">Matchup</div>
+          <div class="site-matchup-tags" id="matchup-tags"></div>
         </div>
 
-        <div class="menu-item">
-          <span id="wc3v-title-count">Replays Uploaded:</span>
-        </div>
-      </div>
-
-      <div id="upload-wrapper">
-        <div class="upload-content">
-          <div id="upload-progress-loader">
-            <div id="upload-progress-opt-text">Uploading replay...</div>
-            <img id="uploading-icon" src="/assets/loading-icon.svg" />
-          </div>
-
-          <div id="upload-finished">
-            <div>Replay uploaded succesfully</div>
-            <div id="upload-finished-text"></div>
-          </div>
-
-          <div id="upload-no-ticket">
-            <div>Unable to take a ticket for this hour, try again in an hour.</div>
-          </div>
-
-          <div id="upload-error">
-            <div>An unexpected error occurred when uploading the replay, sorry.</div>
-          </div>
-
-          <div id="upload-not-found">
-            <div>An error occured when viewing the replay, sorry.</div>
-          </div>
-
-          <div id="upload-not-supported">
-            <div id="upload-not-supported-opt">WC3V does not (yet) support this map, sorry.</div>
-          </div>
-        </div>
-      </div>
-
-      <div id="panel">
-        <div id="panel-search">
-          <input type="text" id="main-search" placeholder="replay id">
-          <button id="search-submit">search</button>
+        <!-- Opener filter -->
+        <div class="site-filter-section" id="opener-section">
+          <div class="site-filter-section-title">Opener</div>
+          <div class="site-filter-axis-tags" id="opener-tags"></div>
         </div>
 
-        <ul>
-          <li onClick="wc3v.claimUploadTicket()">Upload New Replay</li>
-          <li onClick="wc3v.showTutorial()">Show Tutorial</li>
-          <li onClick="wc3v.showSidePanel('pro-replays')">Browse Pro Replays</li>
-          <li onClick="wc3v.showSidePanel('recent-replays')">View Recent Replays</li>
-          <li onClick="wc3v.showSidePanel('about-wc3v')">About WC3v</li>
-        </ul>
-      </div>
-
-      <div  class="side-panel shown">
-        <div class="side-panel-header">
-          <div id="recent-replays-header" class="panel-header-item shown-header" onClick="wc3v.showSidePanel('recent-replays')">
-            <div>Recent Replays</div>
-          </div>
-          
-          <div id="pro-replays-header" class="panel-header-item" onClick="wc3v.showSidePanel('pro-replays')">
-            <div>Pro Replays</div>
-          </div>
-
-          <div id="about-wc3v-header" class="panel-header-item" onClick="wc3v.showSidePanel('about-wc3v')">
-            <div>About WC3V</div>
-          </div>
+        <!-- Game Plan filter -->
+        <div class="site-filter-section" id="gameplan-section">
+          <div class="site-filter-section-title">Game Plan</div>
+          <div class="site-filter-axis-tags" id="gameplan-tags"></div>
         </div>
 
-        <div id="recent-replays">
-          <div id="recent-replays-data"></div>
+        <!-- Army filter -->
+        <div class="site-filter-section" id="army-section">
+          <div class="site-filter-section-title">Army</div>
+          <div class="site-filter-axis-tags" id="army-tags"></div>
         </div>
 
-        <div id="about-wc3v">
-          <h3>About WC3v</h3>
+      </aside>
 
-          <p>A community site to share replays without needing to launch the game client.</p>
-          <p>All services are free and the code is <a href="https://github.com/jblanchette/wc3v">open source</a> with a GNU v3.0 license.</p>
-          <p>Replay uploads are limited by a ticketing system on an hourly basis.</p>
-          <p>All materials and assets are used strictly for educational use, no profits are made from this website.</p>
-
-          <h4>Currently Supported Maps:</h4>
-          <b>All Current W3Champions Maps</b>
+      <!-- Build Grid -->
+      <section aria-label="Build orders">
+        <div id="all-builds-grid" class="site-build-grid">
+          <div class="site-loading">Loading builds...</div>
         </div>
+      </section>
 
-        <div id="pro-replays">
-          <table id="pro-replays-table">
-            <th>Players</th>
-            <th>Map</th>
-            <th>Link</th>
-          </table>
-        </div>
-      </div>
-
-      <div id="content">
-        <div id="gameplay-area">
-          <div id="player-status-wrapper">
-            <div id="player-status-toggles">
-              <div
-                id="heroes-toggle"
-                onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
-              <div
-                id="units-toggle"
-                onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
-              <div
-                id="groups-toggle"
-                onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
-            </div>
-            <canvas id="player-status-canvas" width="265" height="200"></canvas>
-          </div>
-
-          <div id="map-container">
-            <div id="main-wrapper">
-              <div id="mega-play-button" onClick="wc3v.play()"></div>
-
-              <canvas id="main-canvas" width="550" height="650"></canvas>
-              <canvas id="player-canvas" width="550" height="650"></canvas>
-              <canvas id="utility-canvas" width="550" height="650"></canvas>
-
-              <img id="loading-icon" src="/assets/loading-icon.svg" />
-
-              <div id="game-display-box"></div>
-
-              <div id="match-complete-banner">
-                <div class="mcb-text">Match Complete</div>
-                <div class="mcb-restart" onClick="wc3v.restart()">Replay Again</div>
-              </div>
-
-              <div id="empty-game-wrapper">
-                <div class="empty-game-label">No currently selected match.</div>
-
-                <div class="upload-button" onClick="wc3v.claimUploadTicket()">
-                  UPLOAD REPLAY
-                  <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
-                </div>
-              </div>
-
-              <div id="tutorial-wrapper">
-                <div id="tutorial-content">
-                  <div class="tutorial-slide slide-1">
-                    <h2>Welcome to WC3<span class="logo-colors">V</span></h2>
-                    <h4>A free and open source web based viewer for Warcraft III</h4>
-
-                    <div class="github-button">
-                      <a target="_blank" href="https://github.com/jblanchette/wc3v"><img src="/tutorial/github-logo.png" width="50px" /></a>
-                    </div>
-
-                    <div class="upload-button" onClick="wc3v.claimUploadTicket()">
-                      UPLOAD REPLAY
-                      <div class="upload-button-subtext">(bnet, w3c, or netease)</div>
-                    </div>
-
-                    <div class="tutorial-button-wrapper">
-                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(2)">Start Tutorial</div>
-                    </div>
-                  </div>
-
-                  <div class="tutorial-slide slide-2">
-                    <img src="/tutorial/slide-2.gif" class="tutorial-img" alt="Slide 2 - WC3V Neutral Camp Pop-Up" height="325px">
-
-                    <h5>Neutral Camp Pop-Up Details</h5>
-                    <div class="tutorial-text tutorial-text-small">
-                      <b>WC3V</b> analyzes and records information about neutral camps.
-                      Viewers may click on the camp box to show a pop-up of details about the camp. <br><br>
-
-                      The total level of the camp and the color (green, yellow, red) are displayed in the top right. <br><br>
-
-                      Experienced gained by players is displayed <b>as if they only killed these neutral camps.</b> <br><br>
-
-                      Camps can be displayed as unclaimed or contested.  A contested camp means that two players interacted with a camp at the same time and no clear winner was determined.
-                    </div>
-
-                    <div class="tutorial-button-wrapper">
-                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(3)">Next Tutorial (2/6)</div>
-                    </div>
-                  </div>
-
-                  <div class="tutorial-slide slide-3">
-                    <img src="/tutorial/slide-3.gif" class="tutorial-img" alt="Slide 3 - WC3V Time Scrubber Controls">
-
-                    <h5>Time Scrubber Controls</h5>
-                    <div class="tutorial-text">
-                      WC3V shows a replay like a video player.<br><br>
-
-                      Some of the featured controls:
-
-                      <ul>
-                        <li>change playback speed</li>
-                        <li>pause playback</li>
-                        <li>seek to time (click or drag the tracking dot)</li>
-                        <li>zoom and Pan (double click or mouse-wheel to zoom)</li>
-                      </ul>
-                    </div>
-
-                    <div class="tutorial-button-wrapper">
-                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(4)">Next Tutorial (3/6)</div>
-                    </div>
-                  </div>
-
-                  <div class="tutorial-slide slide-4">
-                    <img src="/tutorial/slide-4.jpg" class="tutorial-img" alt="Slide 4 - WC3V Player Status Window">
-
-                    <h5>Player Status</h5>
-                    <div class="tutorial-text">
-                      When a replay has been selected each player in the match
-                      will have an entry in the <b>Player Status</b> window.
-                      <br><br>
-
-                      Displaying team color, player color, and player name
-                      alongside other information with each of the three selectable tabs.
-                    </div>
-
-                    <div class="tutorial-button-wrapper">
-                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(5)">Next Tutorial (4/6)</div>
-                    </div>
-                  </div>
-
-                  <div class="tutorial-slide slide-5">
-                    <img src="/tutorial/slide-5.gif" width="420px" class="tutorial-img" alt="Slide 5 - WC3V Build Order Timeline">
-
-                    <h5>Build Order Timeline</h5>
-                    <div class="tutorial-text">
-                      To display the timeline of each players build order switch the tab above
-                      the player status window to "Build Order" and select the desired players.
-                    </div>
-
-                    <div class="tutorial-button-wrapper">
-                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Hide Tutorial</div>
-                      <div class="tutorial-continue" onClick="wc3v.advanceTutorial(6)">Next Tutorial (5/6)</div>
-                    </div>
-                  </div>
-
-                  <div class="tutorial-slide slide-6">
-                    <h5>Pro Replays</h5>
-
-                    <div class="tutorial-text">
-                      WC3V is pre-loaded with various pro-matches to get an example
-                      of high level play on some available maps.
-                    </div>
-
-                    <table>
-                      <tbody>
-                        <tr>
-                          <th>Players</th>
-                          <th>Map</th>
-                          <th>Replay Link</th>
-                        </tr>
-                      </tbody>
-                      <tr>
-                       <td>Happy vs Grubby</td>
-                       <td>Concealed Hills</td>
-                       <td><a href="http://wc3v.com/replay/happy-vs-grubby">link</a></td>
-                      </tr><tr>
-                       <td>Grubby vs Thorzain</td>
-                       <td>Concealed Hills</td>
-                       <td><a href="http://wc3v.com/replay/grubby-vs-thorzain">link</a></td>
-                      </tr>
-                       <td>Happy vs lucifer</td>
-                       <td>Echo Isles</td>
-                       <td><a href="http://wc3v.com/replay/happy-vs-lucifer">link</a></td>
-                      </tr><tr>
-                       <td>Foggy vs Cash</td>
-                       <td>Echo Isles</td>
-                       <td><a href="http://wc3v.com/replay/foggy-vs-cash-2">link</a></td>
-                      </tr>
-                    </table>
-
-                    <div class="tutorial-button-wrapper">
-                      <div class="tutorial-hide" onClick="wc3v.hideTutorial()">Finish Tutorial</div>
-
-                      <div class="tutorial-continue" onClick="wc3v.claimUploadTicket()">Upload A Replay</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div id="viewer-controls" class="disabled">
-              <div class="vc-btn" id="viewer-option-displayPath"
-                onClick="wc3v.toggleViewOption('displayPath')">Hero Paths</div>
-              <div class="vc-btn on" id="viewer-option-displayLeveLDots"
-                onClick="wc3v.toggleViewOption('displayLeveLDots')">Level Dots</div>
-              <div class="vc-btn on" id="viewer-option-displayText"
-                onClick="wc3v.toggleViewOption('displayText')">Labels</div>
-              <div class="vc-btn on" id="viewer-option-decayEffects"
-                onClick="wc3v.toggleViewOption('decayEffects')">Fade FX</div>
-              <div class="vc-btn" id="viewer-option-displayCreepRoute"
-                onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes</div>
-              <div class="vc-btn" id="viewer-option-displayTreeGrid"
-                onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid</div>
-            </div>
-          </div>
-        </div>
-
-        <div id="build-area">
-          <div id="build-wrapper">
-            <div id="bo-content">
-              <div id="bo-columns">
-                <div class="bo-side bo-side-left"></div>
-                <div id="bo-timeline-gap"></div>
-                <div class="bo-side bo-side-right"></div>
-              </div>
-            </div>
-            <div id="bo-empty">
-              <span>Load a replay to view the build order.</span>
-            </div>
-          </div>
-        </div>
-
-        <div id="scrubber-bar"></div>
-      </div>
     </div>
+  </main>
 
-  </body>
+  <script>
+    const RACE_META = {
+      'H': { label: 'Human',     abbr: 'HU',  color: '#4488FF', icon: 'htow' },
+      'O': { label: 'Orc',       abbr: 'ORC', color: '#FF4444', icon: 'ogre' },
+      'E': { label: 'Night Elf', abbr: 'NE',  color: '#44DD88', icon: 'etol' },
+      'U': { label: 'Undead',    abbr: 'UD',  color: '#AA66FF', icon: 'unpl' }
+    };
+
+    const RACE_KEYS = Object.keys(RACE_META);
+
+    const TAG_AXES = {
+      opener: {
+        label: 'Opener', color: '#D4915E', field: 'opener',
+        values: {
+          'rush': 'Rush', 'harass': 'Harass', 'standard': 'Standard',
+          'expand': 'Expand', 'fast-tech': 'Fast Tech'
+        }
+      },
+      gamePlan: {
+        label: 'Game Plan', color: '#5EA8D4', field: 'gamePlan',
+        values: {
+          'timing-push': 'Timing Push', 'map-control': 'Map Control',
+          'economic': 'Economic', 'tech-scale': 'Tech Scale'
+        }
+      },
+      army: {
+        label: 'Army', color: '#8BC475', field: 'army',
+        values: {
+          'ground': 'Ground', 'air': 'Air',
+          'caster': 'Caster', 'mixed': 'Mixed'
+        }
+      }
+    };
+
+    function raceColor(key) { return (RACE_META[key] || {}).color || '#888'; }
+    function raceAbbr(key)  { return (RACE_META[key] || {}).abbr  || '??';  }
+    function raceLabel(key) { return (RACE_META[key] || {}).label || key;    }
+    function raceIcon(key)  { return (RACE_META[key] || {}).icon  || '';     }
+
+    // ─── Unit / hero label lookup ─────────────────────────────
+    const UNIT_NAMES = {
+      // Undead Heroes
+      'udea': ['Death Knight', 'DK'],   'ulic': ['Lich', 'Lich'],
+      'ucrl': ['Crypt Lord', 'CL'],     'udre': ['Dread Lord', 'DL'],
+      // Undead Units
+      'ucry': ['Crypt Fiend', 'Fiend'], 'uobs': ['Obsidian Statue', 'Statue'],
+      'ubsp': ['Destroyer', 'Destro'],  'ugar': ['Gargoyle', 'Garg'],
+      'ugho': ['Ghoul', 'Ghoul'],       'ufro': ['Frost Wyrm', 'Wyrm'],
+      // Human Heroes
+      'hamg': ['Archmage', 'AM'],       'hmkg': ['Mountain King', 'MK'],
+      'hpal': ['Paladin', 'Pal'],
+      // Human Units
+      'hfoo': ['Footman', 'Foot'],      'hkni': ['Knight', 'Knight'],
+      'hrif': ['Rifleman', 'Rifle'],    'hmpr': ['Priest', 'Priest'],
+      'hspt': ['Spell Breaker', 'SB'],  'hdhw': ['Dragonhawk', 'DHawk'],
+      'hgry': ['Gryphon Rider', 'Gryph'], 'hsor': ['Sorceress', 'Sorc'],
+      // Orc Heroes
+      'obla': ['Blademaster', 'BM'],    'ofar': ['Far Seer', 'FS'],
+      'otch': ['Tauren Chieftain', 'TC'], 'oshd': ['Shadow Hunter', 'SH'],
+      // Orc Units
+      'ogru': ['Grunt', 'Grunt'],       'orai': ['Raider', 'Raider'],
+      'oshm': ['Shaman', 'Shaman'],     'otau': ['Tauren', 'Tauren'],
+      'otbr': ['Troll Batrider', 'Batr'], 'ohun': ['Headhunter', 'HH'],
+      'okod': ['Kodo Beast', 'Kodo'],   'owyv': ['Wind Rider', 'Wyv'],
+      'ospm': ['Spirit Walker', 'SW'],
+      // Night Elf Heroes
+      'ekee': ['Keeper of the Grove', 'KotG'], 'emoo': ['Priestess of the Moon', 'PotM'],
+      'edem': ['Demon Hunter', 'DH'],   'nbrn': ['Dark Ranger', 'DR'],
+      'nbst': ['Beastmaster', 'BM'],
+      // Night Elf Units
+      'earc': ['Archer', 'Archer'],     'edoc': ['Druid of the Claw', 'Bear'],
+      'edot': ['Druid of the Talon', 'Talon'], 'edry': ['Dryad', 'Dryad'],
+      'emtg': ['Mountain Giant', 'MG'], 'esen': ['Huntress', 'Hunt'],
+      'ehpr': ['Hippogryph Rider', 'Hippo'], 'echm': ['Chimera', 'Chim']
+    };
+
+    function unitFull(id)  { return (UNIT_NAMES[id] || ['', ''])[0]; }
+    function unitShort(id) { return (UNIT_NAMES[id] || ['', ''])[1]; }
+
+    // ─── Tier strip renderer ──────────────────────────────────
+    function renderTierStrip(build) {
+      const tp = build.tierProgression;
+      const heroIds = build.heroItemIds || (build.heroItemId ? [build.heroItemId] : []);
+      if (!tp && !heroIds.length) return '';
+
+      const tiers = ['t1', 't2', 't3'];
+      const tierData = tiers.map((key, i) => {
+        const tier = tp ? tp[key] : null;
+        const hero = heroIds[i] || null;
+        const units = (tier && tier.units) ? tier.units.slice(0, 2) : [];
+        const timing = (tier && tier.timing) ? tier.timing : '';
+        return { key, hero, units, timing };
+      });
+
+      // Skip tiers that have nothing
+      const activeTiers = tierData.filter(t => t.hero || t.units.length);
+      if (!activeTiers.length) return '';
+
+      const tierHtml = activeTiers.map(t => {
+        const label = t.key.toUpperCase();
+
+        // Hero slot (alone on top line)
+        let heroHtml = '';
+        if (t.hero) {
+          heroHtml = `<div class="site-card-tier-slot">
+            <img class="site-card-tier-hero" src="/assets/wc3icons/${t.hero}.jpg"
+                 alt="" title="${unitFull(t.hero)}" loading="lazy" />
+            <span class="site-card-tier-name">${unitShort(t.hero)}</span>
+          </div>`;
+        }
+
+        // Units row (separate line below hero)
+        let unitsHtml = '';
+        if (t.units.length) {
+          const unitSlots = t.units.map(id =>
+            `<div class="site-card-tier-slot">
+              <img class="site-card-tier-unit" src="/assets/wc3icons/${id}.jpg"
+                   alt="" title="${unitFull(id)}" loading="lazy" />
+              <span class="site-card-tier-name">${unitShort(id)}</span>
+            </div>`
+          ).join('');
+          unitsHtml = `<div class="site-card-tier-units">${unitSlots}</div>`;
+        }
+
+        const timingHtml = t.timing
+          ? `<span class="site-card-tier-timing">~${t.timing.split('-')[0]}</span>`
+          : '';
+
+        return `<div class="site-card-tier ${t.key}">
+          <span class="site-card-tier-label">${label}</span>
+          <div class="site-card-tier-icons">
+            ${heroHtml}
+            ${unitsHtml}
+          </div>
+          ${timingHtml}
+        </div>`;
+      }).join('');
+
+      return `<div class="site-card-tiers">${tierHtml}</div>`;
+    }
+
+    // ─── Card renderer ──────────────────────────────────────
+    function buildCard(build) {
+      const rc = raceColor(build.race);
+
+      // 3-axis color-coded tags
+      const tagPills = Object.keys(TAG_AXES).map(axisKey => {
+        const axis = TAG_AXES[axisKey];
+        const val = build[axis.field];
+        if (!val || !axis.values[val]) return '';
+        return `<span class="site-card-tag" style="--tag-color:${axis.color}">${axis.values[val]}</span>`;
+      }).join('');
+
+      const rIcon = raceIcon(build.race);
+      const rLabel = raceLabel(build.race);
+
+      const replays = build.replays || [];
+      const hasReplay = replays.length > 0;
+
+      let replaySection = '';
+      if (hasReplay) {
+        const replayItems = replays.map(r => {
+          const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
+          return `<div class="site-replay-item">
+            <span class="site-replay-players">${r.playerName} vs ${r.opponentName}</span>
+            <span class="site-replay-map">${r.map || ''}</span>
+            <a href="${href}" class="site-replay-view-btn">View Replay</a>
+          </div>`;
+        }).join('');
+        replaySection = `<div class="site-replay-section">
+          <div class="site-replay-header">${replays.length} Replay${replays.length !== 1 ? 's' : ''}</div>
+          <div class="site-replay-list">${replayItems}</div>
+        </div>`;
+      } else {
+        replaySection = `<div class="site-replay-section">
+          <div class="site-replay-none">No replays yet</div>
+        </div>`;
+      }
+
+      const tierStrip = renderTierStrip(build);
+
+      return `
+        <div class="site-build-card${hasReplay ? '' : ' no-replay'}" style="--race-color:${rc}">
+          <div class="site-card-topbar">
+            <img class="site-card-race-icon" src="/assets/wc3icons/${rIcon}.jpg" alt="" />
+            <span class="site-card-race-label">${rLabel}</span>
+          </div>
+          <div class="site-card-name">${build.name}</div>
+          ${tierStrip}
+          <div class="site-card-desc">${build.description}</div>
+          <div class="site-card-footer">
+            ${tagPills ? `<div class="site-card-tags">${tagPills}</div>` : ''}
+          </div>
+          ${replaySection}
+        </div>
+      `;
+    }
+
+    // ─── State ──────────────────────────────────────────────
+    let allBuilds = [];
+    let selectedRace = '';
+    let selectedMatchup = '';
+    const axisFilters = { opener: '', gamePlan: '', army: '' };
+
+    // ─── Build race filter buttons ──────────────────────────
+    function buildRaceFilter() {
+      const container = document.getElementById('race-filter');
+      RACE_KEYS.forEach(key => {
+        const meta = RACE_META[key];
+        const btn = document.createElement('button');
+        btn.className = 'site-race-pick';
+        btn.dataset.race = key;
+        btn.style.setProperty('--race-color', meta.color);
+        btn.innerHTML = `
+          <img class="site-race-pick-icon" src="/assets/wc3icons/${meta.icon}.jpg" alt="" />
+          <span class="site-race-pick-label">${meta.label}</span>
+        `;
+        btn.addEventListener('click', () => {
+          const wasActive = btn.classList.contains('active');
+          container.querySelectorAll('.site-race-pick').forEach(b => b.classList.remove('active'));
+          if (wasActive) {
+            selectedRace = '';
+          } else {
+            btn.classList.add('active');
+            selectedRace = key;
+          }
+          selectedMatchup = '';
+          buildMatchupButtons();
+          applyFilter();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    // ─── Build 3-axis filter buttons ──────────────────────────
+    function buildAxisFilters() {
+      const containerIds = {
+        opener: 'opener-tags', gamePlan: 'gameplan-tags', army: 'army-tags'
+      };
+
+      Object.entries(containerIds).forEach(([axisKey, containerId]) => {
+        const axis = TAG_AXES[axisKey];
+        const container = document.getElementById(containerId);
+
+        // Only show values that exist in current builds
+        const usedValues = new Set();
+        allBuilds.forEach(b => { if (b[axis.field]) usedValues.add(b[axis.field]); });
+
+        Object.entries(axis.values).forEach(([val, label]) => {
+          if (!usedValues.has(val)) return;
+          const btn = document.createElement('button');
+          btn.className = 'site-axis-btn';
+          btn.dataset.value = val;
+          btn.style.setProperty('--tag-color', axis.color);
+          btn.textContent = label;
+          btn.addEventListener('click', () => {
+            const wasActive = btn.classList.contains('active');
+            container.querySelectorAll('.site-axis-btn').forEach(b => b.classList.remove('active'));
+            axisFilters[axisKey] = wasActive ? '' : val;
+            if (!wasActive) btn.classList.add('active');
+            applyFilter();
+          });
+          container.appendChild(btn);
+        });
+      });
+    }
+
+    // ─── Build matchup filter buttons ──────────────────────
+    function buildMatchupButtons() {
+      const section = document.getElementById('matchup-section');
+      const container = document.getElementById('matchup-tags');
+      container.innerHTML = '';
+
+      if (!selectedRace) {
+        section.style.display = 'none';
+        return;
+      }
+
+      const opponentRaces = new Set();
+      allBuilds.forEach(b => {
+        if (b.race !== selectedRace) return;
+        (b.matchups || []).forEach(m => {
+          const parts = m.split('v');
+          if (parts[0] === selectedRace && parts[1]) opponentRaces.add(parts[1]);
+        });
+      });
+
+      if (opponentRaces.size === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = '';
+      RACE_KEYS.forEach(key => {
+        if (!opponentRaces.has(key)) return;
+        const btn = document.createElement('button');
+        btn.className = 'site-matchup-btn';
+        btn.dataset.opponent = key;
+        btn.style.setProperty('--race-color', raceColor(key));
+        btn.textContent = `vs ${raceAbbr(key)}`;
+        btn.addEventListener('click', () => {
+          const wasActive = btn.classList.contains('active');
+          container.querySelectorAll('.site-matchup-btn').forEach(b => b.classList.remove('active'));
+          if (wasActive) {
+            selectedMatchup = '';
+          } else {
+            btn.classList.add('active');
+            selectedMatchup = `${selectedRace}v${key}`;
+          }
+          applyFilter();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    // ─── Apply filters ──────────────────────────────────────
+    function applyFilter() {
+      let visible = allBuilds;
+
+      if (selectedRace) {
+        visible = visible.filter(b => b.race === selectedRace);
+      }
+
+      if (selectedMatchup) {
+        visible = visible.filter(b =>
+          (b.matchups || []).includes(selectedMatchup)
+        );
+      }
+
+      // 3-axis filters (AND logic)
+      if (axisFilters.opener) {
+        visible = visible.filter(b => b.opener === axisFilters.opener);
+      }
+      if (axisFilters.gamePlan) {
+        visible = visible.filter(b => b.gamePlan === axisFilters.gamePlan);
+      }
+      if (axisFilters.army) {
+        visible = visible.filter(b => b.army === axisFilters.army);
+      }
+
+      document.getElementById('all-builds-grid').innerHTML =
+        visible.length
+          ? visible.map(buildCard).join('')
+          : '<div class="site-no-results">No builds match these filters.</div>';
+    }
+
+    // ─── Init ───────────────────────────────────────────────
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const raceParam = params.get('race');
+
+      try {
+        const res = await fetch('/data/builds-manifest.json');
+        const manifest = await res.json();
+        allBuilds = manifest.builds || [];
+      } catch (e) {
+        document.getElementById('all-builds-grid').innerHTML =
+          '<div class="site-error">Could not load builds.</div>';
+        return;
+      }
+
+      buildRaceFilter();
+      buildAxisFilters();
+
+      // Pre-select race from URL param
+      if (raceParam && RACE_META[raceParam]) {
+        selectedRace = raceParam;
+        const btn = document.querySelector(`#race-filter .site-race-pick[data-race="${raceParam}"]`);
+        if (btn) btn.classList.add('active');
+      }
+
+      applyFilter();
+    }
+
+    init();
+  </script>
+</body>
 </html>

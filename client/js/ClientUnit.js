@@ -51,6 +51,11 @@ const ClientUnit = class {
       this[field] = unitData[field] || null;
     });
 
+    // guard for units that weren't fully resolved server-side
+    if (!this.meta) {
+      this.meta = { hero: false, worker: false, permanent: this.isBuilding, playerShop: false, evolution: null, movespeed: 200 };
+    }
+
     this.playerId = playerId;
     this.playerColor = playerColor;
     this.isNeutralPlayer = isNeutralPlayer;

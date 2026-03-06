@@ -34,9 +34,9 @@ const TimelineSpline = class {
   }
 
   _render () {
-    const boContent = document.getElementById('bo-content');
+    const columnsEl = document.getElementById('bo-columns');
     const gap = document.getElementById('bo-timeline-gap');
-    if (!boContent) return;
+    if (!columnsEl) return;
 
     // Remove previous SVG
     if (this.svg && this.svg.parentElement) {
@@ -44,44 +44,45 @@ const TimelineSpline = class {
       this.svg = null;
     }
 
-    // Harvest anchors from rendered events
-    const anchors = this._harvestAnchors(boContent);
+    // Harvest anchors relative to #bo-columns
+    const anchors = this._harvestAnchors(columnsEl);
     if (anchors.length < 2) return;
 
     // Build adaptive control points
     const controlPoints = this._buildControlPoints(anchors);
     if (controlPoints.length < 2) return;
 
-    // Compute spine X position
-    const contentRect = boContent.getBoundingClientRect();
+    // Compute spine X position relative to #bo-columns
+    const columnsRect = columnsEl.getBoundingClientRect();
     const isSinglePlayer = !gap || gap.style.display === 'none' || gap.offsetWidth === 0;
     this._isSinglePlayer = isSinglePlayer;
 
     let spineX;
     if (isSinglePlayer) {
       // Single-player: place spine to the left of the column
-      const leftSide = boContent.querySelector('.bo-side-left');
+      const leftSide = columnsEl.querySelector('.bo-side-left');
       if (leftSide) {
         const sideRect = leftSide.getBoundingClientRect();
-        spineX = sideRect.left - contentRect.left - 24;
+        spineX = sideRect.left - columnsRect.left - 24;
       } else {
         spineX = 24;
       }
     } else {
       // Multi-player: center in the gap
       const gapRect = gap.getBoundingClientRect();
-      spineX = gapRect.left + gapRect.width / 2 - contentRect.left;
+      spineX = gapRect.left + gapRect.width / 2 - columnsRect.left;
     }
 
     const svgHeight = Math.max(
-      contentRect.height,
+      columnsRect.height,
       controlPoints[controlPoints.length - 1].y + 20
     );
 
-    // Create SVG and add reusable defs
-    this.svg = this._createSvg(contentRect.width, svgHeight);
+    // Create SVG and add reusable defs — parent is #bo-columns so it
+    // tracks centering (max-width / margin:auto) at any viewport width
+    this.svg = this._createSvg(columnsRect.width, svgHeight);
     this._addDefs();
-    boContent.appendChild(this.svg);
+    columnsEl.appendChild(this.svg);
 
     // Draw spine (with glow)
     this._renderSpine(spineX, controlPoints);

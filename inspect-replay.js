@@ -154,7 +154,9 @@ if (showAll || showSections.includes('events')) {
         const expoTag = e.isExpansion ? ' [EXPANSION]' : '';
         console.log(`    [${time}] ${e.key}: ${b.displayName} (${b.itemId}) gold=${b.goldCost||0} lum=${b.lumberCost||0} food+${b.foodMade||0}${expoTag} | workers: ${wStr}`);
       } else if (e.key === 'HeroLevel') {
-        console.log(`    [${time}] ${e.key}: ${(e.unit||{}).displayName} -> Lv${e.newLevel} spell=${(e.spell||{}).displayName||'?'}`);
+        const slLen = (e.spellList || []).length;
+        const lsLen = e.learnedSkills ? Object.keys(e.learnedSkills).length : 0;
+        console.log(`    [${time}] ${e.key}: ${(e.unit||{}).displayName} -> Lv${e.newLevel} spell=${(e.spell||{}).displayName||'?'} (spellList=${slLen} learned=${lsLen})`);
       } else {
         const name = (e.unit && e.unit.displayName) || (e.building && e.building.displayName) || '';
         console.log(`    [${time}] ${e.key}${name ? ': ' + name : ''} | workers: ${wStr}`);

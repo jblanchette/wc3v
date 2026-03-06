@@ -5,6 +5,7 @@ const utils = require("./helpers/utils"),
       PlayerManager = require("./lib/PlayerManager");
 
 const config = require("./config/config");
+const ReplayValidator = require("./lib/ReplayValidator");
 const fs = require('fs');
 const path = require('path');
 
@@ -22,13 +23,16 @@ const doParsing = async (file) => {
   const buffer = fs.readFileSync(file);
   const parser = new ReplayParser();
 
+  let replayMeta = null;
+
   parser.on("basic_replay_information", (info) => {
+    replayMeta = info;
     playerManager.setMetaData(info.metadata);
   });
 
   parser.on("gamedatablock", (block) => {
     const commandBlocks = block.commandBlocks || [];
-    
+
     if (block.timeIncrement) {
       globalTime += block.timeIncrement;
       playerManager.processTick(globalTime);
@@ -43,6 +47,8 @@ const doParsing = async (file) => {
       actions.forEach(action => {
         actionCount++;
 
+        // normalize w3gjs v3 action format to v2 field names
+        action = utils.normalizeAction(action);
         // all action itemIds must be fixed due to parser bug
         action = utils.fixBrokenActionFormat(action);
 
@@ -52,7 +58,20 @@ const doParsing = async (file) => {
     });
   });
 
-  const replay = await parser.parse(buffer);
+  let replay;
+  try {
+    replay = await parser.parse(buffer);
+  } catch (e) {
+    // w3gjs can crash on unsupported actions (e.g. FLO/W3C replays with newer action types)
+    // game data was already processed via events — use the stored metadata
+    if (replayMeta) {
+      console.error(`w3gjs parse error (using partial data): ${e.message}`);
+      console.error(e.stack);
+      replay = replayMeta;
+    } else {
+      throw e;
+    }
+  }
 
   // post-process: update worker assignments with final per-unit primaryRole
   Object.values(playerManager.players).forEach(player => {
@@ -60,6 +79,50 @@ const doParsing = async (file) => {
       player.postProcessWorkerAssignments();
     }
   });
+
+  // post-parse validation: detect contradictions in parsed data
+  const validator = new ReplayValidator(playerManager.players);
+  const validation = validator.validate();
+
+  if (validation.warnings.length) {
+    console.logger(`Replay validation: ${validation.warnings.length} warning(s)`);
+    validation.warnings.forEach(w => {
+      console.logger(`  [${w.type}] Player ${w.player}: ${w.details}`);
+    });
+  }
+
+  // output action type summary when debug is enabled
+  if (config.debugActions) {
+    const actionSummary = playerManager.getActionSummary();
+    console.log("\n\n=== ACTION TYPE SUMMARY ===");
+    console.log("\nHandled action types:");
+    Object.entries(actionSummary.handled).sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
+      console.log(`  ${name}: ${count}`);
+    });
+
+    if (Object.keys(actionSummary.unhandled).length) {
+      console.log("\nUnhandled (named but no handler):");
+      Object.entries(actionSummary.unhandled).sort((a, b) => b[1] - a[1]).forEach(([name, count]) => {
+        console.log(`  ${name}: ${count}`);
+      });
+    } else {
+      console.log("\nNo unhandled named actions.");
+    }
+
+    if (actionSummary.unknown.length) {
+      console.log(`\nUnknown action IDs (${actionSummary.unknown.length} total):`);
+      const idCounts = {};
+      actionSummary.unknown.forEach(u => {
+        idCounts[u.hexId] = (idCounts[u.hexId] || 0) + 1;
+      });
+      Object.entries(idCounts).sort((a, b) => b[1] - a[1]).forEach(([hexId, count]) => {
+        console.log(`  ${hexId}: ${count} occurrences`);
+      });
+    } else {
+      console.log("\nNo unknown action IDs.");
+    }
+    console.log("===========================\n");
+  }
 
   // output worker trace if enabled
   if (config.debugWorkers) {
@@ -73,7 +136,8 @@ const doParsing = async (file) => {
   return {
     replay,
     players: playerManager.players,
-    world: playerManager.world
+    world: playerManager.world,
+    validation
   };
 };
 
@@ -94,11 +158,11 @@ const parseReplays = async (options) => {
 
   const result = await doParsing(file).then(result => {    
     try {
-        const { replay, players, world } = result;
+        const { replay, players, world, validation } = result;
 
         // write our output wc3v file
         const replayHash = hashes && hashes[0] || null;
-        utils.writeOutput(file, replayHash, replay, players, world, jsonPadding);
+        utils.writeOutput(file, replayHash, replay, players, world, jsonPadding, validation);
 
         // re-enable all logging
         logManager.setDisabledState(false);

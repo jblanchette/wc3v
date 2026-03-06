@@ -154,7 +154,7 @@ const GameDisplayBox = class {
         const playerColor = playerColorMap[playerId];
 
         const heroes = claimPlayers[playerId].units.filter(unit => {
-          return unit.meta.hero;
+          return unit.isHero || (unit.meta && unit.meta.hero);
         }) || [];
 
         playerClaimStr += `

@@ -1,0 +1,72 @@
+[
+  {
+    "buildId": "ud-dk-expand",
+    "name": "DK Fast Expand",
+    "race": "U",
+    "matchups": ["UvO", "UvH"],
+    "replayNeeds": "UD DK opener with early expansion (~6:00 timing) — any pro game showing clear expo decision. Happy, 120, or Labyrinth preferred."
+  },
+  {
+    "buildId": "ud-cl-fiend-push",
+    "name": "Crypt Lord Fast Fiend Push",
+    "race": "U",
+    "matchups": ["UvH"],
+    "replayNeeds": "UD Crypt Lord first hero into fast Fiends — aggressive timing push. Look for CL openers in UDvHU games."
+  },
+  {
+    "buildId": "ud-dk-ghoul-rush",
+    "name": "DK Ghoul Rush",
+    "race": "U",
+    "matchups": ["UvN"],
+    "replayNeeds": "UD DK with mass Ghouls vs Night Elf — aggressive early game. Sometimes called 'ghoul pull' build. Any UDvNE game where ghouls are the primary army."
+  },
+  {
+    "buildId": "orc-fs-fast-tech",
+    "name": "FS Fast Tech",
+    "race": "O",
+    "matchups": ["OvH"],
+    "replayNeeds": "Orc Far Seer skipping Barracks, rushing Stronghold — fast tech build. FoCuS is known for this style. Any OvH game with no T1 combat units."
+  },
+  {
+    "buildId": "hu-mk-fast-expand",
+    "name": "MK Fast Expand",
+    "race": "H",
+    "matchups": ["HvU", "HvN"],
+    "replayNeeds": "Human Mountain King first hero into fast expansion — look for MK opener with early second Town Hall. Cash, TH000, or Infi preferred."
+  },
+  {
+    "buildId": "hu-paladin-rifle",
+    "name": "Paladin Rifle",
+    "race": "H",
+    "matchups": ["HvO", "HvN"],
+    "replayNeeds": "Human Paladin first hero with mass Riflemen — Holy Light sustain build. Any pro game with Paladin first in HvO or HvN."
+  },
+  {
+    "buildId": "ne-dh-fast-bear",
+    "name": "DH Fast Bear Tech",
+    "race": "E",
+    "matchups": ["EvU", "EvO", "EvH"],
+    "replayNeeds": "NE Demon Hunter opener into fast T3 Druid of the Claw (bears). The standard NE build — any pro NE game with DH first and bear transition. Moon, Foggy, Lawliet preferred."
+  },
+  {
+    "buildId": "ne-potm-mass-hunts",
+    "name": "PotM Mass Huntress",
+    "race": "E",
+    "matchups": ["EvH", "EvE"],
+    "replayNeeds": "NE Priestess of the Moon first hero with mass Huntresses — Trueshot Aura build. Any EvH game with PotM opener."
+  },
+  {
+    "buildId": "ne-dh-mass-talons",
+    "name": "DH Mass Talons",
+    "race": "E",
+    "matchups": ["EvO"],
+    "replayNeeds": "NE Demon Hunter into mass Druids of the Talon with Cyclone spam — the classic anti-Orc melee build. Any EvO game heavy on Talons/Cyclone."
+  },
+  {
+    "buildId": "ne-dh-huntress",
+    "name": "DH Mass Huntress",
+    "race": "E",
+    "matchups": ["EvH", "EvO"],
+    "replayNeeds": "NE Demon Hunter opener with fast Huntress production and map control. Any pro NE game with DH + Huntress focus."
+  }
+]

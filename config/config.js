@@ -1,7 +1,7 @@
 
 const config = {
   logToConsole: false,
-	debugActions: true,
+	debugActions: false,
 	debugPlayer: null,
 	debugWorkers: false,
 	debugOutput: false

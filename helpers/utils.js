@@ -10,17 +10,26 @@ const logManager = require("./logManager");
 // check if two [itemId] lists are equal
 ////
 const isEqualItemId = (itemIdA, itemIdB) => {
-	let isEqual = false;
-
 	if (itemIdA === null && itemIdB === null) {
-		// both null
 		return true;
 	} else if (itemIdA === null || itemIdB === null) {
-		// one is null and one isn't
 		return false;
 	}
 
-	// check to ensure each position in the list is equal
+	// plain number comparison (w3gjs v3 readNetTag returns uint32)
+	if (typeof itemIdA === 'number' && typeof itemIdB === 'number') {
+		return itemIdA === itemIdB;
+	}
+
+	// mismatched types — never equal
+	if (typeof itemIdA !== typeof itemIdB) {
+		return false;
+	}
+
+	// array/buffer comparison (w3gjs readFourCC returns [uint8, uint8, uint8, uint8])
+	if (itemIdA.length !== itemIdB.length) {
+		return false;
+	}
 	for (let i = 0; i < itemIdA.length; i++) {
 		if (itemIdA[i] !== itemIdB[i]) {
 			return false;
@@ -79,14 +88,86 @@ const fixItemId = (itemId) => {
 // parser library incorrectly formats itemIds and
 // it seems this will not ever change for unknown reasons
 //
+/**
+ * Normalize w3gjs v3 action format to the v2 format expected by our code.
+ * v3 changes: orderId→itemId, target→targetX/Y, object→objectId1/2,
+ * units→actions, unit/item→objectId/itemObjectId (0x13).
+ */
+const normalizeAction = (action) => {
+  // v3: orderId replaces itemId for ability actions (0x10-0x14)
+  if (action.orderId !== undefined && action.itemId === undefined) {
+    action.itemId = action.orderId;
+    delete action.orderId;
+  }
+
+  // v3: target is [x, y] instead of targetX, targetY
+  if (Array.isArray(action.target)) {
+    action.targetX = action.target[0];
+    action.targetY = action.target[1];
+    delete action.target;
+  }
+
+  // v3: object is [id1, id2] instead of objectId1, objectId2
+  if (Array.isArray(action.object) && action.objectId1 === undefined) {
+    action.objectId1 = action.object[0];
+    action.objectId2 = action.object[1];
+    delete action.object;
+  }
+
+  // v3 action 0x13: unit→objectId1/2, item→itemObjectId1/2
+  if (Array.isArray(action.unit) && action.objectId1 === undefined) {
+    action.objectId1 = action.unit[0];
+    action.objectId2 = action.unit[1];
+    delete action.unit;
+  }
+  if (Array.isArray(action.item) && action.itemObjectId1 === undefined) {
+    action.itemObjectId1 = action.item[0];
+    action.itemObjectId2 = action.item[1];
+    delete action.item;
+  }
+
+  // v3 action 0x14: orderId1→itemId1, orderId2→itemId2, targetA→targetAX/Y, targetB→targetBX/Y
+  if (action.orderId1 !== undefined) {
+    action.itemId1 = action.orderId1;
+    delete action.orderId1;
+  }
+  if (action.orderId2 !== undefined) {
+    action.itemId2 = action.orderId2;
+    delete action.orderId2;
+  }
+  if (Array.isArray(action.targetA)) {
+    action.targetAX = action.targetA[0];
+    action.targetAY = action.targetA[1];
+    delete action.targetA;
+  }
+  if (Array.isArray(action.targetB)) {
+    action.targetBX = action.targetB[0];
+    action.targetBY = action.targetB[1];
+    delete action.targetB;
+  }
+
+  // v3: units is [[id1, id2], ...] instead of actions: [{itemId1, itemId2}, ...]
+  if (Array.isArray(action.units) && action.actions === undefined) {
+    action.actions = action.units.map(pair => ({
+      itemId1: pair[0],
+      itemId2: pair[1]
+    }));
+    delete action.units;
+  }
+
+  return action;
+};
+
 const fixBrokenActionFormat = (action) => {
   if (action && action.itemId) {
     const { itemId } = action;
-    
-    const itemValue = itemId[3];
 
-    if (itemValue >= 0x41 && itemValue <= 0x7A) { 
-      action.itemId = itemId.map(e => String.fromCharCode(parseInt(e, 10))).reverse().join('');
+    if (Array.isArray(itemId)) {
+      const itemValue = itemId[3];
+
+      if (itemValue >= 0x41 && itemValue <= 0x7A) {
+        action.itemId = itemId.map(e => String.fromCharCode(parseInt(e, 10))).reverse().join('');
+      }
     }
   }
 
@@ -428,7 +509,7 @@ const assignCampOrder = (world, wc3vPlayers) => {
 // write wc3v output to file
 ////
 
-const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding = 0) => {
+const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding = 0, validation = null) => {
 
   const savedPlayers = replay.metadata.slotRecords;
   delete replay.players;
@@ -529,7 +610,10 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         return acc;
       }, {})
     },
-    replay: replay
+    replay: replay,
+    ...(validation && (validation.warnings.length || validation.errors.length)
+      ? { validation }
+      : {})
   };
 
   try {
@@ -682,6 +766,7 @@ module.exports = {
   unpackItemId,
   getRaceFromFlag,
   fixBrokenActionFormat,
+  normalizeAction,
 
 	// constants
 	MS_TO_SECONDS: 0.001,

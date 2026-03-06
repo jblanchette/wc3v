@@ -47,32 +47,53 @@ const CLIENT_GAMEDATA_DIR = "../client/js";
 //
 
 async function main() {
+  // parse CLI args
+  const args = process.argv.slice(2);
+  let version = 'v11';
+  let sourcePath = null;
+  let listOnly = false;
+  let mapPrefix = 'w3c_';
+
+  args.forEach(arg => {
+    if (arg.startsWith('--version=')) version = arg.split('=')[1];
+    if (arg.startsWith('--source=')) sourcePath = arg.split('=')[1];
+    if (arg === '--list') listOnly = true;
+    if (arg.startsWith('--prefix=')) mapPrefix = arg.split('=')[1];
+  });
+
   FS.mkdir('/stormjs');
 
-  const w3ChampionsVersion = 'v11';
-
   const homedir = require('os').homedir();
-  const mapDirectoryPath = `${homedir}\\Documents\\Warcraft III\\Maps\\W3Champions\\${w3ChampionsVersion}`;
-  // assumes wc3v is relative to `${homedir}/[some dir]/wc3v/tools`
-  // change if you need to run this in a different place
-  const mapDirectoryPathPosix = `../../../Documents/Warcraft III/Maps/W3Champions/${w3ChampionsVersion}`;
 
-  // mount our w3c folder to stomjs
+  // support custom source path or default W3Champions path
+  const mapDirectoryPathPosix = sourcePath
+    ? path.relative(process.cwd(), sourcePath).replace(/\\/g, '/')
+    : `../../../Documents/Warcraft III/Maps/W3Champions/${version}`;
+
+  console.log(`Map source: ${mapDirectoryPathPosix}`);
+  console.log(`Map prefix: "${mapPrefix}" (strip from filename for map name)`);
+
+  // mount our map folder to stormjs
   FS.mount(FS.filesystems.NODEFS, { root: mapDirectoryPathPosix }, '/stormjs');
 
-  // read all the maps in 
-  const maps = FS.readdir('./stormjs');
+  // read all the maps in
+  const maps = FS.readdir('./stormjs').filter(m => m !== '.' && m !== '..' && m.endsWith('.w3x'));
+
+  if (listOnly) {
+    console.log(`\nFound ${maps.length} maps:`);
+    maps.forEach((map, i) => {
+      const name = map.substring(mapPrefix.length, map.length - 4);
+      console.log(`  ${i + 1}. ${name} (${map})`);
+    });
+    return;
+  }
 
   for (let i = 0; i < maps.length; i++) {
     const map = maps[i];
 
-    if (map == "." || map == "..") {
-      continue;
-    }
-
     try {
       console.log(`reading map: ${map} (${(i+1)}/${maps.length})`);
-      await readMapFile(map);
+      await readMapFile(map, mapPrefix);
     } catch (err) {
       console.log("failed on map: ", map);
       console.log(err);
@@ -82,11 +103,12 @@ async function main() {
   console.log("finished data extraction");
 };
 
-async function readMapFile(mapFilePath) {
+async function readMapFile(mapFilePath, mapPrefix = 'w3c_') {
   const mpq = await MPQ.open(`/stormjs/${mapFilePath}`, 'r');
-  
+
   // get rid of the prefix and filename suffix
-  const normalizedMapName = mapFilePath.substring(4, mapFilePath.length - 4);
+  const prefixLen = mapFilePath.startsWith(mapPrefix) ? mapPrefix.length : 0;
+  const normalizedMapName = mapFilePath.substring(prefixLen, mapFilePath.length - 4);
 
   // make our map output directory if we need to
   const outputDirectory = `../${MAP_OUTPUT_DIR}/${normalizedMapName}`;
