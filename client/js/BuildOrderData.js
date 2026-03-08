@@ -18,6 +18,7 @@ const BuildOrderData = class {
     raceStarterIcons: { 'O': 'ogre', 'H': 'htow', 'E': 'etol', 'U': 'unpl' },
     defaultStartWorkers: { 'O': 5, 'H': 5, 'E': 5, 'U': 4 },
     defaultStartSupply: { 'O': { used: 5, max: 11 }, 'H': { used: 5, max: 12 }, 'E': { used: 5, max: 10 }, 'U': { used: 4, max: 10 } },
+    maxSupply: 100,
     heroBuildTime: 55,
     tierUpgradeIds: {
       'ostr': 2, 'ofrt': 3, 'hkee': 2, 'hcas': 3,
@@ -42,8 +43,8 @@ const BuildOrderData = class {
       itemId: '',
       gameTime,
       goldCost: 0, lumberCost: 0, foodCost: 0, foodProvided: 0,
-      supplyUsed: supplyUsed || 0,
-      supplyMax: supplyMax || 0,
+      supplyUsed: Math.min(supplyUsed || 0, BuildOrderData.CONFIG.maxSupply),
+      supplyMax: Math.min(supplyMax || 0, BuildOrderData.CONFIG.maxSupply),
       workersOnGold: (workers && workers.onGold) || 0,
       workersOnLumber: (workers && workers.onLumber) || 0,
       workersBuilding: (workers && workers.onBuild) || 0,
@@ -112,7 +113,8 @@ const BuildOrderData = class {
         }));
 
         // Supply completion event — synthetic row at buildTime offset
-        if (isSupply && !tierTarget) {
+        // skip if supply is already at max (100)
+        if (isSupply && !tierTarget && supplyMax < BuildOrderData.CONFIG.maxSupply) {
           const buildTime = building.buildTime || 60;
           events.push(create('supplyComplete', gameTime + buildTime, supplyUsed, supplyMax, w, {
             displayName: building.displayName,
@@ -341,6 +343,7 @@ const BuildOrderData = class {
       const heroStatus = {};
       const workerState = { onGold: 0, onLumber: 0, onBuild: 0, total: 0 };
       const economy = { goldSpent: 0, lumberSpent: 0 };
+      const upgrades = { attack: 0, defense: 0, researched: [] };
       let lastSupply = { used: 0, max: 0 };
 
       grouped.forEach(event => {
@@ -379,6 +382,17 @@ const BuildOrderData = class {
           }
           army[event.itemId].count += count;
         }
+        // Upgrade tracking
+        if (event.type === 'attackUpgrade') {
+          upgrades.attack = event.level;
+        }
+        if (event.type === 'defenseUpgrade') {
+          upgrades.defense = event.level;
+        }
+        if (event.type === 'research') {
+          upgrades.researched.push({ displayName: event.displayName, itemId: event.itemId, level: event.level, icon: event.icon });
+        }
+
         if (event.type === 'workerAssign') {
           workerState.onLumber = event.workersOnLumber + event.ghoulsOnLumber;
           workerState.total = event.workersOnGold + workerState.onLumber + event.workersBuilding;
@@ -390,7 +404,8 @@ const BuildOrderData = class {
         heroes: Object.values(heroStatus),
         workers: workerState,
         supply: lastSupply,
-        economy
+        economy,
+        upgrades
       };
     };
 

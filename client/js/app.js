@@ -33,22 +33,14 @@ const Wc3vViewer = class {
 
   // Render rich build context bar: back link, matchup badges, build name, match info, replay switcher pills
   async renderBuildContext (buildId) {
-    const bar = document.getElementById('viewer-breadcrumb');
-    if (!bar) return;
-
     const urlParams = new URLSearchParams(window.location.search);
     const currentReplayId = urlParams.get('r');
-
-    const RACE_COLORS = { H: '#4488FF', O: '#FF4444', E: '#44DD88', U: '#AA66FF' };
-    const RACE_ABBR   = { H: 'HU',     O: 'ORC',     E: 'NE',      U: 'UD'      };
 
     try {
       const res = await fetch('/data/builds-manifest.json');
       const manifest = await res.json();
       const build = (manifest.builds || []).find(b => b.id === buildId);
       if (!build) return;
-
-      const rc = RACE_COLORS[build.race] || '#888';
 
       // Find ALL builds that reference this replay (covers both players)
       this.buildContextBySlot = {};
@@ -62,7 +54,7 @@ const Wc3vViewer = class {
         });
       });
 
-      // Build replay dropdown — all replays for this build, sorted by map then player
+      // Build replay list for dropdown — all replays for this build, sorted by map then player
       const allReplays = (build.replays || []).slice();
       allReplays.sort((a, b) => {
         const mapCmp = (a.map || '').localeCompare(b.map || '');
@@ -85,44 +77,10 @@ const Wc3vViewer = class {
         }
       });
 
-      let replayDropdownHtml = '';
-      if (allReplays.length > 1) {
-        const options = allReplays.map(r => {
-          const label = `${r.map || 'Unknown Map'} — ${r.playerName}${r._dupLabel || ''}`;
-          const url = `/viewer?r=${r.replayId}&buildId=${build.id}`;
-          const selected = r.replayId === currentReplayId ? ' selected' : '';
-          return `<option value="${url}"${selected}>${label}</option>`;
-        }).join('');
-
-        replayDropdownHtml = `
-          <div class="vbc-sep"></div>
-          <span class="vbc-also">Replays:</span>
-          <select class="vbc-replay-select" onchange="if(this.value) window.location.href=this.value">
-            ${options}
-          </select>`;
-      }
-
-      // Build player badges for all players in this replay
-      const slotEntries = Object.entries(this.buildContextBySlot)
-        .sort((a, b) => Number(a[0]) - Number(b[0]));
-
-      const playerBadgesHtml = slotEntries.map((entry, i) => {
-        const ctx = entry[1];
-        const color = RACE_COLORS[ctx.race] || '#888';
-        const abbr = RACE_ABBR[ctx.race] || ctx.race;
-        const sep = i > 0 ? '<span class="vbc-vs">vs</span>' : '';
-        return `${sep}<span class="vbc-badge" style="--rc:${color}">${abbr}</span><span class="vbc-name">${ctx.name}</span>`;
-      }).join('');
-
-      bar.style.display = 'flex';
-      bar.innerHTML = `
-        <a class="vbc-back" href="/">← Builds</a>
-        <div class="vbc-sep"></div>
-        ${playerBadgesHtml}
-        ${replayDropdownHtml}
-      `;
+      // Store for MatchHeader to use
+      this.buildContext = { build, allReplays, currentReplayId };
     } catch (e) {
-      // breadcrumb is non-critical — fail silently
+      // build context is non-critical — fail silently
     }
   }
 
@@ -528,27 +486,6 @@ const Wc3vViewer = class {
       self.mapImage.src = `/maps/${name}/map.jpg`; // Set source path
 
       self.mapImage.addEventListener('load', () => {
-        const { bounds } = this.mapInfo;
-        const { map, camera } = bounds;
-
-        /*
-          bound index selection -
-          not all camera grids are centered in the map grid,
-          try to adjust so we show the lower ratio so enough
-          of the actual map is shown
-         */
-
-        const xBoundIndex = (map[0][0] < camera[0][1]) ? 0 : 1;
-        const yBoundIndex = (map[1][0] < camera[1][1]) ? 0 : 1;
-
-        self.cameraRatio =  {
-          x: 1, //(camera[0][xBoundIndex] / map[0][xBoundIndex]),
-          y: 1, //(camera[1][yBoundIndex] / map[1][yBoundIndex])
-        };
-
-        const mapWidth = self.mapImage.width;// * self.cameraRatio.x;
-        const mapHeight = self.mapImage.height;// * self.cameraRatio.y;
-
         resolve();
       }, false);
 
@@ -652,20 +589,18 @@ const Wc3vViewer = class {
   }
 
   toggleMegaPlayButton (state) {
-    this.megaPlayButton.style.display = state ? "block" : "none";
+    this.megaPlayButton.style.display = state ? "flex" : "none";
   }
 
   toggleViewOption (optionKey) {
     this.viewOptions[optionKey] = !this.viewOptions[optionKey];
+    const isOn = this.viewOptions[optionKey];
 
-    const el = document.getElementById(`viewer-option-${optionKey}`);
-    if (!el) {
-      return;
-    }
-
-    this.viewOptions[optionKey] ?
-      el.classList.add('on') :
-      el.classList.remove('on');
+    // sync all matching toggle elements (toolbar + mega-hint)
+    const els = document.querySelectorAll(
+      `#viewer-option-${optionKey}, .mega-hint[data-option="${optionKey}"]`
+    );
+    els.forEach(el => isOn ? el.classList.add('on') : el.classList.remove('on'));
 
     if (this.gameLoaded) {
       this.render();
@@ -818,12 +753,12 @@ const Wc3vViewer = class {
   scaleLiveModeCanvas () {
     if (!this.gameScaler) return;
 
-    const gameplayRow = document.getElementById('gameplay-row');
-    if (!gameplayRow) return;
+    const mainWrapper = document.getElementById('main-wrapper');
+    if (!mainWrapper) return;
 
     requestAnimationFrame(() => {
-      const availableWidth = gameplayRow.clientWidth;
-      const availableHeight = gameplayRow.clientHeight;
+      const availableWidth = mainWrapper.clientWidth;
+      const availableHeight = mainWrapper.clientHeight;
 
       const mapWidth = this.gameScaler.mapImage.width;
       const mapHeight = this.gameScaler.mapImage.height;
@@ -935,7 +870,7 @@ const Wc3vViewer = class {
     this.utilityCanvas = document.getElementById("utility-canvas");
     this.utilityCtx = this.utilityCanvas.getContext("2d");
 
-    this.megaPlayButton = document.getElementById("mega-play-button");
+    this.megaPlayButton = document.getElementById("mega-play-overlay");
 
     // Mode switcher is in the menu bar now; no title text needed
 
@@ -998,7 +933,7 @@ const Wc3vViewer = class {
       displayWalkGrid: false,
       displayBuildGrid: false,
       displayWaterGrid: false,
-      displayCreepRoute: false
+      displayCreepRoute: true
     };
 
     Object.keys(this.viewOptions).forEach(optionKey => {
@@ -1151,14 +1086,10 @@ const Wc3vViewer = class {
     this.gameDisplayBox.setData(
       world.neutralGroups, GameDisplayBox.neutralCampHandler(this.gameScaler, this.transform));
 
-    this.canvas.addEventListener('mousedown', (e) => {
-      if (self.layoutMode === LayoutMode.liveBuildOrder) return;
-      self.gameDisplayBox.handleMouse(e, 'down', self.transform);
-    });
-
     this.canvas.addEventListener('mousemove', (e) => {
-      if (self.layoutMode === LayoutMode.liveBuildOrder) return;
-      self.gameDisplayBox.handleMouse(e, 'move', self.transform);
+      // skip camp hover only when canvas is CSS-scaled (coordinates mismatch)
+      if (self.displayScale && self.displayScale !== 1.0) return;
+      self.gameDisplayBox.handleMouse(e, self.transform);
     });
 
     this.toggleMegaPlayButton(true);
@@ -1169,14 +1100,28 @@ const Wc3vViewer = class {
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)
       .translateExtent([[0, 0], [width, height]])
+      .filter(() => {
+        // allow wheel zoom always, but block mousedown drag at default zoom
+        // (nothing to pan at k=1, and D3 drag kills mousemove for camp hover)
+        if (d3.event.type === 'mousedown' && this.transform.k <= 1.0) {
+          return false;
+        }
+        // default D3 filter: no ctrl key, no secondary button
+        return !d3.event.ctrlKey && !d3.event.button;
+      })
       .on("zoom", () => {
         if (!this.ctx) {
           return;
         }
 
         const { transform } = d3.event;
-        // update our transform object from the zoom
         this.transform = transform;
+
+        // when zooming back to 1.0 with an offset, snap to origin
+        if (transform.k <= 1.0 && (transform.x !== 0 || transform.y !== 0)) {
+          transform.x = 0;
+          transform.y = 0;
+        }
 
         this.gameDisplayBox.hide();
         this.scrubber.updateZoomDisplay(transform.k);
@@ -1191,18 +1136,14 @@ const Wc3vViewer = class {
       this.zoomContainer.call(this.zoom.scaleTo, k);
     };
 
-    // ResizeObserver for live mode canvas rescaling
-    const gameplayRow = document.getElementById('gameplay-row');
-    if (gameplayRow && typeof ResizeObserver !== 'undefined') {
-      let resizeTimeout;
+    // ResizeObserver — watch gameplay-area (its size only changes from window/layout, not canvas)
+    const resizeTarget = document.getElementById('gameplay-area');
+    if (resizeTarget && typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(() => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-          if (self.layoutMode === LayoutMode.liveBuildOrder) {
-            self.scaleLiveModeCanvas();
-          }
-        }, 100);
-      }).observe(gameplayRow);
+        if (self.layoutMode === LayoutMode.liveBuildOrder) {
+          self.scaleLiveModeCanvas();
+        }
+      }).observe(resizeTarget);
     }
   }
 
@@ -1343,8 +1284,9 @@ const Wc3vViewer = class {
     };
 
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
-    this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler);
-    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap);
+    this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
+    const hoveredCampUuid = this.gameDisplayBox ? this.gameDisplayBox.hoveredCampUuid : null;
+    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid);
 
     players.forEach(player => {
       player.preRender(

@@ -361,6 +361,7 @@ const BuildOrderRenderer = class {
     const levelStr = event.level > 1 ? ` Lv${event.level}` : '';
     bar.innerHTML = `
       <img class="bo-research-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+      <span class="bo-research-label">RESEARCH</span>
       <span class="bo-research-name">${event.displayName}${levelStr}</span>
       ${costStr ? `<span class="bo-research-cost">${costStr}</span>` : ''}`;
     return bar;
@@ -652,16 +653,33 @@ const BuildOrderRenderer = class {
       </div>`;
     }
 
-    // Workers + Supply + Economy section
+    // Upgrades section
+    let upgradesHtml = '';
+    const upgrades = snapshot.upgrades;
+    if (upgrades && (upgrades.attack || upgrades.defense || upgrades.researched.length)) {
+      let upgradeItems = '';
+      if (upgrades.attack) {
+        upgradeItems += `<span class="bo-summary-upgrade atk"><span class="bo-upgrade-badge atk">ATK ${upgrades.attack}</span></span>`;
+      }
+      if (upgrades.defense) {
+        upgradeItems += `<span class="bo-summary-upgrade def"><span class="bo-upgrade-badge def">DEF ${upgrades.defense}</span></span>`;
+      }
+      upgrades.researched.forEach(r => {
+        const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
+        const lvl = r.level > 1 ? ` ${r.level}` : '';
+        upgradeItems += `<span class="bo-summary-upgrade ability">
+          <img class="bo-summary-icon" src="${iconSrc}" title="${r.displayName}" onerror="this.style.display='none'" /><span class="bo-upgrade-name">${r.displayName}${lvl}</span>
+        </span>`;
+      });
+      upgradesHtml = `<div class="bo-summary-section">
+        <span class="bo-summary-label">UPGRADES</span>
+        <div class="bo-summary-items upgrades">${upgradeItems}</div>
+      </div>`;
+    }
+
+    // Supply + Economy section
     const supplyStr = supply ? `${supply.used}/${supply.max}` : '';
-    const cappedGold = Math.min(5, workers.onGold);
     const econHtml = `<div class="bo-summary-section economy">
-      <span class="bo-summary-label">WORKERS</span>
-      <span class="bo-summary-workers">
-        <span class="bo-assign-gold">${cappedGold}G</span>
-        <span class="bo-assign-lumber">${workers.onLumber}L</span>
-        <span class="bo-assign-build">${workers.onBuild}B</span>
-      </span>
       <span class="bo-summary-supply">${supplyStr}</span>
       <span class="bo-summary-spent">
         <span class="bo-cost-dot gold-dot"></span><span class="bo-gold">${economy.goldSpent}</span>
@@ -669,7 +687,7 @@ const BuildOrderRenderer = class {
       </span>
     </div>`;
 
-    el.innerHTML = `${headerHtml}${heroesHtml}${armyHtml}${econHtml}`;
+    el.innerHTML = `${headerHtml}${heroesHtml}${armyHtml}${upgradesHtml}${econHtml}`;
     return el;
   }
 
@@ -679,20 +697,11 @@ const BuildOrderRenderer = class {
     const el = document.createElement('div');
     el.classList.add('bo-econ-summary');
 
-    const cappedGold = Math.min(5, workers.onGold);
     const supplyStr = supply ? `${supply.used}/${supply.max}` : '';
 
     el.innerHTML = `
       <span class="bo-summary-label">FINAL ECONOMY</span>
       <div class="bo-econ-detail">
-        <span class="bo-econ-group">
-          <span class="bo-summary-label">WORKERS</span>
-          <span class="bo-summary-workers">
-            <span class="bo-assign-gold">${cappedGold}G</span>
-            <span class="bo-assign-lumber">${workers.onLumber}L</span>
-            <span class="bo-assign-build">${workers.onBuild}B</span>
-          </span>
-        </span>
         <span class="bo-econ-group">
           <span class="bo-summary-label">SUPPLY</span>
           <span class="bo-summary-supply">${supplyStr}</span>
@@ -732,8 +741,6 @@ const BuildOrderRenderer = class {
       activeEl.classList.add('bo-live-active');
       this.currentLiveBoEvent = activeEl;
 
-      // Auto-scroll the build area to keep active row visible
-      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
 

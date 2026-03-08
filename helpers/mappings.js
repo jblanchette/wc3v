@@ -1652,6 +1652,61 @@ const getUnitInfo = (itemId) => {
 	};
 };
 
+// Tech tree: unit itemId → required building itemIds (production + prerequisites)
+// Does NOT include tier hall requirements (handled separately by TIER_REQUIRED_UNITS in ReplayValidator)
+const TECH_TREE_REQUIREMENTS = {
+  'U': {
+    'ugho': ['usep'],              // Ghoul → Crypt
+    'ucry': ['usep', 'ugrv'],     // Crypt Fiend → Crypt + Graveyard
+    'ugar': ['usep', 'ugrv'],     // Gargoyle → Crypt + Graveyard
+    'uabo': ['uslh'],             // Abomination → Slaughterhouse
+    'uobs': ['uslh'],             // Obsidian Statue → Slaughterhouse
+    'ubsp': ['uslh'],             // Destroyer (upgraded statue) → Slaughterhouse
+    'umtw': ['uslh', 'ugrv'],    // Meat Wagon → Slaughterhouse + Graveyard
+    'unec': ['utod'],             // Necromancer → Temple of the Damned
+    'uban': ['utod'],             // Banshee → Temple of the Damned
+    'ufro': ['ubon'],             // Frost Wyrm → Boneyard
+  },
+  'O': {
+    'ogru': ['obar'],             // Grunt → Barracks
+    'ohun': ['obar'],             // Headhunter → Barracks
+    'otbk': ['obar'],             // Berserker → Barracks
+    'ocat': ['obar', 'ofor'],    // Demolisher → Barracks + War Mill
+    'otau': ['obar'],             // Tauren → Barracks
+    'orai': ['obea'],             // Raider → Bestiary
+    'okod': ['obea'],             // Kodo Beast → Bestiary
+    'owyv': ['obea'],             // Wind Rider → Bestiary
+    'otbr': ['obea'],             // Troll Batrider → Bestiary
+    'oshm': ['osld'],             // Shaman → Spirit Lodge
+    'odoc': ['osld'],             // Witch Doctor → Spirit Lodge
+    'ospw': ['osld'],             // Spirit Walker → Spirit Lodge
+  },
+  'H': {
+    'hfoo': ['hbar'],             // Footman → Barracks
+    'hrif': ['hbar'],             // Rifleman → Barracks
+    'hkni': ['hbar'],             // Knight → Barracks
+    'hmtm': ['harm'],             // Mortar Team → Workshop
+    'hmtt': ['harm'],             // Siege Engine → Workshop
+    'hgyr': ['harm'],             // Gyrocopter → Workshop
+    'hgry': ['hgra'],             // Gryphon Rider → Gryphon Aviary
+    'hmpr': ['hars'],             // Priest → Arcane Sanctum
+    'hsor': ['hars'],             // Sorceress → Arcane Sanctum
+    'hspt': ['hars'],             // Spell Breaker → Arcane Sanctum
+  },
+  'E': {
+    'earc': ['eaow'],             // Archer → Ancient of War
+    'esen': ['eaow'],             // Huntress → Ancient of War
+    'ebal': ['eaow'],             // Glaive Thrower → Ancient of War
+    'edoc': ['eaol'],             // Druid of the Claw → Ancient of Lore
+    'edry': ['eaol'],             // Dryad → Ancient of Lore
+    'emtg': ['eaol'],             // Mountain Giant → Ancient of Lore
+    'edot': ['eaoe'],             // Druid of the Talon → Ancient of Wind
+    'efdr': ['eaoe'],             // Faerie Dragon → Ancient of Wind
+    'ehip': ['eaoe'],             // Hippogryph → Ancient of Wind
+    'echm': ['edos'],             // Chimera → Chimera Roost
+  }
+};
+
 module.exports = {
 	getUnitInfo,
 	buildings,
@@ -1687,6 +1742,8 @@ module.exports = {
   getBuildTime,
 
   researchMeta,
+
+  TECH_TREE_REQUIREMENTS,
 
   NEUTRAL_PLAYER_ID: 1042,
   NEUTRAL_PLAYER_SLOT: 1044,

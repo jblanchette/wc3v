@@ -22,6 +22,15 @@ const SiteNav = {
 
     const isHome = activeSection === 'home';
 
+    // Back-to-builds link for viewer pages with buildId
+    let leftHtml = '';
+    if (!isHome && document.getElementById('app')) {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('buildId')) {
+        leftHtml = `<a class="site-nav-back" href="/">← Builds</a>`;
+      }
+    }
+
     // Right-side content depends on page
     let rightHtml = '';
     if (isHome) {
@@ -42,6 +51,7 @@ const SiteNav = {
         <a class="site-nav-logo" href="${root}/">
           <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
         </a>
+        ${leftHtml}
         <div class="site-nav-spacer"></div>
         ${rightHtml}
       </div>

@@ -29,6 +29,29 @@ const MatchHeader = class {
     const nameEl = this.el.querySelector('.mh-map-name');
     const raw = (this.viewer.mapInfo && this.viewer.mapInfo.name) || this.viewer.mapName || '';
     nameEl.textContent = this.cleanMapName(raw);
+
+    // Replay dropdown — insert into toolbar if build context has multiple replays
+    const ctx = this.viewer.buildContext;
+    if (ctx && ctx.allReplays && ctx.allReplays.length > 1) {
+      const options = ctx.allReplays.map(r => {
+        const label = `${r.map || 'Unknown Map'} — ${r.playerName}${r._dupLabel || ''}`;
+        const url = `/viewer?r=${r.replayId}&buildId=${ctx.build.id}`;
+        const selected = r.replayId === ctx.currentReplayId ? ' selected' : '';
+        return `<option value="${url}"${selected}>${label}</option>`;
+      }).join('');
+
+      const mapInfo = this.el.querySelector('.mh-map-info');
+      if (mapInfo) {
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('mh-replay-select-wrap');
+        wrapper.innerHTML = `
+          <span class="mh-replay-label">Replays:</span>
+          <select class="mh-replay-select" onchange="if(this.value) window.location.href=this.value">
+            ${options}
+          </select>`;
+        mapInfo.appendChild(wrapper);
+      }
+    }
   }
 
   renderMatchup () {
@@ -41,17 +64,27 @@ const MatchHeader = class {
     const leftData = this.boData.processBuildOrderData(buildOrderPlayers[0]);
     const rightData = this.boData.processBuildOrderData(buildOrderPlayers[1]);
 
-    leftEl.innerHTML = this.renderPlayerCard(leftData);
-    rightEl.innerHTML = this.renderPlayerCard(rightData);
+    leftEl.innerHTML = this.renderPlayerCard(leftData, buildOrderPlayers[0]);
+    rightEl.innerHTML = this.renderPlayerCard(rightData, buildOrderPlayers[1]);
   }
 
-  renderPlayerCard (boData) {
+  renderPlayerCard (boData, player) {
     const { race, raceInfo, displayName, playerColor, tierProduction, tier2Time, tier3Time, hasExpansion } = boData;
+
+    // Build name from build context (if this player's slot has a matching build)
+    let buildNameHtml = '';
+    const ctxBySlot = this.viewer.buildContextBySlot;
+    if (ctxBySlot && player) {
+      const ctx = ctxBySlot[player.slot];
+      if (ctx) {
+        buildNameHtml = `<div class="mh-build-name">${ctx.name}</div>`;
+      }
+    }
 
     let html = `<div class="mh-player-name" style="color:${playerColor}">
       ${displayName}
       <span class="mh-race-badge">${raceInfo.label}</span>
-    </div>`;
+    </div>${buildNameHtml}`;
 
     // Heroes with spells
     const { heroes } = tierProduction;
@@ -154,7 +187,7 @@ const MatchHeader = class {
       { key: 'displayCreepRoute', label: 'Creep Routes', featured: true },
       { key: 'displayPath', label: 'Hero Paths' },
       { key: 'displayLeveLDots', label: 'Level Dots' },
-      { key: 'displayText', label: 'Labels' },
+      { key: 'displayText', label: 'Unit Names' },
       { key: 'decayEffects', label: 'Fade FX' },
       { key: 'displayTreeGrid', label: 'Tree Grid' }
     ];

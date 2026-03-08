@@ -9,6 +9,11 @@ html, body {
   height: 100%;
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+}
+
 #modal-backdrop {
   display: block;
   width: 100%;
@@ -25,7 +30,8 @@ html, body {
   display: flex;
   flex-direction: column;
   min-width: 960px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 #app[class*="layout-mode-"] {
@@ -317,7 +323,7 @@ html, body {
 }
 
 #gameplay-row {
-  flex: 1;
+  flex: 1 1 0%;
   min-height: 0;
   overflow: hidden;
   display: flex;
@@ -325,9 +331,11 @@ html, body {
 }
 
 #scrubber-bar {
-  flex-shrink: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 2.25rem;
-  width: 100%;
 }
 
 /* --- Gameplay Mode (Replay Only) --- */
@@ -350,8 +358,8 @@ html, body {
   background: var(--bo-bg);
 }
 
-.layout-mode-live-bo #gameplay-area { position: relative; flex: 2; min-width: 340px; min-height: 0; max-height: 100%; border-left: 1px solid var(--bo-border-solid); background: var(--bo-bg); }
-.layout-mode-live-bo #build-area { display: block; flex: 3; min-width: 580px; overflow-y: auto; order: -1; }
+.layout-mode-live-bo #gameplay-area { position: relative; flex: 1 1 0%; min-width: 340px; min-height: 0; max-height: 100%; border-left: 1px solid var(--bo-border-solid); background: var(--bo-bg); padding-right: 12px; }
+.layout-mode-live-bo #build-area { display: block; flex: 0 0 auto; width: 880px; min-width: 580px; overflow-y: auto; order: -1; padding: 0 6px; }
 
 .layout-mode-live-bo #build-wrapper {
   width: 100%;
@@ -369,11 +377,20 @@ html, body {
 
 #map-container {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 1px solid #000;
+  flex: 1 1 0%;
   min-height: 0;
+  border: 1px solid #000;
+}
+
+#main-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
 
@@ -479,7 +496,8 @@ html, body {
   display: flex;
   gap: 0;
   padding: 0 8px;
-  width: 960px;
+  width: 100%;
+  max-width: 860px;
   margin: 0 auto;
   position: relative;
 }
@@ -813,8 +831,8 @@ html, body {
 }
 
 .bo-research-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   border-radius: 3px;
   flex-shrink: 0;
 }
@@ -850,6 +868,59 @@ html, body {
   font-weight: 400;
   font-size: 11px;
   flex-shrink: 0;
+}
+.bo-research-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+
+/* Upgrade badges in army summaries */
+.bo-summary-items.upgrades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.bo-summary-upgrade {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.bo-summary-upgrade.atk {
+  background: rgba(200, 60, 60, 0.25);
+  color: #f08080;
+}
+.bo-summary-upgrade.def {
+  background: rgba(60, 120, 200, 0.25);
+  color: #7ab8f5;
+}
+.bo-summary-upgrade.ability {
+  background: rgba(140, 80, 200, 0.2);
+  color: #c8a0f0;
+}
+.bo-upgrade-badge {
+  font-weight: 700;
+  font-size: 11px;
+}
+.bo-upgrade-badge.atk { color: #f08080; }
+.bo-upgrade-badge.def { color: #7ab8f5; }
+.bo-upgrade-name {
+  font-weight: 400;
+  font-size: 11px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bo-summary-upgrade .bo-summary-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
 }
 
 /* --- Column header (sticky icon labels for grid columns) --- */
@@ -1321,7 +1392,7 @@ html, body {
 .bo-army-summary {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   padding: 8px 10px;
   margin: 6px 4px;
   font-size: 13px;
@@ -1329,41 +1400,45 @@ html, body {
   background: var(--bo-card-bg);
   border: 1px solid var(--bo-border);
   border-radius: 6px;
+  max-width: 380px;
 }
 
 .bo-summary-section {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  align-items: start;
+  gap: 2px 6px;
+  padding: 3px 0;
 }
 
 .bo-summary-label {
-  font-size: 0.8rem;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
   color: var(--bo-text-dim);
-  min-width: 48px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 30px;
 }
 
 .bo-summary-items {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
 }
 
 .bo-summary-hero {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .bo-summary-hero.training { opacity: 0.5; font-style: italic; }
 .bo-summary-hero.training img { filter: grayscale(0.5); }
 
 .bo-summary-hero-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--bo-text);
 }
@@ -1372,8 +1447,8 @@ html, body {
 .bo-summary-hero.alive .bo-summary-hero-label { color: var(--bo-accent); }
 
 .bo-summary-icon {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 3px;
   object-fit: cover;
   border: 1px solid var(--bo-border);
@@ -1391,10 +1466,11 @@ html, body {
 
 /* Attack / Armor type summary */
 .bo-type-summary {
+  grid-column: 1 / -1;
   display: flex;
-  gap: 12px;
-  margin-top: 4px;
-  padding-top: 4px;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 3px 0 0 68px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
 .bo-type-summary-row {
@@ -1417,14 +1493,14 @@ html, body {
 
 /* Summary card header */
 .bo-summary-header {
-  font-size: 0.75rem;
+  font-size: 10px;
   font-weight: 700;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.5);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
   margin-bottom: 4px;
   padding-bottom: 3px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 /* Unit row type icons (first occurrence) */
@@ -1439,34 +1515,36 @@ html, body {
 
 
 .bo-summary-section.economy {
+  grid-template-columns: auto 1fr;
   padding-top: 4px;
   border-top: 1px solid var(--bo-border);
-  flex-wrap: wrap;
+}
+.bo-summary-section.economy .bo-summary-spent {
+  justify-self: end;
 }
 
 .bo-summary-workers {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   font-weight: 600;
   font-family: var(--bo-font-mono);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .bo-summary-supply {
   font-weight: 700;
   font-family: var(--bo-font-mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--bo-food);
 }
 
 .bo-summary-spent {
-  margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-weight: 600;
   font-family: var(--bo-font-mono);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* --- Phase borders on tier sections --- */
@@ -1496,16 +1574,17 @@ html, body {
 
 /* --- Final economy summary card --- */
 .bo-econ-summary {
-  padding: 8px 10px;
-  margin: 6px 4px;
+  padding: 6px 10px;
+  margin: 4px 4px;
   background: var(--bo-card-bg);
   border: 1px solid var(--bo-border);
   border-radius: 6px;
+  max-width: 380px;
 }
 
 .bo-econ-summary > .bo-summary-label {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -1513,17 +1592,20 @@ html, body {
 }
 
 .bo-econ-detail {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  font-size: 12px;
+  gap: 2px 10px;
+  font-size: 11px;
 }
 
 .bo-econ-group {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.bo-econ-group:last-child {
+  justify-self: end;
 }
 
 .bo-econ-group .bo-summary-label {
@@ -1539,15 +1621,12 @@ html, body {
 
 /* --- Build order uses fixed width (1100px), scrolls horizontally on small screens --- */
 
-#main-wrapper {
-  /* so we can position: absolute; sub-canvas elements */
+/* #main-wrapper is now defined in the layout section above #map-container */
+
+/* Wrapper that keeps overlay canvases aligned with the main canvas */
+#canvas-group {
   position: relative;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  display: inline-block;
 }
 
 #view-selector {
@@ -2039,21 +2118,91 @@ html, body {
 /* Hide toolbar in static-bo mode (no canvas to control) */
 .layout-mode-static-bo .mh-toolbar { display: none; }
 
-#mega-play-button {
+#mega-play-overlay {
   position: absolute;
-  left: calc(50% - 40px);
-  top: calc(50% - 40px);
-  background: url('/assets/mega-play-icon.svg');
-  background-color: rgba(0, 0, 0, 0.65);
-  border-radius: 4rem;
-  height: 80px;
-  width: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
   display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+#mega-play-button {
+  background-image: url('/assets/mega-play-icon.svg');
+  background-color: rgba(0, 0, 0, 0.65);
+  background-size: 50% 50%;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 50%;
+  height: 160px;
+  width: 160px;
 }
 
 #mega-play-button:hover {
   cursor: pointer;
   background-color: rgba(0, 0, 0, 0.85);
+}
+
+#mega-play-hints {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+}
+
+#mega-play-hints-title {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.15rem;
+}
+
+.mega-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.25rem;
+  color: #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.mega-hint:hover {
+  background: rgba(0, 0, 0, 0.8);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.mega-hint.on {
+  background: rgba(60, 140, 220, 0.35);
+  border-color: rgba(60, 140, 220, 0.7);
+  color: #fff;
+}
+
+.mega-hint-icon::after {
+  content: "\2715";
+  margin-left: 0.1rem;
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.mega-hint.on .mega-hint-icon::after {
+  content: "\25C9";
+  opacity: 0.9;
 }
 
 /* --- Match Complete Banner --- */
@@ -2340,124 +2489,170 @@ html, body {
 
 
 #game-display-box {
-  display: none;
   position: absolute;
   left: 0px;
   top: 0px;
-  width: 280px;
-  min-height: 260px;
-  border: 2px solid #000;
-  background: #FFF;
-  border-radius: 0.35rem;
-  opacity: 0.925;
-  padding: 0.35rem 0.25rem;
-  font-size: 12px;
+  width: 300px;
+  background: #1a1f2e;
+  border: 1px solid #3a4a5c;
+  border-radius: 6px;
+  padding: 0;
+  font-size: 13px;
+  color: #d0d6e0;
   z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
 }
 
-.game-display-box-header {
+#game-display-box.visible {
+  opacity: 1;
+}
+
+.camp-popup-header {
   display: flex;
-  flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  width: 98%;
+  padding: 8px 10px;
+  background: #232a3a;
+  border-bottom: 1px solid #3a4a5c;
+  border-radius: 6px 6px 0 0;
 }
 
-#game-display-box h3 {
-  border: 1px solid #5fa5cb;
-  background-color: #ded599;
-  border-radius: 0.75rem;
-  padding: 0.35rem 0.55rem;
-  width: 13.25rem;
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0.25rem;
-}
-
-.game-display-box-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.game-display-box-content ul {
+.camp-popup-header h3 {
   margin: 0;
-  padding: 0;
-}
-
-.game-display-box-content li {
-  display: block;
-  border: 1px solid #333;
-  border-radius: 0.25rem;
-  padding: 0.35rem 0.25rem;
-  background-color: #5fa5cb;
-  color: #000;
   font-size: 14px;
-  margin-top: 0.35rem;
+  font-weight: 600;
+  color: #e8ecf2;
 }
 
-.game-display-box-content .game-stat {
-  width: 90%;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid #000;
-}
-
-.game-stat .game-stat-title {
+.camp-level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 13px;
   font-weight: 700;
-  float: left;
+  border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.game-stat .game-stat-text {
+.camp-level-badge.green {
+  background: #1a7a2e;
+  border-color: #00c850;
+  color: #00c850;
+}
+
+.camp-level-badge.yellow {
+  background: #5a3a00;
+  border-color: #ff8c00;
+  color: #ff8c00;
+}
+
+.camp-level-badge.red {
+  background: #5a1010;
+  border-color: #e02020;
+  color: #e02020;
+}
+
+.camp-creep-list {
+  padding: 6px 0;
+  margin: 0;
+  list-style: none;
+}
+
+.camp-creep-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+}
+
+.camp-creep-row:not(:last-child) {
+  border-bottom: 1px solid #2a3245;
+}
+
+.camp-creep-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.camp-creep-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.camp-creep-name {
+  font-size: 13px;
+  color: #c8cdd8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.camp-creep-level {
+  font-size: 11px;
   font-weight: 700;
-  float: right;
-}
-
-.game-xp {
-  margin-top: 0.5rem;
-  width: 90%;
-}
-
-.game-xp .game-xp-title {
-  
-  font-size: 14px;
-}
-
-.camp-spot-circle {
-  float: right;
-  border: 1px solid #000; 
-  border-radius: 100%;
-  width: 30px; 
-  height: 30px; 
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #1e2536;
+  min-width: 18px;
   text-align: center;
+  flex-shrink: 0;
+  margin-left: 6px;
 }
+
+.camp-creep-level.easy { color: #00c850; }
+.camp-creep-level.medium { color: #ff8c00; }
+.camp-creep-level.hard { color: #e02020; }
+
+.camp-claim-info {
+  padding: 6px 10px;
+  border-top: 1px solid #3a4a5c;
+  font-size: 12px;
+  color: #8a9ab5;
+}
+
+.camp-claim-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.camp-claim-row .camp-claim-value {
+  font-weight: 600;
+  color: #c8cdd8;
+}
+
+.camp-status-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.camp-status-tag.unclaimed { background: #2a3245; color: #6a7a90; }
+.camp-status-tag.contested { background: #3d3520; color: #e0c84a; }
+.camp-status-tag.claimed { background: #1e3320; color: #6dc955; }
 
 .camp-spot-square {
   display: inline-block;
-  border: 1px solid #000; 
-  width: 14px; 
-  height: 14px; 
-}
-
-.camp-spot-circle span {
-  display: block;
-  margin: 0.5rem;
-  font-size: 14px;
-}
-
-.camp-spot-circle.green {
-  background-color: #5BAC39;
-  color: #00008B;
-}
-
-.camp-spot-circle.yellow {
-  background-color: #FDFA1F;
-  color: #00008B;
-}
-
-.camp-spot-circle.red {
-  background-color: #BA1B1B;
-  color: #FFF;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  vertical-align: middle;
 }
 
 /* sub-canvas element */
@@ -2673,62 +2868,50 @@ html, body {
   background: #5aaef0;
 }
 
-/* ── Viewer build context bar ───────────────────────────────────────────── */
-#viewer-breadcrumb {
-  background: rgba(10, 12, 18, 0.97);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  padding: 0 1rem;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.78rem;
-  overflow: hidden;
-}
-
-.vbc-back {
+/* ── Site-nav back link (← Builds) ─────────────────────────────────────── */
+.site-nav-back {
   display: inline-flex; align-items: center; gap: 0.3rem;
   padding: 0.25rem 0.65rem; border-radius: 4px;
   background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
   color: #c0c8d8; text-decoration: none; flex-shrink: 0;
-  font-weight: 600; font-size: 0.8rem;
+  font-weight: 600; font-size: 0.8rem; margin-left: 0.75rem;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.vbc-back:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.3); }
+.site-nav-back:hover { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.3); }
 
-.vbc-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.12); flex-shrink: 0; margin: 0 0.15rem; }
-
-.vbc-badge {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 0.1rem 0.4rem; border-radius: 3px;
-  font-size: 0.65rem; font-weight: 800; flex-shrink: 0;
-  background: color-mix(in srgb, var(--rc) 18%, #1a1e2a);
-  color: var(--rc);
-  border: 1px solid color-mix(in srgb, var(--rc) 30%, transparent);
+/* ── Build name in match header player card ────────────────────────────── */
+.mh-build-name {
+  font: 600 0.78rem Verdana;
+  color: #8890a4;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.vbc-vs { font-size: 0.6rem; color: #8890a4; flex-shrink: 0; }
-.vbc-name { font-weight: 700; color: #e8eaf0; flex-shrink: 0; }
-.vbc-match { color: #8890a4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
-.vbc-also { color: #8890a4; flex-shrink: 0; }
-
-.vbc-replay-pill {
-  padding: 0.15rem 0.5rem; border-radius: 3px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-  color: #8890a4; text-decoration: none; font-size: 0.72rem; flex-shrink: 0;
-  transition: color 0.15s, border-color 0.15s;
+/* ── Replay dropdown in match header toolbar ───────────────────────────── */
+.mh-replay-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
 }
-.vbc-replay-pill:hover { color: #e8eaf0; border-color: rgba(255,255,255,0.25); }
 
-.vbc-replay-select {
+.mh-replay-label {
+  color: #8890a4;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.mh-replay-select {
   padding: 0.15rem 0.4rem; border-radius: 3px;
   background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
   color: #c0c8d8; font: 0.75rem Verdana;
   cursor: pointer; outline: none;
-  max-width: 280px;
+  max-width: 300px;
 }
-.vbc-replay-select:hover { border-color: rgba(255,255,255,0.25); }
-.vbc-replay-select option { background: #1a1e2a; color: #c0c8d8; }
+.mh-replay-select:hover { border-color: rgba(255,255,255,0.25); }
+.mh-replay-select option { background: #1a1e2a; color: #c0c8d8; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SITE-WIDE STYLES  (site- prefix)

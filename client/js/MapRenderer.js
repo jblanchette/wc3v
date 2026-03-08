@@ -3,43 +3,35 @@ const MapRenderer = class {
 
   renderMapBackground (ctx, transform, viewOptions, gameScaler, mapImage, gridMapImage) {
     const {
-      mapExtent,
-      middleX,
-      middleY,
-      xScale,
-      yScale,
-      viewWidth,
-      viewHeight,
+      cropOffset,
       sceneWidth,
       sceneHeight
     } = gameScaler;
 
-    const { width, height } = mapImage;
-    const { x, y, k } = transform;
-
-    const drawX = (transform.x + xScale(mapExtent.x[0]) + middleX);
-    const drawY = (transform.y + yScale(mapExtent.y[0]) + middleY);
+    const { k } = transform;
 
     const bgImage = viewOptions.displayMapGrid ?
       gridMapImage : mapImage;
 
-    const offsetX = 0;//(viewWidth - sceneWidth) / 2;
-    const offsetY = 0;//(viewHeight - sceneHeight) / 2;
+    // at identity transform, camera area draws at (0,0)
+    // xScale(cameraExtent.x[0]) + middleX = -sceneWidth/2 + sceneWidth/2 = 0
+    const drawX = transform.x;
+    const drawY = transform.y;
 
     ctx.drawImage(
       bgImage,
-      offsetX,               // sourceX
-      offsetY,               // sourceY
-      viewWidth,           // sourceWidth
-      viewHeight,          // sourceHeight
-      drawX + offsetX,           // destX
-      drawY + offsetY,           // destY
-      viewWidth * k,       // destWidth
-      viewHeight * k       // destHeight
+      cropOffset.x,        // sourceX: where camera starts in full map image
+      cropOffset.y,        // sourceY
+      sceneWidth,          // sourceWidth: camera area size
+      sceneHeight,         // sourceHeight
+      drawX,               // destX
+      drawY,               // destY
+      sceneWidth * k,      // destWidth
+      sceneHeight * k      // destHeight
     );
   }
 
-  renderMapTrees (ctx, transform, viewOptions, doodadData, gameScaler) {
+  renderMapTrees (ctx, transform, viewOptions, doodadData, gameScaler, mapInfo) {
     const {
       middleX,
       middleY,
@@ -57,8 +49,8 @@ const MapRenderer = class {
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
 
-    ctx.fillStyle = "#013f01";
-    ctx.strokeStyle = "#906739";
+    ctx.fillStyle = (mapInfo && mapInfo.treeColor) || "#013f01";
+    ctx.strokeStyle = (mapInfo && mapInfo.treeStroke) || "#906739";
     ctx.globalAlpha = 0.65;
 
     doodadData.forEach((tree, treeIndex) => {
@@ -93,7 +85,7 @@ const MapRenderer = class {
 
   // Note: this method mutates neutralGroup.isHidden and unit.isNeutralGroupHidden
   // on the data objects passed via mapData and players (by-reference side effects).
-  renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap) {
+  renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid) {
     const { world } = mapData;
 
     const {
@@ -150,7 +142,7 @@ const MapRenderer = class {
       let claimColor = colorMap[0];
       let claimColorFill = null;
 
-      if (gameTime >= claimTime) {
+      if (claimTime != null && gameTime >= claimTime) {
 
         if (!neutralGroup.isHidden) {
           // hide the units from rendering now that its been claimed
@@ -162,13 +154,13 @@ const MapRenderer = class {
           });
         }
 
-        claimColor = campColorMap[claimState];
-
         if (claimState == 1) {
+          claimColor = campColorMap[claimState];
           claimColorFill = campColorMap[claimState];
         }
 
         if (claimState > 1) {
+          claimColor = teamColorMap[claimOwnerId];
           claimColorFill = teamColorMap[claimOwnerId];
 
           claimPaths[claimOwnerId].push({
@@ -179,9 +171,28 @@ const MapRenderer = class {
             rectHeight
           });
         }
+      } else if (neutralGroup.isHidden) {
+        // unhide units when scrubbing backward before claim time
+        neutralGroup.isHidden = false;
+        neutralPlayer.units.forEach(unit => {
+          if (unit.neutralGroupId === uuid) {
+            unit.isNeutralGroupHidden = false;
+          }
+        });
       }
 
-      ctx.strokeStyle = claimColor;
+      const isHovered = (uuid === hoveredCampUuid);
+
+      if (isHovered) {
+        ctx.globalAlpha = 0.9;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#FFF';
+      } else {
+        ctx.strokeStyle = claimColor;
+        if (claimColorFill) {
+          ctx.globalAlpha = 0.8;
+        }
+      }
 
       ctx.beginPath();
       ctx.strokeRect(drawX, drawY, rectWidth, rectHeight);
@@ -192,8 +203,16 @@ const MapRenderer = class {
       ctx.fill();
       ctx.stroke();
 
-      if (claimState > 0 && claimColorFill) {
-        Drawing.drawBoxedLevel(ctx, `${order}`, drawX - 8, drawY - 24, 30, 30, 20, 20);
+      if (isHovered || claimColorFill) {
+        ctx.globalAlpha = 0.55;
+        ctx.lineWidth = 2.5;
+      }
+
+      if (claimState > 0 && claimColorFill && order) {
+        const badgeX = drawX + rectWidth + 4;
+        const badgeY = drawY + rectHeight + 4;
+        const badgeColor = (claimState > 1) ? teamColorMap[claimOwnerId] : '#eaff00';
+        Drawing.drawCampOrderBadge(ctx, `${order}`, badgeX, badgeY, badgeColor, transform.k);
       }
     });
 

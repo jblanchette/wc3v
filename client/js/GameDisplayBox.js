@@ -3,8 +3,8 @@ const DisplayModes = {
 };
 
 const boxDesignSize = {
-  width: 280,
-  height: 260
+  width: 300,
+  height: 200
 };
 
 const GameDisplayBox = class {
@@ -15,20 +15,21 @@ const GameDisplayBox = class {
     this.playerColorMap = playerColorMap;
 
     this.data = null;
+    this.hoveredCampUuid = null;
   }
 
   setData (data, handlerFn) {
     this.data = handlerFn(data);
   }
-  
-  handleMouse (e, type, transform) {
+
+  handleMouse (e, transform) {
     if (transform.k != 1.0) {
+      this.hoveredCampUuid = null;
       this.hide();
       return;
     }
 
-    let { offsetX, offsetY, target } = e;
-    const drawBounds = target.getBoundingClientRect();
+    const { offsetX, offsetY, target } = e;
 
     const hitBox = {
       minX: offsetX,
@@ -39,57 +40,53 @@ const GameDisplayBox = class {
 
     const searchHits = this.data.tree.search(hitBox);
     if (searchHits.length) {
-      //
-      // we have a hit
-      //
-
-      // just use the first box hit
       const searchHit = searchHits[0];
+      const campUuid = searchHit.rawGroup.uuid;
 
-      if (type == 'down') {
-
-        // clipping if needed
-        if (drawBounds) {
-          const boxRight = (drawBounds.x + offsetX + boxDesignSize.width);
-          const boxBottom = (drawBounds.y + offsetY + boxDesignSize.height);
-
-          if (boxRight > drawBounds.right) {
-            offsetX -= boxDesignSize.width;
-          }
-
-          if (boxBottom > drawBounds.bottom) {
-            offsetY -= boxDesignSize.height;
-          }
-        }
-
-        this.box.style.display = "block";
-        this.box.style.left = `${offsetX}px`;
-        this.box.style.top = `${offsetY}px`;
-
-        this.render(searchHit);
-
-        return;
-      }
-
-      if (type == 'move') {
+      // same camp already shown, just update cursor
+      if (this.hoveredCampUuid === campUuid) {
         document.body.style.cursor = 'pointer';
-
         return;
       }
-    } 
-    
-    //
-    // no hit detected
-    //
 
-    if (type == 'move') {
-      if (document.body.style.cursor == 'pointer') {
-        document.body.style.cursor = 'default';
+      this.hoveredCampUuid = campUuid;
+      document.body.style.cursor = 'pointer';
+
+      // position the popup
+      const drawBounds = target.getBoundingClientRect();
+      let popX = offsetX + 12;
+      let popY = offsetY + 12;
+
+      if (drawBounds) {
+        if (drawBounds.x + popX + boxDesignSize.width > drawBounds.right) {
+          popX = offsetX - boxDesignSize.width - 12;
+        }
+        if (drawBounds.y + popY + boxDesignSize.height > drawBounds.bottom) {
+          popY = offsetY - boxDesignSize.height - 12;
+        }
       }
-    } else {
+
+      this.box.style.left = `${popX}px`;
+      this.box.style.top = `${popY}px`;
+
+      this.render(searchHit);
+
+      requestAnimationFrame(() => {
+        this.box.classList.add('visible');
+      });
+
+      return;
+    }
+
+    // no hit — hide
+    if (this.hoveredCampUuid) {
+      this.hoveredCampUuid = null;
       this.hide();
     }
-    
+
+    if (document.body.style.cursor === 'pointer') {
+      document.body.style.cursor = 'default';
+    }
   }
 
   render (item) {
@@ -107,165 +104,115 @@ const GameDisplayBox = class {
   }
 
   hide () {
-    if (this.box.style.display != "none") {
-      this.box.style.display = "none";  
-    }
+    this.hoveredCampUuid = null;
+    this.box.classList.remove('visible');
   }
 
-  static renderContestedCamp (rawGroup, teamColorMap, playerColorMap) {
-    let contestedClaimStr = '<h4>Camp contested or unfinished</h4>';
+  static getLevelClass (level) {
+    if (level <= 5) return 'easy';
+    if (level <= 8) return 'medium';
+    return 'hard';
+  }
 
-    Object.keys(rawGroup.claimers).forEach(teamId => {
-      if (+rawGroup.claimOwnerId != +teamId) {
-        return;
-      }
+  static getLevelColor (level) {
+    if (level <= 5) return '#00c850';
+    if (level <= 8) return '#ff8c00';
+    return '#e02020';
+  }
 
-      const claimPlayers = rawGroup.claimers[teamId].players;
-      const teamColor = teamColorMap[teamId];
+  static getDifficultyClass (totalLevel) {
+    if (totalLevel <= 9) return 'green';
+    if (totalLevel <= 19) return 'yellow';
+    return 'red';
+  }
 
-      contestedClaimStr += `
-        <div class="game-stat">
-          <span class="game-stat-title">Team:</span> 
-          <span class="game-stat-text">
-            <span class="camp-spot-square" style="background-color: ${teamColor}"></span>
+  static titleCase (str) {
+    return str.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  static renderCreepList (units) {
+    const sorted = units.slice().sort((a, b) => {
+      const levelA = (a.balanceInfo && a.balanceInfo.level) || 0;
+      const levelB = (b.balanceInfo && b.balanceInfo.level) || 0;
+      return levelB - levelA;
+    });
+
+    const rows = sorted.map(unit => {
+      const level = (unit.balanceInfo && unit.balanceInfo.level) || '?';
+      const rawName = unit.displayName || unit.itemId || 'Unknown';
+      const name = GameDisplayBox.titleCase(rawName);
+      const levelClass = GameDisplayBox.getLevelClass(+level);
+      const levelColor = GameDisplayBox.getLevelColor(+level);
+      const itemId = unit.itemId || '';
+
+      return `
+        <li class="camp-creep-row">
+          <span class="camp-creep-name-wrap">
+            <img class="camp-creep-icon" src="/assets/wc3icons/${itemId}.jpg" onerror="this.style.display='none'" />
+            <span class="camp-creep-name">${name}</span>
           </span>
+          <span class="camp-creep-level ${levelClass}" style="border-left: 3px solid ${levelColor}">Lv ${level}</span>
+        </li>
+      `;
+    }).join('');
+
+    return `<ul class="camp-creep-list">${rows}</ul>`;
+  }
+
+  static renderClaimInfo (rawGroup, teamColorMap, playerColorMap) {
+    if (!rawGroup.claimers || rawGroup.claimState === 0) {
+      return `
+        <div class="camp-claim-info">
+          <span class="camp-status-tag unclaimed">Unclaimed</span>
         </div>
       `;
-    });
+    }
 
-    return contestedClaimStr;
-  }
+    if (rawGroup.claimState === 1) {
+      return `
+        <div class="camp-claim-info">
+          <span class="camp-status-tag contested">Contested</span>
+        </div>
+      `;
+    }
 
-  static renderClaimedCamp (rawGroup, teamColorMap, playerColorMap) {
-    let teamClaimStr = '';
+    // claimed — collect unique player colors for the owning team only
+    const playerSquares = [];
+    const seenPlayers = new Set();
+    const ownerTeamId = +rawGroup.claimOwnerId;
 
     Object.keys(rawGroup.claimers).forEach(teamId => {
-      if (+rawGroup.claimOwnerId != +teamId) {
-        return;
-      }
-
+      if (+teamId !== ownerTeamId) return;
       const claimPlayers = rawGroup.claimers[teamId].players;
-      const teamColor = teamColorMap[teamId];
-
-      let playerClaimStr = '';
-      
-      // loop each player in the claim
+      if (!claimPlayers) return;
       Object.keys(claimPlayers).forEach(playerId => {
-        const playerColor = playerColorMap[playerId];
-
-        const heroes = claimPlayers[playerId].units.filter(unit => {
-          return unit.isHero || (unit.meta && unit.meta.hero);
-        }) || [];
-
-        playerClaimStr += `
-          <span class="camp-spot-square" style="background-color: ${playerColor}"></span>
-        `;
+        if (seenPlayers.has(playerId)) return;
+        seenPlayers.add(playerId);
+        const color = playerColorMap[playerId];
+        if (color) {
+          playerSquares.push(`<span class="camp-spot-square" style="background-color: ${color}"></span>`);
+        }
       });
-
-      teamClaimStr += `
-        <div class="game-stat">
-          <span class="game-stat-title">Team:</span> 
-          <span class="game-stat-text">
-            <span class="camp-spot-square" style="background-color: ${teamColor}"></span>
-          </span>
-        </div>
-
-        <div class="game-stat">
-          <span class="game-stat-title">Players:</span>
-          <span class="game-stat-text">${playerClaimStr}</span>
-        </div>
-      `;  
     });
 
-    return teamClaimStr;
-  }
-
-  static renderTeamClaims (rawGroup, teamColorMap, playerColorMap) {
-    if (!rawGroup.claimers) {
-      return '';
-    }
-
-    switch (rawGroup.claimState) {
-      case 0:
-        return `<h4>Camp left unclaimed</h4>`;
-      case 1:
-        // Contested camp - show which teams were involved      
-        return GameDisplayBox.renderContestedCamp(rawGroup, teamColorMap, playerColorMap);
-      default:
-        // Claimed camp - show full team and player info
-        return GameDisplayBox.renderClaimedCamp(rawGroup, teamColorMap, playerColorMap);
-    }
-  }
-
-  static renderTeamStats(rawGroup, teamColorMap, playerColorMap) {
-    // if (rawGroup.claimState <= 1) {
-    //   return '';
-    // }
-
-    let xpGainedStr = '';
-
-    if (rawGroup.heroStats) {
-      Object.keys(rawGroup.heroStats).forEach(uuid => {
-        const heroStat = rawGroup.heroStats[uuid];
-        const { displayName, total } = heroStat;
-
-        const startingXp = rawGroup.xpSnapshot[uuid] || 0;
-
-        xpGainedStr += `
-          <li><b>${displayName}:</b> +${total} (${startingXp}->${(startingXp + total)})</li>
-        `;
-      });
-    } else {
-      xpGainedStr = `<li>N/A</li>`;
-    }
-
-    let totalClaimTimeStr = '';
-
-    if (rawGroup.claimers) {
-      Object.keys(rawGroup.claimers).forEach(claimIndex => {
-        Object.keys(rawGroup.claimers[claimIndex].players).forEach(playerId => {
-          const playerClaim = rawGroup.claimers[claimIndex].players[playerId];
-          const playerColor = playerColorMap[playerId];
-          const playerTotal = formatGameTime(playerClaim.timeClaimed);
-
-          if (playerTotal == "0:00") {
-            return;
-          }
-
-          totalClaimTimeStr += `${playerTotal} <span class="camp-spot-square test" style="background-color: ${playerColor}"></span> `;
-        });
-      });
-    }
+    const orderStr = rawGroup.order ? `#${rawGroup.order}` : 'N/A';
+    const timeStr = formatGameTime(rawGroup.claimTime);
 
     return `
-      <div class="game-stat">
-        <span class="game-stat-title">Order Taken:</span> 
-        <span class="game-stat-text">#${rawGroup.order || 'N/A'}</span>
-      </div>
-
-      <div class="game-stat">
-        <span class="game-stat-title">Claim Time:</span> 
-        <span class="game-stat-text">${formatGameTime(rawGroup.claimTime)}</span>
-      </div>
-
-      <div class="game-stat">
-        <span class="game-stat-title">Total Time Claimed:</span> 
-        <span class="game-stat-text">${totalClaimTimeStr}</span>
-      </div>
-
-      <div class="game-stat">
-        <span class="game-stat-title">Neutral Count:</span> 
-        <span class="game-stat-text">${rawGroup.units.length}</span>
-      </div>
-
-      <div class="game-xp">
-        <span class="game-xp-title">
-          <b>Experience Gained:</b>
-        </span>
-
-        <ul>
-          ${xpGainedStr}
-        </ul>
+      <div class="camp-claim-info">
+        <span class="camp-status-tag claimed">Claimed</span>
+        <div class="camp-claim-row">
+          <span>Order</span>
+          <span class="camp-claim-value">${orderStr}</span>
+        </div>
+        <div class="camp-claim-row">
+          <span>Time</span>
+          <span class="camp-claim-value">${timeStr}</span>
+        </div>
+        <div class="camp-claim-row">
+          <span>Claimed by</span>
+          <span class="camp-claim-value">${playerSquares.join(' ')}</span>
+        </div>
       </div>
     `;
   }
@@ -273,44 +220,18 @@ const GameDisplayBox = class {
   static renderNeutralCamp (camp, teamColorMap, playerColorMap) {
     const { rawGroup } = camp;
 
-    const levelMap = {
-      9:  'green',
-      19: 'yellow',
-      20: 'red'
-    };
+    const diffClass = GameDisplayBox.getDifficultyClass(rawGroup.totalLevel);
+    const creepListStr = GameDisplayBox.renderCreepList(rawGroup.units);
+    const claimInfoStr = GameDisplayBox.renderClaimInfo(rawGroup, teamColorMap, playerColorMap);
 
-    const spotColorKey = Object.keys(levelMap).find(levelMapMin => {
-      return (rawGroup.totalLevel <= levelMapMin);
-    }) || 20;
-
-    const spotColor = levelMap[spotColorKey]; 
-
-    //
-    // drawing
-    //
-
-    // aggregated stats for team and player claims
-    const teamClaimStr = GameDisplayBox.renderTeamClaims(rawGroup, teamColorMap, playerColorMap);
-
-    // individual stats about the claims if not contested
-    const teamStatsStr = GameDisplayBox.renderTeamStats(rawGroup, teamColorMap, playerColorMap);
-
-    const renderStr = `
-      <div class="game-display-box-content">
-        <div class="game-display-box-header">
-          <h3>Camp Data</h3>
-
-          <div class="camp-spot-circle ${spotColor}">
-            <span>${rawGroup.totalLevel}</span>
-          </div>
-        </div>
-
-        ${teamClaimStr}
-        ${teamStatsStr}
+    return `
+      <div class="camp-popup-header">
+        <h3>Creep Camp</h3>
+        <div class="camp-level-badge ${diffClass}">${rawGroup.totalLevel}</div>
       </div>
+      ${creepListStr}
+      ${claimInfoStr}
     `;
-
-    return renderStr;
   }
 
   static neutralCampHandler (gameScaler, transform) {
@@ -338,11 +259,11 @@ const GameDisplayBox = class {
       }, []);
 
       tree.load(groupBoxes);
-      
+
       return {
         tree
       };
-    };    
+    };
   }
 };
 

@@ -20,6 +20,41 @@ const Drawing = class {
     ctx.strokeStyle = "#FFF";
   }
 
+  static drawCampOrderBadge (ctx, order, centerX, centerY, teamColor, scale) {
+    const radius = Math.max(9, 11 * scale);
+    const fontSize = Math.max(9, 11 * scale);
+
+    // outer glow ring
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 3, 0, Math.PI * 2);
+    ctx.fillStyle = teamColor || '#FFF';
+    ctx.fill();
+
+    // main circle
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#111';
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = teamColor || '#FFF';
+    ctx.stroke();
+
+    // text
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#FFF';
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(order, centerX, centerY + 1);
+
+    ctx.restore();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
   static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12, fontColor) {
       ctx.textAlign = "center";
       ctx.fillStyle = "#FFF";
@@ -81,7 +116,6 @@ const Drawing = class {
     ctx.fillStyle = "#000";
 
     if (!icon) {
-      console.error("missing icon for unit: ", unit);
       return;
     }
     

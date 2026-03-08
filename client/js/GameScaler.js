@@ -23,7 +23,7 @@ const GameScaler = class {
     const { bounds } = mapInfo;
 
     this.mapInfo = mapInfo;
-  
+
     this.mapExtent = {
       x: bounds.map[0],
       y: bounds.map[1]
@@ -41,7 +41,7 @@ const GameScaler = class {
       top:    bounds.map[1][0],
       bottom: bounds.map[1][1],
 
-      // the camera box the game displays 
+      // the camera box the game displays
       innerBox: {
         left:   bounds.camera[0][0],
         right:  bounds.camera[0][1],
@@ -53,6 +53,7 @@ const GameScaler = class {
     this.setupView();
     this.setupScales();
     this.setupMiddle();
+    this.setupCropOffsets();
   }
 
 
@@ -62,36 +63,64 @@ const GameScaler = class {
 
     this.pixelsPerTile = 2;
 
-    this.mapImage = {
+    // full map image dimensions (used for background image cropping)
+    this.fullMapImage = {
       width:  (full[0] * 4) * this.pixelsPerTile,
       height: (full[1] * 4) * this.pixelsPerTile
     };
 
-    this.sceneImage = {
-      width:  (playable[0] * 4) * this.pixelsPerTile,
-      height: (playable[1] * 4) * this.pixelsPerTile
+    // pixels-per-game-unit derived from full map
+    const mapRangeX = this.mapExtent.x[1] - this.mapExtent.x[0];
+    const mapRangeY = Math.abs(this.mapExtent.y[1] - this.mapExtent.y[0]);
+    this.pxPerUnit = this.fullMapImage.width / mapRangeX;
+
+    // the playable area is defined by the playable tile count, centered in the full map
+    // this is separate from camera bounds (which define where the camera center can scroll)
+    const mapCenterX = (this.mapExtent.x[0] + this.mapExtent.x[1]) / 2;
+    const mapCenterY = (this.mapExtent.y[0] + this.mapExtent.y[1]) / 2;
+    const playableUnitsX = playable[0] * 128;
+    const playableUnitsY = playable[1] * 128;
+
+    const playableBounds = {
+      x: [ mapCenterX - playableUnitsX / 2, mapCenterX + playableUnitsX / 2 ],
+      y: [ mapCenterY + playableUnitsY / 2, mapCenterY - playableUnitsY / 2 ]  // Y: top is positive
     };
 
-    // makes it easier to read/use
-    this.viewWidth  = this.mapImage.width;
-    this.viewHeight = this.mapImage.height;
+    // viewport extent = union of playable area and camera bounds
+    // camera can extend beyond playable in some axes, playable extends beyond camera in others
+    this.viewExtent = {
+      x: [
+        Math.min(playableBounds.x[0], this.cameraExtent.x[0]),
+        Math.max(playableBounds.x[1], this.cameraExtent.x[1])
+      ],
+      y: [
+        Math.max(playableBounds.y[0], this.cameraExtent.y[0]),
+        Math.min(playableBounds.y[1], this.cameraExtent.y[1])
+      ]
+    };
+
+    // scene dimensions from viewport extent
+    const viewRangeX = this.viewExtent.x[1] - this.viewExtent.x[0];
+    const viewRangeY = Math.abs(this.viewExtent.y[1] - this.viewExtent.y[0]);
+
+    this.sceneImage = {
+      width:  Math.round(viewRangeX * this.pxPerUnit),
+      height: Math.round(viewRangeY * this.pxPerUnit)
+    };
+
+    // mapImage = active canvas size = viewport area
+    this.mapImage = this.sceneImage;
+
+    this.viewWidth  = this.sceneImage.width;
+    this.viewHeight = this.sceneImage.height;
 
     this.sceneWidth  = this.sceneImage.width;
     this.sceneHeight = this.sceneImage.height;
 
-    ////
-    // map range is the full sized range of map image
-    ////
-
     this.mapRange = {
-      x: [ -(this.viewWidth / 2),  (this.viewWidth / 2)  ],
-      y: [ -(this.viewHeight / 2), (this.viewHeight / 2) ]
+      x: [ -(this.fullMapImage.width / 2),  (this.fullMapImage.width / 2)  ],
+      y: [ -(this.fullMapImage.height / 2), (this.fullMapImage.height / 2) ]
     };
-
-    ////
-    // camera range is the restricted inner camera range 
-    // always <= than map range
-    ////
 
     this.cameraRange = {
       x: [ -(this.sceneWidth / 2),  (this.sceneWidth / 2)  ],
@@ -100,37 +129,21 @@ const GameScaler = class {
   }
 
   setupScales () {
-    const { 
-      cameraExtent,
+    const {
+      viewExtent,
       cameraRange,
       cameraBox,
-      mapExtent,
-      mapRange,
       _d3
     } = this;
 
-    //
-    // in wc3 map formats the 'map' bounds are the full size and the 'camera' bounds
-    // are in the inner in-game view box
-    // 
-
-    //
-    // map the full [-x, x] map range of the map to scenes
-    // broken apart quadrants [ -(viewWidth / 2) , (viewWidth / 2) ]
-    // to map wc3 coordinates to our on screen coordinates
-    //
-
+    // map viewport game-coordinate bounds to pixel range
     this.xScale = _d3.scaleLinear()
-      .domain(mapExtent.x)
-      .range(mapRange.x);
-
-    //
-    // same for [-y, y] map range
-    //
+      .domain(viewExtent.x)
+      .range(cameraRange.x);
 
     this.yScale = _d3.scaleLinear()
-      .domain(mapExtent.y)
-      .range(mapRange.y);
+      .domain(viewExtent.y)
+      .range(cameraRange.y);
 
     this.gridXScale = _d3.scaleLinear()
       .domain([ 0, Math.abs(cameraBox.left) + Math.abs(cameraBox.right) ])
@@ -142,8 +155,16 @@ const GameScaler = class {
   }
 
   setupMiddle () {
-    this.middleX = (this.mapImage.width / 2);
-    this.middleY = (this.mapImage.height / 2);
+    this.middleX = (this.sceneImage.width / 2);
+    this.middleY = (this.sceneImage.height / 2);
+  }
+
+  setupCropOffsets () {
+    // pixel offset of viewport area within the full map background image
+    this.cropOffset = {
+      x: (this.viewExtent.x[0] - this.mapExtent.x[0]) * this.pxPerUnit,
+      y: (this.mapExtent.y[0] - this.viewExtent.y[0]) * this.pxPerUnit
+    };
   }
 }
 

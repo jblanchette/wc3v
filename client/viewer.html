@@ -7,23 +7,23 @@
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
     <script src="/js/Helpers.js?v=5.03"></script>
-    <script src="/js/Drawing.js?v=5.03"></script>
+    <script src="/js/Drawing.js?v=5.06"></script>
     <script src="/js/Constants.js?v=5.03"></script>
 
     <script src="/js/TimeScrubber.js?v=5.03"></script>
     <script src="/js/GameScaler.js?v=5.05"></script>
     <script src="/js/ClientUnit.js?v=5.03"></script>
     <script src="/js/ClientPlayer.js?v=5.03"></script>
-    <script src="/js/GameDisplayBox.js?v=5.03"></script>
+    <script src="/js/GameDisplayBox.js?v=5.06"></script>
     <script src="/js/gameData.js?v=5.03"></script>
 
     <script src="/js/BuildOrderData.js?v=5.04"></script>
-    <script src="/js/MapRenderer.js?v=5.05"></script>
+    <script src="/js/MapRenderer.js?v=5.07"></script>
     <script src="/js/TimelineSpline.js?v=5.04"></script>
     <script src="/js/BuildOrderRenderer.js?v=5.04"></script>
     <script src="/js/MatchHeader.js?v=5.04"></script>
 
-    <script src="/js/app.js?v=5.05"></script>
+    <script src="/js/app.js?v=5.07"></script>
     <script src="/js/SiteNav.js"></script>
 
     <script>
@@ -34,7 +34,7 @@
     </script>
 
     <style type="text/css">
-      @import "/css/main.css?v=5.05";
+      @import "/css/main.css?v=5.06";
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -45,9 +45,6 @@
     <link rel="manifest" href="/site.webmanifest">
   </head>
   <body style="overflow-y: hidden;">
-
-    <!-- Build context bar — populated by renderBuildContext() when ?buildId param present -->
-    <div id="viewer-breadcrumb" style="display:none;"></div>
 
     <div id="app" class="layout-mode-live-bo">
       <div id="content">
@@ -80,11 +77,22 @@
 
             <div id="map-container">
               <div id="main-wrapper">
-                <div id="mega-play-button" onClick="wc3v.play()"></div>
+                <div id="mega-play-overlay">
+                  <div id="mega-play-button" onClick="wc3v.play()"></div>
+                  <div id="mega-play-hints">
+                    <div id="mega-play-hints-title">View Options</div>
+                    <div class="mega-hint on" data-option="displayCreepRoute" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint" data-option="displayPath" onClick="wc3v.toggleViewOption('displayPath')">Hero Paths<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="displayText" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="displayLeveLDots" onClick="wc3v.toggleViewOption('displayLeveLDots')">Level Dots<span class="mega-hint-icon"></span></div>
+                  </div>
+                </div>
 
-                <canvas id="main-canvas" width="550" height="650"></canvas>
-                <canvas id="player-canvas" width="550" height="650"></canvas>
-                <canvas id="utility-canvas" width="550" height="650"></canvas>
+                <div id="canvas-group">
+                  <canvas id="main-canvas" width="550" height="650"></canvas>
+                  <canvas id="player-canvas" width="550" height="650"></canvas>
+                  <canvas id="utility-canvas" width="550" height="650"></canvas>
+                </div>
 
                 <img id="loading-icon" src="/assets/loading-icon.svg" />
 
@@ -100,9 +108,8 @@
                   <a href="/builds" class="empty-game-browse">Browse Build Orders →</a>
                 </div>
               </div>
-
+              <div id="scrubber-bar"></div>
             </div>
-            <div id="scrubber-bar"></div>
           </div>
         </div>
 

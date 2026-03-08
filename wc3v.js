@@ -80,6 +80,18 @@ const doParsing = async (file) => {
     }
   });
 
+  // post-parse: backfill missing buildings inferred from tech tree
+  const BuildingBackfill = require('./lib/BuildingBackfill');
+  const backfill = new BuildingBackfill(playerManager.players);
+  const backfillResults = backfill.run();
+
+  if (backfillResults.length) {
+    console.logger(`Building backfill: inferred ${backfillResults.length} missing building(s)`);
+    backfillResults.forEach(r => {
+      console.logger(`  Player ${r.player}: ${r.displayName} (${r.buildingId})`);
+    });
+  }
+
   // post-parse validation: detect contradictions in parsed data
   const validator = new ReplayValidator(playerManager.players);
   const validation = validator.validate();
