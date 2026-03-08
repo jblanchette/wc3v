@@ -11,6 +11,8 @@ const BuildOrderData = class {
       'ucs1': true,                          // Carrion Beetle (Crypt Lord)
     },
     workerIds: { 'opeo': true, 'hpea': true, 'ewsp': true, 'uaco': true, 'ugho': true },
+    // UD ghouls beyond this count are treated as attack units, not lumber workers
+    maxGhoulWorkers: 4,
     workerForRace: { 'O': 'opeo', 'H': 'hpea', 'E': 'ewsp', 'U': 'uaco' },
     workerNames: { 'O': 'Peon', 'H': 'Peasant', 'E': 'Wisp', 'U': 'Acolyte' },
     raceStarterIcons: { 'O': 'ogre', 'H': 'htow', 'E': 'etol', 'U': 'unpl' },
@@ -72,6 +74,8 @@ const BuildOrderData = class {
       }));
     }
 
+    let ghoulCount = 0; // track UD ghouls to detect attack ghouls vs lumber workers
+
     eventStream.forEach(event => {
       const { key, gameTime, supplyUsed, supplyMax, workers } = event;
       const w = workers || {};
@@ -128,6 +132,20 @@ const BuildOrderData = class {
         const isQueued = isTraining; // if still training at event time, it's queued or actively training
 
         if (cfg.workerIds[unit.itemId]) {
+          // UD ghouls beyond maxGhoulWorkers are attack units, not lumber workers
+          if (unit.itemId === 'ugho') {
+            ghoulCount++;
+            if (ghoulCount > cfg.maxGhoulWorkers) {
+              events.push(create('unit', gameTime, supplyUsed, supplyMax, w, {
+                displayName: unit.displayName, itemId: unit.itemId,
+                goldCost: unit.goldCost, lumberCost: unit.lumberCost,
+                foodCost: unit.foodUsed, armorType: unit.armorType, attackType: unit.attackType
+              }));
+              // skip worker assignment path — these are army ghouls
+              return;
+            }
+          }
+
           // assignTarget computed server-side; fallback for old replays
           const assignTarget = unit.assignTarget || 'gold';
           // Server snapshot excludes training units — include the new worker
@@ -175,7 +193,7 @@ const BuildOrderData = class {
           events.push(create('unit', gameTime, supplyUsed, supplyMax, w, {
             displayName: unit.displayName, itemId: unit.itemId,
             goldCost: unit.goldCost, lumberCost: unit.lumberCost,
-            foodCost: unit.foodUsed
+            foodCost: unit.foodUsed, armorType: unit.armorType, attackType: unit.attackType
           }));
         }
 
@@ -203,6 +221,24 @@ const BuildOrderData = class {
         events.push(create('heroLevel', gameTime, supplyUsed, supplyMax, w, {
           displayName: unit.displayName, itemId: unit.itemId,
           level: newLevel, spell, spellItemId, learnedSkills, spellList: spellList || []
+        }));
+
+      } else if (key === 'research') {
+        const category = event.category || 'ability';
+        let type;
+        if (category === 'attack') type = 'attackUpgrade';
+        else if (category === 'defense') type = 'defenseUpgrade';
+        else type = 'research';
+
+        events.push(create(type, gameTime, supplyUsed, supplyMax, w, {
+          displayName: event.displayName,
+          itemId: event.itemId,
+          goldCost: event.goldCost || 0,
+          lumberCost: event.lumberCost || 0,
+          level: event.level || 1,
+          icon: event.icon || '',
+          category,
+          building: event.building
         }));
       }
 
@@ -339,7 +375,7 @@ const BuildOrderData = class {
         // Army (non-hero units only)
         if (event.type === 'unit') {
           if (!army[event.itemId]) {
-            army[event.itemId] = { displayName: event.displayName, itemId: event.itemId, count: 0 };
+            army[event.itemId] = { displayName: event.displayName, itemId: event.itemId, count: 0, armorType: event.armorType, attackType: event.attackType };
           }
           army[event.itemId].count += count;
         }
@@ -378,7 +414,7 @@ const BuildOrderData = class {
       }
       if (event.type === 'unit') {
         const c = event.count || 1;
-        if (!units[event.itemId]) units[event.itemId] = { displayName: event.displayName, itemId: event.itemId, count: 0 };
+        if (!units[event.itemId]) units[event.itemId] = { displayName: event.displayName, itemId: event.itemId, count: 0, armorType: event.armorType, attackType: event.attackType };
         units[event.itemId].count += c;
       }
       if (event.type === 'heroComplete') {
@@ -394,7 +430,7 @@ const BuildOrderData = class {
     const heroes = [];
     const heroSeen = {};
 
-    // First pass: collect heroes and track max level
+    // First pass: collect heroes, track max level, and collect final spell state
     grouped.forEach(event => {
       if (event.type === 'heroComplete' && !heroSeen[event.itemId]) {
         heroSeen[event.itemId] = true;
@@ -403,12 +439,17 @@ const BuildOrderData = class {
           displayName: event.displayName,
           level: 1,
           gameTime: event.gameTime,
-          isTavern: event.isTavern || false
+          isTavern: event.isTavern || false,
+          spellList: [],
+          learnedSkills: {}
         });
       }
       if (event.type === 'heroLevel' && heroSeen[event.itemId]) {
         const h = heroes.find(h => h.itemId === event.itemId);
         if (h && event.level > h.level) h.level = event.level;
+        // Keep latest learnedSkills snapshot (cumulative) and spellList
+        if (h && event.learnedSkills) h.learnedSkills = event.learnedSkills;
+        if (h && event.spellList && event.spellList.length) h.spellList = event.spellList;
       }
     });
 
@@ -443,7 +484,9 @@ const BuildOrderData = class {
               displayName: event.displayName,
               itemId: event.itemId,
               count: 0,
-              firstTime: event.gameTime
+              firstTime: event.gameTime,
+              armorType: event.armorType,
+              attackType: event.attackType
             };
           }
           units[event.itemId].count += count;
@@ -497,7 +540,10 @@ const BuildOrderData = class {
     const production = this.buildProductionSummary(grouped);
     const tierProduction = this.buildTierProductionSummary(tiers, grouped);
 
-    return { race, raceInfo, displayName, playerColor, tiers, snapshots, finalSnapshot, production, tierProduction, tier2Time, tier3Time };
+    // Expansion detection
+    const hasExpansion = grouped.some(e => e.type === 'expansion');
+
+    return { race, raceInfo, displayName, playerColor, tiers, snapshots, finalSnapshot, production, tierProduction, tier2Time, tier3Time, hasExpansion };
   }
 };
 

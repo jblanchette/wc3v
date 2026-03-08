@@ -130,7 +130,7 @@ if (showAll || showSections.includes('events')) {
     if (filterKey) events = events.filter(e => e.key === filterKey);
     if (searchText) {
       events = events.filter(e => {
-        const name = (e.unit && e.unit.displayName) || (e.building && e.building.displayName) || '';
+        const name = e.displayName || (e.unit && e.unit.displayName) || (e.building && e.building.displayName) || '';
         return name.toLowerCase().includes(searchText);
       });
     }
@@ -157,6 +157,9 @@ if (showAll || showSections.includes('events')) {
         const slLen = (e.spellList || []).length;
         const lsLen = e.learnedSkills ? Object.keys(e.learnedSkills).length : 0;
         console.log(`    [${time}] ${e.key}: ${(e.unit||{}).displayName} -> Lv${e.newLevel} spell=${(e.spell||{}).displayName||'?'} (spellList=${slLen} learned=${lsLen})`);
+      } else if (e.key === 'research') {
+        const bName = e.building ? ` @ ${e.building.displayName}` : '';
+        console.log(`    [${time}] research: ${e.displayName} Lv${e.level} [${e.category}] gold=${e.goldCost||0} lum=${e.lumberCost||0}${bName} | workers: ${wStr}`);
       } else {
         const name = (e.unit && e.unit.displayName) || (e.building && e.building.displayName) || '';
         console.log(`    [${time}] ${e.key}${name ? ': ' + name : ''} | workers: ${wStr}`);

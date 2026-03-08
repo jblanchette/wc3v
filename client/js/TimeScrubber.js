@@ -45,6 +45,9 @@ const TimeScrubber = class {
       existingDomEl.remove();
     }
 
+    // remove any placeholder content
+    this.wrapperEl.innerHTML = '';
+
     const scrubSpeeds = Object
       .keys(ScrubSpeeds)
       .map(speed => { return `<li onClick="wc3v.scrubber.setSpeed('${speed}');">${speed}</li>` })

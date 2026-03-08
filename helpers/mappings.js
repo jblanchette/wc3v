@@ -1,5 +1,6 @@
 const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 const unitBalanceMap = require("./UnitBalance.json").output;
+const researchMeta = require("./researchMeta.json");
 
 const mapConfiguration = require("../mapdata/mapConfiguration");
 
@@ -1684,6 +1685,8 @@ module.exports = {
   BuildMechanic,
   raceBuildMechanic,
   getBuildTime,
+
+  researchMeta,
 
   NEUTRAL_PLAYER_ID: 1042,
   NEUTRAL_PLAYER_SLOT: 1044,

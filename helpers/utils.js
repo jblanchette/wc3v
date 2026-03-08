@@ -568,15 +568,16 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         return acc;
       }
 
-      const { 
+      const {
         teamId,
-        race, 
-        parseConfidence, 
-        startingPosition, 
+        race,
+        parseConfidence,
+        startingPosition,
         units,
         eventStream,
         selectionStream,
         tierStream,
+        researchStream,
         groupStream,
         isNeutralPlayer
       } = player;
@@ -596,6 +597,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
           }
         }),
         tierStream,
+        researchStream,
         groupStream,
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit())

@@ -11,18 +11,19 @@
     <script src="/js/Constants.js?v=5.03"></script>
 
     <script src="/js/TimeScrubber.js?v=5.03"></script>
-    <script src="/js/GameScaler.js?v=5.03"></script>
+    <script src="/js/GameScaler.js?v=5.05"></script>
     <script src="/js/ClientUnit.js?v=5.03"></script>
     <script src="/js/ClientPlayer.js?v=5.03"></script>
     <script src="/js/GameDisplayBox.js?v=5.03"></script>
     <script src="/js/gameData.js?v=5.03"></script>
 
-    <script src="/js/BuildOrderData.js?v=5.03"></script>
-    <script src="/js/MapRenderer.js?v=5.03"></script>
-    <script src="/js/TimelineSpline.js?v=5.03"></script>
-    <script src="/js/BuildOrderRenderer.js?v=5.03"></script>
+    <script src="/js/BuildOrderData.js?v=5.04"></script>
+    <script src="/js/MapRenderer.js?v=5.05"></script>
+    <script src="/js/TimelineSpline.js?v=5.04"></script>
+    <script src="/js/BuildOrderRenderer.js?v=5.04"></script>
+    <script src="/js/MatchHeader.js?v=5.04"></script>
 
-    <script src="/js/app.js?v=5.03"></script>
+    <script src="/js/app.js?v=5.05"></script>
     <script src="/js/SiteNav.js"></script>
 
     <script>
@@ -33,7 +34,7 @@
     </script>
 
     <style type="text/css">
-      @import "/css/main.css?v=5.03";
+      @import "/css/main.css?v=5.05";
     </style>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -43,80 +44,65 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
   </head>
-  <body>
+  <body style="overflow-y: hidden;">
 
     <!-- Build context bar — populated by renderBuildContext() when ?buildId param present -->
     <div id="viewer-breadcrumb" style="display:none;"></div>
 
     <div id="app" class="layout-mode-live-bo">
-      <!-- Minimal top bar: logo + mode switcher -->
-      <div id="menu">
-        <div class="menu-item">
-          <a href="/">
-            <span class="wc3v-logo">WC3<span class="logo-colors">V</span></span>
-          </a>
-        </div>
-
-        <div class="menu-item spacer">
-          <div id="mode-switcher">
-            <div id="mode-default" class="mode-btn selected" onClick="wc3v.setLayoutMode('default')">Default</div>
-            <div id="mode-build" class="mode-btn" onClick="wc3v.setLayoutMode('build')">Build Only</div>
-            <div id="mode-replay" class="mode-btn" onClick="wc3v.setLayoutMode('replay')">Replay Only</div>
-          </div>
-        </div>
-      </div>
-
       <div id="content">
         <div id="gameplay-area">
-          <div id="player-status-wrapper">
-            <div id="player-status-toggles">
-              <div id="heroes-toggle"
-                onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
-              <div id="units-toggle"
-                onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
-              <div id="groups-toggle"
-                onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
+          <div id="match-header" style="display:none;">
+            <div class="mh-matchup">
+              <div class="mh-player mh-player-left"></div>
+              <div class="mh-player mh-player-right"></div>
             </div>
-            <canvas id="player-status-canvas" width="265" height="200"></canvas>
+
+            <div class="mh-toolbar">
+              <div class="mh-map-info">
+                <span class="mh-map-name"></span>
+              </div>
+              <div class="mh-toggles" id="mh-viewer-toggles"></div>
+            </div>
           </div>
-
-          <div id="map-container">
-            <div id="main-wrapper">
-              <div id="mega-play-button" onClick="wc3v.play()"></div>
-
-              <canvas id="main-canvas" width="550" height="650"></canvas>
-              <canvas id="player-canvas" width="550" height="650"></canvas>
-              <canvas id="utility-canvas" width="550" height="650"></canvas>
-
-              <img id="loading-icon" src="/assets/loading-icon.svg" />
-
-              <div id="game-display-box"></div>
-
-              <div id="match-complete-banner">
-                <div class="mcb-text">Match Complete</div>
-                <div class="mcb-restart" onClick="wc3v.restart()">Replay Again</div>
+          <div id="gameplay-row">
+            <div id="player-status-wrapper">
+              <div id="player-status-toggles">
+                <div id="heroes-toggle"
+                  onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
+                <div id="units-toggle"
+                  onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
+                <div id="groups-toggle"
+                  onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
               </div>
-
-              <div id="empty-game-wrapper">
-                <div class="empty-game-label">No replay loaded.</div>
-                <a href="/builds" class="empty-game-browse">Browse Build Orders →</a>
-              </div>
+              <canvas id="player-status-canvas" width="265" height="200"></canvas>
             </div>
 
-            <div id="viewer-controls" class="disabled">
-              <div class="vc-btn" id="viewer-option-displayPath"
-                onClick="wc3v.toggleViewOption('displayPath')">Hero Paths</div>
-              <div class="vc-btn on" id="viewer-option-displayLeveLDots"
-                onClick="wc3v.toggleViewOption('displayLeveLDots')">Level Dots</div>
-              <div class="vc-btn on" id="viewer-option-displayText"
-                onClick="wc3v.toggleViewOption('displayText')">Labels</div>
-              <div class="vc-btn on" id="viewer-option-decayEffects"
-                onClick="wc3v.toggleViewOption('decayEffects')">Fade FX</div>
-              <div class="vc-btn" id="viewer-option-displayCreepRoute"
-                onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes</div>
-              <div class="vc-btn" id="viewer-option-displayTreeGrid"
-                onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid</div>
+            <div id="map-container">
+              <div id="main-wrapper">
+                <div id="mega-play-button" onClick="wc3v.play()"></div>
+
+                <canvas id="main-canvas" width="550" height="650"></canvas>
+                <canvas id="player-canvas" width="550" height="650"></canvas>
+                <canvas id="utility-canvas" width="550" height="650"></canvas>
+
+                <img id="loading-icon" src="/assets/loading-icon.svg" />
+
+                <div id="game-display-box"></div>
+
+                <div id="match-complete-banner">
+                  <div class="mcb-text">Match Complete</div>
+                  <div class="mcb-restart" onClick="wc3v.restart()">Replay Again</div>
+                </div>
+
+                <div id="empty-game-wrapper">
+                  <div class="empty-game-label">No replay loaded.</div>
+                  <a href="/builds" class="empty-game-browse">Browse Build Orders →</a>
+                </div>
+              </div>
+
             </div>
+            <div id="scrubber-bar"></div>
           </div>
         </div>
 
@@ -134,8 +120,6 @@
             </div>
           </div>
         </div>
-
-        <div id="scrubber-bar"></div>
       </div>
     </div>
 

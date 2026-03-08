@@ -59,101 +59,6 @@ const BuildOrderRenderer = class {
     element.style.setProperty('--race-row-hero', theme.rowHero);
   }
 
-  renderHeaderHeroes (tierProduction) {
-    const row = document.createElement('div');
-    row.classList.add('bo-hdr-heroes');
-
-    const { heroes } = tierProduction;
-    if (!heroes || !heroes.length) return row;
-
-    heroes.forEach(hero => {
-      const shortName = hero.displayName.length > 8
-        ? hero.displayName.substring(0, 7) + '\u2026'
-        : hero.displayName;
-
-      const heroEl = document.createElement('span');
-      heroEl.classList.add('bo-hdr-hero');
-      if (hero.isTavern) heroEl.classList.add('tavern');
-      heroEl.innerHTML = `
-        <img class="bo-hdr-hero-portrait" src="/assets/wc3icons/${hero.itemId}.jpg" title="${hero.displayName}" />
-        <span class="bo-hdr-hero-level">${hero.level}</span>
-        <span class="bo-hdr-hero-name" title="${hero.displayName}">${shortName}</span>`;
-      row.append(heroEl);
-    });
-
-    return row;
-  }
-
-  renderHeaderTierProduction (tierProduction, tier2Time, tier3Time) {
-    const container = document.createElement('div');
-    container.classList.add('bo-hdr-tiers');
-
-    const { tierProd } = tierProduction;
-
-    [1, 2, 3].forEach(tierNum => {
-      if (tierNum === 2 && tier2Time === Infinity) return;
-      if (tierNum === 3 && tier3Time === Infinity) return;
-
-      const data = tierProd[tierNum];
-      const row = document.createElement('div');
-      row.classList.add('bo-hdr-tier-row');
-
-      const hasContent = data.buildings.length > 0 || data.units.length > 0;
-      if (!hasContent) row.classList.add('empty');
-
-      let labelHtml = `<span class="bo-hdr-tier-label t${tierNum}">T${tierNum}</span>`;
-
-      let buildingsHtml = '<span class="bo-hdr-tier-buildings">';
-      data.buildings.forEach(b => {
-        buildingsHtml += `<img src="/assets/wc3icons/${b.itemId}.jpg" title="${b.displayName}" />`;
-      });
-      buildingsHtml += '</span>';
-
-      const sepHtml = (data.buildings.length && data.units.length)
-        ? '<span class="bo-hdr-tier-sep"></span>'
-        : '';
-
-      let unitsHtml = '<span class="bo-hdr-tier-units">';
-      data.units.forEach(u => {
-        const countStr = u.count > 1
-          ? `<span class="bo-hdr-unit-count">\u00d7${u.count}</span>`
-          : '';
-        unitsHtml += `<span class="bo-hdr-unit-entry">
-          <img class="bo-hdr-unit-icon" src="/assets/wc3icons/${u.itemId}.jpg" title="${u.displayName}" />${countStr}
-        </span>`;
-      });
-      unitsHtml += '</span>';
-
-      row.innerHTML = `${labelHtml}${buildingsHtml}${sepHtml}${unitsHtml}`;
-      container.append(row);
-    });
-
-    return container;
-  }
-
-  renderHeaderEconomy (finalSnapshot) {
-    const bar = document.createElement('div');
-    bar.classList.add('bo-hdr-economy');
-
-    if (!finalSnapshot) return bar;
-
-    const { workers, supply, economy } = finalSnapshot;
-    const cappedGold = Math.min(5, workers.onGold);
-
-    bar.innerHTML = `
-      <span class="bo-hdr-econ-workers">
-        <span class="bo-assign-gold">${cappedGold}G</span>
-        <span class="bo-assign-lumber">${workers.onLumber}L</span>
-        <span class="bo-assign-build">${workers.onBuild}B</span>
-      </span>
-      <span class="bo-hdr-econ-supply">${supply.used}/${supply.max}</span>
-      <span class="bo-hdr-econ-spent">
-        <span class="bo-cost-dot gold-dot"></span><span class="bo-gold">${economy.goldSpent}</span>
-        <span class="bo-cost-dot lumber-dot"></span><span class="bo-lumber">${economy.lumberSpent}</span>
-      </span>`;
-    return bar;
-  }
-
   renderBuildOrder () {
     const { buildOrderPlayers } = this.viewer;
 
@@ -180,10 +85,6 @@ const BuildOrderRenderer = class {
 
     emptyEl.style.display = 'none';
     columnsEl.style.display = 'flex';
-
-    // responsive class (also observed dynamically on resize)
-    this._updateResponsiveClass();
-    this._observeResponsive();
 
     const timelineGap = document.getElementById('bo-timeline-gap');
 
@@ -223,9 +124,12 @@ const BuildOrderRenderer = class {
     // Render dispatcher — maps event type to render function
     // Note: workerAssign, building, and unit are handled explicitly in the event loop below
     const renderers = {
-      heroTraining: (event, pc) => this.renderHeroTrainingCard(event, pc),
-      heroLevel:    (event, pc) => this.renderHeroLevelCard(event, pc),
-      expansion:    (event)     => this.renderExpansionCard(event)
+      heroTraining:  (event, pc) => this.renderHeroTrainingCard(event, pc),
+      heroLevel:     (event, pc) => this.renderHeroLevelCard(event, pc),
+      expansion:     (event)     => this.renderExpansionCard(event),
+      attackUpgrade: (event)     => this.renderUpgradeCard(event),
+      defenseUpgrade:(event)     => this.renderUpgradeCard(event),
+      research:      (event)     => this.renderResearchCard(event)
     };
 
     buildOrderPlayers.forEach(player => {
@@ -238,53 +142,28 @@ const BuildOrderRenderer = class {
       column.style.setProperty('--player-color', playerColor);
       this.applyRaceTheme(column, race);
 
-      // --- Player Header (collapsible: toggle bar + expandable body) ---
+      // --- Player Header (name + build name + tier + race) ---
       const header = document.createElement('div');
       header.classList.add('bo-player-header');
 
-      // Determine max tier reached
       const maxTier = tier3Time !== Infinity ? 3 : (tier2Time !== Infinity ? 2 : 1);
 
-      // Toggle bar — always visible, shows name + tier + race + economy summary
+      // Look up build name for this player by their playerId
+      const bcSlots = this.viewer.buildContextBySlot || {};
+      const bc = bcSlots[String(player.playerId)];
+      const buildLabel = bc ? `<span class="bo-hdr-build-name">\u2014 ${bc.name}</span>` : '';
+
+      if (bc && bc.selected) {
+        header.classList.add('bo-hdr-selected');
+      }
+
       const toggleBar = document.createElement('div');
       toggleBar.classList.add('bo-hdr-toggle');
-
-      const econSummary = this.renderHeaderEconomy(finalSnapshot);
-
       toggleBar.innerHTML = `
-        <span class="bo-hdr-chevron"></span>
-        <span class="bo-hdr-player-name" style="color:${playerColor}">${displayName}</span>
+        <span class="bo-hdr-player-name" style="color:${playerColor}">${displayName}${buildLabel}</span>
         <span class="bo-hdr-tier-badge t${maxTier}">T${maxTier}</span>
         <span class="bo-hdr-race-badge">${raceInfo.label}</span>`;
-      toggleBar.append(econSummary);
-
-      const collapseBtn = document.createElement('span');
-      collapseBtn.classList.add('bo-hdr-collapse-btn');
-      collapseBtn.textContent = 'HIDE ▲';
-      toggleBar.append(collapseBtn);
-
-      toggleBar.addEventListener('click', () => {
-        const isCollapsed = header.classList.toggle('collapsed');
-        collapseBtn.textContent = isCollapsed ? 'SHOW ▼' : 'HIDE ▲';
-      });
       header.append(toggleBar);
-
-      // Expandable body — hidden when collapsed
-      const body = document.createElement('div');
-      body.classList.add('bo-hdr-body');
-
-      const main = document.createElement('div');
-      main.classList.add('bo-hdr-main');
-
-      main.append(this.renderHeaderHeroes(tierProduction));
-
-      const right = document.createElement('div');
-      right.classList.add('bo-hdr-right');
-      right.append(this.renderHeaderTierProduction(tierProduction, tier2Time, tier3Time));
-      main.append(right);
-
-      body.append(main);
-      header.append(body);
 
       column.append(header);
 
@@ -293,11 +172,6 @@ const BuildOrderRenderer = class {
       colHeader.classList.add('bo-col-header');
       colHeader.innerHTML = `
         <span class="bo-col-h-desc">ACTION</span>
-        <span class="bo-col-h-workers" title="Workers on gold / lumber">
-          <img class="bo-col-h-icon" src="/assets/wc3icons/gold.jpg" alt="Gold" />
-          <span class="bo-col-h-sep">/</span>
-          <img class="bo-col-h-icon" src="/assets/wc3icons/lmbr.jpg" alt="Lumber" />
-        </span>
         <span class="bo-col-h-cost" title="Gold / Lumber cost">
           <img class="bo-col-h-icon" src="/assets/wc3icons/gold.jpg" alt="Gold" />
           <img class="bo-col-h-icon" src="/assets/wc3icons/lmbr.jpg" alt="Lumber" />
@@ -307,6 +181,8 @@ const BuildOrderRenderer = class {
 
       // --- Tier Sections ---
       let lastArmySummary = null;
+
+      const seenUnitTypes = {};
 
       [1, 2, 3].forEach(tierNum => {
         const tierData = tiers[tierNum];
@@ -351,7 +227,7 @@ const BuildOrderRenderer = class {
 
           let el;
           if (event.type === 'workerAssign' || event.type === 'building' || event.type === 'unit' || event.type === 'supplyComplete' || event.type === 'heroComplete') {
-            el = this.renderBoRow(event, race, workerDots, supply, tierNum);
+            el = this.renderBoRow(event, race, workerDots, supply, tierNum, seenUnitTypes);
           } else {
             const renderer = renderers[event.type];
             if (!renderer) return;
@@ -366,7 +242,9 @@ const BuildOrderRenderer = class {
         // Army summary at tier end
         const snap = snapshots[tierNum + 1] || (tierNum === 3 ? finalSnapshot : null);
         if (snap) {
-          const summary = this.renderArmySummary(snap);
+          const isFinal = tierNum === 3 || !snapshots[tierNum + 1];
+          const summaryLabel = isFinal ? 'Final Composition' : `Tier ${tierNum} Summary`;
+          const summary = this.renderArmySummary(snap, summaryLabel);
           tierSection.append(summary);
           lastArmySummary = summary;
         }
@@ -375,6 +253,11 @@ const BuildOrderRenderer = class {
       });
 
       if (lastArmySummary) lastArmySummary.classList.add('sticky');
+
+      // Final economy summary card
+      if (finalSnapshot) {
+        column.append(this.renderEconomySummary(finalSnapshot));
+      }
 
       // Append to correct side based on team
       const side = teamSideMap[player.teamColor] || 'right';
@@ -450,6 +333,36 @@ const BuildOrderRenderer = class {
       <img class="bo-expansion-icon" src="/assets/wc3icons/${event.itemId}.jpg" />
       <span class="bo-expansion-label">EXPANSION MADE</span>
       ${costStr ? `<span class="bo-expansion-cost">${costStr}</span>` : ''}`;
+    return bar;
+  }
+
+  // --- Attack/Defense upgrade bar ---
+  renderUpgradeCard (event) {
+    const bar = document.createElement('div');
+    const isAttack = event.category === 'attack';
+    bar.classList.add('bo-research-bar', isAttack ? 'bo-attack-upgrade' : 'bo-defense-upgrade');
+    const costStr = this.buildInlineCost(event);
+    const iconSrc = event.icon ? `/assets/wc3icons/${event.icon}.jpg` : `/assets/wc3icons/${event.itemId}.jpg`;
+    const label = isAttack ? 'ATK' : 'DEF';
+    bar.innerHTML = `
+      <img class="bo-research-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+      <span class="bo-research-badge ${isAttack ? 'atk' : 'def'}">${label} ${event.level}</span>
+      <span class="bo-research-name">${event.displayName}</span>
+      ${costStr ? `<span class="bo-research-cost">${costStr}</span>` : ''}`;
+    return bar;
+  }
+
+  // --- Research / ability upgrade card ---
+  renderResearchCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-research-bar', 'bo-ability-research');
+    const costStr = this.buildInlineCost(event);
+    const iconSrc = event.icon ? `/assets/wc3icons/${event.icon}.jpg` : `/assets/wc3icons/${event.itemId}.jpg`;
+    const levelStr = event.level > 1 ? ` Lv${event.level}` : '';
+    bar.innerHTML = `
+      <img class="bo-research-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+      <span class="bo-research-name">${event.displayName}${levelStr}</span>
+      ${costStr ? `<span class="bo-research-cost">${costStr}</span>` : ''}`;
     return bar;
   }
 
@@ -562,7 +475,7 @@ const BuildOrderRenderer = class {
   }
 
   // --- Standard build order row (5-column grid: time | desc | workers | cost | supply) ---
-  renderBoRow (event, race, workerDots, supply, tierNum) {
+  renderBoRow (event, race, workerDots, supply, tierNum, seenUnitTypes) {
     const cfg = BuildOrderData.CONFIG;
     const { type, itemId } = event;
     const count = event.count || 1;
@@ -612,6 +525,10 @@ const BuildOrderRenderer = class {
       row.classList.add('worker-row', assignClass);
       const workerName = cfg.workerNames[race] || 'Worker';
 
+      const gCount = workerDots ? workerDots.onGold : 0;
+      const lCount = workerDots ? workerDots.onLumber : 0;
+      const wkInline = `<span class="bo-wk-inline"><span class="bo-wk-g">${gCount}G</span> / <span class="bo-wk-l">${lCount}L</span></span>`;
+
       if (event.isInitialWorkers) {
         const ghoulsLumber = event.ghoulsOnLumber || 0;
         const goldWorkers = event.totalWorkers - ghoulsLumber;
@@ -622,12 +539,12 @@ const BuildOrderRenderer = class {
         if (ghoulsLumber > 0) {
           parts.push(`${ghoulsLumber} Ghoul <span class="bo-assign-tag tag-lumber">lumber</span>`);
         }
-        descText = parts.join(' ');
+        descText = parts.join(' ') + ` ${wkInline}`;
       } else {
         const tagClass = event.assignTarget === 'lumber' ? 'tag-lumber' : (event.assignTarget === 'build' ? 'tag-build' : 'tag-gold');
         const tagLabel = cfg.assignLabels[event.assignTarget] || 'Gold';
         const countPrefix = count > 1 ? `<span class="bo-unit-count">${count}x</span> ` : '';
-        descText = `${countPrefix}${event.displayName} <span class="bo-assign-tag ${tagClass}">${tagLabel}</span>`;
+        descText = `${countPrefix}${event.displayName} <span class="bo-assign-tag ${tagClass}">${tagLabel}</span> ${wkInline}`;
       }
     } else if (type === 'building') {
       row.classList.add('building-row');
@@ -641,44 +558,36 @@ const BuildOrderRenderer = class {
       row.classList.add('unit-row');
       if (event.isShop) row.classList.add('shop-row');
       const countPrefix = count > 1 ? `<span class="bo-unit-count">${count}x</span> ` : '';
-      descText = `${countPrefix}${verb} ${event.displayName}`;
-    }
-
-    // Worker economy column — compact numeric display (tier 1 only, too spammy after)
-    let workersHtml = '';
-    if (tierNum > 1 || !workerDots) {
-      workersHtml = '<div class="bo-row-workers"></div>';
-    } else {
-      const gCount = Math.min(5, workerDots.onGold || 0);
-      const lCount = workerDots.onLumber || 0;
-      const bCount = workerDots.onBuild || 0;
-      const title = `Workers: ${gCount} on gold, ${lCount} on lumber` +
-        (bCount > 0 ? `, ${bCount} building` : '');
-
-      if (gCount === 0 && lCount === 0) {
-        workersHtml = `<div class="bo-row-workers bo-wk-empty" title="${title}"><span class="bo-wk-dim">&mdash;</span></div>`;
-      } else {
-        workersHtml = `<div class="bo-row-workers" title="${title}">` +
-          `<span class="bo-wk-gold">${gCount}</span>` +
-          `<span class="bo-wk-sep">/</span>` +
-          `<span class="bo-wk-lumber">${lCount}</span></div>`;
+      let typeIcons = '';
+      if (seenUnitTypes && !seenUnitTypes[itemId]) {
+        seenUnitTypes[itemId] = true;
+        const atkInfo = ATTACK_TYPES[event.attackType];
+        const defInfo = ARMOR_TYPES[event.armorType];
+        if (atkInfo) typeIcons += `<img class="bo-row-type-icon" src="${atkInfo.icon}" title="${atkInfo.label} attack" />`;
+        if (defInfo) typeIcons += `<img class="bo-row-type-icon" src="${defInfo.icon}" title="${defInfo.label} armor" />`;
       }
+      descText = `${countPrefix}${verb} ${event.displayName}${typeIcons}`;
     }
 
-    // Column order: desc | workers | cost | supply
+    // Column order: desc | cost | supply
     row.innerHTML = `
       <div class="bo-row-desc">
         <img class="bo-row-icon" src="/assets/wc3icons/${itemId}.jpg" />
         <span class="bo-row-text">${descText}</span>
-      </div>${workersHtml}${costHtml}${supplyHtml}`;
+      </div>${costHtml}${supplyHtml}`;
     return row;
   }
 
   // --- Army summary at tier end ---
-  renderArmySummary (snapshot) {
+  renderArmySummary (snapshot, label) {
     const { army, heroes, workers, supply, economy } = snapshot;
     const el = document.createElement('div');
     el.classList.add('bo-army-summary');
+
+    // Summary header
+    const headerHtml = label
+      ? `<div class="bo-summary-header">${label}</div>`
+      : '';
 
     // Heroes section
     let heroesHtml = '';
@@ -710,9 +619,36 @@ const BuildOrderRenderer = class {
           <img class="bo-summary-icon" src="/assets/wc3icons/${unit.itemId}.jpg" title="${unit.displayName}" />${countStr}
         </span>`;
       });
+
+      // Collect unique attack and armor types present in army
+      const atkSet = {};
+      const defSet = {};
+      army.forEach(unit => {
+        if (unit.attackType && ATTACK_TYPES[unit.attackType]) atkSet[unit.attackType] = 1;
+        if (unit.armorType && ARMOR_TYPES[unit.armorType]) defSet[unit.armorType] = 1;
+      });
+
+      let typeSummary = '';
+      const atkIcons = Object.keys(atkSet).map(k => {
+        const info = ATTACK_TYPES[k];
+        return `<img class="bo-type-summary-icon" src="${info.icon}" title="${info.label} attack" />`;
+      }).join('');
+      const defIcons = Object.keys(defSet).map(k => {
+        const info = ARMOR_TYPES[k];
+        return `<img class="bo-type-summary-icon" src="${info.icon}" title="${info.label} armor" />`;
+      }).join('');
+
+      if (atkIcons || defIcons) {
+        typeSummary = `<div class="bo-type-summary">`;
+        if (atkIcons) typeSummary += `<span class="bo-type-summary-row"><span class="bo-type-summary-label">Atk</span>${atkIcons}</span>`;
+        if (defIcons) typeSummary += `<span class="bo-type-summary-row"><span class="bo-type-summary-label">Def</span>${defIcons}</span>`;
+        typeSummary += `</div>`;
+      }
+
       armyHtml = `<div class="bo-summary-section">
         <span class="bo-summary-label">ARMY</span>
         <div class="bo-summary-items">${armyItems}</div>
+        ${typeSummary}
       </div>`;
     }
 
@@ -733,7 +669,42 @@ const BuildOrderRenderer = class {
       </span>
     </div>`;
 
-    el.innerHTML = `${heroesHtml}${armyHtml}${econHtml}`;
+    el.innerHTML = `${headerHtml}${heroesHtml}${armyHtml}${econHtml}`;
+    return el;
+  }
+
+  // --- Final economy summary card at bottom of player column ---
+  renderEconomySummary (snapshot) {
+    const { workers, supply, economy } = snapshot;
+    const el = document.createElement('div');
+    el.classList.add('bo-econ-summary');
+
+    const cappedGold = Math.min(5, workers.onGold);
+    const supplyStr = supply ? `${supply.used}/${supply.max}` : '';
+
+    el.innerHTML = `
+      <span class="bo-summary-label">FINAL ECONOMY</span>
+      <div class="bo-econ-detail">
+        <span class="bo-econ-group">
+          <span class="bo-summary-label">WORKERS</span>
+          <span class="bo-summary-workers">
+            <span class="bo-assign-gold">${cappedGold}G</span>
+            <span class="bo-assign-lumber">${workers.onLumber}L</span>
+            <span class="bo-assign-build">${workers.onBuild}B</span>
+          </span>
+        </span>
+        <span class="bo-econ-group">
+          <span class="bo-summary-label">SUPPLY</span>
+          <span class="bo-summary-supply">${supplyStr}</span>
+        </span>
+        <span class="bo-econ-group">
+          <span class="bo-summary-label">SPENT</span>
+          <span class="bo-summary-spent">
+            <span class="bo-cost-dot gold-dot"></span><span class="bo-gold">${economy.goldSpent}</span>
+            <span class="bo-cost-dot lumber-dot"></span><span class="bo-lumber">${economy.lumberSpent}</span>
+          </span>
+        </span>
+      </div>`;
     return el;
   }
 

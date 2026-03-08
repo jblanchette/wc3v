@@ -22,14 +22,28 @@ const SiteNav = {
 
     const isHome = activeSection === 'home';
 
+    // Right-side content depends on page
+    let rightHtml = '';
+    if (isHome) {
+      rightHtml = `
+        <span class="site-nav-tagline">Warcraft III Build Orders</span>
+        <span class="site-nav-patch">Patch 1.36.1</span>`;
+    } else if (document.getElementById('app')) {
+      rightHtml = `
+        <div id="mode-switcher">
+          <div id="mode-default" class="mode-btn selected" onClick="wc3v.setLayoutMode('default')">Default</div>
+          <div id="mode-build" class="mode-btn" onClick="wc3v.setLayoutMode('build')">Build Only</div>
+          <div id="mode-replay" class="mode-btn" onClick="wc3v.setLayoutMode('replay')">Replay Only</div>
+        </div>`;
+    }
+
     nav.innerHTML = `
       <div class="site-nav-inner">
         <a class="site-nav-logo" href="${root}/">
           <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
         </a>
         <div class="site-nav-spacer"></div>
-        <span class="site-nav-tagline">Warcraft III Build Orders</span>
-        <span class="site-nav-patch">Patch 1.36.1</span>
+        ${rightHtml}
       </div>
     `;
 

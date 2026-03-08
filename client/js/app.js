@@ -1,4 +1,4 @@
- const Wc3vViewer = class {
+const Wc3vViewer = class {
   constructor () {
     this.reset();
   }
@@ -48,40 +48,78 @@
       const build = (manifest.builds || []).find(b => b.id === buildId);
       if (!build) return;
 
-      // Load summary for current replay
-      let summary = null;
-      try {
-        const sr = await fetch(`/data/summaries/${currentReplayId}.json`);
-        summary = await sr.json();
-      } catch (e) { /* non-critical */ }
-
-      const currentReplay = (build.replays || []).find(r => r.replayId === currentReplayId);
-      const otherReplays  = (build.replays || []).filter(r => r.replayId !== currentReplayId);
-
       const rc = RACE_COLORS[build.race] || '#888';
 
-      // Match summary line
-      let matchLine = '';
-      if (currentReplay) {
-        const map = (summary && summary.map) || currentReplay.map || '';
-        const dur = (summary && summary.durationFormatted) ? ' · ' + summary.durationFormatted : '';
-        matchLine = `${currentReplay.playerName} vs ${currentReplay.opponentName}${map ? ' · ' + map : ''}${dur}`;
+      // Find ALL builds that reference this replay (covers both players)
+      this.buildContextBySlot = {};
+      (manifest.builds || []).forEach(b => {
+        (b.replays || []).forEach(r => {
+          if (r.replayId === currentReplayId) {
+            this.buildContextBySlot[r.playerSlot] = {
+              name: b.name, race: b.race, buildId: b.id, selected: (b.id === buildId)
+            };
+          }
+        });
+      });
+
+      // Build replay dropdown — all replays for this build, sorted by map then player
+      const allReplays = (build.replays || []).slice();
+      allReplays.sort((a, b) => {
+        const mapCmp = (a.map || '').localeCompare(b.map || '');
+        if (mapCmp !== 0) return mapCmp;
+        return (a.playerName || '').localeCompare(b.playerName || '');
+      });
+
+      // Tag duplicates with (#N)
+      const seen = {};
+      allReplays.forEach(r => {
+        const key = `${r.map || ''}-${r.playerName || ''}`;
+        seen[key] = (seen[key] || 0) + 1;
+      });
+      const counters = {};
+      allReplays.forEach(r => {
+        const key = `${r.map || ''}-${r.playerName || ''}`;
+        if (seen[key] > 1) {
+          counters[key] = (counters[key] || 0) + 1;
+          r._dupLabel = ` (#${counters[key]})`;
+        }
+      });
+
+      let replayDropdownHtml = '';
+      if (allReplays.length > 1) {
+        const options = allReplays.map(r => {
+          const label = `${r.map || 'Unknown Map'} — ${r.playerName}${r._dupLabel || ''}`;
+          const url = `/viewer?r=${r.replayId}&buildId=${build.id}`;
+          const selected = r.replayId === currentReplayId ? ' selected' : '';
+          return `<option value="${url}"${selected}>${label}</option>`;
+        }).join('');
+
+        replayDropdownHtml = `
+          <div class="vbc-sep"></div>
+          <span class="vbc-also">Replays:</span>
+          <select class="vbc-replay-select" onchange="if(this.value) window.location.href=this.value">
+            ${options}
+          </select>`;
       }
 
-      // Other replay switcher pills
-      const otherHtml = otherReplays.map(r => {
-        const url = `/viewer?r=${r.replayId}&buildId=${build.id}`;
-        return `<a class="vbc-replay-pill" href="${url}">${r.playerName}</a>`;
+      // Build player badges for all players in this replay
+      const slotEntries = Object.entries(this.buildContextBySlot)
+        .sort((a, b) => Number(a[0]) - Number(b[0]));
+
+      const playerBadgesHtml = slotEntries.map((entry, i) => {
+        const ctx = entry[1];
+        const color = RACE_COLORS[ctx.race] || '#888';
+        const abbr = RACE_ABBR[ctx.race] || ctx.race;
+        const sep = i > 0 ? '<span class="vbc-vs">vs</span>' : '';
+        return `${sep}<span class="vbc-badge" style="--rc:${color}">${abbr}</span><span class="vbc-name">${ctx.name}</span>`;
       }).join('');
 
       bar.style.display = 'flex';
       bar.innerHTML = `
         <a class="vbc-back" href="/">← Builds</a>
         <div class="vbc-sep"></div>
-        <span class="vbc-badge" style="--rc:${rc}">${RACE_ABBR[build.race] || build.race}</span>
-        <span class="vbc-name">${build.name}</span>
-        ${matchLine ? `<div class="vbc-sep"></div><span class="vbc-match">${matchLine}</span>` : ''}
-        ${otherReplays.length ? `<div class="vbc-sep"></div><span class="vbc-also">Also:</span>${otherHtml}` : ''}
+        ${playerBadgesHtml}
+        ${replayDropdownHtml}
       `;
     } catch (e) {
       // breadcrumb is non-critical — fail silently
@@ -158,11 +196,11 @@
 
         const { target } = res;
         const jsonData = JSON.parse(target.responseText);
-        
+
         self.replayId = filename;
         self.mapData = jsonData;
 
-        self.setup(); 
+        self.setup();
         // removing loading status indicator
         self.setLoadingStatus(false);
       } catch (e) {
@@ -222,7 +260,7 @@
 
     const el = document.getElementById(id);
     const headerEl = document.getElementById(`${id}-header`);
-    
+
     el.style.display = "flex";
     headerEl.classList.add("shown-header");
   }
@@ -292,7 +330,7 @@
     if (!document.getElementById("upload-wrapper")) return;
     this.hideUploadContents();
     this.toggleUploadWrapper(true);
-    
+
     document.getElementById(which).style.display = "flex";
 
     if (optText) {
@@ -332,11 +370,11 @@
       const port = window.location.hostname === "127.0.0.1" ? ":8085" : "";
       const req = new XMLHttpRequest();
       req.open('POST', `http://${window.location.hostname}${port}/upload`, true);
-      
+
       req.setRequestHeader("ticketid", ticketId);
       req.setRequestHeader("Content-Type", "application/octet-stream");
       req.setRequestHeader("Content-Disposition", "attachment");
-      
+
       const uploadStart = new Date();
 
       req.upload.onprogress = (e) => {
@@ -345,7 +383,7 @@
 
           // kb / (245 kb/min)
           const estTimeLeft = ((e.total / 1024) / 245).toFixed(2);
-          const optText = percentage === 100 ? 
+          const optText = percentage === 100 ?
             `Parsing... (est ~${estTimeLeft} min)` :
             `Uploading replay... ${percentage}%`;
 
@@ -358,12 +396,12 @@
 
         if (target.status >= 300) {
           console.log("upload error: ", target.status, target.statusText);
-          
+
           let data = null;
           const { responseText } = target;
 
           if (responseText && responseText != "") {
-            try { 
+            try {
               data = JSON.parse(responseText);
             } catch (err) {
               data = null;
@@ -494,7 +532,7 @@
         const { map, camera } = bounds;
 
         /*
-          bound index selection - 
+          bound index selection -
           not all camera grids are centered in the map grid,
           try to adjust so we show the lower ratio so enough
           of the actual map is shown
@@ -513,7 +551,7 @@
 
         resolve();
       }, false);
-      
+
     });
   }
 
@@ -526,7 +564,7 @@
     //     try {
     //       const { target } = res;
     //       const jsonData = JSON.parse(target.responseText);
-            
+
     //       console.log("grid: ", jsonData);
     //       self.gridData = jsonData.grid;
     //     } catch (e) {
@@ -547,7 +585,7 @@
       this.loadFile(`../maps/${name}/doo.json`, (res) => {
         const { target } = res;
         const jsonData = JSON.parse(target.responseText);
-          
+
         self.doodadData = jsonData.grid;
         resolve(true);
       });
@@ -585,15 +623,15 @@
   ////
   setLoadingStatus (isLoading) {
     const loadingIcon = document.getElementById("loading-icon");
-    const viewerControlsPanel = document.getElementById("viewer-controls");
+    const matchHeader = document.getElementById("match-header");
 
     this.emptyGameWrapper.style.display = "none";
 
     loadingIcon.style.display = isLoading ? "block" : "none";
 
-    isLoading ?
-      viewerControlsPanel.classList.add("disabled") :
-      viewerControlsPanel.classList.remove("disabled");
+    if (matchHeader) {
+      matchHeader.style.display = isLoading ? "none" : "";
+    }
   }
 
   togglePlay () {
@@ -609,7 +647,7 @@
 
   toggleSpeed () {
     const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
-    speedModal.style.display = speedModal.style.display !== "block" ? 
+    speedModal.style.display = speedModal.style.display !== "block" ?
       "block" : "none";
   }
 
@@ -759,6 +797,11 @@
       this.resetCanvasScale();
     }
 
+    // Update match header controls visibility
+    if (this.matchHeader) {
+      this.matchHeader.updateLayoutMode(this.layoutMode);
+    }
+
     // Re-render build order if in a BO mode
     if (this.layoutMode !== LayoutMode.gameplay && this.gameLoaded) {
       this.boRenderer.renderBuildOrder();
@@ -775,12 +818,12 @@
   scaleLiveModeCanvas () {
     if (!this.gameScaler) return;
 
-    const gameplayArea = document.getElementById('gameplay-area');
-    if (!gameplayArea) return;
+    const gameplayRow = document.getElementById('gameplay-row');
+    if (!gameplayRow) return;
 
     requestAnimationFrame(() => {
-      const availableWidth = gameplayArea.clientWidth;
-      const availableHeight = gameplayArea.clientHeight;
+      const availableWidth = gameplayRow.clientWidth;
+      const availableHeight = gameplayRow.clientHeight;
 
       const mapWidth = this.gameScaler.mapImage.width;
       const mapHeight = this.gameScaler.mapImage.height;
@@ -927,7 +970,9 @@
       this.setupDrawing();
       this.timelineSpline = new TimelineSpline(this);
       this.boRenderer = new BuildOrderRenderer(this);
+      this.matchHeader = new MatchHeader(this);
       this.setupBuildOrder();
+      this.matchHeader.render();
 
       this.timelineSpline.observeResize();
 
@@ -954,7 +999,7 @@
       displayBuildGrid: false,
       displayWaterGrid: false,
       displayCreepRoute: false
-    };    
+    };
 
     Object.keys(this.viewOptions).forEach(optionKey => {
       const el = document.getElementById(`viewer-option-${optionKey}`);
@@ -997,14 +1042,14 @@
     let slotCounter = 0;
 
     playerList.forEach((playerId, index) => {
-      const { 
-        startingPosition, 
-        units, 
+      const {
+        startingPosition,
+        units,
         selectionStream,
         eventStream,
         tierStream,
         teamId,
-        isNeutralPlayer 
+        isNeutralPlayer
       } = this.mapData.players[playerId];
 
       const { raceDetected, name } = this.mapData.replay.players[playerId];
@@ -1017,9 +1062,9 @@
       const player = new ClientPlayer(
         slotCounter,
         this.teamColorMap[teamId],
-        playerId, 
-        startingPosition, 
-        units, 
+        playerId,
+        startingPosition,
+        units,
         name,
         raceDetected,
         selectionStream,
@@ -1041,7 +1086,7 @@
     const { maps } = window.gameData;
 
     // extract map info from replay data
-    
+
     const { map, metadata, subheader } = this.mapData.replay;
 
     let file = metadata.map.mapName;
@@ -1056,7 +1101,7 @@
     this.matchEndTime = subheader.replayLengthMS;
 
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
-    
+
     const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
       const searchName = maps[mapItem].name.toLowerCase();
 
@@ -1072,7 +1117,7 @@
     const self = this;
     const { world } = this.mapData;
     const { bounds } = this.mapInfo;
-    
+
 
     // player ui toggle offsets
     this.playerSlotOffset = 0;
@@ -1147,8 +1192,8 @@
     };
 
     // ResizeObserver for live mode canvas rescaling
-    const gameplayArea = document.getElementById('gameplay-area');
-    if (gameplayArea && typeof ResizeObserver !== 'undefined') {
+    const gameplayRow = document.getElementById('gameplay-row');
+    if (gameplayRow && typeof ResizeObserver !== 'undefined') {
       let resizeTimeout;
       new ResizeObserver(() => {
         clearTimeout(resizeTimeout);
@@ -1157,13 +1202,13 @@
             self.scaleLiveModeCanvas();
           }
         }, 100);
-      }).observe(gameplayArea);
+      }).observe(gameplayRow);
     }
   }
 
   clearCanvas () {
-    const { 
-      ctx, 
+    const {
+      ctx,
       playerCtx,
       playerStatusCtx,
       utilityCtx,
@@ -1213,19 +1258,19 @@
       this.lastFrameTimestamp = timestamp;
     }
 
-    this.lastFrameDelta += timestamp - this.lastFrameTimestamp; 
+    this.lastFrameDelta += timestamp - this.lastFrameTimestamp;
     this.lastFrameTimestamp = timestamp;
- 
+
     while (this.lastFrameDelta >= timeStep) {
         if (this.state === ScrubStates.playing) {
           this.update(timeStep * speed);
         }
-        
+
         this.lastFrameDelta -= timeStep;
     }
 
     this.render();
-    
+
     if (this.gameTime >= this.matchEndTime) {
       this.stop();
       this.showMatchCompleteBanner();
@@ -1276,15 +1321,15 @@
 
     this.clearCanvas();
 
-    ctx.save();    
+    ctx.save();
     ctx.translate(transform.x, transform.y);
     ctx.scale(transform.k, transform.k);
 
-    playerCtx.save();    
+    playerCtx.save();
     playerCtx.translate(transform.x, transform.y);
     playerCtx.scale(transform.k, transform.k);
 
-    utilityCtx.save();    
+    utilityCtx.save();
     utilityCtx.translate(transform.x, transform.y);
     utilityCtx.scale(transform.k, transform.k);
 
@@ -1307,10 +1352,10 @@
         ctx,
         playerCtx,
         utilityCtx,
-        playerStatusCtx, 
-        transform, 
-        gameTime, 
-        xScale, 
+        playerStatusCtx,
+        transform,
+        gameTime,
+        xScale,
         yScale,
         viewOptions
       );
@@ -1322,10 +1367,10 @@
         ctx,
         playerCtx,
         utilityCtx,
-        playerStatusCtx, 
-        transform, 
-        gameTime, 
-        xScale, 
+        playerStatusCtx,
+        transform,
+        gameTime,
+        xScale,
         yScale,
         viewOptions
       );

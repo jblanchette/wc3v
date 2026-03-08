@@ -1,0 +1,1800 @@
+{
+  "Rhme": {
+    "name": "Melee Weapons",
+    "race": "human",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnsteelmelee",
+      "btnthoriummelee",
+      "btnarcanitemelee"
+    ],
+    "gold": [
+      100,
+      175,
+      250
+    ],
+    "lumber": [
+      50,
+      175,
+      300
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rhra": {
+    "name": "Ranged Weapons",
+    "race": "human",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnhumanmissileupone",
+      "btnhumanmissileuptwo",
+      "btnhumanmissileupthree"
+    ],
+    "gold": [
+      100,
+      175,
+      250
+    ],
+    "lumber": [
+      50,
+      175,
+      300
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rhhb": {
+    "name": "Storm Hammers",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnstormhammer"
+    ],
+    "gold": [
+      125
+    ],
+    "lumber": [
+      225
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Rhar": {
+    "name": "Plating",
+    "race": "human",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnhumanarmorupone",
+      "btnhumanarmoruptwo",
+      "btnhumanarmorupthree"
+    ],
+    "gold": [
+      125,
+      150,
+      175
+    ],
+    "lumber": [
+      75,
+      175,
+      275
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rhgb": {
+    "name": "Flying Machine Bombs",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnhumanartilleryupone"
+    ],
+    "gold": [
+      150
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      35
+    ]
+  },
+  "Rhac": {
+    "name": "Masonry",
+    "race": "human",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnstonearchitecture",
+      "btnarcanitearchitecture",
+      "btnimbuedmasonry"
+    ],
+    "gold": [
+      125,
+      150,
+      175
+    ],
+    "lumber": [
+      50,
+      75,
+      100
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rhde": {
+    "name": "Defend",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btndefend"
+    ],
+    "gold": [
+      125
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rhan": {
+    "name": "Animal War Training",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnanimalwartraining"
+    ],
+    "gold": [
+      125
+    ],
+    "lumber": [
+      125
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rhpt": {
+    "name": "Priest Training",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnpriestadept",
+      "btnpriestmaster"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      60
+    ]
+  },
+  "Rhst": {
+    "name": "Sorceress Training",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnsorceressadept",
+      "btnsorceressmaster"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      60
+    ]
+  },
+  "Rhla": {
+    "name": "Leather Armor",
+    "race": "human",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnleatherupgradeone",
+      "btnleatherupgradetwo",
+      "btnleatherupgradethree"
+    ],
+    "gold": [
+      100,
+      150,
+      200
+    ],
+    "lumber": [
+      100,
+      175,
+      250
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rhri": {
+    "name": "Long Rifles",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btndwarvenlongrifle"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      125
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rhlh": {
+    "name": "Lumber Harvesting",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnhumanlumberupgrade1",
+      "btnhumanlumberupgrade2"
+    ],
+    "gold": [
+      100,
+      200
+    ],
+    "lumber": [
+      0,
+      0
+    ],
+    "time": [
+      60,
+      75
+    ]
+  },
+  "Rhse": {
+    "name": "Magic Sentry",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnmagicalsentry"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rhfl": {
+    "name": "Flare",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnflare"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rhss": {
+    "name": "Control Magic",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btncontrolmagic"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Rhrt": {
+    "name": "Barrage",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnscatterrockets"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rhpm": {
+    "name": "human backpack",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnpackbeast"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      25
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Rhfc": {
+    "name": "Flak Cannons",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnflakcannons"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rhfs": {
+    "name": "Fragmentation Shards",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnfragmentationbombs"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rhcd": {
+    "name": "Cloud",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btncloudoffog"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      35
+    ]
+  },
+  "Rhsb": {
+    "name": "Sundering Blades",
+    "race": "human",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnsunderingblades"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rome": {
+    "name": "Melee Weapons",
+    "race": "orc",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnorcmeleeupone",
+      "btnorcmeleeuptwo",
+      "btnorcmeleeupthree"
+    ],
+    "gold": [
+      100,
+      150,
+      200
+    ],
+    "lumber": [
+      75,
+      150,
+      225
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rora": {
+    "name": "Ranged Weapons",
+    "race": "orc",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnsteelranged",
+      "btnthoriumranged",
+      "btnarcaniteranged"
+    ],
+    "gold": [
+      100,
+      150,
+      200
+    ],
+    "lumber": [
+      100,
+      175,
+      250
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Roar": {
+    "name": "Unit Armor",
+    "race": "orc",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnsteelarmor",
+      "btnthoriumarmor",
+      "btnarcanitearmor"
+    ],
+    "gold": [
+      150,
+      225,
+      300
+    ],
+    "lumber": [
+      75,
+      200,
+      325
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rwdm": {
+    "name": "War Drums",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btndrum"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Ropg": {
+    "name": "Pillage",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnpillage"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      25
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Robs": {
+    "name": "Berserker Strength",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnberserk"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rows": {
+    "name": "Pulverize",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnsmash"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      175
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Roen": {
+    "name": "Ensnare",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnensnare"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rovs": {
+    "name": "Envenomed Spears",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnenvenomedspear"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rowd": {
+    "name": "Witch Doctor Training",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnwitchdoctoradept",
+      "btnwitchdoctormaster"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      60
+    ]
+  },
+  "Rost": {
+    "name": "Shaman Training",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnshamanadept",
+      "btnshamanmaster"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      60
+    ]
+  },
+  "Rosp": {
+    "name": "Spiked Barricades",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnspikedbarricades",
+      "btnimprovedspikedbarricades",
+      "btnadvancedspikedbarricades"
+    ],
+    "gold": [
+      25,
+      50
+    ],
+    "lumber": [
+      75,
+      100
+    ],
+    "time": [
+      60,
+      75
+    ]
+  },
+  "Rotr": {
+    "name": "Troll Regeneration",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnregenerate"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      35
+    ]
+  },
+  "Rolf": {
+    "name": "Liquid Fire",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnliquidfire"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      125
+    ],
+    "time": [
+      75
+    ]
+  },
+  "Roch": {
+    "name": "Chaos",
+    "race": "demon",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnorcmeleeupone"
+    ],
+    "gold": [
+      0
+    ],
+    "lumber": [
+      0
+    ],
+    "time": [
+      0
+    ]
+  },
+  "Rowt": {
+    "name": "Spirit Walker Training",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnspiritwalkeradepttraining",
+      "btnspiritwalkermastertraining"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      50,
+      60
+    ]
+  },
+  "Rorb": {
+    "name": "Reinforced Defenses",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnreinforcedburrows"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      175
+    ],
+    "time": [
+      60
+    ]
+  },
+  "Robk": {
+    "name": "Berserker Upgrade",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnheadhunterberserker"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      175
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Ropm": {
+    "name": "orc backpack",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnpackbeast"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      25
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Robf": {
+    "name": "Burning Oil",
+    "race": "orc",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnfirerocks"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rume": {
+    "name": "Unholy Strength",
+    "race": "undead",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnunholystrength",
+      "btnimprovedunholystrength",
+      "btnadvancedunholystrength"
+    ],
+    "gold": [
+      125,
+      200,
+      275
+    ],
+    "lumber": [
+      50,
+      150,
+      250
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rura": {
+    "name": "Creature Attack",
+    "race": "undead",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btncreatureattack",
+      "btnimprovedcreatureattack",
+      "btnadvancedcreatureattack"
+    ],
+    "gold": [
+      150,
+      200,
+      250
+    ],
+    "lumber": [
+      50,
+      125,
+      200
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Ruar": {
+    "name": "Unholy Armor",
+    "race": "undead",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnunholyarmor",
+      "btnimprovedunholyarmor",
+      "btnadvancedunholyarmor"
+    ],
+    "gold": [
+      125,
+      200,
+      275
+    ],
+    "lumber": [
+      50,
+      150,
+      250
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Ruac": {
+    "name": "Cannibalize",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btncannibalize"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      0
+    ],
+    "time": [
+      15
+    ]
+  },
+  "Rugf": {
+    "name": "Ghoul Frenzy",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnghoulfrenzy"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      50
+    ]
+  },
+  "Ruwb": {
+    "name": "Web",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnweb"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rusf": {
+    "name": "Stone Form",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnstoneform"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rune": {
+    "name": "Necromancer Training",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnnecromanceradept",
+      "btnnecromancermaster"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      30,
+      45
+    ]
+  },
+  "Ruba": {
+    "name": "Banshee Training",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btnbansheeadept",
+      "btnbansheemaster"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      60
+    ]
+  },
+  "Rufb": {
+    "name": "Freezing Breath",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnfreezingbreath"
+    ],
+    "gold": [
+      150
+    ],
+    "lumber": [
+      225
+    ],
+    "time": [
+      60
+    ]
+  },
+  "Rusl": {
+    "name": "Skeletal Longevity",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnskeletallongevity"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      15
+    ]
+  },
+  "Rucr": {
+    "name": "Creature Carapace",
+    "race": "undead",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btncreaturecarapace",
+      "btnimprovedcreaturecarapace",
+      "btnadvancedcreaturecarapace"
+    ],
+    "gold": [
+      150,
+      200,
+      250
+    ],
+    "lumber": [
+      75,
+      200,
+      325
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rupc": {
+    "name": "Plague Cloud",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnplaguecloud"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      200
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Rusm": {
+    "name": "Skeletal Mastery",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnskeletonmage"
+    ],
+    "gold": [
+      150
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rubu": {
+    "name": "Burrow",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btncryptfiendburrow"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Rusp": {
+    "name": "Destroyer Form",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btndestroyer"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      60
+    ]
+  },
+  "Ruex": {
+    "name": "Exhume Corpses",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnexhumecorpses"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Rupm": {
+    "name": "undead backpack",
+    "race": "undead",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnpackbeast"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      25
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Resm": {
+    "name": "Strength of the Moon",
+    "race": "nightelf",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnstrengthofthemoon",
+      "btnimprovedstrengthofthemoon",
+      "btnadvancedstrengthofthemoon"
+    ],
+    "gold": [
+      125,
+      175,
+      225
+    ],
+    "lumber": [
+      75,
+      175,
+      275
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Resw": {
+    "name": "Strength of the Wild",
+    "race": "nightelf",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [
+      "btnstrengthofthewild",
+      "btnimprovedstrengthofthewild",
+      "btnadvancedstrengthofthewild"
+    ],
+    "gold": [
+      100,
+      175,
+      250
+    ],
+    "lumber": [
+      75,
+      175,
+      275
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rema": {
+    "name": "Moon Armor",
+    "race": "nightelf",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnmoonarmor",
+      "btnimprovedmoonarmor",
+      "btnadvancedmoonarmor"
+    ],
+    "gold": [
+      150,
+      200,
+      250
+    ],
+    "lumber": [
+      75,
+      150,
+      225
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rerh": {
+    "name": "Reinforced Hides",
+    "race": "nightelf",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [
+      "btnreinforcedhides",
+      "btnimprovedreinforcedhides",
+      "btnadvancedreinforcedhides"
+    ],
+    "gold": [
+      150,
+      200,
+      250
+    ],
+    "lumber": [
+      50,
+      150,
+      250
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Reuv": {
+    "name": "Ultravision",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnultravision"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Renb": {
+    "name": "Nature's Blessing",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnnaturesblessing"
+    ],
+    "gold": [
+      150
+    ],
+    "lumber": [
+      200
+    ],
+    "time": [
+      60
+    ]
+  },
+  "Resc": {
+    "name": "Sentinel",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnsentinel"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Remg": {
+    "name": "Moon Glaive",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnupgrademoonglaive"
+    ],
+    "gold": [
+      125
+    ],
+    "lumber": [
+      175
+    ],
+    "time": [
+      50
+    ]
+  },
+  "Reib": {
+    "name": "Improved Bows",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnimprovedbows"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      35
+    ]
+  },
+  "Remk": {
+    "name": "Marksmanship",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnmarksmanship"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      175
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Redt": {
+    "name": "Druid of the Talon Training",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btndotadepttraining",
+      "btndotmastertraining"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      60
+    ]
+  },
+  "Redc": {
+    "name": "Druid of the Claw Training",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [
+      "btndocadepttraining",
+      "btndocmastertraining"
+    ],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      25,
+      35
+    ]
+  },
+  "Resi": {
+    "name": "Abolish Magic",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btndryaddispelmagic"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Recb": {
+    "name": "Corrosive Breath",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btncorrosivebreath"
+    ],
+    "gold": [
+      125
+    ],
+    "lumber": [
+      225
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Reht": {
+    "name": "Hippogryph Taming",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btntamehippogriff"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Repb": {
+    "name": "Vorpal Blades",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnvorpalblades"
+    ],
+    "gold": [
+      125
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Rers": {
+    "name": "Resistant Skin",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnresistantskin"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      75
+    ]
+  },
+  "Rehs": {
+    "name": "Hardened Skin",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnhardenedskin"
+    ],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      175
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Reeb": {
+    "name": "Mark of the Claw",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnenchantedbears"
+    ],
+    "gold": [
+      25
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Reec": {
+    "name": "Mark of the Talon",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnenchantedcrows"
+    ],
+    "gold": [
+      25
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Rews": {
+    "name": "Well Spring",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnwellspring"
+    ],
+    "gold": [
+      75
+    ],
+    "lumber": [
+      150
+    ],
+    "time": [
+      30
+    ]
+  },
+  "Repm": {
+    "name": "nightelf backpack",
+    "race": "nightelf",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [
+      "btnpackbeast"
+    ],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      25
+    ],
+    "time": [
+      20
+    ]
+  },
+  "Rgfo": {
+    "name": "glyph of fortification",
+    "race": "unknown",
+    "category": "ability",
+    "maxLevel": 3,
+    "icons": [],
+    "gold": [
+      100,
+      150,
+      200
+    ],
+    "lumber": [
+      100,
+      150,
+      200
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rguv": {
+    "name": "glyph of ultravision",
+    "race": "unknown",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [],
+    "gold": [
+      100
+    ],
+    "lumber": [
+      100
+    ],
+    "time": [
+      60
+    ]
+  },
+  "Rnen": {
+    "name": "naga myrmidon ensnare",
+    "race": "naga",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      75
+    ],
+    "time": [
+      40
+    ]
+  },
+  "Rnsw": {
+    "name": "naga sea witch training",
+    "race": "naga",
+    "category": "ability",
+    "maxLevel": 2,
+    "icons": [],
+    "gold": [
+      100,
+      100
+    ],
+    "lumber": [
+      50,
+      150
+    ],
+    "time": [
+      60,
+      75
+    ]
+  },
+  "Rnsi": {
+    "name": "naga abolish magic",
+    "race": "naga",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [],
+    "gold": [
+      50
+    ],
+    "lumber": [
+      50
+    ],
+    "time": [
+      45
+    ]
+  },
+  "Rnat": {
+    "name": "naga attack",
+    "race": "naga",
+    "category": "attack",
+    "maxLevel": 3,
+    "icons": [],
+    "gold": [
+      150,
+      225,
+      300
+    ],
+    "lumber": [
+      75,
+      225,
+      375
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rnam": {
+    "name": "naga armor",
+    "race": "naga",
+    "category": "defense",
+    "maxLevel": 3,
+    "icons": [],
+    "gold": [
+      125,
+      225,
+      325
+    ],
+    "lumber": [
+      75,
+      225,
+      375
+    ],
+    "time": [
+      60,
+      75,
+      90
+    ]
+  },
+  "Rnsb": {
+    "name": "naga submerge",
+    "race": "naga",
+    "category": "ability",
+    "maxLevel": 1,
+    "icons": [],
+    "gold": [
+      25
+    ],
+    "lumber": [
+      25
+    ],
+    "time": [
+      20
+    ]
+  }
+}

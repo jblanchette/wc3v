@@ -96,6 +96,21 @@ const RaceTheme = {
   }
 };
 
+const ARMOR_TYPES = {
+  large:  { label: 'Heavy',     icon: '/assets/wc3icons/def-heavy.jpg' },
+  medium: { label: 'Medium',    icon: '/assets/wc3icons/def-medium.jpg' },
+  small:  { label: 'Light',     icon: '/assets/wc3icons/def-light.jpg' },
+  none:   { label: 'Unarmored', icon: '/assets/wc3icons/def-unarmored.jpg' },
+};
+
+const ATTACK_TYPES = {
+  normal: { label: 'Normal',  icon: '/assets/wc3icons/atk-normal.jpg' },
+  pierce: { label: 'Pierce',  icon: '/assets/wc3icons/atk-pierce.jpg' },
+  siege:  { label: 'Siege',   icon: '/assets/wc3icons/atk-siege.jpg' },
+  magic:  { label: 'Magic',   icon: '/assets/wc3icons/atk-magic.svg' },
+  chaos:  { label: 'Chaos',   icon: '/assets/wc3icons/atk-chaos.jpg' },
+};
+
 const formatGameTime = (gameTime) => {
   const timerDate = new Date(Math.round(gameTime * 1000) / 1000);
   const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';
