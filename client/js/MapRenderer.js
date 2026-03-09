@@ -1,5 +1,29 @@
 const MapRenderer = class {
-  constructor () {}
+  constructor () {
+    this._neutralIcons = {};
+    this._neutralIconsLoaded = false;
+
+    const iconTypes = ['ngol', 'nfoh', 'nmoo', 'nmer', 'ntav', 'ngme', 'ngad', 'nmrk'];
+    let loaded = 0;
+
+    iconTypes.forEach(type => {
+      const img = new Image();
+      img.onload = () => {
+        this._neutralIcons[type] = img;
+        loaded++;
+        if (loaded === iconTypes.length) {
+          this._neutralIconsLoaded = true;
+        }
+      };
+      img.onerror = () => {
+        loaded++;
+        if (loaded === iconTypes.length) {
+          this._neutralIconsLoaded = true;
+        }
+      };
+      img.src = `/assets/wc3icons/${type}.jpg`;
+    });
+  }
 
   renderMapBackground (ctx, transform, viewOptions, gameScaler, mapImage, gridMapImage) {
     const {
@@ -139,7 +163,7 @@ const MapRenderer = class {
       const drawX = ((xScale(bounds.minX) + middleX) * transform.k) + transform.x;
       const drawY = ((yScale(bounds.minY) + middleY) * transform.k) + transform.y;
 
-      let claimColor = colorMap[0];
+      let claimColor = '#FFF';
       let claimColorFill = null;
 
       if (claimTime != null && gameTime >= claimTime) {
@@ -244,6 +268,53 @@ const MapRenderer = class {
     ctx.fillStyle = oldFillStyle;
     ctx.globalAlpha = oldAlpha;
     ctx.lineWidth = oldWidth;
+  }
+
+  renderNeutralBuildings (ctx, transform, viewOptions, neutralBuildings, gameScaler) {
+    if (!viewOptions.displayNeutralBuildings || !neutralBuildings || !neutralBuildings.length) {
+      return;
+    }
+
+    const {
+      middleX,
+      middleY,
+      xScale,
+      yScale
+    } = gameScaler;
+
+    const oldFillStyle = ctx.fillStyle;
+    const oldStrokeStyle = ctx.strokeStyle;
+    const oldAlpha = ctx.globalAlpha;
+    const oldLineWidth = ctx.lineWidth;
+
+    ctx.globalAlpha = 0.85;
+    ctx.lineWidth = 1.5 * transform.k;
+
+    const iconSize = nb_type => {
+      if (nb_type === 'ngol') return 22 * transform.k;
+      return 18 * transform.k;
+    };
+
+    neutralBuildings.forEach(nb => {
+      const drawX = ((xScale(nb.x) + middleX) * transform.k) + transform.x;
+      const drawY = ((yScale(nb.y) + middleY) * transform.k) + transform.y;
+      const icon = this._neutralIcons[nb.type];
+      const size = iconSize(nb.type);
+      const half = size / 2;
+
+      if (icon) {
+        ctx.drawImage(icon, drawX - half, drawY - half, size, size);
+      } else {
+        // fallback: colored square if icon not loaded
+        ctx.fillStyle = nb.type === 'ngol' ? '#d4a017' : '#9966cc';
+        ctx.fillRect(drawX - half, drawY - half, size, size);
+      }
+    });
+
+    ctx.fillStyle = oldFillStyle;
+    ctx.strokeStyle = oldStrokeStyle;
+    ctx.globalAlpha = oldAlpha;
+    ctx.lineWidth = oldLineWidth;
   }
 
   renderMapGrid (ctx, transform, viewOptions, gameScaler, mapInfo, gridData, canvas) {

@@ -12,12 +12,14 @@ const zlib = require('zlib');
 
 const WPMFile = require("../lib/parsers/WPMFile"),
       DOOFile = require("../lib/parsers/DOOFile"),
+      UNITFile = require("../lib/parsers/UNITFile"),
       LISTFile = require("../lib/parsers/LISTFile"),
       LUAJASSFile = require("../lib/parsers/LUAJASSFile"),
       INFOFile = require("../lib/parsers/INFOFile"),
       TERRAINFile = require("../lib/parsers/TERRAINFile");
 
 const mappings = require("../helpers/mappings.js");
+const { getUnitInfo } = mappings;
 
 const sjs = require('@wowserhq/stormjs');
 const { FS, MPQ } = sjs;
@@ -473,6 +475,38 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
 
   doo.write(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/doo.json`);
   zipGameFile(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/doo.json`);
+
+  // extract neutral buildings (gold mines, shops, fountains) from war3mapUnits.doo
+  try {
+    const unitFile = new UNITFile(`${outputDirectory}/war3mapUnits.doo`);
+    const neutralBuildings = [];
+
+    if (unitFile.units) {
+      unitFile.units.forEach(rawUnit => {
+        const info = getUnitInfo(rawUnit.type);
+        if (info.isGoldmine || info.isFountain || info.isInteractiveShop) {
+          const entry = {
+            type: rawUnit.type,
+            x: rawUnit.position[0],
+            y: rawUnit.position[1]
+          };
+          if (info.isGoldmine && rawUnit.gold > 0) {
+            entry.gold = rawUnit.gold;
+          }
+          neutralBuildings.push(entry);
+        }
+      });
+    }
+
+    if (neutralBuildings.length > 0) {
+      const nbPath = `${CLIENT_OUTPUT_DIR}/${normalizedMapName}/neutralBuildings.json`;
+      fs.writeFileSync(nbPath, JSON.stringify(neutralBuildings), 'utf-8');
+      zipGameFile(nbPath);
+      console.log(`  wrote ${neutralBuildings.length} neutral buildings for ${normalizedMapName}`);
+    }
+  } catch (err) {
+    console.log(`  warning: could not extract neutral buildings for ${normalizedMapName}: ${err.message}`);
+  }
 
   // //
   // // convert the blp map file

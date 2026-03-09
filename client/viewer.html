@@ -2,29 +2,38 @@
 <html>
   <head>
     <title>WC3V — Replay Viewer</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
 
-    <script src="/js/Helpers.js?v=5.03"></script>
-    <script src="/js/Drawing.js?v=5.06"></script>
-    <script src="/js/Constants.js?v=5.03"></script>
-
-    <script src="/js/TimeScrubber.js?v=5.03"></script>
-    <script src="/js/GameScaler.js?v=5.05"></script>
-    <script src="/js/ClientUnit.js?v=5.03"></script>
-    <script src="/js/ClientPlayer.js?v=5.03"></script>
-    <script src="/js/GameDisplayBox.js?v=5.06"></script>
-    <script src="/js/gameData.js?v=5.03"></script>
-
-    <script src="/js/BuildOrderData.js?v=5.04"></script>
-    <script src="/js/MapRenderer.js?v=5.07"></script>
-    <script src="/js/TimelineSpline.js?v=5.04"></script>
-    <script src="/js/BuildOrderRenderer.js?v=5.04"></script>
-    <script src="/js/MatchHeader.js?v=5.04"></script>
-
-    <script src="/js/app.js?v=5.07"></script>
-    <script src="/js/SiteNav.js"></script>
+    <script>
+      // dev cache buster — forces fresh loads every page load
+      const _t = Date.now();
+      const _scripts = [
+        '/js/Helpers.js',
+        '/js/Drawing.js',
+        '/js/Constants.js',
+        '/js/TimeScrubber.js',
+        '/js/GameScaler.js',
+        '/js/ClientUnit.js',
+        '/js/ClientPlayer.js',
+        '/js/GameDisplayBox.js',
+        '/js/gameData.js',
+        '/js/BuildOrderData.js',
+        '/js/MapRenderer.js',
+        '/js/TimelineSpline.js',
+        '/js/BuildOrderRenderer.js',
+        '/js/MatchHeader.js',
+        '/js/app.js',
+        '/js/SiteNav.js'
+      ];
+      _scripts.forEach(src => {
+        document.write('<script src="' + src + '?t=' + _t + '"><\/script>');
+      });
+    </script>
 
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {

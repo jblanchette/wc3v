@@ -90,12 +90,12 @@ const GameScaler = class {
     // camera can extend beyond playable in some axes, playable extends beyond camera in others
     this.viewExtent = {
       x: [
-        Math.min(playableBounds.x[0], this.cameraExtent.x[0]),
-        Math.max(playableBounds.x[1], this.cameraExtent.x[1])
+        Math.max(Math.min(playableBounds.x[0], this.cameraExtent.x[0]), this.mapExtent.x[0]),
+        Math.min(Math.max(playableBounds.x[1], this.cameraExtent.x[1]), this.mapExtent.x[1])
       ],
       y: [
-        Math.max(playableBounds.y[0], this.cameraExtent.y[0]),
-        Math.min(playableBounds.y[1], this.cameraExtent.y[1])
+        Math.min(Math.max(playableBounds.y[0], this.cameraExtent.y[0]), this.mapExtent.y[0]),
+        Math.max(Math.min(playableBounds.y[1], this.cameraExtent.y[1]), this.mapExtent.y[1])
       ]
     };
 

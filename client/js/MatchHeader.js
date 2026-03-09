@@ -69,13 +69,13 @@ const MatchHeader = class {
   }
 
   renderPlayerCard (boData, player) {
-    const { race, raceInfo, displayName, playerColor, tierProduction, tier2Time, tier3Time, hasExpansion } = boData;
+    const { race, raceInfo, displayName, playerColor, tierProduction, tier2Time, tier3Time, hasExpansion, finalSnapshot } = boData;
 
     // Build name from build context (if this player's slot has a matching build)
     let buildNameHtml = '';
     const ctxBySlot = this.viewer.buildContextBySlot;
     if (ctxBySlot && player) {
-      const ctx = ctxBySlot[player.slot];
+      const ctx = ctxBySlot[String(player.playerId)];
       if (ctx) {
         buildNameHtml = `<div class="mh-build-name">${ctx.name}</div>`;
       }
@@ -113,28 +113,48 @@ const MatchHeader = class {
       html += `<div class="mh-heroes">${heroHtml}</div>`;
     }
 
-    // Tier progression + expansion indicator
-    const { tierProd } = tierProduction;
-    let tierHtml = '<div class="mh-tier-prog">';
-    tierHtml += '<span class="mh-tier-badge t1">T1</span>';
-    if (tier2Time !== Infinity) {
-      tierHtml += `<span class="mh-tier-arrow">\u2192</span>`;
-      tierHtml += `<span class="mh-tier-badge t2">T2</span>`;
-      tierHtml += `<span class="mh-tier-time">[${formatGameTime(tier2Time)}]</span>`;
-    }
-    if (tier3Time !== Infinity) {
-      tierHtml += `<span class="mh-tier-arrow">\u2192</span>`;
-      tierHtml += `<span class="mh-tier-badge t3">T3</span>`;
-      tierHtml += `<span class="mh-tier-time">[${formatGameTime(tier3Time)}]</span>`;
-    }
-    // Expansion marker
+    // Expansion marker (own line)
     if (hasExpansion) {
-      tierHtml += `<span class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</span>`;
+      html += `<div class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</div>`;
     } else {
-      tierHtml += `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
+      html += `<div class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</div>`;
     }
-    tierHtml += '</div>';
-    html += tierHtml;
+
+    // Upgrades row + atk/def types row
+    if (finalSnapshot) {
+      let upgLine = '';
+      const upgrades = finalSnapshot.upgrades;
+      if (upgrades && (upgrades.attack || upgrades.defense || upgrades.researched.length)) {
+        if (upgrades.attack) upgLine += `<span class="mh-info-badge atk">ATK ${upgrades.attack}</span>`;
+        if (upgrades.defense) upgLine += `<span class="mh-info-badge def">DEF ${upgrades.defense}</span>`;
+        upgrades.researched.forEach(r => {
+          const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
+          const lvl = r.level > 1 ? ` ${r.level}` : '';
+          upgLine += `<span class="mh-info-upgrade"><img class="mh-info-icon" src="${iconSrc}" title="${r.displayName}${lvl}" onerror="this.style.display='none'" /></span>`;
+        });
+        html += `<div class="mh-info-row"><span class="mh-info-segment"><span class="mh-info-label">UPG</span>${upgLine}</span></div>`;
+      }
+
+      // Collect atk/def types from all tier units
+      const atkSet = {};
+      const defSet = {};
+      const { tierProd } = tierProduction;
+      [1, 2, 3].forEach(t => {
+        if (tierProd[t] && tierProd[t].units) {
+          tierProd[t].units.forEach(u => {
+            if (u.attackType && ATTACK_TYPES[u.attackType]) atkSet[u.attackType] = 1;
+            if (u.armorType && ARMOR_TYPES[u.armorType]) defSet[u.armorType] = 1;
+          });
+        }
+      });
+
+      let typeLine = '';
+      const atkIcons = Object.keys(atkSet).map(k => `<img class="mh-info-icon" src="${ATTACK_TYPES[k].icon}" title="${ATTACK_TYPES[k].label} attack" />`).join('');
+      if (atkIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkIcons}</span>`;
+      const defIcons = Object.keys(defSet).map(k => `<img class="mh-info-icon" src="${ARMOR_TYPES[k].icon}" title="${ARMOR_TYPES[k].label} armor" />`).join('');
+      if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
+      if (typeLine) html += `<div class="mh-info-row">${typeLine}</div>`;
+    }
 
     // Collapsible unit summary toggle
     const uid = displayName.replace(/\W/g, '');
@@ -144,9 +164,10 @@ const MatchHeader = class {
     html += `<div class="mh-unit-content mh-hidden" id="${contentId}">`;
 
     // Tech rows — always show all 3 tiers, dim unreached ones
+    const tierProdData = tierProduction.tierProd;
     [1, 2, 3].forEach(tierNum => {
       const reached = tierNum === 1 || (tierNum === 2 && tier2Time !== Infinity) || (tierNum === 3 && tier3Time !== Infinity);
-      const data = tierProd[tierNum];
+      const data = tierProdData[tierNum];
       const dimClass = reached ? '' : ' mh-tier-unreached';
 
       let rowHtml = `<div class="mh-tech-row${dimClass}"><span class="mh-tech-tier t${tierNum}">T${tierNum}</span><div class="mh-tech-icons">`;

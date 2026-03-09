@@ -221,7 +221,7 @@ const BuildOrderRenderer = class {
             onBuild: event.workersBuilding || 0
           };
 
-          const supply = event.supplyChanged
+          const supply = event.supplyChanged && tierNum <= 2
             ? { used: event.displaySupplyUsed, max: event.displaySupplyMax }
             : null;
 
@@ -341,14 +341,21 @@ const BuildOrderRenderer = class {
     const bar = document.createElement('div');
     const isAttack = event.category === 'attack';
     bar.classList.add('bo-research-bar', isAttack ? 'bo-attack-upgrade' : 'bo-defense-upgrade');
-    const costStr = this.buildInlineCost(event);
     const iconSrc = event.icon ? `/assets/wc3icons/${event.icon}.jpg` : `/assets/wc3icons/${event.itemId}.jpg`;
     const label = isAttack ? 'ATK' : 'DEF';
+
+    const gold = event.goldCost || 0;
+    const lumber = event.lumberCost || 0;
+    const gLine = gold ? `<span class="bo-cost-gold">${gold}</span>` : '';
+    const lLine = lumber ? `<span class="bo-cost-lumber">${lumber}</span>` : '';
+    const costHtml = `<div class="bo-row-cost">${gLine}${lLine}</div>`;
+
     bar.innerHTML = `
-      <img class="bo-research-icon" src="${iconSrc}" onerror="this.style.display='none'" />
-      <span class="bo-research-badge ${isAttack ? 'atk' : 'def'}">${label} ${event.level}</span>
-      <span class="bo-research-name">${event.displayName}</span>
-      ${costStr ? `<span class="bo-research-cost">${costStr}</span>` : ''}`;
+      <div class="bo-row-desc">
+        <img class="bo-row-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+        <span class="bo-research-badge ${isAttack ? 'atk' : 'def'}">${label} ${event.level}</span>
+        <span class="bo-research-name">${event.displayName}</span>
+      </div>${costHtml}`;
     return bar;
   }
 
@@ -356,14 +363,21 @@ const BuildOrderRenderer = class {
   renderResearchCard (event) {
     const bar = document.createElement('div');
     bar.classList.add('bo-research-bar', 'bo-ability-research');
-    const costStr = this.buildInlineCost(event);
     const iconSrc = event.icon ? `/assets/wc3icons/${event.icon}.jpg` : `/assets/wc3icons/${event.itemId}.jpg`;
     const levelStr = event.level > 1 ? ` Lv${event.level}` : '';
+
+    const gold = event.goldCost || 0;
+    const lumber = event.lumberCost || 0;
+    const gLine = gold ? `<span class="bo-cost-gold">${gold}</span>` : '';
+    const lLine = lumber ? `<span class="bo-cost-lumber">${lumber}</span>` : '';
+    const costHtml = `<div class="bo-row-cost">${gLine}${lLine}</div>`;
+
     bar.innerHTML = `
-      <img class="bo-research-icon" src="${iconSrc}" onerror="this.style.display='none'" />
-      <span class="bo-research-label">RESEARCH</span>
-      <span class="bo-research-name">${event.displayName}${levelStr}</span>
-      ${costStr ? `<span class="bo-research-cost">${costStr}</span>` : ''}`;
+      <div class="bo-row-desc">
+        <img class="bo-row-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+        <span class="bo-research-label">RESEARCH</span>
+        <span class="bo-research-name">${event.displayName}${levelStr}</span>
+      </div>${costHtml}`;
     return bar;
   }
 
@@ -621,35 +635,9 @@ const BuildOrderRenderer = class {
         </span>`;
       });
 
-      // Collect unique attack and armor types present in army
-      const atkSet = {};
-      const defSet = {};
-      army.forEach(unit => {
-        if (unit.attackType && ATTACK_TYPES[unit.attackType]) atkSet[unit.attackType] = 1;
-        if (unit.armorType && ARMOR_TYPES[unit.armorType]) defSet[unit.armorType] = 1;
-      });
-
-      let typeSummary = '';
-      const atkIcons = Object.keys(atkSet).map(k => {
-        const info = ATTACK_TYPES[k];
-        return `<img class="bo-type-summary-icon" src="${info.icon}" title="${info.label} attack" />`;
-      }).join('');
-      const defIcons = Object.keys(defSet).map(k => {
-        const info = ARMOR_TYPES[k];
-        return `<img class="bo-type-summary-icon" src="${info.icon}" title="${info.label} armor" />`;
-      }).join('');
-
-      if (atkIcons || defIcons) {
-        typeSummary = `<div class="bo-type-summary">`;
-        if (atkIcons) typeSummary += `<span class="bo-type-summary-row"><span class="bo-type-summary-label">Atk</span>${atkIcons}</span>`;
-        if (defIcons) typeSummary += `<span class="bo-type-summary-row"><span class="bo-type-summary-label">Def</span>${defIcons}</span>`;
-        typeSummary += `</div>`;
-      }
-
       armyHtml = `<div class="bo-summary-section">
         <span class="bo-summary-label">ARMY</span>
         <div class="bo-summary-items">${armyItems}</div>
-        ${typeSummary}
       </div>`;
     }
 
@@ -677,17 +665,7 @@ const BuildOrderRenderer = class {
       </div>`;
     }
 
-    // Supply + Economy section
-    const supplyStr = supply ? `${supply.used}/${supply.max}` : '';
-    const econHtml = `<div class="bo-summary-section economy">
-      <span class="bo-summary-supply">${supplyStr}</span>
-      <span class="bo-summary-spent">
-        <span class="bo-cost-dot gold-dot"></span><span class="bo-gold">${economy.goldSpent}</span>
-        <span class="bo-cost-dot lumber-dot"></span><span class="bo-lumber">${economy.lumberSpent}</span>
-      </span>
-    </div>`;
-
-    el.innerHTML = `${headerHtml}${heroesHtml}${armyHtml}${upgradesHtml}${econHtml}`;
+    el.innerHTML = `${headerHtml}${heroesHtml}${armyHtml}${upgradesHtml}`;
     return el;
   }
 

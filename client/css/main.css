@@ -801,10 +801,11 @@ body {
 /* --- Research / Upgrade bars --- */
 
 .bo-research-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 50px 78px;
   align-items: center;
-  gap: 8px;
-  padding: 5px 10px;
+  min-height: 38px;
+  padding: 3px 6px;
   margin: 3px 0;
   border-radius: 0 3px 3px 0;
   font-size: 12px;
@@ -830,11 +831,8 @@ body {
   color: #c8a8e8;
 }
 
-.bo-research-icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 3px;
-  flex-shrink: 0;
+.bo-research-bar .bo-row-desc {
+  gap: 8px;
 }
 
 .bo-research-badge {
@@ -863,12 +861,6 @@ body {
   text-overflow: ellipsis;
 }
 
-.bo-research-cost {
-  color: #aaa;
-  font-weight: 400;
-  font-size: 11px;
-  flex-shrink: 0;
-}
 .bo-research-label {
   font-size: 9px;
   font-weight: 700;
@@ -980,17 +972,17 @@ body {
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
-  padding: 4px 5px;
-  margin: 2px 0;
+  padding: 2px 4px;
+  margin: 1px 0;
 }
 .bo-supply-nums {
   display: flex;
   align-items: baseline;
   justify-content: center;
 }
-.bo-supply-used { font-size: 22px; font-weight: 800; }
-.bo-supply-sep { font-size: 15px; margin: 0 1px; font-weight: 600; }
-.bo-supply-cap { font-size: 18px; font-weight: 700; }
+.bo-supply-used { font-size: 15px; font-weight: 700; }
+.bo-supply-sep { font-size: 13px; margin: 0 1px; font-weight: 600; }
+.bo-supply-cap { font-size: 15px; font-weight: 700; }
 .bo-supply-upkeep {
   font-size: 8px;
   font-weight: 700;
@@ -1236,7 +1228,7 @@ body {
 }
 
 .bo-skill.bo-skill-lg .bo-skill-level {
-  font-size: 13px;
+  font: 700 0.65rem Verdana;
 }
 
 .bo-hero-training-card.bo-live-active {
@@ -1282,9 +1274,8 @@ body {
 .bo-level-skills { display: flex; gap: 6px; margin-top: 2px; }
 
 .bo-skill {
-  display: flex;
-  align-items: center;
-  gap: 3px;
+  position: relative;
+  display: inline-block;
   font-size: 11px;
   color: var(--bo-text-dim);
 }
@@ -1297,6 +1288,7 @@ body {
   border-radius: 3px;
   border: 2px solid transparent;
   object-fit: cover;
+  display: block;
 }
 
 /* Untrained spell — slight dim, no border */
@@ -1308,15 +1300,18 @@ body {
 /* Just leveled in this card — yellow border */
 .bo-skill.active .bo-skill-icon { border-color: #f0b232; }
 
-/* Skill level text — always legible */
+/* Skill level badge — overlaid on icon (bottom-right) */
 .bo-skill-level {
-  font-weight: 700;
-  font-size: 12px;
-  min-width: 10px;
-  text-align: center;
-  color: #ccc;
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  font: 700 0.6rem Verdana;
+  color: #fff;
+  background: rgba(0,0,0,0.75);
+  border-radius: 2px;
+  padding: 0 2px;
+  line-height: 1.2;
 }
-.bo-skill.learned .bo-skill-level { color: #fff; }
 .bo-skill.active .bo-skill-level { color: #f0b232; }
 .bo-skill-level.hidden { display: none; }
 
@@ -1464,29 +1459,10 @@ body {
 
 .bo-army-count { font-weight: 700; font-size: 0.8rem; color: var(--bo-text); }
 
-/* Attack / Armor type summary */
-.bo-type-summary {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 10px;
-  margin-top: 2px;
-  padding: 3px 0 0 68px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-.bo-type-summary-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-.bo-type-summary-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: rgba(255,255,255,0.4);
-  text-transform: uppercase;
-}
+/* Attack / Armor type summary icons */
 .bo-type-summary-icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 2px;
   border: 1px solid rgba(255,255,255,0.15);
 }
@@ -1495,12 +1471,14 @@ body {
 .bo-summary-header {
   font-size: 10px;
   font-weight: 700;
-  color: rgba(255,255,255,0.5);
+  color: #c8d8f0;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  margin-bottom: 4px;
-  padding-bottom: 3px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin: -8px -10px 4px -10px;
+  padding: 5px 10px;
+  background: rgba(60, 90, 140, 0.25);
+  border-bottom: 1px solid rgba(100, 150, 220, 0.3);
+  border-radius: 6px 6px 0 0;
 }
 
 /* Unit row type icons (first occurrence) */
@@ -1798,7 +1776,7 @@ body {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  min-width: 660px;
+  min-width: 590px;
 }
 
 .mh-vs {
@@ -1811,7 +1789,7 @@ body {
 
 .mh-player {
   flex: 1;
-  min-width: 320px;
+  min-width: 280px;
   padding: 0.4rem 0.6rem;
   background: rgba(255,255,255,0.03);
   border-radius: 6px;
@@ -1848,8 +1826,9 @@ body {
 
 .mh-hero {
   display: flex;
-  align-items: flex-start;
-  gap: 4px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .mh-hero-portrait-wrap {
@@ -1878,17 +1857,16 @@ body {
   line-height: 1.4;
 }
 
-/* Hero spells — vertical stack beside portrait */
+/* Hero spells — horizontal row below portrait */
 .mh-hero-spells {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 1px;
 }
 
 .mh-spell {
-  display: flex;
-  align-items: center;
-  gap: 1px;
+  position: relative;
+  display: inline-block;
 }
 
 .mh-spell-icon {
@@ -1896,13 +1874,19 @@ body {
   height: 24px;
   border-radius: 3px;
   border: 1px solid #3a4a55;
+  display: block;
 }
 
 .mh-spell-level {
-  font: 700 0.65rem Verdana;
-  color: #b0c0d0;
-  width: 10px;
-  text-align: center;
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  font: 700 0.6rem Verdana;
+  color: #fff;
+  background: rgba(0,0,0,0.75);
+  border-radius: 2px;
+  padding: 0 2px;
+  line-height: 1.2;
 }
 
 /* Tier progression */
@@ -1940,7 +1924,10 @@ body {
   font: 700 0.75rem Verdana;
   padding: 1px 6px;
   border-radius: 3px;
-  margin-left: 4px;
+  margin-left: 0;
+  margin-top: 2px;
+  display: inline-block;
+  width: fit-content;
 }
 
 .mh-expanded {
@@ -2041,6 +2028,53 @@ body {
   border-radius: 0 3px 0 3px;
   line-height: 1.3;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Inline info row: upgrades | atk | def */
+.mh-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 4px 0;
+}
+.mh-info-segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.mh-info-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+.mh-info-badge {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.mh-info-badge.atk {
+  background: rgba(230, 80, 60, 0.3);
+  color: #f0a090;
+}
+.mh-info-badge.def {
+  background: rgba(70, 140, 220, 0.3);
+  color: #a0c8f0;
+}
+.mh-info-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.mh-info-upgrade {
+  display: inline-flex;
 }
 
 /* Unit summary toggle */
@@ -4418,3 +4452,16 @@ body {
   .bo-row-desc { font-size: 14px; gap: 6px; }
   .bo-row-icon { width: 28px; height: 28px; }
 }
+
+/* ── Legal footer ─────────────────────────────────────── */
+.site-legal {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 1.5rem;
+  border-top: 1px solid var(--site-border);
+  color: #777;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.site-legal p { margin: 0 0 0.4rem; }
+.site-legal a { color: #999; text-decoration: underline; }

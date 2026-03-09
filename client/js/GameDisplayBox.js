@@ -23,6 +23,14 @@ const GameDisplayBox = class {
   }
 
   handleMouse (e, transform) {
+    if (!this.data || !this.data.tree) {
+      return;
+    }
+
+    if (!e || !transform) {
+      return;
+    }
+
     if (transform.k != 1.0) {
       this.hoveredCampUuid = null;
       this.hide();
@@ -31,11 +39,21 @@ const GameDisplayBox = class {
 
     const { offsetX, offsetY, target } = e;
 
+    if (offsetX === undefined || offsetY === undefined) {
+      return;
+    }
+
+    // convert CSS pixels to canvas pixels when canvas is CSS-scaled
+    const scaleX = target.width / (target.clientWidth || target.width);
+    const scaleY = target.height / (target.clientHeight || target.height);
+    const canvasX = offsetX * scaleX;
+    const canvasY = offsetY * scaleY;
+
     const hitBox = {
-      minX: offsetX,
-      maxX: offsetX,
-      minY: offsetY,
-      maxY: offsetY
+      minX: canvasX,
+      maxX: canvasX,
+      minY: canvasY,
+      maxY: canvasY
     };
 
     const searchHits = this.data.tree.search(hitBox);
@@ -69,7 +87,11 @@ const GameDisplayBox = class {
       this.box.style.left = `${popX}px`;
       this.box.style.top = `${popY}px`;
 
-      this.render(searchHit);
+      try {
+        this.render(searchHit);
+      } catch (err) {
+        this.box.innerHTML = '<div style="padding:10px;color:#e05555;">Render error</div>';
+      }
 
       requestAnimationFrame(() => {
         this.box.classList.add('visible');
@@ -78,7 +100,7 @@ const GameDisplayBox = class {
       return;
     }
 
-    // no hit — hide
+    // no hit
     if (this.hoveredCampUuid) {
       this.hoveredCampUuid = null;
       this.hide();

@@ -549,6 +549,31 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
   calculateExperienceGains(world, wc3vPlayers);
   assignCampOrder(world, wc3vPlayers);
 
+  // remove neutral groups at player starting positions
+  // WC3 removes creeps at occupied spawn locations; the map file has them for all slots
+  const SPAWN_CAMP_DISTANCE = 1500;
+  const playerSpawns = Object.values(wc3vPlayers)
+    .map(p => p.startingPosition)
+    .filter(Boolean);
+
+  if (playerSpawns.length) {
+    const groupKeys = Object.keys(world.neutralGroups);
+    groupKeys.forEach(key => {
+      const group = world.neutralGroups[key];
+      const { bounds } = group;
+      const campCenterX = (bounds.minX + bounds.maxX) / 2;
+      const campCenterY = (bounds.minY + bounds.maxY) / 2;
+
+      const nearSpawn = playerSpawns.some(sp => {
+        return distance(campCenterX, campCenterY, sp.x, sp.y) < SPAWN_CAMP_DISTANCE;
+      });
+
+      if (nearSpawn) {
+        delete world.neutralGroups[key];
+      }
+    });
+  }
+
   const output = {
     players: Object.keys(wc3vPlayers).reduce((acc, playerId) => {
     	const player = wc3vPlayers[playerId];

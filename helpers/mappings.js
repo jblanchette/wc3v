@@ -1357,9 +1357,11 @@ const specialBuildings = {
 };
 
 const interactiveShops = {
-  'Merchant': 'nmer',
-  'Tavern': 'ntav',
-  'Neutral Shop': 'ngme'
+  'nmer': 'Merchant',
+  'ntav': 'Tavern',
+  'ngme': 'Goblin Merchant',
+  'ngad': 'Goblin Laboratory',
+  'nmrk': 'Mercenary Camp'
 };
 
 const critters = {
@@ -1406,7 +1408,11 @@ const buildingUpgrades = {
     'ostr': 'ofrt',
     // Night Elf: Tree of Life -> Tree of Ages -> Tree of Eternity
     'etol': 'etoa',
-    'etoa': 'etoe'
+    'etoa': 'etoe',
+    // Undead: Ziggurat -> Spirit Tower or Nerubian Tower
+    'uzig': ['uzg1', 'uzg2'],
+    // Human: Arcane Tower / Cannon Tower / Guard Tower from Scout Tower
+    'hwtw': ['hatw', 'hctw', 'hgtw']
 };
 
 // building / resrach timings in seconds

@@ -20,8 +20,8 @@ const ScrubStates = {
 
 const TeamColorList = [
   "#FF0000",
-  "#1CE6B9",
   "#0042FF",
+  "#1CE6B9",
   "#FFFC01"
 ];
 

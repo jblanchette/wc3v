@@ -44,7 +44,8 @@ const ClientUnit = class {
       "isBuilding", "isIllusion", "level", "lastPosition",
       "path", "meta", "items", "spawnTime",
       "spawnPosition", "levelStream", "spellList",
-      "neutralGroupId", "xpStream", "uuid"
+      "neutralGroupId", "xpStream", "uuid",
+      "collisionSize"
     ];
 
     dataFields.forEach(field => {
@@ -164,7 +165,9 @@ const ClientUnit = class {
       this.iconSize = IconSizes.hero;
       this.minDecayLevel = 0.0;
     } else if (this.isBuilding) {
-      this.iconSize = IconSizes.building;
+      this.iconSize = this.collisionSize
+        ? Math.max(minimumBuildingSize, this.collisionSize * 0.15)
+        : IconSizes.building;
       this.decayLevel = 0.475;
     } else if (this.meta.worker) {
       this.iconSize = IconSizes.worker;
@@ -324,11 +327,13 @@ const ClientUnit = class {
     const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
     const iconSize = Math.max(dynamicSize, minimumBuildingSize);
 
+    const halfIcon = iconSize / 2;
+
     ctx.globalAlpha = buildingAlpha;
-    ctx.drawImage(this.icon, drawX, drawY, iconSize, iconSize); 
+    ctx.drawImage(this.icon, drawX - halfIcon, drawY - halfIcon, iconSize, iconSize);
 
     ctx.strokeStyle = "#FFFC01";
-    ctx.strokeRect(drawX, drawY, iconSize, iconSize);
+    ctx.strokeRect(drawX - halfIcon, drawY - halfIcon, iconSize, iconSize);
     ctx.strokeStyle = "#000000";
     ctx.globalAlpha = 1.0;
   }

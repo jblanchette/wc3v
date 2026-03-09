@@ -9,7 +9,7 @@ const Wc3vViewer = class {
     const urlParams = new URLSearchParams(window.location.search);
     const replay    = urlParams.get('r');
     const buildId   = urlParams.get('buildId');
-    if (buildId)     this.renderBuildContext(buildId);
+    this.renderBuildContext(buildId);
 
     const hrefPath = window.location.href;
     const re = new RegExp('replay/(.*)', 'i');
@@ -39,8 +39,7 @@ const Wc3vViewer = class {
     try {
       const res = await fetch('/data/builds-manifest.json');
       const manifest = await res.json();
-      const build = (manifest.builds || []).find(b => b.id === buildId);
-      if (!build) return;
+      const build = buildId ? (manifest.builds || []).find(b => b.id === buildId) : null;
 
       // Find ALL builds that reference this replay (covers both players)
       this.buildContextBySlot = {};
@@ -53,6 +52,8 @@ const Wc3vViewer = class {
           }
         });
       });
+
+      if (!build) return;
 
       // Build replay list for dropdown — all replays for this build, sorted by map then player
       const allReplays = (build.replays || []).slice();
@@ -529,6 +530,25 @@ const Wc3vViewer = class {
     })
   }
 
+  loadNeutralBuildings () {
+    const { name } = this.mapInfo;
+
+    return new Promise((resolve) => {
+      this.loadFile(`../maps/${name}/neutralBuildings.json`, (res) => {
+        try {
+          if (res.target.status < 300) {
+            this.neutralBuildings = JSON.parse(res.target.responseText);
+          } else {
+            this.neutralBuildings = [];
+          }
+        } catch (e) {
+          this.neutralBuildings = [];
+        }
+        resolve(true);
+      });
+    });
+  }
+
   ////
   // handle click event on time scrubber tracker
   ////
@@ -765,7 +785,7 @@ const Wc3vViewer = class {
 
       const scaleX = availableWidth / mapWidth;
       const scaleY = availableHeight / mapHeight;
-      const scale = Math.min(scaleX, scaleY, 1.0);
+      const scale = Math.min(scaleX, scaleY);
 
       const displayWidth = Math.floor(mapWidth * scale);
       const displayHeight = Math.floor(mapHeight * scale);
@@ -788,17 +808,7 @@ const Wc3vViewer = class {
   resetCanvasScale () {
     if (!this.gameScaler) return;
 
-    const mapWidth = this.gameScaler.mapImage.width;
-    const mapHeight = this.gameScaler.mapImage.height;
-
-    this.canvas.style.width = mapWidth + 'px';
-    this.canvas.style.height = mapHeight + 'px';
-    this.playerCanvas.style.width = mapWidth + 'px';
-    this.playerCanvas.style.height = mapHeight + 'px';
-    this.utilityCanvas.style.width = mapWidth + 'px';
-    this.utilityCanvas.style.height = mapHeight + 'px';
-
-    this.displayScale = 1.0;
+    this.scaleLiveModeCanvas();
   }
 
   seekToGameTime (gameTime) {
@@ -899,6 +909,7 @@ const Wc3vViewer = class {
     return this.loadMapFile()
     .then(() => { return this.loadMapFile("grid"); })
     .then(() => { return this.loadDoodadFile(); })
+    .then(() => { return this.loadNeutralBuildings(); })
     .then(() => { return this.loadGridFile(); })
     .then(playerLoadedPromiseList)
     .then(() => {
@@ -933,7 +944,8 @@ const Wc3vViewer = class {
       displayWalkGrid: false,
       displayBuildGrid: false,
       displayWaterGrid: false,
-      displayCreepRoute: true
+      displayCreepRoute: true,
+      displayNeutralBuildings: true
     };
 
     Object.keys(this.viewOptions).forEach(optionKey => {
@@ -1080,26 +1092,21 @@ const Wc3vViewer = class {
     self.utilityCanvas.width = mapWidth;
     self.utilityCanvas.height = mapHeight;
 
-    const { width, height } = this.canvas;
-
     this.gameDisplayBox = new GameDisplayBox(this.teamColorMap, this.assignedPlayerColors);
     this.gameDisplayBox.setData(
       world.neutralGroups, GameDisplayBox.neutralCampHandler(this.gameScaler, this.transform));
 
-    this.canvas.addEventListener('mousemove', (e) => {
-      // skip camp hover only when canvas is CSS-scaled (coordinates mismatch)
-      if (self.displayScale && self.displayScale !== 1.0) return;
-      self.gameDisplayBox.handleMouse(e, self.transform);
-    });
+    console.log('[CampSetup] gameDisplayBox created, data set, tree items:', this.gameDisplayBox.data.tree.all().length);
+    console.log('[CampSetup] transform at setup:', JSON.stringify(this.transform));
+    console.log('[CampSetup] canvas element:', this.canvas.id, this.canvas.width, 'x', this.canvas.height);
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
 
-    this.zoomContainer = d3.select("#main-canvas");
+    this.zoomContainer = d3.select("#canvas-group");
 
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)
-      .translateExtent([[0, 0], [width, height]])
       .filter(() => {
         // allow wheel zoom always, but block mousedown drag at default zoom
         // (nothing to pan at k=1, and D3 drag kills mousemove for camp hover)
@@ -1115,22 +1122,37 @@ const Wc3vViewer = class {
         }
 
         const { transform } = d3.event;
-        this.transform = transform;
+
+        // D3 computes mouse position in CSS display-space, but the canvas
+        // render pipeline works in pixel-space. Convert translation by the
+        // ratio between display size and pixel size.
+        const ds = this.displayScale || 1;
+        this.transform = {
+          x: transform.x / ds,
+          y: transform.y / ds,
+          k: transform.k
+        };
 
         // when zooming back to 1.0 with an offset, snap to origin
-        if (transform.k <= 1.0 && (transform.x !== 0 || transform.y !== 0)) {
-          transform.x = 0;
-          transform.y = 0;
+        if (this.transform.k <= 1.0 && (this.transform.x !== 0 || this.transform.y !== 0)) {
+          this.transform.x = 0;
+          this.transform.y = 0;
         }
 
         this.gameDisplayBox.hide();
-        this.scrubber.updateZoomDisplay(transform.k);
+        this.scrubber.updateZoomDisplay(this.transform.k);
 
         this.render();
       });
 
     this.zoomContainer
       .call(this.zoom);
+
+    // camp hover
+    this.zoomContainer.on('mousemove.camphover', () => {
+      if (self.state === ScrubStates.stopped) return;
+      self.gameDisplayBox.handleMouse(d3.event, self.transform);
+    });
 
     this.scrubber.onZoomChange = (k) => {
       this.zoomContainer.call(this.zoom.scaleTo, k);
@@ -1285,6 +1307,7 @@ const Wc3vViewer = class {
 
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
     this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
+    this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
     const hoveredCampUuid = this.gameDisplayBox ? this.gameDisplayBox.hoveredCampUuid : null;
     this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid);
 

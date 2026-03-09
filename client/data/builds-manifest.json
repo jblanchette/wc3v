@@ -155,7 +155,7 @@
       "id": "ud-dk-destroyer",
       "name": "DK Lich Destroyer",
       "race": "U",
-      "matchups": ["UvN", "UvH"],
+      "matchups": ["UvN", "UvH", "UvO"],
       "heroOpener": "Death Knight",
       "heroItemId": "udea",
       "heroItemIds": ["udea", "ulic", "nbrn"],
@@ -214,6 +214,14 @@
           "map": "Echo Isles",
           "outcome": "win",
           "notes": "Happy shows the full DK→Lich→Destroyer progression in a UD mirror — watch the Destroyer timing"
+        },
+        {
+          "replayId": "Lyn_Happy_Shattered_Exile",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Lyn",
+          "map": "Shattered Exile",
+          "notes": "Happy DK→Lich into Gargoyles + Destroyer Form vs Lyn's Orc Wind Riders — UvO Destroyer transition"
         }
       ]
     },
@@ -394,6 +402,14 @@
           "map": "Concealed Hill",
           "outcome": "loss",
           "notes": "Classic Grubby BM aggression — watch the worker harassment micro and Wind Rider transition timing"
+        },
+        {
+          "replayId": "Lyn_Happy_Shattered_Exile",
+          "playerSlot": "1",
+          "playerName": "Lyn",
+          "opponentName": "Happy",
+          "map": "Shattered Exile",
+          "notes": "Lyn BM→SH→TC with fast T3 Wind Riders + Batriders + Kodos vs Happy's UD"
         }
       ]
     },
@@ -1266,6 +1282,124 @@
         ]
       },
       "replays": []
+    },
+
+    {
+      "id": "ne-off-meta",
+      "name": "Off-Meta NE",
+      "race": "E",
+      "matchups": [],
+      "description": "Non-standard Night Elf builds that don't fit neatly into established meta categories.",
+      "tags": ["off-meta"],
+      "playstyleTags": ["off-meta"],
+      "replays": [
+        {
+          "replayId": "happy-vs-moon",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "Happy",
+          "map": "Concealed Hill",
+          "outcome": "loss",
+          "notes": "Moon plays Archers into mass Dryads with expansion"
+        },
+        {
+          "replayId": "happy-vs-life-echo-isles",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Happy",
+          "map": "Echo Isles",
+          "outcome": "loss",
+          "notes": "Life plays DH/PotM double expansion with Protectors into Dryads, Bears, and Mountain Giants"
+        }
+      ]
+    },
+
+    {
+      "id": "ud-dk-mass-gargoyle",
+      "name": "DK Mass Gargoyle",
+      "race": "U",
+      "matchups": ["UvO"],
+      "heroOpener": "Death Knight",
+      "heroItemId": "udea",
+      "heroItemIds": ["udea", "ulic"],
+      "keyUnits": ["ugar", "uobs"],
+      "description": "DK opener into mass Ghouls for lumber, then flood Gargoyles from multiple Crypts. Air superiority overwhelms Orc ground armies. Dark Ranger or Dreadlord third hero for utility.",
+      "strategyPoints": [
+        "DK first with Death Coil — creep efficiently, mass Ghouls for lumber harvesting",
+        "Delayed T2 (7:00-8:00) because heavy Ghoul investment feeds the Gargoyle transition",
+        "Lich second with Frost Nova — burst damage on Orc ground clumps",
+        "T3 for mass Gargoyle production from double Crypt — quantity is key",
+        "Dark Ranger third hero for Silence (shuts down Shadow Hunter/TC) and Black Arrow skeletons",
+        "Obsidian Statues keep Gargoyles alive through sustained healing",
+        "Wins against: Orc ground-heavy builds (Grunts/Raiders) that lack anti-air",
+        "Loses to: fast Wind Rider + Batrider transitions that win the air war"
+      ],
+      "tags": ["tech", "gargoyles", "air", "mass"],
+      "playstyleTags": ["tech", "standard"],
+      "opener": "standard",
+      "gamePlan": "tech-scale",
+      "army": "air",
+      "tierProgression": {
+        "t1": {
+          "buildings": ["usep", "uaod", "utom", "uzig", "uzig"],
+          "units": ["ugho"],
+          "goal": "DK + mass Ghouls for lumber, creep to level 3"
+        },
+        "t2": {
+          "buildings": ["ugrv", "usep", "uslh"],
+          "units": ["ugho", "ugar"],
+          "timing": "7:00-8:00",
+          "goal": "Lich second, begin Gargoyle production, expand if possible"
+        },
+        "t3": {
+          "buildings": ["unpl", "utod"],
+          "units": ["ugar", "uobs", "uban"],
+          "timing": "10:00-11:00",
+          "goal": "Mass Gargoyles + Statues, Dark Ranger third hero for Silence",
+          "notes": "Double Crypt Gargoyle production is critical for reaching critical mass"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Orc transitions to Wind Riders",
+            "adjustment": "Add Web upgrade on Fiends, mix in ground anti-air"
+          },
+          {
+            "condition": "Orc stays pure ground",
+            "adjustment": "Keep massing Gargoyles — they can't answer air without Batriders or Wind Riders"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "638789342_Lyn_Eer0_LostTempleLV",
+          "playerSlot": "2",
+          "playerName": "Eer0",
+          "opponentName": "Lyn",
+          "map": "Lost Temple LV",
+          "notes": "Eer0 DK→Lich→Dark Ranger mass Gargoyle flood vs Lyn's BM Raider/Wind Rider build — long macro game"
+        }
+      ]
+    },
+
+    {
+      "id": "ud-off-meta",
+      "name": "Off-Meta UD",
+      "race": "U",
+      "matchups": [],
+      "description": "Non-standard Undead builds that don't fit neatly into established meta categories.",
+      "tags": ["off-meta"],
+      "playstyleTags": ["off-meta"],
+      "replays": [
+        {
+          "replayId": "happy-vs-lucifer",
+          "playerSlot": "7",
+          "playerName": "Lucifer",
+          "opponentName": "Happy",
+          "map": "Turtle Rock",
+          "outcome": "loss",
+          "notes": "Lucifer opens Lich first into Ghouls, transitions to mass Gargoyles with Dread Lord third hero"
+        }
+      ]
     }
 
   ]
