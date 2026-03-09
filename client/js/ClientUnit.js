@@ -316,7 +316,7 @@ const ClientUnit = class {
     this.resetDecay();
   }
 
-  renderBuilding (ctx, transform, xScale, yScale) {
+  renderBuilding (ctx, frameData, transform, xScale, yScale) {
     const { x, y } = this.lastPosition;
 
     const inverseK = (2.0 - transform.k);
@@ -336,6 +336,13 @@ const ClientUnit = class {
     ctx.strokeRect(drawX - halfIcon, drawY - halfIcon, iconSize, iconSize);
     ctx.strokeStyle = "#000000";
     ctx.globalAlpha = 1.0;
+
+    frameData.buildingPositions.push({
+      x: drawX,
+      y: drawY,
+      halfSize: halfIcon,
+      playerId: this.playerId
+    });
   }
 
   renderUnit (ctx, frameData, transform, gameTime, xScale, yScale, viewOptions) {
@@ -367,6 +374,17 @@ const ClientUnit = class {
 
     let drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
     let drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
+
+    // hide workers that overlap with same-player buildings (e.g. peasant constructing)
+    if (this.meta.worker && frameData.buildingPositions) {
+      for (const bld of frameData.buildingPositions) {
+        if (bld.playerId === this.playerId &&
+            Math.abs(drawX - bld.x) < bld.halfSize &&
+            Math.abs(drawY - bld.y) < bld.halfSize) {
+          return;
+        }
+      }
+    }
 
     const { unitDrawPositions, drawnUnits } = frameData;
 
@@ -540,7 +558,7 @@ const ClientUnit = class {
     }
 
     if (this.isBuilding) {
-      this.renderBuilding(buildingCtx, transform, xScale, yScale, viewOptions);
+      this.renderBuilding(buildingCtx, frameData, transform, xScale, yScale, viewOptions);
     } else {
       this.renderUnit(ctx, frameData, transform, gameTime, xScale, yScale, viewOptions);
     }

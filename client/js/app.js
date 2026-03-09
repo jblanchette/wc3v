@@ -1302,6 +1302,7 @@ const Wc3vViewer = class {
     let frameData = {
       nameplateTree: new rbush(),
       unitDrawPositions: [],
+      buildingPositions: [],
       drawnUnits: {}
     };
 
