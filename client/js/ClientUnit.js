@@ -420,6 +420,7 @@ const ClientUnit = class {
       decayLevel: this.decayLevel,
       isHero: this.meta.hero,
       isWorker: this.meta.worker,
+      isNeutralPlayer: this.isNeutralPlayer,
       isMainHero: this.isMainHero,
       heroRank: this.heroRank,
       spawnTime: this.spawnTime,
@@ -512,10 +513,11 @@ const ClientUnit = class {
     ctx.globalAlpha = 1.0;
   }
 
-  renderLevelDots (ctx, transform, gameTime, xScale, yScale, viewOptions) {
-    const drawPadding = 4;
-
-    ctx.globalAlpha = 0.75;
+  renderLevelPins (ctx, transform, gameTime, xScale, yScale, viewOptions, frameData) {
+    const diamondSize = 14;
+    const iconSize = 22;
+    const proximityThreshold = diamondSize + 30;
+    const unitPositions = frameData ? frameData.unitDrawPositions : [];
 
     this.levelStream.some(levelRecord => {
       if (gameTime < levelRecord.gameTime) {
@@ -527,26 +529,53 @@ const ClientUnit = class {
       const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
       const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
 
-      ctx.globalAlpha = 0.75;
-      ctx.beginPath();
-      ctx.arc(drawX, drawY, 10, 0, Math.PI * 2, true);
-      ctx.fillStyle = "#FFF";
-      ctx.fill();
-      
-      ctx.font = `bold 12px Arial`;
-      ctx.fillStyle = "#000";
-      ctx.fillText(levelRecord.newLevel, drawX - drawPadding, drawY + drawPadding);
-      
-      ctx.globalAlpha = 1.0;
-        
-      // draw which spell was leveled up
-      Drawing.drawImageCircle(
-        ctx, 
-        this[`spell-${levelRecord.slot}`],
-        drawX + 10,
-        drawY + 10,
-        12
+      // fade pin when any unit is nearby
+      const nearUnit = unitPositions.some(u =>
+        Math.abs(u.x - drawX) < proximityThreshold + u.iconSize / 2 &&
+        Math.abs(u.y - drawY) < proximityThreshold + u.iconSize / 2
       );
+      const pinAlpha = nearUnit ? 0.15 : 1.0;
+
+      // outer glow ring
+      ctx.globalAlpha = 0.3 * pinAlpha;
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, diamondSize + 4, 0, Math.PI * 2);
+      ctx.fillStyle = this.playerColor;
+      ctx.fill();
+
+      // diamond pin in player color
+      ctx.globalAlpha = 0.9 * pinAlpha;
+      Drawing.drawDiamond(ctx, drawX, drawY, diamondSize, this.playerColor, '#000');
+
+      // skill icon centered in diamond
+      ctx.globalAlpha = 1.0 * pinAlpha;
+      Drawing.drawImageCircle(
+        ctx,
+        this[`spell-${levelRecord.slot}`],
+        drawX,
+        drawY,
+        iconSize
+      );
+
+      // level badge at bottom-right
+      const badgeX = drawX + diamondSize;
+      const badgeY = drawY + diamondSize;
+      ctx.beginPath();
+      ctx.arc(badgeX, badgeY, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#111';
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = this.playerColor;
+      ctx.stroke();
+
+      ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#FFF';
+      ctx.globalAlpha = pinAlpha;
+      ctx.fillText(levelRecord.newLevel, badgeX, badgeY + 1);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
     });
 
     ctx.globalAlpha = 1;

@@ -3,8 +3,8 @@ const DisplayModes = {
 };
 
 const boxDesignSize = {
-  width: 300,
-  height: 200
+  width: 260,
+  height: 250
 };
 
 const GameDisplayBox = class {
@@ -70,18 +70,33 @@ const GameDisplayBox = class {
       this.hoveredCampUuid = campUuid;
       document.body.style.cursor = 'pointer';
 
-      // position the popup
+      // position the popup — keep within canvas bounds
       const drawBounds = target.getBoundingClientRect();
-      let popX = offsetX + 12;
-      let popY = offsetY + 12;
+      const canvasW = drawBounds ? drawBounds.width : target.clientWidth;
+      const canvasH = drawBounds ? drawBounds.height : target.clientHeight;
+      const popW = boxDesignSize.width;
+      const popH = boxDesignSize.height;
+      const gap = 12;
 
-      if (drawBounds) {
-        if (drawBounds.x + popX + boxDesignSize.width > drawBounds.right) {
-          popX = offsetX - boxDesignSize.width - 12;
-        }
-        if (drawBounds.y + popY + boxDesignSize.height > drawBounds.bottom) {
-          popY = offsetY - boxDesignSize.height - 12;
-        }
+      let popX = offsetX + gap;
+      let popY = offsetY + gap;
+
+      // flip horizontally if overflows right
+      if (popX + popW > canvasW) {
+        popX = offsetX - popW - gap;
+      }
+      // clamp to left edge
+      if (popX < 0) {
+        popX = gap;
+      }
+
+      // flip vertically if overflows bottom
+      if (popY + popH > canvasH) {
+        popY = offsetY - popH - gap;
+      }
+      // clamp to top edge
+      if (popY < 0) {
+        popY = gap;
       }
 
       this.box.style.left = `${popX}px`;
@@ -159,7 +174,10 @@ const GameDisplayBox = class {
       return levelB - levelA;
     });
 
-    const rows = sorted.map(unit => {
+    const hidden = sorted.length > 5 ? sorted.length - 5 : 0;
+    const visible = sorted.slice(0, 5);
+
+    const rows = visible.map(unit => {
       const level = (unit.balanceInfo && unit.balanceInfo.level) || '?';
       const rawName = unit.displayName || unit.itemId || 'Unknown';
       const name = GameDisplayBox.titleCase(rawName);
@@ -178,7 +196,11 @@ const GameDisplayBox = class {
       `;
     }).join('');
 
-    return `<ul class="camp-creep-list">${rows}</ul>`;
+    const moreStr = hidden > 0
+      ? `<li class="camp-creep-more">+${hidden} more</li>`
+      : '';
+
+    return `<ul class="camp-creep-list">${rows}${moreStr}</ul>`;
   }
 
   static renderClaimInfo (rawGroup, teamColorMap, playerColorMap) {

@@ -2,7 +2,7 @@ const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 const unitBalanceMap = require("./UnitBalance.json").output;
 const researchMeta = require("./researchMeta.json");
 
-const mapConfiguration = require("../mapdata/mapConfiguration");
+const mapConfiguration = require("./mapConfiguration");
 
 let {
 	units,

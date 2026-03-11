@@ -55,6 +55,20 @@ const Drawing = class {
     ctx.textBaseline = 'alphabetic';
   }
 
+  static drawDiamond (ctx, x, y, size, fillColor, strokeColor = '#000') {
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x + size, y);
+    ctx.lineTo(x, y + size);
+    ctx.lineTo(x - size, y);
+    ctx.closePath();
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = strokeColor;
+    ctx.stroke();
+  }
+
   static drawCenteredText (ctx, drawX, drawY, textStr, fontSize = 12, fontColor) {
       ctx.textAlign = "center";
       ctx.fillStyle = "#FFF";

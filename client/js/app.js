@@ -108,6 +108,8 @@ const Wc3vViewer = class {
     this.utilityCanvas = null;
     this.utilityCtx = null;
 
+    this.floatingText = new window.FloatingText();
+
     this.scrubber = new window.TimeScrubber("scrubber-bar", "main-canvas");
 
     this.replayId = null;
@@ -163,7 +165,9 @@ const Wc3vViewer = class {
         // removing loading status indicator
         self.setLoadingStatus(false);
       } catch (e) {
-        console.error("Error loading wc3v replay: ", e);
+        const size = target && target.responseText ? target.responseText.length : 0;
+        console.error(`Failed to load replay "${filename}" (response size: ${size} chars): ${e.message}`);
+        console.error('If JSON is truncated, re-parse with: node wc3v.js --replay=NAME --debug');
       }
     });
 
@@ -518,13 +522,22 @@ const Wc3vViewer = class {
   loadDoodadFile () {
     const self = this;
     const { name } = this.mapInfo;
+    const filePath = `../maps/${name}/doo.json`;
 
-    return new Promise((resolve, reject) => {
-      this.loadFile(`../maps/${name}/doo.json`, (res) => {
-        const { target } = res;
-        const jsonData = JSON.parse(target.responseText);
-
-        self.doodadData = jsonData.grid;
+    return new Promise((resolve) => {
+      this.loadFile(filePath, (res) => {
+        try {
+          if (res.target.status < 300) {
+            const jsonData = JSON.parse(res.target.responseText);
+            self.doodadData = jsonData.grid;
+          } else {
+            console.warn(`doodad file not found: ${filePath} (status ${res.target.status})`);
+            self.doodadData = null;
+          }
+        } catch (e) {
+          console.error(`Failed to parse ${filePath}: ${e.message}`);
+          self.doodadData = null;
+        }
         resolve(true);
       });
     })
@@ -609,7 +622,19 @@ const Wc3vViewer = class {
   }
 
   toggleMegaPlayButton (state) {
-    this.megaPlayButton.style.display = state ? "flex" : "none";
+    if (state) {
+      this.megaPlayButton.classList.remove('fading-out');
+      this.megaPlayButton.style.display = "flex";
+    } else {
+      this.megaPlayButton.classList.add('fading-out');
+      const el = this.megaPlayButton;
+      const onEnd = () => {
+        el.removeEventListener('transitionend', onEnd);
+        el.style.display = "none";
+        el.classList.remove('fading-out');
+      };
+      el.addEventListener('transitionend', onEnd);
+    }
   }
 
   toggleViewOption (optionKey) {
@@ -660,6 +685,22 @@ const Wc3vViewer = class {
     this.hideMatchCompleteBanner();
     this.gameTime = 0;
     this.scrubber.moveTracker(0);
+
+    // Reset neutral camp visibility flags so hover works again
+    if (this.mapData && this.mapData.world && this.mapData.world.neutralGroups) {
+      Object.values(this.mapData.world.neutralGroups).forEach(group => {
+        group.isHidden = false;
+      });
+    }
+    const neutralPlayer = this.players.find(p => p.playerId === "1042");
+    if (neutralPlayer) {
+      neutralPlayer.units.forEach(unit => {
+        unit.isNeutralGroupHidden = false;
+      });
+    }
+    if (this.gameDisplayBox) {
+      this.gameDisplayBox.hide();
+    }
 
     this.players.forEach(player => {
       player.moveTracker(0);
@@ -718,21 +759,6 @@ const Wc3vViewer = class {
 
     // Apply current mode
     app.classList.add(`layout-mode-${this.layoutMode}`);
-
-    // Update mode switcher button states
-    const oldModes = Array.from(document.getElementsByClassName("mode-btn selected"));
-    oldModes.forEach(el => el.classList.remove('selected'));
-
-    if (this.layoutMode === LayoutMode.liveBuildOrder) {
-      const el = document.getElementById('mode-default');
-      if (el) el.classList.add('selected');
-    } else if (this.layoutMode === LayoutMode.staticBuildOrder) {
-      const el = document.getElementById('mode-build');
-      if (el) el.classList.add('selected');
-    } else if (this.layoutMode === LayoutMode.gameplay) {
-      const el = document.getElementById('mode-replay');
-      if (el) el.classList.add('selected');
-    }
 
     // Keep old viewMode/buildViewMode in sync for any code still reading them
     this.viewMode = (this.layoutMode === LayoutMode.gameplay) ? ViewModes.gameplay : ViewModes.buildOrder;
@@ -935,7 +961,8 @@ const Wc3vViewer = class {
   setupViewOptions () {
     this.viewOptions = {
       displayPath: false,
-      displayLeveLDots: true,
+      displayLevelPins: true,
+      displayFloatingText: true,
       decayEffects: true,
       displayText: true,
 
@@ -1303,14 +1330,15 @@ const Wc3vViewer = class {
       nameplateTree: new rbush(),
       unitDrawPositions: [],
       buildingPositions: [],
-      drawnUnits: {}
+      drawnUnits: {},
+      gameTime: gameTime
     };
 
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
     this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
-    this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
     const hoveredCampUuid = this.gameDisplayBox ? this.gameDisplayBox.hoveredCampUuid : null;
     this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid);
+    this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
 
     players.forEach(player => {
       player.preRender(
@@ -1341,6 +1369,17 @@ const Wc3vViewer = class {
         viewOptions
       );
     });
+
+    // global nameplate pass — all players' unit icons as obstacles in one tree
+    if (viewOptions.displayText) {
+      frameData.allNameplateBoxes = ClientPlayer.buildNameplateBoxes(frameData, playerCtx);
+      ClientPlayer.renderAllNameplates(frameData, playerCtx);
+    }
+
+    if (viewOptions.displayFloatingText && this.floatingText) {
+      this.floatingText.update(players, gameTime);
+      this.floatingText.render(playerCtx, transform, gameTime, xScale, yScale);
+    }
 
     ctx.restore();
     playerCtx.restore();

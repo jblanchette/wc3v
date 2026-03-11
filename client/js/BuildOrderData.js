@@ -124,6 +124,27 @@ const BuildOrderData = class {
           }));
         }
 
+      } else if (key === 'tierUpgrade') {
+        const { building } = event;
+        if (!building) return;
+        const costOvr = cfg.tierUpgradeCosts[building.itemId];
+        events.push(create('tierUpgrade', gameTime, supplyUsed, supplyMax, w, {
+          displayName: building.displayName,
+          itemId: building.itemId,
+          goldCost: costOvr ? costOvr.gold : building.goldCost,
+          lumberCost: costOvr ? costOvr.lumber : building.lumberCost,
+          tierTarget: building.tierTarget
+        }));
+
+        // Synthetic tier completion event (tier buildings take ~140s)
+        const buildTime = building.buildTime || 140;
+        events.push(create('tierComplete', gameTime + (buildTime * 1000), supplyUsed, supplyMax, w, {
+          displayName: building.displayName,
+          itemId: building.itemId,
+          tierTarget: building.tierTarget,
+          upgradeStartTime: gameTime
+        }));
+
       } else if (key === 'addUnit') {
         const { unit } = event;
         if (!unit || unit.isIllusion || unit.isSummon) return;
@@ -324,7 +345,9 @@ const BuildOrderData = class {
     };
 
     grouped.forEach(event => {
-      const tier = getTier(event.gameTime);
+      let tier = getTier(event.gameTime);
+      // Tier upgrade actions belong in the previous tier (where the player decided to upgrade)
+      if (event.type === 'tierUpgrade' && tier > 1) tier = tier - 1;
       tiers[tier].events.push(event);
       if (!tiers[tier].startSupply) {
         tiers[tier].startSupply = { used: event.supplyUsed, max: event.supplyMax };
@@ -343,7 +366,7 @@ const BuildOrderData = class {
       const heroStatus = {};
       const workerState = { onGold: 0, onLumber: 0, onBuild: 0, total: 0 };
       const economy = { goldSpent: 0, lumberSpent: 0 };
-      const upgrades = { attack: 0, defense: 0, researched: [] };
+      const upgrades = { attack: {}, defense: {}, researched: [] };
       let lastSupply = { used: 0, max: 0 };
 
       grouped.forEach(event => {
@@ -384,10 +407,10 @@ const BuildOrderData = class {
         }
         // Upgrade tracking
         if (event.type === 'attackUpgrade') {
-          upgrades.attack = event.level;
+          upgrades.attack[event.itemId] = { level: event.level, displayName: event.displayName, icon: event.icon };
         }
         if (event.type === 'defenseUpgrade') {
-          upgrades.defense = event.level;
+          upgrades.defense[event.itemId] = { level: event.level, displayName: event.displayName, icon: event.icon };
         }
         if (event.type === 'research') {
           upgrades.researched.push({ displayName: event.displayName, itemId: event.itemId, level: event.level, icon: event.icon });
@@ -546,12 +569,16 @@ const BuildOrderData = class {
     const tier3Event = tierStream.find(t => t.tier === 3);
     const tier2Time = tier2Event ? tier2Event.gameTime : Infinity;
     const tier3Time = tier3Event ? tier3Event.gameTime : Infinity;
+    // Tier completion times (initiation + build time) for snapshot capture
+    const tierBuildTime = 140000; // 140s in ms, uniform across all races
+    const tier2Complete = tier2Time !== Infinity ? tier2Time + tierBuildTime : Infinity;
+    const tier3Complete = tier3Time !== Infinity ? tier3Time + tierBuildTime : Infinity;
 
     const events = this.extractBoEvents(player);
     const grouped = this.groupConsecutiveEvents(events);
     this.tagSupplyChanges(grouped);
     const tiers = this.bucketByTier(grouped, tier2Time, tier3Time);
-    const { snapshots, finalSnapshot } = this.buildTierSnapshots(grouped, tier2Time, tier3Time);
+    const { snapshots, finalSnapshot } = this.buildTierSnapshots(grouped, tier2Complete, tier3Complete);
     const production = this.buildProductionSummary(grouped);
     const tierProduction = this.buildTierProductionSummary(tiers, grouped);
 

@@ -603,7 +603,6 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         selectionStream,
         tierStream,
         researchStream,
-        groupStream,
         isNeutralPlayer
       } = player;
 
@@ -623,7 +622,6 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         }),
         tierStream,
         researchStream,
-        groupStream,
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit())
     	};
@@ -637,7 +635,11 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         return acc;
       }, {})
     },
-    replay: replay,
+    replay: (() => {
+      // strip raw decompressed replay binary — client never uses it
+      delete replay.metadata.gameData;
+      return replay;
+    })(),
     ...(validation && (validation.warnings.length || validation.errors.length)
       ? { validation }
       : {})
@@ -667,6 +669,22 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         console.logger("file write error for: ", outputPath, e);
       })
       .on('finish', () => {
+        // run post-write validation on the gz file
+        try {
+          const { validateReplay } = require('../tools/validate-output');
+          const result = validateReplay(`${outputPath}.gz`);
+          if (result.errors.length) {
+            console.log(`\nValidation FAILED for ${path.basename(outputPath)}.gz:`);
+            result.errors.forEach(e => console.log(`  ERROR: ${e}`));
+          }
+          if (result.warnings.length) {
+            console.log(`\nValidation warnings for ${path.basename(outputPath)}.gz:`);
+            result.warnings.forEach(w => console.log(`  WARN: ${w}`));
+          }
+        } catch (e) {
+          // validation is advisory, don't block on errors
+        }
+
         if (config.debugOutput) {
           console.log("debug: keeping uncompressed wc3v at", outputPath);
         } else {
@@ -678,6 +696,18 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
   } catch (e) {
     console.logger("file write error: ", e);
   }
+};
+
+const getManifestReplayIds = () => {
+  const manifestPath = path.join(__dirname, '..', 'client', 'data', 'builds-manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  const ids = new Set();
+  for (const build of manifest.builds) {
+    for (const r of (build.replays || [])) {
+      if (r.replayId) ids.add(r.replayId);
+    }
+  }
+  return [...ids].sort();
 };
 
 const readCliArgs = (argv) => {
@@ -719,53 +749,22 @@ const readCliArgs = (argv) => {
       break;
 
       case "promaps":
-        config.debugPlayer = null; // hack to turn off all logs for now
+        config.debugPlayer = null;
         logManager.setTestMode();
 
-        const proMaps = [
-          // pro mactches on site
-          'happy-vs-grubby',
-          'grubby-vs-thorzain',
-          'cash-vs-foggy',
-          'happy-vs-lucifer',
-          'foggy-vs-cash-2',
-          'terenas-stand-lv_sonik-vs-tgw',
-          '2v2-synergy',
-          'insup-vs-kiwi'
-        ];
-
         options.inTestMode = true;
-        options.paths = proMaps.map(mapName => {
-          return `./replays/${mapName}.w3g`;
-        });
+        options.paths = getManifestReplayIds().map(id => `./replays/${id}.w3g`);
       break;
 
       case "test":
-        config.debugPlayer = null; // hack to turn off all logs for now
+        config.debugPlayer = null;
         logManager.setTestMode();
 
-        const testMaps = [
-          // pro mactches on site
-          'happy-vs-grubby',
-          'grubby-vs-thorzain',
-          'happy-vs-lucifer',
-          'foggy-vs-cash-2',
-          'cash-vs-foggy',
-          'terenas-stand-lv_sonik-vs-tgw',
-          'insup-vs-kiwi',
-
-          'amazonia',
-          'battleground',
-          'gnollwood',
-          'lastrefuge',
-          'northernisles',
-          'twistedmeadows5'
-        ];
+        const regressionMaps = ['amazonia', 'battleground', 'gnollwood', 'lastrefuge', 'northernisles', 'twistedmeadows5'];
+        const testMaps = [...getManifestReplayIds(), ...regressionMaps];
 
         options.inTestMode = true;
-        options.paths = testMaps.map(mapName => {
-          return `./replays/${mapName}.w3g`;
-        });
+        options.paths = testMaps.map(mapName => `./replays/${mapName}.w3g`);
       break;
 		};
 	});
@@ -785,6 +784,7 @@ module.exports = {
 	closestToPoint,
 	getRandomInt,
 	uuidv4,
+	getManifestReplayIds,
 	readCliArgs,
 	writeOutput,
 

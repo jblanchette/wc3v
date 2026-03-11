@@ -49,253 +49,34 @@ const CLIENT_GAMEDATA_DIR = "../client/js";
 // keyed by first character of W3E tile palette codes
 //
 
-const DEFAULT_THEME = {
-  grass: '#2c6818',
-  ground: '#906739',
-  water: '#051459',
-  shallowwater: '#0A27A6',
-  empty: '#000',
-  trees: '#013f01',
-  treeStroke: '#906739'
-};
-
-const TILESET_THEMES = {
-  // Lordaeron Summer
-  'L': { ...DEFAULT_THEME },
-  // Village
-  'V': {
-    ...DEFAULT_THEME,
-    grass: '#2e7a1e',
-    ground: '#7a6a3a'
-  },
-  // Lordaeron Fall
-  'F': {
-    ...DEFAULT_THEME,
-    grass: '#5a6a20',
-    ground: '#7a5a2a',
-    trees: '#3a5a10',
-    treeStroke: '#6a4a20'
-  },
-  // Village Fall
-  'X': {
-    ...DEFAULT_THEME,
-    grass: '#5a6a20',
-    ground: '#7a5a2a',
-    trees: '#3a5a10',
-    treeStroke: '#6a4a20'
-  },
-  // Lordaeron Winter
-  'W': {
-    ...DEFAULT_THEME,
-    grass: '#a0b0b8',
-    ground: '#7a8a90',
-    trees: '#2a5040',
-    treeStroke: '#5a7068'
-  },
-  // Northrend
-  'N': {
-    ...DEFAULT_THEME,
-    grass: '#b0c0c8',
-    ground: '#8a98a0',
-    trees: '#285a40',
-    treeStroke: '#5a7a68'
-  },
-  // Icecrown
-  'I': {
-    ...DEFAULT_THEME,
-    grass: '#c0d0d8',
-    ground: '#90a0a8',
-    water: '#0a2060',
-    shallowwater: '#1a3878',
-    trees: '#204838',
-    treeStroke: '#506860'
-  },
-  // Ashenvale
-  'A': {
-    ...DEFAULT_THEME,
-    grass: '#1a4828',
-    ground: '#4a3a2a',
-    trees: '#0a3518',
-    treeStroke: '#3a5a30'
-  },
-  // Felwood
-  'C': {
-    ...DEFAULT_THEME,
-    grass: '#283a18',
-    ground: '#4a3040',
-    trees: '#1a3010',
-    treeStroke: '#4a3a4a'
-  },
-  // Barrens
-  'B': {
-    ...DEFAULT_THEME,
-    grass: '#888040',
-    ground: '#a09050',
-    trees: '#4a6820',
-    treeStroke: '#807030'
-  },
-  // Dungeon
-  'D': {
-    ...DEFAULT_THEME,
-    grass: '#3a3a3a',
-    ground: '#585858',
-    trees: '#2a3a2a',
-    treeStroke: '#484848'
-  },
-  // Underground
-  'G': {
-    ...DEFAULT_THEME,
-    grass: '#303030',
-    ground: '#505050',
-    trees: '#203020',
-    treeStroke: '#404040'
-  },
-  // Cityscape
-  'K': {
-    ...DEFAULT_THEME,
-    grass: '#4a4a58',
-    ground: '#686878',
-    trees: '#2a3a2a',
-    treeStroke: '#505058'
-  },
-  // Dalaran Ruins
-  'J': {
-    ...DEFAULT_THEME,
-    grass: '#3a3858',
-    ground: '#585068',
-    trees: '#2a3038',
-    treeStroke: '#484858'
-  },
-  // Sunken Ruins
-  'Y': {
-    ...DEFAULT_THEME,
-    grass: '#1a4858',
-    ground: '#3a5868',
-    water: '#041848',
-    shallowwater: '#0a2880',
-    trees: '#0a3838',
-    treeStroke: '#2a5858'
-  },
-  // Ruins (Lordaeron Ruins / generic ruins)
-  'Z': {
-    ...DEFAULT_THEME,
-    grass: '#3a5a3a',
-    ground: '#5a5a48',
-    trees: '#1a4020',
-    treeStroke: '#4a5a3a'
-  },
-  // Dalaran (Q variant)
-  'Q': {
-    ...DEFAULT_THEME,
-    grass: '#3a4858',
-    ground: '#585068',
-    trees: '#2a3838',
-    treeStroke: '#484858'
-  },
-  // Outland
-  'O': {
-    ...DEFAULT_THEME,
-    grass: '#5a3828',
-    ground: '#704830',
-    trees: '#3a4820',
-    treeStroke: '#604020'
-  }
-};
 
 //
 // per-palette-code color mapping (W3E ground texture codes → hex colors)
 //
 
-const PALETTE_COLORS = {
-  // Lordaeron Summer (L)
-  Ldrt: '#9a8050', Ldro: '#7a6848', Ldrg: '#558030', Lrok: '#707060',
-  Lgrs: '#348020', Lgrd: '#6a8838',
-  // Village (V)
-  Vdrt: '#9a8858', Vdrr: '#8a7850', Vcrp: '#6a8838', Vcbp: '#588030',
-  Vstp: '#8a8a70', Vgrs: '#389028', Vrck: '#787868', Vgrt: '#6a8838',
-  // Lordaeron Fall (F)
-  Fdrt: '#8a7838', Fdro: '#7a6830', Fdrg: '#687828', Frok: '#787058',
-  Fgrs: '#687828', Fgrd: '#788030',
-  // Village Fall (X)
-  Xdrt: '#8a7838', Xdtr: '#7a6830', Xblm: '#685848', Xbtl: '#787058',
-  Xsqd: '#8a8068', Xrtl: '#786050', Xgsb: '#6a7830', Xhdg: '#587028',
-  Xwmb: '#7a6848',
-  // Lordaeron Winter (W)
-  Wdrt: '#98a0a8', Wdro: '#889098', Wsng: '#c8d0d8', Wrok: '#788088',
-  Wgrs: '#a8b8c0', Wsnw: '#d8e0e8',
-  // Northrend (N)
-  Ndrt: '#98a0a0', Ndrd: '#889090', Nrck: '#788080', Ngrs: '#98b0b0',
-  Nice: '#b8d0e0', Nsnw: '#d0e0e8', Nsnr: '#c0d0d8',
-  // Icecrown (I)
-  Idrt: '#90a0a8', Idtr: '#8098a8', Idki: '#587080', Iice: '#b0c8d8',
-  Isnw: '#c8d8e0', Ibkb: '#506070', Irbk: '#587078', Itbk: '#607880',
-  Ibsq: '#687888',
-  // Ashenvale (A)
-  Adrt: '#405838', Adrd: '#304830', Agrs: '#1e5830', Arck: '#505848',
-  Agrd: '#406838', Avin: '#204828', Adrg: '#204820', Alvd: '#305830',
-  // Felwood (C)
-  Cdrt: '#404830', Cdrd: '#303828', Cgrs: '#304820', Cpos: '#402838',
-  Cvin: '#204020', Clvg: '#304820',
-  // Barrens (B)
-  Bdrt: '#a09058', Bdrh: '#908048', Bdrr: '#988850', Bdrg: '#788038',
-  Bdsr: '#b0a070', Bdsd: '#a89868', Bflr: '#806830', Bgrr: '#8a8848',
-  // Dungeon (D)
-  Ddrt: '#484848', Dgrs: '#384838',
-  // Underground (G)
-  Gbrk: '#484840',
-  // Cityscape (K)
-  Ksmb: '#686878',
-  // Dalaran Ruins (J)
-  Jdrt: '#585070', Jdtr: '#504868', Jblm: '#484060', Jbtl: '#605878',
-  Jsqd: '#686080', Jrtl: '#585070', Jgsb: '#485848', Jhdg: '#385030',
-  Jwmb: '#605070',
-  // Sunken Ruins (Y)
-  Ydrt: '#386068', Ydtr: '#305860', Yblm: '#284850', Ybtl: '#385858',
-  Ysqd: '#406068', Yrtl: '#385860', Ygsb: '#285840', Yhdg: '#284838',
-  Ywmb: '#385058',
-  // Ruins (Z)
-  Zdrt: '#586848', Zdtr: '#485840', Zdrg: '#486038', Zbks: '#686850',
-  Zsan: '#9a9068', Zbkl: '#585848', Ztil: '#686858', Zgrs: '#486848',
-  Zvin: '#385830',
-  // Dalaran (Q)
-  Qdrt: '#807050', Qdrr: '#706040', Qcrp: '#685848', Qcbp: '#586840',
-  Qstp: '#787868', Qgrs: '#588040', Qrck: '#686858', Qgrt: '#688040',
-  // Outland (O)
-  Odrt: '#684030', Odtr: '#583828', Osmb: '#584038', Ofst: '#485028',
-  Olgb: '#586830', Ofsl: '#384020', Oaby: '#382828', Orok: '#585048'
-};
-
-function getFallbackColor (palette, suffix) {
-  const knownPrefixes = ['L', 'W', 'A', 'B', 'J', 'Y', 'Z', 'Q', 'F', 'X', 'V', 'N', 'I', 'C', 'O'];
-  for (const p of knownPrefixes) {
-    if (PALETTE_COLORS[p + suffix]) return PALETTE_COLORS[p + suffix];
-  }
-  return null;
-}
-
-// tree/water/cliff colors by tileset (not in per-tile data)
+// Per-tileset rendering colors (water, trees, cliffs, ground/accent for terrain palette)
 const TILESET_EXTRAS = {
-  'L': { water: '#051459', shallowwater: '#0A27A6', trees: '#0a5a08', treeStroke: '#706030', cliff: '#282818' },
-  'V': { water: '#051459', shallowwater: '#0A27A6', trees: '#0a5a08', treeStroke: '#706030', cliff: '#282818' },
-  'F': { water: '#051459', shallowwater: '#0A27A6', trees: '#3a5a10', treeStroke: '#6a4a20', cliff: '#282010' },
-  'X': { water: '#051459', shallowwater: '#0A27A6', trees: '#3a5a10', treeStroke: '#6a4a20', cliff: '#282010' },
-  'W': { water: '#051459', shallowwater: '#0A27A6', trees: '#2a5040', treeStroke: '#5a7068', cliff: '#303840' },
-  'N': { water: '#051459', shallowwater: '#0A27A6', trees: '#285a40', treeStroke: '#5a7a68', cliff: '#303840' },
-  'I': { water: '#0a2060', shallowwater: '#1a3878', trees: '#204838', treeStroke: '#506860', cliff: '#283040' },
-  'A': { water: '#051459', shallowwater: '#0A27A6', trees: '#0a3518', treeStroke: '#3a5a30', cliff: '#181810' },
-  'C': { water: '#051459', shallowwater: '#0A27A6', trees: '#1a3010', treeStroke: '#4a3a4a', cliff: '#181810' },
-  'B': { water: '#051459', shallowwater: '#0A27A6', trees: '#4a6820', treeStroke: '#807030', cliff: '#302818' },
-  'D': { water: '#051459', shallowwater: '#0A27A6', trees: '#2a3a2a', treeStroke: '#484848', cliff: '#181818' },
-  'G': { water: '#051459', shallowwater: '#0A27A6', trees: '#203020', treeStroke: '#404040', cliff: '#101010' },
-  'K': { water: '#051459', shallowwater: '#0A27A6', trees: '#2a3a2a', treeStroke: '#505058', cliff: '#202028' },
-  'J': { water: '#051459', shallowwater: '#0A27A6', trees: '#2a3038', treeStroke: '#484858', cliff: '#181828' },
-  'Y': { water: '#041848', shallowwater: '#0a2880', trees: '#0a3838', treeStroke: '#2a5858', cliff: '#101828' },
-  'Z': { water: '#051459', shallowwater: '#0A27A6', trees: '#1a4020', treeStroke: '#4a5a3a', cliff: '#202018' },
-  'Q': { water: '#051459', shallowwater: '#0A27A6', trees: '#385820', treeStroke: '#605020', cliff: '#201810' },
-  'O': { water: '#051459', shallowwater: '#0A27A6', trees: '#3a4820', treeStroke: '#604020', cliff: '#201810' }
+  'L': { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#7a7040' },
+  'V': { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#807848' },
+  'F': { water: '#081858', shallowwater: '#103080', trees: '#28400a', cliff: '#302818', ground: '#6a8030', accent: '#8a6830' },
+  'X': { water: '#081858', shallowwater: '#103080', trees: '#28400a', cliff: '#302818', ground: '#687830', accent: '#886838' },
+  'W': { water: '#0a2868', shallowwater: '#1840a0', trees: '#1a3830', cliff: '#404858', ground: '#a8b8c0', accent: '#8898a8' },
+  'N': { water: '#0a2868', shallowwater: '#1840a0', trees: '#1a4030', cliff: '#384050', ground: '#90a8b0', accent: '#7888a0' },
+  'I': { water: '#0a1850', shallowwater: '#183070', trees: '#143828', cliff: '#283848', ground: '#88a0b8', accent: '#607088' },
+  'A': { water: '#061050', shallowwater: '#0a2080', trees: '#062810', cliff: '#1a1810', ground: '#1a5028', accent: '#385030' },
+  'C': { water: '#08104a', shallowwater: '#101870', trees: '#10200a', cliff: '#1a1810', ground: '#2a4018', accent: '#38382a' },
+  'B': { water: '#0a2060', shallowwater: '#183888', trees: '#385018', cliff: '#403020', ground: '#88943a', accent: '#a09058' },
+  'D': { water: '#081048', shallowwater: '#101868', trees: '#1a2a1a', cliff: '#181818', ground: '#384838', accent: '#484848' },
+  'G': { water: '#081048', shallowwater: '#101868', trees: '#142014', cliff: '#101010', ground: '#283020', accent: '#383830' },
+  'K': { water: '#081858', shallowwater: '#103080', trees: '#1a2a1a', cliff: '#202028', ground: '#505060', accent: '#606068' },
+  'J': { water: '#0a1060', shallowwater: '#182088', trees: '#1a2028', cliff: '#201830', ground: '#484068', accent: '#504870' },
+  'Y': { water: '#041838', shallowwater: '#0a2860', trees: '#062828', cliff: '#101828', ground: '#285040', accent: '#305050' },
+  'Z': { water: '#0a1858', shallowwater: '#142880', trees: '#103018', cliff: '#282818', ground: '#486040', accent: '#585848' },
+  'Q': { water: '#0a1858', shallowwater: '#142880', trees: '#284018', cliff: '#281810', ground: '#588038', accent: '#787048' },
+  'O': { water: '#0a1848', shallowwater: '#142068', trees: '#283818', cliff: '#281810', ground: '#504828', accent: '#684030' }
 };
 
-const DEFAULT_EXTRAS = { water: '#051459', shallowwater: '#0A27A6', trees: '#013f01', treeStroke: '#906739', cliff: '#181810' };
+const DEFAULT_EXTRAS = { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#7a7040' };
 
 function hexToRgb (hex) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -537,6 +318,10 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
 
   output.info.gridSize.full = [ terrainFile.map.width, terrainFile.map.height ];
 
+  if (infoFile.info.gridSize.margins) {
+    output.info.gridSize.margins = infoFile.info.gridSize.margins;
+  }
+
   const halfGridWidth = terrainFile.map.width / 2;
   const halfGridHeight = terrainFile.map.height / 2;
 
@@ -609,16 +394,16 @@ function drawBackgroundMap (output, wpm, doo, terrainFile) {
   const extras = TILESET_EXTRAS[tileset] || DEFAULT_EXTRAS;
 
   // build a color lookup for this map's palettes (as RGB arrays for noise variation)
+  const greenSuffixes = new Set([
+    'grs', 'grd', 'grr', 'gsb', 'hdg', 'vin', 'drg', 'lvd', 'lvg',
+    'crp', 'cbp', 'fst', 'fsl', 'lgb', 'grt', 'pos'
+  ]);
+
   const paletteColorCache = {};
   terrainFile.tilePalettes.forEach((code, idx) => {
-    let color = PALETTE_COLORS[code];
-    if (!color) {
-      color = getFallbackColor(code, code.substring(1));
-    }
-    if (!color) {
-      color = '#4a6838';
-    }
-    paletteColorCache[idx] = hexToRgb(color);
+    const suffix = code.substring(1);
+    const isVegetation = greenSuffixes.has(suffix);
+    paletteColorCache[idx] = hexToRgb(isVegetation ? extras.ground : extras.accent);
   });
 
   const cliffRgb = hexToRgb(extras.cliff || '#181810');
@@ -637,75 +422,103 @@ function drawBackgroundMap (output, wpm, doo, terrainFile) {
     .domain(gameScaler.mapExtent.y)
     .range([ -(fullMiddleY), fullMiddleY ]);
 
-  // WPM is ~4x resolution of W3E terrain grid
-  const wpmToTerrainX = tileGrid[0] ? (tileGrid[0].length / grid[0].length) : 1;
-  const wpmToTerrainY = tileGrid.length ? (tileGrid.length / grid.length) : 1;
+  const wpmRows = grid.length;
+  const wpmCols = grid[0] ? grid[0].length : 0;
 
-  let rCol = grid.length - 1;
+  // --- Pass 1: Paint ground from W3E terrain grid (coarse, solid color blocks) ---
+  const terrainRows = tileGrid.length;
+  const terrainCols = tileGrid[0] ? tileGrid[0].length : 0;
+  const terrainCellRows = terrainRows - 1;
+  const terrainCellCols = terrainCols - 1;
+  const terrainBlockW = (wpmCols * tileSize) / terrainCellCols;
+  const terrainBlockH = (wpmRows * tileSize) / terrainCellRows;
 
-  for (let col = 0; col < grid.length; col++) {
-    for (let row = 0; row < grid[col].length; row++) {
+  // Boundary margins: skip painting terrain for tiles outside the playable area
+  const margins = output.info.gridSize.margins;
+  const { playable, full } = output.info.gridSize;
+  const marginBottom = margins ? margins[2] : Math.floor((full[1] - playable[1]) / 2);
+  const marginTop = margins ? margins[3] : Math.ceil((full[1] - playable[1]) / 2);
+  const marginLeft = margins ? margins[0] : Math.floor((full[0] - playable[0]) / 2);
+  const marginRight = margins ? margins[1] : Math.ceil((full[0] - playable[0]) / 2);
+
+  for (let row = 0; row < terrainCellRows; row++) {
+    if (row < marginBottom || row >= terrainCellRows - marginTop) continue;
+    const drawY = (terrainCellRows - 1 - row) * terrainBlockH;
+    for (let col = 0; col < terrainCellCols; col++) {
+      if (col < marginLeft || col >= terrainCellCols - marginRight) continue;
+      const tile = tileGrid[row][col];
+      const rgb = (tile && paletteColorCache[tile.paletteIndex]) || [74, 104, 56];
+      ctx.fillStyle = rgbToHex(rgb[0], rgb[1], rgb[2]);
+      ctx.fillRect(col * terrainBlockW, drawY, terrainBlockW + 0.5, terrainBlockH + 0.5);
+    }
+  }
+
+  // --- Pass 2: Overlay water + cliffs from WPM (finer resolution) ---
+  let rCol = wpmRows - 1;
+
+  for (let col = 0; col < wpmRows; col++) {
+    for (let row = 0; row < wpmCols; row++) {
       const data = grid[col][row];
-      const { NoWater, NoWalk, NoFly, NoBuild, Blight } = data;
-
+      const { NoWater, NoWalk, NoFly, NoBuild } = data;
       const drawX = row * tileSize;
       const drawY = rCol * tileSize;
 
-      // unwalkable + unflyable = boundary/cliff
       if (NoWalk && NoFly) {
-        const noise = tileHash(col, row) * 0.3 - 0.15;
+        const noise = tileHash(col, row) * 0.2 - 0.1;
         const cr = Math.max(0, Math.min(255, Math.round(cliffRgb[0] * (1 + noise))));
         const cg = Math.max(0, Math.min(255, Math.round(cliffRgb[1] * (1 + noise))));
         const cb = Math.max(0, Math.min(255, Math.round(cliffRgb[2] * (1 + noise))));
         ctx.fillStyle = rgbToHex(cr, cg, cb);
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-        continue;
-      }
-
-      // water tiles
-      if (!NoWater && !NoBuild) {
+      } else if (!NoWater && !NoBuild) {
         ctx.fillStyle = extras.water;
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-        continue;
-      }
-      if (!NoWater && NoBuild) {
+      } else if (!NoWater && NoBuild) {
         ctx.fillStyle = extras.shallowwater;
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-        continue;
       }
-
-      // ground tiles: look up the W3E terrain palette for this position
-      const terrainCol = Math.min(Math.floor(col * wpmToTerrainY), tileGrid.length - 1);
-      const terrainRow = Math.min(Math.floor(row * wpmToTerrainX), tileGrid[0].length - 1);
-      const terrainTile = tileGrid[terrainCol] ? tileGrid[terrainCol][terrainRow] : null;
-
-      let rgb;
-      if (terrainTile && paletteColorCache[terrainTile.paletteIndex]) {
-        rgb = paletteColorCache[terrainTile.paletteIndex];
-      } else {
-        rgb = [74, 104, 56];
-      }
-
-      const noise = tileHash(col, row) * 0.24 - 0.12;
-      const r = Math.max(0, Math.min(255, Math.round(rgb[0] * (1 + noise))));
-      const g = Math.max(0, Math.min(255, Math.round(rgb[1] * (1 + noise))));
-      const b = Math.max(0, Math.min(255, Math.round(rgb[2] * (1 + noise))));
-      ctx.fillStyle = rgbToHex(r, g, b);
-      ctx.fillRect(drawX, drawY, tileSize, tileSize);
     }
-
     rCol--;
   }
 
+  // --- Trees ---
+  const mapRangeX = gameScaler.mapExtent.x[1] - gameScaler.mapExtent.x[0];
+  const mapRangeY = gameScaler.mapExtent.y[0] - gameScaler.mapExtent.y[1];
+
   dooGrid.forEach((item) => {
+    if (!item.flags.visible) return;
+    if (item.life === 0) return;
+
     const x = parseFloat(item.position.x);
     const y = parseFloat(item.position.y);
+
+    // Check tile + neighbors: if majority are unwalkable cliffs/void, skip
+    const wpmCol = Math.floor((x - gameScaler.mapExtent.x[0]) / mapRangeX * wpmCols);
+    const wpmRow = Math.floor((y - gameScaler.mapExtent.y[1]) / mapRangeY * wpmRows);
+    if (wpmRow < 0 || wpmRow >= wpmRows || wpmCol < 0 || wpmCol >= wpmCols) return;
+
+    let unwalkable = 0;
+    let total = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const r = wpmRow + dr, c = wpmCol + dc;
+        if (r >= 0 && r < wpmRows && c >= 0 && c < wpmCols) {
+          total++;
+          if (grid[r][c].NoWalk && grid[r][c].NoFly) unwalkable++;
+        }
+      }
+    }
+    if (unwalkable > total / 2) return;
+
     const treeX = fullXScale(x) + fullMiddleX;
     const treeY = fullYScale(y) + fullMiddleY;
-    const scaledSize = 10 * item.scale[0];
+
+    const sizeNoise = 1 + (tileHash(Math.round(x), Math.round(y)) * 0.2 - 0.1);
+    const size = Math.max(3, 10 * item.scale[0] * sizeNoise);
+    const halfSize = size / 2;
 
     ctx.fillStyle = extras.trees;
-    ctx.fillRect(treeX, treeY, scaledSize, scaledSize);
+    ctx.fillRect(treeX - halfSize, treeY - halfSize, size, size);
   });
 
   return canvas;
@@ -734,14 +547,14 @@ function zipGameFile (outputPath) {
 };
 
 function readMapConfiguration() {
-  const rawData = fs.readFileSync(`../mapdata/mapConfiguration.json`);
+  const rawData = fs.readFileSync(`${__dirname}/../helpers/mapConfiguration.json`);
 
   return JSON.parse(rawData);
 };
 
 function writeMapConfiguration(mapConfig) {
   fs.writeFileSync(
-      `../mapdata/mapConfiguration.json`, JSON.stringify(mapConfig) , 'utf-8');
+      `${__dirname}/../helpers/mapConfiguration.json`, JSON.stringify(mapConfig) , 'utf-8');
 };
 
 function readGameData() {

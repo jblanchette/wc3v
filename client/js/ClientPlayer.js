@@ -47,6 +47,8 @@ const ClientPlayer = class {
     };
 
     this.currentGroup = null;
+    this.formationCache = new Map(); // uuid → focusUuid, persists across frames
+    this.lastFormationTime = 0;
     this.setupUnits(units);
 
     console.log("setup player: ", this);
@@ -498,37 +500,39 @@ const ClientPlayer = class {
     const owningPlayerId = this.playerId;
 
     const drawBoxes = unitDrawPositions.reduce((acc, item) => {
-      const { 
+      const {
         uuid,
-        x, 
+        x,
         y,
         icon,
-        iconSize, 
-        halfIconSize, 
-        fontSize, 
+        iconSize,
+        halfIconSize,
+        fontSize,
         heroRank,
         spawnTime,
         isHero,
         isMainHero,
-        fullName, 
-        decayLevel, 
+        fullName,
+        decayLevel,
         itemId,
         playerId,
         count,
         drawSlots,
-        isWorker
+        isWorker,
+        isNeutralPlayer
       } = item;
 
       if (decayLevel < 0.45 || playerId != owningPlayerId) {
         return acc;
       }
 
+      const groupPad = halfIconSize * 0.4;
       const unitBox = {
         uuid,
-        minX:     x - (halfIconSize),
-        maxX:     x + (halfIconSize),
-        minY:     y - (halfIconSize),
-        maxY:     y + (halfIconSize),
+        minX:     x - halfIconSize - groupPad,
+        maxX:     x + halfIconSize + groupPad,
+        minY:     y - halfIconSize - groupPad,
+        maxY:     y + halfIconSize + groupPad,
         drawX:    x,
         drawY:    y,
 
@@ -542,7 +546,9 @@ const ClientPlayer = class {
         itemId,
         heroRank,
         spawnTime,
-        isWorker
+        isWorker,
+        isNeutralPlayer,
+        decayLevel
       };
 
       acc.push(unitBox);
@@ -567,6 +573,13 @@ const ClientPlayer = class {
 
     const drawSlots = [];
     const alwaysDrawSlots = [];
+    const prevCache = this.formationCache;
+    const nextCache = new Map();
+
+    // reset cache on backward scrub
+    if (frameData.gameTime !== undefined && frameData.gameTime < this.lastFormationTime - 500) {
+      prevCache.clear();
+    }
 
     const addDrawSlotParent = (unitBox) => {
       drawSlots.push({
@@ -600,6 +613,11 @@ const ClientPlayer = class {
       addDrawSlotParent(unitBox);
     };
 
+    // find slot by focus UUID (for hysteresis)
+    const findSlotByFocus = (focusUuid) => {
+      return drawSlots.find(slot => slot.focusUnit.uuid === focusUuid);
+    };
+
     sortedDrawTree.forEach((unitBox, ind) => {
       const { isMainHero, isHero, isWorker } = unitBox;
       const collisions = unitTree.search(unitBox);
@@ -617,6 +635,18 @@ const ClientPlayer = class {
       }
 
       if (!collisions.length) {
+        // hysteresis: if this unit was in a formation last frame, try to stay
+        const prevFocus = prevCache.get(unitBox.uuid);
+        if (prevFocus) {
+          const cachedSlot = findSlotByFocus(prevFocus);
+          if (cachedSlot) {
+            cachedSlot.unitList.push(unitBox.uuid);
+            cachedSlot.spots.push(unitBox);
+            unitTree.insert(unitBox);
+            return;
+          }
+        }
+
         addDrawSlotParent(unitBox);
 
         return;
@@ -624,6 +654,20 @@ const ClientPlayer = class {
 
       findDrawSlotOrCreate(unitBox, collisions);
     });
+
+    // update formation cache for next frame
+    drawSlots.forEach(slot => {
+      const focusUuid = slot.focusUnit.uuid;
+      slot.unitList.forEach(uuid => {
+        if (uuid !== focusUuid) {
+          nextCache.set(uuid, focusUuid);
+        }
+      });
+    });
+    this.formationCache = nextCache;
+    if (frameData.gameTime !== undefined) {
+      this.lastFormationTime = frameData.gameTime;
+    }
 
 
     const spotOffset = [ -2, -1, 0, 1, 2 ];
@@ -634,129 +678,237 @@ const ClientPlayer = class {
 
       Drawing.drawUnit(ctx, focusUnit);
 
-      if (spots.length) {
-        // const drawX = focusUnit.drawX - (focusUnit.halfIconSize * 4);
-        // const drawY = focusUnit.drawY + focusUnit.iconSize;
+      // separate hero spots from unit spots
+      const heroSpots = [];
+      const unitSpots = [];
+      spots.forEach(s => (s.isHero ? heroSpots : unitSpots).push(s));
 
-        // ctx.fillStyle = "#CCC";
-        // ctx.fillRect(drawX, drawY, focusUnit.iconSize * 4, focusUnit.iconSize * 2);
-      }
+      // draw hero spots (side-by-side, no flip)
+      let hasHeroSpot = false;
+      heroSpots.forEach(spotUnit => {
+        const drawSide = hasHeroSpot ? -1 : 1;
+        spotUnit.drawX = focusUnit.drawX - (focusUnit.iconSize * drawSide);
+        hasHeroSpot = true;
 
+        const udpEntry = unitDrawPositions.find(u => u.uuid === spotUnit.uuid);
+        if (udpEntry) { udpEntry.x = spotUnit.drawX; udpEntry.y = spotUnit.drawY; }
+
+        Drawing.drawUnit(ctx, spotUnit);
+      });
+
+      if (!unitSpots.length) return;
+
+      // compute default below positions
+      const iconBufferSize = focusUnit.halfIconSize * 1.25;
       let spotCol = 0;
       let spotRow = 0;
 
-      let hasHeroSpot = false;
-
-      spots.forEach((spotUnit, ind) => {
-        if (spotUnit.isHero) {
-          const drawSide = hasHeroSpot ? -1 : 1;
-          spotUnit.drawX = focusUnit.drawX - (focusUnit.iconSize * drawSide);
-
-          hasHeroSpot = true;
-
-          Drawing.drawUnit(ctx, spotUnit);
-          return;
-        }
-
-        const iconBufferSize = focusUnit.halfIconSize * 1.25;
-
+      unitSpots.forEach(spotUnit => {
         spotUnit.drawY = focusUnit.drawY + (focusUnit.iconSize + (spotUnit.iconSize * spotCol));
         spotUnit.drawX = focusUnit.drawX + (iconBufferSize * spotOffset[spotRow]);
-
-        Drawing.drawUnit(ctx, spotUnit);
-
         spotRow++;
-        if (spotRow > spotOffset.length) {
-          spotRow = 0;
-          spotCol++;
-        }
+        if (spotRow > spotOffset.length) { spotRow = 0; spotCol++; }
+      });
+
+      // check if formation below overlaps any other-player unit icons
+      const formMinX = Math.min(...unitSpots.map(s => s.drawX - s.halfIconSize));
+      const formMaxX = Math.max(...unitSpots.map(s => s.drawX + s.halfIconSize));
+      const formMinY = Math.min(...unitSpots.map(s => s.drawY - s.halfIconSize));
+      const formMaxY = Math.max(...unitSpots.map(s => s.drawY + s.halfIconSize));
+
+      const enemyOverlap = unitDrawPositions.some(u => {
+        if (u.playerId == owningPlayerId || u.isNeutralPlayer) return false;
+        const half = u.iconSize / 2;
+        return u.x + half > formMinX && u.x - half < formMaxX &&
+               u.y + half > formMinY && u.y - half < formMaxY;
+      });
+
+      // flip formation above hero if enemies below
+      if (enemyOverlap) {
+        spotCol = 0;
+        spotRow = 0;
+        unitSpots.forEach(spotUnit => {
+          spotUnit.drawY = focusUnit.drawY - (focusUnit.iconSize + (spotUnit.iconSize * spotCol));
+          spotUnit.drawX = focusUnit.drawX + (iconBufferSize * spotOffset[spotRow]);
+          spotRow++;
+          if (spotRow > spotOffset.length) { spotRow = 0; spotCol++; }
+        });
+      }
+
+      // draw and sync positions
+      unitSpots.forEach(spotUnit => {
+        const udpEntry = unitDrawPositions.find(u => u.uuid === spotUnit.uuid);
+        if (udpEntry) { udpEntry.x = spotUnit.drawX; udpEntry.y = spotUnit.drawY; }
+        Drawing.drawUnit(ctx, spotUnit);
       });
     });
 
-    // always draw any unit in this list
+    // always draw any unit in this list (neutrals fade when player units overlap)
     alwaysDrawSlots.forEach(unitBox => {
+      if (unitBox.isNeutralPlayer) {
+        const halfIcon = unitBox.iconSize / 2;
+        const overlapped = unitDrawPositions.some(u =>
+          !u.isNeutralPlayer &&
+          Math.abs(u.x - unitBox.drawX) < halfIcon + u.iconSize / 2 &&
+          Math.abs(u.y - unitBox.drawY) < halfIcon + u.iconSize / 2
+        );
+        if (overlapped) {
+          const saved = unitBox.decayLevel;
+          unitBox.decayLevel = 0.12;
+          Drawing.drawUnit(ctx, unitBox);
+          unitBox.decayLevel = saved;
+          return;
+        }
+      }
       Drawing.drawUnit(ctx, unitBox);
     });
   }
 
-  renderNameplates (frameData, ctx) {
-    const { nameplateTree, unitDrawPositions } = frameData;
-    
-    const nameplateBoxes = unitDrawPositions.reduce((acc, item) => {
-      const { x, y, iconSize, fontSize, isHero, fullName, decayLevel, count } = item;
+  static buildNameplateBoxes (frameData, ctx) {
+    const { unitDrawPositions } = frameData;
 
-      // don't draw decayed unit nameplates
+    return unitDrawPositions.reduce((acc, item) => {
+      const { x, y, iconSize, fontSize, isHero, heroRank, fullName, decayLevel, count, isNeutralPlayer } = item;
+
+      // skip neutral unit nameplates when player units overlap them
+      if (isNeutralPlayer) {
+        const overlapped = unitDrawPositions.some(u =>
+          !u.isNeutralPlayer &&
+          Math.abs(u.x - x) < iconSize / 2 + u.iconSize / 2 &&
+          Math.abs(u.y - y) < iconSize / 2 + u.iconSize / 2
+        );
+        if (overlapped) return acc;
+      }
+
       if (decayLevel < 0.65) {
         return acc;
       }
 
-      ctx.font = `${Math.ceil(fontSize)}px Arial`;
+      ctx.font = `bold ${Math.ceil(fontSize)}px Arial`;
       ctx.textAlign = 'center';
 
       const nameStr = count === 1 ? fullName : `${fullName} [${count}]`;
-      const textMetrics = ctx.measureText(nameStr);
+      const textWidth = ctx.measureText(nameStr).width;
+      const halfWidth = textWidth / 2;
+      const drawY = y - iconSize;
 
-      const { actualBoundingBoxLeft, width } = textMetrics;
-      const drawY = (y - iconSize);
+      const priority = isHero ? (100 - (heroRank || 0)) : 0;
 
-      const nameBox = {
-        minX:     (x - actualBoundingBoxLeft),
-        maxX:     (x - actualBoundingBoxLeft) + width,
-        minY:     drawY - (iconSize / 2),
+      acc.push({
+        minX:     x - halfWidth,
+        maxX:     x + halfWidth,
+        minY:     drawY - fontSize,
         maxY:     drawY,
         drawX:    x,
         drawY:    drawY,
+        baseY:    y,
         nameStr:  nameStr,
         fontSize: fontSize,
         iconSize: iconSize,
         isHero:   isHero,
+        priority: priority,
         count:    count
-      };
+      });
 
-      acc.push(nameBox);
       return acc;
     }, []);
+  }
 
-    // bulk load our nameplate boxes
-    nameplateTree.load(nameplateBoxes);
+  static renderAllNameplates (frameData, ctx) {
+    const { nameplateTree, unitDrawPositions } = frameData;
 
-    ////
-    // heroes are drawn first, 
-    // check nameplate collisions last
-    ////
-
-    const treeItems = nameplateTree.all().reverse();
-
-    treeItems.forEach(nameBox => {
-      const { 
-        drawX, 
-        drawY, 
-        minX, 
-        minY, 
-        maxX, 
-        maxY, 
-        nameStr,
-        iconSize,
-        fontSize 
-      } = nameBox;
-
-      const textPadding = 2;
-
-      const searchBox = {
-        minX,
-        minY: drawY - fontSize,
-        maxX,
-        maxY
+    // insert unit icon bounds as obstacles so nameplates avoid other units' icons
+    const obstacles = unitDrawPositions.map(item => {
+      const halfIcon = item.iconSize / 2;
+      return {
+        minX: item.x - halfIcon,
+        maxX: item.x + halfIcon,
+        minY: item.y - halfIcon,
+        maxY: item.y + halfIcon,
+        isObstacle: true,
+        ownerX: item.x,
+        ownerY: item.y
       };
+    });
 
-      const collisions = nameplateTree.search(searchBox);
-      if (collisions.length > 1) {
-        return;
+    const allBoxes = frameData.allNameplateBoxes || [];
+    allBoxes.sort((a, b) => b.priority - a.priority);
+
+    nameplateTree.load(obstacles);
+
+    // helper: check for real collisions (ignoring this unit's own icon obstacle)
+    const hasRealCollision = (box, ownerX, ownerY) => {
+      const hits = nameplateTree.search(box);
+      return hits.some(h => !(h.isObstacle && h.ownerX === ownerX && h.ownerY === ownerY));
+    };
+
+    allBoxes.forEach(nameBox => {
+      const { drawX, baseY, nameStr, iconSize, fontSize, isHero } = nameBox;
+      let { minX, maxX, minY, maxY, drawY } = nameBox;
+
+      const collisionAbove = hasRealCollision({ minX, minY, maxX, maxY }, drawX, baseY);
+
+      let bgAlpha = isHero ? 0.7 : 0.5;
+      let textAlpha = 1;
+
+      if (collisionAbove) {
+        // try below the unit instead
+        const belowY = baseY + iconSize / 2 + fontSize + 4;
+        const belowBox = { minX, maxX, minY: belowY - fontSize, maxY: belowY };
+        const collisionBelow = hasRealCollision(belowBox, drawX, baseY);
+
+        if (!collisionBelow) {
+          drawY = belowY;
+          minY = belowY - fontSize;
+          maxY = belowY;
+        } else if (isHero) {
+          bgAlpha = 0.3;
+          textAlpha = 0.4;
+        } else {
+          return; // non-hero, both blocked — skip
+        }
       }
 
-      Drawing.drawCenteredText (
-        ctx, drawX, drawY, nameStr, fontSize, this.playerColor);
+      // register this nameplate in the tree so later ones see it
+      const placedBox = { minX, minY, maxY, maxX };
+      nameplateTree.insert(placedBox);
+
+      // draw rounded background
+      const padX = 4;
+      const padY = 2;
+      const textW = maxX - minX;
+      const textH = fontSize;
+      const bgX = drawX - (textW / 2) - padX;
+      const bgY = drawY - textH - padY;
+      const bgW = textW + padX * 2;
+      const bgH = textH + padY * 2;
+      const radius = 3;
+
+      ctx.globalAlpha = bgAlpha;
+      ctx.fillStyle = '#111';
+      ctx.beginPath();
+      ctx.moveTo(bgX + radius, bgY);
+      ctx.lineTo(bgX + bgW - radius, bgY);
+      ctx.quadraticCurveTo(bgX + bgW, bgY, bgX + bgW, bgY + radius);
+      ctx.lineTo(bgX + bgW, bgY + bgH - radius);
+      ctx.quadraticCurveTo(bgX + bgW, bgY + bgH, bgX + bgW - radius, bgY + bgH);
+      ctx.lineTo(bgX + radius, bgY + bgH);
+      ctx.quadraticCurveTo(bgX, bgY + bgH, bgX, bgY + bgH - radius);
+      ctx.lineTo(bgX, bgY + radius);
+      ctx.quadraticCurveTo(bgX, bgY, bgX + radius, bgY);
+      ctx.closePath();
+      ctx.fill();
+
+      // text
+      ctx.globalAlpha = textAlpha;
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${Math.ceil(fontSize)}px Arial`;
+      ctx.fillStyle = '#FFF';
+      ctx.fillText(nameStr, drawX, drawY);
+      ctx.textAlign = 'left';
     });
+
+    ctx.globalAlpha = 1;
   }
 
   preRender (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
@@ -783,18 +935,16 @@ const ClientPlayer = class {
     // render optional details
     ////
 
-    if (viewOptions.displayText) {
-      this.renderNameplates(frameData, playerCtx);
-    }
+    // nameplates rendered globally in app.js after all players
 
     if (viewOptions.displayPath) {
       this.heroes.forEach(hero => 
         hero.renderPath(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
     }
 
-    if (viewOptions.displayLeveLDots) {
-      this.heroes.forEach(hero => 
-        hero.renderLevelDots(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
+    if (viewOptions.displayLevelPins) {
+      this.heroes.forEach(hero =>
+        hero.renderLevelPins(utilityCtx, transform, gameTime, xScale, yScale, viewOptions, frameData));
     }
   }
 }

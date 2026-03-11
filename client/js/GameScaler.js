@@ -74,28 +74,38 @@ const GameScaler = class {
     const mapRangeY = Math.abs(this.mapExtent.y[1] - this.mapExtent.y[0]);
     this.pxPerUnit = this.fullMapImage.width / mapRangeX;
 
-    // the playable area is defined by the playable tile count, centered in the full map
-    // this is separate from camera bounds (which define where the camera center can scroll)
-    const mapCenterX = (this.mapExtent.x[0] + this.mapExtent.x[1]) / 2;
-    const mapCenterY = (this.mapExtent.y[0] + this.mapExtent.y[1]) / 2;
-    const playableUnitsX = playable[0] * 128;
-    const playableUnitsY = playable[1] * 128;
+    // playable area bounds — use margins (boundary tile counts per side) when available,
+    // fall back to centered assumption for backward compatibility
+    const margins = gridSize.margins;  // [left, right, bottom, top] in tiles
+    let playableBounds;
 
-    const playableBounds = {
-      x: [ mapCenterX - playableUnitsX / 2, mapCenterX + playableUnitsX / 2 ],
-      y: [ mapCenterY + playableUnitsY / 2, mapCenterY - playableUnitsY / 2 ]  // Y: top is positive
-    };
+    if (margins) {
+      playableBounds = {
+        x: [ this.mapExtent.x[0] + margins[0] * 128,
+             this.mapExtent.x[1] - margins[1] * 128 ],
+        y: [ this.mapExtent.y[0] - margins[3] * 128,    // top = mapTop - topMargin*128
+             this.mapExtent.y[1] + margins[2] * 128 ]    // bottom = mapBottom + bottomMargin*128
+      };
+    } else {
+      const mapCenterX = (this.mapExtent.x[0] + this.mapExtent.x[1]) / 2;
+      const mapCenterY = (this.mapExtent.y[0] + this.mapExtent.y[1]) / 2;
+      const playableUnitsX = playable[0] * 128;
+      const playableUnitsY = playable[1] * 128;
+      playableBounds = {
+        x: [ mapCenterX - playableUnitsX / 2, mapCenterX + playableUnitsX / 2 ],
+        y: [ mapCenterY + playableUnitsY / 2, mapCenterY - playableUnitsY / 2 ]
+      };
+    }
 
-    // viewport extent = union of playable area and camera bounds
-    // camera can extend beyond playable in some axes, playable extends beyond camera in others
+    // viewport = playable area clamped to map extent
     this.viewExtent = {
       x: [
-        Math.max(Math.min(playableBounds.x[0], this.cameraExtent.x[0]), this.mapExtent.x[0]),
-        Math.min(Math.max(playableBounds.x[1], this.cameraExtent.x[1]), this.mapExtent.x[1])
+        Math.max(playableBounds.x[0], this.mapExtent.x[0]),
+        Math.min(playableBounds.x[1], this.mapExtent.x[1])
       ],
       y: [
-        Math.min(Math.max(playableBounds.y[0], this.cameraExtent.y[0]), this.mapExtent.y[0]),
-        Math.max(Math.min(playableBounds.y[1], this.cameraExtent.y[1]), this.mapExtent.y[1])
+        Math.min(playableBounds.y[0], this.mapExtent.y[0]),
+        Math.max(playableBounds.y[1], this.mapExtent.y[1])
       ]
     };
 

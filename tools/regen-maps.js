@@ -238,16 +238,30 @@ function drawBackgroundMap(output, wpm, doo, terrainFile) {
 
   // --- Pass 1: Paint ground from W3E terrain grid (coarse, solid color blocks) ---
   // Each W3E tile covers ~4x4 WPM tiles, so blocks are 4*tileSize pixels = solid regions
-  const terrainRows = tileGrid.length;
-  const terrainCols = tileGrid[0] ? tileGrid[0].length : 0;
+  const terrainRows = tileGrid.length;      // height+1 vertices
+  const terrainCols = tileGrid[0] ? tileGrid[0].length : 0;  // width+1 vertices
+  const terrainCellRows = terrainRows - 1;  // actual cell count
+  const terrainCellCols = terrainCols - 1;
   const wpmRows = grid.length;
   const wpmCols = grid[0] ? grid[0].length : 0;
-  const terrainBlockW = (wpmCols * tileSize) / terrainCols;
-  const terrainBlockH = (wpmRows * tileSize) / terrainRows;
+  const terrainBlockW = (wpmCols * tileSize) / terrainCellCols;
+  const terrainBlockH = (wpmRows * tileSize) / terrainCellRows;
 
-  for (let row = 0; row < terrainRows; row++) {
-    const drawY = (terrainRows - 1 - row) * terrainBlockH;
-    for (let col = 0; col < terrainCols; col++) {
+  // Boundary margins: skip painting terrain for tiles outside the playable area
+  // W3E rows are bottom-to-top (row 0 = bottom), margins are [left, right, bottom, top]
+  const margins = output.info.gridSize.margins;
+  const { playable, full } = output.info.gridSize;
+  const marginBottom = margins ? margins[2] : Math.floor((full[1] - playable[1]) / 2);
+  const marginTop = margins ? margins[3] : Math.ceil((full[1] - playable[1]) / 2);
+  const marginLeft = margins ? margins[0] : Math.floor((full[0] - playable[0]) / 2);
+  const marginRight = margins ? margins[1] : Math.ceil((full[0] - playable[0]) / 2);
+
+  for (let row = 0; row < terrainCellRows; row++) {
+    // Skip boundary rows (W3E row 0 = bottom, so marginBottom skips first rows)
+    if (row < marginBottom || row >= terrainCellRows - marginTop) continue;
+    const drawY = (terrainCellRows - 1 - row) * terrainBlockH;
+    for (let col = 0; col < terrainCellCols; col++) {
+      if (col < marginLeft || col >= terrainCellCols - marginRight) continue;
       const tile = tileGrid[row][col];
       const rgb = (tile && paletteColorCache[tile.paletteIndex]) || [74, 104, 56];
       ctx.fillStyle = rgbToHex(rgb[0], rgb[1], rgb[2]);
@@ -376,6 +390,10 @@ function regenMap(mapName, dryRun) {
 
   const output = { ...infoFile };
   output.info.gridSize.full = [terrainFile.map.width, terrainFile.map.height];
+  // margins from W3I camera complements (now saved by INFOFile parser)
+  if (infoFile.info.gridSize.margins) {
+    output.info.gridSize.margins = infoFile.info.gridSize.margins;
+  }
   output.info.bounds.map = [
     [terrainFile.map.offset.x, terrainFile.map.offset.x + (terrainFile.map.width * 128)],
     [terrainFile.map.offset.y + (terrainFile.map.height * 128), terrainFile.map.offset.y]

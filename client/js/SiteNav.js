@@ -24,26 +24,17 @@ const SiteNav = {
 
     // Back-to-builds link for viewer pages with buildId
     let leftHtml = '';
-    if (!isHome && document.getElementById('app')) {
+    if (isHome) {
+      leftHtml = `
+        <div class="site-nav-search-wrap">
+          <input type="text" id="build-search" class="site-nav-search"
+                 placeholder="Search builds" autocomplete="off" spellcheck="false" />
+        </div>`;
+    } else if (document.getElementById('app')) {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('buildId')) {
         leftHtml = `<a class="site-nav-back" href="/">← Builds</a>`;
       }
-    }
-
-    // Right-side content depends on page
-    let rightHtml = '';
-    if (isHome) {
-      rightHtml = `
-        <span class="site-nav-tagline">Warcraft III Build Orders</span>
-        <span class="site-nav-patch">Patch 1.36.1</span>`;
-    } else if (document.getElementById('app')) {
-      rightHtml = `
-        <div id="mode-switcher">
-          <div id="mode-default" class="mode-btn selected" onClick="wc3v.setLayoutMode('default')">Default</div>
-          <div id="mode-build" class="mode-btn" onClick="wc3v.setLayoutMode('build')">Build Only</div>
-          <div id="mode-replay" class="mode-btn" onClick="wc3v.setLayoutMode('replay')">Replay Only</div>
-        </div>`;
     }
 
     nav.innerHTML = `
@@ -52,8 +43,6 @@ const SiteNav = {
           <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
         </a>
         ${leftHtml}
-        <div class="site-nav-spacer"></div>
-        ${rightHtml}
       </div>
     `;
 

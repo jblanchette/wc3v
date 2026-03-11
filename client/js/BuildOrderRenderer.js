@@ -126,6 +126,7 @@ const BuildOrderRenderer = class {
     const renderers = {
       heroTraining:  (event, pc) => this.renderHeroTrainingCard(event, pc),
       heroLevel:     (event, pc) => this.renderHeroLevelCard(event, pc),
+      tierUpgrade:   (event)     => this.renderTierUpgradeCard(event),
       expansion:     (event)     => this.renderExpansionCard(event),
       attackUpgrade: (event)     => this.renderUpgradeCard(event),
       defenseUpgrade:(event)     => this.renderUpgradeCard(event),
@@ -191,25 +192,11 @@ const BuildOrderRenderer = class {
         const tierSection = document.createElement('div');
         tierSection.classList.add('bo-tier-section', `tier-${tierNum}`);
 
-        // Skip TIER 1 header — everyone starts at tier 1, it's not useful
-        if (tierNum > 1) {
-          tierSection.append(this.renderTierHeader(tierNum, tierData));
-        }
-
-        // Tier upgrade bar (for tier 2/3)
-        if (tierNum > 1) {
-          const upgradeEvent = tierData.events.find(e => e.type === 'tierUpgrade');
-          if (upgradeEvent) {
-            const bar = this.renderUpgradeBar(upgradeEvent);
-            bar.dataset.gametime = upgradeEvent.gameTime;
-            if (liveMode) bar.addEventListener('click', () => this.viewer.seekToGameTime(upgradeEvent.gameTime));
-            tierSection.append(bar);
-          }
-        }
+        // Tier headers removed — tier transitions are shown via inline
+        // tierUpgrade (start) and tierComplete (finish + summary) cards
 
         // Events — dispatched by type
         tierData.events.forEach(event => {
-          if (event.type === 'tierUpgrade') return;
 
           const isCard = event.type === 'heroLevel' || event.type === 'heroTraining';
 
@@ -226,7 +213,10 @@ const BuildOrderRenderer = class {
             : null;
 
           let el;
-          if (event.type === 'workerAssign' || event.type === 'building' || event.type === 'unit' || event.type === 'supplyComplete' || event.type === 'heroComplete') {
+          if (event.type === 'tierComplete') {
+            const snap = snapshots[event.tierTarget];
+            el = this.renderTierCompleteCard(event, snap);
+          } else if (event.type === 'workerAssign' || event.type === 'building' || event.type === 'unit' || event.type === 'supplyComplete' || event.type === 'heroComplete') {
             el = this.renderBoRow(event, race, workerDots, supply, tierNum, seenUnitTypes);
           } else {
             const renderer = renderers[event.type];
@@ -239,12 +229,10 @@ const BuildOrderRenderer = class {
           tierSection.append(el);
         });
 
-        // Army summary at tier end
-        const snap = snapshots[tierNum + 1] || (tierNum === 3 ? finalSnapshot : null);
-        if (snap) {
-          const isFinal = tierNum === 3 || !snapshots[tierNum + 1];
-          const summaryLabel = isFinal ? 'Final Composition' : `Tier ${tierNum} Summary`;
-          const summary = this.renderArmySummary(snap, summaryLabel);
+        // Final composition summary at end of tier 3 only
+        // (tier 1/2 summaries are now shown inline via tierComplete events)
+        if (tierNum === 3 && finalSnapshot) {
+          const summary = this.renderArmySummary(finalSnapshot, 'Final Composition');
           tierSection.append(summary);
           lastArmySummary = summary;
         }
@@ -312,16 +300,45 @@ const BuildOrderRenderer = class {
     return header;
   }
 
-  // --- Upgrade bar (tier 2/3 transition) ---
-  renderUpgradeBar (event) {
-    const bar = document.createElement('div');
-    bar.classList.add('bo-upgrade-bar', `tier-${event.tierTarget}`);
-    const costStr = this.buildInlineCost(event);
+  // --- Tier upgrade card (inline in build order timeline) ---
+  renderTierUpgradeCard (event) {
+    const card = document.createElement('div');
+    card.classList.add('bo-row', 'bo-tier-upgrade-card', `tier-${event.tierTarget}`);
 
-    bar.innerHTML = `
-      <img class="bo-upgrade-icon" src="/assets/wc3icons/${event.itemId}.jpg" />
-      UPGRADE TO TIER ${event.tierTarget} ${costStr}`;
-    return bar;
+    const gold = event.goldCost || 0;
+    const lumber = event.lumberCost || 0;
+    const gLine = gold ? `<span class="bo-cost-gold">${gold}</span>` : '';
+    const lLine = lumber ? `<span class="bo-cost-lumber">${lumber}</span>` : '';
+    const costHtml = `<div class="bo-row-cost">${gLine}${lLine}</div>`;
+
+    card.innerHTML = `
+      <div class="bo-row-desc">
+        <img class="bo-row-icon" src="/assets/wc3icons/${event.itemId}.jpg" />
+        <span class="bo-row-text">Upgrade to Tier ${event.tierTarget} started</span>
+      </div>${costHtml}`;
+    return card;
+  }
+
+  // --- Tier complete card (upgrade finished, now on new tier) ---
+  renderTierCompleteCard (event, snapshot) {
+    const card = document.createElement('div');
+    card.classList.add('bo-tier-complete-card', `tier-${event.tierTarget}`);
+    const timeStr = formatGameTime(event.gameTime);
+
+    card.innerHTML = `
+      <div class="bo-tier-complete-header">
+        <img class="bo-tier-complete-icon" src="/assets/wc3icons/${event.itemId}.jpg" />
+        <span class="bo-tier-complete-label">TIER ${event.tierTarget} COMPLETE</span>
+        <span class="bo-tier-complete-time">${timeStr}</span>
+      </div>`;
+
+    // Append army summary snapshot if available
+    if (snapshot) {
+      const summary = this.renderArmySummary(snapshot, `Tier ${event.tierTarget} Summary`);
+      card.append(summary);
+    }
+
+    return card;
   }
 
   // --- Expansion Made bar (second town hall / haunt placed at a new gold mine) ---
@@ -431,14 +448,16 @@ const BuildOrderRenderer = class {
     }
 
     card.innerHTML = `
-      <span class="bo-hero-card-badge ${badgeClass}" ${badgeBg}>${badgeText}</span>
+      <div class="bo-hero-card-left">
+        <span class="bo-hero-card-badge ${badgeClass}" ${badgeBg}>${badgeText}</span>
+        ${costHtml}
+      </div>
       <img class="bo-hero-portrait" src="/assets/wc3icons/${event.itemId}.jpg"
         style="border-color:${playerColor}" />
       <div class="bo-hero-card-info">
         <span class="bo-hero-card-name">${event.displayName}</span>
         ${skillsHtml}
-      </div>
-      ${costHtml}`;
+      </div>`;
     return card;
   }
 
@@ -644,14 +663,19 @@ const BuildOrderRenderer = class {
     // Upgrades section
     let upgradesHtml = '';
     const upgrades = snapshot.upgrades;
-    if (upgrades && (upgrades.attack || upgrades.defense || upgrades.researched.length)) {
+    const hasAtk = upgrades && Object.keys(upgrades.attack).length > 0;
+    const hasDef = upgrades && Object.keys(upgrades.defense).length > 0;
+    const hasRes = upgrades && upgrades.researched.length > 0;
+    if (hasAtk || hasDef || hasRes) {
       let upgradeItems = '';
-      if (upgrades.attack) {
-        upgradeItems += `<span class="bo-summary-upgrade atk"><span class="bo-upgrade-badge atk">ATK ${upgrades.attack}</span></span>`;
-      }
-      if (upgrades.defense) {
-        upgradeItems += `<span class="bo-summary-upgrade def"><span class="bo-upgrade-badge def">DEF ${upgrades.defense}</span></span>`;
-      }
+      Object.values(upgrades.attack).forEach(upg => {
+        const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
+        upgradeItems += `<span class="bo-summary-upgrade atk"><img class="bo-summary-icon" src="${iconSrc}" title="${upg.displayName} ${upg.level}" onerror="this.style.display='none'" /><span class="bo-upgrade-badge atk">${upg.level}</span></span>`;
+      });
+      Object.values(upgrades.defense).forEach(upg => {
+        const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
+        upgradeItems += `<span class="bo-summary-upgrade def"><img class="bo-summary-icon" src="${iconSrc}" title="${upg.displayName} ${upg.level}" onerror="this.style.display='none'" /><span class="bo-upgrade-badge def">${upg.level}</span></span>`;
+      });
       upgrades.researched.forEach(r => {
         const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
         const lvl = r.level > 1 ? ` ${r.level}` : '';

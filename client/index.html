@@ -146,71 +146,140 @@
     function unitFull(id)  { return (UNIT_NAMES[id] || ['', ''])[0]; }
     function unitShort(id) { return (UNIT_NAMES[id] || ['', ''])[1]; }
 
-    // ─── Tier strip renderer ──────────────────────────────────
-    function renderTierStrip(build) {
-      const tp = build.tierProgression;
-      const heroIds = build.heroItemIds || (build.heroItemId ? [build.heroItemId] : []);
-      if (!tp && !heroIds.length) return '';
+    // ─── Unit combat types (mirrors Constants.js ATTACK_TYPES / ARMOR_TYPES) ──
+    const ATTACK_TYPES = {
+      normal: { label: 'Normal',  icon: '/assets/wc3icons/atk-normal.jpg' },
+      pierce: { label: 'Pierce',  icon: '/assets/wc3icons/atk-pierce.jpg' },
+      siege:  { label: 'Siege',   icon: '/assets/wc3icons/atk-siege.jpg' },
+      magic:  { label: 'Magic',   icon: '/assets/wc3icons/atk-magic.svg' },
+      chaos:  { label: 'Chaos',   icon: '/assets/wc3icons/atk-chaos.jpg' },
+    };
+    const ARMOR_TYPES = {
+      large:  { label: 'Heavy',     icon: '/assets/wc3icons/def-heavy.jpg' },
+      medium: { label: 'Medium',    icon: '/assets/wc3icons/def-medium.jpg' },
+      small:  { label: 'Light',     icon: '/assets/wc3icons/def-light.jpg' },
+      none:   { label: 'Unarmored', icon: '/assets/wc3icons/def-unarmored.jpg' },
+    };
 
-      const tiers = ['t1', 't2', 't3'];
-      const tierData = tiers.map((key, i) => {
-        const tier = tp ? tp[key] : null;
-        const hero = heroIds[i] || null;
-        const units = (tier && tier.units) ? tier.units.slice(0, 2) : [];
-        const timing = (tier && tier.timing) ? tier.timing : '';
-        return { key, hero, units, timing };
-      });
+    // Attack/armor type per unit itemId
+    const UNIT_COMBAT = {
+      // Undead
+      'ucry': { atk: 'pierce', def: 'medium' }, 'uobs': { atk: null,    def: 'large' },
+      'ubsp': { atk: 'magic',  def: 'small' },  'ugar': { atk: 'pierce', def: 'none' },
+      'ugho': { atk: 'normal', def: 'medium' },  'ufro': { atk: 'magic',  def: 'small' },
+      // Human
+      'hfoo': { atk: 'normal', def: 'large' },  'hkni': { atk: 'normal', def: 'large' },
+      'hrif': { atk: 'pierce', def: 'medium' }, 'hmpr': { atk: 'magic',  def: 'none' },
+      'hspt': { atk: 'normal', def: 'medium' }, 'hdhw': { atk: 'pierce', def: 'small' },
+      'hgry': { atk: 'magic',  def: 'small' },  'hsor': { atk: 'magic',  def: 'none' },
+      // Orc
+      'ogru': { atk: 'normal', def: 'large' },  'orai': { atk: 'pierce', def: 'medium' },
+      'oshm': { atk: 'magic',  def: 'none' },   'otau': { atk: 'normal', def: 'large' },
+      'otbr': { atk: 'pierce', def: 'small' },  'ohun': { atk: 'pierce', def: 'medium' },
+      'okod': { atk: null,     def: 'none' },    'owyv': { atk: 'pierce', def: 'small' },
+      'ospm': { atk: 'magic',  def: 'none' },
+      // Night Elf
+      'earc': { atk: 'pierce', def: 'medium' }, 'edoc': { atk: 'normal', def: 'large' },
+      'edot': { atk: 'magic',  def: 'none' },   'edry': { atk: 'pierce', def: 'none' },
+      'emtg': { atk: 'normal', def: 'large' },  'esen': { atk: 'normal', def: 'medium' },
+      'ehpr': { atk: 'pierce', def: 'none' },   'echm': { atk: 'magic',  def: 'small' },
+    };
 
-      // Skip tiers that have nothing
-      const activeTiers = tierData.filter(t => t.hero || t.units.length);
-      if (!activeTiers.length) return '';
+    // Expansion building IDs per race
+    const EXPO_BUILDINGS = { 'H': 'htow', 'O': 'ogre', 'E': 'etol', 'U': 'ugol' };
 
-      const tierHtml = activeTiers.map(t => {
-        const label = t.key.toUpperCase();
-
-        // Hero slot (alone on top line)
-        let heroHtml = '';
-        if (t.hero) {
-          heroHtml = `<div class="site-card-tier-slot">
-            <img class="site-card-tier-hero" src="/assets/wc3icons/${t.hero}.jpg"
-                 alt="" title="${unitFull(t.hero)}" loading="lazy" />
-            <span class="site-card-tier-name">${unitShort(t.hero)}</span>
-          </div>`;
-        }
-
-        // Units row (separate line below hero)
-        let unitsHtml = '';
-        if (t.units.length) {
-          const unitSlots = t.units.map(id =>
-            `<div class="site-card-tier-slot">
-              <img class="site-card-tier-unit" src="/assets/wc3icons/${id}.jpg"
-                   alt="" title="${unitFull(id)}" loading="lazy" />
-              <span class="site-card-tier-name">${unitShort(id)}</span>
-            </div>`
-          ).join('');
-          unitsHtml = `<div class="site-card-tier-units">${unitSlots}</div>`;
-        }
-
-        const timingHtml = t.timing
-          ? `<span class="site-card-tier-timing">~${t.timing.split('-')[0]}</span>`
-          : '';
-
-        return `<div class="site-card-tier ${t.key}">
-          <span class="site-card-tier-label">${label}</span>
-          <div class="site-card-tier-icons">
-            ${heroHtml}
-            ${unitsHtml}
-          </div>
-          ${timingHtml}
-        </div>`;
-      }).join('');
-
-      return `<div class="site-card-tiers">${tierHtml}</div>`;
-    }
-
-    // ─── Card renderer ──────────────────────────────────────
+    // ─── Card renderer — mirrors MatchHeader.renderPlayerCard ──
     function buildCard(build) {
       const rc = raceColor(build.race);
+      const rAbbr = raceAbbr(build.race);
+      const tp = build.tierProgression;
+      const heroIds = build.heroItemIds || (build.heroItemId ? [build.heroItemId] : []);
+
+      // Max tier from tierProgression
+      const maxTier = (tp && tp.t3) ? 3 : (tp && tp.t2) ? 2 : 1;
+
+      // Expansion detection from tierProgression buildings
+      const expoBid = EXPO_BUILDINGS[build.race];
+      let hasExpansion = false;
+      if (tp && expoBid) {
+        ['t1','t2','t3'].forEach(k => {
+          if (tp[k] && tp[k].buildings && tp[k].buildings.includes(expoBid)) hasExpansion = true;
+        });
+      }
+
+      // Collect all unique units across tiers for ATK/DEF types
+      const allUnitIds = new Set();
+      if (tp) {
+        ['t1','t2','t3'].forEach(k => {
+          if (tp[k] && tp[k].units) tp[k].units.forEach(id => allUnitIds.add(id));
+        });
+      }
+      (build.keyUnits || []).forEach(id => allUnitIds.add(id));
+
+      // ── Build the .mh-player inner card (same structure as viewer) ──
+      let mhHtml = '';
+
+      // 1. Player name row → race icon chip + build name
+      const iconId = raceIcon(build.race);
+      mhHtml += `<div class="mh-player-name">
+        <img class="mh-race-icon" src="/assets/wc3icons/${iconId}.jpg"
+             alt="${raceLabel(build.race)}" />
+        <span class="mh-build-label">${build.name}</span>
+      </div>`;
+
+      // 2. Heroes — portraits (no spells/levels in static data)
+      if (heroIds.length) {
+        const heroItems = heroIds.map(id =>
+          `<div class="mh-hero">
+            <div class="mh-hero-portrait-wrap">
+              <img class="mh-hero-portrait" src="/assets/wc3icons/${id}.jpg"
+                   title="${unitFull(id)}" loading="lazy" onerror="this.style.display='none'" />
+            </div>
+          </div>`
+        ).join('');
+        mhHtml += `<div class="mh-heroes">${heroItems}</div>`;
+      }
+
+      // 3. Status row: expansion marker + max tier badge
+      const expoHtml = hasExpansion
+        ? `<div class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</div>`
+        : `<div class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</div>`;
+      mhHtml += `<div class="mh-status-row"><span class="mh-tier-max t${maxTier}">T${maxTier}</span>${expoHtml}</div>`;
+
+      // 4. ATK/DEF types row (derived from unit combat data)
+      const atkSet = {};
+      const defSet = {};
+      allUnitIds.forEach(id => {
+        const c = UNIT_COMBAT[id];
+        if (!c) return;
+        if (c.atk && ATTACK_TYPES[c.atk]) atkSet[c.atk] = 1;
+        if (c.def && ARMOR_TYPES[c.def]) defSet[c.def] = 1;
+      });
+      let typeLine = '';
+      const atkIcons = Object.keys(atkSet).map(k =>
+        `<img class="mh-info-icon" src="${ATTACK_TYPES[k].icon}" title="${ATTACK_TYPES[k].label} attack" onerror="this.style.display='none'" />`
+      ).join('');
+      if (atkIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkIcons}</span>`;
+      const defIcons = Object.keys(defSet).map(k =>
+        `<img class="mh-info-icon" src="${ARMOR_TYPES[k].icon}" title="${ARMOR_TYPES[k].label} armor" onerror="this.style.display='none'" />`
+      ).join('');
+      if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
+      if (typeLine) mhHtml += `<div class="mh-info-row">${typeLine}</div>`;
+
+      // 5. Key units — always visible (not togglable on homepage)
+      const keyUnits = build.keyUnits || [];
+      if (keyUnits.length) {
+        const unitItems = keyUnits.map(id =>
+          `<span class="mh-icon-wrap">
+            <span class="mh-portrait-wrap">
+              <img class="mh-tech-icon" src="/assets/wc3icons/${id}.jpg"
+                   title="${unitFull(id)}" loading="lazy" onerror="this.style.display='none'" />
+            </span>
+          </span>`
+        ).join('');
+        mhHtml += `<div class="mh-section-toggle mh-unit-toggle mh-open mh-static">Key Units</div>`;
+        mhHtml += `<div class="mh-section-content"><div class="mh-unit-flat">${unitItems}</div></div>`;
+      }
 
       // 3-axis color-coded tags
       const tagPills = Object.keys(TAG_AXES).map(axisKey => {
@@ -220,25 +289,41 @@
         return `<span class="site-card-tag" style="--tag-color:${axis.color}">${axis.values[val]}</span>`;
       }).join('');
 
-      const rIcon = raceIcon(build.race);
-      const rLabel = raceLabel(build.race);
-
+      // Replay section
       const replays = build.replays || [];
       const hasReplay = replays.length > 0;
-
       let replaySection = '';
       if (hasReplay) {
-        const replayItems = replays.map(r => {
-          const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
-          return `<div class="site-replay-item">
-            <span class="site-replay-players">${r.playerName} vs ${r.opponentName}</span>
-            <span class="site-replay-map">${r.map || ''}</span>
-            <a href="${href}" class="site-replay-view-btn">View Replay</a>
-          </div>`;
-        }).join('');
+        const first = replays[0];
+        const firstHref = `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}`;
+        const firstItem = `<div class="site-replay-item">
+          <span class="site-replay-players">${first.playerName}</span>
+          <span class="site-replay-map">${first.map || ''}</span>
+          <a href="${firstHref}" class="site-replay-view-btn">View Replay</a>
+        </div>`;
+
+        let moreHtml = '';
+        if (replays.length > 1) {
+          const extraItems = replays.slice(1).map(r => {
+            const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
+            return `<div class="site-replay-extra-item">
+              <div class="site-replay-extra-info">
+                <span class="site-replay-extra-player">${r.playerName} vs ${r.opponentName || '?'}</span>
+                <span class="site-replay-extra-map">${r.map || ''}</span>
+              </div>
+              <a href="${href}" class="site-replay-view-btn">View Replay</a>
+            </div>`;
+          }).join('');
+          moreHtml = `
+            <button class="site-replay-toggle" onclick="event.stopPropagation(); this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
+              View More Replays (${replays.length - 1})
+            </button>
+            <div class="site-replay-extra-list">${extraItems}</div>`;
+        }
+
         replaySection = `<div class="site-replay-section">
-          <div class="site-replay-header">${replays.length} Replay${replays.length !== 1 ? 's' : ''}</div>
-          <div class="site-replay-list">${replayItems}</div>
+          ${firstItem}
+          ${moreHtml}
         </div>`;
       } else {
         replaySection = `<div class="site-replay-section">
@@ -246,16 +331,13 @@
         </div>`;
       }
 
-      const tierStrip = renderTierStrip(build);
+      const cardHref = hasReplay
+        ? `/viewer?r=${replays[0].replayId}&player=${replays[0].playerSlot}&buildId=${build.id}`
+        : '';
 
       return `
-        <div class="site-build-card${hasReplay ? '' : ' no-replay'}" style="--race-color:${rc}">
-          <div class="site-card-topbar">
-            <img class="site-card-race-icon" src="/assets/wc3icons/${rIcon}.jpg" alt="" />
-            <span class="site-card-race-label">${rLabel}</span>
-          </div>
-          <div class="site-card-name">${build.name}</div>
-          ${tierStrip}
+        <div class="site-build-card${hasReplay ? '' : ' no-replay'}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}>
+          <div class="mh-player">${mhHtml}</div>
           <div class="site-card-desc">${build.description}</div>
           <div class="site-card-footer">
             ${tagPills ? `<div class="site-card-tags">${tagPills}</div>` : ''}
@@ -265,8 +347,60 @@
       `;
     }
 
+    // ─── Search index builder ──────────────────────────────
+    // Builds a lowercase searchable string per build, including
+    // all names, abbreviations, race labels, hero/unit full+short names.
+    // Also builds a reverse alias map so e.g. "dk" matches "death knight".
+    const SEARCH_ALIASES = {};
+    // Populate alias map from UNIT_NAMES (both directions)
+    Object.values(UNIT_NAMES).forEach(([full, short]) => {
+      const fl = full.toLowerCase();
+      const sl = short.toLowerCase();
+      // short → full  (e.g. "dk" → "death knight")
+      if (!SEARCH_ALIASES[sl]) SEARCH_ALIASES[sl] = [];
+      SEARCH_ALIASES[sl].push(fl);
+      // full words → short  (e.g. "death knight" → "dk")
+      if (!SEARCH_ALIASES[fl]) SEARCH_ALIASES[fl] = [];
+      SEARCH_ALIASES[fl].push(sl);
+    });
+    // Race aliases
+    Object.values(RACE_META).forEach(m => {
+      const ll = m.label.toLowerCase();
+      const al = m.abbr.toLowerCase();
+      if (!SEARCH_ALIASES[al]) SEARCH_ALIASES[al] = [];
+      SEARCH_ALIASES[al].push(ll);
+      if (!SEARCH_ALIASES[ll]) SEARCH_ALIASES[ll] = [];
+      SEARCH_ALIASES[ll].push(al);
+    });
+
+    function buildSearchText(build) {
+      const parts = [];
+      parts.push(build.name || '');
+      parts.push(build.description || '');
+      parts.push(raceLabel(build.race), raceAbbr(build.race));
+      // Heroes
+      (build.heroItemIds || (build.heroItemId ? [build.heroItemId] : [])).forEach(id => {
+        parts.push(unitFull(id), unitShort(id));
+      });
+      // Key units
+      (build.keyUnits || []).forEach(id => {
+        parts.push(unitFull(id), unitShort(id));
+      });
+      // Matchups
+      (build.matchups || []).forEach(m => parts.push(m));
+      // Tags
+      (build.tags || []).forEach(t => parts.push(t));
+      Object.keys(TAG_AXES).forEach(k => {
+        const val = build[TAG_AXES[k].field];
+        if (val && TAG_AXES[k].values[val]) parts.push(TAG_AXES[k].values[val], val);
+      });
+      return parts.join(' ').toLowerCase();
+    }
+
     // ─── State ──────────────────────────────────────────────
     let allBuilds = [];
+    let buildSearchIndex = []; // parallel array of searchable strings
+    let searchQuery = '';
     let selectedRace = '';
     let selectedMatchup = '';
     const axisFilters = { opener: '', gamePlan: '', army: '' };
@@ -382,30 +516,33 @@
       });
     }
 
+    // ─── Search matching ─────────────────────────────────────
+    function matchesSearch(buildIndex, query) {
+      if (!query) return true;
+      const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+      return words.every(word => {
+        // Direct match in the build's search text
+        if (buildIndex.includes(word)) return true;
+        // Check aliases: if "dk" is typed, also search for "death knight"
+        const aliases = SEARCH_ALIASES[word];
+        if (aliases) {
+          return aliases.some(alias => buildIndex.includes(alias));
+        }
+        return false;
+      });
+    }
+
     // ─── Apply filters ──────────────────────────────────────
     function applyFilter() {
-      let visible = allBuilds;
-
-      if (selectedRace) {
-        visible = visible.filter(b => b.race === selectedRace);
-      }
-
-      if (selectedMatchup) {
-        visible = visible.filter(b =>
-          (b.matchups || []).includes(selectedMatchup)
-        );
-      }
-
-      // 3-axis filters (AND logic)
-      if (axisFilters.opener) {
-        visible = visible.filter(b => b.opener === axisFilters.opener);
-      }
-      if (axisFilters.gamePlan) {
-        visible = visible.filter(b => b.gamePlan === axisFilters.gamePlan);
-      }
-      if (axisFilters.army) {
-        visible = visible.filter(b => b.army === axisFilters.army);
-      }
+      let visible = allBuilds.filter((b, i) => {
+        if (searchQuery && !matchesSearch(buildSearchIndex[i], searchQuery)) return false;
+        if (selectedRace && b.race !== selectedRace) return false;
+        if (selectedMatchup && !(b.matchups || []).includes(selectedMatchup)) return false;
+        if (axisFilters.opener && b.opener !== axisFilters.opener) return false;
+        if (axisFilters.gamePlan && b.gamePlan !== axisFilters.gamePlan) return false;
+        if (axisFilters.army && b.army !== axisFilters.army) return false;
+        return true;
+      });
 
       document.getElementById('all-builds-grid').innerHTML =
         visible.length
@@ -428,6 +565,18 @@
         return;
       }
 
+      // Build search index
+      buildSearchIndex = allBuilds.map(buildSearchText);
+
+      // Wire up search bar
+      const searchInput = document.getElementById('build-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          searchQuery = searchInput.value.trim();
+          applyFilter();
+        });
+      }
+
       buildRaceFilter();
       buildAxisFilters();
 
@@ -439,6 +588,15 @@
       }
 
       applyFilter();
+
+      // Card click → load first replay (let replay buttons handle themselves)
+      document.getElementById('all-builds-grid').addEventListener('click', function(e) {
+        if (e.target.closest('.site-replay-view-btn')) return;
+        if (e.target.closest('.site-replay-toggle')) return;
+        if (e.target.closest('.site-replay-extra-list')) return;
+        const card = e.target.closest('.site-build-card[data-href]');
+        if (card) window.location.href = card.dataset.href;
+      });
     }
 
     init();

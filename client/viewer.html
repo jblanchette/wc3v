@@ -26,6 +26,7 @@
         '/js/MapRenderer.js',
         '/js/TimelineSpline.js',
         '/js/BuildOrderRenderer.js',
+        '/js/FloatingText.js',
         '/js/MatchHeader.js',
         '/js/app.js',
         '/js/SiteNav.js'
@@ -87,13 +88,18 @@
             <div id="map-container">
               <div id="main-wrapper">
                 <div id="mega-play-overlay">
+                  <div id="mega-play-title-group">
+                    <div id="mega-play-title">Watch Rewindable Replay</div>
+                    <div id="mega-play-title-logo" onClick="wc3v.play()"><img src="/assets/wc3v.svg" alt="WC3V" /><img src="/assets/play-icon.svg" alt="Play" class="logo-play-icon" /></div>
+                  </div>
                   <div id="mega-play-button" onClick="wc3v.play()"></div>
                   <div id="mega-play-hints">
                     <div id="mega-play-hints-title">View Options</div>
                     <div class="mega-hint on" data-option="displayCreepRoute" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint" data-option="displayPath" onClick="wc3v.toggleViewOption('displayPath')">Hero Paths<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayText" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="displayLeveLDots" onClick="wc3v.toggleViewOption('displayLeveLDots')">Level Dots<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="displayLevelPins" onClick="wc3v.toggleViewOption('displayLevelPins')">Level Pins<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="displayFloatingText" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Text<span class="mega-hint-icon"></span></div>
                   </div>
                 </div>
 

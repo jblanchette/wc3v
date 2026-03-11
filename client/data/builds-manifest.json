@@ -228,7 +228,7 @@
 
     {
       "id": "ud-cl-fiend-push",
-      "name": "Crypt Lord Fast Fiend Push",
+      "name": "CL Fast Fiend Push",
       "race": "U",
       "matchups": ["UvH"],
       "heroOpener": "Crypt Lord",
@@ -342,7 +342,7 @@
 
     {
       "id": "orc-bm-wind-rider",
-      "name": "BM Wind Rider",
+      "name": "BM WR",
       "race": "O",
       "matchups": ["OvU"],
       "heroOpener": "Blademaster",
@@ -416,7 +416,7 @@
 
     {
       "id": "orc-fs-wind-rider",
-      "name": "FS Expansion Wind Rider",
+      "name": "FS Expansion WR",
       "race": "O",
       "matchups": ["OvH"],
       "heroOpener": "Far Seer",
@@ -482,7 +482,7 @@
 
     {
       "id": "orc-fs-headhunter-shaman",
-      "name": "FS Headhunter Shaman",
+      "name": "FS HH Shaman",
       "race": "O",
       "matchups": ["OvU", "OvH"],
       "heroOpener": "Far Seer",
@@ -543,6 +543,22 @@
           "map": "Concealed Hill",
           "outcome": "loss",
           "notes": "KiWiKaKi shows the full FS Headhunter Shaman progression — see how Bloodlust timing decides fights"
+        },
+        {
+          "replayId": "2952971670_FoCuS_Sok_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Sok",
+          "map": "Autumn Leaves v2.0",
+          "notes": "FS fast tech variant with HH + Spirit Walkers + Taurens — T2@2:39, T3@5:17 extremely fast timing"
+        },
+        {
+          "replayId": "3870665022_Soin_Sok_Tidehunters12",
+          "playerSlot": "1",
+          "playerName": "Soin",
+          "opponentName": "Sok",
+          "map": "Tidehunters v1.2",
+          "notes": "FS + Shadow Hunter with mass Headhunters and Kodos — long game with Tauren transition at T3"
         }
       ]
     },
@@ -739,7 +755,7 @@
 
     {
       "id": "hu-am-dragonhawk",
-      "name": "AM Dragonhawk Riders",
+      "name": "AM DH Riders",
       "race": "H",
       "matchups": ["HvO"],
       "heroOpener": "Archmage",
@@ -869,19 +885,19 @@
       "matchups": ["HvO", "HvN"],
       "heroOpener": "Paladin",
       "heroItemId": "hpal",
-      "heroItemIds": ["hpal", "hamg"],
-      "keyUnits": ["hrif", "hmpr"],
-      "description": "Paladin first with Riflemen as primary army. Holy Light keeps expensive Rifles alive, Divine Shield at level 6 is a panic button. Sustain-focused build that wins through attrition.",
+      "heroItemIds": ["hpal", "Hblm"],
+      "keyUnits": ["hrif"],
+      "description": "Paladin first with Riflemen as primary army. Holy Light keeps expensive Rifles alive, Blood Mage second for Siphon Mana and Banish utility. Transitions into Gryphon Riders at T3 for the killing blow.",
       "strategyPoints": [
         "Paladin first — Holy Light is the strongest single-target heal in the game",
         "Rifles live longer with Paladin healing — more value per gold spent",
-        "Divine Shield at level 6 — panic button that saves Paladin from any burst",
-        "AM second for Brilliance Aura — enables constant Blizzard + Holy Light spam",
-        "Priests add Inner Fire buff and additional healing — double sustain layer",
-        "Wins against: Orc builds relying on focus fire to trade heroes",
-        "Loses to: mana drain (NE DH Manaburn), Undead Destroyers (Devour Magic)"
+        "Blood Mage second — Siphon Mana drains enemy hero mana, Banish amplifies spell damage and disables key units",
+        "Long Rifles research at T2 extends Rifle range — kite melee armies effectively",
+        "T3 Gryphon Riders are the payoff — air damage that Orc struggles to answer without Batriders",
+        "Wins against: Orc melee-heavy builds, Far Seer openers vulnerable to Banish",
+        "Loses to: mana drain (NE DH Manaburn), fast Batrider transitions"
       ],
-      "tags": ["standard", "paladin", "rifles", "sustain"],
+      "tags": ["standard", "paladin", "rifles", "blood-mage"],
       "playstyleTags": ["standard"],
       "opener": "standard",
       "gamePlan": "map-control",
@@ -889,39 +905,64 @@
       "tierProgression": {
         "t1": {
           "buildings": ["halt", "hbar", "hhou", "hbla"],
-          "units": ["hfoo", "hrif"],
-          "goal": "Paladin + Footmen, transition to Rifles immediately"
+          "units": ["hrif"],
+          "goal": "Paladin + immediate Rifle production, skip Footmen"
         },
         "t2": {
-          "buildings": ["hars", "hkee"],
-          "units": ["hrif", "hmpr"],
-          "timing": "5:30-6:30",
-          "goal": "AM second, Priests for double healing, Inner Fire on Rifles"
+          "buildings": ["hvlt", "hkee"],
+          "units": ["hrif"],
+          "timing": "3:00-4:00",
+          "goal": "Blood Mage second, Long Rifles research, Ranged Weapons upgrade"
         },
         "t3": {
           "buildings": ["hcas", "hgra"],
           "units": ["hgry"],
-          "timing": "11:00+",
-          "goal": "Gryphon Riders for late-game air damage",
-          "notes": "T3 Gryphons are the payoff — strong with Paladin sustain keeping them alive"
+          "timing": "8:30-10:00",
+          "goal": "Gryphon Riders for air damage, Storm Hammers upgrade",
+          "notes": "Paladin sustain keeps Gryphons alive — BM Phoenix adds chaos in late game"
         },
         "conditionalBranches": [
           {
-            "condition": "Opponent focuses Paladin hard",
-            "adjustment": "Play defensive until Divine Shield — then push aggressively"
+            "condition": "Opponent goes Batriders",
+            "adjustment": "Stay on mass Rifles with attack upgrades, skip or delay Gryphons"
           },
           {
-            "condition": "Facing NE with Manaburn",
-            "adjustment": "Keep Paladin at range, use Scroll of Replenishment, prioritize level 6"
+            "condition": "Long game — BM hits level 8",
+            "adjustment": "Summon Phoenix is a massive late-game power spike, push with Phoenix + Gryphons"
           }
         ]
       },
-      "replays": []
+      "replays": [
+        {
+          "replayId": "2844085600_Sok_Lyn_TurtleRock16",
+          "playerSlot": "1",
+          "playerName": "Sok",
+          "opponentName": "Lyn",
+          "map": "Turtle Rock",
+          "notes": "Sok's Paladin/BM Rifle into Gryphons vs Lyn's Far Seer headhunters/taurens"
+        },
+        {
+          "replayId": "2952971670_FoCuS_Sok_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "Sok",
+          "opponentName": "FoCuS",
+          "map": "Autumn Leaves v2.0",
+          "notes": "Paladin + Blood Mage Rifles into Gryphon Riders vs FoCuS FS fast tech"
+        },
+        {
+          "replayId": "3870665022_Soin_Sok_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "Sok",
+          "opponentName": "Soin",
+          "map": "Tidehunters v1.2",
+          "notes": "Paladin + Blood Mage + Mountain King — mass Rifles with 3-hero late game vs Orc HH"
+        }
+      ]
     },
 
     {
       "id": "ne-kotg-mountain-giant",
-      "name": "KotG Mountain Giant",
+      "name": "KotG MG",
       "race": "E",
       "matchups": ["EvH"],
       "heroOpener": "Keeper of the Grove",
@@ -988,7 +1029,7 @@
 
     {
       "id": "ne-dh-fast-bear",
-      "name": "DH Fast Bear Tech",
+      "name": "DH Fast Bear",
       "race": "E",
       "matchups": ["EvU", "EvO", "EvH"],
       "heroOpener": "Demon Hunter",
