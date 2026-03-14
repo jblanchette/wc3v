@@ -47,8 +47,6 @@ const ClientPlayer = class {
     };
 
     this.currentGroup = null;
-    this.formationCache = new Map(); // uuid → focusUuid, persists across frames
-    this.lastFormationTime = 0;
     this.setupUnits(units);
 
     console.log("setup player: ", this);
@@ -195,7 +193,10 @@ const ClientPlayer = class {
     });
 
     heroes = heroes.sort(hero => hero.spawnTime);
-    heroes.forEach((hero, ind) => { hero.heroRank = ind + 1; });
+    heroes.forEach((hero, ind) => {
+      hero.heroRank = ind + 1;
+      if (ind > 0) hero.iconSize = IconSizes.secondaryHero;
+    });
 
     if (firstHero) {
       firstHero.isMainHero = true;
@@ -493,9 +494,9 @@ const ClientPlayer = class {
     }
   }
 
-  renderDrawnUnits (frameData, ctx) {
+  resolveUnitPositions (frameData, forceMode) {
     const { isNeutralPlayer } = this;
-    const { nameplateTree, unitDrawPositions } = frameData;
+    const { unitDrawPositions } = frameData;
 
     const owningPlayerId = this.playerId;
 
@@ -516,6 +517,7 @@ const ClientPlayer = class {
         decayLevel,
         itemId,
         playerId,
+        playerColor,
         count,
         drawSlots,
         isWorker,
@@ -540,10 +542,12 @@ const ClientPlayer = class {
         icon,
         iconSize,
         halfIconSize,
-        uuid, 
+        uuid,
         isHero,
         isMainHero,
         itemId,
+        playerId,
+        playerColor,
         heroRank,
         spawnTime,
         isWorker,
@@ -555,192 +559,187 @@ const ClientPlayer = class {
       return acc;
     }, []);
 
-    // sorted by units last, heroes first sorted by spawnTime desc
+    // non-heroes first (drawn behind), heroes last (drawn on top), main hero topmost
     const sortedDrawTree = drawBoxes.sort((a, b) => {
+      if (a.isHero !== b.isHero) return a.isHero - b.isHero;
       if (a.isHero && b.isHero) {
+        if (a.isMainHero) return 1;
+        if (b.isMainHero) return -1;
         return a.spawnTime - b.spawnTime;
       }
-
-      return b.isHero - a.isHero;
+      return (a.uuid < b.uuid) ? -1 : 1;
     });
 
-    /*
-      because we render the 'most visually important' units first, every unit
-      that collides with a hero will be adjusted to offset of the 'focus' unit
-    */
-
-    const unitTree = new rbush();
-
-    const drawSlots = [];
+    // separate workers and neutrals — they always draw at true position
+    const armyUnits = [];
     const alwaysDrawSlots = [];
-    const prevCache = this.formationCache;
-    const nextCache = new Map();
 
-    // reset cache on backward scrub
-    if (frameData.gameTime !== undefined && frameData.gameTime < this.lastFormationTime - 500) {
-      prevCache.clear();
-    }
-
-    const addDrawSlotParent = (unitBox) => {
-      drawSlots.push({
-        focusUnit: unitBox,
-        unitList: [ unitBox.uuid ],
-        spots: []
-      });
-
-      unitTree.insert(unitBox);
-    };
-
-    const findDrawSlotOrCreate = (unitBox, collisions) => {
-      const drawSlot = drawSlots.find(slot => {
-        const hasFocusCollision = collisions.find(collision => {
-          return slot.unitList.includes(collision.uuid);
-        });
-
-        return hasFocusCollision;
-      });
-
-      if (drawSlot) {
-        drawSlot.unitList.push(unitBox.uuid);
-        drawSlot.spots.push(unitBox);
-
-        unitTree.insert(unitBox);
-
-        return;
-      }
-
-      // don't expect this to happen but here is a fallback... might bite us?
-      addDrawSlotParent(unitBox);
-    };
-
-    // find slot by focus UUID (for hysteresis)
-    const findSlotByFocus = (focusUuid) => {
-      return drawSlots.find(slot => slot.focusUnit.uuid === focusUuid);
-    };
-
-    sortedDrawTree.forEach((unitBox, ind) => {
-      const { isMainHero, isHero, isWorker } = unitBox;
-      const collisions = unitTree.search(unitBox);
-
-      if (isNeutralPlayer || isWorker) {
+    sortedDrawTree.forEach(unitBox => {
+      if (isNeutralPlayer || unitBox.isWorker) {
         alwaysDrawSlots.push(unitBox);
-
-        return;
+      } else {
+        armyUnits.push(unitBox);
       }
-
-      if (isMainHero) {
-        addDrawSlotParent(unitBox);
-
-        return;
-      }
-
-      if (!collisions.length) {
-        // hysteresis: if this unit was in a formation last frame, try to stay
-        const prevFocus = prevCache.get(unitBox.uuid);
-        if (prevFocus) {
-          const cachedSlot = findSlotByFocus(prevFocus);
-          if (cachedSlot) {
-            cachedSlot.unitList.push(unitBox.uuid);
-            cachedSlot.spots.push(unitBox);
-            unitTree.insert(unitBox);
-            return;
-          }
-        }
-
-        addDrawSlotParent(unitBox);
-
-        return;
-      }
-
-      findDrawSlotOrCreate(unitBox, collisions);
     });
 
-    // update formation cache for next frame
-    drawSlots.forEach(slot => {
-      const focusUuid = slot.focusUnit.uuid;
-      slot.unitList.forEach(uuid => {
-        if (uuid !== focusUuid) {
-          nextCache.set(uuid, focusUuid);
-        }
-      });
-    });
-    this.formationCache = nextCache;
-    if (frameData.gameTime !== undefined) {
-      this.lastFormationTime = frameData.gameTime;
+    // cluster same-type army units by proximity — reduces bloom input count
+    const { representatives, collapsed } = ClientPlayer.clusterArmyUnits(armyUnits);
+
+    // detect army mode (pack vs scattered) and choose layout strategy
+    this._armyMeta = ClientPlayer.computeArmyMeta(representatives);
+
+    // hysteretic mode determination — dead band prevents flip-flopping
+    let mode;
+    if (forceMode) {
+      mode = forceMode;
+    } else if (this._armyMeta.spread <= 60) {
+      mode = 'pack';
+    } else if (this._armyMeta.spread > 100) {
+      mode = 'scattered';
+    } else {
+      mode = this._prevArmyMode || 'scattered';
     }
+    this._armyMeta.mode = mode;
 
+    if (!this._bloomCache) this._bloomCache = new Map();
+    this._prevArmyMode = mode;
 
-    const spotOffset = [ -2, -1, 0, 1, 2 ];
+    // identify units without cache entries (new to bloom) for symmetry breaking
+    const newUuids = new Set();
+    representatives.forEach(rep => {
+      if (!this._bloomCache.has(rep.uuid)) newUuids.add(rep.uuid);
+    });
 
-    // draw our slots
-    drawSlots.forEach(drawSlot => {
-      const { spots, focusUnit } = drawSlot;
+    if (mode === 'pack') {
+      // structured formation layout — replaces bloom when army is tightly packed
+      ClientPlayer.formationLayout(representatives, this._spawnBiasAngle || 0);
+    } else {
+      // normal bloom + directional bias for scattered/engaged armies
+      ClientPlayer.bloomResolve(representatives, 3, 0.6, newUuids);
 
-      Drawing.drawUnit(ctx, focusUnit);
-
-      // separate hero spots from unit spots
-      const heroSpots = [];
-      const unitSpots = [];
-      spots.forEach(s => (s.isHero ? heroSpots : unitSpots).push(s));
-
-      // draw hero spots (side-by-side, no flip)
-      let hasHeroSpot = false;
-      heroSpots.forEach(spotUnit => {
-        const drawSide = hasHeroSpot ? -1 : 1;
-        spotUnit.drawX = focusUnit.drawX - (focusUnit.iconSize * drawSide);
-        hasHeroSpot = true;
-
-        const udpEntry = unitDrawPositions.find(u => u.uuid === spotUnit.uuid);
-        if (udpEntry) { udpEntry.x = spotUnit.drawX; udpEntry.y = spotUnit.drawY; }
-
-        Drawing.drawUnit(ctx, spotUnit);
-      });
-
-      if (!unitSpots.length) return;
-
-      // compute default below positions
-      const iconBufferSize = focusUnit.halfIconSize * 1.25;
-      let spotCol = 0;
-      let spotRow = 0;
-
-      unitSpots.forEach(spotUnit => {
-        spotUnit.drawY = focusUnit.drawY + (focusUnit.iconSize + (spotUnit.iconSize * spotCol));
-        spotUnit.drawX = focusUnit.drawX + (iconBufferSize * spotOffset[spotRow]);
-        spotRow++;
-        if (spotRow > spotOffset.length) { spotRow = 0; spotCol++; }
-      });
-
-      // check if formation below overlaps any other-player unit icons
-      const formMinX = Math.min(...unitSpots.map(s => s.drawX - s.halfIconSize));
-      const formMaxX = Math.max(...unitSpots.map(s => s.drawX + s.halfIconSize));
-      const formMinY = Math.min(...unitSpots.map(s => s.drawY - s.halfIconSize));
-      const formMaxY = Math.max(...unitSpots.map(s => s.drawY + s.halfIconSize));
-
-      const enemyOverlap = unitDrawPositions.some(u => {
-        if (u.playerId == owningPlayerId || u.isNeutralPlayer) return false;
-        const half = u.iconSize / 2;
-        return u.x + half > formMinX && u.x - half < formMaxX &&
-               u.y + half > formMinY && u.y - half < formMaxY;
-      });
-
-      // flip formation above hero if enemies below
-      if (enemyOverlap) {
-        spotCol = 0;
-        spotRow = 0;
-        unitSpots.forEach(spotUnit => {
-          spotUnit.drawY = focusUnit.drawY - (focusUnit.iconSize + (spotUnit.iconSize * spotCol));
-          spotUnit.drawX = focusUnit.drawX + (iconBufferSize * spotOffset[spotRow]);
-          spotRow++;
-          if (spotRow > spotOffset.length) { spotRow = 0; spotCol++; }
+      // bias nudge — apply to BOTH _origX and drawX so offset calc stays clean
+      if (this._spawnBiasAngle !== undefined) {
+        const biasStrength = 4;
+        const bx = Math.cos(this._spawnBiasAngle) * biasStrength;
+        const by = Math.sin(this._spawnBiasAngle) * biasStrength;
+        representatives.forEach(rep => {
+          if (!rep.isHero) {
+            rep._origX += bx;
+            rep._origY += by;
+            rep.drawX += bx;
+            rep.drawY += by;
+          }
         });
       }
+    }
 
-      // draw and sync positions
-      unitSpots.forEach(spotUnit => {
-        const udpEntry = unitDrawPositions.find(u => u.uuid === spotUnit.uuid);
-        if (udpEntry) { udpEntry.x = spotUnit.drawX; udpEntry.y = spotUnit.drawY; }
-        Drawing.drawUnit(ctx, spotUnit);
+    // temporal smoothing — smooth the bloom OFFSET (not absolute position)
+    const currentGameTime = frameData.gameTime || 0;
+
+    // clear caches on backward scrub
+    if (currentGameTime < (this._lastBloomTime || 0) - 500) {
+      this._bloomCache.clear();
+      if (this._crossCollisionCache) this._crossCollisionCache.clear();
+    }
+    this._lastBloomTime = currentGameTime;
+
+    const lerp = 0.2;
+    const activeUuids = new Set();
+    representatives.forEach(unitBox => {
+      activeUuids.add(unitBox.uuid);
+
+      const bloomOffsetX = unitBox.drawX - unitBox._origX;
+      const bloomOffsetY = unitBox.drawY - unitBox._origY;
+
+      const prev = this._bloomCache.get(unitBox.uuid);
+      if (prev) {
+        const smoothX = prev.ox + (bloomOffsetX - prev.ox) * lerp;
+        const smoothY = prev.oy + (bloomOffsetY - prev.oy) * lerp;
+        unitBox.drawX = unitBox._origX + smoothX;
+        unitBox.drawY = unitBox._origY + smoothY;
+        this._bloomCache.set(unitBox.uuid, { ox: smoothX, oy: smoothY });
+      } else {
+        this._bloomCache.set(unitBox.uuid, { ox: bloomOffsetX, oy: bloomOffsetY });
+      }
+    });
+
+    // prune dead/collapsed units from cache
+    this._bloomCache.forEach((_, uuid) => {
+      if (!activeUuids.has(uuid)) this._bloomCache.delete(uuid);
+    });
+
+    // store resolved data for cross-player collision + draw phase
+    this._resolved = { representatives, collapsed, alwaysDrawSlots };
+  }
+
+  drawResolvedUnits (frameData, ctx) {
+    if (!this._resolved) return;
+
+    const { unitDrawPositions } = frameData;
+    const { representatives, collapsed, alwaysDrawSlots } = this._resolved;
+
+    // draw representatives and count badges
+    representatives.forEach(unitBox => {
+      Drawing.drawUnit(ctx, unitBox);
+
+      if (unitBox.clusterCount > 1) {
+        const badgeX = unitBox.drawX + unitBox.halfIconSize;
+        const badgeY = unitBox.drawY + unitBox.halfIconSize;
+        Drawing.drawCountBadge(ctx, unitBox.clusterCount, badgeX, badgeY, unitBox.playerColor);
+      }
+
+      const udpEntry = unitDrawPositions.find(u => u.uuid === unitBox.uuid);
+      if (udpEntry) {
+        udpEntry.x = unitBox.drawX;
+        udpEntry.y = unitBox.drawY;
+        udpEntry.count = unitBox.clusterCount || 1;
+      }
+    });
+
+    // hide collapsed units from nameplates
+    collapsed.forEach(unitBox => {
+      const udpEntry = unitDrawPositions.find(u => u.uuid === unitBox.uuid);
+      if (udpEntry) {
+        udpEntry.hideNameplate = true;
+      }
+    });
+
+    // consolidate neutral creep nameplates by itemId + proximity
+    const neutralSlots = alwaysDrawSlots.filter(u => u.isNeutralPlayer);
+    const neutralGroups = [];
+    const neutralAssigned = new Set();
+
+    neutralSlots.forEach(unit => {
+      if (neutralAssigned.has(unit.uuid)) return;
+      const group = [unit];
+      neutralAssigned.add(unit.uuid);
+
+      neutralSlots.forEach(other => {
+        if (neutralAssigned.has(other.uuid)) return;
+        if (other.itemId !== unit.itemId) return;
+        const dist = Math.abs(other.drawX - unit.drawX) + Math.abs(other.drawY - unit.drawY);
+        if (dist < unit.iconSize * 4) {
+          group.push(other);
+          neutralAssigned.add(other.uuid);
+        }
       });
+
+      if (group.length > 1) neutralGroups.push(group);
+    });
+
+    neutralGroups.forEach(group => {
+      const avgX = group.reduce((sum, u) => sum + u.drawX, 0) / group.length;
+      const avgY = group.reduce((sum, u) => sum + u.drawY, 0) / group.length;
+      const repUdp = unitDrawPositions.find(u => u.uuid === group[0].uuid);
+      if (repUdp) {
+        repUdp.count = group.length;
+        repUdp.x = avgX;
+        repUdp.y = avgY;
+      }
+      for (let i = 1; i < group.length; i++) {
+        const udp = unitDrawPositions.find(u => u.uuid === group[i].uuid);
+        if (udp) udp.hideNameplate = true;
+      }
     });
 
     // always draw any unit in this list (neutrals fade when player units overlap)
@@ -764,11 +763,337 @@ const ClientPlayer = class {
     });
   }
 
+  static bloomResolve (units, iterations = 3, springStrength = 0.6, newUuids = null) {
+    const len = units.length;
+
+    // save original positions (needed by temporal smoothing even for solo units)
+    for (let i = 0; i < len; i++) {
+      units[i]._origX = units[i].drawX;
+      units[i]._origY = units[i].drawY;
+    }
+
+    if (len < 2) return;
+
+    // symmetry breaking — jitter coincident non-hero units onto a small circle
+    // only for NEW units (no cache entry) to avoid per-frame micro-motion
+    for (let i = 0; i < len; i++) {
+      if (units[i].isHero) continue;
+      if (newUuids && !newUuids.has(units[i].uuid)) continue;
+
+      let coincidentCount = 0;
+      let coincidentIndex = 0;
+
+      for (let j = 0; j < len; j++) {
+        if (i === j) continue;
+        if (Math.abs(units[i].drawX - units[j].drawX) < 0.5 &&
+            Math.abs(units[i].drawY - units[j].drawY) < 0.5) {
+          coincidentCount++;
+          if (j < i) coincidentIndex++;
+        }
+      }
+
+      if (coincidentCount > 0) {
+        const total = coincidentCount + 1;
+        const angle = (2 * Math.PI * coincidentIndex) / total;
+        units[i].drawX += Math.cos(angle) * 3;
+        units[i].drawY += Math.sin(angle) * 3;
+      }
+    }
+
+    for (let iter = 0; iter < iterations; iter++) {
+      // push overlapping pairs apart
+      for (let i = 0; i < len; i++) {
+        const a = units[i];
+        for (let j = i + 1; j < len; j++) {
+          const b = units[j];
+
+          // use actual drawn circle radius (halfIconSize + 2) plus 2px visual gap
+          const minDist = (a.halfIconSize + 2) + (b.halfIconSize + 2) + 2;
+
+          let dx = b.drawX - a.drawX;
+          let dy = b.drawY - a.drawY;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+
+          // deterministic fallback for still-coincident pairs
+          if (dist < 0.01) {
+            const angle = ((i * 7 + j * 13) % 37) / 37 * Math.PI * 2;
+            dx = Math.cos(angle);
+            dy = Math.sin(angle);
+            dist = 0.01;
+          }
+
+          if (dist < minDist) {
+            const overlap = (minDist - dist) / 2;
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // heroes are anchored — only the non-hero moves (full overlap, not doubled)
+            if (a.isHero && !b.isHero) {
+              b.drawX += nx * overlap;
+              b.drawY += ny * overlap;
+            } else if (b.isHero && !a.isHero) {
+              a.drawX -= nx * overlap;
+              a.drawY -= ny * overlap;
+            } else {
+              a.drawX -= nx * overlap;
+              a.drawY -= ny * overlap;
+              b.drawX += nx * overlap;
+              b.drawY += ny * overlap;
+            }
+          }
+        }
+      }
+
+      // spring-pull back toward originals
+      for (let i = 0; i < len; i++) {
+        const u = units[i];
+        const spring = u.isHero ? 0.9 : springStrength;
+        u.drawX += (u._origX - u.drawX) * spring;
+        u.drawY += (u._origY - u.drawY) * spring;
+      }
+    }
+
+    // hard cap — no unit can be displaced more than 35px from its true position
+    const maxDisplacement = 35;
+    for (let i = 0; i < len; i++) {
+      const u = units[i];
+      const dx = u.drawX - u._origX;
+      const dy = u.drawY - u._origY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxDisplacement) {
+        const scale = maxDisplacement / dist;
+        u.drawX = u._origX + dx * scale;
+        u.drawY = u._origY + dy * scale;
+      }
+    }
+  }
+
+  static computeArmyMeta (representatives) {
+    if (!representatives.length) {
+      return { centroidX: 0, centroidY: 0, spread: Infinity, mode: 'scattered' };
+    }
+
+    let cx = 0, cy = 0, total = 0;
+    for (let i = 0; i < representatives.length; i++) {
+      const w = representatives[i].clusterCount || 1;
+      cx += representatives[i].drawX * w;
+      cy += representatives[i].drawY * w;
+      total += w;
+    }
+    cx /= total;
+    cy /= total;
+
+    let spreadSum = 0;
+    for (let i = 0; i < representatives.length; i++) {
+      const w = representatives[i].clusterCount || 1;
+      const dx = representatives[i].drawX - cx;
+      const dy = representatives[i].drawY - cy;
+      spreadSum += Math.sqrt(dx * dx + dy * dy) * w;
+    }
+    const spread = spreadSum / total;
+
+    return {
+      centroidX: cx,
+      centroidY: cy,
+      spread
+    };
+  }
+
+  static formationLayout (representatives, biasAngle = 0) {
+    const len = representatives.length;
+    if (len < 1) return;
+
+    // save originals for temporal smoothing
+    for (let i = 0; i < len; i++) {
+      representatives[i]._origX = representatives[i].drawX;
+      representatives[i]._origY = representatives[i].drawY;
+    }
+
+    if (len < 2) return;
+
+    // compute centroid
+    let cx = 0, cy = 0, total = 0;
+    for (let i = 0; i < len; i++) {
+      const w = representatives[i].clusterCount || 1;
+      cx += representatives[i].drawX * w;
+      cy += representatives[i].drawY * w;
+      total += w;
+    }
+    cx /= total;
+    cy /= total;
+
+    const mainHero = representatives.find(u => u.isMainHero);
+    const secondaryHeroes = representatives.filter(u => u.isHero && !u.isMainHero);
+    const nonHeroes = representatives.filter(u => !u.isHero);
+
+    // main hero at centroid
+    if (mainHero) {
+      mainHero.drawX = cx;
+      mainHero.drawY = cy;
+    }
+
+    // ring 1: secondary heroes
+    const ring1Radius = 22;
+    secondaryHeroes.forEach((unit, i) => {
+      const angle = biasAngle + (2 * Math.PI * i / Math.max(secondaryHeroes.length, 1));
+      unit.drawX = cx + Math.cos(angle) * ring1Radius;
+      unit.drawY = cy + Math.sin(angle) * ring1Radius;
+    });
+
+    // ring 2: non-hero reps
+    const ring2Radius = 38;
+    nonHeroes.forEach((unit, i) => {
+      const angle = biasAngle + (2 * Math.PI * i / Math.max(nonHeroes.length, 1));
+      unit.drawX = cx + Math.cos(angle) * ring2Radius;
+      unit.drawY = cy + Math.sin(angle) * ring2Radius;
+    });
+  }
+
+  static crossPlayerCollision (allReps, iterations = 3, maxDisplacement = 25) {
+    const len = allReps.length;
+    if (len < 2) return;
+
+    for (let i = 0; i < len; i++) {
+      allReps[i]._preCollisionX = allReps[i].drawX;
+      allReps[i]._preCollisionY = allReps[i].drawY;
+    }
+
+    for (let iter = 0; iter < iterations; iter++) {
+      for (let i = 0; i < len; i++) {
+        const a = allReps[i];
+        for (let j = i + 1; j < len; j++) {
+          const b = allReps[j];
+
+          // only resolve cross-player overlaps
+          if (a.playerId === b.playerId) continue;
+
+          const minDist = (a.halfIconSize + 2) + (b.halfIconSize + 2) + 2;
+
+          let dx = b.drawX - a.drawX;
+          let dy = b.drawY - a.drawY;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 0.01) {
+            const angle = ((i * 7 + j * 13) % 37) / 37 * Math.PI * 2;
+            dx = Math.cos(angle);
+            dy = Math.sin(angle);
+            dist = 0.01;
+          }
+
+          if (dist < minDist) {
+            const overlap = (minDist - dist) / 2;
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            a.drawX -= nx * overlap;
+            a.drawY -= ny * overlap;
+            b.drawX += nx * overlap;
+            b.drawY += ny * overlap;
+          }
+        }
+      }
+    }
+
+    // cap displacement from post-bloom position
+    for (let i = 0; i < len; i++) {
+      const u = allReps[i];
+      const dx = u.drawX - u._preCollisionX;
+      const dy = u.drawY - u._preCollisionY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxDisplacement) {
+        const scale = maxDisplacement / dist;
+        u.drawX = u._preCollisionX + dx * scale;
+        u.drawY = u._preCollisionY + dy * scale;
+      }
+    }
+  }
+
+  static clusterArmyUnits (armyUnits, clusterRadius = 35) {
+    const representatives = [];
+    const collapsed = [];
+
+    const heroes = [];
+    const nonHeroes = [];
+    armyUnits.forEach(u => (u.isHero ? heroes : nonHeroes).push(u));
+
+    heroes.forEach(h => representatives.push(h));
+
+    // group non-heroes by itemId
+    const byItemId = {};
+    nonHeroes.forEach(u => {
+      if (!byItemId[u.itemId]) byItemId[u.itemId] = [];
+      byItemId[u.itemId].push(u);
+    });
+
+    // within each type, cluster by proximity
+    Object.values(byItemId).forEach(group => {
+      if (group.length === 1) {
+        representatives.push(group[0]);
+        return;
+      }
+
+      const assigned = new Set();
+
+      for (let i = 0; i < group.length; i++) {
+        const unit = group[i];
+        if (assigned.has(unit.uuid)) continue;
+
+        const cluster = [unit];
+        assigned.add(unit.uuid);
+
+        for (let j = i + 1; j < group.length; j++) {
+          const other = group[j];
+          if (assigned.has(other.uuid)) continue;
+          const dx = other.drawX - unit.drawX;
+          const dy = other.drawY - unit.drawY;
+          if (Math.sqrt(dx * dx + dy * dy) <= clusterRadius) {
+            cluster.push(other);
+            assigned.add(other.uuid);
+          }
+        }
+
+        const rep = cluster[0];
+        rep.clusterCount = cluster.length;
+
+        if (cluster.length > 1) {
+          let avgX = 0, avgY = 0;
+          for (let k = 0; k < cluster.length; k++) {
+            avgX += cluster[k].drawX;
+            avgY += cluster[k].drawY;
+          }
+          rep.drawX = avgX / cluster.length;
+          rep.drawY = avgY / cluster.length;
+        }
+
+        representatives.push(rep);
+
+        for (let k = 1; k < cluster.length; k++) {
+          collapsed.push(cluster[k]);
+        }
+      }
+    });
+
+    return { representatives, collapsed };
+  }
+
+  static isValidBox (box) {
+    return Number.isFinite(box.minX) && Number.isFinite(box.maxX) &&
+           Number.isFinite(box.minY) && Number.isFinite(box.maxY);
+  }
+
   static buildNameplateBoxes (frameData, ctx) {
     const { unitDrawPositions } = frameData;
 
     return unitDrawPositions.reduce((acc, item) => {
       const { x, y, iconSize, fontSize, isHero, heroRank, fullName, decayLevel, count, isNeutralPlayer } = item;
+
+      if (item.hideNameplate) {
+        return acc;
+      }
+
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(iconSize)) {
+        return acc;
+      }
 
       // skip neutral unit nameplates when player units overlap them
       if (isNeutralPlayer) {
@@ -834,7 +1159,8 @@ const ClientPlayer = class {
     const allBoxes = frameData.allNameplateBoxes || [];
     allBoxes.sort((a, b) => b.priority - a.priority);
 
-    nameplateTree.load(obstacles);
+    const validObstacles = obstacles.filter(o => ClientPlayer.isValidBox(o));
+    nameplateTree.load(validObstacles);
 
     // helper: check for real collisions (ignoring this unit's own icon obstacle)
     const hasRealCollision = (box, ownerX, ownerY) => {
@@ -861,16 +1187,14 @@ const ClientPlayer = class {
           drawY = belowY;
           minY = belowY - fontSize;
           maxY = belowY;
-        } else if (isHero) {
-          bgAlpha = 0.3;
-          textAlpha = 0.4;
         } else {
-          return; // non-hero, both blocked — skip
+          return; // both blocked — hide entirely
         }
       }
 
       // register this nameplate in the tree so later ones see it
-      const placedBox = { minX, minY, maxY, maxX };
+      const placedBox = { minX, minY, maxX, maxY };
+      if (!ClientPlayer.isValidBox(placedBox)) return;
       nameplateTree.insert(placedBox);
 
       // draw rounded background
@@ -929,7 +1253,7 @@ const ClientPlayer = class {
     // render drawn units
     ////
 
-    this.renderDrawnUnits(frameData, playerCtx);
+    this.drawResolvedUnits(frameData, playerCtx);
 
     ////
     // render optional details

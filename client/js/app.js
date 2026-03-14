@@ -175,7 +175,9 @@ const Wc3vViewer = class {
     this.scrubber.setupControls({
       "play": (e) => { this.togglePlay(e); },
       "speed": (e) => { this.toggleSpeed(e); },
-      "track": (e) => { this.moveTracker(e); }
+      "track": (e) => { this.moveTracker(e); },
+      "fullscreen": (e) => { this.toggleFullscreen(e); },
+      "settings": (e) => { this.toggleSettings(e); }
     });
   }
 
@@ -615,10 +617,37 @@ const Wc3vViewer = class {
     }
   }
 
-  toggleSpeed () {
+  toggleSpeed (e) {
+    if (e) e.stopPropagation();
     const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
+    const settingsModal = document.getElementById(`${this.scrubber.wrapperId}-settings-modal`);
+    if (settingsModal) settingsModal.style.display = 'none';
     speedModal.style.display = speedModal.style.display !== "block" ?
       "block" : "none";
+  }
+
+  toggleSettings (e) {
+    if (e) e.stopPropagation();
+    const settingsModal = document.getElementById(`${this.scrubber.wrapperId}-settings-modal`);
+    const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
+    if (speedModal) speedModal.style.display = 'none';
+    settingsModal.style.display = settingsModal.style.display !== "block" ?
+      "block" : "none";
+  }
+
+  toggleFullscreen (e) {
+    if (e) e.stopPropagation();
+
+    const container = document.getElementById('map-container');
+    if (!container) return;
+
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      container.requestFullscreen().catch(err => {
+        console.warn('Fullscreen request failed:', err.message);
+      });
+    }
   }
 
   toggleMegaPlayButton (state) {
@@ -960,7 +989,7 @@ const Wc3vViewer = class {
 
   setupViewOptions () {
     this.viewOptions = {
-      displayPath: false,
+      displayPath: true,
       displayLevelPins: true,
       displayFloatingText: true,
       decayEffects: true,
@@ -984,6 +1013,55 @@ const Wc3vViewer = class {
       this.viewOptions[optionKey] ?
         el.classList.add('on') :
         el.classList.remove('on');
+    });
+
+    // populate settings modal with view option toggles
+    const settingsModalEl = document.getElementById(`${this.scrubber.wrapperId}-settings-modal`);
+    if (settingsModalEl) {
+      const buttons = [
+        { key: 'displayCreepRoute', label: 'Creep Routes', featured: true },
+        { key: 'displayPath', label: 'Hero Paths' },
+        { key: 'displayLevelPins', label: 'Level Pins' },
+        { key: 'displayFloatingText', label: 'Action Text' },
+        { key: 'displayText', label: 'Unit Names' },
+        { key: 'decayEffects', label: 'Fade FX' },
+        { key: 'displayTreeGrid', label: 'Tree Grid' }
+      ];
+
+      settingsModalEl.innerHTML = '';
+
+      buttons.forEach(btn => {
+        const el = document.createElement('div');
+        el.classList.add('vc-btn');
+        if (btn.featured) el.classList.add('vc-featured');
+        el.id = `viewer-option-${btn.key}`;
+        el.textContent = btn.label;
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggleViewOption(btn.key);
+        });
+        if (this.viewOptions[btn.key]) el.classList.add('on');
+        settingsModalEl.append(el);
+      });
+    }
+
+    // close modals when clicking outside
+    document.addEventListener('click', (e) => {
+      const settingsBtn = document.getElementById(`${this.scrubber.wrapperId}-settings`);
+      const settingsModal = document.getElementById(`${this.scrubber.wrapperId}-settings-modal`);
+      if (settingsModal && settingsModal.style.display === 'block') {
+        if (!settingsBtn.contains(e.target)) {
+          settingsModal.style.display = 'none';
+        }
+      }
+
+      const speedBtn = document.getElementById(`${this.scrubber.wrapperId}-speed`);
+      const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
+      if (speedModal && speedModal.style.display === 'block') {
+        if (!speedBtn.contains(e.target)) {
+          speedModal.style.display = 'none';
+        }
+      }
     });
   }
 
@@ -1096,7 +1174,7 @@ const Wc3vViewer = class {
     // player ui toggle offsets
     this.playerSlotOffset = 0;
     // how far the camera will zoom
-    const zoomScaleExtent = [ 1.0, 1.75 ];
+    const zoomScaleExtent = [ 1.0, 3.0 ];
     // camera transform
     this.transform = { x: 0.0, y: 0.0, k: 1.0 };
 
@@ -1185,6 +1263,20 @@ const Wc3vViewer = class {
       this.zoomContainer.call(this.zoom.scaleTo, k);
     };
 
+    // reset zoom on window resize — d3.zoom's internal state becomes stale
+    // when canvas dimensions change, causing pan to escape bounds
+    const resetZoomOnResize = () => {
+      if (!self.gameLoaded) return;
+      self.transform = { x: 0, y: 0, k: 1.0 };
+      self.zoomContainer.call(self.zoom.transform, d3.zoomIdentity);
+      self.scrubber.updateZoomDisplay(1.0);
+      if (self.state !== ScrubStates.stopped) {
+        self.render();
+      }
+    };
+
+    window.addEventListener('resize', resetZoomOnResize);
+
     // ResizeObserver — watch gameplay-area (its size only changes from window/layout, not canvas)
     const resizeTarget = document.getElementById('gameplay-area');
     if (resizeTarget && typeof ResizeObserver !== 'undefined') {
@@ -1192,8 +1284,27 @@ const Wc3vViewer = class {
         if (self.layoutMode === LayoutMode.liveBuildOrder) {
           self.scaleLiveModeCanvas();
         }
+        resetZoomOnResize();
       }).observe(resizeTarget);
     }
+
+    // Fullscreen change — rescale canvas and swap icon
+    document.addEventListener('fullscreenchange', () => {
+      const isFullscreen = !!document.fullscreenElement;
+
+      self.scrubber.loadSvg(
+        `#${self.scrubber.wrapperId}-fullscreen-icon`,
+        isFullscreen ? 'fullscreen-exit-icon' : 'fullscreen-icon'
+      );
+
+      self.scaleLiveModeCanvas();
+
+      if (self.gameLoaded && self.zoomContainer && self.zoom) {
+        self.transform = { x: 0, y: 0, k: 1.0 };
+        self.zoomContainer.call(self.zoom.transform, d3.zoomIdentity);
+        self.scrubber.updateZoomDisplay(1.0);
+      }
+    });
   }
 
   clearCanvas () {
@@ -1353,6 +1464,78 @@ const Wc3vViewer = class {
         yScale,
         viewOptions
       );
+    });
+
+    // compute spawn bias angles once (lazy init)
+    if (!this._spawnBiasComputed) {
+      players.forEach(player => {
+        if (!player.isNeutralPlayer && player.startingPosition) {
+          const sx = xScale(player.startingPosition.x) + middleX;
+          const sy = yScale(player.startingPosition.y) + middleY;
+          player._spawnBiasAngle = Math.atan2(sy - middleY, sx - middleX);
+        }
+      });
+      this._spawnBiasComputed = true;
+    }
+
+    // single-pass resolve: use PREVIOUS frame's engagement state as forceMode
+    players.forEach(player => {
+      if (!player.isNeutralPlayer) {
+        player.resolveUnitPositions(frameData, player._wasEngaged ? 'engaged' : null);
+      } else {
+        player.resolveUnitPositions(frameData);
+      }
+    });
+
+    // compute engagement for NEXT frame (hysteretic thresholds)
+    const armyPlayers = players.filter(p => !p.isNeutralPlayer && p._armyMeta);
+    armyPlayers.forEach(p => { p._willEngage = false; });
+    for (let i = 0; i < armyPlayers.length; i++) {
+      for (let j = i + 1; j < armyPlayers.length; j++) {
+        const metaA = armyPlayers[i]._armyMeta;
+        const metaB = armyPlayers[j]._armyMeta;
+        const dx = metaA.centroidX - metaB.centroidX;
+        const dy = metaA.centroidY - metaB.centroidY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        // hysteretic: enter engaged < 120px, exit > 180px
+        const threshold = (armyPlayers[i]._wasEngaged || armyPlayers[j]._wasEngaged) ? 180 : 120;
+        if (dist < threshold) {
+          armyPlayers[i]._willEngage = true;
+          armyPlayers[j]._willEngage = true;
+        }
+      }
+    }
+    armyPlayers.forEach(p => { p._wasEngaged = p._willEngage; });
+
+    // cross-player collision — push apart units from different players
+    const allReps = [];
+    players.forEach(player => {
+      if (!player.isNeutralPlayer && player._resolved) {
+        player._resolved.representatives.forEach(rep => allReps.push(rep));
+      }
+    });
+    ClientPlayer.crossPlayerCollision(allReps);
+
+    // smooth cross-player collision displacements
+    players.forEach(player => {
+      if (!player._resolved || player.isNeutralPlayer) return;
+      if (!player._crossCollisionCache) player._crossCollisionCache = new Map();
+
+      const ccLerp = 0.3;
+      player._resolved.representatives.forEach(rep => {
+        const ccDx = rep.drawX - (rep._preCollisionX || rep.drawX);
+        const ccDy = rep.drawY - (rep._preCollisionY || rep.drawY);
+        const prev = player._crossCollisionCache.get(rep.uuid);
+        if (prev) {
+          const sx = prev.ox + (ccDx - prev.ox) * ccLerp;
+          const sy = prev.oy + (ccDy - prev.oy) * ccLerp;
+          rep.drawX = (rep._preCollisionX || rep.drawX) + sx;
+          rep.drawY = (rep._preCollisionY || rep.drawY) + sy;
+          player._crossCollisionCache.set(rep.uuid, { ox: sx, oy: sy });
+        } else {
+          player._crossCollisionCache.set(rep.uuid, { ox: ccDx, oy: ccDy });
+        }
+      });
     });
 
     players.forEach(player => {

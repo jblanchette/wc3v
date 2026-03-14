@@ -120,7 +120,7 @@ const Drawing = class {
       playerColor 
     } = unit;
 
-    ctx.strokeStyle = "#FFFC01";
+    ctx.strokeStyle = playerColor || "#FFFC01";
     ctx.globalAlpha = decayLevel;
 
     ctx.fillStyle = playerColor;
@@ -137,6 +137,29 @@ const Drawing = class {
 
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;
+  }
+
+  static drawCountBadge (ctx, count, centerX, centerY, playerColor) {
+    if (count < 2) return;
+    const radius = 7;
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#111';
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = playerColor || '#FFF';
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#FFF';
+    ctx.font = 'bold 9px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(count, centerX, centerY + 0.5);
+    ctx.restore();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
   }
 
   static getUnitBounds (unit, offsetX = 0, offsetY = 0) {

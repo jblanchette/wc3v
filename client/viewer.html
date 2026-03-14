@@ -64,13 +64,6 @@
               <div class="mh-player mh-player-left"></div>
               <div class="mh-player mh-player-right"></div>
             </div>
-
-            <div class="mh-toolbar">
-              <div class="mh-map-info">
-                <span class="mh-map-name"></span>
-              </div>
-              <div class="mh-toggles" id="mh-viewer-toggles"></div>
-            </div>
           </div>
           <div id="gameplay-row">
             <div id="player-status-wrapper">
@@ -87,7 +80,8 @@
 
             <div id="map-container">
               <div id="main-wrapper">
-                <div id="mega-play-overlay">
+                <div id="map-name-overlay"></div>
+              <div id="mega-play-overlay">
                   <div id="mega-play-title-group">
                     <div id="mega-play-title">Watch Rewindable Replay</div>
                     <div id="mega-play-title-logo" onClick="wc3v.play()"><img src="/assets/wc3v.svg" alt="WC3V" /><img src="/assets/play-icon.svg" alt="Play" class="logo-play-icon" /></div>
@@ -96,7 +90,7 @@
                   <div id="mega-play-hints">
                     <div id="mega-play-hints-title">View Options</div>
                     <div class="mega-hint on" data-option="displayCreepRoute" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint" data-option="displayPath" onClick="wc3v.toggleViewOption('displayPath')">Hero Paths<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="displayPath" onClick="wc3v.toggleViewOption('displayPath')">Hero Paths<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayText" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayLevelPins" onClick="wc3v.toggleViewOption('displayLevelPins')">Level Pins<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayFloatingText" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Text<span class="mega-hint-icon"></span></div>

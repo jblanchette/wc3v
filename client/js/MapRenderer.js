@@ -32,26 +32,21 @@ const MapRenderer = class {
       sceneHeight
     } = gameScaler;
 
-    const { k } = transform;
-
     const bgImage = viewOptions.displayMapGrid ?
       gridMapImage : mapImage;
 
-    // at identity transform, camera area draws at (0,0)
-    // xScale(cameraExtent.x[0]) + middleX = -sceneWidth/2 + sceneWidth/2 = 0
-    const drawX = transform.x;
-    const drawY = transform.y;
-
+    // canvas context already has translate + scale applied
+    // draw at (0,0) in canvas-space; context transform handles zoom/pan
     ctx.drawImage(
       bgImage,
       cropOffset.x,        // sourceX: where camera starts in full map image
       cropOffset.y,        // sourceY
       sceneWidth,          // sourceWidth: camera area size
       sceneHeight,         // sourceHeight
-      drawX,               // destX
-      drawY,               // destY
-      sceneWidth * k,      // destWidth
-      sceneHeight * k      // destHeight
+      0,                   // destX: canvas-space origin
+      0,                   // destY
+      sceneWidth,          // destWidth
+      sceneHeight          // destHeight
     );
   }
 
@@ -67,7 +62,7 @@ const MapRenderer = class {
       return;
     }
 
-    const treeSize = (6 * transform.k);
+    const treeSize = 6;
     const treeRadius = Math.min(8, Math.max(3.5, treeSize));
 
     const oldFillStyle = ctx.fillStyle;
@@ -82,18 +77,12 @@ const MapRenderer = class {
       const { solid, visible } = flags;
       const { x, y } = position;
 
-      // drawing algo:
-      // x = GameScaler.xScale(x) + middleX
-      // y = GameScaler.yScale(y) + middleY
-      // finally -
-      // (x * transform.k) + transform.x
-      // (y * transform.k) + transform.y
-
-      const scaledSize = (8 * scale[0]) * transform.k;
+      // canvas-space position — context transform handles zoom/pan
+      const scaledSize = (8 * scale[0]);
       const halfSize = scaledSize / 2;
 
-      const drawX = ((xScale(x) + middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(y) + middleY) * transform.k) + transform.y;
+      const drawX = xScale(x) + middleX;
+      const drawY = yScale(y) + middleY;
 
       //ctx.fillRect(drawX, drawY, scaledSize, scaledSize);
 
@@ -124,7 +113,7 @@ const MapRenderer = class {
       1: '#eaff00'
     };
 
-    const iconSize = (14 * transform.k);
+    const iconSize = 14;
 
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
@@ -160,8 +149,8 @@ const MapRenderer = class {
       const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
       const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
 
-      const drawX = ((xScale(bounds.minX) + middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(bounds.minY) + middleY) * transform.k) + transform.y;
+      const drawX = xScale(bounds.minX) + middleX;
+      const drawY = yScale(bounds.minY) + middleY;
 
       let claimColor = '#FFF';
       let claimColorFill = null;
@@ -236,7 +225,7 @@ const MapRenderer = class {
         const badgeX = drawX + rectWidth + 4;
         const badgeY = drawY + rectHeight + 4;
         const badgeColor = (claimState > 1) ? teamColorMap[claimOwnerId] : '#eaff00';
-        Drawing.drawCampOrderBadge(ctx, `${order}`, badgeX, badgeY, badgeColor, transform.k);
+        Drawing.drawCampOrderBadge(ctx, `${order}`, badgeX, badgeY, badgeColor, 1);
       }
     });
 
@@ -288,16 +277,16 @@ const MapRenderer = class {
     const oldLineWidth = ctx.lineWidth;
 
     ctx.globalAlpha = 0.85;
-    ctx.lineWidth = 1.5 * transform.k;
+    ctx.lineWidth = 1.5;
 
     const iconSize = nb_type => {
-      if (nb_type === 'ngol') return 22 * transform.k;
-      return 18 * transform.k;
+      if (nb_type === 'ngol') return 22;
+      return 18;
     };
 
     neutralBuildings.forEach(nb => {
-      const drawX = ((xScale(nb.x) + middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(nb.y) + middleY) * transform.k) + transform.y;
+      const drawX = xScale(nb.x) + middleX;
+      const drawY = yScale(nb.y) + middleY;
       const icon = this._neutralIcons[nb.type];
       const size = iconSize(nb.type);
       const half = size / 2;
@@ -336,8 +325,8 @@ const MapRenderer = class {
 
     const { width, height } = canvas;
 
-    const tileHeight = (height / gridHeight) * transform.k;
-    const tileWidth  = (width  / gridWidth)  * transform.k;
+    const tileHeight = (height / gridHeight);
+    const tileWidth  = (width  / gridWidth);
 
     ctx.lineWidth = 1;
 
@@ -358,8 +347,8 @@ const MapRenderer = class {
           y
         } = data;
 
-        const drawX = (row * tileWidth) + transform.x;
-        const drawY = (col * tileHeight) + transform.y;
+        const drawX = (row * tileWidth);
+        const drawY = (col * tileHeight);
 
         const canWalk = (!NoWalk && NoBuild) || NoWater || Blight;
 

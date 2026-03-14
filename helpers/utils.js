@@ -556,6 +556,8 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
     .map(p => p.startingPosition)
     .filter(Boolean);
 
+  const removedSpawnCampUuids = new Set();
+
   if (playerSpawns.length) {
     const groupKeys = Object.keys(world.neutralGroups);
     groupKeys.forEach(key => {
@@ -569,9 +571,20 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
       });
 
       if (nearSpawn) {
+        removedSpawnCampUuids.add(group.uuid);
         delete world.neutralGroups[key];
       }
     });
+
+    // also remove neutral units belonging to deleted spawn camps
+    if (removedSpawnCampUuids.size) {
+      const neutralPlayer = Object.values(wc3vPlayers).find(p => p.isNeutralPlayer);
+      if (neutralPlayer) {
+        neutralPlayer.units = neutralPlayer.units.filter(
+          unit => !removedSpawnCampUuids.has(unit.neutralGroupId)
+        );
+      }
+    }
   }
 
   const output = {
@@ -603,7 +616,9 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         selectionStream,
         tierStream,
         researchStream,
-        isNeutralPlayer
+        isNeutralPlayer,
+        _buildingAttempts,
+        _supplyBumps
       } = player;
 
     	acc[playerId] = {
@@ -623,7 +638,22 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         tierStream,
         researchStream,
         isNeutralPlayer,
-    		units: units.map(unit => unit.exportUnit())
+    		units: units.map(unit => unit.exportUnit()),
+        buildingAttempts: (_buildingAttempts || []).map(a => ({
+          itemId: a.itemId,
+          displayName: a.displayName,
+          gameTime: a.gameTime,
+          x: a.x,
+          y: a.y,
+          status: a.status
+        })),
+        supplyBumps: (_supplyBumps || []).map(b => ({
+          gameTime: b.gameTime,
+          supplyUsed: b.supplyUsed,
+          previousMax: b.previousMax,
+          newMax: b.newMax,
+          triggerEvent: b.triggerEvent
+        }))
     	};
 
     	return acc;

@@ -162,8 +162,8 @@ const FloatingText = class {
 
       const floatY = -35 * easedProgress;
 
-      const drawX = ((xScale(entry.x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(entry.y) + wc3v.gameScaler.middleY) * transform.k) + transform.y + floatY;
+      const drawX = xScale(entry.x) + wc3v.gameScaler.middleX;
+      const drawY = yScale(entry.y) + wc3v.gameScaler.middleY + floatY;
 
       ctx.globalAlpha = Math.max(0, alpha);
       const weight = entry.bold ? 'bold ' : '';

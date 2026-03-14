@@ -92,6 +92,18 @@ const doParsing = async (file) => {
     });
   }
 
+  // post-parse: backfill missing supply buildings (farms/burrows/zigs/moonwells)
+  const SupplyBuildingBackfill = require('./lib/SupplyBuildingBackfill');
+  const supplyBackfill = new SupplyBuildingBackfill(playerManager.players);
+  const supplyResults = supplyBackfill.run();
+
+  if (supplyResults.length) {
+    console.logger(`Supply building backfill: inferred ${supplyResults.length} missing supply building(s)`);
+    supplyResults.forEach(r => {
+      console.logger(`  Player ${r.player}: ${r.displayName} (${r.buildingId}) at ~${Math.floor(r.gameTime / 60000)}:${String(Math.floor((r.gameTime % 60000) / 1000)).padStart(2, '0')}`);
+    });
+  }
+
   // post-parse validation: detect contradictions in parsed data
   const validator = new ReplayValidator(playerManager.players);
   const validation = validator.validate();
@@ -183,9 +195,28 @@ const parseReplays = async (options) => {
           console.log("TEST PASSED: ", file);
         }
 
-        return { 
-          passed: true, 
-          error: null, 
+        // extract per-player confidence + supply stats for tooling
+        const playerStats = {};
+        Object.keys(players).forEach(pid => {
+          const p = players[pid];
+          if (!p || parseInt(pid) >= 24) return;
+          const supplyBuildingEvents = (p.eventStream || []).filter(e =>
+            e.key === 'addBuilding' && e.isInferred
+          ).length;
+          playerStats[pid] = {
+            name: p.playerName || p.playerId,
+            race: p.race,
+            parseConfidence: p.parseConfidence,
+            supplyBumps: (p._supplyBumps || []).length,
+            inferredBuildings: supplyBuildingEvents
+          };
+        });
+
+        return {
+          passed: true,
+          error: null,
+          playerStats,
+          validation,
           wc3vOutput: {
             replayHash,
             ...replay

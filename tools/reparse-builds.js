@@ -79,6 +79,7 @@ async function main() {
 
   let passed = 0;
   let failed = 0;
+  const flagged = [];
 
   for (const id of available) {
     console.log(`\n--- Parsing: ${id} ---`);
@@ -95,6 +96,28 @@ async function main() {
       if (result && result.passed) {
         console.log(`  OK: ${id}`);
         passed++;
+
+        // display per-player confidence and supply stats
+        if (result.playerStats) {
+          Object.entries(result.playerStats).forEach(([pid, stats]) => {
+            const conf = stats.parseConfidence != null ? stats.parseConfidence.toFixed(4) : '?';
+            const flags = [];
+            if (stats.supplyBumps > 0) flags.push(`${stats.supplyBumps} supply bumps`);
+            if (stats.inferredBuildings > 0) flags.push(`${stats.inferredBuildings} inferred buildings`);
+            const flagStr = flags.length ? ` [${flags.join(', ')}]` : '';
+            console.log(`    P${pid} ${stats.name} (${stats.race}) confidence=${conf}${flagStr}`);
+          });
+        }
+
+        // flag replays with supply issues or low confidence
+        if (result.playerStats) {
+          const issues = Object.entries(result.playerStats).filter(([, s]) =>
+            s.supplyBumps > 0 || s.inferredBuildings > 0 || (s.parseConfidence != null && s.parseConfidence < 0.95)
+          );
+          if (issues.length) {
+            flagged.push({ id, issues: issues.map(([pid, s]) => ({ pid, ...s })) });
+          }
+        }
       } else {
         console.log(`  FAILED: ${id} — ${result ? result.error : 'unknown error'}`);
         failed++;
@@ -109,6 +132,21 @@ async function main() {
   console.log(`  Passed: ${passed}/${available.length}`);
   if (failed) {
     console.log(`  Failed: ${failed}`);
+  }
+
+  if (flagged.length) {
+    console.log(`\n=== FLAGGED REPLAYS (${flagged.length}) ===`);
+    flagged.forEach(({ id, issues }) => {
+      console.log(`  ${id}:`);
+      issues.forEach(s => {
+        const conf = s.parseConfidence != null ? s.parseConfidence.toFixed(4) : '?';
+        const details = [];
+        if (s.supplyBumps > 0) details.push(`${s.supplyBumps} supply bumps`);
+        if (s.inferredBuildings > 0) details.push(`${s.inferredBuildings} inferred buildings`);
+        if (s.parseConfidence != null && s.parseConfidence < 0.95) details.push(`low confidence`);
+        console.log(`    P${s.pid} ${s.name} (${s.race}) confidence=${conf} — ${details.join(', ')}`);
+      });
+    });
   }
 }
 

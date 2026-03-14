@@ -31,23 +31,19 @@ const GameDisplayBox = class {
       return;
     }
 
-    if (transform.k != 1.0) {
-      this.hoveredCampUuid = null;
-      this.hide();
-      return;
-    }
-
     const { offsetX, offsetY, target } = e;
 
     if (offsetX === undefined || offsetY === undefined) {
       return;
     }
 
-    // convert CSS pixels to canvas pixels when canvas is CSS-scaled
+    // convert CSS pixels to canvas pixels, then inverse-transform to canvas-space
     const scaleX = target.width / (target.clientWidth || target.width);
     const scaleY = target.height / (target.clientHeight || target.height);
-    const canvasX = offsetX * scaleX;
-    const canvasY = offsetY * scaleY;
+    const screenX = offsetX * scaleX;
+    const screenY = offsetY * scaleY;
+    const canvasX = (screenX - transform.x) / transform.k;
+    const canvasY = (screenY - transform.y) / transform.k;
 
     const hitBox = {
       minX: canvasX,
@@ -285,17 +281,18 @@ const GameDisplayBox = class {
       const groups = Object.values(data);
       const tree = new rbush();
 
+      // store positions in canvas-space — handleMouse inverse-transforms mouse coords
       const groupBoxes = groups.reduce((acc, group) => {
         const { bounds } = group;
 
         const record = {
           rawGroup: group,
 
-          minX: ((xScale(bounds.minX) + middleX) * transform.k) + transform.x,
-          maxX: ((xScale(bounds.maxX) + middleX) * transform.k) + transform.x,
+          minX: xScale(bounds.minX) + middleX,
+          maxX: xScale(bounds.maxX) + middleX,
 
-          minY: ((yScale(bounds.maxY) + middleY) * transform.k) + transform.y,
-          maxY: ((yScale(bounds.minY) + middleY) * transform.k) + transform.y
+          minY: yScale(bounds.maxY) + middleY,
+          maxY: yScale(bounds.minY) + middleY
         };
 
         acc.push(record);

@@ -12,7 +12,8 @@ const HighlightModes = {
 ////
 
 const IconSizes = {
-  'hero': 32,
+  'hero': 26,
+  'secondaryHero': 24,
   'unit': 22,
   'worker': 20,
   'building': 16,
@@ -319,13 +320,10 @@ const ClientUnit = class {
   renderBuilding (ctx, frameData, transform, xScale, yScale) {
     const { x, y } = this.lastPosition;
 
-    const inverseK = (2.0 - transform.k);
+    const drawX = xScale(x) + wc3v.gameScaler.middleX;
+    const drawY = yScale(y) + wc3v.gameScaler.middleY;
 
-    const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
-    const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
-
-    const dynamicSize = this.iconSize * inverseK; // inverse zoom scale
-    const iconSize = Math.max(dynamicSize, minimumBuildingSize);
+    const iconSize = Math.max(this.iconSize, minimumBuildingSize);
 
     const halfIcon = iconSize / 2;
 
@@ -372,8 +370,8 @@ const ClientUnit = class {
       return;
     }
 
-    let drawX = ((xScale(currentX) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
-    let drawY = ((yScale(currentY) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
+    let drawX = xScale(currentX) + wc3v.gameScaler.middleX;
+    let drawY = yScale(currentY) + wc3v.gameScaler.middleY;
 
     // hide workers that overlap with same-player buildings (e.g. peasant constructing)
     if (this.meta.worker && frameData.buildingPositions) {
@@ -394,13 +392,9 @@ const ClientUnit = class {
 
     drawnUnits[this.uuid] = true;
 
-    const inverseK = (2.0 - transform.k);
-    const dynamicSize = (this.iconSize * inverseK); // inverse zoom scale
-
-    const minimumIconSize = this.meta.hero ? 
+    const minimumIconSize = this.meta.hero ?
       minimumHeroIconSize : minimumUnitSize;
-    const iconSize = (dynamicSize < minimumIconSize) ?
-      minimumIconSize : dynamicSize;
+    const iconSize = Math.max(this.iconSize, minimumIconSize);
 
     const halfIconSize = iconSize / 2.5;
     
@@ -483,8 +477,8 @@ const ClientUnit = class {
 
       const { x, y, isJump } = item;
 
-      const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
+      const drawX = xScale(x) + wc3v.gameScaler.middleX;
+      const drawY = yScale(y) + wc3v.gameScaler.middleY;
 
       const spotDiffs = {
         dist: Helpers.distance(x, y, lastX, lastY),
@@ -526,8 +520,8 @@ const ClientUnit = class {
 
       const { x, y } = levelRecord.position;
 
-      const drawX = ((xScale(x) + wc3v.gameScaler.middleX) * transform.k) + transform.x;
-      const drawY = ((yScale(y) + wc3v.gameScaler.middleY) * transform.k) + transform.y;
+      const drawX = xScale(x) + wc3v.gameScaler.middleX;
+      const drawY = yScale(y) + wc3v.gameScaler.middleY;
 
       // fade pin when any unit is nearby
       const nearUnit = unitPositions.some(u =>

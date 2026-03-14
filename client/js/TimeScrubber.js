@@ -73,8 +73,15 @@ const TimeScrubber = class {
       <span id="${wrapperId}-zoom-label" class="zoom-label">100%</span>
       <div id="${wrapperId}-zoom-out" class="zoom-btn">−</div>
       <input id="${wrapperId}-zoom-slider" class="zoom-slider" type="range"
-        min="100" max="175" step="5" value="100" />
+        min="100" max="300" step="5" value="100" />
       <div id="${wrapperId}-zoom-in" class="zoom-btn">+</div>
+    </div>
+    <div id="${wrapperId}-fullscreen" class="time-scrubber-control fullscreen-button">
+      <div id="${wrapperId}-fullscreen-icon" class="fullscreen-icon-wrap"></div>
+    </div>
+    <div id="${wrapperId}-settings" class="time-scrubber-control settings-button">
+      <div id="${wrapperId}-settings-icon" class="settings-icon-wrap"></div>
+      <div id="${wrapperId}-settings-modal" class="settings-modal"></div>
     </div>`;
 
     this.wrapperEl.append(this.domEl);
@@ -83,6 +90,9 @@ const TimeScrubber = class {
     this.loadSvg(`#${wrapperId}-play`, 'play-icon');
     this.loadSvg(`#${wrapperId}-play`, 'pause-icon', false);
     this.loadSvg(`#${wrapperId}-play`, 'stop-icon', false);
+    this.loadSvg(`#${wrapperId}-settings-icon`, 'settings-icon');
+    this.loadSvg(`#${wrapperId}-fullscreen-icon`, 'fullscreen-icon');
+    this.loadSvg(`#${wrapperId}-fullscreen-icon`, 'fullscreen-exit-icon', false);
 
     this.zoomLabelEl = document.getElementById(`${wrapperId}-zoom-label`);
     this.zoomSliderEl = document.getElementById(`${wrapperId}-zoom-slider`);

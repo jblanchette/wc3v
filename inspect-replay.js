@@ -12,8 +12,10 @@
  *                          events     - eventStream entries (addUnit, addBuilding, etc.)
  *                          expansions - only addBuilding events flagged as expansions
  *                          units      - exported unit list with flags
+ *                          paths      - unit movement paths with groupId data
  *                          workers    - worker snapshots from events
  *                          tiers      - tier transition data
+ *                          supply     - supply building analysis + confidence
  *                          summary    - compact build order overview
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
@@ -152,7 +154,8 @@ if (showAll || showSections.includes('events')) {
       } else if (e.key === 'addBuilding' && e.building) {
         const b = e.building;
         const expoTag = e.isExpansion ? ' [EXPANSION]' : '';
-        console.log(`    [${time}] ${e.key}: ${b.displayName} (${b.itemId}) gold=${b.goldCost||0} lum=${b.lumberCost||0} food+${b.foodMade||0}${expoTag} | workers: ${wStr}`);
+        const inferTag = e.isInferred ? ' [INFERRED]' : '';
+        console.log(`    [${time}] ${e.key}: ${b.displayName} (${b.itemId}) gold=${b.goldCost||0} lum=${b.lumberCost||0} food+${b.foodMade||0}${expoTag}${inferTag} | workers: ${wStr}`);
       } else if (e.key === 'HeroLevel') {
         const slLen = (e.spellList || []).length;
         const lsLen = e.learnedSkills ? Object.keys(e.learnedSkills).length : 0;
@@ -232,6 +235,41 @@ if (showAll || showSections.includes('units')) {
   console.log('');
 }
 
+// --- Paths (movement + groupId) ---
+if (showAll || showSections.includes('paths')) {
+  console.log('=== UNIT PATHS ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    let units = pdata.units || [];
+    // only show units with paths (skip buildings)
+    units = units.filter(u => u.path && u.path.length > 0 && !u.isBuilding);
+    if (searchText) {
+      units = units.filter(u => (u.displayName || '').toLowerCase().includes(searchText));
+    }
+
+    units.slice(0, limit).forEach(u => {
+      const groupMoves = u.path.filter(p => p.groupId);
+      const soloMoves = u.path.filter(p => !p.groupId && !p.isJump);
+      const jumps = u.path.filter(p => p.isJump);
+      console.log(`    ${u.displayName} (${u.itemId}) path=${u.path.length} group=${groupMoves.length} solo=${soloMoves.length} jumps=${jumps.length}`);
+
+      if (groupMoves.length > 0) {
+        const sample = groupMoves.slice(0, 3);
+        sample.forEach(p => {
+          console.log(`      [${formatTime(p.gameTime)}] pos=(${p.x}, ${p.y}) groupId=${p.groupId}`);
+        });
+        if (groupMoves.length > 3) console.log(`      ... (${groupMoves.length - 3} more group moves)`);
+      }
+    });
+  }
+  console.log('');
+}
+
 // --- Workers ---
 if (showAll || showSections.includes('workers')) {
   console.log('=== WORKER SNAPSHOTS ===');
@@ -277,6 +315,78 @@ if (showAll || showSections.includes('tiers')) {
     (pdata.tierStream || []).forEach(t => {
       console.log(`    Tier ${t.tier} at ${formatTime(t.gameTime)}`);
     });
+  }
+  console.log('');
+}
+
+// --- Supply Analysis ---
+if (showAll || showSections.includes('supply')) {
+  console.log('=== SUPPLY ANALYSIS ===');
+  const supplyIds = { 'H': 'hhou', 'O': 'otrb', 'E': 'emow', 'U': 'uzig' };
+  const supplyNames = { 'hhou': 'Farm', 'otrb': 'Burrow', 'emow': 'Moon Well', 'uzig': 'Ziggurat' };
+  const upgradedVariants = { 'uzg1': 'uzig', 'uzg2': 'uzig' };
+
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+    console.log(`    Parse confidence: ${pdata.parseConfidence != null ? pdata.parseConfidence.toFixed(4) : 'N/A'}`);
+
+    const events = pdata.eventStream || [];
+    const buildings = events.filter(e => e.key === 'addBuilding');
+    const inferred = buildings.filter(e => e.isInferred);
+    console.log(`    Buildings: ${buildings.length} events (${inferred.length} inferred)`);
+
+    const sid = supplyIds[pdata.race];
+    if (sid) {
+      const supplyEvents = buildings.filter(e => e.building && (
+        e.building.itemId === sid || upgradedVariants[e.building.itemId] === sid
+      ));
+      const supplyUnits = (pdata.units || []).filter(u => u.isBuilding && (
+        u.itemId === sid || upgradedVariants[u.itemId] === sid
+      ));
+      const inferredSupply = supplyEvents.filter(e => e.isInferred);
+      console.log(`    ${supplyNames[sid] || sid}: ${supplyEvents.length} events (${inferredSupply.length} inferred) / ${supplyUnits.length} in units`);
+
+      supplyEvents.forEach(e => {
+        const time = formatTime(e.gameTime || 0);
+        const tag = e.isInferred ? ' [INFERRED]' : '';
+        console.log(`      [${time}] ${e.building.displayName}${tag}`);
+      });
+
+      // show building attempts for supply buildings
+      const attempts = (pdata.buildingAttempts || []).filter(a => a.itemId === sid);
+      if (attempts.length) {
+        const confirmed = attempts.filter(a => a.status === 'confirmed').length;
+        const cancelled = attempts.filter(a => a.status === 'cancelled').length;
+        const replaced = attempts.filter(a => a.status === 'replaced').length;
+        const pending = attempts.filter(a => a.status === 'pending').length;
+        console.log(`    Build commands: ${attempts.length} total (${confirmed} confirmed, ${cancelled} cancelled, ${replaced} replaced, ${pending} pending)`);
+      }
+    }
+
+    // show supply bumps
+    const bumps = pdata.supplyBumps || [];
+    if (bumps.length) {
+      console.log(`    Supply bumps: ${bumps.length}`);
+      bumps.forEach(b => {
+        const time = formatTime(b.gameTime || 0);
+        console.log(`      [${time}] used=${b.supplyUsed} max ${b.previousMax}→${b.newMax} (${b.triggerEvent})`);
+      });
+    }
+
+    // show validation warnings if present
+    if (data.validation && data.validation.warnings) {
+      const playerWarnings = data.validation.warnings.filter(w => String(w.player) === String(pid));
+      if (playerWarnings.length) {
+        console.log(`    Validation warnings:`);
+        playerWarnings.forEach(w => {
+          console.log(`      [${w.type}] ${w.details}`);
+        });
+      }
+    }
   }
   console.log('');
 }

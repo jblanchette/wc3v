@@ -10,7 +10,6 @@ const MatchHeader = class {
 
     this.renderMapInfo();
     this.renderMatchup();
-    this.renderViewerControls();
 
     this.el.style.display = '';
   }
@@ -26,10 +25,10 @@ const MatchHeader = class {
   }
 
   renderMapInfo () {
-    const nameEl = this.el.querySelector('.mh-map-name');
+    const nameEl = document.getElementById('map-name-overlay');
+    if (!nameEl) return;
     const raw = (this.viewer.mapInfo && this.viewer.mapInfo.name) || this.viewer.mapName || '';
     nameEl.textContent = this.cleanMapName(raw);
-
   }
 
   renderMatchup () {
@@ -60,14 +59,10 @@ const MatchHeader = class {
     const uid = displayName.replace(/\W/g, '');
 
     // Build name from build context (if this player's slot has a matching build)
-    let buildNameHtml = '';
     const ctxBySlot = this.viewer.buildContextBySlot;
-    if (ctxBySlot && player) {
-      const ctx = ctxBySlot[String(player.playerId)];
-      if (ctx) {
-        buildNameHtml = `<div class="mh-build-name">${ctx.name}</div>`;
-      }
-    }
+    const ctx = (ctxBySlot && player) ? ctxBySlot[String(player.playerId)] : null;
+    const buildLabel = (ctx && ctx.name) ? ctx.name : 'Off Meta';
+    const buildNameHtml = `<div class="mh-build-name">${buildLabel}</div>`;
 
     const raceIconId = BuildOrderData.CONFIG.raceStarterIcons[race] || '';
     let html = `<div class="mh-player-header">
@@ -77,16 +72,12 @@ const MatchHeader = class {
       <img class="mh-race-icon-lg" src="/assets/wc3icons/${raceIconId}.jpg" title="${raceInfo.label}" style="border-color:${raceInfo.accent}" />
     </div>`;
 
-    // Expand / Collapse all sections button
-    html += `<div class="mh-expand-all" onclick="(function(btn){var card=btn.closest('.mh-player');var cs=card.querySelectorAll('.mh-section-content');var ts=card.querySelectorAll('.mh-section-toggle:not(.mh-expand-all)');var allOpen=[].every.call(cs,function(c){return !c.classList.contains('mh-hidden')});cs.forEach(function(c){allOpen?c.classList.add('mh-hidden'):c.classList.remove('mh-hidden')});ts.forEach(function(t){allOpen?t.classList.remove('mh-open'):t.classList.add('mh-open')});btn.textContent=allOpen?'Show All':'Hide All'})(this)">Show All</div>`;
-
-    // 1. HERO SUMMARY — collapsible
+    // Hero + Upgrade inline row (always visible)
     const { heroes } = tierProduction;
-    if (heroes && heroes.length) {
-      const sec = this._sectionToggle(uid, 'hero', 'Hero Summary', 'mh-hero-toggle');
-      html += sec.toggle + sec.contentOpen;
+    html += '<div class="mh-hero-upgrades">';
 
-      let heroHtml = '';
+    if (heroes && heroes.length) {
+      html += '<div class="mh-heroes">';
       heroes.forEach(hero => {
         let spellsHtml = '';
         if (hero.spellList && hero.spellList.length) {
@@ -98,7 +89,7 @@ const MatchHeader = class {
           });
         }
 
-        heroHtml += `<div class="mh-hero">
+        html += `<div class="mh-hero">
           <div class="mh-hero-portrait-wrap">
             <img class="mh-hero-portrait" src="/assets/wc3icons/${hero.itemId}.jpg" title="${hero.displayName}" />
             <span class="mh-hero-level">${hero.level}</span>
@@ -106,48 +97,53 @@ const MatchHeader = class {
           <div class="mh-hero-spells">${spellsHtml}</div>
         </div>`;
       });
-      html += `<div class="mh-heroes">${heroHtml}</div>`;
-
-      html += sec.contentClose;
+      html += '</div>';
+      html += '<div class="mh-hu-divider"></div>';
     }
 
-    // 2. UPGRADE SUMMARY — collapsible
     {
-      const sec = this._sectionToggle(uid, 'upgrade', 'Upgrade Summary', 'mh-upgrade-toggle');
-      html += sec.toggle + sec.contentOpen;
-
-      // Status row: expansion marker + max tier badge
+      html += '<div class="mh-upgrades-inline">';
       const maxTier = tier3Time !== Infinity ? 3 : tier2Time !== Infinity ? 2 : 1;
       const expoHtml = hasExpansion
-        ? `<div class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</div>`
-        : `<div class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</div>`;
-      html += `<div class="mh-status-row">${expoHtml}<span class="mh-tier-max t${maxTier}">T${maxTier}</span></div>`;
+        ? `<span class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</span>`
+        : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
+      html += `<div class="mh-status-compact">${expoHtml}<span class="mh-tier-max t${maxTier}">T${maxTier}</span></div>`;
 
-      // Upgrades row + atk/def types row
       if (finalSnapshot) {
-        let upgLine = '';
         const upgrades = finalSnapshot.upgrades;
         const hasAtk = upgrades && Object.keys(upgrades.attack).length > 0;
         const hasDef = upgrades && Object.keys(upgrades.defense).length > 0;
         const hasRes = upgrades && upgrades.researched.length > 0;
         if (hasAtk || hasDef || hasRes) {
-          Object.values(upgrades.attack).forEach(upg => {
-            const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
-            upgLine += `<span class="mh-info-badge atk" title="${upg.displayName} ${upg.level}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upg.level}</span></span>`;
-          });
-          Object.values(upgrades.defense).forEach(upg => {
-            const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
-            upgLine += `<span class="mh-info-badge def" title="${upg.displayName} ${upg.level}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upg.level}</span></span>`;
-          });
-          upgrades.researched.forEach(r => {
-            const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
-            const lvl = r.level > 1 ? ` ${r.level}` : '';
-            upgLine += `<span class="mh-info-upgrade"><img class="mh-info-icon" src="${iconSrc}" title="${r.displayName}${lvl}" onerror="this.style.display='none'" /></span>`;
-          });
-          html += `<div class="mh-info-row"><span class="mh-info-segment"><span class="mh-info-label">UPG</span>${upgLine}</span></div>`;
+          let rowHtml = '';
+          if (hasAtk) {
+            let atkBadges = '';
+            Object.values(upgrades.attack).forEach(upg => {
+              const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
+              atkBadges += `<span class="mh-info-badge atk" title="${upg.displayName} ${upg.level}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upg.level}</span></span>`;
+            });
+            rowHtml += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkBadges}</span>`;
+          }
+          if (hasDef) {
+            let defBadges = '';
+            Object.values(upgrades.defense).forEach(upg => {
+              const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
+              defBadges += `<span class="mh-info-badge def" title="${upg.displayName} ${upg.level}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upg.level}</span></span>`;
+            });
+            rowHtml += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defBadges}</span>`;
+          }
+          if (hasRes) {
+            let resBadges = '';
+            upgrades.researched.forEach(r => {
+              const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
+              const lvl = r.level > 1 ? ` ${r.level}` : '';
+              resBadges += `<span class="mh-info-upgrade"><img class="mh-info-icon" src="${iconSrc}" title="${r.displayName}${lvl}" onerror="this.style.display='none'" /></span>`;
+            });
+            rowHtml += `<span class="mh-info-segment"><span class="mh-info-label">RES</span>${resBadges}</span>`;
+          }
+          html += `<div class="mh-info-row">${rowHtml}</div>`;
         }
 
-        // Collect atk/def types from all tier units
         const atkSet = {};
         const defSet = {};
         const { tierProd } = tierProduction;
@@ -167,9 +163,10 @@ const MatchHeader = class {
         if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
         if (typeLine) html += `<div class="mh-info-row">${typeLine}</div>`;
       }
-
-      html += sec.contentClose;
+      html += '</div>';
     }
+
+    html += '</div>';
 
     // 3. UNIT SUMMARY — collapsible
     {
@@ -195,44 +192,8 @@ const MatchHeader = class {
     return html;
   }
 
-  renderViewerControls () {
-    const togglesEl = document.getElementById('mh-viewer-toggles');
-    if (!togglesEl) return;
-
-    const buttons = [
-      { key: 'displayCreepRoute', label: 'Creep Routes', featured: true },
-      { key: 'displayPath', label: 'Hero Paths' },
-      { key: 'displayLevelPins', label: 'Level Pins' },
-      { key: 'displayFloatingText', label: 'Action Text' },
-      { key: 'displayText', label: 'Unit Names' },
-      { key: 'decayEffects', label: 'Fade FX' },
-      { key: 'displayTreeGrid', label: 'Tree Grid' }
-    ];
-
-    togglesEl.innerHTML = '';
-
-    buttons.forEach(btn => {
-      const el = document.createElement('div');
-      el.classList.add('vc-btn');
-      if (btn.featured) el.classList.add('vc-featured');
-      el.id = `viewer-option-${btn.key}`;
-      el.textContent = btn.label;
-      el.addEventListener('click', () => wc3v.toggleViewOption(btn.key));
-
-      if (this.viewer.viewOptions && this.viewer.viewOptions[btn.key]) {
-        el.classList.add('on');
-      }
-
-      togglesEl.append(el);
-    });
-  }
-
   updateLayoutMode (mode) {
-    if (!this.el) return;
-    const toolbar = this.el.querySelector('.mh-toolbar');
-    if (toolbar) {
-      toolbar.style.display = (mode === LayoutMode.staticBuildOrder) ? 'none' : '';
-    }
+    // no-op — toolbar removed, map name overlay hidden via CSS in static-bo mode
   }
 };
 

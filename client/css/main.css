@@ -1760,45 +1760,6 @@ body {
   flex-shrink: 0;
 }
 
-/* --- Toolbar (map info left, toggle buttons right) --- */
-.mh-toolbar {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  flex-shrink: 0;
-}
-
-.mh-map-info {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  flex-shrink: 0;
-  margin-right: 0.75rem;
-}
-
-.mh-map-name {
-  font: 700 1.1rem Verdana;
-  color: #e0e8f0;
-}
-
-.mh-match-duration {
-  font: 0.8rem Verdana;
-  color: #5a6a75;
-}
-
-.mh-match-duration::before {
-  content: '\00b7';
-  margin-right: 0.4rem;
-}
-
-.mh-toggles {
-  display: grid;
-  grid-template-columns: repeat(4, auto);
-  gap: 4px;
-  align-items: center;
-}
-
 /* Creep Routes featured button — gold accent to stand out */
 .vc-btn.vc-featured {
   border-color: rgba(218,165,32,0.4);
@@ -1833,7 +1794,7 @@ body {
   display: flex;
   align-items: stretch;
   gap: 0.5rem;
-  min-width: 590px;
+  min-width: 540px;
 }
 
 .mh-vs {
@@ -1846,15 +1807,16 @@ body {
 
 .mh-player {
   flex: 1;
-  min-width: 280px;
+  min-width: 365px;
   padding: 0.4rem 0.6rem;
   background: rgba(255,255,255,0.03);
   border-radius: 6px;
   border-left: 3px solid #3a4a55;
-  flex-shrink: 0;
+  flex-shrink: 1;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
 }
 
 .mh-expand-all {
@@ -1880,7 +1842,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.05rem;
 }
 
 .mh-player-header-text {
@@ -1893,28 +1855,65 @@ body {
 }
 
 .mh-race-icon-lg {
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  border: 3px solid;
+  border: 2px solid;
   object-fit: cover;
   flex-shrink: 0;
-  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
 }
 
-/* Heroes row */
-.mh-heroes {
+/* Hero + Upgrade combined inline row */
+.mh-hero-upgrades {
   display: flex;
-  gap: 10px;
-  margin-bottom: 0.4rem;
-  flex-wrap: wrap;
   align-items: flex-start;
-  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.mh-hu-divider {
+  width: 1px;
+  align-self: stretch;
+  background: rgba(255,255,255,0.12);
+  min-height: 30px;
+}
+
+.mh-upgrades-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mh-status-compact {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mh-upg-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Heroes (compact, max 2 per row via grid) */
+.mh-heroes {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 6px;
+  align-items: center;
 }
 
 .mh-hero {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 2px;
 }
@@ -1925,9 +1924,9 @@ body {
 }
 
 .mh-hero-portrait {
-  width: 52px;
-  height: 52px;
-  border-radius: 5px;
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
   border: 2px solid #4a5a65;
   display: block;
 }
@@ -1936,19 +1935,19 @@ body {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  font: 700 0.7rem Verdana;
+  font: 700 0.6rem Verdana;
   color: #fff;
   background: rgba(0,0,0,0.85);
   border: 1px solid #4a5a65;
-  padding: 0 4px;
+  padding: 0 3px;
   border-radius: 3px;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
-/* Hero spells — horizontal row below portrait */
+/* Hero spells — 2-col grid beside portrait */
 .mh-hero-spells {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: repeat(2, 20px);
   gap: 1px;
 }
 
@@ -1958,17 +1957,17 @@ body {
 }
 
 .mh-spell-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
   border: 1px solid #3a4a55;
   display: block;
 }
 
 .mh-spell-level {
   position: absolute;
-  bottom: 1px;
-  right: 1px;
+  bottom: 0;
+  right: 0;
   font: 700 0.6rem Verdana;
   color: #fff;
   background: rgba(0,0,0,0.75);
@@ -2009,13 +2008,11 @@ body {
 
 /* Expansion marker */
 .mh-expansion-marker {
-  font: 700 0.75rem Verdana;
-  padding: 1px 6px;
+  font: 700 0.65rem Verdana;
+  padding: 0 4px;
   border-radius: 3px;
-  margin-left: 0;
-  margin-top: 2px;
   display: inline-block;
-  width: fit-content;
+  white-space: nowrap;
 }
 
 .mh-expanded {
@@ -2039,8 +2036,8 @@ body {
 }
 
 .mh-tier-max {
-  font: 700 0.8rem Verdana;
-  padding: 2px 6px;
+  font: 700 0.7rem Verdana;
+  padding: 1px 5px;
   border-radius: 3px;
   background: rgba(255,255,255,0.05);
 }
@@ -2142,14 +2139,16 @@ body {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-  padding: 4px 0;
+  gap: 6px;
+  margin-top: 3px;
+  padding: 3px 0;
 }
 .mh-info-segment {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 3px;
+  min-width: 0;
 }
 .mh-info-label {
   font-size: 9px;
@@ -2163,7 +2162,7 @@ body {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.06em;
-  padding: 1px 5px;
+  padding: 1px 3px;
   border-radius: 3px;
   display: inline-flex;
   align-items: center;
@@ -2178,14 +2177,14 @@ body {
   color: #a0c8f0;
 }
 .mh-upgrade-level {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
-  min-width: 14px;
+  min-width: 10px;
   text-align: center;
 }
 .mh-info-icon {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 2px;
   border: 1px solid rgba(255,255,255,0.15);
 }
@@ -2237,19 +2236,9 @@ body {
 }
 
 /* Section-specific modifiers */
-.mh-hero-toggle {
-  margin-top: 4px;
-  border-radius: 4px 4px 0 0;
-}
-
-.mh-upgrade-toggle {
-  margin-top: 0;
-  border-radius: 0;
-}
-
 .mh-unit-toggle {
   margin-top: auto;
-  border-radius: 0 0 4px 4px;
+  border-radius: 4px;
 }
 
 .mh-unit-flat {
@@ -2290,8 +2279,7 @@ body {
   gap: 0.2rem;
 }
 
-/* Hide toolbar in static-bo mode (no canvas to control) */
-.layout-mode-static-bo .mh-toolbar { display: none; }
+/* Hide map name overlay in static-bo mode (no canvas visible) */
 
 #mega-play-overlay {
   position: absolute;
@@ -3027,7 +3015,7 @@ body {
   display: flex;
   align-items: center;
   height: 0.75rem;
-  width: calc(100% - 19rem);
+  width: calc(100% - 23rem);
   background-color: #0a1218;
   border: 1px solid #3a4a55;
   border-radius: 2rem;
@@ -3125,6 +3113,134 @@ body {
 .zoom-slider::-moz-range-thumb:hover {
   background: #5aaef0;
 }
+
+/* --- Settings Button (inside scrubber bar) --- */
+
+.settings-button {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+  margin-right: 0.5rem;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.settings-button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.settings-button path {
+  fill: #ccc;
+  opacity: 0.7;
+  transition: opacity 0.12s;
+}
+
+.settings-button:hover path {
+  opacity: 1;
+  fill: #fff;
+}
+
+.settings-modal {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: 2.25rem;
+  min-width: 10rem;
+  padding: 0.5rem;
+  background-color: #1a2830;
+  border: 1px solid #3a4a55;
+  border-radius: 0.5rem;
+  z-index: 100;
+}
+
+.settings-modal .vc-btn {
+  display: flex;
+  width: 100%;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+}
+
+.settings-modal .vc-btn:last-child {
+  margin-bottom: 0;
+}
+
+/* --- Fullscreen Button (inside scrubber bar) --- */
+
+.fullscreen-button {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+
+.fullscreen-button svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.fullscreen-button path {
+  fill: #ccc;
+  opacity: 0.7;
+  transition: opacity 0.12s;
+}
+
+.fullscreen-button:hover path {
+  opacity: 1;
+  fill: #fff;
+}
+
+/* --- Fullscreen mode overrides --- */
+
+#map-container:fullscreen {
+  background: #000;
+  border: none;
+  width: 100vw;
+  height: 100vh;
+}
+
+#map-container:fullscreen #main-wrapper {
+  background: #000;
+}
+
+#map-container:-webkit-full-screen {
+  background: #000;
+  border: none;
+  width: 100vw;
+  height: 100vh;
+}
+
+#map-container:-webkit-full-screen #main-wrapper {
+  background: #000;
+}
+
+/* --- Map Name Overlay (floating on canvas) --- */
+
+#map-name-overlay {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 3000;
+  padding: 0.35rem 0.75rem;
+  background: rgba(10, 16, 22, 0.55);
+  border-radius: 4px;
+  font: 700 1.8rem Verdana;
+  color: rgba(224, 232, 240, 0.75);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+#map-name-overlay:empty {
+  display: none;
+}
+
+.layout-mode-static-bo #map-name-overlay { display: none; }
 
 /* ── Site-nav back link (← Builds) ─────────────────────────────────────── */
 .site-nav-back {
