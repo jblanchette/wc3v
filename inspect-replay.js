@@ -17,6 +17,7 @@
  *                          tiers      - tier transition data
  *                          supply     - supply building analysis + confidence
  *                          summary    - compact build order overview
+ *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
  *   --limit=N           Limit output to N entries per section (default: 50)
@@ -428,6 +429,33 @@ if (showAll || showSections.includes('summary')) {
       const w = firstWithWorkers.workers;
       console.log(`    Initial workers: gold=${w.onGold||0} lumber=${w.onLumber||0} build=${w.onBuild||0} ghouls=${w.ghoulsOnLumber||0}`);
     }
+  }
+  console.log('');
+}
+
+// --- Base Grid ---
+if (showAll || showSections.includes('basegrid')) {
+  console.log('=== BASE GRID ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const bg = pdata.baseGrid;
+    if (!bg) {
+      console.log(`  Player ${pid}: no baseGrid data`);
+      continue;
+    }
+
+    const dataBytes = JSON.stringify(bg.cells).length;
+    console.log(`  Player ${pid}: ${bg.cols}x${bg.rows} cells (${dataBytes} bytes)`);
+    console.log(`    origin: (${bg.originX}, ${bg.originY}) cellSize: ${bg.cellSize}`);
+
+    // count cell types
+    const counts = [0, 0, 0, 0, 0];
+    bg.cells.forEach(row => row.forEach(v => { if (v >= 0 && v <= 4) counts[v]++; }));
+    const labels = ['blocked', 'walkable', 'buildable', 'deepWater', 'shallowWater'];
+    const parts = labels.map((l, i) => `${l}=${counts[i]}`).filter((_, i) => counts[i] > 0);
+    console.log(`    cells: ${parts.join(', ')}`);
   }
   console.log('');
 }

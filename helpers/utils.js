@@ -653,7 +653,11 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
           previousMax: b.previousMax,
           newMax: b.newMax,
           triggerEvent: b.triggerEvent
-        }))
+        })),
+        ...(player._baseGrid ? { baseGrid: player._baseGrid } : {}),
+        ...(player._baseSnapshots && player._baseSnapshots.length
+          ? { baseSnapshots: player._baseSnapshots }
+          : {})
     	};
 
     	return acc;

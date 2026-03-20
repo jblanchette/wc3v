@@ -62,34 +62,22 @@ const MapRenderer = class {
       return;
     }
 
-    const treeSize = 6;
-    const treeRadius = Math.min(8, Math.max(3.5, treeSize));
-
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
 
-    ctx.fillStyle = (mapInfo && mapInfo.treeColor) || "#013f01";
-    ctx.strokeStyle = (mapInfo && mapInfo.treeStroke) || "#906739";
-    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = (mapInfo && mapInfo.treeColor) || '#064006';
+    ctx.globalAlpha = 0.85;
 
-    doodadData.forEach((tree, treeIndex) => {
-      const { flags, position, scale } = tree;
-      const { solid, visible } = flags;
-      const { x, y } = position;
+    doodadData.forEach((tree) => {
+      const { position, scale } = tree;
+      const scaledSize = 8 * scale[0];
 
-      // canvas-space position — context transform handles zoom/pan
-      const scaledSize = (8 * scale[0]);
-      const halfSize = scaledSize / 2;
-
-      const drawX = xScale(x) + middleX;
-      const drawY = yScale(y) + middleY;
-
-      //ctx.fillRect(drawX, drawY, scaledSize, scaledSize);
+      const drawX = xScale(position.x) + middleX;
+      const drawY = yScale(position.y) + middleY;
 
       ctx.beginPath();
-      ctx.arc(drawX + halfSize, drawY + halfSize, scaledSize, 0, Math.PI * 2, true);
+      ctx.arc(drawX, drawY, scaledSize, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
     });
 
     ctx.fillStyle = oldFillStyle;

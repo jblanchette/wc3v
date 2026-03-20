@@ -1,6 +1,7 @@
 const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 const unitBalanceMap = require("./UnitBalance.json").output;
 const researchMeta = require("./researchMeta.json");
+const spellOrderIds = require("./spellOrderIds.json");
 
 const mapConfiguration = require("./mapConfiguration");
 
@@ -178,6 +179,32 @@ const BuildMechanic = Object.freeze({
   SUMMONER:            'summoner',             // Undead: acolyte starts summon, walks away free
   BUILDER:             'builder'               // Human: peasant works on-site, can be pulled away
 });
+
+// Look up a spell from the replay's orderId bytes (hero or unit ability)
+// Returns { abilityId, displayName, toggle, isUnitSpell, isFormToggle, icon } or null
+// toggle is null for regular casts, 'on'/'off' for autocast/toggle abilities
+// icon is the WC3 FourCC code for the icon file (unit abilities only)
+const lookupSpellFromOrderId = (itemIdBytes) => {
+  if (!Array.isArray(itemIdBytes)) return null;
+  const key = itemIdBytes.join(',');
+  const raw = spellOrderIds[key];
+  if (!raw) return null;
+
+  const colonIdx = raw.indexOf(':');
+  const abilityId = colonIdx >= 0 ? raw.substring(0, colonIdx) : raw;
+  const toggle = colonIdx >= 0 ? raw.substring(colonIdx + 1) : null;
+
+  const ability = heroAbilities[abilityId] || unitAbilities[abilityId];
+  const isUnitSpell = !heroAbilities[abilityId] && !!unitAbilities[abilityId];
+  return {
+    abilityId,
+    displayName: ability ? ability.displayName : abilityId,
+    toggle,
+    isUnitSpell,
+    isFormToggle: !!(ability && ability.isFormToggle),
+    icon: (ability && ability.icon) || null
+  };
+};
 
 const raceBuildMechanic = (race, buildingItemId) => {
   switch (race) {
@@ -1335,6 +1362,65 @@ const heroAbilities = {
     'ANtm': { 'displayName': 'Transmute'}
 };
 
+// Non-hero unit abilities (Priest, Shaman, Sorceress, Druid, etc.)
+// Keyed by U-prefixed codes to avoid collision with heroAbilities.
+// icon = real WC3 FourCC code matching /assets/wc3icons/{icon}.jpg
+const unitAbilities = {
+  // ── Human ──
+  'Uhea': { displayName: 'Heal', isAutocast: true, icon: 'Ahea' },
+  'Uifr': { displayName: 'Inner Fire', isAutocast: true, icon: 'Ainf' },
+  'Udis': { displayName: 'Dispel Magic', icon: 'Adis' },
+  'Uslo': { displayName: 'Slow', isAutocast: true, icon: 'Aslo' },
+  'Upol': { displayName: 'Polymorph', icon: 'Aply' },
+  'Uinv': { displayName: 'Invisibility', icon: 'Aivs' },
+  'Usps': { displayName: 'Spell Steal', isAutocast: true, icon: 'Asps' },
+  'Ucmg': { displayName: 'Control Magic', icon: 'Acmg' },
+  'Ufla': { displayName: 'Flare', icon: 'Afla' },
+  'Udef': { displayName: 'Defend', isFormToggle: true, icon: 'Adef' },
+
+  // ── Orc ──
+  'Ublu': { displayName: 'Bloodlust', isAutocast: true, icon: 'Ablo' },
+  'Upur': { displayName: 'Purge', icon: 'Aprg' },
+  'Ulsh': { displayName: 'Lightning Shield', icon: 'Alsh' },
+  'Uhww': { displayName: 'Healing Ward', icon: 'Ahwd' },
+  'Ustt': { displayName: 'Stasis Trap', icon: 'Asta' },
+  'Usey': { displayName: 'Sentry Ward', icon: 'Aeye' },
+  'Uspl': { displayName: 'Spirit Link', icon: 'Aspl' },
+  'Udec': { displayName: 'Disenchant', icon: 'Adch' },
+  'Uasp': { displayName: 'Ancestral Spirit', icon: 'Aast' },
+  'Ueth': { displayName: 'Ethereal Form', isFormToggle: true, icon: 'Aetf' },
+  'Ucor': { displayName: 'Corporeal Form', isFormToggle: true, icon: 'Acor' },
+  'Uens': { displayName: 'Ensnare', isAutocast: true, icon: 'Aens' },
+  'Udev': { displayName: 'Devour', icon: 'Adev' },
+  'Uber': { displayName: 'Berserk', icon: 'Absk' },
+
+  // ── Night Elf ──
+  'Uroa': { displayName: 'Roar', icon: 'Aroa' },
+  'Urej': { displayName: 'Rejuvenation', icon: 'Arej' },
+  'Ubrf': { displayName: 'Bear Form', isFormToggle: true, icon: 'Abrf' },
+  'Uffi': { displayName: 'Faerie Fire', isAutocast: true, icon: 'Afae' },
+  'Ucyc': { displayName: 'Cyclone', icon: 'Acyc' },
+  'Urvf': { displayName: 'Raven Form', isFormToggle: true, icon: 'Arav' },
+  'Uadp': { displayName: 'Abolish Magic', isAutocast: true, icon: 'Aadm' },
+  'Utau': { displayName: 'Taunt', icon: 'Atau' },
+  'Usen': { displayName: 'Sentinel', icon: 'Aesn' },
+  'Udet': { displayName: 'Detonate', icon: 'Adtn' },
+
+  // ── Undead ──
+  'Ursd': { displayName: 'Raise Dead', isAutocast: true, icon: 'Arai' },
+  'Uufr': { displayName: 'Unholy Frenzy', icon: 'Auhf' },
+  'Ucrp': { displayName: 'Cripple', icon: 'Acri' },
+  'Ucrs': { displayName: 'Curse', isAutocast: true, icon: 'Acrs' },
+  'Uams': { displayName: 'Anti-magic Shell', icon: 'Aams' },
+  'Upos': { displayName: 'Possession', icon: 'Apos' },
+  'Uweb': { displayName: 'Web', isAutocast: true, icon: 'Aweb' },
+  'Ustn': { displayName: 'Stone Form', isFormToggle: true, icon: 'Astn' },
+  'Udvm': { displayName: 'Devour Magic', icon: 'Advm' },
+  'Uabs': { displayName: 'Absorb Mana', icon: 'Aabs' },
+  'Urlf': { displayName: 'Replenish Life', isAutocast: true, icon: 'Arpl' },
+  'Urlm': { displayName: 'Replenish Mana', isAutocast: true, icon: 'Arpm' },
+};
+
 const tierBuildings = {
   'U': ['unp1', 'unp2'],
   'O': ['ostr', 'ofrt'],
@@ -1748,6 +1834,9 @@ module.exports = {
   getBuildTime,
 
   researchMeta,
+  spellOrderIds,
+  lookupSpellFromOrderId,
+  unitAbilities,
 
   TECH_TREE_REQUIREMENTS,
 

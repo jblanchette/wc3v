@@ -54,29 +54,7 @@ const CLIENT_GAMEDATA_DIR = "../client/js";
 // per-palette-code color mapping (W3E ground texture codes → hex colors)
 //
 
-// Per-tileset rendering colors (water, trees, cliffs, ground/accent for terrain palette)
-const TILESET_EXTRAS = {
-  'L': { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#7a7040' },
-  'V': { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#807848' },
-  'F': { water: '#081858', shallowwater: '#103080', trees: '#28400a', cliff: '#302818', ground: '#6a8030', accent: '#8a6830' },
-  'X': { water: '#081858', shallowwater: '#103080', trees: '#28400a', cliff: '#302818', ground: '#687830', accent: '#886838' },
-  'W': { water: '#0a2868', shallowwater: '#1840a0', trees: '#1a3830', cliff: '#404858', ground: '#a8b8c0', accent: '#8898a8' },
-  'N': { water: '#0a2868', shallowwater: '#1840a0', trees: '#1a4030', cliff: '#384050', ground: '#90a8b0', accent: '#7888a0' },
-  'I': { water: '#0a1850', shallowwater: '#183070', trees: '#143828', cliff: '#283848', ground: '#88a0b8', accent: '#607088' },
-  'A': { water: '#061050', shallowwater: '#0a2080', trees: '#062810', cliff: '#1a1810', ground: '#1a5028', accent: '#385030' },
-  'C': { water: '#08104a', shallowwater: '#101870', trees: '#10200a', cliff: '#1a1810', ground: '#2a4018', accent: '#38382a' },
-  'B': { water: '#0a2060', shallowwater: '#183888', trees: '#385018', cliff: '#403020', ground: '#88943a', accent: '#a09058' },
-  'D': { water: '#081048', shallowwater: '#101868', trees: '#1a2a1a', cliff: '#181818', ground: '#384838', accent: '#484848' },
-  'G': { water: '#081048', shallowwater: '#101868', trees: '#142014', cliff: '#101010', ground: '#283020', accent: '#383830' },
-  'K': { water: '#081858', shallowwater: '#103080', trees: '#1a2a1a', cliff: '#202028', ground: '#505060', accent: '#606068' },
-  'J': { water: '#0a1060', shallowwater: '#182088', trees: '#1a2028', cliff: '#201830', ground: '#484068', accent: '#504870' },
-  'Y': { water: '#041838', shallowwater: '#0a2860', trees: '#062828', cliff: '#101828', ground: '#285040', accent: '#305050' },
-  'Z': { water: '#0a1858', shallowwater: '#142880', trees: '#103018', cliff: '#282818', ground: '#486040', accent: '#585848' },
-  'Q': { water: '#0a1858', shallowwater: '#142880', trees: '#284018', cliff: '#281810', ground: '#588038', accent: '#787048' },
-  'O': { water: '#0a1848', shallowwater: '#142068', trees: '#283818', cliff: '#281810', ground: '#504828', accent: '#684030' }
-};
-
-const DEFAULT_EXTRAS = { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#7a7040' };
+const { TILESET_EXTRAS, DEFAULT_EXTRAS } = require('../helpers/tilesetColors');
 
 function hexToRgb (hex) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -470,10 +448,12 @@ function drawBackgroundMap (output, wpm, doo, terrainFile) {
         const cb = Math.max(0, Math.min(255, Math.round(cliffRgb[2] * (1 + noise))));
         ctx.fillStyle = rgbToHex(cr, cg, cb);
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      } else if (!NoWater && !NoBuild) {
+      } else if (!NoWater && NoWalk) {
+        // deep water: has water + can't walk
         ctx.fillStyle = extras.water;
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      } else if (!NoWater && NoBuild) {
+      } else if (!NoWater && !NoWalk) {
+        // shallow/buildable water: has water but CAN walk (beach/shore)
         ctx.fillStyle = extras.shallowwater;
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
       }

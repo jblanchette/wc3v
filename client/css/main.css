@@ -644,6 +644,27 @@ body {
   margin-left: auto;
 }
 
+.bo-hdr-base-btn {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  color: #aab;
+  border: 1px solid #3a4a55;
+  background: #1a2830;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 6px;
+  text-transform: uppercase;
+}
+.bo-hdr-base-btn:hover {
+  color: #fff;
+  border-color: #5a7a8a;
+  background: #243540;
+}
+
 /* --- Tier header --- */
 
 .bo-tier-header {
@@ -2442,6 +2463,22 @@ body {
 .mega-hint.on .mega-hint-icon::after {
   content: "\25C9";
   opacity: 0.9;
+}
+
+.mega-hint-featured {
+  border-color: rgba(218,165,32,0.4);
+  color: #daa520;
+}
+
+.mega-hint-featured:hover {
+  background: rgba(218,165,32,0.15);
+  color: #e8b830;
+}
+
+.mega-hint-featured.on {
+  background: rgba(218,165,32,0.3);
+  border-color: #daa520;
+  color: #fff;
 }
 
 /* --- Match Complete Banner --- */
@@ -4726,3 +4763,120 @@ body {
 }
 .site-legal p { margin: 0 0 0.4rem; }
 .site-legal a { color: #999; text-decoration: underline; }
+
+/* ===== Building Placement Viewer Modal ===== */
+
+#placement-viewer-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 5000;
+}
+
+.placement-viewer-panel {
+  background-color: #1a2830;
+  border: 1px solid #3a4a55;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+}
+
+.placement-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.placement-viewer-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #c8d0d8;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.pv-race-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+}
+
+.pv-player-name {
+  font-weight: bold;
+}
+
+.pv-title-sep {
+  color: #667;
+  font-weight: normal;
+}
+
+.placement-viewer-close {
+  color: #888;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+.placement-viewer-close:hover {
+  color: #fff;
+}
+
+.placement-viewer-canvas {
+  border: 1px solid #2a3a45;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+.placement-viewer-canvas canvas {
+  display: block;
+}
+
+.placement-viewer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+}
+
+.pv-snapshot-btn {
+  background: #1a2830;
+  color: #c0c8d0;
+  border: 1px solid #3a4a55;
+  border-radius: 4px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.pv-snapshot-btn:hover:not(:disabled) {
+  background: #243440;
+  border-color: #5a6a75;
+}
+
+.pv-snapshot-btn.active {
+  background: #2a3a20;
+  border-color: #c8a030;
+  color: #e8d878;
+}
+
+.pv-snapshot-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.placement-viewer-label {
+  color: #889098;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  text-align: center;
+}

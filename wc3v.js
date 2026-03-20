@@ -6,6 +6,8 @@ const utils = require("./helpers/utils"),
 
 const config = require("./config/config");
 const ReplayValidator = require("./lib/ReplayValidator");
+const TERRAINFile = require("./lib/parsers/TERRAINFile");
+const { TILESET_EXTRAS, DEFAULT_EXTRAS } = require("./helpers/tilesetColors");
 const fs = require('fs');
 const path = require('path');
 
@@ -103,6 +105,204 @@ const doParsing = async (file) => {
       console.logger(`  Player ${r.player}: ${r.displayName} (${r.buildingId}) at ~${Math.floor(r.gameTime / 60000)}:${String(Math.floor((r.gameTime % 60000) / 1000)).padStart(2, '0')}`);
     });
   }
+
+  // post-parse: fix any remaining buildings with missing positions
+  Object.values(playerManager.players).forEach(player => {
+    if (parseInt(player.id) >= 24) return;  // skip neutral
+    player.units.filter(u => u.isBuilding).forEach(building => {
+      player.estimateBuildingPosition(building);
+    });
+  });
+
+  // post-parse: remove overlapping same-type buildings (destroyed-and-rebuilt or missed cancellation)
+  Object.values(playerManager.players).forEach(player => {
+    if (parseInt(player.id) >= 24) return;
+    const buildings = player.units.filter(u => u.isBuilding);
+    const toRemove = new Set();
+
+    for (let i = 0; i < buildings.length; i++) {
+      for (let j = i + 1; j < buildings.length; j++) {
+        const a = buildings[i], b = buildings[j];
+        if (a.itemId !== b.itemId) continue;
+
+        const dist = utils.distance(a.currentX, a.currentY, b.currentX, b.currentY);
+        const colA = (a.balanceInfo && a.balanceInfo.collisionSize) || 72;
+        const colB = (b.balanceInfo && b.balanceInfo.collisionSize) || 72;
+        const minSpacing = colA + colB;
+
+        if (dist < minSpacing) {
+          // keep the later one (higher spawnTime), remove the earlier
+          const older = a.spawnTime <= b.spawnTime ? a : b;
+          toRemove.add(older);
+          console.logger(`Building dedup: removing overlapping ${older.displayName} at (${older.currentX},${older.currentY})`);
+        }
+      }
+    }
+
+    if (toRemove.size > 0) {
+      player.units = player.units.filter(u => !toRemove.has(u));
+    }
+  });
+
+  // post-parse: extract compact base grid from WPM for each player
+  const wpmGrid = playerManager.world.gridData && playerManager.world.gridData.wpm
+    ? playerManager.world.gridData.wpm.grid
+    : null;
+
+  if (wpmGrid) {
+    const wpmRows = wpmGrid.length;
+    const wpmCols = wpmGrid[0].length;
+    const wpmOriginX = wpmGrid[0][0].x;
+    const wpmOriginY = wpmGrid[0][0].y;
+    const BASE_GRID_PADDING = 8; // WPM cells of padding around buildings
+
+    // read tileset colors for base viewer rendering
+    let tilesetExtras = DEFAULT_EXTRAS;
+    const mapData = playerManager.world.gridData && playerManager.world.gridData.mapData;
+    if (mapData && mapData.name) {
+      const w3ePath = path.join(__dirname, 'mapdata', mapData.name, 'war3map.w3e');
+      if (fs.existsSync(w3ePath)) {
+        try {
+          const terrainFile = new TERRAINFile(w3ePath);
+          tilesetExtras = TILESET_EXTRAS[terrainFile.tileset] || DEFAULT_EXTRAS;
+        } catch (e) {
+          // fallback to default if W3E read fails
+        }
+      }
+    }
+
+    // get doo grid for tree filtering
+    const dooGrid = playerManager.world.gridData && playerManager.world.gridData.doo
+      ? playerManager.world.gridData.doo.grid
+      : null;
+
+    Object.values(playerManager.players).forEach(player => {
+      if (parseInt(player.id) >= 24) return;
+
+      const buildings = player.units.filter(u => u.isBuilding);
+      if (!buildings.length || !player.startingPosition) return;
+
+      // only include buildings near the starting position (main base)
+      const BASE_RADIUS = 2000; // game units from starting position
+      const baseBuildings = buildings.filter(b => {
+        return utils.distance(b.currentX, b.currentY,
+          player.startingPosition.x, player.startingPosition.y) < BASE_RADIUS;
+      });
+      if (!baseBuildings.length) return;
+
+      // compute bounding box of main base buildings in WPM cell indices
+      let minRow = Infinity, maxRow = -Infinity;
+      let minCol = Infinity, maxCol = -Infinity;
+
+      baseBuildings.forEach(b => {
+        const col = Math.round((b.currentX - wpmOriginX) / 32);
+        const row = Math.round((wpmOriginY - b.currentY) / 32);
+        const halfCells = 8; // ~2 tiles of building radius
+        minRow = Math.min(minRow, row - halfCells);
+        maxRow = Math.max(maxRow, row + halfCells);
+        minCol = Math.min(minCol, col - halfCells);
+        maxCol = Math.max(maxCol, col + halfCells);
+      });
+
+      // add padding and clamp
+      minRow = Math.max(0, minRow - BASE_GRID_PADDING);
+      maxRow = Math.min(wpmRows - 1, maxRow + BASE_GRID_PADDING);
+      minCol = Math.max(0, minCol - BASE_GRID_PADDING);
+      maxCol = Math.min(wpmCols - 1, maxCol + BASE_GRID_PADDING);
+
+      // extract subgrid as compact integers:
+      // 0=blocked, 1=walkable(noBuild), 2=buildable, 3=water, 4=shallowWater
+      const rows = [];
+      for (let r = minRow; r <= maxRow; r++) {
+        const row = [];
+        for (let c = minCol; c <= maxCol; c++) {
+          const cell = wpmGrid[r][c];
+          let val;
+          if (cell.NoWalk && cell.NoFly) val = 0;          // blocked cliff/void
+          else if (!cell.NoWater && cell.NoWalk) val = 3;   // deep water
+          else if (!cell.NoWater && !cell.NoWalk) val = 4;  // shallow water
+          else if (!cell.NoBuild && !cell.NoWalk) val = 2;  // buildable
+          else val = 1;                                      // walkable path
+          row.push(val);
+        }
+        rows.push(row);
+      }
+
+      // filter trees within baseGrid bounds
+      const gridOriginX = wpmOriginX + minCol * 32;
+      const gridOriginY = wpmOriginY - minRow * 32;
+      const gridWidth = (maxCol - minCol + 1) * 32;
+      const gridHeight = (maxRow - minRow + 1) * 32;
+      let baseTrees = [];
+
+      if (dooGrid) {
+        dooGrid.forEach(item => {
+          if (!item.flags || !item.flags.visible) return;
+          if (item.life === 0) return;
+
+          const tx = parseFloat(item.position.x);
+          const ty = parseFloat(item.position.y);
+
+          // check if tree is within baseGrid bounds
+          if (tx < gridOriginX || tx > gridOriginX + gridWidth) return;
+          if (ty > gridOriginY || ty < gridOriginY - gridHeight) return;
+
+          baseTrees.push({
+            x: Math.round(tx),
+            y: Math.round(ty),
+            s: Math.round((item.scale ? item.scale[0] : 1) * 100) / 100
+          });
+        });
+      }
+
+      player._baseGrid = {
+        originX: gridOriginX,
+        originY: gridOriginY,
+        cellSize: 32,
+        cols: maxCol - minCol + 1,
+        rows: maxRow - minRow + 1,
+        cells: rows,
+        groundColor: tilesetExtras.ground,
+        cliffColor: tilesetExtras.cliff,
+        waterColor: tilesetExtras.water,
+        shallowWaterColor: tilesetExtras.shallowwater,
+        treeColor: tilesetExtras.trees,
+        trees: baseTrees
+      };
+    });
+  }
+
+  // post-parse: capture final base snapshot for each player
+  const SNAPSHOT_BASE_RADIUS = 2000;
+  Object.values(playerManager.players).forEach(player => {
+    if (parseInt(player.id) >= 24) return;
+    if (!player.startingPosition) return;
+
+    const sx = player.startingPosition.x;
+    const sy = player.startingPosition.y;
+
+    const buildings = player.units
+      .filter(u => u.isBuilding && u.currentX !== 0 && u.currentY !== 0 &&
+        utils.distance(u.currentX, u.currentY, sx, sy) < SNAPSHOT_BASE_RADIUS)
+      .map(u => ({
+        itemId: u.itemId,
+        displayName: u.displayName,
+        x: u.currentX,
+        y: u.currentY,
+        collisionSize: (u.balanceInfo && u.balanceInfo.collisionSize) || 0,
+        isInferred: u.isInferred || false
+      }));
+
+    if (buildings.length) {
+      player._baseSnapshots = player._baseSnapshots || [];
+      player._baseSnapshots.push({
+        label: 'Final',
+        tier: player.tier,
+        gameTime: globalTime,
+        buildings: buildings
+      });
+    }
+  });
 
   // post-parse validation: detect contradictions in parsed data
   const validator = new ReplayValidator(playerManager.players);

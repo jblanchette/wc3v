@@ -23,12 +23,52 @@ const IconSizes = {
 const minimumUnitSize     = 12,
       minimumBuildingSize = 12,
       minimumHeroIconSize = 22;
-      
-const maximumBuildingSize = 20,
-      minFontSize         = 8,
+
+const minFontSize         = 8,
       maxFontSize         = 11;
 
-//// 
+////
+// WC3 building placement footprint in tiles.
+// Primary lookup by itemId (handles race-specific exceptions like NE town halls).
+// Fallback by collisionSize for unknown buildings.
+////
+
+const BUILDING_FOOTPRINT_BY_ID = {
+  // 4x4 town halls (3.5 visual to reduce crowding on canvas)
+  'htow': 3.5, 'hkee': 3.5, 'hcas': 3.5,   // Human
+  'ogre': 3.5, 'ostr': 3.5, 'ofrt': 3.5,   // Orc
+  'etol': 3.5, 'etoa': 3.5, 'etoe': 3.5,   // NE (collision=144 but footprint is 4x4!)
+  'unpl': 3.5, 'unp1': 3.5, 'unp2': 3.5,   // UD
+
+  // 3x3 production / tech buildings
+  'halt': 3, 'hbar': 3, 'hbla': 3, 'harm': 3, 'hars': 3, 'hlum': 3,  // Human
+  'oalt': 3, 'obar': 3, 'obea': 3, 'ofor': 3, 'oshy': 3, 'otto': 3, 'osld': 3, // Orc
+  'eate': 3, 'eaow': 3, 'eaom': 3, 'eaoe': 3, 'edob': 3, 'eden': 3,  // NE
+  'uaod': 3, 'usep': 3, 'ugrv': 3, 'utod': 3, 'uslh': 3, 'ugol': 3,  // UD
+
+  // 2x2 small buildings
+  'hhou': 2, 'hatw': 2, 'hwtw': 2, 'hvlt': 2,  // Human
+  'otrb': 2, 'owtw': 2, 'ovln': 2,              // Orc
+  'emow': 2, 'etrp': 2,                          // NE
+  'uzig': 2, 'uzg1': 2, 'uzg2': 2, 'utom': 2,  // UD
+
+  // Neutral
+  'ngol': 2, 'ntav': 2, 'ngme': 2, 'nmer': 2, 'nmrk': 2,
+};
+
+function getBuildingFootprintTiles (itemId, collisionSize) {
+  // exact itemId match first
+  if (itemId && BUILDING_FOOTPRINT_BY_ID[itemId] !== undefined) {
+    return BUILDING_FOOTPRINT_BY_ID[itemId];
+  }
+  // fallback by collisionSize
+  if (!collisionSize) return 2;
+  if (collisionSize <= 130) return 2;
+  if (collisionSize <= 160) return 3;
+  return 3.5;
+}
+
+////
 // drawing constants
 ////
 
@@ -43,15 +83,18 @@ const ClientUnit = class {
       "displayName", "itemId", "itemId1", "itemId2",
       "objectId1", "objectId2", "isRegistered", "isUnit",
       "isBuilding", "isIllusion", "level", "lastPosition",
-      "path", "meta", "items", "spawnTime",
+      "path", "meta", "items", "spawnTime", "trainedTime",
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
-      "collisionSize"
+      "collisionSize", "isInferred"
     ];
 
     dataFields.forEach(field => {
       this[field] = unitData[field] || null;
     });
+
+    // units in training shouldn't render until training completes
+    this.readyTime = this.trainedTime || this.spawnTime;
 
     // guard for units that weren't fully resolved server-side
     if (!this.meta) {
@@ -166,9 +209,7 @@ const ClientUnit = class {
       this.iconSize = IconSizes.hero;
       this.minDecayLevel = 0.0;
     } else if (this.isBuilding) {
-      this.iconSize = this.collisionSize
-        ? Math.max(minimumBuildingSize, this.collisionSize * 0.15)
-        : IconSizes.building;
+      this.iconSize = IconSizes.building;
       this.decayLevel = 0.475;
     } else if (this.meta.worker) {
       this.iconSize = IconSizes.worker;
@@ -291,7 +332,7 @@ const ClientUnit = class {
   }
 
   update (gameTime, dt) {
-    if (gameTime < this.spawnTime) {
+    if (gameTime < this.readyTime) {
       return;
     }
 
@@ -320,12 +361,15 @@ const ClientUnit = class {
   renderBuilding (ctx, frameData, transform, xScale, yScale) {
     const { x, y } = this.lastPosition;
 
-    const drawX = xScale(x) + wc3v.gameScaler.middleX;
-    const drawY = yScale(y) + wc3v.gameScaler.middleY;
+    // round to integers for pixel-perfect grid alignment
+    const drawX = Math.round(xScale(x) + wc3v.gameScaler.middleX);
+    const drawY = Math.round(yScale(y) + wc3v.gameScaler.middleY);
 
-    const iconSize = Math.max(this.iconSize, minimumBuildingSize);
+    // size building to match its WC3 placement grid footprint
+    const footprintTiles = getBuildingFootprintTiles(this.itemId, this.collisionSize);
+    const iconSize = Math.round(footprintTiles * 128 * wc3v.gameScaler.pxPerUnit);
 
-    const halfIcon = iconSize / 2;
+    const halfIcon = Math.round(iconSize / 2);
 
     ctx.globalAlpha = buildingAlpha;
     ctx.drawImage(this.icon, drawX - halfIcon, drawY - halfIcon, iconSize, iconSize);
@@ -428,7 +472,7 @@ const ClientUnit = class {
   renderPath (ctx, transform, gameTime, xScale, yScale, viewOptions) {
     const self = this;
     const path = this.path;
-    if (!path.length || gameTime < this.spawnTime) {
+    if (!path.length || gameTime < this.readyTime) {
       return;
     }
 
@@ -576,7 +620,7 @@ const ClientUnit = class {
   }
 
   preRender (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
-    if (gameTime < this.spawnTime) {
+    if (gameTime < this.readyTime) {
       return;
     }
 

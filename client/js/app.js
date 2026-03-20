@@ -109,6 +109,7 @@ const Wc3vViewer = class {
     this.utilityCtx = null;
 
     this.floatingText = new window.FloatingText();
+    this.placementViewer = new window.BuildingPlacementViewer();
 
     this.scrubber = new window.TimeScrubber("scrubber-bar", "main-canvas");
 
@@ -500,25 +501,7 @@ const Wc3vViewer = class {
   }
 
   loadGridFile () {
-    const self = this;
-    const { name } = this.mapInfo;
-
-    // return new Promise((resolve, reject) => {
-    //   this.loadFile(`../maps/${name}/wpm.json`, (res) => {
-    //     try {
-    //       const { target } = res;
-    //       const jsonData = JSON.parse(target.responseText);
-
-    //       console.log("grid: ", jsonData);
-    //       self.gridData = jsonData.grid;
-    //     } catch (e) {
-    //       console.log("no grid: ", e);
-    //       self.gridData = [];
-    //     }
-
-    //     resolve(true);
-    //   });
-    // })
+    this.gridData = [];
   }
 
   loadDoodadFile () {
@@ -664,6 +647,27 @@ const Wc3vViewer = class {
       };
       el.addEventListener('transitionend', onEnd);
     }
+  }
+
+  showPlacementViewer (playerId) {
+    const player = this.players.find(p => p.playerId === String(playerId));
+    if (!player) {
+      console.warn('[PlacementViewer] player not found:', playerId);
+      return;
+    }
+
+    const playerData = this.mapData.players[playerId];
+    if (!playerData || !playerData.baseGrid) {
+      console.warn('[PlacementViewer] no baseGrid data for player', playerId);
+      return;
+    }
+
+    if (!playerData.baseSnapshots || !playerData.baseSnapshots.length) {
+      console.warn('[PlacementViewer] no baseSnapshots for player', playerId);
+      return;
+    }
+
+    this.placementViewer.show(playerData.baseGrid, playerData.baseSnapshots, player.playerColor, this.neutralBuildings, this.mapImage, this.gameScaler, player.displayName, player.race);
   }
 
   toggleViewOption (optionKey) {
@@ -972,6 +976,7 @@ const Wc3vViewer = class {
       this.timelineSpline = new TimelineSpline(this);
       this.boRenderer = new BuildOrderRenderer(this);
       this.matchHeader = new MatchHeader(this);
+      this.placementViewer.setup();
       this.setupBuildOrder();
       this.matchHeader.render();
 
@@ -996,7 +1001,7 @@ const Wc3vViewer = class {
       displayText: true,
 
       displayMapGrid: false,
-      displayTreeGrid: false,
+      displayTreeGrid: true,
       displayWalkGrid: false,
       displayBuildGrid: false,
       displayWaterGrid: false,

@@ -164,6 +164,18 @@ const BuildOrderRenderer = class {
         <span class="bo-hdr-player-name" style="color:${playerColor}">${displayName}${buildLabel}</span>
         <span class="bo-hdr-tier-badge t${maxTier}">T${maxTier}</span>
         <span class="bo-hdr-race-badge">${raceInfo.label}</span>`;
+
+      // Base Layout button
+      const baseBtn = document.createElement('span');
+      baseBtn.classList.add('bo-hdr-base-btn');
+      baseBtn.title = 'View base layout';
+      baseBtn.textContent = 'Base';
+      baseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.viewer.showPlacementViewer(player.playerId);
+      });
+      toggleBar.append(baseBtn);
+
       header.append(toggleBar);
 
       column.append(header);
