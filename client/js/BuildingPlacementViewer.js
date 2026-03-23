@@ -9,6 +9,21 @@ const PLACEMENT_MAX_MODAL = 620;
 const PLACEMENT_MIN_CELL = 4;
 const TREE_CLEAR_BUFFER = 3; // extra WPM cells beyond building footprint for tree clearing
 
+// seeded pseudo-random for deterministic per-tree variation
+function tileHash (a, b) {
+  let h = (a * 374761393 + b * 668265263) | 0;
+  h = (h ^ (h >> 13)) * 1274126177;
+  return ((h ^ (h >> 16)) & 0xFF) / 255.0;
+}
+
+function hexToRgb (hex) {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16)
+  ];
+}
+
 // Town hall itemIds that should get a larger footprint in the viewer
 const TOWN_HALL_IDS = new Set([
   'htow', 'hkee', 'hcas',
@@ -206,8 +221,7 @@ const BuildingPlacementViewer = class {
 
     // --- Pass 1.5: Trees from baseGrid.trees, skipping building overlaps ---
     if (baseGrid.trees && baseGrid.trees.length) {
-      ctx.fillStyle = baseGrid.treeColor || '#064006';
-      ctx.globalAlpha = 0.85;
+      const treeRgb = hexToRgb(baseGrid.treeColor || '#064006');
 
       baseGrid.trees.forEach(tree => {
         const gridCol = (tree.x - originX) / cellSize;
@@ -230,10 +244,30 @@ const BuildingPlacementViewer = class {
         });
         if (overlapsBuilding) return;
 
-        // draw tree as circle
-        const radius = Math.max(5, (tree.s || 1) * cs * 1.7);
+        // per-tree seeded variation
+        const h1 = tileHash(tree.x, tree.y);
+        const h2 = tileHash(tree.y, tree.x);
+
+        // brightness: +/-15%
+        const bright = 1 + (h1 * 0.3 - 0.15);
+        const cr = Math.max(0, Math.min(255, Math.round(treeRgb[0] * bright)));
+        const cg = Math.max(0, Math.min(255, Math.round(treeRgb[1] * bright)));
+        const cb = Math.max(0, Math.min(255, Math.round(treeRgb[2] * bright)));
+        ctx.fillStyle = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+
+        // opacity: 0.7 to 0.9
+        ctx.globalAlpha = 0.7 + h2 * 0.2;
+
+        // size: +/-20%
+        const sizeVar = 1 + (h2 * 0.4 - 0.2);
+        const radius = Math.max(5, (tree.s || 1) * cs * 1.7 * sizeVar);
+
+        // position jitter: +/-0.3 cells
+        const jitterX = (h1 * 0.6 - 0.3) * cs;
+        const jitterY = (h2 * 0.6 - 0.3) * cs;
+
         ctx.beginPath();
-        ctx.arc(gridCol * cs, gridRow * cs, radius, 0, Math.PI * 2);
+        ctx.arc(gridCol * cs + jitterX, gridRow * cs + jitterY, radius, 0, Math.PI * 2);
         ctx.fill();
       });
 

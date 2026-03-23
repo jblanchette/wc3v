@@ -146,6 +146,37 @@
     function unitFull(id)  { return (UNIT_NAMES[id] || ['', ''])[0]; }
     function unitShort(id) { return (UNIT_NAMES[id] || ['', ''])[1]; }
 
+    // ─── Building label lookup ───────────────────────────────
+    const BUILDING_NAMES = {
+      // Undead
+      'usep': ['Crypt', 'Crypt'],           'ugrv': ['Graveyard', 'GY'],
+      'uaod': ['Altar of Darkness', 'Altar'], 'utom': ['Tomb of Relics', 'Tomb'],
+      'uslh': ['Slaughterhouse', 'Slaughter'], 'ugol': ['Haunted Gold Mine', 'Expo'],
+      'unpl': ['Necropolis', 'Necro'],       'utod': ['Temple of the Damned', 'Temple'],
+      'uzig': ['Ziggurat', 'Zig'],
+      // Human
+      'halt': ['Altar of Kings', 'Altar'],   'hbar': ['Barracks', 'Rax'],
+      'hhou': ['Farm', 'Farm'],              'hbla': ['Blacksmith', 'Smith'],
+      'hars': ['Arcane Sanctum', 'Sanctum'], 'hkee': ['Keep', 'Keep'],
+      'hcas': ['Castle', 'Castle'],          'hgra': ['Gryphon Aviary', 'Aviary'],
+      'hvlt': ['Arcane Vault', 'Vault'],     'htow': ['Town Hall', 'TH'],
+      // Orc
+      'oalt': ['Altar of Storms', 'Altar'],  'otrb': ['Orc Burrow', 'Burrow'],
+      'obar': ['Barracks', 'Rax'],           'ovln': ['Voodoo Lounge', 'Lounge'],
+      'obea': ['Bestiary', 'Bestiary'],      'osld': ['Spirit Lodge', 'Lodge'],
+      'otto': ['Tauren Totem', 'Totem'],     'ofor': ['War Mill', 'Mill'],
+      'ogre': ['Great Hall', 'GH'],          'ofrt': ['Fortress', 'Fort'],
+      // Night Elf
+      'eate': ['Altar of Elders', 'Altar'],  'eaom': ['Ancient of War', 'AoW'],
+      'emow': ['Moon Well', 'Well'],         'edob': ["Hunter's Hall", 'HH'],
+      'etoa': ['Tree of Ages', 'ToA'],       'eaoe': ['Ancient of Lore', 'AoL'],
+      'etoe': ['Tree of Eternity', 'ToE'],   'etol': ['Tree of Life', 'ToL'],
+      'etrp': ['Ancient Protector', 'AP'],   'eaow': ['Ancient of Wind', 'AoWi']
+    };
+
+    function buildingFull(id)  { return (BUILDING_NAMES[id] || ['', ''])[0]; }
+    function buildingShort(id) { return (BUILDING_NAMES[id] || ['', ''])[1]; }
+
     // ─── Unit combat types (mirrors Constants.js ATTACK_TYPES / ARMOR_TYPES) ──
     const ATTACK_TYPES = {
       normal: { label: 'Normal',  icon: '/assets/wc3icons/atk-normal.jpg' },
@@ -188,108 +219,180 @@
     // Expansion building IDs per race
     const EXPO_BUILDINGS = { 'H': 'htow', 'O': 'ogre', 'E': 'etol', 'U': 'ugol' };
 
-    // ─── Card renderer — mirrors MatchHeader.renderPlayerCard ──
+    // ─── Hero → abilities mapping (3 skills + ultimate) ─────
+    const HERO_SKILLS = {
+      // Human
+      'hamg': ['AHbz', 'AHwe', 'AHab', 'AHmt'],   // Archmage
+      'hmkg': ['AHtb', 'AHtc', 'AHbh', 'AHav'],   // Mountain King
+      'hpal': ['AHhb', 'AHds', 'AHad', 'AHre'],    // Paladin
+      'Hblm': ['AHfs', 'AHbn', 'AHdr', 'AHpx'],    // Blood Mage
+      // Orc
+      'obla': ['AOwk', 'AOmi', 'AOcr', 'AOww'],    // Blademaster
+      'ofar': ['AOcl', 'AOfs', 'AOsf', 'AOeq'],    // Far Seer
+      'otch': ['AOsh', 'AOae', 'AOws', 'AOre'],     // Tauren Chieftain
+      'oshd': ['AOhw', 'AOhx', 'AOsw', 'AOvd'],    // Shadow Hunter
+      // Night Elf
+      'edem': ['AEmb', 'AEim', 'AEev', 'AEme'],    // Demon Hunter
+      'ekee': ['AEer', 'AEfn', 'AEah', 'AEtq'],    // Keeper of the Grove
+      'emoo': ['AEst', 'AHfa', 'AEar', 'AEsf'],    // Priestess of the Moon
+      'ewar': ['AEbl', 'AEfk', 'AEsh', 'AEsv'],    // Warden
+      // Undead
+      'udea': ['AUdc', 'AUdp', 'AUau', 'AUan'],    // Death Knight
+      'ulic': ['AUfn', 'AUfa', 'AUdr', 'AUdd'],    // Lich
+      'udre': ['AUcs', 'AUsl', 'AUav', 'AUin'],    // Dreadlord
+      'ucrl': ['AUim', 'AUts', 'AUcb', 'AUls'],    // Crypt Lord
+      // Neutral
+      'nbrn': ['ANdr', 'ANsi', 'ANba', 'ANch'],     // Dark Ranger
+      'nbst': ['ANsg', 'ANsq', 'ANsw', 'ANst'],    // Beastmaster
+      'npbm': ['ANbf', 'ANdb', 'ANdh', 'ANef'],     // Pandaren Brewmaster
+      'nngs': ['ANfa', 'ANfl', 'ANms', 'ANto'],     // Naga Sea Witch
+      'npit': ['ANrf', 'ANca', 'ANht', 'ANdo'],     // Pit Lord
+      'ntin': ['ANeg', 'ANcs', 'ANsy', 'ANrg'],     // Tinker
+    };
+
+    // Ability display names (subset used on cards)
+    const ABILITY_NAMES = {
+      'AHbz': 'Blizzard', 'AHwe': 'Water Elemental', 'AHab': 'Brilliance Aura', 'AHmt': 'Mass Teleport',
+      'AHtb': 'Storm Bolt', 'AHtc': 'Thunder Clap', 'AHbh': 'Bash', 'AHav': 'Avatar',
+      'AHhb': 'Holy Light', 'AHds': 'Divine Shield', 'AHad': 'Devotion Aura', 'AHre': 'Resurrection',
+      'AHdr': 'Siphon Mana', 'AHfs': 'Flame Strike', 'AHbn': 'Banish', 'AHpx': 'Phoenix',
+      'AEmb': 'Mana Burn', 'AEim': 'Immolation', 'AEev': 'Evasion', 'AEme': 'Metamorphosis',
+      'AEer': 'Entangle', 'AEfn': 'Treants', 'AEah': 'Thorns Aura', 'AEtq': 'Tranquility',
+      'AEst': 'Scout', 'AHfa': 'Searing Arrows', 'AEar': 'Trueshot', 'AEsf': 'Starfall',
+      'AEbl': 'Blink', 'AEfk': 'Fan of Knives', 'AEsh': 'Shadow Strike', 'AEsv': 'Vengeance',
+      'AOwk': 'Wind Walk', 'AOmi': 'Mirror Image', 'AOcr': 'Critical Strike', 'AOww': 'Bladestorm',
+      'AOcl': 'Chain Lightning', 'AOfs': 'Far Sight', 'AOsf': 'Feral Spirit', 'AOeq': 'Earthquake',
+      'AOsh': 'Shockwave', 'AOae': 'Endurance Aura', 'AOws': 'War Stomp', 'AOre': 'Reincarnation',
+      'AOhw': 'Healing Wave', 'AOhx': 'Hex', 'AOsw': 'Serpent Ward', 'AOvd': 'Big Bad Voodoo',
+      'AUdc': 'Death Coil', 'AUdp': 'Death Pact', 'AUau': 'Unholy Aura', 'AUan': 'Animate Dead',
+      'AUfn': 'Frost Nova', 'AUfa': 'Frost Armor', 'AUdr': 'Dark Ritual', 'AUdd': 'Death & Decay',
+      'AUcs': 'Carrion Swarm', 'AUsl': 'Sleep', 'AUav': 'Vampiric Aura', 'AUin': 'Inferno',
+      'AUim': 'Impale', 'AUts': 'Spiked Carapace', 'AUcb': 'Carrion Beetles', 'AUls': 'Locust Swarm',
+      'ANdr': 'Life Drain', 'ANsi': 'Silence', 'ANba': 'Black Arrow', 'ANch': 'Charm',
+      'ANsg': 'Bear', 'ANsq': 'Quilbeast', 'ANsw': 'Hawk', 'ANst': 'Stampede',
+      'ANbf': 'Breath of Fire', 'ANdb': 'Drunken Brawler', 'ANdh': 'Drunken Haze', 'ANef': 'Storm Earth Fire',
+      'ANfa': 'Frost Arrows', 'ANfl': 'Forked Lightning', 'ANms': 'Mana Shield', 'ANto': 'Tornado',
+      'ANrf': 'Rain of Fire', 'ANca': 'Cleave', 'ANht': 'Howl of Terror', 'ANdo': 'Doom',
+      'ANeg': 'Engineering', 'ANcs': 'Cluster Rockets', 'ANsy': 'Pocket Factory', 'ANrg': 'Robo-Goblin',
+    };
+
+    // ─── Card renderer ─────────────────────────────────────
     function buildCard(build) {
       const rc = raceColor(build.race);
-      const rAbbr = raceAbbr(build.race);
       const tp = build.tierProgression;
       const heroIds = build.heroItemIds || (build.heroItemId ? [build.heroItemId] : []);
 
-      // Max tier from tierProgression
-      const maxTier = (tp && tp.t3) ? 3 : (tp && tp.t2) ? 2 : 1;
-
-      // Expansion detection from tierProgression buildings
-      const expoBid = EXPO_BUILDINGS[build.race];
-      let hasExpansion = false;
-      if (tp && expoBid) {
-        ['t1','t2','t3'].forEach(k => {
-          if (tp[k] && tp[k].buildings && tp[k].buildings.includes(expoBid)) hasExpansion = true;
-        });
-      }
-
-      // Collect all unique units across tiers for ATK/DEF types
-      const allUnitIds = new Set();
-      if (tp) {
-        ['t1','t2','t3'].forEach(k => {
-          if (tp[k] && tp[k].units) tp[k].units.forEach(id => allUnitIds.add(id));
-        });
-      }
-      (build.keyUnits || []).forEach(id => allUnitIds.add(id));
-
-      // ── Build the .mh-player inner card (same structure as viewer) ──
-      let mhHtml = '';
-
-      // 1. Player name row → race icon chip + build name
+      // ── Header: build name + matchups + floating race watermark
       const iconId = raceIcon(build.race);
-      mhHtml += `<div class="mh-player-name">
-        <img class="mh-race-icon" src="/assets/wc3icons/${iconId}.jpg"
-             alt="${raceLabel(build.race)}" />
+      let matchupPills = '';
+      if (build.matchups && build.matchups.length) {
+        const pills = build.matchups.map(m => {
+          const opp = m.split('v')[1] || '';
+          return `<span class="site-card-matchup" style="--opp-color:${raceColor(opp)}">vs ${raceAbbr(opp)}</span>`;
+        }).join('');
+        matchupPills = `<div class="site-card-matchups">${pills}</div>`;
+      }
+      const headerHtml = `<div class="site-card-header">
+        <img class="site-card-race-watermark" src="/assets/wc3icons/${iconId}.jpg" alt="${raceLabel(build.race)}" />
         <span class="mh-build-label">${build.name}</span>
+        ${matchupPills}
       </div>`;
 
-      // 2. Heroes — portraits (no spells/levels in static data)
+      // ── Heroes: portraits with skill icons ──────────────
+      const ordLabels = ['1st', '2nd', '3rd'];
+      const heroSkillData = build.heroSkills || {};
+      let heroesHtml = '';
       if (heroIds.length) {
-        const heroItems = heroIds.map(id =>
-          `<div class="mh-hero">
+        const heroItems = heroIds.map((id, i) => {
+          const skills = HERO_SKILLS[id] || [];
+          const levels = heroSkillData[id] || {};
+          const skillIcons = skills.map(abilId => {
+            const lvl = levels[abilId] || 0;
+            const isUlt = skills.indexOf(abilId) === 3;
+            const name = ABILITY_NAMES[abilId] || abilId;
+            const dimClass = lvl === 0 ? ' site-skill-dim' : '';
+            const ultClass = isUlt ? ' site-skill-ult' : '';
+            return `<div class="site-skill-icon${dimClass}${ultClass}" title="${name}${lvl ? ' ('+lvl+')' : ''}">
+              <img src="/assets/wc3icons/${abilId}.jpg" loading="lazy" onerror="this.style.display='none'" />
+              ${lvl ? `<span class="site-skill-lvl">${lvl}</span>` : ''}
+            </div>`;
+          }).join('');
+          return `<div class="site-card-hero">
             <div class="mh-hero-portrait-wrap">
               <img class="mh-hero-portrait" src="/assets/wc3icons/${id}.jpg"
                    title="${unitFull(id)}" loading="lazy" onerror="this.style.display='none'" />
+              <span class="site-card-hero-ord">${ordLabels[i] || ''}</span>
             </div>
-          </div>`
-        ).join('');
-        mhHtml += `<div class="mh-heroes">${heroItems}</div>`;
+            ${skillIcons ? `<div class="site-card-hero-skills">${skillIcons}</div>` : ''}
+          </div>`;
+        }).join('');
+        heroesHtml = `<div class="site-card-heroes"><span class="site-card-section-label">Heroes</span><div class="site-card-heroes-row">${heroItems}</div></div>`;
       }
 
-      // 3. Status row: expansion marker + max tier badge
-      const expoHtml = hasExpansion
-        ? `<div class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</div>`
-        : `<div class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</div>`;
-      mhHtml += `<div class="mh-status-row"><span class="mh-tier-max t${maxTier}">T${maxTier}</span>${expoHtml}</div>`;
+      // ── Key Units + ATK/DEF + Expo ──────────────────────
+      let unitsHtml = '';
+      {
+        const keyUnits = build.keyUnits || [];
 
-      // 4. ATK/DEF types row (derived from unit combat data)
-      const atkSet = {};
-      const defSet = {};
-      allUnitIds.forEach(id => {
-        const c = UNIT_COMBAT[id];
-        if (!c) return;
-        if (c.atk && ATTACK_TYPES[c.atk]) atkSet[c.atk] = 1;
-        if (c.def && ARMOR_TYPES[c.def]) defSet[c.def] = 1;
-      });
-      let typeLine = '';
-      const atkIcons = Object.keys(atkSet).map(k =>
-        `<img class="mh-info-icon" src="${ATTACK_TYPES[k].icon}" title="${ATTACK_TYPES[k].label} attack" onerror="this.style.display='none'" />`
-      ).join('');
-      if (atkIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkIcons}</span>`;
-      const defIcons = Object.keys(defSet).map(k =>
-        `<img class="mh-info-icon" src="${ARMOR_TYPES[k].icon}" title="${ARMOR_TYPES[k].label} armor" onerror="this.style.display='none'" />`
-      ).join('');
-      if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
-      if (typeLine) mhHtml += `<div class="mh-info-row">${typeLine}</div>`;
-
-      // 5. Key units — always visible (not togglable on homepage)
-      const keyUnits = build.keyUnits || [];
-      if (keyUnits.length) {
-        const unitItems = keyUnits.map(id =>
-          `<span class="mh-icon-wrap">
-            <span class="mh-portrait-wrap">
-              <img class="mh-tech-icon" src="/assets/wc3icons/${id}.jpg"
+        let keyHtml = '';
+        if (keyUnits.length) {
+          keyHtml = `<div class="site-card-key-units">${keyUnits.map(id =>
+            `<div class="site-card-key-unit">
+              <img class="site-card-key-icon" src="/assets/wc3icons/${id}.jpg"
                    title="${unitFull(id)}" loading="lazy" onerror="this.style.display='none'" />
-            </span>
-          </span>`
+              <span class="site-card-key-label">${unitShort(id)}</span>
+            </div>`
+          ).join('')}</div>`;
+        }
+
+        const allUnitIds = new Set();
+        if (tp) {
+          ['t1','t2','t3'].forEach(k => {
+            if (tp[k] && tp[k].units) tp[k].units.forEach(id => allUnitIds.add(id));
+          });
+        }
+        keyUnits.forEach(id => allUnitIds.add(id));
+
+        const atkSet = {}, defSet = {};
+        allUnitIds.forEach(id => {
+          const c = UNIT_COMBAT[id];
+          if (!c) return;
+          if (c.atk && ATTACK_TYPES[c.atk]) atkSet[c.atk] = 1;
+          if (c.def && ARMOR_TYPES[c.def]) defSet[c.def] = 1;
+        });
+
+        let typeLine = '';
+        const atkIcons = Object.keys(atkSet).map(k =>
+          `<img class="mh-info-icon" src="${ATTACK_TYPES[k].icon}" title="${ATTACK_TYPES[k].label} attack" onerror="this.style.display='none'" />`
         ).join('');
-        mhHtml += `<div class="mh-section-toggle mh-unit-toggle mh-open mh-static">Key Units</div>`;
-        mhHtml += `<div class="mh-section-content"><div class="mh-unit-flat">${unitItems}</div></div>`;
+        if (atkIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkIcons}</span>`;
+        const defIcons = Object.keys(defSet).map(k =>
+          `<img class="mh-info-icon" src="${ARMOR_TYPES[k].icon}" title="${ARMOR_TYPES[k].label} armor" onerror="this.style.display='none'" />`
+        ).join('');
+        if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
+
+        const expoBid = EXPO_BUILDINGS[build.race];
+        let hasExpansion = false;
+        if (tp && expoBid) {
+          ['t1','t2','t3'].forEach(k => {
+            if (tp[k] && tp[k].buildings && tp[k].buildings.includes(expoBid)) hasExpansion = true;
+          });
+        }
+        const expoHtml = hasExpansion
+          ? `<span class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</span>`
+          : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
+
+        const infoRow = typeLine
+          ? `<div class="site-card-info-row">${typeLine}</div>`
+          : '';
+        const expoRow = `<div class="site-card-expo-row">${expoHtml}</div>`;
+
+        const unitsLabel = keyUnits.length ? `<span class="site-card-section-label">Units</span>` : '';
+        const upgradesLabel = typeLine ? `<span class="site-card-section-label">Upgrades</span>` : '';
+        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}${upgradesLabel}${infoRow}${expoRow}</div>`;
       }
 
-      // 3-axis color-coded tags
-      const tagPills = Object.keys(TAG_AXES).map(axisKey => {
-        const axis = TAG_AXES[axisKey];
-        const val = build[axis.field];
-        if (!val || !axis.values[val]) return '';
-        return `<span class="site-card-tag" style="--tag-color:${axis.color}">${axis.values[val]}</span>`;
-      }).join('');
-
-      // Replay section
+      // ── Replay strip ────────────────────────────────────
       const replays = build.replays || [];
       const hasReplay = replays.length > 0;
       let replaySection = '';
@@ -297,33 +400,40 @@
         const first = replays[0];
         const firstHref = `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}`;
         const firstItem = `<div class="site-replay-item">
-          <span class="site-replay-players">${first.playerName}</span>
-          <span class="site-replay-map">${first.map || ''}</span>
-          <a href="${firstHref}" class="site-replay-view-btn">View Replay</a>
+          <span class="site-replay-info">${first.playerName}${first.map ? ` — ${first.map}` : ''}</span>
+          <a href="${firstHref}" class="site-replay-view-btn">View</a>
         </div>`;
 
-        let moreHtml = '';
+        let moreBtn = '';
         if (replays.length > 1) {
+          const modalId = `replay-modal-${(build.id || '').replace(/\W/g, '')}`;
           const extraItems = replays.slice(1).map(r => {
             const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
-            return `<div class="site-replay-extra-item">
-              <div class="site-replay-extra-info">
-                <span class="site-replay-extra-player">${r.playerName} vs ${r.opponentName || '?'}</span>
-                <span class="site-replay-extra-map">${r.map || ''}</span>
-              </div>
-              <a href="${href}" class="site-replay-view-btn">View Replay</a>
+            return `<div class="site-replay-modal-item">
+              <span class="site-replay-extra-player">${r.playerName}</span>
+              <span class="site-replay-extra-map">${r.map || ''}</span>
+              <a href="${href}" class="site-replay-view-btn">View</a>
             </div>`;
           }).join('');
-          moreHtml = `
-            <button class="site-replay-toggle" onclick="event.stopPropagation(); this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
-              View More Replays (${replays.length - 1})
+
+          moreBtn = `
+            <button class="site-replay-toggle" onclick="event.stopPropagation(); document.getElementById('${modalId}').classList.add('open');">
+              +${replays.length - 1} more replay${replays.length > 2 ? 's' : ''}
             </button>
-            <div class="site-replay-extra-list">${extraItems}</div>`;
+            <div class="site-replay-modal" id="${modalId}" onclick="if(event.target===this)this.classList.remove('open')">
+              <div class="site-replay-modal-box" style="--race-color:${rc}">
+                <div class="site-replay-modal-header">
+                  <span class="site-replay-modal-title">${build.name} — Replays</span>
+                  <button class="site-replay-modal-close" onclick="event.stopPropagation(); this.closest('.site-replay-modal').classList.remove('open')">\u2715</button>
+                </div>
+                <div class="site-replay-modal-list">${extraItems}</div>
+              </div>
+            </div>`;
         }
 
         replaySection = `<div class="site-replay-section">
+          ${moreBtn}
           ${firstItem}
-          ${moreHtml}
         </div>`;
       } else {
         replaySection = `<div class="site-replay-section">
@@ -336,12 +446,10 @@
         : '';
 
       return `
-        <div class="site-build-card${hasReplay ? '' : ' no-replay'}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}>
-          <div class="mh-player">${mhHtml}</div>
-          <div class="site-card-desc">${build.description}</div>
-          <div class="site-card-footer">
-            ${tagPills ? `<div class="site-card-tags">${tagPills}</div>` : ''}
-          </div>
+        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}>
+          ${headerHtml}
+          ${heroesHtml}
+          ${unitsHtml}
           ${replaySection}
         </div>
       `;
@@ -593,7 +701,7 @@
       document.getElementById('all-builds-grid').addEventListener('click', function(e) {
         if (e.target.closest('.site-replay-view-btn')) return;
         if (e.target.closest('.site-replay-toggle')) return;
-        if (e.target.closest('.site-replay-extra-list')) return;
+        if (e.target.closest('.site-replay-modal')) return;
         const card = e.target.closest('.site-build-card[data-href]');
         if (card) window.location.href = card.dataset.href;
       });

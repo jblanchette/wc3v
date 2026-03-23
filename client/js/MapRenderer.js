@@ -1,3 +1,18 @@
+// seeded pseudo-random for deterministic per-tree variation
+function tileHash (a, b) {
+  let h = (a * 374761393 + b * 668265263) | 0;
+  h = (h ^ (h >> 13)) * 1274126177;
+  return ((h ^ (h >> 16)) & 0xFF) / 255.0;
+}
+
+function hexToRgb (hex) {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16)
+  ];
+}
+
 const MapRenderer = class {
   constructor () {
     this._neutralIcons = {};
@@ -65,15 +80,37 @@ const MapRenderer = class {
     const oldFillStyle = ctx.fillStyle;
     const oldAlpha = ctx.globalAlpha;
 
-    ctx.fillStyle = (mapInfo && mapInfo.treeColor) || '#064006';
-    ctx.globalAlpha = 0.85;
+    const treeRgb = hexToRgb((mapInfo && mapInfo.treeColor) || '#064006');
 
     doodadData.forEach((tree) => {
       const { position, scale } = tree;
-      const scaledSize = 8 * scale[0];
+      const tx = Math.round(parseFloat(position.x));
+      const ty = Math.round(parseFloat(position.y));
 
-      const drawX = xScale(position.x) + middleX;
-      const drawY = yScale(position.y) + middleY;
+      // per-tree seeded variation
+      const h1 = tileHash(tx, ty);
+      const h2 = tileHash(ty, tx);
+
+      // brightness: +/-15%
+      const bright = 1 + (h1 * 0.3 - 0.15);
+      const cr = Math.max(0, Math.min(255, Math.round(treeRgb[0] * bright)));
+      const cg = Math.max(0, Math.min(255, Math.round(treeRgb[1] * bright)));
+      const cb = Math.max(0, Math.min(255, Math.round(treeRgb[2] * bright)));
+      ctx.fillStyle = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
+
+      // opacity: 0.7 to 0.9
+      ctx.globalAlpha = 0.7 + h2 * 0.2;
+
+      // size: +/-20%
+      const sizeVar = 1 + (h2 * 0.4 - 0.2);
+      const scaledSize = 8 * scale[0] * sizeVar;
+
+      // position jitter
+      const jitterX = (h1 * 6 - 3);
+      const jitterY = (h2 * 6 - 3);
+
+      const drawX = xScale(position.x) + middleX + jitterX;
+      const drawY = yScale(position.y) + middleY + jitterY;
 
       ctx.beginPath();
       ctx.arc(drawX, drawY, scaledSize, 0, Math.PI * 2);

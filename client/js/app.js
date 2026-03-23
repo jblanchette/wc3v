@@ -166,7 +166,7 @@ const Wc3vViewer = class {
         // removing loading status indicator
         self.setLoadingStatus(false);
       } catch (e) {
-        const size = target && target.responseText ? target.responseText.length : 0;
+        const size = res.target && res.target.responseText ? res.target.responseText.length : 0;
         console.error(`Failed to load replay "${filename}" (response size: ${size} chars): ${e.message}`);
         console.error('If JSON is truncated, re-parse with: node wc3v.js --replay=NAME --debug');
       }
@@ -1153,16 +1153,32 @@ const Wc3vViewer = class {
 
 
 
-    const mapParts = file.split("/");
+    // split on both / and \ to handle W3C paths like "Maps/W3Champions\59_w3c_..."
+    const mapParts = file.split(/[/\\]/);
 
     this.matchEndTime = subheader.replayLengthMS;
 
     this.mapName = mapParts[mapParts.length - 1].toLowerCase();
 
-    const foundMapName =  maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
+    // strip W3C numbered prefix: "{num}_w3c_{date}_{time}_" → just the map name
+    const w3cPrefixMatch = this.mapName.match(/^\d+_w3c_\d+_\d+_(.+)$/);
+    const strippedMapName = w3cPrefixMatch ? w3cPrefixMatch[1] : this.mapName;
+
+    const foundMapName = maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
       const searchName = maps[mapItem].name.toLowerCase();
 
       if (this.mapName.indexOf(searchName) !== -1) {
+        return mapItem;
+      }
+
+      if (strippedMapName !== this.mapName && strippedMapName.indexOf(searchName) !== -1) {
+        return mapItem;
+      }
+
+      // match base map name without version for newer map versions
+      const baseSearchName = searchName.replace(/[_-]v[\d._-]+$/, '');
+      const baseMapName = strippedMapName.replace('.w3x', '').replace(/[_-]v[\d._-]+$/, '');
+      if (baseSearchName.length > 3 && baseMapName === baseSearchName) {
         return mapItem;
       }
     });
