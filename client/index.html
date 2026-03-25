@@ -656,6 +656,11 @@
         visible.length
           ? visible.map(buildCard).join('')
           : '<div class="site-no-results">No builds match these filters.</div>';
+
+      // Move replay modals to document.body so they escape card stacking contexts
+      document.querySelectorAll('.site-replay-modal').forEach(modal => {
+        document.body.appendChild(modal);
+      });
     }
 
     // ─── Init ───────────────────────────────────────────────

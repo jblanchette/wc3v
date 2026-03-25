@@ -250,34 +250,64 @@ const TimelineSpline = class {
     this._svgLine(spineX, y1, spineX, y2, 'bo-spline-line');
   }
 
-  // ── Time markers ──
+  // ── Time markers — hierarchical ruler/clock aesthetic ──
 
   _renderTimeMarkers (spineX, controlPoints, maxTime) {
-    let lastLabelY = -Infinity;
+    let lastMajorLabelY = -Infinity;
+    let lastMinuteLabelY = -Infinity;
 
-    // gameTime is in milliseconds — step every 60 seconds (60000 ms)
-    for (let t = 60000; t <= maxTime; t += 60000) {
+    // Short game fallback: label every minute if game is under 5 minutes
+    const majorLabelInterval = maxTime < 300000 ? 60000 : 300000;
+
+    // Step every 30 seconds for sub-tick granularity
+    for (let t = 30000; t <= maxTime; t += 30000) {
       const y = this._getSplineY(t, controlPoints);
+      const secs = t / 1000;
+      const isMinute = secs % 60 === 0;
+      const is5Min = secs % 300 === 0;
+      const is10Min = secs % 600 === 0;
 
-      // Tick marks
-      this._svgLine(spineX - 12, y, spineX + 12, y, 'bo-time-marker-tick');
+      const minutes = Math.floor(secs / 60);
+      const sec = secs % 60;
+      const label = minutes + ':' + (sec < 10 ? '0' : '') + sec;
 
-      // Diamond marker at each minute
-      this._svgDiamond(spineX, y, 5, 'bo-time-marker-diamond');
-
-      // Label (skip if too close to previous)
-      if (y - lastLabelY > 22) {
-        const totalSecs = Math.floor(t / 1000);
-        const minutes = Math.floor(totalSecs / 60);
-        const secs = totalSecs % 60;
-        const label = `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-
-        // Background pill for readability
-        this._svgRect(spineX - 16, y - 18, 32, 14, 3, 'bo-time-label-bg');
-
-        const text = this._svgText(spineX, y - 8, label, 'bo-time-marker-label');
+      if (is10Min) {
+        // ── 10-minute: wide background bar + bold label + diamond + ring ──
+        this._svgRect(spineX - 26, y - 2, 52, 4, 0, 'bo-tick-bar-10m');
+        this._svgRect(spineX - 24, y - 14, 48, 12, 4, 'bo-time-label-bg-10m');
+        const text = this._svgText(spineX, y - 5, label, 'bo-time-label-10m');
         text.setAttribute('text-anchor', 'middle');
-        lastLabelY = y;
+        this._svgDiamond(spineX, y, 8, 'bo-marker-10m');
+        this._svgCircle(spineX, y, 14, 'bo-marker-10m-ring');
+        lastMajorLabelY = y;
+        lastMinuteLabelY = y;
+
+      } else if (is5Min) {
+        // ── 5-minute: background bar + label + diamond ──
+        this._svgRect(spineX - 22, y - 1.5, 44, 3, 0, 'bo-tick-bar-5m');
+        if (y - lastMajorLabelY > 30) {
+          this._svgRect(spineX - 20, y - 13, 40, 12, 3, 'bo-time-label-bg-5m');
+          const text = this._svgText(spineX, y - 4, label, 'bo-time-label-5m');
+          text.setAttribute('text-anchor', 'middle');
+          lastMajorLabelY = y;
+        }
+        this._svgDiamond(spineX, y, 6, 'bo-marker-5m');
+        lastMinuteLabelY = y;
+
+      } else if (isMinute) {
+        // ── 1-minute: visible tick + small label ──
+        this._svgLine(spineX - 12, y, spineX + 12, y, 'bo-tick-1m');
+        this._svgCircle(spineX, y, 3, 'bo-marker-1m');
+        if (y - lastMinuteLabelY > 22) {
+          this._svgRect(spineX - 16, y - 12, 32, 11, 3, 'bo-time-label-bg-1m');
+          const text = this._svgText(spineX, y - 3.5, label, 'bo-time-label-1m');
+          text.setAttribute('text-anchor', 'middle');
+          lastMinuteLabelY = y;
+        }
+
+      } else {
+        // ── 30-second: subtle but visible tick ──
+        this._svgLine(spineX - 7, y, spineX + 7, y, 'bo-tick-30s');
       }
     }
   }

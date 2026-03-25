@@ -86,7 +86,9 @@ const ClientUnit = class {
       "path", "meta", "items", "spawnTime", "trainedTime",
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
-      "collisionSize", "isInferred"
+      "collisionSize", "isInferred", "destroyedAt", "isSummon",
+      "isTransport", "loadEvents", "loadedInto", "isMercenary",
+      "destroyedByBuilding"
     ];
 
     dataFields.forEach(field => {
@@ -95,6 +97,9 @@ const ClientUnit = class {
 
     // units in training shouldn't render until training completes
     this.readyTime = this.trainedTime || this.spawnTime;
+
+    // Build loaded-windows for units that get loaded into transports
+    this._loadedWindows = this._buildLoadedWindows(unitData);
 
     // guard for units that weren't fully resolved server-side
     if (!this.meta) {
@@ -117,6 +122,53 @@ const ClientUnit = class {
     if (this.meta.hero) {
       this.loaders.concat(this.loadSpellIcons());
     }
+  }
+
+  _buildLoadedWindows (unitData) {
+    // If this unit is a transport, scan its loadEvents to build windows for each passenger
+    // If this unit has loadedInto set, we need to check the transport's loadEvents
+    // But we don't have cross-unit references in the constructor — so we build windows
+    // from any transport's loadEvents that reference this unit's UUID
+    // This is handled externally by ClientPlayer after all units are created
+    return [];
+  }
+
+  _isLoadedAt (gameTime) {
+    for (let i = 0; i < this._loadedWindows.length; i++) {
+      const w = this._loadedWindows[i];
+      if (gameTime >= w.loadTime && gameTime < w.unloadTime) return true;
+    }
+    return false;
+  }
+
+  _cargoCountAt (gameTime) {
+    if (!this.loadEvents || !this.loadEvents.length) return 0;
+    let count = 0;
+    for (let i = 0; i < this.loadEvents.length; i++) {
+      const evt = this.loadEvents[i];
+      if (evt.gameTime > gameTime) break;
+      if (evt.action === 'load') count++;
+      else if (evt.action === 'unload') count = Math.max(0, count - 1);
+    }
+    return count;
+  }
+
+  _cargoItemIdsAt (gameTime) {
+    if (!this.loadEvents || !this.loadEvents.length) return [];
+    const loaded = [];
+    for (let i = 0; i < this.loadEvents.length; i++) {
+      const evt = this.loadEvents[i];
+      if (evt.gameTime > gameTime) break;
+      if (evt.action === 'load') {
+        if (!loaded.find(u => u.unitId === evt.unitId)) {
+          loaded.push({ unitId: evt.unitId, itemId: evt.unitItemId, name: evt.unitName });
+        }
+      } else if (evt.action === 'unload') {
+        const idx = loaded.findIndex(u => u.unitId === evt.unitId);
+        if (idx >= 0) loaded.splice(idx, 1);
+      }
+    }
+    return loaded.slice(0, 8);
   }
 
   loadAsset (imgSrc, prop) {
@@ -216,6 +268,9 @@ const ClientUnit = class {
 
       // don't fully decay workers, since they often idle
       this.minDecayLevel = 0.475;
+    } else if (this.isTransport) {
+      this.iconSize = IconSizes.hero;  // larger icon for transports — important gameplay element
+      this.minDecayLevel = 0.3;
     } else {
       this.iconSize = IconSizes.unit;
       this.minDecayLevel = 0.0;
@@ -223,17 +278,19 @@ const ClientUnit = class {
   }
 
   getFullName () {
+    const shortName = getShortName(this.itemId, this.displayName);
+
     if (!this.meta.hero) {
-      return this.displayName;
+      return shortName;
     } else {
       if (this.isIllusion) {
-        return `${this.displayName} (I)`;
+        return `${shortName} (I)`;
       }
 
       const levelRecord = this.levelStream && this.levelStream[this.recordIndexes.level];
       const heroLevel = levelRecord ? levelRecord.newLevel : 1;
 
-      return `${this.displayName} (${heroLevel})`;
+      return `${shortName} (${heroLevel})`;
     }
   }
 
@@ -335,6 +392,20 @@ const ClientUnit = class {
     if (gameTime < this.readyTime) {
       return;
     }
+
+    // destroyed summons should not render after their expiry
+    if (this.destroyedAt && gameTime >= this.destroyedAt) {
+      this._destroyed = true;
+      return;
+    }
+
+    // permanently consumed wisps (NE ancients) — old replays may lack destroyedAt
+    if (this.destroyedByBuilding) {
+      this._destroyed = true;
+      return;
+    }
+
+    this._destroyed = false;
 
     // checks and updates current level record, setting this.fullName
     this.getCurrentLevelRecord(gameTime);
@@ -445,8 +516,17 @@ const ClientUnit = class {
     const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
 
     // add unit to draw frame unit positions
+    // Calculate current cargo for transports
+    let cargoCount = 0;
+    let cargoItems = null;
+    if (this.isTransport) {
+      const items = this._cargoItemIdsAt(gameTime);
+      cargoCount = items.length;
+      cargoItems = items.length ? items.map(c => c.itemId) : null;
+    }
+
     unitDrawPositions.push({
-      uuid: this.uuid, 
+      uuid: this.uuid,
       itemId: this.itemId,
       fullName: this.fullName,
       playerId: this.playerId,
@@ -462,7 +542,10 @@ const ClientUnit = class {
       isMainHero: this.isMainHero,
       heroRank: this.heroRank,
       spawnTime: this.spawnTime,
-      x: drawX, 
+      isTransport: !!this.isTransport,
+      cargoCount: cargoCount,
+      cargoItems: cargoItems,
+      x: drawX,
       y: drawY,
       count: 1,
       drawSlots: []
@@ -621,6 +704,15 @@ const ClientUnit = class {
 
   preRender (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (gameTime < this.readyTime) {
+      return;
+    }
+
+    if (this._destroyed) {
+      return;
+    }
+
+    // Hide units currently loaded inside a transport
+    if (this._loadedWindows.length && this._isLoadedAt(gameTime)) {
       return;
     }
 

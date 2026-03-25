@@ -168,12 +168,14 @@ const MatchHeader = class {
 
     html += '</div>';
 
-    // 3. UNIT SUMMARY — collapsible
+    // 3. ARMY & ITEMS — collapsible
     {
-      const sec = this._sectionToggle(uid, 'unit', 'Unit Summary', 'mh-unit-toggle');
+      const sec = this._sectionToggle(uid, 'unit', 'Army & Items', 'mh-unit-toggle');
       html += sec.toggle + sec.contentOpen;
-      html += '<div class="mh-unit-flat">';
 
+      // Army composition
+      html += '<div class="mh-subsection-label">Army</div>';
+      html += '<div class="mh-unit-flat">';
       if (finalSnapshot && finalSnapshot.army && finalSnapshot.army.length) {
         finalSnapshot.army.forEach(u => {
           const countBadge = u.count > 1 ? `<span class="mh-unit-count">${u.count}</span>` : '';
@@ -184,8 +186,58 @@ const MatchHeader = class {
       } else {
         html += '<span class="mh-tier-empty">\u2014 No units</span>';
       }
-
       html += '</div>';
+
+      // Item summary
+      const itemStream = player.itemStream;
+      if (itemStream && (itemStream.purchases.length || itemStream.uses.length)) {
+        html += '<div class="mh-subsection-label">Items</div>';
+        html += '<div class="mh-item-summary">';
+
+        if (itemStream.purchases.length) {
+          html += '<div class="mh-item-row">';
+          itemStream.purchases.forEach(p => {
+            const countBadge = p.count > 1 ? `<span class="mh-unit-count">${p.count}</span>` : '';
+            const goldTip = p.goldSpent ? ` (${p.goldSpent}g)` : '';
+            html += `<span class="mh-icon-wrap">
+              <span class="mh-portrait-wrap mh-item-portrait"><img class="mh-tech-icon" src="/assets/wc3icons/${p.itemId}.jpg" title="${p.displayName} x${p.count}${goldTip}" onerror="this.parentElement.parentElement.style.display='none'" />${countBadge}</span>
+            </span>`;
+          });
+          html += '</div>';
+        }
+
+        // Total gold spent on items
+        const totalGold = itemStream.purchases.reduce((sum, p) => sum + (p.goldSpent || 0), 0);
+        if (totalGold > 0) {
+          html += `<div class="mh-item-gold-total"><span class="mh-cost-gold-icon"></span>${totalGold}g spent on items</div>`;
+        }
+
+        html += '</div>';
+      }
+
+      // Mercenary hires
+      const mercEvents = (player.eventStream || []).filter(e => e.key === 'hireMercenary');
+      if (mercEvents.length) {
+        html += '<div class="mh-subsection-label">Mercenaries</div>';
+        html += '<div class="mh-unit-flat">';
+        // Group by unit type
+        const mercCounts = {};
+        mercEvents.forEach(e => {
+          const id = e.unit.itemId;
+          if (!mercCounts[id]) mercCounts[id] = { itemId: id, displayName: e.unit.displayName, count: 0, goldSpent: 0 };
+          mercCounts[id].count++;
+          mercCounts[id].goldSpent += e.goldCost || 0;
+        });
+        Object.values(mercCounts).forEach(m => {
+          const countBadge = m.count > 1 ? `<span class="mh-unit-count">${m.count}</span>` : '';
+          const goldTip = m.goldSpent ? ` (${m.goldSpent}g)` : '';
+          html += `<span class="mh-icon-wrap">
+            <span class="mh-portrait-wrap mh-merc-portrait"><img class="mh-tech-icon" src="/assets/wc3icons/${m.itemId}.jpg" title="${m.displayName} x${m.count}${goldTip}" onerror="this.parentElement.parentElement.style.display='none'" />${countBadge}</span>
+          </span>`;
+        });
+        html += '</div>';
+      }
+
       html += sec.contentClose;
     }
 

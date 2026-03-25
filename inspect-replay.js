@@ -16,6 +16,8 @@
  *                          workers    - worker snapshots from events
  *                          tiers      - tier transition data
  *                          supply     - supply building analysis + confidence
+ *                          items      - item purchases, uses, and summary
+ *                          mercs      - mercenary hires and tavern hero purchases
  *                          summary    - compact build order overview
  *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
@@ -315,6 +317,85 @@ if (showAll || showSections.includes('tiers')) {
     console.log(`  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
     (pdata.tierStream || []).forEach(t => {
       console.log(`    Tier ${t.tier} at ${formatTime(t.gameTime)}`);
+    });
+  }
+  console.log('');
+}
+
+// --- Items ---
+if (showAll || showSections.includes('items')) {
+  console.log('=== ITEMS ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    const events = pdata.eventStream || [];
+    const purchases = events.filter(e => e.key === 'itemPurchase');
+    const uses = events.filter(e => e.key === 'itemUse');
+    const drops = events.filter(e => e.key === 'dropItem');
+
+    console.log(`    Purchases: ${purchases.length}`);
+    purchases.slice(0, limit).forEach(e => {
+      const conf = e.confidence === 'low' ? ' [UNCERTAIN]' : '';
+      const gold = e.goldCost ? ` (${e.goldCost}g)` : '';
+      const shop = e.shop ? ` from ${e.shop}` : '';
+      console.log(`      ${formatTime(e.gameTime)} ${e.item.displayName}${gold}${shop}${conf}`);
+    });
+
+    console.log(`    Uses: ${uses.length}`);
+    uses.slice(0, limit).forEach(e => {
+      const itemName = (e.item && e.item.displayName) || (e.item && e.item.knownItemId) || '?';
+      const cat = e.category ? ` [${e.category}]` : '';
+      console.log(`      ${formatTime(e.gameTime)} ${itemName}${cat}`);
+    });
+
+    console.log(`    Drops/Trades: ${drops.length}`);
+    drops.slice(0, limit).forEach(e => {
+      const itemName = (e.item && e.item.displayName) || '?';
+      const target = e.targetHero ? ` -> ${e.targetHero.displayName}` : ' (ground)';
+      console.log(`      ${formatTime(e.gameTime)} ${itemName} [${e.type}]${target}`);
+    });
+
+    if (pdata.itemStream) {
+      console.log(`    Summary:`);
+      (pdata.itemStream.purchases || []).forEach(p => {
+        console.log(`      Bought: ${p.displayName} x${p.count} (${p.goldSpent}g total)`);
+      });
+      (pdata.itemStream.uses || []).forEach(u => {
+        console.log(`      Used: ${u.displayName} x${u.count}`);
+      });
+    }
+  }
+  console.log('');
+}
+
+// --- Mercenaries ---
+if (showAll || showSections.includes('mercs')) {
+  console.log('=== MERCENARIES ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    const events = pdata.eventStream || [];
+    const mercHires = events.filter(e => e.key === 'hireMercenary');
+    const tavernHires = events.filter(e => e.key === 'makeTavernHero');
+
+    console.log(`    Mercenary Hires: ${mercHires.length}`);
+    mercHires.slice(0, limit).forEach(e => {
+      const gold = e.goldCost ? ` (${e.goldCost}g` + (e.lumberCost ? `/${e.lumberCost}l` : '') + ')' : '';
+      console.log(`      ${formatTime(e.gameTime)} ${e.unit.displayName}${gold} from ${e.building || '?'}`);
+    });
+
+    console.log(`    Tavern Heroes: ${tavernHires.length}`);
+    tavernHires.slice(0, limit).forEach(e => {
+      const gold = e.goldCost ? ` (${e.goldCost}g)` : '';
+      console.log(`      ${formatTime(e.gameTime)} ${e.unit.displayName}${gold}`);
     });
   }
   console.log('');

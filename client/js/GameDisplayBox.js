@@ -2,9 +2,39 @@ const DisplayModes = {
   neutralCamp: 0
 };
 
+// Representative icons for WC3 random item drops (Y{class}I{level})
+// class: i=Any, j=Permanent, k=Charged, o=Powerup
+const RANDOM_ITEM_ICONS = {
+  // Charged items (k) — scrolls, wands, potions with charges
+  'YkI1': 'phea',   // Lv1: Potion of Healing
+  'YkI2': 'pman',   // Lv2: Potion of Mana
+  'YkI3': 'rej3',   // Lv3: Replenishment Potion
+  'YkI4': 'shas',   // Lv4: Scroll of Speed
+  'YkI5': 'pinv',   // Lv5: Potion of Invulnerability
+  'YkI6': 'ankh',   // Lv6: Ankh of Reincarnation
+  // Permanent items (j) — stat items, orbs, armor
+  'YjI1': 'rde1',   // Lv1: Ring of Protection +2
+  'YjI2': 'rst1',   // Lv2: Gauntlets of Strength +3
+  'YjI3': 'rlif',   // Lv3: Ring of Regeneration
+  'YjI4': 'ofir',   // Lv4: Orb of Fire
+  'YjI5': 'ckng',   // Lv5: Crown of Kings
+  'YjI6': 'modt',   // Lv6: Medallion of Courage
+  // Any items (i) — can be any class
+  'YiI1': 'phea',   // Lv1
+  'YiI2': 'rde1',   // Lv2
+  'YiI3': 'rej3',   // Lv3
+  'YiI4': 'ofir',   // Lv4
+  'YiI5': 'ckng',   // Lv5
+  'YiI6': 'modt',   // Lv6
+  // Powerup items (o) — tomes, runes
+  'YoI1': 'tpow',   // Lv1
+  'YoI2': 'tpow',   // Lv2
+  'YoI3': 'tpow',   // Lv3
+};
+
 const boxDesignSize = {
   width: 260,
-  height: 250
+  height: 320
 };
 
 const GameDisplayBox = class {
@@ -180,14 +210,19 @@ const GameDisplayBox = class {
       const levelClass = GameDisplayBox.getLevelClass(+level);
       const levelColor = GameDisplayBox.getLevelColor(+level);
       const itemId = unit.itemId || '';
+      const hasDrops = unit.droppedItemSets && unit.droppedItemSets.length > 0;
+      const dropClass = hasDrops ? ' camp-creep-has-drops' : '';
+      const dropIndicator = hasDrops
+        ? '<span class="camp-drop-indicator" title="Drops items">&#9679;</span>'
+        : '';
 
       return `
-        <li class="camp-creep-row">
+        <li class="camp-creep-row${dropClass}">
           <span class="camp-creep-name-wrap">
             <img class="camp-creep-icon" src="/assets/wc3icons/${itemId}.jpg" onerror="this.style.display='none'" />
             <span class="camp-creep-name">${name}</span>
           </span>
-          <span class="camp-creep-level ${levelClass}" style="border-left: 3px solid ${levelColor}">Lv ${level}</span>
+          <span class="camp-creep-level ${levelClass}" style="border-left: 3px solid ${levelColor}">Lv ${level}${dropIndicator}</span>
         </li>
       `;
     }).join('');
@@ -257,11 +292,67 @@ const GameDisplayBox = class {
     `;
   }
 
+  static renderDropTable (units) {
+    // collect all drops from all units, deduplicate by itemId
+    const dropMap = {};
+    (units || []).forEach(unit => {
+      if (!unit.droppedItemSets) return;
+      unit.droppedItemSets.forEach(drop => {
+        if (!drop.itemId) return;
+        const existing = dropMap[drop.itemId];
+        if (!existing || drop.chance > existing.chance) {
+          dropMap[drop.itemId] = drop;
+        }
+      });
+    });
+
+    const drops = Object.values(dropMap);
+    if (!drops.length) return '';
+
+    const icons = drops.slice(0, 8).map(drop => {
+      const chanceStr = drop.chance < 100
+        ? `<span class="camp-drop-chance">${drop.chance}%</span>`
+        : '';
+      const title = `${drop.displayName}${drop.chance < 100 ? ` (${drop.chance}%)` : ''}`;
+
+      if (drop.isRandom) {
+        const randomIcon = RANDOM_ITEM_ICONS[drop.itemId];
+        return `
+          <div class="camp-drop-icon-wrap camp-drop-random-wrap" title="${title}">
+            ${randomIcon
+              ? `<img class="camp-drop-icon camp-drop-random-icon" src="/assets/wc3icons/${randomIcon}.jpg" onerror="this.style.display='none'" />`
+              : ''
+            }
+            <div class="camp-drop-random-label">${drop.displayName.replace('Random ', '')}</div>
+            ${chanceStr}
+          </div>
+        `;
+      }
+
+      return `
+        <div class="camp-drop-icon-wrap" title="${title}">
+          <img class="camp-drop-icon" src="/assets/wc3icons/${drop.itemId}.jpg" onerror="this.parentElement.style.display='none'" />
+          ${chanceStr}
+        </div>
+      `;
+    }).join('');
+
+    const moreStr = drops.length > 8 ? `<span class="camp-drop-more">+${drops.length - 8}</span>` : '';
+
+    return `
+      <div class="camp-drop-table">
+        <span class="camp-drop-label">Potential Drops</span>
+        <div class="camp-drop-list">${icons}${moreStr}</div>
+      </div>
+    `;
+  }
+
   static renderNeutralCamp (camp, teamColorMap, playerColorMap) {
     const { rawGroup } = camp;
 
     const diffClass = GameDisplayBox.getDifficultyClass(rawGroup.totalLevel);
     const creepListStr = GameDisplayBox.renderCreepList(rawGroup.units);
+    const dropTableStr = GameDisplayBox.renderDropTable(rawGroup.units);
     const claimInfoStr = GameDisplayBox.renderClaimInfo(rawGroup, teamColorMap, playerColorMap);
 
     return `
@@ -270,6 +361,7 @@ const GameDisplayBox = class {
         <div class="camp-level-badge ${diffClass}">${rawGroup.totalLevel}</div>
       </div>
       ${creepListStr}
+      ${dropTableStr}
       ${claimInfoStr}
     `;
   }

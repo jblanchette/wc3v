@@ -82,6 +82,53 @@ const doParsing = async (file) => {
     }
   });
 
+  // post-process: build item stream summary per player
+  Object.values(playerManager.players).forEach(player => {
+    if (player.buildItemStream) {
+      player.buildItemStream();
+    }
+  });
+
+  // post-process: validate and correct transport cargo loadEvents
+  Object.values(playerManager.players).forEach(player => {
+    if (parseInt(player.id) >= 24) return;
+    player.units.filter(u => u.isTransport && u.loadEvents && u.loadEvents.length).forEach(transport => {
+      const MAX_CARGO = 8;
+      const loaded = new Set();
+      const cleaned = [];
+
+      transport.loadEvents.forEach(evt => {
+        if (evt.action === 'load') {
+          if (loaded.has(evt.unitId)) return;  // duplicate load
+          if (loaded.size >= MAX_CARGO) {
+            // Over capacity — insert synthetic unload-all before this load
+            loaded.forEach(uid => {
+              const existing = cleaned.find(e => e.unitId === uid && e.action === 'load');
+              cleaned.push({
+                gameTime: evt.gameTime - 1,
+                action: 'unload',
+                unitId: uid,
+                unitName: existing ? existing.unitName : '?',
+                unitItemId: existing ? existing.unitItemId : '?'
+              });
+            });
+            loaded.clear();
+          }
+          loaded.add(evt.unitId);
+          cleaned.push(evt);
+        } else if (evt.action === 'unload') {
+          loaded.delete(evt.unitId);
+          cleaned.push(evt);
+        }
+      });
+
+      if (cleaned.length !== transport.loadEvents.length) {
+        console.logger(`Transport ${transport.displayName}: corrected ${transport.loadEvents.length} -> ${cleaned.length} loadEvents`);
+      }
+      transport.loadEvents = cleaned;
+    });
+  });
+
   // post-parse: backfill missing buildings inferred from tech tree
   const BuildingBackfill = require('./lib/BuildingBackfill');
   const backfill = new BuildingBackfill(playerManager.players);

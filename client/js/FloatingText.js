@@ -4,6 +4,7 @@ const FloatingText = class {
   constructor () {
     this.entries = [];
     this.processedKeys = new Set();
+    this.seenItemIds = new Set();
     this.lastGameTime = 0;
     this.MAX_ENTRIES = 20;
     this.iconCache = {};
@@ -21,7 +22,7 @@ const FloatingText = class {
     return img;
   }
 
-  // style: { color, fontSize, bold, duration, icon }
+  // style: { color, fontSize, bold, duration, icon, priority }
   addText (text, x, y, gameTime, style = {}) {
     if (this.entries.length >= this.MAX_ENTRIES) {
       this.entries.shift();
@@ -42,13 +43,15 @@ const FloatingText = class {
       borderColor: style.borderColor || null,
       borderWidth: style.borderWidth || 1.5,
       bgTint: style.bgTint || null,
-      fadeStart: style.fadeStart || 0.65
+      fadeStart: style.fadeStart || 0.65,
+      priority: style.priority || 0
     });
   }
 
   reset () {
     this.entries = [];
     this.processedKeys.clear();
+    this.seenItemIds.clear();
     this.lastGameTime = 0;
   }
 
@@ -111,12 +114,19 @@ const FloatingText = class {
         label: 'UPGRADE',
         labelColor: '#AAAAAA',
         borderColor: '#FFFFFF',
-        fadeStart: 0.70
+        fadeStart: 0.70,
+        priority: 90
       });
     }
   }
 
   _spawnFromEvent (event) {
+    // filter noisy item events
+    if (event.key === 'itemPurchase' && event.item && event.item.itemId === 'Jwid') return;
+    if (event.key === 'itemUse' && event.category === 'tome') return;
+    if (event.key === 'dropItem' && event.type === 'potentialUnregisteredItem') return;
+    if (event.key === 'dropItem' && event.item && event.item.itemId === 'Jwid') return;
+
     const pos = this._resolvePosition(event);
     if (!pos) return;
 
@@ -128,6 +138,17 @@ const FloatingText = class {
       text = text(event);
     }
     if (!text) return;
+
+    // first-spawn logic: full name on first appearance, short name after
+    const unitBearingKeys = ['addUnit', 'hireMercenary', 'makeTavernHero'];
+    if (unitBearingKeys.includes(event.key) && event.unit) {
+      const uid = event.unit.itemId;
+      if (!this.seenItemIds.has(uid)) {
+        this.seenItemIds.add(uid);
+      } else {
+        text = getShortName(uid, text);
+      }
+    }
 
     // resolve icon: prefer event.icon (real FourCC), fall back to spellItemId
     let icon = null;
@@ -151,7 +172,8 @@ const FloatingText = class {
       borderColor: config.borderColor || config.color,
       borderWidth: config.borderWidth || 1.5,
       bgTint: config.bgTint || null,
-      fadeStart: config.fadeStart || 0.65
+      fadeStart: config.fadeStart || 0.65,
+      priority: config.priority || 0
     });
   }
 
@@ -159,9 +181,31 @@ const FloatingText = class {
     if (event.spot) return event.spot;
     // prefer caster position over target for spells (text floats above hero)
     if (event.unit && event.unit.lastPosition) return event.unit.lastPosition;
+    if (event.transport && event.transport.lastPosition) return event.transport.lastPosition;
     if (event.targetPosition) return event.targetPosition;
     if (event.building && event.building.lastPosition) return event.building.lastPosition;
     return null;
+  }
+
+  _overlaps (a, b) {
+    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+  }
+
+  _findNonOverlappingX (box, placed, gap) {
+    if (!placed.some(p => this._overlaps(box, p))) return 0;
+
+    const width = box.right - box.left;
+    for (let i = 1; i <= 3; i++) {
+      const offset = (width + gap) * i;
+
+      const rightBox = { left: box.left + offset, right: box.right + offset, top: box.top, bottom: box.bottom };
+      if (!placed.some(p => this._overlaps(rightBox, p))) return offset;
+
+      const leftBox = { left: box.left - offset, right: box.right - offset, top: box.top, bottom: box.bottom };
+      if (!placed.some(p => this._overlaps(leftBox, p))) return -offset;
+    }
+
+    return 0;
   }
 
   _roundRect (ctx, x, y, w, h, r) {
@@ -183,29 +227,26 @@ const FloatingText = class {
 
     ctx.save();
 
+    // --- Phase 1: Measure all visible entries ---
+    const placements = [];
+
     this.entries.forEach(entry => {
       const elapsed = gameTime - entry.spawnTime;
       const progress = Math.min(1, elapsed / entry.duration);
 
-      // ease-out for smooth deceleration
-      const easedProgress = 1 - Math.pow(1 - progress, 2);
-
-      // per-entry fade start
       const fadeStart = entry.fadeStart || 0.65;
       const alpha = progress < fadeStart ? 1 : 1 - ((progress - fadeStart) / (1 - fadeStart));
       if (alpha <= 0) return;
 
+      const easedProgress = 1 - Math.pow(1 - progress, 2);
       const floatY = -40 * easedProgress;
 
       const drawX = xScale(entry.x) + wc3v.gameScaler.middleX;
       const drawY = yScale(entry.y) + wc3v.gameScaler.middleY + floatY;
 
-      ctx.globalAlpha = Math.max(0, alpha);
-
       const hasLabel = !!entry.label;
       const hasIcon = entry.icon && entry.icon._loaded;
 
-      // --- measure dimensions ---
       const labelFontSize = 10;
       const mainWeight = entry.bold ? 'bold ' : '';
       ctx.font = `${mainWeight}${entry.fontSize}px Arial`;
@@ -230,17 +271,57 @@ const FloatingText = class {
 
       const bgW = padX + contentWidth + padX;
       const bgH = padY + labelHeight + labelGap + mainHeight + padY;
+
+      placements.push({
+        entry, alpha, drawX, drawY, bgW, bgH,
+        hasLabel, hasIcon, labelFontSize, mainWeight,
+        iconSize, iconGap, padX, padY, labelGap, labelHeight, mainHeight,
+        contentWidth, priority: entry.priority || 0
+      });
+    });
+
+    // --- Phase 2: Sort by priority and nudge overlapping pills ---
+    placements.sort((a, b) => b.priority - a.priority);
+
+    const placed = [];
+    const nudgeGap = 4;
+
+    placements.forEach(p => {
+      const box = {
+        left:   p.drawX - p.bgW / 2,
+        right:  p.drawX + p.bgW / 2,
+        top:    p.drawY - p.bgH / 2,
+        bottom: p.drawY + p.bgH / 2
+      };
+
+      const offsetX = this._findNonOverlappingX(box, placed, nudgeGap);
+      p.drawX += offsetX;
+
+      placed.push({
+        left:   p.drawX - p.bgW / 2,
+        right:  p.drawX + p.bgW / 2,
+        top:    p.drawY - p.bgH / 2,
+        bottom: p.drawY + p.bgH / 2
+      });
+    });
+
+    // --- Phase 3: Draw all placements ---
+    placements.forEach(p => {
+      const { entry, alpha, drawX, drawY, bgW, bgH,
+              hasLabel, hasIcon, labelFontSize, mainWeight,
+              iconSize, iconGap, padX, padY, labelGap, labelHeight, mainHeight } = p;
+
       const bgX = drawX - bgW / 2;
       const bgY = drawY - bgH / 2;
       const radius = 4;
 
-      // --- dark background pill ---
+      // dark background pill
       ctx.globalAlpha = Math.max(0, alpha * 0.65);
       ctx.fillStyle = '#111';
       this._roundRect(ctx, bgX, bgY, bgW, bgH, radius);
       ctx.fill();
 
-      // --- colored background tint (level-ups, etc.) ---
+      // colored background tint
       if (entry.bgTint) {
         ctx.globalAlpha = Math.max(0, alpha * 0.2);
         ctx.fillStyle = entry.bgTint;
@@ -248,7 +329,7 @@ const FloatingText = class {
         ctx.fill();
       }
 
-      // --- full border ---
+      // border
       if (entry.borderColor) {
         ctx.globalAlpha = Math.max(0, alpha * 0.7);
         ctx.strokeStyle = entry.borderColor;
@@ -260,7 +341,7 @@ const FloatingText = class {
       ctx.globalAlpha = Math.max(0, alpha);
       const contentX = bgX + padX;
 
-      // --- label line (small uppercase) ---
+      // label line
       if (hasLabel) {
         ctx.font = `bold ${labelFontSize}px Arial`;
         ctx.textAlign = 'left';
@@ -269,7 +350,7 @@ const FloatingText = class {
         ctx.fillText(entry.label, contentX, bgY + padY);
       }
 
-      // --- main row (icon + text) ---
+      // main row (icon + text)
       const mainY = bgY + padY + labelHeight + labelGap + mainHeight / 2;
       ctx.font = `${mainWeight}${entry.fontSize}px Arial`;
       ctx.textBaseline = 'middle';
@@ -317,7 +398,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 14,
     bold: true,
     duration: 6500,
-    fadeStart: 0.70
+    fadeStart: 0.70,
+    priority: 100
   },
   'heroRevive': {
     text: 'REVIVED',
@@ -328,7 +410,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 14,
     bold: true,
     duration: 5500,
-    fadeStart: 0.65
+    fadeStart: 0.65,
+    priority: 100
   },
   'expansion': {
     text: 'EXPANSION',
@@ -339,7 +422,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 14,
     bold: true,
     duration: 6500,
-    fadeStart: 0.70
+    fadeStart: 0.70,
+    priority: 70
   },
   'spellCast': {
     text: (e) => e.spellName || (e.unit ? e.unit.displayName : null),
@@ -351,7 +435,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 13,
     bold: true,
     duration: 5000,
-    fadeStart: 0.65
+    fadeStart: 0.65,
+    priority: 50
   },
   'research': {
     text: (e) => e.displayName || null,
@@ -367,7 +452,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 12,
     bold: false,
     duration: 5500,
-    fadeStart: 0.65
+    fadeStart: 0.65,
+    priority: 50
   },
   'autocastToggle': {
     text: (e) => e.spellName || null,
@@ -379,7 +465,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 12,
     bold: false,
     duration: 3500,
-    fadeStart: 0.60
+    fadeStart: 0.60,
+    priority: 30
   },
   'addUnit': {
     text: (e) => (!e.unit || !e.unit.isHero) ? null : e.unit.displayName,
@@ -391,7 +478,8 @@ FloatingText.EVENT_STYLES = {
     fontSize: 13,
     bold: true,
     duration: 5000,
-    fadeStart: 0.65
+    fadeStart: 0.65,
+    priority: 80
   },
   'formToggle': {
     text: (e) => {
@@ -406,7 +494,106 @@ FloatingText.EVENT_STYLES = {
     fontSize: 12,
     bold: false,
     duration: 3500,
-    fadeStart: 0.60
+    fadeStart: 0.60,
+    priority: 30
+  },
+  'itemPurchase': {
+    text: (e) => e.item ? e.item.displayName : null,
+    label: (e) => e.shop ? `BOUGHT \u2014 ${e.shop}` : 'ITEM PURCHASED',
+    icon: (e) => e.item ? e.item.itemId : null,
+    color: '#44DD88',
+    labelColor: '#33AA66',
+    borderColor: '#44DD88',
+    fontSize: 12,
+    bold: false,
+    duration: 4500,
+    fadeStart: 0.60,
+    priority: 10
+  },
+  'itemUse': {
+    text: (e) => e.item ? e.item.displayName : null,
+    label: (e) => {
+      if (e.category === 'consumable') return 'ITEM CONSUMED';
+      if (e.category === 'active') return 'ITEM ACTIVATED';
+      return 'ITEM USED';
+    },
+    icon: (e) => e.item ? (e.item.knownItemId || e.item.itemId) : null,
+    color: '#AADDFF',
+    labelColor: '#88BBDD',
+    borderColor: '#AADDFF',
+    fontSize: 12,
+    bold: false,
+    duration: 3500,
+    fadeStart: 0.55,
+    priority: 10
+  },
+  'dropItem': {
+    text: (e) => e.item ? e.item.displayName : null,
+    label: (e) => {
+      if (e.type === 'knownItem' && e.targetHero) return 'ITEM TRADED';
+      return 'ITEM DROPPED';
+    },
+    icon: (e) => e.item ? (e.item.knownItemId || e.item.itemId) : null,
+    color: '#DDAA44',
+    labelColor: '#BB8833',
+    borderColor: '#DDAA44',
+    fontSize: 11,
+    bold: false,
+    duration: 3000,
+    fadeStart: 0.55,
+    priority: 10
+  },
+  'hireMercenary': {
+    text: (e) => e.unit ? e.unit.displayName : null,
+    label: (e) => `HIRED \u2014 ${e.building || 'Merc Camp'}`,
+    icon: (e) => e.unit ? e.unit.itemId : null,
+    color: '#FF8844',
+    labelColor: '#CC6633',
+    borderColor: '#FF8844',
+    fontSize: 13,
+    bold: true,
+    duration: 5000,
+    fadeStart: 0.60,
+    priority: 80
+  },
+  'makeTavernHero': {
+    text: (e) => e.unit ? e.unit.displayName : null,
+    label: 'TAVERN HERO',
+    icon: (e) => e.unit ? e.unit.itemId : null,
+    color: '#FFD700',
+    labelColor: '#DDAA00',
+    borderColor: '#FFD700',
+    fontSize: 14,
+    bold: true,
+    duration: 6000,
+    fadeStart: 0.65,
+    priority: 100
+  },
+  'transportLoad': {
+    text: (e) => e.passenger ? e.passenger.displayName : null,
+    label: (e) => `LOADED \u2014 ${e.transport ? e.transport.displayName : 'Transport'}`,
+    icon: (e) => e.passenger ? e.passenger.itemId : null,
+    color: '#88AADD',
+    labelColor: '#6688BB',
+    borderColor: '#88AADD',
+    fontSize: 11,
+    bold: false,
+    duration: 3000,
+    fadeStart: 0.55,
+    priority: 10
+  },
+  'transportUnload': {
+    text: (e) => e.passenger ? e.passenger.displayName : null,
+    label: (e) => `UNLOADED \u2014 ${e.transport ? e.transport.displayName : 'Transport'}`,
+    icon: (e) => e.passenger ? e.passenger.itemId : null,
+    color: '#88DDAA',
+    labelColor: '#66BB88',
+    borderColor: '#88DDAA',
+    fontSize: 11,
+    bold: false,
+    duration: 3000,
+    fadeStart: 0.55,
+    priority: 10
   }
 };
 

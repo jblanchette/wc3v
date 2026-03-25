@@ -301,6 +301,7 @@ body {
   left: 0;
   right: 0;
   height: 2.25rem;
+  z-index: 10;
 }
 
 /* --- Gameplay Mode (Replay Only) --- */
@@ -516,29 +517,99 @@ body {
   stroke-width: 2;
 }
 
-.bo-time-marker-label {
-  fill: rgba(200, 210, 220, 0.85);
-  font-size: 11px;
+/* ── Hierarchical tick marks — ruler/clock aesthetic ── */
+
+/* 30-second sub-ticks: subtle but clearly present */
+.bo-tick-30s {
+  stroke: rgba(150, 175, 200, 0.35);
+  stroke-width: 1.5;
+}
+
+/* 1-minute ticks: solid, readable */
+.bo-tick-1m {
+  stroke: rgba(170, 195, 220, 0.60);
+  stroke-width: 2;
+}
+
+/* 1-minute dot on spine */
+.bo-marker-1m {
+  fill: rgba(170, 195, 220, 0.65);
+}
+
+/* 1-minute label — small but readable */
+.bo-time-label-1m {
+  fill: rgba(180, 200, 220, 0.85);
+  font-size: 9px;
   font-weight: 600;
   font-family: 'Consolas', 'Cascadia Mono', monospace;
   user-select: none;
 }
 
-.bo-time-label-bg {
-  fill: rgba(15, 25, 35, 0.85);
-  stroke: rgba(80, 100, 120, 0.25);
+.bo-time-label-bg-1m {
+  fill: rgba(15, 25, 40, 0.85);
+  stroke: rgba(120, 150, 180, 0.30);
   stroke-width: 0.5;
 }
 
-.bo-time-marker-diamond {
-  fill: rgba(180, 200, 220, 0.50);
-  stroke: rgba(200, 220, 240, 0.30);
-  stroke-width: 0.5;
+/* 5-minute: filled background bar across the spine */
+.bo-tick-bar-5m {
+  fill: rgba(80, 140, 200, 0.35);
 }
 
-.bo-time-marker-tick {
-  stroke: rgba(180, 200, 220, 0.30);
+/* 5-minute diamond */
+.bo-marker-5m {
+  fill: rgba(120, 180, 240, 0.80);
+  stroke: rgba(160, 210, 255, 0.60);
+  stroke-width: 1;
+}
+
+/* 5-minute label */
+.bo-time-label-5m {
+  fill: rgba(210, 225, 240, 0.95);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Consolas', 'Cascadia Mono', monospace;
+  user-select: none;
+}
+
+.bo-time-label-bg-5m {
+  fill: rgba(20, 40, 65, 0.92);
+  stroke: rgba(80, 150, 220, 0.50);
+  stroke-width: 1;
+}
+
+/* 10-minute: bold filled bar, unmissable */
+.bo-tick-bar-10m {
+  fill: rgba(70, 140, 220, 0.50);
+}
+
+/* 10-minute diamond — large and bright */
+.bo-marker-10m {
+  fill: rgba(130, 190, 255, 0.90);
+  stroke: rgba(180, 220, 255, 0.80);
   stroke-width: 1.5;
+}
+
+/* 10-minute decorative ring */
+.bo-marker-10m-ring {
+  fill: none;
+  stroke: rgba(90, 170, 255, 0.55);
+  stroke-width: 1.5;
+}
+
+/* 10-minute label — bold, bright, prominent */
+.bo-time-label-10m {
+  fill: rgba(240, 248, 255, 1.0);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Consolas', 'Cascadia Mono', monospace;
+  user-select: none;
+}
+
+.bo-time-label-bg-10m {
+  fill: rgba(15, 35, 60, 0.95);
+  stroke: rgba(80, 160, 255, 0.60);
+  stroke-width: 1.25;
 }
 
 .bo-spine-node {
@@ -897,6 +968,89 @@ body {
   text-overflow: ellipsis;
 }
 
+/* --- Item purchase bar --- */
+.bo-item-bar {
+  display: grid;
+  grid-template-columns: 1fr 78px;
+  align-items: center;
+  min-height: 38px;
+  padding: 3px 6px;
+  margin: 3px 0;
+  border-radius: 0 3px 3px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, rgba(68, 221, 136, 0.15), rgba(68, 221, 136, 0.04));
+  border-left: 4px solid #44DD88;
+  color: #a0e8c0;
+}
+
+.bo-item-bar .bo-row-desc {
+  gap: 8px;
+}
+
+.bo-item-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: rgba(68, 221, 136, 0.25);
+  color: #a0f0c0;
+}
+
+.bo-item-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bo-item-uncertain {
+  opacity: 0.6;
+  border-left-style: dashed;
+}
+
+/* --- Mercenary hire bar --- */
+.bo-merc-bar {
+  display: grid;
+  grid-template-columns: 1fr 78px;
+  align-items: center;
+  min-height: 38px;
+  padding: 3px 6px;
+  margin: 3px 0;
+  border-radius: 0 3px 3px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background: linear-gradient(90deg, rgba(255, 136, 68, 0.15), rgba(255, 136, 68, 0.04));
+  border-left: 4px solid #FF8844;
+  color: #e8c0a0;
+}
+
+.bo-merc-bar .bo-row-desc {
+  gap: 8px;
+}
+
+.bo-merc-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: rgba(255, 136, 68, 0.25);
+  color: #f0c0a0;
+}
+
+.bo-merc-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .bo-research-label {
   font-size: 9px;
   font-weight: 700;
@@ -960,6 +1114,7 @@ body {
   height: 26px;
   padding: 0 6px;
   background: var(--bo-header-bg);
+  border-top: 1px solid var(--bo-border-solid);
   border-bottom: 1px solid var(--bo-border-solid);
   position: sticky;
   top: 0;
@@ -2269,6 +2424,53 @@ body {
   align-items: center;
 }
 
+.mh-subsection-label {
+  font: 700 0.7rem Verdana;
+  color: #6a7a85;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 6px 0 3px;
+}
+
+.mh-subsection-label:first-child {
+  margin-top: 0;
+}
+
+.mh-item-summary {
+  margin-top: 2px;
+}
+
+.mh-item-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.mh-item-portrait {
+  border-color: #44DD88;
+}
+
+.mh-merc-portrait {
+  border-color: #FF8844;
+}
+
+.mh-item-gold-total {
+  font: 0.75rem Verdana;
+  color: #8a9a55;
+  margin-top: 4px;
+}
+
+.mh-cost-gold-icon {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #d4a017;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 .mh-tech-sep {
   width: 1px;
   height: 28px;
@@ -2335,14 +2537,39 @@ body {
 }
 
 #mega-play-title {
-  padding: 0.5rem 1.5rem;
-  font: 700 1.1rem Verdana;
-  color: rgba(255, 255, 255, 0.9);
+  padding: clamp(0.5rem, 1.5vw, 1rem) clamp(1rem, 3vw, 2.5rem);
+  font: 700 clamp(1.1rem, 2.8vw, 2.2rem) Verdana;
+  color: rgba(255, 255, 255, 0.95);
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 6px;
+  letter-spacing: clamp(0.12em, 0.3vw, 0.25em);
+  background: rgba(0, 0, 0, 0.85);
+  border-radius: 8px;
   white-space: nowrap;
+  border: 3px solid #3a8cc5;
+  box-shadow: 0 0 12px rgba(58, 140, 197, 0.6), inset 0 0 8px rgba(58, 140, 197, 0.15);
+  text-shadow: 0 0 10px rgba(58, 140, 197, 0.5);
+  animation: billboard-glow 3s ease-in-out infinite;
+}
+
+@keyframes billboard-glow {
+  0%, 100% {
+    border-color: #3a8cc5;
+    box-shadow: 0 0 12px rgba(58, 140, 197, 0.6), inset 0 0 8px rgba(58, 140, 197, 0.15);
+    text-shadow: 0 0 10px rgba(58, 140, 197, 0.5);
+    transform: scale(1);
+  }
+  33% {
+    border-color: #8ed4ff;
+    box-shadow: 0 0 24px rgba(142, 212, 255, 0.8), inset 0 0 12px rgba(142, 212, 255, 0.2);
+    text-shadow: 0 0 16px rgba(142, 212, 255, 0.7);
+    transform: scale(1.02);
+  }
+  66% {
+    border-color: #d4a535;
+    box-shadow: 0 0 20px rgba(212, 165, 53, 0.7), inset 0 0 10px rgba(212, 165, 53, 0.15);
+    text-shadow: 0 0 14px rgba(212, 165, 53, 0.5);
+    transform: scale(1.01);
+  }
 }
 
 #mega-play-title-logo {
@@ -2391,18 +2618,35 @@ body {
 
 #mega-play-button {
   background-image: url('/assets/mega-play-icon.svg');
-  background-color: rgba(0, 0, 0, 0.65);
-  background-size: 50% 50%;
+  background-color: transparent;
+  background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;
   border-radius: 50%;
-  height: 160px;
-  width: 160px;
+  height: 120px;
+  width: 120px;
+  border: 3px solid rgba(58, 140, 197, 0.6);
+  box-shadow: 0 0 20px rgba(58, 140, 197, 0.3), inset 0 0 20px rgba(58, 140, 197, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  animation: play-btn-pulse 2.5s ease-in-out infinite;
 }
 
 #mega-play-button:hover {
-  cursor: pointer;
-  background-color: rgba(0, 0, 0, 0.85);
+  transform: scale(1.1);
+  border-color: #8ed4ff;
+  box-shadow: 0 0 30px rgba(142, 212, 255, 0.6), inset 0 0 25px rgba(142, 212, 255, 0.15);
+}
+
+@keyframes play-btn-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(58, 140, 197, 0.3), inset 0 0 20px rgba(58, 140, 197, 0.1);
+    border-color: rgba(58, 140, 197, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(95, 181, 232, 0.5), inset 0 0 25px rgba(95, 181, 232, 0.15);
+    border-color: rgba(95, 181, 232, 0.8);
+  }
 }
 
 #mega-play-hints {
@@ -2938,6 +3182,88 @@ body {
   vertical-align: middle;
 }
 
+/* --- creep camp item drop table --- */
+.camp-creep-has-drops {
+  border-left: 3px solid #d4a017;
+}
+.camp-drop-indicator {
+  color: #d4a017;
+  font-size: 0.65rem;
+  margin-left: 4px;
+}
+.camp-drop-table {
+  border-top: 1px solid #2a3a4c;
+  padding: 6px 10px 8px;
+}
+.camp-drop-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #6a7a90;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.camp-drop-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.camp-drop-icon-wrap {
+  position: relative;
+}
+.camp-drop-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 3px;
+  border: 1px solid #3a4a5c;
+  object-fit: cover;
+  display: block;
+}
+.camp-drop-random-wrap {
+  width: 36px;
+  min-height: 36px;
+  border-radius: 3px;
+  border: 1px dashed #7a6a4a;
+  background: #252030;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.camp-drop-random-wrap .camp-drop-icon {
+  border: none;
+  border-radius: 3px 3px 0 0;
+  opacity: 0.65;
+}
+.camp-drop-random-label {
+  font-size: 0.5rem;
+  color: #c8a84a;
+  text-align: center;
+  line-height: 1.1;
+  padding: 1px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 36px;
+}
+.camp-drop-chance {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.55rem;
+  background: #1a1f2e;
+  color: #ff8c00;
+  padding: 0 2px;
+  border-radius: 2px;
+  line-height: 1.2;
+}
+.camp-drop-more {
+  color: #6a7a90;
+  font-size: 0.75rem;
+  align-self: center;
+  margin-left: 2px;
+}
+
 /* sub-canvas element */
 #player-status-canvas {
   backface-visibility: hidden;
@@ -3051,6 +3377,8 @@ body {
 .time-scrubber-track {
   display: flex;
   align-items: center;
+  position: relative;
+  overflow: visible;
   height: 0.75rem;
   width: calc(100% - 23rem);
   background-color: #0a1218;
@@ -3063,6 +3391,7 @@ body {
 .time-scrubber-tracker {
   pointer-events: none;
   position: relative;
+  z-index: 2;
   left: 0;
   height: 0.95rem;
   width: 0.95rem;
@@ -4195,7 +4524,7 @@ body {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0);
   align-items: center;
   justify-content: center;
 }
@@ -5242,4 +5571,169 @@ body {
   font-size: 0.8rem;
   margin-top: 0.4rem;
   text-align: center;
+}
+
+/* ====================================================================
+   Chapter Markers (cm-) — scrubber markers, heatmap, BO quick-jump
+   ==================================================================== */
+
+.cm-scrubber-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  z-index: 1;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.cm-scrubber-marker:hover {
+  transform: translate(-50%, -50%) scale(1.6);
+}
+
+.cm-scrubber-marker.cm-major {
+  width: 10px;
+  height: 10px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  filter: brightness(1.2);
+}
+.cm-scrubber-marker.cm-minor {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  opacity: 0.55;
+}
+
+/* Cluster markers — larger circle with count badge */
+.cm-scrubber-marker.cm-cluster {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  clip-path: none;
+  opacity: 1;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-sizing: border-box;
+  filter: none;
+}
+.cm-scrubber-marker.cm-cluster.cm-major {
+  width: 16px;
+  height: 16px;
+}
+.cm-cluster-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 14px;
+  height: 14px;
+  line-height: 14px;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  background: #1a2830;
+  color: #e0e0e0;
+  border-radius: 7px;
+  border: 1px solid #3a4a55;
+  pointer-events: none;
+  padding: 0 2px;
+}
+
+/* Tooltip — multi-row for clusters */
+.cm-tooltip {
+  position: fixed;
+  transform: translateX(-50%);
+  background: #141d29;
+  color: #e0e0e0;
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  border: 1px solid #3a4a55;
+  z-index: 10000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cm-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.cm-tooltip-pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cm-tooltip-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.cm-heatmap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.35;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* BO Quick-Jump nav */
+.bo-chapter-nav {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3a4a55 transparent;
+  flex-wrap: wrap;
+}
+.bo-chapter-heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #c0c8d0;
+  flex-shrink: 0;
+  padding-right: 3px;
+}
+
+.bo-chapter-btn {
+  font-family: inherit;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--race-muted, #3a4a55);
+  background: rgba(15, 22, 32, 0.85);
+  color: #999;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.bo-chapter-btn:hover {
+  background: rgba(40, 60, 85, 0.9);
+  color: #ddd;
+}
+.bo-chapter-btn.bo-chapter-major {
+  color: #ccc;
+  border-color: var(--race-accent, #6BA3FF);
+  font-weight: 600;
+}
+.bo-chapter-btn.bo-chapter-major:hover {
+  color: #fff;
+}
+.bo-chapter-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  vertical-align: middle;
+  margin-right: 2px;
 }

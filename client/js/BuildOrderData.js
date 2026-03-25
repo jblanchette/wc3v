@@ -263,6 +263,30 @@ const BuildOrderData = class {
           category,
           building: event.building
         }));
+
+      } else if (key === 'itemPurchase') {
+        const { item } = event;
+        if (!item || item.itemId === 'Jwid') return;
+
+        events.push(create('itemPurchase', gameTime, supplyUsed, supplyMax, w, {
+          displayName: item.displayName,
+          itemId: item.itemId,
+          goldCost: event.goldCost || 0,
+          shop: event.shop,
+          isNeutralShop: event.isNeutralShop,
+          confidence: event.confidence || 'high'
+        }));
+
+      } else if (key === 'hireMercenary') {
+        const { unit } = event;
+        if (!unit) return;
+        events.push(create('hireMercenary', gameTime, supplyUsed, supplyMax, w, {
+          displayName: unit.displayName,
+          itemId: unit.itemId,
+          goldCost: event.goldCost || 0,
+          lumberCost: event.lumberCost || 0,
+          building: event.building
+        }));
       }
 
     });
@@ -313,6 +337,7 @@ const BuildOrderData = class {
       if (a.type === 'workerAssign' && b.type === 'workerAssign' &&
           !a.isInitialWorkers && !b.isInitialWorkers &&
           a.itemId === b.itemId && a.assignTarget === b.assignTarget) return true;
+      if (a.type === 'itemPurchase' && b.type === 'itemPurchase' && a.itemId === b.itemId) return true;
       return false;
     };
 
@@ -327,6 +352,7 @@ const BuildOrderData = class {
       if (pending) grouped.push(pending);
 
       const groupable = event.type === 'unit' ||
+        event.type === 'itemPurchase' ||
         (event.type === 'workerAssign' && !event.isInitialWorkers);
       pending = groupable ? { ...event, count: 1, trainingCount: event.isTraining ? 0 : 1, queuedCount: event.isTraining ? 1 : 0 } : null;
       if (!groupable) grouped.push(event);

@@ -1,6 +1,18 @@
 
 const DRAW_SPOTS_PER_UNIT = 4;
 
+// Icon cache for cargo orbit rendering
+const _cargoIconCache = {};
+function _getCargoIcon (itemId) {
+  if (_cargoIconCache[itemId]) return _cargoIconCache[itemId];
+  const img = new Image();
+  img.src = `/assets/wc3icons/${itemId}.jpg`;
+  img._loaded = false;
+  img.onload = () => { img._loaded = true; };
+  _cargoIconCache[itemId] = img;
+  return img;
+}
+
 const Drawing = class {
 
   static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 10, fontSize = 10) {
@@ -110,18 +122,28 @@ const Drawing = class {
   }
 
   static drawUnit (ctx, unit) {
-    const { 
-      drawX, 
-      drawY, 
-      iconSize, 
-      halfIconSize, 
-      decayLevel, 
-      icon, 
-      playerColor 
+    const {
+      drawX,
+      drawY,
+      iconSize,
+      halfIconSize,
+      decayLevel,
+      icon,
+      playerColor
     } = unit;
 
     ctx.strokeStyle = playerColor || "#FFFC01";
     ctx.globalAlpha = decayLevel;
+
+    // Transport outer ring
+    if (unit.isTransport) {
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = playerColor || "#FFFC01";
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, halfIconSize + 4, 0, Math.PI * 2, true);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+    }
 
     ctx.fillStyle = playerColor;
     ctx.beginPath();
@@ -132,8 +154,59 @@ const Drawing = class {
     if (!icon) {
       return;
     }
-    
+
     Drawing.drawImageCircle(ctx, icon, drawX, drawY, iconSize);
+
+    // Cargo orbital icons for transports
+    if (unit.isTransport && unit.cargoItems && unit.cargoItems.length) {
+      const items = unit.cargoItems;
+      const count = items.length;
+      const orbitR = halfIconSize + 12;
+      const cargoIconSize = 13;
+      const cargoHalf = cargoIconSize / 2;
+      // Start from top (-π/2), distribute evenly
+      const angleStep = (Math.PI * 2) / Math.max(count, 1);
+      const startAngle = -Math.PI / 2;
+
+      ctx.globalAlpha = 1;
+
+      for (let i = 0; i < count; i++) {
+        const angle = startAngle + (i * angleStep);
+        const cx = drawX + Math.cos(angle) * orbitR;
+        const cy = drawY + Math.sin(angle) * orbitR;
+        const cargoIcon = _getCargoIcon(items[i]);
+
+        // Dark circle background
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(cx, cy, cargoHalf + 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw circular icon
+        if (cargoIcon && cargoIcon._loaded) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, cargoHalf, 0, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.clip();
+          ctx.drawImage(cargoIcon, cx - cargoHalf, cy - cargoHalf, cargoIconSize, cargoIconSize);
+          ctx.restore();
+        } else {
+          // Fallback: colored dot
+          ctx.fillStyle = playerColor || '#888';
+          ctx.beginPath();
+          ctx.arc(cx, cy, cargoHalf, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Player color border ring
+        ctx.strokeStyle = playerColor || '#FFFC01';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, cargoHalf, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
 
     ctx.globalAlpha = 1;
     ctx.strokeStyle = colorMap.black;

@@ -75,6 +75,10 @@ const abilityActions = {
   'DeathCoil': [ 254, 0, 13, 0 ],
   'HarvestLumber': [ 116, 108, 84, 76 ],
   'TeleportScroll': [ 40, 0, 13, 0 ],
+  'TransportLoadUnit': [ 72, 0, 13, 0 ],
+  'TransportPickUp': [ 78, 0, 13, 0 ],
+  'TransportUnload': [ 80, 0, 13, 0 ],
+  'TransportW3C': [ 79, 0, 13, 0 ],
 };
 
 
@@ -117,27 +121,122 @@ const abilityFlagNames = {
 };
 
 const itemAbilityData = {
-    'rnec': { 
+    // --- Active items (charges / cooldown abilities) ---
+    'rnec': {
       'ability': 0x10,
       'type': 'summon',
+      'category': 'active',
       'uses': 4,
       'stockCount': 1,
       'stockReplenish': 60,
       'cooldown': 22,
       'summonCount': 2,
       'summonItemId': 'uske',
-      'summonDuration': 65
+      'summonDuration': 65,
+      'goldCost': 175
     },
     'stwp': {
-      'ability': 0x12
+      'ability': 0x12,
+      'category': 'consumable',
+      'uses': 1,
+      'goldCost': 350
     },
     'AHwe': {
       'ability': 0x10,
       'type': 'summon',
+      'category': 'active',
       'summonCount': 1,
       'summonItemId': ['hwat', 'hwt2', 'hwt3'],
       'summonDuration': 60
-    }
+    },
+    'wswd': { 'category': 'active', 'uses': 3, 'goldCost': 200 },
+    'whwd': { 'category': 'active', 'uses': 2, 'goldCost': 200 },
+    'wlsd': { 'category': 'active', 'uses': 3, 'goldCost': 150 },
+    'wcyc': { 'category': 'active', 'uses': 3, 'goldCost': 200 },
+    'wneg': { 'category': 'active', 'uses': 3, 'goldCost': 200 },
+    'woms': { 'category': 'active', 'uses': 3, 'goldCost': 200 },
+    'wshs': { 'category': 'active', 'uses': 2, 'goldCost': 75 },
+    'sneg': { 'category': 'active', 'uses': 1, 'goldCost': 200 },
+    'stel': { 'category': 'active', 'uses': 2, 'goldCost': 150 },
+    'ssil': { 'category': 'active', 'uses': 1, 'goldCost': 200 },
+    'ssan': { 'category': 'active', 'uses': 2, 'goldCost': 250 },
+    'will': { 'category': 'active', 'uses': 2, 'goldCost': 200 },
+    'fgun': { 'category': 'active', 'uses': 3, 'goldCost': 75 },
+    'stre': { 'category': 'active', 'uses': 2, 'goldCost': 200 },
+    'dsum': { 'category': 'active', 'uses': 4, 'goldCost': 200 },
+    'spre': { 'category': 'active', 'uses': 2, 'goldCost': 250 },
+
+    // --- Consumable items (single-use potions / scrolls) ---
+    'phea': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'pman': { 'category': 'consumable', 'uses': 1, 'goldCost': 200 },
+    'pghe': { 'category': 'consumable', 'uses': 1, 'goldCost': 400 },
+    'pgma': { 'category': 'consumable', 'uses': 1, 'goldCost': 400 },
+    'pinv': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'pgin': { 'category': 'consumable', 'uses': 1, 'goldCost': 200 },
+    'pnvl': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'pnvu': { 'category': 'consumable', 'uses': 1, 'goldCost': 250 },
+    'pspd': { 'category': 'consumable', 'uses': 1, 'goldCost': 50 },
+    'pres': { 'category': 'consumable', 'uses': 1, 'goldCost': 350 },
+    'pdiv': { 'category': 'consumable', 'uses': 1, 'goldCost': 200 },
+    'pams': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'vamp': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'shea': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'sman': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'spro': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'shas': { 'category': 'consumable', 'uses': 1, 'goldCost': 50 },
+    'dust': { 'category': 'consumable', 'uses': 1, 'goldCost': 75 },
+    'sreg': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'hlst': { 'category': 'consumable', 'uses': 1, 'goldCost': 300 },
+    'mnst': { 'category': 'consumable', 'uses': 1, 'goldCost': 350 },
+    'hslv': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'pclr': { 'category': 'consumable', 'uses': 1, 'goldCost': 60 },
+    'plcl': { 'category': 'consumable', 'uses': 1, 'goldCost': 40 },
+    'pomn': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'moon': { 'category': 'consumable', 'uses': 1, 'goldCost': 50 },
+    'infs': { 'category': 'consumable', 'uses': 1, 'goldCost': 250 },
+    'sand': { 'category': 'consumable', 'uses': 1, 'goldCost': 200 },
+    'srrc': { 'category': 'consumable', 'uses': 1, 'goldCost': 350 },
+    'sror': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
+    'lure': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'skul': { 'category': 'consumable', 'uses': 1, 'goldCost': 50 },
+    'amrc': { 'category': 'consumable', 'uses': 3, 'goldCost': 200 },
+    'gobm': { 'category': 'consumable', 'uses': 3, 'goldCost': 200 },
+    'ankh': { 'category': 'consumable', 'uses': 1, 'goldCost': 500 },
+
+    // --- Tomes (consumed immediately on pickup, never in inventory) ---
+    'tdex': { 'category': 'tome' },
+    'texp': { 'category': 'tome' },
+    'tint': { 'category': 'tome' },
+    'tkno': { 'category': 'tome' },
+    'tstr': { 'category': 'tome' },
+    'tpow': { 'category': 'tome' },
+    'tgxp': { 'category': 'tome' },
+    'tst2': { 'category': 'tome' },
+    'tin2': { 'category': 'tome' },
+    'tdx2': { 'category': 'tome' },
+    'tret': { 'category': 'tome' },
+    'manh': { 'category': 'tome' },
+    'gold': { 'category': 'tome' },
+    'lmbr': { 'category': 'tome' },
+
+    // --- Permanent items (stat/passive, stay in inventory) ---
+    'ofir': { 'category': 'permanent', 'goldCost': 375 },
+    'ofro': { 'category': 'permanent', 'goldCost': 375 },
+    'olig': { 'category': 'permanent', 'goldCost': 375 },
+    'oli2': { 'category': 'permanent', 'goldCost': 375 },
+    'oven': { 'category': 'permanent', 'goldCost': 325 },
+    'odef': { 'category': 'permanent', 'goldCost': 375 },
+    'ocor': { 'category': 'permanent', 'goldCost': 375 },
+    'oslo': { 'category': 'permanent', 'goldCost': 325 },
+    'bspd': { 'category': 'permanent', 'goldCost': 250 },
+    'clsd': { 'category': 'permanent', 'goldCost': 100 },
+    'rlif': { 'category': 'permanent', 'goldCost': 175 },
+    'rwiz': { 'category': 'permanent', 'goldCost': 325 },
+    'gcel': { 'category': 'permanent', 'goldCost': 150 },
+    'gemt': { 'category': 'permanent', 'goldCost': 300 },
+    'mcri': { 'category': 'permanent', 'goldCost': 50 },
+    'spsh': { 'category': 'permanent', 'goldCost': 400 },
+    'crys': { 'category': 'permanent', 'goldCost': 400 }
 };
 
 const workerForRace = {
@@ -554,9 +653,19 @@ const allItemIds = {
     'ANst': 'Stampede',
     'ANeg': 'Engineering Upgrade',
     'ANcs': 'Cluster Rockets',
+    'ANc1': 'Cluster Rockets',
+    'ANc2': 'Cluster Rockets',
+    'ANc3': 'Cluster Rockets',
     'ANsy': 'Pocket Factory',
+    'ANs1': 'Pocket Factory',
+    'ANs2': 'Pocket Factory',
+    'ANs3': 'Pocket Factory',
     'ANrg': 'Robo-Goblin',
+    'ANg1': 'Robo-Goblin',
+    'ANg2': 'Robo-Goblin',
+    'ANg3': 'Robo-Goblin',
     'ANic': 'Incinerate',
+    'ANia': 'Incinerate',
     'ANso': 'Soul Burn',
     'ANlm': 'Summon Lava Spawn',
     'ANvc': 'Volcano',
@@ -970,6 +1079,12 @@ const allItemIds = {
     'nmer': 'Merchant',
     'ntav': 'Tavern',
     'ngol': 'Goldmine',
+    'ngme': 'Goblin Merchant',
+    'nmrk': 'Mercenary Camp',
+    'ngad': 'Goblin Laboratory',
+    'nmr0': 'Mercenary Camp', 'nmr2': 'Mercenary Camp', 'nmr4': 'Mercenary Camp',
+    'nmr6': 'Mercenary Camp', 'nmr8': 'Mercenary Camp', 'nmra': 'Mercenary Camp',
+    'nmrc': 'Mercenary Camp', 'nmre': 'Mercenary Camp',
     'amrc': 'Amulet of Recall',
     'ankh': 'Ankh of Reincarnation',
     'belv': 'Boots of Quel\'Thalas +6',
@@ -1434,6 +1549,8 @@ const specialBuildings = {
     'Tavern': 'ntav',
     'Goldmine':'ngol',
     'NeutralShop': 'ngme',
+    'MercenaryCamp': 'nmrk',
+    'GoblinLaboratory': 'ngad',
     'playerShops': {
         'U': 'utom',
         'O': 'ovln',
@@ -1448,6 +1565,18 @@ const interactiveShops = {
   'ngme': 'Goblin Merchant',
   'ngad': 'Goblin Laboratory',
   'nmrk': 'Mercenary Camp'
+};
+
+// Neutral buildings that players can hire units from (merc camps, goblin lab, merchants)
+// Includes level-specific merc camp variants used on different maps
+const NEUTRAL_HIRE_BUILDINGS = {
+  'nmrk': 'Mercenary Camp',
+  'ngad': 'Goblin Laboratory',
+  'nmer': 'Merchant',
+  // Merc camp level variants
+  'nmr0': 'Mercenary Camp', 'nmr2': 'Mercenary Camp', 'nmr4': 'Mercenary Camp',
+  'nmr6': 'Mercenary Camp', 'nmr8': 'Mercenary Camp', 'nmra': 'Mercenary Camp',
+  'nmrc': 'Mercenary Camp', 'nmre': 'Mercenary Camp'
 };
 
 const critters = {
@@ -1799,6 +1928,37 @@ const TECH_TREE_REQUIREMENTS = {
   }
 };
 
+// WC3 random item class IDs: Y{class}I{level}
+// class: i=Any, j=Permanent, k=Charged, o=Powerup
+const RANDOM_ITEM_CLASSES = {
+  'i': 'Any',
+  'j': 'Permanent',
+  'k': 'Charged',
+  'o': 'Powerup'
+};
+
+/**
+ * Resolve a dropped item ID to a display name.
+ * Handles known items (allItemIds / w3gMappings.items) and WC3 random item patterns.
+ */
+function resolveDropItem (itemId) {
+  if (!itemId) return { itemId, displayName: 'Unknown', isRandom: true };
+
+  const knownName = allItemIds[itemId] || items[itemId];
+  if (knownName) {
+    return { itemId, displayName: knownName, isRandom: false };
+  }
+
+  // decode WC3 random item pattern: Y{class}I{level}
+  if (itemId.length === 4 && itemId[0] === 'Y' && itemId[2] === 'I') {
+    const itemClass = RANDOM_ITEM_CLASSES[itemId[1]] || 'Random';
+    const level = itemId[3];
+    return { itemId, displayName: `Random Lv${level} ${itemClass}`, isRandom: true };
+  }
+
+  return { itemId, displayName: itemId, isRandom: true };
+}
+
 module.exports = {
 	getUnitInfo,
 	buildings,
@@ -1839,6 +1999,9 @@ module.exports = {
   unitAbilities,
 
   TECH_TREE_REQUIREMENTS,
+  NEUTRAL_HIRE_BUILDINGS,
+
+  resolveDropItem,
 
   NEUTRAL_PLAYER_ID: 1042,
   NEUTRAL_PLAYER_SLOT: 1044,

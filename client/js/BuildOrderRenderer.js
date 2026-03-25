@@ -130,10 +130,12 @@ const BuildOrderRenderer = class {
       expansion:     (event)     => this.renderExpansionCard(event),
       attackUpgrade: (event)     => this.renderUpgradeCard(event),
       defenseUpgrade:(event)     => this.renderUpgradeCard(event),
-      research:      (event)     => this.renderResearchCard(event)
+      research:      (event)     => this.renderResearchCard(event),
+      itemPurchase:  (event)     => this.renderItemPurchaseCard(event),
+      hireMercenary: (event)     => this.renderMercHireCard(event)
     };
 
-    buildOrderPlayers.forEach(player => {
+    buildOrderPlayers.forEach((player, playerIdx) => {
       const boData = this.boData.processBuildOrderData(player);
       const { race, raceInfo, displayName, playerColor, tiers, snapshots, finalSnapshot, tierProduction, tier2Time, tier3Time } = boData;
       const liveMode = this.viewer.layoutMode === LayoutMode.liveBuildOrder;
@@ -179,6 +181,12 @@ const BuildOrderRenderer = class {
       header.append(toggleBar);
 
       column.append(header);
+
+      // --- Chapter Quick-Jump ---
+      if (this.viewer.chapterMarkers) {
+        const jumpRow = this.viewer.chapterMarkers.renderBoQuickJump(playerIdx);
+        if (jumpRow) column.append(jumpRow);
+      }
 
       // --- Column header (sticky icon labels) ---
       const colHeader = document.createElement('div');
@@ -406,6 +414,51 @@ const BuildOrderRenderer = class {
         <img class="bo-row-icon" src="${iconSrc}" onerror="this.style.display='none'" />
         <span class="bo-research-label">RESEARCH</span>
         <span class="bo-research-name">${event.displayName}${levelStr}</span>
+      </div>${costHtml}`;
+    return bar;
+  }
+
+  // --- Item purchase bar ---
+  renderItemPurchaseCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-item-bar');
+    if (event.confidence === 'low') bar.classList.add('bo-item-uncertain');
+
+    const iconSrc = `/assets/wc3icons/${event.itemId}.jpg`;
+    const gold = event.goldCost || 0;
+    const gLine = gold ? `<span class="bo-cost-gold">${gold}</span>` : '';
+    const costHtml = gLine ? `<div class="bo-row-cost">${gLine}</div>` : '';
+    const countStr = event.count > 1 ? ` x${event.count}` : '';
+    const shopLabel = event.isNeutralShop ? 'LOOT' : 'ITEM';
+
+    bar.innerHTML = `
+      <div class="bo-row-desc">
+        <img class="bo-row-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+        <span class="bo-item-label">${shopLabel}</span>
+        <span class="bo-item-name">${event.displayName}${countStr}</span>
+      </div>${costHtml}`;
+    return bar;
+  }
+
+  // --- Mercenary hire bar ---
+  renderMercHireCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-merc-bar');
+
+    const iconSrc = `/assets/wc3icons/${event.itemId}.jpg`;
+    const gold = event.goldCost || 0;
+    const lumber = event.lumberCost || 0;
+    const gLine = gold ? `<span class="bo-cost-gold">${gold}</span>` : '';
+    const lLine = lumber ? `<span class="bo-cost-lumber">${lumber}</span>` : '';
+    const costHtml = (gLine || lLine) ? `<div class="bo-row-cost">${gLine}${lLine}</div>` : '';
+    const countStr = event.count > 1 ? ` x${event.count}` : '';
+    const buildingLabel = event.building === 'Goblin Laboratory' ? 'GOBLIN' : 'MERC';
+
+    bar.innerHTML = `
+      <div class="bo-row-desc">
+        <img class="bo-row-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+        <span class="bo-merc-label">${buildingLabel}</span>
+        <span class="bo-merc-name">${event.displayName}${countStr}</span>
       </div>${costHtml}`;
     return bar;
   }

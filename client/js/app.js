@@ -111,6 +111,8 @@ const Wc3vViewer = class {
     this.floatingText = new window.FloatingText();
     this.placementViewer = new window.BuildingPlacementViewer();
 
+    if (this.chapterMarkers) this.chapterMarkers.destroy();
+
     this.scrubber = new window.TimeScrubber("scrubber-bar", "main-canvas");
 
     this.replayId = null;
@@ -975,10 +977,18 @@ const Wc3vViewer = class {
       this.setupDrawing();
       this.timelineSpline = new TimelineSpline(this);
       this.boRenderer = new BuildOrderRenderer(this);
+      this.chapterMarkers = new ChapterMarkers(this);
       this.matchHeader = new MatchHeader(this);
       this.placementViewer.setup();
       this.setupBuildOrder();
       this.matchHeader.render();
+
+      this.chapterMarkers.detectChapters(this.players, this.matchEndTime);
+      const cmTrack = document.getElementById('scrubber-bar-track');
+      if (cmTrack) {
+        this.chapterMarkers.renderScrubberMarkers(cmTrack, this.matchEndTime);
+        this.chapterMarkers.renderHeatmap(cmTrack, this.players, this.matchEndTime);
+      }
 
       this.timelineSpline.observeResize();
 
@@ -1105,6 +1115,7 @@ const Wc3vViewer = class {
         selectionStream,
         eventStream,
         tierStream,
+        itemStream,
         teamId,
         isNeutralPlayer
       } = this.mapData.players[playerId];
@@ -1128,7 +1139,8 @@ const Wc3vViewer = class {
         tierStream,
         this.playerColorMap[index],
         isNeutralPlayer,
-        eventStream
+        eventStream,
+        itemStream
       );
 
       this.assignedPlayerColors[playerId] = this.playerColorMap[index];

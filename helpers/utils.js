@@ -637,8 +637,16 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         }),
         tierStream,
         researchStream,
+        ...(player.itemStream ? { itemStream: player.itemStream } : {}),
         isNeutralPlayer,
-    		units: units.map(unit => unit.exportUnit()),
+    		units: units.map(unit => unit.exportUnit()).concat(
+          (player.destroyedSummons || []).map(unit => {
+            const exported = unit.exportUnit();
+            exported.destroyedAt = unit.destroyedAt;
+            exported.isSummon = true;
+            return exported;
+          })
+        ),
         buildingAttempts: (_buildingAttempts || []).map(a => ({
           itemId: a.itemId,
           displayName: a.displayName,

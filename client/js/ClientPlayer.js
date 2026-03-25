@@ -23,7 +23,7 @@ const TeamColors = {
 };
 
 const ClientPlayer = class {
-  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer, eventStream) {
+  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer, eventStream, itemStream) {
     this.slot = slot;
     this.teamColor = teamColor;
     this.playerId = playerId;
@@ -35,6 +35,7 @@ const ClientPlayer = class {
     this.playerColor = playerColor;
     this.isNeutralPlayer = isNeutralPlayer;
     this.eventStream = eventStream;
+    this.itemStream = itemStream || null;
 
     this.assetsLoaded = false;
     this.tab = StatusTabs.heroes;
@@ -83,6 +84,50 @@ const ClientPlayer = class {
       return unit.meta.hero && !unit.isIllusion;
     }).sort((a, b) => {
       return a.spawnTime - b.spawnTime;
+    });
+
+    // Build loaded-windows for transport passengers
+    this._buildTransportWindows();
+  }
+
+  _buildTransportWindows () {
+    const transports = this.units.filter(u => u.isTransport && u.loadEvents && u.loadEvents.length);
+    if (!transports.length) return;
+
+    const unitsByUuid = {};
+    this.units.forEach(u => { if (u.uuid) unitsByUuid[u.uuid] = u; });
+
+    transports.forEach(transport => {
+      const openLoads = {};
+      transport.loadEvents.forEach(evt => {
+        if (evt.action === 'load') {
+          openLoads[evt.unitId] = evt.gameTime;
+        } else if (evt.action === 'unload') {
+          const loadTime = openLoads[evt.unitId];
+          if (loadTime !== undefined) {
+            const passenger = unitsByUuid[evt.unitId];
+            if (passenger) {
+              passenger._loadedWindows.push({
+                loadTime,
+                unloadTime: evt.gameTime,
+                transportId: transport.uuid
+              });
+            }
+            delete openLoads[evt.unitId];
+          }
+        }
+      });
+      // Any still-open loads (unit never unloaded) — extend to end of replay
+      Object.entries(openLoads).forEach(([unitId, loadTime]) => {
+        const passenger = unitsByUuid[unitId];
+        if (passenger) {
+          passenger._loadedWindows.push({
+            loadTime,
+            unloadTime: Infinity,
+            transportId: transport.uuid
+          });
+        }
+      });
     });
   }
 
@@ -521,7 +566,10 @@ const ClientPlayer = class {
         count,
         drawSlots,
         isWorker,
-        isNeutralPlayer
+        isNeutralPlayer,
+        isTransport,
+        cargoCount,
+        cargoItems
       } = item;
 
       if (decayLevel < 0.45 || playerId != owningPlayerId) {
@@ -552,7 +600,10 @@ const ClientPlayer = class {
         spawnTime,
         isWorker,
         isNeutralPlayer,
-        decayLevel
+        decayLevel,
+        isTransport: isTransport || false,
+        cargoCount: cargoCount || 0,
+        cargoItems: cargoItems || null
       };
 
       acc.push(unitBox);
@@ -1088,6 +1139,11 @@ const ClientPlayer = class {
       const { x, y, iconSize, fontSize, isHero, heroRank, fullName, decayLevel, count, isNeutralPlayer } = item;
 
       if (item.hideNameplate) {
+        return acc;
+      }
+
+      // hide all neutral/creep nameplates
+      if (isNeutralPlayer) {
         return acc;
       }
 

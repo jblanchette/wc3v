@@ -117,3 +117,65 @@ const formatGameTime = (gameTime) => {
 
   return `${timerDate.getUTCMinutes()}:${gameSecondsPrefix}${timerDate.getUTCSeconds()}`;
 };
+
+////
+// Short name lookups for canvas nameplates
+////
+
+const HeroShortNames = {
+  'Hamg': 'AM',
+  'Hblm': 'BMage',
+  'Hmkg': 'MK',
+  'Hpal': 'Pala',
+  'Ekee': 'KotG',
+  'Emoo': 'PotM',
+  'Edem': 'DH',
+  'Ewar': 'Warden',
+  'Obla': 'Blade',
+  'Ofar': 'FS',
+  'Oshd': 'SH',
+  'Otch': 'TC',
+  'Udea': 'DK',
+  'Udre': 'DL',
+  'Ucrl': 'CL',
+  'Ulic': 'Lich',
+  'Npbm': 'Panda',
+  'Nbrn': 'DR',
+  'Nngs': 'Naga',
+  'Nplh': 'PL',
+  'Nbst': 'Beast',
+  'Ntin': 'Tinker',
+  'Nfir': 'FL',
+  'Nalc': 'Alch'
+};
+
+const UnitShortNames = {
+  'ucry': 'Fiend',
+  'uobs': 'Statue',
+  'umtw': 'Wagon',
+  'ufro': 'F. Wyrm',
+  'ospw': 'S. Walker',
+  'ospm': 'S. Walker',
+  'okod': 'Kodo',
+  'edoc': 'DotC',
+  'edot': 'DotT',
+  'emtg': 'M. Giant',
+  'ehpr': 'Hippo Rider',
+  'hgyr': 'Gyro',
+  'hgry': 'Gryphon',
+  'hspt': 'Breaker',
+  'hdhw': 'D. Hawk',
+  'hmtt': 'Siege',
+  'hrtt': 'Siege',
+  'otbr': 'Batrider',
+  'otbk': 'Berserker',
+  'ohun': 'Headhunter',
+  'odoc': 'Doc',
+  'uske': 'Skeleton'
+};
+
+function getShortName (itemId, displayName) {
+  if (HeroShortNames[itemId]) return HeroShortNames[itemId];
+  if (UnitShortNames[itemId]) return UnitShortNames[itemId];
+  return displayName;
+}
