@@ -1,0 +1,58 @@
+{
+  "replayId": "test-ghoul-lumber",
+  "map": "echoisles",
+  "mapRaw": "Maps/frozenthrone/(2)echoisles.w3x",
+  "durationMs": 78400,
+  "durationFormatted": "1:18",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 10700,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 19200,
+          "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 25398,
+          "gameTimeFormatted": "0:25"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Ruac",
+          "name": "Cannibalize",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncannibalize",
+          "gameTimeMs": 21900,
+          "gameTimeFormatted": "0:21"
+        }
+      ]
+    }
+  }
+}

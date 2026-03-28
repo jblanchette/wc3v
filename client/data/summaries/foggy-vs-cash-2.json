@@ -14,13 +14,20 @@
         "gameTimeMs": 67739,
         "gameTimeFormatted": "1:07"
       },
-      "tier2Time": 282193,
-      "tier2TimeFormatted": "4:42",
+      "tier2Time": 142111,
+      "tier2TimeFormatted": "2:22",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
+        {
+          "type": "building",
+          "name": "Spirit Lodge",
+          "itemId": "osld",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
         {
           "type": "building",
           "name": "Altar of Storms",
@@ -106,11 +113,11 @@
           "gameTimeFormatted": "3:36"
         },
         {
-          "type": "unit",
-          "name": "Grunt",
-          "itemId": "ogru",
-          "gameTimeMs": 261847,
-          "gameTimeFormatted": "4:21"
+          "type": "hero",
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee",
+          "gameTimeMs": 250661,
+          "gameTimeFormatted": "4:10"
         },
         {
           "type": "hero",
@@ -153,16 +160,13 @@
           "itemId": "otrb",
           "gameTimeMs": 333192,
           "gameTimeFormatted": "5:33"
-        },
-        {
-          "type": "unit",
-          "name": "Spirit Walker",
-          "itemId": "ospm",
-          "gameTimeMs": 374423,
-          "gameTimeFormatted": "6:14"
         }
       ],
       "t2Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
         {
           "name": "Beastiary",
           "itemId": "obea"
@@ -172,8 +176,8 @@
           "itemId": "otto"
         },
         {
-          "name": "Orc Burrow",
-          "itemId": "otrb"
+          "name": "War Mill",
+          "itemId": "ofor"
         },
         {
           "name": "Voodoo Lounge",
@@ -182,12 +186,16 @@
       ],
       "t2Units": [
         {
-          "name": "Shadow Hunter",
-          "itemId": "Oshd"
-        },
-        {
           "name": "Grunt",
           "itemId": "ogru"
+        },
+        {
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
         },
         {
           "name": "Spirit Walker",
@@ -203,7 +211,27 @@
         }
       ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Roen",
+          "name": "Ensnare",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnensnare",
+          "gameTimeMs": 352143,
+          "gameTimeFormatted": "5:52"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 529223,
+          "gameTimeFormatted": "8:49"
+        }
+      ]
     },
     "2": {
       "name": "Foggywc3",
@@ -214,13 +242,20 @@
         "gameTimeMs": 66328,
         "gameTimeFormatted": "1:06"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "tier2Time": 213163,
+      "tier2TimeFormatted": "3:33",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 150471,
+      "expansionTimeFormatted": "2:30",
       "buildPreview": [
+        {
+          "type": "building",
+          "name": "Ancient of Wind",
+          "itemId": "eaow",
+          "gameTimeMs": 2646,
+          "gameTimeFormatted": "0:02"
+        },
         {
           "type": "building",
           "name": "Altar of Elders",
@@ -257,7 +292,7 @@
           "gameTimeFormatted": "1:22"
         },
         {
-          "type": "building",
+          "type": "expansion",
           "name": "Tree of Life",
           "itemId": "etol",
           "gameTimeMs": 150471,
@@ -290,6 +325,13 @@
           "itemId": "emow",
           "gameTimeMs": 229992,
           "gameTimeFormatted": "3:49"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 248040,
+          "gameTimeFormatted": "4:08"
         },
         {
           "type": "unit",
@@ -334,20 +376,6 @@
           "gameTimeFormatted": "5:50"
         },
         {
-          "type": "hero",
-          "name": "Naga Sea Witch",
-          "itemId": "Nngs",
-          "gameTimeMs": 432771,
-          "gameTimeFormatted": "7:12"
-        },
-        {
-          "type": "unit",
-          "name": "Archer",
-          "itemId": "earc",
-          "gameTimeMs": 501698,
-          "gameTimeFormatted": "8:21"
-        },
-        {
           "type": "unit",
           "name": "Glaive Thrower",
           "itemId": "ebal",
@@ -362,10 +390,56 @@
           "gameTimeFormatted": "8:41"
         }
       ],
-      "t2Buildings": [],
-      "t2Units": [],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Ancient Protector",
+          "itemId": "etrp"
+        },
+        {
+          "name": "Ancient of War",
+          "itemId": "eaom"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Huntress",
+          "itemId": "esen"
+        },
+        {
+          "name": "Blademaster",
+          "itemId": "Obla"
+        },
+        {
+          "name": "Glaive Thrower",
+          "itemId": "ebal"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 244914,
+          "gameTimeFormatted": "4:04"
+        },
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 381072,
+          "gameTimeFormatted": "6:21"
+        }
+      ]
     }
   }
 }

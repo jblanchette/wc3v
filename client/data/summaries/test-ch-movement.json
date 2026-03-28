@@ -11,8 +11,8 @@
       "heroOpener": {
         "name": "Death Knight",
         "itemId": "Udea",
-        "gameTimeMs": 138090,
-        "gameTimeFormatted": "2:18"
+        "gameTimeMs": 81794,
+        "gameTimeFormatted": "1:21"
       },
       "tier2Time": null,
       "tier2TimeFormatted": null,
@@ -43,24 +43,25 @@
           "gameTimeFormatted": "1:17"
         },
         {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 81794,
+          "gameTimeFormatted": "1:21"
+        },
+        {
           "type": "building",
           "name": "Tomb of Relics",
           "itemId": "utom",
           "gameTimeMs": 82794,
           "gameTimeFormatted": "1:22"
-        },
-        {
-          "type": "hero",
-          "name": "Death Knight",
-          "itemId": "Udea",
-          "gameTimeMs": 138090,
-          "gameTimeFormatted": "2:18"
         }
       ],
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

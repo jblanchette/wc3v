@@ -8,7 +8,12 @@
     "1": {
       "name": "Jeef#1496",
       "race": "U",
-      "heroOpener": null,
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 59220,
+        "gameTimeFormatted": "0:59"
+      },
       "tier2Time": null,
       "tier2TimeFormatted": null,
       "tier3Time": null,
@@ -18,10 +23,24 @@
       "buildPreview": [
         {
           "type": "building",
-          "name": "Necropolis",
-          "itemId": "unpl",
-          "gameTimeMs": 2822,
-          "gameTimeFormatted": "0:02"
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 8764,
+          "gameTimeFormatted": "0:08"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 17835,
+          "gameTimeFormatted": "0:17"
         },
         {
           "type": "building",
@@ -29,12 +48,20 @@
           "itemId": "uaod",
           "gameTimeMs": 34252,
           "gameTimeFormatted": "0:34"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 59220,
+          "gameTimeFormatted": "0:59"
         }
       ],
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

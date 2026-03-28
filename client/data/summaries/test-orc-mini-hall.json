@@ -1,0 +1,78 @@
+{
+  "replayId": "test-orc-mini-hall",
+  "map": "terenasstand lv",
+  "mapRaw": "Maps/frozenthrone/(2)terenasstand_lv.w3x",
+  "durationMs": 51300,
+  "durationFormatted": "0:51",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "O",
+      "heroOpener": {
+        "name": "Shadow Hunter",
+        "itemId": "Oshd",
+        "gameTimeMs": 19299,
+        "gameTimeFormatted": "0:19"
+      },
+      "tier2Time": 10400,
+      "tier2TimeFormatted": "0:10",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 13000,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 17099,
+          "gameTimeFormatted": "0:17"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 19299,
+          "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "building",
+          "name": "Great Hall",
+          "itemId": "ogre",
+          "gameTimeMs": 48598,
+          "gameTimeFormatted": "0:48"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Altar of Storms",
+          "itemId": "oalt"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "replayId": "test-hu-buildings",
+  "map": "Last Refuge",
+  "mapRaw": "Maps/W3Champions/v11/w3c_LastRefuge_v1.4.w3x",
+  "durationMs": 64650,
+  "durationFormatted": "1:04",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "H",
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 13663,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "hbar",
+          "gameTimeMs": 31357,
+          "gameTimeFormatted": "0:31"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Kings",
+          "itemId": "halt",
+          "gameTimeMs": 38093,
+          "gameTimeFormatted": "0:38"
+        },
+        {
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 43019,
+          "gameTimeFormatted": "0:43"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

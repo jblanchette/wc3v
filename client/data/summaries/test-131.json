@@ -1,0 +1,74 @@
+{
+  "replayId": "test-131",
+  "map": "echoisles",
+  "mapRaw": "Maps/frozenthrone/(2)echoisles.w3x",
+  "durationMs": 73325,
+  "durationFormatted": "1:13",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": {
+        "name": "Crypt Lord",
+        "itemId": "Ucrl",
+        "gameTimeMs": 58900,
+        "gameTimeFormatted": "0:58"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 26100,
+          "gameTimeFormatted": "0:26"
+        },
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 27900,
+          "gameTimeFormatted": "0:27"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 34300,
+          "gameTimeFormatted": "0:34"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 39600,
+          "gameTimeFormatted": "0:39"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 54100,
+          "gameTimeFormatted": "0:54"
+        },
+        {
+          "type": "hero",
+          "name": "Crypt Lord",
+          "itemId": "Ucrl",
+          "gameTimeMs": 58900,
+          "gameTimeFormatted": "0:58"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "replayId": "test-item-slot-2",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 44625,
+  "durationFormatted": "0:44",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 17600,
+        "gameTimeFormatted": "0:17"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 7400,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "building",
+          "name": "Tomb of Relics",
+          "itemId": "utom",
+          "gameTimeMs": 8798,
+          "gameTimeFormatted": "0:08"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 17600,
+          "gameTimeFormatted": "0:17"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

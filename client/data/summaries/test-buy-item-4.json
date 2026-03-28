@@ -1,0 +1,76 @@
+{
+  "replayId": "test-buy-item-4",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 49600,
+  "durationFormatted": "0:49",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 28597,
+        "gameTimeFormatted": "0:28"
+      },
+      "tier2Time": 15298,
+      "tier2TimeFormatted": "0:15",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 10798,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "building",
+          "name": "Tomb of Relics",
+          "itemId": "utom",
+          "gameTimeMs": 13998,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 28597,
+          "gameTimeFormatted": "0:28"
+        },
+        {
+          "type": "hero",
+          "name": "Lich",
+          "itemId": "Ulic",
+          "gameTimeMs": 35994,
+          "gameTimeFormatted": "0:35"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [
+        {
+          "name": "Death Knight",
+          "itemId": "Udea"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "replayId": "test-buy-item-3",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 72600,
+  "durationFormatted": "1:12",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 18399,
+        "gameTimeFormatted": "0:18"
+      },
+      "tier2Time": 9100,
+      "tier2TimeFormatted": "0:09",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 10000,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 12300,
+          "gameTimeFormatted": "0:12"
+        },
+        {
+          "type": "building",
+          "name": "Tomb of Relics",
+          "itemId": "utom",
+          "gameTimeMs": 18000,
+          "gameTimeFormatted": "0:18"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 18399,
+          "gameTimeFormatted": "0:18"
+        },
+        {
+          "type": "building",
+          "name": "Tomb of Relics",
+          "itemId": "utom",
+          "gameTimeMs": 24695,
+          "gameTimeFormatted": "0:24"
+        },
+        {
+          "type": "hero",
+          "name": "Lich",
+          "itemId": "Ulic",
+          "gameTimeMs": 29095,
+          "gameTimeFormatted": "0:29"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Altar of Darkness",
+          "itemId": "uaod"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
+          "name": "Tomb of Relics",
+          "itemId": "utom"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Death Knight",
+          "itemId": "Udea"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

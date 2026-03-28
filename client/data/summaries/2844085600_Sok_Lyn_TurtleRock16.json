@@ -1,0 +1,572 @@
+{
+  "replayId": "2844085600_Sok_Lyn_TurtleRock16",
+  "map": "250622 1057 Turtle Rock v1.6 dwsl",
+  "mapRaw": "Maps/W3Champions\\w3c_250622_1057_TurtleRock_v1.6_dwsl.w3x",
+  "durationMs": 2308700,
+  "durationFormatted": "38:28",
+  "players": {
+    "1": {
+      "name": "moosangsung#1804",
+      "race": "H",
+      "heroOpener": {
+        "name": "Paladin",
+        "itemId": "Hpal",
+        "gameTimeMs": 93155,
+        "gameTimeFormatted": "1:33"
+      },
+      "tier2Time": 187895,
+      "tier2TimeFormatted": "3:07",
+      "tier3Time": 517020,
+      "tier3TimeFormatted": "8:37",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Kings",
+          "itemId": "halt",
+          "gameTimeMs": 33055,
+          "gameTimeFormatted": "0:33"
+        },
+        {
+          "type": "building",
+          "name": "Blacksmith",
+          "itemId": "hbla",
+          "gameTimeMs": 36103,
+          "gameTimeFormatted": "0:36"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "hbar",
+          "gameTimeMs": 48645,
+          "gameTimeFormatted": "0:48"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 53764,
+          "gameTimeFormatted": "0:53"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 77174,
+          "gameTimeFormatted": "1:17"
+        },
+        {
+          "type": "hero",
+          "name": "Paladin",
+          "itemId": "Hpal",
+          "gameTimeMs": 93155,
+          "gameTimeFormatted": "1:33"
+        },
+        {
+          "type": "unit",
+          "name": "Rifleman",
+          "itemId": "hrif",
+          "gameTimeMs": 112193,
+          "gameTimeFormatted": "1:52"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 120390,
+          "gameTimeFormatted": "2:00"
+        },
+        {
+          "type": "unit",
+          "name": "Rifleman",
+          "itemId": "hrif",
+          "gameTimeMs": 134868,
+          "gameTimeFormatted": "2:14"
+        },
+        {
+          "type": "unit",
+          "name": "Rifleman",
+          "itemId": "hrif",
+          "gameTimeMs": 162854,
+          "gameTimeFormatted": "2:42"
+        },
+        {
+          "type": "unit",
+          "name": "Rifleman",
+          "itemId": "hrif",
+          "gameTimeMs": 207177,
+          "gameTimeFormatted": "3:27"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 230663,
+          "gameTimeFormatted": "3:50"
+        },
+        {
+          "type": "unit",
+          "name": "Rifleman",
+          "itemId": "hrif",
+          "gameTimeMs": 253755,
+          "gameTimeFormatted": "4:13"
+        },
+        {
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 258482,
+          "gameTimeFormatted": "4:18"
+        },
+        {
+          "type": "unit",
+          "name": "Rifleman",
+          "itemId": "hrif",
+          "gameTimeMs": 283810,
+          "gameTimeFormatted": "4:43"
+        },
+        {
+          "type": "building",
+          "name": "Arcane Vault",
+          "itemId": "hvlt",
+          "gameTimeMs": 297038,
+          "gameTimeFormatted": "4:57"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 366808,
+          "gameTimeFormatted": "6:06"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 375089,
+          "gameTimeFormatted": "6:15"
+        },
+        {
+          "type": "hero",
+          "name": "Blood Mage",
+          "itemId": "Hblm",
+          "gameTimeMs": 397156,
+          "gameTimeFormatted": "6:37"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 411469,
+          "gameTimeFormatted": "6:51"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Farm",
+          "itemId": "hhou"
+        },
+        {
+          "name": "Scout Tower",
+          "itemId": "hwtw"
+        },
+        {
+          "name": "Arcane Vault",
+          "itemId": "hvlt"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Rifleman",
+          "itemId": "hrif"
+        },
+        {
+          "name": "Blood Mage",
+          "itemId": "Hblm"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Lumber Mill",
+          "itemId": "hlum"
+        },
+        {
+          "name": "Gryphon Aviary",
+          "itemId": "hgra"
+        },
+        {
+          "name": "Farm",
+          "itemId": "hhou"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Rifleman",
+          "itemId": "hrif"
+        },
+        {
+          "name": "Gryphon Rider",
+          "itemId": "hgry"
+        },
+        {
+          "name": "Phoenix Egg",
+          "itemId": "hpxe"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rhra",
+          "name": "Ranged Weapons",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnhumanmissileupone",
+          "gameTimeMs": 253141,
+          "gameTimeFormatted": "4:13"
+        },
+        {
+          "itemId": "Rhri",
+          "name": "Long Rifles",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndwarvenlongrifle",
+          "gameTimeMs": 344608,
+          "gameTimeFormatted": "5:44"
+        },
+        {
+          "itemId": "Rhla",
+          "name": "Leather Armor",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnleatherupgradeone",
+          "gameTimeMs": 492953,
+          "gameTimeFormatted": "8:12"
+        },
+        {
+          "itemId": "Rhan",
+          "name": "Animal War Training",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnanimalwartraining",
+          "gameTimeMs": 685620,
+          "gameTimeFormatted": "11:25"
+        },
+        {
+          "itemId": "Rhlh",
+          "name": "Lumber Harvesting",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnhumanlumberupgrade1",
+          "gameTimeMs": 732595,
+          "gameTimeFormatted": "12:12"
+        },
+        {
+          "itemId": "Rhme",
+          "name": "Melee Weapons",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnsteelmelee",
+          "gameTimeMs": 878640,
+          "gameTimeFormatted": "14:38"
+        },
+        {
+          "itemId": "Rhhb",
+          "name": "Storm Hammers",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnstormhammer",
+          "gameTimeMs": 1002720,
+          "gameTimeFormatted": "16:42"
+        }
+      ]
+    },
+    "2": {
+      "name": "Lianpia#3217",
+      "race": "O",
+      "heroOpener": {
+        "name": "Far Seer",
+        "itemId": "Ofar",
+        "gameTimeMs": 65255,
+        "gameTimeFormatted": "1:05"
+      },
+      "tier2Time": 161159,
+      "tier2TimeFormatted": "2:41",
+      "tier3Time": 342537,
+      "tier3TimeFormatted": "5:42",
+      "expansionTime": 1903588,
+      "expansionTimeFormatted": "31:43",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 2613,
+          "gameTimeFormatted": "0:02"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 12226,
+          "gameTimeFormatted": "0:12"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 47786,
+          "gameTimeFormatted": "0:47"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 63076,
+          "gameTimeFormatted": "1:03"
+        },
+        {
+          "type": "hero",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "gameTimeMs": 65255,
+          "gameTimeFormatted": "1:05"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 116650,
+          "gameTimeFormatted": "1:56"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 122793,
+          "gameTimeFormatted": "2:02"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 134898,
+          "gameTimeFormatted": "2:14"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 173734,
+          "gameTimeFormatted": "2:53"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 197964,
+          "gameTimeFormatted": "3:17"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 216326,
+          "gameTimeFormatted": "3:36"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 234909,
+          "gameTimeFormatted": "3:54"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 252465,
+          "gameTimeFormatted": "4:12"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 257991,
+          "gameTimeFormatted": "4:17"
+        },
+        {
+          "type": "building",
+          "name": "Tauren Totem",
+          "itemId": "otto",
+          "gameTimeMs": 369979,
+          "gameTimeFormatted": "6:09"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 376781,
+          "gameTimeFormatted": "6:16"
+        },
+        {
+          "type": "building",
+          "name": "Tauren Totem",
+          "itemId": "otto",
+          "gameTimeMs": 402008,
+          "gameTimeFormatted": "6:42"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 418228,
+          "gameTimeFormatted": "6:58"
+        },
+        {
+          "type": "unit",
+          "name": "Tauren",
+          "itemId": "otau",
+          "gameTimeMs": 487529,
+          "gameTimeFormatted": "8:07"
+        },
+        {
+          "type": "unit",
+          "name": "Tauren",
+          "itemId": "otau",
+          "gameTimeMs": 578877,
+          "gameTimeFormatted": "9:38"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Tauren",
+          "itemId": "otau"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        },
+        {
+          "name": "Raider",
+          "itemId": "orai"
+        },
+        {
+          "name": "Kodo Beast",
+          "itemId": "okod"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rora",
+          "name": "Ranged Weapons",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnsteelranged",
+          "gameTimeMs": 195903,
+          "gameTimeFormatted": "3:15"
+        },
+        {
+          "itemId": "Rotr",
+          "name": "Troll Regeneration",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnregenerate",
+          "gameTimeMs": 303849,
+          "gameTimeFormatted": "5:03"
+        },
+        {
+          "itemId": "Ropg",
+          "name": "Pillage",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpillage",
+          "gameTimeMs": 308065,
+          "gameTimeFormatted": "5:08"
+        },
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 492675,
+          "gameTimeFormatted": "8:12"
+        },
+        {
+          "itemId": "Rows",
+          "name": "Pulverize",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnsmash",
+          "gameTimeMs": 533366,
+          "gameTimeFormatted": "8:53"
+        },
+        {
+          "itemId": "Roen",
+          "name": "Ensnare",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnensnare",
+          "gameTimeMs": 740277,
+          "gameTimeFormatted": "12:20"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 1282139,
+          "gameTimeFormatted": "21:22"
+        },
+        {
+          "itemId": "Rwdm",
+          "name": "War Drums",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndrum",
+          "gameTimeMs": 1282939,
+          "gameTimeFormatted": "21:22"
+        }
+      ]
+    }
+  }
+}

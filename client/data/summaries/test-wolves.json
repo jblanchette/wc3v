@@ -1,0 +1,67 @@
+{
+  "replayId": "test-wolves",
+  "map": "echoisles",
+  "mapRaw": "Maps/frozenthrone//(2)echoisles.w3x",
+  "durationMs": 110325,
+  "durationFormatted": "1:50",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "O",
+      "heroOpener": {
+        "name": "Far Seer",
+        "itemId": "Ofar",
+        "gameTimeMs": 20096,
+        "gameTimeFormatted": "0:20"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 8400,
+          "gameTimeFormatted": "0:08"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 10400,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 11500,
+          "gameTimeFormatted": "0:11"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 19096,
+          "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "hero",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "gameTimeMs": 20096,
+          "gameTimeFormatted": "0:20"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

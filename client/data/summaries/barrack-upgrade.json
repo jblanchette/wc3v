@@ -1,0 +1,109 @@
+{
+  "replayId": "barrack-upgrade",
+  "map": "echoisles",
+  "mapRaw": "Maps/frozenthrone/(2)echoisles.w3x",
+  "durationMs": 65900,
+  "durationFormatted": "1:05",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "O",
+      "heroOpener": null,
+      "tier2Time": 22597,
+      "tier2TimeFormatted": "0:22",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 13600,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 14000,
+          "gameTimeFormatted": "0:14"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 17400,
+          "gameTimeFormatted": "0:17"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 26297,
+          "gameTimeFormatted": "0:26"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 43797,
+          "gameTimeFormatted": "0:43"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Grunt",
+          "itemId": "ogru"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Robs",
+          "name": "Berserker Strength",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnberserk",
+          "gameTimeMs": 48398,
+          "gameTimeFormatted": "0:48"
+        },
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 51795,
+          "gameTimeFormatted": "0:51"
+        },
+        {
+          "itemId": "Rotr",
+          "name": "Troll Regeneration",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnregenerate",
+          "gameTimeMs": 55595,
+          "gameTimeFormatted": "0:55"
+        },
+        {
+          "itemId": "Robf",
+          "name": "Burning Oil",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnfirerocks",
+          "gameTimeMs": 60195,
+          "gameTimeFormatted": "1:00"
+        }
+      ]
+    }
+  }
+}

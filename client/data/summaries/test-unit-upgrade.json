@@ -1,0 +1,75 @@
+{
+  "replayId": "test-unit-upgrade",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 39125,
+  "durationFormatted": "0:39",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": null,
+      "tier2Time": 15800,
+      "tier2TimeFormatted": "0:15",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 8300,
+          "gameTimeFormatted": "0:08"
+        },
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 13000,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 19300,
+          "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 26100,
+          "gameTimeFormatted": "0:26"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Graveyard",
+          "itemId": "ugrv"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Ruwb",
+          "name": "Web",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnweb",
+          "gameTimeMs": 35100,
+          "gameTimeFormatted": "0:35"
+        }
+      ]
+    }
+  }
+}

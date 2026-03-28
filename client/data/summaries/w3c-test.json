@@ -1,0 +1,111 @@
+{
+  "replayId": "w3c-test",
+  "map": "3 w3c 251104 0950 Last Refuge",
+  "mapRaw": "maps\\W3Champions\\3_w3c_251104_0950_LastRefuge_v1.5.w3x",
+  "durationMs": 132057,
+  "durationFormatted": "2:12",
+  "players": {
+    "1": {
+      "name": "Aventurier#211320871",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 69443,
+        "gameTimeFormatted": "1:09"
+      },
+      "tier2Time": 124317,
+      "tier2TimeFormatted": "2:04",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 6814,
+          "gameTimeFormatted": "0:06"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 19659,
+          "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 52276,
+          "gameTimeFormatted": "0:52"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 69443,
+          "gameTimeFormatted": "1:09"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    },
+    "2": {
+      "name": "Jeef#1496",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 67414,
+        "gameTimeFormatted": "1:07"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 7119,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 9046,
+          "gameTimeFormatted": "0:09"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 67414,
+          "gameTimeFormatted": "1:07"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

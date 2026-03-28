@@ -14,10 +14,10 @@
         "gameTimeMs": 105250,
         "gameTimeFormatted": "1:45"
       },
-      "tier2Time": 394900,
-      "tier2TimeFormatted": "6:34",
-      "tier3Time": 602200,
-      "tier3TimeFormatted": "10:02",
+      "tier2Time": 254900,
+      "tier2TimeFormatted": "4:14",
+      "tier3Time": 462200,
+      "tier3TimeFormatted": "7:42",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -148,58 +148,62 @@
           "gameTimeFormatted": "7:53"
         },
         {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 490200,
+          "gameTimeFormatted": "8:10"
+        },
+        {
           "type": "unit",
           "name": "Obsidian Statue",
           "itemId": "uobs",
           "gameTimeMs": 539550,
           "gameTimeFormatted": "8:59"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 561550,
-          "gameTimeFormatted": "9:21"
         }
       ],
       "t2Buildings": [
-        {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
-        }
-      ],
-      "t2Units": [
-        {
-          "name": "Lich",
-          "itemId": "Ulic"
-        },
-        {
-          "name": "Obsidian Statue",
-          "itemId": "uobs"
-        },
-        {
-          "name": "Crypt Fiend",
-          "itemId": "ucry"
-        }
-      ],
-      "t3Buildings": [
         {
           "name": "Ziggurat",
           "itemId": "uzig"
         }
       ],
-      "t3Units": [
-        {
-          "name": "Dark Ranger",
-          "itemId": "Nbrn"
-        },
+      "t2Units": [
         {
           "name": "Crypt Fiend",
           "itemId": "ucry"
         },
         {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
+          "name": "Temple of the Damned",
+          "itemId": "utod"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
+        }
+      ],
+      "t3Units": [
+        {
           "name": "Obsidian Statue",
           "itemId": "uobs"
+        },
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
         },
         {
           "name": "Destroyer",
@@ -208,6 +212,35 @@
         {
           "name": "Banshee",
           "itemId": "uban"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 604900,
+          "gameTimeFormatted": "10:04"
+        },
+        {
+          "itemId": "Ruwb",
+          "name": "Web",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnweb",
+          "gameTimeMs": 605350,
+          "gameTimeFormatted": "10:05"
+        },
+        {
+          "itemId": "Ruba",
+          "name": "Banshee Training",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnbansheeadept",
+          "gameTimeMs": 1334700,
+          "gameTimeFormatted": "22:14"
         }
       ]
     },
@@ -220,8 +253,8 @@
         "gameTimeMs": 72450,
         "gameTimeFormatted": "1:12"
       },
-      "tier2Time": 471450,
-      "tier2TimeFormatted": "7:51",
+      "tier2Time": 302600,
+      "tier2TimeFormatted": "5:02",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
@@ -231,14 +264,14 @@
           "type": "building",
           "name": "Crypt",
           "itemId": "usep",
-          "gameTimeMs": 4500,
+          "gameTimeMs": 4550,
           "gameTimeFormatted": "0:04"
         },
         {
           "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
-          "gameTimeMs": 6700,
+          "gameTimeMs": 6750,
           "gameTimeFormatted": "0:06"
         },
         {
@@ -266,7 +299,7 @@
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 87600,
+          "gameTimeMs": 87550,
           "gameTimeFormatted": "1:27"
         },
         {
@@ -298,18 +331,18 @@
           "gameTimeFormatted": "6:22"
         },
         {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 411950,
+          "gameTimeFormatted": "6:51"
+        },
+        {
           "type": "unit",
           "name": "Obsidian Statue",
           "itemId": "uobs",
-          "gameTimeMs": 454950,
-          "gameTimeFormatted": "7:34"
-        },
-        {
-          "type": "hero",
-          "name": "Dread Lord",
-          "itemId": "Udre",
-          "gameTimeMs": 478700,
-          "gameTimeFormatted": "7:58"
+          "gameTimeMs": 491200,
+          "gameTimeFormatted": "8:11"
         },
         {
           "type": "unit",
@@ -319,20 +352,6 @@
           "gameTimeFormatted": "8:18"
         },
         {
-          "type": "hero",
-          "name": "Dark Ranger",
-          "itemId": "Nbrn",
-          "gameTimeMs": 545050,
-          "gameTimeFormatted": "9:05"
-        },
-        {
-          "type": "hero",
-          "name": "Dark Ranger",
-          "itemId": "Nbrn",
-          "gameTimeMs": 545200,
-          "gameTimeFormatted": "9:05"
-        },
-        {
           "type": "unit",
           "name": "Obsidian Statue",
           "itemId": "uobs",
@@ -340,11 +359,11 @@
           "gameTimeFormatted": "9:28"
         },
         {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 589550,
-          "gameTimeFormatted": "9:49"
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 610450,
+          "gameTimeFormatted": "10:10"
         },
         {
           "type": "unit",
@@ -355,23 +374,45 @@
         },
         {
           "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 743550,
-          "gameTimeFormatted": "12:23"
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 746350,
+          "gameTimeFormatted": "12:26"
         },
         {
           "type": "unit",
           "name": "Obsidian Statue",
           "itemId": "uobs",
-          "gameTimeMs": 746350,
-          "gameTimeFormatted": "12:26"
+          "gameTimeMs": 762900,
+          "gameTimeFormatted": "12:42"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 781750,
+          "gameTimeFormatted": "13:01"
+        },
+        {
+          "type": "building",
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol",
+          "gameTimeMs": 798900,
+          "gameTimeFormatted": "13:18"
         }
       ],
       "t2Buildings": [
         {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
           "name": "Ziggurat",
           "itemId": "uzig"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
         },
         {
           "name": "Crypt",
@@ -384,16 +425,12 @@
       ],
       "t2Units": [
         {
-          "name": "Dread Lord",
-          "itemId": "Udre"
+          "name": "Death Knight",
+          "itemId": "Udea"
         },
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
-        },
-        {
-          "name": "Dark Ranger",
-          "itemId": "Nbrn"
         },
         {
           "name": "Crypt Fiend",
@@ -409,7 +446,45 @@
         }
       ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Rugf",
+          "name": "Ghoul Frenzy",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnghoulfrenzy",
+          "gameTimeMs": 472800,
+          "gameTimeFormatted": "7:52"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 512400,
+          "gameTimeFormatted": "8:32"
+        },
+        {
+          "itemId": "Rura",
+          "name": "Creature Attack",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnimprovedcreatureattack",
+          "gameTimeMs": 1407650,
+          "gameTimeFormatted": "23:27"
+        },
+        {
+          "itemId": "Rusf",
+          "name": "Stone Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnstoneform",
+          "gameTimeMs": 1448600,
+          "gameTimeFormatted": "24:08"
+        }
+      ]
     }
   }
 }

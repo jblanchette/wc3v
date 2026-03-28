@@ -1,0 +1,199 @@
+{
+  "replayId": "bnet-ud-vs-orc",
+  "map": "deadlock lv",
+  "mapRaw": "Maps/FrozenThrone/(8)deadlock_lv.w3x",
+  "durationMs": 149750,
+  "durationFormatted": "2:29",
+  "players": {
+    "1": {
+      "name": "pyro.archer.",
+      "race": "E",
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 48443,
+          "gameTimeFormatted": "0:48"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wind",
+          "itemId": "eaow",
+          "gameTimeMs": 50040,
+          "gameTimeFormatted": "0:50"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 66994,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 98816,
+          "gameTimeFormatted": "1:38"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 130040,
+          "gameTimeFormatted": "2:10"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 130077,
+          "gameTimeFormatted": "2:10"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 146501,
+          "gameTimeFormatted": "2:26"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 153839,
+          "gameTimeFormatted": "2:33"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    },
+    "4": {
+      "name": "Uni",
+      "race": "H",
+      "heroOpener": {
+        "name": "Archmage",
+        "itemId": "Hamg",
+        "gameTimeMs": 104356,
+        "gameTimeFormatted": "1:44"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Kings",
+          "itemId": "halt",
+          "gameTimeMs": 42991,
+          "gameTimeFormatted": "0:42"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 58129,
+          "gameTimeFormatted": "0:58"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "hbar",
+          "gameTimeMs": 59862,
+          "gameTimeFormatted": "0:59"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 102445,
+          "gameTimeFormatted": "1:42"
+        },
+        {
+          "type": "hero",
+          "name": "Archmage",
+          "itemId": "Hamg",
+          "gameTimeMs": 104356,
+          "gameTimeFormatted": "1:44"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    },
+    "7": {
+      "name": "jblanch",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 116215,
+        "gameTimeFormatted": "1:56"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 49170,
+          "gameTimeFormatted": "0:49"
+        },
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 71333,
+          "gameTimeFormatted": "1:11"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 103399,
+          "gameTimeFormatted": "1:43"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 116215,
+          "gameTimeFormatted": "1:56"
+        },
+        {
+          "type": "building",
+          "name": "Tomb of Relics",
+          "itemId": "utom",
+          "gameTimeMs": 119811,
+          "gameTimeFormatted": "1:59"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

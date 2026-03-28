@@ -23,6 +23,13 @@
       "buildPreview": [
         {
           "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
           "gameTimeMs": 21043,
@@ -39,7 +46,7 @@
           "type": "building",
           "name": "Tomb of Relics",
           "itemId": "utom",
-          "gameTimeMs": 28904,
+          "gameTimeMs": 28804,
           "gameTimeFormatted": "0:28"
         },
         {
@@ -53,7 +60,8 @@
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

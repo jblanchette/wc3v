@@ -14,10 +14,10 @@
         "gameTimeMs": 73677,
         "gameTimeFormatted": "1:13"
       },
-      "tier2Time": 319691,
-      "tier2TimeFormatted": "5:19",
-      "tier3Time": 472027,
-      "tier3TimeFormatted": "7:52",
+      "tier2Time": 179682,
+      "tier2TimeFormatted": "2:59",
+      "tier3Time": 332001,
+      "tier3TimeFormatted": "5:32",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -32,7 +32,7 @@
           "type": "building",
           "name": "Crypt",
           "itemId": "usep",
-          "gameTimeMs": 8770,
+          "gameTimeMs": 8920,
           "gameTimeFormatted": "0:08"
         },
         {
@@ -79,6 +79,13 @@
         },
         {
           "type": "hero",
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee",
+          "gameTimeMs": 304246,
+          "gameTimeFormatted": "5:04"
+        },
+        {
+          "type": "hero",
           "name": "Lich",
           "itemId": "Ulic",
           "gameTimeMs": 322513,
@@ -97,6 +104,13 @@
           "itemId": "ucry",
           "gameTimeMs": 407269,
           "gameTimeFormatted": "6:47"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 420054,
+          "gameTimeFormatted": "7:00"
         },
         {
           "type": "unit",
@@ -120,18 +134,18 @@
           "gameTimeFormatted": "8:12"
         },
         {
-          "type": "hero",
-          "name": "Naga Sea Witch",
-          "itemId": "Nngs",
-          "gameTimeMs": 591236,
-          "gameTimeFormatted": "9:51"
-        },
-        {
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
           "gameTimeMs": 643682,
           "gameTimeFormatted": "10:43"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 645303,
+          "gameTimeFormatted": "10:45"
         },
         {
           "type": "unit",
@@ -146,60 +160,104 @@
           "itemId": "ucry",
           "gameTimeMs": 697451,
           "gameTimeFormatted": "11:37"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 721400,
-          "gameTimeFormatted": "12:01"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 741063,
-          "gameTimeFormatted": "12:21"
         }
       ],
       "t2Buildings": [
         {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
-        }
-      ],
-      "t2Units": [
-        {
-          "name": "Lich",
-          "itemId": "Ulic"
+          "name": "Graveyard",
+          "itemId": "ugrv"
         },
-        {
-          "name": "Crypt Fiend",
-          "itemId": "ucry"
-        },
-        {
-          "name": "Obsidian Statue",
-          "itemId": "uobs"
-        }
-      ],
-      "t3Buildings": [
         {
           "name": "Ziggurat",
           "itemId": "uzig"
         }
       ],
+      "t2Units": [
+        {
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
+          "name": "Crypt",
+          "itemId": "usep"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
+        }
+      ],
       "t3Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
         },
         {
-          "name": "Naga Sea Witch",
-          "itemId": "Nngs"
+          "name": "Demon Hunter",
+          "itemId": "Edem"
         },
         {
-          "name": "Crypt Fiend",
-          "itemId": "ucry"
+          "name": "Faerie Dragon",
+          "itemId": "efdr"
+        },
+        {
+          "name": "Goblin Shredder",
+          "itemId": "ngir"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Ruwb",
+          "name": "Web",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnweb",
+          "gameTimeMs": 504349,
+          "gameTimeFormatted": "8:24"
+        },
+        {
+          "itemId": "Rugf",
+          "name": "Ghoul Frenzy",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnghoulfrenzy",
+          "gameTimeMs": 535435,
+          "gameTimeFormatted": "8:55"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 536546,
+          "gameTimeFormatted": "8:56"
+        },
+        {
+          "itemId": "Rura",
+          "name": "Creature Attack",
+          "level": 1,
+          "category": "attack",
+          "icon": "btncreatureattack",
+          "gameTimeMs": 1104654,
+          "gameTimeFormatted": "18:24"
         }
       ]
     },
@@ -212,33 +270,33 @@
         "gameTimeMs": 67036,
         "gameTimeFormatted": "1:07"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "tier2Time": 171207,
+      "tier2TimeFormatted": "2:51",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 1063471,
+      "expansionTimeFormatted": "17:43",
       "buildPreview": [
         {
           "type": "building",
           "name": "Altar of Elders",
           "itemId": "eate",
-          "gameTimeMs": 3662,
+          "gameTimeMs": 3692,
           "gameTimeFormatted": "0:03"
         },
         {
-          "type": "unit",
-          "name": "Ancient of War",
-          "itemId": "eaom",
-          "gameTimeMs": 23303,
-          "gameTimeFormatted": "0:23"
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 16182,
+          "gameTimeFormatted": "0:16"
         },
         {
           "type": "building",
           "name": "Ancient of War",
           "itemId": "eaom",
-          "gameTimeMs": 25524,
-          "gameTimeFormatted": "0:25"
+          "gameTimeMs": 26845,
+          "gameTimeFormatted": "0:26"
         },
         {
           "type": "hero",
@@ -260,13 +318,6 @@
           "itemId": "emow",
           "gameTimeMs": 91609,
           "gameTimeFormatted": "1:31"
-        },
-        {
-          "type": "unit",
-          "name": "Ancient of Wonders",
-          "itemId": "eden",
-          "gameTimeMs": 135302,
-          "gameTimeFormatted": "2:15"
         },
         {
           "type": "building",
@@ -326,6 +377,13 @@
         },
         {
           "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 364621,
+          "gameTimeFormatted": "6:04"
+        },
+        {
+          "type": "building",
           "name": "Ancient of Wind",
           "itemId": "eaow",
           "gameTimeMs": 370918,
@@ -360,10 +418,115 @@
           "gameTimeFormatted": "6:49"
         }
       ],
-      "t2Buildings": [],
-      "t2Units": [],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        },
+        {
+          "name": "Ancient of Wind",
+          "itemId": "eaow"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        },
+        {
+          "name": "Demon Hunter",
+          "itemId": "Edem"
+        },
+        {
+          "name": "Hippogryph",
+          "itemId": "ehip"
+        },
+        {
+          "name": "Hippogryph Rider",
+          "itemId": "ehpr"
+        },
+        {
+          "name": "Faerie Dragon",
+          "itemId": "efdr"
+        },
+        {
+          "name": "Naga Sea Witch",
+          "itemId": "Nngs"
+        },
+        {
+          "name": "Goblin Shredder",
+          "itemId": "ngir"
+        },
+        {
+          "name": "HeroDemonHunterMorph",
+          "itemId": "Edmm"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 316535,
+          "gameTimeFormatted": "5:16"
+        },
+        {
+          "itemId": "Resw",
+          "name": "Strength of the Wild",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnimprovedstrengthofthewild",
+          "gameTimeMs": 877427,
+          "gameTimeFormatted": "14:37"
+        },
+        {
+          "itemId": "Repm",
+          "name": "nightelf backpack",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpackbeast",
+          "gameTimeMs": 1099300,
+          "gameTimeFormatted": "18:19"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 2,
+          "category": "defense",
+          "icon": "btnimprovedreinforcedhides",
+          "gameTimeMs": 1323748,
+          "gameTimeFormatted": "22:03"
+        },
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 1209027,
+          "gameTimeFormatted": "20:09"
+        }
+      ]
     }
   }
 }

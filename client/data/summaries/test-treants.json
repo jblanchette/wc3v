@@ -1,0 +1,46 @@
+{
+  "replayId": "test-treants",
+  "map": "echoisles",
+  "mapRaw": "Maps/frozenthrone/(2)echoisles.w3x",
+  "durationMs": 48700,
+  "durationFormatted": "0:48",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "E",
+      "heroOpener": {
+        "name": "Keeper of the Grove",
+        "itemId": "Ekee",
+        "gameTimeMs": 14097,
+        "gameTimeFormatted": "0:14"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 6199,
+          "gameTimeFormatted": "0:06"
+        },
+        {
+          "type": "hero",
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee",
+          "gameTimeMs": 14097,
+          "gameTimeFormatted": "0:14"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

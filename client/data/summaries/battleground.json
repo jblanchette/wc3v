@@ -14,12 +14,12 @@
         "gameTimeMs": 83791,
         "gameTimeFormatted": "1:23"
       },
-      "tier2Time": 403994,
-      "tier2TimeFormatted": "6:43",
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "tier2Time": 263983,
+      "tier2TimeFormatted": "4:23",
+      "tier3Time": 411475,
+      "tier3TimeFormatted": "6:51",
+      "expansionTime": 263010,
+      "expansionTimeFormatted": "4:23",
       "buildPreview": [
         {
           "type": "building",
@@ -34,6 +34,13 @@
           "itemId": "otrb",
           "gameTimeMs": 36097,
           "gameTimeFormatted": "0:36"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 63282,
+          "gameTimeFormatted": "1:03"
         },
         {
           "type": "building",
@@ -99,18 +106,11 @@
           "gameTimeFormatted": "3:42"
         },
         {
-          "type": "building",
+          "type": "expansion",
           "name": "Great Hall",
           "itemId": "ogre",
           "gameTimeMs": 263010,
           "gameTimeFormatted": "4:23"
-        },
-        {
-          "type": "unit",
-          "name": "Troll Headhunter/Berserker",
-          "itemId": "ohun",
-          "gameTimeMs": 277091,
-          "gameTimeFormatted": "4:37"
         },
         {
           "type": "building",
@@ -164,6 +164,18 @@
       ],
       "t2Buildings": [
         {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun"
+        }
+      ],
+      "t3Buildings": [
+        {
           "name": "Barracks",
           "itemId": "obar"
         },
@@ -176,7 +188,7 @@
           "itemId": "osld"
         }
       ],
-      "t2Units": [
+      "t3Units": [
         {
           "name": "Troll Headhunter/Berserker",
           "itemId": "ohun"
@@ -188,10 +200,41 @@
         {
           "name": "Demolisher",
           "itemId": "ocat"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk"
         }
       ],
-      "t3Buildings": [],
-      "t3Units": []
+      "researched": [
+        {
+          "itemId": "Rora",
+          "name": "Ranged Weapons",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnthoriumranged",
+          "gameTimeMs": 694790,
+          "gameTimeFormatted": "11:34"
+        },
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 591235,
+          "gameTimeFormatted": "9:51"
+        },
+        {
+          "itemId": "Robf",
+          "name": "Burning Oil",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnfirerocks",
+          "gameTimeMs": 593353,
+          "gameTimeFormatted": "9:53"
+        }
+      ]
     },
     "3": {
       "name": "azadismind#1665",
@@ -202,10 +245,10 @@
         "gameTimeMs": 118371,
         "gameTimeFormatted": "1:58"
       },
-      "tier2Time": 375258,
-      "tier2TimeFormatted": "6:15",
-      "tier3Time": 715571,
-      "tier3TimeFormatted": "11:55",
+      "tier2Time": 235248,
+      "tier2TimeFormatted": "3:55",
+      "tier3Time": 575546,
+      "tier3TimeFormatted": "9:35",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -352,19 +395,23 @@
       ],
       "t2Buildings": [
         {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
           "name": "Slaughterhouse",
           "itemId": "uslh"
         },
         {
           "name": "Temple of the Damned",
           "itemId": "utod"
-        },
-        {
-          "name": "Ziggurat",
-          "itemId": "uzig"
         }
       ],
       "t2Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
         {
           "name": "Lich",
           "itemId": "Ulic"
@@ -376,10 +423,6 @@
         {
           "name": "Necromancer",
           "itemId": "unec"
-        },
-        {
-          "name": "CryptFiendMorph",
-          "itemId": "ucrm"
         }
       ],
       "t3Buildings": [
@@ -390,8 +433,58 @@
       ],
       "t3Units": [
         {
+          "name": "Necromancer",
+          "itemId": "unec"
+        },
+        {
+          "name": "CryptFiendMorph",
+          "itemId": "ucrm"
+        },
+        {
+          "name": "Obsidian Statue",
+          "itemId": "uobs"
+        },
+        {
           "name": "Crypt Lord",
           "itemId": "Ucrl"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rura",
+          "name": "Creature Attack",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnimprovedcreatureattack",
+          "gameTimeMs": 708449,
+          "gameTimeFormatted": "11:48"
+        },
+        {
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 412005,
+          "gameTimeFormatted": "6:52"
+        },
+        {
+          "itemId": "Rune",
+          "name": "Necromancer Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnnecromancermaster",
+          "gameTimeMs": 744696,
+          "gameTimeFormatted": "12:24"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 742146,
+          "gameTimeFormatted": "12:22"
         }
       ]
     },
@@ -404,8 +497,8 @@
         "gameTimeMs": 69542,
         "gameTimeFormatted": "1:09"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "tier2Time": 234061,
+      "tier2TimeFormatted": "3:54",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
@@ -415,7 +508,7 @@
           "type": "building",
           "name": "Altar of Kings",
           "itemId": "halt",
-          "gameTimeMs": 7792,
+          "gameTimeMs": 7823,
           "gameTimeFormatted": "0:07"
         },
         {
@@ -424,6 +517,13 @@
           "itemId": "hhou",
           "gameTimeMs": 19991,
           "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 21114,
+          "gameTimeFormatted": "0:21"
         },
         {
           "type": "building",
@@ -436,14 +536,14 @@
           "type": "building",
           "name": "Farm",
           "itemId": "hhou",
-          "gameTimeMs": 34475,
+          "gameTimeMs": 34506,
           "gameTimeFormatted": "0:34"
         },
         {
           "type": "building",
           "name": "Farm",
           "itemId": "hhou",
-          "gameTimeMs": 36908,
+          "gameTimeMs": 36753,
           "gameTimeFormatted": "0:36"
         },
         {
@@ -503,6 +603,13 @@
           "gameTimeFormatted": "3:05"
         },
         {
+          "type": "building",
+          "name": "Lumber Mill",
+          "itemId": "hlum",
+          "gameTimeMs": 239272,
+          "gameTimeFormatted": "3:59"
+        },
+        {
           "type": "unit",
           "name": "Rifleman",
           "itemId": "hrif",
@@ -536,26 +643,76 @@
           "itemId": "hrif",
           "gameTimeMs": 331160,
           "gameTimeFormatted": "5:31"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Lumber Mill",
+          "itemId": "hlum"
         },
         {
-          "type": "hero",
+          "name": "Farm",
+          "itemId": "hhou"
+        },
+        {
+          "name": "Arcane Sanctum",
+          "itemId": "hars"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Rifleman",
+          "itemId": "hrif"
+        },
+        {
           "name": "Paladin",
-          "itemId": "Hpal",
-          "gameTimeMs": 401064,
+          "itemId": "Hpal"
+        },
+        {
+          "name": "Spell Breaker",
+          "itemId": "hspt"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Rhra",
+          "name": "Ranged Weapons",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnhumanmissileupone",
+          "gameTimeMs": 332469,
+          "gameTimeFormatted": "5:32"
+        },
+        {
+          "itemId": "Rhri",
+          "name": "Long Rifles",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndwarvenlongrifle",
+          "gameTimeMs": 401467,
           "gameTimeFormatted": "6:41"
         },
         {
-          "type": "building",
-          "name": "Farm",
-          "itemId": "hhou",
-          "gameTimeMs": 408950,
-          "gameTimeFormatted": "6:48"
+          "itemId": "Rhlh",
+          "name": "Lumber Harvesting",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnhumanlumberupgrade1",
+          "gameTimeMs": 402468,
+          "gameTimeFormatted": "6:42"
+        },
+        {
+          "itemId": "Rhar",
+          "name": "Plating",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnhumanarmorupone",
+          "gameTimeMs": 477035,
+          "gameTimeFormatted": "7:57"
         }
-      ],
-      "t2Buildings": [],
-      "t2Units": [],
-      "t3Buildings": [],
-      "t3Units": []
+      ]
     },
     "5": {
       "name": "PyroArcher#1187",
@@ -566,12 +723,12 @@
         "gameTimeMs": 69043,
         "gameTimeFormatted": "1:09"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "tier2Time": 295329,
+      "tier2TimeFormatted": "4:55",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 449470,
+      "expansionTimeFormatted": "7:29",
       "buildPreview": [
         {
           "type": "building",
@@ -707,17 +864,78 @@
           "gameTimeFormatted": "6:55"
         },
         {
-          "type": "building",
-          "name": "Tree of Life",
-          "itemId": "etol",
-          "gameTimeMs": 449501,
-          "gameTimeFormatted": "7:29"
+          "type": "unit",
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp",
+          "gameTimeMs": 441684,
+          "gameTimeFormatted": "7:21"
         }
       ],
-      "t2Buildings": [],
-      "t2Units": [],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        },
+        {
+          "name": "Ancient of Wind",
+          "itemId": "eaow"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        },
+        {
+          "name": "Huntress",
+          "itemId": "esen"
+        },
+        {
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp"
+        },
+        {
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee"
+        },
+        {
+          "name": "Druid of the Talon",
+          "itemId": "edot"
+        },
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Resm",
+          "name": "Strength of the Moon",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnstrengthofthemoon",
+          "gameTimeMs": 384285,
+          "gameTimeFormatted": "6:24"
+        }
+      ]
     },
     "6": {
       "name": "Jeef#1496",
@@ -728,10 +946,10 @@
         "gameTimeMs": 79988,
         "gameTimeFormatted": "1:19"
       },
-      "tier2Time": 338425,
-      "tier2TimeFormatted": "5:38",
-      "tier3Time": 481630,
-      "tier3TimeFormatted": "8:01",
+      "tier2Time": 198420,
+      "tier2TimeFormatted": "3:18",
+      "tier3Time": 341600,
+      "tier3TimeFormatted": "5:41",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -739,7 +957,7 @@
           "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
-          "gameTimeMs": 16223,
+          "gameTimeMs": 16596,
           "gameTimeFormatted": "0:16"
         },
         {
@@ -869,26 +1087,39 @@
           "gameTimeFormatted": "9:42"
         },
         {
-          "type": "unit",
-          "name": "Meatwagon",
-          "itemId": "umtw",
-          "gameTimeMs": 703156,
-          "gameTimeFormatted": "11:43"
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 635945,
+          "gameTimeFormatted": "10:35"
         }
       ],
       "t2Buildings": [
         {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
+          "name": "Ziggurat",
+          "itemId": "uzig"
         }
       ],
       "t2Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
         {
           "name": "Lich",
           "itemId": "Ulic"
         }
       ],
-      "t3Buildings": [],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
       "t3Units": [
         {
           "name": "Crypt Fiend",
@@ -902,6 +1133,26 @@
           "name": "Meatwagon",
           "itemId": "umtw"
         }
+      ],
+      "researched": [
+        {
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 479134,
+          "gameTimeFormatted": "7:59"
+        },
+        {
+          "itemId": "Rucr",
+          "name": "Creature Carapace",
+          "level": 1,
+          "category": "defense",
+          "icon": "btncreaturecarapace",
+          "gameTimeMs": 597336,
+          "gameTimeFormatted": "9:57"
+        }
       ]
     },
     "7": {
@@ -913,12 +1164,12 @@
         "gameTimeMs": 68918,
         "gameTimeFormatted": "1:08"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "tier2Time": 348888,
+      "tier2TimeFormatted": "5:48",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 218495,
+      "expansionTimeFormatted": "3:38",
       "buildPreview": [
         {
           "type": "building",
@@ -998,11 +1249,18 @@
           "gameTimeFormatted": "3:05"
         },
         {
-          "type": "building",
+          "type": "expansion",
           "name": "Town Hall",
           "itemId": "htow",
           "gameTimeMs": 218495,
           "gameTimeFormatted": "3:38"
+        },
+        {
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 229940,
+          "gameTimeFormatted": "3:49"
         },
         {
           "type": "building",
@@ -1020,6 +1278,13 @@
         },
         {
           "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 313731,
+          "gameTimeFormatted": "5:13"
+        },
+        {
+          "type": "building",
           "name": "Blacksmith",
           "itemId": "hbla",
           "gameTimeMs": 372769,
@@ -1034,37 +1299,108 @@
         },
         {
           "type": "building",
-          "name": "Lumber Mill",
-          "itemId": "hlum",
-          "gameTimeMs": 405302,
-          "gameTimeFormatted": "6:45"
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 380206,
+          "gameTimeFormatted": "6:20"
         },
         {
-          "type": "unit",
-          "name": "Rifleman",
-          "itemId": "hrif",
-          "gameTimeMs": 419571,
-          "gameTimeFormatted": "6:59"
-        },
-        {
-          "type": "unit",
-          "name": "Rifleman",
-          "itemId": "hrif",
-          "gameTimeMs": 419853,
-          "gameTimeFormatted": "6:59"
-        },
-        {
-          "type": "unit",
-          "name": "Rifleman",
-          "itemId": "hrif",
-          "gameTimeMs": 420041,
-          "gameTimeFormatted": "7:00"
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 381109,
+          "gameTimeFormatted": "6:21"
         }
       ],
-      "t2Buildings": [],
-      "t2Units": [],
+      "t2Buildings": [
+        {
+          "name": "Blacksmith",
+          "itemId": "hbla"
+        },
+        {
+          "name": "Scout Tower",
+          "itemId": "hwtw"
+        },
+        {
+          "name": "Lumber Mill",
+          "itemId": "hlum"
+        },
+        {
+          "name": "Arcane Sanctum",
+          "itemId": "hars"
+        },
+        {
+          "name": "Farm",
+          "itemId": "hhou"
+        },
+        {
+          "name": "Town Hall",
+          "itemId": "htow"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Rifleman",
+          "itemId": "hrif"
+        },
+        {
+          "name": "Blood Mage",
+          "itemId": "Hblm"
+        },
+        {
+          "name": "Priest",
+          "itemId": "hmpr"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Rhac",
+          "name": "Masonry",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnstonearchitecture",
+          "gameTimeMs": 448104,
+          "gameTimeFormatted": "7:28"
+        },
+        {
+          "itemId": "Rhlh",
+          "name": "Lumber Harvesting",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnhumanlumberupgrade1",
+          "gameTimeMs": 548450,
+          "gameTimeFormatted": "9:08"
+        },
+        {
+          "itemId": "Rhri",
+          "name": "Long Rifles",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndwarvenlongrifle",
+          "gameTimeMs": 561001,
+          "gameTimeFormatted": "9:21"
+        },
+        {
+          "itemId": "Rhra",
+          "name": "Ranged Weapons",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnhumanmissileupone",
+          "gameTimeMs": 594255,
+          "gameTimeFormatted": "9:54"
+        },
+        {
+          "itemId": "Rhpt",
+          "name": "Priest Training",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpriestadept",
+          "gameTimeMs": 604441,
+          "gameTimeFormatted": "10:04"
+        }
+      ]
     }
   }
 }

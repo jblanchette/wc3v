@@ -1,0 +1,46 @@
+{
+  "replayId": "test-hum-hero",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 158700,
+  "durationFormatted": "2:38",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "H",
+      "heroOpener": {
+        "name": "Blood Mage",
+        "itemId": "Hblm",
+        "gameTimeMs": 81691,
+        "gameTimeFormatted": "1:21"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Kings",
+          "itemId": "halt",
+          "gameTimeMs": 15997,
+          "gameTimeFormatted": "0:15"
+        },
+        {
+          "type": "hero",
+          "name": "Blood Mage",
+          "itemId": "Hblm",
+          "gameTimeMs": 81691,
+          "gameTimeFormatted": "1:21"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

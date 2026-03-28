@@ -8,9 +8,14 @@
     "1": {
       "name": "Jeef#1496",
       "race": "O",
-      "heroOpener": null,
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 17145,
+        "gameTimeFormatted": "0:17"
+      },
+      "tier2Time": 28640,
+      "tier2TimeFormatted": "0:28",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
@@ -20,7 +25,7 @@
           "type": "building",
           "name": "Altar of Storms",
           "itemId": "oalt",
-          "gameTimeMs": 10995,
+          "gameTimeMs": 10894,
           "gameTimeFormatted": "0:10"
         },
         {
@@ -31,7 +36,7 @@
           "gameTimeFormatted": "0:14"
         },
         {
-          "type": "unit",
+          "type": "hero",
           "name": "Blademaster",
           "itemId": "Obla",
           "gameTimeMs": 17145,
@@ -41,7 +46,8 @@
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

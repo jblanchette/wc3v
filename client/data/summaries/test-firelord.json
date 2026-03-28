@@ -1,0 +1,67 @@
+{
+  "replayId": "test-firelord",
+  "map": "concealedhill",
+  "mapRaw": "Maps/frozenthrone/community/(2)concealedhill.w3x",
+  "durationMs": 225475,
+  "durationFormatted": "3:45",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 44000,
+        "gameTimeFormatted": "0:44"
+      },
+      "tier2Time": 52500,
+      "tier2TimeFormatted": "0:52",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 7399,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 23701,
+          "gameTimeFormatted": "0:23"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 39202,
+          "gameTimeFormatted": "0:39"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 41700,
+          "gameTimeFormatted": "0:41"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 44000,
+          "gameTimeFormatted": "0:44"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

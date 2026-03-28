@@ -219,6 +219,103 @@
     // Expansion building IDs per race
     const EXPO_BUILDINGS = { 'H': 'htow', 'O': 'ogre', 'E': 'etol', 'U': 'ugol' };
 
+    // ─── Research / upgrade metadata (from researchMeta.json) ────
+    const RESEARCH_META = {
+      // Human — attack
+      'Rhme': { name: 'Melee Weapons', category: 'attack', maxLevel: 3, icons: ['btnsteelmelee','btnthoriummelee','btnarcanitemelee'] },
+      'Rhra': { name: 'Ranged Weapons', category: 'attack', maxLevel: 3, icons: ['btnhumanmissileupone','btnhumanmissileuptwo','btnhumanmissileupthree'] },
+      // Human — defense
+      'Rhar': { name: 'Plating', category: 'defense', maxLevel: 3, icons: ['btnhumanarmorupone','btnhumanarmoruptwo','btnhumanarmorupthree'] },
+      'Rhac': { name: 'Masonry', category: 'defense', maxLevel: 3, icons: ['btnstonearchitecture','btnarcanitearchitecture','btnimbuedmasonry'] },
+      'Rhla': { name: 'Leather Armor', category: 'defense', maxLevel: 3, icons: ['btnleatherupgradeone','btnleatherupgradetwo','btnleatherupgradethree'] },
+      // Human — ability
+      'Rhhb': { name: 'Storm Hammers', category: 'ability', maxLevel: 1, icons: ['btnstormhammer'] },
+      'Rhgb': { name: 'Flying Machine Bombs', category: 'ability', maxLevel: 1, icons: ['btnhumanartilleryupone'] },
+      'Rhde': { name: 'Defend', category: 'ability', maxLevel: 1, icons: ['btndefend'] },
+      'Rhan': { name: 'Animal War Training', category: 'ability', maxLevel: 1, icons: ['btnanimalwartraining'] },
+      'Rhpt': { name: 'Priest Training', category: 'ability', maxLevel: 2, icons: ['btnpriestadept','btnpriestmaster'] },
+      'Rhst': { name: 'Sorceress Training', category: 'ability', maxLevel: 2, icons: ['btnsorceressadept','btnsorceressmaster'] },
+      'Rhri': { name: 'Long Rifles', category: 'ability', maxLevel: 1, icons: ['btndwarvenlongrifle'] },
+      'Rhlh': { name: 'Lumber Harvesting', category: 'ability', maxLevel: 2, icons: ['btnhumanlumberupgrade1','btnhumanlumberupgrade2'] },
+      'Rhse': { name: 'Magic Sentry', category: 'ability', maxLevel: 1, icons: ['btnmagicalsentry'] },
+      'Rhfl': { name: 'Flare', category: 'ability', maxLevel: 1, icons: ['btnflare'] },
+      'Rhss': { name: 'Control Magic', category: 'ability', maxLevel: 1, icons: ['btncontrolmagic'] },
+      'Rhrt': { name: 'Barrage', category: 'ability', maxLevel: 1, icons: ['btnscatterrockets'] },
+      'Rhpm': { name: 'Backpack', category: 'ability', maxLevel: 1, icons: ['btnpackbeast'] },
+      'Rhfc': { name: 'Flak Cannons', category: 'ability', maxLevel: 1, icons: ['btnflakcannons'] },
+      'Rhfs': { name: 'Fragmentation Shards', category: 'ability', maxLevel: 1, icons: ['btnfragmentationbombs'] },
+      'Rhcd': { name: 'Cloud', category: 'ability', maxLevel: 1, icons: ['btncloudoffog'] },
+      'Rhsb': { name: 'Sundering Blades', category: 'ability', maxLevel: 1, icons: ['btnsunderingblades'] },
+      // Orc — attack
+      'Rome': { name: 'Melee Weapons', category: 'attack', maxLevel: 3, icons: ['btnorcmeleeupone','btnorcmeleeuptwo','btnorcmeleeupthree'] },
+      'Rora': { name: 'Ranged Weapons', category: 'attack', maxLevel: 3, icons: ['btnsteelranged','btnthoriumranged','btnarcaniteranged'] },
+      // Orc — defense
+      'Roar': { name: 'Unit Armor', category: 'defense', maxLevel: 3, icons: ['btnsteelarmor','btnthoriumarmor','btnarcanitearmor'] },
+      // Orc — ability
+      'Rwdm': { name: 'War Drums', category: 'ability', maxLevel: 1, icons: ['btndrum'] },
+      'Ropg': { name: 'Pillage', category: 'ability', maxLevel: 1, icons: ['btnpillage'] },
+      'Robs': { name: 'Berserker Strength', category: 'ability', maxLevel: 1, icons: ['btnberserk'] },
+      'Rows': { name: 'Pulverize', category: 'ability', maxLevel: 1, icons: ['btnsmash'] },
+      'Roen': { name: 'Ensnare', category: 'ability', maxLevel: 1, icons: ['btnensnare'] },
+      'Rovs': { name: 'Envenomed Spears', category: 'ability', maxLevel: 1, icons: ['btnenvenomedspear'] },
+      'Rowd': { name: 'Witch Doctor Training', category: 'ability', maxLevel: 2, icons: ['btnwitchdoctoradept','btnwitchdoctormaster'] },
+      'Rost': { name: 'Shaman Training', category: 'ability', maxLevel: 2, icons: ['btnshamanadept','btnshamanmaster'] },
+      'Rosp': { name: 'Spiked Barricades', category: 'ability', maxLevel: 2, icons: ['btnspikedbarricades','btnimprovedspikedbarricades'] },
+      'Rotr': { name: 'Troll Regeneration', category: 'ability', maxLevel: 1, icons: ['btnregenerate'] },
+      'Rolf': { name: 'Liquid Fire', category: 'ability', maxLevel: 1, icons: ['btnliquidfire'] },
+      'Rowt': { name: 'Spirit Walker Training', category: 'ability', maxLevel: 2, icons: ['btnspiritwalkeradepttraining','btnspiritwalkermastertraining'] },
+      'Rorb': { name: 'Reinforced Defenses', category: 'ability', maxLevel: 1, icons: ['btnreinforcedburrows'] },
+      'Robk': { name: 'Berserker Upgrade', category: 'ability', maxLevel: 1, icons: ['btnheadhunterberserker'] },
+      'Ropm': { name: 'Backpack', category: 'ability', maxLevel: 1, icons: ['btnpackbeast'] },
+      'Robf': { name: 'Burning Oil', category: 'ability', maxLevel: 1, icons: ['btnfirerocks'] },
+      // Undead — attack
+      'Rume': { name: 'Unholy Strength', category: 'attack', maxLevel: 3, icons: ['btnunholystrength','btnimprovedunholystrength','btnadvancedunholystrength'] },
+      'Rura': { name: 'Creature Attack', category: 'attack', maxLevel: 3, icons: ['btncreatureattack','btnimprovedcreatureattack','btnadvancedcreatureattack'] },
+      // Undead — defense
+      'Ruar': { name: 'Unholy Armor', category: 'defense', maxLevel: 3, icons: ['btnunholyarmor','btnimprovedunholyarmor','btnadvancedunholyarmor'] },
+      'Rucr': { name: 'Creature Carapace', category: 'defense', maxLevel: 3, icons: ['btncreaturecarapace','btnimprovedcreaturecarapace','btnadvancedcreaturecarapace'] },
+      // Undead — ability
+      'Ruac': { name: 'Cannibalize', category: 'ability', maxLevel: 1, icons: ['btncannibalize'] },
+      'Rugf': { name: 'Ghoul Frenzy', category: 'ability', maxLevel: 1, icons: ['btnghoulfrenzy'] },
+      'Ruwb': { name: 'Web', category: 'ability', maxLevel: 1, icons: ['btnweb'] },
+      'Rusf': { name: 'Stone Form', category: 'ability', maxLevel: 1, icons: ['btnstoneform'] },
+      'Rune': { name: 'Necromancer Training', category: 'ability', maxLevel: 2, icons: ['btnnecromanceradept','btnnecromancermaster'] },
+      'Ruba': { name: 'Banshee Training', category: 'ability', maxLevel: 2, icons: ['btnbansheeadept','btnbansheemaster'] },
+      'Rufb': { name: 'Freezing Breath', category: 'ability', maxLevel: 1, icons: ['btnfreezingbreath'] },
+      'Rusl': { name: 'Skeletal Longevity', category: 'ability', maxLevel: 1, icons: ['btnskeletallongevity'] },
+      'Rupc': { name: 'Plague Cloud', category: 'ability', maxLevel: 1, icons: ['btnplaguecloud'] },
+      'Rusm': { name: 'Skeletal Mastery', category: 'ability', maxLevel: 1, icons: ['btnskeletonmage'] },
+      'Rubu': { name: 'Burrow', category: 'ability', maxLevel: 1, icons: ['btncryptfiendburrow'] },
+      'Rusp': { name: 'Destroyer Form', category: 'ability', maxLevel: 1, icons: ['btndestroyer'] },
+      'Ruex': { name: 'Exhume Corpses', category: 'ability', maxLevel: 1, icons: ['btnexhumecorpses'] },
+      'Rupm': { name: 'Backpack', category: 'ability', maxLevel: 1, icons: ['btnpackbeast'] },
+      // Night Elf — attack
+      'Resm': { name: 'Strength of the Moon', category: 'attack', maxLevel: 3, icons: ['btnstrengthofthemoon','btnimprovedstrengthofthemoon','btnadvancedstrengthofthemoon'] },
+      'Resw': { name: 'Strength of the Wild', category: 'attack', maxLevel: 3, icons: ['btnstrengthofthewild','btnimprovedstrengthofthewild','btnadvancedstrengthofthewild'] },
+      // Night Elf — defense
+      'Rema': { name: 'Moon Armor', category: 'defense', maxLevel: 3, icons: ['btnmoonarmor','btnimprovedmoonarmor','btnadvancedmoonarmor'] },
+      'Rerh': { name: 'Reinforced Hides', category: 'defense', maxLevel: 3, icons: ['btnreinforcedhides','btnimprovedreinforcedhides','btnadvancedreinforcedhides'] },
+      // Night Elf — ability
+      'Reuv': { name: 'Ultravision', category: 'ability', maxLevel: 1, icons: ['btnultravision'] },
+      'Renb': { name: "Nature's Blessing", category: 'ability', maxLevel: 1, icons: ['btnnaturesblessing'] },
+      'Resc': { name: 'Sentinel', category: 'ability', maxLevel: 1, icons: ['btnsentinel'] },
+      'Remg': { name: 'Moon Glaive', category: 'ability', maxLevel: 1, icons: ['btnupgrademoonglaive'] },
+      'Reib': { name: 'Improved Bows', category: 'ability', maxLevel: 1, icons: ['btnimprovedbows'] },
+      'Remk': { name: 'Marksmanship', category: 'ability', maxLevel: 1, icons: ['btnmarksmanship'] },
+      'Redt': { name: 'Druid of the Talon Training', category: 'ability', maxLevel: 2, icons: ['btndotadepttraining','btndotmastertraining'] },
+      'Redc': { name: 'Druid of the Claw Training', category: 'ability', maxLevel: 2, icons: ['btndocadepttraining','btndocmastertraining'] },
+      'Resi': { name: 'Abolish Magic', category: 'ability', maxLevel: 1, icons: ['btndryaddispelmagic'] },
+      'Recb': { name: 'Corrosive Breath', category: 'ability', maxLevel: 1, icons: ['btncorrosivebreath'] },
+      'Reht': { name: 'Hippogryph Taming', category: 'ability', maxLevel: 1, icons: ['btntamehippogriff'] },
+      'Repb': { name: 'Vorpal Blades', category: 'ability', maxLevel: 1, icons: ['btnvorpalblades'] },
+      'Rers': { name: 'Resistant Skin', category: 'ability', maxLevel: 1, icons: ['btnresistantskin'] },
+      'Rehs': { name: 'Hardened Skin', category: 'ability', maxLevel: 1, icons: ['btnhardenedskin'] },
+      'Reeb': { name: 'Mark of the Claw', category: 'ability', maxLevel: 1, icons: ['btnenchantedbears'] },
+      'Reec': { name: 'Mark of the Talon', category: 'ability', maxLevel: 1, icons: ['btnenchantedcrows'] },
+      'Rews': { name: 'Well Spring', category: 'ability', maxLevel: 1, icons: ['btnwellspring'] },
+      'Repm': { name: 'Backpack', category: 'ability', maxLevel: 1, icons: ['btnpackbeast'] },
+    };
+
     // ─── Hero → abilities mapping (3 skills + ultimate) ─────
     const HERO_SKILLS = {
       // Human
@@ -329,11 +426,20 @@
         heroesHtml = `<div class="site-card-heroes"><span class="site-card-section-label">Heroes</span><div class="site-card-heroes-row">${heroItems}</div></div>`;
       }
 
-      // ── Key Units + ATK/DEF + Expo ──────────────────────
+      // ── Key Units + Upgrades + Expo ─────────────────────
       let unitsHtml = '';
+      let upgradesHtml = '';
       {
         const keyUnits = build.keyUnits || [];
 
+        // Get replay summary data for upgrade levels
+        const replayId = (build.replays && build.replays[0]) ? build.replays[0].replayId : null;
+        const playerSlot = (build.replays && build.replays[0]) ? build.replays[0].playerSlot : null;
+        const summary = replayId ? summaryMap[replayId] : null;
+        const playerSummary = summary && playerSlot ? summary.players[playerSlot] : null;
+        const researched = (playerSummary && playerSummary.researched) || [];
+
+        // ── Key units (enlarged portraits, no per-unit type icons)
         let keyHtml = '';
         if (keyUnits.length) {
           keyHtml = `<div class="site-card-key-units">${keyUnits.map(id =>
@@ -345,32 +451,7 @@
           ).join('')}</div>`;
         }
 
-        const allUnitIds = new Set();
-        if (tp) {
-          ['t1','t2','t3'].forEach(k => {
-            if (tp[k] && tp[k].units) tp[k].units.forEach(id => allUnitIds.add(id));
-          });
-        }
-        keyUnits.forEach(id => allUnitIds.add(id));
-
-        const atkSet = {}, defSet = {};
-        allUnitIds.forEach(id => {
-          const c = UNIT_COMBAT[id];
-          if (!c) return;
-          if (c.atk && ATTACK_TYPES[c.atk]) atkSet[c.atk] = 1;
-          if (c.def && ARMOR_TYPES[c.def]) defSet[c.def] = 1;
-        });
-
-        let typeLine = '';
-        const atkIcons = Object.keys(atkSet).map(k =>
-          `<img class="mh-info-icon" src="${ATTACK_TYPES[k].icon}" title="${ATTACK_TYPES[k].label} attack" onerror="this.style.display='none'" />`
-        ).join('');
-        if (atkIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkIcons}</span>`;
-        const defIcons = Object.keys(defSet).map(k =>
-          `<img class="mh-info-icon" src="${ARMOR_TYPES[k].icon}" title="${ARMOR_TYPES[k].label} armor" onerror="this.style.display='none'" />`
-        ).join('');
-        if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
-
+        // ── Expansion badge
         const expoBid = EXPO_BUILDINGS[build.race];
         let hasExpansion = false;
         if (tp && expoBid) {
@@ -382,14 +463,54 @@
           ? `<span class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</span>`
           : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
 
-        const infoRow = typeLine
-          ? `<div class="site-card-info-row">${typeLine}</div>`
-          : '';
-        const expoRow = `<div class="site-card-expo-row">${expoHtml}</div>`;
-
         const unitsLabel = keyUnits.length ? `<span class="site-card-section-label">Units</span>` : '';
-        const upgradesLabel = typeLine ? `<span class="site-card-section-label">Upgrades</span>` : '';
-        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}${upgradesLabel}${infoRow}${expoRow}</div>`;
+        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}<div class="site-card-expo-row">${expoHtml}</div></div>`;
+
+        // ── Upgrades section: all researched upgrades from replay, or coreUpgrades as fallback
+        const coreUpgrades = build.coreUpgrades || [];
+
+        // Collect all upgrades to show — from replay if available, otherwise from coreUpgrades
+        let upgradeBadges = '';
+        if (researched.length) {
+          // Dedupe keeping highest level per itemId
+          const seen = {};
+          const unique = researched.filter(r => {
+            if (seen[r.itemId] && seen[r.itemId] >= r.level) return false;
+            seen[r.itemId] = r.level;
+            return true;
+          });
+          upgradeBadges = unique.map(r => {
+            const meta = RESEARCH_META[r.itemId];
+            const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
+            const catClass = (meta && meta.category === 'attack') ? 'atk' : (meta && meta.category === 'defense') ? 'def' : 'res';
+            const maxLvl = meta ? meta.maxLevel : 1;
+            const name = (meta && meta.name) || r.name;
+            return `<span class="site-upgrade-badge ${catClass}" title="${name}${maxLvl > 1 ? ' ' + r.level : ''}">
+              <img class="site-upgrade-icon" src="${iconSrc}" onerror="this.style.display='none'" />
+              ${maxLvl > 1 ? `<span class="site-upgrade-level">${r.level}</span>` : ''}
+            </span>`;
+          }).join('');
+        } else if (coreUpgrades.length) {
+          // No replay data — show curated core upgrades at max level
+          upgradeBadges = coreUpgrades.map(itemId => {
+            const meta = RESEARCH_META[itemId];
+            if (!meta) return '';
+            const iconIdx = Math.min(meta.maxLevel, meta.icons.length) - 1;
+            const icon = meta.icons[Math.max(0, iconIdx)];
+            const catClass = meta.category === 'attack' ? 'atk' : meta.category === 'defense' ? 'def' : 'res';
+            return `<span class="site-upgrade-badge ${catClass}" title="${meta.name}${meta.maxLevel > 1 ? ' ' + meta.maxLevel : ''}">
+              <img class="site-upgrade-icon" src="/assets/wc3icons/${icon}.jpg" onerror="this.style.display='none'" />
+              ${meta.maxLevel > 1 ? `<span class="site-upgrade-level">${meta.maxLevel}</span>` : ''}
+            </span>`;
+          }).join('');
+        }
+
+        if (upgradeBadges) {
+          upgradesHtml = `<div class="site-card-upgrades">
+            <span class="site-card-section-label">Upgrades</span>
+            <div class="site-card-upgrade-row">${upgradeBadges}</div>
+          </div>`;
+        }
       }
 
       // ── Replay strip ────────────────────────────────────
@@ -450,6 +571,7 @@
           ${headerHtml}
           ${heroesHtml}
           ${unitsHtml}
+          ${upgradesHtml}
           ${replaySection}
         </div>
       `;
@@ -507,6 +629,7 @@
 
     // ─── State ──────────────────────────────────────────────
     let allBuilds = [];
+    let summaryMap = {}; // replayId → summary JSON
     let buildSearchIndex = []; // parallel array of searchable strings
     let searchQuery = '';
     let selectedRace = '';
@@ -677,6 +800,18 @@
           '<div class="site-error">Could not load builds.</div>';
         return;
       }
+
+      // Load summaries for builds with replays (for upgrade data)
+      const replayIds = [...new Set(
+        allBuilds.filter(b => b.replays && b.replays.length)
+          .map(b => b.replays[0].replayId)
+      )];
+      await Promise.all(replayIds.map(rid =>
+        fetch(`/data/summaries/${rid}.json`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (data) summaryMap[rid] = data; })
+          .catch(() => {})
+      ));
 
       // Build search index
       buildSearchIndex = allBuilds.map(buildSearchText);

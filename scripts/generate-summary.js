@@ -55,7 +55,7 @@ function loadReplay(replayId) {
 }
 
 function extractPlayerSummary(playerData, replayPlayerData) {
-  const { eventStream = [], tierStream = [] } = playerData;
+  const { eventStream = [], tierStream = [], researchStream = [] } = playerData;
   const race = playerData.race || replayPlayerData.raceDetected;
 
   // Hero opener: first addUnit event with isHero
@@ -161,6 +161,23 @@ function extractPlayerSummary(playerData, replayPlayerData) {
     return result;
   }
 
+  // Research/upgrades: dedupe by itemId keeping highest level
+  const researchedMap = {};
+  for (const r of researchStream) {
+    if (!researchedMap[r.itemId] || r.level > researchedMap[r.itemId].level) {
+      researchedMap[r.itemId] = {
+        itemId:            r.itemId,
+        name:              r.displayName,
+        level:             r.level,
+        category:          r.category,
+        icon:              r.icon,
+        gameTimeMs:        r.gameTime,
+        gameTimeFormatted: formatMs(r.gameTime)
+      };
+    }
+  }
+  const researched = Object.values(researchedMap);
+
   return {
     name:                   replayPlayerData.name,
     race,
@@ -175,7 +192,8 @@ function extractPlayerSummary(playerData, replayPlayerData) {
     t2Buildings,
     t2Units: resolveUnitNames(t2Units),
     t3Buildings,
-    t3Units: resolveUnitNames(t3Units)
+    t3Units: resolveUnitNames(t3Units),
+    researched
   };
 }
 

@@ -14,10 +14,10 @@
         "gameTimeMs": 74496,
         "gameTimeFormatted": "1:14"
       },
-      "tier2Time": 327664,
-      "tier2TimeFormatted": "5:27",
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
+      "tier2Time": 187662,
+      "tier2TimeFormatted": "3:07",
+      "tier3Time": 333451,
+      "tier3TimeFormatted": "5:33",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -76,6 +76,13 @@
           "itemId": "uzig",
           "gameTimeMs": 86784,
           "gameTimeFormatted": "1:26"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 215057,
+          "gameTimeFormatted": "3:35"
         },
         {
           "type": "building",
@@ -142,13 +149,6 @@
         },
         {
           "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 540021,
-          "gameTimeFormatted": "9:00"
-        },
-        {
-          "type": "unit",
           "name": "Crypt Fiend",
           "itemId": "ucry",
           "gameTimeMs": 548171,
@@ -156,16 +156,16 @@
         },
         {
           "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 584559,
-          "gameTimeFormatted": "9:44"
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 588526,
+          "gameTimeFormatted": "9:48"
         }
       ],
       "t2Buildings": [
         {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
+          "name": "Graveyard",
+          "itemId": "ugrv"
         },
         {
           "name": "Ziggurat",
@@ -176,7 +176,19 @@
         {
           "name": "Lich",
           "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
         },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t3Units": [
         {
           "name": "Crypt Fiend",
           "itemId": "ucry"
@@ -186,20 +198,77 @@
           "itemId": "uobs"
         }
       ],
-      "t3Buildings": [],
-      "t3Units": []
+      "researched": [
+        {
+          "itemId": "Rupm",
+          "name": "undead backpack",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpackbeast",
+          "gameTimeMs": 148093,
+          "gameTimeFormatted": "2:28"
+        },
+        {
+          "itemId": "Rugf",
+          "name": "Ghoul Frenzy",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnghoulfrenzy",
+          "gameTimeMs": 479025,
+          "gameTimeFormatted": "7:59"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 495815,
+          "gameTimeFormatted": "8:15"
+        },
+        {
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 655626,
+          "gameTimeFormatted": "10:55"
+        },
+        {
+          "itemId": "Rupc",
+          "name": "Plague Cloud",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnplaguecloud",
+          "gameTimeMs": 703881,
+          "gameTimeFormatted": "11:43"
+        }
+      ]
     },
     "2": {
       "name": "Interview#31295",
       "race": "E",
-      "heroOpener": null,
-      "tier2Time": 315487,
-      "tier2TimeFormatted": "5:15",
+      "heroOpener": {
+        "name": "Lich",
+        "itemId": "Ulic",
+        "gameTimeMs": 547225,
+        "gameTimeFormatted": "9:07"
+      },
+      "tier2Time": 175458,
+      "tier2TimeFormatted": "2:55",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": 232319,
       "expansionTimeFormatted": "3:52",
       "buildPreview": [
+        {
+          "type": "building",
+          "name": "Ancient of Wind",
+          "itemId": "eaow",
+          "gameTimeMs": 4079,
+          "gameTimeFormatted": "0:04"
+        },
         {
           "type": "building",
           "name": "Ancient of War",
@@ -292,13 +361,6 @@
           "gameTimeFormatted": "4:05"
         },
         {
-          "type": "unit",
-          "name": "Archer",
-          "itemId": "earc",
-          "gameTimeMs": 260892,
-          "gameTimeFormatted": "4:20"
-        },
-        {
           "type": "building",
           "name": "Hunter's Hall",
           "itemId": "edob",
@@ -307,9 +369,16 @@
         },
         {
           "type": "building",
+          "name": "Unknown (eaol)",
+          "itemId": "eaol",
+          "gameTimeMs": 326227,
+          "gameTimeFormatted": "5:26"
+        },
+        {
+          "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 343600,
+          "gameTimeMs": 343661,
           "gameTimeFormatted": "5:43"
         },
         {
@@ -332,16 +401,25 @@
           "itemId": "edry",
           "gameTimeMs": 438629,
           "gameTimeFormatted": "7:18"
-        },
-        {
-          "type": "building",
-          "name": "Ancient of Wonders",
-          "itemId": "eden",
-          "gameTimeMs": 446411,
-          "gameTimeFormatted": "7:26"
         }
       ],
       "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        },
         {
           "name": "Ancient of Lore",
           "itemId": "eaoe"
@@ -349,16 +427,20 @@
         {
           "name": "Ancient of Wonders",
           "itemId": "eden"
-        },
-        {
-          "name": "Moon Well",
-          "itemId": "emow"
         }
       ],
       "t2Units": [
         {
+          "name": "Archer",
+          "itemId": "earc"
+        },
+        {
           "name": "Dryad",
           "itemId": "edry"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
         },
         {
           "name": "Ancient of Lore",
@@ -366,7 +448,18 @@
         }
       ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 455526,
+          "gameTimeFormatted": "7:35"
+        }
+      ]
     }
   }
 }

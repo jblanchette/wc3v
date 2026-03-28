@@ -137,6 +137,7 @@ const Wc3vViewer = class {
     this.displayScale = 1.0;
 
     this.isDev = (window.location.hostname === "127.0.0.1");
+    this.hasBeenPlayedOnce = false;
   }
 
   load (mapId = null) {
@@ -692,6 +693,7 @@ const Wc3vViewer = class {
 
     this.scrubber.loadSvg(`#${wrapperId}-play`, 'pause-icon');
     this.state = ScrubStates.playing;
+    this.hasBeenPlayedOnce = true;
 
     this.toggleMegaPlayButton(false);
     this.hideMatchCompleteBanner();
@@ -705,6 +707,7 @@ const Wc3vViewer = class {
     this.state = ScrubStates.paused;
 
     this.stopRenderLoop();
+    if (this.hasBeenPlayedOnce) this.renderGameClock();
   }
 
   stop () {
@@ -714,6 +717,7 @@ const Wc3vViewer = class {
     this.state = ScrubStates.stopped;
 
     this.stopRenderLoop();
+    if (this.hasBeenPlayedOnce) this.renderGameClock();
   }
 
   restart () {
@@ -1424,6 +1428,89 @@ const Wc3vViewer = class {
 
 
 
+  renderGameClock () {
+    const { playerCtx, state, gameTime } = this;
+    if (!playerCtx) return;
+
+    const cw = this.canvas.width;
+    const timeText = formatGameTime(gameTime);
+    const isPlaying = state === ScrubStates.playing;
+
+    const pillH    = 32;
+    const pillPadX = 14;
+    const iconSize = 14;
+    const iconGap  = 7;
+    const fontSize = 16;
+    const topY     = 12;
+
+    playerCtx.save();
+    playerCtx.setTransform(1, 0, 0, 1, 0, 0);
+
+    playerCtx.font = `bold ${fontSize}px Arial`;
+    const textW = playerCtx.measureText(timeText).width;
+    const pillW = pillPadX + iconSize + iconGap + textW + pillPadX;
+    const pillX = Math.round(cw / 2 - pillW / 2);
+    const pillY = topY;
+    const radius = pillH / 2;
+
+    // Semi-transparent pill background
+    playerCtx.globalAlpha = 0.72;
+    playerCtx.fillStyle = 'rgba(10, 14, 20, 0.78)';
+    playerCtx.beginPath();
+    playerCtx.moveTo(pillX + radius, pillY);
+    playerCtx.lineTo(pillX + pillW - radius, pillY);
+    playerCtx.quadraticCurveTo(pillX + pillW, pillY, pillX + pillW, pillY + radius);
+    playerCtx.lineTo(pillX + pillW, pillY + pillH - radius);
+    playerCtx.quadraticCurveTo(pillX + pillW, pillY + pillH, pillX + pillW - radius, pillY + pillH);
+    playerCtx.lineTo(pillX + radius, pillY + pillH);
+    playerCtx.quadraticCurveTo(pillX, pillY + pillH, pillX, pillY + pillH - radius);
+    playerCtx.lineTo(pillX, pillY + radius);
+    playerCtx.quadraticCurveTo(pillX, pillY, pillX + radius, pillY);
+    playerCtx.closePath();
+    playerCtx.fill();
+
+    // Subtle border
+    playerCtx.globalAlpha = 0.40;
+    playerCtx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    playerCtx.lineWidth = 1;
+    playerCtx.stroke();
+
+    playerCtx.globalAlpha = 1.0;
+
+    // Play/pause icon
+    const iconX  = pillX + pillPadX;
+    const iconCY = pillY + pillH / 2;
+    playerCtx.fillStyle = isPlaying ? '#FFFFFF' : '#FFD740';
+
+    if (isPlaying) {
+      // Pause icon: two vertical bars
+      const barW = 3.5, barH = iconSize * 0.7, gap = 3;
+      const barsLeft = iconX + (iconSize - barW * 2 - gap) / 2;
+      playerCtx.fillRect(Math.round(barsLeft), Math.round(iconCY - barH / 2), barW, barH);
+      playerCtx.fillRect(Math.round(barsLeft + barW + gap), Math.round(iconCY - barH / 2), barW, barH);
+    } else {
+      // Play icon: right-pointing triangle
+      const tw = iconSize * 0.6, th = iconSize * 0.65;
+      const tx = iconX + (iconSize - tw) / 2;
+      playerCtx.beginPath();
+      playerCtx.moveTo(tx,      Math.round(iconCY - th / 2));
+      playerCtx.lineTo(tx + tw, Math.round(iconCY));
+      playerCtx.lineTo(tx,      Math.round(iconCY + th / 2));
+      playerCtx.closePath();
+      playerCtx.fill();
+    }
+
+    // Time text
+    const textX = iconX + iconSize + iconGap;
+    const textY = pillY + pillH / 2 + Math.round(fontSize * 0.36);
+    playerCtx.fillStyle = '#FFFFFF';
+    playerCtx.font = `bold ${fontSize}px Arial`;
+    playerCtx.textBaseline = 'alphabetic';
+    playerCtx.fillText(timeText, textX, textY);
+
+    playerCtx.restore();
+  }
+
   render () {
     // No canvas rendering needed in static BO mode
     if (this.layoutMode === LayoutMode.staticBuildOrder) {
@@ -1600,6 +1687,10 @@ const Wc3vViewer = class {
     ctx.restore();
     playerCtx.restore();
     utilityCtx.restore();
+
+    if (this.hasBeenPlayedOnce) {
+      this.renderGameClock();
+    }
 
     this.scrubber.render(gameTime, matchEndTime);
 

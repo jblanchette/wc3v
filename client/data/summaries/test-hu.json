@@ -1,0 +1,81 @@
+{
+  "replayId": "test-hu",
+  "map": "echoisles",
+  "mapRaw": "Maps/frozenthrone/(2)echoisles.w3x",
+  "durationMs": 134750,
+  "durationFormatted": "2:14",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "H",
+      "heroOpener": null,
+      "tier2Time": 6301,
+      "tier2TimeFormatted": "0:06",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Arcane Sanctum",
+          "itemId": "hars",
+          "gameTimeMs": 18799,
+          "gameTimeFormatted": "0:18"
+        },
+        {
+          "type": "unit",
+          "name": "Priest",
+          "itemId": "hmpr",
+          "gameTimeMs": 24999,
+          "gameTimeFormatted": "0:24"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Kings",
+          "itemId": "halt",
+          "gameTimeMs": 49396,
+          "gameTimeFormatted": "0:49"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Arcane Sanctum",
+          "itemId": "hars"
+        },
+        {
+          "name": "Altar of Kings",
+          "itemId": "halt"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Priest",
+          "itemId": "hmpr"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Rhpt",
+          "name": "Priest Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnpriestmaster",
+          "gameTimeMs": 122293,
+          "gameTimeFormatted": "2:02"
+        },
+        {
+          "itemId": "Rhse",
+          "name": "Magic Sentry",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnmagicalsentry",
+          "gameTimeMs": 146791,
+          "gameTimeFormatted": "2:26"
+        }
+      ]
+    }
+  }
+}

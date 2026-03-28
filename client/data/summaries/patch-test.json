@@ -23,6 +23,13 @@
       "buildPreview": [
         {
           "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
           "gameTimeMs": 9066,
@@ -39,8 +46,15 @@
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 80331,
-          "gameTimeFormatted": "1:20"
+          "gameTimeMs": 79627,
+          "gameTimeFormatted": "1:19"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 81036,
+          "gameTimeFormatted": "1:21"
         },
         {
           "type": "hero",
@@ -60,7 +74,8 @@
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

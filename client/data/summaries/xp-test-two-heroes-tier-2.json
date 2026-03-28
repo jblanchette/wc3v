@@ -8,18 +8,77 @@
     "1": {
       "name": "Jeef#1496",
       "race": "U",
-      "heroOpener": null,
-      "tier2Time": 66489,
-      "tier2TimeFormatted": "1:06",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 15819,
+        "gameTimeFormatted": "0:15"
+      },
+      "tier2Time": 16424,
+      "tier2TimeFormatted": "0:16",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
-      "buildPreview": [],
-      "t2Buildings": [],
-      "t2Units": [],
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 9568,
+          "gameTimeFormatted": "0:09"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 11181,
+          "gameTimeFormatted": "0:11"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 15819,
+          "gameTimeFormatted": "0:15"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 17935,
+          "gameTimeFormatted": "0:17"
+        },
+        {
+          "type": "hero",
+          "name": "Lich",
+          "itemId": "Ulic",
+          "gameTimeMs": 27710,
+          "gameTimeFormatted": "0:27"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

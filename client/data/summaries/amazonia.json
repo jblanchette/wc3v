@@ -18,9 +18,16 @@
       "buildPreview": [
         {
           "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
-          "gameTimeMs": 3506,
+          "gameTimeMs": 3406,
           "gameTimeFormatted": "0:03"
         },
         {
@@ -41,7 +48,8 @@
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

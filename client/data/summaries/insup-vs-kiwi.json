@@ -14,10 +14,10 @@
         "gameTimeMs": 65838,
         "gameTimeFormatted": "1:05"
       },
-      "tier2Time": 247041,
-      "tier2TimeFormatted": "4:07",
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
+      "tier2Time": 107032,
+      "tier2TimeFormatted": "1:47",
+      "tier3Time": 394100,
+      "tier3TimeFormatted": "6:34",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -25,7 +25,7 @@
           "type": "building",
           "name": "Altar of Storms",
           "itemId": "oalt",
-          "gameTimeMs": 3752,
+          "gameTimeMs": 3841,
           "gameTimeFormatted": "0:03"
         },
         {
@@ -46,7 +46,7 @@
           "type": "building",
           "name": "War Mill",
           "itemId": "ofor",
-          "gameTimeMs": 110692,
+          "gameTimeMs": 110560,
           "gameTimeFormatted": "1:50"
         },
         {
@@ -60,7 +60,7 @@
           "type": "building",
           "name": "Barracks",
           "itemId": "obar",
-          "gameTimeMs": 134377,
+          "gameTimeMs": 134643,
           "gameTimeFormatted": "2:14"
         },
         {
@@ -164,8 +164,16 @@
       ],
       "t2Buildings": [
         {
-          "name": "Spirit Lodge",
-          "itemId": "osld"
+          "name": "War Mill",
+          "itemId": "ofor"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Barracks",
+          "itemId": "obar"
         },
         {
           "name": "Voodoo Lounge",
@@ -174,9 +182,29 @@
       ],
       "t2Units": [
         {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun"
+        },
+        {
           "name": "Tauren Chieftain",
           "itemId": "Otch"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
         },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        }
+      ],
+      "t3Units": [
         {
           "name": "Troll Headhunter/Berserker",
           "itemId": "ohun"
@@ -190,8 +218,53 @@
           "itemId": "otbk"
         }
       ],
-      "t3Buildings": [],
-      "t3Units": []
+      "researched": [
+        {
+          "itemId": "Rora",
+          "name": "Ranged Weapons",
+          "level": 3,
+          "category": "attack",
+          "icon": "btnarcaniteranged",
+          "gameTimeMs": 334712,
+          "gameTimeFormatted": "5:34"
+        },
+        {
+          "itemId": "Rotr",
+          "name": "Troll Regeneration",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnregenerate",
+          "gameTimeMs": 481549,
+          "gameTimeFormatted": "8:01"
+        },
+        {
+          "itemId": "Rost",
+          "name": "Shaman Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnshamanmaster",
+          "gameTimeMs": 501016,
+          "gameTimeFormatted": "8:21"
+        },
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 535896,
+          "gameTimeFormatted": "8:55"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 680023,
+          "gameTimeFormatted": "11:20"
+        }
+      ]
     },
     "6": {
       "name": "iNSUPERABLE#11842",
@@ -199,16 +272,23 @@
       "heroOpener": {
         "name": "Death Knight",
         "itemId": "Udea",
-        "gameTimeMs": 123779,
-        "gameTimeFormatted": "2:03"
+        "gameTimeMs": 68091,
+        "gameTimeFormatted": "1:08"
       },
-      "tier2Time": 292060,
-      "tier2TimeFormatted": "4:52",
-      "tier3Time": 478811,
-      "tier3TimeFormatted": "7:58",
+      "tier2Time": 152044,
+      "tier2TimeFormatted": "2:32",
+      "tier3Time": 338810,
+      "tier3TimeFormatted": "5:38",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 6271,
+          "gameTimeFormatted": "0:06"
+        },
         {
           "type": "building",
           "name": "Ziggurat",
@@ -231,18 +311,18 @@
           "gameTimeFormatted": "0:56"
         },
         {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 68091,
+          "gameTimeFormatted": "1:08"
+        },
+        {
           "type": "building",
           "name": "Graveyard",
           "itemId": "ugrv",
           "gameTimeMs": 75243,
           "gameTimeFormatted": "1:15"
-        },
-        {
-          "type": "hero",
-          "name": "Death Knight",
-          "itemId": "Udea",
-          "gameTimeMs": 123779,
-          "gameTimeFormatted": "2:03"
         },
         {
           "type": "unit",
@@ -280,13 +360,6 @@
           "gameTimeFormatted": "4:39"
         },
         {
-          "type": "hero",
-          "name": "Dark Ranger",
-          "itemId": "Nbrn",
-          "gameTimeMs": 314493,
-          "gameTimeFormatted": "5:14"
-        },
-        {
           "type": "building",
           "name": "Slaughterhouse",
           "itemId": "uslh",
@@ -299,6 +372,13 @@
           "itemId": "ucry",
           "gameTimeMs": 371344,
           "gameTimeFormatted": "6:11"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 398675,
+          "gameTimeFormatted": "6:38"
         },
         {
           "type": "unit",
@@ -325,8 +405,15 @@
           "type": "hero",
           "name": "Lich",
           "itemId": "Ulic",
-          "gameTimeMs": 541188,
-          "gameTimeFormatted": "9:01"
+          "gameTimeMs": 484544,
+          "gameTimeFormatted": "8:04"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 532988,
+          "gameTimeFormatted": "8:52"
         },
         {
           "type": "unit",
@@ -334,33 +421,31 @@
           "itemId": "ucry",
           "gameTimeMs": 590901,
           "gameTimeFormatted": "9:50"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 592489,
-          "gameTimeFormatted": "9:52"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 615957,
-          "gameTimeFormatted": "10:15"
         }
       ],
       "t2Buildings": [
         {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
+          "name": "Ziggurat",
+          "itemId": "uzig"
         }
       ],
       "t2Units": [
         {
-          "name": "Dark Ranger",
-          "itemId": "Nbrn"
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
         },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t3Units": [
         {
           "name": "Crypt Fiend",
           "itemId": "ucry"
@@ -368,21 +453,39 @@
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
-        }
-      ],
-      "t3Buildings": [],
-      "t3Units": [
+        },
         {
           "name": "Lich",
           "itemId": "Ulic"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 492258,
+          "gameTimeFormatted": "8:12"
         },
         {
-          "name": "Crypt Fiend",
-          "itemId": "ucry"
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 713883,
+          "gameTimeFormatted": "11:53"
         },
         {
-          "name": "Obsidian Statue",
-          "itemId": "uobs"
+          "itemId": "Rura",
+          "name": "Creature Attack",
+          "level": 1,
+          "category": "attack",
+          "icon": "btncreatureattack",
+          "gameTimeMs": 736024,
+          "gameTimeFormatted": "12:16"
         }
       ]
     }

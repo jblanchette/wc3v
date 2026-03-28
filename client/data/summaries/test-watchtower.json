@@ -1,0 +1,72 @@
+{
+  "replayId": "test-watchtower",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 167750,
+  "durationFormatted": "2:47",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "O",
+      "heroOpener": null,
+      "tier2Time": 100300,
+      "tier2TimeFormatted": "1:40",
+      "tier3Time": 233990,
+      "tier3TimeFormatted": "3:53",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 12800,
+          "gameTimeFormatted": "0:12"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 24298,
+          "gameTimeFormatted": "0:24"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 213891,
+          "gameTimeFormatted": "3:33"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Altar of Storms",
+          "itemId": "oalt"
+        }
+      ],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Rosp",
+          "name": "Spiked Barricades",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnimprovedspikedbarricades",
+          "gameTimeMs": 270090,
+          "gameTimeFormatted": "4:30"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 245990,
+          "gameTimeFormatted": "4:05"
+        }
+      ]
+    }
+  }
+}

@@ -14,12 +14,12 @@
         "gameTimeMs": 68732,
         "gameTimeFormatted": "1:08"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "tier2Time": 159311,
+      "tier2TimeFormatted": "2:39",
+      "tier3Time": 532513,
+      "tier3TimeFormatted": "8:52",
+      "expansionTime": 627608,
+      "expansionTimeFormatted": "10:27",
       "buildPreview": [
         {
           "type": "building",
@@ -30,16 +30,23 @@
         },
         {
           "type": "building",
+          "name": "Ancient of Wind",
+          "itemId": "eaow",
+          "gameTimeMs": 13639,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 14570,
+          "gameTimeMs": 14541,
           "gameTimeFormatted": "0:14"
         },
         {
           "type": "building",
           "name": "Ancient of War",
           "itemId": "eaom",
-          "gameTimeMs": 33107,
+          "gameTimeMs": 33167,
           "gameTimeFormatted": "0:33"
         },
         {
@@ -62,20 +69,6 @@
           "itemId": "earc",
           "gameTimeMs": 93639,
           "gameTimeFormatted": "1:33"
-        },
-        {
-          "type": "unit",
-          "name": "Ancient of Wonders",
-          "itemId": "eden",
-          "gameTimeMs": 113013,
-          "gameTimeFormatted": "1:53"
-        },
-        {
-          "type": "building",
-          "name": "Ancient of Wonders",
-          "itemId": "eden",
-          "gameTimeMs": 113227,
-          "gameTimeFormatted": "1:53"
         },
         {
           "type": "unit",
@@ -102,6 +95,13 @@
           "type": "building",
           "name": "Ancient of Wonders",
           "itemId": "eden",
+          "gameTimeMs": 232368,
+          "gameTimeFormatted": "3:52"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
           "gameTimeMs": 236476,
           "gameTimeFormatted": "3:56"
         },
@@ -116,7 +116,7 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 276672,
+          "gameTimeMs": 276762,
           "gameTimeFormatted": "4:36"
         },
         {
@@ -125,6 +125,13 @@
           "itemId": "earc",
           "gameTimeMs": 280205,
           "gameTimeFormatted": "4:40"
+        },
+        {
+          "type": "building",
+          "name": "Unknown (eaol)",
+          "itemId": "eaol",
+          "gameTimeMs": 291925,
+          "gameTimeFormatted": "4:51"
         },
         {
           "type": "building",
@@ -144,7 +151,7 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 331085,
+          "gameTimeMs": 331145,
           "gameTimeFormatted": "5:31"
         },
         {
@@ -153,19 +160,99 @@
           "itemId": "edry",
           "gameTimeMs": 381925,
           "gameTimeFormatted": "6:21"
-        },
-        {
-          "type": "hero",
-          "name": "Goblin Alchemist",
-          "itemId": "Nalc",
-          "gameTimeMs": 392736,
-          "gameTimeFormatted": "6:32"
         }
       ],
-      "t2Buildings": [],
-      "t2Units": [],
-      "t3Buildings": [],
-      "t3Units": []
+      "t2Buildings": [
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        },
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 296069,
+          "gameTimeFormatted": "4:56"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 430071,
+          "gameTimeFormatted": "7:10"
+        },
+        {
+          "itemId": "Resm",
+          "name": "Strength of the Moon",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnstrengthofthemoon",
+          "gameTimeMs": 539955,
+          "gameTimeFormatted": "8:59"
+        },
+        {
+          "itemId": "Resw",
+          "name": "Strength of the Wild",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnstrengthofthewild",
+          "gameTimeMs": 541195,
+          "gameTimeFormatted": "9:01"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnreinforcedhides",
+          "gameTimeMs": 577907,
+          "gameTimeFormatted": "9:37"
+        }
+      ]
     },
     "2": {
       "name": "Jeef#1496",
@@ -176,17 +263,24 @@
         "gameTimeMs": 86526,
         "gameTimeFormatted": "1:26"
       },
-      "tier2Time": 295808,
-      "tier2TimeFormatted": "4:55",
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "tier2Time": 155783,
+      "tier2TimeFormatted": "2:35",
+      "tier3Time": 316781,
+      "tier3TimeFormatted": "5:16",
+      "expansionTime": 697132,
+      "expansionTimeFormatted": "11:37",
       "buildPreview": [
         {
           "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
+          "gameTimeMs": 7831,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
           "gameTimeMs": 7831,
           "gameTimeFormatted": "0:07"
         },
@@ -315,16 +409,25 @@
           "itemId": "uobs",
           "gameTimeMs": 496949,
           "gameTimeFormatted": "8:16"
-        },
-        {
-          "type": "hero",
-          "name": "Pit Lord",
-          "itemId": "Nplh",
-          "gameTimeMs": 624324,
-          "gameTimeFormatted": "10:24"
         }
       ],
       "t2Buildings": [
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [
         {
           "name": "Slaughterhouse",
           "itemId": "uslh"
@@ -338,11 +441,7 @@
           "itemId": "unpl"
         }
       ],
-      "t2Units": [
-        {
-          "name": "Lich",
-          "itemId": "Ulic"
-        },
+      "t3Units": [
         {
           "name": "Crypt Fiend",
           "itemId": "ucry"
@@ -350,14 +449,46 @@
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
-        },
-        {
-          "name": "Pit Lord",
-          "itemId": "Nplh"
         }
       ],
-      "t3Buildings": [],
-      "t3Units": []
+      "researched": [
+        {
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 393853,
+          "gameTimeFormatted": "6:33"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 496278,
+          "gameTimeFormatted": "8:16"
+        },
+        {
+          "itemId": "Rura",
+          "name": "Creature Attack",
+          "level": 1,
+          "category": "attack",
+          "icon": "btncreatureattack",
+          "gameTimeMs": 701655,
+          "gameTimeFormatted": "11:41"
+        },
+        {
+          "itemId": "Rucr",
+          "name": "Creature Carapace",
+          "level": 1,
+          "category": "defense",
+          "icon": "btncreaturecarapace",
+          "gameTimeMs": 701836,
+          "gameTimeFormatted": "11:41"
+        }
+      ]
     }
   }
 }

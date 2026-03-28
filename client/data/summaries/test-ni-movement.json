@@ -1,0 +1,53 @@
+{
+  "replayId": "test-ni-movement",
+  "map": "northernisles",
+  "mapRaw": "Maps/frozenthrone/community/(2)northernisles.w3x",
+  "durationMs": 84125,
+  "durationFormatted": "1:24",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 18850,
+        "gameTimeFormatted": "0:18"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 7616,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 18850,
+          "gameTimeFormatted": "0:18"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

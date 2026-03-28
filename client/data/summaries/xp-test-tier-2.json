@@ -8,18 +8,58 @@
     "1": {
       "name": "Jeef#1496",
       "race": "U",
-      "heroOpener": null,
-      "tier2Time": 65840,
-      "tier2TimeFormatted": "1:05",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 27480,
+        "gameTimeFormatted": "0:27"
+      },
+      "tier2Time": 15803,
+      "tier2TimeFormatted": "0:15",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
-      "buildPreview": [],
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 9460,
+          "gameTimeFormatted": "0:09"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 12279,
+          "gameTimeFormatted": "0:12"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 27480,
+          "gameTimeFormatted": "0:27"
+        }
+      ],
       "t2Buildings": [],
-      "t2Units": [],
+      "t2Units": [
+        {
+          "name": "Death Knight",
+          "itemId": "Udea"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

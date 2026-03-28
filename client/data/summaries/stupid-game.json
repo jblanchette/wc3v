@@ -14,10 +14,10 @@
         "gameTimeMs": 76857,
         "gameTimeFormatted": "1:16"
       },
-      "tier2Time": 329468,
-      "tier2TimeFormatted": "5:29",
-      "tier3Time": 496810,
-      "tier3TimeFormatted": "8:16",
+      "tier2Time": 189459,
+      "tier2TimeFormatted": "3:09",
+      "tier3Time": 356808,
+      "tier3TimeFormatted": "5:56",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -71,6 +71,13 @@
           "gameTimeFormatted": "1:36"
         },
         {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 235143,
+          "gameTimeFormatted": "3:55"
+        },
+        {
           "type": "unit",
           "name": "Crypt Fiend",
           "itemId": "ucry",
@@ -100,6 +107,13 @@
         },
         {
           "type": "building",
+          "name": "Slaughterhouse",
+          "itemId": "uslh",
+          "gameTimeMs": 419230,
+          "gameTimeFormatted": "6:59"
+        },
+        {
+          "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
           "gameTimeMs": 462568,
@@ -118,15 +132,42 @@
           "itemId": "uobs",
           "gameTimeMs": 517128,
           "gameTimeFormatted": "8:37"
+        },
+        {
+          "type": "building",
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol",
+          "gameTimeMs": 1371440,
+          "gameTimeFormatted": "22:51"
         }
       ],
       "t2Buildings": [
         {
-          "name": "Ziggurat",
-          "itemId": "uzig"
+          "name": "Graveyard",
+          "itemId": "ugrv"
         }
       ],
       "t2Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
+        }
+      ],
+      "t3Units": [
         {
           "name": "Lich",
           "itemId": "Ulic"
@@ -134,15 +175,13 @@
         {
           "name": "Crypt Fiend",
           "itemId": "ucry"
-        }
-      ],
-      "t3Buildings": [],
-      "t3Units": [
+        },
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
         }
-      ]
+      ],
+      "researched": []
     },
     "3": {
       "name": "mikewang#1378",
@@ -153,12 +192,12 @@
         "gameTimeMs": 74049,
         "gameTimeFormatted": "1:14"
       },
-      "tier2Time": 258948,
-      "tier2TimeFormatted": "4:18",
-      "tier3Time": 474072,
-      "tier3TimeFormatted": "7:54",
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "tier2Time": 118938,
+      "tier2TimeFormatted": "1:58",
+      "tier3Time": 424064,
+      "tier3TimeFormatted": "7:04",
+      "expansionTime": 672234,
+      "expansionTimeFormatted": "11:12",
       "buildPreview": [
         {
           "type": "building",
@@ -206,7 +245,7 @@
           "type": "building",
           "name": "Beastiary",
           "itemId": "obea",
-          "gameTimeMs": 271300,
+          "gameTimeMs": 271131,
           "gameTimeFormatted": "4:31"
         },
         {
@@ -238,6 +277,13 @@
           "gameTimeFormatted": "6:46"
         },
         {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 426560,
+          "gameTimeFormatted": "7:06"
+        },
+        {
           "type": "unit",
           "name": "Wind Rider",
           "itemId": "owyv",
@@ -259,7 +305,7 @@
           "gameTimeFormatted": "9:34"
         },
         {
-          "type": "building",
+          "type": "expansion",
           "name": "Great Hall",
           "itemId": "ogre",
           "gameTimeMs": 672234,
@@ -275,12 +321,16 @@
       ],
       "t2Buildings": [
         {
-          "name": "Beastiary",
-          "itemId": "obea"
-        },
-        {
           "name": "Orc Burrow",
           "itemId": "otrb"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
         }
       ],
       "t2Units": [
@@ -295,6 +345,10 @@
       ],
       "t3Buildings": [
         {
+          "name": "War Mill",
+          "itemId": "ofor"
+        },
+        {
           "name": "Great Hall",
           "itemId": "ogre"
         }
@@ -303,6 +357,35 @@
         {
           "name": "Wind Rider",
           "itemId": "owyv"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rora",
+          "name": "Ranged Weapons",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnthoriumranged",
+          "gameTimeMs": 626212,
+          "gameTimeFormatted": "10:26"
+        },
+        {
+          "itemId": "Rovs",
+          "name": "Envenomed Spears",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenvenomedspear",
+          "gameTimeMs": 578413,
+          "gameTimeFormatted": "9:38"
+        },
+        {
+          "itemId": "Roar",
+          "name": "Unit Armor",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnsteelarmor",
+          "gameTimeMs": 626469,
+          "gameTimeFormatted": "10:26"
         }
       ]
     }

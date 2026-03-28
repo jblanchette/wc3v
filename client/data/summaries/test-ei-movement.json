@@ -8,18 +8,46 @@
     "1": {
       "name": "jblanch",
       "race": "U",
-      "heroOpener": null,
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 59101,
+        "gameTimeFormatted": "0:59"
+      },
       "tier2Time": null,
       "tier2TimeFormatted": null,
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
-      "buildPreview": [],
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 14000,
+          "gameTimeFormatted": "0:14"
+        },
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 38001,
+          "gameTimeFormatted": "0:38"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 59101,
+          "gameTimeFormatted": "0:59"
+        }
+      ],
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

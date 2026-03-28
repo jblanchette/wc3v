@@ -1,0 +1,523 @@
+{
+  "replayId": "ne-vs-hu",
+  "map": "1v1 Echo Isles v2.2 w3c 260125 1357 1051",
+  "mapRaw": "Maps/W3Champions\\1v1_EchoIsles_v2.2_w3c_260125_1357_1051.w3x",
+  "durationMs": 935525,
+  "durationFormatted": "15:35",
+  "players": {
+    "1": {
+      "name": "KAHO#31819",
+      "race": "E",
+      "heroOpener": {
+        "name": "Demon Hunter",
+        "itemId": "Edem",
+        "gameTimeMs": 66214,
+        "gameTimeFormatted": "1:06"
+      },
+      "tier2Time": 182677,
+      "tier2TimeFormatted": "3:02",
+      "tier3Time": 499006,
+      "tier3TimeFormatted": "8:19",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 2108,
+          "gameTimeFormatted": "0:02"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wind",
+          "itemId": "eaow",
+          "gameTimeMs": 2351,
+          "gameTimeFormatted": "0:02"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 5027,
+          "gameTimeFormatted": "0:05"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 15327,
+          "gameTimeFormatted": "0:15"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 21749,
+          "gameTimeFormatted": "0:21"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 66214,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 82351,
+          "gameTimeFormatted": "1:22"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 92670,
+          "gameTimeFormatted": "1:32"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 130175,
+          "gameTimeFormatted": "2:10"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 162310,
+          "gameTimeFormatted": "2:42"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 185166,
+          "gameTimeFormatted": "3:05"
+        },
+        {
+          "type": "hero",
+          "name": "Archmage",
+          "itemId": "Hamg",
+          "gameTimeMs": 187192,
+          "gameTimeFormatted": "3:07"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 225897,
+          "gameTimeFormatted": "3:45"
+        },
+        {
+          "type": "unit",
+          "name": "renegade wizard",
+          "itemId": "nwzg",
+          "gameTimeMs": 235644,
+          "gameTimeFormatted": "3:55"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb",
+          "gameTimeMs": 239327,
+          "gameTimeFormatted": "3:59"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp",
+          "gameTimeMs": 241223,
+          "gameTimeFormatted": "4:01"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 271318,
+          "gameTimeFormatted": "4:31"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 273198,
+          "gameTimeFormatted": "4:33"
+        },
+        {
+          "type": "building",
+          "name": "Unknown (eaol)",
+          "itemId": "eaol",
+          "gameTimeMs": 411633,
+          "gameTimeFormatted": "6:51"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 425813,
+          "gameTimeFormatted": "7:05"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        },
+        {
+          "name": "Archmage",
+          "itemId": "Hamg"
+        },
+        {
+          "name": "renegade wizard",
+          "itemId": "nwzg"
+        },
+        {
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb"
+        },
+        {
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        },
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "Footman",
+          "itemId": "hfoo"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Reib",
+          "name": "Improved Bows",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnimprovedbows",
+          "gameTimeMs": 330721,
+          "gameTimeFormatted": "5:30"
+        },
+        {
+          "itemId": "Redc",
+          "name": "Druid of the Claw Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btndocmastertraining",
+          "gameTimeMs": 660027,
+          "gameTimeFormatted": "11:00"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 543741,
+          "gameTimeFormatted": "9:03"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 773086,
+          "gameTimeFormatted": "12:53"
+        }
+      ]
+    },
+    "2": {
+      "name": "moosangsung#1804",
+      "race": "H",
+      "heroOpener": {
+        "name": "Archmage",
+        "itemId": "Hamg",
+        "gameTimeMs": 66214,
+        "gameTimeFormatted": "1:06"
+      },
+      "tier2Time": 419050,
+      "tier2TimeFormatted": "6:59",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": 243087,
+      "expansionTimeFormatted": "4:03",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Kings",
+          "itemId": "halt",
+          "gameTimeMs": 4965,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 16884,
+          "gameTimeFormatted": "0:16"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "hbar",
+          "gameTimeMs": 17954,
+          "gameTimeFormatted": "0:17"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 62298,
+          "gameTimeFormatted": "1:02"
+        },
+        {
+          "type": "hero",
+          "name": "Archmage",
+          "itemId": "Hamg",
+          "gameTimeMs": 66214,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 80210,
+          "gameTimeFormatted": "1:20"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 98230,
+          "gameTimeFormatted": "1:38"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 110223,
+          "gameTimeFormatted": "1:50"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 120660,
+          "gameTimeFormatted": "2:00"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 128515,
+          "gameTimeFormatted": "2:08"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 152275,
+          "gameTimeFormatted": "2:32"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 178810,
+          "gameTimeFormatted": "2:58"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 179579,
+          "gameTimeFormatted": "2:59"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 220289,
+          "gameTimeFormatted": "3:40"
+        },
+        {
+          "type": "expansion",
+          "name": "Town Hall",
+          "itemId": "htow",
+          "gameTimeMs": 243087,
+          "gameTimeFormatted": "4:03"
+        },
+        {
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 245329,
+          "gameTimeFormatted": "4:05"
+        },
+        {
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 259582,
+          "gameTimeFormatted": "4:19"
+        },
+        {
+          "type": "building",
+          "name": "Scout Tower",
+          "itemId": "hwtw",
+          "gameTimeMs": 351265,
+          "gameTimeFormatted": "5:51"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 394670,
+          "gameTimeFormatted": "6:34"
+        },
+        {
+          "type": "unit",
+          "name": "Footman",
+          "itemId": "hfoo",
+          "gameTimeMs": 411944,
+          "gameTimeFormatted": "6:51"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Blacksmith",
+          "itemId": "hbla"
+        },
+        {
+          "name": "Lumber Mill",
+          "itemId": "hlum"
+        },
+        {
+          "name": "Farm",
+          "itemId": "hhou"
+        },
+        {
+          "name": "Arcane Vault",
+          "itemId": "hvlt"
+        },
+        {
+          "name": "Scout Tower",
+          "itemId": "hwtw"
+        },
+        {
+          "name": "Arcane Sanctum",
+          "itemId": "hars"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Footman",
+          "itemId": "hfoo"
+        },
+        {
+          "name": "Rifleman",
+          "itemId": "hrif"
+        },
+        {
+          "name": "Blood Mage",
+          "itemId": "Hblm"
+        },
+        {
+          "name": "Priest",
+          "itemId": "hmpr"
+        },
+        {
+          "name": "Sorceress",
+          "itemId": "hsor"
+        },
+        {
+          "name": "Spell Breaker",
+          "itemId": "hspt"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [
+        {
+          "itemId": "Rhde",
+          "name": "Defend",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndefend",
+          "gameTimeMs": 342577,
+          "gameTimeFormatted": "5:42"
+        },
+        {
+          "itemId": "Rhlh",
+          "name": "Lumber Harvesting",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnhumanlumberupgrade2",
+          "gameTimeMs": 511063,
+          "gameTimeFormatted": "8:31"
+        },
+        {
+          "itemId": "Rhri",
+          "name": "Long Rifles",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndwarvenlongrifle",
+          "gameTimeMs": 580671,
+          "gameTimeFormatted": "9:40"
+        },
+        {
+          "itemId": "Rhra",
+          "name": "Ranged Weapons",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnhumanmissileuptwo",
+          "gameTimeMs": 630090,
+          "gameTimeFormatted": "10:30"
+        }
+      ]
+    }
+  }
+}

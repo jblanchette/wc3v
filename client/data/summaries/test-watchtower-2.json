@@ -1,0 +1,41 @@
+{
+  "replayId": "test-watchtower-2",
+  "map": "Echo Isles",
+  "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "durationMs": 72100,
+  "durationFormatted": "1:12",
+  "players": {
+    "1": {
+      "name": "jblanch",
+      "race": "O",
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 14800,
+          "gameTimeFormatted": "0:14"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 63495,
+          "gameTimeFormatted": "1:03"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

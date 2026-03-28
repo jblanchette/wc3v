@@ -8,18 +8,70 @@
     "1": {
       "name": "Jeef#1496",
       "race": "U",
-      "heroOpener": null,
-      "tier2Time": 61233,
-      "tier2TimeFormatted": "1:01",
-      "tier3Time": 81798,
-      "tier3TimeFormatted": "1:21",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 14293,
+        "gameTimeFormatted": "0:14"
+      },
+      "tier2Time": 11170,
+      "tier2TimeFormatted": "0:11",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
-      "buildPreview": [],
-      "t2Buildings": [],
-      "t2Units": [],
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 9258,
+          "gameTimeFormatted": "0:09"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 10667,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 14293,
+          "gameTimeFormatted": "0:14"
+        },
+        {
+          "type": "building",
+          "name": "Tomb of Relics",
+          "itemId": "utom",
+          "gameTimeMs": 14695,
+          "gameTimeFormatted": "0:14"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Tomb of Relics",
+          "itemId": "utom"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Death Knight",
+          "itemId": "Udea"
+        }
+      ],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

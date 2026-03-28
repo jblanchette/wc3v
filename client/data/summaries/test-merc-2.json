@@ -1,0 +1,67 @@
+{
+  "replayId": "test-merc-2",
+  "map": "Sanctuary LV",
+  "mapRaw": "Maps/W3Champions/v11/w3c_Sanctuary_LV.w3x",
+  "durationMs": 492350,
+  "durationFormatted": "8:12",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 20503,
+        "gameTimeFormatted": "0:20"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Crypt",
+          "itemId": "usep",
+          "gameTimeMs": 0,
+          "gameTimeFormatted": "0:00"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 11961,
+          "gameTimeFormatted": "0:11"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 13266,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 20503,
+          "gameTimeFormatted": "0:20"
+        },
+        {
+          "type": "unit",
+          "name": "Goblin Zeppelin",
+          "itemId": "nzep",
+          "gameTimeMs": 564990,
+          "gameTimeFormatted": "9:24"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

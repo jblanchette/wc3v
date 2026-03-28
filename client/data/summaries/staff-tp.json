@@ -14,8 +14,8 @@
         "gameTimeMs": 19434,
         "gameTimeFormatted": "0:19"
       },
-      "tier2Time": null,
-      "tier2TimeFormatted": null,
+      "tier2Time": 128163,
+      "tier2TimeFormatted": "2:08",
       "tier3Time": null,
       "tier3TimeFormatted": null,
       "expansionTime": null,
@@ -57,10 +57,20 @@
           "gameTimeFormatted": "2:21"
         }
       ],
-      "t2Buildings": [],
+      "t2Buildings": [
+        {
+          "name": "Crypt",
+          "itemId": "usep"
+        },
+        {
+          "name": "Tomb of Relics",
+          "itemId": "utom"
+        }
+      ],
       "t2Units": [],
       "t3Buildings": [],
-      "t3Units": []
+      "t3Units": [],
+      "researched": []
     }
   }
 }

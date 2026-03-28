@@ -4476,8 +4476,8 @@ body {
 }
 
 .site-card-key-icon {
-  width: 42px;
-  height: 42px;
+  width: 54px;
+  height: 54px;
   border-radius: 4px;
   border: 1px solid #444;
   object-fit: cover;
@@ -4490,33 +4490,66 @@ body {
 .site-card-key-label {
   font: 600 0.6rem Verdana;
   color: #6a7a85;
-  max-width: 52px;
+  max-width: 64px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
 }
 
-.site-card-info-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.site-card-info-row .mh-info-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 3px;
-}
-
-.site-card-info-row .mh-info-label {
-  font-size: 11px;
-}
-
 .site-card-expo-row {
   margin-top: 4px;
 }
+
+/* ── Core Upgrades Section ─────────────────────────────── */
+.site-card-upgrades {
+  padding: 6px 0 4px;
+  border-top: 1px solid var(--card-divider, rgba(255,255,255,0.06));
+  position: relative;
+  z-index: 1;
+}
+
+.site-card-upgrade-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.site-upgrade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.site-upgrade-badge.atk {
+  background: rgba(230, 80, 60, 0.25);
+}
+
+.site-upgrade-badge.def {
+  background: rgba(70, 140, 220, 0.25);
+}
+
+.site-upgrade-badge.res {
+  background: rgba(160, 80, 220, 0.25);
+}
+
+.site-upgrade-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.site-upgrade-level {
+  font: 800 0.6rem Verdana;
+  color: #ccc;
+  min-width: 10px;
+  text-align: center;
+}
+
 
 /* ── Replay Modal ────────────────────────────────────────── */
 .site-replay-modal {
