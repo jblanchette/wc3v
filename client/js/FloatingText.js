@@ -594,6 +594,23 @@ FloatingText.EVENT_STYLES = {
     duration: 3000,
     fadeStart: 0.55,
     priority: 10
+  },
+  'scout': {
+    text: (e) => {
+      if (e.isLumberScout) return 'WISP LUMBER SCOUT';
+      const name = e.unit ? e.unit.displayName : 'Worker';
+      return `${name} SCOUTING`;
+    },
+    label: (e) => e.isLumberScout ? 'PERSISTENT VISION' : 'SCOUTING',
+    icon: (e) => e.unit ? e.unit.itemId : null,
+    color: '#44DDBB',
+    labelColor: '#33AA99',
+    borderColor: '#44DDBB',
+    fontSize: 12,
+    bold: true,
+    duration: 5000,
+    fadeStart: 0.60,
+    priority: 40
   }
 };
 

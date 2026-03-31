@@ -88,7 +88,8 @@ const ClientUnit = class {
       "neutralGroupId", "xpStream", "uuid",
       "collisionSize", "isInferred", "destroyedAt", "isSummon",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
-      "destroyedByBuilding"
+      "destroyedByBuilding", "sacrificed", "scoutInfo",
+      "constructionStartTime"
     ];
 
     dataFields.forEach(field => {
@@ -96,7 +97,8 @@ const ClientUnit = class {
     });
 
     // units in training shouldn't render until training completes
-    this.readyTime = this.trainedTime || this.spawnTime;
+    // buildings shouldn't render until construction starts
+    this.readyTime = this.constructionStartTime || this.trainedTime || this.spawnTime;
 
     // Build loaded-windows for units that get loaded into transports
     this._loadedWindows = this._buildLoadedWindows(unitData);
@@ -122,6 +124,7 @@ const ClientUnit = class {
     if (this.meta.hero) {
       this.loaders.concat(this.loadSpellIcons());
     }
+
   }
 
   _buildLoadedWindows (unitData) {
@@ -224,6 +227,9 @@ const ClientUnit = class {
       path: -1
     };
 
+    this._prevDrawX = null;
+    this._prevDrawY = null;
+
     this.decayLevel = 1;
 
     this.fullName = this.getFullName();
@@ -304,8 +310,8 @@ const ClientUnit = class {
     const { path } = this;
 
     const index = Helpers.findIndexFrom(
-      path, 
-      Helpers.StandardStreamSearch, 
+      path,
+      Helpers.StandardStreamSearch,
       this.recordIndexes.path,
       gameTime
     );
@@ -369,13 +375,17 @@ const ClientUnit = class {
 
     // reset unit
     this.resetDecay();
+    this._scoutEnded = false;
 
     this.recordIndexes = {
       move: -1,
       level: -1,
       path: -1
     };
-    
+
+    this._prevDrawX = null;
+    this._prevDrawY = null;
+
     this.fullName = this.getFullName();
   }
 
@@ -400,7 +410,8 @@ const ClientUnit = class {
     }
 
     // permanently consumed wisps (NE ancients) — old replays may lack destroyedAt
-    if (this.destroyedByBuilding) {
+    // when destroyedAt IS set, the time-based check above handles it (wisp paths back first)
+    if (this.destroyedByBuilding && !this.destroyedAt) {
       this._destroyed = true;
       return;
     }
@@ -416,11 +427,28 @@ const ClientUnit = class {
     }
 
     const currentMoveRecord = this.getCurrentMovePath(gameTime);
+
+    // scout lifecycle: unit moved well after scout event = no longer scouting
+    if (this.scoutInfo && !this._scoutEnded) {
+      if (currentMoveRecord && currentMoveRecord.gameTime > this.scoutInfo.gameTime + 10000) {
+        this._scoutEnded = true;
+      }
+    }
+
+    const isActiveScout = this.scoutInfo && !this._scoutEnded && gameTime >= this.scoutInfo.gameTime;
+
     if (currentMoveRecord) {
       if ((gameTime - currentMoveRecord.gameTime) > idleDecayTime) {
-        // idle detected, increment the decay level for the
-        this.decay();
+        if (isActiveScout) {
+          // active scouts fade gradually but never fully disappear
+          const scoutAge = gameTime - this.scoutInfo.gameTime;
+          const fadeProgress = Math.min(1, scoutAge / 30000);
+          this.decayLevel = Math.max(0.6 - fadeProgress * 0.3, this.decayLevel);
+          return;
+        }
 
+        // idle detected, increment the decay level
+        this.decay();
         return;
       }
     }
@@ -477,19 +505,56 @@ const ClientUnit = class {
 
     const pathNode = this.path[this.recordIndexes.path];
 
-    const currentX = pathNode && pathNode.x;
-    const currentY = pathNode && pathNode.y;
+    let currentX = pathNode && pathNode.x;
+    let currentY = pathNode && pathNode.y;
+
+    // active scouts: use scout target position when path data is stale
+    const isActiveScout = this.scoutInfo && !this._scoutEnded && gameTime >= this.scoutInfo.gameTime;
+    if (isActiveScout && this.scoutInfo.position) {
+      const pathAge = pathNode ? (gameTime - pathNode.gameTime) : Infinity;
+      if (pathAge > 5000 || isNaN(currentX) || isNaN(currentY)) {
+        currentX = this.scoutInfo.position.x;
+        currentY = this.scoutInfo.position.y;
+      }
+    }
 
     if (isNaN(currentX) || isNaN(currentY)) {
-      // some kind of drawing error, just return out
       return;
     }
+
 
     let drawX = xScale(currentX) + wc3v.gameScaler.middleX;
     let drawY = yScale(currentY) + wc3v.gameScaler.middleY;
 
+    // jitter dead band: suppress sub-pixel oscillations between adjacent path records
+    const JITTER_THRESHOLD_SQ = 2.5 * 2.5;
+    if (this._prevDrawX !== null) {
+      const jdx = drawX - this._prevDrawX;
+      const jdy = drawY - this._prevDrawY;
+      if (jdx * jdx + jdy * jdy < JITTER_THRESHOLD_SQ) {
+        drawX = this._prevDrawX;
+        drawY = this._prevDrawY;
+      }
+    }
+    this._prevDrawX = drawX;
+    this._prevDrawY = drawY;
+
+    // lumber scouts: snap to nearest tree so the wisp looks attached
+    if (isActiveScout && this.scoutInfo.isLumberScout && wc3v._treeIndex) {
+      const nearest = ClientUnit._findNearestTree(wc3v._treeIndex, drawX, drawY);
+      if (nearest) {
+        // position the wisp adjacent to the tree (offset by tree radius)
+        const dx = drawX - nearest.x;
+        const dy = drawY - nearest.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        drawX = nearest.x + (dx / dist) * (nearest.r + 4);
+        drawY = nearest.y + (dy / dist) * (nearest.r + 4);
+      }
+    }
+
     // hide workers that overlap with same-player buildings (e.g. peasant constructing)
-    if (this.meta.worker && frameData.buildingPositions) {
+    // but never hide scouts — they need to stay visible at their position
+    if (this.meta.worker && !this.scoutInfo && frameData.buildingPositions) {
       for (const bld of frameData.buildingPositions) {
         if (bld.playerId === this.playerId &&
             Math.abs(drawX - bld.x) < bld.halfSize &&
@@ -525,6 +590,8 @@ const ClientUnit = class {
       cargoItems = items.length ? items.map(c => c.itemId) : null;
     }
 
+    const scoutLabel = isActiveScout ? 'SCOUT' : null;
+
     unitDrawPositions.push({
       uuid: this.uuid,
       itemId: this.itemId,
@@ -545,6 +612,7 @@ const ClientUnit = class {
       isTransport: !!this.isTransport,
       cargoCount: cargoCount,
       cargoItems: cargoItems,
+      scoutLabel: scoutLabel,
       x: drawX,
       y: drawY,
       count: 1,
@@ -581,9 +649,11 @@ const ClientUnit = class {
     
     const minTimeGap = (5 * 1000);   // small time delta     - 5 seconds
     const minGapThreshold = 1500;    // large distance delta - 1500 units
-    
+
     const maxTimeGap = (300 * 1000); // large time delta     - 500 seconds
     const maxGapThreshold = 500;     // small distance delta - 500 units
+
+    const idleGapTime = (10 * 1000); // any time gap > 10s is treated as idle (no connecting line)
 
     path.forEach((item, ind) => {
       if (item.gameTime > gameTime) {
@@ -616,7 +686,8 @@ const ClientUnit = class {
       const isMaxDistanceGap = (spotDiffs.dist > maxGapThreshold);
 
       const isGap = (isMinDistanceGap && spotDiffs.timeDelta < minTimeGap) ||
-                    (isMaxDistanceGap && spotDiffs.timeDelta > maxTimeGap);
+                    (isMaxDistanceGap && spotDiffs.timeDelta > maxTimeGap) ||
+                    (spotDiffs.timeDelta > idleGapTime);
 
       if (ind === 0 || isJump || isGap) {
         ctx.moveTo(drawX, drawY);        
@@ -721,6 +792,36 @@ const ClientUnit = class {
     } else {
       this.renderUnit(ctx, frameData, transform, gameTime, xScale, yScale, viewOptions);
     }
+  }
+
+  // find the nearest tree to a screen position from the tree index
+  static _findNearestTree (treeIndex, x, y) {
+    if (!treeIndex) return null;
+    const { grid, cellSize } = treeIndex;
+    const cx = Math.floor(x / cellSize);
+    const cy = Math.floor(y / cellSize);
+
+    let best = null;
+    let bestDist = Infinity;
+
+    for (let dx = -2; dx <= 2; dx++) {
+      for (let dy = -2; dy <= 2; dy++) {
+        const trees = grid[(cx + dx) + ',' + (cy + dy)];
+        if (!trees) continue;
+        for (let i = 0; i < trees.length; i++) {
+          const t = trees[i];
+          const tdx = x - t.x;
+          const tdy = y - t.y;
+          const dist = tdx * tdx + tdy * tdy;
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = t;
+          }
+        }
+      }
+    }
+
+    return best;
   }
 }
 

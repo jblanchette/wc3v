@@ -161,6 +161,18 @@ const doParsing = async (file) => {
     });
   });
 
+  // post-parse: backfill units with missing positions (must run after building position fixup)
+  const UnitPositionBackfill = require('./lib/UnitPositionBackfill');
+  const unitPosBackfill = new UnitPositionBackfill(playerManager.players);
+  const unitPosResults = unitPosBackfill.run();
+
+  if (unitPosResults.length) {
+    console.logger(`Unit position backfill: fixed ${unitPosResults.length} unit(s)`);
+    unitPosResults.forEach(r => {
+      console.logger(`  Player ${r.player}: ${r.displayName} (${r.itemId}) via ${r.source}`);
+    });
+  }
+
   // post-parse: remove overlapping same-type buildings (destroyed-and-rebuilt or missed cancellation)
   Object.values(playerManager.players).forEach(player => {
     if (parseInt(player.id) >= 24) return;
@@ -437,6 +449,9 @@ const parseReplays = async (options) => {
 
         // re-enable all logging
         logManager.setDisabledState(false);
+
+        // log pathfinding stats (after logging re-enabled)
+        world.pathFinder.logCacheStats();
 
         if (options.inTestMode) {
           console.log("TEST PASSED: ", file);

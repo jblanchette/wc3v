@@ -626,7 +626,13 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         parseConfidence,
         race,
         startingPosition,
-        eventStream,
+        eventStream: eventStream.filter(event => {
+          // filter ghost summon events (castSummon units that were never registered)
+          if (event.key === 'addUnit' && event.unit && event.unit.itemId === null) {
+            return false;
+          }
+          return true;
+        }),
         selectionStream: selectionStream.map(item => {
           return {
             gameTime: item.gameTime,
@@ -640,12 +646,14 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         ...(player.itemStream ? { itemStream: player.itemStream } : {}),
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit()).concat(
-          (player.destroyedSummons || []).map(unit => {
-            const exported = unit.exportUnit();
-            exported.destroyedAt = unit.destroyedAt;
-            exported.isSummon = true;
-            return exported;
-          })
+          (player.destroyedSummons || [])
+            .filter(unit => unit.itemId1 !== null || unit.objectId1 !== null)
+            .map(unit => {
+              const exported = unit.exportUnit();
+              exported.destroyedAt = unit.destroyedAt;
+              exported.isSummon = true;
+              return exported;
+            })
         ),
         buildingAttempts: (_buildingAttempts || []).map(a => ({
           itemId: a.itemId,

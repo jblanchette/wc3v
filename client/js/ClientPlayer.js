@@ -569,7 +569,8 @@ const ClientPlayer = class {
         isNeutralPlayer,
         isTransport,
         cargoCount,
-        cargoItems
+        cargoItems,
+        scoutLabel
       } = item;
 
       if (decayLevel < 0.45 || playerId != owningPlayerId) {
@@ -603,7 +604,8 @@ const ClientPlayer = class {
         decayLevel,
         isTransport: isTransport || false,
         cargoCount: cargoCount || 0,
-        cargoItems: cargoItems || null
+        cargoItems: cargoItems || null,
+        scoutLabel: scoutLabel || null
       };
 
       acc.push(unitBox);
@@ -663,10 +665,10 @@ const ClientPlayer = class {
 
     if (mode === 'pack') {
       // structured formation layout — replaces bloom when army is tightly packed
-      ClientPlayer.formationLayout(representatives, this._spawnBiasAngle || 0);
+      ClientPlayer.formationLayout(representatives, this._spawnBiasAngle || 0, wc3v._treeIndex);
     } else {
       // normal bloom + directional bias for scattered/engaged armies
-      ClientPlayer.bloomResolve(representatives, 3, 0.6, newUuids);
+      ClientPlayer.bloomResolve(representatives, 3, 0.6, newUuids, wc3v._treeIndex);
 
       // bias nudge — apply to BOTH _origX and drawX so offset calc stays clean
       if (this._spawnBiasAngle !== undefined) {
@@ -719,6 +721,48 @@ const ClientPlayer = class {
       if (!activeUuids.has(uuid)) this._bloomCache.delete(uuid);
     });
 
+    // hard displacement cap AFTER temporal smoothing — no unit can be more than
+    // 35px from its true path position regardless of cached offsets
+    const maxFinalDisplacement = 35;
+    representatives.forEach(u => {
+      const dx = u.drawX - u._origX;
+      const dy = u.drawY - u._origY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxFinalDisplacement) {
+        const scale = maxFinalDisplacement / dist;
+        u.drawX = u._origX + dx * scale;
+        u.drawY = u._origY + dy * scale;
+        // also clamp the cached offset so it doesn't keep inflating
+        this._bloomCache.set(u.uuid, {
+          ox: (u.drawX - u._origX),
+          oy: (u.drawY - u._origY)
+        });
+      }
+    });
+
+    // terrain + tree clamp after displacement cap
+    const treeIdx = wc3v._treeIndex;
+    const terrainIdx = wc3v._terrainIndex;
+    if (treeIdx || terrainIdx) {
+      representatives.forEach(u => {
+        if (Wc3vViewer.isBlockedTerrain(terrainIdx, u.drawX, u.drawY)) {
+          u.drawX = u._origX;
+          u.drawY = u._origY;
+          this._bloomCache.set(u.uuid, { ox: 0, oy: 0 });
+          return;
+        }
+        const hit = Wc3vViewer.treeCollisionCheck(treeIdx, u.drawX, u.drawY, u.halfIconSize);
+        if (hit) {
+          const tdx = u.drawX - hit.tree.x;
+          const tdy = u.drawY - hit.tree.y;
+          const d = hit.dist || 0.01;
+          const push = hit.minDist - d;
+          u.drawX += (tdx / d) * push;
+          u.drawY += (tdy / d) * push;
+        }
+      });
+    }
+
     // store resolved data for cross-player collision + draw phase
     this._resolved = { representatives, collapsed, alwaysDrawSlots };
   }
@@ -728,6 +772,41 @@ const ClientPlayer = class {
 
     const { unitDrawPositions } = frameData;
     const { representatives, collapsed, alwaysDrawSlots } = this._resolved;
+
+    // draw formation tethers — dashed lines from displaced non-hero units to nearest hero
+    const heroReps = representatives.filter(r => r.isHero);
+    if (heroReps.length > 0 && representatives.length > 1) {
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.35;
+
+      representatives.forEach(unitBox => {
+        if (unitBox.isHero) return;
+        if (!unitBox._origX) return;
+
+        const bloomDx = unitBox.drawX - unitBox._origX;
+        const bloomDy = unitBox.drawY - unitBox._origY;
+        if (bloomDx * bloomDx + bloomDy * bloomDy < 25) return; // < 5px displacement
+
+        let nearestHero = heroReps[0];
+        let nearestDist = Infinity;
+        heroReps.forEach(h => {
+          const dx = h.drawX - unitBox.drawX;
+          const dy = h.drawY - unitBox.drawY;
+          const d = dx * dx + dy * dy;
+          if (d < nearestDist) { nearestDist = d; nearestHero = h; }
+        });
+
+        ctx.strokeStyle = unitBox.playerColor;
+        ctx.beginPath();
+        ctx.moveTo(nearestHero.drawX, nearestHero.drawY);
+        ctx.lineTo(unitBox.drawX, unitBox.drawY);
+        ctx.stroke();
+      });
+
+      ctx.restore();
+    }
 
     // draw representatives and count badges
     representatives.forEach(unitBox => {
@@ -811,10 +890,29 @@ const ClientPlayer = class {
         }
       }
       Drawing.drawUnit(ctx, unitBox);
+
+      // scout label badge below the unit icon
+      if (unitBox.scoutLabel) {
+        const lx = unitBox.drawX;
+        const ly = unitBox.drawY + unitBox.halfIconSize + 10;
+        ctx.globalAlpha = Math.max(unitBox.decayLevel, 0.5);
+        ctx.font = 'bold 8px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const tw = ctx.measureText(unitBox.scoutLabel).width + 6;
+        const th = 11;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(lx - tw / 2, ly - th / 2, tw, th);
+
+        ctx.fillStyle = '#44DDBB';
+        ctx.fillText(unitBox.scoutLabel, lx, ly);
+        ctx.globalAlpha = 1;
+      }
     });
   }
 
-  static bloomResolve (units, iterations = 3, springStrength = 0.6, newUuids = null) {
+  static bloomResolve (units, iterations = 3, springStrength = 0.6, newUuids = null, treeIndex = null) {
     const len = units.length;
 
     // save original positions (needed by temporal smoothing even for solo units)
@@ -902,6 +1000,29 @@ const ClientPlayer = class {
         u.drawX += (u._origX - u.drawX) * spring;
         u.drawY += (u._origY - u.drawY) * spring;
       }
+
+      // terrain + tree collision clamping — prevent bloom from pushing units into unpathable areas
+      if (treeIndex) {
+        for (let i = 0; i < len; i++) {
+          const u = units[i];
+          // check WPM terrain (water, cliffs) — snap back to original if blocked
+          if (Wc3vViewer.isBlockedTerrain(wc3v._terrainIndex, u.drawX, u.drawY)) {
+            u.drawX = u._origX;
+            u.drawY = u._origY;
+            continue;
+          }
+          // check tree sprites — push out along tree→unit vector
+          const hit = Wc3vViewer.treeCollisionCheck(treeIndex, u.drawX, u.drawY, u.halfIconSize);
+          if (hit) {
+            const tdx = u.drawX - hit.tree.x;
+            const tdy = u.drawY - hit.tree.y;
+            const d = hit.dist || 0.01;
+            const push = hit.minDist - d;
+            u.drawX += (tdx / d) * push;
+            u.drawY += (tdy / d) * push;
+          }
+        }
+      }
     }
 
     // hard cap — no unit can be displaced more than 35px from its true position
@@ -950,7 +1071,7 @@ const ClientPlayer = class {
     };
   }
 
-  static formationLayout (representatives, biasAngle = 0) {
+  static formationLayout (representatives, biasAngle = 0, treeIndex = null) {
     const len = representatives.length;
     if (len < 1) return;
 
@@ -998,9 +1119,30 @@ const ClientPlayer = class {
       unit.drawX = cx + Math.cos(angle) * ring2Radius;
       unit.drawY = cy + Math.sin(angle) * ring2Radius;
     });
+
+    // terrain + tree collision clamping
+    if (treeIndex) {
+      for (let i = 0; i < len; i++) {
+        const u = representatives[i];
+        if (Wc3vViewer.isBlockedTerrain(wc3v._terrainIndex, u.drawX, u.drawY)) {
+          u.drawX = u._origX;
+          u.drawY = u._origY;
+          continue;
+        }
+        const hit = Wc3vViewer.treeCollisionCheck(treeIndex, u.drawX, u.drawY, u.halfIconSize);
+        if (hit) {
+          const tdx = u.drawX - hit.tree.x;
+          const tdy = u.drawY - hit.tree.y;
+          const d = hit.dist || 0.01;
+          const push = hit.minDist - d;
+          u.drawX += (tdx / d) * push;
+          u.drawY += (tdy / d) * push;
+        }
+      }
+    }
   }
 
-  static crossPlayerCollision (allReps, iterations = 3, maxDisplacement = 25) {
+  static crossPlayerCollision (allReps, iterations = 3, maxDisplacement = 25, treeIndex = null) {
     const len = allReps.length;
     if (len < 2) return;
 
@@ -1041,6 +1183,27 @@ const ClientPlayer = class {
             b.drawX += nx * overlap;
             b.drawY += ny * overlap;
           }
+        }
+      }
+    }
+
+    // terrain + tree collision clamping
+    if (treeIndex) {
+      for (let i = 0; i < len; i++) {
+        const u = allReps[i];
+        if (Wc3vViewer.isBlockedTerrain(wc3v._terrainIndex, u.drawX, u.drawY)) {
+          u.drawX = u._preCollisionX;
+          u.drawY = u._preCollisionY;
+          continue;
+        }
+        const hit = Wc3vViewer.treeCollisionCheck(treeIndex, u.drawX, u.drawY, u.halfIconSize);
+        if (hit) {
+          const tdx = u.drawX - hit.tree.x;
+          const tdy = u.drawY - hit.tree.y;
+          const d = hit.dist || 0.01;
+          const push = hit.minDist - d;
+          u.drawX += (tdx / d) * push;
+          u.drawY += (tdy / d) * push;
         }
       }
     }
@@ -1292,9 +1455,9 @@ const ClientPlayer = class {
   }
 
   preRender (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
-    // draw units / buildings
-    this.units.forEach(unit => 
-      unit.preRender(frameData, playerCtx, mainCtx, transform, gameTime, xScale, yScale, viewOptions));
+    // draw units and buildings on playerCtx (z=3, above trees)
+    this.units.forEach(unit =>
+      unit.preRender(frameData, playerCtx, playerCtx, transform, gameTime, xScale, yScale, viewOptions));
   }
 
   render (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {

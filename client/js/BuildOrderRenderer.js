@@ -128,6 +128,7 @@ const BuildOrderRenderer = class {
       heroLevel:     (event, pc) => this.renderHeroLevelCard(event, pc),
       tierUpgrade:   (event)     => this.renderTierUpgradeCard(event),
       expansion:     (event)     => this.renderExpansionCard(event),
+      scout:         (event)     => this.renderScoutCard(event),
       attackUpgrade: (event)     => this.renderUpgradeCard(event),
       defenseUpgrade:(event)     => this.renderUpgradeCard(event),
       research:      (event)     => this.renderResearchCard(event),
@@ -370,6 +371,17 @@ const BuildOrderRenderer = class {
       <img class="bo-expansion-icon" src="/assets/wc3icons/${event.itemId}.jpg" />
       <span class="bo-expansion-label">EXPANSION MADE</span>
       ${costStr ? `<span class="bo-expansion-cost">${costStr}</span>` : ''}`;
+    return bar;
+  }
+
+  // --- Scout card (worker sent outside base) ---
+  renderScoutCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-scout-card');
+    const iconSrc = event.itemId ? `/assets/wc3icons/${event.itemId}.jpg` : '';
+    bar.innerHTML = `
+      ${iconSrc ? `<img class="bo-expansion-icon" src="${iconSrc}" onerror="this.style.display='none'" />` : ''}
+      <span class="bo-scout-label">${event.displayName.toUpperCase()}</span>`;
     return bar;
   }
 

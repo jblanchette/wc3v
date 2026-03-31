@@ -176,7 +176,13 @@
       "Bash(awk '/Game Clock: 16:49/,/Game Clock: 18:0/' client/logs/3147545390_Starbuck_LawLiet_LastRefuge15.w3g.log)",
       "Bash(awk '/Game Clock: 16:49/,/Game Clock: 19:0/' client/logs/3147545390_Starbuck_LawLiet_LastRefuge15.w3g.log)",
       "Bash(while read:*)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(git -C /c/Users/Jeff/Code/wc3v log --all --oneline -20)",
+      "Bash(git -C /c/Users/Jeff/Code/wc3v log --all --grep=\"interpol\" --oneline)",
+      "Bash(git -C /c/Users/Jeff/Code/wc3v log --all -S \"interpolatedPos\" --oneline)",
+      "Bash(git -C /c/Users/Jeff/Code/wc3v diff HEAD client/js/ClientUnit.js)",
+      "Bash(git -C /c/Users/Jeff/Code/wc3v log --oneline -1)",
+      "Read(//c/Users/Jeff/Code/wc3v/**)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Jeff\\Code\\wc3v"

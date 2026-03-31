@@ -287,6 +287,15 @@ const BuildOrderData = class {
           lumberCost: event.lumberCost || 0,
           building: event.building
         }));
+
+      } else if (key === 'scout') {
+        events.push(create('scout', gameTime, supplyUsed, supplyMax, w, {
+          displayName: event.isLumberScout
+            ? 'Wisp Lumber Scout'
+            : (event.unit ? event.unit.displayName + ' Scout' : 'Worker Scout'),
+          itemId: event.unit ? event.unit.itemId : '',
+          isLumberScout: event.isLumberScout || false
+        }));
       }
 
     });

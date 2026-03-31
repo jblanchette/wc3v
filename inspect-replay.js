@@ -514,6 +514,51 @@ if (showAll || showSections.includes('summary')) {
   console.log('');
 }
 
+// --- Scouts ---
+if (showAll || showSections.includes('scouts')) {
+  console.log('=== SCOUTS ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    const units = pdata.units || [];
+    const scoutUnits = units.filter(u => u.scoutInfo);
+
+    if (!scoutUnits.length) {
+      console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race}) — no scouts`);
+      continue;
+    }
+
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race}) — ${scoutUnits.length} scout(s)`);
+    scoutUnits.forEach(u => {
+      const si = u.scoutInfo;
+      const time = formatTime(si.gameTime);
+      const pos = si.position ? `(${si.position.x}, ${si.position.y})` : '(?)';
+      const pathLen = (u.path || []).length;
+      const lastPath = pathLen > 0 ? u.path[pathLen - 1] : null;
+      const lastPathStr = lastPath ? `last path: (${lastPath.x}, ${lastPath.y}) @ ${formatTime(lastPath.gameTime)}` : 'no path records';
+      console.log(`    ${u.displayName} (${u.itemId}) ${si.isLumberScout ? '[LUMBER SCOUT]' : '[SCOUT]'} @ ${time} → ${pos}`);
+      console.log(`      path records: ${pathLen}, ${lastPathStr}`);
+      if (u.destroyedAt) console.log(`      destroyed at: ${formatTime(u.destroyedAt)}`);
+      if (u.destroyedByBuilding) console.log(`      destroyedByBuilding: true`);
+      if (u.sacrificed) console.log(`      sacrificed: true`);
+      // show last 5 path records to trace movement
+      const lastPaths = (u.path || []).slice(-5);
+      if (lastPaths.length) {
+        console.log(`      last path records:`);
+        lastPaths.forEach(p => console.log(`        (${p.x}, ${p.y}) @ ${formatTime(p.gameTime)}${p.isJump ? ' [JUMP]' : ''}`));
+      }
+      // show spawnPosition and lastPosition for debugging
+      const sp = u.spawnPosition;
+      const lp = u.lastPosition;
+      if (sp) console.log(`      spawnPosition: (${sp.x}, ${sp.y})`);
+      if (lp) console.log(`      lastPosition: (${lp.x}, ${lp.y})`);
+    });
+  }
+  console.log('');
+}
+
 // --- Base Grid ---
 if (showAll || showSections.includes('basegrid')) {
   console.log('=== BASE GRID ===');

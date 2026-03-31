@@ -507,6 +507,26 @@ const Wc3vViewer = class {
     this.gridData = [];
   }
 
+  loadWalkmap () {
+    const { name } = this.mapInfo;
+    const filePath = `../maps/${name}/walkmap.json`;
+
+    return new Promise((resolve) => {
+      this.loadFile(filePath, (res) => {
+        try {
+          if (res.target.status < 300) {
+            this._walkmap = JSON.parse(res.target.responseText);
+          } else {
+            this._walkmap = null;
+          }
+        } catch (e) {
+          this._walkmap = null;
+        }
+        resolve(true);
+      });
+    });
+  }
+
   loadDoodadFile () {
     const self = this;
     const { name } = this.mapInfo;
@@ -529,6 +549,98 @@ const Wc3vViewer = class {
         resolve(true);
       });
     })
+  }
+
+  // Build a canvas-space walkability bitmap from WPM pathing data + tree positions.
+  // Used by bloom/formation to prevent pushing units into water, cliffs, or trees.
+  buildTerrainIndex () {
+    if (!this.gameScaler) {
+      this._terrainIndex = null;
+      this._treeIndex = null;
+      return;
+    }
+
+    const { xScale, yScale, middleX, middleY } = this.gameScaler;
+
+    // WPM-based blocked cells (water, cliffs, unwalkable terrain)
+    const CELL_SIZE = 10; // canvas pixels per terrain cell
+    const blocked = {};
+
+    if (this._walkmap) {
+      const { rows, cols, originX, originY, cellSize, walkable } = this._walkmap;
+      for (let col = 0; col < rows; col++) {
+        for (let row = 0; row < cols; row++) {
+          const idx = col * cols + row;
+          if (walkable[idx] === '1') continue; // walkable, skip
+
+          const gameX = originX + (row * cellSize);
+          const gameY = originY - (col * cellSize);
+          const cx = xScale(gameX) + middleX;
+          const cy = yScale(gameY) + middleY;
+          const key = Math.floor(cx / CELL_SIZE) + ',' + Math.floor(cy / CELL_SIZE);
+          blocked[key] = true;
+        }
+      }
+    }
+
+    const blockedCount = Object.keys(blocked).length;
+    console.log(`[terrain] walkmap loaded: ${!!this._walkmap}, blocked cells: ${blockedCount}, trees: ${this.doodadData ? this.doodadData.length : 0}`);
+
+    this._terrainIndex = { blocked, cellSize: CELL_SIZE };
+
+    // also build tree index for point-based collision
+    const treeGrid = {};
+    if (this.doodadData) {
+      const TREE_CELL = 40;
+      this.doodadData.forEach(tree => {
+        const { position, scale } = tree;
+        const drawX = xScale(position.x) + middleX;
+        const drawY = yScale(position.y) + middleY;
+        const radius = 8 * scale[0];
+
+        const cellX = Math.floor(drawX / TREE_CELL);
+        const cellY = Math.floor(drawY / TREE_CELL);
+        const key = cellX + ',' + cellY;
+
+        if (!treeGrid[key]) treeGrid[key] = [];
+        treeGrid[key].push({ x: drawX, y: drawY, r: radius });
+      });
+    }
+    this._treeIndex = { grid: treeGrid, cellSize: 40 };
+  }
+
+  // Check if a canvas position is on non-walkable terrain (water, cliffs, etc.)
+  static isBlockedTerrain (terrainIndex, x, y) {
+    if (!terrainIndex) return false;
+    const { blocked, cellSize } = terrainIndex;
+    const key = Math.floor(x / cellSize) + ',' + Math.floor(y / cellSize);
+    return !!blocked[key];
+  }
+
+  // Check if a canvas position collides with a tree sprite
+  static treeCollisionCheck (treeIndex, x, y, unitRadius) {
+    if (!treeIndex) return null;
+    const { grid, cellSize } = treeIndex;
+    const cx = Math.floor(x / cellSize);
+    const cy = Math.floor(y / cellSize);
+
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const trees = grid[(cx + dx) + ',' + (cy + dy)];
+        if (!trees) continue;
+        for (let i = 0; i < trees.length; i++) {
+          const t = trees[i];
+          const tdx = x - t.x;
+          const tdy = y - t.y;
+          const dist = Math.sqrt(tdx * tdx + tdy * tdy);
+          const minDist = t.r + unitRadius;
+          if (dist < minDist) {
+            return { tree: t, dist, minDist };
+          }
+        }
+      }
+    }
+    return null;
   }
 
   loadNeutralBuildings () {
@@ -974,11 +1086,13 @@ const Wc3vViewer = class {
     return this.loadMapFile()
     .then(() => { return this.loadMapFile("grid"); })
     .then(() => { return this.loadDoodadFile(); })
+    .then(() => { return this.loadWalkmap(); })
     .then(() => { return this.loadNeutralBuildings(); })
     .then(() => { return this.loadGridFile(); })
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
+      this.buildTerrainIndex();
       this.timelineSpline = new TimelineSpline(this);
       this.boRenderer = new BuildOrderRenderer(this);
       this.chapterMarkers = new ChapterMarkers(this);
@@ -1634,7 +1748,7 @@ const Wc3vViewer = class {
         player._resolved.representatives.forEach(rep => allReps.push(rep));
       }
     });
-    ClientPlayer.crossPlayerCollision(allReps);
+    ClientPlayer.crossPlayerCollision(allReps, 3, 25, this._treeIndex);
 
     // smooth cross-player collision displacements
     players.forEach(player => {
@@ -1657,6 +1771,40 @@ const Wc3vViewer = class {
         }
       });
     });
+
+    // absolute displacement cap after ALL modifications — 35px max from true position
+    const maxFinalDisp = 35;
+    allReps.forEach(u => {
+      if (!u._origX) return;
+      const dx = u.drawX - u._origX;
+      const dy = u.drawY - u._origY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > maxFinalDisp) {
+        const scale = maxFinalDisp / dist;
+        u.drawX = u._origX + dx * scale;
+        u.drawY = u._origY + dy * scale;
+      }
+    });
+
+    // terrain + tree clamp
+    if (this._terrainIndex || this._treeIndex) {
+      allReps.forEach(u => {
+        if (Wc3vViewer.isBlockedTerrain(this._terrainIndex, u.drawX, u.drawY)) {
+          u.drawX = u._origX;
+          u.drawY = u._origY;
+          return;
+        }
+        const hit = Wc3vViewer.treeCollisionCheck(this._treeIndex, u.drawX, u.drawY, u.halfIconSize);
+        if (hit) {
+          const tdx = u.drawX - hit.tree.x;
+          const tdy = u.drawY - hit.tree.y;
+          const d = hit.dist || 0.01;
+          const push = hit.minDist - d;
+          u.drawX += (tdx / d) * push;
+          u.drawY += (tdy / d) * push;
+        }
+      });
+    }
 
     players.forEach(player => {
       player.render(
@@ -1695,6 +1843,70 @@ const Wc3vViewer = class {
     this.scrubber.render(gameTime, matchEndTime);
 
     this.boRenderer.updateLiveBoHighlight();
+  }
+
+  debugPathingDump () {
+    const gt = this.gameTime;
+    const { xScale, yScale, middleX, middleY } = this.gameScaler;
+
+    console.log('=== DEBUG PATHING DUMP at gameTime:', gt, '(' + (gt / 1000).toFixed(1) + 's) ===');
+    console.log('terrainIndex:', !!this._terrainIndex, 'treeIndex:', !!this._treeIndex);
+
+    this.players.forEach(player => {
+      if (player.isNeutralPlayer) return;
+      console.log(`\n--- Player ${player.playerId}: ${player.name} ---`);
+
+      player.units.forEach(unit => {
+        if (unit.isBuilding || !unit.path || !unit.path.length) return;
+        if (unit.decayLevel < 0.3) return; // skip decayed/invisible
+
+        const pathIdx = unit.recordIndexes.path;
+        const pathNode = unit.path[pathIdx];
+        if (!pathNode) return;
+
+        const nextNode = unit.path[pathIdx + 1] || null;
+
+        // where the path data says the unit is
+        const pathX = pathNode.x;
+        const pathY = pathNode.y;
+        const pathDrawX = xScale(pathX) + middleX;
+        const pathDrawY = yScale(pathY) + middleY;
+
+        // where the unit was actually rendered (with dead band)
+        const renderedX = unit._prevDrawX;
+        const renderedY = unit._prevDrawY;
+
+        // check terrain at both positions
+        const pathBlocked = Wc3vViewer.isBlockedTerrain(this._terrainIndex, pathDrawX, pathDrawY);
+        const renderedBlocked = renderedX !== null ? Wc3vViewer.isBlockedTerrain(this._terrainIndex, renderedX, renderedY) : null;
+        const treeHitPath = Wc3vViewer.treeCollisionCheck(this._treeIndex, pathDrawX, pathDrawY, 10);
+        const treeHitRendered = renderedX !== null ? Wc3vViewer.treeCollisionCheck(this._treeIndex, renderedX, renderedY, 10) : null;
+
+        // find bloom-resolved position if available
+        let bloomX = null, bloomY = null;
+        if (player._resolved && player._resolved.representatives) {
+          const rep = player._resolved.representatives.find(r => r.uuid === unit.uuid);
+          if (rep) { bloomX = rep.drawX; bloomY = rep.drawY; }
+        }
+
+        const dt = nextNode ? (nextNode.gameTime - pathNode.gameTime) : null;
+        const dist = nextNode ? Math.sqrt((nextNode.x - pathNode.x) ** 2 + (nextNode.y - pathNode.y) ** 2).toFixed(0) : null;
+
+        console.log(
+          `  ${unit.displayName} (${unit.itemId})`,
+          `| pathIdx: ${pathIdx}/${unit.path.length}`,
+          `| pathPos: (${pathX}, ${pathY})`,
+          `| pathDraw: (${pathDrawX.toFixed(1)}, ${pathDrawY.toFixed(1)})`,
+          pathBlocked ? '⛔BLOCKED' : '',
+          treeHitPath ? '🌲TREE' : '',
+          `| rendered: ${renderedX !== null ? `(${renderedX.toFixed(1)}, ${renderedY.toFixed(1)})` : 'null'}`,
+          renderedBlocked ? '⛔BLOCKED' : '',
+          treeHitRendered ? '🌲TREE' : '',
+          bloomX !== null ? `| bloom: (${bloomX.toFixed(1)}, ${bloomY.toFixed(1)})` : '',
+          `| nextDt: ${dt}ms nextDist: ${dist}`
+        );
+      });
+    });
   }
 
 };

@@ -26,6 +26,8 @@ const ChapterMarkers = class {
     const allHeroEvents = [];
 
     // Track "firsts" across all players
+    const EARLY_GAME_CUTOFF = 300000; // 5 minutes — only track scouts in early game
+    const firstScoutByPlayer = {};
     let firstExpansionTime = Infinity;
     let firstExpansionData = null;
     let firstTier2Time = Infinity;
@@ -114,6 +116,22 @@ const ChapterMarkers = class {
               icon: ev.icon || null
             });
           }
+        }
+
+        // First scout per player (early game only)
+        if (ev.key === 'scout' && !firstScoutByPlayer[pIdx] && ev.gameTime < EARLY_GAME_CUTOFF) {
+          firstScoutByPlayer[pIdx] = true;
+          const label = ev.isLumberScout ? 'Wisp Scout' : 'First Scout';
+          chapters.push({
+            gameTime: ev.gameTime,
+            label,
+            shortLabel: 'Scout',
+            type: 'firstScout',
+            severity: 'minor',
+            playerIndex: pIdx,
+            playerColor: pc,
+            icon: ev.unit ? ev.unit.itemId : null
+          });
         }
 
         // Mercenary hires
