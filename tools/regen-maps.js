@@ -26,101 +26,6 @@ const d3 = require("d3");
 const MAPDATA_DIR = "mapdata";
 const CLIENT_MAPS_DIR = "client/maps";
 
-//
-// per-palette-code color mapping
-// key: 4-char palette code (e.g., "Ldrt") → hex color
-// suffix meanings: drt=dirt, grs=grass, rck/rok=rock, drg=dark grass,
-//   dro=dark rock, grd=ground, snw=snow, ice=ice, vin=vines,
-//   san=sand, btl=brick tile, gsb=grass blend, etc.
-//
-
-const PALETTE_COLORS = {
-  // Lordaeron Summer (L)
-  Ldrt: '#9a8050', Ldro: '#7a6848', Ldrg: '#558030', Lrok: '#707060',
-  Lgrs: '#348020', Lgrd: '#6a8838',
-
-  // Village (V)
-  Vdrt: '#9a8858', Vdrr: '#8a7850', Vcrp: '#6a8838', Vcbp: '#588030',
-  Vstp: '#8a8a70', Vgrs: '#389028', Vrck: '#787868', Vgrt: '#6a8838',
-
-  // Lordaeron Fall (F)
-  Fdrt: '#8a7838', Fdro: '#7a6830', Fdrg: '#687828', Frok: '#787058',
-  Fgrs: '#687828', Fgrd: '#788030',
-
-  // Village Fall (X)
-  Xdrt: '#8a7838', Xdtr: '#7a6830', Xblm: '#685848', Xbtl: '#787058',
-  Xsqd: '#8a8068', Xrtl: '#786050', Xgsb: '#6a7830', Xhdg: '#587028',
-  Xwmb: '#7a6848',
-
-  // Lordaeron Winter (W)
-  Wdrt: '#98a0a8', Wdro: '#889098', Wsng: '#c8d0d8', Wrok: '#788088',
-  Wgrs: '#a8b8c0', Wsnw: '#d8e0e8',
-
-  // Northrend (N)
-  Ndrt: '#98a0a0', Ndrd: '#889090', Nrck: '#788080', Ngrs: '#98b0b0',
-  Nice: '#b8d0e0', Nsnw: '#d0e0e8', Nsnr: '#c0d0d8',
-
-  // Icecrown (I)
-  Idrt: '#90a0a8', Idtr: '#8098a8', Idki: '#587080', Iice: '#b0c8d8',
-  Isnw: '#c8d8e0', Ibkb: '#506070', Irbk: '#587078', Itbk: '#607880',
-  Ibsq: '#687888',
-
-  // Ashenvale (A)
-  Adrt: '#405838', Adrd: '#304830', Agrs: '#1e5830', Arck: '#505848',
-  Agrd: '#406838', Avin: '#204828', Adrg: '#204820', Alvd: '#305830',
-
-  // Felwood (C)
-  Cdrt: '#404830', Cdrd: '#303828', Cgrs: '#304820', Cpos: '#402838',
-  Cvin: '#204020', Clvg: '#304820',
-
-  // Barrens (B)
-  Bdrt: '#a09058', Bdrh: '#908048', Bdrr: '#988850', Bdrg: '#788038',
-  Bdsr: '#b0a070', Bdsd: '#a89868', Bflr: '#806830', Bgrr: '#8a8848',
-
-  // Dungeon (D)
-  Ddrt: '#484848', Dgrs: '#384838',
-
-  // Underground (G)
-  Gbrk: '#484840',
-
-  // Cityscape (K)
-  Ksmb: '#686878',
-
-  // Dalaran Ruins (J)
-  Jdrt: '#585070', Jdtr: '#504868', Jblm: '#484060', Jbtl: '#605878',
-  Jsqd: '#686080', Jrtl: '#585070', Jgsb: '#485848', Jhdg: '#385030',
-  Jwmb: '#605070',
-
-  // Sunken Ruins (Y)
-  Ydrt: '#386068', Ydtr: '#305860', Yblm: '#284850', Ybtl: '#385858',
-  Ysqd: '#406068', Yrtl: '#385860', Ygsb: '#285840', Yhdg: '#284838',
-  Ywmb: '#385058',
-
-  // Ruins (Z)
-  Zdrt: '#586848', Zdtr: '#485840', Zdrg: '#486038', Zbks: '#686850',
-  Zsan: '#9a9068', Zbkl: '#585848', Ztil: '#686858', Zgrs: '#486848',
-  Zvin: '#385830',
-
-  // Dalaran (Q) — warm autumn-toned, not purple
-  Qdrt: '#807050', Qdrr: '#706040', Qcrp: '#685848', Qcbp: '#586840',
-  Qstp: '#787868', Qgrs: '#588040', Qrck: '#686858', Qgrt: '#688040',
-
-  // Outland (O)
-  Odrt: '#684030', Odtr: '#583828', Osmb: '#584038', Ofst: '#485028',
-  Olgb: '#586830', Ofsl: '#384020', Oaby: '#382828', Orok: '#585048'
-};
-
-// fallback: derive a reasonable color from palette prefix when exact code not found
-function getFallbackColor (palette, suffix) {
-  // try same suffix from a known prefix
-  const knownPrefixes = ['L', 'W', 'A', 'B', 'J', 'Y', 'Z', 'Q', 'F', 'X', 'V', 'N', 'I', 'C', 'O'];
-  for (const p of knownPrefixes) {
-    const key = p + suffix;
-    if (PALETTE_COLORS[key]) return PALETTE_COLORS[key];
-  }
-  return null;
-}
-
 const TILESET_NAMES = {
   'L': 'Lordaeron Summer', 'V': 'Village', 'F': 'Lordaeron Fall', 'X': 'Village Fall',
   'W': 'Lordaeron Winter', 'N': 'Northrend', 'I': 'Icecrown', 'A': 'Ashenvale',
@@ -129,9 +34,7 @@ const TILESET_NAMES = {
   'Z': 'Ruins', 'Q': 'Dalaran', 'O': 'Outland', 'c': 'Custom/Mixed'
 };
 
-// Per-tileset minimap colors tuned to match WC3's actual minimap feel
-// ground = grass/vegetation, accent = dirt/rock/paths, water varies by theme
-const { TILESET_EXTRAS, DEFAULT_EXTRAS } = require('../helpers/tilesetColors');
+const { TILESET_EXTRAS, DEFAULT_EXTRAS, PALETTE_COLORS, getFallbackPaletteColor } = require('../helpers/tilesetColors');
 
 // helper to parse hex color and apply brightness variation
 function hexToRgb (hex) {
@@ -167,10 +70,8 @@ function drawBackgroundMap(output, wpm, doo, terrainFile) {
   const tileset = terrainFile.tileset;
   const extras = TILESET_EXTRAS[tileset] || DEFAULT_EXTRAS;
 
-  // Simplified ground colors: each palette code maps to either
-  // the tileset's primary ground or accent color for clean, solid regions.
-  // Suffix categorization: grs/grd/grr/gsb/hdg/vin/drg/lvd/lvg/crp/cbp/fst/fsl/lgb = green/vegetated
-  // Everything else (drt/dro/drr/rok/rck/san/btl/sqd/blm/etc.) = accent/path
+  // Per-palette colors: use actual PALETTE_COLORS when available,
+  // fall back to tileset ground/accent based on suffix categorization
   const greenSuffixes = new Set([
     'grs', 'grd', 'grr', 'gsb', 'hdg', 'vin', 'drg', 'lvd', 'lvg',
     'crp', 'cbp', 'fst', 'fsl', 'lgb', 'grt', 'pos'
@@ -178,9 +79,18 @@ function drawBackgroundMap(output, wpm, doo, terrainFile) {
 
   const paletteColorCache = {};
   terrainFile.tilePalettes.forEach((code, idx) => {
-    const suffix = code.substring(1);
-    const isVegetation = greenSuffixes.has(suffix);
-    paletteColorCache[idx] = hexToRgb(isVegetation ? extras.ground : extras.accent);
+    if (PALETTE_COLORS[code]) {
+      paletteColorCache[idx] = hexToRgb(PALETTE_COLORS[code]);
+    } else {
+      const fallback = getFallbackPaletteColor(code, code.substring(1));
+      if (fallback) {
+        paletteColorCache[idx] = hexToRgb(fallback);
+      } else {
+        const suffix = code.substring(1);
+        const isVegetation = greenSuffixes.has(suffix);
+        paletteColorCache[idx] = hexToRgb(isVegetation ? extras.ground : extras.accent);
+      }
+    }
   });
 
   const cliffRgb = hexToRgb(extras.cliff || '#181810');
@@ -197,19 +107,17 @@ function drawBackgroundMap(output, wpm, doo, terrainFile) {
     .domain(gameScaler.mapExtent.y)
     .range([-(fullMiddleY), fullMiddleY]);
 
-  // --- Pass 1: Paint ground from W3E terrain grid (coarse, solid color blocks) ---
-  // Each W3E tile covers ~4x4 WPM tiles, so blocks are 4*tileSize pixels = solid regions
-  const terrainRows = tileGrid.length;      // height+1 vertices
-  const terrainCols = tileGrid[0] ? tileGrid[0].length : 0;  // width+1 vertices
-  const terrainCellRows = terrainRows - 1;  // actual cell count
+  // --- Pass 1: Paint ground from W3E terrain grid with sub-tile noise ---
+  const terrainRows = tileGrid.length;
+  const terrainCols = tileGrid[0] ? tileGrid[0].length : 0;
+  const terrainCellRows = terrainRows - 1;
   const terrainCellCols = terrainCols - 1;
   const wpmRows = grid.length;
   const wpmCols = grid[0] ? grid[0].length : 0;
   const terrainBlockW = (wpmCols * tileSize) / terrainCellCols;
   const terrainBlockH = (wpmRows * tileSize) / terrainCellRows;
 
-  // Boundary margins: skip painting terrain for tiles outside the playable area
-  // W3E rows are bottom-to-top (row 0 = bottom), margins are [left, right, bottom, top]
+  // Boundary margins
   const margins = output.info.gridSize.margins;
   const { playable, full } = output.info.gridSize;
   const marginBottom = margins ? margins[2] : Math.floor((full[1] - playable[1]) / 2);
@@ -217,46 +125,222 @@ function drawBackgroundMap(output, wpm, doo, terrainFile) {
   const marginLeft = margins ? margins[0] : Math.floor((full[0] - playable[0]) / 2);
   const marginRight = margins ? margins[1] : Math.ceil((full[0] - playable[0]) / 2);
 
+  // sub-block size for intra-tile noise (4x4 sub-blocks per terrain cell)
+  const subBlockW = Math.max(1, Math.floor(terrainBlockW / 4));
+  const subBlockH = Math.max(1, Math.floor(terrainBlockH / 4));
+
   for (let row = 0; row < terrainCellRows; row++) {
-    // Skip boundary rows (W3E row 0 = bottom, so marginBottom skips first rows)
     if (row < marginBottom || row >= terrainCellRows - marginTop) continue;
     const drawY = (terrainCellRows - 1 - row) * terrainBlockH;
     for (let col = 0; col < terrainCellCols; col++) {
       if (col < marginLeft || col >= terrainCellCols - marginRight) continue;
       const tile = tileGrid[row][col];
-      const rgb = (tile && paletteColorCache[tile.paletteIndex]) || [74, 104, 56];
-      ctx.fillStyle = rgbToHex(rgb[0], rgb[1], rgb[2]);
-      ctx.fillRect(col * terrainBlockW, drawY, terrainBlockW + 0.5, terrainBlockH + 0.5);
+      const effectiveIdx = tile ? (tile.paletteIndex < terrainFile.tilePalettes.length
+        ? tile.paletteIndex : tile.paletteIndex % terrainFile.tilePalettes.length) : 0;
+      const rgb = paletteColorCache[effectiveIdx] || [74, 104, 56];
+      const baseX = col * terrainBlockW;
+
+      // paint sub-blocks with noise variation
+      for (let sy = 0; sy < terrainBlockH; sy += subBlockH) {
+        for (let sx = 0; sx < terrainBlockW; sx += subBlockW) {
+          const noise = tileHash(col * 4 + Math.floor(sx / subBlockW), row * 4 + Math.floor(sy / subBlockH));
+          const factor = 1 + (noise * 0.16 - 0.08);
+          const nr = Math.max(0, Math.min(255, Math.round(rgb[0] * factor)));
+          const ng = Math.max(0, Math.min(255, Math.round(rgb[1] * factor)));
+          const nb = Math.max(0, Math.min(255, Math.round(rgb[2] * factor)));
+          ctx.fillStyle = rgbToHex(nr, ng, nb);
+          ctx.fillRect(baseX + sx, drawY + sy, subBlockW + 0.5, subBlockH + 0.5);
+        }
+      }
     }
   }
 
-  // --- Pass 2: Overlay water + cliffs from WPM (finer resolution) ---
+  // --- Pass 1.5: Edge blending between different terrain types ---
+  for (let row = marginBottom; row < terrainCellRows - marginTop; row++) {
+    const drawY = (terrainCellRows - 1 - row) * terrainBlockH;
+    for (let col = marginLeft; col < terrainCellCols - marginRight; col++) {
+      const tile = tileGrid[row][col];
+      const myIdx = tile ? (tile.paletteIndex < terrainFile.tilePalettes.length
+        ? tile.paletteIndex : tile.paletteIndex % terrainFile.tilePalettes.length) : 0;
+      const myRgb = paletteColorCache[myIdx] || [74, 104, 56];
+      const baseX = col * terrainBlockW;
+      const blendW = Math.max(1, Math.round(terrainBlockW * 0.15));
+      const blendH = Math.max(1, Math.round(terrainBlockH * 0.15));
+
+      // blend right edge
+      if (col + 1 < terrainCellCols - marginRight) {
+        const rightTile = tileGrid[row][col + 1];
+        const rightIdx = rightTile ? (rightTile.paletteIndex < terrainFile.tilePalettes.length
+          ? rightTile.paletteIndex : rightTile.paletteIndex % terrainFile.tilePalettes.length) : 0;
+        if (rightIdx !== myIdx) {
+          const rightRgb = paletteColorCache[rightIdx] || [74, 104, 56];
+          for (let sy = 0; sy < terrainBlockH; sy += 2) {
+            const n = tileHash(col * 100 + sy, row * 100);
+            const mixR = Math.max(0, Math.min(255, Math.round((myRgb[0] + rightRgb[0]) / 2 + (n * 10 - 5))));
+            const mixG = Math.max(0, Math.min(255, Math.round((myRgb[1] + rightRgb[1]) / 2 + (n * 10 - 5))));
+            const mixB = Math.max(0, Math.min(255, Math.round((myRgb[2] + rightRgb[2]) / 2 + (n * 10 - 5))));
+            ctx.fillStyle = rgbToHex(mixR, mixG, mixB);
+            ctx.fillRect(baseX + terrainBlockW - blendW, drawY + sy, blendW * 2, 2);
+          }
+        }
+      }
+
+      // blend bottom edge (visually — W3E row+1 is above in draw coords)
+      if (row + 1 < terrainCellRows - marginTop) {
+        const belowTile = tileGrid[row + 1][col];
+        const belowIdx = belowTile ? (belowTile.paletteIndex < terrainFile.tilePalettes.length
+          ? belowTile.paletteIndex : belowTile.paletteIndex % terrainFile.tilePalettes.length) : 0;
+        if (belowIdx !== myIdx) {
+          const belowRgb = paletteColorCache[belowIdx] || [74, 104, 56];
+          for (let sx = 0; sx < terrainBlockW; sx += 2) {
+            const n = tileHash(row * 100 + sx, col * 100);
+            const mixR = Math.max(0, Math.min(255, Math.round((myRgb[0] + belowRgb[0]) / 2 + (n * 10 - 5))));
+            const mixG = Math.max(0, Math.min(255, Math.round((myRgb[1] + belowRgb[1]) / 2 + (n * 10 - 5))));
+            const mixB = Math.max(0, Math.min(255, Math.round((myRgb[2] + belowRgb[2]) / 2 + (n * 10 - 5))));
+            ctx.fillStyle = rgbToHex(mixR, mixG, mixB);
+            ctx.fillRect(baseX + sx, drawY - blendH, 2, blendH * 2);
+          }
+        }
+      }
+    }
+  }
+
+  // --- Pass 2: Water depth + cliffs using W3E height data + WPM flags ---
+  // Build a water-depth map from W3E terrain heights.
+  // Each W3E tile maps to ~4x4 WPM tiles; we interpolate depth at WPM resolution.
+  const waterRgb = hexToRgb(extras.water);
+  const shallowRgb = hexToRgb(extras.shallowwater);
+  // shore color: blend between ground and shallow water for the beach/transition zone
+  const groundRgb = hexToRgb(extras.ground);
+  const shoreRgb = [
+    Math.round((groundRgb[0] + shallowRgb[0]) / 2),
+    Math.round((groundRgb[1] + shallowRgb[1]) / 2),
+    Math.round((groundRgb[2] + shallowRgb[2]) / 2)
+  ];
+
+  // compute water depth at each W3E vertex: depth = waterLevel - groundHeight
+  // positive depth = underwater, 0 or negative = above water
+  let minDepth = Infinity, maxDepth = -Infinity;
+  const depthGrid = [];
+  for (let row = 0; row < terrainRows; row++) {
+    const depthRow = [];
+    for (let col = 0; col < terrainCols; col++) {
+      const tile = tileGrid[row][col];
+      if (tile && tile.waterLevel != null && tile.groundHeight != null) {
+        const depth = tile.waterLevel - tile.groundHeight;
+        depthRow.push(depth);
+        if (depth > 0) {
+          if (depth < minDepth) minDepth = depth;
+          if (depth > maxDepth) maxDepth = depth;
+        }
+      } else {
+        depthRow.push(0);
+      }
+    }
+    depthGrid.push(depthRow);
+  }
+  const depthRange = maxDepth > minDepth ? maxDepth - minDepth : 1;
+
+  // bilinear interpolation of depth at a fractional W3E position
+  function sampleDepth (fRow, fCol) {
+    const r0 = Math.floor(fRow), c0 = Math.floor(fCol);
+    const r1 = Math.min(r0 + 1, terrainRows - 1), c1 = Math.min(c0 + 1, terrainCols - 1);
+    const fr = fRow - r0, fc = fCol - c0;
+    const d00 = depthGrid[r0] ? (depthGrid[r0][c0] || 0) : 0;
+    const d01 = depthGrid[r0] ? (depthGrid[r0][c1] || 0) : 0;
+    const d10 = depthGrid[r1] ? (depthGrid[r1][c0] || 0) : 0;
+    const d11 = depthGrid[r1] ? (depthGrid[r1][c1] || 0) : 0;
+    return d00 * (1 - fr) * (1 - fc) + d01 * (1 - fr) * fc + d10 * fr * (1 - fc) + d11 * fr * fc;
+  }
+
+  // count how many of 8 neighbors are water for shoreline detection
+  function countWaterNeighbors (wpmCol, wpmRow) {
+    let water = 0;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const r = wpmCol + dr, c = wpmRow + dc;
+        if (r >= 0 && r < wpmRows && c >= 0 && c < wpmCols) {
+          if (!grid[r][c].NoWater) water++;
+        }
+      }
+    }
+    return water;
+  }
+
   let rCol = wpmRows - 1;
 
   for (let col = 0; col < wpmRows; col++) {
     for (let row = 0; row < wpmCols; row++) {
       const data = grid[col][row];
-      const { NoWater, NoWalk, NoFly, NoBuild } = data;
+      const { NoWater, NoWalk, NoFly } = data;
       const drawX = row * tileSize;
       const drawY = rCol * tileSize;
 
       if (NoWalk && NoFly) {
-        const noise = tileHash(col, row) * 0.2 - 0.1;
+        // cliffs
+        const noise = tileHash(col, row) * 0.24 - 0.12;
         const cr = Math.max(0, Math.min(255, Math.round(cliffRgb[0] * (1 + noise))));
         const cg = Math.max(0, Math.min(255, Math.round(cliffRgb[1] * (1 + noise))));
         const cb = Math.max(0, Math.min(255, Math.round(cliffRgb[2] * (1 + noise))));
         ctx.fillStyle = rgbToHex(cr, cg, cb);
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      } else if (!NoWater && NoWalk) {
-        // deep water: has water + can't walk
-        ctx.fillStyle = extras.water;
+      } else if (!NoWater) {
+        // water tile — use depth-based color gradient
+        // map WPM coords to W3E fractional position for depth lookup
+        const terrainFRow = (col / wpmRows) * terrainCellRows;
+        const terrainFCol = (row / wpmCols) * terrainCellCols;
+        const depth = sampleDepth(terrainFRow, terrainFCol);
+
+        // normalize depth to 0..1 range
+        const depthNorm = depth > 0 ? Math.min(1, (depth - minDepth) / depthRange) : 0;
+
+        // 4-stop gradient: shore → shallow → medium → deep
+        let r, g, b;
+        const noise = tileHash(col * 3, row * 3) * 0.08 - 0.04;
+
+        if (depthNorm < 0.15) {
+          // shore/very shallow — blend shore to shallow
+          const t = depthNorm / 0.15;
+          r = Math.round(shoreRgb[0] * (1 - t) + shallowRgb[0] * t);
+          g = Math.round(shoreRgb[1] * (1 - t) + shallowRgb[1] * t);
+          b = Math.round(shoreRgb[2] * (1 - t) + shallowRgb[2] * t);
+        } else if (depthNorm < 0.5) {
+          // shallow to medium
+          const t = (depthNorm - 0.15) / 0.35;
+          r = Math.round(shallowRgb[0] * (1 - t) + waterRgb[0] * t);
+          g = Math.round(shallowRgb[1] * (1 - t) + waterRgb[1] * t);
+          b = Math.round(shallowRgb[2] * (1 - t) + waterRgb[2] * t);
+        } else {
+          // medium to deep — darken further
+          const t = (depthNorm - 0.5) / 0.5;
+          r = Math.round(waterRgb[0] * (1 - t * 0.3));
+          g = Math.round(waterRgb[1] * (1 - t * 0.3));
+          b = Math.round(waterRgb[2] * (1 - t * 0.3));
+        }
+
+        r = Math.max(0, Math.min(255, Math.round(r * (1 + noise))));
+        g = Math.max(0, Math.min(255, Math.round(g * (1 + noise))));
+        b = Math.max(0, Math.min(255, Math.round(b * (1 + noise))));
+        ctx.fillStyle = rgbToHex(r, g, b);
         ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      } else if (!NoWater && !NoWalk) {
-        // shallow/buildable water: has water but CAN walk (beach/shore)
-        ctx.fillStyle = extras.shallowwater;
-        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+      } else if (NoWater) {
+        // ground tile — check if near water for shoreline blending
+        const waterNeighbors = countWaterNeighbors(col, row);
+        if (waterNeighbors > 0) {
+          // shoreline fringe: partially tint toward shore color
+          const fringeT = Math.min(1, waterNeighbors / 6);
+          const noise = tileHash(col * 7, row * 7) * 0.1 - 0.05;
+          // read existing ground color from canvas and blend toward shore
+          ctx.globalAlpha = fringeT * 0.35;
+          const sr = Math.max(0, Math.min(255, Math.round(shoreRgb[0] * (1 + noise))));
+          const sg = Math.max(0, Math.min(255, Math.round(shoreRgb[1] * (1 + noise))));
+          const sb = Math.max(0, Math.min(255, Math.round(shoreRgb[2] * (1 + noise))));
+          ctx.fillStyle = rgbToHex(sr, sg, sb);
+          ctx.fillRect(drawX, drawY, tileSize, tileSize);
+          ctx.globalAlpha = 1.0;
+        }
       }
-      // walkable ground: terrain already painted in pass 1
     }
     rCol--;
   }
@@ -357,7 +441,7 @@ function regenMap(mapName, dryRun) {
     drawNeutralBuildingsOnMap(ctx, neutralBuildings, fullXScale, fullYScale, fullMiddleX, fullMiddleY);
   }
 
-  const buffer = canvas.toBuffer('image/png');
+  const buffer = canvas.toBuffer('image/jpeg', { quality: 0.75 });
 
   if (!fs.existsSync(clientMapDir)) {
     fs.mkdirSync(clientMapDir, { recursive: true });

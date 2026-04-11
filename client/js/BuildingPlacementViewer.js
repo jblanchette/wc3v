@@ -5,7 +5,6 @@
 // nav controls. Trees that overlap buildings are automatically removed.
 ////
 
-const PLACEMENT_MAX_MODAL = 620;
 const PLACEMENT_MIN_CELL = 4;
 const TREE_CLEAR_BUFFER = 3; // extra WPM cells beyond building footprint for tree clearing
 
@@ -24,13 +23,40 @@ function hexToRgb (hex) {
   ];
 }
 
-// Town hall itemIds that should get a larger footprint in the viewer
-const TOWN_HALL_IDS = new Set([
-  'htow', 'hkee', 'hcas',
-  'ogre', 'ostr', 'ofrt',
-  'etol', 'etoa', 'etoe',
-  'unpl', 'unp1', 'unp2',
-]);
+// WC3 building footprints in WPM cells (grid squares).
+// UnitBalance.json collisionSize is unreliable for many buildings
+// (shops/shipyards have cs=50 but are 3x3 in-game). This table
+// uses actual WC3 footprints.
+const BUILDING_FOOTPRINT = {
+  // Human
+  htow: 6, hkee: 6, hcas: 6,        // town halls
+  hbar: 5, hbla: 5, hlum: 5,         // standard 3x3
+  halt: 5, harm: 5, hars: 5,
+  hgra: 4,                            // gryphon aviary
+  hhou: 3, hwtw: 3, hgtw: 3,         // small 2x2
+  hatw: 3, hctw: 3,
+  hvlt: 4, hshy: 4,                   // shops/shipyard
+  haro: 6,                            // observatory
+  // Orc
+  ogre: 6, ostr: 6, ofrt: 6,         // town halls
+  obar: 5, obea: 5, ofor: 5,         // standard
+  osld: 5, otto: 5, oalt: 5,
+  otrb: 3, owtw: 3,                  // small
+  ovln: 4, oshy: 4,                   // shops/shipyard
+  // Night Elf
+  etol: 5, etoa: 5, etoe: 5,         // trees of life (actually 4x4 with roots)
+  eaom: 5, eaow: 5, eaoe: 5,         // ancients
+  eate: 5, edob: 5, eden: 5,
+  edos: 5, etrp: 5,
+  emow: 3,                            // moon well
+  egol: 4, eshy: 4,                   // entangled mine/shipyard
+  // Undead
+  unpl: 7, unp1: 7, unp2: 7,         // necropolis (actually bigger)
+  usep: 5, ugrv: 5, uaod: 5,         // standard
+  uslh: 5, ubon: 5, utod: 5, usap: 5,
+  uzig: 4, uzg1: 4, uzg2: 4,         // ziggurats
+  utom: 4, ugol: 4, ushp: 4,         // tomb of relics/haunted mine/shipyard
+};
 
 // All possible snapshot slots in display order
 const SNAPSHOT_SLOTS = [
@@ -39,11 +65,11 @@ const SNAPSHOT_SLOTS = [
   { label: 'Final' }
 ];
 
-// Viewer footprint: collision radius in WPM cells.
+// Building footprint in WPM cells. Uses lookup table, falls back to collisionSize formula.
 function getViewerWpmCells (itemId, collisionSize) {
-  if (!collisionSize) return 3;
-  if (TOWN_HALL_IDS.has(itemId)) return 7;
-  return Math.round(collisionSize / 28);
+  if (BUILDING_FOOTPRINT[itemId]) return BUILDING_FOOTPRINT[itemId];
+  if (!collisionSize || collisionSize <= 50) return 4;
+  return Math.max(3, Math.round(collisionSize / 28));
 }
 
 const BuildingPlacementViewer = class {
@@ -64,9 +90,9 @@ const BuildingPlacementViewer = class {
     this.canvas = document.createElement('canvas');
     this.canvas.style.display = 'block';
 
-    const canvasWrap = this.container.querySelector('.placement-viewer-canvas');
-    if (canvasWrap) {
-      canvasWrap.appendChild(this.canvas);
+    this._canvasWrap = this.container.querySelector('.placement-viewer-canvas');
+    if (this._canvasWrap) {
+      this._canvasWrap.appendChild(this.canvas);
     }
 
     this.ctx = this.canvas.getContext('2d');
@@ -77,6 +103,19 @@ const BuildingPlacementViewer = class {
     }
     this.container.addEventListener('click', (e) => {
       if (e.target === this.container) this.hide();
+    });
+
+    // re-render on resize
+    if (this._canvasWrap) {
+      this._resizeObserver = new ResizeObserver(() => {
+        if (this.visible && this._baseParams) this._doRender();
+      });
+      this._resizeObserver.observe(this._canvasWrap);
+    }
+
+    // Escape key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.visible) this.hide();
     });
   }
 
@@ -176,10 +215,13 @@ const BuildingPlacementViewer = class {
 
     const { originX, originY, cellSize, cols, rows, cells } = baseGrid;
 
-    // dynamic cell size to fit modal
+    // compute available canvas space from viewport (panel auto-sizes around canvas)
+    const fixedH = 80; // header + controls + label + padding
+    const availW = Math.floor(window.innerWidth * 0.90);
+    const availH = Math.floor(window.innerHeight * 0.90 - fixedH);
     const cs = Math.max(PLACEMENT_MIN_CELL, Math.floor(Math.min(
-      PLACEMENT_MAX_MODAL / cols,
-      PLACEMENT_MAX_MODAL / rows
+      availW / cols,
+      availH / rows
     )));
 
     const canvasW = cols * cs;
@@ -244,31 +286,16 @@ const BuildingPlacementViewer = class {
         });
         if (overlapsBuilding) return;
 
-        // per-tree seeded variation
-        const h1 = tileHash(tree.x, tree.y);
+          const h1 = tileHash(tree.x, tree.y);
         const h2 = tileHash(tree.y, tree.x);
 
-        // brightness: +/-15%
-        const bright = 1 + (h1 * 0.3 - 0.15);
-        const cr = Math.max(0, Math.min(255, Math.round(treeRgb[0] * bright)));
-        const cg = Math.max(0, Math.min(255, Math.round(treeRgb[1] * bright)));
-        const cb = Math.max(0, Math.min(255, Math.round(treeRgb[2] * bright)));
-        ctx.fillStyle = 'rgb(' + cr + ',' + cg + ',' + cb + ')';
-
-        // opacity: 0.7 to 0.9
-        ctx.globalAlpha = 0.7 + h2 * 0.2;
-
-        // size: +/-20%
         const sizeVar = 1 + (h2 * 0.4 - 0.2);
         const radius = Math.max(5, (tree.s || 1) * cs * 1.7 * sizeVar);
 
-        // position jitter: +/-0.3 cells
         const jitterX = (h1 * 0.6 - 0.3) * cs;
         const jitterY = (h2 * 0.6 - 0.3) * cs;
 
-        ctx.beginPath();
-        ctx.arc(gridCol * cs + jitterX, gridRow * cs + jitterY, radius, 0, Math.PI * 2);
-        ctx.fill();
+        window.renderTree(ctx, gridCol * cs + jitterX, gridRow * cs + jitterY, radius, treeRgb, h1, h2);
       });
 
       ctx.globalAlpha = 1.0;
@@ -334,8 +361,11 @@ const BuildingPlacementViewer = class {
 
     // --- Pass 4: Player buildings from snapshot ---
     snapshot.buildings.forEach(b => {
-      const gridCol = (b.x - originX) / cellSize;
-      const gridRow = (originY - b.y) / cellSize;
+      // snap building center to nearest grid cell
+      const rawCol = (b.x - originX) / cellSize;
+      const rawRow = (originY - b.y) / cellSize;
+      const gridCol = Math.round(rawCol);
+      const gridRow = Math.round(rawRow);
 
       const wpmCells = getViewerWpmCells(b.itemId, b.collisionSize);
       const halfCells = wpmCells / 2;
@@ -346,8 +376,15 @@ const BuildingPlacementViewer = class {
 
       const isInferred = b.isInferred;
 
+      // subtle player-colored glow behind building
+      if (!isInferred) {
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = playerColor || '#888';
+        ctx.fillRect(px - 1, py - 1, size + 2, size + 2);
+      }
+
       if (this._icons[b.itemId]) {
-        ctx.globalAlpha = isInferred ? 0.3 : 0.85;
+        ctx.globalAlpha = isInferred ? 0.3 : 0.9;
         ctx.drawImage(this._icons[b.itemId], px + 1, py + 1, size - 2, size - 2);
       } else {
         ctx.globalAlpha = isInferred ? 0.2 : 0.5;
@@ -364,7 +401,8 @@ const BuildingPlacementViewer = class {
         ctx.strokeRect(px + 0.5, py + 0.5, size - 1, size - 1);
         ctx.setLineDash([]);
       } else {
-        ctx.strokeStyle = '#FFFC01';
+        ctx.strokeStyle = playerColor || '#888';
+        ctx.globalAlpha = 0.6;
         ctx.strokeRect(px + 0.5, py + 0.5, size - 1, size - 1);
       }
 

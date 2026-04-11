@@ -89,6 +89,14 @@ const doParsing = async (file) => {
     }
   });
 
+  // post-process: build APM data per player
+  Object.values(playerManager.players).forEach(player => {
+    if (parseInt(player.id) >= 24) return;
+    if (player.buildApmData) {
+      player.buildApmData();
+    }
+  });
+
   // post-process: validate and correct transport cargo loadEvents
   Object.values(playerManager.players).forEach(player => {
     if (parseInt(player.id) >= 24) return;

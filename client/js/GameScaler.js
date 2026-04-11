@@ -61,7 +61,7 @@ const GameScaler = class {
     const { bounds, gridSize } = this.mapInfo;
     const { playable, full } = gridSize;
 
-    this.pixelsPerTile = 2;
+    this.pixelsPerTile = 4;
 
     // full map image dimensions (used for background image cropping)
     this.fullMapImage = {

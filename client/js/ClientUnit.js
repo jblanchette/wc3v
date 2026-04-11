@@ -12,20 +12,20 @@ const HighlightModes = {
 ////
 
 const IconSizes = {
-  'hero': 26,
-  'secondaryHero': 24,
-  'unit': 22,
-  'worker': 20,
+  'hero': 42,
+  'secondaryHero': 38,
+  'unit': 36,
+  'worker': 32,
   'building': 16,
-  'neutral': 14
+  'neutral': 22
 };
 
-const minimumUnitSize     = 12,
+const minimumUnitSize     = 20,
       minimumBuildingSize = 12,
-      minimumHeroIconSize = 22;
+      minimumHeroIconSize = 36;
 
-const minFontSize         = 8,
-      maxFontSize         = 11;
+const minFontSize         = 13,
+      maxFontSize         = 18;
 
 ////
 // WC3 building placement footprint in tiles.
@@ -706,9 +706,9 @@ const ClientUnit = class {
   }
 
   renderLevelPins (ctx, transform, gameTime, xScale, yScale, viewOptions, frameData) {
-    const diamondSize = 14;
-    const iconSize = 22;
-    const proximityThreshold = diamondSize + 30;
+    const diamondSize = 22;
+    const iconSize = 36;
+    const proximityThreshold = diamondSize + 48;
     const unitPositions = frameData ? frameData.unitDrawPositions : [];
 
     this.levelStream.some(levelRecord => {
@@ -731,7 +731,7 @@ const ClientUnit = class {
       // outer glow ring
       ctx.globalAlpha = 0.3 * pinAlpha;
       ctx.beginPath();
-      ctx.arc(drawX, drawY, diamondSize + 4, 0, Math.PI * 2);
+      ctx.arc(drawX, drawY, diamondSize + 7, 0, Math.PI * 2);
       ctx.fillStyle = this.playerColor;
       ctx.fill();
 
@@ -753,14 +753,14 @@ const ClientUnit = class {
       const badgeX = drawX + diamondSize;
       const badgeY = drawY + diamondSize;
       ctx.beginPath();
-      ctx.arc(badgeX, badgeY, 8, 0, Math.PI * 2);
+      ctx.arc(badgeX, badgeY, 13, 0, Math.PI * 2);
       ctx.fillStyle = '#111';
       ctx.fill();
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 2.5;
       ctx.strokeStyle = this.playerColor;
       ctx.stroke();
 
-      ctx.font = 'bold 10px Arial';
+      ctx.font = 'bold 16px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#FFF';

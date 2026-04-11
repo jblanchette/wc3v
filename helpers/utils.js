@@ -469,10 +469,18 @@ const assignCampOrder = (world, wc3vPlayers) => {
     return acc;
   }, []);
 
+  //
+  // assign per-team ordering. each team gets its own sequential numbering
+  // for every camp they participated in (cleared or contested).
+  // stored in camp.teamOrders = { [teamId]: orderNumber }
+  //
   teamList.forEach(teamId => {
+    // include any camp where this team has timeClaimed > 0
     const orderedCamps = Object.values(world.neutralGroups)
       .filter(camp => {
-        return camp.claimOwnerId != null && +camp.claimOwnerId == +teamId;
+        if (!camp.claimers) return false;
+        const teamClaim = camp.claimers[teamId];
+        return teamClaim && teamClaim.timeClaimed > 0;
       })
       .sort((a, b) => {
         return a.claimTime - b.claimTime;
@@ -481,8 +489,16 @@ const assignCampOrder = (world, wc3vPlayers) => {
     const heroMap = {};
 
     orderedCamps.forEach((camp, ind) => {
-      camp.order = (ind + 1);
-      camp.xpSnapshot = {};
+      // per-team order stored in teamOrders map
+      if (!camp.teamOrders) camp.teamOrders = {};
+      camp.teamOrders[teamId] = (ind + 1);
+
+      // also set camp.order to the owner's order for backward compat
+      if (+camp.claimOwnerId === +teamId) {
+        camp.order = (ind + 1);
+      }
+
+      camp.xpSnapshot = camp.xpSnapshot || {};
 
       if (!camp.heroStats) {
         return;
@@ -495,13 +511,10 @@ const assignCampOrder = (world, wc3vPlayers) => {
           heroMap[uuid] = 0;
         }
 
-        // save in our snapshot for this camp
         camp.xpSnapshot[uuid] = heroMap[uuid];
-
-        // continue with the sum
         heroMap[uuid] += hero.total;
       });
-    });  
+    });
   });
 }
 
@@ -644,6 +657,7 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
         tierStream,
         researchStream,
         ...(player.itemStream ? { itemStream: player.itemStream } : {}),
+        ...(player.apmData ? { apmData: player.apmData } : {}),
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit()).concat(
           (player.destroyedSummons || [])

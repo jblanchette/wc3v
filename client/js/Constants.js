@@ -111,6 +111,23 @@ const ATTACK_TYPES = {
   chaos:  { label: 'Chaos',   icon: '/assets/wc3icons/atk-chaos.jpg' },
 };
 
+// WC3 TFT damage multiplier matrix: DAMAGE_MATRIX[attackType][armorType] = multiplier
+// Source: Warcraft III game data (w3a combat tables)
+const DAMAGE_MATRIX = {
+  normal: { light: 1.0,  medium: 1.5,  heavy: 1.0,  fortified: 0.7,  hero: 1.0,  unarmored: 1.0  },
+  pierce: { light: 2.0,  medium: 0.75, heavy: 1.0,  fortified: 0.35, hero: 0.5,  unarmored: 1.5  },
+  siege:  { light: 1.0,  medium: 0.5,  heavy: 1.0,  fortified: 1.5,  hero: 0.5,  unarmored: 1.5  },
+  magic:  { light: 1.25, medium: 0.75, heavy: 2.0,  fortified: 0.35, hero: 0.5,  unarmored: 1.5  },
+  chaos:  { light: 1.0,  medium: 1.0,  heavy: 1.0,  fortified: 1.0,  hero: 1.0,  unarmored: 1.0  },
+  hero:   { light: 1.0,  medium: 1.0,  heavy: 1.0,  fortified: 0.5,  hero: 1.0,  unarmored: 1.0  }
+};
+
+// Map internal armor type keys to DAMAGE_MATRIX keys
+const ARMOR_MATRIX_KEY = {
+  small: 'light', medium: 'medium', large: 'heavy',
+  none: 'unarmored', hero: 'hero', fort: 'fortified', divine: 'hero'
+};
+
 const formatGameTime = (gameTime) => {
   const timerDate = new Date(Math.round(gameTime * 1000) / 1000);
   const gameSecondsPrefix = timerDate.getUTCSeconds() < 10 ? '0' : '';

@@ -15,8 +15,8 @@ function _getCargoIcon (itemId) {
 
 const Drawing = class {
 
-  static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 10, fontSize = 10) {
-    const padding = 4;
+  static drawBoxedLevel (ctx, textStr, boxX, boxY, boxWidth, boxHeight, size = 16, fontSize = 16) {
+    const padding = 7;
     const drawX = (boxX + boxWidth) - size - padding;
     const drawY = (boxY + boxHeight) - size - padding;
 
@@ -27,20 +27,20 @@ const Drawing = class {
 
     ctx.fillStyle = "#000";
     ctx.font = `${fontSize}px Arial`;
-    ctx.fillText(textStr, drawX + 3, drawY + size - 1.5);
+    ctx.fillText(textStr, drawX + 5, drawY + size - 1.5);
 
     ctx.strokeStyle = "#FFF";
   }
 
   static drawCampOrderBadge (ctx, order, centerX, centerY, teamColor, scale) {
-    const radius = Math.max(9, 11 * scale);
-    const fontSize = Math.max(9, 11 * scale);
+    const radius = Math.max(15, 18 * scale);
+    const fontSize = Math.max(15, 18 * scale);
 
     // outer glow ring
     ctx.save();
     ctx.globalAlpha = 0.35;
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + 3, 0, Math.PI * 2);
+    ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
     ctx.fillStyle = teamColor || '#FFF';
     ctx.fill();
 
@@ -50,7 +50,7 @@ const Drawing = class {
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.fillStyle = '#111';
     ctx.fill();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.strokeStyle = teamColor || '#FFF';
     ctx.stroke();
 
@@ -76,7 +76,7 @@ const Drawing = class {
     ctx.closePath();
     ctx.fillStyle = fillColor;
     ctx.fill();
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2.5;
     ctx.strokeStyle = strokeColor;
     ctx.stroke();
   }
@@ -137,17 +137,17 @@ const Drawing = class {
 
     // Transport outer ring
     if (unit.isTransport) {
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.strokeStyle = playerColor || "#FFFC01";
       ctx.beginPath();
-      ctx.arc(drawX, drawY, halfIconSize + 4, 0, Math.PI * 2, true);
+      ctx.arc(drawX, drawY, halfIconSize + 7, 0, Math.PI * 2, true);
       ctx.stroke();
       ctx.lineWidth = 1;
     }
 
     ctx.fillStyle = playerColor;
     ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize + 2, 0, Math.PI * 2, true);
+    ctx.arc(drawX, drawY, halfIconSize + 3, 0, Math.PI * 2, true);
     ctx.fill();
     ctx.fillStyle = "#000";
 
@@ -161,8 +161,8 @@ const Drawing = class {
     if (unit.isTransport && unit.cargoItems && unit.cargoItems.length) {
       const items = unit.cargoItems;
       const count = items.length;
-      const orbitR = halfIconSize + 12;
-      const cargoIconSize = 13;
+      const orbitR = halfIconSize + 20;
+      const cargoIconSize = 21;
       const cargoHalf = cargoIconSize / 2;
       // Start from top (-π/2), distribute evenly
       const angleStep = (Math.PI * 2) / Math.max(count, 1);
@@ -179,7 +179,7 @@ const Drawing = class {
         // Dark circle background
         ctx.fillStyle = '#000000';
         ctx.beginPath();
-        ctx.arc(cx, cy, cargoHalf + 2, 0, Math.PI * 2);
+        ctx.arc(cx, cy, cargoHalf + 3, 0, Math.PI * 2);
         ctx.fill();
 
         // Draw circular icon
@@ -214,19 +214,19 @@ const Drawing = class {
 
   static drawCountBadge (ctx, count, centerX, centerY, playerColor) {
     if (count < 2) return;
-    const radius = 7;
+    const radius = 11;
     ctx.save();
     ctx.globalAlpha = 0.9;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
     ctx.fillStyle = '#111';
     ctx.fill();
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 2.5;
     ctx.strokeStyle = playerColor || '#FFF';
     ctx.stroke();
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#FFF';
-    ctx.font = 'bold 9px Arial';
+    ctx.font = 'bold 15px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(count, centerX, centerY + 0.5);

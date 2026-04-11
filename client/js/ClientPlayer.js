@@ -23,7 +23,7 @@ const TeamColors = {
 };
 
 const ClientPlayer = class {
-  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer, eventStream, itemStream) {
+  constructor (slot, teamColor, playerId, startingPosition, units, displayName, race, selectionStream, tierStream, playerColor, isNeutralPlayer, eventStream, itemStream, apmData) {
     this.slot = slot;
     this.teamColor = teamColor;
     this.playerId = playerId;
@@ -36,6 +36,7 @@ const ClientPlayer = class {
     this.isNeutralPlayer = isNeutralPlayer;
     this.eventStream = eventStream;
     this.itemStream = itemStream || null;
+    this.apmData = apmData || null;
 
     this.assetsLoaded = false;
     this.tab = StatusTabs.heroes;
@@ -894,14 +895,14 @@ const ClientPlayer = class {
       // scout label badge below the unit icon
       if (unitBox.scoutLabel) {
         const lx = unitBox.drawX;
-        const ly = unitBox.drawY + unitBox.halfIconSize + 10;
+        const ly = unitBox.drawY + unitBox.halfIconSize + 16;
         ctx.globalAlpha = Math.max(unitBox.decayLevel, 0.5);
-        ctx.font = 'bold 8px sans-serif';
+        ctx.font = 'bold 13px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const tw = ctx.measureText(unitBox.scoutLabel).width + 6;
-        const th = 11;
+        const tw = ctx.measureText(unitBox.scoutLabel).width + 10;
+        const th = 18;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(lx - tw / 2, ly - th / 2, tw, th);
 
@@ -1417,15 +1418,15 @@ const ClientPlayer = class {
       nameplateTree.insert(placedBox);
 
       // draw rounded background
-      const padX = 4;
-      const padY = 2;
+      const padX = 7;
+      const padY = 3;
       const textW = maxX - minX;
       const textH = fontSize;
       const bgX = drawX - (textW / 2) - padX;
       const bgY = drawY - textH - padY;
       const bgW = textW + padX * 2;
       const bgH = textH + padY * 2;
-      const radius = 3;
+      const radius = 5;
 
       ctx.globalAlpha = bgAlpha;
       ctx.fillStyle = '#111';
@@ -1462,7 +1463,7 @@ const ClientPlayer = class {
 
   render (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
     ////
-    // render player status 
+    // render player status
     ////
 
     this.renderPlayerIcon(

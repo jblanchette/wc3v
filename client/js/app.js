@@ -108,8 +108,12 @@ const Wc3vViewer = class {
     this.utilityCanvas = null;
     this.utilityCtx = null;
 
+    if (this.unitsProductionPanel) this.unitsProductionPanel.destroy();
+    this.unitsProductionPanel = new window.UnitsProductionPanel(this);
+
     this.floatingText = new window.FloatingText();
     this.placementViewer = new window.BuildingPlacementViewer();
+    this.matchSummary = new window.MatchSummary(this);
 
     if (this.chapterMarkers) this.chapterMarkers.destroy();
 
@@ -596,7 +600,7 @@ const Wc3vViewer = class {
         const { position, scale } = tree;
         const drawX = xScale(position.x) + middleX;
         const drawY = yScale(position.y) + middleY;
-        const radius = 8 * scale[0];
+        const radius = 12 * scale[0];
 
         const cellX = Math.floor(drawX / TREE_CELL);
         const cellY = Math.floor(drawY / TREE_CELL);
@@ -870,6 +874,11 @@ const Wc3vViewer = class {
     if (el) el.style.display = 'none';
   }
 
+  showMatchSummary () {
+    if (!this.gameLoaded || !this.matchSummary) return;
+    this.matchSummary.show();
+  }
+
   setLayoutMode (mode) {
     if (mode === 'default') {
       this.layoutMode = LayoutMode.liveBuildOrder;
@@ -1064,12 +1073,6 @@ const Wc3vViewer = class {
     // player-status-toggles + player boxes
     this.playerStatusCanvas.height = 50 + (this.players.length * 140);
 
-    // this.playerStatusCanvas.addEventListener('mousemove', (e) => {
-    //   this.players.forEach(player => {
-    //     player.handleStatusMouse(e);
-    //   });
-    // });
-
     this.playerStatusCtx.lineWidth = 1;
     this.playerStatusCtx.fillStyle = "#29373E";
     this.playerStatusCtx.strokeStyle = "#FFF";
@@ -1089,6 +1092,7 @@ const Wc3vViewer = class {
     .then(() => { return this.loadWalkmap(); })
     .then(() => { return this.loadNeutralBuildings(); })
     .then(() => { return this.loadGridFile(); })
+    .then(() => { return this.loadUnitBalance(); })
     .then(playerLoadedPromiseList)
     .then(() => {
       this.setupDrawing();
@@ -1098,6 +1102,7 @@ const Wc3vViewer = class {
       this.chapterMarkers = new ChapterMarkers(this);
       this.matchHeader = new MatchHeader(this);
       this.placementViewer.setup();
+      this.matchSummary.setup();
       this.setupBuildOrder();
       this.matchHeader.render();
 
@@ -1110,10 +1115,24 @@ const Wc3vViewer = class {
 
       this.timelineSpline.observeResize();
 
+      this.unitsProductionPanel.setup(this.players);
+
       this.applyLayoutMode();
 
       this.render();
     });
+  }
+
+  loadUnitBalance () {
+    if (this.unitBalance) return Promise.resolve();
+    return fetch('/data/unit-balance-lite.json')
+      .then(res => res.json())
+      .then(data => {
+        this.unitBalance = data;
+      })
+      .catch(() => {
+        this.unitBalance = {};
+      });
   }
 
   setupBuildOrder () {
@@ -1234,6 +1253,7 @@ const Wc3vViewer = class {
         eventStream,
         tierStream,
         itemStream,
+        apmData,
         teamId,
         isNeutralPlayer
       } = this.mapData.players[playerId];
@@ -1258,7 +1278,8 @@ const Wc3vViewer = class {
         this.playerColorMap[index],
         isNeutralPlayer,
         eventStream,
-        itemStream
+        itemStream,
+        apmData
       );
 
       this.assignedPlayerColors[playerId] = this.playerColorMap[index];
@@ -1550,12 +1571,12 @@ const Wc3vViewer = class {
     const timeText = formatGameTime(gameTime);
     const isPlaying = state === ScrubStates.playing;
 
-    const pillH    = 32;
-    const pillPadX = 14;
-    const iconSize = 14;
-    const iconGap  = 7;
-    const fontSize = 16;
-    const topY     = 12;
+    const pillH    = 52;
+    const pillPadX = 22;
+    const iconSize = 22;
+    const iconGap  = 11;
+    const fontSize = 26;
+    const topY     = 20;
 
     playerCtx.save();
     playerCtx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1843,6 +1864,10 @@ const Wc3vViewer = class {
     this.scrubber.render(gameTime, matchEndTime);
 
     this.boRenderer.updateLiveBoHighlight();
+
+    if (this.unitsProductionPanel) {
+      this.unitsProductionPanel.update(gameTime);
+    }
   }
 
   debugPathingDump () {

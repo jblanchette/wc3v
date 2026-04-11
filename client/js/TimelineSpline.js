@@ -87,12 +87,12 @@ const TimelineSpline = class {
     // Draw spine (with glow)
     this._renderSpine(spineX, controlPoints);
 
-    // Draw time markers
+    // Draw connector arms with arrow nodes (before time markers so labels sit on top)
+    this._renderConnectors(anchors, spineX, controlPoints);
+
+    // Draw time markers last so label pills are never occluded
     const maxTime = Math.max(...anchors.map(a => a.gameTime));
     this._renderTimeMarkers(spineX, controlPoints, maxTime);
-
-    // Draw connector arms with arrow nodes
-    this._renderConnectors(anchors, spineX, controlPoints);
   }
 
   /**
@@ -272,9 +272,9 @@ const TimelineSpline = class {
       const label = minutes + ':' + (sec < 10 ? '0' : '') + sec;
 
       if (is10Min) {
-        // ── 10-minute: wide background bar + bold label + diamond + ring ──
+        // ── 10-minute: wide background bar + bold label pill + diamond + ring ──
         this._svgRect(spineX - 26, y - 2, 52, 4, 0, 'bo-tick-bar-10m');
-        this._svgRect(spineX - 24, y - 14, 48, 12, 4, 'bo-time-label-bg-10m');
+        this._svgRect(spineX - 28, y - 17, 56, 18, 5, 'bo-time-label-bg-10m');
         const text = this._svgText(spineX, y - 5, label, 'bo-time-label-10m');
         text.setAttribute('text-anchor', 'middle');
         this._svgDiamond(spineX, y, 8, 'bo-marker-10m');
@@ -283,11 +283,11 @@ const TimelineSpline = class {
         lastMinuteLabelY = y;
 
       } else if (is5Min) {
-        // ── 5-minute: background bar + label + diamond ──
+        // ── 5-minute: background bar + label pill + diamond ──
         this._svgRect(spineX - 22, y - 1.5, 44, 3, 0, 'bo-tick-bar-5m');
         if (y - lastMajorLabelY > 30) {
-          this._svgRect(spineX - 20, y - 13, 40, 12, 3, 'bo-time-label-bg-5m');
-          const text = this._svgText(spineX, y - 4, label, 'bo-time-label-5m');
+          this._svgRect(spineX - 24, y - 16, 48, 16, 4, 'bo-time-label-bg-5m');
+          const text = this._svgText(spineX, y - 5, label, 'bo-time-label-5m');
           text.setAttribute('text-anchor', 'middle');
           lastMajorLabelY = y;
         }
@@ -295,12 +295,12 @@ const TimelineSpline = class {
         lastMinuteLabelY = y;
 
       } else if (isMinute) {
-        // ── 1-minute: visible tick + small label ──
+        // ── 1-minute: visible tick + label pill ──
         this._svgLine(spineX - 12, y, spineX + 12, y, 'bo-tick-1m');
         this._svgCircle(spineX, y, 3, 'bo-marker-1m');
         if (y - lastMinuteLabelY > 22) {
-          this._svgRect(spineX - 16, y - 12, 32, 11, 3, 'bo-time-label-bg-1m');
-          const text = this._svgText(spineX, y - 3.5, label, 'bo-time-label-1m');
+          this._svgRect(spineX - 20, y - 15, 40, 15, 4, 'bo-time-label-bg-1m');
+          const text = this._svgText(spineX, y - 5, label, 'bo-time-label-1m');
           text.setAttribute('text-anchor', 'middle');
           lastMinuteLabelY = y;
         }

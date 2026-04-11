@@ -19,6 +19,8 @@
  *                          items      - item purchases, uses, and summary
  *                          mercs      - mercenary hires and tavern hero purchases
  *                          summary    - compact build order overview
+ *                          camps      - neutral creep camp claim data
+ *                          camps-debug - camp progressive timeline + interval details
  *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
@@ -584,4 +586,163 @@ if (showAll || showSections.includes('basegrid')) {
     console.log(`    cells: ${parts.join(', ')}`);
   }
   console.log('');
+}
+
+// --- APM ---
+if (showAll || showSections.includes('apm')) {
+  console.log('=== APM (Actions Per Minute) ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const apm = pdata.apmData;
+    if (!apm) {
+      console.log(`  Player ${pid}: no APM data (replay may need re-parsing)`);
+      continue;
+    }
+
+    const durationMin = Math.ceil(apm.matchDurationMs / 60000);
+    console.log(`  Player ${pid} (${pdata.race}) — ${durationMin} minute match`);
+    console.log(`    Raw APM:       avg=${apm.raw.average}  peak=${apm.raw.peak}  total=${apm.raw.total}`);
+    console.log(`    Effective APM: avg=${apm.effective.average}  peak=${apm.effective.peak}  total=${apm.effective.total}`);
+
+    // category breakdown
+    const cats = Object.entries(apm.categories).sort((a, b) => b[1] - a[1]);
+    console.log(`    Categories: ${cats.map(([k, v]) => `${k}=${v}`).join(', ')}`);
+
+    // per-minute sparkline
+    if (apm.raw.perMinute && apm.raw.perMinute.length) {
+      const bars = '▁▂▃▄▅▆▇█';
+      const max = apm.raw.peak || 1;
+      const sparkRaw = apm.raw.perMinute.map(v => bars[Math.min(Math.floor((v / max) * 8), 8)]).join('');
+      const sparkEff = apm.effective.perMinute.map(v => bars[Math.min(Math.floor((v / max) * 8), 8)]).join('');
+      console.log(`    Raw APM/min:       ${sparkRaw}`);
+      console.log(`    Effective APM/min: ${sparkEff}`);
+    }
+    console.log('');
+  }
+}
+
+if (showAll || showSections.includes('camps')) {
+  console.log('=== Neutral Creep Camps ===');
+  const groups = (data.world && data.world.neutralGroups) || {};
+  const stateNames = { 0: 'untouched', 1: 'contested', 2: 'cleared', 3: 'partial' };
+
+  const groupList = Object.values(groups).sort((a, b) => {
+    return (a.claimTime || Infinity) - (b.claimTime || Infinity);
+  });
+
+  const limited = groupList.slice(0, limit);
+  console.log(`  Total camps: ${groupList.length} (showing ${limited.length})`);
+
+  const stateCounts = groupList.reduce((acc, g) => {
+    const name = stateNames[g.claimState] || 'unknown';
+    acc[name] = (acc[name] || 0) + 1;
+    return acc;
+  }, {});
+  console.log(`  States: ${Object.entries(stateCounts).map(([k, v]) => `${k}=${v}`).join(', ')}`);
+  console.log('');
+
+  limited.forEach((g, i) => {
+    const state = stateNames[g.claimState] || 'unknown';
+    const units = (g.units || []).map(u => `${u.displayName}(Lv${u.balanceInfo.level})`).join(', ');
+    const timeStr = g.claimTime ? formatTime(g.claimTime) : 'N/A';
+    const completion = g.completionEstimate != null ? `${Math.round(g.completionEstimate * 100)}%` : 'N/A';
+
+    console.log(`  Camp ${i + 1}: Lv${g.totalLevel} [${state}] order=${g.order || '-'} time=${timeStr} completion=${completion} uncontested=${g.uncontested || false}`);
+    console.log(`    Units: ${units}`);
+
+    // contributions
+    if (g.contributions && Object.keys(g.contributions).length) {
+      const contribs = Object.entries(g.contributions).map(([tid, pct]) => `team${tid}=${Math.round(pct * 100)}%`);
+      console.log(`    Contributions: ${contribs.join(', ')}`);
+    }
+
+    // presence intervals
+    if (g.presenceIntervals && g.presenceIntervals.length) {
+      const intervals = g.presenceIntervals.map(iv => {
+        const enter = formatTime(iv.enterTime);
+        const exit = iv.exitTime ? formatTime(iv.exitTime) : '?';
+        return `[${enter}-${exit} team${iv.teamId} p${iv.playerId} ${iv.unitCount}u${iv.hasHero ? ' hero' : ''}]`;
+      });
+      console.log(`    Intervals: ${intervals.join(' ')}`);
+    }
+
+    // XP records
+    if (g.heroClaimRecords && g.heroClaimRecords.length) {
+      const xpStr = g.heroClaimRecords.map(r => `${r.displayName}+${r.xpGained}xp`).join(', ');
+      console.log(`    XP: ${xpStr}`);
+    }
+
+    console.log('');
+  });
+}
+
+if (showSections.includes('camps-debug')) {
+  console.log('=== Neutral Creep Camps — Debug Timeline ===');
+  const groups = (data.world && data.world.neutralGroups) || {};
+  const stateNames = { 0: 'untouched', 1: 'contested', 2: 'cleared', 3: 'partial' };
+
+  const groupList = Object.values(groups).sort((a, b) => {
+    const at = a.progressTimeline && a.progressTimeline.length ? a.progressTimeline[0].gameTime : Infinity;
+    const bt = b.progressTimeline && b.progressTimeline.length ? b.progressTimeline[0].gameTime : Infinity;
+    return at - bt;
+  });
+
+  const limited = groupList.slice(0, limit);
+
+  limited.forEach((g, i) => {
+    const state = stateNames[g.claimState] || 'unknown';
+    const tl = g.progressTimeline || [];
+    const unitNames = (g.units || []).map(u => u.displayName).join(', ');
+
+    const teamOrderStr = g.teamOrders ? Object.entries(g.teamOrders).map(([t, o]) => `t${t}=#${o}`).join(' ') : '';
+    console.log(`  Camp ${i + 1}: Lv${g.totalLevel} [${state}] order=${g.order || '-'} owner=team${g.claimOwnerId} teamOrders=[${teamOrderStr}]`);
+    console.log(`    Units: ${unitNames}`);
+
+    // bounds comparison
+    if (g.unitBounds) {
+      const ub = g.unitBounds;
+      const pb = g.bounds;
+      const ubSize = `${Math.round(ub.maxX - ub.minX)}x${Math.round(ub.maxY - ub.minY)}`;
+      const pbSize = `${Math.round(pb.maxX - pb.minX)}x${Math.round(pb.maxY - pb.minY)}`;
+      console.log(`    unitBounds: ${ubSize} at (${Math.round(ub.minX)},${Math.round(ub.minY)})  paddedBounds: ${pbSize}`);
+    }
+
+    // claimers summary
+    if (g.claimers) {
+      Object.entries(g.claimers).forEach(([tid, c]) => {
+        const unitList = c.players ? Object.values(c.players).reduce((arr, p) => {
+          return arr.concat((p.units || []).map(u => (u.displayName || u.itemId) + (u.isHero ? '*' : '')));
+        }, []) : [];
+        console.log(`    team${tid}: timeClaimed=${Math.round(c.timeClaimed)}ms units=[${unitList.join(', ')}]`);
+      });
+    }
+
+    // presence intervals
+    if (g.presenceIntervals && g.presenceIntervals.length) {
+      console.log(`    Intervals (${g.presenceIntervals.length}):`);
+      g.presenceIntervals.slice(0, 10).forEach(iv => {
+        console.log(`      [${formatTime(iv.enterTime)}-${formatTime(iv.exitTime)} team${iv.teamId} p${iv.playerId} ${iv.unitCount}u${iv.hasHero ? ' HERO' : ''}]`);
+      });
+      if (g.presenceIntervals.length > 10) {
+        console.log(`      ... +${g.presenceIntervals.length - 10} more`);
+      }
+    }
+
+    // progress timeline
+    console.log(`    Timeline (${tl.length} entries):`);
+    tl.slice(0, 8).forEach(s => {
+      const maxP = Math.max(...Object.values(s.teams));
+      const teamStr = Object.entries(s.teams).map(([t, v]) => `t${t}=${(v * 100).toFixed(0)}%`).join(' ');
+      console.log(`      ${formatTime(s.gameTime)} max=${(maxP * 100).toFixed(0)}% ${teamStr}`);
+    });
+    if (tl.length > 8) {
+      const last = tl[tl.length - 1];
+      const lastMax = Math.max(...Object.values(last.teams));
+      console.log(`      ... +${tl.length - 8} more → ${formatTime(last.gameTime)} max=${(lastMax * 100).toFixed(0)}%`);
+    }
+
+    console.log('');
+  });
 }

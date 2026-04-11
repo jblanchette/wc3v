@@ -234,48 +234,91 @@ const GameDisplayBox = class {
     return `<ul class="camp-creep-list">${rows}${moreStr}</ul>`;
   }
 
+  static renderProgressBar (completionEstimate, contributions, teamColorMap) {
+    const pct = Math.round((completionEstimate || 0) * 100);
+    if (pct <= 0) return '';
+
+    // build segments from contributions
+    const teamIds = contributions ? Object.keys(contributions).filter(t => contributions[t] > 0.02) : [];
+    let barInner = '';
+
+    if (teamIds.length > 1) {
+      const total = teamIds.reduce((s, t) => s + contributions[t], 0) || 1;
+      const sorted = teamIds.sort((a, b) => contributions[b] - contributions[a]);
+      barInner = sorted.map(tid => {
+        const segPct = (contributions[tid] / total) * pct;
+        const color = teamColorMap[tid] || '#888';
+        return `<div class="camp-progress-seg" style="width:${segPct.toFixed(1)}%;background:${color}"></div>`;
+      }).join('');
+    } else {
+      const color = teamIds.length ? (teamColorMap[teamIds[0]] || '#888') : '#6a7a90';
+      barInner = `<div class="camp-progress-seg" style="width:${pct}%;background:${color}"></div>`;
+    }
+
+    return `
+      <div class="camp-progress-wrap">
+        <div class="camp-progress-track">${barInner}</div>
+        <span class="camp-progress-label">${pct}%</span>
+      </div>
+    `;
+  }
+
   static renderClaimInfo (rawGroup, teamColorMap, playerColorMap) {
+    const { contributions, completionEstimate, uncontested } = rawGroup;
+    const progressBar = GameDisplayBox.renderProgressBar(completionEstimate, contributions, teamColorMap);
+
+    // state 0: untouched
     if (!rawGroup.claimers || rawGroup.claimState === 0) {
       return `
         <div class="camp-claim-info">
-          <span class="camp-status-tag unclaimed">Unclaimed</span>
+          <span class="camp-status-tag unclaimed">Untouched</span>
         </div>
       `;
     }
 
+    // state 1: contested
     if (rawGroup.claimState === 1) {
+      const timeStr = rawGroup.claimTime ? formatGameTime(rawGroup.claimTime) : '';
+
       return `
         <div class="camp-claim-info">
           <span class="camp-status-tag contested">Contested</span>
+          ${progressBar}
+          ${timeStr ? `<div class="camp-claim-row"><span>Time</span><span class="camp-claim-value">${timeStr}</span></div>` : ''}
         </div>
       `;
     }
 
-    // claimed — collect unique player colors for the owning team only
+    // state 2: cleared
     const playerSquares = [];
     const seenPlayers = new Set();
     const ownerTeamId = +rawGroup.claimOwnerId;
 
-    Object.keys(rawGroup.claimers).forEach(teamId => {
-      if (+teamId !== ownerTeamId) return;
-      const claimPlayers = rawGroup.claimers[teamId].players;
-      if (!claimPlayers) return;
-      Object.keys(claimPlayers).forEach(playerId => {
-        if (seenPlayers.has(playerId)) return;
-        seenPlayers.add(playerId);
-        const color = playerColorMap[playerId];
-        if (color) {
-          playerSquares.push(`<span class="camp-spot-square" style="background-color: ${color}"></span>`);
-        }
+    if (rawGroup.claimers) {
+      Object.keys(rawGroup.claimers).forEach(teamId => {
+        if (+teamId !== ownerTeamId) return;
+        const claimPlayers = rawGroup.claimers[teamId].players;
+        if (!claimPlayers) return;
+        Object.keys(claimPlayers).forEach(playerId => {
+          if (seenPlayers.has(playerId)) return;
+          seenPlayers.add(playerId);
+          const color = playerColorMap[playerId];
+          if (color) {
+            playerSquares.push(`<span class="camp-spot-square" style="background-color: ${color}"></span>`);
+          }
+        });
       });
-    });
+    }
 
     const orderStr = rawGroup.order ? `#${rawGroup.order}` : 'N/A';
     const timeStr = formatGameTime(rawGroup.claimTime);
+    const uncontestedBadge = uncontested ? `<span class="camp-status-tag uncontested">Solo</span>` : '';
 
     return `
       <div class="camp-claim-info">
-        <span class="camp-status-tag claimed">Claimed</span>
+        <span class="camp-status-tag claimed">Cleared</span>
+        ${uncontestedBadge}
+        ${progressBar}
         <div class="camp-claim-row">
           <span>Order</span>
           <span class="camp-claim-value">${orderStr}</span>
@@ -285,7 +328,7 @@ const GameDisplayBox = class {
           <span class="camp-claim-value">${timeStr}</span>
         </div>
         <div class="camp-claim-row">
-          <span>Claimed by</span>
+          <span>Cleared by</span>
           <span class="camp-claim-value">${playerSquares.join(' ')}</span>
         </div>
       </div>
@@ -375,16 +418,17 @@ const GameDisplayBox = class {
 
       // store positions in canvas-space — handleMouse inverse-transforms mouse coords
       const groupBoxes = groups.reduce((acc, group) => {
-        const { bounds } = group;
+        // use tight unitBounds for hover detection
+        const b = group.unitBounds || group.bounds;
 
         const record = {
           rawGroup: group,
 
-          minX: xScale(bounds.minX) + middleX,
-          maxX: xScale(bounds.maxX) + middleX,
+          minX: xScale(b.minX) + middleX,
+          maxX: xScale(b.maxX) + middleX,
 
-          minY: yScale(bounds.maxY) + middleY,
-          maxY: yScale(bounds.minY) + middleY
+          minY: yScale(b.maxY) + middleY,
+          maxY: yScale(b.minY) + middleY
         };
 
         acc.push(record);

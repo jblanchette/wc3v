@@ -41,7 +41,7 @@ const FloatingText = class {
       label: style.label || null,
       labelColor: style.labelColor || style.color || '#FFFFFF',
       borderColor: style.borderColor || null,
-      borderWidth: style.borderWidth || 1.5,
+      borderWidth: style.borderWidth || 2.5,
       bgTint: style.bgTint || null,
       fadeStart: style.fadeStart || 0.65,
       priority: style.priority || 0
@@ -108,7 +108,7 @@ const FloatingText = class {
 
       this.addText(`TIER ${tier.tier}`, pos.x, pos.y, tier.gameTime, {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 26,
         bold: true,
         duration: 7000,
         label: 'UPGRADE',
@@ -239,7 +239,7 @@ const FloatingText = class {
       if (alpha <= 0) return;
 
       const easedProgress = 1 - Math.pow(1 - progress, 2);
-      const floatY = -40 * easedProgress;
+      const floatY = -65 * easedProgress;
 
       const drawX = xScale(entry.x) + wc3v.gameScaler.middleX;
       const drawY = yScale(entry.y) + wc3v.gameScaler.middleY + floatY;
@@ -247,13 +247,13 @@ const FloatingText = class {
       const hasLabel = !!entry.label;
       const hasIcon = entry.icon && entry.icon._loaded;
 
-      const labelFontSize = 10;
+      const labelFontSize = 16;
       const mainWeight = entry.bold ? 'bold ' : '';
       ctx.font = `${mainWeight}${entry.fontSize}px Arial`;
       const mainTextWidth = ctx.measureText(entry.text).width;
 
-      const iconSize = entry.fontSize + 6;
-      const iconGap = 5;
+      const iconSize = entry.fontSize + 10;
+      const iconGap = 8;
       const mainRowWidth = hasIcon ? iconSize + iconGap + mainTextWidth : mainTextWidth;
 
       let labelWidth = 0;
@@ -263,9 +263,9 @@ const FloatingText = class {
       }
 
       const contentWidth = Math.max(mainRowWidth, labelWidth);
-      const padX = 8;
-      const padY = hasLabel ? 5 : 4;
-      const labelGap = hasLabel ? 2 : 0;
+      const padX = 13;
+      const padY = hasLabel ? 8 : 7;
+      const labelGap = hasLabel ? 3 : 0;
       const labelHeight = hasLabel ? labelFontSize + 2 : 0;
       const mainHeight = entry.fontSize;
 
@@ -284,7 +284,7 @@ const FloatingText = class {
     placements.sort((a, b) => b.priority - a.priority);
 
     const placed = [];
-    const nudgeGap = 4;
+    const nudgeGap = 7;
 
     placements.forEach(p => {
       const box = {
@@ -313,7 +313,7 @@ const FloatingText = class {
 
       const bgX = drawX - bgW / 2;
       const bgY = drawY - bgH / 2;
-      const radius = 4;
+      const radius = 7;
 
       // dark background pill
       ctx.globalAlpha = Math.max(0, alpha * 0.65);
@@ -393,9 +393,9 @@ FloatingText.EVENT_STYLES = {
     color: '#FFD700',
     labelColor: '#FFD700',
     borderColor: '#FFD700',
-    borderWidth: 2,
+    borderWidth: 3,
     bgTint: '#FFD700',
-    fontSize: 14,
+    fontSize: 22,
     bold: true,
     duration: 6500,
     fadeStart: 0.70,
@@ -407,7 +407,7 @@ FloatingText.EVENT_STYLES = {
     color: '#00FF88',
     labelColor: '#00DD77',
     borderColor: '#00FF88',
-    fontSize: 14,
+    fontSize: 22,
     bold: true,
     duration: 5500,
     fadeStart: 0.65,
@@ -419,7 +419,7 @@ FloatingText.EVENT_STYLES = {
     color: '#FFD700',
     labelColor: '#DDAA00',
     borderColor: '#FFD700',
-    fontSize: 14,
+    fontSize: 22,
     bold: true,
     duration: 6500,
     fadeStart: 0.70,
@@ -432,7 +432,7 @@ FloatingText.EVENT_STYLES = {
     color: '#88CCFF',
     labelColor: '#6699CC',
     borderColor: '#88CCFF',
-    fontSize: 13,
+    fontSize: 21,
     bold: true,
     duration: 5000,
     fadeStart: 0.65,
@@ -449,7 +449,7 @@ FloatingText.EVENT_STYLES = {
     color: '#BB88FF',
     labelColor: '#9966DD',
     borderColor: '#BB88FF',
-    fontSize: 12,
+    fontSize: 20,
     bold: false,
     duration: 5500,
     fadeStart: 0.65,
@@ -462,7 +462,7 @@ FloatingText.EVENT_STYLES = {
     color: '#FFAA44',
     labelColor: '#CC8833',
     borderColor: '#FFAA44',
-    fontSize: 12,
+    fontSize: 20,
     bold: false,
     duration: 3500,
     fadeStart: 0.60,
@@ -475,7 +475,7 @@ FloatingText.EVENT_STYLES = {
     color: '#FFD700',
     labelColor: '#DDAA00',
     borderColor: '#FFD700',
-    fontSize: 13,
+    fontSize: 21,
     bold: true,
     duration: 5000,
     fadeStart: 0.65,
@@ -491,7 +491,7 @@ FloatingText.EVENT_STYLES = {
     color: '#44DDAA',
     labelColor: '#33AA88',
     borderColor: '#44DDAA',
-    fontSize: 12,
+    fontSize: 20,
     bold: false,
     duration: 3500,
     fadeStart: 0.60,
@@ -504,7 +504,7 @@ FloatingText.EVENT_STYLES = {
     color: '#44DD88',
     labelColor: '#33AA66',
     borderColor: '#44DD88',
-    fontSize: 12,
+    fontSize: 20,
     bold: false,
     duration: 4500,
     fadeStart: 0.60,
@@ -521,7 +521,7 @@ FloatingText.EVENT_STYLES = {
     color: '#AADDFF',
     labelColor: '#88BBDD',
     borderColor: '#AADDFF',
-    fontSize: 12,
+    fontSize: 20,
     bold: false,
     duration: 3500,
     fadeStart: 0.55,
@@ -537,7 +537,7 @@ FloatingText.EVENT_STYLES = {
     color: '#DDAA44',
     labelColor: '#BB8833',
     borderColor: '#DDAA44',
-    fontSize: 11,
+    fontSize: 18,
     bold: false,
     duration: 3000,
     fadeStart: 0.55,
@@ -550,7 +550,7 @@ FloatingText.EVENT_STYLES = {
     color: '#FF8844',
     labelColor: '#CC6633',
     borderColor: '#FF8844',
-    fontSize: 13,
+    fontSize: 21,
     bold: true,
     duration: 5000,
     fadeStart: 0.60,
@@ -563,7 +563,7 @@ FloatingText.EVENT_STYLES = {
     color: '#FFD700',
     labelColor: '#DDAA00',
     borderColor: '#FFD700',
-    fontSize: 14,
+    fontSize: 22,
     bold: true,
     duration: 6000,
     fadeStart: 0.65,
@@ -576,7 +576,7 @@ FloatingText.EVENT_STYLES = {
     color: '#88AADD',
     labelColor: '#6688BB',
     borderColor: '#88AADD',
-    fontSize: 11,
+    fontSize: 18,
     bold: false,
     duration: 3000,
     fadeStart: 0.55,
@@ -589,7 +589,7 @@ FloatingText.EVENT_STYLES = {
     color: '#88DDAA',
     labelColor: '#66BB88',
     borderColor: '#88DDAA',
-    fontSize: 11,
+    fontSize: 18,
     bold: false,
     duration: 3000,
     fadeStart: 0.55,
@@ -606,7 +606,7 @@ FloatingText.EVENT_STYLES = {
     color: '#44DDBB',
     labelColor: '#33AA99',
     borderColor: '#44DDBB',
-    fontSize: 12,
+    fontSize: 20,
     bold: true,
     duration: 5000,
     fadeStart: 0.60,

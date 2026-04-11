@@ -121,6 +121,24 @@ const MapRenderer = class {
     ctx.globalAlpha = oldAlpha;
   }
 
+  // binary search: find the latest snapshot where gameTime <= target
+  _findProgress (timeline, gameTime) {
+    if (!timeline || !timeline.length) return null;
+    if (gameTime < timeline[0].gameTime) return null;
+    if (gameTime >= timeline[timeline.length - 1].gameTime) return timeline[timeline.length - 1];
+
+    let lo = 0, hi = timeline.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (timeline[mid].gameTime <= gameTime) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    return timeline[lo];
+  }
+
   // Note: this method mutates neutralGroup.isHidden and unit.isNeutralGroupHidden
   // on the data objects passed via mapData and players (by-reference side effects).
   renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid) {
@@ -133,57 +151,56 @@ const MapRenderer = class {
       yScale
     } = gameScaler;
 
-    const campColorMap = {
-      0: '#FFF',
-      1: '#eaff00'
-    };
-
-    const iconSize = 14;
-
-    const oldFillStyle = ctx.fillStyle;
-    const oldAlpha = ctx.globalAlpha;
-    const oldWidth = ctx.lineWidith;
-
-    ctx.fillStyle = "#FFF";
-    ctx.strokeStyle = "#FFF";
-    ctx.globalAlpha = 0.55;
-    ctx.lineWidth = 2.5;
+    ctx.save();
 
     const neutralPlayer = players.find(player => {
       return player.playerId === "1042";
     });
 
     if (!neutralPlayer) {
+      ctx.restore();
       return;
     }
 
+    const PI2 = Math.PI * 2;
+    const START_ANGLE = -Math.PI / 2; // 12 o'clock
+    const RING_PAD = 4;
+
     const groups = Object.values(world.neutralGroups);
-    const claimPaths = groups.reduce((acc, group) => {
-      if (group.claimOwnerId == null) {
-        return acc;
-      }
+    const claimPaths = {};
 
-      acc[group.claimOwnerId] = [];
+    groups.forEach((neutralGroup) => {
+      const {
+        claimState, claimTime, claimOwnerId, uuid, order,
+        teamOrders, progressTimeline
+      } = neutralGroup;
 
-      return acc;
-    }, {});
+      // use tight unitBounds for rendering (falls back to padded bounds)
+      const b = neutralGroup.unitBounds || neutralGroup.bounds;
 
-    groups.forEach((neutralGroup, campNumber) => {
-      const { bounds, claimState, claimTime, claimOwnerId, uuid, order } = neutralGroup;
+      const rectWidth = (xScale(b.maxX) - xScale(b.minX));
+      const rectHeight = (yScale(b.maxY) - yScale(b.minY));
+      const drawX = xScale(b.minX) + middleX;
+      const drawY = yScale(b.minY) + middleY;
 
-      const rectWidth = (xScale(bounds.maxX) - xScale(bounds.minX));
-      const rectHeight = (yScale(bounds.maxY) - yScale(bounds.minY));
+      // ring geometry
+      const centerX = drawX + rectWidth / 2;
+      const centerY = drawY + rectHeight / 2;
+      const radius = Math.max(rectWidth, rectHeight) / 2 + RING_PAD;
 
-      const drawX = xScale(bounds.minX) + middleX;
-      const drawY = yScale(bounds.minY) + middleY;
+      // look up current progress from timeline
+      const snapshot = this._findProgress(progressTimeline, gameTime);
+      const currentTeams = snapshot ? snapshot.teams : null;
+      const maxProgress = currentTeams
+        ? Math.max(...Object.values(currentTeams))
+        : 0;
 
-      let claimColor = '#FFF';
-      let claimColorFill = null;
+      const hasCampProgress = maxProgress > 0.02;
+      const isCleared = maxProgress >= 0.85;
 
-      if (claimTime != null && gameTime >= claimTime) {
-
+      // hide neutral units once any team has interacted with the camp
+      if (hasCampProgress) {
         if (!neutralGroup.isHidden) {
-          // hide the units from rendering now that its been claimed
           neutralGroup.isHidden = true;
           neutralPlayer.units.forEach(unit => {
             if (unit.neutralGroupId === uuid) {
@@ -191,26 +208,7 @@ const MapRenderer = class {
             }
           });
         }
-
-        if (claimState == 1) {
-          claimColor = campColorMap[claimState];
-          claimColorFill = campColorMap[claimState];
-        }
-
-        if (claimState > 1) {
-          claimColor = teamColorMap[claimOwnerId];
-          claimColorFill = teamColorMap[claimOwnerId];
-
-          claimPaths[claimOwnerId].push({
-            claimTime,
-            drawX,
-            drawY,
-            rectWidth,
-            rectHeight
-          });
-        }
       } else if (neutralGroup.isHidden) {
-        // unhide units when scrubbing backward before claim time
         neutralGroup.isHidden = false;
         neutralPlayer.units.forEach(unit => {
           if (unit.neutralGroupId === uuid) {
@@ -219,69 +217,155 @@ const MapRenderer = class {
         });
       }
 
+      // collect route paths — add to each team that has progress
+      if (hasCampProgress && claimTime != null && gameTime >= claimTime && currentTeams) {
+        Object.entries(currentTeams).forEach(([teamId, progress]) => {
+          if (progress <= 0.005) return;
+          if (!claimPaths[teamId]) {
+            claimPaths[teamId] = [];
+          }
+          claimPaths[teamId].push({ claimTime, drawX, drawY, rectWidth, rectHeight });
+        });
+      }
+
       const isHovered = (uuid === hoveredCampUuid);
 
-      if (isHovered) {
-        ctx.globalAlpha = 0.9;
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = '#FFF';
-      } else {
-        ctx.strokeStyle = claimColor;
-        if (claimColorFill) {
-          ctx.globalAlpha = 0.8;
+      if (maxProgress > 0.02 && currentTeams) {
+        //
+        // camp has been interacted with — solid fill
+        //
+        const teamsWithProgress = Object.entries(currentTeams)
+          .filter(([, v]) => v > 0.005)
+          .sort((a, b) => b[1] - a[1]);
+
+        if (teamsWithProgress.length === 1) {
+          // single team: solid filled circle
+          const color = teamColorMap[teamsWithProgress[0][0]] || '#FFF';
+
+          // black border
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius + 2, 0, PI2);
+          ctx.fillStyle = '#000';
+          ctx.globalAlpha = 0.7;
+          ctx.fill();
+
+          // team color fill
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius, 0, PI2);
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.75;
+          ctx.fill();
+        } else {
+          // multiple teams: equal split wedges
+          const wedgeAngle = PI2 / teamsWithProgress.length;
+
+          // black border behind
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, radius + 2, 0, PI2);
+          ctx.fillStyle = '#000';
+          ctx.globalAlpha = 0.7;
+          ctx.fill();
+
+          let angle = START_ANGLE;
+          teamsWithProgress.forEach(([teamId]) => {
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, angle, angle + wedgeAngle);
+            ctx.closePath();
+            ctx.fillStyle = teamColorMap[teamId] || '#FFF';
+            ctx.globalAlpha = 0.75;
+            ctx.fill();
+            angle += wedgeAngle;
+          });
+
+          // divider lines between wedges
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 0.6;
+          angle = START_ANGLE;
+          for (let i = 0; i < teamsWithProgress.length; i++) {
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(
+              centerX + Math.cos(angle) * radius,
+              centerY + Math.sin(angle) * radius
+            );
+            ctx.stroke();
+            angle += wedgeAngle;
+          }
         }
+
+        // white outline on top
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, PI2);
+        ctx.strokeStyle = isHovered ? '#FFF' : 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = isHovered ? 3 : 1.5;
+        ctx.globalAlpha = isHovered ? 0.9 : 0.6;
+        ctx.stroke();
+
+      } else {
+        // untouched: thin white circle
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, PI2);
+        ctx.strokeStyle = '#FFF';
+        ctx.lineWidth = isHovered ? 3 : 1.5;
+        ctx.globalAlpha = isHovered ? 0.8 : 0.35;
+        ctx.stroke();
       }
 
-      ctx.beginPath();
-      ctx.strokeRect(drawX, drawY, rectWidth, rectHeight);
-      if (claimColorFill) {
-        ctx.fillStyle = claimColorFill;
-        ctx.fillRect(drawX, drawY, rectWidth, rectHeight);
-      }
-      ctx.fill();
-      ctx.stroke();
+      // camp order badges — one per team that participated
+      if (maxProgress > 0.02 && claimTime != null && gameTime >= claimTime && teamOrders) {
+        const teamIds = Object.keys(teamOrders);
+        teamIds.forEach((tid, idx) => {
+          const teamOrder = teamOrders[tid];
+          if (!teamOrder) return;
 
-      if (isHovered || claimColorFill) {
-        ctx.globalAlpha = 0.55;
-        ctx.lineWidth = 2.5;
-      }
-
-      if (claimState > 0 && claimColorFill && order) {
-        const badgeX = drawX + rectWidth + 4;
-        const badgeY = drawY + rectHeight + 4;
-        const badgeColor = (claimState > 1) ? teamColorMap[claimOwnerId] : '#eaff00';
-        Drawing.drawCampOrderBadge(ctx, `${order}`, badgeX, badgeY, badgeColor, 1);
+          // position badges around the circle edge, spaced apart for multi-team
+          const baseAngle = Math.PI / 4;
+          const angleOffset = teamIds.length > 1 ? (idx - 0.5) * 0.6 : 0;
+          const badgeAngle = baseAngle + angleOffset;
+          const badgeX = centerX + Math.cos(badgeAngle) * (radius + 12);
+          const badgeY = centerY + Math.sin(badgeAngle) * (radius + 12);
+          const badgeColor = teamColorMap[tid] || '#FFF';
+          Drawing.drawCampOrderBadge(ctx, `${teamOrder}`, badgeX, badgeY, badgeColor, teamIds.length > 1 ? 0.8 : 1);
+        });
       }
     });
 
+    // creep route lines
     if (!viewOptions.displayCreepRoute) {
+      ctx.restore();
       return;
     }
 
-    ctx.beginPath();
     Object.keys(claimPaths).forEach(teamClaimId => {
       const claimPath = claimPaths[teamClaimId].sort((a, b) => {
         return a.claimTime - b.claimTime;
-      })
-
-      claimPath.forEach((step, ind) => {
-        const midX = (step.drawX + (step.rectWidth / 2));
-        const midY = (step.drawY + (step.rectHeight / 2));
-
-        if (ind == 0) {
-          ctx.moveTo(midX, midY);
-
-          return;
-        }
-
-        ctx.lineTo(midX, midY);
       });
-    });
-    ctx.stroke();
 
-    ctx.fillStyle = oldFillStyle;
-    ctx.globalAlpha = oldAlpha;
-    ctx.lineWidth = oldWidth;
+      ctx.strokeStyle = teamColorMap[teamClaimId] || '#FFF';
+      ctx.lineWidth = 2.5;
+      ctx.globalAlpha = 0.7;
+      ctx.setLineDash([]);
+
+      for (let i = 1; i < claimPath.length; i++) {
+        const prev = claimPath[i - 1];
+        const step = claimPath[i];
+
+        const prevMidX = prev.drawX + (prev.rectWidth / 2);
+        const prevMidY = prev.drawY + (prev.rectHeight / 2);
+        const stepMidX = step.drawX + (step.rectWidth / 2);
+        const stepMidY = step.drawY + (step.rectHeight / 2);
+
+        ctx.beginPath();
+        ctx.moveTo(prevMidX, prevMidY);
+        ctx.lineTo(stepMidX, stepMidY);
+        ctx.stroke();
+      }
+    });
+
+    ctx.setLineDash([]);
+    ctx.restore();
   }
 
   renderNeutralBuildings (ctx, transform, viewOptions, neutralBuildings, gameScaler) {

@@ -182,7 +182,15 @@
       "Bash(git -C /c/Users/Jeff/Code/wc3v log --all -S \"interpolatedPos\" --oneline)",
       "Bash(git -C /c/Users/Jeff/Code/wc3v diff HEAD client/js/ClientUnit.js)",
       "Bash(git -C /c/Users/Jeff/Code/wc3v log --oneline -1)",
-      "Read(//c/Users/Jeff/Code/wc3v/**)"
+      "Read(//c/Users/Jeff/Code/wc3v/**)",
+      "Bash(npx http-server:*)",
+      "Bash(taskkill //F //IM \"http-server*\")",
+      "Bash(pkill -f \"http-server\")",
+      "Bash(lsof -ti:8080)",
+      "Bash(xargs kill:*)",
+      "Bash(netstat -ano)",
+      "Bash(awk '{print $5}')",
+      "Bash(xargs -I{} taskkill //PID {} //F)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Jeff\\Code\\wc3v"
