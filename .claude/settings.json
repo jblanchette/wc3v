@@ -190,7 +190,17 @@
       "Bash(xargs kill:*)",
       "Bash(netstat -ano)",
       "Bash(awk '{print $5}')",
-      "Bash(xargs -I{} taskkill //PID {} //F)"
+      "Bash(xargs -I{} taskkill //PID {} //F)",
+      "Bash(grep -E '\\\\.\\(jpg|jpeg|png|gif|bmp|tga|blp|mp3|wav|ogg|mdx|mdl|w3x|w3m|w3g\\)$')",
+      "Bash(git ls-tree:*)",
+      "Bash(grep -E '\\\\.\\(jpg|jpeg|png|gif|bmp|tga|blp|mp3|wav|ogg|mdx|mdl|w3x|w3m|w3g|webm\\)$')",
+      "Bash(grep -E '\\\\.\\(blp|mdx|mdl\\)$')",
+      "Bash(grep -E '\\\\.\\(dds|tga|mdx|mdl\\)$')",
+      "Bash(git check-ignore:*)",
+      "Bash(xargs -0 du -h)",
+      "Bash(grep -E '\\\\.webm$|\\\\.gif$')",
+      "Bash(grep -E '\\(mapdata/|tools/upgrade-data/|tools/ability-data/|\\\\.slk$|\\\\.w3g$|\\\\.w3x$|\\\\.w3m$|\\\\.blp$|\\\\.dds$|common\\\\.j|orders\\\\.c|UnitBalance\\)')",
+      "Bash(xargs -0 -I{} stat -c \"%s {}\" \"{}\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\Jeff\\Code\\wc3v"

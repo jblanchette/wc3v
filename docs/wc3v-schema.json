@@ -1,0 +1,1050 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/jblanchette/wc3v/master/docs/wc3v-schema.json",
+  "title": "WC3V Replay Data Format",
+  "description": "Schema for .wc3v files produced by the wc3v replay parser. A .wc3v file is a JSON document containing rich game data extracted from a Warcraft III .w3g replay file through deterministic game simulation.",
+  "type": "object",
+  "required": ["players", "world", "replay"],
+  "properties": {
+    "players": {
+      "type": "object",
+      "description": "Player data keyed by numeric player ID (as string). Each entry contains the full game state for one player.",
+      "additionalProperties": {
+        "$ref": "#/$defs/PlayerData"
+      }
+    },
+    "world": {
+      "type": "object",
+      "description": "World state including neutral creep camps and terrain data.",
+      "required": ["neutralGroups"],
+      "properties": {
+        "neutralGroups": {
+          "type": "object",
+          "description": "Neutral creep camps keyed by UUID. Each camp tracks claiming, XP distribution, and combat progress.",
+          "additionalProperties": {
+            "$ref": "#/$defs/NeutralGroup"
+          }
+        }
+      }
+    },
+    "replay": {
+      "$ref": "#/$defs/ReplayMetadata",
+      "description": "Replay file metadata from the w3gjs parser — map info, player records, slot assignments, and format headers."
+    },
+    "validation": {
+      "$ref": "#/$defs/ValidationResult",
+      "description": "Optional. Present only when the parser detected data quality issues (tier contradictions, missing supply buildings, etc.)."
+    }
+  },
+
+  "$defs": {
+
+    "Position": {
+      "type": "object",
+      "description": "A 2D coordinate in WC3 world space.",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number", "description": "X coordinate in world units." },
+        "y": { "type": "number", "description": "Y coordinate in world units." }
+      }
+    },
+
+    "Bounds": {
+      "type": "object",
+      "description": "Axis-aligned bounding box in world space.",
+      "required": ["minX", "minY", "maxX", "maxY"],
+      "properties": {
+        "minX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxX": { "type": "number" },
+        "maxY": { "type": "number" }
+      }
+    },
+
+    "WorkerSnapshot": {
+      "type": "object",
+      "description": "Worker assignment counts at a point in time. For Undead, lumber is harvested by ghouls tracked separately in ghoulsOnLumber (onLumber is always 0).",
+      "required": ["onGold", "onLumber", "onBuild", "totalWorkers", "consumedByBuildings"],
+      "properties": {
+        "onGold": { "type": "integer", "description": "Workers assigned to gold mining." },
+        "onLumber": { "type": "integer", "description": "Workers assigned to lumber harvesting. Always 0 for Undead — see ghoulsOnLumber." },
+        "onBuild": { "type": "integer", "description": "Workers currently constructing buildings." },
+        "totalWorkers": { "type": "integer", "description": "Total worker count (alive, not consumed/destroyed)." },
+        "consumedByBuildings": { "type": "integer", "description": "Workers consumed by buildings (Orc peons inside, NE wisps sacrificed)." },
+        "ghoulsOnLumber": { "type": "integer", "description": "Undead only. Ghouls harvesting lumber. Must be added to onLumber for total lumber workers." }
+      }
+    },
+
+    "PlayerData": {
+      "type": "object",
+      "description": "Complete game state for a single player.",
+      "required": ["teamId", "parseConfidence", "race", "startingPosition", "eventStream", "selectionStream", "tierStream", "researchStream", "isNeutralPlayer", "units", "buildingAttempts", "supplyBumps"],
+      "properties": {
+        "teamId": {
+          "type": "integer",
+          "description": "Team assignment (0-based). Players on the same team are allies."
+        },
+        "parseConfidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence score (0-1) indicating how reliably the parser interpreted this player's actions. Lower values mean more ambiguous or unresolved parsing events."
+        },
+        "race": {
+          "type": "string",
+          "enum": ["H", "O", "E", "U", "R"],
+          "description": "Detected race. H=Human, O=Orc, E=Night Elf, U=Undead, R=Random/unknown."
+        },
+        "startingPosition": {
+          "description": "Detected starting position on the map, or null if not determined.",
+          "oneOf": [
+            { "$ref": "#/$defs/Position" },
+            { "type": "null" }
+          ]
+        },
+        "eventStream": {
+          "type": "array",
+          "description": "Chronological log of all significant game events for this player. Each event includes supply and worker state at the time it occurred.",
+          "items": { "$ref": "#/$defs/Event" }
+        },
+        "selectionStream": {
+          "type": "array",
+          "description": "Unit selection changes over time.",
+          "items": {
+            "type": "object",
+            "required": ["gameTime", "selection"],
+            "properties": {
+              "gameTime": { "type": "integer", "description": "Game time in milliseconds." },
+              "selection": {
+                "type": "object",
+                "required": ["units"],
+                "properties": {
+                  "units": {
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/UnitReference" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tierStream": {
+          "type": "array",
+          "description": "Tech tier progression events. Tier 1 is implicit at game start.",
+          "items": {
+            "type": "object",
+            "required": ["gameTime", "tier"],
+            "properties": {
+              "gameTime": { "type": "integer", "description": "Game time in milliseconds when tier was reached." },
+              "tier": { "type": "integer", "enum": [1, 2, 3], "description": "Tech tier level." },
+              "position": { "$ref": "#/$defs/Position", "description": "Location of the tier building." }
+            }
+          }
+        },
+        "researchStream": {
+          "type": "array",
+          "description": "Research and upgrade completion events.",
+          "items": {
+            "type": "object",
+            "required": ["gameTime", "itemId", "level", "displayName", "category"],
+            "properties": {
+              "gameTime": { "type": "integer" },
+              "itemId": { "type": "string", "description": "4-character research item ID." },
+              "level": { "type": "integer", "description": "Level of this research (1 for first upgrade, 2 for second, etc.)." },
+              "displayName": { "type": "string" },
+              "category": { "type": "string", "description": "Research category (e.g. 'Armor', 'Weapon', 'Weapon Speed', etc.)." },
+              "icon": { "type": "string", "description": "Icon filename (without path or extension)." },
+              "goldCost": { "type": "integer" },
+              "lumberCost": { "type": "integer" },
+              "building": { "$ref": "#/$defs/UnitReference", "description": "The building that performed this research." }
+            }
+          }
+        },
+        "itemStream": {
+          "type": "object",
+          "description": "Optional. Aggregated item purchase and usage statistics.",
+          "properties": {
+            "purchases": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "displayName": { "type": "string" },
+                  "count": { "type": "integer" },
+                  "goldSpent": { "type": "integer" }
+                }
+              }
+            },
+            "uses": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "displayName": { "type": "string" },
+                  "count": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "apmData": {
+          "type": "object",
+          "description": "Optional. Actions per minute metrics.",
+          "properties": {
+            "actionsBySecond": {
+              "type": "array",
+              "items": { "type": "number" },
+              "description": "APM sampled per second of game time."
+            },
+            "totalActions": { "type": "integer" },
+            "totalGameTime": { "type": "number", "description": "Total game time in milliseconds." },
+            "averageAPM": { "type": "number" }
+          }
+        },
+        "isNeutralPlayer": {
+          "type": "boolean",
+          "description": "True for the neutral/creep player (player ID 24+). Neutral players own creep camp units."
+        },
+        "units": {
+          "type": "array",
+          "description": "All units and buildings controlled by this player, including destroyed summons.",
+          "items": { "$ref": "#/$defs/Unit" }
+        },
+        "buildingAttempts": {
+          "type": "array",
+          "description": "Building placement attempts with status tracking.",
+          "items": {
+            "type": "object",
+            "required": ["itemId", "displayName", "gameTime", "x", "y", "status"],
+            "properties": {
+              "itemId": { "type": "string" },
+              "displayName": { "type": "string" },
+              "gameTime": { "type": "integer" },
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "status": { "type": "string", "description": "Building attempt status (e.g. 'started', 'cancelled', 'completed')." }
+            }
+          }
+        },
+        "supplyBumps": {
+          "type": "array",
+          "description": "Supply safety-net corrections. Recorded when supply usage exceeds tracked maximum, indicating missed supply buildings.",
+          "items": {
+            "type": "object",
+            "required": ["gameTime", "supplyUsed", "previousMax", "newMax", "triggerEvent"],
+            "properties": {
+              "gameTime": { "type": "integer" },
+              "supplyUsed": { "type": "integer" },
+              "previousMax": { "type": "integer" },
+              "newMax": { "type": "integer" },
+              "triggerEvent": { "type": "string", "description": "Event key that triggered the supply bump." }
+            }
+          }
+        },
+        "baseGrid": {
+          "type": "object",
+          "description": "Optional. Grid-based pathability map of the player's main base area.",
+          "properties": {
+            "originX": { "type": "number", "description": "Grid origin X in world coordinates." },
+            "originY": { "type": "number", "description": "Grid origin Y in world coordinates." },
+            "cellSize": { "type": "integer", "description": "Pixels per cell (typically 32)." },
+            "rows": { "type": "integer" },
+            "cols": { "type": "integer" },
+            "cells": {
+              "type": "array",
+              "description": "2D grid. Values: 0=blocked, 1=walkable/no-build, 2=buildable, 3=water, 4=shallow water.",
+              "items": {
+                "type": "array",
+                "items": { "type": "integer", "enum": [0, 1, 2, 3, 4] }
+              }
+            },
+            "groundColor": { "type": "string", "description": "Hex color for ground tiles." },
+            "cliffColor": { "type": "string", "description": "Hex color for cliff tiles." },
+            "waterColor": { "type": "string", "description": "Hex color for deep water." },
+            "shallowWaterColor": { "type": "string", "description": "Hex color for shallow water." },
+            "treeColor": { "type": "string", "description": "Hex color for trees." },
+            "trees": {
+              "type": "array",
+              "description": "Tree positions within the grid area.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "s": { "type": "number", "description": "Scale factor." }
+                }
+              }
+            }
+          }
+        },
+        "baseSnapshots": {
+          "type": "array",
+          "description": "Optional. Building layout snapshots captured at tier transitions.",
+          "items": {
+            "type": "object",
+            "required": ["label", "tier", "gameTime", "buildings"],
+            "properties": {
+              "label": { "type": "string", "description": "Human-readable label (e.g. 'Tier 1')." },
+              "tier": { "type": "integer" },
+              "gameTime": { "type": "integer" },
+              "buildings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["itemId", "displayName", "x", "y", "collisionSize"],
+                  "properties": {
+                    "itemId": { "type": "string" },
+                    "displayName": { "type": "string" },
+                    "x": { "type": "number" },
+                    "y": { "type": "number" },
+                    "collisionSize": { "type": "number" },
+                    "isInferred": { "type": "boolean", "description": "True if this building was backfilled (not directly observed in replay actions)." }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "Event": {
+      "type": "object",
+      "description": "A game event in the player's event stream. Every event includes the base fields (key, gameTime, supply, workers) plus event-type-specific data.",
+      "required": ["key", "gameTime", "supplyUsed", "supplyMax", "workers"],
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Event type identifier.",
+          "enum": [
+            "addUnit", "addBuilding", "tierUpgrade", "research",
+            "HeroLevel", "itemPurchase", "itemUse", "dropItem",
+            "hireMercenary", "makeTavernHero", "transportLoad", "transportUnload",
+            "autocastToggle", "spellCast", "formToggle", "scout",
+            "heroRevive", "teleportScroll", "buildingAbility"
+          ]
+        },
+        "gameTime": {
+          "type": "integer",
+          "description": "Game time in milliseconds when this event occurred."
+        },
+        "supplyUsed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Player's food/supply used at event time."
+        },
+        "supplyMax": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Player's food/supply cap at event time."
+        },
+        "workers": {
+          "$ref": "#/$defs/WorkerSnapshot",
+          "description": "Worker assignments at event time."
+        },
+        "unit": {
+          "$ref": "#/$defs/UnitReference",
+          "description": "The unit involved in this event. Present for: addUnit, HeroLevel, spellCast, scout, heroRevive, teleportScroll, buildingAbility, autocastToggle, formToggle, itemUse, dropItem, hireMercenary, makeTavernHero."
+        },
+        "building": {
+          "description": "The building involved. For addBuilding: a UnitReference. For tierUpgrade: an object with cost and tier info. For hireMercenary/makeTavernHero: a string name.",
+          "oneOf": [
+            { "$ref": "#/$defs/UnitReference" },
+            { "$ref": "#/$defs/TierUpgradeBuilding" },
+            { "type": "string" }
+          ]
+        },
+        "isExpansion": {
+          "type": "boolean",
+          "description": "addBuilding only. True if the building is a town hall placed at a new gold mine (expansion)."
+        },
+        "isInferred": {
+          "type": "boolean",
+          "description": "addBuilding only. True if the building was backfilled from tech tree inference."
+        },
+        "item": {
+          "type": "object",
+          "description": "Item involved in itemPurchase, itemUse, or dropItem events.",
+          "properties": {
+            "itemId": { "type": "string" },
+            "displayName": { "type": "string" },
+            "knownItemId": { "type": "string" },
+            "knownItemX": { "type": "number" },
+            "knownItemY": { "type": "number" },
+            "objectId1": { "type": "integer" },
+            "objectId2": { "type": "integer" }
+          }
+        },
+        "spellName": {
+          "type": "string",
+          "description": "Ability/spell display name. Present for: spellCast, autocastToggle, formToggle."
+        },
+        "spellItemId": {
+          "type": "string",
+          "description": "4-character ability item ID. Present for: spellCast, autocastToggle, formToggle."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon filename for the spell or research."
+        },
+        "state": {
+          "type": "string",
+          "description": "Toggle state for autocastToggle/formToggle events.",
+          "enum": ["on", "off"]
+        },
+        "isUnitSpell": {
+          "type": "boolean",
+          "description": "True if this is a unit ability (not hero ability)."
+        },
+        "isSacrifice": {
+          "type": "boolean",
+          "description": "spellCast only. True if this spell sacrifices the casting unit."
+        },
+        "newLevel": {
+          "type": "integer",
+          "description": "HeroLevel only. The hero's new level (1-10)."
+        },
+        "spell": {
+          "type": "object",
+          "description": "HeroLevel only. The skill learned at this level.",
+          "properties": {
+            "displayName": { "type": "string" },
+            "abilityId": { "type": "string" }
+          }
+        },
+        "spellList": {
+          "type": "array",
+          "description": "HeroLevel only. All abilities learned by this hero so far."
+        },
+        "learnedSkills": {
+          "type": "object",
+          "description": "HeroLevel only. Map of ability IDs to boolean (true if learned)."
+        },
+        "goldCost": {
+          "type": "integer",
+          "description": "Gold cost. Present for: itemPurchase, hireMercenary, makeTavernHero, tierUpgrade."
+        },
+        "lumberCost": {
+          "type": "integer",
+          "description": "Lumber cost. Present for: hireMercenary, tierUpgrade."
+        },
+        "shop": {
+          "type": "string",
+          "description": "itemPurchase only. Name of the shop building."
+        },
+        "confidence": {
+          "type": "string",
+          "description": "itemPurchase only. Confidence level of the purchase detection.",
+          "enum": ["high", "low"]
+        },
+        "slot": {
+          "type": "integer",
+          "description": "dropItem only. Inventory slot number (1-6)."
+        },
+        "type": {
+          "type": "string",
+          "description": "dropItem only. Detection method for the item drop."
+        },
+        "targetHero": {
+          "$ref": "#/$defs/UnitReference",
+          "description": "dropItem only. Hero receiving a traded item."
+        },
+        "transport": {
+          "$ref": "#/$defs/UnitReference",
+          "description": "transportLoad/transportUnload only. The transport unit."
+        },
+        "passenger": {
+          "$ref": "#/$defs/UnitReference",
+          "description": "transportLoad/transportUnload only. The unit being loaded/unloaded."
+        },
+        "targetPosition": {
+          "$ref": "#/$defs/Position",
+          "description": "scout only. Position being scouted."
+        },
+        "distanceFromBase": {
+          "type": "number",
+          "description": "scout only. Distance from player's starting position."
+        },
+        "isLumberScout": {
+          "type": "boolean",
+          "description": "scout only. True if the scouting was a lumber-related movement."
+        },
+        "spot": {
+          "$ref": "#/$defs/Position",
+          "description": "heroRevive only. Location of the altar/revive point."
+        },
+        "ability": {
+          "type": "string",
+          "description": "buildingAbility only. Ability name (e.g. 'EatTree', 'unsummon')."
+        },
+        "usesLeft": {
+          "type": "integer",
+          "description": "itemUse only. Remaining charges on the item."
+        },
+        "category": {
+          "type": "string",
+          "description": "itemUse only. Item category."
+        },
+        "researchEvent": {
+          "type": "object",
+          "description": "research only. Research event details (spread into the event)."
+        },
+        "buildingItemId": {
+          "type": "string",
+          "description": "hireMercenary only. Item ID of the mercenary building."
+        }
+      }
+    },
+
+    "TierUpgradeBuilding": {
+      "type": "object",
+      "description": "Building info for tierUpgrade events, including upgrade costs.",
+      "properties": {
+        "displayName": { "type": "string" },
+        "itemId": { "type": "string", "description": "4-character item ID of the upgraded building (e.g. 'hkee' for Keep)." },
+        "goldCost": { "type": "integer" },
+        "lumberCost": { "type": "integer" },
+        "foodUsed": { "type": "integer" },
+        "foodMade": { "type": "integer" },
+        "tierTarget": { "type": "integer", "enum": [2, 3], "description": "The tier being upgraded to." },
+        "buildTime": { "type": "number", "description": "Construction time in game seconds." }
+      }
+    },
+
+    "UnitReference": {
+      "type": "object",
+      "description": "Compact unit reference used in events and selections. Contains identification, type flags, costs, and current state.",
+      "required": ["displayName", "itemId", "uuid"],
+      "properties": {
+        "displayName": { "type": "string", "description": "Human-readable unit name." },
+        "itemId": {
+          "type": ["string", "null"],
+          "description": "4-character WC3 item ID identifying the unit type (e.g. 'hpea' for Peasant, 'ogre' for Great Hall)."
+        },
+        "itemId1": { "type": ["string", "null"], "description": "Raw itemId byte pair (diagnostic)." },
+        "itemId2": { "type": ["string", "null"], "description": "Raw itemId byte pair (diagnostic)." },
+        "objectId1": { "type": ["integer", "null"], "description": "w3gjs object identifier (part 1). Unique per unit instance." },
+        "objectId2": { "type": ["integer", "null"], "description": "w3gjs object identifier (part 2). Unique per unit instance." },
+        "isRegistered": { "type": "boolean", "description": "True if the unit has been identified via a selection action." },
+        "isUnit": { "type": "boolean", "description": "True for trainable units (not buildings)." },
+        "isBuilding": { "type": "boolean", "description": "True for buildings/structures." },
+        "isIllusion": { "type": "boolean", "description": "True for illusion/mirror image units." },
+        "isHero": { "type": "boolean", "description": "True for hero units." },
+        "isSummon": { "type": "boolean", "description": "True for summoned units (detected via summonDuration > 0)." },
+        "isMercenary": { "type": "boolean", "description": "True for mercenary units hired from neutral buildings." },
+        "isPlayerShop": { "type": "boolean", "description": "True for player-owned shop buildings." },
+        "level": { "type": "integer", "description": "Hero level (1-10), or 0 for non-heroes." },
+        "lastPosition": { "$ref": "#/$defs/Position", "description": "Last known position." },
+        "goldCost": { "type": "integer", "description": "Gold cost to train/build." },
+        "lumberCost": { "type": "integer", "description": "Lumber cost to train/build." },
+        "foodUsed": { "type": "integer", "description": "Supply/food consumed by this unit." },
+        "foodMade": { "type": "integer", "description": "Supply/food provided by this unit (buildings only)." },
+        "buildTime": { "type": "number", "description": "Build/train time in game seconds." },
+        "armorType": { "type": ["string", "null"], "description": "Armor classification (e.g. 'Light', 'Medium', 'Heavy', 'Fortified')." },
+        "attackType": { "type": ["string", "null"], "description": "Attack classification (e.g. 'Normal', 'Pierce', 'Siege', 'Magic', 'Chaos')." },
+        "collisionSize": { "type": "number", "description": "Unit collision radius in world units." },
+        "uuid": { "type": "string", "description": "Unique identifier for this unit instance." },
+        "assignTarget": {
+          "type": ["string", "null"],
+          "description": "Current worker role assignment.",
+          "enum": ["gold", "lumber", "build", null]
+        },
+        "roleHistory": {
+          "type": "array",
+          "description": "Worker role changes over time.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gameTime": { "type": "integer" },
+              "role": { "type": "string", "enum": ["gold", "lumber", "build"] }
+            }
+          }
+        },
+        "isTraining": { "type": "boolean", "description": "True if the unit is currently in a training queue." },
+        "isConsumedByBuilding": { "type": "boolean", "description": "True if this worker is consumed inside a building (Orc peon, NE wisp during construction)." },
+        "destroyedByBuilding": { "type": "boolean", "description": "True if this unit was permanently destroyed by building construction (NE wisp consumed by Ancient)." },
+        "buildMechanic": {
+          "type": ["string", "null"],
+          "description": "Race-specific building mechanic for this unit.",
+          "enum": ["CONSUMED_PERMANENT", "CONSUMED_TEMPORARY", "SUMMONER", "BUILDER", null]
+        },
+        "sacrificed": { "type": "boolean", "description": "Optional. True if the unit was consumed by an ability (e.g. Undead Sacrifice)." },
+        "destroyedAt": { "type": "integer", "description": "Optional. Game time in ms when the unit was destroyed." },
+        "scoutInfo": { "$ref": "#/$defs/ScoutInfo", "description": "Optional. Scouting event data if this unit was scouted." }
+      }
+    },
+
+    "Unit": {
+      "type": "object",
+      "description": "Full unit data including movement history, hero progression, and inventory. Extends UnitReference with additional detail.",
+      "required": ["uuid", "displayName", "itemId", "isRegistered", "isUnit", "isBuilding", "isIllusion", "level", "lastPosition", "collisionSize", "isInferred", "meta", "items"],
+      "properties": {
+        "uuid": { "type": "string", "description": "Unique identifier for this unit instance." },
+        "displayName": { "type": "string", "description": "Human-readable unit name." },
+        "itemId": {
+          "type": ["string", "null"],
+          "description": "4-character WC3 item ID identifying the unit type."
+        },
+        "itemId1": { "type": ["string", "null"], "description": "Raw itemId byte pair (diagnostic)." },
+        "itemId2": { "type": ["string", "null"], "description": "Raw itemId byte pair (diagnostic)." },
+        "objectId1": { "type": ["integer", "null"], "description": "w3gjs object identifier (part 1)." },
+        "objectId2": { "type": ["integer", "null"], "description": "w3gjs object identifier (part 2)." },
+        "isRegistered": { "type": "boolean", "description": "True if the unit was identified via a selection action in the replay." },
+        "isUnit": { "type": "boolean", "description": "True for trainable units (not buildings)." },
+        "isBuilding": { "type": "boolean", "description": "True for buildings/structures." },
+        "isIllusion": { "type": "boolean", "description": "True for illusion/mirror image units." },
+        "level": { "type": "integer", "description": "Hero level (1-10), or 0 for non-heroes." },
+        "levelStream": {
+          "type": "array",
+          "description": "Hero level-up events with timing and skill learned.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gameTime": { "type": "integer" },
+              "newLevel": { "type": "integer" },
+              "spawnTime": { "type": "integer" }
+            }
+          }
+        },
+        "xpStream": {
+          "type": "array",
+          "description": "Experience gain events (primarily from creeping).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uuid": { "type": "string", "description": "Hero UUID." },
+              "displayName": { "type": "string" },
+              "xpGained": { "type": "number" },
+              "gameTime": { "type": "integer" },
+              "tier": { "type": "integer" },
+              "level": { "type": "integer" },
+              "heroCount": { "type": "integer" }
+            }
+          }
+        },
+        "spellList": {
+          "type": "array",
+          "description": "Hero abilities learned, in order. Each entry is an ability item ID string."
+        },
+        "lastPosition": { "$ref": "#/$defs/Position", "description": "Last known position in world coordinates." },
+        "spawnTime": {
+          "type": ["integer", "null"],
+          "description": "Game time in ms when this unit first appeared."
+        },
+        "trainedTime": {
+          "type": ["integer", "null"],
+          "description": "Game time in ms when training/construction completed."
+        },
+        "spawnPosition": {
+          "description": "Position where the unit first appeared.",
+          "oneOf": [
+            { "$ref": "#/$defs/Position" },
+            { "type": "null" }
+          ]
+        },
+        "path": {
+          "type": "array",
+          "description": "Movement waypoints with timestamps.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gameTime": { "type": "integer" },
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "groupId": { "type": "integer" },
+              "isJump": { "type": "boolean", "description": "True if position was set directly (not walked)." }
+            }
+          }
+        },
+        "moveHistory": {
+          "type": "array",
+          "description": "Move command events."
+        },
+        "neutralGroupId": {
+          "type": ["string", "null"],
+          "description": "UUID of the neutral camp this unit belongs to (neutral player units only)."
+        },
+        "collisionSize": { "type": "number", "description": "Unit collision radius in world units." },
+        "isInferred": { "type": "boolean", "description": "True if this unit was backfilled from tech tree inference rather than directly observed." },
+        "meta": {
+          "type": "object",
+          "description": "Unit metadata from game balance data.",
+          "properties": {
+            "hero": { "type": "boolean" },
+            "worker": { "type": "boolean" },
+            "building": { "type": "boolean" },
+            "unit": { "type": "boolean" },
+            "summoned": { "type": "boolean" },
+            "movespeed": { "type": "number" }
+          }
+        },
+        "items": {
+          "type": "array",
+          "description": "Hero inventory slots. Empty for non-hero units.",
+          "items": {
+            "type": "object",
+            "required": ["slot", "itemId", "displayName"],
+            "properties": {
+              "slot": { "type": "integer", "minimum": 1, "maximum": 6, "description": "Inventory slot (1-6)." },
+              "itemId": { "type": "string" },
+              "displayName": { "type": "string" },
+              "knownItemX": { "type": "number" },
+              "knownItemY": { "type": "number" },
+              "objectId1": { "type": "integer" },
+              "objectId2": { "type": "integer" }
+            }
+          }
+        },
+        "constructionStartTime": { "type": "integer", "description": "Optional. Game time in ms when building construction began." },
+        "isTransport": { "type": "boolean", "description": "Optional. True for transport units (Zeppelin, etc.)." },
+        "loadEvents": {
+          "type": "array",
+          "description": "Optional. Load/unload events for transport units.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gameTime": { "type": "integer" },
+              "action": { "type": "string", "enum": ["load", "unload"] },
+              "unitId": { "type": "string", "description": "UUID of the passenger." },
+              "unitName": { "type": "string" },
+              "unitItemId": { "type": "string" }
+            }
+          }
+        },
+        "loadedInto": { "type": "string", "description": "Optional. UUID of the transport this unit is loaded into." },
+        "isMercenary": { "type": "boolean", "description": "Optional. True for mercenary units." },
+        "isSummon": { "type": "boolean", "description": "Optional. True for summoned units." },
+        "sacrificed": { "type": "boolean", "description": "Optional. True if the unit was consumed by an ability." },
+        "destroyedAt": { "type": "integer", "description": "Optional. Game time in ms when the unit was destroyed." },
+        "destroyedByBuilding": { "type": "boolean", "description": "Optional. True if permanently destroyed by building construction." },
+        "scoutInfo": { "$ref": "#/$defs/ScoutInfo", "description": "Optional. Scouting data if this unit was scouted by an opponent." }
+      }
+    },
+
+    "ScoutInfo": {
+      "type": "object",
+      "description": "Information about a unit being scouted by an opponent.",
+      "properties": {
+        "scoutedTime": { "type": "integer", "description": "Game time in ms." },
+        "unitItemId": { "type": "string", "description": "Item ID of the scouting unit." },
+        "unitDisplayName": { "type": "string" },
+        "scoutPosition": { "$ref": "#/$defs/Position" }
+      }
+    },
+
+    "NeutralGroup": {
+      "type": "object",
+      "description": "A neutral creep camp. Tracks the creeps present, claiming state, XP distribution, and combat progression.",
+      "required": ["bounds", "uuid", "units", "totalLevel", "claimOwnerId", "claimState", "claimTime", "hasFountain"],
+      "properties": {
+        "bounds": { "$ref": "#/$defs/Bounds", "description": "Spatial bounds of the camp area." },
+        "unitBounds": { "$ref": "#/$defs/Bounds", "description": "Tight bounds around the actual creep units." },
+        "uuid": { "type": "string", "description": "Unique camp identifier." },
+        "units": {
+          "type": "array",
+          "description": "Neutral creep units in this camp.",
+          "items": { "$ref": "#/$defs/NeutralUnit" }
+        },
+        "totalLevel": { "type": "integer", "description": "Sum of all creep levels in the camp." },
+        "claimOwnerId": {
+          "type": ["integer", "null"],
+          "description": "Team ID of the team that claimed (cleared) this camp, or null if unclaimed."
+        },
+        "claimState": {
+          "type": ["string", "integer"],
+          "description": "Camp claim status. 0=untouched, 1=contested, 2=cleared, 3=partial."
+        },
+        "claimTime": {
+          "type": ["number", "null"],
+          "description": "Game time in ms when the camp was claimed."
+        },
+        "claimers": {
+          "type": ["object", "null"],
+          "description": "Per-team claim data including which players and units participated.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "active": { "type": "boolean" },
+              "timeClaimed": { "type": "number" },
+              "multiplier": { "type": "number" },
+              "xpGained": { "type": "number" },
+              "players": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "timeClaimed": { "type": "number" },
+                    "units": {
+                      "type": "array",
+                      "items": { "$ref": "#/$defs/UnitReference" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "hasFountain": { "type": "boolean", "description": "True if the camp includes a healing fountain." },
+        "heroClaimRecords": {
+          "type": "array",
+          "description": "XP gain events for heroes who participated in clearing this camp.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uuid": { "type": "string", "description": "Hero UUID." },
+              "xpGained": { "type": "number" },
+              "displayName": { "type": "string" },
+              "gameTime": { "type": "integer" }
+            }
+          }
+        },
+        "heroStats": {
+          "type": "object",
+          "description": "Per-hero total XP gained from this camp.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "displayName": { "type": "string" },
+              "total": { "type": "number" }
+            }
+          }
+        },
+        "order": {
+          "type": ["integer", "null"],
+          "description": "Sequential camp clear order for the claiming team."
+        },
+        "teamOrders": {
+          "type": "object",
+          "description": "Per-team camp clear order numbers.",
+          "additionalProperties": { "type": "integer" }
+        },
+        "xpSnapshot": {
+          "type": "object",
+          "description": "Cumulative XP per hero at the time this camp was claimed.",
+          "additionalProperties": { "type": "number" }
+        },
+        "presenceIntervals": {
+          "type": "array",
+          "description": "Time intervals when player units were near this camp.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "teamId": { "type": "integer" },
+              "playerId": { "type": "integer" },
+              "enterTime": { "type": "number" },
+              "exitTime": { "type": "number" },
+              "unitCount": { "type": "integer" },
+              "hasHero": { "type": "boolean" }
+            }
+          }
+        },
+        "contributions": {
+          "type": "object",
+          "description": "Per-team contribution fraction (0-1) for claiming this camp.",
+          "additionalProperties": { "type": "number" }
+        },
+        "completionEstimate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Estimated completion fraction (0=untouched, 1=fully cleared)."
+        },
+        "uncontested": {
+          "type": "boolean",
+          "description": "True if only one team interacted with this camp."
+        },
+        "firstInteractionTime": {
+          "type": ["number", "null"],
+          "description": "Game time in ms of the first attack on this camp."
+        },
+        "progressTimeline": {
+          "type": "array",
+          "description": "Per-team completion progress over time, for visualizing camp clearing.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "gameTime": { "type": "number" },
+              "teams": {
+                "type": "object",
+                "additionalProperties": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "NeutralUnit": {
+      "type": "object",
+      "description": "A neutral creep in a camp.",
+      "required": ["displayName", "itemId", "balanceInfo"],
+      "properties": {
+        "displayName": { "type": "string", "description": "Creep name." },
+        "itemId": { "type": "string", "description": "4-character WC3 item ID." },
+        "balanceInfo": {
+          "type": "object",
+          "required": ["level"],
+          "properties": {
+            "level": { "type": "integer", "minimum": 0, "description": "Creep level (affects XP granted)." }
+          }
+        },
+        "droppedItemSets": {
+          "type": "array",
+          "description": "Optional. Items this creep can drop when killed.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "itemId": { "type": "string" },
+              "chance": { "type": "number", "minimum": 0, "maximum": 1, "description": "Drop chance (0-1)." },
+              "displayName": { "type": "string" },
+              "isRandom": { "type": "boolean", "description": "True if the drop is from a random item table." }
+            }
+          }
+        }
+      }
+    },
+
+    "ReplayMetadata": {
+      "type": "object",
+      "description": "Metadata from the .w3g replay file, parsed by w3gjs.",
+      "properties": {
+        "header": {
+          "type": "object",
+          "description": "Binary file header.",
+          "properties": {
+            "decompressedSize": { "type": "integer" },
+            "headerVersion": { "type": "string" },
+            "compressedDataBlockCount": { "type": "integer" },
+            "compressedSize": { "type": "integer" }
+          }
+        },
+        "subheader": {
+          "type": "object",
+          "description": "Replay sub-header with version info.",
+          "properties": {
+            "gameIdentifier": { "type": "string", "description": "Game identifier string (e.g. 'PX3W')." },
+            "version": { "type": "integer", "description": "Game version number (e.g. 10031)." },
+            "buildNo": { "type": "integer" },
+            "replayLengthMS": { "type": "integer", "description": "Total replay duration in milliseconds." }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Game settings and player information.",
+          "properties": {
+            "map": {
+              "type": "object",
+              "properties": {
+                "speed": { "type": "integer" },
+                "hideTerrain": { "type": "boolean" },
+                "mapExplored": { "type": "boolean" },
+                "alwaysVisible": { "type": "boolean" },
+                "default": { "type": "boolean" },
+                "observerMode": { "type": "integer" },
+                "teamsTogether": { "type": "boolean" },
+                "fixedTeams": { "type": "boolean" },
+                "fullSharedUnitControl": { "type": "boolean" },
+                "randomHero": { "type": "boolean" },
+                "randomRaces": { "type": "boolean" },
+                "referees": { "type": "boolean" },
+                "mapName": { "type": "string", "description": "Full map path as stored in the replay." },
+                "creator": { "type": "string" },
+                "mapChecksum": { "type": "string" },
+                "mapChecksumSha1": { "type": "string" }
+              }
+            },
+            "playerCount": { "type": "integer" },
+            "gameType": { "type": "string" },
+            "localeHash": { "type": "string" },
+            "playerRecords": {
+              "type": "array",
+              "description": "Player identity records from the replay.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "playerId": { "type": "integer" },
+                  "playerName": { "type": "string" }
+                }
+              }
+            },
+            "slotRecords": {
+              "type": "array",
+              "description": "Player slot assignments.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "playerId": { "type": "integer" },
+                  "raceFlag": { "type": "integer" },
+                  "teamId": { "type": "integer" },
+                  "slotStatus": { "type": "integer", "description": "2 = occupied by player." },
+                  "computerAI": { "type": "integer" }
+                }
+              }
+            },
+            "reforgedPlayerMetadata": { "type": "array" },
+            "randomSeed": { "type": "integer" },
+            "selectMode": { "type": "string" },
+            "gameName": { "type": "string", "description": "Game lobby name." },
+            "startSpotCount": { "type": "integer" },
+            "isPost202ReplayFormat": { "type": "boolean" }
+          }
+        },
+        "players": {
+          "type": "object",
+          "description": "Player summary keyed by player ID.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "raceDetected": { "type": "string", "description": "Detected race code." },
+              "teamId": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+
+    "ValidationResult": {
+      "type": "object",
+      "description": "Post-parse validation results. Only present when warnings or errors were found.",
+      "required": ["warnings", "errors", "corrections"],
+      "properties": {
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "player", "severity", "details"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Warning type.",
+                "enum": ["TIER_BUILDING_MISMATCH", "TIER_UNIT_MISMATCH", "MISSING_WORKER_DATA"]
+              },
+              "player": { "type": "integer", "description": "Player ID affected." },
+              "severity": { "type": "string", "enum": ["low", "medium", "high"] },
+              "details": { "type": "string", "description": "Human-readable description of the issue." }
+            }
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "corrections": {
+          "type": "array",
+          "description": "Auto-corrections applied by the validator.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "player": { "type": "integer" },
+              "details": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

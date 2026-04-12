@@ -3,8 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WC3V — Pro Build Orders for Warcraft 3</title>
-  <meta name="description" content="Browse curated pro Warcraft 3 build orders. Learn how the best players open each matchup, with real replay walkthroughs.">
+
+  <title>WC3V — Pro Build Orders &amp; Replay Analysis for Warcraft III</title>
+  <meta name="description" content="Free Warcraft III build order library with pro replay analysis. Browse curated builds by race and matchup, or upload your own .w3g replay for a full visual breakdown of heroes, units, upgrades, and timings.">
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://wc3v.com/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="WC3V — Pro Build Orders & Replay Analysis for Warcraft III">
+  <meta property="og:description" content="Free Warcraft III build order library with pro replay analysis. Browse curated builds by race and matchup, or upload your own .w3g replay for a full visual breakdown.">
+  <meta property="og:url" content="https://wc3v.com/">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:locale" content="en_US">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WC3V — Pro Build Orders & Replay Analysis for Warcraft III">
+  <meta name="twitter:description" content="Free Warcraft III build order library with pro replay analysis. Browse builds or upload your own .w3g replay.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
+
+  <!-- Additional SEO -->
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="Warcraft 3, WC3, build orders, replay analysis, replay parser, w3g, pro builds, strategy, Human, Orc, Night Elf, Undead, competitive, esports">
+  <meta name="author" content="WC3V">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "WC3V",
+    "url": "https://wc3v.com",
+    "description": "Free, open-source Warcraft III build order library and replay analysis tool. Browse pro build orders by race and matchup, or upload .w3g replays for a full visual breakdown.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "isAccessibleForFree": true,
+    "license": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md",
+    "sourceOrganization": {
+      "@type": "Organization",
+      "name": "WC3V",
+      "url": "https://github.com/jblanchette/wc3v"
+    }
+  }
+  </script>
+
   <link rel="stylesheet" href="css/main.css">
   <style>
     body { margin: 0; }
@@ -15,10 +65,74 @@
   <script>document.addEventListener('DOMContentLoaded', () => SiteNav.render('home'));</script>
 
   <main class="site-content">
+    <header class="site-hero-banner" role="banner">
+      <div class="site-hero-banner-inner">
+        <div class="site-hero-text">
+          <h1 class="site-hero-banner-title">Learn how the <em>pros</em> play.</h1>
+          <p class="site-hero-banner-sub">Pro Warcraft III build orders from real replays — or upload your own for a full breakdown.</p>
+          <div class="site-hero-features">
+            <div class="site-hero-feat">
+              <svg class="site-hero-feat-svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="4" height="14" rx="1"/><rect x="8" y="7" width="4" height="10" rx="1"/><rect x="14" y="1" width="4" height="16" rx="1"/></svg>
+              <span>Visual Build Orders</span>
+            </div>
+            <div class="site-hero-feat">
+              <img src="/assets/wc3icons/ngol.jpg" alt="">
+              <span>Live Minimap</span>
+            </div>
+            <div class="site-hero-feat">
+              <img src="/assets/wc3icons/AUdc.jpg" alt="">
+              <span>Hero &amp; Skill Tracking</span>
+            </div>
+            <div class="site-hero-feat">
+              <img src="/assets/wc3icons/btnsteelmelee.jpg" alt="">
+              <span>Upgrade Tracking</span>
+            </div>
+            <div class="site-hero-feat">
+              <img src="/assets/wc3icons/hpea.jpg" alt="">
+              <span>Economy &amp; Workers</span>
+            </div>
+            <div class="site-hero-feat">
+              <svg class="site-hero-feat-svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10a8 8 0 1 1 8 8"/><polyline points="2 6 2 10 6 10"/><polyline points="10 5 10 10 13 12"/></svg>
+              <span>Re-windable Replay</span>
+            </div>
+          </div>
+        </div>
+        <div class="site-hero-divider"></div>
+        <div class="site-hero-cta" role="group" aria-label="Main actions">
+
+          <div class="site-cta-panel site-cta-active">
+            <div class="site-cta-icons">
+              <img src="/assets/wc3icons/Hamg.jpg" alt="Archmage">
+              <img src="/assets/wc3icons/Obla.jpg" alt="Blademaster">
+              <img src="/assets/wc3icons/Udea.jpg" alt="Death Knight">
+              <img src="/assets/wc3icons/Edem.jpg" alt="Demon Hunter">
+            </div>
+            <div class="site-cta-body">
+              <h2 class="site-cta-heading">Watch Pro Replays</h2>
+              <p class="site-cta-desc">Study builds from top competitive players</p>
+            </div>
+            <span class="site-cta-badge">Viewing now</span>
+          </div>
+
+          <a href="/viewer.html" class="site-cta-panel site-cta-upload">
+            <div class="site-cta-upload-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </div>
+            <div class="site-cta-body">
+              <h2 class="site-cta-heading">Upload Your Replay</h2>
+              <p class="site-cta-desc">Analyze any .w3g file from your games</p>
+            </div>
+            <span class="site-cta-arrow">&rarr;</span>
+          </a>
+
+        </div>
+      </div>
+    </header>
+
     <div class="site-browse-layout">
 
       <!-- Sidebar Filters -->
-      <aside class="site-filter-panel" id="filter-panel">
+      <aside class="site-filter-panel" id="filter-panel" aria-label="Build order filters">
 
         <!-- Race picker (single column) -->
         <div class="site-filter-section">
@@ -53,8 +167,9 @@
       </aside>
 
       <!-- Build Grid -->
-      <section aria-label="Build orders">
-        <div id="all-builds-grid" class="site-build-grid">
+      <section id="builds" aria-label="Build orders">
+        <h2 class="sr-only">Pro Build Orders</h2>
+        <div id="all-builds-grid" class="site-build-grid" role="list" aria-live="polite">
           <div class="site-loading">Loading builds...</div>
         </div>
       </section>
@@ -62,9 +177,21 @@
     </div>
   </main>
 
-  <footer class="site-legal">
-    <p>Warcraft III and all related assets, icons, and imagery are trademarks and copyrights of Blizzard Entertainment, Inc. This is a fan-made, non-commercial educational tool — not affiliated with or endorsed by Blizzard Entertainment.</p>
-    <p>Source code licensed under <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3</a>.</p>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III. Upload any .w3g replay for a full breakdown of builds, units, heroes, and timings.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+        <a href="/viewer.html">Upload a Replay</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool — not affiliated with or endorsed by Blizzard.
+    </div>
   </footer>
 
   <script>

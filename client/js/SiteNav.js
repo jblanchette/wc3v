@@ -37,12 +37,19 @@ const SiteNav = {
       }
     }
 
+    const navLinks = `
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="${root}/about.html">About</a>
+      </div>`;
+
     nav.innerHTML = `
       <div class="site-nav-inner">
         <a class="site-nav-logo" href="${root}/">
           <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
         </a>
         ${leftHtml}
+        ${navLinks}
       </div>
     `;
 

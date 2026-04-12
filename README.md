@@ -1,137 +1,145 @@
 # WC3V
 
- **W**ar**c**raft **3**™ Replay **V**iewer.
+**W**ar**c**raft **3** Replay **V**iewer
 
- Goal is to simulate enough of wc3 to get a 'birds eye view'
- of the match from a given replay.
+Parse Warcraft III `.w3g` replay files into rich JSON data and view them as an interactive birds-eye replay in the browser.
 
- Examples:
+![Happy vs Grubby showmatch on Concealed Hill](/wc3v-demo.gif)
 
- ![Happy vs Grubby showmatch on Concealed Hill](/wc3v-demo.gif)
+## Features
 
-# Usage
+- **Game Simulation** — reconstructs unit movement, building construction, and combat from raw player inputs
+- **Build Order Timeline** — supply-indexed event timeline with tier snapshots, research tracking, and composition breakdowns
+- **3 Layout Modes** — gameplay (animated map), static build order, and live build order synced to playback
+- **Map Rendering** — tileset-aware terrain colors, neutral buildings, trees, and grid overlay for 80+ maps
+- **Neutral Creep Camps** — camp claiming, XP attribution per hero, combat progression timelines, item drops
+- **Worker Tracking** — race-specific mechanics (Orc peon consumption, NE wisp sacrifice, UD ghoul lumber, Human builders)
+- **Hero Tracking** — levels, skill builds, inventory, revives, floating action text on the map
+- **Research & Upgrades** — attack/defense/ability upgrades with icons, costs, and timing
+- **Expansion Detection** — identifies town hall placements at new gold mines
+- **Transport Tracking** — Zeppelin load/unload events
+- **Parse Confidence** — quantified reliability score (0-1) indicating data quality per player
+- **Replay Validation** — detects tier contradictions, missing supply buildings, and data inconsistencies
+- **W3C / FLO Support** — handles W3Champions and FLO replay formats alongside standard Battle.net replays
+- **Replay Upload** — upload `.w3g` files directly through the browser viewer
+- **Curated Build Guides** — 20 build order guides with matchup filtering and tier progression breakdowns
 
-## Running the reference `wc3v` client viewer
+## Quick Start
 
-(NOTE: in order to show WC3 icons, you must follow the instructions on war3observer
- and put the resulting icons in the `client/assets/wc3icons` folder).
+**Prerequisites:** [Node.js](https://nodejs.org/) 18+
 
-navigate to the `client` directory
+### Parse a replay
 
-run `npm install -g http-server` to install `http-server`
-
-run `http-server` and follow the printed directions to see the locally hosted site
-
-
-Also see the [client README.md](client/README.md) for more information
-
-## Running the `wc3v` map parser
-
-```
-note: currently built as a node project for ease of development, will eventually
-be ported to web.
-```
-
-run `node wc3v.js --replay=[REPLAY NAME]`
-
-where `REPLAY NAME` is the replay file path in the `replays` folder without any extension
-
-**example:**
-
-`node wc3v.js --replay=happy-vs-grubby`
-
-### Testing mode
-
-to run wc3v in testing mode against a set of known test maps, run:
-
-`node wc3v.js --test`
-
-Latest test output:
-
-```
-$ node wc3v.js --test
-user args:  [ '--test' ]
-parse: 404.044ms
-TEST PASSED:  ./replays/test-ch-movement.w3g
-parse: 286.320ms
-TEST PASSED:  ./replays/test-ei-movement.w3g
-parse: 4746.978ms
-TEST PASSED:  ./replays/bnet-ud-vs-orc-2.w3g
-parse: 4265.524ms
-TEST PASSED:  ./replays/happy-vs-grubby.w3g
-parse: 8102.156ms
-TEST PASSED:  ./replays/grubby-vs-thorzain.w3g
-parse: 11543.821ms
-TEST PASSED:  ./replays/happy-vs-lucifer.w3g
-parse: 7434.809ms
-TEST PASSED:  ./replays/cash-vs-foggy.w3g
-parse: 2646.344ms
-TEST PASSED:  ./replays/foggy-vs-cash-2.w3g
-parse: 6350.330ms
-TEST PASSED:  ./replays/crow-vs-john.w3g
-parse: 8031.555ms
-TEST PASSED:  ./replays/chae-vs-hawk.w3g
-parse: 6523.733ms
-TEST PASSED:  ./replays/soin-vs-chae.w3g
-parse: 8551.837ms
-TEST PASSED:  ./replays/joker-vs-lil.w3g
-parse: 5771.456ms
-TEST PASSED:  ./replays/terenas-stand-lv_sonik-vs-tgw.w3g
-parse: 10894.642ms
-TEST PASSED:  ./replays/2v2-synergy.w3g
+```bash
+node wc3v.js --replay=happy-vs-grubby
 ```
 
-# Example output
+Place `.w3g` replay files in the `replays/` directory. The parser outputs compressed `.wc3v.gz` JSON to `client/replays/`.
 
-see the [happy-vs-grubby.w3g.wc3v](docs/happy-vs-grubby.w3g.wc3v) file for a pretty-printed JSON dump
-of the current output for a Happy vs Grubby show match.
+### Debug mode
 
-# How It Works
+Keep the uncompressed `.wc3v` file alongside the `.gz` for inspection:
 
-See the [DESIGN.md](/docs/DESIGN.md) file
+```bash
+node wc3v.js --replay=happy-vs-grubby --debug
+```
 
-## Implemented
-	
-* unit selection / deselection
-* unit spawning
-* skill training, levels
-* skill usage - point, object target, summon
-* Right Click path tracking
-* Hotkey Groups
-* Items (partially - registrtion of shop items / giving or dropping)
-* Shop tracking
-* Game Time simulation
-  * unit movement is simulated (turn rates and basic pathing around known buildings and terrian WIP)
-  * building construction and upgrading is simulated
-* Rendering 'birds eye view' of game play
-* Player starting position detection
-* Mirror matches
+### Inspect parsed data
 
-## Not implemented
+Query replay data from the command line without opening the viewer:
 
-* Neutral Creep tracking
-* Item unit spawns
-* Gold + Wood resource tracking
-* Food / Upkeep tracking
+```bash
+node inspect-replay.js --replay=happy-vs-grubby --show=summary
+node inspect-replay.js --replay=happy-vs-grubby --show=events --player=1 --filter=research
+node inspect-replay.js --replay=happy-vs-grubby --show=units --search=Blademaster
+```
 
-# Credits
+Available sections: `players`, `events`, `workers`, `units`, `tiers`, `expansions`, `summary`, `all`
 
-Replay parsing using:
+### Run the viewer
 
-* https://github.com/PBug90/w3gjs
+```bash
+cd client
+npx http-server
+```
 
-Replay documentation from:
+Open the printed URL in your browser. To display WC3 icons, extract them from the game files using [war3observer](https://github.com/warlockbrawl/war3observer) and place them in `client/assets/wc3icons/`.
 
-* https://github.com/scopatz/w3g/blob/master/w3g_format.txt
+## Output Format (.wc3v)
 
-Icon extraction from:
+The parser produces `.wc3v` files — JSON documents containing the full simulated game state:
 
-* https://github.com/warlockbrawl/war3observer
+| Section | Description |
+|---------|-------------|
+| `players` | Per-player data: event stream, unit list, tier/research streams, worker counts, APM, base grid |
+| `world` | Neutral creep camps with claim state, XP distribution, and combat timelines |
+| `replay` | Replay metadata: map name, player names, game settings, slot records |
+| `validation` | Optional data quality warnings (tier mismatches, missing data) |
+
+**Full schema:** [`docs/wc3v-schema.json`](docs/wc3v-schema.json) (JSON Schema draft 2020-12)
+
+**Example output:** [`docs/happy-vs-grubby.w3g.wc3v`](docs/happy-vs-grubby.w3g.wc3v)
+
+## Architecture
+
+```
+.w3g replay file
+      |
+      v
+  wc3v.js (Node.js parser)
+  - w3gjs decodes replay actions
+  - Game engine simulates unit movement, building, combat
+  - Post-processing: worker tracking, backfilling, validation
+      |
+      v
+  .wc3v.gz (compressed JSON)
+      |
+      v
+  Client viewer (browser)
+  - D3.js v5 + Canvas + HTML/CSS
+  - Coordinator pattern: Wc3vViewer delegates to subsystems
+  - MapRenderer, BuildOrderRenderer, TimeScrubber, FloatingText
+```
+
+See [docs/DESIGN.md](docs/DESIGN.md) for a deep dive into replay parsing, unit tracking, and simulation mechanics.
+
+## Tools
+
+| Tool | Description |
+|------|-------------|
+| `inspect-replay.js` | Query parsed replay data from the CLI (events, units, workers, tiers) |
+| `tools/data-tool.js` | Extract map terrain, trees, and neutral buildings from `.w3x` map files |
+| `tools/add-replay.js` | Replay onboarding pipeline: scan, parse, generate summary, update manifest |
+| `tools/regen-maps.js` | Regenerate map images from extracted map data |
+| `tools/parse-upgrade-data.js` | Generate `researchMeta.json` from WC3 game data files |
+
+## Testing
+
+Run the parser against the test replay suite:
+
+```bash
+node wc3v.js --test
+```
+
+This parses all replays in `replays/` and verifies they produce valid output without fatal errors.
+
+## Credits
+
+Replay parsing powered by:
+- [w3gjs](https://github.com/PBug90/w3gjs) — W3G replay file parser
+
+Replay format documentation:
+- [w3g_format.txt](https://github.com/scopatz/w3g/blob/master/w3g_format.txt)
+
+Icon extraction:
+- [war3observer](https://github.com/warlockbrawl/war3observer)
+
+## License
+
+[GNU General Public License v3.0](LICENSE.md)
 
 ---
 
-All code, assets, names, and concepts are used for educational purposes only and have no commerical or retail usage.  All copyright and trademark are respective to their original owners.
+All code, assets, names, and concepts are used for educational purposes only and have no commercial or retail usage. All copyright and trademark are respective to their original owners.
 
-All software learned from public sources and from rightfully owned copies of the game.
-
-For Educational use only.
+All software learned from public sources and from rightfully owned copies of the game. For educational use only.

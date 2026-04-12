@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>About WC3V - Visual Build Order &amp; Replay Analyzer for Warcraft III</title>
+  <meta name="description" content="WC3V is a visual build order viewer and replay analyzer for Warcraft III. Upload .w3g replays for full breakdowns of builds, heroes, units, upgrades, and minimap playback. Free, open source, and built for the WC3 community.">
+
+  <link rel="canonical" href="https://wc3v.com/about.html">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="About WC3V - Visual Build Order & Replay Analyzer for Warcraft III">
+  <meta property="og:description" content="Visual replay analyzer for Warcraft III. Build order timelines, minimap playback, and pro build library. Free and open source.">
+  <meta property="og:url" content="https://wc3v.com/about.html">
+
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="Warcraft 3 replay viewer, WC3 build order, w3g replay analyzer, Warcraft III strategy guide, WC3 replay parser, Warcraft 3 build orders, WC3 replay analysis, Warcraft III pro builds, WC3 minimap replay, Warcraft 3 unit composition">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AboutPage",
+    "name": "About WC3V",
+    "description": "WC3V is a visual build order viewer and replay analyzer for Warcraft III. Upload .w3g replays for full game breakdowns.",
+    "mainEntity": {
+      "@type": "WebApplication",
+      "name": "WC3V",
+      "url": "https://wc3v.com",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web",
+      "isAccessibleForFree": true
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { margin: 0; }
+  </style>
+</head>
+<body class="site-page">
+  <script src="js/SiteNav.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => SiteNav.render('about'));</script>
+
+  <main class="site-content">
+    <article class="site-about-page">
+
+      <!-- ── Hero ── -->
+      <div class="about-hero">
+        <div class="about-hero-text">
+          <h1 class="about-hero-title">Visual Build Order Viewer for Warcraft III</h1>
+          <p class="about-hero-sub">WC3V turns .w3g replay files into visual build order timelines with live minimap playback. Upload a replay, see the full game.</p>
+        </div>
+        <div class="about-hero-demo">
+          <video src="/assets/wc3v-beta-preview.webm" autoplay loop muted playsinline></video>
+        </div>
+      </div>
+
+      <!-- ── Feature strip ── -->
+      <div class="about-feature-strip">
+        <div class="about-feat">
+          <svg class="about-feat-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="4" height="14" rx="1"/><rect x="8" y="7" width="4" height="10" rx="1"/><rect x="14" y="1" width="4" height="16" rx="1"/></svg>
+          <span class="about-feat-title">Visual Build Orders</span>
+          <span class="about-feat-desc">Supply-indexed timelines showing every building, unit, and upgrade decision</span>
+        </div>
+        <div class="about-feat">
+          <img class="about-feat-icon" src="/assets/wc3icons/ngol.jpg" alt="">
+          <span class="about-feat-title">Live Minimap</span>
+          <span class="about-feat-desc">Canvas-rendered map with unit movement, buildings, and neutral camps</span>
+        </div>
+        <div class="about-feat">
+          <img class="about-feat-icon" src="/assets/wc3icons/AUdc.jpg" alt="">
+          <span class="about-feat-title">Hero &amp; Skill Tracking</span>
+          <span class="about-feat-desc">Level-ups, ability choices, and revival timings for every hero</span>
+        </div>
+        <div class="about-feat">
+          <img class="about-feat-icon" src="/assets/wc3icons/btnsteelmelee.jpg" alt="">
+          <span class="about-feat-title">Upgrade Tracking</span>
+          <span class="about-feat-desc">Attack, defense, and ability research with per-level costs</span>
+        </div>
+        <div class="about-feat">
+          <img class="about-feat-icon" src="/assets/wc3icons/hpea.jpg" alt="">
+          <span class="about-feat-title">Economy &amp; Workers</span>
+          <span class="about-feat-desc">Gold miners, lumber workers, supply usage, and expansion timings</span>
+        </div>
+        <div class="about-feat">
+          <svg class="about-feat-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 10a8 8 0 1 1 8 8"/><polyline points="2 6 2 10 6 10"/><polyline points="10 5 10 10 13 12"/></svg>
+          <span class="about-feat-title">Re-windable Replay</span>
+          <span class="about-feat-desc">Scrub forward and backward to any moment in the game</span>
+        </div>
+      </div>
+
+      <!-- ── Feature cards: what the analyzer does ── -->
+      <section class="about-section">
+        <h2 class="about-section-title">Warcraft III Replay Analyzer</h2>
+        <p class="about-section-sub">Works with .w3g replay files from Reforged, classic WC3, and W3Champions.</p>
+
+        <div class="about-feature-grid">
+          <div class="about-feature-card">
+            <div class="about-feature-icon-row">
+              <img src="/assets/wc3icons/hbar.jpg" alt="Barracks">
+              <img src="/assets/wc3icons/usep.jpg" alt="Crypt">
+              <img src="/assets/wc3icons/emow.jpg" alt="Moon Well">
+            </div>
+            <h3>Build Order Timeline</h3>
+            <p>Buildings, units, and upgrades indexed by supply count with game timings.</p>
+          </div>
+
+          <div class="about-feature-card">
+            <div class="about-feature-icon-row">
+              <img src="/assets/wc3icons/Hamg.jpg" alt="Archmage">
+              <img src="/assets/wc3icons/Obla.jpg" alt="Blademaster">
+              <img src="/assets/wc3icons/Udea.jpg" alt="Death Knight">
+            </div>
+            <h3>Hero Tracking</h3>
+            <p>Levels, skill picks, ability choices, and revival timings for each hero.</p>
+          </div>
+
+          <div class="about-feature-card">
+            <div class="about-feature-icon-row">
+              <img src="/assets/wc3icons/hkni.jpg" alt="Knight">
+              <img src="/assets/wc3icons/ucry.jpg" alt="Fiend">
+              <img src="/assets/wc3icons/edoc.jpg" alt="Bear">
+            </div>
+            <h3>Unit Composition</h3>
+            <p>Unit training and army composition over time for both players.</p>
+          </div>
+
+          <div class="about-feature-card">
+            <div class="about-feature-icon-row">
+              <img src="/assets/wc3icons/btnsteelmelee.jpg" alt="Attack upgrade">
+              <img src="/assets/wc3icons/btnsteelarmor.jpg" alt="Defense upgrade">
+              <img src="/assets/wc3icons/btnensnare.jpg" alt="Ensnare">
+            </div>
+            <h3>Upgrades &amp; Research</h3>
+            <p>Attack upgrades, defense upgrades, and ability research with per-level costs and timings.</p>
+          </div>
+
+          <div class="about-feature-card">
+            <div class="about-feature-icon-row">
+              <img src="/assets/wc3icons/ngol.jpg" alt="Gold Mine">
+              <img src="/assets/wc3icons/hpea.jpg" alt="Peasant">
+              <img src="/assets/wc3icons/ugho.jpg" alt="Ghoul">
+            </div>
+            <h3>Workers &amp; Economy</h3>
+            <p>Gold miners, lumber harvesters, supply usage, and expansion timings.</p>
+          </div>
+
+          <div class="about-feature-card">
+            <div class="about-feature-icon-row">
+              <img src="/assets/wc3icons/nmer.jpg" alt="Marketplace">
+              <img src="/assets/wc3icons/nfoh.jpg" alt="Fountain">
+              <img src="/assets/wc3icons/ngme.jpg" alt="Goblin Shop">
+            </div>
+            <h3>Interactive Minimap</h3>
+            <p>Minimap with unit movement, building placement, neutral camps, and gold mines. Scrub to any point.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Pro builds section ── -->
+      <section class="about-section">
+        <h2 class="about-section-title">Pro Warcraft III Build Orders</h2>
+        <p class="about-section-sub">Curated builds from top competitive players, each sourced from a real replay.</p>
+
+        <div class="about-two-col">
+          <div class="about-col-text">
+            <div class="about-highlight-item">
+              <span class="about-highlight-label">All four races</span>
+              <p>Human, Orc, Night Elf, and Undead builds across every major matchup.</p>
+            </div>
+            <div class="about-highlight-item">
+              <span class="about-highlight-label">Tagged &amp; filterable</span>
+              <p>Filter by opener style, game plan, and army type.</p>
+            </div>
+            <div class="about-highlight-item">
+              <span class="about-highlight-label">Real replay data</span>
+              <p>Every build is backed by an actual pro game you can watch play out step by step with the full visual timeline.</p>
+            </div>
+          </div>
+          <div class="about-col-heroes">
+            <div class="about-hero-grid">
+              <img src="/assets/wc3icons/Hamg.jpg" alt="Archmage" title="Archmage">
+              <img src="/assets/wc3icons/Hmkg.jpg" alt="Mountain King" title="Mountain King">
+              <img src="/assets/wc3icons/Hpal.jpg" alt="Paladin" title="Paladin">
+              <img src="/assets/wc3icons/Obla.jpg" alt="Blademaster" title="Blademaster">
+              <img src="/assets/wc3icons/Ofar.jpg" alt="Far Seer" title="Far Seer">
+              <img src="/assets/wc3icons/Oshd.jpg" alt="Shadow Hunter" title="Shadow Hunter">
+              <img src="/assets/wc3icons/Edem.jpg" alt="Demon Hunter" title="Demon Hunter">
+              <img src="/assets/wc3icons/Ekee.jpg" alt="Keeper" title="Keeper of the Grove">
+              <img src="/assets/wc3icons/Emoo.jpg" alt="Priestess" title="Priestess of the Moon">
+              <img src="/assets/wc3icons/Udea.jpg" alt="Death Knight" title="Death Knight">
+              <img src="/assets/wc3icons/Ulic.jpg" alt="Lich" title="Lich">
+              <img src="/assets/wc3icons/Ucrl.jpg" alt="Crypt Lord" title="Crypt Lord">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── How it works ── -->
+      <section class="about-section about-section-muted">
+        <h2 class="about-section-title">How WC3V Works</h2>
+        <div class="about-steps">
+          <div class="about-step">
+            <div class="about-step-num">1</div>
+            <h3>Upload a .w3g replay</h3>
+            <p>The same binary replay file Warcraft III saves after every game. Drag and drop or click to upload.</p>
+          </div>
+          <div class="about-step">
+            <div class="about-step-num">2</div>
+            <h3>Parser reconstructs the game</h3>
+            <p>Player actions are extracted (building placements, unit training, hero skills, upgrades, resource events) and the full game state is reconstructed.</p>
+          </div>
+          <div class="about-step">
+            <div class="about-step-num">3</div>
+            <h3>Visual breakdown renders</h3>
+            <p>Supply-indexed build order timeline, tier snapshots, and live minimap with unit positions. Scrub, pause, and study any moment.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Open source / free ── -->
+      <section class="about-section">
+        <div class="about-two-col about-two-col-even">
+          <div class="about-info-card">
+            <h2>Open Source</h2>
+            <p>WC3V is free, open-source software licensed under <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3</a>. Full source on <a href="https://github.com/jblanchette/wc3v">GitHub</a>. Built with Node.js, D3.js, and plain HTML/CSS/JS. No frameworks, no build tools, no accounts.</p>
+          </div>
+          <div class="about-info-card">
+            <h2>Free Forever</h2>
+            <p>Built by Warcraft III players for Warcraft III players. No ads, no paywalls, no tracking, no data collection. All game assets and imagery are property of Blizzard Entertainment. WC3V is a fan-made educational tool, not affiliated with or endorsed by Blizzard.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Bottom CTA ── -->
+      <div class="about-bottom-cta">
+        <a href="/" class="site-cta-btn site-cta-primary">Browse Pro Builds</a>
+        <a href="/viewer.html" class="site-cta-btn site-cta-secondary">Analyze Your Replay</a>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool not affiliated with or endorsed by Blizzard.
+    </div>
+  </footer>
+</body>
+</html>
