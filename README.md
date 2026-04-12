@@ -78,7 +78,7 @@ The parser produces `.wc3v` files — JSON documents containing the full simulat
 
 **Full schema:** [`docs/wc3v-schema.json`](docs/wc3v-schema.json) (JSON Schema draft 2020-12)
 
-**Example output:** [`docs/happy-vs-grubby.w3g.wc3v`](docs/happy-vs-grubby.w3g.wc3v)
+**Example output:** [`docs/happy-vs-grubby.wc3v.gz`](docs/happy-vs-grubby.wc3v.gz) (gzip-compressed JSON, ~800 KB)
 
 ## Architecture
 
