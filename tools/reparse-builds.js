@@ -1,10 +1,22 @@
 /**
- * Reparses all replays referenced by builds in the builds-manifest.json.
+ * reparse-builds.js — Reparse all pro replays referenced by builds-manifest.json.
+ *
+ * Run this after ANY server-side parser change (Hero.js, Player.js, mappings.js,
+ * Building.js, etc.) to regenerate the .wc3v.gz files that the client reads.
+ * The site only serves pre-parsed .wc3v.gz — if you don't reparse, clients will
+ * still see old data regardless of code changes.
  *
  * Usage:
- *   node tools/reparse-builds.js            — reparse all build replays
+ *   node tools/reparse-builds.js            — reparse all build replays (47 replays)
  *   node tools/reparse-builds.js --dry-run   — list replays without parsing
  *   node tools/reparse-builds.js --debug     — reparse with debug output (keeps uncompressed .wc3v)
+ *
+ * Source: reads replay IDs from client/data/builds-manifest.json
+ * Input:  replays/{id}.w3g (raw replay files)
+ * Output: client/replays/{id}.wc3v.gz (parsed JSON, gzipped)
+ *
+ * Reports per-player parse confidence and flags replays with supply bumps,
+ * inferred buildings, or low confidence scores (<0.95).
  */
 
 const fs = require('fs');

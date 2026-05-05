@@ -153,18 +153,22 @@ const UnitsProductionPanel = class {
     const h = wrapper.clientHeight;
     const dim = Math.min(w, h);
 
+    // Compact sizing when in split-screen mode
+    const isSplit = this.container.classList.contains('up-split-mode');
+
     // Scale icon sizes relative to canvas dimension
     // Small canvas (~400px): icons 28px hero 34px  |  Large (~900px+): icons 36px hero 42px
-    const unitIcon = Math.round(Math.max(28, Math.min(36, dim * 0.045)));
+    const baseUnitIcon = Math.round(Math.max(28, Math.min(36, dim * 0.045)));
+    const unitIcon = isSplit ? Math.round(baseUnitIcon * 0.65) : baseUnitIcon;
     const heroIcon = Math.round(unitIcon * 1.18);
-    const abilIcon = Math.round(Math.max(12, Math.min(16, dim * 0.02)));
+    const abilIcon = isSplit ? 10 : Math.round(Math.max(12, Math.min(16, dim * 0.02)));
 
     // Cell widths: just slightly wider than the portrait to allow ability overflow
-    const cellW = unitIcon + 6;
-    const heroCellW = heroIcon + 8;
+    const cellW = unitIcon + (isSplit ? 3 : 6);
+    const heroCellW = heroIcon + (isSplit ? 4 : 8);
 
     // Hero may span 2 grid columns if wide enough
-    const heroSpan = heroCellW > cellW * 1.4 ? 2 : 1;
+    const heroSpan = isSplit ? 1 : (heroCellW > cellW * 1.4 ? 2 : 1);
 
     const s = this.container.style;
     s.setProperty('--up-icon', unitIcon + 'px');
@@ -173,6 +177,28 @@ const UnitsProductionPanel = class {
     s.setProperty('--up-cell-w', cellW + 'px');
     s.setProperty('--up-hero-cell-w', heroCellW + 'px');
     s.setProperty('--up-hero-span', heroSpan);
+  }
+
+  /**
+   * Assign split-screen positions based on BroadcastCamera split targets.
+   * splitPlayers[0] = left/top-left half, splitPlayers[1] = right/bottom-right half.
+   */
+  setSplitPositions (splitPlayers) {
+    if (!splitPlayers || splitPlayers.length < 2) return;
+    this._playerEls.forEach(pEl => {
+      const id = pEl.player.playerId;
+      if (id === splitPlayers[0].playerId) {
+        pEl.root.dataset.splitPos = 'left';
+      } else if (id === splitPlayers[1].playerId) {
+        pEl.root.dataset.splitPos = 'right';
+      }
+    });
+  }
+
+  clearSplitPositions () {
+    this._playerEls.forEach(pEl => {
+      delete pEl.root.dataset.splitPos;
+    });
   }
 
   _createToggle (label, section, active) {
@@ -211,6 +237,7 @@ const UnitsProductionPanel = class {
     const root = document.createElement('div');
     root.className = 'up-player';
     root.dataset.playerId = player.playerId;
+    root.style.setProperty('--player-color', player.playerColor);
 
     // Player header
     const header = document.createElement('div');
@@ -236,10 +263,14 @@ const UnitsProductionPanel = class {
     unitsLabel.className = 'up-section-label';
     unitsLabel.textContent = 'UNITS';
 
+    const heroRow = document.createElement('div');
+    heroRow.className = 'up-hero-row';
+
     const unitGrid = document.createElement('div');
     unitGrid.className = 'up-unit-grid';
 
     unitsSection.appendChild(unitsLabel);
+    unitsSection.appendChild(heroRow);
     unitsSection.appendChild(unitGrid);
     root.appendChild(unitsSection);
 
@@ -260,6 +291,7 @@ const UnitsProductionPanel = class {
 
     return {
       root,
+      heroRow,
       unitGrid,
       prodGrid,
       player
@@ -359,7 +391,7 @@ const UnitsProductionPanel = class {
   }
 
   _computeProductionQueue (player, gameTime) {
-    const items = [];
+    const rawItems = [];
     const unitBalance = this.viewer.unitBalance;
 
     player.units.forEach(unit => {
@@ -381,23 +413,59 @@ const UnitsProductionPanel = class {
       }
 
       if (startTime === null || endTime === null) return;
-      if (gameTime < startTime || gameTime >= endTime) return;
 
-      const progress = Math.min(1, (gameTime - startTime) / (endTime - startTime));
-
-      items.push({
+      rawItems.push({
         uuid: unit.uuid,
         itemId: unit.itemId,
         displayName: unit.displayName,
         isBuilding: unit.isBuilding,
-        progress,
         startTime,
         endTime,
         unit
       });
     });
 
-    // Sort by start time
+    // Fix sequential training: units queued at the same building get similar
+    // spawnTime but sequential trainedTime. Group by itemId, sort by endTime,
+    // and chain them so each unit's display start = previous unit's end.
+    // Units from different buildings will have different enough spawnTimes (>5s)
+    // to remain independent.
+    const groups = {};
+    rawItems.forEach(item => {
+      if (item.isBuilding) return; // buildings don't queue
+      const key = item.itemId;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+
+    for (const key in groups) {
+      const group = groups[key];
+      if (group.length <= 1) continue;
+
+      // Sort by endTime to establish training order
+      group.sort((a, b) => a.endTime - b.endTime);
+
+      // Chain units that were queued together (spawnTime within 5s of each other)
+      for (let i = 1; i < group.length; i++) {
+        const prev = group[i - 1];
+        const curr = group[i];
+        // If queued around the same time and curr starts before prev ends,
+        // this is a queued unit — its real training starts when prev finishes
+        if (Math.abs(curr.startTime - prev.startTime) < 5000 &&
+            curr.startTime < prev.endTime) {
+          curr.startTime = prev.endTime;
+        }
+      }
+    }
+
+    // Now filter to items active at current gameTime and compute progress
+    const items = [];
+    rawItems.forEach(item => {
+      if (gameTime < item.startTime || gameTime >= item.endTime) return;
+      item.progress = Math.min(1, (gameTime - item.startTime) / (item.endTime - item.startTime));
+      items.push(item);
+    });
+
     items.sort((a, b) => a.startTime - b.startTime);
     return items;
   }
@@ -418,21 +486,22 @@ const UnitsProductionPanel = class {
       unitKey: key
     });
 
+    pEl.heroRow.innerHTML = '';
     grid.innerHTML = '';
 
-    // Render heroes first
+    // Render heroes on their own row
     units.heroes.forEach(hero => {
-      grid.appendChild(this._buildHeroEl(hero, gameTime));
+      pEl.heroRow.appendChild(this._buildHeroEl(hero, gameTime));
     });
 
-    // Render unit groups
+    // Render unit groups below heroes
     units.groups.forEach(group => {
       grid.appendChild(this._buildUnitGroupEl(group));
     });
   }
 
   _updateHeroLevels (pEl, units, gameTime) {
-    const heroEls = pEl.unitGrid.querySelectorAll('.up-hero');
+    const heroEls = pEl.heroRow.querySelectorAll('.up-hero');
     units.heroes.forEach((hero, i) => {
       if (heroEls[i]) {
         const levelEl = heroEls[i].querySelector('.up-hero-level');
@@ -568,6 +637,9 @@ const UnitsProductionPanel = class {
       prodKey: key
     });
 
+    // Invalidate cached prod item list — will be rebuilt on next _updateProductionBars
+    pEl._cachedProdItems = [];
+
     grid.innerHTML = '';
 
     if (!production.length) {
@@ -614,12 +686,27 @@ const UnitsProductionPanel = class {
   _updateProductionBars (gameTime) {
     if (!this.container) return;
 
+    // Build uuid→unit lookup once if missing (avoids O(n) find per bar per frame)
+    if (!this._unitsByUuid) this._unitsByUuid = new Map();
+
     this._playerEls.forEach(pEl => {
-      const prodItems = pEl.prodGrid.querySelectorAll('.up-prod-item');
-      prodItems.forEach(el => {
+      // Use cached prod item list instead of querySelectorAll per frame
+      if (!pEl._cachedProdItems) pEl._cachedProdItems = [];
+      const prodItems = pEl._cachedProdItems;
+      if (!prodItems.length && pEl.prodGrid) {
+        pEl.prodGrid.querySelectorAll('.up-prod-item').forEach(el => prodItems.push(el));
+      }
+
+      for (let i = 0; i < prodItems.length; i++) {
+        const el = prodItems[i];
         const uuid = el.dataset.uuid;
-        const unit = pEl.player.units.find(u => u.uuid === uuid);
-        if (!unit) return;
+
+        let unit = this._unitsByUuid.get(uuid);
+        if (!unit) {
+          unit = pEl.player.units.find(u => u.uuid === uuid);
+          if (unit) this._unitsByUuid.set(uuid, unit);
+          else continue;
+        }
 
         let startTime, endTime;
         const unitBalance = this.viewer.unitBalance;
@@ -635,12 +722,18 @@ const UnitsProductionPanel = class {
           endTime = unit.trainedTime;
         }
 
-        if (startTime == null || endTime == null) return;
+        if (startTime == null || endTime == null) continue;
 
         const progress = Math.min(1, (gameTime - startTime) / (endTime - startTime));
-        const fill = el.querySelector('.up-prod-fill');
+        // Cache fill element reference on the DOM node
+        if (!el._fillEl) el._fillEl = el.querySelector('.up-prod-fill');
+        const fill = el._fillEl;
         if (fill) {
-          fill.style.width = `${Math.round(progress * 100)}%`;
+          const pct = Math.round(progress * 100);
+          if (fill._lastPct !== pct) {
+            fill.style.width = pct + '%';
+            fill._lastPct = pct;
+          }
         }
 
         // Completion flash
@@ -651,7 +744,7 @@ const UnitsProductionPanel = class {
             el.classList.remove('up-prod-complete');
           }, { once: true });
         }
-      });
+      }
     });
   }
 
@@ -687,6 +780,24 @@ const UnitsProductionPanel = class {
     this._lastState.clear();
     this._completedItems.clear();
     this._lastUpdateGameTime = -1;
+  }
+
+  /**
+   * Show camera mode indicator on player panels.
+   * @param {number|null} playerId — which player to highlight (null = all or none)
+   * @param {string|null} mode — 'follow', 'auto', or null to clear
+   */
+  setCameraHighlight (playerId, mode) {
+    if (!this._playerEls) return;
+    this._playerEls.forEach((el, idx) => {
+      const root = el.root;
+      root.classList.remove('up-camera-follow', 'up-camera-auto');
+      if (mode === 'auto') {
+        root.classList.add('up-camera-auto');
+      } else if (mode === 'follow' && idx === playerId) {
+        root.classList.add('up-camera-follow');
+      }
+    });
   }
 };
 

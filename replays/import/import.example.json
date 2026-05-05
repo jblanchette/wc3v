@@ -1,0 +1,41 @@
+{
+  "tournament": {
+    "id": "bcup-s22",
+    "name": "B Cup Season 22",
+    "shortName": "B Cup S22",
+    "date": "2026-04-01",
+    "endDate": "2026-04-15",
+    "organizer": "Back2Warcraft",
+    "tier": 2,
+    "region": "EU",
+    "mapPool": [
+      "Autumn Leaves",
+      "Concealed Hill",
+      "Echo Isles 2",
+      "Hammerfall",
+      "Northern Isles",
+      "Shattered Exile",
+      "Springtime",
+      "Tidehunters",
+      "Turtle Rock 2"
+    ],
+    "url": "https://liquipedia.net/warcraft/B_Cup/22"
+  },
+  "replays": {
+    "happy-vs-lyn-g1.w3g": {
+      "stage": "Grand Final",
+      "round": "Game 1",
+      "outcome": { "1": "loss", "2": "win" },
+      "notes": "Happy's textbook DK Fiend opener on Concealed Hill"
+    },
+    "happy-vs-lyn-g2.w3g": {
+      "stage": "Grand Final",
+      "round": "Game 2",
+      "outcome": { "1": "win", "2": "loss" }
+    },
+    "focus-vs-moon.w3g": {
+      "stage": "Semifinal",
+      "round": "Game 3"
+    }
+  }
+}

@@ -4,6 +4,7 @@
   "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
   "durationMs": 72700,
   "durationFormatted": "1:12",
+  "fingerprint": "Echo Isles|73|jblanch",
   "players": {
     "1": {
       "name": "jblanch",
@@ -23,13 +24,6 @@
       "buildPreview": [
         {
           "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 0,
-          "gameTimeFormatted": "0:00"
-        },
-        {
-          "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
           "gameTimeMs": 6500,
@@ -41,13 +35,6 @@
           "itemId": "uzig",
           "gameTimeMs": 14300,
           "gameTimeFormatted": "0:14"
-        },
-        {
-          "type": "building",
-          "name": "Tomb of Relics",
-          "itemId": "utom",
-          "gameTimeMs": 20600,
-          "gameTimeFormatted": "0:20"
         },
         {
           "type": "hero",

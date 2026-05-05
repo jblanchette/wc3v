@@ -1,0 +1,575 @@
+{
+  "replayId": "888856001_Life_Happy_Last-Refuge-15",
+  "map": "Last Refuge",
+  "mapRaw": "Maps/W3Champions\\3_w3c_251104_0950_LastRefuge_v1.5.w3x",
+  "durationMs": 1079175,
+  "durationFormatted": "17:59",
+  "fingerprint": "Last Refuge|1079|aurorahappy#2668,medusa#31315",
+  "players": {
+    "1": {
+      "name": "Medusa#31315",
+      "race": "E",
+      "heroOpener": {
+        "name": "Demon Hunter",
+        "itemId": "Edem",
+        "gameTimeMs": 67216,
+        "gameTimeFormatted": "1:07"
+      },
+      "tier2Time": 164209,
+      "tier2TimeFormatted": "2:44",
+      "tier3Time": 349693,
+      "tier3TimeFormatted": "5:49",
+      "expansionTime": 677729,
+      "expansionTimeFormatted": "11:17",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 4455,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 4816,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 16084,
+          "gameTimeFormatted": "0:16"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 22645,
+          "gameTimeFormatted": "0:22"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 67216,
+          "gameTimeFormatted": "1:07"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 99693,
+          "gameTimeFormatted": "1:39"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 105289,
+          "gameTimeFormatted": "1:45"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 106556,
+          "gameTimeFormatted": "1:46"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 131278,
+          "gameTimeFormatted": "2:11"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 158377,
+          "gameTimeFormatted": "2:38"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 180829,
+          "gameTimeFormatted": "3:00"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 191170,
+          "gameTimeFormatted": "3:11"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 211304,
+          "gameTimeFormatted": "3:31"
+        },
+        {
+          "type": "building",
+          "name": "Unknown (eaol)",
+          "itemId": "eaol",
+          "gameTimeMs": 295918,
+          "gameTimeFormatted": "4:55"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 314810,
+          "gameTimeFormatted": "5:14"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 315447,
+          "gameTimeFormatted": "5:15"
+        },
+        {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
+          "gameTimeMs": 385918,
+          "gameTimeFormatted": "6:25"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 393034,
+          "gameTimeFormatted": "6:33"
+        },
+        {
+          "type": "unit",
+          "name": "Druid of the Claw",
+          "itemId": "edoc",
+          "gameTimeMs": 416012,
+          "gameTimeFormatted": "6:56"
+        },
+        {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
+          "gameTimeMs": 435360,
+          "gameTimeFormatted": "7:15"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        },
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "Mountain Giant",
+          "itemId": "emtg"
+        },
+        {
+          "name": "murloc nightcrawler",
+          "itemId": "nmrm"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 315296,
+          "gameTimeFormatted": "5:15"
+        },
+        {
+          "itemId": "Redc",
+          "name": "Druid of the Claw Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btndocmastertraining",
+          "gameTimeMs": 491052,
+          "gameTimeFormatted": "8:11"
+        },
+        {
+          "itemId": "Resw",
+          "name": "Strength of the Wild",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnimprovedstrengthofthewild",
+          "gameTimeMs": 741214,
+          "gameTimeFormatted": "12:21"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 584301,
+          "gameTimeFormatted": "9:44"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 2,
+          "category": "defense",
+          "icon": "btnimprovedreinforcedhides",
+          "gameTimeMs": 859287,
+          "gameTimeFormatted": "14:19"
+        },
+        {
+          "itemId": "Rews",
+          "name": "Well Spring",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnwellspring",
+          "gameTimeMs": 708811,
+          "gameTimeFormatted": "11:48"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 872134,
+          "gameTimeFormatted": "14:32"
+        },
+        {
+          "itemId": "Rehs",
+          "name": "Hardened Skin",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnhardenedskin",
+          "gameTimeMs": 872646,
+          "gameTimeFormatted": "14:32"
+        },
+        {
+          "itemId": "Rers",
+          "name": "Resistant Skin",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnresistantskin",
+          "gameTimeMs": 872796,
+          "gameTimeFormatted": "14:32"
+        }
+      ]
+    },
+    "2": {
+      "name": "AuroraHappy#2668",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 76584,
+        "gameTimeFormatted": "1:16"
+      },
+      "tier2Time": 202714,
+      "tier2TimeFormatted": "3:22",
+      "tier3Time": 350055,
+      "tier3TimeFormatted": "5:50",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 5874,
+          "gameTimeFormatted": "0:05"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 22555,
+          "gameTimeFormatted": "0:22"
+        },
+        {
+          "type": "building",
+          "name": "Necropolis",
+          "itemId": "unpl",
+          "gameTimeMs": 58752,
+          "gameTimeFormatted": "0:58"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 76584,
+          "gameTimeFormatted": "1:16"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 266924,
+          "gameTimeFormatted": "4:26"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 284910,
+          "gameTimeFormatted": "4:44"
+        },
+        {
+          "type": "building",
+          "name": "Slaughterhouse",
+          "itemId": "uslh",
+          "gameTimeMs": 377921,
+          "gameTimeFormatted": "6:17"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 389095,
+          "gameTimeFormatted": "6:29"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 417651,
+          "gameTimeFormatted": "6:57"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 420604,
+          "gameTimeFormatted": "7:00"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 440780,
+          "gameTimeFormatted": "7:20"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 472085,
+          "gameTimeFormatted": "7:52"
+        },
+        {
+          "type": "hero",
+          "name": "Lich",
+          "itemId": "Ulic",
+          "gameTimeMs": 490932,
+          "gameTimeFormatted": "8:10"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 522611,
+          "gameTimeFormatted": "8:42"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 571468,
+          "gameTimeFormatted": "9:31"
+        },
+        {
+          "type": "building",
+          "name": "Temple of the Damned",
+          "itemId": "utod",
+          "gameTimeMs": 602833,
+          "gameTimeFormatted": "10:02"
+        },
+        {
+          "type": "building",
+          "name": "Sacrificial Pit",
+          "itemId": "usap",
+          "gameTimeMs": 690618,
+          "gameTimeFormatted": "11:30"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 754542,
+          "gameTimeFormatted": "12:34"
+        },
+        {
+          "type": "unit",
+          "name": "Shade",
+          "itemId": "ushd",
+          "gameTimeMs": 758879,
+          "gameTimeFormatted": "12:38"
+        },
+        {
+          "type": "unit",
+          "name": "Abomination",
+          "itemId": "uabo",
+          "gameTimeMs": 763396,
+          "gameTimeFormatted": "12:43"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Graveyard",
+          "itemId": "ugrv"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t2Units": [],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
+          "name": "Temple of the Damned",
+          "itemId": "utod"
+        },
+        {
+          "name": "Sacrificial Pit",
+          "itemId": "usap"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
+        {
+          "name": "Obsidian Statue",
+          "itemId": "uobs"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        },
+        {
+          "name": "Shade",
+          "itemId": "ushd"
+        },
+        {
+          "name": "Abomination",
+          "itemId": "uabo"
+        },
+        {
+          "name": "Banshee",
+          "itemId": "uban"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rupm",
+          "name": "undead backpack",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpackbeast",
+          "gameTimeMs": 172702,
+          "gameTimeFormatted": "2:52"
+        },
+        {
+          "itemId": "Rugf",
+          "name": "Ghoul Frenzy",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnghoulfrenzy",
+          "gameTimeMs": 492778,
+          "gameTimeFormatted": "8:12"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 499042,
+          "gameTimeFormatted": "8:19"
+        },
+        {
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 581942,
+          "gameTimeFormatted": "9:41"
+        },
+        {
+          "itemId": "Ruba",
+          "name": "Banshee Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnbansheemaster",
+          "gameTimeMs": 672429,
+          "gameTimeFormatted": "11:12"
+        }
+      ]
+    }
+  }
+}

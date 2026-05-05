@@ -40,14 +40,20 @@ const SiteNav = {
     const navLinks = `
       <div class="site-nav-spacer"></div>
       <div class="site-nav-links">
+        <a class="site-nav-link" href="${root}/">Home</a>
         <a class="site-nav-link" href="${root}/about.html">About</a>
       </div>`;
 
+    // On the homepage the WC3V logo is rendered prominently in the hero
+    // bar, so the small nav-logo is suppressed to avoid duplication.
+    const logoHtml = isHome ? '' : `
+      <a class="site-nav-logo" href="${root}/">
+        <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
+      </a>`;
+
     nav.innerHTML = `
       <div class="site-nav-inner">
-        <a class="site-nav-logo" href="${root}/">
-          <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
-        </a>
+        ${logoHtml}
         ${leftHtml}
         ${navLinks}
       </div>

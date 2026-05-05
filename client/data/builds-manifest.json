@@ -2,7 +2,7 @@
   "builds": [
     {
       "id": "udo-dk-fast-fiend",
-      "name": "DK Standard Fiend",
+      "name": "DK Fiend Standard",
       "race": "U",
       "matchups": [
         "UvO",
@@ -18,13 +18,13 @@
       "keyUnits": [
         "ucry"
       ],
-      "description": "The bread-and-butter Undead build. Death Knight opener into fast Crypt Fiend production, Lich second for Frost Nova. Works in every matchup with adjustments.",
+      "description": "The standard Undead build. Death Knight opener with mass Ghouls for early creeping and lumber, transitioning into Crypt Fiends and Obsidian Statues at T2. Lich second hero for Frost Nova burst.",
       "strategyPoints": [
-        "Open DK for Unholy Aura speed and Death Coil sustain \u00e2\u20ac\u201d creep efficiently to level 3",
-        "Rush to tier 2 around 5:30\u00e2\u20ac\u201c6:00, start Fiend production immediately from Crypt",
-        "Lich second hero with Frost Nova \u00e2\u20ac\u201d obliterates clumped melee and provides burst damage",
+        "Open DK for Unholy Aura speed and Death Coil sustain â€” creep efficiently to level 3",
+        "Rush to tier 2 around 5:30â€“6:00, start Fiend production immediately from Crypt",
+        "Lich second hero with Frost Nova â€” obliterates clumped melee and provides burst damage",
         "Add Obsidian Statues at T2 for mana/HP regen sustain in prolonged fights",
-        "T3 for Orb of Corruption on DK \u00e2\u20ac\u201d armor debuff makes Fiend focus fire lethal",
+        "T3 for Orb of Corruption on DK â€” armor debuff makes Fiend focus fire lethal",
         "Wins against: most standard openers, BM Grunt builds, AM Rifle builds",
         "Loses to: very fast Orc harassment preventing creeping, well-timed NE Bear timing pushes"
       ],
@@ -73,7 +73,7 @@
           ],
           "timing": "8:00-9:00",
           "goal": "Orb of Corruption on DK, Destroyers if facing casters",
-          "notes": "Standard UD T3 for the orb \u00e2\u20ac\u201d not a T3-focused build"
+          "notes": "Standard UD T3 for the orb â€” not a T3-focused build"
         },
         "conditionalBranches": [
           {
@@ -88,145 +88,225 @@
       },
       "replays": [
         {
-          "replayId": "happy-vs-grubby",
+          "replayId": "1342775468_Kaho_Happy_Hammerfall",
           "playerSlot": "2",
           "playerName": "Happy",
-          "opponentName": "FollowGrubby",
-          "map": "Concealed Hill",
-          "outcome": "win",
-          "notes": "Textbook DK opener \u00e2\u20ac\u201d clean expansion timing at ~6:00, Lich transitions, dominant late game"
+          "opponentName": "Kaho",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Hammerfall|791|aurorahappy#2668,kaho#31819"
         },
         {
-          "replayId": "insup-vs-kiwi",
-          "playerSlot": "6",
-          "playerName": "iNSUPERABLE",
-          "opponentName": "KiWiKaKi",
-          "map": "Concealed Hill",
-          "outcome": "win",
-          "notes": "DK into Dark Ranger variant \u00e2\u20ac\u201d shows how to adapt hero choice to counter Orc summoners"
+          "replayId": "1579908815_Eer0_FoCuS_Tidehunters-12",
+          "playerSlot": "1",
+          "playerName": "Eer0",
+          "opponentName": "FoCuS",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 1",
+          "fingerprint": "Tidehunters|914|focus#31324,orange#14823"
         },
         {
-          "replayId": "happy-vs-moon",
+          "replayId": "1697966098_LabyRinth_ColorFul_Springtime-13",
+          "playerSlot": "1",
+          "playerName": "LabyRinth",
+          "opponentName": "ColorFul",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Grand Final",
+          "round": "Game 5",
+          "fingerprint": "Springtime|541|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "1934607475_LabyRinth_ColorFul_Twisted-Meadows-11",
+          "playerSlot": "1",
+          "playerName": "LabyRinth",
+          "opponentName": "ColorFul",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Twisted Meadows|931|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "1964524342_Kaho_Happy_Last-Refuge-15",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Kaho",
+          "map": "Last Refuge v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 4",
+          "fingerprint": "Last Refuge|929|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "2026580177_Happy_Life_Shattered-Exile",
           "playerSlot": "1",
           "playerName": "Happy",
-          "opponentName": "Interview",
-          "map": "Autumn Leaves",
-          "outcome": "win",
-          "notes": "DK Fiend vs NE \u00e2\u20ac\u201d shows the standard Fiend/Statue composition against Night Elf expansion"
-        }
-      ],
-      "heroSkills": {
-        "udea": {
-          "AUdc": 3,
-          "AUau": 3,
-          "AUdp": 1,
-          "AUan": 0
+          "opponentName": "Life",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 3",
+          "fingerprint": "Shattered Exile|1041|aurorahappy#2668,medusa#31315"
         },
-        "ulic": {
-          "AUfn": 3,
-          "AUfa": 1,
-          "AUdr": 1,
-          "AUdd": 0
-        }
-      },
-      "coreUpgrades": [
-        "Ruwb",
-        "Rupm"
-      ]
-    },
-    {
-      "id": "ud-dk-expand",
-      "name": "DK Fast Expand",
-      "race": "U",
-      "matchups": [
-        "UvO",
-        "UvH"
-      ],
-      "heroOpener": "Death Knight",
-      "heroItemId": "udea",
-      "heroItemIds": [
-        "udea",
-        "ulic"
-      ],
-      "keyUnits": [
-        "ucry"
-      ],
-      "description": "Death Knight opener with an early expansion to goldmine two. The gold lead funds a dominant mid-game army. Riskier than standard Fiend but snowballs hard if uncontested.",
-      "strategyPoints": [
-        "Same T1 opener as standard DK Fiend \u00e2\u20ac\u201d Crypt, Graveyard, Altar, Rod of Necromancy",
-        "Take expansion at 5:30-6:30 while pressuring with DK coil to deny opponent scouting",
-        "Lich second for Frost Armor on Fiends \u00e2\u20ac\u201d huge survivability boost vs Orc melee",
-        "Double gold income allows faster Statue production and earlier T3",
-        "Wins against: passive opponents who don't punish the expansion window",
-        "Loses to: fast Orc push that hits before expansion defenses are up"
-      ],
-      "tags": [
-        "expansion",
-        "fiends",
-        "macro"
-      ],
-      "playstyleTags": [
-        "macro-expand",
-        "standard"
-      ],
-      "opener": "expand",
-      "gamePlan": "economic",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "usep",
-            "ugrv",
-            "uaod",
-            "utom"
-          ],
-          "units": [
-            "ucry"
-          ],
-          "goal": "DK + 2-3 Fiends, scout for expansion timing"
-        },
-        "t2": {
-          "buildings": [
-            "uslh",
-            "ugol"
-          ],
-          "units": [
-            "ucry",
-            "uobs"
-          ],
-          "timing": "5:30-6:00",
-          "goal": "Expand to second mine, Lich with Frost Armor, defend expansion"
-        },
-        "t3": {
-          "buildings": [
-            "unpl"
-          ],
-          "units": [
-            "ubsp"
-          ],
-          "timing": "8:30-9:30",
-          "goal": "Orb on DK, Destroyers \u00e2\u20ac\u201d funded by double gold income"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Expansion gets pressured",
-            "adjustment": "Nerubian towers at expo, pull army back to defend"
-          },
-          {
-            "condition": "Opponent also expands",
-            "adjustment": "Your earlier expo gives the advantage \u00e2\u20ac\u201d push before they catch up"
-          }
-        ]
-      },
-      "replays": [
         {
-          "replayId": "happy-vs-life-echo-isles",
+          "replayId": "2027107604_FoCuS_Eer0_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Eer0",
+          "opponentName": "FoCuS",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 4",
+          "fingerprint": "Hammerfall|1151|focus#31324,orange#14823"
+        },
+        {
+          "replayId": "2458063746_Eer0_FoCuS_Shattered-Exile",
+          "playerSlot": "1",
+          "playerName": "Eer0",
+          "opponentName": "FoCuS",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 2",
+          "fingerprint": "Shattered Exile|956|focus#31324,orange#14823"
+        },
+        {
+          "replayId": "2720674050_FoCuS_Eer0_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Eer0",
+          "opponentName": "FoCuS",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 3",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1077|focus#31324,orange#14823"
+        },
+        {
+          "replayId": "3309940837_Life_Happy_Springtime-13",
           "playerSlot": "2",
           "playerName": "Happy",
           "opponentName": "Life",
-          "map": "Echo Isles",
-          "outcome": "win",
-          "notes": "DK fast expand at 6:39 \u00e2\u20ac\u201d mass Acolytes for double gold mining, Lich second, Destroyer transition"
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 5",
+          "fingerprint": "Springtime|797|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "338540307_Happy_Life_Echo-Isles-22",
+          "playerSlot": "1",
+          "playerName": "Happy",
+          "opponentName": "Life",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1623|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "3781201998_Kaho_Happy_Springtime-13",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Kaho",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 2",
+          "fingerprint": "Springtime|981|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "4052744632_Life_Happy_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Life",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 1",
+          "fingerprint": "Turtle Rock v1.6 dwsl|841|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "455876078_FoCuS_Happy_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "FoCuS",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 4",
+          "fingerprint": "Autumn Leaves|293|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "888856001_Life_Happy_Last-Refuge-15",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Life",
+          "map": "Last Refuge v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 2",
+          "fingerprint": "Last Refuge|1079|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "953044625_Life_Eer0_Shattered-Exile",
+          "playerSlot": "2",
+          "playerName": "Eer0",
+          "opponentName": "Life",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 2",
+          "fingerprint": "Shattered Exile|1428|medusa#31315,orange#14823"
+        },
+        {
+          "replayId": "980175687_Kaho_Happy_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "Kaho",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 5",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1683|aurorahappy#2668,kaho#31819"
         }
       ],
       "heroSkills": {
@@ -250,7 +330,7 @@
     },
     {
       "id": "ud-dk-destroyer",
-      "name": "DK Lich Destroyer",
+      "name": "DK Destroyer",
       "race": "U",
       "matchups": [
         "UvN",
@@ -270,11 +350,11 @@
       ],
       "description": "DK Fiend opener that priorities a fast T3 for Destroyer tech. Destroyers' Devour Magic hard-counters caster-heavy armies like NE Dryads or HU Priests.",
       "strategyPoints": [
-        "Standard DK Fiend T1 \u00e2\u20ac\u201d creep efficiently, build 4-5 Fiends before teching",
+        "Standard DK Fiend T1 â€” creep efficiently, build 4-5 Fiends before teching",
         "Lich second with Frost Nova for burst damage in engagements",
-        "Rush T3 for Destroyers \u00e2\u20ac\u201d they eat buffs/debuffs and counter caster compositions",
-        "Destroyers absorb mana for healing \u00e2\u20ac\u201d self-sustaining vs magic-heavy armies",
-        "Dark Ranger third hero \u00e2\u20ac\u201d Silence shuts down NE bears/dryads, Black Arrow raises skeletons",
+        "Rush T3 for Destroyers â€” they eat buffs/debuffs and counter caster compositions",
+        "Destroyers absorb mana for healing â€” self-sustaining vs magic-heavy armies",
+        "Dark Ranger third hero â€” Silence shuts down NE bears/dryads, Black Arrow raises skeletons",
         "Wins against: NE Dryad/Bear compositions, HU Priest/Breaker armies",
         "Loses to: fast timing pushes that hit before Destroyers are online"
       ],
@@ -324,7 +404,7 @@
             "uobs"
           ],
           "timing": "8:00-9:00",
-          "goal": "Destroyers ASAP \u00e2\u20ac\u201d Devour Magic is the win condition",
+          "goal": "Destroyers ASAP â€” Devour Magic is the win condition",
           "notes": "Rushed Destroyers specifically to counter caster-heavy compositions"
         },
         "conditionalBranches": [
@@ -338,25 +418,7 @@
           }
         ]
       },
-      "replays": [
-        {
-          "replayId": "happy-vs-lucifer",
-          "playerSlot": "4",
-          "playerName": "Happy",
-          "opponentName": "Lucifer",
-          "map": "Echo Isles",
-          "outcome": "win",
-          "notes": "Happy shows the full DK\u00e2\u2020\u2019Lich\u00e2\u2020\u2019Destroyer progression in a UD mirror \u00e2\u20ac\u201d watch the Destroyer timing"
-        },
-        {
-          "replayId": "Lyn_Happy_Shattered_Exile",
-          "playerSlot": "2",
-          "playerName": "Happy",
-          "opponentName": "Lyn",
-          "map": "Shattered Exile",
-          "notes": "Happy DK\u00e2\u2020\u2019Lich into Gargoyles + Destroyer Form vs Lyn's Orc Wind Riders \u00e2\u20ac\u201d UvO Destroyer transition"
-        }
-      ],
+      "replays": [],
       "heroSkills": {
         "udea": {
           "AUdc": 3,
@@ -384,211 +446,8 @@
       ]
     },
     {
-      "id": "ud-cl-fiend-push",
-      "name": "CL Fast Fiend Push",
-      "race": "U",
-      "matchups": [
-        "UvH"
-      ],
-      "heroOpener": "Crypt Lord",
-      "heroItemId": "ucrl",
-      "heroItemIds": [
-        "ucrl",
-        "nbrn"
-      ],
-      "keyUnits": [
-        "ucry"
-      ],
-      "description": "Crypt Lord first for Impale stun and Carrion Beetles. Fast tech to T2 with aggressive timing push at CL level 3 plus tavern hero.",
-      "strategyPoints": [
-        "CL first \u00e2\u20ac\u201d Impale stuns in a line, Carrion Beetles provide free meat shields",
-        "Skip DK opener entirely \u00e2\u20ac\u201d CL can solo creep with beetles + Rod of Necromancy",
-        "Fast tech to T2 by 2:45, get CL to level 3 before buying tavern hero",
-        "Dark Ranger from tavern \u00e2\u20ac\u201d Silence + Black Arrow combo with CL Impale is devastating",
-        "Push with CL3 + DR + 4-5 Fiends + 6 Beetles at ~7:00 timing window",
-        "Wins against: Human builds that expect standard DK opener and don't scout early",
-        "Loses to: early aggression that punishes the greedy fast tech"
-      ],
-      "tags": [
-        "aggressive",
-        "fiends",
-        "timing-push",
-        "crypt-lord"
-      ],
-      "playstyleTags": [
-        "timing-attack",
-        "tech"
-      ],
-      "opener": "standard",
-      "gamePlan": "timing-push",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "usep",
-            "uaod",
-            "utom"
-          ],
-          "units": [
-            "ucry"
-          ],
-          "goal": "CL first, creep with beetles, fast tech to T2"
-        },
-        "t2": {
-          "buildings": [
-            "uslh"
-          ],
-          "units": [
-            "ucry"
-          ],
-          "timing": "4:30-5:00",
-          "goal": "CL level 3 + tavern hero (Dark Ranger), mass Fiends"
-        },
-        "t3": {
-          "buildings": [],
-          "units": [],
-          "timing": null,
-          "goal": "Usually wins or loses before T3",
-          "notes": "This is a timing push build \u00e2\u20ac\u201d T3 is a fallback plan, not the goal"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Push fails to do damage",
-            "adjustment": "Transition to standard DK Fiend with expo \u00e2\u20ac\u201d buy DK from tavern"
-          },
-          {
-            "condition": "Opponent towers up",
-            "adjustment": "Don't force it \u00e2\u20ac\u201d creep to CL5 and outscale with Locust Swarm"
-          }
-        ]
-      },
-      "replays": [],
-      "heroSkills": {
-        "ucrl": {
-          "AUim": 3,
-          "AUcb": 2,
-          "AUts": 1,
-          "AUls": 1
-        },
-        "nbrn": {
-          "ANsi": 2,
-          "ANba": 1,
-          "ANdr": 0,
-          "ANch": 0
-        }
-      },
-      "coreUpgrades": [
-        "Ruwb"
-      ]
-    },
-    {
-      "id": "ud-dk-ghoul-rush",
-      "name": "DK Ghoul Rush",
-      "race": "U",
-      "matchups": [
-        "UvN"
-      ],
-      "heroOpener": "Death Knight",
-      "heroItemId": "udea",
-      "heroItemIds": [
-        "udea",
-        "udre"
-      ],
-      "keyUnits": [
-        "ugho"
-      ],
-      "description": "Aggressive DK opener into mass Ghouls. Unholy Aura speed bonus makes Ghouls extremely fast, surrounding and killing NE units before they can retreat. Dreadlord second for Vampiric Aura.",
-      "strategyPoints": [
-        "DK first with Unholy Aura \u00e2\u20ac\u201d the speed bonus is the core of the build",
-        "Rush Ghouls from double Crypt \u00e2\u20ac\u201d quantity over quality, surround enemy units",
-        "Ghouls are cheap and expendable \u00e2\u20ac\u201d trade aggressively, replace constantly",
-        "Dreadlord second for Vampiric Aura \u00e2\u20ac\u201d heals Ghouls in combat, sustains pressure",
-        "Can transition to Gargoyles or Frost Wyrms at T3 if game goes late",
-        "Wins against: NE Archer builds that get surrounded, slow DH openers",
-        "Loses to: NE Mass Huntresses with Moon Glaive upgrade, well-timed Bear timing"
-      ],
-      "tags": [
-        "aggressive",
-        "ghouls",
-        "rush",
-        "melee"
-      ],
-      "playstyleTags": [
-        "rush",
-        "harass"
-      ],
-      "opener": "rush",
-      "gamePlan": "timing-push",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "usep",
-            "usep",
-            "uaod"
-          ],
-          "units": [
-            "ugho"
-          ],
-          "goal": "DK + mass Ghouls from double Crypt, pressure NE base"
-        },
-        "t2": {
-          "buildings": [
-            "ugrv"
-          ],
-          "units": [
-            "ugho",
-            "ugar"
-          ],
-          "timing": "6:00-7:00",
-          "goal": "Dreadlord second, Ghoul Frenzy upgrade, add Gargoyles"
-        },
-        "t3": {
-          "buildings": [
-            "unpl"
-          ],
-          "units": [
-            "ugar",
-            "ufro"
-          ],
-          "timing": "10:00+",
-          "goal": "Frost Wyrms if game goes late \u00e2\u20ac\u201d fallback air army",
-          "notes": "Usually decided before T3 \u00e2\u20ac\u201d this is an aggro build"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "NE goes mass Huntress",
-            "adjustment": "Add Nerubian towers defensively, transition to Fiends with Web"
-          },
-          {
-            "condition": "Early Ghoul pressure works",
-            "adjustment": "Keep producing Ghouls, don't tech \u00e2\u20ac\u201d ride the momentum"
-          }
-        ]
-      },
-      "replays": [],
-      "heroSkills": {
-        "udea": {
-          "AUdc": 1,
-          "AUau": 3,
-          "AUdp": 2,
-          "AUan": 0
-        },
-        "udre": {
-          "AUcs": 2,
-          "AUsl": 2,
-          "AUav": 1,
-          "AUin": 0
-        }
-      },
-      "coreUpgrades": [
-        "Rugf",
-        "Ruac"
-      ]
-    },
-    {
       "id": "orc-bm-wind-rider",
-      "name": "BM WR",
+      "name": "BM Wind Rider",
       "race": "O",
       "matchups": [
         "OvU"
@@ -657,7 +516,7 @@
           ],
           "timing": "8:00-9:00",
           "goal": "Mass Wind Riders with Envenomed Weapons upgrade",
-          "notes": "T3 mainly for unit upgrades \u00e2\u20ac\u201d army is already Wind Riders at T2"
+          "notes": "T3 mainly for unit upgrades â€” army is already Wind Riders at T2"
         },
         "conditionalBranches": [
           {
@@ -666,27 +525,114 @@
           },
           {
             "condition": "UD turtles with towers",
-            "adjustment": "Expand yourself and outscale \u00e2\u20ac\u201d WRs can harass expansions"
+            "adjustment": "Expand yourself and outscale â€” WRs can harass expansions"
           }
         ]
       },
       "replays": [
         {
-          "replayId": "happy-vs-grubby",
+          "replayId": "12016427_FoCuS_Happy_Springtime-13",
           "playerSlot": "1",
-          "playerName": "FollowGrubby",
+          "playerName": "FoCuS",
           "opponentName": "Happy",
-          "map": "Concealed Hill",
-          "outcome": "loss",
-          "notes": "Classic Grubby BM aggression \u00e2\u20ac\u201d watch the worker harassment micro and Wind Rider transition timing"
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 3",
+          "fingerprint": "Springtime|618|aurorahappy#2668,focus#31324"
         },
         {
-          "replayId": "Lyn_Happy_Shattered_Exile",
+          "replayId": "1579908815_Eer0_FoCuS_Tidehunters-12",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "Eer0",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 1",
+          "fingerprint": "Tidehunters|914|focus#31324,orange#14823"
+        },
+        {
+          "replayId": "1695616928_FoCuS_Happy_Shattered-Exile",
           "playerSlot": "1",
-          "playerName": "Lyn",
+          "playerName": "FoCuS",
           "opponentName": "Happy",
-          "map": "Shattered Exile",
-          "notes": "Lyn BM\u00e2\u2020\u2019SH\u00e2\u2020\u2019TC with fast T3 Wind Riders + Batriders + Kodos vs Happy's UD"
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Shattered Exile|645|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "2458063746_Eer0_FoCuS_Shattered-Exile",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "Eer0",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 2",
+          "fingerprint": "Shattered Exile|956|focus#31324,orange#14823"
+        },
+        {
+          "replayId": "2469691735_FoCuS_Lyn_Echo-Isles-22",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Lyn",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1061|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "3935848085_FoCuS_Happy_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Happy",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 2",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1443|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "455876078_FoCuS_Happy_Autumn-Leaves-20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Happy",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 4",
+          "fingerprint": "Autumn Leaves|293|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "781305788_FoCuS_Lyn_Twisted-Meadows-11",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Lyn",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 4",
+          "fingerprint": "Twisted Meadows|642|focus#31324,lianpia#3217"
         }
       ],
       "heroSkills": {
@@ -709,124 +655,8 @@
       ]
     },
     {
-      "id": "orc-fs-wind-rider",
-      "name": "FS Expansion WR",
-      "race": "O",
-      "matchups": [
-        "OvH"
-      ],
-      "heroOpener": "Far Seer",
-      "heroItemId": "ofar",
-      "heroItemIds": [
-        "ofar",
-        "oshd"
-      ],
-      "keyUnits": [
-        "owyv",
-        "otbr"
-      ],
-      "description": "Far Seer opener with early expansion, scaling into a dominant Wind Rider and Bat Rider air force. Strong economic play that snowballs hard.",
-      "strategyPoints": [
-        "Far Seer Spirit Wolves provide cheap harassment and goldmine pressure",
-        "Fast expansion fueled by FS Farsight scouting \u00e2\u20ac\u201d always know where to expand safely",
-        "Wind Riders counter Human Sorceress Slow with Ensnare, grounding flying units",
-        "Bat Riders add oil fire splash damage that melts Human melee deathballs",
-        "Wins against: standard Human defensive AM play on open maps",
-        "Loses to: fast Human tower rushes that deny the expansion"
-      ],
-      "tags": [
-        "expansion",
-        "air",
-        "wind-rider",
-        "far-seer"
-      ],
-      "playstyleTags": [
-        "macro-expand",
-        "air"
-      ],
-      "opener": "expand",
-      "gamePlan": "economic",
-      "army": "air",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "oalt",
-            "otrb",
-            "obar",
-            "ovln"
-          ],
-          "units": [
-            "ogru"
-          ],
-          "goal": "FS + Grunts, harass with wolves, scout with Farsight"
-        },
-        "t2": {
-          "buildings": [
-            "obea",
-            "ogre"
-          ],
-          "units": [
-            "owyv"
-          ],
-          "timing": "5:00-6:00",
-          "goal": "Expand, Shadow Hunter second, start Wind Rider production"
-        },
-        "t3": {
-          "buildings": [
-            "ofrt"
-          ],
-          "units": [
-            "owyv",
-            "otbr"
-          ],
-          "timing": "8:30-9:30",
-          "goal": "Add Bat Riders for splash damage, double Bestiary for mass air",
-          "notes": "Double gold income from expansion makes mass air production viable"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Human pushes your expansion early",
-            "adjustment": "Burrow defense + wolves to delay, pull WRs back to defend"
-          },
-          {
-            "condition": "Human goes mass anti-air (Flying Machines)",
-            "adjustment": "Add Bat Riders \u00e2\u20ac\u201d they melt Flying Machines with Unstable Concoction"
-          }
-        ]
-      },
-      "replays": [
-        {
-          "replayId": "grubby-vs-thorzain",
-          "playerSlot": "1",
-          "playerName": "FollowGrubby",
-          "opponentName": "Thorzain",
-          "map": "Concealed Hill",
-          "outcome": "win",
-          "notes": "Grubby vs Thorzain \u00e2\u20ac\u201d a masterclass in FS expansion timing and Wind Rider escalation"
-        }
-      ],
-      "heroSkills": {
-        "ofar": {
-          "AOcl": 3,
-          "AOsf": 3,
-          "AOfs": 0,
-          "AOeq": 1
-        },
-        "oshd": {
-          "AOhx": 2,
-          "AOhw": 2,
-          "AOsw": 1,
-          "AOvd": 0
-        }
-      },
-      "coreUpgrades": [
-        "Rovs",
-        "Ropm"
-      ]
-    },
-    {
       "id": "orc-fs-headhunter-shaman",
-      "name": "FS HH Shaman",
+      "name": "FS Headhunter",
       "race": "O",
       "matchups": [
         "OvU",
@@ -842,13 +672,13 @@
         "ohun",
         "oshm"
       ],
-      "description": "Far Seer opener with Headhunters and Shamans. The most versatile Orc opener \u00e2\u20ac\u201d Bloodlust makes Headhunters burst targets down, Hex and Purge shut down enemy heroes.",
+      "description": "Far Seer opener with Headhunters and Shamans. The most versatile Orc opener â€” Bloodlust makes Headhunters burst targets down, Hex and Purge shut down enemy heroes.",
       "strategyPoints": [
         "Far Seer Spirit Wolves are free tanks that absorb Death Coil and Holy Light",
         "Headhunters with Berserker Upgrade have extreme DPS under Bloodlust",
         "Shaman Hex removes key enemy units from fights for several seconds",
         "Purge removes Unholy Aura speed, Brilliance Aura, Devotion Aura",
-        "Tauren Chieftain second \u00e2\u20ac\u201d Endurance Aura stacks with Bloodlust for insane attack speed",
+        "Tauren Chieftain second â€” Endurance Aura stacks with Bloodlust for insane attack speed",
         "Wins against: DK openers that rely on Death Coil micro, standard AM play",
         "Loses to: fast T2 pushes that arrive before Shamans get Bloodlust upgrade"
       ],
@@ -900,44 +730,84 @@
           ],
           "timing": "9:00-10:00",
           "goal": "Master Bloodlust upgrade, Kodo Beasts for Devour",
-          "notes": "T3 mainly for Shaman Master Training \u00e2\u20ac\u201d the army composition stays HH/Shaman"
+          "notes": "T3 mainly for Shaman Master Training â€” the army composition stays HH/Shaman"
         },
         "conditionalBranches": [
           {
             "condition": "Enemy masses air units",
-            "adjustment": "Headhunters already counter air \u00e2\u20ac\u201d add more and skip Shamans"
+            "adjustment": "Headhunters already counter air â€” add more and skip Shamans"
           },
           {
             "condition": "Enemy goes heavy melee",
-            "adjustment": "Add Kodo Beasts \u00e2\u20ac\u201d Devour removes key enemy units permanently"
+            "adjustment": "Add Kodo Beasts â€” Devour removes key enemy units permanently"
           }
         ]
       },
       "replays": [
         {
-          "replayId": "insup-vs-kiwi",
-          "playerSlot": "3",
-          "playerName": "KiWiKaKi",
-          "opponentName": "iNSUPERABLE",
-          "map": "Concealed Hill",
-          "outcome": "loss",
-          "notes": "KiWiKaKi shows the full FS Headhunter Shaman progression \u00e2\u20ac\u201d see how Bloodlust timing decides fights"
-        },
-        {
-          "replayId": "2952971670_FoCuS_Sok_AutumnLeaves20",
+          "replayId": "2720674050_FoCuS_Eer0_Turtle-Rock-16",
           "playerSlot": "1",
           "playerName": "FoCuS",
-          "opponentName": "Sok",
-          "map": "Autumn Leaves v2.0",
-          "notes": "FS fast tech variant with HH + Spirit Walkers + Taurens \u00e2\u20ac\u201d T2@2:39, T3@5:17 extremely fast timing"
+          "opponentName": "Eer0",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 3",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1077|focus#31324,orange#14823"
         },
         {
-          "replayId": "3870665022_Soin_Sok_Tidehunters12",
+          "replayId": "2966021215_FoCuS_Lyn_Autumn-Leaves-20",
           "playerSlot": "1",
-          "playerName": "Soin",
-          "opponentName": "Sok",
-          "map": "Tidehunters v1.2",
-          "notes": "FS + Shadow Hunter with mass Headhunters and Kodos \u00e2\u20ac\u201d long game with Tauren transition at T3"
+          "playerName": "FoCuS",
+          "opponentName": "Lyn",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 5",
+          "fingerprint": "Autumn Leaves|400|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "2966021215_FoCuS_Lyn_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "Lyn",
+          "opponentName": "FoCuS",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 5",
+          "fingerprint": "Autumn Leaves|400|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "3124260180_FoCuS_Lyn_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Lyn",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 2",
+          "fingerprint": "Turtle Rock v1.6 dwsl|961|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "3205763865_FoCuS_Lyn_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Lyn",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Hammerfall|924|focus#31324,lianpia#3217"
         }
       ],
       "heroSkills": {
@@ -962,7 +832,7 @@
     },
     {
       "id": "orc-bm-grunt-push",
-      "name": "BM Grunt Push",
+      "name": "BM Grunt Standard",
       "race": "O",
       "matchups": [
         "OvN",
@@ -981,7 +851,7 @@
       "strategyPoints": [
         "BM Wind Walk into enemy base for worker kills while Grunts creep",
         "Mass Grunts are cost-effective and trade well in melee engagements",
-        "Shadow Hunter second \u00e2\u20ac\u201d Healing Wave keeps Grunts alive in sustained fights",
+        "Shadow Hunter second â€” Healing Wave keeps Grunts alive in sustained fights",
         "Push timing at 50-60 food with BM3 + SH + 5-6 Grunts",
         "Wins against: greedy NE fast expansions, NE Archer openers without Huntresses",
         "Loses to: well-positioned Ancient Protectors, NE mass Huntress with Moon Glaive"
@@ -1033,13 +903,13 @@
             "otau"
           ],
           "timing": "9:00+",
-          "goal": "Taurens if game goes late \u00e2\u20ac\u201d Pulverize is devastating in melee",
-          "notes": "Usually decided at T2 timing push \u00e2\u20ac\u201d T3 is the fallback"
+          "goal": "Taurens if game goes late â€” Pulverize is devastating in melee",
+          "notes": "Usually decided at T2 timing push â€” T3 is the fallback"
         },
         "conditionalBranches": [
           {
             "condition": "NE builds Ancient Protectors at expansion",
-            "adjustment": "Don't force it \u00e2\u20ac\u201d take your own expansion and outscale"
+            "adjustment": "Don't force it â€” take your own expansion and outscale"
           },
           {
             "condition": "NE goes mass air (Hippogryphs)",
@@ -1049,13 +919,108 @@
       },
       "replays": [
         {
-          "replayId": "foggy-vs-cash-2",
+          "replayId": "1130358437_FoCuS_LawLiet_Tidehunters-12",
           "playerSlot": "1",
-          "playerName": "Cash",
-          "opponentName": "Foggywc3",
-          "map": "Echo Isles",
-          "outcome": "win",
-          "notes": "Cash BM Grunt push into Spirit Walker transition \u00e2\u20ac\u201d shows the T2 tech path against NE"
+          "playerName": "FoCuS",
+          "opponentName": "LawLiet",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 3",
+          "fingerprint": "Tidehunters|622|focus#31324,lawliet#3990"
+        },
+        {
+          "replayId": "2027107604_FoCuS_Eer0_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Eer0",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 4",
+          "fingerprint": "Hammerfall|1151|focus#31324,orange#14823"
+        },
+        {
+          "replayId": "2469691735_FoCuS_Lyn_Echo-Isles-22",
+          "playerSlot": "2",
+          "playerName": "Lyn",
+          "opponentName": "FoCuS",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1061|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "29397476_FoCuS_LawLiet_Springtime-13",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "LawLiet",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Springtime|703|focus#31324,lawliet#3990"
+        },
+        {
+          "replayId": "3124260180_FoCuS_Lyn_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Lyn",
+          "opponentName": "FoCuS",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 2",
+          "fingerprint": "Turtle Rock v1.6 dwsl|961|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "3205763865_FoCuS_Lyn_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Lyn",
+          "opponentName": "FoCuS",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Hammerfall|924|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "3259738147_FoCuS_LawLiet_Autumn-Leaves-20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "LawLiet",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Autumn Leaves|1159|focus#31324,lawliet#3990"
+        },
+        {
+          "replayId": "781305788_FoCuS_Lyn_Twisted-Meadows-11",
+          "playerSlot": "2",
+          "playerName": "Lyn",
+          "opponentName": "FoCuS",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 4",
+          "fingerprint": "Twisted Meadows|642|focus#31324,lianpia#3217"
         }
       ],
       "heroSkills": {
@@ -1079,153 +1044,44 @@
       ]
     },
     {
-      "id": "orc-fs-fast-tech",
-      "name": "FS Fast Tech",
-      "race": "O",
-      "matchups": [
-        "OvH"
-      ],
-      "heroOpener": "Far Seer",
-      "heroItemId": "ofar",
-      "heroItemIds": [
-        "ofar",
-        "oshd"
-      ],
-      "keyUnits": [
-        "owyv"
-      ],
-      "description": "Far Seer fast tech build that skips Barracks entirely to rush Stronghold. FS harasses constantly while base techs. Fastest T2 timing of any Orc build.",
-      "strategyPoints": [
-        "No Barracks \u00e2\u20ac\u201d saves lumber for faster Stronghold, but no T1 army units",
-        "FS solo creeps with Spirit Wolves as tanks \u00e2\u20ac\u201d efficient mana usage is critical",
-        "Chain Lightning harasses HU hero + army from range \u00e2\u20ac\u201d kite and poke",
-        "Stronghold arrives 30-45s before standard builds \u00e2\u20ac\u201d surprise T2 timing advantage",
-        "Shadow Hunter second from Altar as soon as Stronghold completes",
-        "Wins against: Human players who expect standard opener and play passively",
-        "Loses to: aggressive HU AM push that punishes the lack of T1 units"
-      ],
-      "tags": [
-        "tech",
-        "fast-tech",
-        "far-seer",
-        "risky"
-      ],
-      "playstyleTags": [
-        "tech"
-      ],
-      "opener": "fast-tech",
-      "gamePlan": "tech-scale",
-      "army": "mixed",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "oalt",
-            "otrb",
-            "ovln"
-          ],
-          "units": [],
-          "goal": "FS only \u00e2\u20ac\u201d no combat units, just tech to Stronghold ASAP"
-        },
-        "t2": {
-          "buildings": [
-            "obea",
-            "osld"
-          ],
-          "units": [
-            "owyv",
-            "oshm"
-          ],
-          "timing": "4:00-4:30",
-          "goal": "Fastest possible T2 \u00e2\u20ac\u201d Bestiary for Wind Riders, Spirit Lodge for Shamans"
-        },
-        "t3": {
-          "buildings": [
-            "ofrt"
-          ],
-          "units": [
-            "owyv",
-            "otbr"
-          ],
-          "timing": "8:00-9:00",
-          "goal": "Mass Wind Riders + Bat Riders \u00e2\u20ac\u201d the payoff for the greedy fast tech"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "HU scouts and pushes immediately",
-            "adjustment": "Build emergency Barracks + Burrow defense, delay with wolves"
-          },
-          {
-            "condition": "HU plays passively",
-            "adjustment": "Punish with early WR harassment on workers and supply buildings"
-          }
-        ]
-      },
-      "replays": [],
-      "heroSkills": {
-        "ofar": {
-          "AOcl": 3,
-          "AOsf": 3,
-          "AOfs": 0,
-          "AOeq": 1
-        },
-        "oshd": {
-          "AOhx": 2,
-          "AOhw": 2,
-          "AOsw": 1,
-          "AOvd": 0
-        }
-      },
-      "coreUpgrades": [
-        "Rovs",
-        "Ropm"
-      ]
-    },
-    {
-      "id": "hu-am-rifles",
-      "name": "AM Rifle Caster",
+      "id": "hu-am-caster",
+      "name": "AM Caster",
       "race": "H",
       "matchups": [
         "HvN",
         "HvO",
-        "HvH"
+        "HvU"
       ],
       "heroOpener": "Archmage",
       "heroItemId": "hamg",
       "heroItemIds": [
         "hamg",
-        "hmkg",
-        "hpal"
+        "hmkg"
       ],
       "keyUnits": [
-        "hrif",
+        "hfoo",
         "hmpr",
         "hspt"
       ],
-      "description": "The standard Human build. Archmage with Water Elementals into Riflemen, then Priests and Spell Breakers at T2. Works in every matchup with adjustments.",
+      "description": "Archmage into Footmen, then Priests and Spell Breakers at T2. The dominant Human build in the current meta. Inner Fire buffs Footmen, Spell Steal counters summons.",
       "strategyPoints": [
-        "Archmage Water Elementals are free units that trade well early \u00e2\u20ac\u201d micro them aggressively",
-        "Brilliance Aura gives permanent mana regen to all nearby units \u00e2\u20ac\u201d enables Blizzard spam",
-        "Riflemen have the longest range of any T1 ground unit \u00e2\u20ac\u201d kite melee effectively",
-        "Mountain King second for Storm Bolt stun and Bash \u00e2\u20ac\u201d shuts down enemy hero plays",
-        "Priests with Inner Fire buff Riflemen damage, Heal sustains the army between fights",
-        "Spell Breakers at T2 \u00e2\u20ac\u201d Control Magic steals summons, Spell Immunity blocks nukes",
-        "Wins against: most standard openers, NE Archer builds, Orc Grunt builds",
-        "Loses to: mass Mountain Giants with Taunt, UD Destroyer transitions"
+        "Archmage Water Elementals trade well early — micro them aggressively",
+        "Footmen tank while casters deal damage from behind",
+        "Priests with Inner Fire are the core — buff Footmen damage and Heal sustains",
+        "Spell Breakers counter enemy summons and provide spell immunity",
+        "Mountain King second for Storm Bolt stun — shuts down enemy hero plays"
       ],
       "tags": [
         "standard",
-        "rifles",
-        "archmage",
-        "ranged",
-        "casters"
+        "casters",
+        "archmage"
       ],
       "playstyleTags": [
-        "standard",
-        "timing-attack"
+        "standard"
       ],
       "opener": "standard",
       "gamePlan": "timing-push",
-      "army": "mixed",
+      "army": "caster",
       "tierProgression": {
         "t1": {
           "buildings": [
@@ -1262,7 +1118,7 @@
           ],
           "timing": "10:00-12:00",
           "goal": "Castle for Knight production and Master Training upgrades",
-          "notes": "T3 is optional \u00e2\u20ac\u201d many games end at T2 with Rifle/Caster army"
+          "notes": "T3 is optional â€” many games end at T2 with Rifle/Caster army"
         },
         "conditionalBranches": [
           {
@@ -1271,28 +1127,127 @@
           },
           {
             "condition": "Opponent masses casters",
-            "adjustment": "More Spell Breakers with Control Magic \u00e2\u20ac\u201d steal their summons"
+            "adjustment": "More Spell Breakers with Control Magic â€” steal their summons"
           }
         ]
       },
       "replays": [
         {
-          "replayId": "cash-vs-foggy",
-          "playerSlot": "7",
-          "playerName": "mTwCash",
-          "opponentName": "Foggy",
-          "map": "Concealed Hill",
-          "outcome": "win",
-          "notes": "Cash shows the AM Rifle opening \u00e2\u20ac\u201d notice hero positioning and how Water Elementals buy space"
+          "replayId": "2229321501_Sok_Fortitude_Autumn-Leaves-20",
+          "playerSlot": "1",
+          "playerName": "Sok",
+          "opponentName": "Fortitude",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 4",
+          "fingerprint": "Autumn Leaves|875|moosangsung#1804,noname#114787"
         },
         {
-          "replayId": "3147545390_Starbuck_LawLiet_LastRefuge15",
+          "replayId": "2229321501_Sok_Fortitude_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "Fortitude",
+          "opponentName": "Sok",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 4",
+          "fingerprint": "Autumn Leaves|875|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "2328002525_Sok_Fortitude_Twisted-Meadows-11",
           "playerSlot": "1",
-          "playerName": "StarBuck",
-          "opponentName": "LawLiet",
-          "map": "Last Refuge",
-          "outcome": "unknown",
-          "notes": "AM + FireLord (tavern) into mass Footman/Rifle/Caster. Hires a Goblin Zeppelin late game for scouting/transport"
+          "playerName": "Sok",
+          "opponentName": "Fortitude",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Twisted Meadows|828|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "2328002525_Sok_Fortitude_Twisted-Meadows-11",
+          "playerSlot": "2",
+          "playerName": "Fortitude",
+          "opponentName": "Sok",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Twisted Meadows|828|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "2576049378_Fortitude_Sok_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Fortitude",
+          "opponentName": "Sok",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Hammerfall|1130|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "2576049378_Fortitude_Sok_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Sok",
+          "opponentName": "Fortitude",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Hammerfall|1130|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "273544190_Sok_Fortitude_Tidehunters-12",
+          "playerSlot": "1",
+          "playerName": "Sok",
+          "opponentName": "Fortitude",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 3",
+          "fingerprint": "Tidehunters|788|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "273544190_Sok_Fortitude_Tidehunters-12",
+          "playerSlot": "2",
+          "playerName": "Fortitude",
+          "opponentName": "Sok",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 3",
+          "fingerprint": "Tidehunters|788|moosangsung#1804,noname#114787"
+        },
+        {
+          "replayId": "3983404462_Life_Fortitude_Twisted-Meadows-11",
+          "playerSlot": "2",
+          "playerName": "Fortitude",
+          "opponentName": "Life",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Twisted Meadows|647|medusa#31315,noname#114787"
         }
       ],
       "heroSkills": {
@@ -1322,44 +1277,49 @@
       ]
     },
     {
-      "id": "hu-am-dragonhawk",
-      "name": "AM DH Riders",
+      "id": "hu-am-rifle",
+      "name": "AM Rifle",
       "race": "H",
       "matchups": [
+        "HvN",
+        "HvH",
         "HvO"
       ],
       "heroOpener": "Archmage",
       "heroItemId": "hamg",
       "heroItemIds": [
         "hamg",
-        "hmkg"
+        "hmkg",
+        "hpal"
       ],
       "keyUnits": [
-        "hdhw"
+        "hrif",
+        "hsor"
       ],
-      "description": "Archmage opener scaling into Dragonhawk Rider air superiority. Cloud and Aerial Shackles control the battlefield while Dragonhawks deal sustained damage.",
+      "description": "Archmage into Footmen transitioning to Riflemen and Sorceresses. Rifle range controls space, Slow from Sorceresses kites melee armies.",
       "strategyPoints": [
-        "Archmage Brilliance Aura gives permanent mana regen \u00e2\u20ac\u201d spam Blizzard all game",
-        "Sorceress Slow shuts down Orc Grunt melee even with Bloodlust active",
-        "Dragonhawks' Cloud disables enemy buildings \u00e2\u20ac\u201d shuts down production during pushes",
-        "Aerial Shackles lock down enemy air units, preventing escape",
-        "Mountain King second for Storm Bolt \u00e2\u20ac\u201d stun Chain Lightning combo is devastating",
-        "Wins against: Orc armies that lack anti-air (no Bat Riders or Headhunters)",
-        "Loses to: Orc Fast Wind Rider with Ensnare \u00e2\u20ac\u201d grounds your entire army at once"
+        "Archmage Water Elementals are free units that trade well early â€” micro them aggressively",
+        "Brilliance Aura gives permanent mana regen to all nearby units â€” enables Blizzard spam",
+        "Riflemen have the longest range of any T1 ground unit â€” kite melee effectively",
+        "Mountain King second for Storm Bolt stun and Bash â€” shuts down enemy hero plays",
+        "Priests with Inner Fire buff Riflemen damage, Heal sustains the army between fights",
+        "Spell Breakers at T2 â€” Control Magic steals summons, Spell Immunity blocks nukes",
+        "Wins against: most standard openers, NE Archer builds, Orc Grunt builds",
+        "Loses to: mass Mountain Giants with Taunt, UD Destroyer transitions"
       ],
       "tags": [
-        "air",
-        "dragonhawk",
+        "standard",
+        "rifles",
         "archmage",
-        "anti-orc"
+        "ranged"
       ],
       "playstyleTags": [
-        "air",
-        "tech"
+        "standard",
+        "timing-attack"
       ],
       "opener": "standard",
-      "gamePlan": "tech-scale",
-      "army": "air",
+      "gamePlan": "timing-push",
+      "army": "ground",
       "tierProgression": {
         "t1": {
           "buildings": [
@@ -1369,53 +1329,72 @@
             "hbla"
           ],
           "units": [
-            "hfoo"
+            "hfoo",
+            "hrif"
           ],
-          "goal": "AM + Footmen for creeping, fast tech to Keep"
+          "goal": "AM + Footmen for creeping, transition to Rifles"
         },
         "t2": {
           "buildings": [
-            "hgra",
+            "hars",
             "hkee"
           ],
           "units": [
-            "hdhw"
+            "hrif",
+            "hmpr",
+            "hspt"
           ],
-          "timing": "5:30-6:30",
-          "goal": "MK second, Gryphon Aviary for Dragonhawk production"
+          "timing": "5:00-6:00",
+          "goal": "MK second hero, Arcane Sanctum for Priests + Spell Breakers"
         },
         "t3": {
           "buildings": [
             "hcas"
           ],
           "units": [
-            "hdhw",
-            "hgry"
+            "hkni"
           ],
-          "timing": "10:00+",
-          "goal": "Mass Dragonhawks, add Gryphon Riders for damage",
-          "notes": "T3 unlocks Gryphon Riders \u00e2\u20ac\u201d devastating combined with Dragonhawks"
+          "timing": "10:00-12:00",
+          "goal": "Castle for Knight production and Master Training upgrades",
+          "notes": "T3 is optional â€” many games end at T2 with Rifle/Caster army"
         },
         "conditionalBranches": [
           {
-            "condition": "Orc builds Headhunters or Bat Riders",
-            "adjustment": "Add Sorceresses for Slow, Priests for healing \u00e2\u20ac\u201d support the air army"
+            "condition": "Opponent goes mass air",
+            "adjustment": "Add Flying Machines from Workshop, Riflemen already counter air"
           },
           {
-            "condition": "Orc expands",
-            "adjustment": "Cloud the expansion buildings \u00e2\u20ac\u201d shut down production while you push"
+            "condition": "Opponent masses casters",
+            "adjustment": "More Spell Breakers with Control Magic â€” steal their summons"
           }
         ]
       },
       "replays": [
         {
-          "replayId": "grubby-vs-thorzain",
+          "replayId": "1293021105_Life_Fortitude_Turtle-Rock-16",
           "playerSlot": "2",
-          "playerName": "Thorzain",
-          "opponentName": "FollowGrubby",
-          "map": "Concealed Hill",
-          "outcome": "loss",
-          "notes": "Thorzain's AM into Dragonhawk build \u00e2\u20ac\u201d even in a loss the build order execution is textbook"
+          "playerName": "Fortitude",
+          "opponentName": "Life",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 4",
+          "fingerprint": "Turtle Rock v1.6 dwsl|692|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "411626257_Fortitude_Life_Autumn-Leaves-20",
+          "playerSlot": "1",
+          "playerName": "Fortitude",
+          "opponentName": "Life",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 5",
+          "fingerprint": "Autumn Leaves|957|medusa#31315,noname#114787"
         }
       ],
       "heroSkills": {
@@ -1430,10 +1409,17 @@
           "AHtc": 1,
           "AHbh": 1,
           "AHav": 0
+        },
+        "hpal": {
+          "AHhb": 2,
+          "AHad": 1,
+          "AHds": 0,
+          "AHre": 0
         }
       },
       "coreUpgrades": [
-        "Rhcd",
+        "Rhpt",
+        "Rhde",
         "Rhpm"
       ]
     },
@@ -1458,7 +1444,7 @@
       ],
       "description": "Mountain King first into fast expansion. Storm Bolt stuns harassers, Bash provides melee dominance. Build army to 60 food then upgrade to Castle for Knights.",
       "strategyPoints": [
-        "MK first \u00e2\u20ac\u201d Storm Bolt is the best anti-harass stun in the game",
+        "MK first â€” Storm Bolt is the best anti-harass stun in the game",
         "Fast expansion with militia to defend the new Town Hall",
         "MK + Footmen + Rifles can defend expo against most early aggression",
         "AM second for Brilliance Aura mana sustain and Water Elementals",
@@ -1514,8 +1500,8 @@
             "hkni"
           ],
           "timing": "10:00-12:00",
-          "goal": "Knights with double gold income \u00e2\u20ac\u201d the payoff for expanding",
-          "notes": "Castle timing is faster with double gold \u00e2\u20ac\u201d that's the whole point"
+          "goal": "Knights with double gold income â€” the payoff for expanding",
+          "notes": "Castle timing is faster with double gold â€” that's the whole point"
         },
         "conditionalBranches": [
           {
@@ -1524,11 +1510,38 @@
           },
           {
             "condition": "Opponent also expands",
-            "adjustment": "Your MK is better in defensive fights \u00e2\u20ac\u201d just outscale"
+            "adjustment": "Your MK is better in defensive fights â€” just outscale"
           }
         ]
       },
-      "replays": [],
+      "replays": [
+        {
+          "replayId": "3310264392_Life_Fortitude_Tidehunters-12",
+          "playerSlot": "2",
+          "playerName": "Fortitude",
+          "opponentName": "Life",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 2",
+          "fingerprint": "Tidehunters|623|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "685836192_Fortitude_Life_Springtime-13",
+          "playerSlot": "1",
+          "playerName": "Fortitude",
+          "opponentName": "Life",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 3",
+          "fingerprint": "Springtime|1591|medusa#31315,noname#114787"
+        }
+      ],
       "heroSkills": {
         "hmkg": {
           "AHtb": 3,
@@ -1555,140 +1568,8 @@
       ]
     },
     {
-      "id": "hu-paladin-rifle",
-      "name": "Paladin Rifle",
-      "race": "H",
-      "matchups": [
-        "HvO",
-        "HvN"
-      ],
-      "heroOpener": "Paladin",
-      "heroItemId": "hpal",
-      "heroItemIds": [
-        "hpal",
-        "Hblm"
-      ],
-      "keyUnits": [
-        "hrif"
-      ],
-      "description": "Paladin first with Riflemen as primary army. Holy Light keeps expensive Rifles alive, Blood Mage second for Siphon Mana and Banish utility. Transitions into Gryphon Riders at T3 for the killing blow.",
-      "strategyPoints": [
-        "Paladin first \u00e2\u20ac\u201d Holy Light is the strongest single-target heal in the game",
-        "Rifles live longer with Paladin healing \u00e2\u20ac\u201d more value per gold spent",
-        "Blood Mage second \u00e2\u20ac\u201d Siphon Mana drains enemy hero mana, Banish amplifies spell damage and disables key units",
-        "Long Rifles research at T2 extends Rifle range \u00e2\u20ac\u201d kite melee armies effectively",
-        "T3 Gryphon Riders are the payoff \u00e2\u20ac\u201d air damage that Orc struggles to answer without Batriders",
-        "Wins against: Orc melee-heavy builds, Far Seer openers vulnerable to Banish",
-        "Loses to: mana drain (NE DH Manaburn), fast Batrider transitions"
-      ],
-      "tags": [
-        "standard",
-        "paladin",
-        "rifles",
-        "blood-mage"
-      ],
-      "playstyleTags": [
-        "standard"
-      ],
-      "opener": "standard",
-      "gamePlan": "map-control",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "halt",
-            "hbar",
-            "hhou",
-            "hbla"
-          ],
-          "units": [
-            "hrif"
-          ],
-          "goal": "Paladin + immediate Rifle production, skip Footmen"
-        },
-        "t2": {
-          "buildings": [
-            "hvlt",
-            "hkee"
-          ],
-          "units": [
-            "hrif"
-          ],
-          "timing": "3:00-4:00",
-          "goal": "Blood Mage second, Long Rifles research, Ranged Weapons upgrade"
-        },
-        "t3": {
-          "buildings": [
-            "hcas",
-            "hgra"
-          ],
-          "units": [
-            "hgry"
-          ],
-          "timing": "8:30-10:00",
-          "goal": "Gryphon Riders for air damage, Storm Hammers upgrade",
-          "notes": "Paladin sustain keeps Gryphons alive \u00e2\u20ac\u201d BM Phoenix adds chaos in late game"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Opponent goes Batriders",
-            "adjustment": "Stay on mass Rifles with attack upgrades, skip or delay Gryphons"
-          },
-          {
-            "condition": "Long game \u00e2\u20ac\u201d BM hits level 8",
-            "adjustment": "Summon Phoenix is a massive late-game power spike, push with Phoenix + Gryphons"
-          }
-        ]
-      },
-      "replays": [
-        {
-          "replayId": "2844085600_Sok_Lyn_TurtleRock16",
-          "playerSlot": "1",
-          "playerName": "Sok",
-          "opponentName": "Lyn",
-          "map": "Turtle Rock",
-          "notes": "Sok's Paladin/BM Rifle into Gryphons vs Lyn's Far Seer headhunters/taurens"
-        },
-        {
-          "replayId": "2952971670_FoCuS_Sok_AutumnLeaves20",
-          "playerSlot": "2",
-          "playerName": "Sok",
-          "opponentName": "FoCuS",
-          "map": "Autumn Leaves v2.0",
-          "notes": "Paladin + Blood Mage Rifles into Gryphon Riders vs FoCuS FS fast tech"
-        },
-        {
-          "replayId": "3870665022_Soin_Sok_Tidehunters12",
-          "playerSlot": "2",
-          "playerName": "Sok",
-          "opponentName": "Soin",
-          "map": "Tidehunters v1.2",
-          "notes": "Paladin + Blood Mage + Mountain King \u00e2\u20ac\u201d mass Rifles with 3-hero late game vs Orc HH"
-        }
-      ],
-      "heroSkills": {
-        "hpal": {
-          "AHhb": 3,
-          "AHds": 2,
-          "AHad": 2,
-          "AHre": 0
-        },
-        "Hblm": {
-          "AHfs": 2,
-          "AHbn": 2,
-          "AHdr": 1,
-          "AHpx": 0
-        }
-      },
-      "coreUpgrades": [
-        "Rhri",
-        "Rhhb",
-        "Rhpm"
-      ]
-    },
-    {
       "id": "ne-kotg-mountain-giant",
-      "name": "KotG MG",
+      "name": "KotG Mountain Giant",
       "race": "E",
       "matchups": [
         "EvH"
@@ -1704,11 +1585,11 @@
       ],
       "description": "Keeper of the Grove opener into Mountain Giant tank line. Entangle roots Human heroes, Giants taunt Human armies, and Treant summons provide free reinforcements.",
       "strategyPoints": [
-        "KotG Entangling Roots roots Human heroes \u00e2\u20ac\u201d removes Divine Shield timing windows",
+        "KotG Entangling Roots roots Human heroes â€” removes Divine Shield timing windows",
         "Mountain Giants have the highest HP of any unit in the game at Tier 3",
         "Giant Taunt forces Human Sorceresses to polymorph their own units if poorly positioned",
-        "Force of Nature summons free Treants from enemy trees \u00e2\u20ac\u201d punishes Human passive play",
-        "DH second hero for Manaburn \u00e2\u20ac\u201d drains AM/MK mana, shuts down their abilities",
+        "Force of Nature summons free Treants from enemy trees â€” punishes Human passive play",
+        "DH second hero for Manaburn â€” drains AM/MK mana, shuts down their abilities",
         "Wins against: Human AM Rifle builds that rely on kiting, not tanking hits",
         "Loses to: Archmage Blizzard with Mass Teleport that kills Giants before Taunt activates"
       ],
@@ -1758,8 +1639,8 @@
             "edry"
           ],
           "timing": "9:00-10:00",
-          "goal": "Mountain Giants with Hardened Skin \u00e2\u20ac\u201d the army anchor",
-          "notes": "Giants are the entire build's purpose \u00e2\u20ac\u201d everything else supports them"
+          "goal": "Mountain Giants with Hardened Skin â€” the army anchor",
+          "notes": "Giants are the entire build's purpose â€” everything else supports them"
         },
         "conditionalBranches": [
           {
@@ -1768,21 +1649,11 @@
           },
           {
             "condition": "Human goes air (Gryphons)",
-            "adjustment": "Add Hippogryph Riders \u00e2\u20ac\u201d Giants can't hit air, you need anti-air"
+            "adjustment": "Add Hippogryph Riders â€” Giants can't hit air, you need anti-air"
           }
         ]
       },
-      "replays": [
-        {
-          "replayId": "cash-vs-foggy",
-          "playerSlot": "10",
-          "playerName": "Foggy",
-          "opponentName": "mTwCash",
-          "map": "Concealed Hill",
-          "outcome": "loss",
-          "notes": "Foggy shows the KotG Mountain Giant build \u00e2\u20ac\u201d the build order timing and giant production queue is the key lesson here"
-        }
-      ],
+      "replays": [],
       "heroSkills": {
         "ekee": {
           "AEer": 3,
@@ -1805,7 +1676,7 @@
     },
     {
       "id": "ne-dh-fast-bear",
-      "name": "DH Fast Bear",
+      "name": "DH Standard",
       "race": "E",
       "matchups": [
         "EvU",
@@ -1824,11 +1695,11 @@
       ],
       "description": "The standard Night Elf build. Demon Hunter first for Manaburn harassment, fast tech to T3 for Druid of the Claw (bears). Bears in Bear Form have massive HP and Roar aura.",
       "strategyPoints": [
-        "DH first \u00e2\u20ac\u201d Manaburn drains enemy hero mana, shutting down their abilities",
-        "Immolation provides passive AoE damage \u00e2\u20ac\u201d good for fast creeping",
-        "Fast tech through T2 to T3 \u00e2\u20ac\u201d the goal is Bears as fast as possible",
+        "DH first â€” Manaburn drains enemy hero mana, shutting down their abilities",
+        "Immolation provides passive AoE damage â€” good for fast creeping",
+        "Fast tech through T2 to T3 â€” the goal is Bears as fast as possible",
         "Druids of the Claw in Bear Form have 960 HP and Roar gives 25% damage aura",
-        "KotG second hero for Entangle + Treants \u00e2\u20ac\u201d lockdown and free reinforcements",
+        "KotG second hero for Entangle + Treants â€” lockdown and free reinforcements",
         "Dryads provide Abolish Magic to remove debuffs and Slow Poison for kiting",
         "Wins against: most standard openers across all matchups",
         "Loses to: fast timing pushes that hit during the vulnerable T2 transition"
@@ -1879,8 +1750,8 @@
             "edry"
           ],
           "timing": "8:00-9:00",
-          "goal": "Master Bears \u00e2\u20ac\u201d Bear Form with Roar and Rejuvenation",
-          "notes": "Bears are arguably the best T3 unit in the game \u00e2\u20ac\u201d the entire build leads here"
+          "goal": "Master Bears â€” Bear Form with Roar and Rejuvenation",
+          "notes": "Bears are arguably the best T3 unit in the game â€” the entire build leads here"
         },
         "conditionalBranches": [
           {
@@ -1889,11 +1760,428 @@
           },
           {
             "condition": "Facing Orc BM harassment",
-            "adjustment": "Manaburn the BM \u00e2\u20ac\u201d he can't harass without mana for Wind Walk"
+            "adjustment": "Manaburn the BM â€” he can't harass without mana for Wind Walk"
           }
         ]
       },
-      "replays": [],
+      "replays": [
+        {
+          "replayId": "1130358437_FoCuS_LawLiet_Tidehunters-12",
+          "playerSlot": "2",
+          "playerName": "LawLiet",
+          "opponentName": "FoCuS",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 3",
+          "fingerprint": "Tidehunters|622|focus#31324,lawliet#3990"
+        },
+        {
+          "replayId": "1264013117_Eer0_Life_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "Life",
+          "opponentName": "Eer0",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 3",
+          "fingerprint": "Autumn Leaves|710|medusa#31315,orange#14823"
+        },
+        {
+          "replayId": "1293021105_Life_Fortitude_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Fortitude",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 4",
+          "fingerprint": "Turtle Rock v1.6 dwsl|692|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "1342775468_Kaho_Happy_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Happy",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Hammerfall|791|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "1697966098_LabyRinth_ColorFul_Springtime-13",
+          "playerSlot": "2",
+          "playerName": "ColorFul",
+          "opponentName": "LabyRinth",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Grand Final",
+          "round": "Game 5",
+          "fingerprint": "Springtime|541|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "1932419007_Eer0_Life_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Life",
+          "opponentName": "Eer0",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 1",
+          "fingerprint": "Turtle Rock v1.6 dwsl|720|medusa#31315,orange#14823"
+        },
+        {
+          "replayId": "1964524342_Kaho_Happy_Last-Refuge-15",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Happy",
+          "map": "Last Refuge v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 4",
+          "fingerprint": "Last Refuge|929|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "2026580177_Happy_Life_Shattered-Exile",
+          "playerSlot": "2",
+          "playerName": "Life",
+          "opponentName": "Happy",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 3",
+          "fingerprint": "Shattered Exile|1041|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "2138774446_Kaho_Moon_Springtime-13",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Moon",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 4",
+          "fingerprint": "Springtime|726|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "2138774446_Kaho_Moon_Springtime-13",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "Kaho",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 4",
+          "fingerprint": "Springtime|726|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "29397476_FoCuS_LawLiet_Springtime-13",
+          "playerSlot": "2",
+          "playerName": "LawLiet",
+          "opponentName": "FoCuS",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Springtime|703|focus#31324,lawliet#3990"
+        },
+        {
+          "replayId": "3230336721_LabyRinth_ColorFul_Last-Refuge-15",
+          "playerSlot": "2",
+          "playerName": "ColorFul",
+          "opponentName": "LabyRinth",
+          "map": "Last Refuge v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 4",
+          "fingerprint": "Last Refuge|1693|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "3309940837_Life_Happy_Springtime-13",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Happy",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 5",
+          "fingerprint": "Springtime|797|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "3310264392_Life_Fortitude_Tidehunters-12",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Fortitude",
+          "map": "Tidehunters v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 2",
+          "fingerprint": "Tidehunters|623|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "338540307_Happy_Life_Echo-Isles-22",
+          "playerSlot": "2",
+          "playerName": "Life",
+          "opponentName": "Happy",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1623|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "3441004708_Kaho_Moon_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Moon",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 3",
+          "fingerprint": "Hammerfall|835|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "3441004708_Kaho_Moon_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "Kaho",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 3",
+          "fingerprint": "Hammerfall|835|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "3781201998_Kaho_Happy_Springtime-13",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Happy",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 2",
+          "fingerprint": "Springtime|981|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "3983404462_Life_Fortitude_Twisted-Meadows-11",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Fortitude",
+          "map": "Twisted Meadows v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Twisted Meadows|647|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "4052744632_Life_Happy_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Happy",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 1",
+          "fingerprint": "Turtle Rock v1.6 dwsl|841|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "411626257_Fortitude_Life_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "Life",
+          "opponentName": "Fortitude",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 5",
+          "fingerprint": "Autumn Leaves|957|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "4128003586_Happy_Kaho_Echo-Isles-22",
+          "playerSlot": "2",
+          "playerName": "Kaho",
+          "opponentName": "Happy",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1897|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "4292986322_Moon_Kaho_Autumn-Leaves-20",
+          "playerSlot": "1",
+          "playerName": "Moon",
+          "opponentName": "Kaho",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Autumn Leaves|617|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "4292986322_Moon_Kaho_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "Kaho",
+          "opponentName": "Moon",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Autumn Leaves|617|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "515631458_ColorFul_LabyRinth_Autumn-Leaves-20",
+          "playerSlot": "1",
+          "playerName": "ColorFul",
+          "opponentName": "LabyRinth",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Autumn Leaves|840|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "685836192_Fortitude_Life_Springtime-13",
+          "playerSlot": "2",
+          "playerName": "Life",
+          "opponentName": "Fortitude",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 3",
+          "fingerprint": "Springtime|1591|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "809829148_ColorFul_LabyRinth_Echo-Isles-22",
+          "playerSlot": "1",
+          "playerName": "ColorFul",
+          "opponentName": "LabyRinth",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1038|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "888856001_Life_Happy_Last-Refuge-15",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Happy",
+          "map": "Last Refuge v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Final",
+          "round": "Game 2",
+          "fingerprint": "Last Refuge|1079|aurorahappy#2668,medusa#31315"
+        },
+        {
+          "replayId": "953044625_Life_Eer0_Shattered-Exile",
+          "playerSlot": "1",
+          "playerName": "Life",
+          "opponentName": "Eer0",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 2",
+          "fingerprint": "Shattered Exile|1428|medusa#31315,orange#14823"
+        },
+        {
+          "replayId": "954278491_Kaho_Moon_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Moon",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1036|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "954278491_Kaho_Moon_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "Kaho",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 2",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1036|kaho#31819,moon#35134"
+        },
+        {
+          "replayId": "980175687_Kaho_Happy_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "Kaho",
+          "opponentName": "Happy",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 5",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1683|aurorahappy#2668,kaho#31819"
+        }
+      ],
       "heroSkills": {
         "edem": {
           "AEmb": 3,
@@ -1915,234 +2203,6 @@
       ]
     },
     {
-      "id": "ne-kotg-expand-huntress",
-      "name": "KotG Fast Expand",
-      "race": "E",
-      "matchups": [
-        "EvO",
-        "EvH"
-      ],
-      "heroOpener": "Keeper of the Grove",
-      "heroItemId": "ekee",
-      "heroItemIds": [
-        "ekee",
-        "edem"
-      ],
-      "keyUnits": [
-        "esen"
-      ],
-      "description": "Keeper of the Grove with fast expansion into Huntress map control. Entangle roots enemy heroes and creeps for safe expansion. Huntresses provide aggressive map presence.",
-      "strategyPoints": [
-        "KotG first for Entangling Roots \u00e2\u20ac\u201d roots give free creep kills and hero lockdown",
-        "Fast expansion at 3:00-4:00 \u00e2\u20ac\u201d KotG Treants provide free defense at the expansion",
-        "Huntresses with Moon Glaive upgrade bounce attacks between clumped enemies",
-        "Ancient Protectors at expansion for defense \u00e2\u20ac\u201d they uproot to reposition",
-        "DH second hero for Manaburn \u00e2\u20ac\u201d drains enemy hero mana during engagements",
-        "Wins against: Orc players who don't scout and pressure the expansion",
-        "Loses to: fast BM harassment that kills wisps before expansion completes"
-      ],
-      "tags": [
-        "expansion",
-        "keeper",
-        "huntress",
-        "map-control"
-      ],
-      "playstyleTags": [
-        "macro-expand"
-      ],
-      "opener": "expand",
-      "gamePlan": "economic",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "eate",
-            "eaom",
-            "emow",
-            "edob"
-          ],
-          "units": [
-            "earc",
-            "esen"
-          ],
-          "goal": "KotG + Archers, transition to Huntresses, scout for expansion"
-        },
-        "t2": {
-          "buildings": [
-            "etoa",
-            "etol",
-            "etrp"
-          ],
-          "units": [
-            "esen"
-          ],
-          "timing": "5:00-6:00",
-          "goal": "Expand, Ancient Protectors for defense, DH second hero"
-        },
-        "t3": {
-          "buildings": [
-            "etoe",
-            "eaoe"
-          ],
-          "units": [
-            "edoc",
-            "edry"
-          ],
-          "timing": "9:00-10:00",
-          "goal": "Bears + Dryads funded by double gold income",
-          "notes": "The expansion makes T3 Bears affordable faster"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Orc pushes expansion hard",
-            "adjustment": "Uproot Protectors to block, Entangle key units, delay until army arrives"
-          },
-          {
-            "condition": "Opponent also expands",
-            "adjustment": "Your earlier expo gives advantage \u00e2\u20ac\u201d push before they catch up"
-          }
-        ]
-      },
-      "replays": [
-        {
-          "replayId": "foggy-vs-cash-2",
-          "playerSlot": "2",
-          "playerName": "Foggy",
-          "opponentName": "Cash",
-          "map": "Echo Isles",
-          "outcome": "loss",
-          "notes": "Foggy KotG expansion into Huntresses with Ancient Protector defense vs ORC BM Grunt push"
-        }
-      ],
-      "heroSkills": {
-        "ekee": {
-          "AEer": 3,
-          "AEfn": 3,
-          "AEah": 1,
-          "AEtq": 0
-        },
-        "edem": {
-          "AEmb": 2,
-          "AEim": 1,
-          "AEev": 1,
-          "AEme": 0
-        }
-      },
-      "coreUpgrades": [
-        "Remg",
-        "Repm"
-      ]
-    },
-    {
-      "id": "ne-potm-mass-hunts",
-      "name": "PotM Mass Huntress",
-      "race": "E",
-      "matchups": [
-        "EvH",
-        "EvE"
-      ],
-      "heroOpener": "Priestess of the Moon",
-      "heroItemId": "emoo",
-      "heroItemIds": [
-        "emoo",
-        "edem"
-      ],
-      "keyUnits": [
-        "esen"
-      ],
-      "description": "Priestess of the Moon first with Trueshot Aura boosting Huntress DPS. Mass Huntresses provide aggressive map control and deny Human expansion. Searing Arrows steal creep kills.",
-      "strategyPoints": [
-        "PotM first \u00e2\u20ac\u201d Trueshot Aura gives all ranged units bonus damage passively",
-        "Searing Arrows let PotM last-hit creeps from enemy \u00e2\u20ac\u201d denies XP and items",
-        "Mass Huntresses with Moon Glaive \u00e2\u20ac\u201d bouncing attacks shred clumped units",
-        "Huntresses are fast and can raid enemy lumber line, pressure expansions",
-        "Shadowmeld keeps PotM safe \u00e2\u20ac\u201d hide and ambush when enemy hero walks past",
-        "DH second for Manaburn \u00e2\u20ac\u201d removes enemy hero's ability to cast spells",
-        "Wins against: Human AM Rifle builds without early anti-Huntress tech",
-        "Loses to: mass AoE (Blizzard, Thunder Clap) that shreds low-HP Huntresses"
-      ],
-      "tags": [
-        "aggressive",
-        "huntress",
-        "priestess",
-        "map-control"
-      ],
-      "playstyleTags": [
-        "harass",
-        "timing-attack"
-      ],
-      "opener": "harass",
-      "gamePlan": "map-control",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "eate",
-            "eaom",
-            "emow",
-            "edob"
-          ],
-          "units": [
-            "earc",
-            "esen"
-          ],
-          "goal": "PotM + Archers, transition to mass Huntresses with Moon Glaive"
-        },
-        "t2": {
-          "buildings": [
-            "etoa",
-            "eaoe"
-          ],
-          "units": [
-            "esen",
-            "edry"
-          ],
-          "timing": "5:30-6:30",
-          "goal": "DH second, Huntresses for map pressure, Dryads for utility"
-        },
-        "t3": {
-          "buildings": [
-            "etoe"
-          ],
-          "units": [
-            "edoc"
-          ],
-          "timing": "10:00+",
-          "goal": "Bears as late-game transition if Huntress pressure stalls",
-          "notes": "Games are often decided at T1/T2 \u00e2\u20ac\u201d this is a pressure build, not a T3 build"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Human towers up defensively",
-            "adjustment": "Don't force \u00e2\u20ac\u201d expand yourself and transition to Bears at T3"
-          },
-          {
-            "condition": "Human goes mass AoE",
-            "adjustment": "Spread Huntresses, don't clump \u00e2\u20ac\u201d Moon Glaive works in spread formations"
-          }
-        ]
-      },
-      "replays": [],
-      "heroSkills": {
-        "emoo": {
-          "AEst": 1,
-          "AHfa": 3,
-          "AEar": 3,
-          "AEsf": 0
-        },
-        "edem": {
-          "AEmb": 2,
-          "AEim": 1,
-          "AEev": 1,
-          "AEme": 0
-        }
-      },
-      "coreUpgrades": [
-        "Remg",
-        "Repm"
-      ]
-    },
-    {
       "id": "ne-dh-mass-talons",
       "name": "DH Mass Talons",
       "race": "E",
@@ -2160,12 +2220,12 @@
       ],
       "description": "Demon Hunter into mass Druids of the Talon with Cyclone spam. Exploits Orc's limited dispel options. Cyclone removes key units from fights, Faerie Fire reduces armor.",
       "strategyPoints": [
-        "DH first for Manaburn \u00e2\u20ac\u201d drains Blademaster's mana, preventing Wind Walk escapes",
-        "Druids of the Talon cast Cyclone \u00e2\u20ac\u201d removes Grunts and key units from fights for 6 seconds",
-        "Mass Cyclone means Orc can never fight at full strength \u00e2\u20ac\u201d always 2-3 units disabled",
-        "Faerie Fire reduces armor and reveals invisible units \u00e2\u20ac\u201d BM can't hide",
+        "DH first for Manaburn â€” drains Blademaster's mana, preventing Wind Walk escapes",
+        "Druids of the Talon cast Cyclone â€” removes Grunts and key units from fights for 6 seconds",
+        "Mass Cyclone means Orc can never fight at full strength â€” always 2-3 units disabled",
+        "Faerie Fire reduces armor and reveals invisible units â€” BM can't hide",
         "Beastmaster from tavern for Quilbeast summons and Stampede ultimate",
-        "Orc Spirit Walkers can Ethereal Form to avoid Cyclone \u00e2\u20ac\u201d but NE can just focus other units",
+        "Orc Spirit Walkers can Ethereal Form to avoid Cyclone â€” but NE can just focus other units",
         "Wins against: Orc melee compositions without heavy dispel",
         "Loses to: FS Headhunter builds that outrange Talons, mass Spirit Walkers"
       ],
@@ -2215,7 +2275,7 @@
           ],
           "timing": "9:00-10:00",
           "goal": "Double Ancient of Wind, Master Talon upgrade for Storm Crow Form",
-          "notes": "Storm Crow Form lets Talons fly \u00e2\u20ac\u201d attack and Cyclone from the air"
+          "notes": "Storm Crow Form lets Talons fly â€” attack and Cyclone from the air"
         },
         "conditionalBranches": [
           {
@@ -2224,11 +2284,25 @@
           },
           {
             "condition": "Orc switches to Headhunter ranged",
-            "adjustment": "Add Mountain Giants \u00e2\u20ac\u201d Taunt forces Headhunters into melee range"
+            "adjustment": "Add Mountain Giants â€” Taunt forces Headhunters into melee range"
           }
         ]
       },
-      "replays": [],
+      "replays": [
+        {
+          "replayId": "3259738147_FoCuS_LawLiet_Autumn-Leaves-20",
+          "playerSlot": "2",
+          "playerName": "LawLiet",
+          "opponentName": "FoCuS",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 1",
+          "fingerprint": "Autumn Leaves|1159|focus#31324,lawliet#3990"
+        }
+      ],
       "heroSkills": {
         "edem": {
           "AEmb": 3,
@@ -2250,159 +2324,8 @@
       ]
     },
     {
-      "id": "ne-dh-huntress",
-      "name": "DH Mass Huntress",
-      "race": "E",
-      "matchups": [
-        "EvH",
-        "EvO"
-      ],
-      "heroOpener": "Demon Hunter",
-      "heroItemId": "edem",
-      "heroItemIds": [
-        "edem",
-        "ekee"
-      ],
-      "keyUnits": [
-        "esen"
-      ],
-      "description": "Demon Hunter opener into fast Huntress production. Huntresses provide early map control and pressure while DH burns enemy hero mana. Transitions to bears at T3.",
-      "strategyPoints": [
-        "DH first for Manaburn \u00e2\u20ac\u201d shuts down enemy hero casting immediately",
-        "1 Ancient of War into fast Huntress Hall \u00e2\u20ac\u201d Huntresses come online quickly",
-        "Sentinel upgrade gives vision across the map \u00e2\u20ac\u201d no more hidden expansions or creep routes",
-        "Moon Glaive upgrade \u00e2\u20ac\u201d bouncing attacks make Huntresses devastating vs clumped units",
-        "KotG second for Entangle root and Treant summons \u00e2\u20ac\u201d supports Huntress aggression",
-        "Wins against: builds that rely on hero abilities (AM, FS, DK)",
-        "Loses to: massed ranged units that kite Huntresses (Rifles, Fiends with Web)"
-      ],
-      "tags": [
-        "aggressive",
-        "huntress",
-        "demon-hunter",
-        "map-control"
-      ],
-      "playstyleTags": [
-        "harass",
-        "standard"
-      ],
-      "opener": "harass",
-      "gamePlan": "map-control",
-      "army": "ground",
-      "tierProgression": {
-        "t1": {
-          "buildings": [
-            "eate",
-            "eaom",
-            "emow",
-            "edob"
-          ],
-          "units": [
-            "earc",
-            "esen"
-          ],
-          "goal": "DH + Archers, fast Huntress Hall, transition to Huntresses"
-        },
-        "t2": {
-          "buildings": [
-            "etoa",
-            "eaoe"
-          ],
-          "units": [
-            "esen",
-            "edry"
-          ],
-          "timing": "5:30-6:30",
-          "goal": "KotG second, Huntress pressure, Dryads for utility/anti-magic"
-        },
-        "t3": {
-          "buildings": [
-            "etoe"
-          ],
-          "units": [
-            "edoc"
-          ],
-          "timing": "9:00-10:00",
-          "goal": "Bears for late-game transition if needed",
-          "notes": "Most games decided before T3 \u00e2\u20ac\u201d Huntresses are the core army"
-        },
-        "conditionalBranches": [
-          {
-            "condition": "Opponent builds ranged army",
-            "adjustment": "Mix in Archers to trade at range, don't force melee engagements"
-          },
-          {
-            "condition": "Opponent turtles behind towers",
-            "adjustment": "Add Glaive Throwers for siege, maintain map control with Sentinels"
-          }
-        ]
-      },
-      "replays": [],
-      "heroSkills": {
-        "edem": {
-          "AEmb": 3,
-          "AEim": 2,
-          "AEev": 1,
-          "AEme": 1
-        },
-        "ekee": {
-          "AEer": 2,
-          "AEfn": 2,
-          "AEah": 1,
-          "AEtq": 0
-        }
-      },
-      "coreUpgrades": [
-        "Remg",
-        "Repm"
-      ]
-    },
-    {
-      "id": "ne-off-meta",
-      "name": "Off-Meta NE",
-      "race": "E",
-      "matchups": [],
-      "description": "Non-standard Night Elf builds that don't fit neatly into established meta categories.",
-      "tags": [
-        "off-meta"
-      ],
-      "playstyleTags": [
-        "off-meta"
-      ],
-      "replays": [
-        {
-          "replayId": "happy-vs-moon",
-          "playerSlot": "2",
-          "playerName": "Moon",
-          "opponentName": "Happy",
-          "map": "Concealed Hill",
-          "outcome": "loss",
-          "notes": "Moon plays Archers into mass Dryads with expansion"
-        },
-        {
-          "replayId": "happy-vs-life-echo-isles",
-          "playerSlot": "1",
-          "playerName": "Life",
-          "opponentName": "Happy",
-          "map": "Echo Isles",
-          "outcome": "loss",
-          "notes": "Life plays DH/PotM double expansion with Protectors into Dryads, Bears, and Mountain Giants"
-        },
-        {
-          "replayId": "3147545390_Starbuck_LawLiet_LastRefuge15",
-          "playerSlot": "2",
-          "playerName": "LawLiet",
-          "opponentName": "StarBuck",
-          "map": "Last Refuge",
-          "outcome": "unknown",
-          "notes": "KotG + Naga Sea Witch into Archers/Dryads/DotC. Hires mercs (Forest Troll, Ogre Mauler, Goblin Shredder) and a Goblin Zeppelin"
-        }
-      ],
-      "coreUpgrades": []
-    },
-    {
       "id": "ud-dk-mass-gargoyle",
-      "name": "DK Mass Gargoyle",
+      "name": "DK Gargoyle",
       "race": "U",
       "matchups": [
         "UvO"
@@ -2419,10 +2342,10 @@
       ],
       "description": "DK opener into mass Ghouls for lumber, then flood Gargoyles from multiple Crypts. Air superiority overwhelms Orc ground armies. Dark Ranger or Dreadlord third hero for utility.",
       "strategyPoints": [
-        "DK first with Death Coil \u00e2\u20ac\u201d creep efficiently, mass Ghouls for lumber harvesting",
+        "DK first with Death Coil â€” creep efficiently, mass Ghouls for lumber harvesting",
         "Delayed T2 (7:00-8:00) because heavy Ghoul investment feeds the Gargoyle transition",
-        "Lich second with Frost Nova \u00e2\u20ac\u201d burst damage on Orc ground clumps",
-        "T3 for mass Gargoyle production from double Crypt \u00e2\u20ac\u201d quantity is key",
+        "Lich second with Frost Nova â€” burst damage on Orc ground clumps",
+        "T3 for mass Gargoyle production from double Crypt â€” quantity is key",
         "Dark Ranger third hero for Silence (shuts down Shadow Hunter/TC) and Black Arrow skeletons",
         "Obsidian Statues keep Gargoyles alive through sustained healing",
         "Wins against: Orc ground-heavy builds (Grunts/Raiders) that lack anti-air",
@@ -2489,18 +2412,114 @@
           },
           {
             "condition": "Orc stays pure ground",
-            "adjustment": "Keep massing Gargoyles \u00e2\u20ac\u201d they can't answer air without Batriders or Wind Riders"
+            "adjustment": "Keep massing Gargoyles â€” they can't answer air without Batriders or Wind Riders"
           }
         ]
       },
       "replays": [
         {
-          "replayId": "638789342_Lyn_Eer0_LostTempleLV",
+          "replayId": "12016427_FoCuS_Happy_Springtime-13",
           "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "FoCuS",
+          "map": "Springtime v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 3",
+          "fingerprint": "Springtime|618|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "1264013117_Eer0_Life_Autumn-Leaves-20",
+          "playerSlot": "1",
           "playerName": "Eer0",
-          "opponentName": "Lyn",
-          "map": "Lost Temple LV",
-          "notes": "Eer0 DK\u00e2\u2020\u2019Lich\u00e2\u2020\u2019Dark Ranger mass Gargoyle flood vs Lyn's BM Raider/Wind Rider build \u00e2\u20ac\u201d long macro game"
+          "opponentName": "Life",
+          "map": "Autumn Leaves v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 3",
+          "fingerprint": "Autumn Leaves|710|medusa#31315,orange#14823"
+        },
+        {
+          "replayId": "1695616928_FoCuS_Happy_Shattered-Exile",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "FoCuS",
+          "map": "Shattered Exile v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Quarterfinals",
+          "round": "Game 1",
+          "fingerprint": "Shattered Exile|645|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "1932419007_Eer0_Life_Turtle-Rock-16",
+          "playerSlot": "1",
+          "playerName": "Eer0",
+          "opponentName": "Life",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 1",
+          "fingerprint": "Turtle Rock v1.6 dwsl|720|medusa#31315,orange#14823"
+        },
+        {
+          "replayId": "3230336721_LabyRinth_ColorFul_Last-Refuge-15",
+          "playerSlot": "1",
+          "playerName": "LabyRinth",
+          "opponentName": "ColorFul",
+          "map": "Last Refuge v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Group Stage",
+          "round": "Game 4",
+          "fingerprint": "Last Refuge|1693|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "3935848085_FoCuS_Happy_Turtle-Rock-16",
+          "playerSlot": "2",
+          "playerName": "Happy",
+          "opponentName": "FoCuS",
+          "map": "Turtle Rock v1.6",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "Semifinals",
+          "round": "Game 2",
+          "fingerprint": "Turtle Rock v1.6 dwsl|1443|aurorahappy#2668,focus#31324"
+        },
+        {
+          "replayId": "4128003586_Happy_Kaho_Echo-Isles-22",
+          "playerSlot": "1",
+          "playerName": "Happy",
+          "opponentName": "Kaho",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1897|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "809829148_ColorFul_LabyRinth_Echo-Isles-22",
+          "playerSlot": "2",
+          "playerName": "LabyRinth",
+          "opponentName": "ColorFul",
+          "map": "Echo Isles v2.2 w3c 1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "dolphin-wsl-s2",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Echo Isles|1038|colorful#4737,labyrinth#3113"
         }
       ],
       "heroSkills": {
@@ -2520,31 +2539,6 @@
       "coreUpgrades": [
         "Rupm"
       ]
-    },
-    {
-      "id": "ud-off-meta",
-      "name": "Off-Meta UD",
-      "race": "U",
-      "matchups": [],
-      "description": "Non-standard Undead builds that don't fit neatly into established meta categories.",
-      "tags": [
-        "off-meta"
-      ],
-      "playstyleTags": [
-        "off-meta"
-      ],
-      "replays": [
-        {
-          "replayId": "happy-vs-lucifer",
-          "playerSlot": "7",
-          "playerName": "Lucifer",
-          "opponentName": "Happy",
-          "map": "Turtle Rock",
-          "outcome": "loss",
-          "notes": "Lucifer opens Lich first into Ghouls, transitions to mass Gargoyles with Dread Lord third hero"
-        }
-      ],
-      "coreUpgrades": []
     }
   ]
 }

@@ -1,3 +1,11 @@
+// Replay-derived strings (player names, hero names, unit/upgrade
+// displayNames, itemIds) reach this file via the parsed wc3v JSON.
+// Everything that flows into innerHTML must go through these helpers
+// — see Security.js. Same conventions as BuildOrderRenderer.
+const _mhEsc  = (s) => Security.escapeHtml(Security.sanitizeUserText(s));
+const _mhAttr = (s) => Security.escapeAttr(Security.sanitizeUserText(s));
+const _mhIcon = (id) => /^[A-Za-z0-9_\-]{1,32}$/.test(String(id == null ? '' : id)) ? id : '';
+
 const MatchHeader = class {
   constructor (viewer) {
     this.viewer = viewer;
@@ -28,7 +36,10 @@ const MatchHeader = class {
     const nameEl = document.getElementById('map-name-overlay');
     if (!nameEl) return;
     const raw = (this.viewer.mapInfo && this.viewer.mapInfo.name) || this.viewer.mapName || '';
-    nameEl.textContent = this.cleanMapName(raw);
+    // textContent assignment — no escape needed, but cap length and
+    // strip control/bidi chars so a malicious map name can't pretend to
+    // be UI text.
+    nameEl.textContent = Security.sanitizeUserText(this.cleanMapName(raw), { maxLen: 64 });
   }
 
   renderMatchup () {
@@ -38,38 +49,40 @@ const MatchHeader = class {
     const leftEl = this.el.querySelector('.mh-player-left');
     const rightEl = this.el.querySelector('.mh-player-right');
 
-    const leftData = this.boData.processBuildOrderData(buildOrderPlayers[0]);
-    const rightData = this.boData.processBuildOrderData(buildOrderPlayers[1]);
-
-    leftEl.innerHTML = this.renderPlayerCard(leftData, buildOrderPlayers[0]);
-    rightEl.innerHTML = this.renderPlayerCard(rightData, buildOrderPlayers[1]);
+    leftEl.innerHTML = this.renderPlayerCard(this.boData.processBuildOrderData(buildOrderPlayers[0]), buildOrderPlayers[0]);
+    rightEl.innerHTML = this.renderPlayerCard(this.boData.processBuildOrderData(buildOrderPlayers[1]), buildOrderPlayers[1]);
   }
 
   _sectionToggle (uid, sectionKey, label, extraToggleClass) {
+    // uid is already restricted to [A-Za-z0-9_] by callers (see uid=
+    // displayName.replace(/\W/g, '')) so toggleId/contentId are safe to
+    // interpolate into JS string context. label is the only free-text
+    // input; escape for HTML body context.
     const toggleId = `mh-${sectionKey}-toggle-${uid}`;
     const contentId = `mh-${sectionKey}-content-${uid}`;
     const cls = `mh-section-toggle ${extraToggleClass || ''}`.trim();
-    const toggle = `<div class="${cls}" id="${toggleId}" onclick="document.getElementById('${contentId}').classList.toggle('mh-hidden');this.classList.toggle('mh-open')">${label}</div>`;
+    const toggle = `<div class="${cls}" id="${toggleId}" onclick="document.getElementById('${contentId}').classList.toggle('mh-hidden');this.classList.toggle('mh-open')">${_mhEsc(label)}</div>`;
     const contentOpen = `<div class="mh-section-content mh-hidden" id="${contentId}">`;
     return { toggle, contentOpen, contentClose: '</div>' };
   }
 
   renderPlayerCard (boData, player) {
     const { race, raceInfo, displayName, playerColor, tierProduction, tier2Time, tier3Time, hasExpansion, finalSnapshot } = boData;
-    const uid = displayName.replace(/\W/g, '');
+    // Strip non-word chars then cap — produces a safe DOM id slug.
+    const uid = String(displayName == null ? '' : displayName).replace(/\W/g, '').slice(0, 32) || 'p';
 
     // Build name from build context (if this player's slot has a matching build)
     const ctxBySlot = this.viewer.buildContextBySlot;
     const ctx = (ctxBySlot && player) ? ctxBySlot[String(player.playerId)] : null;
     const buildLabel = (ctx && ctx.name) ? ctx.name : 'Off Meta';
-    const buildNameHtml = `<div class="mh-build-name">${buildLabel}</div>`;
+    const buildNameHtml = `<div class="mh-build-name">${_mhEsc(buildLabel)}</div>`;
 
-    const raceIconId = BuildOrderData.CONFIG.raceStarterIcons[race] || '';
+    const raceIconId = _mhIcon(BuildOrderData.CONFIG.raceStarterIcons[race] || '');
     let html = `<div class="mh-player-header">
       <div class="mh-player-header-text">
-        <div class="mh-player-name" style="color:${playerColor}">${displayName}</div>${buildNameHtml}
+        <div class="mh-player-name" style="color:${_mhAttr(playerColor)}">${_mhEsc(displayName)}</div>${buildNameHtml}
       </div>
-      <img class="mh-race-icon-lg" src="/assets/wc3icons/${raceIconId}.jpg" title="${raceInfo.label}" style="border-color:${raceInfo.accent}" />
+      <img class="mh-race-icon-lg" src="/assets/wc3icons/${raceIconId}.jpg" title="${_mhAttr(raceInfo.label)}" style="border-color:${_mhAttr(raceInfo.accent)}" />
     </div>`;
 
     // Hero + Upgrade inline row (always visible)
@@ -84,15 +97,17 @@ const MatchHeader = class {
           hero.spellList.forEach(spell => {
             const learned = hero.learnedSkills && hero.learnedSkills[spell.itemId];
             if (!learned || learned.level === 0) return;
-            spellsHtml += `<span class="mh-spell" title="${spell.displayName} Lv${learned.level}">
-              <img class="mh-spell-icon" src="/assets/wc3icons/${spell.itemId}.jpg" /><span class="mh-spell-level">${learned.level}</span></span>`;
+            const lvl = Number(learned.level) || 0;
+            spellsHtml += `<span class="mh-spell" title="${_mhAttr(spell.displayName)} Lv${lvl}">
+              <img class="mh-spell-icon" src="/assets/wc3icons/${_mhIcon(spell.itemId)}.jpg" /><span class="mh-spell-level">${lvl}</span></span>`;
           });
         }
 
+        const heroLvl = Number(hero.level) || 0;
         html += `<div class="mh-hero">
           <div class="mh-hero-portrait-wrap">
-            <img class="mh-hero-portrait" src="/assets/wc3icons/${hero.itemId}.jpg" title="${hero.displayName}" />
-            <span class="mh-hero-level">${hero.level}</span>
+            <img class="mh-hero-portrait" src="/assets/wc3icons/${_mhIcon(hero.itemId)}.jpg" title="${_mhAttr(hero.displayName)}" />
+            <span class="mh-hero-level">${heroLvl}</span>
           </div>
           <div class="mh-hero-spells">${spellsHtml}</div>
         </div>`;
@@ -105,8 +120,8 @@ const MatchHeader = class {
       html += '<div class="mh-upgrades-inline">';
       const maxTier = tier3Time !== Infinity ? 3 : tier2Time !== Infinity ? 2 : 1;
       const expoHtml = hasExpansion
-        ? `<span class="mh-expansion-marker mh-expanded" title="Expanded">\u2714 Expo</span>`
-        : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
+        ? `<span class="mh-expansion-marker mh-expanded" title="Expanded">✔ Expo</span>`
+        : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">✘ No Expo</span>`;
       html += `<div class="mh-status-compact">${expoHtml}<span class="mh-tier-max t${maxTier}">T${maxTier}</span></div>`;
 
       if (finalSnapshot) {
@@ -119,25 +134,31 @@ const MatchHeader = class {
           if (hasAtk) {
             let atkBadges = '';
             Object.values(upgrades.attack).forEach(upg => {
-              const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
-              atkBadges += `<span class="mh-info-badge atk" title="${upg.displayName} ${upg.level}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upg.level}</span></span>`;
+              const iconId = _mhIcon(upg.icon);
+              const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+              const upgLvl = Number(upg.level) || 0;
+              atkBadges += `<span class="mh-info-badge atk" title="${_mhAttr(upg.displayName)} ${upgLvl}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upgLvl}</span></span>`;
             });
             rowHtml += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkBadges}</span>`;
           }
           if (hasDef) {
             let defBadges = '';
             Object.values(upgrades.defense).forEach(upg => {
-              const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : '';
-              defBadges += `<span class="mh-info-badge def" title="${upg.displayName} ${upg.level}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upg.level}</span></span>`;
+              const iconId = _mhIcon(upg.icon);
+              const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+              const upgLvl = Number(upg.level) || 0;
+              defBadges += `<span class="mh-info-badge def" title="${_mhAttr(upg.displayName)} ${upgLvl}"><img class="mh-info-icon" src="${iconSrc}" onerror="this.style.display='none'" /><span class="mh-upgrade-level">${upgLvl}</span></span>`;
             });
             rowHtml += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defBadges}</span>`;
           }
           if (hasRes) {
             let resBadges = '';
             upgrades.researched.forEach(r => {
-              const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
-              const lvl = r.level > 1 ? ` ${r.level}` : '';
-              resBadges += `<span class="mh-info-upgrade"><img class="mh-info-icon" src="${iconSrc}" title="${r.displayName}${lvl}" onerror="this.style.display='none'" /></span>`;
+              const iconId = _mhIcon(r.icon || r.itemId);
+              const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+              const rLvl = Number(r.level) || 0;
+              const lvl = rLvl > 1 ? ` ${rLvl}` : '';
+              resBadges += `<span class="mh-info-upgrade"><img class="mh-info-icon" src="${iconSrc}" title="${_mhAttr(r.displayName)}${lvl}" onerror="this.style.display='none'" /></span>`;
             });
             rowHtml += `<span class="mh-info-segment"><span class="mh-info-label">RES</span>${resBadges}</span>`;
           }
@@ -156,10 +177,12 @@ const MatchHeader = class {
           }
         });
 
+        // ATTACK_TYPES / ARMOR_TYPES are trusted constant tables, but
+        // escape defensively so this stays safe if their shape changes.
         let typeLine = '';
-        const atkIcons = Object.keys(atkSet).map(k => `<img class="mh-info-icon" src="${ATTACK_TYPES[k].icon}" title="${ATTACK_TYPES[k].label} attack" />`).join('');
+        const atkIcons = Object.keys(atkSet).map(k => `<img class="mh-info-icon" src="${_mhAttr(ATTACK_TYPES[k].icon)}" title="${_mhAttr(ATTACK_TYPES[k].label)} attack" />`).join('');
         if (atkIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">ATK</span>${atkIcons}</span>`;
-        const defIcons = Object.keys(defSet).map(k => `<img class="mh-info-icon" src="${ARMOR_TYPES[k].icon}" title="${ARMOR_TYPES[k].label} armor" />`).join('');
+        const defIcons = Object.keys(defSet).map(k => `<img class="mh-info-icon" src="${_mhAttr(ARMOR_TYPES[k].icon)}" title="${_mhAttr(ARMOR_TYPES[k].label)} armor" />`).join('');
         if (defIcons) typeLine += `<span class="mh-info-segment"><span class="mh-info-label">DEF</span>${defIcons}</span>`;
         if (typeLine) html += `<div class="mh-info-row">${typeLine}</div>`;
       }
@@ -178,13 +201,14 @@ const MatchHeader = class {
       html += '<div class="mh-unit-flat">';
       if (finalSnapshot && finalSnapshot.army && finalSnapshot.army.length) {
         finalSnapshot.army.forEach(u => {
-          const countBadge = u.count > 1 ? `<span class="mh-unit-count">${u.count}</span>` : '';
+          const c = Number(u.count) || 0;
+          const countBadge = c > 1 ? `<span class="mh-unit-count">${c}</span>` : '';
           html += `<span class="mh-icon-wrap">
-            <span class="mh-portrait-wrap"><img class="mh-tech-icon" src="/assets/wc3icons/${u.itemId}.jpg" title="${u.displayName}" />${countBadge}</span>
+            <span class="mh-portrait-wrap"><img class="mh-tech-icon" src="/assets/wc3icons/${_mhIcon(u.itemId)}.jpg" title="${_mhAttr(u.displayName)}" />${countBadge}</span>
           </span>`;
         });
       } else {
-        html += '<span class="mh-tier-empty">\u2014 No units</span>';
+        html += '<span class="mh-tier-empty">— No units</span>';
       }
       html += '</div>';
 
@@ -197,17 +221,19 @@ const MatchHeader = class {
         if (itemStream.purchases.length) {
           html += '<div class="mh-item-row">';
           itemStream.purchases.forEach(p => {
-            const countBadge = p.count > 1 ? `<span class="mh-unit-count">${p.count}</span>` : '';
-            const goldTip = p.goldSpent ? ` (${p.goldSpent}g)` : '';
+            const c = Number(p.count) || 0;
+            const goldSpent = Number(p.goldSpent) || 0;
+            const countBadge = c > 1 ? `<span class="mh-unit-count">${c}</span>` : '';
+            const goldTip = goldSpent ? ` (${goldSpent}g)` : '';
             html += `<span class="mh-icon-wrap">
-              <span class="mh-portrait-wrap mh-item-portrait"><img class="mh-tech-icon" src="/assets/wc3icons/${p.itemId}.jpg" title="${p.displayName} x${p.count}${goldTip}" onerror="this.parentElement.parentElement.style.display='none'" />${countBadge}</span>
+              <span class="mh-portrait-wrap mh-item-portrait"><img class="mh-tech-icon" src="/assets/wc3icons/${_mhIcon(p.itemId)}.jpg" title="${_mhAttr(p.displayName)} x${c}${goldTip}" onerror="this.parentElement.parentElement.style.display='none'" />${countBadge}</span>
             </span>`;
           });
           html += '</div>';
         }
 
         // Total gold spent on items
-        const totalGold = itemStream.purchases.reduce((sum, p) => sum + (p.goldSpent || 0), 0);
+        const totalGold = itemStream.purchases.reduce((sum, p) => sum + (Number(p.goldSpent) || 0), 0);
         if (totalGold > 0) {
           html += `<div class="mh-item-gold-total"><span class="mh-cost-gold-icon"></span>${totalGold}g spent on items</div>`;
         }
@@ -229,10 +255,12 @@ const MatchHeader = class {
           mercCounts[id].goldSpent += e.goldCost || 0;
         });
         Object.values(mercCounts).forEach(m => {
-          const countBadge = m.count > 1 ? `<span class="mh-unit-count">${m.count}</span>` : '';
-          const goldTip = m.goldSpent ? ` (${m.goldSpent}g)` : '';
+          const c = Number(m.count) || 0;
+          const goldSpent = Number(m.goldSpent) || 0;
+          const countBadge = c > 1 ? `<span class="mh-unit-count">${c}</span>` : '';
+          const goldTip = goldSpent ? ` (${goldSpent}g)` : '';
           html += `<span class="mh-icon-wrap">
-            <span class="mh-portrait-wrap mh-merc-portrait"><img class="mh-tech-icon" src="/assets/wc3icons/${m.itemId}.jpg" title="${m.displayName} x${m.count}${goldTip}" onerror="this.parentElement.parentElement.style.display='none'" />${countBadge}</span>
+            <span class="mh-portrait-wrap mh-merc-portrait"><img class="mh-tech-icon" src="/assets/wc3icons/${_mhIcon(m.itemId)}.jpg" title="${_mhAttr(m.displayName)} x${c}${goldTip}" onerror="this.parentElement.parentElement.style.display='none'" />${countBadge}</span>
           </span>`;
         });
         html += '</div>';

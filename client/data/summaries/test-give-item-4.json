@@ -4,6 +4,7 @@
   "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
   "durationMs": 78250,
   "durationFormatted": "1:18",
+  "fingerprint": "Echo Isles|78|jblanch",
   "players": {
     "1": {
       "name": "jblanch",
@@ -23,13 +24,6 @@
       "buildPreview": [
         {
           "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 0,
-          "gameTimeFormatted": "0:00"
-        },
-        {
-          "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
           "gameTimeMs": 11499,
@@ -47,13 +41,6 @@
           "name": "Death Knight",
           "itemId": "Udea",
           "gameTimeMs": 24299,
-          "gameTimeFormatted": "0:24"
-        },
-        {
-          "type": "building",
-          "name": "Tomb of Relics",
-          "itemId": "utom",
-          "gameTimeMs": 24699,
           "gameTimeFormatted": "0:24"
         }
       ],

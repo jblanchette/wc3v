@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WC3V — Your Replay Library</title>
+  <meta name="description" content="Browse, search, sort, and manage all your locally-parsed Warcraft III replays. Stored in your browser; never uploaded.">
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://wc3v.com/replays">
+
+  <link rel="stylesheet" href="css/main.css">
+  <style>body { margin: 0; }</style>
+</head>
+<body class="site-page">
+  <script src="js/SiteNav.js"></script>
+  <script src="js/Security.js"></script>
+  <script src="js/MyReplays.js"></script>
+  <script src="js/vendor/wc3v-parser.bundle.js"></script>
+  <script src="js/UploadManager.js"></script>
+  <script src="js/ReplayAnalyzer.js"></script>
+  <script src="js/CompareMatcher.js"></script>
+  <script src="js/AdvancedComparePicker.js"></script>
+  <script src="js/CompareInline.js"></script>
+
+  <main class="site-content">
+    <header class="site-hero-bar" role="banner">
+      <div class="hero-bar-inner">
+        <a class="hero-bar-logo" href="/" aria-label="WC3V">
+          <img src="/assets/wc3v.svg" alt="WC3V" />
+        </a>
+        <span class="hero-bar-tagline">Your replay library.</span>
+        <button id="hero-find-replays-btn" type="button" class="hero-bar-help" title="Where are my replay files?">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Where are my replays?</span>
+        </button>
+        <div class="hero-bar-private" role="img" aria-label="Browser-only" title="Browser-only — your file is never uploaded">
+          <svg class="hero-bar-private-shield" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/>
+            <path d="M9 12 L11 14 L15 10"/>
+          </svg>
+          <div class="hero-bar-private-text">
+            <span class="hero-bar-private-line1">BROWSER-ONLY</span>
+            <span class="hero-bar-private-line2">no upload · no server</span>
+          </div>
+        </div>
+        <button id="hero-upload-card" type="button" class="hero-bar-upload" title="Pick or drop a .w3g — analyzed locally">
+          <svg class="hero-bar-upload-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="hero-bar-upload-label">Upload a replay</span>
+          <span class="hero-bar-upload-sub" id="hero-upload-status" aria-live="polite"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Parse overlay (drives the upload progress bar). -->
+    <div id="parse-overlay" class="parse-overlay" style="display:none" aria-live="polite" aria-hidden="true">
+      <div class="parse-overlay-card">
+        <div class="parse-overlay-spinner"></div>
+        <div class="parse-overlay-title" id="parse-overlay-title">Parsing your replay…</div>
+        <div class="parse-overlay-sub" id="parse-overlay-sub">This happens entirely in your browser. Nothing is uploaded.</div>
+        <div class="parse-overlay-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="parse-overlay-bar-fill" id="parse-overlay-bar-fill" style="width: 0%"></div>
+        </div>
+        <div class="parse-overlay-stats">
+          <span class="parse-overlay-phase" id="parse-overlay-phase">starting…</span>
+          <span class="parse-overlay-percent" id="parse-overlay-percent">0%</span>
+        </div>
+        <div class="parse-overlay-progress" id="parse-overlay-progress"></div>
+      </div>
+    </div>
+
+    <!-- Find-replays help modal (same as homepage). -->
+    <div id="find-replays-modal" class="help-modal" hidden role="dialog" aria-modal="true" aria-labelledby="find-replays-title">
+      <div class="help-modal-backdrop" data-action="close"></div>
+      <div class="help-modal-card">
+        <header class="help-modal-head">
+          <h2 id="find-replays-title" class="help-modal-title">Where are my replay files?</h2>
+          <button class="help-modal-close" type="button" data-action="close" aria-label="Close">×</button>
+        </header>
+        <div class="help-modal-body">
+          <p>Warcraft III saves your replays as <code>.w3g</code> files in the standard <strong>Documents</strong> folder.</p>
+          <div class="help-path">
+            <span class="help-path-label">Windows</span>
+            <code class="help-path-code">Documents\Warcraft III\Replays</code>
+          </div>
+          <div class="help-path">
+            <span class="help-path-label">Battle.net</span>
+            <code class="help-path-code">Documents\Warcraft III\BattleNet\&lt;account&gt;\Replays</code>
+          </div>
+          <div class="help-path">
+            <span class="help-path-label">W3Champions</span>
+            <code class="help-path-code">Documents\Warcraft III\Replays\W3Champions</code>
+          </div>
+          <p class="help-modal-tip">
+            Drag any <code>.w3g</code> onto the <strong>Upload a replay</strong> button — or click it to open a file picker. Your replay is parsed entirely on this machine; nothing leaves your browser.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <section class="replays-page">
+      <div class="replays-page-toolbar">
+        <input type="search" id="replays-search" class="replays-search" placeholder="Search by player, opponent, or map…" autocomplete="off" />
+        <label class="mine-toolbar-sort">
+          <span class="mine-toolbar-label">Sort</span>
+          <select id="replays-sort-select" class="mine-sort-select">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="race">Race</option>
+            <option value="map">Map</option>
+          </select>
+        </label>
+        <div class="replays-race-filter" role="toolbar" aria-label="Filter by race">
+          <span class="mine-toolbar-label">Race</span>
+          <button class="replays-race-chip" data-race="all" type="button">All</button>
+          <button class="replays-race-chip race-H" data-race="H" type="button">HU</button>
+          <button class="replays-race-chip race-O" data-race="O" type="button">ORC</button>
+          <button class="replays-race-chip race-E" data-race="E" type="button">NE</button>
+          <button class="replays-race-chip race-U" data-race="U" type="button">UD</button>
+        </div>
+        <span class="replays-page-count" id="replays-page-count" aria-live="polite"></span>
+        <button class="replays-select-toggle" id="replays-select-toggle" type="button">Select</button>
+      </div>
+
+      <div id="replays-page-grid" class="replays-page-grid" aria-live="polite"></div>
+
+      <div id="replays-page-empty" class="replays-page-empty" hidden>
+        <div class="site-mine-empty-icon" aria-hidden="true">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div class="site-mine-empty-title">No replays match these filters.</div>
+        <div class="site-mine-empty-sub">Clear the search or try a different race filter. Or <a href="/" class="replays-empty-link">go to the homepage</a> to upload a new one.</div>
+      </div>
+
+      <nav id="replays-page-pager" class="replays-page-pager" aria-label="Pagination"></nav>
+    </section>
+
+    <!-- Bulk action bar (visible when select-mode is on with ≥1 selected). -->
+    <div id="replays-bulk-bar" class="replays-bulk-bar" hidden>
+      <span class="replays-bulk-count" id="replays-bulk-count">0 selected</span>
+      <button class="rep-card-btn" id="replays-bulk-cancel" type="button">Cancel</button>
+      <button class="rep-card-btn rep-card-btn-danger" id="replays-bulk-delete" type="button">Delete selected</button>
+    </div>
+  </main>
+
+  <!-- Compare drawer (same as homepage). -->
+  <aside id="compare-drawer" class="compare-drawer" hidden aria-label="Compare to pro" aria-modal="true" role="dialog">
+    <div class="compare-drawer-head">
+      <div class="compare-drawer-head-text">
+        <span class="compare-drawer-eyebrow" id="compare-drawer-eyebrow">Compare</span>
+        <span class="compare-drawer-title" id="compare-drawer-title">Replay vs Pro</span>
+      </div>
+      <button class="compare-drawer-close" id="compare-drawer-close" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="compare-drawer-body" id="compare-drawer-body"></div>
+  </aside>
+  <div class="compare-drawer-backdrop" id="compare-drawer-backdrop" hidden></div>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III. Browse pro builds, drop a .w3g for a full breakdown — parses entirely in your browser — or compare your replay to a pro's.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="/">Home</a>
+        <a href="/replays.html">Your library</a>
+        <a href="/about.html">About</a>
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      SiteNav.render(null);
+
+      const my = new window.MyReplays();
+      const uploader = new window.UploadManager({ myReplays: my });
+
+      // Wire shared chrome (find-replays modal, upload button, parse overlay).
+      // Same wiring as the homepage. Kept inline so the page is self-contained.
+      const overlay = document.getElementById('parse-overlay');
+      const overlayTitle = document.getElementById('parse-overlay-title');
+      const overlayProgress = document.getElementById('parse-overlay-progress');
+      const overlayBarFill = document.getElementById('parse-overlay-bar-fill');
+      const overlayPhase = document.getElementById('parse-overlay-phase');
+      const overlayPercent = document.getElementById('parse-overlay-percent');
+      const overlayBarRole = overlay ? overlay.querySelector('[role="progressbar"]') : null;
+      const PHASE_LABEL = {
+        reading: 'reading file', peek: 'reading replay header',
+        fetch: 'loading map data', metadata: 'reading replay metadata',
+        parsing: 'parsing replay events', postprocess: 'analyzing data',
+        assemble: 'building output', storing: 'saving to your library',
+        done: 'done — opening viewer'
+      };
+      const fmtMs = (ms) => {
+        if (typeof ms !== 'number' || ms < 0) return null;
+        const s = Math.floor(ms / 1000), m = Math.floor(s / 60);
+        return `${m}:${String(s % 60).padStart(2, '0')}`;
+      };
+      const showOverlay = (filename) => {
+        if (!overlay) return;
+        overlay.style.display = 'flex';
+        overlayTitle.textContent = filename ? `Parsing ${filename}…` : 'Parsing your replay…';
+        if (overlayBarFill) overlayBarFill.style.width = '0%';
+        if (overlayPhase) overlayPhase.textContent = 'starting…';
+        if (overlayPercent) overlayPercent.textContent = '0%';
+        if (overlayProgress) overlayProgress.textContent = '';
+      };
+      const updateOverlay = (evt) => {
+        const pct = typeof evt.percent === 'number' ? Math.round(evt.percent) : null;
+        if (pct !== null) {
+          if (overlayBarFill) overlayBarFill.style.width = pct + '%';
+          if (overlayPercent) overlayPercent.textContent = pct + '%';
+          if (overlayBarRole) overlayBarRole.setAttribute('aria-valuenow', String(pct));
+        }
+        if (evt.phase && overlayPhase) overlayPhase.textContent = PHASE_LABEL[evt.phase] || evt.phase;
+        let sub = '';
+        if (evt.phase === 'parsing' && typeof evt.gameTimeMs === 'number' && typeof evt.durationMs === 'number' && evt.durationMs > 0) {
+          sub = `${fmtMs(evt.gameTimeMs)} of ${fmtMs(evt.durationMs)}`;
+        } else if (evt.detail) sub = evt.detail;
+        if (overlayProgress) overlayProgress.textContent = sub;
+      };
+      const hideOverlay = () => { if (overlay) overlay.style.display = 'none'; };
+
+      const triggerUpload = async () => {
+        try {
+          uploader.onProgress = (p) => {
+            if (overlay && overlay.style.display === 'none') showOverlay();
+            updateOverlay(p);
+          };
+          const res = await uploader.pickAndParse();
+          if (!res) { hideOverlay(); return; }
+          window.location.href = '/viewer?local=' + encodeURIComponent(res.id);
+        } catch (e) {
+          hideOverlay();
+          let msg = 'Upload failed: ' + (e.message || e);
+          if (e.code === 'missing_map') msg = 'Map not in our library yet: ' + (e.rawMapName || '');
+          else if (e.code === 'too_large' || e.code === 'unsupported_media') msg = e.message;
+          alert(msg);
+        }
+      };
+      const heroCard = document.getElementById('hero-upload-card');
+      if (heroCard) heroCard.addEventListener('click', triggerUpload);
+
+      // Help modal.
+      const findBtn = document.getElementById('hero-find-replays-btn');
+      const findModal = document.getElementById('find-replays-modal');
+      if (findBtn && findModal) {
+        const closeModal = () => { findModal.hidden = true; document.body.classList.remove('help-modal-active'); };
+        findBtn.addEventListener('click', () => { findModal.hidden = false; document.body.classList.add('help-modal-active'); });
+        findModal.addEventListener('click', (e) => { if (e.target.dataset && e.target.dataset.action === 'close') closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !findModal.hidden) closeModal(); });
+      }
+
+      // ───── Library page state ────────────────────────────
+      const SORT_KEY = 'wc3v.myReplaysSort';
+      const PAGE_SIZE = 24;
+
+      const searchEl = document.getElementById('replays-search');
+      const sortEl = document.getElementById('replays-sort-select');
+      const raceChips = Array.from(document.querySelectorAll('.replays-race-chip'));
+      const gridEl = document.getElementById('replays-page-grid');
+      const emptyEl = document.getElementById('replays-page-empty');
+      const countEl = document.getElementById('replays-page-count');
+      const pagerEl = document.getElementById('replays-page-pager');
+      const selectToggle = document.getElementById('replays-select-toggle');
+      const bulkBar = document.getElementById('replays-bulk-bar');
+      const bulkCount = document.getElementById('replays-bulk-count');
+      const bulkCancel = document.getElementById('replays-bulk-cancel');
+      const bulkDelete = document.getElementById('replays-bulk-delete');
+
+      const params = new URLSearchParams(window.location.search);
+      let state = {
+        page: Math.max(1, parseInt(params.get('page') || '1', 10) || 1),
+        sort: localStorage.getItem(SORT_KEY) || 'newest',
+        race: 'all',
+        query: '',
+        selectMode: false,
+        selected: new Set()
+      };
+
+      sortEl.value = state.sort;
+      raceChips.forEach(c => c.classList.toggle('active', c.dataset.race === state.race));
+
+      const setUrl = () => {
+        const url = new URL(window.location.href);
+        if (state.page > 1) url.searchParams.set('page', String(state.page));
+        else url.searchParams.delete('page');
+        history.replaceState(null, '', url.toString());
+      };
+
+      const filterAndSort = (records) => {
+        const q = state.query.trim().toLowerCase();
+        const out = records.filter(r => {
+          if (state.race !== 'all' && r.race !== state.race) return false;
+          if (q) {
+            const map = (r.mapName || '').toLowerCase();
+            const players = (r.players || []).map(p => (p.name || '').toLowerCase()).join(' ');
+            if (!map.includes(q) && !players.includes(q)) return false;
+          }
+          return true;
+        });
+        return out;
+      };
+
+      const updateBulkBar = () => {
+        const n = state.selected.size;
+        bulkBar.hidden = !state.selectMode || n === 0;
+        bulkCount.textContent = `${n} selected`;
+      };
+
+      const render = async () => {
+        const all = await my.list({ sort: state.sort });
+        const filtered = filterAndSort(all);
+        const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+        if (state.page > totalPages) state.page = totalPages;
+        const start = (state.page - 1) * PAGE_SIZE;
+        const pageRecords = filtered.slice(start, start + PAGE_SIZE);
+
+        gridEl.innerHTML = '';
+        emptyEl.hidden = filtered.length > 0;
+        for (const r of pageRecords) {
+          const card = my._renderCard(r, { viewerPath: '/viewer' });
+          if (state.selectMode) {
+            card.classList.add('rep-card-selectable');
+            const cb = document.createElement('label');
+            cb.className = 'rep-card-checkbox';
+            cb.innerHTML = `<input type="checkbox" ${state.selected.has(r.id) ? 'checked' : ''}/>`;
+            cb.querySelector('input').addEventListener('change', (e) => {
+              if (e.target.checked) state.selected.add(r.id); else state.selected.delete(r.id);
+              updateBulkBar();
+            });
+            card.appendChild(cb);
+          }
+          gridEl.appendChild(card);
+        }
+
+        countEl.textContent = filtered.length === all.length
+          ? `${filtered.length} ${filtered.length === 1 ? 'replay' : 'replays'}`
+          : `${filtered.length} of ${all.length}`;
+
+        // Pager.
+        pagerEl.innerHTML = '';
+        if (totalPages > 1) {
+          const mkBtn = (label, page, opts = {}) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'replays-pager-btn' + (opts.active ? ' replays-pager-active' : '');
+            b.textContent = label;
+            b.disabled = !!opts.disabled;
+            b.addEventListener('click', () => { state.page = page; setUrl(); render(); });
+            pagerEl.appendChild(b);
+          };
+          mkBtn('◀', Math.max(1, state.page - 1), { disabled: state.page === 1 });
+          for (let p = 1; p <= totalPages; p++) {
+            // Compact pager — show 1, current±1, last; ellipsize the gaps.
+            if (p === 1 || p === totalPages || Math.abs(p - state.page) <= 1) {
+              mkBtn(String(p), p, { active: p === state.page });
+            } else if (p === 2 || p === totalPages - 1) {
+              const span = document.createElement('span');
+              span.className = 'replays-pager-ellipsis';
+              span.textContent = '…';
+              pagerEl.appendChild(span);
+            }
+          }
+          mkBtn('▶', Math.min(totalPages, state.page + 1), { disabled: state.page === totalPages });
+        }
+        updateBulkBar();
+      };
+
+      searchEl.addEventListener('input', () => {
+        state.query = searchEl.value;
+        state.page = 1;
+        setUrl();
+        render();
+      });
+      sortEl.addEventListener('change', () => {
+        state.sort = sortEl.value;
+        localStorage.setItem(SORT_KEY, state.sort);
+        state.page = 1;
+        setUrl();
+        render();
+      });
+      raceChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          state.race = chip.dataset.race;
+          raceChips.forEach(c => c.classList.toggle('active', c.dataset.race === state.race));
+          state.page = 1;
+          setUrl();
+          render();
+        });
+      });
+      selectToggle.addEventListener('click', () => {
+        state.selectMode = !state.selectMode;
+        if (!state.selectMode) state.selected.clear();
+        selectToggle.classList.toggle('active', state.selectMode);
+        selectToggle.textContent = state.selectMode ? 'Done' : 'Select';
+        render();
+      });
+      bulkCancel.addEventListener('click', () => {
+        state.selected.clear();
+        state.selectMode = false;
+        selectToggle.classList.remove('active');
+        selectToggle.textContent = 'Select';
+        render();
+      });
+      bulkDelete.addEventListener('click', async () => {
+        const ids = [...state.selected];
+        if (!ids.length) return;
+        if (!confirm(`Delete ${ids.length} replay${ids.length === 1 ? '' : 's'}? This cannot be undone.`)) return;
+        for (const id of ids) await my.remove(id);
+        state.selected.clear();
+        render();
+      });
+
+      // Re-render on global delete events from card-level confirms.
+      document.addEventListener('wc3v:my-replays-changed', () => render());
+
+      await render();
+    });
+  </script>
+</body>
+</html>

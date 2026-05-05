@@ -302,6 +302,20 @@ const BuildOrderData = class {
 
     events.sort((a, b) => a.gameTime - b.gameTime);
 
+    // --- Deduplicate BO events (safety net for any server-side misses) ---
+    {
+      const seen = new Set();
+      const deduped = [];
+      for (const e of events) {
+        const key = e.type + '|' + e.gameTime + '|' + (e.itemId || '');
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(e);
+      }
+      events.length = 0;
+      events.push(...deduped);
+    }
+
     // --- Adjust supplyMax: defer supply from buildings under construction ---
     // Server pre-counts supply when building starts; we defer it to completion.
     const supplyWindows = events

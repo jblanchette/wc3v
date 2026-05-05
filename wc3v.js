@@ -11,7 +11,17 @@ const { TILESET_EXTRAS, DEFAULT_EXTRAS } = require("./helpers/tilesetColors");
 const fs = require('fs');
 const path = require('path');
 
-const doParsing = async (file) => {
+// input: Buffer (raw .w3g bytes) or string (filesystem path)
+// options:
+//   - mapDataCache: { [mapName]: { wpm, doo, unit } } — pre-loaded JSON cache
+//     for browser use, skips fs map reads. Falls back to fs path when absent.
+//   - skipTerrainRead: boolean — true on browser; skips the optional W3E read
+//     and falls back to DEFAULT_EXTRAS for tileset color (cosmetic only).
+//   - onProgress: ({ phase, percent, gameTimeMs?, durationMs?, detail? })
+//     called repeatedly during parse. Throttled internally to ~10/sec so
+//     callers can drive a UI progress bar without taking over the loop.
+//     phase ∈ { 'metadata', 'parsing', 'postprocess', 'done' }
+const doParsing = async (input, options = {}) => {
   let actionCount = 0;
   let globalTime = 0;
 
@@ -22,14 +32,31 @@ const doParsing = async (file) => {
 
   let playerManager = new PlayerManager();
 
-  const buffer = fs.readFileSync(file);
+  const buffer = Buffer.isBuffer(input) ? input : fs.readFileSync(input);
   const parser = new ReplayParser();
 
   let replayMeta = null;
+  let durationMs = 0;
+
+  // Progress throttling: gamedatablock fires many times per sec; coalesce
+  // to ~10 updates/sec to keep the UI smooth without spamming the callback.
+  const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
+  let lastProgressAt = 0;
+  const emitProgress = (phase, percent, extra = {}) => {
+    if (!onProgress) return;
+    const now = Date.now();
+    // Always emit phase transitions and the 'done'/100% case.
+    if (phase !== 'parsing' || now - lastProgressAt >= 100) {
+      lastProgressAt = now;
+      try { onProgress({ phase, percent: Math.max(0, Math.min(100, percent)), ...extra }); } catch (e) { /* swallow */ }
+    }
+  };
 
   parser.on("basic_replay_information", (info) => {
     replayMeta = info;
-    playerManager.setMetaData(info.metadata);
+    durationMs = (info && info.subheader && info.subheader.replayLengthMS) || 0;
+    emitProgress('metadata', 10, { durationMs });
+    playerManager.setMetaData(info.metadata, options);
   });
 
   parser.on("gamedatablock", (block) => {
@@ -38,6 +65,14 @@ const doParsing = async (file) => {
     if (block.timeIncrement) {
       globalTime += block.timeIncrement;
       playerManager.processTick(globalTime);
+      // 10..85% allocated to the gamedatablock pass. Map global game-time
+      // progress within that range. Falls back to 50% if duration unknown.
+      if (durationMs > 0) {
+        const ratio = Math.min(1, globalTime / durationMs);
+        emitProgress('parsing', 10 + ratio * 75, { gameTimeMs: globalTime, durationMs });
+      } else {
+        emitProgress('parsing', 50, { gameTimeMs: globalTime });
+      }
     }
 
     commandBlocks.forEach((actionBlock) => {
@@ -74,6 +109,8 @@ const doParsing = async (file) => {
       throw e;
     }
   }
+
+  emitProgress('postprocess', 86, { detail: 'workers' });
 
   // post-process: update worker assignments with final per-unit primaryRole
   Object.values(playerManager.players).forEach(player => {
@@ -136,6 +173,8 @@ const doParsing = async (file) => {
       transport.loadEvents = cleaned;
     });
   });
+
+  emitProgress('postprocess', 88, { detail: 'building backfill' });
 
   // post-parse: backfill missing buildings inferred from tech tree
   const BuildingBackfill = require('./lib/BuildingBackfill');
@@ -208,8 +247,29 @@ const doParsing = async (file) => {
 
     if (toRemove.size > 0) {
       player.units = player.units.filter(u => !toRemove.has(u));
+
+      // also remove corresponding addBuilding events from eventStream
+      const removedIds = new Set([...toRemove].map(u =>
+        `${u.objectId1},${u.objectId2},${u.currentX},${u.currentY}`
+      ));
+      player.eventStream = player.eventStream.filter(evt => {
+        if (evt.key !== 'addBuilding' || !evt.building) return true;
+        const b = evt.building;
+        const id = `${b.objectId1},${b.objectId2},${b.currentX},${b.currentY}`;
+        return !removedIds.has(id);
+      });
     }
   });
+
+  // post-parse: deduplicate eventStream entries across all event types
+  Object.values(playerManager.players).forEach(player => {
+    if (parseInt(player.id) >= 24) return;
+    if (player.deduplicateEventStream) {
+      player.deduplicateEventStream();
+    }
+  });
+
+  emitProgress('postprocess', 92, { detail: 'building dedup' });
 
   // post-parse: extract compact base grid from WPM for each player
   const wpmGrid = playerManager.world.gridData && playerManager.world.gridData.wpm
@@ -226,9 +286,14 @@ const doParsing = async (file) => {
     // read tileset colors for base viewer rendering
     let tilesetExtras = DEFAULT_EXTRAS;
     const mapData = playerManager.world.gridData && playerManager.world.gridData.mapData;
-    if (mapData && mapData.name) {
-      const w3ePath = path.join(__dirname, 'mapdata', mapData.name, 'war3map.w3e');
-      if (fs.existsSync(w3ePath)) {
+    // mapData.name comes from the replay header (attacker-controlled on uploads).
+    // Whitelist safe chars and verify resolved path stays inside mapdata/.
+    // Browser path skips this entirely (cosmetic — base-grid color falls back).
+    const SAFE_MAP_NAME = /^[A-Za-z0-9_\-. ]+$/;
+    if (!options.skipTerrainRead && mapData && mapData.name && SAFE_MAP_NAME.test(mapData.name)) {
+      const mapdataRoot = path.resolve(__dirname, 'mapdata');
+      const w3ePath = path.resolve(mapdataRoot, mapData.name, 'war3map.w3e');
+      if (w3ePath.startsWith(mapdataRoot + path.sep) && fs.existsSync(w3ePath)) {
         try {
           const terrainFile = new TERRAINFile(w3ePath);
           tilesetExtras = TILESET_EXTRAS[terrainFile.tileset] || DEFAULT_EXTRAS;
@@ -371,6 +436,8 @@ const doParsing = async (file) => {
     }
   });
 
+  emitProgress('postprocess', 96, { detail: 'validation' });
+
   // post-parse validation: detect contradictions in parsed data
   const validator = new ReplayValidator(playerManager.players);
   const validation = validator.validate();
@@ -423,6 +490,8 @@ const doParsing = async (file) => {
     tracer.writeToFile(tracePath);
     console.log(`Worker trace written to ${tracePath}`);
   }
+
+  emitProgress('done', 100);
 
   return {
     replay,
@@ -521,7 +590,10 @@ module.exports = {
   parseReplays
 };
 
-const isCLI = !module.parent;
+// CLI detection. `require.main === module` is true only when this file was
+// invoked directly via `node wc3v.js`. Bundlers (esbuild, etc.) leave
+// require.main undefined, so the bundled browser path skips main().
+const isCLI = typeof require !== 'undefined' && require.main === module;
 
 if (isCLI) {
   main();

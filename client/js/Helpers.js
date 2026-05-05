@@ -128,7 +128,7 @@ const findIndexFrom = (arr, fn, start = 0, gameTime = 0) => {
 
 const StandardStreamSearch = (record, nextRecord, gameTime) => {
   // is the gameTime before the next record in the sequence
-  let isBeforeNextStep;    
+  let isBeforeNextStep;
 
   if (!nextRecord) {
     // there is no next record, so this one is always our last valid one
@@ -142,6 +142,26 @@ const StandardStreamSearch = (record, nextRecord, gameTime) => {
   }
 };
 
+// Uniform Catmull-Rom interpolation between p1 and p2 with neighbors p0 and p3.
+// t in [0,1]. Each point is {x, y}. Returns {x, y}.
+const catmullRomXY = (p0, p1, p2, p3, t) => {
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const x = 0.5 * (
+    (2 * p1.x) +
+    (-p0.x + p2.x) * t +
+    (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+    (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3
+  );
+  const y = 0.5 * (
+    (2 * p1.y) +
+    (-p0.y + p2.y) * t +
+    (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+    (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3
+  );
+  return { x, y };
+};
+
 const Helpers = {
   distance,
   closestToPoint,
@@ -151,6 +171,7 @@ const Helpers = {
   isBoxCollision,
   findIndexFrom,
   StandardStreamSearch,
+  catmullRomXY,
 
   // constants
   MS_TO_SECONDS: 0.001,

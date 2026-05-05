@@ -1,3 +1,13 @@
+// Replay-derived strings reach this file via the parsed wc3v JSON.
+// See Security.js for the escape/sanitize/validate helpers.
+const _msEsc  = (s) => Security.escapeHtml(Security.sanitizeUserText(s));
+const _msAttr = (s) => Security.escapeAttr(Security.sanitizeUserText(s));
+const _msIcon = (id) => /^[A-Za-z0-9_\-]{1,32}$/.test(String(id == null ? '' : id)) ? id : '';
+// SVG / CSS values that should be safe color/length tokens. Restrict to
+// hex, rgb(), and a few keywords so a replay-controlled color can't
+// inject "; }</style><script>…".
+const _msColor = (s) => /^#[0-9A-Fa-f]{3,8}$|^rgb[a]?\([0-9.,\s%]+\)$|^[a-zA-Z]{1,20}$/.test(String(s == null ? '' : s)) ? s : '#888';
+
 const MatchSummary = class {
   constructor (viewer) {
     this.viewer = viewer;
@@ -152,20 +162,21 @@ const MatchSummary = class {
 
       // --- Top section: Player identity + heroes ---
       let top = '';
-      const raceIconId = BuildOrderData.CONFIG.raceStarterIcons[race] || '';
+      const raceIconId = _msIcon(BuildOrderData.CONFIG.raceStarterIcons[race] || '');
       top += `<div class="ms-player-name">
-        <img class="ms-race-icon" src="/assets/wc3icons/${raceIconId}.jpg" style="border-color:${raceInfo.accent}" onerror="this.style.display='none'" />
-        <span style="color:${boData.playerColor}">${boData.displayName}</span>
-        <span class="ms-race-label" style="color:${raceInfo.accent}">${raceInfo.label}</span>
+        <img class="ms-race-icon" src="/assets/wc3icons/${raceIconId}.jpg" style="border-color:${_msColor(raceInfo.accent)}" onerror="this.style.display='none'" />
+        <span style="color:${_msColor(boData.playerColor)}">${_msEsc(boData.displayName)}</span>
+        <span class="ms-race-label" style="color:${_msColor(raceInfo.accent)}">${_msEsc(raceInfo.label)}</span>
       </div>`;
 
       if (tierProduction.heroes && tierProduction.heroes.length) {
         top += '<div class="ms-heroes-row">';
         tierProduction.heroes.forEach(hero => {
+          const heroLvl = Number(hero.level) || 0;
           top += `<div class="ms-hero-inline">
             <div class="ms-hero-portrait-wrap">
-              <img class="ms-hero-portrait" src="/assets/wc3icons/${hero.itemId}.jpg" title="${hero.displayName}" onerror="this.style.display='none'" />
-              <span class="ms-hero-level">${hero.level}</span>
+              <img class="ms-hero-portrait" src="/assets/wc3icons/${_msIcon(hero.itemId)}.jpg" title="${_msAttr(hero.displayName)}" onerror="this.style.display='none'" />
+              <span class="ms-hero-level">${heroLvl}</span>
             </div>
             <div class="ms-hero-spells-grid">${this._renderHeroSpells(hero)}</div>
           </div>`;
@@ -287,19 +298,22 @@ const MatchSummary = class {
     myUnits.forEach(u => {
       const atk = u.attackType && ATTACK_TYPES[u.attackType];
       const arm = u.armorType && (ARMOR_TYPES[u.armorType] || (u.armorType === 'hero' ? { label: 'Hero', icon: '' } : null));
+      const uName = _msEsc(u.displayName);
+      const uAttr = _msAttr(u.displayName);
+      const uCount = Number(u.count) || 0;
 
       html += '<div class="ms-ct-unit">';
-      html += `<span class="ms-ct-name">${u.displayName}${u.count > 1 ? ' x' + u.count : ''}</span>`;
-      html += `<div class="ms-ct-portrait-wrap"><img class="ms-ct-unit-icon" src="/assets/wc3icons/${u.itemId}.jpg" title="${u.displayName}" onerror="this.style.display='none'" />${u.count > 1 ? `<span class="ms-ct-count">${u.count}</span>` : ''}</div>`;
+      html += `<span class="ms-ct-name">${uName}${uCount > 1 ? ' x' + uCount : ''}</span>`;
+      html += `<div class="ms-ct-portrait-wrap"><img class="ms-ct-unit-icon" src="/assets/wc3icons/${_msIcon(u.itemId)}.jpg" title="${uAttr}" onerror="this.style.display='none'" />${uCount > 1 ? `<span class="ms-ct-count">${uCount}</span>` : ''}</div>`;
       html += '<div class="ms-ct-type-col">';
       if (atk) {
-        html += `<div class="ms-ct-typed"><img class="ms-ct-type-icon" src="${atk.icon}" onerror="this.style.display='none'" /><span class="ms-ct-type-lbl">${atk.label}</span></div>`;
+        html += `<div class="ms-ct-typed"><img class="ms-ct-type-icon" src="${_msAttr(atk.icon)}" onerror="this.style.display='none'" /><span class="ms-ct-type-lbl">${_msEsc(atk.label)}</span></div>`;
       }
       if (arm) {
         const armIcon = arm.icon || '';
         html += `<div class="ms-ct-typed">`;
-        if (armIcon) html += `<img class="ms-ct-type-icon" src="${armIcon}" onerror="this.style.display='none'" />`;
-        html += `<span class="ms-ct-type-lbl">${arm.label}</span></div>`;
+        if (armIcon) html += `<img class="ms-ct-type-icon" src="${_msAttr(armIcon)}" onerror="this.style.display='none'" />`;
+        html += `<span class="ms-ct-type-lbl">${_msEsc(arm.label)}</span></div>`;
       }
       html += '</div></div>';
     });
@@ -319,9 +333,9 @@ const MatchSummary = class {
         if (!arm) return;
         const armIcon = arm.icon || '';
         const unitNames = oppArmTypes[armKey].map(u => u.displayName).join(', ');
-        html += `<td class="ms-matrix-col-hdr" title="${unitNames}">`;
-        html += `<span>${arm.label}</span>`;
-        if (armIcon) html += `<img class="ms-matrix-hdr-icon" src="${armIcon}" onerror="this.style.display='none'" />`;
+        html += `<td class="ms-matrix-col-hdr" title="${_msAttr(unitNames)}">`;
+        html += `<span>${_msEsc(arm.label)}</span>`;
+        if (armIcon) html += `<img class="ms-matrix-hdr-icon" src="${_msAttr(armIcon)}" onerror="this.style.display='none'" />`;
         html += `</td>`;
       });
       html += '</tr>';
@@ -332,9 +346,9 @@ const MatchSummary = class {
         if (!atk) return;
         const unitNames = myAtkTypes[atkType].map(u => u.displayName).join(', ');
 
-        html += `<tr><td class="ms-matrix-row-hdr" title="${unitNames}">`;
-        html += `<span>${atk.label}</span>`;
-        html += `<img class="ms-matrix-hdr-icon" src="${atk.icon}" onerror="this.style.display='none'" />`;
+        html += `<tr><td class="ms-matrix-row-hdr" title="${_msAttr(unitNames)}">`;
+        html += `<span>${_msEsc(atk.label)}</span>`;
+        html += `<img class="ms-matrix-hdr-icon" src="${_msAttr(atk.icon)}" onerror="this.style.display='none'" />`;
         html += `</td>`;
 
         armKeys.forEach(armKey => {
@@ -350,7 +364,7 @@ const MatchSummary = class {
 
           const armLabel = (ARMOR_TYPES[armKey] && ARMOR_TYPES[armKey].label) || armKey;
           const oppNames = oppArmTypes[armKey].map(u => u.displayName).join(', ');
-          html += `<td class="ms-matrix-cell ${cls}" title="${atk.label} vs ${armLabel} (${oppNames}): ${pct}%">${pct}%</td>`;
+          html += `<td class="ms-matrix-cell ${cls}" title="${_msAttr(atk.label)} vs ${_msAttr(armLabel)} (${_msAttr(oppNames)}): ${pct}%">${pct}%</td>`;
         });
         html += '</tr>';
       });
@@ -416,20 +430,22 @@ const MatchSummary = class {
       if (finalSnapshot) {
         const eco = finalSnapshot.economy || {};
         html += '<div class="ms-section-label">Resources</div>';
-        html += `<div class="ms-stat-row"><span>Gold Spent</span><span class="ms-stat-value ms-gold">${eco.goldSpent || 0}</span></div>`;
-        html += `<div class="ms-stat-row"><span>Lumber Spent</span><span class="ms-stat-value ms-lumber">${eco.lumberSpent || 0}</span></div>`;
+        html += `<div class="ms-stat-row"><span>Gold Spent</span><span class="ms-stat-value ms-gold">${Number(eco.goldSpent) || 0}</span></div>`;
+        html += `<div class="ms-stat-row"><span>Lumber Spent</span><span class="ms-stat-value ms-lumber">${Number(eco.lumberSpent) || 0}</span></div>`;
       }
 
       const itemStream = player.itemStream;
       if (itemStream && itemStream.purchases && itemStream.purchases.length) {
-        const totalItemGold = itemStream.purchases.reduce((sum, p) => sum + (p.goldSpent || 0), 0);
+        const totalItemGold = itemStream.purchases.reduce((sum, p) => sum + (Number(p.goldSpent) || 0), 0);
         html += `<div class="ms-section-label">Item Purchases (${totalItemGold}g)</div>`;
         html += '<div class="ms-icon-grid">';
         itemStream.purchases.forEach(p => {
-          const tip = `${p.displayName} x${p.count}${p.goldSpent ? ` (${p.goldSpent}g)` : ''}`;
+          const c = Number(p.count) || 0;
+          const goldSpent = Number(p.goldSpent) || 0;
+          const tip = `${_msAttr(p.displayName)} x${c}${goldSpent ? ` (${goldSpent}g)` : ''}`;
           html += `<div class="ms-icon-wrap" title="${tip}">
-            <img class="ms-icon" src="/assets/wc3icons/${p.itemId}.jpg" onerror="this.parentElement.style.display='none'" />
-            ${p.count > 1 ? `<span class="ms-icon-count">${p.count}</span>` : ''}
+            <img class="ms-icon" src="/assets/wc3icons/${_msIcon(p.itemId)}.jpg" onerror="this.parentElement.style.display='none'" />
+            ${c > 1 ? `<span class="ms-icon-count">${c}</span>` : ''}
           </div>`;
         });
         html += '</div>';
@@ -439,9 +455,10 @@ const MatchSummary = class {
         html += '<div class="ms-section-label">Item Uses</div>';
         html += '<div class="ms-icon-grid">';
         itemStream.uses.forEach(u => {
-          html += `<div class="ms-icon-wrap" title="${u.displayName} x${u.count}">
-            <img class="ms-icon" src="/assets/wc3icons/${u.itemId}.jpg" onerror="this.parentElement.style.display='none'" />
-            ${u.count > 1 ? `<span class="ms-icon-count">${u.count}</span>` : ''}
+          const c = Number(u.count) || 0;
+          html += `<div class="ms-icon-wrap" title="${_msAttr(u.displayName)} x${c}">
+            <img class="ms-icon" src="/assets/wc3icons/${_msIcon(u.itemId)}.jpg" onerror="this.parentElement.style.display='none'" />
+            ${c > 1 ? `<span class="ms-icon-count">${c}</span>` : ''}
           </div>`;
         });
         html += '</div>';
@@ -461,7 +478,8 @@ const MatchSummary = class {
         html += `<div class="ms-section-label">Mercenaries (${totalMercGold}g)</div>`;
         html += '<div class="ms-icon-grid">';
         Object.values(mercCounts).forEach(m => {
-          html += this._renderIcon(m.itemId, `${m.displayName} x${m.count} (${m.goldSpent}g)`, m.count);
+          // _renderIcon escapes/sanitizes title; safe to pass raw replay strings here.
+          html += this._renderIcon(m.itemId, `${m.displayName} x${Number(m.count) || 0} (${Number(m.goldSpent) || 0}g)`, m.count);
         });
         html += '</div>';
       }
@@ -472,12 +490,12 @@ const MatchSummary = class {
         heroes.forEach(hero => {
           const items = hero.items || [];
           if (!items.length) return;
-          html += `<div class="ms-hero-inv-label">${hero.displayName}</div>`;
+          html += `<div class="ms-hero-inv-label">${_msEsc(hero.displayName)}</div>`;
           html += '<div class="ms-icon-grid">';
           items.forEach(item => {
             if (!item.itemId) return;
-            html += `<div class="ms-icon-wrap" title="${item.displayName || item.itemId}">
-              <img class="ms-icon" src="/assets/wc3icons/${item.itemId}.jpg" onerror="this.parentElement.style.display='none'" />
+            html += `<div class="ms-icon-wrap" title="${_msAttr(item.displayName || item.itemId)}">
+              <img class="ms-icon" src="/assets/wc3icons/${_msIcon(item.itemId)}.jpg" onerror="this.parentElement.style.display='none'" />
             </div>`;
           });
           html += '</div>';
@@ -508,11 +526,13 @@ const MatchSummary = class {
         phtml += '<div class="ms-section-label ms-atk-label">Attack Upgrades</div>';
         phtml += '<div class="ms-upgrade-list">';
         atkEntries.forEach(upg => {
-          const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : `/assets/wc3icons/${upg.itemId}.jpg`;
+          const iconId = _msIcon(upg.icon || upg.itemId);
+          const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+          const lvl = Number(upg.level) || 0;
           phtml += `<div class="ms-upgrade-row ms-atk">
             <img class="ms-upgrade-icon" src="${iconSrc}" onerror="this.style.display='none'" />
-            <span class="ms-upgrade-name">${upg.displayName}</span>
-            <span class="ms-upgrade-level">Lv ${upg.level}</span>
+            <span class="ms-upgrade-name">${_msEsc(upg.displayName)}</span>
+            <span class="ms-upgrade-level">Lv ${lvl}</span>
           </div>`;
         });
         phtml += '</div>';
@@ -523,11 +543,13 @@ const MatchSummary = class {
         phtml += '<div class="ms-section-label ms-def-label">Defense Upgrades</div>';
         phtml += '<div class="ms-upgrade-list">';
         defEntries.forEach(upg => {
-          const iconSrc = upg.icon ? `/assets/wc3icons/${upg.icon}.jpg` : `/assets/wc3icons/${upg.itemId}.jpg`;
+          const iconId = _msIcon(upg.icon || upg.itemId);
+          const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+          const lvl = Number(upg.level) || 0;
           phtml += `<div class="ms-upgrade-row ms-def">
             <img class="ms-upgrade-icon" src="${iconSrc}" onerror="this.style.display='none'" />
-            <span class="ms-upgrade-name">${upg.displayName}</span>
-            <span class="ms-upgrade-level">Lv ${upg.level}</span>
+            <span class="ms-upgrade-name">${_msEsc(upg.displayName)}</span>
+            <span class="ms-upgrade-level">Lv ${lvl}</span>
           </div>`;
         });
         phtml += '</div>';
@@ -538,11 +560,13 @@ const MatchSummary = class {
         phtml += '<div class="ms-section-label ms-res-label">Research</div>';
         phtml += '<div class="ms-upgrade-list">';
         researched.forEach(r => {
-          const iconSrc = r.icon ? `/assets/wc3icons/${r.icon}.jpg` : `/assets/wc3icons/${r.itemId}.jpg`;
-          const lvl = r.level > 1 ? ` Lv ${r.level}` : '';
+          const iconId = _msIcon(r.icon || r.itemId);
+          const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+          const rLvl = Number(r.level) || 0;
+          const lvl = rLvl > 1 ? ` Lv ${rLvl}` : '';
           phtml += `<div class="ms-upgrade-row ms-res">
             <img class="ms-upgrade-icon" src="${iconSrc}" onerror="this.style.display='none'" />
-            <span class="ms-upgrade-name">${r.displayName}${lvl}</span>
+            <span class="ms-upgrade-name">${_msEsc(r.displayName)}${lvl}</span>
           </div>`;
         });
         phtml += '</div>';
@@ -552,12 +576,14 @@ const MatchSummary = class {
       if (researchEvents.length) {
         phtml += '<div class="ms-section-label">Research Timeline</div>';
         researchEvents.forEach(e => {
-          const iconSrc = e.icon ? `/assets/wc3icons/${e.icon}.jpg` : `/assets/wc3icons/${e.itemId}.jpg`;
-          const lvl = e.level > 1 ? ` Lv ${e.level}` : '';
+          const iconId = _msIcon(e.icon || e.itemId);
+          const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
+          const eLvl = Number(e.level) || 0;
+          const lvl = eLvl > 1 ? ` Lv ${eLvl}` : '';
           phtml += `<div class="ms-timeline-mini">
             <span class="ms-timeline-time">${formatGameTime(e.gameTime)}</span>
             <img class="ms-timeline-icon" src="${iconSrc}" onerror="this.style.display='none'" />
-            <span>${e.displayName}${lvl}</span>
+            <span>${_msEsc(e.displayName)}${lvl}</span>
           </div>`;
         });
       }
@@ -593,9 +619,9 @@ const MatchSummary = class {
     const renderCampIcons = (g) => {
       let icons = '';
       (g.units || []).forEach(u => {
-        const lvl = (u.balanceInfo && u.balanceInfo.level) || 0;
-        icons += `<div class="ms-creep-icon-wrap" title="${u.displayName} Lv ${lvl}">
-          <img class="ms-creep-icon" src="/assets/wc3icons/${u.itemId}.jpg" onerror="this.style.display='none'" />
+        const lvl = Number(u.balanceInfo && u.balanceInfo.level) || 0;
+        icons += `<div class="ms-creep-icon-wrap" title="${_msAttr(u.displayName)} Lv ${lvl}">
+          <img class="ms-creep-icon" src="/assets/wc3icons/${_msIcon(u.itemId)}.jpg" onerror="this.style.display='none'" />
           ${lvl ? `<span class="ms-creep-lvl">${lvl}</span>` : ''}
         </div>`;
       });
@@ -637,13 +663,14 @@ const MatchSummary = class {
         const maxXp = heroEntries[0].xp || 1;
         heroEntries.forEach(h => {
           const heroUnit = (player.heroes || []).find(u => u.displayName === h.displayName);
-          const iconId = heroUnit ? heroUnit.itemId : '';
+          const iconId = _msIcon(heroUnit ? heroUnit.itemId : '');
           const pct = (h.xp / maxXp * 100).toFixed(0);
+          const xp = Number(h.xp) || 0;
           phtml += `<div class="ms-hero-xp-row">
             ${iconId ? `<img class="ms-hero-xp-icon" src="/assets/wc3icons/${iconId}.jpg" onerror="this.style.display='none'" />` : ''}
-            <span class="ms-hero-xp-name">${h.displayName}</span>
-            <div class="ms-hero-xp-bar-track"><div class="ms-hero-xp-bar" style="width:${pct}%;background:${boData.playerColor}"></div></div>
-            <span class="ms-hero-xp-val">${h.xp}</span>
+            <span class="ms-hero-xp-name">${_msEsc(h.displayName)}</span>
+            <div class="ms-hero-xp-bar-track"><div class="ms-hero-xp-bar" style="width:${pct}%;background:${_msColor(boData.playerColor)}"></div></div>
+            <span class="ms-hero-xp-val">${xp}</span>
           </div>`;
         });
       } else {
@@ -668,16 +695,20 @@ const MatchSummary = class {
     html += '<div class="ms-section-label">Creep Score</div>';
     html += '<div class="ms-creep-score">';
     playerCamps.forEach(p => {
+      const count = Number(p.count) || 0;
+      const partialCount = Number(p.partialCount) || 0;
+      const totalLvl = Number(p.totalLvl) || 0;
+      const totalXp = Number(p.totalXp) || 0;
       html += `<div class="ms-creep-score-side">
-        <span class="ms-creep-score-name" style="color:${p.color}">${p.name}</span>
-        <span class="ms-creep-score-stat">${p.count} camps${p.partialCount ? ' + ' + p.partialCount + ' partial' : ''} &middot; Lv ${p.totalLvl}${p.totalXp ? ' &middot; ' + p.totalXp + ' XP' : ''}</span>
+        <span class="ms-creep-score-name" style="color:${_msColor(p.color)}">${_msEsc(p.name)}</span>
+        <span class="ms-creep-score-stat">${count} camps${partialCount ? ' + ' + partialCount + ' partial' : ''} &middot; Lv ${totalLvl}${totalXp ? ' &middot; ' + totalXp + ' XP' : ''}</span>
       </div>`;
     });
     html += '</div>';
     html += '<div class="ms-creep-bar">';
     playerCamps.forEach(p => {
-      const pct = Math.max(2, p.count / totalCampsCount * 100);
-      html += `<div class="ms-creep-bar-seg" style="width:${pct.toFixed(1)}%;background:${p.color}"></div>`;
+      const pct = Math.max(2, (Number(p.count) || 0) / totalCampsCount * 100);
+      html += `<div class="ms-creep-bar-seg" style="width:${pct.toFixed(1)}%;background:${_msColor(p.color)}"></div>`;
     });
     html += '</div>';
 
@@ -708,7 +739,7 @@ const MatchSummary = class {
         if (!camps.length) return;
         const diff = campDifficulty(diffKey === 'green' ? 0 : diffKey === 'orange' ? 10 : 20);
 
-        phtml += `<div class="ms-creep-diff-label" style="color:${diff.color}">${diff.label}s (${camps.length})</div>`;
+        phtml += `<div class="ms-creep-diff-label" style="color:${_msColor(diff.color)}">${_msEsc(diff.label)}s (${camps.length})</div>`;
         phtml += '<div class="ms-creep-route">';
         camps.forEach(({ camp: g, order }) => {
           const xp = campXp(g);
@@ -716,7 +747,7 @@ const MatchSummary = class {
           const partialPct = isPartial ? Math.round((g.completionEstimate || 0) * 100) : null;
           const partialClass = isPartial ? ' ms-creep-step-partial' : '';
           phtml += `<div class="ms-creep-step${partialClass}">
-            <span class="ms-creep-order" style="border-color:${diff.color};color:${diff.color}">${order}</span>
+            <span class="ms-creep-order" style="border-color:${_msColor(diff.color)};color:${_msColor(diff.color)}">${Number(order) || 0}</span>
             <div class="ms-creep-camp">
               <div class="ms-creep-icons">${renderCampIcons(g)}</div>
               <div class="ms-creep-camp-info">
@@ -854,16 +885,16 @@ const MatchSummary = class {
     if (oppData.length) {
       const opp = buildPath(oppData);
       if (opp) {
-        svg += `<path d="${opp.areaD}" fill="${oppColor}" opacity="0.06" />`;
-        svg += `<path d="${opp.lineD}" fill="none" stroke="${oppColor}" stroke-width="1" opacity="0.3" />`;
+        svg += `<path d="${opp.areaD}" fill="${_msColor(oppColor)}" opacity="0.06" />`;
+        svg += `<path d="${opp.lineD}" fill="none" stroke="${_msColor(oppColor)}" stroke-width="1" opacity="0.3" />`;
       }
     }
 
     // This player's line (foreground)
     const me = buildPath(data);
     if (me) {
-      svg += `<path d="${me.areaD}" fill="${color}" opacity="0.15" />`;
-      svg += `<path d="${me.lineD}" fill="none" stroke="${color}" stroke-width="1.5" />`;
+      svg += `<path d="${me.areaD}" fill="${_msColor(color)}" opacity="0.15" />`;
+      svg += `<path d="${me.lineD}" fill="none" stroke="${_msColor(color)}" stroke-width="1.5" />`;
     }
 
     // Baseline
@@ -936,8 +967,8 @@ const MatchSummary = class {
       const firstX = padL + (line.points[0].t / matchEnd) * chartW;
       const lastX = padL + (line.points[line.points.length - 1].t / matchEnd) * chartW;
       const baseY = padT + chartH;
-      svg += `<path d="${pathParts.join(' ')} L${lastX.toFixed(1)},${baseY} L${firstX.toFixed(1)},${baseY} Z" fill="${line.color}" opacity="0.12" />`;
-      svg += `<path d="${pathParts.join(' ')}" fill="none" stroke="${line.color}" stroke-width="2" />`;
+      svg += `<path d="${pathParts.join(' ')} L${lastX.toFixed(1)},${baseY} L${firstX.toFixed(1)},${baseY} Z" fill="${_msColor(line.color)}" opacity="0.12" />`;
+      svg += `<path d="${pathParts.join(' ')}" fill="none" stroke="${_msColor(line.color)}" stroke-width="2" />`;
     });
 
     svg += '</svg>';
@@ -986,7 +1017,7 @@ const MatchSummary = class {
         const x = padL + mi * barGroupW + si * (barW + 1);
         const h = (v / globalMax) * chartH;
         const y = padT + chartH - h;
-        svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${s.color}" opacity="0.7" />`;
+        svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" fill="${_msColor(s.color)}" opacity="0.7" />`;
       });
     });
 
@@ -1006,7 +1037,7 @@ const MatchSummary = class {
 
     seriesData.forEach(s => {
       html += `<div class="ms-tier-row">
-        <span class="ms-tier-player" style="color:${s.color}">${s.name}</span>
+        <span class="ms-tier-player" style="color:${_msColor(s.color)}">${_msEsc(s.name)}</span>
         <div class="ms-tier-bar-track">`;
 
       const t2 = s.tier2Time !== Infinity ? s.tier2Time : matchEnd;
@@ -1051,9 +1082,10 @@ const MatchSummary = class {
 
       seriesData.forEach((s, i) => {
         const pct = (values[i] / max * 100).toFixed(1);
+        const v = Number(values[i]) || 0;
         html += `<div class="ms-cat-bar-row">
-          <div class="ms-cat-bar" style="width:${pct}%;background:${s.color}"></div>
-          <span class="ms-cat-val">${values[i]}</span>
+          <div class="ms-cat-bar" style="width:${pct}%;background:${_msColor(s.color)}"></div>
+          <span class="ms-cat-val">${v}</span>
         </div>`;
       });
 
@@ -1078,9 +1110,10 @@ const MatchSummary = class {
   }
 
   _renderIcon (itemId, title, count) {
-    const countBadge = (count && count > 1) ? `<span class="ms-icon-count">${count}</span>` : '';
-    return `<div class="ms-icon-wrap" title="${title || itemId}">
-      <img class="ms-icon" src="/assets/wc3icons/${itemId}.jpg" onerror="this.parentElement.style.display='none'" />
+    const c = Number(count) || 0;
+    const countBadge = c > 1 ? `<span class="ms-icon-count">${c}</span>` : '';
+    return `<div class="ms-icon-wrap" title="${_msAttr(title || itemId)}">
+      <img class="ms-icon" src="/assets/wc3icons/${_msIcon(itemId)}.jpg" onerror="this.parentElement.style.display='none'" />
       ${countBadge}
     </div>`;
   }
@@ -1091,9 +1124,10 @@ const MatchSummary = class {
     hero.spellList.forEach(spell => {
       const learned = hero.learnedSkills && hero.learnedSkills[spell.itemId];
       if (!learned || learned.level === 0) return;
-      html += `<span class="ms-spell" title="${spell.displayName} Lv${learned.level}">
-        <img class="ms-spell-icon" src="/assets/wc3icons/${spell.itemId}.jpg" onerror="this.style.display='none'" />
-        <span class="ms-spell-level">${learned.level}</span>
+      const lvl = Number(learned.level) || 0;
+      html += `<span class="ms-spell" title="${_msAttr(spell.displayName)} Lv${lvl}">
+        <img class="ms-spell-icon" src="/assets/wc3icons/${_msIcon(spell.itemId)}.jpg" onerror="this.style.display='none'" />
+        <span class="ms-spell-level">${lvl}</span>
       </span>`;
     });
     return html;

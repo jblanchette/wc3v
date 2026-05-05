@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Building Model Test</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="/js/GLBLoader.js?v=3"></script>
+  <style>
+    body { margin: 0; background: #111; color: #fff; font-family: 'Segoe UI', monospace; overflow: hidden; }
+    canvas { display: block; }
+    #controls {
+      position: absolute; top: 10px; left: 10px; z-index: 10;
+      display: flex; gap: 8px; align-items: center;
+    }
+    #controls select, #controls button {
+      font-size: 14px; padding: 4px 8px; background: #222; color: #ddd;
+      border: 1px solid #555; border-radius: 4px; cursor: pointer;
+    }
+    #controls select { min-width: 200px; }
+    #controls label { font-size: 13px; color: #aaa; }
+    #log {
+      position: absolute; bottom: 10px; left: 10px; font-size: 12px; z-index: 10;
+      white-space: pre; color: #8a9; max-height: 200px; overflow-y: auto;
+      background: rgba(0,0,0,0.6); padding: 6px 10px; border-radius: 4px;
+    }
+    #team-swatches { display: flex; gap: 4px; }
+    .swatch {
+      width: 20px; height: 20px; border-radius: 3px; border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .swatch.active { border-color: #fff; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <select id="model-select"></select>
+    <label>Team:</label>
+    <div id="team-swatches"></div>
+    <button id="btn-wireframe">Wireframe</button>
+  </div>
+  <div id="log">Ready</div>
+  <script>
+    // ---- Config ----
+    const MODELS = {
+      '--- Neutral ---': null,
+      'Gold Mine (ngol)': 'goldmine',
+      'Tavern (ntav)': 'tavern',
+      'Goblin Merchant (ngme)': 'merchant',
+      'Fountain of Health (nfoh)': 'fountainoflife',
+      'Fountain of Mana (nmoo)': 'fountainofmana',
+      'Goblin Lab (ngad)': 'ammodump',
+      'Mercenary Camp (nmer)': 'mercenary',
+      '--- Human ---': null,
+      'Town Hall': 'townhall',
+      'Barracks': 'humanbarracks',
+      'Farm': 'farm',
+      'Lumber Mill': 'humanlumbermill',
+      'Blacksmith': 'blacksmith',
+      'Arcane Sanctum': 'arcanesanctum',
+      'Workshop': 'workshop',
+      'Tower': 'humantower',
+      'Gryphon Aviary': 'gryphonaviary',
+      'Altar of Kings': 'altarofkings',
+      'Arcane Vault': 'arcanevault',
+      '--- Orc ---': null,
+      'Great Hall': 'greathall',
+      'Orc Barracks': 'orcbarracks',
+      'War Mill': 'warmill',
+      'Beastiary': 'beastiary',
+      'Spirit Lodge': 'spiritlodge',
+      'Tauren Totem': 'taurentotem',
+      'Voodoo Lounge': 'voodoolounge',
+      'Altar of Storms': 'altarofstorms',
+      'Watch Tower': 'watchtower',
+      'Troll Burrow': 'trollburrow',
+      '--- Night Elf ---': null,
+      'Tree of Life': 'treeoflife',
+      'Ancient of War': 'ancientofwar',
+      'Ancient of Lore': 'ancientoflore',
+      'Ancient of Wind': 'ancientofwind',
+      'Ancient Protector': 'ancientprotector',
+      'Moon Well': 'moonwell',
+      'Hunters Hall': 'huntershall',
+      'Altar of Elders': 'altarofelders',
+      'Chimaera Roost': 'chimaeraroost',
+      '--- Undead ---': null,
+      'Necropolis': 'necropolis',
+      'Crypt': 'crypt',
+      'Graveyard': 'graveyard',
+      'Slaughterhouse': 'slaughterhouse',
+      'Temple of the Damned': 'templeofthedamned',
+      'Sacrificial Pit': 'sacrificialpit',
+      'Tomb of Relics': 'tombofrelics',
+      'Altar of Darkness': 'altarofdarkness',
+      'Ziggurat': 'ziggurat',
+      'Bone Yard': 'boneyard',
+      'Haunted Mine': 'hauntedmine',
+    };
+
+    const TEAM_COLORS = [
+      { name: 'None', hex: null },
+      { name: 'Red', hex: '#ff0303' },
+      { name: 'Blue', hex: '#0042ff' },
+      { name: 'Teal', hex: '#1ce6b9' },
+      { name: 'Purple', hex: '#540081' },
+      { name: 'Yellow', hex: '#fffc01' },
+      { name: 'Orange', hex: '#fe8a0e' },
+      { name: 'Green', hex: '#20c000' },
+      { name: 'Pink', hex: '#e55bb0' },
+    ];
+
+    // ---- State ----
+    let currentModel = null;
+    let currentTeamColor = null;
+    let wireframe = false;
+
+    // ---- DOM ----
+    const logEl = document.getElementById('log');
+    const selectEl = document.getElementById('model-select');
+    const swatchesEl = document.getElementById('team-swatches');
+    const wireBtn = document.getElementById('btn-wireframe');
+
+    function addLog(msg) { logEl.textContent += '\n' + msg; logEl.scrollTop = logEl.scrollHeight; console.log(msg); }
+    function clearLog() { logEl.textContent = ''; }
+
+    // Populate dropdown
+    for (const [label, model] of Object.entries(MODELS)) {
+      const opt = document.createElement('option');
+      opt.textContent = label;
+      opt.value = model || '';
+      if (!model) opt.disabled = true;
+      selectEl.appendChild(opt);
+    }
+    selectEl.value = 'goldmine';
+
+    // Populate team color swatches
+    TEAM_COLORS.forEach((tc, i) => {
+      const el = document.createElement('div');
+      el.className = 'swatch' + (i === 0 ? ' active' : '');
+      el.style.background = tc.hex || '#444';
+      el.title = tc.name;
+      el.onclick = () => {
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        currentTeamColor = tc.hex;
+        loadModel(selectEl.value);
+      };
+      swatchesEl.appendChild(el);
+    });
+
+    wireBtn.onclick = () => {
+      wireframe = !wireframe;
+      wireBtn.style.borderColor = wireframe ? '#0f0' : '#555';
+      if (currentModel) {
+        currentModel.traverse(c => {
+          if (c.isMesh && c.material) c.material.wireframe = wireframe;
+        });
+      }
+    };
+
+    selectEl.onchange = () => loadModel(selectEl.value);
+
+    // ---- Three.js ----
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2a3a2a);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Lighting — match ThreeMapRenderer
+    scene.add(new THREE.AmbientLight(0xe8ebe3, 1.25));
+    const sun = new THREE.DirectionalLight(0xfff1c4, 1.6);
+    sun.position.set(-1200, 3000, -1200);
+    scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xc4d8ff, 0.3);
+    fill.position.set(1200, 1000, 1200);
+    scene.add(fill);
+    scene.add(new THREE.HemisphereLight(0xbfd8ec, 0x6b5a3a, 0.35));
+
+    // Ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(2000, 2000),
+      new THREE.MeshLambertMaterial({ color: 0x3a6a2a })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -5;
+    scene.add(ground);
+
+    // ---- Model loading ----
+    const loader = new GLBLoader();
+
+    function loadModel(modelName) {
+      if (!modelName) return;
+      clearLog();
+      addLog('Loading: ' + modelName + '.glb');
+
+      // Remove old model
+      if (currentModel) {
+        scene.remove(currentModel);
+        currentModel = null;
+      }
+
+      const url = '/assets/models/buildings/' + modelName + '.glb?v=' + Date.now();
+      loader.load(url, (result) => {
+        if (result.isGroup) {
+          addLog('Type: THREE.Group (' + result.children.length + ' meshes)');
+          let totalVerts = 0;
+          result.children.forEach((child, i) => {
+            if (!child.isMesh) return;
+            const verts = child.geometry.attributes.position ? child.geometry.attributes.position.count : 0;
+            totalVerts += verts;
+            const hasTex = !!(child.material && child.material.map);
+            addLog('  mesh[' + i + ']: ' + verts + ' verts, texture=' + (hasTex ? 'yes' : 'NO'));
+
+            // Apply team color emissive if selected
+            if (currentTeamColor && child.material) {
+              child.material = child.material.clone();
+              child.material.emissive = new THREE.Color(currentTeamColor);
+              child.material.emissiveIntensity = 0.15;
+            }
+            if (wireframe && child.material) child.material.wireframe = true;
+          });
+          addLog('Total: ' + totalVerts + ' vertices');
+          scene.add(result);
+          currentModel = result;
+        } else if (result.isBufferGeometry) {
+          addLog('Type: BufferGeometry (OLD single-primitive, no embedded textures)');
+          const verts = result.attributes.position ? result.attributes.position.count : 0;
+          addLog('Vertices: ' + verts);
+          const color = currentTeamColor ? new THREE.Color(currentTeamColor) : new THREE.Color(0x998877);
+          const mat = new THREE.MeshLambertMaterial({ color, wireframe });
+          const mesh = new THREE.Mesh(result, mat);
+          scene.add(mesh);
+          currentModel = mesh;
+        }
+
+        // Fit camera to model
+        const box = new THREE.Box3().setFromObject(currentModel);
+        const center = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const dist = maxDim * 2;
+        camera.position.set(center.x + dist * 0.6, center.y + dist * 0.5, center.z + dist * 0.6);
+        camera.lookAt(center);
+
+        addLog('Bounds: ' + size.x.toFixed(0) + 'x' + size.y.toFixed(0) + 'x' + size.z.toFixed(0));
+      }, undefined, (err) => {
+        addLog('ERROR: ' + (err.message || err));
+      });
+    }
+
+    // ---- Orbit ----
+    let angle = 0;
+    let orbitCenter = new THREE.Vector3();
+    let orbitDist = 500;
+    let orbitHeight = 200;
+    let dragging = false;
+    let lastX = 0;
+
+    renderer.domElement.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; });
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      angle += (e.clientX - lastX) * 0.01;
+      lastX = e.clientX;
+    });
+    renderer.domElement.addEventListener('mouseup', () => { dragging = false; });
+    renderer.domElement.addEventListener('wheel', (e) => {
+      orbitDist = Math.max(100, orbitDist + e.deltaY * 0.5);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (!dragging) angle += 0.003;
+
+      if (currentModel) {
+        const box = new THREE.Box3().setFromObject(currentModel);
+        orbitCenter = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+        orbitHeight = size.y * 0.6;
+      }
+
+      camera.position.x = orbitCenter.x + Math.sin(angle) * orbitDist;
+      camera.position.z = orbitCenter.z + Math.cos(angle) * orbitDist;
+      camera.position.y = orbitCenter.y + orbitHeight;
+      camera.lookAt(orbitCenter);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Load default
+    loadModel('goldmine');
+  </script>
+</body>
+</html>

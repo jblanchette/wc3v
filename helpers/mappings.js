@@ -1477,6 +1477,33 @@ const heroAbilities = {
     'ANtm': { 'displayName': 'Transmute'}
 };
 
+// Heroes with level-variant or autocast-duplicate ability IDs in abilityToHero.
+// Maps hero itemId → the 4 canonical spell IDs (in skill bar order).
+// getAbilitiesForHero() uses this to return only the real spells.
+const heroCanonicalSpells = {
+  'Ntin': ['ANeg', 'ANcs', 'ANsy', 'ANrg'],  // Goblin Tinker (has ANc1-3, ANs1-3, ANg1-3 variants)
+  'Nfir': ['ANic', 'ANso', 'ANlm', 'ANvc'],  // FireLord (ANia = autocast Incinerate duplicate)
+  'Ulic': ['AUfn', 'AUfa', 'AUdr', 'AUdd']   // Lich (AUfu = autocast Frost Armor duplicate)
+};
+
+// Maps variant/autocast ability IDs → their canonical base ID.
+// Used so skill-learn events with variant IDs resolve correctly.
+const spellVariantToBase = {};
+(function buildVariantMap () {
+  // Tinker level variants
+  const tinkerVariants = {
+    'ANc1': 'ANcs', 'ANc2': 'ANcs', 'ANc3': 'ANcs',  // Cluster Rockets
+    'ANs1': 'ANsy', 'ANs2': 'ANsy', 'ANs3': 'ANsy',  // Pocket Factory
+    'ANg1': 'ANrg', 'ANg2': 'ANrg', 'ANg3': 'ANrg'   // Robo-Goblin
+  };
+  // Autocast duplicates
+  const autocastDupes = {
+    'ANia': 'ANic',  // Firelord Incinerate autocast
+    'AUfu': 'AUfa'   // Lich Frost Armor autocast
+  };
+  Object.assign(spellVariantToBase, tinkerVariants, autocastDupes);
+})();
+
 // Non-hero unit abilities (Priest, Shaman, Sorceress, Druid, etc.)
 // Keyed by U-prefixed codes to avoid collision with heroAbilities.
 // icon = real WC3 FourCC code matching /assets/wc3icons/{icon}.jpg
@@ -1915,15 +1942,17 @@ const TECH_TREE_REQUIREMENTS = {
     'hspt': ['hars'],             // Spell Breaker → Arcane Sanctum
   },
   'E': {
-    'earc': ['eaow'],             // Archer → Ancient of War
-    'esen': ['eaow'],             // Huntress → Ancient of War
-    'ebal': ['eaow'],             // Glaive Thrower → Ancient of War
-    'edoc': ['eaol'],             // Druid of the Claw → Ancient of Lore
-    'edry': ['eaol'],             // Dryad → Ancient of Lore
-    'emtg': ['eaol'],             // Mountain Giant → Ancient of Lore
-    'edot': ['eaoe'],             // Druid of the Talon → Ancient of Wind
-    'efdr': ['eaoe'],             // Faerie Dragon → Ancient of Wind
-    'ehip': ['eaoe'],             // Hippogryph → Ancient of Wind
+    // WC3 ancients: eaom=War, eaoe=Lore, eaow=Wind. (The previous mapping had
+    // eaow/eaoe/eaol — comments and itemIds were swapped.)
+    'earc': ['eaom'],             // Archer → Ancient of War
+    'esen': ['eaom'],             // Huntress → Ancient of War
+    'ebal': ['eaom'],             // Glaive Thrower → Ancient of War
+    'edoc': ['eaoe'],             // Druid of the Claw → Ancient of Lore
+    'edry': ['eaoe'],             // Dryad → Ancient of Lore
+    'emtg': ['eaoe'],             // Mountain Giant → Ancient of Lore
+    'edot': ['eaow'],             // Druid of the Talon → Ancient of Wind
+    'efdr': ['eaow'],             // Faerie Dragon → Ancient of Wind
+    'ehip': ['eaow'],             // Hippogryph → Ancient of Wind
     'echm': ['edos'],             // Chimera → Chimera Roost
   }
 };
@@ -1978,6 +2007,8 @@ module.exports = {
   unitCosts,
   itemAbilityData,
   abilityToHero,
+  heroCanonicalSpells,
+  spellVariantToBase,
   tierBuildings,
 
   WorkerRole,

@@ -421,14 +421,22 @@ const GameDisplayBox = class {
         // use tight unitBounds for hover detection
         const b = group.unitBounds || group.bounds;
 
+        // Project the 4 corners through the 3D camera and take the screen
+        // AABB. Good enough for coarse RBush hit-testing under a tilted camera.
+        const _gs = window.wc3v && window.wc3v.gameScaler;
+        const p1 = _gs.projectXY(b.minX, b.minY);
+        const p2 = _gs.projectXY(b.maxX, b.minY);
+        const p3 = _gs.projectXY(b.minX, b.maxY);
+        const p4 = _gs.projectXY(b.maxX, b.maxY);
+
         const record = {
           rawGroup: group,
 
-          minX: xScale(b.minX) + middleX,
-          maxX: xScale(b.maxX) + middleX,
+          minX: Math.min(p1.x, p2.x, p3.x, p4.x) + middleX,
+          maxX: Math.max(p1.x, p2.x, p3.x, p4.x) + middleX,
 
-          minY: yScale(b.maxY) + middleY,
-          maxY: yScale(b.minY) + middleY
+          minY: Math.min(p1.y, p2.y, p3.y, p4.y) + middleY,
+          maxY: Math.max(p1.y, p2.y, p3.y, p4.y) + middleY
         };
 
         acc.push(record);

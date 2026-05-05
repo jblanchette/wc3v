@@ -8,6 +8,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
     <script>
       // dev cache buster — forces fresh loads every page load
@@ -16,6 +17,7 @@
         '/js/Helpers.js',
         '/js/Drawing.js',
         '/js/Constants.js',
+        '/js/Security.js',
         '/js/TimeScrubber.js',
         '/js/GameScaler.js',
         '/js/ClientUnit.js',
@@ -24,14 +26,28 @@
         '/js/gameData.js',
         '/js/BuildOrderData.js',
         '/js/MapRenderer.js',
+        '/js/FogOfWar.js',
+        '/js/GLBLoader.js',
+        '/js/ThreeMapRenderer.js',
+        '/js/PathTrailRenderer3D.js',
+        '/js/BroadcastCamera.js',
         '/js/TimelineSpline.js',
         '/js/BuildOrderRenderer.js',
         '/js/ChapterMarkers.js',
         '/js/FloatingText.js',
+        '/js/BuildingProgressBar.js',
+        '/js/buildingProductionData.js',
+        '/js/BuildingInfoTooltip.js',
+        '/js/BuildingHoverLabel.js',
+        '/js/BuildingSplats.js',
         '/js/BuildingPlacementViewer.js',
         '/js/UnitsProductionPanel.js',
+        '/js/MinimapPip.js',
         '/js/MatchSummary.js',
         '/js/MatchHeader.js',
+        '/js/MyReplays.js',
+        '/js/vendor/wc3v-parser.bundle.js',
+        '/js/UploadManager.js',
         '/js/app.js',
         '/js/SiteNav.js'
       ];
@@ -59,6 +75,37 @@
     <link rel="manifest" href="/site.webmanifest">
   </head>
   <body style="overflow-y: hidden;">
+
+    <!-- Loading overlay shown when arriving at /viewer?local=ID, hidden by
+         loadLocal once setup() resolves. Plain CSS — no script dependency
+         on the rest of the bundle. -->
+    <div id="local-loading-overlay" class="parse-overlay" style="display:none">
+      <div class="parse-overlay-card">
+        <div class="parse-overlay-spinner"></div>
+        <div class="parse-overlay-title">Loading your replay…</div>
+        <div class="parse-overlay-sub">Hydrating from your local library and rendering the map.</div>
+      </div>
+    </div>
+
+    <!-- Friendly error shown when ?local=ID points to a replay that isn't in
+         this browser's IndexedDB (most often: a friend sent a "share link"
+         not realizing replays are stored locally, never on a server). -->
+    <div id="missing-replay-overlay" class="parse-overlay" style="display:none">
+      <div class="missing-replay-card">
+        <div class="missing-replay-icon" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="missing-replay-title">We couldn't find this replay</div>
+        <div class="missing-replay-body">
+          <p>WC3V replays are parsed and stored <strong>privately in your browser</strong> — they never get uploaded to a server. That means a link like this only works on the device that uploaded the file.</p>
+          <p class="missing-replay-tip">Did a friend send you this link? Ask them to share the original <code>.w3g</code> file instead — you can drop it on the homepage and watch it locally.</p>
+        </div>
+        <div class="missing-replay-actions">
+          <a class="missing-replay-btn missing-replay-btn-primary" href="/">Go to homepage</a>
+          <a class="missing-replay-btn" href="/builds">Browse pro builds</a>
+        </div>
+      </div>
+    </div>
 
     <div id="app" class="layout-mode-live-bo">
       <div id="content">
@@ -95,24 +142,31 @@
                     <div id="mega-play-hints-title">View Options</div>
                     <div class="mega-hint mega-hint-featured on" data-option="displayCreepRoute" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayPath" onClick="wc3v.toggleViewOption('displayPath')">Hero Paths<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="pathTrailStyle" onClick="wc3v.cyclePathTrailStyle()"><span class="mega-hint-label">Trail: Tube</span><span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayLevelPins" onClick="wc3v.toggleViewOption('displayLevelPins')">Level Pins<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayFloatingText" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Text<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayText" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="decayEffects" onClick="wc3v.toggleViewOption('decayEffects')">Fade FX<span class="mega-hint-icon"></span></div>
                     <div class="mega-hint on" data-option="displayTreeGrid" onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid<span class="mega-hint-icon"></span></div>
+                    <div class="mega-hint on" data-option="autoSplitScreen" onClick="wc3v.toggleViewOption('autoSplitScreen')">Split Screen<span class="mega-hint-icon"></span></div>
                   </div>
                 </div>
 
                 <div id="canvas-group">
+                  <canvas id="three-canvas" width="550" height="650"></canvas>
                   <canvas id="main-canvas" width="550" height="650"></canvas>
                   <canvas id="player-canvas" width="550" height="650"></canvas>
                   <canvas id="utility-canvas" width="550" height="650"></canvas>
                 </div>
 
+                <div id="loading-overlay">
+                  <img src="/assets/loading-icon.svg" alt="Loading" />
+                  <div id="loading-status">Loading replay...</div>
+                </div>
                 <img id="loading-icon" src="/assets/loading-icon.svg" />
 
                 <div id="game-display-box"></div>
-                <button id="debug-pathing-btn" style="position:absolute;top:4px;right:4px;z-index:9999;padding:4px 8px;font-size:11px;background:#c00;color:#fff;border:none;cursor:pointer;border-radius:3px;" onclick="wc3v.debugPathingDump()">Debug Pathing</button>
+                <div id="building-info-tooltip"></div>
 
                 <div id="match-complete-banner">
                   <div class="mcb-text">Match Complete</div>

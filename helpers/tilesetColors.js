@@ -2,10 +2,10 @@
 // ground = grass/vegetation, accent = dirt/rock/paths, water varies by theme
 
 const TILESET_EXTRAS = {
-  // Lordaeron Summer — bright green, warm brown dirt, standard blue water
-  'L': { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#7a7040' },
+  // Lordaeron Summer — matched to in-game Concealed Hill reference
+  'L': { water: '#2a5090', shallowwater: '#9a8060', trees: '#1a5820', cliff: '#5a4a34', ground: '#57a032', accent: '#c0a070' },
   // Village — similar to Lordaeron but slightly warmer
-  'V': { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#807848' },
+  'V': { water: '#2a5090', shallowwater: '#9a8060', trees: '#1a5820', cliff: '#5a4a34', ground: '#57a032', accent: '#c0a070' },
   // Lordaeron Fall — warm olive/amber, orange-brown, darker water
   'F': { water: '#081858', shallowwater: '#103080', trees: '#28400a', cliff: '#302818', ground: '#6a8030', accent: '#8a6830' },
   // Village Fall — autumnal, warm tones
@@ -42,64 +42,86 @@ const TILESET_EXTRAS = {
 
 const DEFAULT_EXTRAS = { water: '#0a2070', shallowwater: '#1838a0', trees: '#064006', cliff: '#383020', ground: '#48862a', accent: '#7a7040' };
 
-// Per-palette-code color mapping: W3E 4-char ground texture codes → hex colors
+// Per-palette-code color mapping: W3E 4-char ground texture codes → hex colors.
+// Auto-computed from actual WC3 texture atlases (right-half variation averages).
 const PALETTE_COLORS = {
   // Lordaeron Summer (L)
-  Ldrt: '#9a8050', Ldro: '#7a6848', Ldrg: '#558030', Lrok: '#707060',
-  Lgrs: '#348020', Lgrd: '#6a8838',
+  Ldrt: '#8c6435', Ldro: '#865f33', Ldrg: '#706727', Lrok: '#856c5d',
+  Lgrs: '#266f18', Lgrd: '#13570f',
   // Village (V)
-  Vdrt: '#9a8858', Vdrr: '#8a7850', Vcrp: '#6a8838', Vcbp: '#588030',
-  Vstp: '#8a8a70', Vgrs: '#389028', Vrck: '#787868', Vgrt: '#6a8838',
+  Vdrt: '#4a4724', Vdrr: '#3c3e1d', Vcrp: '#2a3217', Vcbp: '#282214',
+  Vstp: '#3c3421', Vgrs: '#2c3712', Vrck: '#606543', Vgrt: '#154311',
   // Lordaeron Fall (F)
-  Fdrt: '#8a7838', Fdro: '#7a6830', Fdrg: '#687828', Frok: '#787058',
-  Fgrs: '#687828', Fgrd: '#788030',
+  Fdrt: '#6d5430', Fdro: '#694e2d', Fdrg: '#6a501e', Frok: '#876b5b',
+  Fgrs: '#6d4c14', Fgrd: '#5e4012',
   // Village Fall (X)
-  Xdrt: '#8a7838', Xdtr: '#7a6830', Xblm: '#685848', Xbtl: '#787058',
-  Xsqd: '#8a8068', Xrtl: '#786050', Xgsb: '#6a7830', Xhdg: '#587028',
-  Xwmb: '#7a6848',
+  Xdrt: '#46412a', Xdtr: '#393722', Xblm: '#1e1014', Xbtl: '#7e7071',
+  Xsqd: '#4c3247', Xrtl: '#726561', Xgsb: '#1b4110', Xhdg: '#061c04',
+  Xwmb: '#727171',
   // Lordaeron Winter (W)
-  Wdrt: '#98a0a8', Wdro: '#889098', Wsng: '#c8d0d8', Wrok: '#788088',
-  Wgrs: '#a8b8c0', Wsnw: '#d8e0e8',
+  Wdrt: '#494b3b', Wdro: '#45483a', Wsng: '#475143', Wrok: '#5b4f42',
+  Wgrs: '#274641', Wsnw: '#b8c9db',
   // Northrend (N)
-  Ndrt: '#98a0a0', Ndrd: '#889090', Nrck: '#788080', Ngrs: '#98b0b0',
-  Nice: '#b8d0e0', Nsnw: '#d0e0e8', Nsnr: '#c0d0d8',
+  Ndrt: '#243d35', Ndrd: '#162d25', Nrck: '#154043', Ngrs: '#14514d',
+  Nice: '#559ab1', Nsnw: '#b5c8db', Nsnr: '#829cb0',
   // Icecrown (I)
-  Idrt: '#90a0a8', Idtr: '#8098a8', Idki: '#587080', Iice: '#b0c8d8',
-  Isnw: '#c8d8e0', Ibkb: '#506070', Irbk: '#587078', Itbk: '#607880',
-  Ibsq: '#687888',
+  Idrt: '#18282c', Idtr: '#101c1f', Idki: '#0d5e6a', Iice: '#58b7cb',
+  Isnw: '#96d1e3', Ibkb: '#081214', Irbk: '#172e32', Itbk: '#063136',
+  Ibsq: '#081415',
   // Ashenvale (A)
-  Adrt: '#405838', Adrd: '#304830', Agrs: '#1e5830', Arck: '#505848',
-  Agrd: '#406838', Avin: '#204828', Adrg: '#204820', Alvd: '#305830',
+  Adrt: '#404119', Adrd: '#282e0e', Agrs: '#2b5413', Arck: '#697044',
+  Agrd: '#253e13', Avin: '#193914', Adrg: '#203007', Alvd: '#1b2b16',
   // Felwood (C)
-  Cdrt: '#404830', Cdrd: '#303828', Cgrs: '#304820', Cpos: '#402838',
-  Cvin: '#204020', Clvg: '#304820',
+  Cdrt: '#283731', Cdrd: '#1d2c24', Cgrs: '#173a20', Cpos: '#145807',
+  Cvin: '#15301f', Clvg: '#11291e', Crck: '#082d19',
   // Barrens (B)
-  Bdrt: '#a09058', Bdrh: '#908048', Bdrr: '#988850', Bdrg: '#788038',
-  Bdsr: '#b0a070', Bdsd: '#a89868', Bflr: '#806830', Bgrr: '#8a8848',
+  Bdrt: '#523521', Bdrh: '#382314', Bdrr: '#3f2218', Bdrg: '#341f0b',
+  Bdsr: '#80522e', Bdsd: '#683f20', Bflr: '#3b1e16', Bgrr: '#70430e',
   // Dungeon (D)
-  Ddrt: '#484848', Dgrs: '#384838',
+  Ddrt: '#3e1914', Dgrs: '#290e0c', Dbrk: '#391313', Ddkr: '#280e0c',
+  Dlav: '#9c1e03', Dlvc: '#8b0e01', Drds: '#380e0a', Dsqd: '#3e2725',
   // Underground (G)
-  Gbrk: '#484840',
+  Gbrk: '#1b2a29', Gdkr: '#09140d', Gdrt: '#142522', Ggrs: '#131413',
+  Glav: '#28767e', Glvc: '#1a6568', Grds: '#111814', Gsqd: '#252c21',
   // Cityscape (K)
-  Ksmb: '#686878',
+  Ksmb: '#4c170a', Kdkt: '#1e0a0a', Kdrt: '#611909', Kdtr: '#3b1205',
+  Kfsl: '#682e12', Kfst: '#1d0601', Klgb: '#2e0807', Ksqt: '#0d0202',
   // Dalaran Ruins (J)
-  Jdrt: '#585070', Jdtr: '#504868', Jblm: '#484060', Jbtl: '#605878',
-  Jsqd: '#686080', Jrtl: '#585070', Jgsb: '#485848', Jhdg: '#385030',
-  Jwmb: '#605070',
+  Jdrt: '#353223', Jdtr: '#242415', Jblm: '#140c0d', Jbtl: '#2c2524',
+  Jsqd: '#23141f', Jrtl: '#1f1b18', Jgsb: '#212815', Jhdg: '#0d1209',
+  Jwmb: '#2f2f2f',
   // Sunken Ruins (Y)
-  Ydrt: '#386068', Ydtr: '#305860', Yblm: '#284850', Ybtl: '#385858',
-  Ysqd: '#406068', Yrtl: '#385860', Ygsb: '#285840', Yhdg: '#284838',
-  Ywmb: '#385058',
+  Ydrt: '#4a4724', Ydtr: '#3c3e1d', Yblm: '#19140d', Ybtl: '#796d5c',
+  Ysqd: '#6f5e45', Yrtl: '#514a40', Ygsb: '#154311', Yhdg: '#051c03',
+  Ywmb: '#76706b',
   // Ruins (Z)
-  Zdrt: '#586848', Zdtr: '#485840', Zdrg: '#486038', Zbks: '#686850',
-  Zsan: '#9a9068', Zbkl: '#585848', Ztil: '#686858', Zgrs: '#486848',
-  Zvin: '#385830',
+  Zdrt: '#696937', Zdtr: '#41401b', Zdrg: '#354718', Zbks: '#232911',
+  Zsan: '#616036', Zbkl: '#7c7e42', Ztil: '#375527', Zgrs: '#13570e',
+  Zvin: '#002000',
   // Dalaran (Q)
-  Qdrt: '#807050', Qdrr: '#706040', Qcrp: '#685848', Qcbp: '#586840',
-  Qstp: '#787868', Qgrs: '#588040', Qrck: '#686858', Qgrt: '#688040',
+  Qdrt: '#484427', Qdrr: '#3a3a1f', Qcrp: '#313112', Qcbp: '#261f12',
+  Qstp: '#363126', Qgrs: '#35280e', Qrck: '#675845', Qgrt: '#59380b',
   // Outland (O)
-  Odrt: '#684030', Odtr: '#583828', Osmb: '#584038', Ofst: '#485028',
-  Olgb: '#586830', Ofsl: '#384020', Oaby: '#382828', Orok: '#585048'
+  Odrt: '#611909', Odtr: '#682e12', Osmb: '#361204', Ofst: '#5d1a0a',
+  Olgb: '#1d0601', Ofsl: '#6d3418', Oaby: '#000000', Orok: '#160201',
+  // Cliff ground tiles — c{tileset}c{variant} codes used at cliff bases.
+  // Colors derived from each tileset's cliff/rock tones in TILESET_EXTRAS.
+  cLc1: '#5a4a34', cLc2: '#4d4030',
+  cVc1: '#5a4a34',
+  cFc1: '#302818', cFc2: '#3a3020',
+  cXc1: '#302818', cXc2: '#3a3020',
+  cWc1: '#404858', cWc2: '#4a5060',
+  cNc2: '#384050',
+  cIc1: '#283848',
+  cAc1: '#1a1810',
+  cCc1: '#1a1810',
+  cBc1: '#403020', cBc2: '#4a3828',
+  cKc1: '#202028', cKc2: '#282830',
+  cJc1: '#201830', cJc2: '#281838',
+  cYc1: '#101828', cYc2: '#182030',
+  cZc1: '#282818', cZc2: '#303020',
+  cQc1: '#281810',
+  cOc1: '#281810'
 };
 
 function getFallbackPaletteColor (palette, suffix) {

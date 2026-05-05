@@ -38,11 +38,11 @@ const rbush = require("rbush");
 // constants
 //
 
-const MAP_OUTPUT_DIR = "mapdata";
+const MAP_OUTPUT_DIR = path.join(__dirname, '..', 'mapdata');
 
-const CLIENT_OUTPUT_DIR = "../client/maps";
+const CLIENT_OUTPUT_DIR = path.join(__dirname, '..', 'client', 'maps');
 
-const CLIENT_GAMEDATA_DIR = "../client/js";
+const CLIENT_GAMEDATA_DIR = path.join(__dirname, '..', 'client', 'js');
 
 //
 // tileset color themes
@@ -113,7 +113,7 @@ async function main() {
   if (listOnly) {
     console.log(`\nFound ${maps.length} maps:`);
     maps.forEach((map, i) => {
-      const name = map.substring(mapPrefix.length, map.length - 4);
+      const name = normalizeW3xFilename(map);
       console.log(`  ${i + 1}. ${name} (${map})`);
     });
     return;
@@ -134,15 +134,43 @@ async function main() {
   console.log("finished data extraction");
 };
 
+/**
+ * Normalize a W3C .w3x filename to a clean map name for output directory.
+ * Handles multiple naming patterns:
+ *   Old:  {num}_w3c_{date}_{time}_{MapName}.w3x  → MapName
+ *   New:  1v1_{MapName}_{ver}_w3c_{date}_{time}_{hash}.w3x  → MapName_{ver}
+ *   S13:  w3c_s13_{MapName}.w3x  → MapName
+ *   S13x: w3c_s13.1_{MapName}.w3x  → MapName
+ *   Plain: w3c_{MapName}.w3x  → MapName
+ */
+function normalizeW3xFilename(filename) {
+  let name = filename.replace(/\.w3x$/i, '');
+
+  // Pattern: 1v1_{MapName}_{ver}_w3c_{date}_{time}_{hash}
+  const newPattern = name.match(/^1v1_(.+?)_w3c_\d+_\d+_\d+$/);
+  if (newPattern) return newPattern[1];
+
+  // Pattern: {num}_w3c_{date}_{time}_{MapName}
+  const oldPattern = name.match(/^\d+_w3c_\d+_\d+_(.+)$/);
+  if (oldPattern) return oldPattern[1];
+
+  // Pattern: w3c_s13.x_{MapName} or w3c_s13_{MapName}
+  const s13Pattern = name.match(/^w3c_s\d+(?:\.\d+)?_(.+)$/);
+  if (s13Pattern) return s13Pattern[1];
+
+  // Pattern: w3c_{MapName}
+  if (name.startsWith('w3c_')) return name.substring(4);
+
+  return name;
+}
+
 async function readMapFile(mapFilePath, mapPrefix = 'w3c_') {
   const mpq = await MPQ.open(`/stormjs/${mapFilePath}`, 'r');
 
-  // get rid of the prefix and filename suffix
-  const prefixLen = mapFilePath.startsWith(mapPrefix) ? mapPrefix.length : 0;
-  const normalizedMapName = mapFilePath.substring(prefixLen, mapFilePath.length - 4);
+  const normalizedMapName = normalizeW3xFilename(mapFilePath);
 
   // make our map output directory if we need to
-  const outputDirectory = `../${MAP_OUTPUT_DIR}/${normalizedMapName}`;
+  const outputDirectory = path.join(MAP_OUTPUT_DIR, normalizedMapName);
 
   if (!fs.existsSync(outputDirectory)){
     console.log("making map output directory: ", outputDirectory);
@@ -247,7 +275,10 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
           const entry = {
             type: rawUnit.type,
             x: rawUnit.position[0],
-            y: rawUnit.position[1]
+            y: rawUnit.position[1],
+            rotation: rawUnit.rotation,
+            scale: rawUnit.scale,
+            variation: rawUnit.variation
           };
           if (info.isGoldmine && rawUnit.gold > 0) {
             entry.gold = rawUnit.gold;

@@ -1,0 +1,542 @@
+{
+  "replayId": "2138774446_Kaho_Moon_Springtime-13",
+  "map": "Springtime",
+  "mapRaw": "Maps/W3Champions\\1075_w3c_251104_0950_Springtime_v1.3.w3x",
+  "durationMs": 726375,
+  "durationFormatted": "12:06",
+  "fingerprint": "Springtime|726|kaho#31819,moon#35134",
+  "players": {
+    "1": {
+      "name": "KAHO#31819",
+      "race": "E",
+      "heroOpener": {
+        "name": "Demon Hunter",
+        "itemId": "Edem",
+        "gameTimeMs": 66052,
+        "gameTimeFormatted": "1:06"
+      },
+      "tier2Time": 147471,
+      "tier2TimeFormatted": "2:27",
+      "tier3Time": 387576,
+      "tier3TimeFormatted": "6:27",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 2111,
+          "gameTimeFormatted": "0:02"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 4407,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 13894,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 22230,
+          "gameTimeFormatted": "0:22"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 66052,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 82918,
+          "gameTimeFormatted": "1:22"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 90569,
+          "gameTimeFormatted": "1:30"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 150438,
+          "gameTimeFormatted": "2:30"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 163196,
+          "gameTimeFormatted": "2:43"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 175021,
+          "gameTimeFormatted": "2:55"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 192144,
+          "gameTimeFormatted": "3:12"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 232021,
+          "gameTimeFormatted": "3:52"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 245665,
+          "gameTimeFormatted": "4:05"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 257122,
+          "gameTimeFormatted": "4:17"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 328672,
+          "gameTimeFormatted": "5:28"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 331797,
+          "gameTimeFormatted": "5:31"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 339024,
+          "gameTimeFormatted": "5:39"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 353740,
+          "gameTimeFormatted": "5:53"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 357168,
+          "gameTimeFormatted": "5:57"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 407809,
+          "gameTimeFormatted": "6:47"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        },
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Reib",
+          "name": "Improved Bows",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnimprovedbows",
+          "gameTimeMs": 375584,
+          "gameTimeFormatted": "6:15"
+        },
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 391333,
+          "gameTimeFormatted": "6:31"
+        },
+        {
+          "itemId": "Redc",
+          "name": "Druid of the Claw Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btndocmastertraining",
+          "gameTimeMs": 529355,
+          "gameTimeFormatted": "8:49"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 514120,
+          "gameTimeFormatted": "8:34"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 631839,
+          "gameTimeFormatted": "10:31"
+        }
+      ]
+    },
+    "2": {
+      "name": "Moon#35134",
+      "race": "E",
+      "heroOpener": {
+        "name": "Demon Hunter",
+        "itemId": "Edem",
+        "gameTimeMs": 66865,
+        "gameTimeFormatted": "1:06"
+      },
+      "tier2Time": 156338,
+      "tier2TimeFormatted": "2:36",
+      "tier3Time": 384525,
+      "tier3TimeFormatted": "6:24",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 3683,
+          "gameTimeFormatted": "0:03"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 3683,
+          "gameTimeFormatted": "0:03"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 16760,
+          "gameTimeFormatted": "0:16"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 21380,
+          "gameTimeFormatted": "0:21"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 66865,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 81346,
+          "gameTimeFormatted": "1:21"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 151616,
+          "gameTimeFormatted": "2:31"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 168460,
+          "gameTimeFormatted": "2:48"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 169090,
+          "gameTimeFormatted": "2:49"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 169697,
+          "gameTimeFormatted": "2:49"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 180555,
+          "gameTimeFormatted": "3:00"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 192779,
+          "gameTimeFormatted": "3:12"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 214520,
+          "gameTimeFormatted": "3:34"
+        },
+        {
+          "type": "unit",
+          "name": "Gnoll Brute",
+          "itemId": "ngnb",
+          "gameTimeMs": 232354,
+          "gameTimeFormatted": "3:52"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 260720,
+          "gameTimeFormatted": "4:20"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 263501,
+          "gameTimeFormatted": "4:23"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 281356,
+          "gameTimeFormatted": "4:41"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 345149,
+          "gameTimeFormatted": "5:45"
+        },
+        {
+          "type": "building",
+          "name": "Unknown (eaol)",
+          "itemId": "eaol",
+          "gameTimeMs": 397994,
+          "gameTimeFormatted": "6:37"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 408447,
+          "gameTimeFormatted": "6:48"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        },
+        {
+          "name": "Gnoll Brute",
+          "itemId": "ngnb"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Unknown (eaol)",
+          "itemId": "eaol"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Reib",
+          "name": "Improved Bows",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnimprovedbows",
+          "gameTimeMs": 314616,
+          "gameTimeFormatted": "5:14"
+        },
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 442590,
+          "gameTimeFormatted": "7:22"
+        },
+        {
+          "itemId": "Redc",
+          "name": "Druid of the Claw Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btndocmastertraining",
+          "gameTimeMs": 535110,
+          "gameTimeFormatted": "8:55"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnreinforcedhides",
+          "gameTimeMs": 560082,
+          "gameTimeFormatted": "9:20"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 580500,
+          "gameTimeFormatted": "9:40"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 640689,
+          "gameTimeFormatted": "10:40"
+        },
+        {
+          "itemId": "Resw",
+          "name": "Strength of the Wild",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnstrengthofthewild",
+          "gameTimeMs": 654375,
+          "gameTimeFormatted": "10:54"
+        }
+      ]
+    }
+  }
+}

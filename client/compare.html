@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WC3V — Compare moved to homepage</title>
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="https://wc3v.com/">
+  <script>
+    // Compare-to-pro is now an inline action on each My Replays card on
+    // the homepage. Redirect old bookmarks; preserve any ?local=ID param
+    // since that previously deep-linked into a specific user replay.
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const local = params.get('local');
+      const target = local ? '/?local=' + encodeURIComponent(local) : '/';
+      window.location.replace(target);
+    })();
+  </script>
+</head>
+<body>
+  <noscript>
+    <p>Comparison has moved. <a href="/">Go to the homepage</a> and click <strong>Compare to a pro</strong> on any of your replays.</p>
+  </noscript>
+</body>
+</html>

@@ -167,8 +167,8 @@ const ClientPlayer = class {
     }
 
     if (this.recordIndexes.selection !== index) {
-      this.enrichSelectionGroup();
       this.recordIndexes.selection = index;
+      this.enrichSelectionGroup();
     }
 
     // return back the new record
@@ -286,6 +286,14 @@ const ClientPlayer = class {
   }
 
   moveTracker (gameTime) {
+    // findIndexFrom (Helpers.js) is forward-only — it scans from the cursor
+    // and never rewinds. On a backward jump the cursor is past the target
+    // gameTime, so without resetting we'd retain end-of-match selection/tier.
+    this.recordIndexes.selection = -1;
+    this.recordIndexes.tier = -1;
+    this.currentGroup = null;
+    this.tier = 1;
+
     this.units.forEach(unit => {
       // reset a units record indexes, decay status, full name
       unit.jump(gameTime);
@@ -293,6 +301,11 @@ const ClientPlayer = class {
       // update the unit at the new gameTime to prepare for rendering
       unit.update(gameTime, 1);
     });
+
+    const tierEvent = this.getCurrentTier(gameTime);
+    if (tierEvent) {
+      this.tier = Math.min(3, tierEvent.tier);
+    }
 
     this.getSelectionRecord(gameTime);
   }
@@ -540,7 +553,7 @@ const ClientPlayer = class {
     }
   }
 
-  resolveUnitPositions (frameData, forceMode) {
+  resolveUnitPositions (frameData, forceMode, skipBloom = false) {
     const { isNeutralPlayer } = this;
     const { unitDrawPositions } = frameData;
 
@@ -638,6 +651,50 @@ const ClientPlayer = class {
 
     // cluster same-type army units by proximity — reduces bloom input count
     const { representatives, collapsed } = ClientPlayer.clusterArmyUnits(armyUnits);
+
+    // when gameTime hasn't changed (e.g. panning while paused), reuse cached
+    // bloom offsets instead of re-running the non-deterministic bloom algorithm
+    if (skipBloom && this._bloomCache && this._bloomCache.size > 0) {
+      // set _origX from fresh screen-projected positions
+      representatives.forEach(rep => {
+        rep._origX = rep.drawX;
+        rep._origY = rep.drawY;
+        const cached = this._bloomCache.get(rep.uuid);
+        if (cached) {
+          rep.drawX = rep._origX + cached.ox;
+          rep.drawY = rep._origY + cached.oy;
+        }
+      });
+
+      // apply cross-collision cached offsets
+      if (this._crossCollisionCache) {
+        representatives.forEach(rep => {
+          rep._preCollisionX = rep.drawX;
+          rep._preCollisionY = rep.drawY;
+          const cc = this._crossCollisionCache.get(rep.uuid);
+          if (cc) {
+            rep.drawX += cc.ox;
+            rep.drawY += cc.oy;
+          }
+        });
+      }
+
+      // displacement cap
+      const maxDisp = 35;
+      representatives.forEach(u => {
+        const dx = u.drawX - u._origX;
+        const dy = u.drawY - u._origY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > maxDisp) {
+          const scale = maxDisp / dist;
+          u.drawX = u._origX + dx * scale;
+          u.drawY = u._origY + dy * scale;
+        }
+      });
+
+      this._resolved = { representatives, collapsed, alwaysDrawSlots };
+      return;
+    }
 
     // detect army mode (pack vs scattered) and choose layout strategy
     this._armyMeta = ClientPlayer.computeArmyMeta(representatives);
@@ -1481,10 +1538,7 @@ const ClientPlayer = class {
 
     // nameplates rendered globally in app.js after all players
 
-    if (viewOptions.displayPath) {
-      this.heroes.forEach(hero => 
-        hero.renderPath(utilityCtx, transform, gameTime, xScale, yScale, viewOptions));
-    }
+    // Hero path trails moved to the 3D scene; see PathTrailRenderer3D.
 
     if (viewOptions.displayLevelPins) {
       this.heroes.forEach(hero =>

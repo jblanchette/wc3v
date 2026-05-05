@@ -3,6 +3,7 @@ const ScrubSpeeds = {
   '1/2x': 0.5,
   '1x': 1,
   '2x': 2,
+  '3x': 3,
   '5x': 5,
   '10x': 10,
   '20x': 20,
@@ -16,7 +17,7 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
-    const startingSpeed = '5x';
+    const startingSpeed = '3x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
 
@@ -156,6 +157,9 @@ const TimeScrubber = class {
   }
 
   moveTracker (matchPercentDone) {
+    // Defensive: render() can fire from a zoom event before init() has run
+    // in some load orderings. Skip silently rather than crash the loop.
+    if (!this.trackerEl) return;
     this.trackerEl.style.left = `${matchPercentDone}%`;
   }
 
@@ -195,10 +199,7 @@ const TimeScrubber = class {
   }
 
   render (gameTime, matchEndTime) {
-    const scrubberBox = this.wrapperEl.getBoundingClientRect();
-    const { width } = scrubberBox;
     const matchPercentDone = Math.min(100, (gameTime / matchEndTime) * 100);
-
     this.moveTracker(matchPercentDone);
   }
 };

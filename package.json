@@ -2,6 +2,23 @@
 	"name": "w3gv",
 	"version": "0.1.0",
 	"description": "WC3 Replay Viewer",
+	"scripts": {
+		"build:parser": "node tools/build-parser-bundle.js"
+	},
+	"devDependencies": {
+		"assert": "^2.1.0",
+		"browserify-zlib": "^0.2.0",
+		"buffer": "^6.0.3",
+		"crypto-browserify": "^3.12.1",
+		"esbuild": "^0.25.0",
+		"events": "^3.3.0",
+		"fflate": "^0.8.2",
+		"pako": "^1.0.11",
+		"path-browserify": "^1.0.1",
+		"process": "^0.11.10",
+		"stream-browserify": "^3.0.0",
+		"util": "^0.12.5"
+	},
 	"keywords": [
 		"w3g",
 		"julas",
@@ -24,8 +41,8 @@
 		"image-size": "^0.9.1",
 		"pngjs": "^6.0.0",
 		"rbush": "^3.0.1",
-		"w3gjs": "^3.0.0",
-		"war3-model": "^2.0.0"
+		"w3gjs": "3.0.0",
+		"war3-model": "^4.0.1"
 	},
 	"license": "GNU v3.0",
 	"readmeFilename": "README.md"

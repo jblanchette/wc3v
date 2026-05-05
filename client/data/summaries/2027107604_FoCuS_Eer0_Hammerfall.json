@@ -1,0 +1,544 @@
+{
+  "replayId": "2027107604_FoCuS_Eer0_Hammerfall",
+  "map": "Hammerfall",
+  "mapRaw": "Maps/W3Champions\\5185_w3c_251104_0950_Hammerfall.w3x",
+  "durationMs": 1151025,
+  "durationFormatted": "19:11",
+  "fingerprint": "Hammerfall|1151|focus#31324,orange#14823",
+  "players": {
+    "1": {
+      "name": "FoCuS#31324",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 65684,
+        "gameTimeFormatted": "1:05"
+      },
+      "tier2Time": 143229,
+      "tier2TimeFormatted": "2:23",
+      "tier3Time": 286212,
+      "tier3TimeFormatted": "4:46",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 3115,
+          "gameTimeFormatted": "0:03"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 35219,
+          "gameTimeFormatted": "0:35"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 65684,
+          "gameTimeFormatted": "1:05"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 79730,
+          "gameTimeFormatted": "1:19"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 95549,
+          "gameTimeFormatted": "1:35"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 191584,
+          "gameTimeFormatted": "3:11"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 213044,
+          "gameTimeFormatted": "3:33"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 289914,
+          "gameTimeFormatted": "4:49"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 307157,
+          "gameTimeFormatted": "5:07"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 321072,
+          "gameTimeFormatted": "5:21"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 365151,
+          "gameTimeFormatted": "6:05"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 396139,
+          "gameTimeFormatted": "6:36"
+        },
+        {
+          "type": "hero",
+          "name": "Tauren Chieftain",
+          "itemId": "Otch",
+          "gameTimeMs": 436954,
+          "gameTimeFormatted": "7:16"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 441975,
+          "gameTimeFormatted": "7:21"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 468540,
+          "gameTimeFormatted": "7:48"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk",
+          "gameTimeMs": 522227,
+          "gameTimeFormatted": "8:42"
+        },
+        {
+          "type": "unit",
+          "name": "Kodo Beast",
+          "itemId": "okod",
+          "gameTimeMs": 544674,
+          "gameTimeFormatted": "9:04"
+        },
+        {
+          "type": "unit",
+          "name": "Kodo Beast",
+          "itemId": "okod",
+          "gameTimeMs": 589592,
+          "gameTimeFormatted": "9:49"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 626920,
+          "gameTimeFormatted": "10:26"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk",
+          "gameTimeMs": 657246,
+          "gameTimeFormatted": "10:57"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "War Mill",
+          "itemId": "ofor"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Grunt",
+          "itemId": "ogru"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        },
+        {
+          "name": "Watch Tower",
+          "itemId": "owtw"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        },
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        },
+        {
+          "name": "Raider",
+          "itemId": "orai"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun"
+        },
+        {
+          "name": "Tauren Chieftain",
+          "itemId": "Otch"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk"
+        },
+        {
+          "name": "Kodo Beast",
+          "itemId": "okod"
+        },
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospm"
+        },
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospw"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Roen",
+          "name": "Ensnare",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnensnare",
+          "gameTimeMs": 377759,
+          "gameTimeFormatted": "6:17"
+        },
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 432308,
+          "gameTimeFormatted": "7:12"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 497216,
+          "gameTimeFormatted": "8:17"
+        },
+        {
+          "itemId": "Rwdm",
+          "name": "War Drums",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndrum",
+          "gameTimeMs": 656879,
+          "gameTimeFormatted": "10:56"
+        },
+        {
+          "itemId": "Rowt",
+          "name": "Spirit Walker Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnspiritwalkermastertraining",
+          "gameTimeMs": 876835,
+          "gameTimeFormatted": "14:36"
+        },
+        {
+          "itemId": "Rows",
+          "name": "Pulverize",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnsmash",
+          "gameTimeMs": 951068,
+          "gameTimeFormatted": "15:51"
+        }
+      ]
+    },
+    "2": {
+      "name": "orange#14823",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 67178,
+        "gameTimeFormatted": "1:07"
+      },
+      "tier2Time": 146771,
+      "tier2TimeFormatted": "2:26",
+      "tier3Time": 289517,
+      "tier3TimeFormatted": "4:49",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 2809,
+          "gameTimeFormatted": "0:02"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 3511,
+          "gameTimeFormatted": "0:03"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 5041,
+          "gameTimeFormatted": "0:05"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 9386,
+          "gameTimeFormatted": "0:09"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 67178,
+          "gameTimeFormatted": "1:07"
+        },
+        {
+          "type": "building",
+          "name": "Graveyard",
+          "itemId": "ugrv",
+          "gameTimeMs": 74993,
+          "gameTimeFormatted": "1:14"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 166453,
+          "gameTimeFormatted": "2:46"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 180952,
+          "gameTimeFormatted": "3:00"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 217470,
+          "gameTimeFormatted": "3:37"
+        },
+        {
+          "type": "hero",
+          "name": "Lich",
+          "itemId": "Ulic",
+          "gameTimeMs": 288812,
+          "gameTimeFormatted": "4:48"
+        },
+        {
+          "type": "building",
+          "name": "Slaughterhouse",
+          "itemId": "uslh",
+          "gameTimeMs": 309479,
+          "gameTimeFormatted": "5:09"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 327289,
+          "gameTimeFormatted": "5:27"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 372906,
+          "gameTimeFormatted": "6:12"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 390163,
+          "gameTimeFormatted": "6:30"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 391264,
+          "gameTimeFormatted": "6:31"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 413385,
+          "gameTimeFormatted": "6:53"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 445187,
+          "gameTimeFormatted": "7:25"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 513300,
+          "gameTimeFormatted": "8:33"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 558828,
+          "gameTimeFormatted": "9:18"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 577693,
+          "gameTimeFormatted": "9:37"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        },
+        {
+          "name": "Graveyard",
+          "itemId": "ugrv"
+        },
+        {
+          "name": "Temple of the Damned",
+          "itemId": "utod"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Obsidian Statue",
+          "itemId": "uobs"
+        },
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 444972,
+          "gameTimeFormatted": "7:24"
+        },
+        {
+          "itemId": "Rubu",
+          "name": "Burrow",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncryptfiendburrow",
+          "gameTimeMs": 523911,
+          "gameTimeFormatted": "8:43"
+        },
+        {
+          "itemId": "Rura",
+          "name": "Creature Attack",
+          "level": 3,
+          "category": "attack",
+          "icon": "btnadvancedcreatureattack",
+          "gameTimeMs": 837624,
+          "gameTimeFormatted": "13:57"
+        },
+        {
+          "itemId": "Rucr",
+          "name": "Creature Carapace",
+          "level": 1,
+          "category": "defense",
+          "icon": "btncreaturecarapace",
+          "gameTimeMs": 892372,
+          "gameTimeFormatted": "14:52"
+        }
+      ]
+    }
+  }
+}

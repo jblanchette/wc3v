@@ -522,8 +522,10 @@ const assignCampOrder = (world, wc3vPlayers) => {
 // write wc3v output to file
 ////
 
-const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding = 0, validation = null) => {
-
+// Pure assembly: produces the .wc3v output object. No filesystem I/O.
+// Mutates `replay` (strips gameData, replaces replay.players); same as the
+// pre-refactor writeOutput behavior — kept identical so callers see no change.
+const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
   const savedPlayers = replay.metadata.slotRecords;
   delete replay.players;
 
@@ -709,6 +711,12 @@ const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding
       : {})
   };
 
+  return output;
+};
+
+const writeOutput = (filename, fileHash, replay, wc3vPlayers, world, jsonPadding = 0, validation = null) => {
+  const output = buildOutputObject(replay, wc3vPlayers, world, validation);
+
   try {
     let baseFile = fileHash || path.basename(filename);
     if (baseFile.endsWith('.w3g')) {
@@ -851,6 +859,7 @@ module.exports = {
 	getManifestReplayIds,
 	readCliArgs,
 	writeOutput,
+	buildOutputObject,
 
   findIndexFrom,
   StandardStreamSearch,

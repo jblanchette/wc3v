@@ -4,6 +4,7 @@
   "mapRaw": "Maps/Download/4193615f9bff902d44a7181fda315d7792be5cbd/(8)Battleground_LV.w3x",
   "durationMs": 644775,
   "durationFormatted": "10:44",
+  "fingerprint": "Battleground LV|645|biga#21302,general#23660,harb#2176,jeef#1496,marco79#2996,p07470#11292,seaphi#4432,spighter#1733",
   "players": {
     "2": {
       "name": "Harb#2176",
@@ -30,13 +31,6 @@
         },
         {
           "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 23208,
-          "gameTimeFormatted": "0:23"
-        },
-        {
-          "type": "building",
           "name": "Barracks",
           "itemId": "obar",
           "gameTimeMs": 50583,
@@ -55,13 +49,6 @@
           "itemId": "Otch",
           "gameTimeMs": 71123,
           "gameTimeFormatted": "1:11"
-        },
-        {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 101144,
-          "gameTimeFormatted": "1:41"
         },
         {
           "type": "unit",
@@ -83,13 +70,6 @@
           "itemId": "ohun",
           "gameTimeMs": 142268,
           "gameTimeFormatted": "2:22"
-        },
-        {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 173431,
-          "gameTimeFormatted": "2:53"
         },
         {
           "type": "unit",
@@ -160,6 +140,27 @@
           "itemId": "osld",
           "gameTimeMs": 438834,
           "gameTimeFormatted": "7:18"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 465710,
+          "gameTimeFormatted": "7:45"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 467193,
+          "gameTimeFormatted": "7:47"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 471722,
+          "gameTimeFormatted": "7:51"
         }
       ],
       "t2Buildings": [
@@ -252,13 +253,6 @@
         },
         {
           "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 16596,
-          "gameTimeFormatted": "0:16"
-        },
-        {
-          "type": "building",
           "name": "War Mill",
           "itemId": "ofor",
           "gameTimeMs": 54259,
@@ -277,13 +271,6 @@
           "itemId": "Ofar",
           "gameTimeMs": 74633,
           "gameTimeFormatted": "1:14"
-        },
-        {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 105065,
-          "gameTimeFormatted": "1:45"
         },
         {
           "type": "unit",
@@ -315,24 +302,10 @@
         },
         {
           "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 184608,
-          "gameTimeFormatted": "3:04"
-        },
-        {
-          "type": "building",
           "name": "Watch Tower",
           "itemId": "owtw",
           "gameTimeMs": 264427,
           "gameTimeFormatted": "4:24"
-        },
-        {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 314793,
-          "gameTimeFormatted": "5:14"
         },
         {
           "type": "unit",
@@ -382,6 +355,13 @@
           "itemId": "obea",
           "gameTimeMs": 523670,
           "gameTimeFormatted": "8:43"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 590534,
+          "gameTimeFormatted": "9:50"
         }
       ],
       "t2Buildings": [
@@ -471,24 +451,10 @@
       "buildPreview": [
         {
           "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 10395,
-          "gameTimeFormatted": "0:10"
-        },
-        {
-          "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
           "gameTimeMs": 12710,
           "gameTimeFormatted": "0:12"
-        },
-        {
-          "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 15913,
-          "gameTimeFormatted": "0:15"
         },
         {
           "type": "building",
@@ -510,13 +476,6 @@
           "itemId": "uzig",
           "gameTimeMs": 70681,
           "gameTimeFormatted": "1:10"
-        },
-        {
-          "type": "building",
-          "name": "Tomb of Relics",
-          "itemId": "utom",
-          "gameTimeMs": 95753,
-          "gameTimeFormatted": "1:35"
         },
         {
           "type": "hero",
@@ -608,6 +567,20 @@
           "itemId": "uzig",
           "gameTimeMs": 620272,
           "gameTimeFormatted": "10:20"
+        },
+        {
+          "type": "building",
+          "name": "Boneyard",
+          "itemId": "ubon",
+          "gameTimeMs": 624755,
+          "gameTimeFormatted": "10:24"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 630696,
+          "gameTimeFormatted": "10:30"
         }
       ],
       "t2Buildings": [
@@ -703,13 +676,6 @@
           "itemId": "Hmkg",
           "gameTimeMs": 81311,
           "gameTimeFormatted": "1:21"
-        },
-        {
-          "type": "building",
-          "name": "Scout Tower",
-          "itemId": "hwtw",
-          "gameTimeMs": 107619,
-          "gameTimeFormatted": "1:47"
         },
         {
           "type": "unit",
@@ -808,6 +774,13 @@
           "itemId": "htow",
           "gameTimeMs": 412472,
           "gameTimeFormatted": "6:52"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 435143,
+          "gameTimeFormatted": "7:15"
         }
       ],
       "t2Buildings": [
@@ -896,13 +869,6 @@
       "buildPreview": [
         {
           "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 6887,
-          "gameTimeFormatted": "0:06"
-        },
-        {
-          "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
           "gameTimeMs": 9919,
@@ -928,13 +894,6 @@
           "itemId": "uzig",
           "gameTimeMs": 99370,
           "gameTimeFormatted": "1:39"
-        },
-        {
-          "type": "building",
-          "name": "Tomb of Relics",
-          "itemId": "utom",
-          "gameTimeMs": 115600,
-          "gameTimeFormatted": "1:55"
         },
         {
           "type": "hero",
@@ -1033,6 +992,20 @@
           "itemId": "uzig",
           "gameTimeMs": 423227,
           "gameTimeFormatted": "7:03"
+        },
+        {
+          "type": "building",
+          "name": "Slaughterhouse",
+          "itemId": "uslh",
+          "gameTimeMs": 479072,
+          "gameTimeFormatted": "7:59"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
+          "gameTimeMs": 561703,
+          "gameTimeFormatted": "9:21"
         }
       ],
       "t2Buildings": [
@@ -1133,13 +1106,6 @@
           "itemId": "emow",
           "gameTimeMs": 22562,
           "gameTimeFormatted": "0:22"
-        },
-        {
-          "type": "building",
-          "name": "Ancient of Wind",
-          "itemId": "eaow",
-          "gameTimeMs": 27109,
-          "gameTimeFormatted": "0:27"
         },
         {
           "type": "building",
@@ -1259,6 +1225,13 @@
           "itemId": "eaol",
           "gameTimeMs": 337941,
           "gameTimeFormatted": "5:37"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 361230,
+          "gameTimeFormatted": "6:01"
         }
       ],
       "t2Buildings": [
@@ -1355,13 +1328,6 @@
       "buildPreview": [
         {
           "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 10123,
-          "gameTimeFormatted": "0:10"
-        },
-        {
-          "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
           "gameTimeMs": 11382,
@@ -1380,13 +1346,6 @@
           "itemId": "uzig",
           "gameTimeMs": 20925,
           "gameTimeFormatted": "0:20"
-        },
-        {
-          "type": "building",
-          "name": "Tomb of Relics",
-          "itemId": "utom",
-          "gameTimeMs": 39896,
-          "gameTimeFormatted": "0:39"
         },
         {
           "type": "hero",
@@ -1492,6 +1451,20 @@
           "itemId": "uzig",
           "gameTimeMs": 520443,
           "gameTimeFormatted": "8:40"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 567836,
+          "gameTimeFormatted": "9:27"
+        },
+        {
+          "type": "building",
+          "name": "Boneyard",
+          "itemId": "ubon",
+          "gameTimeMs": 584459,
+          "gameTimeFormatted": "9:44"
         }
       ],
       "t2Buildings": [
@@ -1614,13 +1587,6 @@
         },
         {
           "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 19664,
-          "gameTimeFormatted": "0:19"
-        },
-        {
-          "type": "building",
           "name": "War Mill",
           "itemId": "ofor",
           "gameTimeMs": 67953,
@@ -1639,13 +1605,6 @@
           "itemId": "obar",
           "gameTimeMs": 81379,
           "gameTimeFormatted": "1:21"
-        },
-        {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 116249,
-          "gameTimeFormatted": "1:56"
         },
         {
           "type": "unit",
@@ -1690,13 +1649,6 @@
           "gameTimeFormatted": "3:59"
         },
         {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 250365,
-          "gameTimeFormatted": "4:10"
-        },
-        {
           "type": "unit",
           "name": "Troll Headhunter/Berserker",
           "itemId": "ohun",
@@ -1739,11 +1691,32 @@
           "gameTimeFormatted": "5:57"
         },
         {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 389003,
-          "gameTimeFormatted": "6:29"
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 416979,
+          "gameTimeFormatted": "6:56"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 429415,
+          "gameTimeFormatted": "7:09"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 462020,
+          "gameTimeFormatted": "7:42"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 506469,
+          "gameTimeFormatted": "8:26"
         }
       ],
       "t2Buildings": [

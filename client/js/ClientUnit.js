@@ -77,13 +77,34 @@ const minNeighborDrawDistance = 20;
 const pathDecayTime = 1000 * 20;
 const idleDecayTime = 1000 * 2;
 
+// Path-gap detection — shared by ClientUnit.getInterpolatedPosition and
+// PathTrailRenderer3D so both decide identically where the trail line breaks.
+const PATH_MIN_TIME_GAP = 5 * 1000;     // small time delta
+const PATH_MIN_GAP_DIST = 1500;         // large distance delta
+const PATH_MAX_TIME_GAP = 300 * 1000;   // large time delta
+const PATH_MAX_GAP_DIST = 500;          // small distance delta
+const PATH_IDLE_GAP_TIME = 10 * 1000;   // any gap > 10s breaks the line
+
+const isPathGap = (a, b) => {
+  if (!a || !b) return false;
+  if (b.isJump) return true;
+  const dt = b.gameTime - a.gameTime;
+  if (dt > PATH_IDLE_GAP_TIME) return true;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist > PATH_MIN_GAP_DIST && dt < PATH_MIN_TIME_GAP) return true;
+  if (dist > PATH_MAX_GAP_DIST && dt > PATH_MAX_TIME_GAP) return true;
+  return false;
+};
+
 const ClientUnit = class {
   constructor (unitData, playerId, playerColor, isNeutralPlayer) {
-    const dataFields = [ 
+    const dataFields = [
       "displayName", "itemId", "itemId1", "itemId2",
       "objectId1", "objectId2", "isRegistered", "isUnit",
       "isBuilding", "isIllusion", "level", "lastPosition",
-      "path", "meta", "items", "spawnTime", "trainedTime",
+      "path", "footprints", "meta", "items", "spawnTime", "trainedTime",
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
       "collisionSize", "isInferred", "destroyedAt", "isSummon",
@@ -227,13 +248,10 @@ const ClientUnit = class {
       path: -1
     };
 
-    this._prevDrawX = null;
-    this._prevDrawY = null;
-
     this.decayLevel = 1;
 
     this.fullName = this.getFullName();
-    this.itemIdHash = this.itemId1 ? 
+    this.itemIdHash = this.itemId1 ?
       Helpers.makeItemIdHash(this.itemId1, this.itemId2) : `unregistered`;
 
     //
@@ -326,6 +344,39 @@ const ClientUnit = class {
     return path[index];
   }
 
+  // Smoothly interpolate the unit's world position at gameTime by lerping
+  // between path[i] and path[i+1] using the time fraction. Uses a uniform
+  // Catmull-Rom across path[i-1..i+2] when neither neighbor crosses a gap,
+  // otherwise linear lerp; snaps on jumps/idles/teleports.
+  // Relies on recordIndexes.path being maintained by getCurrentMovePath.
+  getInterpolatedPosition (gameTime) {
+    const path = this.path;
+    const i = this.recordIndexes.path;
+    if (i < 0 || !path || !path[i]) return null;
+
+    const a = path[i];
+    const b = path[i + 1];
+
+    if (!b || gameTime >= b.gameTime || gameTime < a.gameTime) {
+      return { x: a.x, y: a.y };
+    }
+
+    if (isPathGap(a, b)) {
+      return { x: a.x, y: a.y };
+    }
+
+    const dt = b.gameTime - a.gameTime;
+    const t = dt > 0 ? Math.min(1, Math.max(0, (gameTime - a.gameTime) / dt)) : 0;
+
+    const p0 = path[i - 1];
+    const p3 = path[i + 2];
+    const canCR = p0 && p3 && !isPathGap(p0, a) && !isPathGap(b, p3);
+
+    return canCR
+      ? Helpers.catmullRomXY(p0, a, b, p3, t)
+      : { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+  }
+
   getCurrentLevelRecord (gameTime, verbose = false) {
     if (!this.meta.hero) {
       return;
@@ -383,9 +434,6 @@ const ClientUnit = class {
       path: -1
     };
 
-    this._prevDrawX = null;
-    this._prevDrawY = null;
-
     this.fullName = this.getFullName();
   }
 
@@ -428,9 +476,13 @@ const ClientUnit = class {
 
     const currentMoveRecord = this.getCurrentMovePath(gameTime);
 
-    // scout lifecycle: unit moved well after scout event = no longer scouting
+    // scout lifecycle: label persists for 30s of game time then ends
+    // (matches the fade animation duration below). previously keyed on
+    // currentMoveRecord.gameTime, which prematurely ended the label for
+    // workers that kept moving (e.g. acolytes walking on to mine/haunt)
+    // while leaving it stuck on for wisps that stopped at a tree.
     if (this.scoutInfo && !this._scoutEnded) {
-      if (currentMoveRecord && currentMoveRecord.gameTime > this.scoutInfo.gameTime + 10000) {
+      if (gameTime > this.scoutInfo.gameTime + 30000) {
         this._scoutEnded = true;
       }
     }
@@ -447,8 +499,14 @@ const ClientUnit = class {
           return;
         }
 
-        // idle detected, increment the decay level
-        this.decay();
+        // compute correct decay for the full idle duration — handles large
+        // time skips (scrub/jump) where the unit should already be faded
+        const idleDuration = gameTime - currentMoveRecord.gameTime - idleDecayTime;
+        const amount = this.meta.hero ? 0.0015 : 0.0035;
+        const targetDecay = Math.max(this.minDecayLevel, 1.0 - amount * (idleDuration / 16.67));
+
+        // snap to target if more faded than current; otherwise normal per-frame decay
+        this.decayLevel = Math.min(this.decayLevel, targetDecay);
         return;
       }
     }
@@ -458,31 +516,23 @@ const ClientUnit = class {
   }
 
   renderBuilding (ctx, frameData, transform, xScale, yScale) {
+    // 3D building models handle visual rendering now (ThreeMapRenderer).
+    // Still track positions for worker-overlap hiding logic.
     const { x, y } = this.lastPosition;
-
-    // round to integers for pixel-perfect grid alignment
-    const drawX = Math.round(xScale(x) + wc3v.gameScaler.middleX);
-    const drawY = Math.round(yScale(y) + wc3v.gameScaler.middleY);
-
-    // size building to match its WC3 placement grid footprint
+    const _proj = wc3v.gameScaler.projectXY(x, y);
+    const drawX = Math.round(_proj.x + wc3v.gameScaler.middleX);
+    const drawY = Math.round(_proj.y + wc3v.gameScaler.middleY);
     const footprintTiles = getBuildingFootprintTiles(this.itemId, this.collisionSize);
-    const iconSize = Math.round(footprintTiles * 128 * wc3v.gameScaler.pxPerUnit);
-
-    const halfIcon = Math.round(iconSize / 2);
-
-    ctx.globalAlpha = buildingAlpha;
-    ctx.drawImage(this.icon, drawX - halfIcon, drawY - halfIcon, iconSize, iconSize);
-
-    ctx.strokeStyle = "#FFFC01";
-    ctx.strokeRect(drawX - halfIcon, drawY - halfIcon, iconSize, iconSize);
-    ctx.strokeStyle = "#000000";
-    ctx.globalAlpha = 1.0;
+    const halfIcon = Math.round(footprintTiles * 128 * wc3v.gameScaler.pxPerUnit / 2);
 
     frameData.buildingPositions.push({
       x: drawX,
       y: drawY,
       halfSize: halfIcon,
-      playerId: this.playerId
+      playerId: this.playerId,
+      displayName: this.displayName,
+      itemId: this.itemId,
+      playerColor: this.playerColor
     });
   }
 
@@ -491,7 +541,7 @@ const ClientUnit = class {
       return;
     }
 
-    if (!this.currentX || !this.currentY) {
+    if (this.currentX == null || this.currentY == null) {
       return;
     }
 
@@ -503,41 +553,33 @@ const ClientUnit = class {
       return;
     }
 
+    // Smoothly interpolate live position between path waypoints. Falls back
+    // to a snap on jumps/teleports/idle gaps. recordIndexes.path is kept
+    // current by getCurrentMovePath() during update().
+    const interp = this.getInterpolatedPosition(gameTime);
+    if (interp && !isNaN(interp.x)) {
+      this.currentX = interp.x;
+      this.currentY = interp.y;
+    }
     const pathNode = this.path[this.recordIndexes.path];
 
-    let currentX = pathNode && pathNode.x;
-    let currentY = pathNode && pathNode.y;
-
-    // active scouts: use scout target position when path data is stale
+    // Active scouts: override with scout target when path data is stale
     const isActiveScout = this.scoutInfo && !this._scoutEnded && gameTime >= this.scoutInfo.gameTime;
     if (isActiveScout && this.scoutInfo.position) {
       const pathAge = pathNode ? (gameTime - pathNode.gameTime) : Infinity;
-      if (pathAge > 5000 || isNaN(currentX) || isNaN(currentY)) {
-        currentX = this.scoutInfo.position.x;
-        currentY = this.scoutInfo.position.y;
+      if (pathAge > 5000 || isNaN(this.currentX)) {
+        this.currentX = this.scoutInfo.position.x;
+        this.currentY = this.scoutInfo.position.y;
       }
     }
 
-    if (isNaN(currentX) || isNaN(currentY)) {
+    if (isNaN(this.currentX) || isNaN(this.currentY)) {
       return;
     }
 
-
-    let drawX = xScale(currentX) + wc3v.gameScaler.middleX;
-    let drawY = yScale(currentY) + wc3v.gameScaler.middleY;
-
-    // jitter dead band: suppress sub-pixel oscillations between adjacent path records
-    const JITTER_THRESHOLD_SQ = 2.5 * 2.5;
-    if (this._prevDrawX !== null) {
-      const jdx = drawX - this._prevDrawX;
-      const jdy = drawY - this._prevDrawY;
-      if (jdx * jdx + jdy * jdy < JITTER_THRESHOLD_SQ) {
-        drawX = this._prevDrawX;
-        drawY = this._prevDrawY;
-      }
-    }
-    this._prevDrawX = drawX;
-    this._prevDrawY = drawY;
+    const _projCur = wc3v.gameScaler.projectXY(this.currentX, this.currentY);
+    let drawX = _projCur.x + wc3v.gameScaler.middleX;
+    let drawY = _projCur.y + wc3v.gameScaler.middleY;
 
     // lumber scouts: snap to nearest tree so the wisp looks attached
     if (isActiveScout && this.scoutInfo.isLumberScout && wc3v._treeIndex) {
@@ -620,91 +662,6 @@ const ClientUnit = class {
     });
   }
 
-  renderPath (ctx, transform, gameTime, xScale, yScale, viewOptions) {
-    const self = this;
-    const path = this.path;
-    if (!path.length || gameTime < this.readyTime) {
-      return;
-    }
-
-    let levelRecordIndex = -1;
-
-    ctx.globalAlpha = 0.75;
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = this.playerColor;
-    ctx.fillStyle = "#FFF";
-
-    ctx.beginPath();
-
-    let lastX = 0,
-        lastY = 0,
-        lastGT = 0;
-
-    /**
-     * gaps -
-     *  min: if there is a large distance delta and a small time delta
-     *  max: if there is a small distance delta and a large time delta
-     */
-
-    
-    const minTimeGap = (5 * 1000);   // small time delta     - 5 seconds
-    const minGapThreshold = 1500;    // large distance delta - 1500 units
-
-    const maxTimeGap = (300 * 1000); // large time delta     - 500 seconds
-    const maxGapThreshold = 500;     // small distance delta - 500 units
-
-    const idleGapTime = (10 * 1000); // any time gap > 10s is treated as idle (no connecting line)
-
-    path.forEach((item, ind) => {
-      if (item.gameTime > gameTime) {
-        return;
-      }
-
-      if (ind > this.recordIndexes.path) {
-        return;
-      }
-
-      if (viewOptions.decayEffects) {
-        const delta = (gameTime - item.gameTime);
-
-        if (delta > pathDecayTime) {
-          return;
-        }
-      }
-
-      const { x, y, isJump } = item;
-
-      const drawX = xScale(x) + wc3v.gameScaler.middleX;
-      const drawY = yScale(y) + wc3v.gameScaler.middleY;
-
-      const spotDiffs = {
-        dist: Helpers.distance(x, y, lastX, lastY),
-        timeDelta: (item.gameTime - lastGT)
-      };
-
-      const isMinDistanceGap = (spotDiffs.dist > minGapThreshold);
-      const isMaxDistanceGap = (spotDiffs.dist > maxGapThreshold);
-
-      const isGap = (isMinDistanceGap && spotDiffs.timeDelta < minTimeGap) ||
-                    (isMaxDistanceGap && spotDiffs.timeDelta > maxTimeGap) ||
-                    (spotDiffs.timeDelta > idleGapTime);
-
-      if (ind === 0 || isJump || isGap) {
-        ctx.moveTo(drawX, drawY);        
-      } else {
-        ctx.lineTo(drawX, drawY);
-      }
-
-      lastX = x;
-      lastY = y;
-      lastGT = item.gameTime;
-    });
-
-    ctx.stroke();
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = 1.0;
-  }
-
   renderLevelPins (ctx, transform, gameTime, xScale, yScale, viewOptions, frameData) {
     const diamondSize = 22;
     const iconSize = 36;
@@ -718,8 +675,9 @@ const ClientUnit = class {
 
       const { x, y } = levelRecord.position;
 
-      const drawX = xScale(x) + wc3v.gameScaler.middleX;
-      const drawY = yScale(y) + wc3v.gameScaler.middleY;
+      const _projL = wc3v.gameScaler.projectXY(x, y);
+      const drawX = _projL.x + wc3v.gameScaler.middleX;
+      const drawY = _projL.y + wc3v.gameScaler.middleY;
 
       // fade pin when any unit is nearby
       const nearUnit = unitPositions.some(u =>
@@ -824,5 +782,10 @@ const ClientUnit = class {
     return best;
   }
 }
+
+// Static helpers for other subsystems (e.g. PathTrailRenderer3D) that need to
+// segment a unit path identically to how the client interpolates it.
+ClientUnit.isPathGap = isPathGap;
+ClientUnit.PATH_DECAY_TIME = pathDecayTime;
 
 window.ClientUnit = ClientUnit;

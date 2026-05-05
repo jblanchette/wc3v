@@ -176,13 +176,39 @@ const GameScaler = class {
       y: (this.mapExtent.y[0] - this.viewExtent.y[0]) * this.pxPerUnit
     };
   }
+
+  // The 3D terrain renderer (ThreeMapRenderer) is set after map setup so that
+  // projectXY can use the real perspective camera instead of the d3 top-down
+  // linear scales. While null, projectXY falls back to the 2D scales.
+  setThreeRenderer (threeMapRenderer) {
+    this.threeMapRenderer = threeMapRenderer;
+  }
+
+  // Canonical world→canvas projection for every 2D unit overlay element.
+  // Returns { x, y } relative to canvas center (pre-middleX/middleY offset)
+  // so legacy callsites keep working: `projectXY(x, y).x + middleX` yields the
+  // final pixel coordinate.
+  //
+  // When the 3D terrain is active, this samples terrain height at (wx, wy)
+  // and projects through the Three.js perspective camera. Otherwise it falls
+  // back to the top-down d3 linear scales so setup-phase code keeps working.
+  projectXY (wx, wy) {
+    const three = this.threeMapRenderer;
+    if (three && three.ready) {
+      const p = three.projectToCanvas(wx, wy);
+      if (p) {
+        return { x: p.x - this.middleX, y: p.y - this.middleY };
+      }
+    }
+    return { x: this.xScale(wx), y: this.yScale(wy) };
+  }
 }
 
-try {
-  if (window) {
-    window.GameScaler = GameScaler;
-  }
-} catch (e) {
-  // noop
+// CommonJS export for Node CLI + bundlers (esbuild).
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = GameScaler;
+}
+// Browser global for the existing client (script-tag-loaded) usage.
+if (typeof window !== 'undefined') {
+  window.GameScaler = GameScaler;
 }

@@ -1,9 +1,10 @@
 {
   "replayId": "w3c-test",
-  "map": "3 w3c 251104 0950 Last Refuge",
+  "map": "Last Refuge",
   "mapRaw": "maps\\W3Champions\\3_w3c_251104_0950_LastRefuge_v1.5.w3x",
   "durationMs": 132057,
   "durationFormatted": "2:12",
+  "fingerprint": "Last Refuge|132|aventurier#211320871,jeef#1496",
   "players": {
     "1": {
       "name": "Aventurier#211320871",
@@ -27,13 +28,6 @@
           "itemId": "oalt",
           "gameTimeMs": 6814,
           "gameTimeFormatted": "0:06"
-        },
-        {
-          "type": "building",
-          "name": "Orc Burrow",
-          "itemId": "otrb",
-          "gameTimeMs": 19659,
-          "gameTimeFormatted": "0:19"
         },
         {
           "type": "building",
@@ -72,13 +66,6 @@
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
-        {
-          "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 0,
-          "gameTimeFormatted": "0:00"
-        },
         {
           "type": "building",
           "name": "Altar of Darkness",

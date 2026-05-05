@@ -53,6 +53,7 @@ const FloatingText = class {
     this.processedKeys.clear();
     this.seenItemIds.clear();
     this.lastGameTime = 0;
+    this._eventCursors = {};
   }
 
   update (players, gameTime) {
@@ -77,10 +78,24 @@ const FloatingText = class {
   _scanEventStream (eventStream, playerIndex, gameTime) {
     if (!eventStream) return;
 
-    for (let i = 0; i < eventStream.length; i++) {
+    // Use a per-player cursor to skip already-processed events
+    if (!this._eventCursors) this._eventCursors = {};
+    const cursorKey = `es-${playerIndex}`;
+    let start = this._eventCursors[cursorKey] || 0;
+
+    // If we've scrubbed backwards, reset cursor
+    if (start > 0 && eventStream[start - 1] && eventStream[start - 1].gameTime > gameTime) {
+      start = 0;
+    }
+
+    for (let i = start; i < eventStream.length; i++) {
       const event = eventStream[i];
       if (event.gameTime > gameTime) break;
-      if (gameTime - event.gameTime > 8000) continue;
+      if (gameTime - event.gameTime > 8000) {
+        // Skip old events and advance cursor past them
+        this._eventCursors[cursorKey] = i + 1;
+        continue;
+      }
 
       const eventKey = `${playerIndex}-${i}`;
       if (this.processedKeys.has(eventKey)) continue;
@@ -241,8 +256,9 @@ const FloatingText = class {
       const easedProgress = 1 - Math.pow(1 - progress, 2);
       const floatY = -65 * easedProgress;
 
-      const drawX = xScale(entry.x) + wc3v.gameScaler.middleX;
-      const drawY = yScale(entry.y) + wc3v.gameScaler.middleY + floatY;
+      const _projFT = wc3v.gameScaler.projectXY(entry.x, entry.y);
+      const drawX = _projFT.x + wc3v.gameScaler.middleX;
+      const drawY = _projFT.y + wc3v.gameScaler.middleY + floatY;
 
       const hasLabel = !!entry.label;
       const hasIcon = entry.icon && entry.icon._loaded;

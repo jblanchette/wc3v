@@ -178,10 +178,21 @@ const MapRenderer = class {
       // use tight unitBounds for rendering (falls back to padded bounds)
       const b = neutralGroup.unitBounds || neutralGroup.bounds;
 
-      const rectWidth = (xScale(b.maxX) - xScale(b.minX));
-      const rectHeight = (yScale(b.maxY) - yScale(b.minY));
-      const drawX = xScale(b.minX) + middleX;
-      const drawY = yScale(b.minY) + middleY;
+      // Project the 4 bbox corners through the 3D camera and take the screen-
+      // space AABB so camp rings land on the correct terrain surface.
+      const _gs = window.wc3v && window.wc3v.gameScaler;
+      const _c1 = _gs.projectXY(b.minX, b.minY);
+      const _c2 = _gs.projectXY(b.maxX, b.minY);
+      const _c3 = _gs.projectXY(b.minX, b.maxY);
+      const _c4 = _gs.projectXY(b.maxX, b.maxY);
+      const _minPX = Math.min(_c1.x, _c2.x, _c3.x, _c4.x);
+      const _maxPX = Math.max(_c1.x, _c2.x, _c3.x, _c4.x);
+      const _minPY = Math.min(_c1.y, _c2.y, _c3.y, _c4.y);
+      const _maxPY = Math.max(_c1.y, _c2.y, _c3.y, _c4.y);
+      const rectWidth = _maxPX - _minPX;
+      const rectHeight = _maxPY - _minPY;
+      const drawX = _minPX + middleX;
+      const drawY = _minPY + middleY;
 
       // ring geometry
       const centerX = drawX + rectWidth / 2;
@@ -369,6 +380,8 @@ const MapRenderer = class {
   }
 
   renderNeutralBuildings (ctx, transform, viewOptions, neutralBuildings, gameScaler) {
+    // 3D building models handle neutral building rendering now (ThreeMapRenderer).
+    return;
     if (!viewOptions.displayNeutralBuildings || !neutralBuildings || !neutralBuildings.length) {
       return;
     }
@@ -394,8 +407,9 @@ const MapRenderer = class {
     };
 
     neutralBuildings.forEach(nb => {
-      const drawX = xScale(nb.x) + middleX;
-      const drawY = yScale(nb.y) + middleY;
+      const _projNB = window.wc3v.gameScaler.projectXY(nb.x, nb.y);
+      const drawX = _projNB.x + middleX;
+      const drawY = _projNB.y + middleY;
       const icon = this._neutralIcons[nb.type];
       const size = iconSize(nb.type);
       const half = size / 2;
