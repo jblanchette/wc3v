@@ -2,7 +2,7 @@
  * SiteNav.js — Shared navigation header for all site pages.
  *
  * Usage: call SiteNav.render(activeSection) after DOM ready.
- * activeSection: 'home' | null
+ * activeSection: 'home' | 'about' | 'community' | null
  */
 
 const SiteNav = {
@@ -42,6 +42,7 @@ const SiteNav = {
       <div class="site-nav-links">
         <a class="site-nav-link" href="${root}/">Home</a>
         <a class="site-nav-link" href="${root}/about.html">About</a>
+        <a class="site-nav-link" href="${root}/community.html">Community</a>
       </div>`;
 
     // On the homepage the WC3V logo is rendered prominently in the hero

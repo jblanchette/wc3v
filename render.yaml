@@ -1,0 +1,37 @@
+services:
+  - type: web
+    runtime: static
+    name: wc3v
+    staticPublishPath: ./client
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+    routes:
+      # Heavy assets are hosted on R2 at cdn.wc3v.com. The client code uses
+      # root-relative paths (e.g. /assets/wc3icons/foo.jpg, /maps/X/map.jpg)
+      # so they "just work" in dev — these 301 redirects send production
+      # traffic to R2. Browsers cache the redirect, so per-asset overhead
+      # is one extra hop on first request only.
+      - type: redirect
+        source: /assets/wc3icons/*
+        destination: https://cdn.wc3v.com/assets/wc3icons/:splat
+      - type: redirect
+        source: /assets/models/*
+        destination: https://cdn.wc3v.com/assets/models/:splat
+      - type: redirect
+        source: /assets/textures/*
+        destination: https://cdn.wc3v.com/assets/textures/:splat
+      - type: redirect
+        source: /maps/*
+        destination: https://cdn.wc3v.com/maps/:splat
+      - type: redirect
+        source: /replays/*
+        destination: https://cdn.wc3v.com/replays/:splat

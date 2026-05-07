@@ -2,13 +2,235 @@
   "replayId": "test-coords-left",
   "map": "Echo Isles",
   "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "mapInfo": {
+    "name": "EchoIsles",
+    "bounds": {
+      "camera": [
+        [
+          -6912,
+          4864
+        ],
+        [
+          6912,
+          -5376
+        ]
+      ],
+      "map": [
+        [
+          -8192,
+          8192
+        ],
+        [
+          6144,
+          -6144
+        ]
+      ]
+    },
+    "gridSize": {
+      "playable": [
+        116,
+        84
+      ],
+      "full": [
+        128,
+        96
+      ],
+      "margins": [
+        6,
+        6,
+        4,
+        8
+      ]
+    }
+  },
   "durationMs": 23025,
   "durationFormatted": "0:23",
-  "fingerprint": "Echo Isles|23|jblanch",
+  "neutralCamps": [
+    {
+      "groupId": "f7ea08e7-7dd5-448d-b559-65b747253742",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": -3634.150390625,
+        "minY": -4063.314208984375,
+        "maxX": -2632.96875,
+        "maxY": -3279.822998046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "469ced6d-34d6-4b67-a7e8-605d7bcc43aa",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": 2410.276611328125,
+        "minY": 4037.287109375,
+        "maxX": 3321.036865234375,
+        "maxY": 4804.45947265625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "d2db3027-6eef-4403-af59-cf34dd640f29",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": -3801.58544921875,
+        "minY": 4046.68505859375,
+        "maxX": -2890.8251953125,
+        "maxY": 4813.857421875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "84689e27-88e6-42d1-9169-24b27a778954",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -6050.57666015625,
+        "minY": 373.072509765625,
+        "maxX": -5299.12353515625,
+        "maxY": 1224.5048828125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "5cf8b52e-b798-4230-99c3-1c537dd8cc0d",
+      "totalLevel": 16,
+      "bounds": {
+        "minX": 5344.6103515625,
+        "minY": -1330.7238159179688,
+        "maxX": 6459.30517578125,
+        "maxY": -195.95675659179688
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "56e58853-4135-4b8e-ac0a-3f72077fb267",
+      "totalLevel": 11,
+      "bounds": {
+        "minX": -5149.982421875,
+        "minY": -3467.08349609375,
+        "maxX": -4202.82275390625,
+        "maxY": -2499.78564453125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "de943ffa-1ee1-47b4-bb12-3de3cb5c1126",
+      "totalLevel": 11,
+      "bounds": {
+        "minX": 3723.730224609375,
+        "minY": -3436.0859375,
+        "maxX": 4586.83642578125,
+        "maxY": -2548.124755859375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "ee2fc642-d0ac-4e91-8738-6d9ec6d65ec0",
+      "totalLevel": 17,
+      "bounds": {
+        "minX": -826.5867309570312,
+        "minY": 2498.6845703125,
+        "maxX": 326.4272766113281,
+        "maxY": 3433.72265625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "4f58e7b7-9e6e-4630-90f3-19a8aff66fa0",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": 2467.1953125,
+        "minY": -4286.099853515625,
+        "maxX": 3234.86328125,
+        "maxY": -3303.76806640625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "c9043ed9-72eb-47d7-8283-2a2a69402cde",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -747.7492370605469,
+        "minY": -3485.489501953125,
+        "maxX": 262.19493865966797,
+        "maxY": -2802.48876953125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "ce5737a6-1cb1-4ee6-aed6-8e187ea8e7d9",
+      "totalLevel": 16,
+      "bounds": {
+        "minX": -6950.9765625,
+        "minY": -1351.4896240234375,
+        "maxX": -5836.28173828125,
+        "maxY": -216.72259521484375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "426c8492-31bf-40c6-ae37-f50dbeab816d",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 4864.46484375,
+        "minY": 429.66064453125,
+        "maxX": 5568.86474609375,
+        "maxY": 1243.8426513671875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "6ad94cd9-de91-41cb-9d63-4076f0041e7b",
+      "totalLevel": 17,
+      "bounds": {
+        "minX": -6987.26123046875,
+        "minY": -4103.482421875,
+        "maxX": -5951.98779296875,
+        "maxY": -3005.86865234375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "7537387b-2bc6-44b5-a604-d35e05f9d9c4",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": 2305.20361328125,
+        "minY": -1232.31201171875,
+        "maxX": 3367.417724609375,
+        "maxY": -187.22714233398438
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "1bb7b844-e824-46a2-bf52-64fd3d17469b",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -3980.073974609375,
+        "minY": -1233.08349609375,
+        "maxX": -2884.853759765625,
+        "maxY": -379.8839111328125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "f8445e96-8a8d-4e93-82b8-693d7da14c49",
+      "totalLevel": 17,
+      "bounds": {
+        "minX": 5478.90087890625,
+        "minY": -5082.75634765625,
+        "maxX": 6497.2236328125,
+        "maxY": -4143.75341796875
+      },
+      "hasFountain": false
+    }
+  ],
   "players": {
     "1": {
       "name": "jblanch",
       "race": "O",
+      "startingPosition": {
+        "x": -5184,
+        "y": 2944
+      },
       "heroOpener": null,
       "tier2Time": null,
       "tier2TimeFormatted": null,
@@ -16,12 +238,36 @@
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
+      "firstTowerTime": null,
+      "firstTowerTimeFormatted": null,
+      "firstUnitTime": null,
+      "firstUnitTimeFormatted": null,
+      "firstHeroLevel2Time": null,
+      "firstHeroLevel2TimeFormatted": null,
+      "firstHeroLevel3Time": null,
+      "firstHeroLevel3TimeFormatted": null,
+      "firstHeroLevel5Time": null,
+      "firstHeroLevel5TimeFormatted": null,
+      "archetype": "unknown",
+      "economyTrack": [],
       "buildPreview": [],
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
       "t3Units": [],
-      "researched": []
+      "researched": [],
+      "heroBuilds": [],
+      "itemPurchases": [],
+      "itemUses": [],
+      "mercenariesHired": [],
+      "upgradeTimeline": [],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        }
+      ],
+      "apm": null
     }
   }
 }

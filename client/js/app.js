@@ -930,32 +930,6 @@ const Wc3vViewer = class {
     this.placementViewer.show(playerData.baseGrid, playerData.baseSnapshots, player.playerColor, this.neutralBuildings, this.mapImage, this.gameScaler, player.displayName, player.race, this.threeMapRenderer);
   }
 
-  cyclePathTrailStyle () {
-    const styles = (window.PathTrailRenderer3D && PathTrailRenderer3D.STYLES) || ['tube'];
-    const current = this.viewOptions.pathTrailStyle || 'tube';
-    const idx = Math.max(0, styles.indexOf(current));
-    const next = styles[(idx + 1) % styles.length];
-    this.viewOptions.pathTrailStyle = next;
-
-    // Force a teardown of all hero trail entries so the new style starts clean.
-    if (this.pathTrailRenderer) {
-      for (const entry of this.pathTrailRenderer._pool.values()) {
-        this.pathTrailRenderer._tearDownStyle(entry);
-        entry.style = null;
-      }
-    }
-
-    document.querySelectorAll('.mega-hint[data-option="pathTrailStyle"], #viewer-option-pathTrailStyle')
-      .forEach(el => {
-        const lbl = el.querySelector('.mega-hint-label');
-        const text = `Trail: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
-        if (lbl) lbl.textContent = text;
-        else el.firstChild && (el.firstChild.nodeValue = text);
-      });
-
-    if (this.gameLoaded) this.render();
-  }
-
   toggleViewOption (optionKey) {
     this.viewOptions[optionKey] = !this.viewOptions[optionKey];
     const isOn = this.viewOptions[optionKey];
@@ -1436,8 +1410,7 @@ const Wc3vViewer = class {
     if (settingsModalEl) {
       const buttons = [
         { key: 'displayCreepRoute', label: 'Creep Routes', featured: true },
-        { key: 'displayPath', label: 'Hero Paths' },
-        { key: 'pathTrailStyle', label: 'Trail Style', cycle: true },
+        { key: 'displayPath', label: 'Unit Trails' },
         { key: 'displayLevelPins', label: 'Level Pins' },
         { key: 'displayFloatingText', label: 'Action Text' },
         { key: 'displayText', label: 'Unit Names' },
@@ -1454,24 +1427,12 @@ const Wc3vViewer = class {
         if (btn.featured) el.classList.add('vc-featured');
         el.id = `viewer-option-${btn.key}`;
 
-        if (btn.cycle && btn.key === 'pathTrailStyle') {
-          const current = this.viewOptions.pathTrailStyle || 'tube';
-          el.textContent = `${btn.label}: ${current.charAt(0).toUpperCase() + current.slice(1)}`;
-          el.classList.add('on');
-          el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.cyclePathTrailStyle();
-            const next = this.viewOptions.pathTrailStyle;
-            el.textContent = `${btn.label}: ${next.charAt(0).toUpperCase() + next.slice(1)}`;
-          });
-        } else {
-          el.textContent = btn.label;
-          el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.toggleViewOption(btn.key);
-          });
-          if (this.viewOptions[btn.key]) el.classList.add('on');
-        }
+        el.textContent = btn.label;
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggleViewOption(btn.key);
+        });
+        if (this.viewOptions[btn.key]) el.classList.add('on');
 
         settingsModalEl.append(el);
       });

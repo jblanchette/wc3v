@@ -564,7 +564,7 @@ const BuildOrderRenderer = class {
     card.style.borderLeftColor = playerColor;
 
     const heroLevel = Number(event.level) || 1;
-    const badgeText = event.isTavern ? 'TAVERN' : `HERO Lv ${heroLevel}`;
+    const badgeText = event.isTavern ? 'TAVERN' : `Lv ${heroLevel}`;
     const badgeClass = event.isTavern ? 'tavern' : '';
     const badgeBg = event.isTavern ? '' : `style="background:${_attr(playerColor)}"`;
 
@@ -608,16 +608,16 @@ const BuildOrderRenderer = class {
     }
 
     card.innerHTML = `
-      <div class="bo-hero-card-left">
+      <div class="bo-hero-portrait-col">
+        <img class="bo-hero-portrait" src="/assets/wc3icons/${_icon(event.itemId)}.jpg"
+          style="border-color:${_attr(playerColor)}" />
         <span class="bo-hero-card-badge ${badgeClass}" ${badgeBg}>${badgeText}</span>
-        ${costHtml}
       </div>
-      <img class="bo-hero-portrait" src="/assets/wc3icons/${_icon(event.itemId)}.jpg"
-        style="border-color:${_attr(playerColor)}" />
       <div class="bo-hero-card-info">
         <span class="bo-hero-card-name">${_esc(event.displayName)}</span>
         ${skillsHtml}
-      </div>`;
+      </div>
+      ${costHtml}`;
     return card;
   }
 

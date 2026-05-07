@@ -16,6 +16,7 @@
         "ulic"
       ],
       "keyUnits": [
+        "ugho",
         "ucry"
       ],
       "description": "The standard Undead build. Death Knight opener with mass Ghouls for early creeping and lumber, transitioning into Crypt Fiends and Obsidian Statues at T2. Lich second hero for Frost Nova burst.",
@@ -49,9 +50,9 @@
             "utom"
           ],
           "units": [
-            "ucry"
+            "ugho"
           ],
-          "goal": "DK + 3-4 Fiends, creep to level 3"
+          "goal": "DK + 4-5 Ghouls, creep to level 3"
         },
         "t2": {
           "buildings": [
@@ -307,6 +308,66 @@
           "stage": "Quarterfinals",
           "round": "Game 5",
           "fingerprint": "Turtle Rock v1.6 dwsl|1683|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "144571828_Eer0_Happy_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "AuroraHappy",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1622925875_Lucifer_Leon_ConcealedHill",
+          "playerSlot": "1",
+          "playerName": "Lucifer",
+          "opponentName": "LeonXIV",
+          "map": "ConcealedHill",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2028743422_Eer0_Happy_Springtime13",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "AuroraHappy",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2466972733_FoCuS_Happy_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "FoCuS",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "289522245_Ugly_TH000_ShatteredExile",
+          "playerSlot": "1",
+          "playerName": "ehMuch",
+          "opponentName": "Egg",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2869044276_TH000_Eer0_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "orange",
+          "opponentName": "Egg",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -345,12 +406,13 @@
         "nbrn"
       ],
       "keyUnits": [
+        "ugho",
         "ucry",
         "ubsp"
       ],
       "description": "DK Fiend opener that priorities a fast T3 for Destroyer tech. Destroyers' Devour Magic hard-counters caster-heavy armies like NE Dryads or HU Priests.",
       "strategyPoints": [
-        "Standard DK Fiend T1 â€” creep efficiently, build 4-5 Fiends before teching",
+        "Standard DK Ghoul T1 — creep efficiently, build 4-5 Ghouls before teching to Fiends at T2",
         "Lich second with Frost Nova for burst damage in engagements",
         "Rush T3 for Destroyers â€” they eat buffs/debuffs and counter caster compositions",
         "Destroyers absorb mana for healing â€” self-sustaining vs magic-heavy armies",
@@ -380,9 +442,9 @@
             "utom"
           ],
           "units": [
-            "ucry"
+            "ugho"
           ],
-          "goal": "DK + 4-5 Fiends, creep aggressively"
+          "goal": "DK + 4-5 Ghouls, aggressive creep"
         },
         "t2": {
           "buildings": [
@@ -418,7 +480,108 @@
           }
         ]
       },
-      "replays": [],
+      "replays": [
+        {
+          "replayId": "1129305842_Leon_Lucifer_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "Lucifer",
+          "opponentName": "LeonXIV",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1364826411_Inspired_Pcg123_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "Sunlight",
+          "opponentName": "Inspired",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1422110034_Soin_Happy_ShatteredExile",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "전소인",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1450832685_EleGaNt_Pcg123_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "Sunlight",
+          "opponentName": "qiuqiuLoveU",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1500895623_FoCuS_Happy_TurtleRock20",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "FoCuS",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1031906232_FoCuS_Eer0_Springtime13",
+          "playerSlot": "2",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1133376030_Eer0_FoCuS_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1467978689_Eer0_FoCuS_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1615296152_FoCuS_Eer0_TurtleRock20",
+          "playerSlot": "2",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1862522924_Eer0_FoCuS_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        }
+      ],
       "heroSkills": {
         "udea": {
           "AUdc": 3,
@@ -459,6 +622,7 @@
         "oshd"
       ],
       "keyUnits": [
+        "ogru",
         "owyv"
       ],
       "description": "Blademaster opener with heavy early harassment, transitioning into Wind Rider air superiority. Denies expansion and wins on economic disruption.",
@@ -633,6 +797,106 @@
           "stage": "Quarterfinals",
           "round": "Game 4",
           "fingerprint": "Twisted Meadows|642|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "1422110034_Soin_Happy_ShatteredExile",
+          "playerSlot": "1",
+          "playerName": "전소인",
+          "opponentName": "AuroraHappy",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1500895623_FoCuS_Happy_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "AuroraHappy",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1924044594_Soin_Happy_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "전소인",
+          "opponentName": "AuroraHappy",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2394677578_FoCuS_Happy_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "AuroraHappy",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "330861190_FoCuS_Happy_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "AuroraHappy",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1031906232_FoCuS_Eer0_Springtime13",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1133376030_Eer0_FoCuS_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1467978689_Eer0_FoCuS_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1862522924_Eer0_FoCuS_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2829151463_Eer0_FoCuS_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -808,6 +1072,106 @@
           "stage": "Quarterfinals",
           "round": "Game 1",
           "fingerprint": "Hammerfall|924|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "1047891405_Leqi_Cash_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "Cash",
+          "opponentName": "leqi",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2466972733_FoCuS_Happy_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "AuroraHappy",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2819302220_Leqi_Cash_ConcealedHill",
+          "playerSlot": "2",
+          "playerName": "Cash",
+          "opponentName": "leqi",
+          "map": "ConcealedHill",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3389277017_Cash_Leqi_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Cash",
+          "opponentName": "leqi",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "98941651_FoCuS_Happy_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "AuroraHappy",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1615296152_FoCuS_Eer0_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1966951224_TH000_Soin_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "전소인",
+          "opponentName": "Egg",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2486181249_Eer0_FoCuS_Springtime13",
+          "playerSlot": "2",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "334757241_FoCuS_Eer0_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "orange",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1125194053_Soin_Sok_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "전소인",
+          "opponentName": "SooooK",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -1021,6 +1385,106 @@
           "stage": "Quarterfinals",
           "round": "Game 4",
           "fingerprint": "Twisted Meadows|642|focus#31324,lianpia#3217"
+        },
+        {
+          "replayId": "1020568240_Soin_Life_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "전소인",
+          "opponentName": "Medusa",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1168111252_War3Orcer0_LawLiet_ConcealedHill",
+          "playerSlot": "1",
+          "playerName": "IamNoob",
+          "opponentName": "LawLiet",
+          "map": "ConcealedHill",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1253794434_Iceorc_Jens_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "Ice",
+          "opponentName": "Jens",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1711969456_Jens_Iceorc_Springtime13",
+          "playerSlot": "2",
+          "playerName": "Ice",
+          "opponentName": "Jens",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "270744978_LawLiet_War3Orcer0_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "IamNoob",
+          "opponentName": "LawLiet",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1057610942_Moon_Soin_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "전소인",
+          "opponentName": "Moon",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "116430527_FoCuS_Moon_TwistedMeadows11",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Moon",
+          "map": "TwistedMeadows_v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1202510875_FoCuS_Kaho_Springtime13",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "KAHO",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1332700574_FoCuS_Moon_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Moon",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1341468428_FoCuS_Moon_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "FoCuS",
+          "opponentName": "Moon",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -1248,6 +1712,106 @@
           "stage": "Quarterfinals",
           "round": "Game 1",
           "fingerprint": "Twisted Meadows|647|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "1129305842_Leon_Lucifer_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "LeonXIV",
+          "opponentName": "Lucifer",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "114870724_Leqi_Happy_Springtime13",
+          "playerSlot": "1",
+          "playerName": "leqi",
+          "opponentName": "AuroraHappy",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1174595027_Pcg123_Inspired_ShatteredExile",
+          "playerSlot": "2",
+          "playerName": "Inspired",
+          "opponentName": "Sunlight",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1364826411_Inspired_Pcg123_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "Inspired",
+          "opponentName": "Sunlight",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1499624326_Ugly_TH000_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Egg",
+          "opponentName": "ehMuch",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2928965384_Eer0_TH000_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "Egg",
+          "opponentName": "orange",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "3376954469_Eer0_TH000_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Egg",
+          "opponentName": "orange",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1125194053_Soin_Sok_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "SooooK",
+          "opponentName": "전소인",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2857443226_Sok_Eer0_LastRefuge15",
+          "playerSlot": "1",
+          "playerName": "SooooK",
+          "opponentName": "orange",
+          "map": "LastRefuge_v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "3107737237_Soin_Sok_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "SooooK",
+          "opponentName": "전소인",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -1293,6 +1857,7 @@
         "hpal"
       ],
       "keyUnits": [
+        "hfoo",
         "hrif",
         "hsor"
       ],
@@ -1395,6 +1960,106 @@
           "stage": "Quarterfinals",
           "round": "Game 5",
           "fingerprint": "Autumn Leaves|957|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "1047891405_Leqi_Cash_Tidehunters12",
+          "playerSlot": "1",
+          "playerName": "leqi",
+          "opponentName": "Cash",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "142494574_Leon_Sini_Springtime13",
+          "playerSlot": "1",
+          "playerName": "LeonXIV",
+          "opponentName": "McLarenF1GTR",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1784316982_Jens_HawK_ShatteredExile",
+          "playerSlot": "2",
+          "playerName": "HawK",
+          "opponentName": "Jens",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "18012366_Leqi_Dise_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "leqi",
+          "opponentName": "DiSe22",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1908149276_Jens_HawK_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "HawK",
+          "opponentName": "Jens",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1053414698_Sok_Kaho_Springtime13",
+          "playerSlot": "1",
+          "playerName": "SooooK",
+          "opponentName": "KAHO",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1929023875_Sok_Kaho_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "SooooK",
+          "opponentName": "KAHO",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1966951224_TH000_Soin_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "Egg",
+          "opponentName": "전소인",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "323952526_Sok_Kaho_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "SooooK",
+          "opponentName": "KAHO",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2453868813_Soin_Sok_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "SooooK",
+          "opponentName": "전소인",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -1439,8 +2104,8 @@
         "hpal"
       ],
       "keyUnits": [
-        "hrif",
-        "hfoo"
+        "hfoo",
+        "hrif"
       ],
       "description": "Mountain King first into fast expansion. Storm Bolt stuns harassers, Bash provides melee dominance. Build army to 60 food then upgrade to Castle for Knights.",
       "strategyPoints": [
@@ -1540,6 +2205,56 @@
           "stage": "Quarterfinals",
           "round": "Game 3",
           "fingerprint": "Springtime|1591|medusa#31315,noname#114787"
+        },
+        {
+          "replayId": "2447498405_Sini_Leon_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "LeonXIV",
+          "opponentName": "McLarenF1GTR",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3773454903_Kaho_TH000_ShatteredExile",
+          "playerSlot": "2",
+          "playerName": "Egg",
+          "opponentName": "KAHO",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3957504930_HawK_Jens_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "HawK",
+          "opponentName": "Jens",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "65056574_TH000_Kaho_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "Egg",
+          "opponentName": "KAHO",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3465631628_Kaho_Sok_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "SooooK",
+          "opponentName": "KAHO",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -1572,7 +2287,10 @@
       "name": "KotG Mountain Giant",
       "race": "E",
       "matchups": [
-        "EvH"
+        "EvH",
+        "EvO",
+        "EvU",
+        "EvE"
       ],
       "heroOpener": "Keeper of the Grove",
       "heroItemId": "ekee",
@@ -1581,6 +2299,7 @@
         "edem"
       ],
       "keyUnits": [
+        "earc",
         "emtg"
       ],
       "description": "Keeper of the Grove opener into Mountain Giant tank line. Entangle roots Human heroes, Giants taunt Human armies, and Treant summons provide free reinforcements.",
@@ -1653,7 +2372,108 @@
           }
         ]
       },
-      "replays": [],
+      "replays": [
+        {
+          "replayId": "1168111252_War3Orcer0_LawLiet_ConcealedHill",
+          "playerSlot": "2",
+          "playerName": "LawLiet",
+          "opponentName": "IamNoob",
+          "map": "ConcealedHill",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1784316982_Jens_HawK_ShatteredExile",
+          "playerSlot": "1",
+          "playerName": "Jens",
+          "opponentName": "HawK",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "270744978_LawLiet_War3Orcer0_Tidehunters12",
+          "playerSlot": "1",
+          "playerName": "LawLiet",
+          "opponentName": "IamNoob",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2746363582_Jens_Lyn_Tidehunters12",
+          "playerSlot": "1",
+          "playerName": "Jens",
+          "opponentName": "Lianpia",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3512567999_LawLiet_War3Orcer0_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "LawLiet",
+          "opponentName": "IamNoob",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1959551150_Moon_FoCuS_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Moon",
+          "opponentName": "FoCuS",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2421460310_Kaho_Moon_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "KAHO",
+          "opponentName": "Moon",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2631829275_Moon_Soin_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Moon",
+          "opponentName": "전소인",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "3184129349_Lyn_Moon_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "Lianpia",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "3808514551_Moon_FoCuS_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "Moon",
+          "opponentName": "FoCuS",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        }
+      ],
       "heroSkills": {
         "ekee": {
           "AEer": 3,
@@ -1690,6 +2510,7 @@
         "ekee"
       ],
       "keyUnits": [
+        "earc",
         "edoc",
         "edry"
       ],
@@ -2180,6 +3001,106 @@
           "stage": "Quarterfinals",
           "round": "Game 5",
           "fingerprint": "Turtle Rock v1.6 dwsl|1683|aurorahappy#2668,kaho#31819"
+        },
+        {
+          "replayId": "142494574_Leon_Sini_Springtime13",
+          "playerSlot": "2",
+          "playerName": "McLarenF1GTR",
+          "opponentName": "LeonXIV",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1450832685_EleGaNt_Pcg123_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "qiuqiuLoveU",
+          "opponentName": "Sunlight",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "18012366_Leqi_Dise_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "DiSe22",
+          "opponentName": "leqi",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1908149276_Jens_HawK_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "Jens",
+          "opponentName": "HawK",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2202133300_Jens_HawK_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "Jens",
+          "opponentName": "HawK",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1053414698_Sok_Kaho_Springtime13",
+          "playerSlot": "2",
+          "playerName": "KAHO",
+          "opponentName": "SooooK",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1446229222_FoCuS_Kaho_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "KAHO",
+          "opponentName": "FoCuS",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1513798095_Lyn_Kaho_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "KAHO",
+          "opponentName": "Lianpia",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1986077389_Moon_Soin_EchoIsles22",
+          "playerSlot": "1",
+          "playerName": "Moon",
+          "opponentName": "전소인",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "222324759_Lyn_Kaho_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "KAHO",
+          "opponentName": "Lianpia",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -2216,6 +3137,7 @@
         "nbst"
       ],
       "keyUnits": [
+        "earc",
         "edot"
       ],
       "description": "Demon Hunter into mass Druids of the Talon with Cyclone spam. Exploits Orc's limited dispel options. Cyclone removes key units from fights, Faerie Fire reduces armor.",
@@ -2301,6 +3223,106 @@
           "stage": "Group Stage",
           "round": "Game 1",
           "fingerprint": "Autumn Leaves|1159|focus#31324,lawliet#3990"
+        },
+        {
+          "replayId": "1020568240_Soin_Life_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "Medusa",
+          "opponentName": "전소인",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1253794434_Iceorc_Jens_TurtleRock20",
+          "playerSlot": "2",
+          "playerName": "Jens",
+          "opponentName": "Ice",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1711969456_Jens_Iceorc_Springtime13",
+          "playerSlot": "1",
+          "playerName": "Jens",
+          "opponentName": "Ice",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2128305564_Lyn_Jens_TurtleRock20",
+          "playerSlot": "2",
+          "playerName": "Jens",
+          "opponentName": "Lianpia",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3599394949_Soin_Life_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "Medusa",
+          "opponentName": "전소인",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1057610942_Moon_Soin_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "Moon",
+          "opponentName": "전소인",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "116430527_FoCuS_Moon_TwistedMeadows11",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "FoCuS",
+          "map": "TwistedMeadows_v1.9",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1202510875_FoCuS_Kaho_Springtime13",
+          "playerSlot": "2",
+          "playerName": "KAHO",
+          "opponentName": "FoCuS",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1332700574_FoCuS_Moon_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "FoCuS",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "1341468428_FoCuS_Moon_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "Moon",
+          "opponentName": "FoCuS",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -2337,6 +3359,7 @@
         "ulic"
       ],
       "keyUnits": [
+        "ugho",
         "ugar",
         "uobs"
       ],
@@ -2520,6 +3543,106 @@
           "stage": "",
           "round": "",
           "fingerprint": "Echo Isles|1038|colorful#4737,labyrinth#3113"
+        },
+        {
+          "replayId": "1924044594_Soin_Happy_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "전소인",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2394677578_FoCuS_Happy_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "FoCuS",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "330861190_FoCuS_Happy_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "FoCuS",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "962495274_FoCuS_Happy_EchoIsles22",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "FoCuS",
+          "map": "1v1_EchoIsles_v2.2_w3c_260125_1357_1051",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "98941651_FoCuS_Happy_TurtleRock20",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "FoCuS",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2486181249_Eer0_FoCuS_Springtime13",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2829151463_Eer0_FoCuS_Tidehunters12",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "334757241_FoCuS_Eer0_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "530637469_Eer0_FoCuS_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "677931033_Eer0_FoCuS_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "FoCuS",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
         }
       ],
       "heroSkills": {
@@ -2538,6 +3661,518 @@
       },
       "coreUpgrades": [
         "Rupm"
+      ]
+    },
+    {
+      "id": "ud-lich-fast-tech",
+      "name": "Lich Fast Tech",
+      "race": "U",
+      "matchups": [
+        "UvH",
+        "UvU",
+        "UvO"
+      ],
+      "heroOpener": "Lich",
+      "heroItemId": "ulic",
+      "heroItemIds": [
+        "ulic",
+        "udea"
+      ],
+      "keyUnits": [
+        "ugho",
+        "ucry",
+        "uobs"
+      ],
+      "description": "Lich first hero for early Frost Armor tankiness and Frost Nova burst. Slightly defensive opener that creeps with Ghouls and rushes T2 Crypt Fiends. DK as second hero anchors the army at level 6 with Death Coil sustain.",
+      "strategyPoints": [
+        "Lich opener trades creep speed for early magic damage and Frost Armor on Ghouls — survives harassment better than DK first",
+        "Frost Nova on tightly packed melee armies is a swing in midgame fights",
+        "Skip aggressive level 6 timing — wait until DK is also at 6 to commit",
+        "Statues at T2 sustain Lich mana for repeated Frost Nova casts",
+        "Good vs HU Archmage Caster: Frost Armor blunts Sorceress Slow + Rifle damage",
+        "Wins against: HU caster-heavy openers, slow tech UD mirrors",
+        "Loses to: very fast Orc / NE timing pushes that punish slower tech"
+      ],
+      "tags": [
+        "tech",
+        "lich",
+        "fiends"
+      ],
+      "playstyleTags": [
+        "tech",
+        "defensive"
+      ],
+      "opener": "tech",
+      "gamePlan": "tech-up",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": [
+            "usep",
+            "ugrv",
+            "uaod",
+            "utom"
+          ],
+          "units": [
+            "ugho"
+          ],
+          "goal": "Lich + 4 Ghouls, creep efficiently with Frost Armor"
+        },
+        "t2": {
+          "buildings": [
+            "uslh"
+          ],
+          "units": [
+            "ucry",
+            "uobs"
+          ],
+          "timing": "5:30-6:30",
+          "goal": "DK second hero, Statues for sustain, transition into Fiends"
+        },
+        "t3": {
+          "buildings": [
+            "unpl"
+          ],
+          "units": [
+            "ubsp"
+          ],
+          "timing": "9:00-10:00",
+          "goal": "Orb of Corruption on DK, Destroyers if facing casters"
+        }
+      },
+      "replays": [
+        {
+          "replayId": "114870724_Leqi_Happy_Springtime13",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "leqi",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1174595027_Pcg123_Inspired_ShatteredExile",
+          "playerSlot": "1",
+          "playerName": "Sunlight",
+          "opponentName": "Inspired",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "144571828_Eer0_Happy_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "AuroraHappy",
+          "opponentName": "orange",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1499624326_Ugly_TH000_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "ehMuch",
+          "opponentName": "Egg",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2542718961_Leon_Eer0_AutumnLeaves20",
+          "playerSlot": "2",
+          "playerName": "orange",
+          "opponentName": "LeonXIV",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2928965384_Eer0_TH000_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "Egg",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "3376954469_Eer0_TH000_Hammerfall",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "Egg",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "2857443226_Sok_Eer0_LastRefuge15",
+          "playerSlot": "2",
+          "playerName": "orange",
+          "opponentName": "SooooK",
+          "map": "LastRefuge_v1.5",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "3658141668_Eer0_Sok_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "SooooK",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        },
+        {
+          "replayId": "561773898_Eer0_Sok_TurtleRock20",
+          "playerSlot": "1",
+          "playerName": "orange",
+          "opponentName": "SooooK",
+          "map": "TurtleRock_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "wsb-2026-s3"
+        }
+      ]
+    },
+    {
+      "id": "ne-potm-mass-hunts",
+      "name": "PotM Mass Huntress",
+      "race": "E",
+      "matchups": [
+        "EvH",
+        "EvE",
+        "EvO"
+      ],
+      "heroOpener": "Priestess of the Moon",
+      "heroItemId": "emoo",
+      "heroItemIds": [
+        "emoo",
+        "edem",
+        "ekee"
+      ],
+      "keyUnits": [
+        "earc",
+        "ehnt",
+        "edry"
+      ],
+      "description": "PotM first hero for Trueshot Aura damage boost and Searing Arrows hero harass. Mass Huntresses provide ranged DPS and Sentinel scout vision. Strong open-map control build.",
+      "strategyPoints": [
+        "PotM Searing Arrows is a powerful early hero-harass tool — trade hits at any creep camp",
+        "Trueshot Aura at level 3 buffs all ranged units permanently — Huntresses scale incredibly with it",
+        "Sentinel Owl gives free vision at any tree line — abuse for scouting and creep timing",
+        "Build Hunter's Hall after first Ancient of War — Moon Glaive upgrade is critical",
+        "DH or KotG second hero — DH for harass continuation, KotG for Force of Nature wave",
+        "Wins against: Human caster builds (range dominance), NE mirror with DH harass",
+        "Loses to: AoE-heavy compositions (Mortar Teams, Destroyers, Frost Nova spam)"
+      ],
+      "tags": [
+        "huntress",
+        "potm",
+        "ranged"
+      ],
+      "playstyleTags": [
+        "standard",
+        "map-control"
+      ],
+      "opener": "standard",
+      "gamePlan": "map-control",
+      "army": "ranged",
+      "tierProgression": {
+        "t1": {
+          "buildings": [
+            "etrp",
+            "eaoe",
+            "eaow",
+            "edob"
+          ],
+          "units": [
+            "ehnt"
+          ],
+          "goal": "PotM + 4-5 Huntresses, control creep camps with Owl scout"
+        },
+        "t2": {
+          "buildings": [
+            "etoa"
+          ],
+          "units": [
+            "ehnt",
+            "edry"
+          ],
+          "timing": "5:00-5:30",
+          "goal": "Hunter's Hall + Moon Glaive, second hero (DH or KotG), add Dryads"
+        },
+        "t3": {
+          "buildings": [
+            "etoe"
+          ],
+          "units": [
+            "edot"
+          ],
+          "timing": "8:30-9:30",
+          "goal": "Mountain Giants or Druids of the Talon as situation dictates"
+        }
+      },
+      "replays": [
+        {
+          "replayId": "1236276886_Hazy_15sui_Springtime13",
+          "playerSlot": "1",
+          "playerName": "hazy123123",
+          "opponentName": "达菲熊",
+          "map": "Springtime_v1.3",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "1329733918_15sui_Hazy_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "hazy123123",
+          "opponentName": "达菲熊",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2481489344_Hazy_15sui_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "hazy123123",
+          "opponentName": "达菲熊",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "2752663672_Soin_Neytpoh_Hammerfall",
+          "playerSlot": "2",
+          "playerName": "Neytpoh",
+          "opponentName": "전소인",
+          "map": "Hammerfall",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "3773635529_15sui_Hazy_Tidehunters12",
+          "playerSlot": "2",
+          "playerName": "hazy123123",
+          "opponentName": "达菲熊",
+          "map": "Tidehunters_v1.2",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        }
+      ]
+    },
+    {
+      "id": "hu-paladin-rifle",
+      "name": "Paladin Rifle",
+      "race": "H",
+      "matchups": [
+        "HvO",
+        "HvN",
+        "HvU"
+      ],
+      "heroOpener": "Paladin",
+      "heroItemId": "hpal",
+      "heroItemIds": [
+        "hpal",
+        "hamg",
+        "hmkg"
+      ],
+      "keyUnits": [
+        "hfoo",
+        "hrif",
+        "hmpr"
+      ],
+      "description": "Paladin first hero for Holy Light sustain on early Footmen. Tower up at base, mass Riflemen with Priest support. Defensive opener that scales into a powerful T2 ranged army.",
+      "strategyPoints": [
+        "Holy Light keeps Footmen alive through early creeping and harass — pivotal at low levels",
+        "Tower one or two Guard Towers at home before second peasant batch — discourages early aggression",
+        "Riflemen production starts around 4:30 — keep all Barracks busy",
+        "Priests with Inner Fire double-buff Riflemen damage; Heal sustains the front",
+        "Archmage second hero for Brilliance Aura mana sustain on Priests",
+        "Wins against: Orc Grunt builds (Holy Light + Towers), NE Bear timing pushes",
+        "Loses to: aggressive caster magic (Frost Nova, Faerie Dragon mana burn)"
+      ],
+      "tags": [
+        "paladin",
+        "rifles",
+        "defensive"
+      ],
+      "playstyleTags": [
+        "standard",
+        "defensive"
+      ],
+      "opener": "defensive",
+      "gamePlan": "turtle",
+      "army": "ranged",
+      "tierProgression": {
+        "t1": {
+          "buildings": [
+            "hbar",
+            "halt",
+            "hbla",
+            "hlum"
+          ],
+          "units": [
+            "hfoo",
+            "hpea"
+          ],
+          "goal": "Paladin + 3-4 Footmen, creep with Holy Light heals, tower at home"
+        },
+        "t2": {
+          "buildings": [
+            "hkee"
+          ],
+          "units": [
+            "hrif",
+            "hmpr"
+          ],
+          "timing": "5:00-5:30",
+          "goal": "Riflemen + Priest production, second hero (Archmage)"
+        },
+        "t3": {
+          "buildings": [
+            "hcas"
+          ],
+          "units": [
+            "hgyr"
+          ],
+          "timing": "9:00-10:00",
+          "goal": "Spell Breakers or Gryphons depending on opponent composition"
+        }
+      },
+      "replays": [
+        {
+          "replayId": "289522245_Ugly_TH000_ShatteredExile",
+          "playerSlot": "2",
+          "playerName": "Egg",
+          "opponentName": "ehMuch",
+          "map": "ShatteredExile_v2.4",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        },
+        {
+          "replayId": "325756077_Snowdream_War3Orcer0_AutumnLeaves20",
+          "playerSlot": "1",
+          "playerName": "Angelxuemen",
+          "opponentName": "IamNoob",
+          "map": "AutumnLeaves_v2.0",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        }
+      ]
+    },
+    {
+      "id": "ud-cl-standard",
+      "name": "Crypt Lord Standard",
+      "race": "U",
+      "matchups": [
+        "UvH",
+        "UvN",
+        "UvO"
+      ],
+      "heroOpener": "Crypt Lord",
+      "heroItemId": "ucrl",
+      "heroItemIds": [
+        "ucrl",
+        "udea"
+      ],
+      "keyUnits": [
+        "ugho",
+        "ucry"
+      ],
+      "description": "Crypt Lord first hero for Carrion Beetles map presence and Impale stun. Ghoul opener like other UD builds, transitions to Crypt Fiends and Statues at T2. Strong vs Night Elf Bears (Impale shuts down DPS) and Human casters (CL tankiness in the front line).",
+      "strategyPoints": [
+        "Carrion Beetles are free creeping units — produce off cooldown, let them tank camps",
+        "Spiked Carapace at level 2 — CL becomes the front-line tank, takes Footman/Grunt focus fire",
+        "Level 6 Impale stun is decisive on grouped enemy heroes — wait until T2 fight to commit",
+        "DK second hero for Death Coil sustain on CL between fights",
+        "Statues at T2 keep Beetles + Fiends sustained for repeated engagements",
+        "Wins against: NE Bear timing pushes (Impale on bears), HU caster compositions",
+        "Loses to: very fast Orc harass that prevents creeping CL to level 3+"
+      ],
+      "tags": [
+        "crypt-lord",
+        "fiends",
+        "tank"
+      ],
+      "playstyleTags": [
+        "standard",
+        "tank"
+      ],
+      "opener": "standard",
+      "gamePlan": "map-control",
+      "army": "ground",
+      "tierProgression": {
+        "t1": {
+          "buildings": [
+            "usep",
+            "ugrv",
+            "uaod",
+            "utom"
+          ],
+          "units": [
+            "ugho"
+          ],
+          "goal": "CL + 3-4 Ghouls, creep aggressively with Beetles"
+        },
+        "t2": {
+          "buildings": [
+            "uslh"
+          ],
+          "units": [
+            "ucry",
+            "uobs"
+          ],
+          "timing": "5:30-6:30",
+          "goal": "DK second hero, Fiend transition, Statues for sustain"
+        },
+        "t3": {
+          "buildings": [
+            "unpl"
+          ],
+          "units": [
+            "ubsp"
+          ],
+          "timing": "8:30-9:30",
+          "goal": "Orb of Corruption on DK, Destroyers if facing casters"
+        },
+        "conditionalBranches": [
+          {
+            "condition": "Vs NE Demon Hunter timing push",
+            "adjustment": "Skip Orb, push out with CL+DK level 6 + Fiends before Bears"
+          },
+          {
+            "condition": "Vs HU caster (Sorceress + Priest)",
+            "adjustment": "Rush Destroyers to Devour Magic — Sleep on CL is otherwise lethal"
+          }
+        ]
+      },
+      "replays": [
+        {
+          "replayId": "2926718387_Lucifer_Leon_NorthernIsles",
+          "playerSlot": "1",
+          "playerName": "Lucifer",
+          "opponentName": "LeonXIV",
+          "map": "NorthernIsles",
+          "outcome": "",
+          "notes": "",
+          "tournamentId": "bcup-s22"
+        }
       ]
     }
   ]

@@ -38,6 +38,9 @@ const CompareInline = class {
   async bootstrap () {
     this._renderLoading();
     try {
+      // Cache the map-folders manifest before building the user summary so
+      // mapInfo can be resolved deterministically (matches server-side).
+      await ensureMapFoldersManifest();
       // Build summary-shaped object from the parsedJson once.
       this.userSummary = buildUserSummary(this.userRecord);
       this.userSlot = pickUserSlot(this.userSummary, this.userRecord);
@@ -145,283 +148,80 @@ const CompareInline = class {
     this.rootEl.querySelector('.ci-advanced-btn').addEventListener('click', () => this._openAdvanced());
   }
 
-  // Broadcast-style report. Sections (top → bottom):
-  //   1. Identity bar (pro card + "Watch my replay" CTA)
-  //   2. Compatibility checklist
-  //   3. Overall grade + 5 grade tiles with "?" tooltips
-  //   4. Side-by-side hero comparison
-  //   5. Side-by-side build order preview (first ~20 events)
-  //   6. Economy chart (supply + workers, you vs pro)
-  //   7. Switcher chips + advanced search
+  // Tabbed report. The header (slot row, pro card, overall grade, watch
+  // CTAs) and switcher (chips + advanced) stay always-visible; the main
+  // content area swaps between Overview / Build / Tech / Economy / Heroes
+  // / Upgrades. Tabs are re-rendered on click rather than cached — cheap.
   _renderReport (report, proEntry, proSummary) {
-    const u = this.userSummary.players[this.userSlot] || {};
-    const proPlayers = (proSummary && proSummary.players) || {};
-    const p = proPlayers[String(proEntry.playerSlot)] || {};
-    const pTrack = p.economyTrack || [];
-    const pPreview = p.buildPreview || [];
+    this._report = report;
+    this._proEntry = proEntry;
+    this._proSummary = proSummary;
+    this._activeTab = 'overview';
 
-    const overallGradeClass = window.ReplayAnalyzer.gradeClass(report.overall.grade);
+    this.rootEl.innerHTML = `
+      ${this._headerHtml()}
+      ${this._tabsNavHtml()}
+      <div class="ci-tab-content"></div>
+      ${this._switcherHtml()}
+    `;
+    this._renderActiveTab();
+    this._wireGlobal();
+  }
+
+  _setTab (tabId) {
+    if (tabId === this._activeTab) return;
+    this._activeTab = tabId;
+    this.rootEl.querySelectorAll('.ci-tab').forEach(el => {
+      el.classList.toggle('ci-tab-active', el.dataset.tab === tabId);
+      el.setAttribute('aria-selected', el.dataset.tab === tabId ? 'true' : 'false');
+    });
+    this._renderActiveTab();
+  }
+
+  _renderActiveTab () {
+    const el = this.rootEl.querySelector('.ci-tab-content');
+    if (!el) return;
+    el.innerHTML = this._tabHtml(this._activeTab);
+    this._wireTab(this._activeTab);
+  }
+
+  _tabHtml (tabId) {
+    switch (tabId) {
+      case 'overview': return this._overviewHtml();
+      case 'build':    return this._buildHtml();
+      case 'tech':     return this._techHtml();
+      case 'economy':  return this._economyHtml();
+      case 'heroes':   return this._heroesHtml();
+      case 'creeps':   return this._creepsHtml();
+      case 'upgrades': return this._upgradesHtml();
+      default:         return '';
+    }
+  }
+
+  // ── Header (always visible) ─────────────────────────────────────────────
+  _headerHtml () {
+    const report = this._report;
+    const proEntry = this._proEntry;
     const isAuto = this.candidates.length && this.candidates[0].entry === proEntry && !report.selfMatch;
-    const isFreshUpload = document.body.dataset.freshUpload === '1';
     const isSelfMatch = !!report.selfMatch;
+    const isFreshUpload = document.body.dataset.freshUpload === '1';
     const userRecordId = this.userRecord && this.userRecord.id;
-    // Overall grade is "N/A" when every category was unavailable (e.g., the
-    // user picked a different-matchup pro). We don't want to show a giant
-    // empty "N/A 0/100" card — replace with a "Why no grade?" explanation.
-    const overallUnavailable = !report.overall || report.overall.grade === 'N/A' || (report.overall.score === 0 && Object.values(report.categories || {}).every(c => !c.available));
+    const overallGradeClass = window.ReplayAnalyzer.gradeClass(report.overall.grade);
+    const overallUnavailable = !report.overall || report.overall.grade === 'N/A'
+      || (report.overall.score === 0 && Object.values(report.categories || {}).every(c => !c.available));
 
-    // ---- Compatibility checklist ----
-    const checklistHtml = (report.compatibility || []).map(c => `
-      <div class="ci-check ci-check-${c.status}">
-        <span class="ci-check-icon">${CHECK_ICON[c.status] || '·'}</span>
-        <span class="ci-check-label">${escapeHtml(c.label)}</span>
-        <span class="ci-check-detail">${escapeHtml(c.detail || '')}</span>
-      </div>
-    `).join('');
-
-    // ---- Grade tiles with tooltips ----
-    const TILE_INFO = {
-      macro: 'Worker count and supply usage every 30s vs pro. Improve: queue workers continuously and don\'t get supply-blocked.',
-      tech: 'Tier-2 / Tier-3 / Hero-level timings vs pro (60–90s tolerance). Improve: don\'t sit on resources at tier-up time.',
-      expansion: 'When you took your second town hall vs pro. Only scored when both played the same map.',
-      buildAdherence: 'How closely your first 20 buildings/units match the pro\'s order (longest common subsequence).',
-      production: 'Number of combat units produced in the first 10 minutes vs pro.'
-    };
-    const categoryOrder = ['macro', 'tech', 'expansion', 'buildAdherence', 'production'];
-    const categoryLabels = {
-      macro: 'Macro', tech: 'Tech', expansion: 'Expansion',
-      buildAdherence: 'Build Adherence', production: 'Production'
-    };
-    // Map ReplayAnalyzer's terse `reason` strings to user-friendly explanations
-    // ("not graded — different matchup" instead of "different matchups").
-    const REASON_PRETTY = {
-      'different matchups': 'Different matchup, the pro played a different race composition, so timings can\'t be compared apples-to-apples.',
-      'different maps': 'Different maps, expansion timing depends on the map, so we skip this when maps differ.',
-      'pro did not expand': 'The pro never expanded in this replay, so there\'s nothing to compare against.',
-      'no economy data': 'Economy data missing from one or both replays.',
-      'overlapping time too short': 'The replays barely overlap in length, can\'t sample the economy fairly.',
-      'no overlapping samples': 'No overlapping economy samples to compare.',
-      'no tech timings to compare': 'The pro never reached the tier or hero level we measure.',
-      'no build preview': 'Build order data missing from one or both replays.',
-      'pro produced no units in window': 'Pro built no combat units in the first 10 minutes, nothing to score against.',
-      'archetype-degraded': 'Different archetypes, used a relaxed set-overlap score (penalised).',
-      'Game ended too early to compare meaningfully': 'Your replay ended too early to compare meaningfully against the pro\'s game length.'
-    };
-    const tilesHtml = categoryOrder.map(k => {
-      const cat = report.categories[k];
-      if (!cat) return '';
-      const findings = (cat.findings || []).map(f =>
-        `<li class="ci-finding ci-finding-${f.severity}">${escapeHtml(f.text)}</li>`
-      ).join('');
-      const cls = cat.available ? 'ci-tile-on' : 'ci-tile-off';
-      const grade = cat.available ? cat.grade : 'Not graded';
-      const gradeCls = cat.available ? window.ReplayAnalyzer.gradeClass(grade) : 'grade-NA';
-      const prettyReason = cat.reason ? (REASON_PRETTY[cat.reason] || cat.reason) : 'Data unavailable for this category.';
-      return `
-        <div class="ci-tile ${cls}">
-          <div class="ci-tile-head">
-            <div class="ci-tile-label">${categoryLabels[k]}<span class="ci-tile-info" title="${escapeAttr(TILE_INFO[k] || '')}">?</span></div>
-            <div class="ci-tile-grade ${gradeCls}">${escapeHtml(grade)}</div>
-          </div>
-          ${cat.available
-            ? `<div class="ci-tile-score">${cat.score}/100</div>`
-            : `<div class="ci-tile-reason">${escapeHtml(prettyReason)}</div>`}
-          ${findings ? `<ul class="ci-findings">${findings}</ul>` : ''}
-        </div>
-      `;
-    }).join('');
-
-    // ---- Side-by-side hero card ----
-    const heroCardHtml = (label, player) => {
-      const h = player.heroOpener || null;
-      if (!h) return `<div class="ci-hero-card ci-hero-empty"><div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-hero-none">No hero</div></div>`;
-      const ic = iconUrl(h.itemId);
-      return `
-        <div class="ci-hero-card">
-          <div class="ci-side-label">${escapeHtml(label)}</div>
-          <div class="ci-hero-body">
-            <img class="ci-hero-portrait" src="${escapeAttr(ic)}" alt="${escapeAttr(h.name || '')}" loading="lazy"
-                 onerror="this.style.visibility='hidden'"/>
-            <div class="ci-hero-meta">
-              <div class="ci-hero-name">${escapeHtml(h.name || 'Unknown')}</div>
-              <div class="ci-hero-time">first at ${escapeHtml(window.ReplayAnalyzer.formatMs(h.gameTimeMs || 0))}</div>
-            </div>
-          </div>
-        </div>
-      `;
-    };
-    const heroSection = `
-      <section class="ci-section ci-section-hero">
-        <h3 class="ci-section-title">Hero opener</h3>
-        <div class="ci-vs-grid">
-          ${heroCardHtml(`You — ${escapeHtml(u.name || '')}`, u)}
-          ${heroCardHtml(`Pro — ${escapeHtml(p.name || proEntry.playerName || '')}`, p)}
-        </div>
-      </section>
-    `;
-
-    // ---- Side-by-side build order preview ----
-    const userPreview = (u.buildPreview || []).slice(0, 20);
-    const proPreview = (pPreview || []).slice(0, 20);
-    // Shared item id sets so each row can light up if the other side built it too.
-    const userIds = new Set(userPreview.map(b => b.itemId));
-    const proIds  = new Set(proPreview.map(b => b.itemId));
-    const renderBoTrack = (rows, otherIds) => rows.map(r => {
-      const ic = iconUrl(r.itemId);
-      const cls = otherIds.has(r.itemId) ? 'ci-bo-row ci-bo-row-match' : 'ci-bo-row ci-bo-row-miss';
-      const typeBadge = r.type === 'expansion' ? '<span class="ci-bo-badge ci-bo-badge-expo">EXPO</span>'
-        : r.type === 'hero' ? '<span class="ci-bo-badge ci-bo-badge-hero">HERO</span>' : '';
-      return `
-        <div class="${cls}">
-          <img class="ci-bo-icon" src="${escapeAttr(ic)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>
-          <div class="ci-bo-name">${escapeHtml(r.name || '')}${typeBadge}</div>
-          <div class="ci-bo-time">${escapeHtml(window.ReplayAnalyzer.formatMs(r.gameTimeMs || 0))}</div>
-        </div>
-      `;
-    }).join('') || '<div class="ci-bo-empty">No build data.</div>';
-
-    const buildSection = `
-      <section class="ci-section ci-section-build">
-        <h3 class="ci-section-title">Build order — first 20 events</h3>
-        <div class="ci-vs-grid">
-          <div class="ci-bo-track">
-            <div class="ci-side-label">You — ${escapeHtml(u.name || '')}</div>
-            <div class="ci-bo-rows">${renderBoTrack(userPreview, proIds)}</div>
-          </div>
-          <div class="ci-bo-track">
-            <div class="ci-side-label">Pro — ${escapeHtml(p.name || proEntry.playerName || '')}</div>
-            <div class="ci-bo-rows">${renderBoTrack(proPreview, userIds)}</div>
-          </div>
-        </div>
-        <div class="ci-bo-legend">
-          <span class="ci-bo-legend-pip ci-bo-legend-match"></span> in both builds
-          &nbsp;&nbsp;
-          <span class="ci-bo-legend-pip ci-bo-legend-miss"></span> only on this side
-        </div>
-      </section>
-    `;
-
-    // ---- Economy chart ----
-    const econSvg = renderEconomyChart(u.economyTrack || [], pTrack || []);
-    const econSection = econSvg ? `
-      <section class="ci-section ci-section-econ">
-        <h3 class="ci-section-title">Economy over time</h3>
-        ${econSvg}
-        <div class="ci-econ-legend">
-          <span class="ci-econ-pip ci-econ-pip-you"></span> Your supply &nbsp;
-          <span class="ci-econ-pip ci-econ-pip-pro"></span> Pro supply &nbsp;
-          <span class="ci-econ-pip ci-econ-pip-you-w"></span> Your workers &nbsp;
-          <span class="ci-econ-pip ci-econ-pip-pro-w"></span> Pro workers
-        </div>
-      </section>
-    ` : '';
-
-    // ---- Switcher chips ----
-    const top = this.candidates.slice(0, 4);
-    const chipsHtml = top.map(c => {
-      const e = c.entry;
-      const isCurrent = e.replayId === proEntry.replayId && String(e.playerSlot) === String(proEntry.playerSlot);
-      return `
-        <button class="ci-chip ${isCurrent ? 'ci-chip-active' : ''}" data-replay-id="${escapeAttr(e.replayId)}" data-slot="${escapeAttr(e.playerSlot)}">
-          <span class="ci-chip-race race-${escapeAttr(e.buildRace || '?')}">${escapeHtml(e.buildRace || '?')}</span>
-          <span class="ci-chip-name">${escapeHtml(e.playerName || '?')}</span>
-          <span class="ci-chip-mu">${escapeHtml((e.buildMatchups && e.buildMatchups[0]) || '')}</span>
-        </button>
-      `;
-    }).join('');
-
-    // ---- Identity bar (top) with prominent side-by-side Watch CTAs ----
-    const proLabel = isSelfMatch ? 'Same replay (self-match)'
-                   : isAuto ? 'Auto-matched pro'
-                   : 'Comparing to pro';
     const watchProUrl = `/viewer?r=${encodeURIComponent(proEntry.replayId)}&player=${encodeURIComponent(proEntry.playerSlot)}&buildId=${encodeURIComponent(proEntry.buildId || '')}`;
     const watchMineUrl = userRecordId ? `/viewer?local=${encodeURIComponent(userRecordId)}` : '';
     const freshHeadline = isFreshUpload
       ? `<div class="ci-fresh-headline">Your replay is ready — here\'s how it stacks up.</div>`
       : '';
 
-    // Overall grade region: a real card when graded, OR a "No overall
-    // grade" panel that explains why. The panel surfaces the actual
-    // top-level warnings from the analyzer so the user knows whether to
-    // try a different pro, switch player, or accept the mismatch.
-    const warnHtml = (report.warnings && report.warnings.length)
-      ? `<ul class="ci-no-grade-list">${report.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
-      : '';
-    const gradeRegion = overallUnavailable ? `
-      <div class="ci-no-grade">
-        <div class="ci-no-grade-head">No overall grade</div>
-        <div class="ci-no-grade-body">
-          None of the five scoring categories had comparable data between your replay and this pro. The top reasons:
-        </div>
-        ${warnHtml}
-        <div class="ci-no-grade-foot">
-          Each tile below shows the specific reason it couldn\'t be scored. Try a different pro from the chips at the bottom, or use Advanced search to filter by matchup, race, or map.
-        </div>
-      </div>
-    ` : `
-      <div class="ci-grade-card">
-        <div class="ci-grade-letter ${overallGradeClass}">${escapeHtml(report.overall.grade)}</div>
-        <div class="ci-grade-score">${report.overall.score}/100</div>
-      </div>
-    `;
+    const slotRowHtml = this._slotRowHtml();
 
-    const watchButtons = `
-      <div class="ci-watch-row">
-        ${watchMineUrl ? `<a class="ci-watch-cta ci-watch-mine" href="${escapeAttr(watchMineUrl)}">▶ Watch my replay</a>` : ''}
-        <a class="ci-watch-cta ci-watch-pro" href="${escapeAttr(watchProUrl)}" target="_blank" rel="noopener">▶ Watch pro replay ↗</a>
-      </div>
-    `;
-
-    // ---- Slot-card row (the "You're comparing as ..." selector) ----
-    // One real button per non-neutral player in the user's replay. The active
-    // card is highlighted; clicking another card swaps the user identity
-    // directly (no separate modal — that flow is still available via
-    // _switchPlayer() with no arg).
-    const RACE_NAME = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead', R: 'Random' };
-    const RACE_BADGE = { H: 'HU', O: 'ORC', E: 'NE', U: 'UD', R: '?' };
-    const slotCards = (window.PlayerPicker && typeof window.PlayerPicker.buildCards === 'function')
-      ? window.PlayerPicker.buildCards(this.userRecord && this.userRecord.parsedJson)
-      : [];
-    const slotRowHtml = slotCards.length ? `
-      <div class="ci-slot-row" aria-label="Pick which player in this replay is you">
-        <div class="ci-slot-row-head">
-          <span class="ci-slot-row-title">Your player</span>
-          ${slotCards.length > 1 ? '<span class="ci-slot-row-hint">Click another to switch.</span>' : ''}
-        </div>
-        ${slotCards.map(c => {
-          const isActive = String(c.slot) === String(this.userSlot);
-          const portrait = c.heroItemId ? iconUrl(c.heroItemId) : '';
-          return `
-            <button
-              class="ci-slot-card ${isActive ? 'ci-slot-card-active' : ''}"
-              type="button"
-              data-slot="${escapeAttr(c.slot)}"
-              ${isActive ? 'aria-pressed="true"' : ''}
-            >
-              <div class="ci-slot-portrait-wrap">
-                ${portrait
-                  ? `<img class="ci-slot-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`
-                  : '<div class="ci-slot-portrait"></div>'}
-                <span class="ci-slot-race-badge race-${escapeAttr(c.race || 'R')}">${escapeHtml(RACE_BADGE[c.race] || c.race || '?')}</span>
-              </div>
-              <div class="ci-slot-body">
-                <div class="ci-slot-name">${escapeHtml(c.name || ('Slot ' + c.slot))}</div>
-                <div class="ci-slot-meta">${escapeHtml(RACE_NAME[c.race] || c.race || 'Unknown')}${c.heroName ? ' · ' + escapeHtml(c.heroName) : ''}</div>
-                <span class="ci-slot-pill ${isActive ? 'ci-slot-pill-active' : 'ci-slot-pill-pick'}">${isActive ? 'Selected' : 'Pick this player'}</span>
-              </div>
-            </button>
-          `;
-        }).join('')}
-      </div>
-    ` : '';
-
-    // Pro card: "AUTO-MATCHED PRO" / "SAME REPLAY" / "COMPARING TO PRO"
-    // gets a real banner header (uppercase eyebrow on a colored stripe)
-    // sitting on top of a bordered card containing the pro's name, matchup,
-    // build name, and stage. Reads as a labeled section, not a span.
+    const proLabel = isSelfMatch ? 'Same replay (self-match)'
+                   : isAuto ? 'Auto-matched pro' : 'Comparing to pro';
     const proLabelClass = isSelfMatch ? 'ci-pro-banner-self'
-                       : isAuto ? 'ci-pro-banner-auto'
-                       : 'ci-pro-banner-manual';
+                       : isAuto ? 'ci-pro-banner-auto' : 'ci-pro-banner-manual';
     const proMeta = [
       (proEntry.buildMatchups && proEntry.buildMatchups[0]) || '',
       proEntry.buildName || '',
@@ -439,7 +239,33 @@ const CompareInline = class {
       </section>
     `;
 
-    const headerHtml = `
+    const warnHtml = (report.warnings && report.warnings.length)
+      ? `<ul class="ci-no-grade-list">${report.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : '';
+    const gradeRegion = overallUnavailable ? `
+      <div class="ci-no-grade">
+        <div class="ci-no-grade-head">No overall grade</div>
+        <div class="ci-no-grade-body">
+          None of the scoring categories had comparable data. Top reasons:
+        </div>
+        ${warnHtml}
+        <div class="ci-no-grade-foot">
+          Each tile in the Overview shows the specific reason. Try a different pro from the chips, or use Advanced search.
+        </div>
+      </div>
+    ` : `
+      <div class="ci-grade-card">
+        <div class="ci-grade-letter ${overallGradeClass}">${escapeHtml(report.overall.grade)}</div>
+        <div class="ci-grade-score">${report.overall.score}/100</div>
+      </div>
+    `;
+    const watchButtons = `
+      <div class="ci-watch-row">
+        ${watchMineUrl ? `<a class="ci-watch-cta ci-watch-mine" href="${escapeAttr(watchMineUrl)}">▶ Watch my replay</a>` : ''}
+        <a class="ci-watch-cta ci-watch-pro" href="${escapeAttr(watchProUrl)}" target="_blank" rel="noopener">▶ Watch pro replay ↗</a>
+      </div>
+    `;
+
+    return `
       ${slotRowHtml}
       ${freshHeadline}
       <div class="ci-header">
@@ -448,22 +274,988 @@ const CompareInline = class {
       </div>
       ${watchButtons}
     `;
+  }
 
-    this.rootEl.innerHTML = `
-      ${headerHtml}
-      <div class="ci-checklist" aria-label="Compatibility checklist">${checklistHtml}</div>
-      <div class="ci-tiles">${tilesHtml}</div>
-      ${heroSection}
-      ${buildSection}
-      ${econSection}
+  _slotRowHtml () {
+    const RACE_NAME = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead', R: 'Random' };
+    const RACE_BADGE = { H: 'HU', O: 'ORC', E: 'NE', U: 'UD', R: '?' };
+    const slotCards = (window.PlayerPicker && typeof window.PlayerPicker.buildCards === 'function')
+      ? window.PlayerPicker.buildCards(this.userRecord && this.userRecord.parsedJson) : [];
+    if (!slotCards.length) return '';
+    return `
+      <div class="ci-slot-row" aria-label="Pick which player in this replay is you">
+        <div class="ci-slot-row-head">
+          <span class="ci-slot-row-title">Your player</span>
+          ${slotCards.length > 1 ? '<span class="ci-slot-row-hint">Click another to switch.</span>' : ''}
+        </div>
+        ${slotCards.map(c => {
+          const isActive = String(c.slot) === String(this.userSlot);
+          const portrait = c.heroItemId ? iconUrl(c.heroItemId) : '';
+          return `
+            <button class="ci-slot-card ${isActive ? 'ci-slot-card-active' : ''}" type="button"
+                    data-slot="${escapeAttr(c.slot)}" ${isActive ? 'aria-pressed="true"' : ''}>
+              <div class="ci-slot-portrait-wrap">
+                ${portrait
+                  ? `<img class="ci-slot-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`
+                  : '<div class="ci-slot-portrait"></div>'}
+                <span class="ci-slot-race-badge race-${escapeAttr(c.race || 'R')}">${escapeHtml(RACE_BADGE[c.race] || c.race || '?')}</span>
+              </div>
+              <div class="ci-slot-body">
+                <div class="ci-slot-name">${escapeHtml(c.name || ('Slot ' + c.slot))}</div>
+                <div class="ci-slot-meta">${escapeHtml(RACE_NAME[c.race] || c.race || 'Unknown')}${c.heroName ? ' · ' + escapeHtml(c.heroName) : ''}</div>
+                <span class="ci-slot-pill ${isActive ? 'ci-slot-pill-active' : 'ci-slot-pill-pick'}">${isActive ? 'Selected' : 'Pick this player'}</span>
+              </div>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  _tabsNavHtml () {
+    const tabs = [
+      { id: 'overview', label: 'Overview' },
+      { id: 'build',    label: 'Build' },
+      { id: 'tech',     label: 'Tech' },
+      { id: 'economy',  label: 'Economy' },
+      { id: 'heroes',   label: 'Heroes' },
+      { id: 'creeps',   label: 'Creeps' },
+      { id: 'upgrades', label: 'Upgrades' }
+    ];
+    return `
+      <nav class="ci-tabs" role="tablist">
+        ${tabs.map(t => `
+          <button class="ci-tab ${t.id === this._activeTab ? 'ci-tab-active' : ''}"
+                  role="tab" aria-selected="${t.id === this._activeTab ? 'true' : 'false'}"
+                  data-tab="${escapeAttr(t.id)}">${escapeHtml(t.label)}</button>
+        `).join('')}
+      </nav>
+    `;
+  }
+
+  _switcherHtml () {
+    const proEntry = this._proEntry;
+    const top = this.candidates.slice(0, 4);
+    const chipsHtml = top.map(c => {
+      const e = c.entry;
+      const isCurrent = e.replayId === proEntry.replayId && String(e.playerSlot) === String(proEntry.playerSlot);
+      return `
+        <button class="ci-chip ${isCurrent ? 'ci-chip-active' : ''}" data-replay-id="${escapeAttr(e.replayId)}" data-slot="${escapeAttr(e.playerSlot)}">
+          <span class="ci-chip-race race-${escapeAttr(e.buildRace || '?')}">${escapeHtml(e.buildRace || '?')}</span>
+          <span class="ci-chip-name">${escapeHtml(e.playerName || '?')}</span>
+          <span class="ci-chip-mu">${escapeHtml((e.buildMatchups && e.buildMatchups[0]) || '')}</span>
+        </button>
+      `;
+    }).join('');
+    return `
       <div class="ci-switcher">
         <div class="ci-switcher-label">Switch pro:</div>
         <div class="ci-chips">${chipsHtml}</div>
         <button class="ci-advanced-btn" type="button">Advanced search…</button>
       </div>
     `;
+  }
 
-    // Wire chip clicks.
+  // ── Tab: Overview ───────────────────────────────────────────────────────
+  _overviewHtml () {
+    const report = this._report;
+    // Compatibility checklist (full version, not collapsed).
+    const checklistHtml = (report.compatibility || []).map(c => `
+      <div class="ci-check ci-check-${c.status}">
+        <span class="ci-check-icon">${CHECK_ICON[c.status] || '·'}</span>
+        <span class="ci-check-label">${escapeHtml(c.label)}</span>
+        <span class="ci-check-detail">${escapeHtml(c.detail || '')}</span>
+      </div>
+    `).join('');
+
+    // 9 grade tiles.
+    const tilesHtml = CATEGORY_ORDER.map(k => this._tileHtml(k, report.categories[k])).join('');
+
+    // "Top fixes" — collect warn-severity findings across categories,
+    // weight by analyzer weight, take top 3, render as coaching cards.
+    const fixes = this._topFixes(report, 3);
+    const fixesHtml = this._topFixesHtml(fixes);
+
+    return `
+      <div class="ci-checklist" aria-label="Compatibility checklist">${checklistHtml}</div>
+      <div class="ci-tiles">${tilesHtml}</div>
+      ${fixesHtml}
+    `;
+  }
+
+  _tileHtml (k, cat) {
+    if (!cat) return '';
+    const findings = (cat.findings || []).slice(0, 2).map(f =>
+      `<li class="ci-finding ci-finding-${f.severity}">${escapeHtml(f.text)}</li>`
+    ).join('');
+    const cls = cat.available ? 'ci-tile-on' : 'ci-tile-off';
+    const grade = cat.available ? cat.grade : 'Not graded';
+    const gradeCls = cat.available ? window.ReplayAnalyzer.gradeClass(grade) : 'grade-NA';
+    const prettyReason = cat.reason ? (REASON_PRETTY[cat.reason] || cat.reason) : 'Data unavailable for this category.';
+    const drillTab = TILE_TO_TAB[k];
+    const drillBtn = (cat.available && drillTab) ? `<button class="ci-tile-drill" data-target-tab="${escapeAttr(drillTab)}">View detail →</button>` : '';
+    return `
+      <div class="ci-tile ${cls}" data-cat="${escapeAttr(k)}">
+        <div class="ci-tile-head">
+          <div class="ci-tile-label">${escapeHtml(CATEGORY_LABELS[k] || k)}<span class="ci-tile-info" title="${escapeAttr(TILE_INFO[k] || '')}">?</span></div>
+          <div class="ci-tile-grade ${gradeCls}">${escapeHtml(grade)}</div>
+        </div>
+        ${cat.available
+          ? `<div class="ci-tile-score">${cat.score}/100</div>`
+          : `<div class="ci-tile-reason">${escapeHtml(prettyReason)}</div>`}
+        ${findings ? `<ul class="ci-findings">${findings}</ul>` : ''}
+        ${drillBtn}
+      </div>
+    `;
+  }
+
+  // ── Tab: Build ──────────────────────────────────────────────────────────
+  _buildHtml () {
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const userPreview = (u.buildPreview || []).slice(0, 20);
+    const proPreview = (p.buildPreview || []).slice(0, 20);
+    const userIds = new Set(userPreview.map(b => b.itemId));
+    const proIds = new Set(proPreview.map(b => b.itemId));
+    const ba = this._report.categories.buildAdherence || {};
+    const divPt = (ba.detail && ba.detail.divergencePoint) || null;
+
+    const renderRows = (rows, otherIds, divIndex) => rows.map((r, i) => {
+      const ic = iconUrl(r.itemId);
+      const matchCls = otherIds.has(r.itemId) ? 'ci-bo-row-match' : 'ci-bo-row-miss';
+      const divCls = (divIndex !== null && i === divIndex) ? ' ci-bo-row-divergence' : '';
+      const typeBadge = r.type === 'expansion' ? '<span class="ci-bo-badge ci-bo-badge-expo">EXPO</span>'
+        : r.type === 'hero' ? '<span class="ci-bo-badge ci-bo-badge-hero">HERO</span>' : '';
+      return `
+        <div class="ci-bo-row ${matchCls}${divCls}">
+          <span class="ci-bo-index">${i + 1}</span>
+          <img class="ci-bo-icon" src="${escapeAttr(ic)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>
+          <div class="ci-bo-name">${escapeHtml(r.name || '')}${typeBadge}</div>
+          <div class="ci-bo-time">${escapeHtml(window.ReplayAnalyzer.formatMs(r.gameTimeMs || 0))}</div>
+        </div>
+      `;
+    }).join('') || '<div class="ci-bo-empty">No build data.</div>';
+
+    const divergenceBanner = divPt ? `
+      <div class="ci-divergence-banner">
+        <strong>Builds match through ${divPt.index} event${divPt.index === 1 ? '' : 's'}.</strong>
+        Diverged at event ${divPt.index + 1} (${escapeHtml(window.ReplayAnalyzer.formatMs((divPt.userBuilding && divPt.userBuilding.gameTimeMs) || 0))}):
+        you went <strong>${escapeHtml((divPt.userBuilding && divPt.userBuilding.name) || '?')}</strong>,
+        pro went <strong>${escapeHtml((divPt.proBuilding && divPt.proBuilding.name) || '?')}</strong>.
+      </div>
+    ` : '';
+
+    // Tier composition side-by-side.
+    const compHtml = (label, list) => {
+      if (!list || !list.length) return `<div class="ci-comp-empty">— none —</div>`;
+      return `
+        <div class="ci-comp-grid">
+          ${list.map(it => `
+            <div class="ci-comp-icon" title="${escapeAttr(it.name)}">
+              <img src="${escapeAttr(iconUrl(it.itemId))}" alt="${escapeAttr(it.name)}" loading="lazy" onerror="this.style.visibility='hidden'"/>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    };
+    const tierBlock = (tierLabel, userBuildings, userUnits, proBuildings, proUnits) => `
+      <div class="ci-tier-block">
+        <h4 class="ci-tier-block-title">${escapeHtml(tierLabel)}</h4>
+        <div class="ci-vs-grid">
+          <div class="ci-comp-side">
+            <div class="ci-side-label">You · Buildings</div>
+            ${compHtml('Buildings', userBuildings)}
+            <div class="ci-side-label" style="margin-top:0.5rem">You · Units</div>
+            ${compHtml('Units', userUnits)}
+          </div>
+          <div class="ci-comp-side">
+            <div class="ci-side-label">Pro · Buildings</div>
+            ${compHtml('Buildings', proBuildings)}
+            <div class="ci-side-label" style="margin-top:0.5rem">Pro · Units</div>
+            ${compHtml('Units', proUnits)}
+          </div>
+        </div>
+      </div>
+    `;
+
+    return `
+      <section class="ci-section">
+        <h3 class="ci-section-title">Build order — first 20 events</h3>
+        ${divergenceBanner}
+        <div class="ci-vs-grid">
+          <div class="ci-bo-track">
+            <div class="ci-side-label">You — ${escapeHtml(u.name || '')}</div>
+            <div class="ci-bo-rows">${renderRows(userPreview, proIds, divPt ? divPt.index : null)}</div>
+          </div>
+          <div class="ci-bo-track">
+            <div class="ci-side-label">Pro — ${escapeHtml(p.name || this._proEntry.playerName || '')}</div>
+            <div class="ci-bo-rows">${renderRows(proPreview, userIds, divPt ? divPt.index : null)}</div>
+          </div>
+        </div>
+        <div class="ci-bo-legend">
+          <span class="ci-bo-legend-pip ci-bo-legend-match"></span> in both builds &nbsp;&nbsp;
+          <span class="ci-bo-legend-pip ci-bo-legend-miss"></span> only on this side
+          ${divPt ? '&nbsp;&nbsp;<span class="ci-bo-legend-pip ci-bo-legend-div"></span> divergence' : ''}
+        </div>
+      </section>
+      <section class="ci-section">
+        <h3 class="ci-section-title">Tier composition</h3>
+        ${tierBlock('Tier 2', u.t2Buildings || [], u.t2Units || [], p.t2Buildings || [], p.t2Units || [])}
+        ${tierBlock('Tier 3', u.t3Buildings || [], u.t3Units || [], p.t3Buildings || [], p.t3Units || [])}
+      </section>
+    `;
+  }
+
+  // ── Tab: Tech ───────────────────────────────────────────────────────────
+  _techHtml () {
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const totalMs = Math.max(this.userSummary.durationMs || 0, this._proSummary.durationMs || 0);
+    const RACE_ACCENT = { H: '#4eb6e0', O: '#d04848', E: '#5cb878', U: '#9b59b6', R: '#888' };
+    const tierBars = `
+      <div class="ci-tier-bars">
+        ${window.CompareCharts.tierProgressionRow(`You (${u.race || '?'}) — ${escapeHtml(u.name || '')}`, u.tier2Time, u.tier3Time, totalMs, RACE_ACCENT[u.race])}
+        ${window.CompareCharts.tierProgressionRow(`Pro (${p.race || '?'}) — ${escapeHtml(p.name || this._proEntry.playerName || '')}`, p.tier2Time, p.tier3Time, totalMs, RACE_ACCENT[p.race])}
+        <div class="ci-tier-legend">
+          <span class="ci-tier-legend-pip ci-tier-legend-t1"></span>T1
+          <span class="ci-tier-legend-pip ci-tier-legend-t2"></span>T2
+          <span class="ci-tier-legend-pip ci-tier-legend-t3"></span>T3
+        </div>
+      </div>
+    `;
+
+    // Key timings table (T2/T3/Hero L2/L3/L5/First Unit/First Tower/Expansion).
+    const fmt = (ms) => ms != null ? window.ReplayAnalyzer.formatMs(ms) : '—';
+    const deltaCell = (userMs, proMs) => {
+      if (userMs == null || proMs == null) return '—';
+      const d = (userMs - proMs) / 1000;
+      const sign = d > 0 ? '+' : '−';
+      const cls = Math.abs(d) < 30 ? 'ci-delta-good' : (d > 0 ? 'ci-delta-late' : 'ci-delta-early');
+      return `<span class="${cls}">${sign}${Math.abs(d).toFixed(0)}s</span>`;
+    };
+    const rows = [
+      ['Tier 2',          u.tier2Time,           p.tier2Time],
+      ['Tier 3',          u.tier3Time,           p.tier3Time],
+      ['Hero L2',         u.firstHeroLevel2Time, p.firstHeroLevel2Time],
+      ['Hero L3',         u.firstHeroLevel3Time, p.firstHeroLevel3Time],
+      ['Hero L5',         u.firstHeroLevel5Time, p.firstHeroLevel5Time],
+      ['First combat unit', u.firstUnitTime,     p.firstUnitTime],
+      ['First tower',     u.firstTowerTime,      p.firstTowerTime],
+      ['Expansion',       u.expansionTime,       p.expansionTime]
+    ];
+    const tableRows = rows.map(([label, ut, pt]) => `
+      <tr>
+        <td>${escapeHtml(label)}</td>
+        <td>${fmt(ut)}</td>
+        <td>${fmt(pt)}</td>
+        <td>${deltaCell(ut, pt)}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <section class="ci-section">
+        <h3 class="ci-section-title">Tier progression</h3>
+        ${tierBars}
+      </section>
+      <section class="ci-section">
+        <h3 class="ci-section-title">Key timings</h3>
+        <table class="ci-timings-table">
+          <thead>
+            <tr><th>Milestone</th><th>You</th><th>Pro</th><th>Delta</th></tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </section>
+    `;
+  }
+
+  // ── Tab: Economy ────────────────────────────────────────────────────────
+  _economyHtml () {
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const supplySvg  = window.CompareCharts.supplyChart(u.economyTrack, p.economyTrack);
+    const workersSvg = window.CompareCharts.workersChart(u.economyTrack, p.economyTrack);
+    const idleSvg    = window.CompareCharts.idleHeadroomChart(u.economyTrack, p.economyTrack);
+    const combatSvg  = window.CompareCharts.combatUnitsChart(u.combatUnitsTrack, p.combatUnitsTrack);
+
+    const lastU = (u.economyTrack && u.economyTrack[u.economyTrack.length - 1]) || {};
+    const lastP = (p.economyTrack && p.economyTrack[p.economyTrack.length - 1]) || {};
+    const finalRow = (label, uVal, pVal) => `
+      <tr><td>${escapeHtml(label)}</td><td>${escapeHtml(String(uVal))}</td><td>${escapeHtml(String(pVal))}</td></tr>
+    `;
+    const finalTable = `
+      <table class="ci-final-table">
+        <thead><tr><th></th><th>You</th><th>Pro</th></tr></thead>
+        <tbody>
+          ${finalRow('Final supply used', lastU.supplyUsed || 0, lastP.supplyUsed || 0)}
+          ${finalRow('Final supply max', lastU.supplyMax || 0, lastP.supplyMax || 0)}
+          ${finalRow('Workers on gold', lastU.workersOnGold || 0, lastP.workersOnGold || 0)}
+          ${finalRow('Workers on lumber', lastU.workersOnLumber || 0, lastP.workersOnLumber || 0)}
+          ${finalRow('Total workers', lastU.totalWorkers || 0, lastP.totalWorkers || 0)}
+        </tbody>
+      </table>
+    `;
+
+    return `
+      <section class="ci-section">
+        <h3 class="ci-section-title">Supply</h3>
+        ${supplySvg || '<div class="ci-empty-mini">No supply data.</div>'}
+        <div class="ci-chart-legend"><span class="ci-chart-pip ci-chart-pip-you"></span>You &nbsp;<span class="ci-chart-pip ci-chart-pip-pro"></span>Pro</div>
+      </section>
+      <section class="ci-section">
+        <h3 class="ci-section-title">Workers</h3>
+        ${workersSvg || '<div class="ci-empty-mini">No worker data.</div>'}
+      </section>
+      <section class="ci-section">
+        <h3 class="ci-section-title">Idle supply headroom <small>— how much unused supply you sat on</small></h3>
+        ${idleSvg || '<div class="ci-empty-mini">No data.</div>'}
+      </section>
+      <section class="ci-section">
+        <h3 class="ci-section-title">Combat units over time</h3>
+        ${combatSvg || '<div class="ci-empty-mini">No combat unit data.</div>'}
+      </section>
+      <section class="ci-section">
+        <h3 class="ci-section-title">Final economy snapshot</h3>
+        ${finalTable}
+      </section>
+    `;
+  }
+
+  // ── Tab: Heroes ─────────────────────────────────────────────────────────
+  _heroesHtml () {
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const userHeroes = u.heroBuilds || [];
+    const proHeroes = p.heroBuilds || [];
+    if (!userHeroes.length && !proHeroes.length) {
+      return '<div class="ci-empty-mini">No hero data available.</div>';
+    }
+    // Pair heroes by itemId where possible; otherwise pair by index.
+    const byId = (arr) => {
+      const m = {};
+      for (const h of arr) m[h.itemId] = h;
+      return m;
+    };
+    const proById = byId(proHeroes);
+    const seenPro = {};
+    const pairs = [];
+    for (const uh of userHeroes) {
+      const ph = proById[uh.itemId];
+      if (ph) { pairs.push({ user: uh, pro: ph }); seenPro[uh.itemId] = 1; }
+      else pairs.push({ user: uh, pro: null });
+    }
+    for (const ph of proHeroes) {
+      if (!seenPro[ph.itemId]) pairs.push({ user: null, pro: ph });
+    }
+
+    const heroSection = (pair) => {
+      const ref = pair.user || pair.pro;
+      const portrait = ref ? iconUrl(ref.itemId) : '';
+      const userPicks = (pair.user && pair.user.skillOrder) || [];
+      const proPicks = (pair.pro && pair.pro.skillOrder) || [];
+      const limit = Math.max(userPicks.length, proPicks.length, 5);
+
+      // Skill cell: icon + level rank pips (●●○ for L2 of L3) + small footer.
+      // Mismatches get a tinted background and a thin red bar; matches green.
+      const skillCell = (pk, matchOther) => {
+        if (!pk) {
+          return `<div class="ci-skill2-cell ci-skill2-empty"><div class="ci-skill2-icon-slot"></div><div class="ci-skill2-name">—</div></div>`;
+        }
+        // Rank max is unknown without mappings; assume 3 for basics (heuristic:
+        // skillLevel can never exceed 3 except ultimates which always cap at 1).
+        const isUltimate = pk.skillLevel === 1 && (pk.heroLevel === 6 || pk.heroLevel === 10);
+        const max = isUltimate ? 1 : 3;
+        const pips = [];
+        for (let r = 1; r <= max; r++) {
+          pips.push(`<span class="ci-skill2-pip ${r <= pk.skillLevel ? 'ci-skill2-pip-on' : ''}"></span>`);
+        }
+        const cls = matchOther === true ? 'ci-skill2-match'
+                   : matchOther === false ? 'ci-skill2-miss' : '';
+        const ic = pk.abilityId ? iconUrl(pk.abilityId) : '';
+        return `
+          <div class="ci-skill2-cell ${cls}" title="${escapeAttr(pk.skillName)} L${pk.skillLevel} @ ${escapeAttr(pk.gameTimeFormatted || '')}">
+            <div class="ci-skill2-icon-slot">
+              ${ic ? `<img class="ci-skill2-icon" src="${escapeAttr(ic)}" alt="${escapeAttr(pk.skillName)}" loading="lazy" onerror="this.style.display='none'"/>` : ''}
+              <div class="ci-skill2-rank">${pips.join('')}</div>
+            </div>
+            <div class="ci-skill2-name" title="${escapeAttr(pk.skillName)}">${escapeHtml(pk.skillName)}</div>
+            <div class="ci-skill2-foot"><span class="ci-skill2-hl">L${pk.heroLevel}</span><span class="ci-skill2-time">${escapeHtml(pk.gameTimeFormatted || '')}</span></div>
+          </div>
+        `;
+      };
+
+      // Header row of hero-level columns + side label.
+      const headerCols = [];
+      for (let i = 0; i < limit; i++) headerCols.push(`<div class="ci-skill2-head-col">Hero L${i + 1}</div>`);
+
+      // Build cells for each side, comparing by index.
+      const userCells = [];
+      const proCells = [];
+      for (let i = 0; i < limit; i++) {
+        const a = userPicks[i] || null, b = proPicks[i] || null;
+        const sameSkill = a && b && (a.abilityId ? a.abilityId === b.abilityId : a.skillName === b.skillName);
+        userCells.push(skillCell(a, a && b ? sameSkill : null));
+        proCells.push(skillCell(b, a && b ? sameSkill : null));
+      }
+
+      // Connector row between the two sides — green tick for match, red x for divergence.
+      const connectors = [];
+      for (let i = 0; i < limit; i++) {
+        const a = userPicks[i], b = proPicks[i];
+        if (!a || !b) {
+          connectors.push(`<div class="ci-skill2-conn ci-skill2-conn-na"></div>`);
+          continue;
+        }
+        const same = a.abilityId ? a.abilityId === b.abilityId : a.skillName === b.skillName;
+        connectors.push(`<div class="ci-skill2-conn ${same ? 'ci-skill2-conn-match' : 'ci-skill2-conn-miss'}">${same ? '✓' : '✗'}</div>`);
+      }
+
+      // Level milestones — keep horizontal timeline, but better label spacing.
+      const milestoneRow = (label, list, totalMs) => {
+        if (!list || !list.length) {
+          return `<div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-level-bar"><div class="ci-empty-mini">No level-ups</div></div>`;
+        }
+        const max = Math.max(totalMs, list[list.length - 1].gameTimeMs || 1);
+        const ticks = list.map(m => {
+          const x = ((m.gameTimeMs || 0) / max) * 100;
+          return `<div class="ci-level-tick" style="left:${x.toFixed(2)}%;" title="L${m.level} @ ${m.gameTimeFormatted}"><span class="ci-level-tick-label">L${m.level}</span></div>`;
+        }).join('');
+        return `<div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-level-bar">${ticks}</div>`;
+      };
+
+      const itemsRow = (label, list) => {
+        const grid = (list && list.length)
+          ? list.map(it => `<img class="ci-hero-item" src="${escapeAttr(iconUrl(it.itemId))}" alt="${escapeAttr(it.name)}" title="${escapeAttr(it.name)}" loading="lazy" onerror="this.style.visibility='hidden'"/>`).join('')
+          : '<span class="ci-empty-mini">— no items —</span>';
+        return `<div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-hero-items">${grid}</div>`;
+      };
+
+      const totalMs = Math.max(this.userSummary.durationMs || 0, this._proSummary.durationMs || 0);
+      const heroName = ref ? ref.name : 'Hero';
+      const heroLevel = pair.user ? pair.user.finalLevel : 0;
+      const proLevel = pair.pro ? pair.pro.finalLevel : 0;
+
+      return `
+        <section class="ci-hero-section">
+          <header class="ci-hero-section-head">
+            <img class="ci-hero-section-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>
+            <div class="ci-hero-section-meta">
+              <div class="ci-hero-section-name">${escapeHtml(heroName)}</div>
+              <div class="ci-hero-section-levels">You L${heroLevel} · Pro L${proLevel}</div>
+            </div>
+          </header>
+          <div class="ci-hero-block">
+            <h4 class="ci-hero-block-title">Skill build</h4>
+            <div class="ci-skill2-grid" style="--ci-skill2-cols:${limit}">
+              <div class="ci-skill2-side-label">&nbsp;</div>
+              ${headerCols.join('')}
+              <div class="ci-skill2-side-label">You</div>
+              ${userCells.join('')}
+              <div class="ci-skill2-side-label">&nbsp;</div>
+              ${connectors.join('')}
+              <div class="ci-skill2-side-label">Pro</div>
+              ${proCells.join('')}
+            </div>
+          </div>
+          <div class="ci-hero-block">
+            <h4 class="ci-hero-block-title">Level milestones</h4>
+            ${milestoneRow('You', pair.user ? pair.user.levelMilestones : [], totalMs)}
+            ${milestoneRow('Pro', pair.pro ? pair.pro.levelMilestones : [], totalMs)}
+          </div>
+          <div class="ci-hero-block">
+            <h4 class="ci-hero-block-title">Items</h4>
+            ${itemsRow('You', pair.user ? pair.user.items : [])}
+            ${itemsRow('Pro', pair.pro ? pair.pro.items : [])}
+          </div>
+        </section>
+      `;
+    };
+
+    return pairs.map(heroSection).join('');
+  }
+
+  // ── Tab: Upgrades ───────────────────────────────────────────────────────
+  // Horizontal Gantt-style: one block per category (attack / defense /
+  // ability). Inside each block, two stacked time tracks (You / Pro). Each
+  // upgrade is an icon+name card placed at its game-time X coordinate.
+  // Collisions (events within ~10% of width) stack vertically inside the
+  // same track instead of overlapping.
+  _upgradesHtml () {
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const userU = u.upgradeTimeline || [];
+    const proU = p.upgradeTimeline || [];
+    const totalMs = Math.max(this.userSummary.durationMs || 0, this._proSummary.durationMs || 0, 60_000);
+
+    const countByCat = (list) => {
+      const c = { attack: 0, defense: 0, ability: 0 };
+      for (const r of list) c[r.category] = (c[r.category] || 0) + 1;
+      return c;
+    };
+    const uc = countByCat(userU);
+    const pc = countByCat(proU);
+    const totalsRow = `
+      <div class="ci-upg2-totals">
+        <span class="ci-upg2-total ci-upg2-total-attack"><span class="ci-upg2-dot"></span>Attack <strong>You ${uc.attack || 0}</strong> · <strong>Pro ${pc.attack || 0}</strong></span>
+        <span class="ci-upg2-total ci-upg2-total-defense"><span class="ci-upg2-dot"></span>Defense <strong>You ${uc.defense || 0}</strong> · <strong>Pro ${pc.defense || 0}</strong></span>
+        <span class="ci-upg2-total ci-upg2-total-ability"><span class="ci-upg2-dot"></span>Ability/Research <strong>You ${uc.ability || 0}</strong> · <strong>Pro ${pc.ability || 0}</strong></span>
+      </div>
+    `;
+
+    const block = (catKey, label, userEvts, proEvts) => {
+      if (!userEvts.length && !proEvts.length) {
+        return `
+          <section class="ci-upg2-block ci-upg2-${catKey}">
+            <header class="ci-upg2-block-head"><span class="ci-upg2-cat-label">${escapeHtml(label)}</span></header>
+            <div class="ci-empty-mini">Neither side researched anything in this category.</div>
+          </section>
+        `;
+      }
+      return `
+        <section class="ci-upg2-block ci-upg2-${catKey}">
+          <header class="ci-upg2-block-head"><span class="ci-upg2-cat-label">${escapeHtml(label)}</span></header>
+          <div class="ci-upg2-track-wrap">
+            <div class="ci-upg2-side-label">You</div>
+            ${this._renderUpgradeTrack(userEvts, totalMs, catKey)}
+            <div class="ci-upg2-side-label">Pro</div>
+            ${this._renderUpgradeTrack(proEvts, totalMs, catKey)}
+            <div class="ci-upg2-axis-spacer"></div>
+            ${this._renderUpgradeAxis(totalMs)}
+          </div>
+        </section>
+      `;
+    };
+    const filterCat = (list, cat) => list.filter(r => r.category === cat);
+    const sectionsHtml = [
+      block('attack',  'Attack upgrades',  filterCat(userU, 'attack'),  filterCat(proU, 'attack')),
+      block('defense', 'Defense upgrades', filterCat(userU, 'defense'), filterCat(proU, 'defense')),
+      block('ability', 'Ability / Research', filterCat(userU, 'ability'), filterCat(proU, 'ability'))
+    ].join('');
+
+    const findings = ((this._report.categories.upgrades || {}).findings || [])
+      .map(f => `<li class="ci-finding ci-finding-${f.severity}">${escapeHtml(f.text)}</li>`).join('');
+    const findingsHtml = findings ? `<section class="ci-section"><h3 class="ci-section-title">Findings</h3><ul class="ci-findings">${findings}</ul></section>` : '';
+
+    return `
+      <section class="ci-section">
+        <h3 class="ci-section-title">Upgrades summary</h3>
+        ${totalsRow}
+      </section>
+      ${sectionsHtml}
+      ${findingsHtml}
+    `;
+  }
+
+  // Place each upgrade as an absolutely-positioned card on a horizontal
+  // time axis. Detect horizontal collision and stack onto a higher row so
+  // labels never overlap.
+  _renderUpgradeTrack (events, maxMs, catKey) {
+    if (!events || !events.length) return '<div class="ci-upg2-track ci-upg2-track-empty">— none —</div>';
+    const MIN_GAP_PCT = 12;
+    const sorted = events.slice().sort((a, b) => a.gameTimeMs - b.gameTimeMs);
+    const placed = [];
+    for (const e of sorted) {
+      const xPct = Math.max(0, Math.min(100, (e.gameTimeMs / maxMs) * 100));
+      let row = 0;
+      while (placed.some(p => p.row === row && Math.abs(p.xPct - xPct) < MIN_GAP_PCT)) row++;
+      placed.push({ ev: e, xPct, row });
+    }
+    const maxRow = placed.reduce((m, p) => Math.max(m, p.row), 0);
+    const trackHeight = 36 + maxRow * 34;
+    const cards = placed.map(({ ev, xPct, row }) => {
+      const ic = ev.icon ? `/assets/wc3icons/${encodeURIComponent(ev.icon)}.jpg`
+              : ev.itemId ? iconUrl(ev.itemId) : '';
+      const lvl = (ev.level && ev.level > 1) ? ` <span class="ci-upg2-lvl">L${ev.level}</span>` : '';
+      return `
+        <div class="ci-upg2-event" style="left:${xPct.toFixed(2)}%; top:${(row * 34).toFixed(0)}px;" title="${escapeAttr(ev.name)} ${ev.level > 1 ? 'L' + ev.level : ''} @ ${escapeAttr(ev.gameTimeFormatted || '')}">
+          <span class="ci-upg2-event-pin"></span>
+          <span class="ci-upg2-event-card">
+            ${ic ? `<img class="ci-upg2-event-icon" src="${escapeAttr(ic)}" alt="" loading="lazy" onerror="this.style.display='none'"/>` : ''}
+            <span class="ci-upg2-event-name">${escapeHtml(ev.name)}${lvl}</span>
+            <span class="ci-upg2-event-time">${escapeHtml(ev.gameTimeFormatted || '')}</span>
+          </span>
+        </div>
+      `;
+    }).join('');
+    return `<div class="ci-upg2-track ci-upg2-track-${catKey}" style="height:${trackHeight}px;"><div class="ci-upg2-track-line"></div>${cards}</div>`;
+  }
+
+  // Bottom axis with minute-tick labels.
+  _renderUpgradeAxis (maxMs) {
+    const ticks = [];
+    const step = maxMs > 20 * 60_000 ? 4 : maxMs > 10 * 60_000 ? 2 : 1;
+    for (let m = 0; m <= maxMs / 60_000; m += step) {
+      const xPct = (m * 60_000 / maxMs) * 100;
+      ticks.push(`<div class="ci-upg2-axis-tick" style="left:${xPct.toFixed(2)}%;">${m}:00</div>`);
+    }
+    return `<div class="ci-upg2-axis">${ticks.join('')}</div>`;
+  }
+
+  // ── Tab: Creeps ─────────────────────────────────────────────────────────
+  // Map-based creep route comparison. Background = the existing
+  // /maps/{folder}/map.jpg minimap; coordinates come from walkmap.json
+  // (originX, originY, cellSize, rows, cols). Camps are drawn as numbered
+  // dots with lines connecting them in clearing order. User route is one
+  // color, pro route another. If maps differ, only the user's route is
+  // shown with a warning.
+  _creepsHtml () {
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const userMapName = (this.userSummary.mapInfo && this.userSummary.mapInfo.name) || null;
+    const proMapName  = (this._proSummary.mapInfo && this._proSummary.mapInfo.name) || null;
+    const sameMap = !!(userMapName && proMapName && userMapName === proMapName);
+
+    const userCamps = this._collectCamps(u);
+    const proCamps = this._collectCamps(p);
+    const userTotalXp = (u.heroBuilds || []).reduce((s, h) => s + (h.totalCreepXp || 0), 0);
+    const proTotalXp = (p.heroBuilds || []).reduce((s, h) => s + (h.totalCreepXp || 0), 0);
+
+    const warnHtml = sameMap ? '' : `
+      <div class="ci-creeps-warn">
+        Different maps — drawing your map only.
+        Pro played on <strong>${escapeHtml(proMapName || 'unknown map')}</strong>.
+      </div>
+    `;
+
+    const summaryHtml = `
+      <section class="ci-section">
+        <h3 class="ci-section-title">Creep route</h3>
+        <div class="ci-creeps-summary">
+          <span class="ci-creeps-stat ci-creeps-stat-you"><span class="ci-creeps-pip"></span>You — <strong>${userCamps.length}</strong> camps · <strong>${userTotalXp}</strong> XP</span>
+          <span class="ci-creeps-stat ci-creeps-stat-pro"><span class="ci-creeps-pip"></span>Pro — <strong>${proCamps.length}</strong> camps · <strong>${proTotalXp}</strong> XP</span>
+        </div>
+        ${warnHtml}
+      </section>
+      <section class="ci-section">
+        <div class="ci-creeps-canvas-wrap" data-same-map="${sameMap ? '1' : '0'}">
+          <canvas class="ci-creeps-canvas" width="600" height="600" aria-label="Creep route map"></canvas>
+          <div class="ci-creeps-loading">Loading map…</div>
+        </div>
+      </section>
+      ${this._creepsListHtml(userCamps, proCamps, sameMap)}
+    `;
+    return summaryHtml;
+  }
+
+  _creepsListHtml (userCamps, proCamps, sameMap) {
+    const fmt = (c, i) => `
+      <li class="ci-camp2-item">
+        <span class="ci-camp2-num">${i + 1}</span>
+        <span class="ci-camp2-time">${escapeHtml(c.gameTimeFormatted || '')}</span>
+        <span class="ci-camp2-lvl">camp lvl ${c.totalLevel || '?'}</span>
+        <span class="ci-camp2-xp">+${c.xpGained} XP</span>
+      </li>
+    `;
+    const userList = userCamps.length
+      ? `<ol class="ci-camp2-list">${userCamps.map(fmt).join('')}</ol>`
+      : `<div class="ci-empty-mini">No camps cleared.</div>`;
+    const proList = proCamps.length
+      ? `<ol class="ci-camp2-list">${proCamps.map(fmt).join('')}</ol>`
+      : `<div class="ci-empty-mini">No camps cleared.</div>`;
+    return `
+      <section class="ci-section">
+        <h3 class="ci-section-title">Camps cleared, in order</h3>
+        <div class="ci-vs-grid">
+          <div>
+            <div class="ci-side-label ci-creeps-side-you">You</div>
+            ${userList}
+          </div>
+          <div>
+            <div class="ci-side-label ci-creeps-side-pro">Pro</div>
+            ${proList}
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  // Collect ordered, deduped camps for a player. A camp shared by two
+  // heroes appears once (deduped by groupId), with the earliest claim time.
+  _collectCamps (player) {
+    const all = [];
+    for (const h of (player.heroBuilds || [])) {
+      for (const c of (h.camps || [])) {
+        if (c && c.x != null && c.y != null) all.push(c);
+      }
+    }
+    all.sort((a, b) => (a.gameTimeMs || 0) - (b.gameTimeMs || 0));
+    const seen = {};
+    const out = [];
+    for (const c of all) {
+      const key = c.groupId || `${c.x},${c.y}`;
+      if (seen[key]) continue;
+      seen[key] = 1;
+      out.push(c);
+    }
+    return out;
+  }
+
+  // Async canvas paint for the Creeps tab.
+  //
+  // Mirrors what the in-replay viewer does, but on a flat 2D canvas:
+  //   1. Background = /maps/{folder}/map.jpg (terrain palette)
+  //   2. Trees rendered as small dark dots from doo.json (mirrors
+  //      MapRenderer.renderMapTrees)
+  //   3. Neutral buildings (gold mines, shops, fountains) rendered as wc3
+  //      icons from neutralBuildings.json
+  //   4. Every neutral group on the map gets a white outline circle, with
+  //      radius = max(width, height)/2 + 4px (RING_PAD) computed from the
+  //      screen-space AABB of the bounds rectangle's 4 projected corners
+  //   5. Cleared camps overlay a small filled colored circle inside the ring
+  //      with the order number, plus a polyline through all of them
+  //
+  // If mapInfo or the map.jpg can't be loaded, falls back to a self-scaled
+  // bounding box derived from the camps themselves so something still renders.
+  async _renderCreepsCanvas () {
+    const wrap = this.rootEl.querySelector('.ci-creeps-canvas-wrap');
+    if (!wrap) return;
+    const canvas = wrap.querySelector('.ci-creeps-canvas');
+    const loadingEl = wrap.querySelector('.ci-creeps-loading');
+    const sameMap = wrap.dataset.sameMap === '1';
+
+    const u = this.userSummary.players[this.userSlot] || {};
+    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
+    const userMapInfo = this.userSummary.mapInfo;
+    const userCamps = this._collectCamps(u);
+    const proCamps = sameMap ? this._collectCamps(p) : [];
+    const allRings = this.userSummary.neutralCamps || [];
+
+    // The summary's mapInfo.name IS the resolved client/maps/ folder.
+    const mapFolder = userMapInfo && userMapInfo.name ? userMapInfo.name : null;
+
+    // Parallel-load all map overlays. Background image, trees, neutral
+    // buildings, plus the cached neutral icon sprites.
+    let mapImg = null, trees = null, neutrals = null;
+    if (mapFolder) {
+      [mapImg, trees, neutrals] = await Promise.all([
+        loadMapImage(mapFolder),
+        loadDoodadData(mapFolder),
+        loadNeutralBuildings(mapFolder)
+      ]);
+    }
+    const neutralIcons = await ensureNeutralIcons();
+    if (loadingEl) loadingEl.remove();
+
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // World→canvas transform. mapInfo.bounds.map is shaped
+    // [[xMin, yMax], [xMax, yMin]] (top-left → bottom-right corners). Use
+    // the map extent (full bg image), not the camera/playable extent — the
+    // bg jpg covers the full extent.
+    let w2c;
+    if (userMapInfo && userMapInfo.bounds && userMapInfo.bounds.map) {
+      const [[mxMin, myMax], [mxMax, myMin]] = userMapInfo.bounds.map;
+      const worldW = mxMax - mxMin;
+      const worldH = myMax - myMin;
+      w2c = (wx, wy) => ({
+        x: ((wx - mxMin) / worldW) * W,
+        // WC3 +Y = north (up). Canvas +Y = down. Flip.
+        y: ((myMax - wy) / worldH) * H
+      });
+    } else {
+      // Fallback: bounding box of available points.
+      const pts = [];
+      if (u.startingPosition) pts.push(u.startingPosition);
+      if (sameMap && p.startingPosition) pts.push(p.startingPosition);
+      for (const c of userCamps) pts.push({ x: c.x, y: c.y });
+      for (const c of proCamps)  pts.push({ x: c.x, y: c.y });
+      for (const r of allRings)  if (r.bounds) pts.push({ x: (r.bounds.minX + r.bounds.maxX)/2, y: (r.bounds.minY + r.bounds.maxY)/2 });
+      if (!pts.length) {
+        canvas.style.display = 'none';
+        wrap.insertAdjacentHTML('beforeend', '<div class="ci-empty-mini">No camp data to plot.</div>');
+        return;
+      }
+      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+      const pad = 800;
+      const xmin = Math.min(...xs) - pad, xmax = Math.max(...xs) + pad;
+      const ymin = Math.min(...ys) - pad, ymax = Math.max(...ys) + pad;
+      w2c = (wx, wy) => ({
+        x: ((wx - xmin) / (xmax - xmin)) * W,
+        y: ((ymax - wy) / (ymax - ymin)) * H
+      });
+    }
+
+    // Background. Map.jpg covers the full mapExtent bounds, so a flat
+    // drawImage to the canvas at 0,0 → W,H aligns with the world transform.
+    if (mapImg) {
+      ctx.drawImage(mapImg, 0, 0, W, H);
+    } else {
+      ctx.fillStyle = '#0a0d10';
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = '#1d2228';
+      for (let i = 1; i < 8; i++) {
+        const v = (i / 8) * W;
+        ctx.beginPath(); ctx.moveTo(v, 0); ctx.lineTo(v, H); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, v); ctx.lineTo(W, v); ctx.stroke();
+      }
+    }
+
+    // Layer 0a — trees from doo.json. Mirrors MapRenderer.renderMapTrees but
+    // simplified for the small overview canvas (no per-tree jitter, smaller
+    // dots). One small dark-green circle per tree.
+    if (trees && trees.length) {
+      ctx.fillStyle = '#0c2a0c';
+      ctx.globalAlpha = 0.78;
+      for (const t of trees) {
+        if (!t || !t.position) continue;
+        const tx = parseFloat(t.position.x);
+        const ty = parseFloat(t.position.y);
+        if (Number.isNaN(tx) || Number.isNaN(ty)) continue;
+        const cp = w2c(tx, ty);
+        // Skip trees that project outside the canvas (paranoia).
+        if (cp.x < -4 || cp.x > W + 4 || cp.y < -4 || cp.y > H + 4) continue;
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, 2.2, 0, 2 * Math.PI);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Layer 0b — neutral buildings (gold mines, shops, fountains). Lifted
+    // from MapRenderer.renderNeutralBuildings — same icon sprites, same
+    // size scheme (gold mines bigger).
+    if (neutrals && neutrals.length) {
+      const iconSize = (type) => type === 'ngol' ? 18 : 14;
+      ctx.globalAlpha = 0.95;
+      for (const nb of neutrals) {
+        if (!nb || nb.x == null || nb.y == null) continue;
+        const cp = w2c(nb.x, nb.y);
+        const sz = iconSize(nb.type);
+        const half = sz / 2;
+        const icon = neutralIcons[nb.type];
+        if (icon && icon.complete && icon.naturalWidth) {
+          ctx.drawImage(icon, cp.x - half, cp.y - half, sz, sz);
+        } else {
+          // Fallback: colored square if icon failed to load.
+          ctx.fillStyle = nb.type === 'ngol' ? '#d4a017' : '#9966cc';
+          ctx.fillRect(cp.x - half, cp.y - half, sz, sz);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Subtle vignette so route overlays read better. Applied AFTER the
+    // terrain layers (background + trees + neutrals) so the route reads on
+    // top, but BEFORE the camp rings/dots.
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+    ctx.fillRect(0, 0, W, H);
+
+    // Project a world-space bounds rectangle to screen-space center+radius.
+    // Lifted from MapRenderer.renderNeutralGroups (lines 178–201).
+    const RING_PAD = 4;
+    const projectCamp = (b) => {
+      const c1 = w2c(b.minX, b.minY), c2 = w2c(b.maxX, b.minY);
+      const c3 = w2c(b.minX, b.maxY), c4 = w2c(b.maxX, b.maxY);
+      const minPX = Math.min(c1.x, c2.x, c3.x, c4.x);
+      const maxPX = Math.max(c1.x, c2.x, c3.x, c4.x);
+      const minPY = Math.min(c1.y, c2.y, c3.y, c4.y);
+      const maxPY = Math.max(c1.y, c2.y, c3.y, c4.y);
+      return {
+        cx: (minPX + maxPX) / 2,
+        cy: (minPY + maxPY) / 2,
+        radius: Math.max(maxPX - minPX, maxPY - minPY) / 2 + RING_PAD
+      };
+    };
+
+    // Layer 1 — every camp on the map: white outline circle (untouched-camp
+    // style from the viewer).
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.lineWidth = 1.5;
+    for (const ring of allRings) {
+      if (!ring.bounds) continue;
+      const { cx, cy, radius } = projectCamp(ring.bounds);
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+      ctx.stroke();
+    }
+
+    // Helpers reused across both routes.
+    const drawRoute = (camps, startPos, color) => {
+      if (!camps.length && !startPos) return;
+
+      // Connecting polyline through camp centers.
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+      ctx.shadowBlur = 3;
+      ctx.beginPath();
+      let first = true;
+      if (startPos) {
+        const sp = w2c(startPos.x, startPos.y);
+        ctx.moveTo(sp.x, sp.y); first = false;
+      }
+      for (const c of camps) {
+        const cp = w2c(c.x, c.y);
+        if (first) { ctx.moveTo(cp.x, cp.y); first = false; }
+        else       { ctx.lineTo(cp.x, cp.y); }
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // Start marker — small square with white border.
+      if (startPos) {
+        const sp = w2c(startPos.x, startPos.y);
+        ctx.fillStyle = color;
+        ctx.fillRect(sp.x - 6, sp.y - 6, 12, 12);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(sp.x - 6, sp.y - 6, 12, 12);
+      }
+
+      // Order dots — small filled circle inside the camp ring with the
+      // ordinal number on top.
+      camps.forEach((c, i) => {
+        const cp = w2c(c.x, c.y);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(cp.x, cp.y, 9, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.strokeStyle = '#0a0d10';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = '#0a0d10';
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(i + 1), cp.x, cp.y);
+      });
+    };
+
+    // Pro first (under), user on top so user's route reads as primary.
+    if (sameMap) drawRoute(proCamps, p.startingPosition, '#d4a23a');
+    drawRoute(userCamps, u.startingPosition, '#5fa5cb');
+
+    // Legend (top-left).
+    const legend = [
+      ['#5fa5cb', 'You'],
+      sameMap ? ['#d4a23a', 'Pro'] : null
+    ].filter(Boolean);
+    ctx.font = 'bold 12px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    let ly = 16;
+    for (const [color, label] of legend) {
+      ctx.fillStyle = color;
+      ctx.fillRect(10, ly - 6, 14, 12);
+      ctx.strokeStyle = '#0a0d10';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(10, ly - 6, 14, 12);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(label, 30, ly);
+      ly += 20;
+    }
+  }
+
+  // ── Wiring ──────────────────────────────────────────────────────────────
+  _wireGlobal () {
+    // Tab nav
+    this.rootEl.querySelectorAll('.ci-tab').forEach(btn => {
+      btn.addEventListener('click', () => this._setTab(btn.dataset.tab));
+    });
+    // Switcher chips
     this.rootEl.querySelectorAll('.ci-chip').forEach(chip => {
       chip.addEventListener('click', async () => {
         const id = chip.dataset.replayId;
@@ -472,14 +1264,102 @@ const CompareInline = class {
         if (candidate) await this._compareWith(candidate.entry);
       });
     });
-    // Wire advanced button.
     const advBtn = this.rootEl.querySelector('.ci-advanced-btn');
     if (advBtn) advBtn.addEventListener('click', () => this._openAdvanced());
-    // Wire slot-card click → direct switch to that player (no modal).
+    // Slot-card clicks
     this.rootEl.querySelectorAll('.ci-slot-card[data-slot]').forEach(card => {
       if (card.classList.contains('ci-slot-card-active')) return;
       card.addEventListener('click', () => this._switchPlayer(card.dataset.slot));
     });
+  }
+
+  _wireTab (tabId) {
+    if (tabId === 'overview') {
+      // Drill buttons jump to the relevant detail tab.
+      this.rootEl.querySelectorAll('.ci-tile-drill').forEach(btn => {
+        btn.addEventListener('click', () => this._setTab(btn.dataset.targetTab));
+      });
+    }
+    if (tabId === 'creeps') {
+      // Canvas paint is async (loads image + walkmap.json). Fire-and-forget.
+      this._renderCreepsCanvas().catch(e => console.error('[Creeps] render failed:', e));
+    }
+  }
+
+  // Pick the top-N actionable findings across all categories.
+  // Severity: 'warn' > 'info' > 'good'. Weight by category weight.
+  // Returns full finding objects (with headline/text/metric/vizType/vizData)
+  // tagged with their categoryKey.
+  _topFixes (report, n) {
+    const SEV_RANK = { warn: 3, info: 2, good: 0 };
+    const W = {
+      macro: 0.20, tech: 0.18, buildAdherence: 0.15, production: 0.10,
+      expansion: 0.07, heroSkillBuild: 0.10, upgrades: 0.10, itemEconomy: 0.05, idleResources: 0.05
+    };
+    const collected = [];
+    for (const k of Object.keys(report.categories || {})) {
+      const cat = report.categories[k];
+      if (!cat || !cat.available || !cat.findings) continue;
+      for (const f of cat.findings) {
+        const score = (SEV_RANK[f.severity] || 1) * (W[k] || 0.05) * 100;
+        collected.push({ categoryKey: k, finding: f, _score: score });
+      }
+    }
+    collected.sort((a, b) => b._score - a._score);
+    return collected.slice(0, n);
+  }
+
+  // Render the Top Fixes panel as coaching cards. Each card has a numbered
+  // badge, category label, action-verb headline, supporting detail, optional
+  // metric pill on the right, and an optional inline sparkline (when the
+  // finding carries vizType + vizData).
+  _topFixesHtml (fixes) {
+    if (!fixes || !fixes.length) return '';
+    const cardHtml = (entry, i) => {
+      const f = entry.finding || {};
+      const sev = f.severity || 'info';
+      const headline = f.headline || f.text || '';
+      const detail = f.headline ? (f.text || '') : '';
+      const cat = entry.categoryKey;
+      const catLabel = CATEGORY_LABELS[cat] || cat;
+      const metricHtml = f.metric && f.metric.label
+        ? `<span class="ci-fix2-metric">${escapeHtml(f.metric.label)}</span>`
+        : '';
+      let sparkHtml = '';
+      if (f.vizType && f.vizData && window.CompareCharts && window.CompareCharts.sparkline) {
+        const seriesKey = f.vizType === 'workers'
+          ? { user: 'userWorkers', pro: 'proWorkers' }
+          : { user: 'userSupply',  pro: 'proSupply' };
+        const series = (f.vizData || []).map(s => ({
+          gameTimeMs: s.gameTimeMs,
+          userValue: s[seriesKey.user] || 0,
+          proValue:  s[seriesKey.pro]  || 0
+        }));
+        sparkHtml = `<div class="ci-fix2-spark">${window.CompareCharts.sparkline(series)}</div>`;
+      }
+      return `
+        <article class="ci-fix2-card ci-fix2-${sev}" data-cat="${escapeAttr(cat)}">
+          <div class="ci-fix2-badge">${i + 1}</div>
+          <div class="ci-fix2-body">
+            <div class="ci-fix2-cat">${escapeHtml(catLabel)}</div>
+            <div class="ci-fix2-headline">${escapeHtml(headline)}</div>
+            ${detail ? `<div class="ci-fix2-detail">${escapeHtml(detail)}</div>` : ''}
+          </div>
+          <div class="ci-fix2-aside">
+            ${metricHtml}
+            ${sparkHtml}
+          </div>
+        </article>
+      `;
+    };
+    return `
+      <section class="ci-section ci-section-fixes">
+        <h3 class="ci-section-title">Top things to fix</h3>
+        <div class="ci-fix2-list">
+          ${fixes.map(cardHtml).join('')}
+        </div>
+      </section>
+    `;
   }
 
   // Switch the user's identity (which player from their replay is being
@@ -568,7 +1448,7 @@ const synthSelfMatchReport = (userSummary, userSlot, proSummary, proSlot) => {
   const cleanedMap = (window.ReplayAnalyzer && window.ReplayAnalyzer.prettyMap)
     ? window.ReplayAnalyzer.prettyMap(userSummary.map) : userSummary.map;
   const matchTile = (label) => ({
-    score: 100, grade: 'A+', findings: [], available: true, _selfMatch: true
+    score: 100, grade: 'A+', findings: [], available: true, _selfMatch: true, detail: null
   });
   return {
     overall: { score: 100, grade: 'A+' },
@@ -577,7 +1457,11 @@ const synthSelfMatchReport = (userSummary, userSlot, proSummary, proSlot) => {
       tech:           matchTile('Tech'),
       expansion:      matchTile('Expansion'),
       buildAdherence: matchTile('Build Adherence'),
-      production:     matchTile('Production')
+      production:     matchTile('Production'),
+      heroSkillBuild: matchTile('Hero Skill Build'),
+      upgrades:       matchTile('Upgrades'),
+      itemEconomy:    matchTile('Item Economy'),
+      idleResources:  matchTile('Idle Resources')
     },
     guards: {
       durationOk: true, matchupCompatible: true, mapCompatible: true,
@@ -612,66 +1496,72 @@ const CHECK_ICON = {
   unknown:  '?'
 };
 
+// Tab dispatch: which detail tab does each Overview tile drill into?
+const TILE_TO_TAB = {
+  macro:          'economy',
+  tech:           'tech',
+  expansion:      'tech',
+  buildAdherence: 'build',
+  production:     'economy',
+  heroSkillBuild: 'heroes',
+  upgrades:       'upgrades',
+  itemEconomy:    'heroes',
+  idleResources:  'economy'
+};
+
+const CATEGORY_ORDER = [
+  'macro', 'tech', 'expansion', 'buildAdherence', 'production',
+  'heroSkillBuild', 'upgrades', 'itemEconomy', 'idleResources'
+];
+
+const CATEGORY_LABELS = {
+  macro:          'Macro',
+  tech:           'Tech',
+  expansion:      'Expansion',
+  buildAdherence: 'Build Adherence',
+  production:     'Production',
+  heroSkillBuild: 'Hero Skill Build',
+  upgrades:       'Upgrades',
+  itemEconomy:    'Item Economy',
+  idleResources:  'Idle Resources'
+};
+
+const TILE_INFO = {
+  macro:          'Worker count and supply usage every 30s vs pro. Improve: queue workers continuously and don\'t get supply-blocked.',
+  tech:           'Tier-2 / Tier-3 / Hero-level timings vs pro (60–90s tolerance). Improve: don\'t sit on resources at tier-up time.',
+  expansion:      'When you took your second town hall vs pro. Only scored when both played the same map.',
+  buildAdherence: 'How closely your first 20 buildings/units match the pro\'s order (longest common subsequence).',
+  production:     'Combat units produced over the 5–15 minute window vs pro. Pros keep production halls firing constantly.',
+  heroSkillBuild: 'Hero ability learn order vs pro (same hero only). Pros pick a specific skill order per matchup.',
+  upgrades:       'Attack / defense / ability research timings vs pro (90s tolerance). Pros are religious about upgrade timing.',
+  itemEconomy:    'Hero items the pro bought that you didn\'t (boots, salves, talismans, scrolls). Item discipline is a hidden skill gap.',
+  idleResources:  'Average unused supply headroom over the game. High = you built farms/houses but didn\'t train units = floating resources.'
+};
+
+const REASON_PRETTY = {
+  'different matchups':              'Different matchup, the pro played a different race composition, so timings can\'t be compared apples-to-apples.',
+  'different maps':                  'Different maps, expansion timing depends on the map, so we skip this when maps differ.',
+  'pro did not expand':              'The pro never expanded in this replay, so there\'s nothing to compare against.',
+  'no economy data':                 'Economy data missing from one or both replays.',
+  'overlapping time too short':      'The replays barely overlap in length, can\'t sample the economy fairly.',
+  'no overlapping samples':          'No overlapping economy samples to compare.',
+  'no tech timings to compare':      'The pro never reached the tier or hero level we measure.',
+  'no build preview':                'Build order data missing from one or both replays.',
+  'pro produced no units in window': 'Pro built no combat units in the first 10 minutes, nothing to score against.',
+  'archetype-degraded':              'Different archetypes, used a relaxed set-overlap score (penalised).',
+  'hero data missing':               'Hero skill-order data missing from one or both replays.',
+  'pro hero never leveled':          'The pro never leveled their hero in this replay.',
+  'pro researched nothing':          'Pro got no upgrades in this replay — no benchmark to compare against.',
+  'different races':                 'Different races, so the item shop catalog differs and a comparison would be misleading.',
+  'neither side bought items':       'Neither side purchased items — nothing to compare.',
+  'Game ended too early to compare meaningfully': 'Your replay ended too early to compare meaningfully against the pro\'s game length.'
+};
+
 // Aliases into client/js/Security.js — shared escape helpers.
 const escapeHtml = Security.escapeHtml;
 const escapeAttr = Security.escapeAttr;
 
 const iconUrl = (itemId) => itemId ? `/assets/wc3icons/${encodeURIComponent(itemId)}.jpg` : '';
-
-// Render a small SVG line chart of supply + worker counts over time, you vs
-// pro. Inputs are economyTrack arrays of {gameTimeMs, supplyUsed, totalWorkers}
-// at 30s samples. Returns '' when there's nothing meaningful to draw.
-const renderEconomyChart = (uTrack, pTrack) => {
-  if (!uTrack || !pTrack || !uTrack.length || !pTrack.length) return '';
-  const W = 720, H = 220, padL = 36, padR = 16, padT = 16, padB = 28;
-  const innerW = W - padL - padR, innerH = H - padT - padB;
-  const maxT = Math.max(
-    uTrack[uTrack.length - 1].gameTimeMs || 0,
-    pTrack[pTrack.length - 1].gameTimeMs || 0
-  );
-  if (maxT <= 0) return '';
-  const all = uTrack.concat(pTrack);
-  const maxSupply = Math.max(20, ...all.map(s => s.supplyUsed || 0));
-  const maxWorkers = Math.max(10, ...all.map(s => s.totalWorkers || 0));
-  const yMax = Math.max(maxSupply, maxWorkers, 20);
-
-  const xFor = (t) => padL + (t / maxT) * innerW;
-  const yFor = (v) => padT + innerH - (v / yMax) * innerH;
-
-  const buildPath = (track, key) => {
-    const pts = track.map(s => `${xFor(s.gameTimeMs || 0).toFixed(1)},${yFor(s[key] || 0).toFixed(1)}`);
-    if (!pts.length) return '';
-    return 'M' + pts.join(' L');
-  };
-
-  // Time gridlines every 2 minutes.
-  const gridX = [];
-  for (let t = 0; t <= maxT; t += 120000) {
-    const x = xFor(t);
-    const m = Math.floor(t / 60000);
-    gridX.push(`<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + innerH}" class="ci-econ-grid"/>` +
-               `<text x="${x}" y="${padT + innerH + 14}" text-anchor="middle" class="ci-econ-axis">${m}:00</text>`);
-  }
-  // Y gridlines every 25% of yMax.
-  const gridY = [];
-  for (let i = 0; i <= 4; i++) {
-    const v = (yMax * i / 4);
-    const y = yFor(v);
-    gridY.push(`<line x1="${padL}" y1="${y}" x2="${padL + innerW}" y2="${y}" class="ci-econ-grid"/>` +
-               `<text x="${padL - 6}" y="${y + 3}" text-anchor="end" class="ci-econ-axis">${Math.round(v)}</text>`);
-  }
-
-  return `
-    <svg class="ci-econ-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Economy chart">
-      ${gridX.join('')}
-      ${gridY.join('')}
-      <path d="${buildPath(uTrack, 'totalWorkers')}" class="ci-econ-line ci-econ-you-w"/>
-      <path d="${buildPath(pTrack, 'totalWorkers')}" class="ci-econ-line ci-econ-pro-w"/>
-      <path d="${buildPath(uTrack, 'supplyUsed')}" class="ci-econ-line ci-econ-you"/>
-      <path d="${buildPath(pTrack, 'supplyUsed')}" class="ci-econ-line ci-econ-pro"/>
-    </svg>
-  `;
-};
 
 const prettyArchetype = (a) => {
   const map = {
@@ -716,18 +1606,37 @@ const pickUserSlot = (summary, record) => {
   return null;
 };
 
-// Mirror of CompareView._buildUserSummary, scoped here so this subsystem
-// is self-contained. Builds a summary-shaped object from the parsed
-// .wc3v JSON stored in IndexedDB.
+// Build a summary-shaped object from the parsed .wc3v JSON stored in
+// IndexedDB. Per-player extraction is delegated to the shared module
+// helpers/summaryExtract.js so the user summary matches the pro summary
+// shape field-for-field — anything we add server-side surfaces here too.
 const buildUserSummary = (record) => {
   const full = record.parsedJson;
   if (!full) return null;
-  const cleanMap = cleanMapName((full.replay && full.replay.metadata && full.replay.metadata.map && full.replay.metadata.map.mapName) || '');
+  if (!window.SummaryExtract || typeof window.SummaryExtract.extractPlayerSummary !== 'function') {
+    console.error('[CompareInline] SummaryExtract not loaded — cannot build user summary');
+    return null;
+  }
+  const rawMap = (full.replay && full.replay.metadata && full.replay.metadata.map && full.replay.metadata.map.mapName) || '';
+  const cleanMap = cleanMapName(rawMap);
   const durationMs = (full.replay && full.replay.subheader && full.replay.subheader.replayLengthMS) || 0;
+  const worldNeutralGroups = (full.world && full.world.neutralGroups) || null;
+  // mapInfo resolution uses the cached browser manifest. If the manifest
+  // hasn't been loaded yet (first compare modal open), mapInfo stays null
+  // and the Creeps tab falls back to its bounding-box renderer.
+  const SE = window.SummaryExtract;
+  const mapDataByFile = window.__mapFoldersManifest || null;
+  const mapInfo = (SE && mapDataByFile)
+    ? SE.slimMapInfo(SE.resolveMapFolder(rawMap, mapDataByFile))
+    : null;
+  const neutralCamps = SE ? SE.extractNeutralCamps(worldNeutralGroups) : [];
   const summary = {
     replayId: record.id,
     map: cleanMap,
+    mapRaw: rawMap,
+    mapInfo,
     durationMs,
+    neutralCamps,
     fingerprint: null,
     players: {}
   };
@@ -738,7 +1647,7 @@ const buildUserSummary = (record) => {
     const p = full.players[slot];
     if (!p || p.isNeutralPlayer) continue;
     const replayP = (full.replay && full.replay.players && full.replay.players[slot]) || {};
-    summary.players[slot] = derivePlayerSummary(p, replayP);
+    summary.players[slot] = window.SummaryExtract.extractPlayerSummary(p, replayP, durationMs, worldNeutralGroups);
     const nm = String(replayP.name || '').toLowerCase().trim();
     if (nm) fpNames.push(nm);
   }
@@ -747,117 +1656,98 @@ const buildUserSummary = (record) => {
   return summary;
 };
 
-const TOWER_IDS = { hgtw: 1, hgt1: 1, hgt2: 1, hwtw: 1, owtw: 1, unpl: 1, etrp: 1, etol: 1 };
-const WORKER_IDS = { opeo: 1, hpea: 1, ewsp: 1, uaco: 1, ugho: 1 };
-const SUMMON_UNIT_IDS = { uske: 1, hwat: 1, hwt2: 1, hwt3: 1, efon: 1, osw1: 1, osw2: 1, osw3: 1, ucs1: 1 };
-// Tier-2/3 buildings — drop from buildPreview if they appear before that
-// tier upgrade time (parser leakage / phantom events).
-const T2_BUILDING_IDS = { eaow: 1, osld: 1, obea: 1, utod: 1, usep: 1, uslh: 1, hars: 1, hwtw: 1 };
-const T3_BUILDING_IDS = { edos: 1, otrb: 1, ubon: 1, hgra: 1 };
-
-const heroRaceFromItemId = (itemId) => {
-  if (!itemId) return null;
-  const c = String(itemId).charAt(0);
-  if (c === 'H') return 'H';
-  if (c === 'O') return 'O';
-  if (c === 'E') return 'E';
-  if (c === 'U') return 'U';
-  if (c === 'N') return 'N';
-  return null;
+// Lazy-load the map-folders manifest once per page. Stored on window so
+// every CompareInline instance shares the same fetch.
+const ensureMapFoldersManifest = async () => {
+  if (window.__mapFoldersManifest) return window.__mapFoldersManifest;
+  if (window.__mapFoldersManifestPromise) return window.__mapFoldersManifestPromise;
+  window.__mapFoldersManifestPromise = (async () => {
+    try {
+      const r = await fetch('/data/map-folders.json');
+      if (!r.ok) return null;
+      const json = await r.json();
+      window.__mapFoldersManifest = json;
+      return json;
+    } catch (e) {
+      return null;
+    }
+  })();
+  return window.__mapFoldersManifestPromise;
 };
 
-const derivePlayerSummary = (playerData, replayPlayerData) => {
-  const eventStream = playerData.eventStream || [];
-  const tierStream = playerData.tierStream || [];
-  const race = playerData.race || replayPlayerData.raceDetected;
+// Resolve a raw replay map name to the canonical client/maps/{folder}/ name.
+// Mirrors MyReplays.canonicalMapDir — duplicated here to keep CompareInline
+// self-contained. Strips W3C numbered prefix and slot prefix; keeps the
+// version suffix because it's part of the actual folder name (e.g.
+// "TurtleRock_v2.0").
+const canonicalMapDir = (rawMapName) => {
+  if (!rawMapName) return null;
+  let n = String(rawMapName).split(/[\\/]/).pop().replace(/\.(w3x|w3m)$/i, '');
+  n = n.replace(/^\d+_w3c_\d+_\d+_/i, '');
+  n = n.replace(/^\(\d+\)\s*/, '');
+  return n;
+};
 
-  let tier2Time = null, tier3Time = null;
-  for (const t of tierStream) {
-    if (t.tier === 2 && tier2Time === null) tier2Time = t.gameTime;
-    if (t.tier === 3 && tier3Time === null) tier3Time = t.gameTime;
-  }
+// ── Map-asset loaders for the Creeps tab ────────────────────────────────────
+// Some maps ship only the gzipped variants (`doo.json.gz`,
+// `neutralBuildings.json.gz`); others have both. Try uncompressed first
+// (cheaper), fall back to gzipped via DecompressionStream.
 
-  let heroOpener = null;
-  for (const ev of eventStream) {
-    // Tavern heroes ride a separate 'makeTavernHero' event, not 'addUnit'.
-    const isHeroEvent = ev.unit && (
-      (ev.key === 'addUnit' && ev.unit.isHero) ||
-      ev.key === 'makeTavernHero'
-    );
-    if (!isHeroEvent) continue;
-    const heroRace = heroRaceFromItemId(ev.unit.itemId);
-    // Skip race-mismatched heroes (parser leakage).
-    if (heroRace && heroRace !== 'N' && race && heroRace !== race) continue;
-    heroOpener = { name: ev.unit.displayName, itemId: ev.unit.itemId, gameTimeMs: ev.gameTime };
-    break;
+const fetchMapJson = async (folder, file) => {
+  const base = `/maps/${encodeURIComponent(folder)}/${file}`;
+  try {
+    const r = await fetch(base);
+    if (r.ok) return await r.json();
+  } catch (e) { /* fall through */ }
+  try {
+    const r = await fetch(base + '.gz');
+    if (!r.ok) return null;
+    if (typeof DecompressionStream !== 'function') return null;
+    const stream = r.body.pipeThrough(new DecompressionStream('gzip'));
+    const text = await new Response(stream).text();
+    return JSON.parse(text);
+  } catch (e) {
+    return null;
   }
-  let expansionTime = null;
-  for (const ev of eventStream) {
-    if (ev.isExpansion) { expansionTime = ev.gameTime; break; }
-  }
-  let firstTowerTime = null, firstUnitTime = null;
-  let firstHeroLevel2Time = null, firstHeroLevel3Time = null;
-  for (const ev of eventStream) {
-    if (firstTowerTime === null && ev.key === 'addBuilding' && ev.building && TOWER_IDS[ev.building.itemId]) firstTowerTime = ev.gameTime;
-    if (firstUnitTime === null && ev.key === 'addUnit' && ev.unit && !ev.unit.isHero
-        && !WORKER_IDS[ev.unit.itemId] && !ev.unit.isSummon && !SUMMON_UNIT_IDS[ev.unit.itemId]) firstUnitTime = ev.gameTime;
-    if (ev.key === 'heroLevel') {
-      if (firstHeroLevel2Time === null && ev.level === 2) firstHeroLevel2Time = ev.gameTime;
-      if (firstHeroLevel3Time === null && ev.level === 3) firstHeroLevel3Time = ev.gameTime;
-    }
-  }
-  const economyTrack = [];
-  let nextSampleAt = 0, lastSnap = null;
-  for (const ev of eventStream) {
-    if (typeof ev.gameTime !== 'number') continue;
-    if (typeof ev.supplyUsed === 'number') {
-      lastSnap = {
-        gameTimeMs: ev.gameTime, supplyUsed: ev.supplyUsed, supplyMax: ev.supplyMax || 0,
-        workersOnGold: ev.workers ? (ev.workers.onGold || 0) : 0,
-        workersOnLumber: ev.workers ? ((ev.workers.onLumber || 0) + (ev.workers.ghoulsOnLumber || 0)) : 0,
-        totalWorkers: ev.workers ? (ev.workers.totalWorkers || 0) : 0
-      };
-    }
-    while (lastSnap && ev.gameTime >= nextSampleAt && nextSampleAt <= 30 * 60 * 1000) {
-      economyTrack.push({ ...lastSnap, gameTimeMs: nextSampleAt });
-      nextSampleAt += 30 * 1000;
-    }
-  }
-  const buildPreview = [];
-  for (const ev of eventStream) {
-    if (buildPreview.length >= 20) break;
-    if (ev.key === 'addBuilding' && ev.building) {
-      const id = ev.building.itemId || '';
-      if (T2_BUILDING_IDS[id] && (tier2Time === null || ev.gameTime < tier2Time)) continue;
-      if (T3_BUILDING_IDS[id] && (tier3Time === null || ev.gameTime < tier3Time)) continue;
-      buildPreview.push({ type: ev.isExpansion ? 'expansion' : 'building', name: ev.building.displayName, itemId: id, gameTimeMs: ev.gameTime });
-    } else if (ev.key === 'addUnit' && ev.unit) {
-      if (WORKER_IDS[ev.unit.itemId]) continue;
-      if (ev.unit.isSummon || SUMMON_UNIT_IDS[ev.unit.itemId]) continue;
-      if (ev.unit.isHero) {
-        const heroRace = heroRaceFromItemId(ev.unit.itemId);
-        if (heroRace && heroRace !== 'N' && race && heroRace !== race) continue;
-      }
-      buildPreview.push({ type: ev.unit.isHero ? 'hero' : 'unit', name: ev.unit.displayName, itemId: ev.unit.itemId || '', gameTimeMs: ev.gameTime });
-    }
-  }
-  const SIX_MIN = 6 * 60 * 1000, EIGHT_MIN = 8 * 60 * 1000, FOUR_MIN = 4 * 60 * 1000, TWO_MIN = 2 * 60 * 1000;
-  let archetype = 'unknown';
-  if (firstTowerTime !== null && firstTowerTime < FOUR_MIN) archetype = 'tower-rush';
-  else if (expansionTime !== null) {
-    if (tier2Time === null) archetype = 'fast-expand';
-    else if (expansionTime < tier2Time) archetype = 'fast-expand';
-    else if (expansionTime - tier2Time < TWO_MIN) archetype = 'fast-expand';
-  }
-  if (archetype === 'unknown' && tier2Time !== null && tier2Time < SIX_MIN
-      && (expansionTime === null || expansionTime > EIGHT_MIN)) archetype = '1-base-t2';
+};
 
-  return {
-    name: replayPlayerData.name, race, heroOpener,
-    tier2Time, tier3Time, expansionTime,
-    firstTowerTime, firstUnitTime, firstHeroLevel2Time, firstHeroLevel3Time,
-    archetype, economyTrack, buildPreview
-  };
+const loadMapImage = (folder) => new Promise(resolve => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = () => resolve(null);
+  img.src = `/maps/${encodeURIComponent(folder)}/map.jpg`;
+});
+
+const loadDoodadData = async (folder) => {
+  const data = await fetchMapJson(folder, 'doo.json');
+  if (!data) return null;
+  // Server writes { grid: [...] } where each entry has position {x,y} + scale
+  return Array.isArray(data) ? data : (data.grid || null);
+};
+
+const loadNeutralBuildings = async (folder) => {
+  const data = await fetchMapJson(folder, 'neutralBuildings.json');
+  if (!data) return null;
+  return Array.isArray(data) ? data : (data.grid || data.neutrals || null);
+};
+
+// Preload neutral-building icon sprites once per page; reused across all
+// CompareInline instances and Creeps-tab paints.
+let _neutralIconsPromise = null;
+const ensureNeutralIcons = () => {
+  if (_neutralIconsPromise) return _neutralIconsPromise;
+  const types = ['ngol', 'nfoh', 'nmoo', 'nmer', 'ntav', 'ngme', 'ngad', 'nmrk'];
+  _neutralIconsPromise = Promise.all(types.map(type => new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve([type, img]);
+    img.onerror = () => resolve([type, null]);
+    img.src = `/assets/wc3icons/${type}.jpg`;
+  }))).then(pairs => {
+    const map = {};
+    for (const [type, img] of pairs) if (img) map[type] = img;
+    return map;
+  });
+  return _neutralIconsPromise;
 };
 
 // Browser mirror of tools/import-replays.js cleanMapName(). Keep in sync.

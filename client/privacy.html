@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Privacy Policy | WC3V</title>
+  <meta name="description" content="Privacy policy for WC3V. Replays are parsed in your browser and never uploaded. We don't sell your data because we don't have any.">
+
+  <link rel="canonical" href="https://wc3v.com/privacy.html">
+  <meta name="robots" content="index, follow">
+
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { margin: 0; }
+    .legal-page { max-width: 760px; }
+    .legal-page h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--site-text);
+      margin: 1.75rem 0 0.5rem;
+      letter-spacing: -0.01em;
+    }
+    .legal-page p,
+    .legal-page li {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: var(--site-text);
+    }
+    .legal-page ul { padding-left: 1.25rem; }
+    .legal-page li { margin-bottom: 0.4rem; }
+    .legal-page p a,
+    .legal-page li a { color: var(--site-accent); text-decoration: none; }
+    .legal-page p a:hover,
+    .legal-page li a:hover { text-decoration: underline; }
+    .legal-effective {
+      font-size: 0.82rem;
+      color: var(--site-text-muted);
+      margin: 0 0 1.5rem;
+    }
+    .legal-callout {
+      background: rgba(68, 136, 255, 0.08);
+      border: 1px solid rgba(68, 136, 255, 0.25);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body class="site-page">
+  <script src="js/SiteNav.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => SiteNav.render(null));</script>
+
+  <main class="site-content">
+    <article class="site-about-page legal-page">
+
+      <div class="about-hero">
+        <div class="about-hero-text">
+          <h1 class="about-hero-title">Privacy Policy</h1>
+          <p class="about-hero-sub">What data WC3V touches, what it doesn't, and where it lives.</p>
+        </div>
+      </div>
+
+      <p class="legal-effective">Effective: May 6, 2026</p>
+
+      <div class="legal-callout">
+        <strong>Short version:</strong> Your replay files never leave your browser. We don't have user accounts, don't run analytics, and don't sell anything because there's nothing to sell. WC3V is a static site hosted in the United States.
+      </div>
+
+      <h2>1. Replays stay on your device</h2>
+      <p>When you load a <code>.w3g</code> file into WC3V, it is parsed locally in your browser using a JavaScript parser bundle. <strong>The replay file is never uploaded to our servers.</strong> Parsed metadata (player names, race, build timeline, map, units, etc.) may be stored in your browser's local storage and IndexedDB so you can revisit your replay library without re-uploading. That data lives on your device and you can clear it at any time by clearing your browser's site data for wc3v.com.</p>
+
+      <h2>2. What we don't collect</h2>
+      <ul>
+        <li>No user accounts, no email addresses, no passwords.</li>
+        <li>No tracking pixels, no third-party advertising, no behavioral analytics.</li>
+        <li>No replay file uploads.</li>
+        <li>No personal identifying information beyond what your browser sends to any web server (IP address, user agent — see below).</li>
+      </ul>
+
+      <h2>3. What our server sees</h2>
+      <p>When you visit WC3V, our hosting provider's web server receives standard HTTP request information so it can serve pages: your IP address, the URL you requested, your user agent string, the referring URL, and a timestamp. This is standard for any website on the internet. These access logs are kept briefly for operational and security purposes (typically a few days to a few weeks at the host level) and are not combined with any other data.</p>
+
+      <h2>4. Local storage on your device</h2>
+      <p>WC3V uses your browser's storage APIs to keep things working between visits:</p>
+      <ul>
+        <li><strong>IndexedDB</strong> — your parsed replay library (the <code>.wc3v</code> JSON output of replays you've loaded).</li>
+        <li><strong>localStorage</strong> — small UI preferences (e.g. layout mode, terms acknowledgment, dismissed banners).</li>
+      </ul>
+      <p>None of this is sent to us. Clear it any time via your browser's site-data controls.</p>
+
+      <h2>5. Third-party content loaded by your browser</h2>
+      <p>Some pages load JavaScript libraries from public CDNs so you don't have to download them from us:</p>
+      <ul>
+        <li><a href="https://cdnjs.cloudflare.com/" target="_blank" rel="noopener noreferrer">cdnjs (Cloudflare)</a> — D3.js</li>
+        <li><a href="https://unpkg.com/" target="_blank" rel="noopener noreferrer">unpkg</a> — RBush</li>
+        <li><a href="https://www.jsdelivr.com/" target="_blank" rel="noopener noreferrer">jsDelivr</a> — Three.js</li>
+      </ul>
+      <p>When your browser fetches these files, those CDNs see your IP address and a request URL the same way any web server would. They are subject to their own privacy policies.</p>
+
+      <h2>6. Cookies</h2>
+      <p>WC3V does not set tracking cookies. The hosting provider may set minimal technical cookies for security or load-balancing; we don't use any analytics or advertising cookies.</p>
+
+      <h2>7. Children's privacy</h2>
+      <p>WC3V is intended for a general audience and is not directed at children under 13. We don't knowingly collect personal information from children.</p>
+
+      <h2>8. Your choices</h2>
+      <ul>
+        <li><strong>Clear local data:</strong> Clear site data for wc3v.com in your browser settings to remove your replay library and preferences.</li>
+        <li><strong>Stop using the site:</strong> Closing the tab is a complete privacy reset on our end — we have nothing about you to delete.</li>
+        <li><strong>Block CDNs:</strong> If you don't want third-party CDNs to see your IP, use a browser extension or VPN of your choice.</li>
+      </ul>
+
+      <h2>9. Changes</h2>
+      <p>If this policy changes, the effective date at the top of this page will be updated. Material changes will be called out in the site footer or release notes.</p>
+
+      <h2>10. Contact</h2>
+      <p>Questions or concerns: open an issue on <a href="https://github.com/jblanchette/wc3v/issues" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+
+      <div class="about-bottom-cta">
+        <a href="/" class="site-cta-btn site-cta-primary">Back to WC3V</a>
+        <a href="/terms.html" class="site-cta-btn site-cta-secondary">Terms of Service</a>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="/about.html">About</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool not affiliated with or endorsed by Blizzard.
+    </div>
+  </footer>
+</body>
+</html>

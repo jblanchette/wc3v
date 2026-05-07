@@ -1,0 +1,500 @@
+{
+  "replayId": "253930565_Neytpoh_Soin_ShatteredExile",
+  "map": "59 w3c 251104 0950 Shattered Exile",
+  "mapRaw": "maps\\W3Champions\\59_w3c_251104_0950_ShatteredExile_v2.4.w3x",
+  "mapInfo": {
+    "name": "ShatteredExile_v2-07",
+    "bounds": {
+      "camera": [
+        [
+          -5632,
+          5504
+        ],
+        [
+          5632,
+          -5504
+        ]
+      ],
+      "map": [
+        [
+          -8192,
+          8192
+        ],
+        [
+          8192,
+          -8192
+        ]
+      ]
+    },
+    "gridSize": {
+      "playable": [
+        96,
+        90
+      ],
+      "full": [
+        128,
+        128
+      ],
+      "margins": [
+        16,
+        16,
+        19,
+        19
+      ]
+    }
+  },
+  "durationMs": 754560,
+  "durationFormatted": "12:34",
+  "neutralCamps": [
+    {
+      "groupId": "02b13f11-f347-4b33-94d4-521324e484bf",
+      "totalLevel": 18,
+      "bounds": {
+        "minX": -315.44659423828125,
+        "minY": 4571.3359375,
+        "maxX": 291.7654724121094,
+        "maxY": 4921.17236328125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "2a7abe23-bae8-4bdf-a1f1-2bd40e1d8780",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": 4781.3369140625,
+        "minY": -1932.4608154296875,
+        "maxX": 5067.7158203125,
+        "maxY": -1469.545654296875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "60c7cd07-8642-41af-a2ab-c4c7abfda61d",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": -2718.3134765625,
+        "minY": 2080.333984375,
+        "maxX": -2325.15771484375,
+        "maxY": 2470.475830078125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0457364b-e78d-4cd3-a046-40613fe75ea0",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 1969.4195556640625,
+        "minY": -4372.50146484375,
+        "maxX": 2250.9482421875,
+        "maxY": -4077.17138671875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "3b612999-39d8-4850-a009-44523ec32ac7",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 2061.591552734375,
+        "minY": 4235.771484375,
+        "maxX": 2356.921630859375,
+        "maxY": 4517.30029296875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0a990f13-5030-4d45-8912-6b48c6a7655f",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -2345.6943359375,
+        "minY": 4162.05908203125,
+        "maxX": -2043.76171875,
+        "maxY": 4479.77685546875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0a001d10-d898-4d68-9986-1a1d686d7ec7",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": -5061.64404296875,
+        "minY": -1970.40673828125,
+        "maxX": -4724.80322265625,
+        "maxY": -1449.9798583984375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e32edf40-be5b-4966-a5a9-a68feaaec2e0",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": 2309.707763671875,
+        "minY": -293.08905029296875,
+        "maxX": 2445.89990234375,
+        "maxY": 311.884521484375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "1a964bfd-4adb-4af2-8aed-3ebfb0bd47c4",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -2355.562255859375,
+        "minY": -4331.59423828125,
+        "maxX": -1934.4644775390625,
+        "maxY": -4104.60498046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "911085a0-c87e-4677-b019-aabd8234756c",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": 2455.843505859375,
+        "minY": -2499.72509765625,
+        "maxX": 2832.456787109375,
+        "maxY": -2108.584228515625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "acfaeace-676d-4617-8c6b-1ae2448d1742",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": 2415.87109375,
+        "minY": 2038.33349609375,
+        "maxX": 2819.713134765625,
+        "maxY": 2485.9375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "32f376bb-121e-4f73-a855-e16a21794255",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": -4797.19970703125,
+        "minY": -4666.4775390625,
+        "maxX": -4207.47607421875,
+        "maxY": -4150.88916015625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "2310c9a7-cea0-4942-a8a1-26010c1d1e48",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": -2586.305419921875,
+        "minY": -2549.13671875,
+        "maxX": -2177.872314453125,
+        "maxY": -2193.54150390625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "45d5dbd9-f712-4cd1-a479-fc456cbbeae8",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": 4162.7275390625,
+        "minY": 4132.564453125,
+        "maxX": 4750.13330078125,
+        "maxY": 4716.00634765625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "8d62e528-d7b4-4f5f-b006-71c71a632466",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": 4726.794921875,
+        "minY": 1487.082763671875,
+        "maxX": 5113.79150390625,
+        "maxY": 2020.8905029296875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "949318df-7572-4dcf-a9cc-315711631254",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -2403.483154296875,
+        "minY": -294.40257263183594,
+        "maxX": -2267.291015625,
+        "maxY": 310.57098388671875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "cb3ab5e3-bd4c-47fb-a973-9d968de4b374",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": -303.76611328125,
+        "minY": 1912.277587890625,
+        "maxX": 323.52593994140625,
+        "maxY": 2234.17578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e0963cff-6632-4e9c-9e2b-8851f6b7ae95",
+      "totalLevel": 18,
+      "bounds": {
+        "minX": -288.5401916503906,
+        "minY": -4892.140625,
+        "maxX": 281.41668701171875,
+        "maxY": -4592.1142578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "4f5920b6-bd23-4b33-b130-7e940747f917",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": -228.872802734375,
+        "minY": -1130.9537353515625,
+        "maxX": 181.389404296875,
+        "maxY": -1005.6268310546875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "d594f372-0961-4f58-a537-728387a048c4",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": -286.92901611328125,
+        "minY": -2237.80517578125,
+        "maxX": 280.35406494140625,
+        "maxY": -1905.600341796875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "343f85b6-49da-4199-98a0-96bea94a0afe",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": -4966.71435546875,
+        "minY": 1453.498046875,
+        "maxX": -4707.48095703125,
+        "maxY": 2002.59326171875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "60114df2-996f-4976-9698-06655a4866e9",
+      "totalLevel": 22,
+      "bounds": {
+        "minX": -4807.0234375,
+        "minY": 4297.169921875,
+        "maxX": -4285.22021484375,
+        "maxY": 4848.8955078125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "22b7cdda-d6fc-4ab3-8cb6-1e465623cce6",
+      "totalLevel": 22,
+      "bounds": {
+        "minX": 4277.8193359375,
+        "minY": -4818.3896484375,
+        "maxX": 4818.70751953125,
+        "maxY": -4209.5703125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "c88a6315-291b-46dc-bf3e-222abb99c2f2",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": -4969.46630859375,
+        "minY": -278.45733642578125,
+        "maxX": -4598.1708984375,
+        "maxY": 298.014404296875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "f5d3af97-49b7-4494-a18d-dd66f08d49a1",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": 4603.40625,
+        "minY": -306.00238037109375,
+        "maxX": 4980.53466796875,
+        "maxY": 255.17718505859375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "58180e64-918b-4118-afdf-655a19a28005",
+      "totalLevel": 22,
+      "bounds": {
+        "minX": -370.5010070800781,
+        "minY": 1019.549072265625,
+        "maxX": 392.16949462890625,
+        "maxY": 1157.16796875
+      },
+      "hasFountain": false
+    }
+  ],
+  "players": {
+    "1": {
+      "name": "Neytpoh#21885",
+      "race": "E",
+      "startingPosition": null,
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "firstTowerTime": null,
+      "firstTowerTimeFormatted": null,
+      "firstUnitTime": null,
+      "firstUnitTimeFormatted": null,
+      "firstHeroLevel2Time": null,
+      "firstHeroLevel2TimeFormatted": null,
+      "firstHeroLevel3Time": null,
+      "firstHeroLevel3TimeFormatted": null,
+      "firstHeroLevel5Time": null,
+      "firstHeroLevel5TimeFormatted": null,
+      "archetype": "unknown",
+      "economyTrack": [
+        {
+          "gameTimeMs": 0,
+          "supplyUsed": 5,
+          "supplyMax": 10,
+          "workersOnGold": 5,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        }
+      ],
+      "buildPreview": [],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [],
+      "heroBuilds": [],
+      "itemPurchases": [],
+      "itemUses": [],
+      "mercenariesHired": [],
+      "upgradeTimeline": [],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 30000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 60000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 90000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 120000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 150000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 180000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 210000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 240000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 270000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 300000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 330000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 360000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 390000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 420000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 450000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 480000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 510000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 540000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 570000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 600000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 630000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 660000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 690000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 720000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 750000,
+          "count": 0
+        }
+      ],
+      "apm": {
+        "rawAverage": 8,
+        "effectiveAverage": 8,
+        "effectivePerMinute": [
+          8
+        ],
+        "categories": {
+          "select": 7,
+          "ui": 2,
+          "build": 1
+        }
+      }
+    }
+  }
+}

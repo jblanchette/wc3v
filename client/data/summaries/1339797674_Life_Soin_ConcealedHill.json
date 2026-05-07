@@ -1,0 +1,469 @@
+{
+  "replayId": "1339797674_Life_Soin_ConcealedHill",
+  "map": "1 w3c 251104 0950 Concealed Hill",
+  "mapRaw": "maps\\W3Champions\\1_w3c_251104_0950_ConcealedHill.w3x",
+  "mapInfo": {
+    "name": "ConcealedHill",
+    "bounds": {
+      "camera": [
+        [
+          -4608,
+          5760
+        ],
+        [
+          4608,
+          -6272
+        ]
+      ],
+      "map": [
+        [
+          -6144,
+          6144
+        ],
+        [
+          8192,
+          -8192
+        ]
+      ]
+    },
+    "gridSize": {
+      "playable": [
+        80,
+        98
+      ],
+      "full": [
+        96,
+        128
+      ],
+      "margins": [
+        8,
+        8,
+        13,
+        17
+      ]
+    }
+  },
+  "durationMs": 1235445,
+  "durationFormatted": "20:35",
+  "neutralCamps": [
+    {
+      "groupId": "54edb3f8-e1e4-40a1-9a74-ff0307d5cdee",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": 815.1259765625,
+        "minY": -3286.31396484375,
+        "maxX": 1250.621337890625,
+        "maxY": -3039.763427734375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "8cce2501-e239-4995-b208-d86405876bc3",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": 2160.03369140625,
+        "minY": -5649.5,
+        "maxX": 2572.246337890625,
+        "maxY": -5252.27099609375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "b3622c60-7dae-4964-8c5d-0549392ad06d",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": -2596.994384765625,
+        "minY": 4675.5732421875,
+        "maxX": -2160.58203125,
+        "maxY": 5083.19873046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "1c770352-0be8-4ae7-bbe8-193f05816f6f",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": 3770.16162109375,
+        "minY": 1159.3135986328125,
+        "maxX": 4117.796875,
+        "maxY": 1620.9755859375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "6afc8144-89b0-412d-881f-d5bb3276b400",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": -4119.451904296875,
+        "minY": -2123.916748046875,
+        "maxX": -3769.2412109375,
+        "maxY": -1639.55029296875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "c731ef8e-0724-4345-8619-7b0f22e25171",
+      "totalLevel": 10,
+      "bounds": {
+        "minX": 3581.6591796875,
+        "minY": 2809.320068359375,
+        "maxX": 3832.22216796875,
+        "maxY": 3113.633544921875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "72334f8d-15d3-49ea-83c5-21ae1e10dd63",
+      "totalLevel": 26,
+      "bounds": {
+        "minX": 3942.377197265625,
+        "minY": -2580.998046875,
+        "maxX": 4570.54296875,
+        "maxY": -2113.116455078125
+      },
+      "hasFountain": true
+    },
+    {
+      "groupId": "b6e0df59-c355-4c62-a2f4-e17548394ea9",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": -391.062744140625,
+        "minY": -5772.4453125,
+        "maxX": 36.475337982177734,
+        "maxY": -5565.73828125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "b1756aad-7548-40c4-b991-3b72d4c5769e",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": -1215.118408203125,
+        "minY": 2298.97216796875,
+        "maxX": -827.2756958007812,
+        "maxY": 2580.155517578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "c4dfb259-212d-47fe-9d77-0172f84eb440",
+      "totalLevel": 26,
+      "bounds": {
+        "minX": -4522.529296875,
+        "minY": 1612.99609375,
+        "maxX": -3915.029541015625,
+        "maxY": 2035.5787353515625
+      },
+      "hasFountain": true
+    },
+    {
+      "groupId": "dd704ca9-75cc-475a-bf96-1f9608278ba6",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": 882.5140380859375,
+        "minY": -1217.2825927734375,
+        "maxX": 1201.237548828125,
+        "maxY": -936.4586181640625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "12ddf985-5405-4e4e-99c3-c8522882ea30",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": 4113.158203125,
+        "minY": -3872.82275390625,
+        "maxX": 4317.79541015625,
+        "maxY": -3555.454833984375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "78081e39-d7a9-4197-81aa-36b8d85799c2",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": -4397.5361328125,
+        "minY": 3167.912353515625,
+        "maxX": -4152.9375,
+        "maxY": 3432.709716796875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "cd7f8484-511f-4a50-aad8-07e27de0a6c0",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": 40.352928161621094,
+        "minY": 5068.8623046875,
+        "maxX": 457.2838134765625,
+        "maxY": 5281.07275390625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "d03f64a1-1acc-4523-84f5-259d0a7f7e4c",
+      "totalLevel": 10,
+      "bounds": {
+        "minX": -3750.25048828125,
+        "minY": -3562.939453125,
+        "maxX": -3485.476806640625,
+        "maxY": -3289.53271484375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "a4350890-2639-4d1e-8ec3-b03dafc719f3",
+      "totalLevel": 22,
+      "bounds": {
+        "minX": -710.9097290039062,
+        "minY": -89.2774772644043,
+        "maxX": -184.7646484375,
+        "maxY": 322.8298645019531
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "69c1168c-1eb4-4323-900d-61cb95e2f0f2",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": -1711.8624267578125,
+        "minY": 126.72477722167969,
+        "maxX": -1430.620361328125,
+        "maxY": 517.5470581054688
+      },
+      "hasFountain": false
+    }
+  ],
+  "players": {
+    "1": {
+      "name": "Medusa#31315",
+      "race": "E",
+      "startingPosition": {
+        "x": -2304,
+        "y": -4736
+      },
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "firstTowerTime": null,
+      "firstTowerTimeFormatted": null,
+      "firstUnitTime": null,
+      "firstUnitTimeFormatted": null,
+      "firstHeroLevel2Time": null,
+      "firstHeroLevel2TimeFormatted": null,
+      "firstHeroLevel3Time": null,
+      "firstHeroLevel3TimeFormatted": null,
+      "firstHeroLevel5Time": null,
+      "firstHeroLevel5TimeFormatted": null,
+      "archetype": "unknown",
+      "economyTrack": [
+        {
+          "gameTimeMs": 0,
+          "supplyUsed": 5,
+          "supplyMax": 10,
+          "workersOnGold": 5,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        }
+      ],
+      "buildPreview": [],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": [],
+      "heroBuilds": [],
+      "itemPurchases": [],
+      "itemUses": [],
+      "mercenariesHired": [],
+      "upgradeTimeline": [],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 30000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 60000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 90000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 120000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 150000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 180000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 210000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 240000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 270000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 300000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 330000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 360000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 390000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 420000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 450000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 480000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 510000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 540000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 570000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 600000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 630000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 660000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 690000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 720000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 750000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 780000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 810000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 840000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 870000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 900000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 930000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 960000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 990000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1020000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1050000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1080000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1110000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1140000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1170000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1200000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 1230000,
+          "count": 0
+        }
+      ],
+      "apm": {
+        "rawAverage": 20,
+        "effectiveAverage": 16,
+        "effectivePerMinute": [
+          16
+        ],
+        "categories": {
+          "select": 16,
+          "ui": 8,
+          "move": 2,
+          "build": 2
+        }
+      }
+    }
+  }
+}

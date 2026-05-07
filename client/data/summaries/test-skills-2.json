@@ -2,13 +2,235 @@
   "replayId": "test-skills-2",
   "map": "Echo Isles",
   "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
+  "mapInfo": {
+    "name": "EchoIsles",
+    "bounds": {
+      "camera": [
+        [
+          -6912,
+          4864
+        ],
+        [
+          6912,
+          -5376
+        ]
+      ],
+      "map": [
+        [
+          -8192,
+          8192
+        ],
+        [
+          6144,
+          -6144
+        ]
+      ]
+    },
+    "gridSize": {
+      "playable": [
+        116,
+        84
+      ],
+      "full": [
+        128,
+        96
+      ],
+      "margins": [
+        6,
+        6,
+        4,
+        8
+      ]
+    }
+  },
   "durationMs": 95600,
   "durationFormatted": "1:35",
-  "fingerprint": "Echo Isles|96|jblanch",
+  "neutralCamps": [
+    {
+      "groupId": "d5b42680-cfb2-4c71-a8da-97a10599823f",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": -3634.150390625,
+        "minY": -4063.314208984375,
+        "maxX": -2632.96875,
+        "maxY": -3279.822998046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "a0a3dc4d-cec8-433e-86b9-d9333518043a",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": 2410.276611328125,
+        "minY": 4037.287109375,
+        "maxX": 3321.036865234375,
+        "maxY": 4804.45947265625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "a3ec8a28-369f-4f21-ab87-e32e5190e906",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": -3801.58544921875,
+        "minY": 4046.68505859375,
+        "maxX": -2890.8251953125,
+        "maxY": 4813.857421875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "2da18b86-72c3-4851-a7de-78302cac9a0a",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -6050.57666015625,
+        "minY": 373.072509765625,
+        "maxX": -5299.12353515625,
+        "maxY": 1224.5048828125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "06ab0039-7e25-4751-88c9-01b42d422183",
+      "totalLevel": 16,
+      "bounds": {
+        "minX": 5344.6103515625,
+        "minY": -1330.7238159179688,
+        "maxX": 6459.30517578125,
+        "maxY": -195.95675659179688
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "4e8d346a-1b44-43bf-aa36-141267468430",
+      "totalLevel": 11,
+      "bounds": {
+        "minX": -5149.982421875,
+        "minY": -3467.08349609375,
+        "maxX": -4202.82275390625,
+        "maxY": -2499.78564453125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "7b884dd0-1454-49ad-a654-38c582b739b5",
+      "totalLevel": 11,
+      "bounds": {
+        "minX": 3723.730224609375,
+        "minY": -3436.0859375,
+        "maxX": 4586.83642578125,
+        "maxY": -2548.124755859375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0e58f39c-399a-4759-8499-c37f8f039b49",
+      "totalLevel": 17,
+      "bounds": {
+        "minX": -826.5867309570312,
+        "minY": 2498.6845703125,
+        "maxX": 326.4272766113281,
+        "maxY": 3433.72265625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "b058966e-b3ab-46e7-ab0f-dd058f86d2f4",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": 2467.1953125,
+        "minY": -4286.099853515625,
+        "maxX": 3234.86328125,
+        "maxY": -3303.76806640625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "72f04d7a-8c98-4726-bd01-c9737d4d090f",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -747.7492370605469,
+        "minY": -3485.489501953125,
+        "maxX": 262.19493865966797,
+        "maxY": -2802.48876953125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "7f7264d7-23e3-47d7-87b6-8437bfa85666",
+      "totalLevel": 16,
+      "bounds": {
+        "minX": -6950.9765625,
+        "minY": -1351.4896240234375,
+        "maxX": -5836.28173828125,
+        "maxY": -216.72259521484375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "54c7b02c-4c0a-4663-a593-740a11fcf171",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 4864.46484375,
+        "minY": 429.66064453125,
+        "maxX": 5568.86474609375,
+        "maxY": 1243.8426513671875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e3cf908e-b189-4a1a-a761-bc2aca8517ed",
+      "totalLevel": 17,
+      "bounds": {
+        "minX": -6987.26123046875,
+        "minY": -4103.482421875,
+        "maxX": -5951.98779296875,
+        "maxY": -3005.86865234375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "a983b71f-0a3d-4036-acc9-e40344890eaf",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": 2305.20361328125,
+        "minY": -1232.31201171875,
+        "maxX": 3367.417724609375,
+        "maxY": -187.22714233398438
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "81f53d40-8120-4575-86cc-9d3a818bda9b",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -3980.073974609375,
+        "minY": -1233.08349609375,
+        "maxX": -2884.853759765625,
+        "maxY": -379.8839111328125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e1cefebb-66c0-485e-9d64-b419786cf373",
+      "totalLevel": 17,
+      "bounds": {
+        "minX": 5478.90087890625,
+        "minY": -5082.75634765625,
+        "maxX": 6497.2236328125,
+        "maxY": -4143.75341796875
+      },
+      "hasFountain": false
+    }
+  ],
   "players": {
     "1": {
       "name": "jblanch",
       "race": "O",
+      "startingPosition": {
+        "x": -5184,
+        "y": 2944
+      },
       "heroOpener": {
         "name": "Far Seer",
         "itemId": "Ofar",
@@ -21,6 +243,51 @@
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
+      "firstTowerTime": null,
+      "firstTowerTimeFormatted": null,
+      "firstUnitTime": null,
+      "firstUnitTimeFormatted": null,
+      "firstHeroLevel2Time": 59296,
+      "firstHeroLevel2TimeFormatted": "0:59",
+      "firstHeroLevel3Time": 92090,
+      "firstHeroLevel3TimeFormatted": "1:32",
+      "firstHeroLevel5Time": null,
+      "firstHeroLevel5TimeFormatted": null,
+      "archetype": "unknown",
+      "economyTrack": [
+        {
+          "gameTimeMs": 0,
+          "supplyUsed": 5,
+          "supplyMax": 11,
+          "workersOnGold": 4,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        },
+        {
+          "gameTimeMs": 30000,
+          "supplyUsed": 5,
+          "supplyMax": 11,
+          "workersOnGold": 4,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        },
+        {
+          "gameTimeMs": 60000,
+          "supplyUsed": 10,
+          "supplyMax": 11,
+          "workersOnGold": 5,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        },
+        {
+          "gameTimeMs": 90000,
+          "supplyUsed": 10,
+          "supplyMax": 11,
+          "workersOnGold": 5,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        }
+      ],
       "buildPreview": [
         {
           "type": "building",
@@ -41,7 +308,122 @@
       "t2Units": [],
       "t3Buildings": [],
       "t3Units": [],
-      "researched": []
+      "researched": [],
+      "heroBuilds": [
+        {
+          "uuid": "3a839389-7925-468a-a36e-a4e39ee2d264",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "spawnTimeMs": 16496,
+          "finalLevel": 3,
+          "levelMilestones": [
+            {
+              "level": 1,
+              "gameTimeMs": 22696,
+              "gameTimeFormatted": "0:22"
+            },
+            {
+              "level": 2,
+              "gameTimeMs": 59296,
+              "gameTimeFormatted": "0:59"
+            },
+            {
+              "level": 3,
+              "gameTimeMs": 92090,
+              "gameTimeFormatted": "1:32"
+            }
+          ],
+          "skillOrder": [
+            {
+              "heroLevel": 1,
+              "abilityId": "AOsf",
+              "skillName": "Feral Spirit",
+              "skillLevel": 1,
+              "gameTimeMs": 22696,
+              "gameTimeFormatted": "0:22"
+            },
+            {
+              "heroLevel": 2,
+              "abilityId": "AOcl",
+              "skillName": "Chain Lighting",
+              "skillLevel": 1,
+              "gameTimeMs": 59296,
+              "gameTimeFormatted": "0:59"
+            },
+            {
+              "heroLevel": 3,
+              "abilityId": "AOsf",
+              "skillName": "Feral Spirit",
+              "skillLevel": 2,
+              "gameTimeMs": 92090,
+              "gameTimeFormatted": "1:32"
+            }
+          ],
+          "items": [
+            {
+              "slot": "1",
+              "itemId": "stwp",
+              "name": "Scroll of Town Portal"
+            }
+          ],
+          "totalCreepXp": 364,
+          "camps": [
+            {
+              "gameTimeMs": 36796,
+              "gameTimeFormatted": "0:36",
+              "xpGained": 144,
+              "totalLevel": 9,
+              "x": -3346.205322265625,
+              "y": 4430.271240234375,
+              "bounds": {
+                "minX": -3801.58544921875,
+                "minY": 4046.68505859375,
+                "maxX": -2890.8251953125,
+                "maxY": 4813.857421875
+              },
+              "groupId": "a3ec8a28-369f-4f21-ab87-e32e5190e906"
+            },
+            {
+              "gameTimeMs": 87090,
+              "gameTimeFormatted": "1:27",
+              "xpGained": 220,
+              "totalLevel": 13,
+              "x": -3432.4638671875,
+              "y": -806.4837036132812,
+              "bounds": {
+                "minX": -3980.073974609375,
+                "minY": -1233.08349609375,
+                "maxX": -2884.853759765625,
+                "maxY": -379.8839111328125
+              },
+              "groupId": "81f53d40-8120-4575-86cc-9d3a818bda9b"
+            }
+          ]
+        }
+      ],
+      "itemPurchases": [],
+      "itemUses": [],
+      "mercenariesHired": [],
+      "upgradeTimeline": [],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 30000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 60000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 90000,
+          "count": 0
+        }
+      ],
+      "apm": null
     }
   }
 }

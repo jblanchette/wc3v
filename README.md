@@ -170,6 +170,8 @@ See [docs/DESIGN.md](docs/DESIGN.md) for a deep dive into replay parsing, unit t
 | `tools/regen-maps.js` | Regenerate map images from extracted map data |
 | `tools/parse-upgrade-data.js` | Generate `researchMeta.json` from WC3 game data files |
 
+For the full pro-replay onboarding workflow (acquiring packs, matching to builds, adding tournaments), see [docs/REPLAY_ONBOARDING.md](docs/REPLAY_ONBOARDING.md).
+
 ## Testing
 
 Run the parser against the test replay suite:

@@ -1,14 +1,258 @@
 {
   "replayId": "3205763865_FoCuS_Lyn_Hammerfall",
-  "map": "Hammerfall",
+  "map": "5185 w3c 251104 0950 Hammerfall",
   "mapRaw": "Maps/W3Champions\\5185_w3c_251104_0950_Hammerfall.w3x",
+  "mapInfo": {
+    "name": "Hammerfall",
+    "bounds": {
+      "camera": [
+        [
+          -4864,
+          4864
+        ],
+        [
+          4864,
+          -5376
+        ]
+      ],
+      "map": [
+        [
+          -6144,
+          6144
+        ],
+        [
+          6144,
+          -6144
+        ]
+      ]
+    },
+    "gridSize": {
+      "playable": [
+        84,
+        84
+      ],
+      "margins": [
+        6,
+        6,
+        4,
+        8
+      ],
+      "full": [
+        96,
+        96
+      ]
+    }
+  },
   "durationMs": 923900,
   "durationFormatted": "15:23",
-  "fingerprint": "Hammerfall|924|focus#31324,lianpia#3217",
+  "neutralCamps": [
+    {
+      "groupId": "17b6be1a-0954-4c7f-8237-8e91bd5f6e2e",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": 1505.4278564453125,
+        "minY": 646.6983032226562,
+        "maxX": 1848.135009765625,
+        "maxY": 751.9027099609375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "47f3ad9f-7dee-4e6c-9fa0-fc1b3eea0aa2",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": -4128.924560546875,
+        "minY": -3308.472900390625,
+        "maxX": -3751.19140625,
+        "maxY": -2718.42431640625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "d44ce231-ff7a-4c06-89ab-64dee2597c00",
+      "totalLevel": 7,
+      "bounds": {
+        "minX": -1849.02001953125,
+        "minY": -1270.1575927734375,
+        "maxX": -1506.3128662109375,
+        "maxY": -1164.953125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "69bb8eef-5dc9-43e8-a05e-47ee103332d3",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": -1363.658447265625,
+        "minY": -2848.96240234375,
+        "maxX": -880.6156616210938,
+        "maxY": -2416.34228515625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0bbd1f47-3290-4f11-8ed5-28960b465250",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": -4671.009765625,
+        "minY": -709.800048828125,
+        "maxX": -4109.298828125,
+        "maxY": -399.26171875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "41bd5195-01e7-49aa-b476-b9f0f85568bd",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": 2542.580322265625,
+        "minY": -2545.186767578125,
+        "maxX": 2846.308349609375,
+        "maxY": -2213.58935546875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0b7dcddb-6b18-4bce-b168-05d8eb98a6ee",
+      "totalLevel": 8,
+      "bounds": {
+        "minX": -2847.73828125,
+        "minY": 1721.00341796875,
+        "maxX": -2510.846435546875,
+        "maxY": 2003.8551025390625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "f1c55a2f-4f11-4fba-94b9-9d8cdd3a6474",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": 4109.298828125,
+        "minY": -112.73828125,
+        "maxX": 4671.009765625,
+        "maxY": 197.800048828125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "eb62e0b1-d9a1-4be4-8789-c0be073720b3",
+      "totalLevel": 11,
+      "bounds": {
+        "minX": 2032.257568359375,
+        "minY": -4744.830078125,
+        "maxX": 2616.22314453125,
+        "maxY": -4503.96826171875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "fda4af53-165e-4788-beb5-1f2ffa71a91e",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -134.96495819091797,
+        "minY": -5228.4443359375,
+        "maxX": 195.17974853515625,
+        "maxY": -4717.90478515625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "bf32a7c9-b513-4972-b7c3-3aff8f188bf7",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": -2454.273193359375,
+        "minY": -4433.84912109375,
+        "maxX": -2058.07080078125,
+        "maxY": -4196.96435546875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e815c872-2c16-4324-988d-2bc0646f183a",
+      "totalLevel": 9,
+      "bounds": {
+        "minX": 2024.15234375,
+        "minY": 3608.4619140625,
+        "maxX": 2379.693359375,
+        "maxY": 3898.947998046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "54e09a31-825a-4590-a2ad-a3203c24555a",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": 1663.0537109375,
+        "minY": -1664.8475341796875,
+        "maxX": 2112.015869140625,
+        "maxY": -1167.577880859375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "5280ce4d-d871-47c4-99f6-14e6b16b24bf",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": 880.6156616210938,
+        "minY": 1904.34228515625,
+        "maxX": 1363.658447265625,
+        "maxY": 2336.96240234375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "7fdfdfe0-a0a6-4416-a770-f610c54c040e",
+      "totalLevel": 11,
+      "bounds": {
+        "minX": -2616.22314453125,
+        "minY": 3991.96826171875,
+        "maxX": -2032.257568359375,
+        "maxY": 4232.830078125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "4b84e3e6-0fef-47be-b056-c8f1f3034399",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -203.2825164794922,
+        "minY": 4205.3701171875,
+        "maxX": 161.9142303466797,
+        "maxY": 4748.33935546875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "aa09de00-eafa-4a0e-a874-6de5a1d2437d",
+      "totalLevel": 15,
+      "bounds": {
+        "minX": -2112.015869140625,
+        "minY": 655.577880859375,
+        "maxX": -1663.0537109375,
+        "maxY": 1152.8475341796875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "0e00796c-60af-433b-8b6f-a9da4878709e",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": 3833.79345703125,
+        "minY": 2188.185546875,
+        "maxX": 4211.5263671875,
+        "maxY": 2778.234130859375
+      },
+      "hasFountain": false
+    }
+  ],
   "players": {
     "1": {
       "name": "FoCuS#31324",
       "race": "O",
+      "startingPosition": {
+        "x": -3904,
+        "y": 3328
+      },
       "heroOpener": {
         "name": "Far Seer",
         "itemId": "Ofar",
@@ -21,6 +265,267 @@
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
+      "firstTowerTime": 347986,
+      "firstTowerTimeFormatted": "5:47",
+      "firstUnitTime": 94869,
+      "firstUnitTimeFormatted": "1:34",
+      "firstHeroLevel2Time": 188807,
+      "firstHeroLevel2TimeFormatted": "3:08",
+      "firstHeroLevel3Time": 383126,
+      "firstHeroLevel3TimeFormatted": "6:23",
+      "firstHeroLevel5Time": null,
+      "firstHeroLevel5TimeFormatted": null,
+      "archetype": "1-base-t2",
+      "economyTrack": [
+        {
+          "gameTimeMs": 0,
+          "supplyUsed": 5,
+          "supplyMax": 11,
+          "workersOnGold": 5,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        },
+        {
+          "gameTimeMs": 30000,
+          "supplyUsed": 7,
+          "supplyMax": 21,
+          "workersOnGold": 4,
+          "workersOnLumber": 0,
+          "totalWorkers": 7
+        },
+        {
+          "gameTimeMs": 60000,
+          "supplyUsed": 9,
+          "supplyMax": 21,
+          "workersOnGold": 7,
+          "workersOnLumber": 0,
+          "totalWorkers": 9
+        },
+        {
+          "gameTimeMs": 90000,
+          "supplyUsed": 11,
+          "supplyMax": 21,
+          "workersOnGold": 7,
+          "workersOnLumber": 2,
+          "totalWorkers": 11
+        },
+        {
+          "gameTimeMs": 120000,
+          "supplyUsed": 17,
+          "supplyMax": 31,
+          "workersOnGold": 7,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 150000,
+          "supplyUsed": 22,
+          "supplyMax": 31,
+          "workersOnGold": 8,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 180000,
+          "supplyUsed": 22,
+          "supplyMax": 31,
+          "workersOnGold": 8,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 210000,
+          "supplyUsed": 24,
+          "supplyMax": 31,
+          "workersOnGold": 8,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 240000,
+          "supplyUsed": 26,
+          "supplyMax": 41,
+          "workersOnGold": 7,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 270000,
+          "supplyUsed": 28,
+          "supplyMax": 41,
+          "workersOnGold": 8,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 300000,
+          "supplyUsed": 37,
+          "supplyMax": 41,
+          "workersOnGold": 9,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 330000,
+          "supplyUsed": 39,
+          "supplyMax": 41,
+          "workersOnGold": 9,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 360000,
+          "supplyUsed": 44,
+          "supplyMax": 50,
+          "workersOnGold": 8,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 390000,
+          "supplyUsed": 46,
+          "supplyMax": 50,
+          "workersOnGold": 8,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 420000,
+          "supplyUsed": 48,
+          "supplyMax": 50,
+          "workersOnGold": 7,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 450000,
+          "supplyUsed": 50,
+          "supplyMax": 50,
+          "workersOnGold": 8,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 480000,
+          "supplyUsed": 52,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 510000,
+          "supplyUsed": 54,
+          "supplyMax": 60,
+          "workersOnGold": 8,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 540000,
+          "supplyUsed": 56,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 570000,
+          "supplyUsed": 58,
+          "supplyMax": 60,
+          "workersOnGold": 8,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 600000,
+          "supplyUsed": 60,
+          "supplyMax": 60,
+          "workersOnGold": 8,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 630000,
+          "supplyUsed": 65,
+          "supplyMax": 80,
+          "workersOnGold": 9,
+          "workersOnLumber": 3,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 660000,
+          "supplyUsed": 69,
+          "supplyMax": 80,
+          "workersOnGold": 9,
+          "workersOnLumber": 3,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 690000,
+          "supplyUsed": 73,
+          "supplyMax": 80,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 720000,
+          "supplyUsed": 77,
+          "supplyMax": 80,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 750000,
+          "supplyUsed": 82,
+          "supplyMax": 90,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 780000,
+          "supplyUsed": 87,
+          "supplyMax": 90,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 810000,
+          "supplyUsed": 94,
+          "supplyMax": 100,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 840000,
+          "supplyUsed": 96,
+          "supplyMax": 100,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 870000,
+          "supplyUsed": 100,
+          "supplyMax": 100,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        },
+        {
+          "gameTimeMs": 900000,
+          "supplyUsed": 100,
+          "supplyMax": 100,
+          "workersOnGold": 9,
+          "workersOnLumber": 4,
+          "totalWorkers": 13
+        }
+      ],
       "buildPreview": [
         {
           "type": "building",
@@ -223,11 +728,489 @@
           "gameTimeMs": 708553,
           "gameTimeFormatted": "11:48"
         }
-      ]
+      ],
+      "heroBuilds": [
+        {
+          "uuid": "e453f5ff-9f1f-4786-8244-bdfed669c75e",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "spawnTimeMs": 783982,
+          "finalLevel": 1,
+          "levelMilestones": [],
+          "skillOrder": [],
+          "items": [],
+          "totalCreepXp": 0,
+          "camps": []
+        },
+        {
+          "uuid": "c5691f02-d155-4e3e-a034-cace5c573d48",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "spawnTimeMs": 66902,
+          "finalLevel": 3,
+          "levelMilestones": [
+            {
+              "level": 1,
+              "gameTimeMs": 123285,
+              "gameTimeFormatted": "2:03"
+            },
+            {
+              "level": 2,
+              "gameTimeMs": 188807,
+              "gameTimeFormatted": "3:08"
+            },
+            {
+              "level": 3,
+              "gameTimeMs": 383126,
+              "gameTimeFormatted": "6:23"
+            }
+          ],
+          "skillOrder": [
+            {
+              "heroLevel": 1,
+              "abilityId": "AOsf",
+              "skillName": "Feral Spirit",
+              "skillLevel": 1,
+              "gameTimeMs": 123285,
+              "gameTimeFormatted": "2:03"
+            },
+            {
+              "heroLevel": 2,
+              "abilityId": "AOcl",
+              "skillName": "Chain Lighting",
+              "skillLevel": 1,
+              "gameTimeMs": 188807,
+              "gameTimeFormatted": "3:08"
+            },
+            {
+              "heroLevel": 3,
+              "abilityId": "AOsf",
+              "skillName": "Feral Spirit",
+              "skillLevel": 2,
+              "gameTimeMs": 383126,
+              "gameTimeFormatted": "6:23"
+            }
+          ],
+          "items": [
+            {
+              "slot": "3",
+              "itemId": "plcl",
+              "name": "Lesser Clarity Potion"
+            }
+          ],
+          "totalCreepXp": 116,
+          "camps": [
+            {
+              "gameTimeMs": 137995,
+              "gameTimeFormatted": "2:17",
+              "xpGained": 116,
+              "totalLevel": 7,
+              "x": -1677.6664428710938,
+              "y": -1217.5553588867188,
+              "bounds": {
+                "minX": -1849.02001953125,
+                "minY": -1270.1575927734375,
+                "maxX": -1506.3128662109375,
+                "maxY": -1164.953125
+              },
+              "groupId": "d44ce231-ff7a-4c06-89ab-64dee2597c00"
+            }
+          ]
+        },
+        {
+          "uuid": "e690c3df-6140-447c-b9f0-5a41d5b09e59",
+          "name": "FireLord",
+          "itemId": "Nfir",
+          "spawnTimeMs": 307833,
+          "finalLevel": 3,
+          "levelMilestones": [
+            {
+              "level": 1,
+              "gameTimeMs": 308932,
+              "gameTimeFormatted": "5:08"
+            },
+            {
+              "level": 2,
+              "gameTimeMs": 497633,
+              "gameTimeFormatted": "8:17"
+            },
+            {
+              "level": 3,
+              "gameTimeMs": 609829,
+              "gameTimeFormatted": "10:09"
+            }
+          ],
+          "skillOrder": [
+            {
+              "heroLevel": 1,
+              "abilityId": "ANlm",
+              "skillName": "Summon Lava Spawn",
+              "skillLevel": 1,
+              "gameTimeMs": 308932,
+              "gameTimeFormatted": "5:08"
+            },
+            {
+              "heroLevel": 2,
+              "abilityId": "ANso",
+              "skillName": "Soul Burn",
+              "skillLevel": 1,
+              "gameTimeMs": 497633,
+              "gameTimeFormatted": "8:17"
+            },
+            {
+              "heroLevel": 3,
+              "abilityId": "ANlm",
+              "skillName": "Summon Lava Spawn",
+              "skillLevel": 2,
+              "gameTimeMs": 609829,
+              "gameTimeFormatted": "10:09"
+            }
+          ],
+          "items": [
+            {
+              "slot": "2",
+              "itemId": "plcl",
+              "name": "Lesser Clarity Potion"
+            },
+            {
+              "slot": "3",
+              "itemId": "shas",
+              "name": "Scroll of Speed"
+            }
+          ],
+          "totalCreepXp": 0,
+          "camps": []
+        }
+      ],
+      "itemPurchases": [
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 240332,
+          "gameTimeFormatted": "4:00",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 242822,
+          "gameTimeFormatted": "4:02",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 263844,
+          "gameTimeFormatted": "4:23",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 555038,
+          "gameTimeFormatted": "9:15",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "e690c3df-6140-447c-b9f0-5a41d5b09e59"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 555190,
+          "gameTimeFormatted": "9:15",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "e690c3df-6140-447c-b9f0-5a41d5b09e59"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 556892,
+          "gameTimeFormatted": "9:16",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 562076,
+          "gameTimeFormatted": "9:22",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 703366,
+          "gameTimeFormatted": "11:43",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 703487,
+          "gameTimeFormatted": "11:43",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 703548,
+          "gameTimeFormatted": "11:43",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 705927,
+          "gameTimeFormatted": "11:45",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        }
+      ],
+      "itemUses": [
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 273169,
+          "gameTimeFormatted": "4:33",
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 555677,
+          "gameTimeFormatted": "9:15",
+          "heroUuid": "e690c3df-6140-447c-b9f0-5a41d5b09e59"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 654649,
+          "gameTimeFormatted": "10:54",
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 703914,
+          "gameTimeFormatted": "11:43",
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 705102,
+          "gameTimeFormatted": "11:45",
+          "heroUuid": "e690c3df-6140-447c-b9f0-5a41d5b09e59"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 801591,
+          "gameTimeFormatted": "13:21",
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 918595,
+          "gameTimeFormatted": "15:18",
+          "heroUuid": "c5691f02-d155-4e3e-a034-cace5c573d48"
+        }
+      ],
+      "mercenariesHired": [],
+      "upgradeTimeline": [
+        {
+          "itemId": "Roen",
+          "name": "Ensnare",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnensnare",
+          "gameTimeMs": 708553,
+          "gameTimeFormatted": "11:48"
+        }
+      ],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 30000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 60000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 90000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 120000,
+          "count": 1
+        },
+        {
+          "gameTimeMs": 150000,
+          "count": 2
+        },
+        {
+          "gameTimeMs": 180000,
+          "count": 2
+        },
+        {
+          "gameTimeMs": 210000,
+          "count": 4
+        },
+        {
+          "gameTimeMs": 240000,
+          "count": 5
+        },
+        {
+          "gameTimeMs": 270000,
+          "count": 7
+        },
+        {
+          "gameTimeMs": 300000,
+          "count": 8
+        },
+        {
+          "gameTimeMs": 330000,
+          "count": 9
+        },
+        {
+          "gameTimeMs": 360000,
+          "count": 10
+        },
+        {
+          "gameTimeMs": 390000,
+          "count": 12
+        },
+        {
+          "gameTimeMs": 420000,
+          "count": 12
+        },
+        {
+          "gameTimeMs": 450000,
+          "count": 14
+        },
+        {
+          "gameTimeMs": 480000,
+          "count": 14
+        },
+        {
+          "gameTimeMs": 510000,
+          "count": 16
+        },
+        {
+          "gameTimeMs": 540000,
+          "count": 17
+        },
+        {
+          "gameTimeMs": 570000,
+          "count": 17
+        },
+        {
+          "gameTimeMs": 600000,
+          "count": 19
+        },
+        {
+          "gameTimeMs": 630000,
+          "count": 21
+        },
+        {
+          "gameTimeMs": 660000,
+          "count": 22
+        },
+        {
+          "gameTimeMs": 690000,
+          "count": 24
+        },
+        {
+          "gameTimeMs": 720000,
+          "count": 25
+        },
+        {
+          "gameTimeMs": 750000,
+          "count": 26
+        },
+        {
+          "gameTimeMs": 780000,
+          "count": 28
+        },
+        {
+          "gameTimeMs": 810000,
+          "count": 30
+        },
+        {
+          "gameTimeMs": 840000,
+          "count": 31
+        },
+        {
+          "gameTimeMs": 870000,
+          "count": 34
+        },
+        {
+          "gameTimeMs": 900000,
+          "count": 35
+        }
+      ],
+      "apm": {
+        "rawAverage": 687,
+        "effectiveAverage": 608,
+        "effectivePerMinute": [
+          573,
+          633,
+          757,
+          630,
+          729,
+          800,
+          460,
+          463,
+          581,
+          795,
+          628,
+          682,
+          730,
+          551,
+          527,
+          195
+        ],
+        "categories": {
+          "select": 8678,
+          "ui": 7242,
+          "move": 2096,
+          "build": 53,
+          "ability": 84,
+          "cancel": 50,
+          "item": 24
+        }
+      }
     },
     "2": {
       "name": "Lianpia#3217",
       "race": "O",
+      "startingPosition": {
+        "x": 3904,
+        "y": -3840
+      },
       "heroOpener": {
         "name": "Blademaster",
         "itemId": "Obla",
@@ -240,6 +1223,267 @@
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
+      "firstTowerTime": null,
+      "firstTowerTimeFormatted": null,
+      "firstUnitTime": 93343,
+      "firstUnitTimeFormatted": "1:33",
+      "firstHeroLevel2Time": 183875,
+      "firstHeroLevel2TimeFormatted": "3:03",
+      "firstHeroLevel3Time": 406999,
+      "firstHeroLevel3TimeFormatted": "6:46",
+      "firstHeroLevel5Time": 731353,
+      "firstHeroLevel5TimeFormatted": "12:11",
+      "archetype": "1-base-t2",
+      "economyTrack": [
+        {
+          "gameTimeMs": 0,
+          "supplyUsed": 5,
+          "supplyMax": 11,
+          "workersOnGold": 5,
+          "workersOnLumber": 0,
+          "totalWorkers": 5
+        },
+        {
+          "gameTimeMs": 30000,
+          "supplyUsed": 7,
+          "supplyMax": 21,
+          "workersOnGold": 4,
+          "workersOnLumber": 0,
+          "totalWorkers": 7
+        },
+        {
+          "gameTimeMs": 60000,
+          "supplyUsed": 9,
+          "supplyMax": 21,
+          "workersOnGold": 6,
+          "workersOnLumber": 0,
+          "totalWorkers": 9
+        },
+        {
+          "gameTimeMs": 90000,
+          "supplyUsed": 11,
+          "supplyMax": 21,
+          "workersOnGold": 7,
+          "workersOnLumber": 2,
+          "totalWorkers": 11
+        },
+        {
+          "gameTimeMs": 120000,
+          "supplyUsed": 17,
+          "supplyMax": 21,
+          "workersOnGold": 8,
+          "workersOnLumber": 3,
+          "totalWorkers": 12
+        },
+        {
+          "gameTimeMs": 150000,
+          "supplyUsed": 25,
+          "supplyMax": 40,
+          "workersOnGold": 8,
+          "workersOnLumber": 5,
+          "totalWorkers": 14
+        },
+        {
+          "gameTimeMs": 180000,
+          "supplyUsed": 29,
+          "supplyMax": 40,
+          "workersOnGold": 8,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 210000,
+          "supplyUsed": 32,
+          "supplyMax": 40,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 240000,
+          "supplyUsed": 38,
+          "supplyMax": 40,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 270000,
+          "supplyUsed": 38,
+          "supplyMax": 40,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 300000,
+          "supplyUsed": 38,
+          "supplyMax": 50,
+          "workersOnGold": 8,
+          "workersOnLumber": 5,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 330000,
+          "supplyUsed": 38,
+          "supplyMax": 50,
+          "workersOnGold": 8,
+          "workersOnLumber": 5,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 360000,
+          "supplyUsed": 43,
+          "supplyMax": 50,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 390000,
+          "supplyUsed": 46,
+          "supplyMax": 50,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 420000,
+          "supplyUsed": 46,
+          "supplyMax": 50,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 450000,
+          "supplyUsed": 52,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 480000,
+          "supplyUsed": 55,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 510000,
+          "supplyUsed": 55,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 540000,
+          "supplyUsed": 58,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 570000,
+          "supplyUsed": 58,
+          "supplyMax": 60,
+          "workersOnGold": 9,
+          "workersOnLumber": 6,
+          "totalWorkers": 15
+        },
+        {
+          "gameTimeMs": 600000,
+          "supplyUsed": 62,
+          "supplyMax": 70,
+          "workersOnGold": 9,
+          "workersOnLumber": 7,
+          "totalWorkers": 16
+        },
+        {
+          "gameTimeMs": 630000,
+          "supplyUsed": 65,
+          "supplyMax": 80,
+          "workersOnGold": 9,
+          "workersOnLumber": 7,
+          "totalWorkers": 16
+        },
+        {
+          "gameTimeMs": 660000,
+          "supplyUsed": 68,
+          "supplyMax": 80,
+          "workersOnGold": 9,
+          "workersOnLumber": 7,
+          "totalWorkers": 16
+        },
+        {
+          "gameTimeMs": 690000,
+          "supplyUsed": 69,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 720000,
+          "supplyUsed": 69,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 750000,
+          "supplyUsed": 69,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 780000,
+          "supplyUsed": 75,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 810000,
+          "supplyUsed": 75,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 840000,
+          "supplyUsed": 78,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 870000,
+          "supplyUsed": 78,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        },
+        {
+          "gameTimeMs": 900000,
+          "supplyUsed": 78,
+          "supplyMax": 80,
+          "workersOnGold": 10,
+          "workersOnLumber": 7,
+          "totalWorkers": 17
+        }
+      ],
       "buildPreview": [
         {
           "type": "building",
@@ -431,7 +1675,868 @@
           "gameTimeMs": 425075,
           "gameTimeFormatted": "7:05"
         }
-      ]
+      ],
+      "heroBuilds": [
+        {
+          "uuid": "479eb1f3-800d-43de-8dda-821b11e89526",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "spawnTimeMs": 65718,
+          "finalLevel": 5,
+          "levelMilestones": [
+            {
+              "level": 1,
+              "gameTimeMs": 123254,
+              "gameTimeFormatted": "2:03"
+            },
+            {
+              "level": 2,
+              "gameTimeMs": 183875,
+              "gameTimeFormatted": "3:03"
+            },
+            {
+              "level": 3,
+              "gameTimeMs": 406999,
+              "gameTimeFormatted": "6:46"
+            },
+            {
+              "level": 4,
+              "gameTimeMs": 730899,
+              "gameTimeFormatted": "12:10"
+            },
+            {
+              "level": 5,
+              "gameTimeMs": 731353,
+              "gameTimeFormatted": "12:11"
+            }
+          ],
+          "skillOrder": [
+            {
+              "heroLevel": 1,
+              "abilityId": "AOwk",
+              "skillName": "Wind Walk",
+              "skillLevel": 1,
+              "gameTimeMs": 123254,
+              "gameTimeFormatted": "2:03"
+            },
+            {
+              "heroLevel": 2,
+              "abilityId": "AOcr",
+              "skillName": "Critical Strike",
+              "skillLevel": 1,
+              "gameTimeMs": 183875,
+              "gameTimeFormatted": "3:03"
+            },
+            {
+              "heroLevel": 3,
+              "abilityId": "AOcr",
+              "skillName": "Critical Strike",
+              "skillLevel": 2,
+              "gameTimeMs": 406999,
+              "gameTimeFormatted": "6:46"
+            },
+            {
+              "heroLevel": 4,
+              "abilityId": "AOmi",
+              "skillName": "Mirror Image",
+              "skillLevel": 1,
+              "gameTimeMs": 730899,
+              "gameTimeFormatted": "12:10"
+            },
+            {
+              "heroLevel": 5,
+              "abilityId": "AOcr",
+              "skillName": "Critical Strike",
+              "skillLevel": 3,
+              "gameTimeMs": 731353,
+              "gameTimeFormatted": "12:11"
+            }
+          ],
+          "items": [
+            {
+              "slot": "3",
+              "itemId": "shas",
+              "name": "Scroll of Speed"
+            }
+          ],
+          "totalCreepXp": 222,
+          "camps": [
+            {
+              "gameTimeMs": 247435,
+              "gameTimeFormatted": "4:07",
+              "xpGained": 128,
+              "totalLevel": 8,
+              "x": -2679.2923583984375,
+              "y": 1862.4292602539062,
+              "bounds": {
+                "minX": -2847.73828125,
+                "minY": 1721.00341796875,
+                "maxX": -2510.846435546875,
+                "maxY": 2003.8551025390625
+              },
+              "groupId": "0b7dcddb-6b18-4bce-b168-05d8eb98a6ee"
+            },
+            {
+              "gameTimeMs": 591818,
+              "gameTimeFormatted": "9:51",
+              "xpGained": 94,
+              "totalLevel": 11,
+              "x": 2324.2403564453125,
+              "y": -4624.399169921875,
+              "bounds": {
+                "minX": 2032.257568359375,
+                "minY": -4744.830078125,
+                "maxX": 2616.22314453125,
+                "maxY": -4503.96826171875
+              },
+              "groupId": "eb62e0b1-d9a1-4be4-8789-c0be073720b3"
+            }
+          ]
+        },
+        {
+          "uuid": "8ae0a18b-5944-499f-a9de-942e572b10a2",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "spawnTimeMs": 278887,
+          "finalLevel": 4,
+          "levelMilestones": [
+            {
+              "level": 1,
+              "gameTimeMs": 338941,
+              "gameTimeFormatted": "5:38"
+            },
+            {
+              "level": 2,
+              "gameTimeMs": 452460,
+              "gameTimeFormatted": "7:32"
+            },
+            {
+              "level": 3,
+              "gameTimeMs": 661019,
+              "gameTimeFormatted": "11:01"
+            },
+            {
+              "level": 4,
+              "gameTimeMs": 881712,
+              "gameTimeFormatted": "14:41"
+            }
+          ],
+          "skillOrder": [
+            {
+              "heroLevel": 1,
+              "abilityId": "AOhw",
+              "skillName": "Healing Wave",
+              "skillLevel": 1,
+              "gameTimeMs": 338941,
+              "gameTimeFormatted": "5:38"
+            },
+            {
+              "heroLevel": 2,
+              "abilityId": "AOsw",
+              "skillName": "Serpent Ward",
+              "skillLevel": 1,
+              "gameTimeMs": 452460,
+              "gameTimeFormatted": "7:32"
+            },
+            {
+              "heroLevel": 3,
+              "abilityId": "AOhw",
+              "skillName": "Healing Wave",
+              "skillLevel": 2,
+              "gameTimeMs": 661019,
+              "gameTimeFormatted": "11:01"
+            },
+            {
+              "heroLevel": 4,
+              "abilityId": "AOsw",
+              "skillName": "Serpent Ward",
+              "skillLevel": 2,
+              "gameTimeMs": 881712,
+              "gameTimeFormatted": "14:41"
+            }
+          ],
+          "items": [
+            {
+              "slot": "1",
+              "itemId": "hslv",
+              "name": "Healing Salve"
+            },
+            {
+              "slot": "3",
+              "itemId": "phea",
+              "name": "Potion of Healing"
+            },
+            {
+              "slot": "4",
+              "itemId": "plcl",
+              "name": "Lesser Clarity Potion"
+            },
+            {
+              "slot": "5",
+              "itemId": "hslv",
+              "name": "Healing Salve"
+            },
+            {
+              "slot": "6",
+              "itemId": "plcl",
+              "name": "Lesser Clarity Potion"
+            },
+            {
+              "slot": "undefined",
+              "itemId": "shas",
+              "name": "Scroll of Speed"
+            }
+          ],
+          "totalCreepXp": 94,
+          "camps": [
+            {
+              "gameTimeMs": 591818,
+              "gameTimeFormatted": "9:51",
+              "xpGained": 94,
+              "totalLevel": 11,
+              "x": 2324.2403564453125,
+              "y": -4624.399169921875,
+              "bounds": {
+                "minX": 2032.257568359375,
+                "minY": -4744.830078125,
+                "maxX": 2616.22314453125,
+                "maxY": -4503.96826171875
+              },
+              "groupId": "eb62e0b1-d9a1-4be4-8789-c0be073720b3"
+            }
+          ]
+        }
+      ],
+      "itemPurchases": [
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 149507,
+          "gameTimeFormatted": "2:29",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 149658,
+          "gameTimeFormatted": "2:29",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 149809,
+          "gameTimeFormatted": "2:29",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 335606,
+          "gameTimeFormatted": "5:35",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 335757,
+          "gameTimeFormatted": "5:35",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 338295,
+          "gameTimeFormatted": "5:38",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 342408,
+          "gameTimeFormatted": "5:42",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 343898,
+          "gameTimeFormatted": "5:43",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 412613,
+          "gameTimeFormatted": "6:52",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 450846,
+          "gameTimeFormatted": "7:30",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 462666,
+          "gameTimeFormatted": "7:42",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 466374,
+          "gameTimeFormatted": "7:46",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 471778,
+          "gameTimeFormatted": "7:51",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 505264,
+          "gameTimeFormatted": "8:25",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "pman",
+          "name": "Potion of Mana",
+          "gameTimeMs": 516327,
+          "gameTimeFormatted": "8:36",
+          "goldCost": 200,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 531686,
+          "gameTimeFormatted": "8:51",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 534112,
+          "gameTimeFormatted": "8:54",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 594161,
+          "gameTimeFormatted": "9:54",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 627749,
+          "gameTimeFormatted": "10:27",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 668149,
+          "gameTimeFormatted": "11:08",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 668452,
+          "gameTimeFormatted": "11:08",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 676231,
+          "gameTimeFormatted": "11:16",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "pman",
+          "name": "Potion of Mana",
+          "gameTimeMs": 679900,
+          "gameTimeFormatted": "11:19",
+          "goldCost": 200,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 729314,
+          "gameTimeFormatted": "12:09",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 762850,
+          "gameTimeFormatted": "12:42",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "pman",
+          "name": "Potion of Mana",
+          "gameTimeMs": 777772,
+          "gameTimeFormatted": "12:57",
+          "goldCost": 200,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 798822,
+          "gameTimeFormatted": "13:18",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 799004,
+          "gameTimeFormatted": "13:19",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 823251,
+          "gameTimeFormatted": "13:43",
+          "goldCost": 150,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 828567,
+          "gameTimeFormatted": "13:48",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "pman",
+          "name": "Potion of Mana",
+          "gameTimeMs": 832652,
+          "gameTimeFormatted": "13:52",
+          "goldCost": 200,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 846600,
+          "gameTimeFormatted": "14:06",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 870507,
+          "gameTimeFormatted": "14:30",
+          "goldCost": 40,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 889999,
+          "gameTimeFormatted": "14:49",
+          "goldCost": 100,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 891635,
+          "gameTimeFormatted": "14:51",
+          "goldCost": 50,
+          "isNeutralShop": false,
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        }
+      ],
+      "itemUses": [
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 280968,
+          "gameTimeFormatted": "4:40",
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 342833,
+          "gameTimeFormatted": "5:42",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 398195,
+          "gameTimeFormatted": "6:38",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 421066,
+          "gameTimeFormatted": "7:01",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 432801,
+          "gameTimeFormatted": "7:12",
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 451757,
+          "gameTimeFormatted": "7:31",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 476885,
+          "gameTimeFormatted": "7:56",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 510637,
+          "gameTimeFormatted": "8:30",
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 534566,
+          "gameTimeFormatted": "8:54",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 640742,
+          "gameTimeFormatted": "10:40",
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 670425,
+          "gameTimeFormatted": "11:10",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "shas",
+          "name": "Scroll of Speed",
+          "gameTimeMs": 758753,
+          "gameTimeFormatted": "12:38",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 783252,
+          "gameTimeFormatted": "13:03",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 786079,
+          "gameTimeFormatted": "13:06",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 799886,
+          "gameTimeFormatted": "13:19",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 841583,
+          "gameTimeFormatted": "14:01",
+          "heroUuid": "479eb1f3-800d-43de-8dda-821b11e89526"
+        },
+        {
+          "itemId": "hslv",
+          "name": "Healing Salve",
+          "gameTimeMs": 850154,
+          "gameTimeFormatted": "14:10",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "plcl",
+          "name": "Lesser Clarity Potion",
+          "gameTimeMs": 889727,
+          "gameTimeFormatted": "14:49",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        },
+        {
+          "itemId": "phea",
+          "name": "Potion of Healing",
+          "gameTimeMs": 913466,
+          "gameTimeFormatted": "15:13",
+          "heroUuid": "8ae0a18b-5944-499f-a9de-942e572b10a2"
+        }
+      ],
+      "mercenariesHired": [],
+      "upgradeTimeline": [
+        {
+          "itemId": "Robs",
+          "name": "Berserker Strength",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnberserk",
+          "gameTimeMs": 288116,
+          "gameTimeFormatted": "4:48"
+        },
+        {
+          "itemId": "Rowt",
+          "name": "Spirit Walker Training",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnspiritwalkeradepttraining",
+          "gameTimeMs": 425075,
+          "gameTimeFormatted": "7:05"
+        }
+      ],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 30000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 60000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 90000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 120000,
+          "count": 4
+        },
+        {
+          "gameTimeMs": 150000,
+          "count": 4
+        },
+        {
+          "gameTimeMs": 180000,
+          "count": 4
+        },
+        {
+          "gameTimeMs": 210000,
+          "count": 5
+        },
+        {
+          "gameTimeMs": 240000,
+          "count": 6
+        },
+        {
+          "gameTimeMs": 270000,
+          "count": 6
+        },
+        {
+          "gameTimeMs": 300000,
+          "count": 6
+        },
+        {
+          "gameTimeMs": 330000,
+          "count": 6
+        },
+        {
+          "gameTimeMs": 360000,
+          "count": 7
+        },
+        {
+          "gameTimeMs": 390000,
+          "count": 8
+        },
+        {
+          "gameTimeMs": 420000,
+          "count": 9
+        },
+        {
+          "gameTimeMs": 450000,
+          "count": 10
+        },
+        {
+          "gameTimeMs": 480000,
+          "count": 11
+        },
+        {
+          "gameTimeMs": 510000,
+          "count": 13
+        },
+        {
+          "gameTimeMs": 540000,
+          "count": 14
+        },
+        {
+          "gameTimeMs": 570000,
+          "count": 15
+        },
+        {
+          "gameTimeMs": 600000,
+          "count": 16
+        },
+        {
+          "gameTimeMs": 630000,
+          "count": 17
+        },
+        {
+          "gameTimeMs": 660000,
+          "count": 17
+        },
+        {
+          "gameTimeMs": 690000,
+          "count": 17
+        },
+        {
+          "gameTimeMs": 720000,
+          "count": 17
+        },
+        {
+          "gameTimeMs": 750000,
+          "count": 19
+        },
+        {
+          "gameTimeMs": 780000,
+          "count": 19
+        },
+        {
+          "gameTimeMs": 810000,
+          "count": 19
+        },
+        {
+          "gameTimeMs": 840000,
+          "count": 20
+        },
+        {
+          "gameTimeMs": 870000,
+          "count": 20
+        },
+        {
+          "gameTimeMs": 900000,
+          "count": 20
+        }
+      ],
+      "apm": {
+        "rawAverage": 700,
+        "effectiveAverage": 614,
+        "effectivePerMinute": [
+          842,
+          959,
+          721,
+          673,
+          705,
+          549,
+          504,
+          451,
+          523,
+          733,
+          625,
+          657,
+          575,
+          496,
+          591,
+          227
+        ],
+        "categories": {
+          "ui": 4824,
+          "select": 9397,
+          "move": 1507,
+          "build": 59,
+          "ability": 142,
+          "cancel": 71,
+          "item": 30
+        }
+      }
     }
   }
 }

@@ -3,9 +3,11 @@
   Uses the same drawing logic as data-tool.js but skips MPQ extraction.
 
   Usage:
-    node tools/regen-maps.js                    # all maps
-    node tools/regen-maps.js --map=NorthernIsles  # single map
-    node tools/regen-maps.js --dry-run          # just show tilesets
+    node tools/regen-maps.js                          # all maps
+    node tools/regen-maps.js --map=NorthernIsles      # single map
+    node tools/regen-maps.js --dry-run                # just show tilesets
+    node tools/regen-maps.js --terrain-size=4096      # downscale terrain.jpg to NxN before encode
+    node tools/regen-maps.js --terrain-quality=0.85   # JPEG quality (0..1, default 0.92)
 */
 
 const fs = require('fs');
@@ -29,9 +31,11 @@ const TERRAIN_TEX_DIR = "client/assets/terrain";
 const MAPDATA_DIR = "mapdata";
 const CLIENT_MAPS_DIR = "client/maps";
 
-// Pixels of baked terrain texture per WC3 tile. 32 gives plenty of detail
-// for the 3D camera distance while keeping the bake fast (~10s per map).
-const TERRAIN_BAKE_PX_PER_TILE = 32;
+// Optional overrides set from CLI in main().
+// terrainSize: if non-null, downscale the native bake to NxN before JPEG encode.
+// terrainQuality: JPEG quality 0..1 for terrain.jpg.
+let terrainSize = null;
+let terrainQuality = 0.92;
 
 const TILESET_NAMES = {
   'L': 'Lordaeron Summer', 'V': 'Village', 'F': 'Lordaeron Fall', 'X': 'Village Fall',
@@ -370,7 +374,19 @@ async function bakeTerrainTexture (terrainFile, clientMapDir) {
   }
 
   ctx.putImageData(outImg, 0, 0);
-  const buf = canvas.toBuffer('image/jpeg', { quality: 0.92 });
+
+  let encodeCanvas = canvas;
+  let finalW = outW, finalH = outH;
+  if (terrainSize && terrainSize !== outW) {
+    const dst = createCanvas(terrainSize, terrainSize);
+    const dctx = dst.getContext('2d');
+    dctx.imageSmoothingEnabled = true;
+    dctx.imageSmoothingQuality = 'high';
+    dctx.drawImage(canvas, 0, 0, outW, outH, 0, 0, terrainSize, terrainSize);
+    encodeCanvas = dst;
+    finalW = finalH = terrainSize;
+  }
+  const buf = encodeCanvas.toBuffer('image/jpeg', { quality: terrainQuality });
 
   if (!fs.existsSync(clientMapDir)) {
     fs.mkdirSync(clientMapDir, { recursive: true });
@@ -378,8 +394,9 @@ async function bakeTerrainTexture (terrainFile, clientMapDir) {
 
   fs.writeFileSync(`${clientMapDir}/terrain.jpg`, buf);
   const usedTextures = palettes.filter(c => images.get(c)).length;
-  console.log(`    baked terrain ${outW}x${outH} px (${usedTextures}/${nPalettes} textures, ${(buf.length/1024).toFixed(0)} KB)`);
-  return { width: outW, height: outH, codes: palettes, usedTextures };
+  const sizeNote = (finalW !== outW) ? ` → ${finalW}x${finalH}` : '';
+  console.log(`    baked terrain ${outW}x${outH}${sizeNote} px q=${terrainQuality} (${usedTextures}/${nPalettes} textures, ${(buf.length/1024).toFixed(0)} KB)`);
+  return { width: finalW, height: finalH, codes: palettes, usedTextures };
 }
 
 function drawBackgroundMap(output, wpm, doo, terrainFile) {
@@ -1050,6 +1067,8 @@ async function main() {
   args.forEach(arg => {
     if (arg.startsWith('--map=')) targetMap = arg.split('=')[1];
     if (arg === '--dry-run') dryRun = true;
+    if (arg.startsWith('--terrain-size=')) terrainSize = parseInt(arg.split('=')[1], 10);
+    if (arg.startsWith('--terrain-quality=')) terrainQuality = parseFloat(arg.split('=')[1]);
   });
 
   const maps = targetMap

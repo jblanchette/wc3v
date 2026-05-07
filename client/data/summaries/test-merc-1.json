@@ -2,13 +2,444 @@
   "replayId": "test-merc-1",
   "map": "Battleground",
   "mapRaw": "Maps/W3Champions/v11/w3c_Battleground.w3x",
+  "mapInfo": {
+    "name": "Battleground",
+    "bounds": {
+      "camera": [
+        [
+          -7680,
+          7808
+        ],
+        [
+          7680,
+          -8064
+        ]
+      ],
+      "map": [
+        [
+          -10240,
+          10240
+        ],
+        [
+          10240,
+          -10240
+        ]
+      ]
+    },
+    "gridSize": {
+      "playable": [
+        128,
+        128
+      ],
+      "full": [
+        160,
+        160
+      ],
+      "margins": [
+        16,
+        16,
+        15,
+        17
+      ]
+    }
+  },
   "durationMs": 216050,
   "durationFormatted": "3:36",
-  "fingerprint": "Battleground|216|jeef#1496",
+  "neutralCamps": [
+    {
+      "groupId": "ac14e079-1dde-487b-9545-1eb8b144e6f1",
+      "totalLevel": 20,
+      "bounds": {
+        "minX": -2211.68115234375,
+        "minY": -4344.314697265625,
+        "maxX": -1220.4111328125,
+        "maxY": -3437.788818359375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "81f27310-2765-4ebe-955f-59a34ebc363f",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": 5492.6455078125,
+        "minY": 3428.920166015625,
+        "maxX": 6358.50634765625,
+        "maxY": 4379.632568359375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "be799a6a-3eb9-4109-9e14-7d59d18c3f4f",
+      "totalLevel": 20,
+      "bounds": {
+        "minX": 6264.0537109375,
+        "minY": -2957.110107421875,
+        "maxX": 7069.310546875,
+        "maxY": -1964.536376953125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "08711575-ad85-40d6-a7f4-e98001065904",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 4928.59716796875,
+        "minY": -1565.112060546875,
+        "maxX": 5756.6328125,
+        "maxY": -883.4847412109375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "6cb1520a-84d6-4812-a7be-bdfa0723e1bd",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": -5372.61962890625,
+        "minY": -3094.58203125,
+        "maxX": -4600.37255859375,
+        "maxY": -2085.635986328125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "b853e4df-c7c6-495a-8e1c-d301d9b0e506",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": 6612.72705078125,
+        "minY": -5729.38818359375,
+        "maxX": 7478.587890625,
+        "maxY": -4778.67578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "8f7eb0cf-6311-4197-ad65-f5e56831171e",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": 6527.1953125,
+        "minY": -1150.51708984375,
+        "maxX": 7393.05615234375,
+        "maxY": -199.8046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "b40e3267-124d-486c-8faa-932d758ba239",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 3468.800537109375,
+        "minY": -5193.185546875,
+        "maxX": 4261.6650390625,
+        "maxY": -4447.6240234375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "3e80e8fe-c165-480f-8bfb-81947fea2f73",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -1290.057861328125,
+        "minY": -6470.7958984375,
+        "maxX": -490.0784912109375,
+        "maxY": -5467.72705078125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "71e4f521-d58d-44a9-88ec-8f51e34ba7bf",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": -6402.53955078125,
+        "minY": -7882.03271484375,
+        "maxX": -5470.11083984375,
+        "maxY": -7030.01123046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "c80cc282-5cf4-44be-8f5c-7d91837fbed3",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": 2475.67578125,
+        "minY": -6106.931640625,
+        "maxX": 3487.176025390625,
+        "maxY": -5316.55517578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "62491c10-fe8e-409d-85e7-6b173b0426da",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": 275.5185546875,
+        "minY": -8111.8212890625,
+        "maxX": 1180.4988403320312,
+        "maxY": -7269.181640625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "c939f940-af8e-4a08-b67d-a44b2bce9890",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": 4822.76953125,
+        "minY": 1880.071533203125,
+        "maxX": 5585.25830078125,
+        "maxY": 2890.447998046875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "431c5a66-6b79-48ee-ae5d-3cf7554351d0",
+      "totalLevel": 14,
+      "bounds": {
+        "minX": -2663.687255859375,
+        "minY": 4628.95849609375,
+        "maxX": -1680.5816650390625,
+        "maxY": 5445.93017578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "a76007f7-b6de-4e47-b20e-efa547f9fbcb",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": 1724.408935546875,
+        "minY": -2037.8096923828125,
+        "maxX": 2594.178466796875,
+        "maxY": -1045.5499267578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "a10acd8a-868b-41cf-a444-2b2fa1407220",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -3176.66845703125,
+        "minY": -4711.6455078125,
+        "maxX": -2404.110107421875,
+        "maxY": -3936.37841796875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "4e2f7db4-a45d-4eca-8c8d-cbf55014a62b",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": 6302.93505859375,
+        "minY": 6323.5498046875,
+        "maxX": 7189.10400390625,
+        "maxY": 7217.1142578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "ab34d5c1-1b58-40b6-a684-cfc04212e857",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": 1817.148193359375,
+        "minY": 1539.35888671875,
+        "maxX": 2726.704345703125,
+        "maxY": 2501.701171875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e4066fa2-084d-41a8-8a3c-1e439c77e83b",
+      "totalLevel": 20,
+      "bounds": {
+        "minX": 1659.741455078125,
+        "minY": 4315.265625,
+        "maxX": 2654.987548828125,
+        "maxY": 5148.91162109375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "836bf80f-4f0f-42d9-885c-8a9b61140b38",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": -7812.71875,
+        "minY": -3862.665283203125,
+        "maxX": -6879.5830078125,
+        "maxY": -3020.568115234375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "8c544b95-14ac-4117-88b1-c07cc8718e92",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -4698.65087890625,
+        "minY": 3028.49609375,
+        "maxX": -3830.9033203125,
+        "maxY": 3783.55078125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "70d18812-aad2-4dab-a01e-0450bcb69f89",
+      "totalLevel": 20,
+      "bounds": {
+        "minX": -4714.3603515625,
+        "minY": 1727.306640625,
+        "maxX": -3892.38916015625,
+        "maxY": 2722.680908203125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "23929ce8-1c27-4048-a4c8-bb3c3b854c1c",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": -2335.457763671875,
+        "minY": -1455.607421875,
+        "maxX": -1531.050048828125,
+        "maxY": -401.01068115234375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "5258f922-23a4-46a3-b382-401cf04c4144",
+      "totalLevel": 21,
+      "bounds": {
+        "minX": -1925.39501953125,
+        "minY": 1880.234619140625,
+        "maxX": -1126.9930419921875,
+        "maxY": 2837.6767578125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "cfa6eb8b-dd4a-498a-aeef-743e1922714d",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": 6240.44921875,
+        "minY": -8009.01708984375,
+        "maxX": 7055.798828125,
+        "maxY": -7045.19384765625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "3fa585ca-0ee0-4f15-8951-e12b1a1d1857",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -1555.724853515625,
+        "minY": 6574.841796875,
+        "maxX": -648.0025024414062,
+        "maxY": 7489.94091796875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "de271f6a-3f97-467d-abc5-e06e35522419",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -4221.648193359375,
+        "minY": -6527.43408203125,
+        "maxX": -3270.6376953125,
+        "maxY": -5661.97705078125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e1f3986d-42ee-429d-acb9-a4f43f77bcd5",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 2968.45263671875,
+        "minY": 4619.6279296875,
+        "maxX": 3783.0107421875,
+        "maxY": 5336.576171875
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "db227e96-13d2-4ea2-be89-0a3c8f42b130",
+      "totalLevel": 13,
+      "bounds": {
+        "minX": -7659.31640625,
+        "minY": -983.4488525390625,
+        "maxX": -6850.98388671875,
+        "maxY": 10.5452880859375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "f33235aa-375e-418f-9574-4b0cda4964da",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": 7279.03662109375,
+        "minY": 1647.337158203125,
+        "maxX": 8151.67529296875,
+        "maxY": 2540.901611328125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "de81e6c9-ed1d-4a25-a0b1-4ddf1fb2dcf3",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": 1404.754638671875,
+        "minY": 7039.1435546875,
+        "maxX": 2202.861328125,
+        "maxY": 7911.751953125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "336a9d68-f7ee-4829-ba2c-4b4dc91864e6",
+      "totalLevel": 12,
+      "bounds": {
+        "minX": -8012.30029296875,
+        "minY": 5631.66943359375,
+        "maxX": -7203.4365234375,
+        "maxY": 6471.43212890625
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "d66ac936-6d95-4a32-9a2c-061ee4d67eae",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": 1134.4564208984375,
+        "minY": -5119.43505859375,
+        "maxX": 1938.805419921875,
+        "maxY": -4319.12939453125
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "e2823b5a-b840-4466-92ac-83ebb61bb957",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -5783.9755859375,
+        "minY": 1029.2415771484375,
+        "maxX": -4876.580078125,
+        "maxY": 1707.56787109375
+      },
+      "hasFountain": false
+    },
+    {
+      "groupId": "af217eaf-22e5-447a-acf0-031a696e807f",
+      "totalLevel": 5,
+      "bounds": {
+        "minX": -1545.4854736328125,
+        "minY": 4675.3310546875,
+        "maxX": -811.080322265625,
+        "maxY": 5484.3408203125
+      },
+      "hasFountain": false
+    }
+  ],
   "players": {
     "1": {
       "name": "Jeef#1496",
       "race": "U",
+      "startingPosition": {
+        "x": -5248,
+        "y": 4672
+      },
       "heroOpener": {
         "name": "Death Knight",
         "itemId": "Udea",
@@ -21,6 +452,83 @@
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
+      "firstTowerTime": null,
+      "firstTowerTimeFormatted": null,
+      "firstUnitTime": 208107,
+      "firstUnitTimeFormatted": "3:28",
+      "firstHeroLevel2Time": null,
+      "firstHeroLevel2TimeFormatted": null,
+      "firstHeroLevel3Time": null,
+      "firstHeroLevel3TimeFormatted": null,
+      "firstHeroLevel5Time": null,
+      "firstHeroLevel5TimeFormatted": null,
+      "archetype": "unknown",
+      "economyTrack": [
+        {
+          "gameTimeMs": 0,
+          "supplyUsed": 5,
+          "supplyMax": 10,
+          "workersOnGold": 2,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 30000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 60000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 90000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 120000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 150000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 180000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        },
+        {
+          "gameTimeMs": 210000,
+          "supplyUsed": 12,
+          "supplyMax": 20,
+          "workersOnGold": 3,
+          "workersOnLumber": 1,
+          "totalWorkers": 3
+        }
+      ],
       "buildPreview": [
         {
           "type": "building",
@@ -55,7 +563,86 @@
       "t2Units": [],
       "t3Buildings": [],
       "t3Units": [],
-      "researched": []
+      "researched": [],
+      "heroBuilds": [
+        {
+          "uuid": "6aa0843c-20c6-4207-805e-ddb54d890d5a",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "spawnTimeMs": 26123,
+          "finalLevel": 1,
+          "levelMilestones": [],
+          "skillOrder": [],
+          "items": [],
+          "totalCreepXp": 352,
+          "camps": [
+            {
+              "gameTimeMs": 40790,
+              "gameTimeFormatted": "0:40",
+              "xpGained": 352,
+              "totalLevel": 20,
+              "x": -4303.374755859375,
+              "y": 2224.9937744140625,
+              "bounds": {
+                "minX": -4714.3603515625,
+                "minY": 1727.306640625,
+                "maxX": -3892.38916015625,
+                "maxY": 2722.680908203125
+              },
+              "groupId": "70d18812-aad2-4dab-a01e-0450bcb69f89"
+            }
+          ]
+        }
+      ],
+      "itemPurchases": [],
+      "itemUses": [],
+      "mercenariesHired": [
+        {
+          "itemId": "nfsp",
+          "name": "Forest Troll Shadow Priest",
+          "gameTimeMs": 208107,
+          "gameTimeFormatted": "3:28",
+          "goldCost": 195,
+          "lumberCost": 10,
+          "building": "Merchant"
+        }
+      ],
+      "upgradeTimeline": [],
+      "combatUnitsTrack": [
+        {
+          "gameTimeMs": 0,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 30000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 60000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 90000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 120000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 150000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 180000,
+          "count": 0
+        },
+        {
+          "gameTimeMs": 210000,
+          "count": 1
+        }
+      ],
+      "apm": null
     }
   }
 }

@@ -62,14 +62,17 @@
 </head>
 <body class="site-page">
   <script src="js/SiteNav.js"></script>
+  <script src="js/TosBanner.js"></script>
   <script src="js/Security.js"></script>
   <script src="js/MyReplays.js"></script>
   <script src="js/vendor/wc3v-parser.bundle.js"></script>
   <script src="js/UploadManager.js"></script>
   <script src="js/PlayerPicker.js"></script>
+  <script src="js/SummaryExtract.js"></script>
   <script src="js/ReplayAnalyzer.js"></script>
   <script src="js/CompareMatcher.js"></script>
   <script src="js/AdvancedComparePicker.js"></script>
+  <script src="js/CompareCharts.js"></script>
   <script src="js/CompareInline.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
@@ -625,6 +628,8 @@
       <div class="site-footer-links">
         <a href="/">Home</a>
         <a href="/about.html">About</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
         <a href="https://github.com/jblanchette/wc3v">GitHub</a>
         <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
       </div>
@@ -712,6 +717,26 @@
 
     function unitFull(id)  { return (UNIT_NAMES[id] || ['', ''])[0]; }
     function unitShort(id) { return (UNIT_NAMES[id] || ['', ''])[1]; }
+
+    // Display-side cleanup for raw map strings stored in the manifest.
+    // Strips W3C numeric prefixes/suffixes, underscores, and version noise so
+    // a string like "1v1_EchoIsles_v2.2_w3c_260125_1357_1051" renders as "Echo Isles v2.2".
+    function formatMap(raw) {
+      if (!raw) return '';
+      let s = String(raw)
+        .replace(/^\d+v\d+_/, '')         // "1v1_" / "2v2_" prefix
+        .replace(/_w3c_.*$/i, '')         // "_w3c_..." suffix
+        .replace(/\s+w3c\s+\S+.*$/i, '')  // " w3c 1051" suffix variant
+        .replace(/\.w3x$/i, '')           // ".w3x" extension
+        .replace(/_/g, ' ')               // underscores → spaces
+        .replace(/\s+/g, ' ')
+        .trim();
+      // Split glued CamelCase names: "EchoIsles" → "Echo Isles"
+      s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+      // Split glued version tags: "Hammerfallv2.0" → "Hammerfall v2.0"
+      s = s.replace(/([A-Za-z])(v\d)/g, '$1 $2');
+      return s;
+    }
 
     // ─── Building label lookup ───────────────────────────────
     const BUILDING_NAMES = {
@@ -940,6 +965,103 @@
       'ANeg': 'Engineering', 'ANcs': 'Cluster Rockets', 'ANsy': 'Pocket Factory', 'ANrg': 'Robo-Goblin',
     };
 
+    // ─── Replay diff helpers (used by the "+more replays" modal) ──
+    // Compares an extra replay's summary against the main one and produces
+    // similarity tags + unit/upgrade deltas. Returns null if either side lacks
+    // a summary (graceful degradation: row just renders without diff chips).
+    function compareReplaySummaries(mainP, extraP, mainMeta, extraMeta) {
+      if (!mainP || !extraP) return null;
+      const idsOf = (arr) => new Set((arr || []).map(x => (x.itemId || '').toLowerCase()).filter(Boolean));
+      const nameMap = new Map();
+      const collect = (arr) => (arr || []).forEach(x => {
+        if (x.itemId) nameMap.set(x.itemId.toLowerCase(), x.name || x.itemId);
+      });
+      collect(mainP.t2Units); collect(mainP.t3Units); collect(mainP.researched);
+      collect(extraP.t2Units); collect(extraP.t3Units); collect(extraP.researched);
+
+      const keyMain = new Set([...idsOf(mainP.t2Units), ...idsOf(mainP.t3Units)]);
+      const keyExtra = new Set([...idsOf(extraP.t2Units), ...idsOf(extraP.t3Units)]);
+      const upMain = idsOf(mainP.researched);
+      const upExtra = idsOf(extraP.researched);
+
+      const addedUnits = [...keyExtra].filter(id => !keyMain.has(id));
+      const removedUnits = [...keyMain].filter(id => !keyExtra.has(id));
+      const addedUpgrades = [...upExtra].filter(id => !upMain.has(id));
+      const removedUpgrades = [...upMain].filter(id => !upExtra.has(id));
+
+      const mainHeroId = (mainP.heroOpener && mainP.heroOpener.itemId || '').toLowerCase();
+      const extraHeroId = (extraP.heroOpener && extraP.heroOpener.itemId || '').toLowerCase();
+      const sameHero = !!(mainHeroId && extraHeroId && mainHeroId === extraHeroId);
+
+      const eqText = (a, b) => !!(a && b && a.toLowerCase() === b.toLowerCase());
+      const samePlayer = eqText(mainMeta.playerName, extraMeta.playerName);
+      const sameOpponent = eqText(mainMeta.opponentName, extraMeta.opponentName);
+
+      const sameUnits = addedUnits.length === 0 && removedUnits.length === 0;
+      const sameUpgrades = addedUpgrades.length === 0 && removedUpgrades.length === 0;
+      const identical = sameHero && sameUnits && sameUpgrades;
+      const similarUnits = sameHero && sameUnits;
+
+      return {
+        identical, similarUnits, sameHero, samePlayer, sameOpponent,
+        mainHeroId, extraHeroId,
+        mainHeroName: mainP.heroOpener && mainP.heroOpener.name,
+        extraHeroName: extraP.heroOpener && extraP.heroOpener.name,
+        addedUnits, removedUnits, addedUpgrades, removedUpgrades,
+        nameMap
+      };
+    }
+
+    function renderDiffPills(diff) {
+      if (!diff) return '';
+      const pills = [];
+      const heroIcon = (id) => id ? `<img class="pill-icon" src="/assets/wc3icons/${id}.jpg" loading="lazy" onerror="this.style.display='none'">` : '';
+      if (diff.identical) {
+        pills.push('<span class="site-replay-pill pill-same" title="Same hero, units, and upgrades">≡ Same build</span>');
+      } else if (diff.similarUnits) {
+        pills.push('<span class="site-replay-pill pill-similar" title="Same hero and key units; upgrades differ">≈ Similar build</span>');
+      } else if (diff.sameHero) {
+        pills.push(`<span class="site-replay-pill pill-same-opener">${heroIcon(diff.extraHeroId)}Same opener</span>`);
+      } else if (diff.mainHeroName && diff.extraHeroName) {
+        pills.push(`<span class="site-replay-pill pill-diff-hero" title="Main: ${diff.mainHeroName}">${heroIcon(diff.extraHeroId)}${diff.extraHeroName}</span>`);
+      }
+      if (diff.samePlayer) {
+        pills.push('<span class="site-replay-pill pill-same-player" title="Same player as main replay">Same pro</span>');
+      }
+      return pills.join('');
+    }
+
+    function renderDeltaChips(diff) {
+      if (!diff || diff.identical) return '';
+      const chips = [];
+      const labelOf = (id) => unitShort(id) || diff.nameMap.get(id) || id;
+      const fullOf = (id) => unitFull(id) || diff.nameMap.get(id) || id;
+      const iconHtml = (id) => `<img class="delta-icon" src="/assets/wc3icons/${id}.jpg" loading="lazy" onerror="this.style.display='none'">`;
+
+      diff.addedUnits.slice(0, 3).forEach(id => {
+        chips.push(`<span class="site-replay-delta delta-add" title="Adds: ${fullOf(id)}">${iconHtml(id)}<span class="delta-sign">+</span>${labelOf(id)}</span>`);
+      });
+      if (diff.addedUnits.length > 3) {
+        chips.push(`<span class="site-replay-delta delta-more">+${diff.addedUnits.length - 3} more</span>`);
+      }
+      diff.removedUnits.slice(0, 3).forEach(id => {
+        chips.push(`<span class="site-replay-delta delta-rem" title="Missing: ${fullOf(id)}">${iconHtml(id)}<span class="delta-sign">−</span>${labelOf(id)}</span>`);
+      });
+      if (diff.removedUnits.length > 3) {
+        chips.push(`<span class="site-replay-delta delta-more">−${diff.removedUnits.length - 3} more</span>`);
+      }
+
+      const upDiffCount = diff.addedUpgrades.length + diff.removedUpgrades.length;
+      if (upDiffCount > 0) {
+        const tip = [
+          ...diff.addedUpgrades.map(id => '+ ' + (diff.nameMap.get(id) || id)),
+          ...diff.removedUpgrades.map(id => '− ' + (diff.nameMap.get(id) || id))
+        ].join(' · ').replace(/"/g, '&quot;');
+        chips.push(`<span class="site-replay-delta delta-upgrade" title="${tip}">±${upDiffCount} upgrade${upDiffCount === 1 ? '' : 's'}</span>`);
+      }
+      return chips.join('');
+    }
+
     // ─── Card renderer ─────────────────────────────────────
     function buildCard(build) {
       const rc = raceColor(build.race);
@@ -1087,49 +1209,144 @@
       if (hasReplay) {
         const first = replays[0];
         const firstHref = `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}`;
-        const firstTournament = first.tournamentId && tournamentMap[first.tournamentId]
-          ? `<span class="site-replay-tournament">${tournamentMap[first.tournamentId].shortName}${first.stage ? ' — ' + first.stage : ''}${first.round ? ' ' + first.round : ''}</span>`
+        const firstTournamentName = first.tournamentId && tournamentMap[first.tournamentId]
+          ? tournamentMap[first.tournamentId].shortName : '';
+        const firstStageText = [first.stage, first.round].filter(Boolean).join(' · ');
+        const firstTournamentChip = firstTournamentName
+          ? `<span class="site-replay-tournament">${firstTournamentName}</span>`
           : '';
-        const firstItem = `<div class="site-replay-item">
-          ${firstTournament}
-          <span class="site-replay-info">${first.playerName}${first.map ? ` — ${first.map}` : ''}</span>
-          <a href="${firstHref}" class="site-replay-view-btn">View</a>
-        </div>`;
+        const firstStageChip = firstStageText
+          ? `<span class="site-replay-stage">${firstStageText}</span>`
+          : '';
+        const firstMapChip = first.map
+          ? `<span class="site-replay-map">${formatMap(first.map)}</span>`
+          : '';
 
         let moreBtn = '';
+        let moreModal = '';
         if (replays.length > 1) {
           const modalId = `replay-modal-${(build.id || '').replace(/\W/g, '')}`;
-          const extraItems = replays.slice(1).map(r => {
-            const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
-            const extraTournament = r.tournamentId && tournamentMap[r.tournamentId]
-              ? `<span class="site-replay-tournament">${tournamentMap[r.tournamentId].shortName}${r.stage ? ' — ' + r.stage : ''}</span>`
-              : '';
-            return `<div class="site-replay-modal-item">
-              ${extraTournament}
-              <span class="site-replay-extra-player">${r.playerName}</span>
-              <span class="site-replay-extra-map">${r.map || ''}</span>
-              <a href="${href}" class="site-replay-view-btn">View</a>
+          // Group remaining replays by map, sort maps naturally, sort rows by player.
+          const allExtras = replays.slice(1);
+          const byMap = new Map();
+          for (const r of allExtras) {
+            const mapKey = (r.map || 'Unknown').trim();
+            if (!byMap.has(mapKey)) byMap.set(mapKey, []);
+            byMap.get(mapKey).push(r);
+          }
+          const mapKeys = [...byMap.keys()].sort((a, b) =>
+            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+          );
+          for (const k of mapKeys) {
+            byMap.get(k).sort((a, b) =>
+              (a.playerName || '').localeCompare(b.playerName || '', undefined, { sensitivity: 'base' })
+            );
+          }
+
+          // Pull the main replay's player summary once for diff comparison.
+          const mainSummary = summaryMap[first.replayId];
+          const mainPlayer = (mainSummary && mainSummary.players)
+            ? mainSummary.players[first.playerSlot] : null;
+
+          const extraGroups = mapKeys.map(mapName => {
+            const rowsHtml = byMap.get(mapName).map(r => {
+              const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
+              const tName = r.tournamentId && tournamentMap[r.tournamentId]
+                ? tournamentMap[r.tournamentId].shortName : '';
+              const stageText = [r.stage, r.round].filter(Boolean).join(' · ');
+              const tChip = tName
+                ? `<span class="site-replay-modal-tournament">${tName}</span>`
+                : '';
+              const sChip = stageText
+                ? `<span class="site-replay-modal-stage">${stageText}</span>`
+                : '';
+              const opponentHtml = r.opponentName
+                ? `<span class="vs">vs</span><span class="opponent">${r.opponentName}</span>`
+                : '';
+
+              // Compute diff vs main replay.
+              const extraSummary = summaryMap[r.replayId];
+              const extraPlayer = (extraSummary && extraSummary.players)
+                ? extraSummary.players[r.playerSlot] : null;
+              const diff = compareReplaySummaries(mainPlayer, extraPlayer, first, r);
+              const pillsHtml = renderDiffPills(diff);
+              const chipsHtml = renderDeltaChips(diff);
+              let diffHtml;
+              if (pillsHtml || chipsHtml) {
+                diffHtml = `<div class="site-replay-modal-diff">${pillsHtml}${chipsHtml}</div>`;
+              } else if (!extraPlayer) {
+                diffHtml = `<div class="site-replay-modal-diff site-replay-modal-diff-empty">No comparison data</div>`;
+              } else {
+                diffHtml = `<div class="site-replay-modal-diff site-replay-modal-diff-empty">Identical to main replay</div>`;
+              }
+
+              // Leading hero portrait (extra replay's hero opener).
+              const heroId = (extraPlayer && extraPlayer.heroOpener && extraPlayer.heroOpener.itemId) || '';
+              const heroName = (extraPlayer && extraPlayer.heroOpener && extraPlayer.heroOpener.name) || '';
+              const heroPortrait = heroId
+                ? `<img class="site-replay-modal-hero" src="/assets/wc3icons/${heroId.toLowerCase()}.jpg" title="${heroName}" loading="lazy" onerror="this.style.visibility='hidden'">`
+                : `<span class="site-replay-modal-hero site-replay-modal-hero-empty"></span>`;
+
+              return `<div class="site-replay-modal-row">
+                ${heroPortrait}
+                <div class="site-replay-modal-identity">
+                  <span class="site-replay-modal-matchup">
+                    <span class="player">${r.playerName || ''}</span>
+                    ${opponentHtml}
+                  </span>
+                  ${tChip}
+                  ${sChip}
+                </div>
+                ${diffHtml}
+                <a href="${href}" class="site-replay-view-btn">View</a>
+              </div>`;
+            }).join('');
+            return `<div class="site-replay-modal-group">
+              <div class="site-replay-modal-group-header">
+                <span class="site-replay-modal-map">${formatMap(mapName)}</span>
+                <span class="site-replay-modal-count">${byMap.get(mapName).length}</span>
+              </div>
+              <div class="site-replay-modal-group-rows">${rowsHtml}</div>
             </div>`;
           }).join('');
 
-          moreBtn = `
-            <button class="site-replay-toggle" onclick="event.stopPropagation(); document.getElementById('${modalId}').classList.add('open');">
-              +${replays.length - 1} more replay${replays.length > 2 ? 's' : ''}
-            </button>
-            <div class="site-replay-modal" id="${modalId}" onclick="if(event.target===this)this.classList.remove('open')">
+          const extraCount = allExtras.length;
+          const subtitleText = `${extraCount} more replay${extraCount === 1 ? '' : 's'} · ${mapKeys.length} map${mapKeys.length === 1 ? '' : 's'}`;
+
+          moreBtn = `<button class="site-replay-toggle" onclick="event.stopPropagation(); document.getElementById('${modalId}').classList.add('open');" title="Show ${extraCount} more replay${extraCount === 1 ? '' : 's'}">+${extraCount} more</button>`;
+
+          moreModal = `<div class="site-replay-modal" id="${modalId}" onclick="if(event.target===this)this.classList.remove('open')">
               <div class="site-replay-modal-box" style="--race-color:${rc}">
                 <div class="site-replay-modal-header">
-                  <span class="site-replay-modal-title">${build.name} — Replays</span>
+                  <div class="site-replay-modal-title-block">
+                    <div class="site-replay-modal-title">${build.name}</div>
+                    <div class="site-replay-modal-subtitle">${subtitleText}</div>
+                  </div>
                   <button class="site-replay-modal-close" onclick="event.stopPropagation(); this.closest('.site-replay-modal').classList.remove('open')">\u2715</button>
                 </div>
-                <div class="site-replay-modal-list">${extraItems}</div>
+                <div class="site-replay-modal-list">${extraGroups}</div>
               </div>
             </div>`;
         }
 
+        const firstItem = `<div class="site-replay-item">
+          <div class="site-replay-item-meta">
+            ${firstTournamentChip}
+            ${firstStageChip}
+          </div>
+          <div class="site-replay-item-info">
+            <span class="site-replay-player">${first.playerName}</span>
+            ${firstMapChip}
+          </div>
+          <div class="site-replay-item-actions">
+            ${moreBtn}
+            <a href="${firstHref}" class="site-replay-view-btn">View</a>
+          </div>
+        </div>`;
+
         replaySection = `<div class="site-replay-section">
-          ${moreBtn}
           ${firstItem}
+          ${moreModal}
         </div>`;
       } else {
         replaySection = `<div class="site-replay-section">
@@ -1448,10 +1665,11 @@
         // tournaments.json is optional — proceed without tournament data
       }
 
-      // Load summaries for builds with replays (for upgrade data)
+      // Load summaries for ALL replays (main + extras) — used for upgrade rendering
+      // on the card and for diff/similarity tagging in the "+more replays" modal.
       const replayIds = [...new Set(
         allBuilds.filter(b => b.replays && b.replays.length)
-          .map(b => b.replays[0].replayId)
+          .flatMap(b => b.replays.map(r => r.replayId))
       )];
       await Promise.all(replayIds.map(rid =>
         fetch(`/data/summaries/${rid}.json`)
