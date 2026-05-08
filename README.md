@@ -73,8 +73,9 @@ Just go to **[wc3v.com](https://wc3v.com)** and drop a `.w3g` file. Parsing happ
 **Prerequisites:** [Node.js](https://nodejs.org/) 18+
 
 ```bash
-# 1. Drop .w3g files in ./replays/
-# 2. Parse one
+# 1. Drop .w3g files in ./replays/  (pattern: ./replays/<name>.w3g)
+# 2. Parse one — `happy-vs-grubby` is the canonical example used throughout
+#    these docs; substitute any file name you dropped in ./replays/
 node wc3v.js --replay=happy-vs-grubby
 # Outputs ./client/replays/happy-vs-grubby.wc3v.gz
 
@@ -82,6 +83,8 @@ node wc3v.js --replay=happy-vs-grubby
 cd client && npx http-server
 # open the printed URL
 ```
+
+If you don't have a `.w3g` handy, the parsed output of `happy-vs-grubby` is checked into `docs/` — see [Output format](#output-format-wc3v) below for a guided walkthrough.
 
 Note that the viewer needs WC3 game data (icons, unit balance, map files) to be set up before it can render anything — see [Data Setup](#data-setup) below. Without those, the parser still works but the viewer renders blank.
 
@@ -167,7 +170,7 @@ The parser produces `.wc3v` files — JSON documents containing the full simulat
 
 **Full schema:** [docs/wc3v-schema.json](docs/wc3v-schema.json) (JSON Schema draft 2020-12)
 
-**Example output:** [docs/happy-vs-grubby.wc3v.gz](docs/happy-vs-grubby.wc3v.gz) (gzip-compressed JSON, ~800 KB)
+**Example output:** [docs/happy-vs-grubby.wc3v.gz](docs/happy-vs-grubby.wc3v.gz) (gzip-compressed JSON, ~1.1 MB) — Happy (UD) vs FollowGrubby (Orc) on Concealed Hill, the same replay used as `--replay=happy-vs-grubby` throughout this README. See [docs/wc3v-example.md](docs/wc3v-example.md) for a guided walkthrough of the file's structure with real values, plus a trimmed [`docs/wc3v-example.json`](docs/wc3v-example.json) you can read in an editor.
 
 ## Data setup
 

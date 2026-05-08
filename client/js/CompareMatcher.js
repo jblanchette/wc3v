@@ -16,13 +16,28 @@
 // at hero opener + key buildings + key units.
 
 const CompareMatcher = class {
-  constructor () {
+  // myReplays (optional): a MyReplays instance. When provided, IDB records
+  // flagged isReference=true are merged into the candidate pool alongside the
+  // curated builds-manifest entries. Reference entries carry isUserReference=
+  // true so the chooser UI can split them into their own column.
+  constructor (myReplays = null) {
     this.proIndex = null;        // [{replayId, playerSlot, ...metadata}]
     this.summaryCache = new Map();
     this.manifestPromise = null;
+    this.myReplays = myReplays;
+    this.localSummaryById = new Map();  // 'local::<id>' → cachedSummary
+  }
+
+  // Bust the cached index — call after the user marks/unmarks a reference so
+  // future rankCandidates calls see the new pool.
+  invalidate () {
+    this.proIndex = null;
+    this.localSummaryById.clear();
   }
 
   // Lazy-load the builds-manifest and flatten its replays into a pro index.
+  // Also pulls IDB records flagged isReference=true (when MyReplays was passed
+  // to the constructor) and appends them with isUserReference=true.
   async loadIndex () {
     if (this.proIndex) return this.proIndex;
     if (!this.manifestPromise) {
@@ -55,16 +70,76 @@ const CompareMatcher = class {
           buildMatchups: b.matchups || [],  // ['UvO','UvH']
           buildOpener: b.opener,
           buildGamePlan: b.gamePlan,
-          buildArmy: b.army
+          buildArmy: b.army,
+          isUserReference: false
         });
       }
     }
+
+    // Merge user-flagged references from IndexedDB. Each reference is shaped
+    // to fit the same scoring path; its cachedSummary (built when the user
+    // flagged it) is the equivalent of the manifest's pre-baked summary.json.
+    if (this.myReplays && typeof this.myReplays.list === 'function') {
+      try {
+        const records = await this.myReplays.list();
+        for (const rec of records) {
+          if (!rec || !rec.isReference) continue;
+          // The list() result is the lightweight summary — fetch the full
+          // record to get cachedSummary (unless an earlier call already did).
+          let full = rec;
+          if (!full.cachedSummary) {
+            try { full = await this.myReplays.get(rec.id); } catch { full = rec; }
+          }
+          const cached = full && full.cachedSummary;
+          if (!cached) continue;
+          const proSlot = String(full.referencePlayerSlot || (cached.players && Object.keys(cached.players)[0]) || '1');
+          const proPlayer = cached.players && cached.players[proSlot];
+          if (!proPlayer) continue;
+          const proRace = proPlayer.race || full.race;
+          const matchups = deriveMatchupsForSlot(cached, proSlot);
+          const replayId = `local::${full.id}`;
+          this.localSummaryById.set(replayId, cached);
+          index.push({
+            replayId,
+            playerSlot: proSlot,
+            playerName: proPlayer.name || full.referenceLabel || 'Reference',
+            opponentName: deriveOpponentName(cached, proSlot),
+            map: cached.map || full.mapName,
+            tournament: null,
+            stage: null,
+            fingerprint: cached.fingerprint || null,
+            buildId: replayId,
+            buildName: full.referenceLabel || `Your reference · ${proPlayer.name || ''}`.trim(),
+            buildRace: proRace,
+            buildMatchups: matchups,
+            buildOpener: null,
+            buildGamePlan: null,
+            buildArmy: null,
+            isUserReference: true,
+            sourceRecordId: full.id,
+            // Carry the proPlayer's archetype directly so scoreCandidate can
+            // skip the cheap manifest-tag inference when this entry is a
+            // user reference.
+            referenceArchetype: proPlayer.archetype || null
+          });
+        }
+      } catch (e) {
+        // Swallow — user references are a bonus, not load-bearing.
+        if (typeof console !== 'undefined') console.warn('[CompareMatcher] failed to load references:', e);
+      }
+    }
+
     this.proIndex = index;
     return index;
   }
 
-  // Fetch a pro replay's summary JSON. Cached.
+  // Fetch a pro replay's summary JSON. Cached. Local-reference replayIds
+  // (prefix "local::") are served from this.localSummaryById, populated by
+  // loadIndex(); never hit the network for those.
   async loadSummary (replayId) {
+    if (replayId && replayId.startsWith && replayId.startsWith('local::')) {
+      return this.localSummaryById.get(replayId) || null;
+    }
     if (this.summaryCache.has(replayId)) return this.summaryCache.get(replayId);
     const promise = fetch(`/data/summaries/${encodeURIComponent(replayId)}.json`, { credentials: 'omit' })
       .then(r => r.ok ? r.json() : null)
@@ -97,9 +172,11 @@ const CompareMatcher = class {
 
     // Archetype match — needs the pro's summary, but we can use opener/
     // gamePlan hints from the build manifest as a cheap proxy first.
-    // (Real archetype check happens after summary is loaded.)
+    // For user references we have the real archetype on hand, so use it.
     if (u.archetype && u.archetype !== 'unknown') {
-      const expected = inferArchetypeFromBuild(proEntry);
+      const expected = proEntry.isUserReference
+        ? proEntry.referenceArchetype
+        : inferArchetypeFromBuild(proEntry);
       if (expected && expected === u.archetype) score += 15;
     }
 
@@ -199,25 +276,63 @@ const CompareMatcher = class {
     return { proName: hit.playerName, uploadedName: userName };
   }
 
-  // Highest-level helper: pick the auto-match, return null if no candidate
-  // clears the "good enough" bar. Order:
-  //   1. Fingerprint match → that's the same .w3g, return it.
-  //   2. Otherwise, the top candidate must clear THREE bars:
-  //      - metadata score ≥ 85
-  //      - grades (analyzer duration gate passes)
-  //      - non-divergent build (signature unit matches OR enough overlap)
-  //   Failing any of those, return null and let the UI fall back to a
-  //   labelled lower-confidence state instead of greenlighting a bad match.
+  // Highest-level helper: pick the auto-match, return null if anything other
+  // than a structurally exact match exists.
+  //
+  // Order:
+  //   1. Fingerprint match → same .w3g, return it (synthetic perfect-fit).
+  //   2. Iterate candidates and return the first one that is *exact*:
+  //        - race correct      (proEntry.buildRace === user race)
+  //        - matchup correct   (user matchup ∈ proEntry.buildMatchups)
+  //        - archetype correct (user archetype matches and is not 'unknown')
+  //        - grades            (analyzer duration gate passes)
+  //        - non-divergent     (signature unit overlaps the pro's)
+  //      Map can differ — same-map adds polish but isn't required for "exact"
+  //      per product spec. The previous score≥85 heuristic was loose enough
+  //      that race + matchup + map (no archetype match) qualified — players
+  //      then complained the match wasn't really for their build.
+  //   3. When both a curated and a reference replay are exact, prefer
+  //      curated (vetted, builds-manifest data) over user-supplied. The
+  //      candidate ranking already places ungraded last; among graded +
+  //      same-build, curated comes ahead of references via this loop.
+  //
+  // Returns null when no candidate clears all five gates — the UI then
+  // renders the chooser so the user can pick deliberately.
   async autoPick (userSummary, userSlot) {
     const fpHit = await this.findByFingerprint(userSummary);
     if (fpHit) return fpHit;
 
-    const ranked = await this.rankCandidates(userSummary, userSlot, { limit: 5 });
+    const ranked = await this.rankCandidates(userSummary, userSlot, { limit: 8 });
     if (!ranked.length) return null;
-    const top = ranked[0];
-    if (top.grades && !top.divergent && top.score >= 85) return top.entry;
+    const userPlayer = userSummary.players[String(userSlot)] || {};
+    const userMu = matchupString(userSummary, userSlot);
+
+    // Two passes: prefer curated exact match before reference exact match,
+    // but otherwise the same gate.
+    const isExact = (c) => exactMatch(c, userPlayer, userMu);
+    const curated = ranked.find(c => !c.entry.isUserReference && isExact(c));
+    if (curated) return curated.entry;
+    const ref = ranked.find(c => c.entry.isUserReference && isExact(c));
+    if (ref) return ref.entry;
     return null;
   }
+};
+
+// Structural exact-match gate. All conditions must hold; map is intentionally
+// not required (per product: map can differ, build/race/matchup must match).
+const exactMatch = (annotated, userPlayer, userMu) => {
+  if (!annotated || !annotated.entry) return false;
+  if (!annotated.grades) return false;
+  if (annotated.divergent) return false;
+  const e = annotated.entry;
+  if (!userPlayer.race || e.buildRace !== userPlayer.race) return false;
+  if (!userMu || !(e.buildMatchups || []).includes(userMu)) return false;
+  if (!userPlayer.archetype || userPlayer.archetype === 'unknown') return false;
+  const expected = e.isUserReference
+    ? e.referenceArchetype
+    : inferArchetypeFromBuild(e);
+  if (!expected || expected !== userPlayer.archetype) return false;
+  return true;
 };
 
 // Helpers (file-local).
@@ -246,6 +361,30 @@ const inferArchetypeFromBuild = (entry) => {
   if (entry.buildOpener === 'rush' && entry.buildArmy === 'ground') return '1-base-t2';
   if (entry.buildOpener === 'standard') return '1-base-t2';
   return null;
+};
+
+// Build a [matchup] array for a reference entry: the pro slot's race vs
+// the first non-neutral opponent in the cached summary. References don't
+// have curated buildMatchups so we synthesize one from the cached summary.
+const deriveMatchupsForSlot = (cachedSummary, proSlot) => {
+  if (!cachedSummary || !cachedSummary.players) return [];
+  const pro = cachedSummary.players[String(proSlot)];
+  if (!pro || !pro.race) return [];
+  const opp = Object.keys(cachedSummary.players)
+    .filter(k => k !== String(proSlot))
+    .map(k => cachedSummary.players[k])
+    .find(p => p && !p.isNeutralPlayer && p.race && p.race !== 'R');
+  if (!opp) return [];
+  return [`${pro.race}v${opp.race}`];
+};
+
+const deriveOpponentName = (cachedSummary, proSlot) => {
+  if (!cachedSummary || !cachedSummary.players) return null;
+  const opp = Object.keys(cachedSummary.players)
+    .filter(k => k !== String(proSlot))
+    .map(k => cachedSummary.players[k])
+    .find(p => p && !p.isNeutralPlayer);
+  return (opp && opp.name) || null;
 };
 
 if (typeof module !== 'undefined' && module.exports) {
