@@ -40,9 +40,13 @@ const BUILDING_PRODUCTION = {
   'etoa': { type: 'production', label: 'Tree of Ages', units: ['ewsp'], upgrades: ['Renb'] },
   'etoe': { type: 'production', label: 'Tree of Eternity', units: ['ewsp'], upgrades: ['Renb'] },
   'eate': { type: 'altar', label: 'Altar of Elders', units: ['Edem', 'Ekee', 'Emoo', 'Ewar'] },
-  'eaow': { type: 'production', label: 'Ancient of War', units: ['earc', 'esen', 'ehip'] },
-  'eaom': { type: 'production', label: 'Ancient of Wind', units: ['edry', 'ehip'] },
-  'eaoe': { type: 'production', label: 'Ancient of Lore', units: ['edot', 'edtm', 'emtg'] },
+  // WC3 ancients: eaom=War (T1), eaoe=Lore (T2), eaow=Wind (T2). The labels
+  // and unit rosters were previously scrambled — Ancient of War (eaom) was
+  // showing up labeled "Ancient of Wind" in the build order, which made any
+  // Tier 1 NE replay look like it had a Tier-2 building in Tier 1.
+  'eaom': { type: 'production', label: 'Ancient of War', units: ['earc', 'esen', 'ebal'] },
+  'eaoe': { type: 'production', label: 'Ancient of Lore', units: ['edoc', 'edry', 'emtg'] },
+  'eaow': { type: 'production', label: 'Ancient of Wind', units: ['edot', 'efdr', 'ehip'] },
   'edob': { type: 'production', label: 'Hunter\'s Hall', upgrades: ['Reib', 'Rema', 'Rerh'] },
   'eden': { type: 'production', label: 'Ancient of Wonders', items: ['phea', 'pman', 'pinv', 'stwp', 'dust', 'moon'] },
   'emow': { type: 'supply', label: 'Moon Well' },
