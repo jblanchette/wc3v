@@ -22,16 +22,16 @@ services:
       # is one extra hop on first request only.
       - type: redirect
         source: /assets/wc3icons/*
-        destination: https://cdn.wc3v.com/assets/wc3icons/:splat
+        destination: https://cdn.wc3v.com/assets/wc3icons/*
       - type: redirect
         source: /assets/models/*
-        destination: https://cdn.wc3v.com/assets/models/:splat
+        destination: https://cdn.wc3v.com/assets/models/*
       - type: redirect
         source: /assets/textures/*
-        destination: https://cdn.wc3v.com/assets/textures/:splat
+        destination: https://cdn.wc3v.com/assets/textures/*
       - type: redirect
         source: /maps/*
-        destination: https://cdn.wc3v.com/maps/:splat
+        destination: https://cdn.wc3v.com/maps/*
       - type: redirect
         source: /replays/*
-        destination: https://cdn.wc3v.com/replays/:splat
+        destination: https://cdn.wc3v.com/replays/*
