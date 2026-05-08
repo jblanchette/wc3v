@@ -366,16 +366,13 @@ const MyReplays = class {
     const drawer = document.getElementById('compare-drawer');
     const backdrop = document.getElementById('compare-drawer-backdrop');
     const body = document.getElementById('compare-drawer-body');
-    const eyebrow = document.getElementById('compare-drawer-eyebrow');
-    const title = document.getElementById('compare-drawer-title');
+    const foot = document.getElementById('compare-drawer-foot');
     if (!drawer || !body) return;
-
-    eyebrow.textContent = 'Compare';
-    title.textContent = 'Loading…';
 
     // Reset and re-create CompareInline each time so the drawer body is
     // fresh and reflects whichever card was clicked.
     body.innerHTML = '';
+    if (foot) foot.innerHTML = '';
     drawer.hidden = false;
     if (backdrop) backdrop.hidden = false;
     // Force a paint before adding the open class so the scale/fade-in
@@ -439,10 +436,9 @@ const MyReplays = class {
           console.warn('[MyReplays] failed to cache lastCompare:', e);
         }
       },
-      onTitleChange: (text, eyebrowText) => {
-        title.textContent = text;
-        if (eyebrowText) eyebrow.textContent = eyebrowText;
-      }
+      // Title bar was removed in favor of inline meta — onTitleChange is
+      // now a no-op so existing CompareInline calls don't have to branch.
+      onTitleChange: () => {}
     });
     await inline.bootstrap();
   }

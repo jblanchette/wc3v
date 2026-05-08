@@ -147,7 +147,20 @@ const CompareInline = class {
 
   // ===== Rendering =====
 
+  // Returns the sticky footer element next to rootEl (the drawer-foot region).
+  // Returns null when CompareInline is hosted outside the drawer (defensive).
+  _footEl () {
+    const parent = this.rootEl && this.rootEl.parentElement;
+    return parent ? parent.querySelector('.compare-drawer-foot') : null;
+  }
+
+  _clearFooter () {
+    const foot = this._footEl();
+    if (foot) foot.innerHTML = '';
+  }
+
   _renderLoading (msg) {
+    this._clearFooter();
     this.rootEl.innerHTML = `
       <div class="ci-loading">
         <div class="ci-spinner"></div>
@@ -157,14 +170,17 @@ const CompareInline = class {
   }
 
   _renderError (msg) {
+    this._clearFooter();
     this.rootEl.innerHTML = `<div class="ci-error">${escapeHtml(msg)}</div>`;
   }
 
   _renderEmpty (msg) {
+    this._clearFooter();
     this.rootEl.innerHTML = `<div class="ci-empty">${escapeHtml(msg)}</div>`;
   }
 
   _renderNoCandidates () {
+    this._clearFooter();
     const u = this.userSummary.players[this.userSlot];
     const userMu = matchupString(this.userSummary, this.userSlot);
     this.rootEl.innerHTML = `
@@ -188,13 +204,15 @@ const CompareInline = class {
     this._proEntry = proEntry;
     this._proSummary = proSummary;
     this._activeTab = 'overview';
+    this._activeHeroIdx = 0;
 
     this.rootEl.innerHTML = `
       ${this._headerHtml()}
       ${this._tabsNavHtml()}
       <div class="ci-tab-content"></div>
-      ${this._switcherHtml()}
     `;
+    const foot = this._footEl();
+    if (foot) foot.innerHTML = this._footerHtml();
     this._renderActiveTab();
     this._wireGlobal();
   }
@@ -202,6 +220,7 @@ const CompareInline = class {
   _setTab (tabId) {
     if (tabId === this._activeTab) return;
     this._activeTab = tabId;
+    if (tabId === 'heroes') this._activeHeroIdx = 0;
     this.rootEl.querySelectorAll('.ci-tab').forEach(el => {
       el.classList.toggle('ci-tab-active', el.dataset.tab === tabId);
       el.setAttribute('aria-selected', el.dataset.tab === tabId ? 'true' : 'false');
@@ -229,91 +248,97 @@ const CompareInline = class {
     }
   }
 
-  // ── Header (always visible) ─────────────────────────────────────────────
+  // ── Header (single inline row: slot picker + pro + grade) ──────────────
   _headerHtml () {
     const report = this._report;
     const proEntry = this._proEntry;
     const isSelfMatch = !!report.selfMatch;
     const conf = isSelfMatch ? 'self' : (this.matchConfidence || 'manual');
     const isFreshUpload = document.body.dataset.freshUpload === '1';
-    const userRecordId = this.userRecord && this.userRecord.id;
     const overallGradeClass = window.ReplayAnalyzer.gradeClass(report.overall.grade);
     const overallUnavailable = !report.overall || report.overall.grade === 'N/A'
       || (report.overall.score === 0 && Object.values(report.categories || {}).every(c => !c.available));
 
-    const watchProUrl = `/viewer?r=${encodeURIComponent(proEntry.replayId)}&player=${encodeURIComponent(proEntry.playerSlot)}&buildId=${encodeURIComponent(proEntry.buildId || '')}`;
-    const watchMineUrl = userRecordId ? `/viewer?local=${encodeURIComponent(userRecordId)}` : '';
     const freshHeadline = isFreshUpload
       ? `<div class="ci-fresh-headline">Your replay is ready — here\'s how it stacks up.</div>`
       : '';
 
-    const slotRowHtml = this._slotRowHtml();
     const noticeHtml = this._headerNoticesHtml(conf);
 
-    const proLabel = conf === 'self'      ? 'Same replay (self-match)'
+    const proLabel = conf === 'self'      ? 'Same replay'
                    : conf === 'auto'      ? 'Auto-matched pro'
                    : conf === 'graded'    ? 'Best graded match'
                    : conf === 'divergent' ? 'Closest pro · Different build'
                    : conf === 'low'       ? 'Closest match · low confidence'
                    : 'Comparing to pro';
-    const proLabelClass = conf === 'self'      ? 'ci-pro-banner-self'
-                       : conf === 'auto'      ? 'ci-pro-banner-auto'
-                       : conf === 'graded'    ? 'ci-pro-banner-graded'
-                       : conf === 'divergent' ? 'ci-pro-banner-divergent'
-                       : conf === 'low'       ? 'ci-pro-banner-lowconf'
-                       : 'ci-pro-banner-manual';
-    const proMeta = [
+    const proLabelClass = conf === 'self'      ? 'ci-pro-pill-self'
+                       : conf === 'auto'      ? 'ci-pro-pill-auto'
+                       : conf === 'graded'    ? 'ci-pro-pill-graded'
+                       : conf === 'divergent' ? 'ci-pro-pill-divergent'
+                       : conf === 'low'       ? 'ci-pro-pill-lowconf'
+                       : 'ci-pro-pill-manual';
+    const proMetaParts = [
       (proEntry.buildMatchups && proEntry.buildMatchups[0]) || '',
-      proEntry.buildName || '',
-      proEntry.stage || ''
-    ].filter(Boolean).map(escapeHtml).join(' &middot; ');
-    const proCard = `
-      <section class="ci-pro-card">
-        <header class="ci-pro-banner ${proLabelClass}">
-          <span class="ci-pro-banner-text">${escapeHtml(proLabel)}</span>
-        </header>
-        <div class="ci-pro-card-body">
-          <div class="ci-pro-name">${escapeHtml(proEntry.playerName || '?')}</div>
-          ${proMeta ? `<div class="ci-pro-meta">${proMeta}</div>` : ''}
-        </div>
-      </section>
-    `;
+      proEntry.buildName || ''
+    ].filter(Boolean).map(escapeHtml);
+    const proMeta = proMetaParts.length
+      ? `<span class="ci-meta-pro-meta">${proMetaParts.join(' · ')}</span>`
+      : '';
 
-    const warnHtml = (report.warnings && report.warnings.length)
-      ? `<ul class="ci-no-grade-list">${report.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : '';
     const gradeRegion = overallUnavailable ? `
-      <div class="ci-no-grade">
-        <div class="ci-no-grade-head">No overall grade</div>
-        <div class="ci-no-grade-body">
-          None of the scoring categories had comparable data. Top reasons:
-        </div>
-        ${warnHtml}
-        <div class="ci-no-grade-foot">
-          Each tile in the Overview shows the specific reason. Try a different pro from the chips, or use Advanced search.
-        </div>
+      <div class="ci-header-region ci-header-grade ci-header-grade-na" title="No overall grade — none of the scoring categories had comparable data.">
+        <span class="ci-grade-letter ci-grade-na">N/A</span>
       </div>
     ` : `
-      <div class="ci-grade-card">
-        <div class="ci-grade-letter ${overallGradeClass}">${escapeHtml(report.overall.grade)}</div>
-        <div class="ci-grade-score">${report.overall.score}/100</div>
+      <div class="ci-header-region ci-header-grade">
+        <span class="ci-grade-letter ${overallGradeClass}">${escapeHtml(report.overall.grade)}</span>
+        <span class="ci-grade-score">${report.overall.score}/100</span>
       </div>
     `;
-    const watchButtons = `
-      <div class="ci-watch-row">
-        ${watchMineUrl ? `<a class="ci-watch-cta ci-watch-mine" href="${escapeAttr(watchMineUrl)}">▶ Watch my replay</a>` : ''}
-        <a class="ci-watch-cta ci-watch-pro" href="${escapeAttr(watchProUrl)}" target="_blank" rel="noopener">▶ Watch pro replay ↗</a>
+
+    const headerRow = `
+      <div class="ci-header-row">
+        ${this._slotPickerRegionHtml()}
+        <div class="ci-header-region ci-header-pro">
+          <span class="ci-pro-pill ${proLabelClass}">${escapeHtml(proLabel)}</span>
+          <span class="ci-meta-pro-name">${escapeHtml(proEntry.playerName || '?')}</span>
+          ${proMeta}
+        </div>
+        ${gradeRegion}
       </div>
     `;
 
     return `
-      ${slotRowHtml}
       ${freshHeadline}
       ${noticeHtml}
-      <div class="ci-header">
-        ${proCard}
-        ${gradeRegion}
+      ${headerRow}
+    `;
+  }
+
+  // Slot picker region — sits inside the header row when more than one
+  // player exists in the replay. Returns an empty string for single-player
+  // replays so the row collapses to just pro + grade.
+  _slotPickerRegionHtml () {
+    const RACE_BADGE = { H: 'HU', O: 'ORC', E: 'NE', U: 'UD', R: '?' };
+    const slotCards = (window.PlayerPicker && typeof window.PlayerPicker.buildCards === 'function')
+      ? window.PlayerPicker.buildCards(this.userRecord && this.userRecord.parsedJson) : [];
+    if (slotCards.length <= 1) return '';
+    return `
+      <div class="ci-header-region ci-header-slot" aria-label="Pick which player in this replay is you">
+        <span class="ci-slot-chip-label">Compare as</span>
+        <div class="ci-slot-chip-row">
+          ${slotCards.map(c => {
+            const isActive = String(c.slot) === String(this.userSlot);
+            return `
+              <button class="ci-slot-chip ${isActive ? 'ci-slot-chip-active' : ''}" type="button"
+                      data-slot="${escapeAttr(c.slot)}" ${isActive ? 'aria-pressed="true"' : ''}>
+                <span class="ci-slot-chip-race race-${escapeAttr(c.race || 'R')}">${escapeHtml(RACE_BADGE[c.race] || c.race || '?')}</span>
+                <span class="ci-slot-chip-name">${escapeHtml(c.name || ('Slot ' + c.slot))}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
       </div>
-      ${watchButtons}
     `;
   }
 
@@ -381,40 +406,20 @@ const CompareInline = class {
     return notices.join('');
   }
 
-  _slotRowHtml () {
-    const RACE_NAME = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead', R: 'Random' };
-    const RACE_BADGE = { H: 'HU', O: 'ORC', E: 'NE', U: 'UD', R: '?' };
-    const slotCards = (window.PlayerPicker && typeof window.PlayerPicker.buildCards === 'function')
-      ? window.PlayerPicker.buildCards(this.userRecord && this.userRecord.parsedJson) : [];
-    if (!slotCards.length) return '';
-    return `
-      <div class="ci-slot-row" aria-label="Pick which player in this replay is you">
-        <div class="ci-slot-row-head">
-          <span class="ci-slot-row-title">Your player</span>
-          ${slotCards.length > 1 ? '<span class="ci-slot-row-hint">Click another to switch.</span>' : ''}
-        </div>
-        ${slotCards.map(c => {
-          const isActive = String(c.slot) === String(this.userSlot);
-          const portrait = c.heroItemId ? iconUrl(c.heroItemId) : '';
-          return `
-            <button class="ci-slot-card ${isActive ? 'ci-slot-card-active' : ''}" type="button"
-                    data-slot="${escapeAttr(c.slot)}" ${isActive ? 'aria-pressed="true"' : ''}>
-              <div class="ci-slot-portrait-wrap">
-                ${portrait
-                  ? `<img class="ci-slot-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>`
-                  : '<div class="ci-slot-portrait"></div>'}
-                <span class="ci-slot-race-badge race-${escapeAttr(c.race || 'R')}">${escapeHtml(RACE_BADGE[c.race] || c.race || '?')}</span>
-              </div>
-              <div class="ci-slot-body">
-                <div class="ci-slot-name">${escapeHtml(c.name || ('Slot ' + c.slot))}</div>
-                <div class="ci-slot-meta">${escapeHtml(RACE_NAME[c.race] || c.race || 'Unknown')}${c.heroName ? ' · ' + escapeHtml(c.heroName) : ''}</div>
-                <span class="ci-slot-pill ${isActive ? 'ci-slot-pill-active' : 'ci-slot-pill-pick'}">${isActive ? 'Selected' : 'Pick this player'}</span>
-              </div>
-            </button>
-          `;
-        }).join('')}
+  // Sticky footer — switch-pro chips + watch CTAs. Always visible while a
+  // report is rendered. Injected into #compare-drawer-foot, not rootEl.
+  _footerHtml () {
+    const proEntry = this._proEntry;
+    const userRecordId = this.userRecord && this.userRecord.id;
+    const watchProUrl = `/viewer?r=${encodeURIComponent(proEntry.replayId)}&player=${encodeURIComponent(proEntry.playerSlot)}&buildId=${encodeURIComponent(proEntry.buildId || '')}`;
+    const watchMineUrl = userRecordId ? `/viewer?local=${encodeURIComponent(userRecordId)}` : '';
+    const watchButtons = `
+      <div class="ci-watch-row">
+        ${watchMineUrl ? `<a class="ci-watch-cta ci-watch-mine" href="${escapeAttr(watchMineUrl)}">▶ Watch my replay</a>` : ''}
+        <a class="ci-watch-cta ci-watch-pro" href="${escapeAttr(watchProUrl)}" target="_blank" rel="noopener">▶ Watch pro replay ↗</a>
       </div>
     `;
+    return `${this._switcherHtml()}${watchButtons}`;
   }
 
   _tabsNavHtml () {
@@ -713,19 +718,21 @@ const CompareInline = class {
     `).join('');
 
     return `
-      <section class="ci-section">
-        <h3 class="ci-section-title">Tier progression</h3>
-        ${tierBars}
-      </section>
-      <section class="ci-section">
-        <h3 class="ci-section-title">Key timings</h3>
-        <table class="ci-timings-table">
-          <thead>
-            <tr><th>Milestone</th><th>You</th><th>Pro</th><th>Delta</th></tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </section>
+      <div class="ci-tech-grid">
+        <section class="ci-section">
+          <h3 class="ci-section-title">Tier progression</h3>
+          ${tierBars}
+        </section>
+        <section class="ci-section">
+          <h3 class="ci-section-title">Key timings</h3>
+          <table class="ci-timings-table">
+            <thead>
+              <tr><th>Milestone</th><th>You</th><th>Pro</th><th>Delta</th></tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        </section>
+      </div>
     `;
   }
 
@@ -757,27 +764,29 @@ const CompareInline = class {
     `;
 
     return `
-      <section class="ci-section">
-        <h3 class="ci-section-title">Supply</h3>
-        ${supplySvg || '<div class="ci-empty-mini">No supply data.</div>'}
-        <div class="ci-chart-legend"><span class="ci-chart-pip ci-chart-pip-you"></span>You &nbsp;<span class="ci-chart-pip ci-chart-pip-pro"></span>Pro</div>
-      </section>
-      <section class="ci-section">
-        <h3 class="ci-section-title">Workers</h3>
-        ${workersSvg || '<div class="ci-empty-mini">No worker data.</div>'}
-      </section>
-      <section class="ci-section">
-        <h3 class="ci-section-title">Idle supply headroom <small>— how much unused supply you sat on</small></h3>
-        ${idleSvg || '<div class="ci-empty-mini">No data.</div>'}
-      </section>
-      <section class="ci-section">
-        <h3 class="ci-section-title">Combat units over time</h3>
-        ${combatSvg || '<div class="ci-empty-mini">No combat unit data.</div>'}
-      </section>
-      <section class="ci-section">
-        <h3 class="ci-section-title">Final economy snapshot</h3>
-        ${finalTable}
-      </section>
+      <div class="ci-economy-grid">
+        <section class="ci-section">
+          <h3 class="ci-section-title">Supply</h3>
+          ${supplySvg || '<div class="ci-empty-mini">No supply data.</div>'}
+          <div class="ci-chart-legend"><span class="ci-chart-pip ci-chart-pip-you"></span>You &nbsp;<span class="ci-chart-pip ci-chart-pip-pro"></span>Pro</div>
+        </section>
+        <section class="ci-section">
+          <h3 class="ci-section-title">Workers</h3>
+          ${workersSvg || '<div class="ci-empty-mini">No worker data.</div>'}
+        </section>
+        <section class="ci-section">
+          <h3 class="ci-section-title">Idle supply headroom <small>— how much unused supply you sat on</small></h3>
+          ${idleSvg || '<div class="ci-empty-mini">No data.</div>'}
+        </section>
+        <section class="ci-section">
+          <h3 class="ci-section-title">Combat units over time</h3>
+          ${combatSvg || '<div class="ci-empty-mini">No combat unit data.</div>'}
+        </section>
+        <section class="ci-section ci-economy-final">
+          <h3 class="ci-section-title">Final economy snapshot</h3>
+          ${finalTable}
+        </section>
+      </div>
     `;
   }
 
@@ -808,130 +817,253 @@ const CompareInline = class {
       if (!seenPro[ph.itemId]) pairs.push({ user: null, pro: ph });
     }
 
-    const heroSection = (pair) => {
-      const ref = pair.user || pair.pro;
-      const portrait = ref ? iconUrl(ref.itemId) : '';
-      const userPicks = (pair.user && pair.user.skillOrder) || [];
-      const proPicks = (pair.pro && pair.pro.skillOrder) || [];
-      const limit = Math.max(userPicks.length, proPicks.length, 5);
+    this._heroPairs = pairs;
+    if (this._activeHeroIdx >= pairs.length) this._activeHeroIdx = 0;
+    const activeIdx = this._activeHeroIdx;
 
-      // Skill cell: icon + level rank pips (●●○ for L2 of L3) + small footer.
-      // Mismatches get a tinted background and a thin red bar; matches green.
-      const skillCell = (pk, matchOther) => {
-        if (!pk) {
-          return `<div class="ci-skill2-cell ci-skill2-empty"><div class="ci-skill2-icon-slot"></div><div class="ci-skill2-name">—</div></div>`;
-        }
-        // Rank max is unknown without mappings; assume 3 for basics (heuristic:
-        // skillLevel can never exceed 3 except ultimates which always cap at 1).
-        const isUltimate = pk.skillLevel === 1 && (pk.heroLevel === 6 || pk.heroLevel === 10);
-        const max = isUltimate ? 1 : 3;
-        const pips = [];
-        for (let r = 1; r <= max; r++) {
-          pips.push(`<span class="ci-skill2-pip ${r <= pk.skillLevel ? 'ci-skill2-pip-on' : ''}"></span>`);
-        }
-        const cls = matchOther === true ? 'ci-skill2-match'
-                   : matchOther === false ? 'ci-skill2-miss' : '';
-        const ic = pk.abilityId ? iconUrl(pk.abilityId) : '';
-        return `
-          <div class="ci-skill2-cell ${cls}" title="${escapeAttr(pk.skillName)} L${pk.skillLevel} @ ${escapeAttr(pk.gameTimeFormatted || '')}">
-            <div class="ci-skill2-icon-slot">
-              ${ic ? `<img class="ci-skill2-icon" src="${escapeAttr(ic)}" alt="${escapeAttr(pk.skillName)}" loading="lazy" onerror="this.style.display='none'"/>` : ''}
-              <div class="ci-skill2-rank">${pips.join('')}</div>
-            </div>
-            <div class="ci-skill2-name" title="${escapeAttr(pk.skillName)}">${escapeHtml(pk.skillName)}</div>
-            <div class="ci-skill2-foot"><span class="ci-skill2-hl">L${pk.heroLevel}</span><span class="ci-skill2-time">${escapeHtml(pk.gameTimeFormatted || '')}</span></div>
+    const subtabs = pairs.length > 1 ? this._heroSubtabsHtml(pairs, activeIdx) : '';
+    const panel = this._heroPanelHtml(pairs[activeIdx]);
+    return `
+      ${subtabs}
+      <div class="ci-hero-panel">${panel}</div>
+    `;
+  }
+
+  // Portrait chip strip used to switch which hero's panel is visible.
+  _heroSubtabsHtml (pairs, activeIdx) {
+    return `
+      <nav class="ci-hero-subtabs" role="tablist" aria-label="Heroes">
+        ${pairs.map((pair, i) => {
+          const ref = pair.user || pair.pro;
+          const heroName = ref ? ref.name : 'Hero';
+          const portrait = ref ? iconUrl(ref.itemId) : '';
+          const userLvl = pair.user ? pair.user.finalLevel : 0;
+          const proLvl = pair.pro ? pair.pro.finalLevel : 0;
+          const isActive = i === activeIdx;
+          return `
+            <button class="ci-hero-chip ${isActive ? 'ci-hero-chip-active' : ''}" type="button"
+                    role="tab" aria-selected="${isActive ? 'true' : 'false'}" data-hero-idx="${i}">
+              <img class="ci-hero-chip-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>
+              <span class="ci-hero-chip-name">${escapeHtml(heroName)}</span>
+              <span class="ci-hero-chip-levels">L${userLvl} · L${proLvl}</span>
+            </button>
+          `;
+        }).join('')}
+      </nav>
+    `;
+  }
+
+  // Single-hero panel: skill build grid + level delta table + items grid.
+  _heroPanelHtml (pair) {
+    if (!pair) return '<div class="ci-empty-mini">No hero data.</div>';
+    const ref = pair.user || pair.pro;
+    const portrait = ref ? iconUrl(ref.itemId) : '';
+    const heroName = ref ? ref.name : 'Hero';
+    const userLevel = pair.user ? pair.user.finalLevel : 0;
+    const proLevel = pair.pro ? pair.pro.finalLevel : 0;
+
+    return `
+      <section class="ci-hero-section">
+        <header class="ci-hero-section-head">
+          <img class="ci-hero-section-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>
+          <div class="ci-hero-section-meta">
+            <div class="ci-hero-section-name">${escapeHtml(heroName)}</div>
+            <div class="ci-hero-section-levels">You L${userLevel} · Pro L${proLevel}</div>
           </div>
-        `;
-      };
-
-      // Header row of hero-level columns + side label.
-      const headerCols = [];
-      for (let i = 0; i < limit; i++) headerCols.push(`<div class="ci-skill2-head-col">Hero L${i + 1}</div>`);
-
-      // Build cells for each side, comparing by index.
-      const userCells = [];
-      const proCells = [];
-      for (let i = 0; i < limit; i++) {
-        const a = userPicks[i] || null, b = proPicks[i] || null;
-        const sameSkill = a && b && (a.abilityId ? a.abilityId === b.abilityId : a.skillName === b.skillName);
-        userCells.push(skillCell(a, a && b ? sameSkill : null));
-        proCells.push(skillCell(b, a && b ? sameSkill : null));
-      }
-
-      // Connector row between the two sides — green tick for match, red x for divergence.
-      const connectors = [];
-      for (let i = 0; i < limit; i++) {
-        const a = userPicks[i], b = proPicks[i];
-        if (!a || !b) {
-          connectors.push(`<div class="ci-skill2-conn ci-skill2-conn-na"></div>`);
-          continue;
-        }
-        const same = a.abilityId ? a.abilityId === b.abilityId : a.skillName === b.skillName;
-        connectors.push(`<div class="ci-skill2-conn ${same ? 'ci-skill2-conn-match' : 'ci-skill2-conn-miss'}">${same ? '✓' : '✗'}</div>`);
-      }
-
-      // Level milestones — keep horizontal timeline, but better label spacing.
-      const milestoneRow = (label, list, totalMs) => {
-        if (!list || !list.length) {
-          return `<div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-level-bar"><div class="ci-empty-mini">No level-ups</div></div>`;
-        }
-        const max = Math.max(totalMs, list[list.length - 1].gameTimeMs || 1);
-        const ticks = list.map(m => {
-          const x = ((m.gameTimeMs || 0) / max) * 100;
-          return `<div class="ci-level-tick" style="left:${x.toFixed(2)}%;" title="L${m.level} @ ${m.gameTimeFormatted}"><span class="ci-level-tick-label">L${m.level}</span></div>`;
-        }).join('');
-        return `<div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-level-bar">${ticks}</div>`;
-      };
-
-      const itemsRow = (label, list) => {
-        const grid = (list && list.length)
-          ? list.map(it => `<img class="ci-hero-item" src="${escapeAttr(iconUrl(it.itemId))}" alt="${escapeAttr(it.name)}" title="${escapeAttr(it.name)}" loading="lazy" onerror="this.style.visibility='hidden'"/>`).join('')
-          : '<span class="ci-empty-mini">— no items —</span>';
-        return `<div class="ci-side-label">${escapeHtml(label)}</div><div class="ci-hero-items">${grid}</div>`;
-      };
-
-      const totalMs = Math.max(this.userSummary.durationMs || 0, this._proSummary.durationMs || 0);
-      const heroName = ref ? ref.name : 'Hero';
-      const heroLevel = pair.user ? pair.user.finalLevel : 0;
-      const proLevel = pair.pro ? pair.pro.finalLevel : 0;
-
-      return `
-        <section class="ci-hero-section">
-          <header class="ci-hero-section-head">
-            <img class="ci-hero-section-portrait" src="${escapeAttr(portrait)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"/>
-            <div class="ci-hero-section-meta">
-              <div class="ci-hero-section-name">${escapeHtml(heroName)}</div>
-              <div class="ci-hero-section-levels">You L${heroLevel} · Pro L${proLevel}</div>
-            </div>
-          </header>
-          <div class="ci-hero-block">
-            <h4 class="ci-hero-block-title">Skill build</h4>
-            <div class="ci-skill2-grid" style="--ci-skill2-cols:${limit}">
-              <div class="ci-skill2-side-label">&nbsp;</div>
-              ${headerCols.join('')}
-              <div class="ci-skill2-side-label">You</div>
-              ${userCells.join('')}
-              <div class="ci-skill2-side-label">&nbsp;</div>
-              ${connectors.join('')}
-              <div class="ci-skill2-side-label">Pro</div>
-              ${proCells.join('')}
-            </div>
-          </div>
+        </header>
+        <div class="ci-hero-block">
+          <h4 class="ci-hero-block-title">Skill build</h4>
+          ${this._skillBuildHtml(pair)}
+        </div>
+        <div class="ci-hero-bottom-row">
           <div class="ci-hero-block">
             <h4 class="ci-hero-block-title">Level milestones</h4>
-            ${milestoneRow('You', pair.user ? pair.user.levelMilestones : [], totalMs)}
-            ${milestoneRow('Pro', pair.pro ? pair.pro.levelMilestones : [], totalMs)}
+            ${this._levelDeltaTableHtml(pair)}
           </div>
           <div class="ci-hero-block">
             <h4 class="ci-hero-block-title">Items</h4>
-            ${itemsRow('You', pair.user ? pair.user.items : [])}
-            ${itemsRow('Pro', pair.pro ? pair.pro.items : [])}
+            ${this._heroItemsHtml(pair)}
           </div>
-        </section>
+        </div>
+      </section>
+    `;
+  }
+
+  // Skill build: 4-row CSS grid (header, you, connector, pro).
+  _skillBuildHtml (pair) {
+    const userPicks = (pair.user && pair.user.skillOrder) || [];
+    const proPicks = (pair.pro && pair.pro.skillOrder) || [];
+    const limit = Math.max(userPicks.length, proPicks.length, 5);
+
+    const skillCell = (pk, matchOther) => {
+      if (!pk) {
+        return `<div class="ci-skill2-cell ci-skill2-empty" aria-hidden="true"><div class="ci-skill2-icon-slot"></div><div class="ci-skill2-name">—</div></div>`;
+      }
+      const isUltimate = pk.skillLevel === 1 && (pk.heroLevel === 6 || pk.heroLevel === 10);
+      const max = isUltimate ? 1 : 3;
+      const pips = [];
+      for (let r = 1; r <= max; r++) {
+        pips.push(`<span class="ci-skill2-pip ${r <= pk.skillLevel ? 'ci-skill2-pip-on' : ''}"></span>`);
+      }
+      const cls = matchOther === true ? 'ci-skill2-match'
+                 : matchOther === false ? 'ci-skill2-miss' : '';
+      const ic = pk.abilityId ? iconUrl(pk.abilityId) : '';
+      return `
+        <div class="ci-skill2-cell ${cls}" title="${escapeAttr(pk.skillName)} L${pk.skillLevel} @ ${escapeAttr(pk.gameTimeFormatted || '')}">
+          <div class="ci-skill2-icon-slot">
+            ${ic ? `<img class="ci-skill2-icon" src="${escapeAttr(ic)}" alt="${escapeAttr(pk.skillName)}" loading="lazy" onerror="this.style.display='none'"/>` : ''}
+            <div class="ci-skill2-rank">${pips.join('')}</div>
+          </div>
+          <div class="ci-skill2-name" title="${escapeAttr(pk.skillName)}">${escapeHtml(pk.skillName)}</div>
+          <div class="ci-skill2-foot"><span class="ci-skill2-hl">L${pk.heroLevel}</span><span class="ci-skill2-time">${escapeHtml(pk.gameTimeFormatted || '')}</span></div>
+        </div>
       `;
     };
 
-    return pairs.map(heroSection).join('');
+    const headerCols = [];
+    for (let i = 0; i < limit; i++) headerCols.push(`<div class="ci-skill2-head-col">Hero L${i + 1}</div>`);
+
+    const userCells = [];
+    const proCells = [];
+    const connectors = [];
+    for (let i = 0; i < limit; i++) {
+      const a = userPicks[i] || null, b = proPicks[i] || null;
+      const sameSkill = a && b && (a.abilityId ? a.abilityId === b.abilityId : a.skillName === b.skillName);
+      userCells.push(skillCell(a, a && b ? sameSkill : null));
+      proCells.push(skillCell(b, a && b ? sameSkill : null));
+      if (!a || !b) {
+        connectors.push(`<div class="ci-skill2-conn ci-skill2-conn-na"></div>`);
+      } else {
+        connectors.push(`<div class="ci-skill2-conn ${sameSkill ? 'ci-skill2-conn-match' : 'ci-skill2-conn-miss'}">${sameSkill ? '✓' : '✗'}</div>`);
+      }
+    }
+
+    return `
+      <div class="ci-skill2-grid" style="--ci-skill2-cols:${limit}">
+        <div class="ci-skill2-side-label">&nbsp;</div>
+        ${headerCols.join('')}
+        <div class="ci-skill2-side-label">You</div>
+        ${userCells.join('')}
+        <div class="ci-skill2-side-label">&nbsp;</div>
+        ${connectors.join('')}
+        <div class="ci-skill2-side-label">Pro</div>
+        ${proCells.join('')}
+      </div>
+    `;
+  }
+
+  // Level milestones: comparison table with per-level Δ between you and pro.
+  _levelDeltaTableHtml (pair) {
+    const userMs = {};
+    const proMs = {};
+    if (pair.user && Array.isArray(pair.user.levelMilestones)) {
+      for (const m of pair.user.levelMilestones) userMs[m.level] = m.gameTimeMs;
+    }
+    if (pair.pro && Array.isArray(pair.pro.levelMilestones)) {
+      for (const m of pair.pro.levelMilestones) proMs[m.level] = m.gameTimeMs;
+    }
+    const levels = Array.from(new Set([
+      ...Object.keys(userMs).map(Number),
+      ...Object.keys(proMs).map(Number)
+    ])).sort((a, b) => a - b);
+    if (!levels.length) return '<div class="ci-empty-mini">No level-ups recorded.</div>';
+
+    const fmt = (ms) => {
+      if (typeof ms !== 'number' || !isFinite(ms)) return '—';
+      const total = Math.round(ms / 1000);
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+    const fmtDelta = (deltaMs) => {
+      const sign = deltaMs >= 0 ? '+' : '−';
+      return `${sign}${fmt(Math.abs(deltaMs))}`;
+    };
+
+    const rows = levels.map(level => {
+      const a = userMs[level];
+      const b = proMs[level];
+      let deltaCell = '<td class="ci-delta-na">—</td>';
+      if (typeof a === 'number' && typeof b === 'number') {
+        const d = a - b;
+        const cls = d > 0 ? 'ci-delta-slower' : d < 0 ? 'ci-delta-faster' : '';
+        deltaCell = `<td class="${cls}">${d === 0 ? '0:00' : fmtDelta(d)}</td>`;
+      }
+      return `
+        <tr>
+          <td class="ci-level-cell">L${level}</td>
+          <td>${fmt(a)}</td>
+          <td>${fmt(b)}</td>
+          ${deltaCell}
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <table class="ci-hero-levels">
+        <thead>
+          <tr><th>Level</th><th>You</th><th>Pro</th><th>Δ</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  // Items: fixed 6-slot inventory grid per side. Empty boxes for unused slots.
+  // Shared items get a green outline, pro-only items get a gold outline so the
+  // user can see what they're missing at a glance.
+  _heroItemsHtml (pair) {
+    const userItems = (pair.user && pair.user.items) || [];
+    const proItems = (pair.pro && pair.pro.items) || [];
+    const userIds = new Set(userItems.map(it => it.itemId));
+    const proIds = new Set(proItems.map(it => it.itemId));
+    const slotsPerRow = 6;
+    const sideRowCount = (list) => Math.max(1, Math.ceil(list.length / slotsPerRow));
+    const rowCount = Math.max(sideRowCount(userItems), sideRowCount(proItems));
+    const totalSlots = rowCount * slotsPerRow;
+
+    const cell = (it, otherSet, isProSide) => {
+      if (!it) return '<div class="ci-hero-item-empty"></div>';
+      const shared = otherSet.has(it.itemId);
+      const proOnly = isProSide && !shared;
+      const cls = shared ? 'ci-hero-item-shared'
+                : proOnly ? 'ci-hero-item-pro-only' : '';
+      return `<img class="ci-hero-item ${cls}" src="${escapeAttr(iconUrl(it.itemId))}" alt="${escapeAttr(it.name)}" title="${escapeAttr(it.name)}" loading="lazy" onerror="this.style.visibility='hidden'"/>`;
+    };
+
+    const renderRow = (label, list, otherSet, isProSide) => {
+      const cells = [];
+      for (let i = 0; i < totalSlots; i++) cells.push(cell(list[i], otherSet, isProSide));
+      return `
+        <div class="ci-hero-item-row">
+          <div class="ci-side-label">${escapeHtml(label)}</div>
+          <div class="ci-hero-items" style="--ci-item-cols:${slotsPerRow}">${cells.join('')}</div>
+        </div>
+      `;
+    };
+
+    return `
+      <div class="ci-hero-items-wrap">
+        ${renderRow('You', userItems, proIds, false)}
+        ${renderRow('Pro', proItems, userIds, true)}
+      </div>
+    `;
+  }
+
+  _setHeroSubTab (idx) {
+    if (idx === this._activeHeroIdx) return;
+    this._activeHeroIdx = idx;
+    // Toggle chip active class without re-rendering the strip (preserves
+    // scroll position of the chip row when there are many heroes).
+    this.rootEl.querySelectorAll('.ci-hero-chip').forEach(chip => {
+      const active = String(chip.dataset.heroIdx) === String(idx);
+      chip.classList.toggle('ci-hero-chip-active', active);
+      chip.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    const panel = this.rootEl.querySelector('.ci-hero-panel');
+    if (panel && this._heroPairs && this._heroPairs[idx]) {
+      panel.innerHTML = this._heroPanelHtml(this._heroPairs[idx]);
+    }
   }
 
   // ── Tab: Upgrades ───────────────────────────────────────────────────────
@@ -1391,28 +1523,32 @@ const CompareInline = class {
 
   // ── Wiring ──────────────────────────────────────────────────────────────
   _wireGlobal () {
-    // Tab nav
+    // Tab nav lives in rootEl (header).
     this.rootEl.querySelectorAll('.ci-tab').forEach(btn => {
       btn.addEventListener('click', () => this._setTab(btn.dataset.tab));
     });
-    // Switcher chips
-    this.rootEl.querySelectorAll('.ci-chip').forEach(chip => {
-      chip.addEventListener('click', async () => {
-        const id = chip.dataset.replayId;
-        const slot = chip.dataset.slot;
-        const candidate = this.candidates.find(c => c.entry.replayId === id && String(c.entry.playerSlot) === String(slot));
-        if (candidate) {
-          this.matchConfidence = 'manual';
-          await this._compareWith(candidate.entry);
-        }
+    // Switcher chips and advanced button now live in the sticky footer
+    // (sibling of rootEl), so query against the parent drawer.
+    const drawer = this.rootEl.parentElement;
+    if (drawer) {
+      drawer.querySelectorAll('.ci-chip').forEach(chip => {
+        chip.addEventListener('click', async () => {
+          const id = chip.dataset.replayId;
+          const slot = chip.dataset.slot;
+          const candidate = this.candidates.find(c => c.entry.replayId === id && String(c.entry.playerSlot) === String(slot));
+          if (candidate) {
+            this.matchConfidence = 'manual';
+            await this._compareWith(candidate.entry);
+          }
+        });
       });
-    });
-    const advBtn = this.rootEl.querySelector('.ci-advanced-btn');
-    if (advBtn) advBtn.addEventListener('click', () => this._openAdvanced());
-    // Slot-card clicks
-    this.rootEl.querySelectorAll('.ci-slot-card[data-slot]').forEach(card => {
-      if (card.classList.contains('ci-slot-card-active')) return;
-      card.addEventListener('click', () => this._switchPlayer(card.dataset.slot));
+      const advBtn = drawer.querySelector('.ci-advanced-btn');
+      if (advBtn) advBtn.addEventListener('click', () => this._openAdvanced());
+    }
+    // Slot chips (compact picker, lives in rootEl).
+    this.rootEl.querySelectorAll('.ci-slot-chip[data-slot]').forEach(chip => {
+      if (chip.classList.contains('ci-slot-chip-active')) return;
+      chip.addEventListener('click', () => this._switchPlayer(chip.dataset.slot));
     });
   }
 
@@ -1426,6 +1562,14 @@ const CompareInline = class {
     if (tabId === 'creeps') {
       // Canvas paint is async (loads image + walkmap.json). Fire-and-forget.
       this._renderCreepsCanvas().catch(e => console.error('[Creeps] render failed:', e));
+    }
+    if (tabId === 'heroes') {
+      this.rootEl.querySelectorAll('.ci-hero-chip[data-hero-idx]').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const idx = parseInt(chip.dataset.heroIdx, 10);
+          if (Number.isFinite(idx)) this._setHeroSubTab(idx);
+        });
+      });
     }
   }
 
