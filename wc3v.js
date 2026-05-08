@@ -542,10 +542,16 @@ const parseReplays = async (options) => {
           const supplyBuildingEvents = (p.eventStream || []).filter(e =>
             e.key === 'addBuilding' && e.isInferred
           ).length;
+          // collect this player's validation issues from the validator output
+          const playerWarnings = (validation && validation.warnings || [])
+            .filter(w => String(w.player) === String(pid));
           playerStats[pid] = {
             name: p.playerName || p.playerId,
             race: p.race,
             parseConfidence: p.parseConfidence,
+            validationConfidence: p.validationConfidence,
+            issueCounts: p.validationIssues || { critical: 0, major: 0, minor: 0, info: 0 },
+            warnings: playerWarnings,
             supplyBumps: (p._supplyBumps || []).length,
             inferredBuildings: supplyBuildingEvents
           };

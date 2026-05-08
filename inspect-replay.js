@@ -15,6 +15,7 @@
  *                          paths      - unit movement paths with groupId data
  *                          workers    - worker snapshots from events
  *                          tiers      - tier transition data
+ *                          validation - validator severity/confidence + warnings
  *                          supply     - supply building analysis + confidence
  *                          items      - item purchases, uses, and summary
  *                          mercs      - mercenary hires and tavern hero purchases
@@ -324,6 +325,44 @@ if (showAll || showSections.includes('tiers')) {
   console.log('');
 }
 
+if (showAll || showSections.includes('validation')) {
+  console.log('=== VALIDATION ===');
+  if (!data.validation) {
+    console.log('  (no validation block — replay parsed clean or pre-validator format)');
+  } else {
+    const v = data.validation;
+    if (v.playerConfidence) {
+      console.log('  Validation confidence:');
+      Object.entries(v.playerConfidence).forEach(([pid, conf]) => {
+        if (!shouldIncludePlayer(pid)) return;
+        const issues = (v.playerIssues && v.playerIssues[pid]) || {};
+        const breakdown = ['critical', 'major', 'minor', 'info']
+          .map(s => `${s}=${issues[s] || 0}`)
+          .join(' ');
+        console.log(`    P${pid}: ${conf.toFixed(3)}  [${breakdown}]`);
+      });
+    }
+    const warnings = v.warnings || [];
+    const filteredWarnings = filterPlayer
+      ? warnings.filter(w => String(w.player) === String(filterPlayer))
+      : warnings;
+    if (filteredWarnings.length) {
+      console.log(`  Warnings (${filteredWarnings.length}):`);
+      filteredWarnings.forEach(w => {
+        const sev = (w.severity || 'minor').toUpperCase();
+        console.log(`    P${w.player} [${sev}] [${w.type}]: ${w.details}`);
+      });
+    } else {
+      console.log('  (no warnings)');
+    }
+    if (v.errors && v.errors.length) {
+      console.log(`  Errors (${v.errors.length}):`);
+      v.errors.forEach(e => console.log(`    [${e.type}] ${e.details}`));
+    }
+  }
+  console.log('');
+}
+
 // --- Items ---
 if (showAll || showSections.includes('items')) {
   console.log('=== ITEMS ===');
@@ -465,9 +504,12 @@ if (showAll || showSections.includes('supply')) {
     if (data.validation && data.validation.warnings) {
       const playerWarnings = data.validation.warnings.filter(w => String(w.player) === String(pid));
       if (playerWarnings.length) {
-        console.log(`    Validation warnings:`);
+        const conf = data.validation.playerConfidence && data.validation.playerConfidence[pid];
+        const confStr = conf != null ? ` (validation confidence ${conf.toFixed(3)})` : '';
+        console.log(`    Validation warnings${confStr}:`);
         playerWarnings.forEach(w => {
-          console.log(`      [${w.type}] ${w.details}`);
+          const sev = (w.severity || 'minor').toUpperCase();
+          console.log(`      [${sev}] [${w.type}] ${w.details}`);
         });
       }
     }

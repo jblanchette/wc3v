@@ -2184,6 +2184,17 @@
         for (const t of this._treeInstances) savedTreeState.push(t.hidden);
       }
 
+      // Hide construction progress bars during snapshot — they would otherwise
+      // float over buildings/gold mines if the snapshot's gameTime falls inside
+      // a build window.
+      const hiddenBars = [];
+      for (const child of this.scene.children) {
+        if (child.userData && child.userData.isBuildingProgressBar && child.visible) {
+          hiddenBars.push(child);
+          child.visible = false;
+        }
+      }
+
       // Show only the snapshot buildings, hide others
       if (this._playerBuildings) {
         for (const b of this._playerBuildings) b.mesh.visible = false;
@@ -2265,6 +2276,9 @@
           this._playerBuildings[i].mesh.visible = savedBuildingVis[i];
         }
       }
+
+      // Restore construction progress bar visibility
+      for (const bar of hiddenBars) bar.visible = true;
 
       // Re-render main view
       this.requestRender();

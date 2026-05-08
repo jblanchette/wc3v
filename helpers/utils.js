@@ -706,9 +706,23 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
       delete replay.metadata.gameData;
       return replay;
     })(),
-    ...(validation && (validation.warnings.length || validation.errors.length)
-      ? { validation }
-      : {})
+    ...((() => {
+      // include validation block whenever the validator ran. Keeps the issue
+      // counts and confidence consistent with the warning list — inspect-replay
+      // shows both, so dropping warnings while keeping counts would be confusing.
+      if (!validation) return {};
+      const warnings = validation.warnings || [];
+      const errors = validation.errors || [];
+      if (!warnings.length && !errors.length && !validation.playerConfidence) return {};
+      return {
+        validation: {
+          warnings,
+          errors,
+          playerConfidence: validation.playerConfidence,
+          playerIssues: validation.playerIssues
+        }
+      };
+    })())
   };
 
   return output;

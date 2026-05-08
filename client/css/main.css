@@ -2473,6 +2473,28 @@ body {
   border-radius: 4px;
 }
 
+.mh-base-btn {
+  font: 700 0.75rem Verdana;
+  color: #aab;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  padding: 6px 10px;
+  margin-top: 6px;
+  text-align: center;
+  user-select: none;
+  background: #1a2830;
+  border: 1px solid #3a4a55;
+  border-radius: 4px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.mh-base-btn:hover {
+  background: #243540;
+  color: #fff;
+  border-color: #5a7a8a;
+}
+
 .mh-unit-flat {
   display: flex;
   flex-wrap: wrap;
@@ -4525,10 +4547,33 @@ body {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Narrow viewports (≤ 767px): let the nav wrap and shrink the search input
+   so logo + links + search don't overflow horizontally. */
+@media (max-width: 767px) {
+  .site-nav-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    padding: 0.3rem 0.75rem;
+  }
+  .site-nav-search-wrap { margin-left: 0; flex: 1 1 100%; order: 3; }
+  .site-nav-search { width: 100%; }
+  .site-nav-link { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+}
+
+@media (max-width: 480px) {
+  .site-nav-search { display: none; }
+}
+
 .site-content {
   max-width: 1800px;
   margin: 0 auto;
   padding: 1.25rem 1.5rem 4rem;
+}
+
+/* Small phone (≤ 480px): tighter outer padding so text-heavy pages
+   (about, legal) and the homepage card grid get more horizontal room. */
+@media (max-width: 480px) {
+  .site-content { padding: 0.75rem 0.75rem 2rem; }
 }
 
 /* ── Intro row: video thumb + tagline ───────────────────── */
@@ -5568,6 +5613,12 @@ body {
     border-right: none;
     border-bottom: none;
   }
+}
+
+/* Small phone (≤ 480px): tighten modal internal padding. */
+@media (max-width: 480px) {
+  .site-replay-modal-header { padding: 10px 12px; gap: 8px; }
+  .site-replay-modal-list { padding: 10px 12px 14px; }
 }
 
 .site-replay-modal-header {
@@ -6696,10 +6747,10 @@ body {
 /* Below the viewer minimum: #app enforces 960px via min-width, html scrolls.
    No additional rules needed here — the min-width on #app handles it.       */
 
-/* Mobile viewport (≤ 767px): collapse to build-order-only, no canvas.       */
-@media (max-width: 767px) {
+/* Tablet portrait & narrower (≤ 1023px): collapse to build-order-only, no canvas. */
+@media (max-width: 1023px) {
   #app {
-    min-width: 0; /* let the viewer fill a narrow mobile screen */
+    min-width: 0; /* let the viewer fill a narrow mobile/tablet screen */
   }
 
   /* Override all layout-mode grid variants to show build order only */
@@ -6737,6 +6788,20 @@ body {
   .bo-row { min-height: 34px; padding: 2px 4px; }
   .bo-row-desc { font-size: 14px; gap: 6px; }
   .bo-row-icon { width: 28px; height: 28px; }
+}
+
+/* Small phone (≤ 480px): stack the two BO sides into a single column. */
+@media (max-width: 480px) {
+  #bo-columns {
+    flex-direction: column;
+    max-width: 100%;
+    padding: 0 4px;
+    gap: 8px;
+  }
+  #bo-timeline-gap { display: none; }
+  #bo-timeline-svg { display: none; }
+  .bo-side { width: 100%; flex: none; }
+  .bo-column { max-width: 100%; min-width: 0; }
 }
 
 /* ── About page ──────────────────────────────────────── */
@@ -7058,7 +7123,7 @@ svg.about-feat-icon {
 }
 
 /* ── About: responsive ── */
-@media (max-width: 700px) {
+@media (max-width: 767px) {
   .about-hero {
     flex-direction: column;
     gap: 1.25rem;
@@ -7075,8 +7140,13 @@ svg.about-feat-icon {
   .about-bottom-cta { flex-direction: column; align-items: center; }
 }
 
-@media (min-width: 701px) and (max-width: 900px) {
+@media (min-width: 768px) and (max-width: 1023px) {
   .about-feature-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Small phone (≤ 480px): collapse the strip to a single column too. */
+@media (max-width: 480px) {
+  .about-feature-strip { grid-template-columns: 1fr; }
 }
 
 /* ── Site footer ──────────────────────────────────────── */
@@ -7137,7 +7207,7 @@ svg.about-feat-icon {
   padding-top: 1rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767px) {
   .site-footer-inner {
     flex-direction: column;
     gap: 1rem;
@@ -9086,6 +9156,17 @@ svg.about-feat-icon {
   }
   .hero-bar-help span { display: none; }       /* icon only */
   .hero-bar-help { padding: 5px 8px; }
+}
+
+/* Small phone (≤ 480px): upload button takes its own row. */
+@media (max-width: 480px) {
+  .hero-bar-inner { padding: 8px 12px; }
+  .hero-bar-upload {
+    flex-basis: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+  .hero-bar-private { margin-left: 0; }
 }
 
 /* My Replays header — extra layout when there are multiple actions */
@@ -11172,6 +11253,18 @@ svg.about-feat-icon {
   position: relative;
 }
 
+/* Small phone (≤ 480px): tighten chip rows so they wrap cleanly. */
+@media (max-width: 480px) {
+  .pro-filter-bar { gap: 6px 8px; }
+  .pfb-group { gap: 4px; }
+  .pfb-chips { gap: 3px; }
+  .pfb-chips .site-race-pick,
+  .pfb-chips .site-matchup-btn,
+  .pfb-chips .site-axis-btn,
+  .pfb-chips .site-tournament-btn { padding: 3px 8px; font-size: 0.78rem; }
+  .pfb-label { font-size: 0.68rem; }
+}
+
 .pfb-group {
   display: inline-flex;
   align-items: center;
@@ -12169,12 +12262,13 @@ body.help-modal-active {
   margin-right: 4px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 767px) {
   .replays-page-grid {
     grid-template-columns: 1fr;
   }
   .replays-page-toolbar { gap: 8px; }
   .replays-search { min-width: 0; width: 100%; }
+  .replays-race-filter { flex-wrap: wrap; }
 }
 
 /* ===== Terms acknowledgment banner =====

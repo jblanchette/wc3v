@@ -7,25 +7,31 @@
  * still see old data regardless of code changes.
  *
  * Usage:
- *   node tools/reparse-builds.js            — reparse all build replays (47 replays)
- *   node tools/reparse-builds.js --dry-run   — list replays without parsing
- *   node tools/reparse-builds.js --debug     — reparse with debug output (keeps uncompressed .wc3v)
+ *   node tools/reparse-builds.js              — reparse all build replays
+ *   node tools/reparse-builds.js --dry-run    — list replays without parsing
+ *   node tools/reparse-builds.js --debug      — reparse with debug output (keeps uncompressed .wc3v)
+ *   node tools/reparse-builds.js --all        — also include replays not in builds-manifest
  *
  * Source: reads replay IDs from client/data/builds-manifest.json
  * Input:  replays/{id}.w3g (raw replay files)
  * Output: client/replays/{id}.wc3v.gz (parsed JSON, gzipped)
  *
- * Reports per-player parse confidence and flags replays with supply bumps,
- * inferred buildings, or low confidence scores (<0.95).
+ * Reports per-player parse + validation confidence and prints a verbose
+ * report for any replay where critical issues were detected or any player's
+ * combined confidence dropped below LOW_CONFIDENCE_THRESHOLD.
  */
 
 const fs = require('fs');
 const path = require('path');
 
+const LOW_CONFIDENCE_THRESHOLD = 0.85;
+
 const manifestPath = path.join(__dirname, '..', 'client', 'data', 'builds-manifest.json');
 const replaysDir = path.join(__dirname, '..', 'replays');
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+
+const isAll = process.argv.includes('--all');
 
 // extract unique replayIds from all builds
 const replayIds = new Set();
@@ -37,6 +43,18 @@ for (const build of manifest.builds) {
       }
     }
   }
+}
+
+if (isAll) {
+  // include every .w3g in replays/, not just manifest entries
+  fs.readdirSync(replaysDir)
+    .filter(f => f.endsWith('.w3g'))
+    .forEach(f => {
+      const id = path.basename(f, '.w3g');
+      if (!id.startsWith('test-') && !id.startsWith('bad') && id !== 'w3c-test') {
+        replayIds.add(id);
+      }
+    });
 }
 
 const uniqueIds = [...replayIds].sort();
@@ -84,6 +102,17 @@ if (available.length === 0) {
 const { parseReplays } = require('../wc3v');
 const config = require('../config/config');
 
+function combinedConfidence (stats) {
+  // multiply parser-internal confidence with validator confidence so a clean
+  // parser run with a contradicting validator drops the score, and vice versa.
+  // Clamp parseConfidence to [0,1] — Player.reduceParseConfidence can drive
+  // it negative, which is meaningful as a flag but breaks the multiplication.
+  const rawParse = stats.parseConfidence != null ? stats.parseConfidence : 1;
+  const parseConf = Math.max(0, Math.min(1, rawParse));
+  const validationConf = stats.validationConfidence != null ? stats.validationConfidence : 1;
+  return parseConf * validationConf;
+}
+
 async function main() {
   if (isDebug) {
     config.debugOutput = true;
@@ -112,20 +141,39 @@ async function main() {
         // display per-player confidence and supply stats
         if (result.playerStats) {
           Object.entries(result.playerStats).forEach(([pid, stats]) => {
-            const conf = stats.parseConfidence != null ? stats.parseConfidence.toFixed(4) : '?';
+            const combined = combinedConfidence(stats);
+            const parts = [
+              `parse=${stats.parseConfidence != null ? stats.parseConfidence.toFixed(3) : '?'}`,
+              `validation=${stats.validationConfidence != null ? stats.validationConfidence.toFixed(3) : '?'}`,
+              `combined=${combined.toFixed(3)}`
+            ];
+            const ic = stats.issueCounts || {};
+            const issueParts = [];
+            if (ic.critical) issueParts.push(`${ic.critical}C`);
+            if (ic.major)    issueParts.push(`${ic.major}M`);
+            if (ic.minor)    issueParts.push(`${ic.minor}m`);
+            if (ic.info)     issueParts.push(`${ic.info}i`);
+            const issueStr = issueParts.length ? ` issues=[${issueParts.join('/')}]` : '';
+
             const flags = [];
             if (stats.supplyBumps > 0) flags.push(`${stats.supplyBumps} supply bumps`);
             if (stats.inferredBuildings > 0) flags.push(`${stats.inferredBuildings} inferred buildings`);
             const flagStr = flags.length ? ` [${flags.join(', ')}]` : '';
-            console.log(`    P${pid} ${stats.name} (${stats.race}) confidence=${conf}${flagStr}`);
+
+            console.log(`    P${pid} ${stats.name} (${stats.race}) ${parts.join(' ')}${issueStr}${flagStr}`);
           });
         }
 
-        // flag replays with supply issues or low confidence
+        // flag replays with critical issues OR any player below threshold
         if (result.playerStats) {
-          const issues = Object.entries(result.playerStats).filter(([, s]) =>
-            s.supplyBumps > 0 || s.inferredBuildings > 0 || (s.parseConfidence != null && s.parseConfidence < 0.95)
-          );
+          const issues = Object.entries(result.playerStats).filter(([, s]) => {
+            const combined = combinedConfidence(s);
+            const ic = s.issueCounts || {};
+            return ic.critical > 0 ||
+                   combined < LOW_CONFIDENCE_THRESHOLD ||
+                   s.supplyBumps > 0 ||
+                   s.inferredBuildings > 0;
+          });
           if (issues.length) {
             flagged.push({ id, issues: issues.map(([pid, s]) => ({ pid, ...s })) });
           }
@@ -148,17 +196,40 @@ async function main() {
 
   if (flagged.length) {
     console.log(`\n=== FLAGGED REPLAYS (${flagged.length}) ===`);
+    console.log(`(threshold: combined confidence < ${LOW_CONFIDENCE_THRESHOLD}, or any critical issue)`);
     flagged.forEach(({ id, issues }) => {
-      console.log(`  ${id}:`);
+      console.log(`\n  ${id}`);
       issues.forEach(s => {
-        const conf = s.parseConfidence != null ? s.parseConfidence.toFixed(4) : '?';
-        const details = [];
-        if (s.supplyBumps > 0) details.push(`${s.supplyBumps} supply bumps`);
-        if (s.inferredBuildings > 0) details.push(`${s.inferredBuildings} inferred buildings`);
-        if (s.parseConfidence != null && s.parseConfidence < 0.95) details.push(`low confidence`);
-        console.log(`    P${s.pid} ${s.name} (${s.race}) confidence=${conf} — ${details.join(', ')}`);
+        const combined = combinedConfidence(s);
+        const ic = s.issueCounts || {};
+        const reasons = [];
+        if (ic.critical) reasons.push(`${ic.critical} critical`);
+        if (ic.major)    reasons.push(`${ic.major} major`);
+        if (combined < LOW_CONFIDENCE_THRESHOLD) reasons.push(`combined=${combined.toFixed(3)} below ${LOW_CONFIDENCE_THRESHOLD}`);
+        if (s.supplyBumps > 0) reasons.push(`${s.supplyBumps} supply bumps`);
+        if (s.inferredBuildings > 0) reasons.push(`${s.inferredBuildings} inferred buildings`);
+
+        console.log(`    P${s.pid} ${s.name} (${s.race}) — ${reasons.join(', ')}`);
+
+        // verbose validator output: print every critical/major warning
+        const showLevels = new Set(['critical', 'major']);
+        (s.warnings || [])
+          .filter(w => showLevels.has(w.severity))
+          .forEach(w => {
+            console.log(`      [${w.severity.toUpperCase()}] ${w.type}: ${w.details}`);
+          });
       });
     });
+
+    // explicit critical-issue summary so it can't be missed in long output
+    const withCritical = flagged.filter(f => f.issues.some(i => (i.issueCounts || {}).critical > 0));
+    if (withCritical.length) {
+      console.log(`\n!!! ${withCritical.length} replay(s) with CRITICAL validation issues !!!`);
+      withCritical.forEach(({ id }) => console.log(`  - ${id}`));
+      console.log('');
+      console.log('These contradictions (e.g. tier-2 building before tier-2 upgrade) suggest');
+      console.log('the parsed build order will be misleading. Investigate before publishing.');
+    }
   }
 }
 

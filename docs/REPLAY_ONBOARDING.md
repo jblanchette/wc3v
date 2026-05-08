@@ -71,9 +71,38 @@ Step 2 prints map, players, races, matchup, heroes, tier timings, and event coun
 Related tools:
 
 - `node tools/reparse-builds.js [--dry-run] [--debug]` — re-parse every manifest replay (use after server-side parser changes so clients see updated data)
+- `node tools/deploy-replays.js [--manifest] [--dry-run]` — upload `.wc3v.gz` files to R2 (cdn.wc3v.com). **Required after any reparse — see "Deploying replays" below.**
 - `node tools/build-parser-bundle.js` — rebuild [client/js/vendor/wc3v-parser.bundle.js](../client/js/vendor/wc3v-parser.bundle.js) so the in-browser parser picks up engine changes (run after parser code changes that affect what users see when uploading their own `.w3g`)
 - `node inspect-replay.js --replay=NAME --show=summary` — inspect parsed replay data without opening the viewer
 - `node wc3v.js --replay=NAME --debug` — keep the uncompressed `.wc3v` JSON alongside the `.gz` for parser dev
+
+## Deploying replays
+
+`client/replays/*.wc3v.gz` is **gitignored**. Render only ships the static `client/` dir; any `/replays/*` URL is 301-redirected to the Cloudflare R2 bucket `wc3v-cdn` (see [render.yaml](../render.yaml)). That means **a fresh reparse is invisible to viewers until the files are pushed to R2**.
+
+```bash
+# After reparse, push the manifest replays to R2:
+node tools/deploy-replays.js --manifest
+
+# Or push everything in client/replays/:
+node tools/deploy-replays.js
+
+# Single replay:
+node tools/deploy-replays.js --replay=1342775468_Kaho_Happy_Hammerfall
+
+# Preview without uploading:
+node tools/deploy-replays.js --manifest --dry-run
+```
+
+The helper uses `rclone copy` (never `sync`), so it never deletes anything in R2 even if a file is missing locally. Files whose size+mtime match are skipped, so re-running after a partial reparse only uploads what changed.
+
+Requires an `r2:` rclone remote pointing at the Cloudflare R2 endpoint that owns `wc3v-cdn`. Verify with `rclone listremotes` (should include `r2:`) and `rclone lsd r2:wc3v-cdn` (should show `replays/`, `assets/`, `maps/`).
+
+After upload, spot-check a `Last-Modified` header against the freshly uploaded file:
+
+```bash
+curl -sI https://cdn.wc3v.com/replays/SOME_ID.wc3v.gz | grep -i last-modified
+```
 
 ## Manifest structure
 

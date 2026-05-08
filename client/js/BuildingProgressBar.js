@@ -69,6 +69,7 @@ const BuildingProgressBar = class {
       if (constructionEndTime - b.readyTime < 500) continue;
 
       const group = new THREE.Group();
+      group.userData.isBuildingProgressBar = true;
 
       // Outer border — white
       const outerBorder = new THREE.Mesh(

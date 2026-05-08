@@ -1957,6 +1957,33 @@ const TECH_TREE_REQUIREMENTS = {
   }
 };
 
+// Building → minimum tier required to construct it.
+// Used by BuildingBackfill (so an inferred T2/T3 building doesn't land at gameTime 0)
+// and by ReplayValidator (so a real T2/T3 building before its tier upgrade is flagged).
+// Tier 1 buildings are omitted (everyone has tier 1 from the start).
+const BUILDING_TIER_REQUIREMENTS = {
+  'E': {
+    'eaoe': 2,    // Ancient of Lore — needs Tree of Ages
+    'eaow': 2,    // Ancient of Wind — needs Tree of Ages
+    'edos': 3     // Chimera Roost — needs Tree of Eternity
+  },
+  'O': {
+    'osld': 2,    // Spirit Lodge — needs Stronghold
+    'obea': 2,    // Beastiary — needs Stronghold
+    'otto': 2     // Tauren Totem — needs Stronghold (the Tauren *unit* needs Fortress, but the building itself only needs T2)
+  },
+  'H': {
+    'harm': 2,    // Workshop — needs Keep
+    'hars': 2,    // Arcane Sanctum — needs Keep
+    'hgra': 3     // Gryphon Aviary — needs Castle
+  },
+  'U': {
+    'utod': 2,    // Temple of the Damned — needs Halls of the Dead
+    'uslh': 2,    // Slaughterhouse — needs Halls of the Dead
+    'ubon': 3     // Boneyard — needs Black Citadel
+  }
+};
+
 // WC3 random item class IDs: Y{class}I{level}
 // class: i=Any, j=Permanent, k=Charged, o=Powerup
 const RANDOM_ITEM_CLASSES = {
@@ -2030,6 +2057,7 @@ module.exports = {
   unitAbilities,
 
   TECH_TREE_REQUIREMENTS,
+  BUILDING_TIER_REQUIREMENTS,
   NEUTRAL_HIRE_BUILDINGS,
 
   resolveDropItem,
