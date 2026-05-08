@@ -259,6 +259,10 @@ const ClientPlayer = class {
 
         return resolve(true);
       };
+      img.onerror = () => {
+        console.log("img error: ", imgSrc);
+        return resolve(false);
+      };
     });
 
     unitLoaders.push(iconPromise);

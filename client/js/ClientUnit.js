@@ -219,7 +219,8 @@ const ClientUnit = class {
       };
 
       img.onerror = (e) => {
-        console.log("img error: ", e);
+        console.log("img error: ", imgSrc);
+        return resolve(false);
       };
     });
   }
