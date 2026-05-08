@@ -214,7 +214,7 @@ const ClientPlayer = class {
     };
 
     let unitLoaders = this.units.reduce((acc, unit) => {
-      acc.concat(unit.loaders);
+      acc.push(...unit.loaders);
 
       return acc;
     }, []);
@@ -460,7 +460,9 @@ const ClientPlayer = class {
       const drawX = xPadding + offsetX + (c * iconSize);
       const drawY = yPadding + offsetY + (row * iconSize);
 
-      playerStatusCtx.drawImage(unit.icon, drawX, drawY, iconSize, iconSize);
+      if (unit.icon) {
+        playerStatusCtx.drawImage(unit.icon, drawX, drawY, iconSize, iconSize);
+      }
       c++;
 
       if (c === maxRow) {
@@ -495,7 +497,9 @@ const ClientPlayer = class {
 
         playerStatusCtx.globalAlpha = (hero.spawnTime <= gameTime) ? 1.0 : 0.35;
         playerStatusCtx.strokeRect(boxX, offsetY, subBoxWidth, boxHeight + skillBoxHeight);
-        playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+        if (hero.icon) {
+          playerStatusCtx.drawImage(hero.icon, boxX, offsetY, subBoxWidth, (boxHeight - skillBoxHeight));
+        }
 
         // draw team color square
 
@@ -519,13 +523,16 @@ const ClientPlayer = class {
           const spellRowOffsetY = (spellSlot > 1) ? skillBoxHeight : 0;
           const spellRowOffsetX = (spellSlot > 1) ? -(skillSubBoxWidth * 2) : 0;
 
-          playerStatusCtx.drawImage(
-            hero[`spell-${spellSlot}`], 
-            spellX + spellRowOffsetX,
-            skillBoxOffset + spellRowOffsetY,
-            skillSubBoxWidth,
-            skillBoxHeight
-          );
+          const spellIcon = hero[`spell-${spellSlot}`];
+          if (spellIcon) {
+            playerStatusCtx.drawImage(
+              spellIcon,
+              spellX + spellRowOffsetX,
+              skillBoxOffset + spellRowOffsetY,
+              skillSubBoxWidth,
+              skillBoxHeight
+            );
+          }
 
           if (heroLevelRecord) {
             const skillRecord = heroLevelRecord.learnedSkills[spellId];

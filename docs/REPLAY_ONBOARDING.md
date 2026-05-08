@@ -96,6 +96,10 @@ node tools/deploy-replays.js --manifest --dry-run
 
 The helper uses `rclone copy` (never `sync`), so it never deletes anything in R2 even if a file is missing locally. Files whose size+mtime match are skipped, so re-running after a partial reparse only uploads what changed.
 
+Every upload sets `Cache-Control: public, max-age=300, must-revalidate`. Without this, browsers fall back to heuristic caching (~10% of file age) and may serve stale `.wc3v.gz` from disk cache long after a reparse. 5 minutes keeps reload behavior responsive without hammering R2 — ETag-based revalidation makes the actual revalidation cheap (304 with no body).
+
+Use `--force` to re-upload even when size+mtime match — needed if you ever change the Cache-Control value or other upload metadata, since rclone's normal skip logic only checks file content equivalence.
+
 Requires an `r2:` rclone remote pointing at the Cloudflare R2 endpoint that owns `wc3v-cdn`. Verify with `rclone listremotes` (should include `r2:`) and `rclone lsd r2:wc3v-cdn` (should show `replays/`, `assets/`, `maps/`).
 
 After upload, spot-check a `Last-Modified` header against the freshly uploaded file:

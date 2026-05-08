@@ -140,10 +140,10 @@ const ClientUnit = class {
 
     this.loaders = [];
 
-    this.loaders.concat(this.loadIcon());
+    this.loaders.push(...this.loadIcon());
 
     if (this.meta.hero) {
-      this.loaders.concat(this.loadSpellIcons());
+      this.loaders.push(...this.loadSpellIcons());
     }
 
   }

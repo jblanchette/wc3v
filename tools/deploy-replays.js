@@ -13,6 +13,7 @@
  *   node tools/deploy-replays.js --dry-run    — preview transfers without uploading
  *   node tools/deploy-replays.js --replay=ID  — sync a single replay (.wc3v.gz)
  *   node tools/deploy-replays.js --manifest   — sync only replays referenced by builds-manifest.json
+ *   node tools/deploy-replays.js --force      — re-upload even if size+mtime match (use to refresh metadata like Cache-Control on already-uploaded files)
  *
  * Requires: rclone configured with an `r2` remote pointing at the
  * Cloudflare R2 endpoint that owns `wc3v-cdn`. (Check `rclone listremotes`.)
@@ -24,6 +25,11 @@
  *   - Only *.wc3v.gz is uploaded. Uncompressed *.wc3v debug files stay local.
  *   - rclone skips files whose size+mtime already match the destination, so
  *     re-running after a partial reparse only uploads the changed files.
+ *   - Every upload sets Cache-Control: public, max-age=300, must-revalidate.
+ *     Without this, browsers fall back to heuristic caching (~10% of file age)
+ *     and may serve stale .wc3v.gz from disk cache long after a reparse.
+ *     5 minutes is short enough that a viewer reload after a fresh deploy
+ *     gets the new data, and ETag/304 keeps revalidation cheap.
  */
 
 const fs = require('fs');
@@ -33,6 +39,7 @@ const { spawnSync } = require('child_process');
 const REMOTE = 'r2:wc3v-cdn/replays';
 const LOCAL_DIR = path.join(__dirname, '..', 'client', 'replays');
 const MANIFEST_PATH = path.join(__dirname, '..', 'client', 'data', 'builds-manifest.json');
+const CACHE_CONTROL = 'public, max-age=300, must-revalidate';
 
 const args = {};
 process.argv.slice(2).forEach(raw => {
@@ -43,6 +50,7 @@ process.argv.slice(2).forEach(raw => {
 const isDryRun = !!args['dry-run'];
 const singleReplay = args.replay && args.replay !== true ? args.replay : null;
 const manifestOnly = !!args.manifest;
+const isForce = !!args.force;
 
 // Sanity: rclone exists and the r2 remote is configured.
 function checkRclone () {
@@ -107,6 +115,7 @@ function main () {
     LOCAL_DIR,
     REMOTE,
     ...buildIncludeArgs(),
+    '--header-upload', `Cache-Control: ${CACHE_CONTROL}`,
     '--progress',
     '--stats-one-line',
     '--stats=2s',
@@ -114,6 +123,10 @@ function main () {
     '--checkers=16'
   ];
   if (isDryRun) cmd.push('--dry-run');
+  // --ignore-times forces rclone to re-upload even when size+mtime match.
+  // Use this once after introducing/changing Cache-Control to push the new
+  // header onto previously-uploaded files; otherwise rclone skips them.
+  if (isForce) cmd.push('--ignore-times');
 
   console.log(`\n+ rclone ${cmd.join(' ')}\n`);
 
