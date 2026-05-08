@@ -30,6 +30,9 @@ services:
         source: /assets/textures/*
         destination: https://cdn.wc3v.com/assets/textures/*
       - type: redirect
+        source: /assets/terrain/*
+        destination: https://cdn.wc3v.com/assets/terrain/*
+      - type: redirect
         source: /maps/*
         destination: https://cdn.wc3v.com/maps/*
       - type: redirect
