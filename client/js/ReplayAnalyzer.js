@@ -76,6 +76,10 @@ const ReplayAnalyzer = (() => {
     if (!guards.matchupCompatible) warnings.push('Different matchups — build adherence not scored');
     if (!guards.mapCompatible) warnings.push('Different maps — expansion timing not scored');
     if (!guards.archetypeCompatible) warnings.push(`Different archetypes (${u.archetype || '?'} vs ${p.archetype || '?'}) — build adherence falls back to general timing`);
+    if (guards.compositionDivergent) {
+      const c = guards.composition;
+      warnings.push(`Different army composition — you built mostly ${c.userSignatureName}, pro built ${c.proSignatureName}. Overall grade reflects macro execution, not build adherence.`);
+    }
     if (proResult === 'loss') warnings.push('This pro lost — take advice with a grain of salt');
 
     let categories;
@@ -128,7 +132,17 @@ const ReplayAnalyzer = (() => {
       weightedSum += cat.score * w;
       totalWeight += w;
     }
-    const overallScore = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0;
+    let overallScore = totalWeight > 0 ? Math.round(weightedSum / totalWeight) : 0;
+
+    // Honesty cap: when the user's army composition diverges sharply from
+    // the pro's (different signature unit + low Jaccard overlap), the
+    // overall grade can never legitimately claim A. The macro/tech/etc.
+    // scores remain valid information, but the ceiling drops to 70 (B-)
+    // because the comparison is fundamentally not measuring the user's
+    // build vs. the pro's build.
+    if (guards.compositionDivergent && totalWeight > 0) {
+      overallScore = Math.min(overallScore, 70);
+    }
 
     return {
       overall: { score: overallScore, grade: totalWeight > 0 ? gradeFor(overallScore) : 'N/A' },
@@ -176,6 +190,26 @@ const ReplayAnalyzer = (() => {
         ? prettyArchetype(u.archetype)
         : `You: ${prettyArchetype(u.archetype)} · Pro: ${prettyArchetype(p.archetype)}`
     });
+
+    // Composition row sits next to archetype since they're related: archetype
+    // is the strategic posture (fast-expand, 1-base-T2…); composition is the
+    // actual unit content. Both can mismatch independently.
+    const comp = guards.composition || {};
+    let compStatus, compDetail;
+    if (comp.reason === 'race-mismatch' || comp.signatureMatch === null) {
+      compStatus = 'unknown';
+      compDetail = comp.reason === 'race-mismatch' ? 'Different races' : 'Not enough unit data';
+    } else if (comp.signatureMatch) {
+      compStatus = 'match';
+      compDetail = `Both built ${comp.userSignatureName}`;
+    } else if (guards.compositionDivergent) {
+      compStatus = 'mismatch';
+      compDetail = `You: ${comp.userSignatureName} · Pro: ${comp.proSignatureName}`;
+    } else {
+      compStatus = 'partial';
+      compDetail = `You: ${comp.userSignatureName} · Pro: ${comp.proSignatureName} (some overlap)`;
+    }
+    out.push({ key: 'composition', label: 'Same army composition', status: compStatus, detail: compDetail });
 
     const userMapPretty = prettyMap(userSummary.map);
     const proMapPretty = prettyMap(proSummary.map);
@@ -237,13 +271,111 @@ const ReplayAnalyzer = (() => {
 
     const archetypeCompatible = u.archetype && p.archetype && u.archetype !== 'unknown' && u.archetype === p.archetype;
 
+    const composition = computeCompositionSimilarity(u, p);
+
     return {
       durationOk,
       matchupCompatible,
       mapCompatible,
       archetypeCompatible,
+      composition,
+      compositionDivergent: !!composition.divergent,
       proWon: proResult === 'win',
       proResult
+    };
+  };
+
+  // Compare the army compositions both players actually built. Without this
+  // signal, scoreProduction (count-only) and scoreBuildAdherence (building-
+  // order-only) cannot tell footman-spam apart from rifle-spam — they'd
+  // happily score 100 against each other. The signal looks at:
+  //   - buildPreview unit events (capped at 20 mid-game events but still
+  //     enough to identify the primary trained unit)
+  //   - t2Units / t3Units (per-tier itemId sets, supplements buildPreview)
+  // and reports `signatureMatch` (top-1 by count, equal? — the strongest
+  // single signal) and Jaccard `similarity` over all unit-type sets.
+  // `divergent` fires when signatures mismatch AND similarity is low — that
+  // case must NEVER be allowed to score A+.
+  const computeCompositionSimilarity = (u, p) => {
+    const NEUTRAL = {
+      similarity: 1, signatureMatch: null,
+      userSignature: null, proSignature: null,
+      userSignatureName: null, proSignatureName: null,
+      sharedTypes: [], divergent: false,
+      reason: 'insufficient-data'
+    };
+    // Different races have different unit catalogs — comparing them produces
+    // garbage. Race mismatch is already flagged by other guards; defer.
+    if (!u || !p || !u.race || !p.race || u.race !== p.race) {
+      return Object.assign({}, NEUTRAL, { reason: 'race-mismatch' });
+    }
+
+    const collect = (player) => {
+      const counts = {};
+      for (const ev of (player.buildPreview || [])) {
+        if (ev && ev.type === 'unit' && ev.itemId) {
+          counts[ev.itemId] = (counts[ev.itemId] || 0) + 1;
+        }
+      }
+      // Tier-unit lists supplement the count map — they only add itemIds we
+      // didn't already see in buildPreview, with count=1 (presence signal).
+      for (const list of [player.t2Units || [], player.t3Units || []]) {
+        for (const tu of list) {
+          if (tu && tu.itemId && !counts[tu.itemId]) counts[tu.itemId] = 1;
+        }
+      }
+      return counts;
+    };
+
+    const userCounts = collect(u);
+    const proCounts = collect(p);
+    const userKeys = Object.keys(userCounts);
+    const proKeys = Object.keys(proCounts);
+
+    // Need at least 2 distinct unit types on each side to make any meaningful
+    // claim about composition. Below that, defer to other signals.
+    if (userKeys.length < 2 || proKeys.length < 2) {
+      return Object.assign({}, NEUTRAL, { reason: 'insufficient-data' });
+    }
+
+    // Top-1 unit by count, tiebreak deterministically on itemId.
+    const top = (cs) => {
+      const ks = Object.keys(cs);
+      ks.sort((a, b) => (cs[b] - cs[a]) || a.localeCompare(b));
+      return ks[0];
+    };
+    const userSig = top(userCounts);
+    const proSig = top(proCounts);
+
+    const nameFor = (player, itemId) => {
+      const ev = (player.buildPreview || []).find(e => e && e.type === 'unit' && e.itemId === itemId);
+      if (ev && ev.name) return ev.name;
+      const tu = (player.t2Units || []).concat(player.t3Units || []).find(x => x && x.itemId === itemId);
+      return (tu && tu.name) || itemId;
+    };
+
+    const shared = userKeys.filter(k => Object.prototype.hasOwnProperty.call(proCounts, k));
+    const union = new Set([...userKeys, ...proKeys]);
+    const similarity = shared.length / Math.max(1, union.size);
+
+    const signatureMatch = userSig === proSig;
+    // Divergent iff the primary trained unit differs AND total overlap is
+    // low. A user who built mostly footmen against a rifle pro hits both:
+    // signatures differ + Jaccard near 0. A user who shared the primary
+    // unit but added a side splash (e.g., rifles + 1 sorceress vs rifles)
+    // does NOT trip divergence — signatureMatch stays true.
+    const divergent = !signatureMatch && similarity < 0.4;
+
+    return {
+      similarity,
+      signatureMatch,
+      userSignature: userSig,
+      proSignature: proSig,
+      userSignatureName: nameFor(u, userSig),
+      proSignatureName: nameFor(p, proSig),
+      sharedTypes: shared,
+      divergent,
+      reason: null
     };
   };
 
@@ -489,14 +621,24 @@ const ReplayAnalyzer = (() => {
     if (!guards.archetypeCompatible) {
       const userIds = new Set((u.buildPreview || []).map(b => b.itemId));
       const overlap = (p.buildPreview || []).filter(b => userIds.has(b.itemId)).length;
-      const score = Math.round(Math.min(1, overlap / Math.max(1, p.buildPreview.length)) * 100 * 0.7);
+      let score = Math.round(Math.min(1, overlap / Math.max(1, p.buildPreview.length)) * 100 * 0.7);
+      const findings = [{
+        severity: 'info',
+        headline: 'Try the pro\'s archetype',
+        text: `You played ${u.archetype}; pro played ${p.archetype}. Build-order grading uses set-overlap when archetypes differ.`
+      }];
+      if (guards.compositionDivergent) {
+        const c = guards.composition;
+        score = Math.min(score, 50);
+        findings.push({
+          severity: 'warn',
+          headline: `Different army: ${c.userSignatureName} vs ${c.proSignatureName}`,
+          text: `Buildings overlap, but the units coming out of them differ — you built mostly ${c.userSignatureName}; the pro built ${c.proSignatureName}.`,
+          metric: { label: `${c.userSignatureName} vs ${c.proSignatureName}` }
+        });
+      }
       return {
-        score, grade: gradeFor(score),
-        findings: [{
-          severity: 'info',
-          headline: 'Try the pro\'s archetype',
-          text: `You played ${u.archetype}; pro played ${p.archetype}. Build-order grading uses set-overlap when archetypes differ.`
-        }],
+        score, grade: gradeFor(score), findings,
         available: true,
         reason: 'archetype-degraded',
         detail: { setOverlapCount: overlap, userPreview: u.buildPreview, proPreview: p.buildPreview, divergencePoint: null }
@@ -506,7 +648,7 @@ const ReplayAnalyzer = (() => {
     const userSeq = (u.buildPreview || []).map(b => b.itemId);
     const proSeq = (p.buildPreview || []).map(b => b.itemId);
     const lcsLen = lcs(userSeq, proSeq);
-    const score = Math.round((lcsLen / Math.max(1, proSeq.length)) * 100);
+    let score = Math.round((lcsLen / Math.max(1, proSeq.length)) * 100);
 
     // Find the first divergence point (earliest index where the two sequences
     // disagree). The Top Fixes finding names the specific buildings.
@@ -535,6 +677,20 @@ const ReplayAnalyzer = (() => {
         headline: 'Match the pro opening order',
         text: `Only ${lcsLen}/${proSeq.length} of the pro's first 20 events matched. Walk through the Build tab to see the divergence.`,
         metric: { label: `${lcsLen}/${proSeq.length} match` }
+      });
+    }
+
+    // Building-order LCS doesn't see units. Two players who follow the same
+    // building sequence can still produce wildly different armies — cap and
+    // surface the divergence so the score reflects it.
+    if (guards.compositionDivergent) {
+      const c = guards.composition;
+      score = Math.min(score, 50);
+      findings.push({
+        severity: 'warn',
+        headline: `Different army: ${c.userSignatureName} vs ${c.proSignatureName}`,
+        text: `Buildings overlap, but the units coming out of them differ — you built mostly ${c.userSignatureName}; the pro built ${c.proSignatureName}.`,
+        metric: { label: `${c.userSignatureName} vs ${c.proSignatureName}` }
       });
     }
 
@@ -572,7 +728,7 @@ const ReplayAnalyzer = (() => {
         // Fall through to legacy single-snapshot scoring.
       } else {
         const ratio = Math.min(1, userArea / proArea);
-        const score = Math.round(ratio * 100);
+        let score = Math.round(ratio * 100);
         const userAvg = Math.round(userArea / n);
         const proAvg = Math.round(proArea / n);
         if (userArea < proArea * 0.7) {
@@ -581,6 +737,20 @@ const ReplayAnalyzer = (() => {
             headline: 'Keep production halls firing',
             text: `Averaged ${userAvg} combat units vs pro ${proAvg} between 5:00–15:00. Don't let your barracks/altar/etc idle — queue the next unit the moment one finishes.`,
             metric: { label: `${userAvg} vs ${proAvg}` }
+          });
+        }
+        // Production count alone is misleading when the user built a totally
+        // different unit type. Cap at 50 and surface the divergence so the
+        // user sees the signal that's actually wrong, not just the macro
+        // smell test.
+        if (guards && guards.compositionDivergent) {
+          const c = guards.composition;
+          score = Math.min(score, 50);
+          findings.push({
+            severity: 'warn',
+            headline: `Different primary unit: ${c.userSignatureName} vs ${c.proSignatureName}`,
+            text: `You built mostly ${c.userSignatureName}; the pro built ${c.proSignatureName}. Production count is similar but the army composition diverges — copy the pro's unit choices, not just their tempo.`,
+            metric: { label: `${c.userSignatureName} vs ${c.proSignatureName}` }
           });
         }
         return { score, grade: gradeFor(score), findings, available: true, detail: { samples, userAvg: userArea/n, proAvg: proArea/n } };
@@ -594,7 +764,7 @@ const ReplayAnalyzer = (() => {
     const proU = countUnits(p.buildPreview);
     if (proU === 0) return na('pro produced no units in window');
     const ratio = Math.min(1, userU / proU);
-    const score = Math.round(ratio * 100);
+    let score = Math.round(ratio * 100);
     const findings = [];
     if (userU < proU) {
       findings.push({
@@ -602,6 +772,16 @@ const ReplayAnalyzer = (() => {
         headline: 'Keep production halls firing',
         text: `${userU} combat units in the first 10:00 vs pro ${proU}. Queue your next unit as soon as a hall frees up.`,
         metric: { label: `${userU} vs ${proU}` }
+      });
+    }
+    if (guards && guards.compositionDivergent) {
+      const c = guards.composition;
+      score = Math.min(score, 50);
+      findings.push({
+        severity: 'warn',
+        headline: `Different primary unit: ${c.userSignatureName} vs ${c.proSignatureName}`,
+        text: `You built mostly ${c.userSignatureName}; the pro built ${c.proSignatureName}. Same unit count, different army.`,
+        metric: { label: `${c.userSignatureName} vs ${c.proSignatureName}` }
       });
     }
     return { score, grade: gradeFor(score), findings, available: true, detail: { userCount: userU, proCount: proU, snapshot: '10:00' } };
@@ -931,7 +1111,7 @@ const ReplayAnalyzer = (() => {
     return 'grade-' + grade.replace('+', 'plus').replace('-', 'minus');
   };
 
-  return { compare, gradeFor, gradeClass, prettyArchetype, formatMs, sameMap, prettyMap };
+  return { compare, gradeFor, gradeClass, prettyArchetype, formatMs, sameMap, prettyMap, computeCompositionSimilarity };
 })();
 
 if (typeof module !== 'undefined' && module.exports) {

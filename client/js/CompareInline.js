@@ -25,6 +25,18 @@ const CompareInline = class {
     this.currentReport = null;
     this.selfMatchEntry = null;       // pro entry whose fingerprint == userSummary's
     this.isSelfMatch = false;         // true while currentProEntry === selfMatchEntry
+    // matchConfidence:
+    //   'auto'      — top candidate clears metadata (≥85) AND grades AND
+    //                 has a matching build composition
+    //   'graded'    — top graded non-divergent candidate, score < 85
+    //   'divergent' — best graded candidate has the wrong build (no
+    //                 same-build pro available in our library that grades)
+    //   'low'       — nothing graded; showing closest metadata fallback
+    //   'manual'    — user picked via chip / advanced search
+    this.matchConfidence = null;
+    this.topCandidateScore = 0;       // score of best candidate (for low-conf detail)
+    this.uploadedProInfo = null;      // { proName, uploadedName } if user's slot
+                                      // matches a known pro but fingerprint doesn't
     // Callbacks injected by the host (drawer, inline panel, etc).
     //   onResult(report, proEntry) — fires after a successful compare run
     //     so the host can cache the grade or update other UI.
@@ -49,17 +61,36 @@ const CompareInline = class {
         return;
       }
       this.candidates = await this.matcher.rankCandidates(this.userSummary, this.userSlot, { limit: 8 });
-      // Detect self-match (re-upload of a pro replay) ahead of autoPick so we
-      // can render a different label and snap the grade to 100.
+      this.topCandidateScore = (this.candidates[0] && this.candidates[0].score) || 0;
+      // Detect self-match (re-upload of a pro replay) ahead of any other
+      // pick so we can render a different label and snap the grade to 100.
       this.selfMatchEntry = await this.matcher.findByFingerprint(this.userSummary);
-      const auto = await this.matcher.autoPick(this.userSummary, this.userSlot);
-      if (auto) {
-        await this._compareWith(auto);
+      // Detect uploaded-pro replay: user's selected slot is a known pro but
+      // we don't have this exact game (no fingerprint match). Pro-vs-pro
+      // comparisons against our library don't grade meaningfully.
+      this.uploadedProInfo = this.selfMatchEntry
+        ? null
+        : await this.matcher.detectProInUpload(this.userSummary, this.userSlot);
+
+      if (this.selfMatchEntry) {
+        this.matchConfidence = 'auto';
+        await this._compareWith(this.selfMatchEntry);
       } else if (this.candidates.length) {
-        // No auto-pick, but candidates exist — render with the top candidate
-        // selected so the user sees something useful right away. The
-        // checklist will explain what doesn't match.
-        await this._compareWith(this.candidates[0].entry);
+        // candidates come back sorted: graded+sameBuild > graded+divergent >
+        // ungraded+sameBuild > ungraded+divergent. The top entry is the best
+        // pick the matcher can offer. Confidence label reflects which tier
+        // it's in:
+        //   - clears 85 + grades + same build  → 'auto'
+        //   - grades + same build (any score)  → 'graded'
+        //   - grades + divergent build         → 'divergent' (no same-build
+        //                                        graded option exists)
+        //   - doesn't grade                    → 'low' (metadata fallback)
+        const top = this.candidates[0];
+        if (top.grades && !top.divergent && top.score >= 85) this.matchConfidence = 'auto';
+        else if (top.grades && !top.divergent)               this.matchConfidence = 'graded';
+        else if (top.grades && top.divergent)                this.matchConfidence = 'divergent';
+        else                                                  this.matchConfidence = 'low';
+        await this._compareWith(top.entry);
       } else {
         this._renderNoCandidates();
       }
@@ -202,8 +233,8 @@ const CompareInline = class {
   _headerHtml () {
     const report = this._report;
     const proEntry = this._proEntry;
-    const isAuto = this.candidates.length && this.candidates[0].entry === proEntry && !report.selfMatch;
     const isSelfMatch = !!report.selfMatch;
+    const conf = isSelfMatch ? 'self' : (this.matchConfidence || 'manual');
     const isFreshUpload = document.body.dataset.freshUpload === '1';
     const userRecordId = this.userRecord && this.userRecord.id;
     const overallGradeClass = window.ReplayAnalyzer.gradeClass(report.overall.grade);
@@ -217,11 +248,20 @@ const CompareInline = class {
       : '';
 
     const slotRowHtml = this._slotRowHtml();
+    const noticeHtml = this._headerNoticesHtml(conf);
 
-    const proLabel = isSelfMatch ? 'Same replay (self-match)'
-                   : isAuto ? 'Auto-matched pro' : 'Comparing to pro';
-    const proLabelClass = isSelfMatch ? 'ci-pro-banner-self'
-                       : isAuto ? 'ci-pro-banner-auto' : 'ci-pro-banner-manual';
+    const proLabel = conf === 'self'      ? 'Same replay (self-match)'
+                   : conf === 'auto'      ? 'Auto-matched pro'
+                   : conf === 'graded'    ? 'Best graded match'
+                   : conf === 'divergent' ? 'Closest pro · Different build'
+                   : conf === 'low'       ? 'Closest match · low confidence'
+                   : 'Comparing to pro';
+    const proLabelClass = conf === 'self'      ? 'ci-pro-banner-self'
+                       : conf === 'auto'      ? 'ci-pro-banner-auto'
+                       : conf === 'graded'    ? 'ci-pro-banner-graded'
+                       : conf === 'divergent' ? 'ci-pro-banner-divergent'
+                       : conf === 'low'       ? 'ci-pro-banner-lowconf'
+                       : 'ci-pro-banner-manual';
     const proMeta = [
       (proEntry.buildMatchups && proEntry.buildMatchups[0]) || '',
       proEntry.buildName || '',
@@ -268,12 +308,77 @@ const CompareInline = class {
     return `
       ${slotRowHtml}
       ${freshHeadline}
+      ${noticeHtml}
       <div class="ci-header">
         ${proCard}
         ${gradeRegion}
       </div>
       ${watchButtons}
     `;
+  }
+
+  // Renders contextual banners that explain why this comparison may not be
+  // meaningful: low-confidence match (autoPick rejected), or uploaded-pro
+  // detection (user uploaded a tournament replay we don't have indexed).
+  _headerNoticesHtml (conf) {
+    const notices = [];
+    if (this.uploadedProInfo) {
+      const { uploadedName } = this.uploadedProInfo;
+      notices.push(`
+        <div class="ci-notice ci-notice-pro-upload">
+          <span class="ci-notice-icon" aria-hidden="true">★</span>
+          <div class="ci-notice-body">
+            <strong>Looks like a pro replay.</strong>
+            Player <strong>${escapeHtml(uploadedName)}</strong> matches a pro in our library, but we don't have this exact game indexed. Comparing it against a different pro replay won't grade meaningfully — this tool is built to compare your play against pros, not pro vs. pro.
+          </div>
+        </div>
+      `);
+    }
+    if (conf === 'graded') {
+      notices.push(`
+        <div class="ci-notice ci-notice-graded">
+          <span class="ci-notice-icon" aria-hidden="true">✓</span>
+          <div class="ci-notice-body">
+            <strong>Showing the closest pro that grades.</strong>
+            A higher-scored metadata match exists, but its game length doesn't overlap enough with yours to score categories. We picked the best pro that produces a real graded comparison. Use the chip strip to switch — the ✓ marks pros that will grade.
+          </div>
+        </div>
+      `);
+    }
+    if (conf === 'low') {
+      const score = this.topCandidateScore || 0;
+      notices.push(`
+        <div class="ci-notice ci-notice-lowconf">
+          <span class="ci-notice-icon" aria-hidden="true">!</span>
+          <div class="ci-notice-body">
+            <strong>No confident pro match.</strong>
+            The closest candidate scored ${score}/100 on race + matchup + map + archetype (need ≥ 85), and no candidate's game length overlaps enough with yours to grade. Switch pros below or use Advanced search.
+          </div>
+        </div>
+      `);
+    }
+    // Composition divergence is the loudest signal — different signature
+    // unit + low overlap means the comparison is fundamentally not measuring
+    // build adherence. Surface it whether or not the match was auto-picked.
+    // Copy varies: when conf='divergent' the matcher already tried and failed
+    // to find a same-build pro, so don't tell the user to "switch pros".
+    const guards = this._report && this._report.guards;
+    if (guards && guards.compositionDivergent) {
+      const c = guards.composition || {};
+      const tail = (conf === 'divergent')
+        ? `No pro in our library matches your build closely <em>and</em> has a comparable game length. We're showing the closest graded comparison; build-dependent categories are capped to reflect the mismatch.`
+        : `Switch pros (or use Advanced search) for a closer build match.`;
+      notices.push(`
+        <div class="ci-notice ci-notice-divergent">
+          <span class="ci-notice-icon" aria-hidden="true">⚠</span>
+          <div class="ci-notice-body">
+            <strong>Different army composition.</strong>
+            You built mostly <strong>${escapeHtml(c.userSignatureName || '?')}</strong>; the pro built mostly <strong>${escapeHtml(c.proSignatureName || '?')}</strong>. Overall grade is capped at 70 because the comparison reflects your macro execution, not your build. ${tail}
+          </div>
+        </div>
+      `);
+    }
+    return notices.join('');
   }
 
   _slotRowHtml () {
@@ -339,11 +444,24 @@ const CompareInline = class {
     const chipsHtml = top.map(c => {
       const e = c.entry;
       const isCurrent = e.replayId === proEntry.replayId && String(e.playerSlot) === String(proEntry.playerSlot);
+      // Two independent signals: ✓ (grades) and ≠ (build divergent). A pro
+      // with both icons grades but with a wrong build; a pro with only ✓ is
+      // the ideal target. No icon = won't grade.
+      const gradedBadge = c.grades
+        ? '<span class="ci-chip-graded" title="Game length overlaps enough to grade">✓</span>'
+        : '';
+      const divergentBadge = c.divergent
+        ? '<span class="ci-chip-divergent" title="Different signature unit — build doesn\'t match yours">≠</span>'
+        : '';
+      const cls = c.grades && !c.divergent ? 'ci-chip-grades'
+                : c.grades && c.divergent  ? 'ci-chip-grades ci-chip-build-mismatch'
+                : 'ci-chip-no-grade';
       return `
-        <button class="ci-chip ${isCurrent ? 'ci-chip-active' : ''}" data-replay-id="${escapeAttr(e.replayId)}" data-slot="${escapeAttr(e.playerSlot)}">
+        <button class="ci-chip ${isCurrent ? 'ci-chip-active' : ''} ${cls}" data-replay-id="${escapeAttr(e.replayId)}" data-slot="${escapeAttr(e.playerSlot)}">
           <span class="ci-chip-race race-${escapeAttr(e.buildRace || '?')}">${escapeHtml(e.buildRace || '?')}</span>
           <span class="ci-chip-name">${escapeHtml(e.playerName || '?')}</span>
           <span class="ci-chip-mu">${escapeHtml((e.buildMatchups && e.buildMatchups[0]) || '')}</span>
+          ${gradedBadge}${divergentBadge}
         </button>
       `;
     }).join('');
@@ -368,8 +486,28 @@ const CompareInline = class {
       </div>
     `).join('');
 
-    // 9 grade tiles.
-    const tilesHtml = CATEGORY_ORDER.map(k => this._tileHtml(k, report.categories[k])).join('');
+    // Split categories into graded and ungraded, then group ungraded by
+    // shared reason so we don't repeat the same "Not graded because…" text
+    // 9 times. Each ungraded group renders as one banner + a compact row
+    // of category chips.
+    const graded = [];
+    const ungradedByReason = new Map();
+    CATEGORY_ORDER.forEach(k => {
+      const cat = report.categories[k];
+      if (!cat) return;
+      if (cat.available) {
+        graded.push(k);
+      } else {
+        const reasonKey = cat.reason || '__no_reason__';
+        if (!ungradedByReason.has(reasonKey)) ungradedByReason.set(reasonKey, []);
+        ungradedByReason.get(reasonKey).push(k);
+      }
+    });
+
+    const gradedTilesHtml = graded.map(k => this._tileHtml(k, report.categories[k])).join('');
+    const ungradedHtml = Array.from(ungradedByReason.entries())
+      .map(([reason, keys]) => this._ungradedGroupHtml(reason, keys))
+      .join('');
 
     // "Top fixes" — collect warn-severity findings across categories,
     // weight by analyzer weight, take top 3, render as coaching cards.
@@ -378,7 +516,8 @@ const CompareInline = class {
 
     return `
       <div class="ci-checklist" aria-label="Compatibility checklist">${checklistHtml}</div>
-      <div class="ci-tiles">${tilesHtml}</div>
+      ${gradedTilesHtml ? `<div class="ci-tiles">${gradedTilesHtml}</div>` : ''}
+      ${ungradedHtml}
       ${fixesHtml}
     `;
   }
@@ -388,23 +527,44 @@ const CompareInline = class {
     const findings = (cat.findings || []).slice(0, 2).map(f =>
       `<li class="ci-finding ci-finding-${f.severity}">${escapeHtml(f.text)}</li>`
     ).join('');
-    const cls = cat.available ? 'ci-tile-on' : 'ci-tile-off';
-    const grade = cat.available ? cat.grade : 'Not graded';
-    const gradeCls = cat.available ? window.ReplayAnalyzer.gradeClass(grade) : 'grade-NA';
-    const prettyReason = cat.reason ? (REASON_PRETTY[cat.reason] || cat.reason) : 'Data unavailable for this category.';
+    const grade = cat.grade;
+    const gradeCls = window.ReplayAnalyzer.gradeClass(grade);
     const drillTab = TILE_TO_TAB[k];
-    const drillBtn = (cat.available && drillTab) ? `<button class="ci-tile-drill" data-target-tab="${escapeAttr(drillTab)}">View detail →</button>` : '';
+    const drillBtn = drillTab ? `<button class="ci-tile-drill" data-target-tab="${escapeAttr(drillTab)}">View detail →</button>` : '';
     return `
-      <div class="ci-tile ${cls}" data-cat="${escapeAttr(k)}">
+      <div class="ci-tile ci-tile-on" data-cat="${escapeAttr(k)}">
         <div class="ci-tile-head">
           <div class="ci-tile-label">${escapeHtml(CATEGORY_LABELS[k] || k)}<span class="ci-tile-info" title="${escapeAttr(TILE_INFO[k] || '')}">?</span></div>
           <div class="ci-tile-grade ${gradeCls}">${escapeHtml(grade)}</div>
         </div>
-        ${cat.available
-          ? `<div class="ci-tile-score">${cat.score}/100</div>`
-          : `<div class="ci-tile-reason">${escapeHtml(prettyReason)}</div>`}
+        <div class="ci-tile-score">${cat.score}/100</div>
         ${findings ? `<ul class="ci-findings">${findings}</ul>` : ''}
         ${drillBtn}
+      </div>
+    `;
+  }
+
+  // Render one ungraded group: a single banner explaining the shared
+  // reason, plus a compact row of category chips so the user still sees
+  // which metrics were skipped.
+  _ungradedGroupHtml (reasonKey, keys) {
+    if (!keys.length) return '';
+    const reason = reasonKey === '__no_reason__'
+      ? 'Data unavailable for these categories.'
+      : (REASON_PRETTY[reasonKey] || reasonKey);
+    const chips = keys.map(k => `
+      <span class="ci-ungraded-chip" title="${escapeAttr(TILE_INFO[k] || '')}">
+        ${escapeHtml(CATEGORY_LABELS[k] || k)}
+      </span>
+    `).join('');
+    const count = keys.length;
+    return `
+      <div class="ci-ungraded-group">
+        <div class="ci-ungraded-head">
+          <span class="ci-ungraded-badge">Not graded · ${count}</span>
+          <span class="ci-ungraded-reason">${escapeHtml(reason)}</span>
+        </div>
+        <div class="ci-ungraded-chips">${chips}</div>
       </div>
     `;
   }
@@ -1023,13 +1183,14 @@ const CompareInline = class {
     // The summary's mapInfo.name IS the resolved client/maps/ folder.
     const mapFolder = userMapInfo && userMapInfo.name ? userMapInfo.name : null;
 
-    // Parallel-load all map overlays. Background image, trees, neutral
-    // buildings, plus the cached neutral icon sprites.
-    let mapImg = null, trees = null, neutrals = null;
+    // Parallel-load map background and neutral-building overlay data. Trees
+    // are not overlaid: the minimap (BLP from .w3x or HiveWE-style synth)
+    // already represents terrain the way the game does — adding tree dots
+    // on top would double-render.
+    let mapImg = null, neutrals = null;
     if (mapFolder) {
-      [mapImg, trees, neutrals] = await Promise.all([
+      [mapImg, neutrals] = await Promise.all([
         loadMapImage(mapFolder),
-        loadDoodadData(mapFolder),
         loadNeutralBuildings(mapFolder)
       ]);
     }
@@ -1091,28 +1252,7 @@ const CompareInline = class {
       }
     }
 
-    // Layer 0a — trees from doo.json. Mirrors MapRenderer.renderMapTrees but
-    // simplified for the small overview canvas (no per-tree jitter, smaller
-    // dots). One small dark-green circle per tree.
-    if (trees && trees.length) {
-      ctx.fillStyle = '#0c2a0c';
-      ctx.globalAlpha = 0.78;
-      for (const t of trees) {
-        if (!t || !t.position) continue;
-        const tx = parseFloat(t.position.x);
-        const ty = parseFloat(t.position.y);
-        if (Number.isNaN(tx) || Number.isNaN(ty)) continue;
-        const cp = w2c(tx, ty);
-        // Skip trees that project outside the canvas (paranoia).
-        if (cp.x < -4 || cp.x > W + 4 || cp.y < -4 || cp.y > H + 4) continue;
-        ctx.beginPath();
-        ctx.arc(cp.x, cp.y, 2.2, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // Layer 0b — neutral buildings (gold mines, shops, fountains). Lifted
+    // Neutral buildings (gold mines, shops, fountains). Lifted
     // from MapRenderer.renderNeutralBuildings — same icon sprites, same
     // size scheme (gold mines bigger).
     if (neutrals && neutrals.length) {
@@ -1261,7 +1401,10 @@ const CompareInline = class {
         const id = chip.dataset.replayId;
         const slot = chip.dataset.slot;
         const candidate = this.candidates.find(c => c.entry.replayId === id && String(c.entry.playerSlot) === String(slot));
-        if (candidate) await this._compareWith(candidate.entry);
+        if (candidate) {
+          this.matchConfidence = 'manual';
+          await this._compareWith(candidate.entry);
+        }
       });
     });
     const advBtn = this.rootEl.querySelector('.ci-advanced-btn');
@@ -1432,6 +1575,7 @@ const CompareInline = class {
         if (!this.candidates.find(c => c.entry.replayId === entry.replayId && String(c.entry.playerSlot) === String(entry.playerSlot))) {
           this.candidates.unshift({ entry, score: 100 });
         }
+        this.matchConfidence = 'manual';
         await this._compareWith(entry);
       }
     });
@@ -1717,13 +1861,6 @@ const loadMapImage = (folder) => new Promise(resolve => {
   img.onerror = () => resolve(null);
   img.src = `/maps/${encodeURIComponent(folder)}/map.jpg`;
 });
-
-const loadDoodadData = async (folder) => {
-  const data = await fetchMapJson(folder, 'doo.json');
-  if (!data) return null;
-  // Server writes { grid: [...] } where each entry has position {x,y} + scale
-  return Array.isArray(data) ? data : (data.grid || null);
-};
 
 const loadNeutralBuildings = async (folder) => {
   const data = await fetchMapJson(folder, 'neutralBuildings.json');

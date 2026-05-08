@@ -3,7 +3,8 @@
  * Three.js scene. An oversized plane (3x map dimensions) sits just above
  * the terrain so it fills the screen from any camera angle. A custom shader
  * uses world-space XZ coordinates to determine fog intensity: transparent
- * inside the camera bounds, fading to opaque black outside.
+ * over the playable area, fading to opaque black across the unplayable
+ * margin.
  */
 const FogOfWar = class {
   /**
@@ -12,36 +13,59 @@ const FogOfWar = class {
    * @param {number} worldWidth — full map width in world units
    * @param {number} worldHeight — full map height in world units
    * @param {number} fogY — Y elevation for the fog plane (just above terrain)
+   * @param {GameScaler} [gameScaler] — provides viewExtent (true playable
+   *   bounds derived from gridSize.margins). Falls back to bounds.camera if
+   *   not provided, but bounds.camera is the in-game camera pan box and is
+   *   inset further than the playable edge — using it clips the fog into
+   *   playable terrain (especially the south edge on most maps).
    */
-  constructor (scene, mapInfo, worldWidth, worldHeight, fogY) {
+  constructor (scene, mapInfo, worldWidth, worldHeight, fogY, gameScaler) {
     this.mesh = null;
-    this._build(scene, mapInfo, worldWidth, worldHeight, fogY);
+    this._build(scene, mapInfo, worldWidth, worldHeight, fogY, gameScaler);
   }
 
-  _build (scene, mapInfo, worldWidth, worldHeight, fogY) {
-    const camera = mapInfo.bounds.camera;
+  _build (scene, mapInfo, worldWidth, worldHeight, fogY, gameScaler) {
     const map = mapInfo.bounds.map;
-
-    // Camera bounds in WC3 world coords
-    const camLeft   = camera[0][0];
-    const camRight  = camera[0][1];
-    const camTop    = camera[1][0];   // max Y (north)
-    const camBottom = camera[1][1];   // min Y (south)
 
     const mapLeft   = map[0][0];
     const mapRight  = map[0][1];
     const mapTop    = map[1][0];
     const mapBottom = map[1][1];
 
+    // Prefer the playable bounds GameScaler computes from gridSize.margins —
+    // those match what the 2D viewport considers playable. bounds.camera is
+    // the WC3 in-game camera pan box, which is a smaller inset region and
+    // would leave a strip of playable terrain (notably the south edge)
+    // outside the fog's "clear" zone, putting fog over the map.
+    let playLeft, playRight, playTop, playBottom;
+    if (gameScaler && gameScaler.viewExtent) {
+      const ve = gameScaler.viewExtent;
+      playLeft   = ve.x[0];
+      playRight  = ve.x[1];
+      playTop    = ve.y[0];   // max WC3 Y (north)
+      playBottom = ve.y[1];   // min WC3 Y (south)
+    } else {
+      const camera = mapInfo.bounds.camera;
+      playLeft   = camera[0][0];
+      playRight  = camera[0][1];
+      playTop    = camera[1][0];
+      playBottom = camera[1][1];
+    }
+
     const hasGap = (
-      camLeft > mapLeft + 10 ||
-      camRight < mapRight - 10 ||
-      camTop < mapTop - 10 ||
-      camBottom > mapBottom + 10
+      playLeft > mapLeft + 10 ||
+      playRight < mapRight - 10 ||
+      playTop < mapTop - 10 ||
+      playBottom > mapBottom + 10
     );
     if (!hasGap) return;
 
-    // Feather width in world units (~2 tiles for smooth fade)
+    // Feather width in world units (~2 tiles for smooth fade). The feather
+    // sits ENTIRELY OUTSIDE the camera-playable area: fog is fully transparent
+    // up to the playable edge, then fades to opaque over FEATHER units of the
+    // unplayable border. This way the fog never bleeds onto playable terrain
+    // at any zoom level — at high zoom an inward feather would smear a huge
+    // dark gradient across the visible playable map.
     const FEATHER = 256;
 
     // Make the plane 3x map size so the tilted perspective camera can never
@@ -56,11 +80,17 @@ const FogOfWar = class {
     const mapCenterX = (mapLeft + mapRight) / 2;
     const mapCenterY = (mapTop + mapBottom) / 2;
 
-    // Camera bounds in Three.js world space (X = WC3 X - center, Z = -(WC3 Y - center))
-    const boundsXMin = camLeft - mapCenterX;
-    const boundsXMax = camRight - mapCenterX;
-    const boundsZMin = -(camTop - mapCenterY);    // north (high WC3 Y) = negative Z
-    const boundsZMax = -(camBottom - mapCenterY);  // south (low WC3 Y) = positive Z
+    // Playable bounds in Three.js world space, expanded outward by FEATHER
+    // plus a small EDGE_BUFFER. The buffer keeps the gradient from biting
+    // into playable terrain even when the source bounds are slightly tight
+    // (e.g. a map's effective playable area extends ~half a tile past
+    // gridSize.margins, or floating-point/edge-tile rounding leaves a sliver
+    // of playable terrain just outside the reported playable rect).
+    const EDGE_BUFFER = 128;
+    const boundsXMin = (playLeft   - mapCenterX) - FEATHER - EDGE_BUFFER;
+    const boundsXMax = (playRight  - mapCenterX) + FEATHER + EDGE_BUFFER;
+    const boundsZMin = -(playTop    - mapCenterY) - FEATHER - EDGE_BUFFER;  // north (high WC3 Y) = negative Z
+    const boundsZMax = -(playBottom - mapCenterY) + FEATHER + EDGE_BUFFER;  // south (low WC3 Y) = positive Z
 
     const mat = new THREE.ShaderMaterial({
       transparent: true,
@@ -104,7 +134,7 @@ const FogOfWar = class {
     });
 
     console.log('[FogOfWar] Three.js bounds:', { boundsXMin, boundsXMax, boundsZMin, boundsZMax });
-    console.log('[FogOfWar] camera WC3:', { camLeft, camRight, camTop, camBottom });
+    console.log('[FogOfWar] playable WC3:', { playLeft, playRight, playTop, playBottom });
     console.log('[FogOfWar] map WC3:', { mapLeft, mapRight, mapTop, mapBottom });
     console.log('[FogOfWar] plane size:', planeW, 'x', planeH, '| fogY:', fogY);
 

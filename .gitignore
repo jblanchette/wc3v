@@ -14,11 +14,19 @@ replays/old/
 client/replays/old/
 client/data/summaries/old/
 
+# Source replay files — kept locally for re-parsing only, never committed.
+# Production uses parsed .wc3v.gz served from R2 (cdn.wc3v.com).
+replays/*.w3g
+replays/*.wc3v
+replays/*.wc3v.gz
+
 # Import folder (keep example, ignore actual imports)
 replays/import/*.w3g
 replays/import/import.json
 
 tools/map-data/
+
+marketing/raw/
 
 tools/upgrade-data/
 tools/ability-data/

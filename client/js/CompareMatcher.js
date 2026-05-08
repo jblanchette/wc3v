@@ -106,16 +106,70 @@ const CompareMatcher = class {
     return score;
   }
 
-  // Find candidates ranked by compatibility score. Returns top N; later
-  // we'll fetch each one's summary on demand for the analyzer run.
+  // Find candidates ranked by compatibility score. Returns top N candidates,
+  // each annotated with two boolean flags:
+  //   `grades`     — passes the analyzer's duration gate (60% min ratio,
+  //                  both >= 90s). Without this, a perfect metadata match
+  //                  can be auto-picked against a pro whose game length
+  //                  doesn't overlap with the user's, producing zero graded
+  //                  categories.
+  //   `divergent`  — user's primary trained unit differs sharply from the
+  //                  pro's (top-1 mismatch + low Jaccard). Without this, a
+  //                  HU footman user can be auto-picked against a HU rifle
+  //                  pro and receive an A+ on a bogus comparison.
+  //
+  // Final sort, descending preference:
+  //   1. graded + same-build  (the ideal match)
+  //   2. graded + divergent build
+  //   3. ungraded + same-build
+  //   4. ungraded + divergent build
+  // Ties within each tier broken by metadata score.
   async rankCandidates (userSummary, userSlot, { limit = 10 } = {}) {
     const index = await this.loadIndex();
     const scored = index
       .map(entry => ({ entry, score: this.scoreCandidate(userSummary, userSlot, entry) }))
       .filter(c => c.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
 
-    return scored.slice(0, limit);
+    const userDur = (userSummary && userSummary.durationMs) || 0;
+    const userPlayer = userSummary && userSummary.players && userSummary.players[String(userSlot)];
+    const compute = (typeof window !== 'undefined' && window.ReplayAnalyzer)
+      ? window.ReplayAnalyzer.computeCompositionSimilarity
+      : null;
+
+    const annotated = await Promise.all(scored.map(async (c) => {
+      const summary = await this.loadSummary(c.entry.replayId);
+      const proDur = (summary && summary.durationMs) || 0;
+      const grades = this._durationOk(userDur, proDur);
+      let composition = null;
+      if (compute && summary && userPlayer) {
+        const proPlayer = summary.players && summary.players[String(c.entry.playerSlot)];
+        if (proPlayer) composition = compute(userPlayer, proPlayer);
+      }
+      const divergent = !!(composition && composition.divergent);
+      return Object.assign({}, c, { grades, composition, divergent });
+    }));
+
+    annotated.sort((a, b) => {
+      // Tier 1: graded vs ungraded
+      if (a.grades !== b.grades) return a.grades ? -1 : 1;
+      // Tier 2: same-build vs divergent (within graded class)
+      if (a.divergent !== b.divergent) return a.divergent ? 1 : -1;
+      // Tier 3: metadata score
+      return b.score - a.score;
+    });
+    return annotated;
+  }
+
+  // Mirrors the duration gate in ReplayAnalyzer.compare(). Kept in sync
+  // intentionally — if the analyzer's gate changes, this must too.
+  _durationOk (userDur, proDur) {
+    if (!userDur || !proDur) return false;
+    const min = Math.min(userDur, proDur);
+    const max = Math.max(userDur, proDur);
+    if (min < 90_000) return false;
+    return (min / max) >= 0.6;
   }
 
   // Self-match short-circuit. If the user re-uploaded a replay that's already
@@ -129,12 +183,31 @@ const CompareMatcher = class {
     return index.find(e => e.fingerprint && e.fingerprint === fp) || null;
   }
 
+  // Heuristic: did the user upload a pro tournament replay we don't have
+  // indexed? Catches the case where the player name in the user's selected
+  // slot matches a known pro in our manifest but the fingerprint doesn't
+  // match any entry (different game we haven't catalogued). Used by the UI
+  // to warn that pro-vs-unknown comparisons won't grade meaningfully.
+  async detectProInUpload (userSummary, userSlot) {
+    await this.loadIndex();
+    const player = userSummary && userSummary.players && userSummary.players[String(userSlot)];
+    const userName = player && player.name ? String(player.name).trim() : '';
+    if (!userName) return null;
+    const lower = userName.toLowerCase();
+    const hit = this.proIndex.find(e => e.playerName && String(e.playerName).toLowerCase() === lower);
+    if (!hit) return null;
+    return { proName: hit.playerName, uploadedName: userName };
+  }
+
   // Highest-level helper: pick the auto-match, return null if no candidate
   // clears the "good enough" bar. Order:
   //   1. Fingerprint match → that's the same .w3g, return it.
-  //   2. Otherwise, race(50) + matchup(25) AND map(10) OR archetype(15) → ≥85.
-  // The UI shows a non-auto candidate if no match clears the bar so users
-  // see the closest pick without it claiming to be "their build".
+  //   2. Otherwise, the top candidate must clear THREE bars:
+  //      - metadata score ≥ 85
+  //      - grades (analyzer duration gate passes)
+  //      - non-divergent build (signature unit matches OR enough overlap)
+  //   Failing any of those, return null and let the UI fall back to a
+  //   labelled lower-confidence state instead of greenlighting a bad match.
   async autoPick (userSummary, userSlot) {
     const fpHit = await this.findByFingerprint(userSummary);
     if (fpHit) return fpHit;
@@ -142,8 +215,8 @@ const CompareMatcher = class {
     const ranked = await this.rankCandidates(userSummary, userSlot, { limit: 5 });
     if (!ranked.length) return null;
     const top = ranked[0];
-    if (top.score < 85) return null;
-    return top.entry;
+    if (top.grades && !top.divergent && top.score >= 85) return top.entry;
+    return null;
   }
 };
 

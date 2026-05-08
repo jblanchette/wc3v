@@ -1,0 +1,53 @@
+{
+  "_comment": "Fixture pairs for tools/test-analyzer-fixtures.js. Each entry runs ReplayAnalyzer.compare against two real summaries from client/data/summaries/ and asserts the named expectations. The 'expect' block describes the target behaviour AFTER Phase 2-3 of the analyzer cleanup. Fixtures marked requiresPhase2=true are EXPECTED TO FAIL until those phases land — the harness exists partly to make the bug visible.",
+  "fixtures": [
+    {
+      "name": "self-match: Happy UD vs Happy UD (same replay)",
+      "user": { "replayId": "1342775468_Kaho_Happy_Hammerfall", "slot": "2" },
+      "pro":  { "replayId": "1342775468_Kaho_Happy_Hammerfall", "slot": "2" },
+      "expect": {
+        "overallMin": 95,
+        "guards": { "durationOk": true, "matchupCompatible": true, "mapCompatible": true },
+        "compositionDivergent": false
+      }
+    },
+    {
+      "name": "same race, same build: HU footman 1116s vs HU footman 1011s",
+      "user": { "replayId": "1499624326_Ugly_TH000_Hammerfall", "slot": "2" },
+      "pro":  { "replayId": "1129305842_Leon_Lucifer_AutumnLeaves20", "slot": "1" },
+      "_note": "We do NOT assert overall here — analyzer noise across two unrelated games (different opponents, different game flows) keeps the score in the 40s-60s even with the same build. The crucial assertion is that composition is NOT flagged divergent, since both built footmen.",
+      "expect": {
+        "guards": { "durationOk": true, "matchupCompatible": true },
+        "compositionDivergent": false
+      }
+    },
+    {
+      "name": "same race, DIFFERENT build (THE BUG): HU footman vs HU rifleman",
+      "user": { "replayId": "2576049378_Fortitude_Sok_Hammerfall", "slot": "1" },
+      "pro":  { "replayId": "325756077_Snowdream_War3Orcer0_AutumnLeaves20", "slot": "1" },
+      "requiresPhase2": true,
+      "expect": {
+        "overallMax": 70,
+        "guards": { "durationOk": true, "compositionDivergent": true },
+        "warningsContain": ["army composition"]
+      }
+    },
+    {
+      "name": "different races: NE vs UD (matchup incompatible)",
+      "user": { "replayId": "1342775468_Kaho_Happy_Hammerfall", "slot": "1" },
+      "pro":  { "replayId": "1342775468_Kaho_Happy_Hammerfall", "slot": "2" },
+      "expect": {
+        "guards": { "matchupCompatible": false }
+      }
+    },
+    {
+      "name": "too-short replay: 4:52 UD vs 18:50 HU (durationOk false)",
+      "user": { "replayId": "455876078_FoCuS_Happy_Autumn-Leaves-20", "slot": "2" },
+      "pro":  { "replayId": "2576049378_Fortitude_Sok_Hammerfall", "slot": "1" },
+      "expect": {
+        "guards": { "durationOk": false },
+        "categoriesAllUnavailable": true
+      }
+    }
+  ]
+}

@@ -24,15 +24,7 @@ const { getUnitInfo } = mappings;
 const sjs = require('@wowserhq/stormjs');
 const { FS, MPQ } = sjs;
 
-const war3model = require('war3-model');
-const { decodeBLP, getBLPImageData } = war3model;
-
-const GameScaler = require("../client/js/GameScaler");
-
-const { createCanvas } = require("canvas");
-
-const d3 = require("d3");
-const rbush = require("rbush");
+const { renderMinimap } = require('../helpers/minimapRenderer');
 
 //
 // constants
@@ -54,24 +46,7 @@ const CLIENT_GAMEDATA_DIR = path.join(__dirname, '..', 'client', 'js');
 // per-palette-code color mapping (W3E ground texture codes → hex colors)
 //
 
-const { TILESET_EXTRAS, DEFAULT_EXTRAS, PALETTE_COLORS, getFallbackPaletteColor } = require('../helpers/tilesetColors');
-
-function hexToRgb (hex) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
-}
-
-function rgbToHex (r, g, b) {
-  return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
-
-function tileHash (col, row) {
-  let h = (col * 374761393 + row * 668265263) | 0;
-  h = (h ^ (h >> 13)) * 1274126177;
-  return ((h ^ (h >> 16)) & 0xFF) / 255.0;
-}
+const { TILESET_EXTRAS, DEFAULT_EXTRAS } = require('../helpers/tilesetColors');
 
 //
 // main entry code
@@ -298,21 +273,6 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
     console.log(`  warning: could not extract neutral buildings for ${normalizedMapName}: ${err.message}`);
   }
 
-  // //
-  // // convert the blp map file
-  // //
-
-  // let blp = decodeBLP(new Uint8Array(fs.readFileSync(`${outputDirectory}/war3mapMap.blp`)).buffer);
-  // let imageData = getBLPImageData(blp, 0);
-  // let png = new PNG({width: blp.width, height: blp.height, inputHasAlpha: true});
-
-  // png.data = Buffer.from(imageData.data.buffer);
-
-  // fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`, PNG.sync.write(png));
-
-  // // clean up the png
-  // fs.unlinkSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.png`);
-
   //
   // parse game files and create configs and game data
   //
@@ -365,8 +325,8 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
   output.info.treeColor = extras.trees;
   output.info.treeStroke = extras.treeStroke;
 
-  const canvas = drawBackgroundMap(output, wpm, doo, terrainFile);
-  const buffer = canvas.toBuffer('image/png');
+  const canvas = await drawBackgroundMap(outputDirectory, terrainFile);
+  const buffer = canvas.toBuffer('image/jpeg', { quality: 0.92 });
 
   fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/map.jpg`, buffer);
   fs.writeFileSync(`${CLIENT_OUTPUT_DIR}/${normalizedMapName}/gridmap.jpg`, buffer);
@@ -386,232 +346,13 @@ async function parseMapData(normalizedMapName, mapFilePath, outputDirectory, isL
   writeGameData(gameData);
 };
 
-function drawBackgroundMap (output, wpm, doo, terrainFile) {
-
-  const gameScaler = new GameScaler();
-  gameScaler.addDependency('_d3', d3);
-  gameScaler.setup(output.info);
-
-  const canvas = createCanvas(gameScaler.fullMapImage.width, gameScaler.fullMapImage.height);
-  const ctx = canvas.getContext('2d');
-
-  const { grid } = wpm;
-  const dooGrid = doo.grid;
-  const tileSize = gameScaler.pixelsPerTile;
-  const tileGrid = terrainFile.tileGrid;
-  const tileset = terrainFile.tileset;
-  const extras = TILESET_EXTRAS[tileset] || DEFAULT_EXTRAS;
-
-  // Per-palette colors: use actual PALETTE_COLORS when available
-  const greenSuffixes = new Set([
-    'grs', 'grd', 'grr', 'gsb', 'hdg', 'vin', 'drg', 'lvd', 'lvg',
-    'crp', 'cbp', 'fst', 'fsl', 'lgb', 'grt', 'pos'
-  ]);
-
-  const paletteColorCache = {};
-  terrainFile.tilePalettes.forEach((code, idx) => {
-    if (PALETTE_COLORS[code]) {
-      paletteColorCache[idx] = hexToRgb(PALETTE_COLORS[code]);
-    } else {
-      const fallback = getFallbackPaletteColor(code, code.substring(1));
-      if (fallback) {
-        paletteColorCache[idx] = hexToRgb(fallback);
-      } else {
-        const suffix = code.substring(1);
-        const isVegetation = greenSuffixes.has(suffix);
-        paletteColorCache[idx] = hexToRgb(isVegetation ? extras.ground : extras.accent);
-      }
-    }
-  });
-
-  const cliffRgb = hexToRgb(extras.cliff || '#181810');
-
-  ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, gameScaler.fullMapImage.width, gameScaler.fullMapImage.height);
-
-  const fullMiddleX = gameScaler.fullMapImage.width / 2;
-  const fullMiddleY = gameScaler.fullMapImage.height / 2;
-  const fullXScale = d3.scaleLinear()
-    .domain(gameScaler.mapExtent.x)
-    .range([ -(fullMiddleX), fullMiddleX ]);
-  const fullYScale = d3.scaleLinear()
-    .domain(gameScaler.mapExtent.y)
-    .range([ -(fullMiddleY), fullMiddleY ]);
-
-  const wpmRows = grid.length;
-  const wpmCols = grid[0] ? grid[0].length : 0;
-
-  // --- Pass 1: Paint ground from W3E terrain grid with sub-tile noise ---
-  const terrainRows = tileGrid.length;
-  const terrainCols = tileGrid[0] ? tileGrid[0].length : 0;
-  const terrainCellRows = terrainRows - 1;
-  const terrainCellCols = terrainCols - 1;
-  const terrainBlockW = (wpmCols * tileSize) / terrainCellCols;
-  const terrainBlockH = (wpmRows * tileSize) / terrainCellRows;
-
-  const margins = output.info.gridSize.margins;
-  const { playable, full } = output.info.gridSize;
-  const marginBottom = margins ? margins[2] : Math.floor((full[1] - playable[1]) / 2);
-  const marginTop = margins ? margins[3] : Math.ceil((full[1] - playable[1]) / 2);
-  const marginLeft = margins ? margins[0] : Math.floor((full[0] - playable[0]) / 2);
-  const marginRight = margins ? margins[1] : Math.ceil((full[0] - playable[0]) / 2);
-
-  const subBlockW = Math.max(1, Math.floor(terrainBlockW / 4));
-  const subBlockH = Math.max(1, Math.floor(terrainBlockH / 4));
-
-  for (let row = 0; row < terrainCellRows; row++) {
-    if (row < marginBottom || row >= terrainCellRows - marginTop) continue;
-    const drawY = (terrainCellRows - 1 - row) * terrainBlockH;
-    for (let col = 0; col < terrainCellCols; col++) {
-      if (col < marginLeft || col >= terrainCellCols - marginRight) continue;
-      const tile = tileGrid[row][col];
-      const effectiveIdx = tile ? (tile.paletteIndex < terrainFile.tilePalettes.length
-        ? tile.paletteIndex : tile.paletteIndex % terrainFile.tilePalettes.length) : 0;
-      const rgb = paletteColorCache[effectiveIdx] || [74, 104, 56];
-      const baseX = col * terrainBlockW;
-
-      for (let sy = 0; sy < terrainBlockH; sy += subBlockH) {
-        for (let sx = 0; sx < terrainBlockW; sx += subBlockW) {
-          const noise = tileHash(col * 4 + Math.floor(sx / subBlockW), row * 4 + Math.floor(sy / subBlockH));
-          const factor = 1 + (noise * 0.16 - 0.08);
-          const nr = Math.max(0, Math.min(255, Math.round(rgb[0] * factor)));
-          const ng = Math.max(0, Math.min(255, Math.round(rgb[1] * factor)));
-          const nb = Math.max(0, Math.min(255, Math.round(rgb[2] * factor)));
-          ctx.fillStyle = rgbToHex(nr, ng, nb);
-          ctx.fillRect(baseX + sx, drawY + sy, subBlockW + 0.5, subBlockH + 0.5);
-        }
-      }
-    }
-  }
-
-  // --- Pass 1.5: Edge blending between different terrain types ---
-  for (let row = marginBottom; row < terrainCellRows - marginTop; row++) {
-    const drawY = (terrainCellRows - 1 - row) * terrainBlockH;
-    for (let col = marginLeft; col < terrainCellCols - marginRight; col++) {
-      const tile = tileGrid[row][col];
-      const myIdx = tile ? (tile.paletteIndex < terrainFile.tilePalettes.length
-        ? tile.paletteIndex : tile.paletteIndex % terrainFile.tilePalettes.length) : 0;
-      const myRgb = paletteColorCache[myIdx] || [74, 104, 56];
-      const baseX = col * terrainBlockW;
-      const blendW = Math.max(1, Math.round(terrainBlockW * 0.15));
-      const blendH = Math.max(1, Math.round(terrainBlockH * 0.15));
-
-      if (col + 1 < terrainCellCols - marginRight) {
-        const rightTile = tileGrid[row][col + 1];
-        const rightIdx = rightTile ? (rightTile.paletteIndex < terrainFile.tilePalettes.length
-          ? rightTile.paletteIndex : rightTile.paletteIndex % terrainFile.tilePalettes.length) : 0;
-        if (rightIdx !== myIdx) {
-          const rightRgb = paletteColorCache[rightIdx] || [74, 104, 56];
-          for (let sy = 0; sy < terrainBlockH; sy += 2) {
-            const n = tileHash(col * 100 + sy, row * 100);
-            const mixR = Math.max(0, Math.min(255, Math.round((myRgb[0] + rightRgb[0]) / 2 + (n * 10 - 5))));
-            const mixG = Math.max(0, Math.min(255, Math.round((myRgb[1] + rightRgb[1]) / 2 + (n * 10 - 5))));
-            const mixB = Math.max(0, Math.min(255, Math.round((myRgb[2] + rightRgb[2]) / 2 + (n * 10 - 5))));
-            ctx.fillStyle = rgbToHex(mixR, mixG, mixB);
-            ctx.fillRect(baseX + terrainBlockW - blendW, drawY + sy, blendW * 2, 2);
-          }
-        }
-      }
-
-      if (row + 1 < terrainCellRows - marginTop) {
-        const belowTile = tileGrid[row + 1][col];
-        const belowIdx = belowTile ? (belowTile.paletteIndex < terrainFile.tilePalettes.length
-          ? belowTile.paletteIndex : belowTile.paletteIndex % terrainFile.tilePalettes.length) : 0;
-        if (belowIdx !== myIdx) {
-          const belowRgb = paletteColorCache[belowIdx] || [74, 104, 56];
-          for (let sx = 0; sx < terrainBlockW; sx += 2) {
-            const n = tileHash(row * 100 + sx, col * 100);
-            const mixR = Math.max(0, Math.min(255, Math.round((myRgb[0] + belowRgb[0]) / 2 + (n * 10 - 5))));
-            const mixG = Math.max(0, Math.min(255, Math.round((myRgb[1] + belowRgb[1]) / 2 + (n * 10 - 5))));
-            const mixB = Math.max(0, Math.min(255, Math.round((myRgb[2] + belowRgb[2]) / 2 + (n * 10 - 5))));
-            ctx.fillStyle = rgbToHex(mixR, mixG, mixB);
-            ctx.fillRect(baseX + sx, drawY - blendH, 2, blendH * 2);
-          }
-        }
-      }
-    }
-  }
-
-  // --- Pass 2: Overlay water + cliffs from WPM (finer resolution) ---
-  let rCol = wpmRows - 1;
-
-  for (let col = 0; col < wpmRows; col++) {
-    for (let row = 0; row < wpmCols; row++) {
-      const data = grid[col][row];
-      const { NoWater, NoWalk, NoFly, NoBuild } = data;
-      const drawX = row * tileSize;
-      const drawY = rCol * tileSize;
-
-      if (NoWalk && NoFly) {
-        const noise = tileHash(col, row) * 0.24 - 0.12;
-        const cr = Math.max(0, Math.min(255, Math.round(cliffRgb[0] * (1 + noise))));
-        const cg = Math.max(0, Math.min(255, Math.round(cliffRgb[1] * (1 + noise))));
-        const cb = Math.max(0, Math.min(255, Math.round(cliffRgb[2] * (1 + noise))));
-        ctx.fillStyle = rgbToHex(cr, cg, cb);
-        ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      } else if (!NoWater && NoWalk) {
-        const wNoise = tileHash(col * 3, row * 3) * 0.1 - 0.05;
-        const wRgb = hexToRgb(extras.water);
-        const wr = Math.max(0, Math.min(255, Math.round(wRgb[0] * (1 + wNoise))));
-        const wg = Math.max(0, Math.min(255, Math.round(wRgb[1] * (1 + wNoise))));
-        const wb = Math.max(0, Math.min(255, Math.round(wRgb[2] * (1 + wNoise))));
-        ctx.fillStyle = rgbToHex(wr, wg, wb);
-        ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      } else if (!NoWater && !NoWalk) {
-        const swNoise = tileHash(col * 5, row * 5) * 0.1 - 0.05;
-        const swRgb = hexToRgb(extras.shallowwater);
-        const sr = Math.max(0, Math.min(255, Math.round(swRgb[0] * (1 + swNoise))));
-        const sg = Math.max(0, Math.min(255, Math.round(swRgb[1] * (1 + swNoise))));
-        const sb = Math.max(0, Math.min(255, Math.round(swRgb[2] * (1 + swNoise))));
-        ctx.fillStyle = rgbToHex(sr, sg, sb);
-        ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      }
-    }
-    rCol--;
-  }
-
-  // --- Trees ---
-  const mapRangeX = gameScaler.mapExtent.x[1] - gameScaler.mapExtent.x[0];
-  const mapRangeY = gameScaler.mapExtent.y[0] - gameScaler.mapExtent.y[1];
-
-  dooGrid.forEach((item) => {
-    if (!item.flags.visible) return;
-    if (item.life === 0) return;
-
-    const x = parseFloat(item.position.x);
-    const y = parseFloat(item.position.y);
-
-    // Check tile + neighbors: if majority are unwalkable cliffs/void, skip
-    const wpmCol = Math.floor((x - gameScaler.mapExtent.x[0]) / mapRangeX * wpmCols);
-    const wpmRow = Math.floor((y - gameScaler.mapExtent.y[1]) / mapRangeY * wpmRows);
-    if (wpmRow < 0 || wpmRow >= wpmRows || wpmCol < 0 || wpmCol >= wpmCols) return;
-
-    let unwalkable = 0;
-    let total = 0;
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        const r = wpmRow + dr, c = wpmCol + dc;
-        if (r >= 0 && r < wpmRows && c >= 0 && c < wpmCols) {
-          total++;
-          if (grid[r][c].NoWalk && grid[r][c].NoFly) unwalkable++;
-        }
-      }
-    }
-    if (unwalkable > total / 2) return;
-
-    const treeX = fullXScale(x) + fullMiddleX;
-    const treeY = fullYScale(y) + fullMiddleY;
-
-    const sizeNoise = 1 + (tileHash(Math.round(x), Math.round(y)) * 0.2 - 0.1);
-    const size = Math.max(3, 10 * item.scale[0] * sizeNoise);
-    const halfSize = size / 2;
-
-    ctx.fillStyle = extras.trees;
-    ctx.fillRect(treeX - halfSize, treeY - halfSize, size, size);
-  });
-
-  return canvas;
-};
+// Minimap render entry point. Prefers war3mapMap.blp (the literal image WC3
+// displays in-game) from the extracted mapdata folder; falls back to a
+// HiveWE-style synthesis from the W3E grid when the BLP is missing. Trees
+// and neutral building icons are layered on top by the client, not baked.
+async function drawBackgroundMap (mapdataDir, terrainFile) {
+  return renderMinimap(mapdataDir, terrainFile);
+}
 
 function zipGameFile (outputPath) {
   const gzip = zlib.createGzip();

@@ -941,10 +941,13 @@
       this.camera.updateProjectionMatrix();
       console.log('[ThreeMapRenderer] camera fit', { mapMajor, fitDistance, camDist, camHeight, camOffset });
 
-      // Fog of war — darkens non-playable map edges (outside camera bounds)
+      // Fog of war — darkens non-playable map edges. Pass gameScaler so the
+      // fog uses the true playable bounds (gridSize.margins) instead of the
+      // smaller in-game camera pan box, which would clip fog into playable
+      // terrain at the south edge of most maps.
       if (window.FogOfWar) {
         this.fogOfWar = new FogOfWar(
-          this.scene, mapInfo, worldWidth, worldHeight, maxY + 20
+          this.scene, mapInfo, worldWidth, worldHeight, maxY + 20, gameScaler
         );
       }
 

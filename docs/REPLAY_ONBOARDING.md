@@ -71,6 +71,7 @@ Step 2 prints map, players, races, matchup, heroes, tier timings, and event coun
 Related tools:
 
 - `node tools/reparse-builds.js [--dry-run] [--debug]` — re-parse every manifest replay (use after server-side parser changes so clients see updated data)
+- `node tools/build-parser-bundle.js` — rebuild [client/js/vendor/wc3v-parser.bundle.js](../client/js/vendor/wc3v-parser.bundle.js) so the in-browser parser picks up engine changes (run after parser code changes that affect what users see when uploading their own `.w3g`)
 - `node inspect-replay.js --replay=NAME --show=summary` — inspect parsed replay data without opening the viewer
 - `node wc3v.js --replay=NAME --debug` — keep the uncompressed `.wc3v` JSON alongside the `.gz` for parser dev
 

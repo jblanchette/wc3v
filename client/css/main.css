@@ -9442,7 +9442,86 @@ svg.about-feat-icon {
   background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
   color: #c8c8c8;
 }
+.ci-pro-banner-lowconf {
+  background: linear-gradient(90deg, rgba(204,140,72,0.32), rgba(204,140,72,0.10));
+  color: #f0c890;
+}
+.ci-pro-banner-graded {
+  background: linear-gradient(90deg, rgba(108,163,196,0.30), rgba(108,163,196,0.10));
+  color: #b8d8ec;
+}
+.ci-pro-banner-divergent {
+  background: linear-gradient(90deg, rgba(196,90,72,0.32), rgba(196,90,72,0.10));
+  color: #f0a890;
+}
 .ci-pro-banner-text { display: inline-block; }
+
+/* Header notices: contextual warnings that sit above the pro card / grade
+   pair. Used for "low-confidence match" and "uploaded pro replay" cases. */
+.ci-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #d0d0d0;
+}
+.ci-notice-icon {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: rgba(255,255,255,0.08);
+  color: #d0d0d0;
+}
+.ci-notice-body { flex: 1; }
+.ci-notice-body strong { color: #f0f0f0; }
+.ci-notice-lowconf {
+  background: rgba(204,140,72,0.10);
+  border-color: rgba(204,140,72,0.35);
+  color: #e8d4b8;
+}
+.ci-notice-lowconf .ci-notice-icon {
+  background: rgba(204,140,72,0.30);
+  color: #f0c890;
+}
+.ci-notice-pro-upload {
+  background: rgba(212,168,72,0.10);
+  border-color: rgba(212,168,72,0.35);
+  color: #e8dcb8;
+}
+.ci-notice-pro-upload .ci-notice-icon {
+  background: rgba(212,168,72,0.30);
+  color: #f0d68c;
+}
+.ci-notice-graded {
+  background: rgba(108,163,196,0.10);
+  border-color: rgba(108,163,196,0.35);
+  color: #d0e2ee;
+}
+.ci-notice-graded .ci-notice-icon {
+  background: rgba(108,163,196,0.30);
+  color: #b8d8ec;
+}
+.ci-notice-divergent {
+  background: rgba(196,90,72,0.12);
+  border-color: rgba(196,90,72,0.40);
+  color: #f0d0c8;
+}
+.ci-notice-divergent .ci-notice-icon {
+  background: rgba(196,90,72,0.32);
+  color: #f0a890;
+}
 .ci-pro-card-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
 .ci-pro-name {
   font-size: 1.15rem;
@@ -9535,8 +9614,6 @@ svg.about-feat-icon {
   border-radius: 6px;
 }
 
-.ci-tile-off { opacity: 0.55; }
-
 .ci-tile-head {
   display: flex;
   justify-content: space-between;
@@ -9549,7 +9626,55 @@ svg.about-feat-icon {
 .ci-tile-grade { font-size: 1.4rem; font-weight: 700; line-height: 1; }
 
 .ci-tile-score  { font-size: 0.8rem; color: #999; margin-bottom: 6px; }
-.ci-tile-reason { font-size: 0.82rem; color: #888; font-style: italic; }
+
+/* Ungraded group: one banner per shared reason, plus a compact chip row
+   listing the affected categories. Replaces the old behavior of rendering
+   9 identical "Not graded — <reason>" tiles. */
+.ci-ungraded-group {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+}
+.ci-ungraded-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 10px;
+  margin-bottom: 8px;
+}
+.ci-ungraded-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #b0b0b0;
+  background: rgba(255,255,255,0.06);
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.ci-ungraded-reason {
+  font-size: 0.85rem;
+  color: #aaa;
+  flex: 1;
+  min-width: 200px;
+}
+.ci-ungraded-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ci-ungraded-chip {
+  font-size: 0.8rem;
+  color: #c0c0c0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: help;
+}
 
 .ci-findings { list-style: none; padding: 0; margin: 6px 0 0 0; }
 
@@ -9636,6 +9761,42 @@ svg.about-feat-icon {
 .ci-chip-race.race-U { background: #6c4a8c; color: #fff; }
 
 .ci-chip-mu { font-size: 0.72rem; color: #999; font-weight: 500; }
+
+/* Graded indicator: a small green check on chips whose pro replay's game
+   length overlaps enough with the user's to produce a real grade. Pros
+   without it will come back with all categories ungraded. */
+.ci-chip-graded {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(140,200,120,0.30);
+  color: #c8e8b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+/* Build-divergent chip indicator: signature unit ≠ user's. Sits next to
+   the graded ✓ when the pro grades but built a different army. */
+.ci-chip-divergent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(196,90,72,0.30);
+  color: #f0a890;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-left: 2px;
+}
+.ci-chip-build-mismatch { opacity: 0.85; }
+.ci-chip-no-grade { opacity: 0.65; }
+.ci-chip-no-grade:hover { opacity: 0.9; }
 
 .ci-advanced-btn {
   padding: 5px 12px;
