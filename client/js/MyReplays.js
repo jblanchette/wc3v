@@ -3,7 +3,21 @@
 // Storage shape:
 //   db: 'wc3v'            object store: 'replays' (keyPath: 'id')
 //   record: { id, parsedJson, uploadedAt, race, mapName, durationMs,
-//             players: [{slot, name, race}], originalFilename }
+//             players: [{slot, name, race}], originalFilename,
+//             // Optional fields added in the reference-replay feature:
+//             isReference, referenceLabel, referencePlayerSlot, cachedSummary,
+//             // Cached compare result on regular game replays:
+//             lastCompare: { grade, score, proKey, proPlayerName, ts },
+//             // Optional user-authored card metadata (only on references —
+//             // a reference graduates from the compact rail to a "Your
+//             // Builds" card on the homepage; this blob holds the editable
+//             // pieces of that card):
+//             userBuild: { name, description, strategyPoints[], tags[],
+//                          matchups[], edited } }
+//
+// A "reference" replay is a game the user wants to use as a comparison
+// anchor (e.g. a Happy ladder game) — it shows up in the compare chooser
+// alongside curated builds and is never graded itself.
 //
 // Quota: keep most-recent N replays (FIFO eviction). Each parsed replay is
 // ~700 KB JSON; 25 replays ≈ 17 MB, well under IndexedDB browser limits.
@@ -72,6 +86,7 @@ const MyReplays = class {
   //
   //   options.limit — return at most N records (after sorting)
   //   options.sort  — 'newest' (default) | 'oldest' | 'race' | 'map'
+  //   options.filter — 'all' (default) | 'games' | 'references'
   async list (options = {}) {
     const direction = options.sort === 'oldest' ? 'next' : 'prev';
     const all = await this._tx('readonly', store => new Promise((res, rej) => {
@@ -90,7 +105,16 @@ const MyReplays = class {
             durationMs: v.durationMs,
             players: v.players,
             originalFilename: v.originalFilename,
-            lastCompare: v.lastCompare || null
+            userSlot: v.userSlot ?? null,
+            lastCompare: v.lastCompare || null,
+            isReference: !!v.isReference,
+            referenceLabel: v.referenceLabel || null,
+            referencePlayerSlot: v.referencePlayerSlot || null,
+            // userBuild rides along on references so the homepage Your Builds
+            // section can render its cards from the lightweight list result;
+            // the heavy cachedSummary stays on the full record (fetched lazily
+            // at render time when the card actually needs to draw).
+            userBuild: v.userBuild || null
           });
           cursor.continue();
         } else res(out);
@@ -106,10 +130,126 @@ const MyReplays = class {
       all.sort((a, b) => String(a.mapName || '').localeCompare(String(b.mapName || '')) || (b.uploadedAt - a.uploadedAt));
     }
 
+    let filtered = all;
+    if (options.filter === 'games') filtered = all.filter(r => !r.isReference);
+    else if (options.filter === 'references') filtered = all.filter(r => r.isReference);
+
     if (typeof options.limit === 'number' && options.limit > 0) {
-      return all.slice(0, options.limit);
+      return filtered.slice(0, options.limit);
     }
-    return all;
+    return filtered;
+  }
+
+  // Stable signature for a parsed replay. Two distinct games on the same
+  // map with the same players AND the exact same duration is vanishingly
+  // rare in practice; identical .w3g files always match. Used by
+  // findDuplicateReference() to keep the same replay from becoming two
+  // cards on the homepage.
+  static _referenceFingerprint (record) {
+    if (!record) return '';
+    const map = String(record.mapName || '').toLowerCase().trim();
+    const dur = Math.round((record.durationMs || 0) / 1000);
+    const players = (record.players || [])
+      .filter(p => p && typeof p.slot === 'number' && p.slot < 24)
+      .map(p => `${p.slot}:${(p.race || '').toUpperCase()}:${(p.name || '').toLowerCase().trim()}`)
+      .sort()
+      .join(';');
+    return `${map}|${dur}|${players}`;
+  }
+
+  // Find an existing reference whose content matches `record`. Skips the
+  // candidate's own id so re-promoting an unflagged-then-reflagged record
+  // still works. Returns the other record (lightweight list shape) or null.
+  async findDuplicateReference (record) {
+    const target = MyReplays._referenceFingerprint(record);
+    if (!target) return null;
+    const refs = await this.list({ filter: 'references' });
+    for (const r of refs) {
+      if (r.id === record.id) continue;
+      if (MyReplays._referenceFingerprint(r) === target) return r;
+    }
+    return null;
+  }
+
+  // Toggle a record's reference state. Both players in a reference replay
+  // are pros (it's a pro-vs-pro game), so the matcher indexes both slots
+  // separately at lookup time — we don't need the user to nominate one as
+  // "the" pro. Computes and caches a summary the first time a record is
+  // flagged so the matcher can score it against future uploads. Returns
+  // the updated record. Also clears any cached lastCompare since
+  // references aren't graded — their role is anchor, not subject.
+  async setReferenceState (id, opts = {}) {
+    const record = await this.get(id);
+    if (!record) return null;
+    if (opts.isReference) {
+      record.isReference = true;
+      record.referenceLabel = opts.referenceLabel || record.referenceLabel || null;
+      if (opts.referencePlayerSlot != null) {
+        record.referencePlayerSlot = opts.referencePlayerSlot;
+      }
+      // Compute cachedSummary if missing — uses the same builder
+      // CompareInline runs on bootstrap, so the shape matches the
+      // server-baked /data/summaries/*.json format the matcher already
+      // knows how to score against. If this fails (e.g. the page hasn't
+      // finished loading SummaryExtract yet), the matcher's loadIndex has
+      // a lazy-recovery path that recomputes on demand.
+      if (!record.cachedSummary && window.CompareInline && window.CompareInline.buildUserSummary) {
+        try {
+          if (window.CompareInline.ensureMapFoldersManifest) {
+            await window.CompareInline.ensureMapFoldersManifest();
+          }
+          record.cachedSummary = window.CompareInline.buildUserSummary(record);
+        } catch (e) {
+          console.warn('[MyReplays] failed to compute cachedSummary:', e);
+        }
+      }
+      // Seed an editable userBuild blob the first time a record graduates
+      // to a reference. The blob powers the Your Builds card on the
+      // homepage; subsequent edits flow through setUserBuild() and flip
+      // edited=true so we don't overwrite user authoring on re-promote.
+      if (!record.userBuild || !record.userBuild.edited) {
+        record.userBuild = seedUserBuild(record);
+      }
+      // References are anchors, not subjects — nuke any stale grade.
+      record.lastCompare = null;
+    } else {
+      record.isReference = false;
+      record.referenceLabel = null;
+      // Keep userBuild on the record across an unflag/reflag cycle so an
+      // edited card name doesn't get lost — re-promotion respects the
+      // edited flag in the seed-or-keep branch above.
+    }
+    await this.put(record);
+    return record;
+  }
+
+  // Merge user-edited card metadata onto a record's userBuild blob. Caller
+  // passes the changed fields only (e.g. { name: 'New name' }); the rest
+  // of the blob is preserved. Marks edited=true so future re-promotions
+  // don't reseed the auto-derived defaults over user authoring.
+  async setUserBuild (id, partial) {
+    const record = await this.get(id);
+    if (!record) return null;
+    const seed = record.userBuild || seedUserBuild(record);
+    record.userBuild = {
+      ...seed,
+      ...partial,
+      // Coerce array fields back to arrays even if the caller passed
+      // `undefined` (the spread above would leave the seed value alone, but
+      // an explicit `null`/non-array would corrupt the shape).
+      strategyPoints: Array.isArray((partial && partial.strategyPoints) ?? seed.strategyPoints)
+        ? ((partial && partial.strategyPoints) ?? seed.strategyPoints)
+        : [],
+      tags: Array.isArray((partial && partial.tags) ?? seed.tags)
+        ? ((partial && partial.tags) ?? seed.tags)
+        : [],
+      matchups: Array.isArray((partial && partial.matchups) ?? seed.matchups)
+        ? ((partial && partial.matchups) ?? seed.matchups)
+        : [],
+      edited: true
+    };
+    await this.put(record);
+    return record;
   }
 
   async remove (id) {
@@ -139,8 +279,10 @@ const MyReplays = class {
   async renderPanel (containerEl, options = {}) {
     if (!containerEl) return { rendered: 0, total: 0 };
 
-    // Always fetch the full list to know the total; then slice for the cap.
-    const all = await this.list({ sort: options.sort });
+    // Always fetch the full filtered list to know the total; then slice for
+    // the cap. options.filter passes through to list() — 'all' (default) /
+    // 'games' / 'references'.
+    const all = await this.list({ sort: options.sort, filter: options.filter });
     const records = (typeof options.limit === 'number') ? all.slice(0, options.limit) : all;
     const total = all.length;
 
@@ -167,10 +309,16 @@ const MyReplays = class {
 
   // Broadcast-style replay card. Race banner backdrop + map thumbnail +
   // matchup header + timing pills + grade badge + actions.
+  //
+  // Reference replays (record.isReference === true) render with a "Reference"
+  // pill instead of a grade badge, swap the Compare CTA for an unflag toggle,
+  // and gain the .rep-card-reference modifier so CSS can highlight them.
   _renderCard (record, options) {
     const card = document.createElement('article');
-    card.className = `rep-card race-${record.race || 'R'}`;
+    const refCls = record.isReference ? ' rep-card-reference' : '';
+    card.className = `rep-card race-${record.race || 'R'}${refCls}`;
     card.dataset.id = record.id;
+    if (record.isReference) card.dataset.reference = '1';
 
     const userPlayer = pickUserPlayer(record);
     const oppPlayer = pickOpponent(record, userPlayer);
@@ -215,9 +363,11 @@ const MyReplays = class {
             <span class="rep-card-vs">vs</span>
             <span class="rep-card-race-badge race-${oppRace} rep-card-opp">${RACE_LABEL[oppRace] || oppRace}</span>
           </div>
-          ${lastCompare
-            ? `<span class="rep-card-grade-badge ${gradeClass(lastCompare.grade)}" title="Last compare: ${lastCompare.score}/100${lastCompare.proPlayerName ? ' vs ' + escapeAttr(lastCompare.proPlayerName) : ''}">${escapeHtml(lastCompare.grade)}</span>`
-            : ''}
+          ${record.isReference
+            ? `<span class="rep-card-reference-badge" title="In your pro builds grid — not graded itself">★ Pro replay</span>`
+            : (lastCompare
+              ? `<span class="rep-card-grade-badge ${gradeClass(lastCompare.grade)}" title="Last compare: ${lastCompare.score}/100${lastCompare.proPlayerName ? ' vs ' + escapeAttr(lastCompare.proPlayerName) : ''}">${escapeHtml(lastCompare.grade)}</span>`
+              : '')}
         </header>
 
         <div class="rep-card-meta">
@@ -247,15 +397,27 @@ const MyReplays = class {
 
         <footer class="rep-card-actions">
           <a class="rep-card-btn rep-card-btn-primary" data-action="watch" href="${(options.viewerPath || '/viewer')}?local=${encodeURIComponent(record.id)}">Watch</a>
-          <button class="rep-card-btn rep-card-btn-compare" data-action="compare" type="button" aria-expanded="false">Compare to a pro</button>
+          ${record.isReference
+            ? `<button class="rep-card-btn rep-card-btn-unref" data-action="unmark-reference" type="button" title="Remove from pro builds — this replay returns to your replays as a regular game">Move back to my replays</button>`
+            : `<button class="rep-card-btn rep-card-btn-compare" data-action="compare" type="button" aria-expanded="false">Compare to a pro</button>
+               <button class="rep-card-btn rep-card-btn-mark-ref" data-action="mark-reference" type="button" title="Add this replay to the Pro Builds grid so it can be used as a comparison anchor">Promote to pro replay</button>`}
           <button class="rep-card-btn rep-card-btn-icon" data-action="remove" type="button" title="Remove from your library" aria-label="Remove">×</button>
         </footer>
       </div>
     `;
 
     // Wire actions.
-    card.querySelector('[data-action="compare"]').addEventListener('click', () => {
-      this._openCompareDrawer(card, record);
+    const compareBtn = card.querySelector('[data-action="compare"]');
+    if (compareBtn) compareBtn.addEventListener('click', () => this._openCompareDrawer(card, record));
+    const markBtn = card.querySelector('[data-action="mark-reference"]');
+    if (markBtn) markBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._toggleReference(card, record, true);
+    });
+    const unmarkBtn = card.querySelector('[data-action="unmark-reference"]');
+    if (unmarkBtn) unmarkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._toggleReference(card, record, false);
     });
     card.querySelector('[data-action="remove"]').addEventListener('click', (e) => {
       e.stopPropagation();
@@ -311,6 +473,81 @@ const MyReplays = class {
     return card;
   }
 
+  // Flip a record between "reference" and "your game" state. Re-renders the
+  // card by dispatching the my-replays-changed event so the panel host can
+  // refresh the list (which also bursts any matcher index that has it
+  // cached). Optimistic UI: badge + button update first, then IDB write.
+  //
+  // Promote path is dedup-guarded: if an identical replay is already in
+  // the user's pro builds, we surface a friendly inline note on the card
+  // instead of silently creating a second card.
+  async _toggleReference (cardEl, record, makeReference) {
+    try {
+      if (makeReference) {
+        const existing = await this.findDuplicateReference(record);
+        if (existing) {
+          this._showAlreadyPromotedMessage(cardEl, record, existing);
+          return;
+        }
+      }
+      const updated = await this.setReferenceState(record.id, makeReference
+        ? { isReference: true, referencePlayerSlot: record.userSlot || record.referencePlayerSlot }
+        : { isReference: false });
+      if (!updated) return;
+      // Notify panel host so it re-renders + the matcher invalidates its index.
+      try {
+        document.dispatchEvent(new CustomEvent('wc3v:my-replays-changed', {
+          detail: { changedId: record.id, isReference: !!updated.isReference }
+        }));
+      } catch {}
+    } catch (e) {
+      console.warn('[MyReplays] toggle reference failed:', e);
+    }
+  }
+
+  // Replace the actions row with a brief info bar explaining the promote
+  // was skipped because an identical replay is already in pro builds.
+  // Mirrors the delete-confirm in-place pattern so it feels native to the
+  // card; auto-dismisses after a few seconds in case the user walks away.
+  _showAlreadyPromotedMessage (cardEl, record, existing) {
+    const actionsEl = cardEl.querySelector('.rep-card-actions');
+    if (!actionsEl || cardEl.dataset.infoMsg === '1') return;
+    cardEl.dataset.infoMsg = '1';
+    const originalHtml = actionsEl.innerHTML;
+    actionsEl.classList.add('rep-card-actions-info');
+
+    const label = (existing && existing.userBuild && existing.userBuild.name)
+      || (existing && existing.referenceLabel)
+      || 'a pro replay';
+
+    actionsEl.innerHTML = `
+      <span class="rep-card-info-msg">Already in your pro builds — “${escapeHtml(label)}”.</span>
+      <button class="rep-card-btn rep-card-btn-cancel" type="button" data-info="ok">OK</button>
+    `;
+
+    const restore = () => {
+      if (cardEl.dataset.infoMsg !== '1') return;
+      actionsEl.classList.remove('rep-card-actions-info');
+      actionsEl.innerHTML = originalHtml;
+      cardEl.dataset.infoMsg = '';
+      // innerHTML wipes listeners — re-bind the original action buttons.
+      const cmp = actionsEl.querySelector('[data-action="compare"]');
+      if (cmp) cmp.addEventListener('click', () => this._openCompareDrawer(cardEl, record));
+      const mk = actionsEl.querySelector('[data-action="mark-reference"]');
+      if (mk) mk.addEventListener('click', (e) => { e.stopPropagation(); this._toggleReference(cardEl, record, true); });
+      const um = actionsEl.querySelector('[data-action="unmark-reference"]');
+      if (um) um.addEventListener('click', (e) => { e.stopPropagation(); this._toggleReference(cardEl, record, false); });
+      const rm = actionsEl.querySelector('[data-action="remove"]');
+      if (rm) rm.addEventListener('click', (e) => { e.stopPropagation(); this._enterDeleteConfirm(cardEl, record); });
+      document.removeEventListener('keydown', escHandler);
+      clearTimeout(autoTimer);
+    };
+    const escHandler = (e) => { if (e.key === 'Escape') restore(); };
+    document.addEventListener('keydown', escHandler);
+    actionsEl.querySelector('[data-info="ok"]').addEventListener('click', restore);
+    const autoTimer = setTimeout(restore, 5000);
+  }
+
   // Two-step delete confirm: replace the actions row with a confirm bar
   // in-place. Cancel restores the row; Confirm removes the record + card.
   _enterDeleteConfirm (cardEl, record) {
@@ -331,7 +568,12 @@ const MyReplays = class {
       actionsEl.innerHTML = originalHtml;
       cardEl.dataset.confirming = '';
       // Re-wire the original buttons (innerHTML wipes listeners).
-      actionsEl.querySelector('[data-action="compare"]').addEventListener('click', () => this._openCompareDrawer(cardEl, record));
+      const cmp = actionsEl.querySelector('[data-action="compare"]');
+      if (cmp) cmp.addEventListener('click', () => this._openCompareDrawer(cardEl, record));
+      const mk = actionsEl.querySelector('[data-action="mark-reference"]');
+      if (mk) mk.addEventListener('click', (e) => { e.stopPropagation(); this._toggleReference(cardEl, record, true); });
+      const um = actionsEl.querySelector('[data-action="unmark-reference"]');
+      if (um) um.addEventListener('click', (e) => { e.stopPropagation(); this._toggleReference(cardEl, record, false); });
       actionsEl.querySelector('[data-action="remove"]').addEventListener('click', (e) => {
         e.stopPropagation();
         this._enterDeleteConfirm(cardEl, record);
@@ -411,12 +653,13 @@ const MyReplays = class {
     // produces a result, so we can cache the grade on the record + update
     // the badge on the card.
     const inline = new window.CompareInline(body, fullRecord, this, {
-      onResult: async (report, proEntry) => {
+      onResult: async (report, proEntry, proKey) => {
         try {
           const updated = { ...fullRecord,
             lastCompare: {
               grade: report.overall.grade,
               score: report.overall.score,
+              proKey: proKey || null,
               proReplayId: proEntry && proEntry.replayId,
               proPlayerName: proEntry && proEntry.playerName,
               ts: Date.now()
@@ -621,6 +864,259 @@ const formatTimeAgo = (ts) => {
   return `${d}d ago`;
 };
 
+// ===== Your Builds adapter — reference record → buildCard() props =====
+
+// Default name for a freshly-promoted reference. References are pro
+// replays the user uploaded — naming them by who-played-whom-where is
+// the most informative default ("Happy vs Moon — Turtle Rock S2").
+// Falls back to matchup + hero opener, then to a generic label.
+const defaultUserBuildName = (record) => {
+  const slot = pickReferenceSlot(record);
+  const ps = pickPlayerSummary(record, slot);
+  const opp = pickOpponentSummary(record, slot);
+
+  // Try to assemble player-vs-player + map. Names come from
+  // cachedSummary (extracted at promote time) and fall back to the
+  // record's player roster.
+  let userName = (ps && ps.name) || '';
+  let oppName = (opp && opp.name) || '';
+  if (!userName) {
+    const u = pickUserPlayer(record);
+    if (u) userName = u.name || '';
+  }
+  if (!oppName) {
+    const u = pickUserPlayer(record);
+    const o = pickOpponent(record, u);
+    if (o) oppName = o.name || '';
+  }
+  // Map: prefer the cleaned summary map; fall back to the record's
+  // raw mapName (cleaned) or the canonical map dir.
+  const mapName = (record.cachedSummary && record.cachedSummary.map)
+    || cleanMapName(record.mapName)
+    || '';
+
+  if (userName && oppName && mapName) return `${userName} vs ${oppName} — ${mapName}`;
+  if (userName && oppName) return `${userName} vs ${oppName}`;
+
+  // Fall back to matchup + hero, then bare label.
+  const heroName = ps && ps.heroOpener && ps.heroOpener.name ? ps.heroOpener.name : '';
+  const matchup = derivePrimaryMatchup(record, slot);
+  if (matchup && heroName) return `${matchup} ${heroName}`;
+  if (matchup) return `${matchup} reference`;
+  return 'Reference replay';
+};
+
+// Choose which player-slot in the cachedSummary we treat as the build's
+// author. References can be pro-vs-pro (no canonical user slot), so we
+// fall back through a few options. The chosen slot drives matchups, hero
+// opener, and key-unit derivation.
+const pickReferenceSlot = (record) => {
+  if (record.referencePlayerSlot != null) return String(record.referencePlayerSlot);
+  if (record.userSlot != null) return String(record.userSlot);
+  const summary = record.cachedSummary;
+  if (summary && summary.players) {
+    const slots = Object.keys(summary.players);
+    if (slots.length) return slots[0];
+  }
+  const userPlayer = pickUserPlayer(record);
+  if (userPlayer) return String(userPlayer.slot);
+  return null;
+};
+
+const pickPlayerSummary = (record, slot) => {
+  if (!record.cachedSummary || !record.cachedSummary.players || slot == null) return null;
+  return record.cachedSummary.players[String(slot)] || null;
+};
+
+const pickOpponentSummary = (record, slot) => {
+  if (!record.cachedSummary || !record.cachedSummary.players) return null;
+  const players = record.cachedSummary.players;
+  const keys = Object.keys(players);
+  for (const k of keys) {
+    if (String(k) !== String(slot)) return players[k];
+  }
+  return null;
+};
+
+const derivePrimaryMatchup = (record, slot) => {
+  const me = pickPlayerSummary(record, slot);
+  const opp = pickOpponentSummary(record, slot);
+  if (me && opp && me.race && opp.race) return `${me.race}v${opp.race}`;
+  // Fall back to record.players.
+  const all = (record.players || []).filter(p => p && typeof p.slot === 'number' && p.slot < 24);
+  if (all.length >= 2) {
+    const meP = all.find(p => String(p.slot) === String(slot)) || all[0];
+    const oppP = all.find(p => p.slot !== meP.slot) || all[1];
+    if (meP && oppP && meP.race && oppP.race) return `${meP.race}v${oppP.race}`;
+  }
+  return '';
+};
+
+// Build the editable defaults for a new reference. cachedSummary may be
+// absent on first call (we seed lazily); the user can edit name/etc later
+// regardless. matchups[] is auto-derived only — the user doesn't author it.
+const seedUserBuild = (record) => {
+  const slot = pickReferenceSlot(record);
+  const matchup = derivePrimaryMatchup(record, slot);
+  return {
+    name: defaultUserBuildName(record),
+    description: '',
+    strategyPoints: [],
+    tags: [],
+    matchups: matchup ? [matchup] : [],
+    edited: false
+  };
+};
+
+// Adapter: convert an IDB reference record (with cachedSummary populated)
+// into the same prop shape the homepage's curated buildCard() expects.
+// Returns null if the record can't be rendered as a card (e.g. the
+// summary wasn't computed yet — the caller should retry after lazy-load).
+//
+// Race + matchups + heroes + key units + upgrades all come from the
+// summary; the editable bits (name/description/strategy/tags) come from
+// userBuild. The single replay entry is local-only: { _isLocal: true,
+// href: /viewer?local=ID } so the buildCard renderer points the View
+// button at the IDB-backed viewer path instead of a server replay id.
+const buildCardPropsFromRecord = (record) => {
+  if (!record) return null;
+  const summary = record.cachedSummary;
+  const slot = pickReferenceSlot(record);
+  const ps = pickPlayerSummary(record, slot);
+  const opp = pickOpponentSummary(record, slot);
+  const ub = record.userBuild || seedUserBuild(record);
+
+  const race = (ps && ps.race) || record.race || 'R';
+  const userName = (ps && ps.name) || (() => {
+    const p = pickUserPlayer(record);
+    return p ? p.name : '';
+  })();
+  const oppName = (opp && opp.name) || (() => {
+    const u = pickUserPlayer(record);
+    const o = pickOpponent(record, u);
+    return o ? o.name : '';
+  })();
+
+  // Hero IDs in pick order. heroOpener gives us the first one with high
+  // confidence; heroBuilds (if extracted) extends it with later picks.
+  const heroIds = [];
+  const seenHero = new Set();
+  if (ps && ps.heroOpener && ps.heroOpener.itemId) {
+    heroIds.push(ps.heroOpener.itemId);
+    seenHero.add(ps.heroOpener.itemId);
+  }
+  if (ps && Array.isArray(ps.heroBuilds)) {
+    const ordered = [...ps.heroBuilds].sort((a, b) =>
+      (a.spawnTimeMs ?? Infinity) - (b.spawnTimeMs ?? Infinity)
+    );
+    for (const h of ordered) {
+      if (heroIds.length >= 3) break;
+      if (h && h.itemId && !seenHero.has(h.itemId)) {
+        heroIds.push(h.itemId);
+        seenHero.add(h.itemId);
+      }
+    }
+  }
+
+  // heroSkills: { heroItemId: { abilityId: finalLevel } }. Derived from
+  // each hero's skillOrder by taking the max skillLevel observed per
+  // ability. The buildCard renders dim/ult/level pips based on this map.
+  const heroSkills = {};
+  if (ps && Array.isArray(ps.heroBuilds)) {
+    for (const h of ps.heroBuilds) {
+      if (!h || !h.itemId || !Array.isArray(h.skillOrder)) continue;
+      const levels = {};
+      for (const s of h.skillOrder) {
+        if (!s || !s.abilityId) continue;
+        const cur = levels[s.abilityId] || 0;
+        if (s.skillLevel > cur) levels[s.abilityId] = s.skillLevel;
+      }
+      heroSkills[h.itemId] = levels;
+    }
+  }
+
+  // Key units: top-N produced units by tier. Mirrors the curated card's
+  // intent of showing what army the build leans on. Drop tier-2 → tier-3
+  // duplicates so the row stays readable.
+  const keyUnits = [];
+  const seenKu = new Set();
+  const pushUnits = (arr) => {
+    for (const u of (arr || [])) {
+      if (keyUnits.length >= 6) break;
+      const id = u && u.itemId;
+      if (!id || seenKu.has(id)) continue;
+      seenKu.add(id);
+      keyUnits.push(id);
+    }
+  };
+  if (ps) {
+    pushUnits(ps.t3Units);
+    pushUnits(ps.t2Units);
+  }
+
+  // coreUpgrades: highest-level researched per itemId. Lets buildCard's
+  // upgrade row populate from coreUpgrades when summary lookup fails (and
+  // for our user-build, it always will — there's no entry in summaryMap).
+  const coreUpgrades = [];
+  if (ps && Array.isArray(ps.researched)) {
+    const best = {};
+    for (const r of ps.researched) {
+      if (!r || !r.itemId) continue;
+      if ((r.level || 0) > (best[r.itemId] || 0)) best[r.itemId] = r.level || 0;
+    }
+    for (const id of Object.keys(best)) coreUpgrades.push(id);
+  }
+
+  // tierProgression: synthesize from the tier composition fields so the
+  // buildCard's expansion-detection branch (checks if expo building
+  // appears in any tier's buildings) still works for user builds.
+  const tierProgression = (ps && (ps.t2Buildings || ps.t3Buildings))
+    ? {
+        t1: { buildings: [], units: [] },
+        t2: { buildings: (ps.t2Buildings || []).map(b => b.itemId).filter(Boolean),
+              units:     (ps.t2Units || []).map(u => u.itemId).filter(Boolean) },
+        t3: { buildings: (ps.t3Buildings || []).map(b => b.itemId).filter(Boolean),
+              units:     (ps.t3Units || []).map(u => u.itemId).filter(Boolean) }
+      }
+    : null;
+
+  // Local-only "replay" entry. _isLocal flips buildCard onto the local
+  // /viewer?local= path; map/playerName flow through to the same chips
+  // pro replays use, so the strip looks identical apart from the badge.
+  const mapDisplay = (summary && summary.map) || cleanMapName(record.mapName) || '';
+  const replays = [{
+    _isLocal: true,
+    replayId: '_local_' + record.id,
+    playerSlot: slot != null ? String(slot) : '1',
+    playerName: userName || 'You',
+    opponentName: oppName || '',
+    map: mapDisplay,
+    href: '/viewer?local=' + encodeURIComponent(record.id)
+  }];
+
+  return {
+    id: 'userBuild::' + record.id,
+    _localId: record.id,
+    _isUserBuild: true,
+    name: ub.name || defaultUserBuildName(record),
+    description: ub.description || '',
+    strategyPoints: Array.isArray(ub.strategyPoints) ? ub.strategyPoints : [],
+    tags: Array.isArray(ub.tags) ? ub.tags : [],
+    race,
+    matchups: Array.isArray(ub.matchups) && ub.matchups.length ? ub.matchups : [],
+    heroItemIds: heroIds,
+    heroItemId: heroIds[0] || null,
+    heroSkills,
+    keyUnits,
+    coreUpgrades,
+    tierProgression,
+    replays
+  };
+};
+
 if (typeof window !== 'undefined') {
   window.MyReplays = MyReplays;
+  // Static helpers exposed for the homepage's Your Builds renderer.
+  window.MyReplays.buildCardPropsFromRecord = buildCardPropsFromRecord;
+  window.MyReplays.seedUserBuild = seedUserBuild;
 }

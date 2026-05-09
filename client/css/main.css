@@ -6559,7 +6559,12 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
-/* ── Replay list section ──────────────────────────────── */
+/* ── Replay list section ──────────────────────────────────────
+   Bottom of every build card. Unified layout for curated pros AND
+   user-uploaded pros — same shape, same spacing, same heights, so
+   cards in the same grid row line up cleanly regardless of how much
+   metadata they carry. The top divider belongs to .site-replay-section;
+   the strip itself has no boxed background. */
 .site-replay-section {
   padding-top: 10px;
   border-top: 1px solid var(--card-divider, rgba(255,255,255,0.08));
@@ -6568,96 +6573,104 @@ body {
   z-index: 1;
 }
 
+/* The strip is two rows:
+     Row 1 (.site-replay-item-identity): "{player} vs {opponent}" + map
+     Row 2 (.site-replay-item-row):      tournament/stage chips + actions
+   Row 2 has a fixed min-height so user-uploaded cards (no chips) match
+   curated cards (with chips) in total height. No background, no border —
+   we let the divider above + the typography do the visual work. */
 .site-replay-item {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto auto;
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  padding: 10px;
-  border-radius: 4px;
-  background: rgba(255,255,255,0.10);
-  border: 1px solid rgba(255,255,255,0.14);
   font-size: 0.82rem;
 }
 
-.site-replay-item-meta {
-  grid-row: 1;
+.site-replay-item-identity {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   min-width: 0;
 }
 
-.site-replay-item-meta:empty {
-  display: none;
+.site-replay-item-players {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.site-replay-item-info {
-  grid-row: 2;
+.site-replay-item-map {
+  flex: 0 0 auto;
+  color: #999;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+}
+
+.site-replay-item-row {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 26px;       /* alignment guarantee across cards in a row */
+}
+
+.site-replay-item-chips {
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 10px;
+  gap: 4px 6px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .site-replay-item-actions {
-  grid-row: 3;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 6px;
+  flex: 0 0 auto;
 }
 
-.site-replay-item .site-replay-view-btn {
-  align-self: center;
+/* Identity line typography: bold player, muted "vs", regular opponent. */
+.site-replay-player {
+  color: #e8e8ec;
+  font-weight: 700;
 }
-
-.site-replay-item:hover {
-  background: rgba(255,255,255,0.14);
-}
-
-.site-replay-item .site-replay-outcome {
-  padding: 1px 4px;
-  font-size: 0.6rem;
-  margin-right: 0;
-  flex-shrink: 0;
-}
-
-.site-replay-players {
-  color: #ccc;
+.site-replay-vs {
+  color: #777;
   font-weight: 500;
+}
+.site-replay-opponent {
+  color: #c8c8c8;
+  font-weight: 500;
+}
+
+/* Stage / round line — sits next to the tournament chip on row 2. */
+.site-replay-stage {
+  color: #999;
+  font-size: 0.74rem;
+  line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
-.site-replay-player {
-  color: #e8e8ec;
-  font-weight: 700;
-  white-space: normal;
-  overflow-wrap: break-word;
-  min-width: 0;
-}
-
-.site-replay-map {
-  color: #999;
-  font-size: 0.78rem;
-  white-space: normal;
-  overflow-wrap: break-word;
-  min-width: 0;
-}
-
-.site-replay-stage {
-  color: #999;
-  font-size: 0.74rem;
-  line-height: 1.3;
-  min-width: 0;
-  flex: 1 1 auto;
-  white-space: normal;
-  overflow-wrap: break-word;
+/* Legacy aliases — these classes used to render the map + outcome on
+   the old 3-row layout. Kept as no-op block defs so any external page
+   that still uses them doesn't crash, but the new layout uses the
+   .site-replay-item-* classes above instead. */
+.site-replay-map { color: #999; font-size: 0.76rem; white-space: nowrap; }
+.site-replay-players { color: #ccc; font-weight: 500; min-width: 0; }
+.site-replay-item .site-replay-outcome {
+  padding: 1px 4px;
+  font-size: 0.6rem;
+  flex-shrink: 0;
 }
 
 /* ── Tournament badge on replay items ───────────────── */
@@ -11328,59 +11341,149 @@ svg.about-feat-icon {
   color: #f0f0f0;
 }
 
-.acp-results { overflow-y: auto; padding: 8px; flex: 1; }
+.acp-results { overflow-y: auto; padding: 12px; flex: 1; }
+.acp-results-grouped { display: flex; flex-direction: column; gap: 14px; }
 
-.acp-empty { padding: 32px; text-align: center; color: #888; }
+.acp-empty {
+  padding: 32px;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.acp-empty strong { color: #e8e8e8; }
 
-.acp-result {
+/* Map-grouped result row — adopts the .ci-chooser-mapgroup chrome from
+   the compare drawer so the picker visual matches the chooser. The
+   per-row layout: opponent race icon · player vs opponent · build/
+   tournament/stage meta · action button. Reuses .ci-chooser-opt-vs-icon
+   for the race icon (already styled globally). */
+.acp-result-list {
+  /* override .ci-chooser-mapgroup-list's left padding — picker rows
+     can use the full width for clarity. */
+  padding-left: 0;
+}
+
+.acp-result-row {
+  display: grid;
+  /* Three children: vs+icon (auto) · identity (1fr, takes the slack) ·
+     Watch button (auto, content-sized). Anything else lets the button
+     stretch — keep this in sync with the row HTML in
+     AdvancedComparePicker._rowHtml. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  transition: background 0.12s, border-color 0.12s;
+}
+.acp-result-row:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.acp-result-vs {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.acp-result-vs-label {
+  font-size: 0.66rem;
+  color: #707070;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.acp-result-identity { min-width: 0; }
+
+.acp-result-name {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 6px;
-}
-
-.acp-result:hover { background: rgba(255,255,255,0.04); }
-
-.acp-result-icon {
-  width: 32px;
-  height: 32px;
-  text-align: center;
-  line-height: 32px;
-  font-weight: 700;
-  border-radius: 6px;
-  flex-shrink: 0;
-}
-
-.acp-result-icon.race-H { background: #4a6da8; color: #fff; }
-.acp-result-icon.race-O { background: #a8543a; color: #fff; }
-.acp-result-icon.race-E { background: #5a9c4a; color: #fff; }
-.acp-result-icon.race-U { background: #6c4a8c; color: #fff; }
-
-.acp-result-body { flex: 1; min-width: 0; }
-
-.acp-result-name { color: #f0f0f0; font-weight: 600; font-size: 0.95rem; }
-.acp-result-vs { color: #aaa; font-weight: 400; }
-.acp-result-meta {
-  color: #888;
-  font-size: 0.82rem;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #f0f0f0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.acp-result-player { font-weight: 700; }
+.acp-result-vs-text {
+  color: #666;
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+.acp-result-opponent { color: #c8c8c8; font-weight: 500; }
 
-.acp-result-pick {
-  padding: 6px 14px;
-  background: #3a8c4a;
-  color: #fff;
-  border: 1px solid #5cb878;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  font-family: inherit;
-  cursor: pointer;
+/* "★ Yours" tag on user-uploaded entries — slate to match the homepage
+   "Added by you" pill. Inline with the name so the row reads as
+   "Player vs Opponent · Yours". */
+.acp-result-mine {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin-left: 4px;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: #b0c4d0;
+  background: rgba(140,180,210,0.10);
+  border: 1px solid rgba(140,180,210,0.32);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
-.acp-result-pick:hover { background: #4ba85b; }
+.acp-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 3px;
+  font-size: 0.72rem;
+  color: #888;
+}
+.acp-result-build {
+  color: #aaa;
+  font-weight: 600;
+}
+.acp-result-build::after { content: ' ·'; color: #555; margin-left: 2px; }
+.acp-result-tournament {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(200, 168, 78, 0.14);
+  border: 1px solid rgba(200, 168, 78, 0.28);
+  color: #c8a84e;
+  font-weight: 700;
+  font-size: 0.66rem;
+  white-space: nowrap;
+}
+.acp-result-stage { color: #999; }
+
+.acp-result-action {
+  /* Fixed-feel button: pinned width + justify-self:end so it always
+     hugs the right edge regardless of the row's identity content
+     length. Never stretches with the grid cell. */
+  justify-self: end;
+  width: 92px;
+  padding: 6px 0;
+  text-align: center;
+  background: rgba(80, 160, 100, 0.18);
+  color: #9adfa8;
+  border: 1px solid rgba(80, 160, 100, 0.45);
+  border-radius: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, border-color 0.12s;
+}
+.acp-result-action:hover {
+  background: rgba(80, 160, 100, 0.32);
+  border-color: rgba(80, 160, 100, 0.7);
+  color: #fff;
+}
 
 .site-my-replays-hint { font-size: 0.85rem; color: #888; }
 .site-my-replays-hint strong { color: #c8c8c8; font-weight: 600; }
@@ -11654,6 +11757,30 @@ svg.about-feat-icon {
   background: rgba(255,255,255,0.06);
   color: #fff;
 }
+
+/* Advanced search entry — same chip silhouette as .pfb-more-btn but
+   with a leading magnifier icon and a slightly warmer accent so it
+   reads as the "richer browse experience" entry point. */
+.pfb-advanced-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  background: transparent;
+  color: #c8a84e;
+  border: 1px solid rgba(200, 168, 78, 0.35);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.pfb-advanced-btn:hover {
+  color: #f0c878;
+  background: rgba(200, 168, 78, 0.10);
+  border-color: rgba(200, 168, 78, 0.65);
+}
+.pfb-advanced-btn svg { display: block; }
 .pfb-more-pop {
   position: absolute;
   top: calc(100% + 6px);
@@ -12356,6 +12483,23 @@ body.help-modal-active {
   pointer-events: none;
 }
 
+/* ── Inline "already promoted" info bar (promote-dedup) ── */
+.rep-card-actions-info {
+  background: rgba(200,168,78,0.10);
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: 0 -6px;
+  align-items: center;
+  gap: 8px;
+}
+.rep-card-info-msg {
+  flex: 1;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #f0e0b0;
+  font-weight: 500;
+}
+
 /* ============================================================= */
 /* Replays library page (/replays.html)                          */
 /* ============================================================= */
@@ -12613,4 +12757,1042 @@ body.help-modal-active {
     flex-wrap: wrap;
     justify-content: space-between;
   }
+}
+
+/* ── ReplayTypePicker — your game vs reference modal ──
+   Shown right after a successful upload. Two big choice cards. */
+.rtp-modal {
+  position: fixed; inset: 0; z-index: 10002;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.rtp-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(8, 10, 14, 0.78);
+  backdrop-filter: blur(4px);
+}
+.rtp-card {
+  position: relative; z-index: 1;
+  width: min(720px, 96vw);
+  max-height: 90vh; overflow-y: auto;
+  background: #161a22;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  padding: 22px 24px 18px;
+}
+.rtp-head { margin-bottom: 14px; }
+.rtp-title {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem; font-weight: 800;
+  color: #f0f0f0;
+}
+.rtp-filename {
+  font-size: 0.85rem; color: #a0a0a0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  margin: 4px 0;
+  word-break: break-all;
+}
+.rtp-sub { font-size: 0.92rem; color: #aaa; margin: 4px 0 0; }
+.rtp-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+@media (min-width: 640px) {
+  .rtp-options { grid-template-columns: 1fr 1fr; }
+}
+.rtp-option {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.08s;
+}
+.rtp-option:hover {
+  border-color: rgba(255,255,255,0.30);
+  background: rgba(255,255,255,0.07);
+}
+.rtp-option:active { transform: scale(0.99); }
+.rtp-option-icon {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 8px;
+  font-size: 1.4rem; line-height: 1;
+}
+.rtp-option-game .rtp-option-icon { color: #6cc8e8; }
+.rtp-option-ref  .rtp-option-icon { color: #f2c46e; }
+.rtp-option-body { min-width: 0; }
+.rtp-option-title {
+  font-size: 1rem; font-weight: 700; color: #f0f0f0; margin-bottom: 2px;
+}
+.rtp-option-desc {
+  font-size: 0.86rem; color: #b0b0b0; line-height: 1.35;
+}
+.rtp-option-tag {
+  font-size: 0.65rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 7px; border-radius: 4px;
+  background: rgba(255,255,255,0.10); color: #c8c8c8;
+}
+.rtp-option-tag-default {
+  background: rgba(108,200,232,0.18); color: #b0d8e8;
+}
+.rtp-option-tag-new {
+  background: rgba(242,196,110,0.20); color: #f2c46e;
+}
+
+/* ── Reference replay card modifier ──
+   Subtle gold accent + replaces the grade badge. */
+.rep-card-reference { /* Hook for future per-card variations. */ }
+.rep-card-reference .rep-card-bg-tint {
+  /* Slightly warmer overlay so reference cards stand out at a glance. */
+  background: linear-gradient(180deg, rgba(36,28,16,0.10), rgba(20,18,12,0.35));
+}
+.rep-card-reference-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  background: rgba(242,196,110,0.22);
+  border: 1px solid rgba(242,196,110,0.45);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f0d68c;
+  text-transform: uppercase;
+}
+.rep-card-btn-mark-ref {
+  font-size: 0.78rem;
+  background: rgba(242,196,110,0.10);
+  border-color: rgba(242,196,110,0.30);
+  color: #f0d68c;
+}
+.rep-card-btn-mark-ref:hover {
+  background: rgba(242,196,110,0.20);
+  border-color: rgba(242,196,110,0.50);
+  color: #fff3d8;
+}
+.rep-card-btn-unref {
+  font-size: 0.8rem;
+  flex: 1;
+  background: rgba(242,196,110,0.06);
+  border-color: rgba(242,196,110,0.25);
+  color: #d8c890;
+}
+.rep-card-btn-unref:hover {
+  background: rgba(242,196,110,0.14);
+  color: #f0d68c;
+}
+
+/* ── My-replays rail filter chips ── */
+.mine-toolbar-filter {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+}
+.mine-filter-chip {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #a8a8a8;
+  font-size: 0.78rem;
+  font-family: inherit;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.mine-filter-chip:hover {
+  color: #e0e0e0;
+  background: rgba(255,255,255,0.06);
+}
+.mine-filter-chip-active {
+  background: rgba(108,200,232,0.18);
+  border-color: rgba(108,200,232,0.35);
+  color: #d8ecf8;
+}
+.mine-filter-chip[data-filter="references"].mine-filter-chip-active {
+  background: rgba(242,196,110,0.22);
+  border-color: rgba(242,196,110,0.45);
+  color: #f0d68c;
+}
+
+/* ── Compare header "Change pro" affordance ── */
+.ci-header-change {
+  margin-left: 8px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 4px;
+  color: #c0c0c0;
+  font-size: 0.74rem;
+  font-family: inherit;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s, background 0.12s;
+}
+.ci-header-change:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.35);
+  color: #f0f0f0;
+}
+
+/* ── Chooser (compact) ──
+   Forced-choice view shown when no curated build is structurally exact.
+   Designed to fit comfortably above the fold: recommended card ~70px,
+   each option row ~36px, two columns side-by-side. */
+.ci-chooser {
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.ci-chooser-head { padding-right: 32px; }
+.ci-chooser-title {
+  margin: 0 0 2px 0;
+  font-size: 1.05rem; font-weight: 800;
+  color: #f0f0f0;
+}
+.ci-chooser-sub {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #a8a8a8;
+  line-height: 1.35;
+}
+.ci-chooser-sub strong { color: #f0f0f0; }
+.ci-chooser-prevbanner {
+  padding: 7px 10px;
+  background: rgba(108,200,232,0.10);
+  border: 1px solid rgba(108,200,232,0.25);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #c8e0f0;
+}
+.ci-chooser-prevbanner strong { color: #fff; }
+
+/* Recommended card (compact, single-row). Race identity is carried by the
+   race chip (the colored letter pill), not by an edge stripe — single-edge
+   accents are forbidden in this codebase per the design feedback memo. */
+.ci-chooser-rec {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+  background: linear-gradient(180deg, rgba(108,200,232,0.09), rgba(108,200,232,0.03));
+  border: 1px solid rgba(108,200,232,0.40);
+  border-radius: 8px;
+  color: #e8e8e8;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.08s;
+}
+.ci-chooser-rec:hover {
+  border-color: rgba(108,200,232,0.75);
+  background: linear-gradient(180deg, rgba(108,200,232,0.14), rgba(108,200,232,0.06));
+}
+.ci-chooser-rec:active { transform: scale(0.997); }
+
+.ci-chooser-rec-row {
+  display: grid;
+  grid-template-columns: auto 32px minmax(0, 1fr) auto auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 12px 8px 10px;
+}
+.ci-chooser-rec-eyebrow {
+  font-size: 0.66rem; font-weight: 800;
+  letter-spacing: 0.10em;
+  color: #9cd0ec;
+  text-transform: uppercase;
+}
+/* Race image chip — colored ring sets the race tone, icon image is the
+   recognizable WC3 building (htow / ogre / etol / unpl) per RACE_ICON. */
+.ci-chooser-rec-race {
+  width: 32px; height: 32px;
+  border-radius: 5px;
+  display: inline-block;
+  object-fit: cover;
+  background: #2a2e36;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.15);
+}
+.ci-chooser-rec-race.race-H { box-shadow: inset 0 0 0 2px #4488FF; }
+.ci-chooser-rec-race.race-O { box-shadow: inset 0 0 0 2px #FF4444; }
+.ci-chooser-rec-race.race-E { box-shadow: inset 0 0 0 2px #44DD88; }
+.ci-chooser-rec-race.race-U { box-shadow: inset 0 0 0 2px #AA66FF; }
+.ci-chooser-rec-race-fail { background: rgba(255,255,255,0.06); }
+.ci-chooser-rec-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ci-chooser-rec-name {
+  font-size: 0.96rem; font-weight: 700; color: #f0f0f0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ci-chooser-rec-opp {
+  font-size: 0.78rem; color: #909090;
+  font-weight: 500; margin-left: 4px;
+}
+.ci-chooser-rec-sub {
+  font-size: 0.78rem; color: #a8a8a8;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ci-chooser-rec-heroes {
+  display: inline-flex;
+  gap: 3px;
+}
+.ci-chooser-rec-hero {
+  width: 28px; height: 28px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  object-fit: cover;
+}
+.ci-rec-hero-fail { visibility: hidden; }
+.ci-chooser-rec-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+.ci-chooser-rec-tag {
+  font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 3px;
+  background: rgba(255,255,255,0.08); color: #c0c0c0;
+}
+.ci-chooser-rec-tag-ref {
+  background: rgba(242,196,110,0.22); color: #f0d68c;
+}
+.ci-chooser-rec-cta {
+  font-size: 0.82rem; font-weight: 700;
+  color: #9cd0ec;
+  white-space: nowrap;
+}
+@media (max-width: 720px) {
+  /* Below this width the single-row layout gets cramped; let it wrap. */
+  .ci-chooser-rec-row { grid-template-columns: 32px minmax(0,1fr) auto auto; }
+  .ci-chooser-rec-eyebrow { display: none; }
+  .ci-chooser-rec-heroes { display: none; }
+  .ci-chooser-rec-cta { grid-column: 1 / -1; text-align: right; padding-top: 4px; }
+}
+
+/* Sort chip row — three states: best match (default), map, pro name. */
+.ci-chooser-sortbar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -4px;  /* tighten gap to the recommended card above */
+}
+.ci-chooser-sort-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  margin-right: 2px;
+}
+.ci-chooser-sort-chip {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 4px;
+  color: #b0b0b0;
+  font-size: 0.74rem;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.ci-chooser-sort-chip:hover {
+  border-color: rgba(255,255,255,0.25);
+  color: #fff;
+}
+.ci-chooser-sort-chip-active {
+  background: rgba(108,200,232,0.18);
+  border-color: rgba(108,200,232,0.40);
+  color: #d8ecf8;
+}
+
+/* Two-column option list. */
+.ci-chooser-cols {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 760px) {
+  .ci-chooser-cols { grid-template-columns: 1fr 1fr; }
+}
+.ci-chooser-col {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
+}
+.ci-chooser-col-ref {
+  background: linear-gradient(180deg, rgba(242,196,110,0.06), rgba(242,196,110,0.02));
+  border-color: rgba(242,196,110,0.20);
+}
+.ci-chooser-col-curated {
+  background: linear-gradient(180deg, rgba(108,200,232,0.05), rgba(108,200,232,0.015));
+  border-color: rgba(108,200,232,0.18);
+}
+.ci-chooser-col-head {
+  display: flex; align-items: center;
+  gap: 6px;
+  font-size: 0.74rem; font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #d8d8d8;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.ci-chooser-col-icon {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 3px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.ci-chooser-col-icon-ref {
+  background: rgba(242,196,110,0.20);
+  color: #f0d68c;
+  border: 1px solid rgba(242,196,110,0.35);
+}
+.ci-chooser-col-icon-curated {
+  background: rgba(108,200,232,0.18);
+  color: #9cd0ec;
+  border: 1px solid rgba(108,200,232,0.30);
+}
+.ci-chooser-col-label { flex: 1; }
+.ci-chooser-col-count {
+  font-size: 0.7rem;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px; padding: 1px 7px;
+  color: #c0c0c0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ci-chooser-col-empty {
+  padding: 12px 8px;
+  color: #909090;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.ci-chooser-col-empty-title {
+  font-weight: 700; color: #d8d8d8; margin-bottom: 4px;
+  font-size: 0.86rem;
+}
+.ci-chooser-col-empty-ref .ci-chooser-col-empty-title { color: #f0d68c; }
+.ci-chooser-col-empty-body {
+  font-size: 0.78rem;
+  color: #909090;
+}
+.ci-chooser-col-empty-body strong { color: #f0d68c; }
+.ci-chooser-col-list {
+  display: flex; flex-direction: column;
+  gap: 5px;
+}
+
+/* Map-grouped layout (active when sort=map). Each group is a section with
+   a big 56×40 map thumbnail header + map name + count, and the option
+   rows under it carry no per-row map info (header already says it). */
+.ci-chooser-mapgroup {
+  margin-bottom: 10px;
+}
+.ci-chooser-mapgroup:last-child { margin-bottom: 0; }
+.ci-chooser-mapgroup-head {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 5px;
+}
+.ci-chooser-mapgroup-icon {
+  width: 56px; height: 40px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  object-fit: cover;
+  display: block;
+}
+.ci-chooser-mapgroup-icon-fail {
+  background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+}
+.ci-chooser-mapgroup-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ci-chooser-mapgroup-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ci-chooser-mapgroup-count {
+  font-size: 0.72rem;
+  color: #888;
+  margin-top: 1px;
+}
+.ci-chooser-mapgroup-list {
+  display: flex; flex-direction: column;
+  gap: 4px;
+  padding-left: 8px;
+}
+/* Option row (single line, ~32px) — race chip + name/meta + match dots + arrow.
+   Hero portraits and grade tags were dropped: they made each row ~70px,
+   pushing usable content below the fold; the build dot already encodes
+   "different signature unit" via the amber state, and the grade dot
+   encodes the duration gate. */
+.ci-chooser-opt {
+  display: grid;
+  grid-template-columns: auto 26px minmax(0, 1fr) auto 14px;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  color: #d8d8d8;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: border-color 0.12s, background 0.12s, transform 0.08s;
+}
+.ci-chooser-opt:hover {
+  border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.06);
+}
+.ci-chooser-opt:active { transform: scale(0.997); }
+
+/* Opponent race ICON — building image (htow / ogre / etol / unpl) ringed
+   in the race color. The "vs" text label is its own grid cell so the row
+   reads naturally at narrow widths. */
+.ci-chooser-opt-vs {
+  font-size: 0.66rem; color: #707070;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.ci-chooser-opt-vs-icon {
+  width: 26px; height: 26px;
+  border-radius: 4px;
+  display: inline-block;
+  object-fit: cover;
+  background: #2a2e36;
+  box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.12);
+}
+.ci-chooser-opt-vs-icon.race-H { box-shadow: inset 0 0 0 1.5px #4488FF; }
+.ci-chooser-opt-vs-icon.race-O { box-shadow: inset 0 0 0 1.5px #FF4444; }
+.ci-chooser-opt-vs-icon.race-E { box-shadow: inset 0 0 0 1.5px #44DD88; }
+.ci-chooser-opt-vs-icon.race-U { box-shadow: inset 0 0 0 1.5px #AA66FF; }
+.ci-chooser-opt-vs-icon-fail {
+  background: rgba(255,255,255,0.06);
+  /* Visibility:hidden left blank space; this collapses cleanly. */
+}
+
+.ci-chooser-opt-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ci-chooser-opt-name {
+  font-size: 0.86rem; font-weight: 700; color: #f0f0f0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+}
+.ci-chooser-opt-ref {
+  color: #f2c46e; font-size: 0.82rem; line-height: 1;
+  cursor: help;
+}
+.ci-chooser-opt-build {
+  color: #888;
+  font-weight: 500;
+  font-size: 0.76rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ci-chooser-opt-build::before { content: '· '; color: #555; }
+
+/* Map icon + name share the sub-line. Icon hides on load failure; the
+   map name still wraps gracefully. */
+.ci-chooser-opt-sub {
+  font-size: 0.72rem; color: #999;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  margin-top: 2px;
+  display: flex; align-items: center; gap: 5px;
+}
+.ci-chooser-opt-mapicon {
+  width: 32px; height: 22px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+/* Collapse out of layout when both primary and alt URLs fail — keeps the
+   sub-line tidy (just shows the map name) instead of leaving a hole. */
+.ci-chooser-opt-mapicon-fail { display: none; }
+.ci-chooser-opt-sub-empty { color: #555; }
+.ci-chooser-opt-mapname {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  min-width: 0;
+}
+
+/* Per-dimension match pills: R / MU / B / M / G. Letter pills, ~18px tall,
+   green when matched, grey when missed, amber when partial/unknown. */
+.ci-chooser-opt-dots {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+}
+.ci-chooser-dot {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  min-width: 22px; height: 18px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 0.62rem; font-weight: 800;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+  cursor: help;
+  font-family: inherit;
+}
+.ci-chooser-dot-on {
+  background: rgba(140,200,120,0.22);
+  border: 1px solid rgba(140,200,120,0.45);
+  color: #b8e8a0;
+}
+.ci-chooser-dot-off {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: #6c6c6c;
+}
+.ci-chooser-dot-unknown {
+  background: rgba(242,196,110,0.14);
+  border: 1px solid rgba(242,196,110,0.32);
+  color: #d8b878;
+}
+
+.ci-chooser-opt-arrow {
+  color: #707070;
+  font-size: 0.86rem;
+  transition: color 0.12s, transform 0.12s;
+  font-weight: 700;
+  text-align: center;
+}
+.ci-chooser-opt:hover .ci-chooser-opt-arrow {
+  color: #f0f0f0;
+  transform: translateX(2px);
+}
+
+/* Upload-as-reference shortcut button in the empty refs column. */
+.ci-chooser-col-upload {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: rgba(242,196,110,0.16);
+  border: 1px solid rgba(242,196,110,0.40);
+  border-radius: 5px;
+  color: #f0d68c;
+  font-size: 0.84rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  width: 100%;
+}
+.ci-chooser-col-upload:hover {
+  background: rgba(242,196,110,0.28);
+  border-color: rgba(242,196,110,0.65);
+  color: #fff3d8;
+}
+.ci-chooser-col-upload:active { transform: scale(0.985); }
+.ci-chooser-col-upload:disabled {
+  opacity: 0.6; cursor: progress;
+}
+
+/* Footer: "Watch without grading" escape hatch (compact). */
+.ci-chooser-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.ci-chooser-skip {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 5px;
+  color: #d0d0d0;
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ci-chooser-skip:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.35);
+  color: #fff;
+}
+.ci-chooser-skip-hint {
+  font-size: 0.74rem; color: #888;
+  flex: 1;
+}
+
+/* ─── Bug report entry points ─────────────────────────────────────
+   Auto-injected by client/js/BugReport.js into footers and hero
+   bars; viewer.html mounts the floating variant explicitly. */
+
+/* Footer link inherits .site-footer-links a but takes a subtle warm
+   tint so it reads as an action, not a static legal link. */
+.site-footer-bug {
+  color: #f0d68c;
+}
+.site-footer-bug:hover {
+  color: #ffe8a3;
+}
+
+/* Hero-bar pill — same shape as .hero-bar-help (it inherits the class)
+   but without the margin-left:auto, so it sits flush next to the
+   existing "Where are my replays?" pill instead of being shoved right.
+   Warm amber tint keeps it visually distinct from the help pill. */
+.hero-bar-bug {
+  margin-left: 0;
+  text-decoration: none;
+  color: #f0d68c;
+  border-color: rgba(240,214,140,0.30);
+}
+.hero-bar-bug:hover {
+  color: #ffe8a3;
+  border-color: rgba(240,214,140,0.55);
+  background: rgba(240,214,140,0.08);
+}
+@media (max-width: 700px) {
+  .hero-bar-bug span { display: none; }
+  .hero-bar-bug { padding: 5px 8px; }
+}
+
+/* Nav-link variant — used on viewer.html (no footer, no hero bar) where
+   BugReport.mountInNav() drops the entry into the SiteNav's links row.
+   Inherits .site-nav-link sizing/shape; warm amber tint distinguishes
+   it from Home/About/Community. */
+.site-nav-bug {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #f0d68c;
+  background: rgba(240,214,140,0.06);
+  border-color: rgba(240,214,140,0.28);
+}
+.site-nav-bug:hover {
+  color: #ffe8a3 !important;
+  background: rgba(240,214,140,0.14) !important;
+  border-color: rgba(240,214,140,0.55) !important;
+}
+.site-nav-bug svg { display: block; }
+
+/* User-uploaded pro replays sit in the same grid as curated pros. They
+   read as the same kind of artifact — same shape, same race theming —
+   with one calm signal that says "you added this": a thin slate ring
+   outside the race-colored border. Subtle enough to blend; visible
+   enough that the user can pick out their own uploads at a glance. */
+.site-build-card.is-user-build {
+  box-shadow:
+    0 0 0 2px rgba(140,180,210,0.22),
+    0 2px 8px rgba(0,0,0,0.2);
+}
+.site-build-card.is-user-build:hover {
+  box-shadow:
+    0 0 0 2px rgba(140,180,210,0.5),
+    0 4px 16px rgba(0,0,0,0.25),
+    inset 0 0 30px var(--card-glow, rgba(255,255,255,0.04));
+}
+
+/* "Added by you" pill: small attribution on user-uploaded pro cards.
+   Slate-tinted so it pairs with the .is-user-build outline ring;
+   weight + casing kept normal so it reads as a label, not a stamp. */
+.site-card-added-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  margin-left: 6px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: #b0c4d0;
+  background: rgba(140,180,210,0.08);
+  border: 1px solid rgba(140,180,210,0.28);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.site-card-edit-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  color: #d0d0d0;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.site-card-edit-btn:hover {
+  background: rgba(140,180,210,0.10);
+  border-color: rgba(140,180,210,0.45);
+  color: #b0c4d0;
+}
+
+/* User-authored notes block — description, strategy points, tags. Sits
+   between the upgrades row and the replay strip; only renders when the
+   user has actually authored content. */
+.site-card-user-notes {
+  margin: 6px 0 4px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.025);
+  border-left: 0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #c8c8c8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.site-card-user-desc {
+  margin: 0;
+  line-height: 1.4;
+  color: #d8d8d8;
+}
+.site-card-user-points {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #c0c0c0;
+}
+.site-card-user-points li {
+  line-height: 1.35;
+}
+.site-card-user-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.site-card-user-tag {
+  display: inline-flex;
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #b0c4d0;
+  background: rgba(140,180,210,0.08);
+  border: 1px solid rgba(140,180,210,0.22);
+  border-radius: 999px;
+}
+
+/* ── User-build editor modal ──────────────────────────────────
+   Backdrop + centered dialog. Hosted at body level so the .site-build-card
+   overflow:hidden doesn't clip it. Form is plain HTML with bare inputs
+   styled in line with the rest of the site palette. */
+.ub-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ub-editor[hidden] { display: none; }
+
+.ub-editor-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+.ub-editor-box {
+  position: relative;
+  width: min(480px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: #1c1f30;
+  border: 1px solid #363a50;
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #e0e0e0;
+}
+
+.ub-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+.ub-editor-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.4px;
+}
+.ub-editor-close {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #d0d0d0;
+  cursor: pointer;
+}
+.ub-editor-close:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+
+.ub-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+.ub-editor-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #a8a8a8;
+}
+.ub-editor-hint {
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #888;
+  margin-left: 4px;
+}
+.ub-editor-field input[type="text"],
+.ub-editor-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  background: #14172a;
+  border: 1px solid #363a50;
+  border-radius: 6px;
+  color: #e8e8e8;
+  font-family: inherit;
+  font-size: 0.92rem;
+  resize: vertical;
+}
+.ub-editor-field input[type="text"]:focus,
+.ub-editor-field textarea:focus {
+  outline: none;
+  border-color: #5888dd;
+  background: #181c34;
+}
+fieldset.ub-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+fieldset.ub-editor-field input[type="text"] {
+  margin-top: 0;
+}
+
+.ub-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.ub-editor-actions-spacer {
+  flex: 1;
+}
+.ub-editor-btn-unmark {
+  color: #d4915e;
+  border-color: rgba(212,145,94,0.32);
+}
+.ub-editor-btn-unmark:hover {
+  background: rgba(212,145,94,0.10);
+  border-color: rgba(212,145,94,0.55);
+}
+
+/* Destructive delete: calm by default; the .ub-editor-btn-delete-armed
+   class flips it to a hot-red warning state on first click so the user
+   has to confirm intent. Second click within ~4s commits; closeEditor
+   resets the armed state via resetDeleteButton(). */
+.ub-editor-btn-delete {
+  color: #c8624e;
+  border-color: rgba(200,98,78,0.32);
+}
+.ub-editor-btn-delete:hover {
+  background: rgba(200,98,78,0.10);
+  border-color: rgba(200,98,78,0.55);
+}
+.ub-editor-btn-delete-armed,
+.ub-editor-btn-delete-armed:hover {
+  color: #fff;
+  background: #b04030;
+  border-color: #d04030;
+  box-shadow: 0 0 0 2px rgba(208,64,48,0.25);
+}
+
+.ub-editor-btn {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #d0d0d0;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.ub-editor-btn-cancel:hover {
+  background: rgba(255,255,255,0.06);
+}
+.ub-editor-btn-save {
+  color: #f0d68c;
+  border-color: rgba(240,214,140,0.45);
+  background: rgba(240,214,140,0.08);
+}
+.ub-editor-btn-save:hover {
+  background: rgba(240,214,140,0.16);
+  border-color: #f0d68c;
 }

@@ -61,7 +61,11 @@
 </head>
 <body class="site-page">
   <script src="js/SiteNav.js"></script>
-  <script>document.addEventListener('DOMContentLoaded', () => SiteNav.render('community'));</script>
+  <script src="js/BugReport.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => {
+    SiteNav.render('community');
+    window.BugReport && window.BugReport.install();
+  });</script>
 
   <main class="site-content">
     <article class="site-about-page">

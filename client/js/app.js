@@ -2123,6 +2123,7 @@ const Wc3vViewer = class {
           unitDrawPositions: [],
           buildingPositions: [],
           drawnUnits: {},
+          deathFx: [],
           gameTime: 0
         };
       }
@@ -2130,6 +2131,8 @@ const Wc3vViewer = class {
       frameData.nameplateTree.clear();
       frameData.unitDrawPositions.length = 0;
       frameData.buildingPositions.length = 0;
+      if (!frameData.deathFx) frameData.deathFx = [];
+      frameData.deathFx.length = 0;
       for (const k in frameData.drawnUnits) delete frameData.drawnUnits[k];
       frameData.gameTime = gameTime;
 
@@ -2150,6 +2153,10 @@ const Wc3vViewer = class {
       players.forEach(player => {
         player.render(frameData, ctx, playerCtx, utilityCtx, playerStatusCtx, t, gameTime, xScale, yScale, viewOptions);
       });
+
+      // One-shot death FX (queued during the per-unit renderUnit pass) flushed
+      // here so all players' FX render together on top of unit icons.
+      ClientPlayer.drawDeathFxQueue(frameData, playerCtx);
 
       // Nameplates
       if (viewOptions.displayText) {
@@ -2340,6 +2347,7 @@ const Wc3vViewer = class {
         unitDrawPositions: [],
         buildingPositions: [],
         drawnUnits: {},
+        deathFx: [],
         gameTime: 0
       };
     }
@@ -2347,6 +2355,8 @@ const Wc3vViewer = class {
     frameData.nameplateTree.clear();
     frameData.unitDrawPositions.length = 0;
     frameData.buildingPositions.length = 0;
+    if (!frameData.deathFx) frameData.deathFx = [];
+    frameData.deathFx.length = 0;
     for (const k in frameData.drawnUnits) delete frameData.drawnUnits[k];
     frameData.gameTime = gameTime;
 
@@ -2502,6 +2512,10 @@ const Wc3vViewer = class {
         viewOptions
       );
     });
+
+    // One-shot death FX (queued during the per-unit renderUnit pass) flushed
+    // here so all players' FX render together on top of unit icons.
+    ClientPlayer.drawDeathFxQueue(frameData, playerCtx);
 
     // global nameplate pass — all players' unit icons as obstacles in one tree
     if (viewOptions.displayText) {

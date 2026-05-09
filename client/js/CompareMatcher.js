@@ -55,11 +55,19 @@ const CompareMatcher = class {
         const key = `${r.replayId}::${r.playerSlot}`;
         if (seen.has(key)) continue;
         seen.add(key);
+        // Derive opponent race from the FIRST matchup string ("UvO" → "O").
+        // Multi-matchup builds (e.g. ["UvO","UvH"]) lose nuance here, but
+        // the chooser only needs a representative opponent race for the
+        // visual chip; users picking between multi-matchup builds rely on
+        // the dot pattern + build name for finer disambiguation.
+        const firstMatchup = (b.matchups && b.matchups[0]) || '';
+        const oppRace = firstMatchup.length === 3 ? firstMatchup.charAt(2) : null;
         index.push({
           replayId: r.replayId,
           playerSlot: String(r.playerSlot || '1'),
           playerName: r.playerName,
           opponentName: r.opponentName,
+          opponentRace: oppRace,
           map: r.map,
           tournament: r.tournamentId,
           stage: r.stage,
@@ -71,14 +79,23 @@ const CompareMatcher = class {
           buildOpener: b.opener,
           buildGamePlan: b.gamePlan,
           buildArmy: b.army,
+          // Visual hooks for the chooser UI: heroes the build features and
+          // the build description (1-line elevator pitch).
+          heroItemIds: Array.isArray(b.heroItemIds) ? b.heroItemIds.slice(0, 3) : [],
+          heroOpener: b.heroOpener || null,
+          buildDescription: b.description || null,
           isUserReference: false
         });
       }
     }
 
-    // Merge user-flagged references from IndexedDB. Each reference is shaped
-    // to fit the same scoring path; its cachedSummary (built when the user
-    // flagged it) is the equivalent of the manifest's pre-baked summary.json.
+    // Merge user-flagged references from IndexedDB. We expand each
+    // reference replay into ONE ENTRY PER NON-NEUTRAL SLOT — both players
+    // are pros (it's a pro-vs-pro replay), so both can be valid comparison
+    // anchors. A Happy-vs-Moon reference indexes as both "Happy (UD)" and
+    // "Moon (NE)"; the user uploading a UD replay sees Happy, a NE replay
+    // sees Moon. This eliminates the "which slot is the pro?" prompt
+    // entirely and means the user doesn't accidentally pick the wrong one.
     if (this.myReplays && typeof this.myReplays.list === 'function') {
       try {
         const records = await this.myReplays.list();
@@ -90,38 +107,62 @@ const CompareMatcher = class {
           if (!full.cachedSummary) {
             try { full = await this.myReplays.get(rec.id); } catch { full = rec; }
           }
-          const cached = full && full.cachedSummary;
-          if (!cached) continue;
-          const proSlot = String(full.referencePlayerSlot || (cached.players && Object.keys(cached.players)[0]) || '1');
-          const proPlayer = cached.players && cached.players[proSlot];
-          if (!proPlayer) continue;
-          const proRace = proPlayer.race || full.race;
-          const matchups = deriveMatchupsForSlot(cached, proSlot);
+          let cached = full && full.cachedSummary;
+          // Lazy-recover: if cachedSummary is missing (old record, or
+          // SummaryExtract wasn't loaded when the flag was set), compute
+          // it now from parsedJson and write it back. This keeps newly
+          // flagged references discoverable even if the original
+          // setReferenceState call fell through silently.
+          if (!cached && full && full.parsedJson && window.CompareInline && window.CompareInline.buildUserSummary) {
+            try {
+              if (window.CompareInline.ensureMapFoldersManifest) {
+                await window.CompareInline.ensureMapFoldersManifest();
+              }
+              cached = window.CompareInline.buildUserSummary(full);
+              if (cached) {
+                full.cachedSummary = cached;
+                try { await this.myReplays.put(full); } catch {}
+              }
+            } catch (e) {
+              if (typeof console !== 'undefined') console.warn('[CompareMatcher] lazy summary build failed for', rec.id, e);
+            }
+          }
+          if (!cached || !cached.players) continue;
           const replayId = `local::${full.id}`;
           this.localSummaryById.set(replayId, cached);
-          index.push({
-            replayId,
-            playerSlot: proSlot,
-            playerName: proPlayer.name || full.referenceLabel || 'Reference',
-            opponentName: deriveOpponentName(cached, proSlot),
-            map: cached.map || full.mapName,
-            tournament: null,
-            stage: null,
-            fingerprint: cached.fingerprint || null,
-            buildId: replayId,
-            buildName: full.referenceLabel || `Your reference · ${proPlayer.name || ''}`.trim(),
-            buildRace: proRace,
-            buildMatchups: matchups,
-            buildOpener: null,
-            buildGamePlan: null,
-            buildArmy: null,
-            isUserReference: true,
-            sourceRecordId: full.id,
-            // Carry the proPlayer's archetype directly so scoreCandidate can
-            // skip the cheap manifest-tag inference when this entry is a
-            // user reference.
-            referenceArchetype: proPlayer.archetype || null
-          });
+          // Index every non-neutral slot — the reference replay is a
+          // pro-vs-pro game, both players are valid comparison anchors.
+          for (const slot of Object.keys(cached.players)) {
+            const proPlayer = cached.players[slot];
+            if (!proPlayer || proPlayer.isNeutralPlayer) continue;
+            if (!proPlayer.race || proPlayer.race === 'R') continue;
+            const matchups = deriveMatchupsForSlot(cached, slot);
+            const heroIds = (proPlayer.heroBuilds || []).map(h => h && h.itemId).filter(Boolean).slice(0, 3);
+            index.push({
+              replayId,
+              playerSlot: String(slot),
+              playerName: proPlayer.name || full.referenceLabel || 'Reference',
+              opponentName: deriveOpponentName(cached, slot),
+              opponentRace: deriveOpponentRace(cached, slot),
+              map: cached.map || full.mapName,
+              tournament: null,
+              stage: null,
+              fingerprint: cached.fingerprint || null,
+              buildId: `${replayId}::${slot}`,
+              buildName: full.referenceLabel || `Your reference · ${proPlayer.name || ''}`.trim(),
+              buildRace: proPlayer.race,
+              buildMatchups: matchups,
+              buildOpener: null,
+              buildGamePlan: null,
+              buildArmy: null,
+              heroItemIds: heroIds,
+              heroOpener: null,
+              buildDescription: null,
+              isUserReference: true,
+              sourceRecordId: full.id,
+              referenceArchetype: proPlayer.archetype || null
+            });
+          }
         }
       } catch (e) {
         // Swallow — user references are a bonus, not load-bearing.
@@ -203,9 +244,15 @@ const CompareMatcher = class {
   // Ties within each tier broken by metadata score.
   async rankCandidates (userSummary, userSlot, { limit = 10 } = {}) {
     const index = await this.loadIndex();
+    // User references are always retained regardless of metadata score —
+    // they're a small curated set the USER assembled, and hiding one
+    // because it doesn't share a race with the current replay is more
+    // confusing than helpful (they just uploaded it; they expect to see
+    // it). Curated entries keep the score > 0 filter so the chooser
+    // doesn't get spammed with the full manifest on every imperfect match.
     const scored = index
       .map(entry => ({ entry, score: this.scoreCandidate(userSummary, userSlot, entry) }))
-      .filter(c => c.score > 0)
+      .filter(c => c.score > 0 || c.entry.isUserReference)
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
 
@@ -385,6 +432,15 @@ const deriveOpponentName = (cachedSummary, proSlot) => {
     .map(k => cachedSummary.players[k])
     .find(p => p && !p.isNeutralPlayer);
   return (opp && opp.name) || null;
+};
+
+const deriveOpponentRace = (cachedSummary, proSlot) => {
+  if (!cachedSummary || !cachedSummary.players) return null;
+  const opp = Object.keys(cachedSummary.players)
+    .filter(k => k !== String(proSlot))
+    .map(k => cachedSummary.players[k])
+    .find(p => p && !p.isNeutralPlayer && p.race);
+  return (opp && opp.race) || null;
 };
 
 if (typeof module !== 'undefined' && module.exports) {

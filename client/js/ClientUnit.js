@@ -75,7 +75,23 @@ function getBuildingFootprintTiles (itemId, collisionSize) {
 const buildingAlpha = 0.55;
 const minNeighborDrawDistance = 20;
 const pathDecayTime = 1000 * 20;
-const idleDecayTime = 1000 * 2;
+
+// Fade & death detection — tunables.
+// Idle does NOT mean dead. Living units commonly stand still for tens of
+// seconds (peons mining, heroes attacking, units defending), so we hold full
+// opacity well past any normal idle window before we even start fading.
+const IDLE_GRACE_MS = 30 * 1000;
+// PROBABLY_GONE_MS: high-confidence "this unit is dead" threshold. Because
+// the replay is fully parsed up front, we know there are no further records
+// for this unit anywhere in the timeline — that lets us treat extended
+// silence as a death signal instead of guessing each frame.
+const PROBABLY_GONE_MS = 90 * 1000;
+// One-shot death FX duration (game time). Kept in game time so it scales
+// with playback speed and survives scrub-back automatically.
+const DEATH_FX_DURATION_MS = 1500;
+// Stale fade floor — a unit that is silent past IDLE_GRACE but not yet
+// confidently dead fades to this alpha (per type) and holds.
+const STALE_DECAY_FLOOR = { hero: 0.55, worker: 0.65, transport: 0.45, default: 0.55 };
 
 // Path-gap detection — shared by ClientUnit.getInterpolatedPosition and
 // PathTrailRenderer3D so both decide identically where the trail line breaks.
@@ -237,9 +253,62 @@ const ClientUnit = class {
   loadSpellIcons () {
     return this.spellList.map((spellId, index) => {
       const imgSrc = `/assets/wc3icons/${spellId}.jpg`;
-      
+
       return this.loadAsset(imgSrc, `spell-${index}`);
     });
+  }
+
+  // Pre-compute the latest gameTime we have any positional / movement record
+  // for this unit. Server `path` is normally the strongest signal; some units
+  // also have moveHistory entries. We fall back to spawnTime so newly-spawned
+  // units that haven't moved yet aren't immediately classified stale.
+  _computeInitialActivityTime () {
+    let t = this.spawnTime || 0;
+    if (this.path && this.path.length) {
+      const last = this.path[this.path.length - 1];
+      if (last && typeof last.gameTime === 'number' && last.gameTime > t) {
+        t = last.gameTime;
+      }
+    }
+    if (this.moveHistory && this.moveHistory.length) {
+      const last = this.moveHistory[this.moveHistory.length - 1];
+      if (last && typeof last.gameTime === 'number' && last.gameTime > t) {
+        t = last.gameTime;
+      }
+    }
+    return t;
+  }
+
+  // ClientPlayer calls this during selection-stream enrichment to record any
+  // gameTime where this unit (or a unit of the same type) was selected by the
+  // owning player. Selection is a strong "still alive" signal — over-attributing
+  // alive across instances of the same type is the safer error mode here.
+  recordActivity (gameTime) {
+    if (typeof gameTime !== 'number') return;
+    if (this._lastActivityTime == null || gameTime > this._lastActivityTime) {
+      this._lastActivityTime = gameTime;
+    }
+  }
+
+  // Per-type stale fade floor — how dim a "silent but probably alive" unit
+  // can get before we hold there. Heroes and workers stay more visible than
+  // generic units because they're the most identity-critical icons on the map.
+  _staleFadeFloor () {
+    if (this.meta && this.meta.hero) return STALE_DECAY_FLOOR.hero;
+    if (this.meta && this.meta.worker) return STALE_DECAY_FLOOR.worker;
+    if (this.isTransport) return STALE_DECAY_FLOOR.transport;
+    return STALE_DECAY_FLOOR.default;
+  }
+
+  // Death-FX label: short tag drawn above the icon when we're confident a
+  // unit has died. Heroes get a louder label since they're the rare/expensive
+  // ones a viewer most wants to notice.
+  _deathFxLabel () {
+    if (this.meta && this.meta.hero) return 'HERO DOWN';
+    if (this.sacrificed) return 'SACRIFICED';
+    if (this.destroyedAt) return 'EXPIRED';
+    if (this.destroyedByBuilding) return 'CONSUMED';
+    return 'LOST';
   }
 
   setup () {
@@ -250,6 +319,18 @@ const ClientUnit = class {
     };
 
     this.decayLevel = 1;
+
+    // Last gameTime we have *any* signal that this unit was alive: a path
+    // record (movement / position update) or a move history entry. ClientPlayer
+    // may bump this further when it cross-references the selection stream. Used
+    // by update() to drive the fade + death-FX state machine. Null means we
+    // don't track lifetime for this unit (neutrals, illusions, buildings, etc).
+    this._lastActivityTime = this._computeInitialActivityTime();
+    // gameTime when the one-shot death FX began (null when the FX is not
+    // currently playing). Set once the unit transitions into "confirmed dead".
+    this._deathFxStartTime = null;
+    // Mirrors _deathFxStartTime != null for cheap reads in renderUnit().
+    this._deathFxActive = false;
 
     this.fullName = this.getFullName();
     this.itemIdHash = this.itemId1 ?
@@ -449,19 +530,38 @@ const ClientUnit = class {
 
   update (gameTime, dt) {
     if (gameTime < this.readyTime) {
+      // scrub-back before this unit even existed: clear any stale FX state
+      this._deathFxStartTime = null;
+      this._deathFxActive = false;
+      this._destroyed = false;
       return;
     }
 
-    // destroyed summons should not render after their expiry
+    // Definitive server-side death signals: summon expiry (destroyedAt) and
+    // permanent wisp consumption (destroyedByBuilding). Both get the same FX
+    // window so the visual is consistent with heuristic deaths below.
     if (this.destroyedAt && gameTime >= this.destroyedAt) {
+      const fxAge = gameTime - this.destroyedAt;
+      if (fxAge < DEATH_FX_DURATION_MS) {
+        const floor = this._staleFadeFloor();
+        this.decayLevel = Math.max(0, floor * (1 - fxAge / DEATH_FX_DURATION_MS));
+        this._deathFxStartTime = this.destroyedAt;
+        this._deathFxActive = true;
+        this._destroyed = false;
+        return;
+      }
       this._destroyed = true;
+      this._deathFxActive = false;
       return;
     }
 
-    // permanently consumed wisps (NE ancients) — old replays may lack destroyedAt
-    // when destroyedAt IS set, the time-based check above handles it (wisp paths back first)
+    // Permanently consumed wisps (NE ancients) — old replays may lack
+    // destroyedAt. The wisp's pre-summon life isn't tracked as a normal unit
+    // here, so treat the flag as "always destroyed" (preserves prior behavior).
     if (this.destroyedByBuilding && !this.destroyedAt) {
       this._destroyed = true;
+      this._deathFxActive = false;
+      this._deathFxStartTime = null;
       return;
     }
 
@@ -472,6 +572,24 @@ const ClientUnit = class {
 
     // early exit for buildings
     if (this.isBuilding) {
+      return;
+    }
+
+    // Neutral creeps hold their setup() baseline (0.75). They don't get the
+    // idle/death pipeline — neutral group visibility is managed by camp-level
+    // hide rules and overlap fading in drawResolvedUnits.
+    if (this.isNeutralPlayer) {
+      this.decayLevel = 0.75;
+      this._deathFxStartTime = null;
+      this._deathFxActive = false;
+      return;
+    }
+
+    // Illusions are never rendered; skip the lifetime/FX pipeline so we don't
+    // queue death FX at a position that won't be drawn anyway.
+    if (this.isIllusion) {
+      this._deathFxStartTime = null;
+      this._deathFxActive = false;
       return;
     }
 
@@ -490,29 +608,74 @@ const ClientUnit = class {
 
     const isActiveScout = this.scoutInfo && !this._scoutEnded && gameTime >= this.scoutInfo.gameTime;
 
-    if (currentMoveRecord) {
-      if ((gameTime - currentMoveRecord.gameTime) > idleDecayTime) {
-        if (isActiveScout) {
-          // active scouts fade gradually but never fully disappear
-          const scoutAge = gameTime - this.scoutInfo.gameTime;
-          const fadeProgress = Math.min(1, scoutAge / 30000);
-          this.decayLevel = Math.max(0.6 - fadeProgress * 0.3, this.decayLevel);
-          return;
-        }
+    // Active scouts keep their existing 30s gradual-fade lifecycle. Skip the
+    // generic fade/death pipeline so the scout label and minimum visibility
+    // floor still drive their look.
+    if (isActiveScout) {
+      const lastMoveT = currentMoveRecord ? currentMoveRecord.gameTime : this.scoutInfo.gameTime;
+      if ((gameTime - lastMoveT) > 2000) {
+        const scoutAge = gameTime - this.scoutInfo.gameTime;
+        const fadeProgress = Math.min(1, scoutAge / 30000);
+        this.decayLevel = Math.max(0.6 - fadeProgress * 0.3, this.decayLevel);
+      } else {
+        this.resetDecay();
+      }
+      this._deathFxActive = false;
+      return;
+    }
 
-        // compute correct decay for the full idle duration — handles large
-        // time skips (scrub/jump) where the unit should already be faded
-        const idleDuration = gameTime - currentMoveRecord.gameTime - idleDecayTime;
-        const amount = this.meta.hero ? 0.0015 : 0.0035;
-        const targetDecay = Math.max(this.minDecayLevel, 1.0 - amount * (idleDuration / 16.67));
+    // Lifetime-aware fade. _lastActivityTime is the latest gameTime we have
+    // any signal that this unit was alive (path / moveHistory / selection).
+    // Replay is fully parsed up front, so silence past PROBABLY_GONE_MS is a
+    // high-confidence death signal, not a guess.
+    //
+    // Workers and transports opt out of the death pipeline — they routinely
+    // go silent for long stretches (peons mining gold, transports parked),
+    // and their genuine "death" paths are already covered by the explicit
+    // server signals above (consumed/destroyedByBuilding) or replay end.
+    // They still get the gentle stale fade so they look settled in place.
+    const skipDeathFx = !!(this.meta && this.meta.worker) || !!this.isTransport || !!this.isInferred;
+    const lastActivity = this._lastActivityTime;
+    if (lastActivity != null) {
+      const silentFor = gameTime - lastActivity;
+      const deathTime = lastActivity + PROBABLY_GONE_MS;
 
-        // snap to target if more faded than current; otherwise normal per-frame decay
-        this.decayLevel = Math.min(this.decayLevel, targetDecay);
+      // Past the FX window: snap-destroy and stop drawing.
+      if (!skipDeathFx && gameTime >= deathTime + DEATH_FX_DURATION_MS) {
+        this._destroyed = true;
+        this._deathFxActive = false;
+        return;
+      }
+
+      // Inside the death FX window: hold a fading ghost; renderUnit will
+      // emit the FX entry while it draws this frame.
+      if (!skipDeathFx && gameTime >= deathTime) {
+        const fxAge = gameTime - deathTime;
+        const fxProgress = fxAge / DEATH_FX_DURATION_MS;
+        // ghost icon decays from the stale floor down to ~0 over the window
+        const floor = this._staleFadeFloor();
+        this.decayLevel = Math.max(0, floor * (1 - fxProgress));
+        this._deathFxStartTime = deathTime;
+        this._deathFxActive = true;
+        return;
+      }
+
+      // Stale window: gentle fade toward the per-type floor, no further.
+      if (silentFor > IDLE_GRACE_MS) {
+        const floor = this._staleFadeFloor();
+        const stalePhase = Math.min(1, (silentFor - IDLE_GRACE_MS) / (PROBABLY_GONE_MS - IDLE_GRACE_MS));
+        const target = 1.0 - (1.0 - floor) * stalePhase;
+        // never inflate alpha above current; never fall below floor
+        this.decayLevel = Math.max(floor, Math.min(this.decayLevel, target));
+        this._deathFxStartTime = null;
+        this._deathFxActive = false;
         return;
       }
     }
 
-    // we have an active record so reset the units visual decay
+    // Active or within grace window — fully visible.
+    this._deathFxStartTime = null;
+    this._deathFxActive = false;
     this.resetDecay();
   }
 
@@ -661,6 +824,22 @@ const ClientUnit = class {
       count: 1,
       drawSlots: []
     });
+
+    // Death FX: queue a one-shot ring + label at the unit's last known
+    // position while the FX window is active. Drawn after the unit pass so
+    // the ring renders on top of the icon's resting alpha.
+    if (this._deathFxActive && this._deathFxStartTime != null && frameData.deathFx) {
+      frameData.deathFx.push({
+        x: drawX,
+        y: drawY,
+        ageMs: gameTime - this._deathFxStartTime,
+        durationMs: DEATH_FX_DURATION_MS,
+        iconSize: iconSize,
+        playerColor: this.playerColor,
+        label: this._deathFxLabel(),
+        isHero: !!(this.meta && this.meta.hero)
+      });
+    }
   }
 
   renderLevelPins (ctx, transform, gameTime, xScale, yScale, viewOptions, frameData) {

@@ -212,6 +212,67 @@ const Drawing = class {
     ctx.strokeStyle = colorMap.black;
   }
 
+  // One-shot death FX: an expanding player-colored ring + floating label
+  // anchored at the unit's last known position. `ageMs` is gameTime since
+  // the FX began, `durationMs` is the full window. ageMs may be slightly out
+  // of [0, durationMs] under fast scrubbing; we clamp.
+  static drawDeathFx (ctx, fx) {
+    const {
+      x, y, ageMs, durationMs, iconSize, playerColor, label, isHero
+    } = fx;
+    const t = Math.max(0, Math.min(1, ageMs / durationMs));
+    const halfIcon = iconSize / 2;
+
+    ctx.save();
+
+    // Expanding ring: starts at icon edge, grows ~1.5x icon size. Alpha
+    // peaks mid-window then fades out.
+    const ringR = halfIcon + (iconSize * 0.85) * t;
+    const ringAlpha = (1 - Math.abs(t - 0.35) / 0.65) * 0.85;
+    if (ringAlpha > 0.01) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, ringAlpha));
+      ctx.lineWidth = isHero ? 4 : 3;
+      ctx.strokeStyle = playerColor || '#FF5252';
+      ctx.beginPath();
+      ctx.arc(x, y, ringR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Inner darkening disc to imply the unit is "gone" — fades fastest.
+      const discAlpha = (1 - t) * 0.35;
+      if (discAlpha > 0.01) {
+        ctx.globalAlpha = discAlpha;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(x, y, halfIcon, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Floating label drifts upward and fades. Heroes use larger, redder text.
+    if (label) {
+      const drift = 24 * t;
+      const labelY = y - halfIcon - 12 - drift;
+      const labelAlpha = Math.max(0, 1 - t * 1.1);
+      ctx.globalAlpha = labelAlpha;
+      ctx.font = isHero ? 'bold 14px sans-serif' : 'bold 12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const tw = ctx.measureText(label).width + 12;
+      const th = isHero ? 20 : 18;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(x - tw / 2, labelY - th / 2, tw, th);
+
+      ctx.fillStyle = isHero ? '#FF6B6B' : '#FFD7D7';
+      ctx.fillText(label, x, labelY);
+    }
+
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
   static drawCountBadge (ctx, count, centerX, centerY, playerColor) {
     if (count < 2) return;
     const radius = 11;

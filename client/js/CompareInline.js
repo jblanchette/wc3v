@@ -17,7 +17,9 @@ const CompareInline = class {
     this.rootEl = rootEl;
     this.userRecord = userRecord;     // {id, parsedJson, race, mapName, ...}
     this.myReplays = myReplays;
-    this.matcher = new window.CompareMatcher();
+    // Pass the MyReplays instance so the matcher can fold IDB-flagged
+    // reference replays into its candidate pool alongside curated builds.
+    this.matcher = new window.CompareMatcher(myReplays);
     this.userSummary = null;          // built lazily from parsedJson
     this.userSlot = null;             // string; first non-neutral slot
     this.candidates = [];             // [{ entry, score }]
@@ -60,7 +62,10 @@ const CompareInline = class {
         this._renderEmpty('Couldn\'t find your player slot in this replay.');
         return;
       }
-      this.candidates = await this.matcher.rankCandidates(this.userSummary, this.userSlot, { limit: 8 });
+      // Generous limit so the chooser can show all curated race-relevant
+      // entries plus the user's full reference library. The chooser's
+      // option list already scrolls if too tall.
+      this.candidates = await this.matcher.rankCandidates(this.userSummary, this.userSlot, { limit: 30 });
       this.topCandidateScore = (this.candidates[0] && this.candidates[0].score) || 0;
       // Detect self-match (re-upload of a pro replay) ahead of any other
       // pick so we can render a different label and snap the grade to 100.
@@ -72,25 +77,53 @@ const CompareInline = class {
         ? null
         : await this.matcher.detectProInUpload(this.userSummary, this.userSlot);
 
+      // Self-match short-circuits everything. Same .w3g content == 100/100.
       if (this.selfMatchEntry) {
         this.matchConfidence = 'auto';
         await this._compareWith(this.selfMatchEntry);
-      } else if (this.candidates.length) {
-        // candidates come back sorted: graded+sameBuild > graded+divergent >
-        // ungraded+sameBuild > ungraded+divergent. The top entry is the best
-        // pick the matcher can offer. Confidence label reflects which tier
-        // it's in:
-        //   - clears 85 + grades + same build  → 'auto'
-        //   - grades + same build (any score)  → 'graded'
-        //   - grades + divergent build         → 'divergent' (no same-build
-        //                                        graded option exists)
-        //   - doesn't grade                    → 'low' (metadata fallback)
-        const top = this.candidates[0];
-        if (top.grades && !top.divergent && top.score >= 85) this.matchConfidence = 'auto';
-        else if (top.grades && !top.divergent)               this.matchConfidence = 'graded';
-        else if (top.grades && top.divergent)                this.matchConfidence = 'divergent';
-        else                                                  this.matchConfidence = 'low';
-        await this._compareWith(top.entry);
+        return;
+      }
+
+      // Honor a stored user choice from a previous compare on this record.
+      // proKey: 'none'                            → user explicitly opted out
+      //         'manifest::<replayId>::<slot>'    → curated entry
+      //         'local::<idbId>::<slot>'          → user's reference replay
+      const storedKey = this.userRecord.lastCompare && this.userRecord.lastCompare.proKey;
+      if (storedKey === 'none') {
+        // User previously picked "Watch without grading" — reopen the
+        // chooser so they can change their mind, but skip auto-pick.
+        if (this.candidates.length) {
+          this._renderChooser({ reason: 'previous-skip' });
+        } else {
+          this._renderNoCandidates();
+        }
+        return;
+      }
+      if (storedKey) {
+        const stored = findEntryByProKey(storedKey, this.candidates);
+        if (stored) {
+          this.matchConfidence = 'manual';
+          await this._compareWith(stored);
+          return;
+        }
+        // Stored entry no longer in candidate pool (reference deleted, etc.)
+        // — fall through to fresh auto-pick logic.
+      }
+
+      // No stored choice: try strict auto-pick. Returns non-null only when a
+      // candidate is structurally exact (race + matchup + archetype + grades
+      // + non-divergent; map allowed to differ).
+      const exactPick = await this.matcher.autoPick(this.userSummary, this.userSlot);
+      if (exactPick) {
+        this.matchConfidence = 'auto';
+        await this._compareWith(exactPick);
+        return;
+      }
+
+      // Imperfect match: render the chooser. User explicitly picks a pro,
+      // a reference, or "watch without grading."
+      if (this.candidates.length) {
+        this._renderChooser();
       } else {
         this._renderNoCandidates();
       }
@@ -135,9 +168,10 @@ const CompareInline = class {
     this._renderReport(report, proEntry, proSummary);
 
     // Notify host (drawer caches lastCompare on the IDB record + updates
-    // the card grade badge).
+    // the card grade badge). The third arg is the proKey — host writes
+    // it into lastCompare so the next bootstrap can restore the choice.
     if (this.onResult) {
-      try { this.onResult(report, proEntry); } catch (e) { /* host owns errors */ }
+      try { this.onResult(report, proEntry, buildProKey(proEntry)); } catch (e) { /* host owns errors */ }
     }
     if (this.onTitleChange) {
       const mu = (proEntry.buildMatchups && proEntry.buildMatchups[0]) || '';
@@ -193,6 +227,364 @@ const CompareInline = class {
       </div>
     `;
     this.rootEl.querySelector('.ci-advanced-btn').addEventListener('click', () => this._openAdvanced());
+  }
+
+  // Forced-choice chooser shown when no curated build is a structural exact
+  // match for the user's replay. Players were getting confused by loose
+  // auto-picks ("but the build doesn't match my play!"); this view makes
+  // the choice deliberate and explicit.
+  //
+  // Layout (top to bottom):
+  //   1. Headline + reasoning ("we couldn't find an exact pro match…")
+  //   2. Recommended card — the top-ranked candidate with a per-dimension
+  //      "why" checklist (race ✓ matchup ✓ archetype ⚠ map ✗) so the user
+  //      sees exactly which dimensions matched.
+  //   3. Two columns:
+  //        Your references — IDB records flagged isReference, scored same
+  //                          way as curated. Empty state CTAs upload.
+  //        Curated builds  — manifest-backed pros.
+  //   4. "Watch without grading" — persists proKey='none' on the record so
+  //      reopening the drawer skips auto-pick.
+  _renderChooser (options = {}) {
+    this._clearFooter();
+    this._activeView = 'chooser';
+    if (!this._chooserSort) this._chooserSort = 'match';
+    const u = this.userSummary.players[this.userSlot] || {};
+    const userMu = matchupString(this.userSummary, this.userSlot);
+
+    // The recommended card always uses match-score order — it's "the
+    // single best fit" by definition. The columns include EVERY candidate
+    // (refs + curated) regardless of whether one is also the recommended;
+    // otherwise a user uploading their first reference into a column with
+    // no other competition would see it promoted to recommended and the
+    // refs column would lie ("No references yet"). Slight redundancy
+    // beats a misleading empty state.
+    const top = this.candidates[0];
+    const refs = sortChooserItems(this.candidates.filter(c => c.entry.isUserReference), this._chooserSort);
+    const curated = sortChooserItems(this.candidates.filter(c => !c.entry.isUserReference), this._chooserSort);
+
+    const previousSkipBanner = options.reason === 'previous-skip' ? `
+      <div class="ci-chooser-prevbanner">
+        You previously picked <strong>Watch without grading</strong> for this replay. Pick a comparison below to grade it, or close to keep it ungraded.
+      </div>
+    ` : '';
+
+    const sortChip = (key, label) => `
+      <button type="button"
+              class="ci-chooser-sort-chip ${this._chooserSort === key ? 'ci-chooser-sort-chip-active' : ''}"
+              data-sort="${escapeAttr(key)}"
+              aria-pressed="${this._chooserSort === key ? 'true' : 'false'}">${escapeHtml(label)}</button>
+    `;
+
+    this.rootEl.innerHTML = `
+      <div class="ci-chooser">
+        <header class="ci-chooser-head">
+          <h2 class="ci-chooser-title">Pick a comparison</h2>
+          <p class="ci-chooser-sub">
+            We didn't find a pro replay in our curated library that exactly matches your <strong>${escapeHtml(prettyArchetype(u.archetype))}</strong> ${escapeHtml(u.race || '?')}${userMu ? ' (' + escapeHtml(userMu) + ')' : ''} game. Pick the closest pro, use one of your reference replays, or skip grading.
+          </p>
+        </header>
+        ${previousSkipBanner}
+        ${top ? this._chooserRecommendedHtml(top) : ''}
+        <div class="ci-chooser-sortbar" role="toolbar" aria-label="Sort options">
+          <span class="ci-chooser-sort-label">Sort</span>
+          ${sortChip('match', 'Best match')}
+          ${sortChip('map', 'Map')}
+          ${sortChip('pro', 'Pro name')}
+        </div>
+        <div class="ci-chooser-cols">
+          ${this._chooserColumnHtml('Your references', refs, true)}
+          ${this._chooserColumnHtml('Curated builds', curated, false)}
+        </div>
+        <div class="ci-chooser-foot">
+          <button class="ci-chooser-skip" type="button" data-action="skip">
+            Watch without grading
+          </button>
+          <span class="ci-chooser-skip-hint">Closes this drawer with no comparison saved. You can re-open it later.</span>
+        </div>
+      </div>
+    `;
+
+    // Wire option clicks (recommended card + each column item).
+    this.rootEl.querySelectorAll('[data-pro-key]').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.proKey;
+        const entry = findEntryByProKey(key, this.candidates);
+        if (!entry) return;
+        this.matchConfidence = 'manual';
+        this._compareWith(entry);
+      });
+    });
+    const skipBtn = this.rootEl.querySelector('[data-action="skip"]');
+    if (skipBtn) skipBtn.addEventListener('click', () => this._skipCompare());
+
+    // Sort chip clicks — change state, re-render in place. Doesn't touch
+    // candidates or the matcher; pure display sort.
+    this.rootEl.querySelectorAll('.ci-chooser-sort-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        this._chooserSort = chip.dataset.sort;
+        this._renderChooser(options);
+      });
+    });
+
+    // Upload-reference button in the empty refs column. Same parser as
+    // the homepage flow but auto-tags the result as a reference (we know
+    // the user's intent because they clicked from the references column).
+    const uploadBtn = this.rootEl.querySelector('[data-action="upload-reference"]');
+    if (uploadBtn) uploadBtn.addEventListener('click', () => this._uploadReferenceFromChooser(uploadBtn));
+  }
+
+  // In-chooser shortcut for adding a reference replay — saves the user a
+  // round trip back to the homepage. Picks file → parses → marks as
+  // reference → re-bootstraps the chooser so the new entry appears.
+  // Drives the existing #parse-overlay (z-index 9999, sits above the
+  // compare drawer at 9001) so the user sees real parse progress instead
+  // of a static "Saving…" button label.
+  async _uploadReferenceFromChooser (btnEl) {
+    if (!window.UploadManager || !this.myReplays) {
+      alert('Upload subsystem not loaded. Refresh and try again.');
+      return;
+    }
+    btnEl.disabled = true;
+    const originalText = btnEl.textContent;
+    btnEl.textContent = 'Pick a .w3g file…';
+    const overlay = parseOverlayController();
+    try {
+      const uploader = new window.UploadManager({ myReplays: this.myReplays });
+      // Show the parse overlay on the first progress event (which fires
+      // after the user picks a file). Same pattern as the homepage flow.
+      uploader.onProgress = (evt) => overlay.update(evt);
+      const result = await uploader.pickAndParse();
+      overlay.hide();
+      if (!result) { btnEl.disabled = false; btnEl.textContent = originalText; return; }
+      // No slot prompt — both players in a reference replay are pros and
+      // the matcher will index both for future comparisons.
+      await this.myReplays.setReferenceState(result.record.id, { isReference: true });
+      try { document.dispatchEvent(new CustomEvent('wc3v:my-replays-changed', { detail: { addedId: result.record.id, asReference: true } })); } catch {}
+      // Re-bootstrap so the new reference shows up in the candidate pool.
+      this.matcher.invalidate();
+      await this.bootstrap();
+    } catch (e) {
+      console.error('[CompareInline] reference upload failed:', e);
+      overlay.hide();
+      btnEl.disabled = false;
+      btnEl.textContent = originalText;
+      alert('Upload failed: ' + (e.message || e));
+    }
+  }
+
+  // Recommended card — compact horizontal layout: race chip + name on the
+  // left, hero icons + match-dimension chips on the right, single-line
+  // check summary, CTA on the same row. Aim: ~80px tall total so the rest
+  // of the chooser fits above the fold.
+  _chooserRecommendedHtml (annotated) {
+    const e = annotated.entry;
+    const u = this.userSummary.players[this.userSlot] || {};
+    const userMu = matchupString(this.userSummary, this.userSlot);
+    const proKey = buildProKey(e);
+    const refTag = e.isUserReference
+      ? `<span class="ci-chooser-rec-tag ci-chooser-rec-tag-ref">★ Reference</span>`
+      : `<span class="ci-chooser-rec-tag">Curated</span>`;
+    const muLabel = (e.buildMatchups && e.buildMatchups[0]) || '';
+    const buildLabel = e.buildName || '';
+    const recMap = resolveMap(e.map);
+    const mapLabel = recMap.displayName && recMap.displayName !== 'Unknown map' ? `· ${recMap.displayName}` : '';
+    const opp = e.opponentName ? ` vs ${e.opponentName}` : '';
+    const heroes = (e.heroItemIds || []).slice(0, 3);
+    const heroPortraits = heroes.length
+      ? `<span class="ci-chooser-rec-heroes" aria-label="Hero picks">
+           ${heroes.map(h => `<img class="ci-chooser-rec-hero" src="${escapeAttr(iconUrl(h))}" alt="" loading="lazy" onerror="this.classList.add('ci-rec-hero-fail')"/>`).join('')}
+         </span>`
+      : '';
+    const dotsHtml = chooserDimensionDots(e, u, userMu, this.userSummary, annotated);
+
+    const proRaceIcon = RACE_ICON[e.buildRace]
+      ? `<img class="ci-chooser-rec-race race-${escapeAttr(e.buildRace)}" src="${escapeAttr(raceIconUrl(e.buildRace))}" alt="${escapeAttr(RACE_LONG[e.buildRace] || e.buildRace)}" title="${escapeAttr(RACE_LONG[e.buildRace] || e.buildRace)}" onerror="this.classList.add('ci-chooser-rec-race-fail')"/>`
+      : '<span class="ci-chooser-rec-race ci-chooser-rec-race-fail" aria-hidden="true"></span>';
+    return `
+      <button class="ci-chooser-rec race-${escapeAttr(e.buildRace || '?')}" data-pro-key="${escapeAttr(proKey)}" type="button">
+        <div class="ci-chooser-rec-row">
+          <span class="ci-chooser-rec-eyebrow">RECOMMENDED</span>
+          ${proRaceIcon}
+          <span class="ci-chooser-rec-meta">
+            <span class="ci-chooser-rec-name">${escapeHtml(e.playerName || '?')}<span class="ci-chooser-rec-opp">${escapeHtml(opp)}</span></span>
+            <span class="ci-chooser-rec-sub">${escapeHtml([muLabel, buildLabel].filter(Boolean).join(' · '))}${escapeHtml(mapLabel)}</span>
+          </span>
+          ${heroPortraits}
+          <span class="ci-chooser-rec-dots" aria-label="Match summary">${dotsHtml}</span>
+          ${refTag}
+          <span class="ci-chooser-rec-cta">Compare to this →</span>
+        </div>
+      </button>
+    `;
+  }
+
+  // One column of the chooser ("Your references" or "Curated builds").
+  // Two render modes:
+  //   - Flat (sort=match or sort=pro): one option row per item.
+  //   - Map-grouped (sort=map): items grouped by map name, each group
+  //     rendered with a 56×40 map header image + map name + count, then
+  //     option rows under it (with hideMap=true so per-row map info is
+  //     suppressed since the header already says it).
+  _chooserColumnHtml (label, items, isRefColumn) {
+    const colCls = isRefColumn ? 'ci-chooser-col ci-chooser-col-ref' : 'ci-chooser-col ci-chooser-col-curated';
+    const headIcon = isRefColumn
+      ? '<span class="ci-chooser-col-icon ci-chooser-col-icon-ref" aria-hidden="true">★</span>'
+      : '<span class="ci-chooser-col-icon ci-chooser-col-icon-curated" aria-hidden="true">◆</span>';
+    const head = `
+      <header class="ci-chooser-col-head">
+        ${headIcon}
+        <span class="ci-chooser-col-label">${escapeHtml(label)}</span>
+        <span class="ci-chooser-col-count">${items.length}</span>
+      </header>
+    `;
+    if (!items.length) {
+      const empty = isRefColumn
+        ? `<div class="ci-chooser-col-empty ci-chooser-col-empty-ref">
+             <div class="ci-chooser-col-empty-title">★ No reference replays yet</div>
+             <div class="ci-chooser-col-empty-body">Drop a pro replay (e.g. a Happy or Moon ladder game) and we'll grade your future games against it.</div>
+             <button class="ci-chooser-col-upload" type="button" data-action="upload-reference">＋ Upload reference replay</button>
+           </div>`
+        : `<div class="ci-chooser-col-empty">
+             <div class="ci-chooser-col-empty-title">No curated builds for this matchup</div>
+             <div class="ci-chooser-col-empty-body">We add new pros regularly. Try a reference replay below.</div>
+           </div>`;
+      return `<div class="${colCls}">${head}${empty}</div>`;
+    }
+    const body = this._chooserSort === 'map'
+      ? this._chooserMapGroupedHtml(items)
+      : `<div class="ci-chooser-col-list">${items.map(c => this._chooserOptionHtml(c)).join('')}</div>`;
+    return `<div class="${colCls}">${head}${body}</div>`;
+  }
+
+  // Group items by NORMALIZED map name (so "Autumn Leaves v2.0" and
+  // "AutumnLeaves_v2.0" merge into one "Autumn Leaves" group). Within
+  // each group, sort by pro name. Header shows the map's gridmap.jpg as
+  // a big (56×40) thumbnail.
+  _chooserMapGroupedHtml (items) {
+    const groups = new Map();
+    for (const item of items) {
+      const map = resolveMap(item.entry.map);
+      const key = map.displayName || 'Unknown map';
+      if (!groups.has(key)) groups.set(key, { displayName: key, iconUrl: map.iconUrl, items: [] });
+      groups.get(key).items.push(item);
+    }
+    const sortedGroups = Array.from(groups.values())
+      .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' }));
+    return sortedGroups.map(group => {
+      const sorted = group.items.slice().sort((a, b) =>
+        String(a.entry.playerName || '').localeCompare(String(b.entry.playerName || ''), undefined, { sensitivity: 'base' })
+      );
+      const headerIcon = group.iconUrl
+        ? `<img class="ci-chooser-mapgroup-icon" src="${escapeAttr(group.iconUrl)}" alt="" loading="lazy" onerror="this.classList.add('ci-chooser-mapgroup-icon-fail')"/>`
+        : '<span class="ci-chooser-mapgroup-icon ci-chooser-mapgroup-icon-fail" aria-hidden="true"></span>';
+      const rows = sorted.map(c => this._chooserOptionHtml(c, true)).join('');
+      return `
+        <section class="ci-chooser-mapgroup">
+          <header class="ci-chooser-mapgroup-head">
+            ${headerIcon}
+            <div class="ci-chooser-mapgroup-meta">
+              <div class="ci-chooser-mapgroup-name">${escapeHtml(group.displayName)}</div>
+              <div class="ci-chooser-mapgroup-count">${sorted.length} ${sorted.length === 1 ? 'pro' : 'pros'}</div>
+            </div>
+          </header>
+          <div class="ci-chooser-mapgroup-list">${rows}</div>
+        </section>
+      `;
+    }).join('');
+  }
+
+  // Option row — single horizontal line, ~36px tall. The pro's own race
+  // chip was dropped: it always matches the user's race for the entries
+  // that should reasonably appear, and the dimension dots already say it
+  // for those that don't. What's actually useful: the OPPONENT'S race
+  // icon (visual recognition) and, when not in map-grouped mode, a small
+  // map icon + name on the sub-line.
+  //
+  // hideMap: when true (set by the map-grouped renderer), drops the map
+  // icon + name from the sub-line because the section header already
+  // shows them. Sub-line then carries just the build name.
+  _chooserOptionHtml (annotated, hideMap = false) {
+    const e = annotated.entry;
+    const proKey = buildProKey(e);
+    const u = this.userSummary.players[this.userSlot] || {};
+    const userMu = matchupString(this.userSummary, this.userSlot);
+    const buildLabel = e.buildName || '';
+
+    const dotsHtml = chooserDimensionDots(e, u, userMu, this.userSummary, annotated);
+    const refStar = e.isUserReference
+      ? `<span class="ci-chooser-opt-ref" title="Your reference replay">★</span>`
+      : '';
+
+    const oppRace = e.opponentRace || (e.buildMatchups && e.buildMatchups[0] && e.buildMatchups[0].length === 3 ? e.buildMatchups[0].charAt(2) : null);
+    const oppLabel = oppRace ? (RACE_LONG[oppRace] || oppRace) : 'unknown';
+    const oppIcon = oppRace && RACE_ICON[oppRace]
+      ? `<img class="ci-chooser-opt-vs-icon race-${escapeAttr(oppRace)}" src="${escapeAttr(raceIconUrl(oppRace))}" alt="vs ${escapeAttr(oppLabel)}" title="Pro played vs ${escapeAttr(oppLabel)}" onerror="this.classList.add('ci-chooser-opt-vs-icon-fail')"/>`
+      : `<span class="ci-chooser-opt-vs-icon ci-chooser-opt-vs-icon-fail" title="vs unknown race" aria-hidden="true"></span>`;
+    const vsChip = `
+      <span class="ci-chooser-opt-vs" aria-hidden="true">vs</span>
+      ${oppIcon}
+    `;
+
+    let subContent;
+    if (hideMap) {
+      // In map-grouped mode the header already names the map. Sub-line
+      // just shows the build label (or empty if none) so each row keeps
+      // a consistent height.
+      subContent = buildLabel ? escapeHtml(buildLabel) : '<span class="ci-chooser-opt-sub-empty">—</span>';
+    } else {
+      const map = resolveMap(e.map);
+      const mapIcon = map.iconUrl
+        ? `<img class="ci-chooser-opt-mapicon" src="${escapeAttr(map.iconUrl)}" alt="" loading="lazy" onerror="this.classList.add('ci-chooser-opt-mapicon-fail')"/>`
+        : '';
+      subContent = `
+        ${mapIcon}
+        <span class="ci-chooser-opt-mapname">${escapeHtml(map.displayName)}</span>
+      `;
+    }
+
+    return `
+      <button class="ci-chooser-opt" data-pro-key="${escapeAttr(proKey)}" type="button">
+        ${vsChip}
+        <span class="ci-chooser-opt-text">
+          <span class="ci-chooser-opt-name">
+            ${refStar}${escapeHtml(e.playerName || '?')}
+            ${buildLabel && !hideMap ? `<span class="ci-chooser-opt-build">${escapeHtml(buildLabel)}</span>` : ''}
+          </span>
+          <span class="ci-chooser-opt-sub">${subContent}</span>
+        </span>
+        <span class="ci-chooser-opt-dots" aria-label="Match dimensions">${dotsHtml}</span>
+        <span class="ci-chooser-opt-arrow" aria-hidden="true">→</span>
+      </button>
+    `;
+  }
+
+  // "Watch without grading" path — persist the user's intent and close the
+  // drawer. The card's grade badge stays empty; reopening will land back on
+  // the chooser thanks to the `proKey === 'none'` branch in bootstrap().
+  async _skipCompare () {
+    try {
+      if (this.myReplays && this.userRecord) {
+        const updated = await this.myReplays.get(this.userRecord.id);
+        if (updated) {
+          updated.lastCompare = {
+            grade: null, score: null, proKey: 'none',
+            proPlayerName: null, ts: Date.now()
+          };
+          await this.myReplays.put(updated);
+        }
+      }
+    } catch (e) {
+      console.warn('[CompareInline] skip-compare persist failed:', e);
+    }
+    // Use the global drawer close handler if present; otherwise just clear.
+    const drawer = document.getElementById('compare-drawer');
+    const closeBtn = document.getElementById('compare-drawer-close');
+    if (drawer && closeBtn && typeof closeBtn.click === 'function') {
+      closeBtn.click();
+    } else {
+      this._renderEmpty('No comparison set.');
+    }
   }
 
   // Tabbed report. The header (slot row, pro card, overall grade, watch
@@ -296,6 +688,13 @@ const CompareInline = class {
       </div>
     `;
 
+    // Always offer a way back to the chooser. Self-match is the only case
+    // where re-picking doesn't make sense (the user can switch via slot
+    // chips or close the drawer instead).
+    const changeBtn = (conf === 'self' || !this.candidates.length)
+      ? ''
+      : `<button class="ci-header-change" type="button" data-action="open-chooser" title="Pick a different pro to compare against">Change pro</button>`;
+
     const headerRow = `
       <div class="ci-header-row">
         ${this._slotPickerRegionHtml()}
@@ -303,6 +702,7 @@ const CompareInline = class {
           <span class="ci-pro-pill ${proLabelClass}">${escapeHtml(proLabel)}</span>
           <span class="ci-meta-pro-name">${escapeHtml(proEntry.playerName || '?')}</span>
           ${proMeta}
+          ${changeBtn}
         </div>
         ${gradeRegion}
       </div>
@@ -1550,6 +1950,10 @@ const CompareInline = class {
       if (chip.classList.contains('ci-slot-chip-active')) return;
       chip.addEventListener('click', () => this._switchPlayer(chip.dataset.slot));
     });
+    // "Change pro" → re-render the chooser so users can pick a different
+    // anchor without leaving the drawer.
+    const changeBtn = this.rootEl.querySelector('[data-action="open-chooser"]');
+    if (changeBtn) changeBtn.addEventListener('click', () => this._renderChooser());
   }
 
   _wireTab (tabId) {
@@ -1782,6 +2186,66 @@ const CHECK_ICON = {
   partial:  '⚠',
   mismatch: '✗',
   unknown:  '?'
+};
+
+const RACE_LONG = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead', R: 'Random' };
+// Race building icons used everywhere in the codebase as the visual proxy
+// for race. Sourced from /assets/wc3icons/{id}.jpg — already shipped, same
+// files RACE_META in index.html points at.
+const RACE_ICON = { H: 'htow', O: 'ogre', E: 'etol', U: 'unpl' };
+const raceIconUrl = (race) => RACE_ICON[race] ? `/assets/wc3icons/${RACE_ICON[race]}.jpg` : '';
+
+// Map normalization — single source of truth.
+//
+// The builds-manifest stores a wild mix of map name variants ("Autumn
+// Leaves v2.0", "AutumnLeaves_v2.0", "1v1_EchoIsles_v2.2_w3c_..."), and
+// the on-disk folder names mix dot/dash version conventions
+// ("Arathor_v1.3" vs "AutumnLeaves_v2-0"). The /data/map-folders.json
+// manifest (loaded by ensureMapFoldersManifest) IS the canonical mapping
+// from folder name → metadata. We use it to:
+//   - Resolve any raw map string to its actual folder (so the icon URL
+//     points at a real file).
+//   - Produce a single normalized display name (cleanMapName(folder)).
+// Cached after first build because the manifest doesn't change at runtime.
+let _mapResolveCache = null;
+const buildMapResolveCache = () => {
+  const manifest = (typeof window !== 'undefined' && window.__mapFoldersManifest) || null;
+  if (!manifest) return null;
+  // Indexed by normalized clean name → manifest entry.
+  const byClean = new Map();
+  for (const key of Object.keys(manifest)) {
+    const entry = manifest[key];
+    if (!entry || !entry.name) continue;
+    const clean = cleanMapName(entry.name).toLowerCase();
+    if (clean && !byClean.has(clean)) byClean.set(clean, entry);
+  }
+  return byClean;
+};
+const resolveMap = (rawName) => {
+  if (!rawName) return { displayName: 'Unknown map', folderName: null, iconUrl: null };
+  if (!_mapResolveCache) _mapResolveCache = buildMapResolveCache();
+  const targetClean = cleanMapName(rawName).toLowerCase();
+  let entry = null;
+  if (_mapResolveCache && targetClean) {
+    entry = _mapResolveCache.get(targetClean) || null;
+    if (!entry) {
+      // Fuzzy: substring in either direction (e.g. target="echoisles"
+      // matches entry-clean="echoisles" with version stripped).
+      for (const [k, v] of _mapResolveCache) {
+        if (k && (targetClean.includes(k) || k.includes(targetClean))) {
+          entry = v; break;
+        }
+      }
+    }
+  }
+  const folderName = entry ? entry.name : null;
+  const displayName = entry
+    ? cleanMapName(entry.name)
+    : cleanMapName(rawName) || 'Unknown map';
+  const iconUrl = folderName
+    ? `/maps/${encodeURIComponent(folderName)}/gridmap.jpg`
+    : null;
+  return { displayName, folderName, iconUrl };
 };
 
 // Tab dispatch: which detail tab does each Overview tile drill into?
@@ -2031,6 +2495,282 @@ const ensureNeutralIcons = () => {
   return _neutralIconsPromise;
 };
 
+// Stable key identifying a candidate "pro" the user can pick to compare
+// against. Two flavors: curated manifest entries vs IDB-backed user
+// references. Encoded as a string so it can live in lastCompare.proKey
+// without needing a discriminator field. Read back via findEntryByProKey.
+const buildProKey = (entry) => {
+  if (!entry) return 'none';
+  const slot = String(entry.playerSlot || '1');
+  if (entry.replayId && entry.replayId.startsWith('local::')) {
+    // entry.replayId already encodes the IDB id ('local::<idbId>'); append slot.
+    return `${entry.replayId}::${slot}`;
+  }
+  return `manifest::${entry.replayId}::${slot}`;
+};
+
+// Resolve a stored proKey back to an entry in the candidate list. Returns
+// null when the key is malformed, the candidate is no longer indexed, or
+// the key is the sentinel 'none' (= explicit "watch without grading").
+const findEntryByProKey = (key, candidates) => {
+  if (!key || key === 'none') return null;
+  const list = (candidates || []).map(c => c.entry);
+  if (key.startsWith('manifest::')) {
+    // 'manifest::<replayId>::<slot>' — slot is the trailing segment;
+    // replayId may itself contain '::' (unlikely, but be safe).
+    const lastColon = key.lastIndexOf('::');
+    const replayId = key.slice('manifest::'.length, lastColon);
+    const slot = key.slice(lastColon + 2);
+    return list.find(e => e.replayId === replayId && String(e.playerSlot) === String(slot)) || null;
+  }
+  if (key.startsWith('local::')) {
+    const lastColon = key.lastIndexOf('::');
+    const replayId = key.slice(0, lastColon);
+    const slot = key.slice(lastColon + 2);
+    return list.find(e => e.replayId === replayId && String(e.playerSlot) === String(slot)) || null;
+  }
+  return null;
+};
+
+// Per-dimension compatibility checklist for the chooser's recommended card.
+// Mirrors the shape of report.compatibility but doesn't require the analyzer
+// to have run — built directly from the entry + user summary so we can
+// render BEFORE the heavy compare() call. Status values: match / partial
+// / mismatch / unknown (to match CHECK_ICON keys).
+const chooserChecksHtml = (entry, userPlayer, userMu, userSummary, annotated) => {
+  const checks = [];
+  // Race
+  checks.push({
+    status: (entry.buildRace && entry.buildRace === userPlayer.race) ? 'match' : 'mismatch',
+    label: 'Same race',
+    detail: `${userPlayer.race || '?'} vs ${entry.buildRace || '?'}`
+  });
+  // Matchup
+  const muMatch = userMu && (entry.buildMatchups || []).includes(userMu);
+  checks.push({
+    status: muMatch ? 'match' : 'mismatch',
+    label: 'Same matchup',
+    detail: muMatch ? userMu : (userMu ? `${userMu} vs ${(entry.buildMatchups || []).join('/') || 'unknown'}` : 'unknown matchup')
+  });
+  // Archetype (build)
+  const expectedArch = entry.isUserReference ? entry.referenceArchetype : (
+    entry.buildOpener === 'expand' ? 'fast-expand' :
+    entry.buildOpener === 'fast-tech' ? 'tech' :
+    entry.buildOpener === 'rush' ? '1-base-t2' :
+    entry.buildOpener === 'standard' ? '1-base-t2' : null
+  );
+  const archMatch = userPlayer.archetype && userPlayer.archetype !== 'unknown' && expectedArch === userPlayer.archetype;
+  checks.push({
+    status: archMatch ? 'match' : (userPlayer.archetype === 'unknown' ? 'unknown' : 'partial'),
+    label: 'Same build',
+    detail: archMatch
+      ? prettyArchetype(userPlayer.archetype)
+      : (userPlayer.archetype === 'unknown'
+          ? 'Couldn\'t classify your build'
+          : `you: ${prettyArchetype(userPlayer.archetype)} · pro: ${expectedArch ? prettyArchetype(expectedArch) : 'unknown'}`)
+  });
+  // Map
+  const userMap = (userSummary && userSummary.map) || '';
+  const proMap = entry.map || '';
+  const mapCanon = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const mapMatch = userMap && proMap && (mapCanon(userMap).includes(mapCanon(proMap)) || mapCanon(proMap).includes(mapCanon(userMap)));
+  checks.push({
+    status: mapMatch ? 'match' : 'partial',
+    label: 'Same map',
+    detail: mapMatch ? userMap : `you: ${userMap || '?'} · pro: ${proMap || '?'}`
+  });
+  // Duration / grade gate
+  checks.push({
+    status: annotated.grades ? 'match' : 'mismatch',
+    label: 'Comparable game length',
+    detail: annotated.grades
+      ? 'Game lengths overlap — categories will grade'
+      : 'Game lengths too different — categories won\'t grade'
+  });
+  return checks.map(c => `
+    <div class="ci-chooser-check ci-chooser-check-${escapeAttr(c.status)}">
+      <span class="ci-chooser-check-icon">${CHECK_ICON[c.status] || '·'}</span>
+      <span class="ci-chooser-check-label">${escapeHtml(c.label)}</span>
+      <span class="ci-chooser-check-detail">${escapeHtml(c.detail || '')}</span>
+    </div>
+  `).join('');
+};
+
+// In-chooser column sort. Sort orders:
+//   'match' — score desc (default; matches the rank-candidates output)
+//   'map'   — map name asc, then pro name asc
+//   'pro'   — pro name asc, then map name asc
+// Stable: ties fall through to the next dimension and finally to score
+// to keep ordering deterministic across renders.
+const sortChooserItems = (items, mode) => {
+  const arr = items.slice();
+  // Sort by NORMALIZED map name so "AutumnLeaves_v2.0" and
+  // "Autumn Leaves v2.0" sort together.
+  const mapKey = (c) => resolveMap(c.entry.map).displayName || '';
+  const byMap = (a, b) => mapKey(a).localeCompare(mapKey(b), undefined, { sensitivity: 'base' });
+  const byPro = (a, b) => String(a.entry.playerName || '').localeCompare(String(b.entry.playerName || ''), undefined, { sensitivity: 'base' });
+  const byScore = (a, b) => (b.score || 0) - (a.score || 0);
+  if (mode === 'map') {
+    arr.sort((a, b) => byMap(a, b) || byPro(a, b) || byScore(a, b));
+  } else if (mode === 'pro') {
+    arr.sort((a, b) => byPro(a, b) || byMap(a, b) || byScore(a, b));
+  }
+  // 'match' mode is already the source order from rankCandidates.
+  return arr;
+};
+
+// Lightweight controller for the page's #parse-overlay (defined in
+// index.html / replays.html). Mirrors the inline showOverlay/updateOverlay
+// /hideOverlay logic those pages use for the homepage upload flow, so the
+// in-chooser reference upload gets the same parse progress UI without
+// having to plumb the homepage's closures into here.
+//
+// The overlay's z-index (9999) already sits above the compare drawer
+// (9001), so it correctly covers the chooser while parsing.
+const PARSE_PHASE_LABEL = {
+  reading: 'reading file', peek: 'reading replay header',
+  fetch: 'loading map data', metadata: 'reading replay metadata',
+  parsing: 'parsing replay events', postprocess: 'analyzing data',
+  assemble: 'building output', storing: 'saving to your library',
+  done: 'done'
+};
+
+const parseOverlayController = () => {
+  const overlay = document.getElementById('parse-overlay');
+  const title = document.getElementById('parse-overlay-title');
+  const sub = document.getElementById('parse-overlay-sub');
+  const progress = document.getElementById('parse-overlay-progress');
+  const barFill = document.getElementById('parse-overlay-bar-fill');
+  const phaseEl = document.getElementById('parse-overlay-phase');
+  const percentEl = document.getElementById('parse-overlay-percent');
+  const barRole = overlay ? overlay.querySelector('[role="progressbar"]') : null;
+
+  const fmtMs = (ms) => {
+    if (typeof ms !== 'number' || ms < 0) return null;
+    const s = Math.floor(ms / 1000), m = Math.floor(s / 60);
+    return `${m}:${String(s % 60).padStart(2, '0')}`;
+  };
+
+  const show = () => {
+    if (!overlay) return;
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+    if (title) title.textContent = 'Parsing your reference replay…';
+    if (sub) sub.textContent = 'This happens entirely in your browser. Nothing is uploaded.';
+    if (barFill) barFill.style.width = '0%';
+    if (phaseEl) phaseEl.textContent = 'starting…';
+    if (percentEl) percentEl.textContent = '0%';
+    if (progress) progress.textContent = '';
+  };
+
+  const update = (evt) => {
+    if (!overlay) return;
+    if (overlay.style.display === 'none' || overlay.style.display === '') show();
+    if (!evt) return;
+    const pct = typeof evt.percent === 'number' ? Math.round(evt.percent) : null;
+    if (pct !== null) {
+      if (barFill) barFill.style.width = pct + '%';
+      if (percentEl) percentEl.textContent = pct + '%';
+      if (barRole) barRole.setAttribute('aria-valuenow', String(pct));
+    }
+    if (evt.phase && phaseEl) {
+      phaseEl.textContent = PARSE_PHASE_LABEL[evt.phase] || evt.phase;
+    }
+    let detail = '';
+    if (evt.phase === 'parsing' && typeof evt.gameTimeMs === 'number' && typeof evt.durationMs === 'number' && evt.durationMs > 0) {
+      detail = `${fmtMs(evt.gameTimeMs)} of ${fmtMs(evt.durationMs)}`;
+    } else if (evt.detail) {
+      detail = evt.detail;
+    }
+    if (progress) progress.textContent = detail;
+  };
+
+  const hide = () => {
+    if (!overlay) return;
+    overlay.style.display = 'none';
+    overlay.setAttribute('aria-hidden', 'true');
+  };
+
+  return { show, update, hide };
+};
+
+// Compact dimension-pill match indicator for chooser rows. Replaces the
+// old numeric "score" badge — the underlying scoring buckets coarsely
+// (race=50, matchup=25, archetype=15, map=10), so every same-tier option
+// landed on the same number and the rows looked indistinguishable.
+//
+// Five pills: race / matchup / build / map / grade.
+//   green = match · grey = miss · amber = partial-or-unknown
+// The build pill folds in the divergent flag (amber when build is
+// different even if archetype tag matched). The grade pill folds in
+// the analyzer duration gate (red-grey when game lengths don't overlap
+// enough to score).
+const chooserDimensionDots = (entry, userPlayer, userMu, userSummary, annotated) => {
+  const dims = chooserDimensionStatus(entry, userPlayer, userMu, userSummary, annotated);
+  return dims.map(d => `<span class="ci-chooser-dot ci-chooser-dot-${escapeAttr(d.status)}" title="${escapeAttr(d.title)}">${escapeHtml(d.label)}</span>`).join('');
+};
+
+const chooserDimensionStatus = (entry, userPlayer, userMu, userSummary, annotated) => {
+  const out = [];
+  // Race
+  out.push({
+    label: 'R',
+    status: (entry.buildRace && entry.buildRace === userPlayer.race) ? 'on' : 'off',
+    title: `Race ${entry.buildRace === userPlayer.race ? 'matches' : 'differs'}`
+  });
+  // Matchup
+  const muMatch = userMu && (entry.buildMatchups || []).includes(userMu);
+  out.push({
+    label: 'MU',
+    status: muMatch ? 'on' : 'off',
+    title: `Matchup ${muMatch ? 'matches' : 'differs'}`
+  });
+  // Build / archetype — amber when annotated.divergent (different
+  // signature unit even if archetype tag matched), green when both
+  // archetype and signature align.
+  const expectedArch = entry.isUserReference ? entry.referenceArchetype : (
+    entry.buildOpener === 'expand' ? 'fast-expand' :
+    entry.buildOpener === 'fast-tech' ? 'tech' :
+    entry.buildOpener === 'rush' ? '1-base-t2' :
+    entry.buildOpener === 'standard' ? '1-base-t2' : null
+  );
+  const archMatch = userPlayer.archetype && userPlayer.archetype !== 'unknown' && expectedArch === userPlayer.archetype;
+  let buildStatus = 'off';
+  let buildTitle = 'Different build';
+  if (archMatch && (!annotated || !annotated.divergent)) {
+    buildStatus = 'on'; buildTitle = 'Same build archetype';
+  } else if (annotated && annotated.divergent) {
+    buildStatus = 'unknown'; buildTitle = 'Different signature unit';
+  } else if (userPlayer.archetype === 'unknown') {
+    buildStatus = 'unknown'; buildTitle = 'Couldn\'t classify your build';
+  }
+  out.push({ label: 'B', status: buildStatus, title: buildTitle });
+  // Map — compare resolved display names (both go through the same
+  // map-folders manifest lookup so version variants and naming
+  // conventions converge to one canonical string).
+  const userMapDisplay = (userSummary && userSummary.map ? resolveMap(userSummary.map).displayName : '').toLowerCase();
+  const entryMapDisplay = entry.map ? resolveMap(entry.map).displayName.toLowerCase() : '';
+  const mapMatch = !!userMapDisplay && !!entryMapDisplay && userMapDisplay === entryMapDisplay;
+  out.push({
+    label: 'M',
+    status: mapMatch ? 'on' : 'off',
+    title: `Map ${mapMatch ? 'matches' : 'differs'}`
+  });
+  // Grade-ability (analyzer duration gate). Decoupled from the dimension
+  // matches so the user sees both signals: a perfect race+matchup+build
+  // match that won't grade still tells you what you'd be losing.
+  if (annotated) {
+    out.push({
+      label: 'G',
+      status: annotated.grades ? 'on' : 'off',
+      title: annotated.grades
+        ? 'Game lengths overlap — categories will grade'
+        : 'Game lengths too different — categories won\'t grade'
+    });
+  }
+  return out;
+};
+
 // Browser mirror of tools/import-replays.js cleanMapName(). Keep in sync.
 const cleanMapName = (raw) => {
   if (!raw) return '';
@@ -2048,5 +2788,20 @@ const cleanMapName = (raw) => {
   return n;
 };
 
-if (typeof window !== 'undefined') window.CompareInline = CompareInline;
+if (typeof window !== 'undefined') {
+  window.CompareInline = CompareInline;
+  // Expose the shared user-summary builder + map-folders bootstrap so other
+  // subsystems (notably MyReplays.setReferenceState) can compute a summary
+  // for a record without depending on private file-local closures here.
+  window.CompareInline.buildUserSummary = buildUserSummary;
+  window.CompareInline.ensureMapFoldersManifest = ensureMapFoldersManifest;
+  // Map + race helpers used by AdvancedComparePicker so its result rows
+  // match the map-grouped chooser inside the compare drawer (same map
+  // thumbnail, same opponent race icon convention). Additive — existing
+  // callers are unaffected.
+  window.CompareInline.resolveMap = resolveMap;
+  window.CompareInline.raceIconUrl = raceIconUrl;
+  window.CompareInline.RACE_ICON = RACE_ICON;
+  window.CompareInline.RACE_LONG = RACE_LONG;
+}
 })();

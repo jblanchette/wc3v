@@ -18,12 +18,15 @@
   <script src="js/MyReplays.js"></script>
   <script src="js/vendor/wc3v-parser.bundle.js"></script>
   <script src="js/UploadManager.js"></script>
+  <script src="js/PlayerPicker.js"></script>
+  <script src="js/ReplayTypePicker.js"></script>
   <script src="js/SummaryExtract.js"></script>
   <script src="js/ReplayAnalyzer.js"></script>
   <script src="js/CompareMatcher.js"></script>
   <script src="js/AdvancedComparePicker.js"></script>
   <script src="js/CompareCharts.js"></script>
   <script src="js/CompareInline.js"></script>
+  <script src="js/BugReport.js"></script>
 
   <main class="site-content">
     <header class="site-hero-bar" role="banner">
@@ -173,6 +176,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       SiteNav.render(null);
+      window.BugReport && window.BugReport.install();
 
       const my = new window.MyReplays();
       const uploader = new window.UploadManager({ myReplays: my });
@@ -223,6 +227,24 @@
       };
       const hideOverlay = () => { if (overlay) overlay.style.display = 'none'; };
 
+      // Mirror the homepage post-parse flow: ask "your game or reference?"
+      // before any navigation. Reference replays stay on this page and just
+      // refresh the grid. Game replays redirect into the viewer as before.
+      const handlePostParse = async (record) => {
+        const choice = window.ReplayTypePicker
+          ? await window.ReplayTypePicker.open({ filename: record.originalFilename })
+          : 'game';
+        if (choice === 'reference') {
+          // Both players in a reference replay are pros — the matcher
+          // indexes both slots automatically, no slot prompt needed.
+          await my.setReferenceState(record.id, { isReference: true });
+          try { document.dispatchEvent(new CustomEvent('wc3v:my-replays-changed', { detail: { addedId: record.id, asReference: true } })); } catch {}
+          if (typeof render === 'function') render();
+          return;
+        }
+        window.location.href = '/viewer?local=' + encodeURIComponent(record.id);
+      };
+
       const triggerUpload = async () => {
         try {
           uploader.onProgress = (p) => {
@@ -231,7 +253,8 @@
           };
           const res = await uploader.pickAndParse();
           if (!res) { hideOverlay(); return; }
-          window.location.href = '/viewer?local=' + encodeURIComponent(res.id);
+          hideOverlay();
+          await handlePostParse(res.record);
         } catch (e) {
           hideOverlay();
           let msg = 'Upload failed: ' + (e.message || e);

@@ -72,7 +72,7 @@ const ClientPlayer = class {
 
     this.unitsByItemId = this.units.reduce((acc, unit) => {
       const { itemIdHash } = unit;
-      
+
       if (itemIdHash === "unregistered") {
         return acc;
       }
@@ -89,6 +89,34 @@ const ClientPlayer = class {
 
     // Build loaded-windows for transport passengers
     this._buildTransportWindows();
+
+    // Bump each unit's lifetime activity from the selection stream. Selection
+    // is a strong "still alive" signal: a player can't select a dead unit.
+    // This compensates for units whose `path` records go silent while the
+    // unit is still active (e.g. heroes hold-positioning, units being kept
+    // in a control group). Over-attributing alive across instances of the
+    // same itemIdHash is the safer error mode for the fade fix.
+    this._stampActivityFromSelectionStream();
+  }
+
+  _stampActivityFromSelectionStream () {
+    const stream = this.selectionStream;
+    if (!stream || !stream.length) return;
+    for (let i = 0; i < stream.length; i++) {
+      const entry = stream[i];
+      const t = entry && entry.gameTime;
+      const sel = entry && entry.selection;
+      if (typeof t !== 'number' || !sel || !sel.units) continue;
+      for (let j = 0; j < sel.units.length; j++) {
+        const u = sel.units[j];
+        if (!u || !u.itemId1 || !u.itemId2) continue;
+        const hash = Helpers.makeItemIdHash(u.itemId1, u.itemId2);
+        const unit = this.unitsByItemId[hash];
+        if (unit && typeof unit.recordActivity === 'function') {
+          unit.recordActivity(t);
+        }
+      }
+    }
   }
 
   _buildTransportWindows () {
@@ -979,6 +1007,17 @@ const ClientPlayer = class {
         ctx.globalAlpha = 1;
       }
     });
+  }
+
+  // Draw and drain all queued death FX entries into the given context. Called
+  // once per frame from app.js after every player has rendered, so FX from
+  // all players are flushed in a single pass on top of unit icons.
+  static drawDeathFxQueue (frameData, ctx) {
+    if (!frameData || !frameData.deathFx || !frameData.deathFx.length) return;
+    for (let i = 0; i < frameData.deathFx.length; i++) {
+      Drawing.drawDeathFx(ctx, frameData.deathFx[i]);
+    }
+    frameData.deathFx.length = 0;
   }
 
   static bloomResolve (units, iterations = 3, springStrength = 0.6, newUuids = null, treeIndex = null) {

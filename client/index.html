@@ -68,18 +68,25 @@
   <script src="js/vendor/wc3v-parser.bundle.js"></script>
   <script src="js/UploadManager.js"></script>
   <script src="js/PlayerPicker.js"></script>
+  <script src="js/ReplayTypePicker.js"></script>
   <script src="js/SummaryExtract.js"></script>
   <script src="js/ReplayAnalyzer.js"></script>
   <script src="js/CompareMatcher.js"></script>
   <script src="js/AdvancedComparePicker.js"></script>
   <script src="js/CompareCharts.js"></script>
   <script src="js/CompareInline.js"></script>
+  <script src="js/BugReport.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       SiteNav.render('home');
+      window.BugReport && window.BugReport.install();
 
       const my = new window.MyReplays();
       const uploader = new window.UploadManager({ myReplays: my });
+      // Expose the IDB instance to the second inline script (the pro-builds
+      // catalog renderer) so it can pull user-uploaded pro replays and
+      // merge them into the pro grid alongside curated builds.
+      window.__wc3vMyReplays = my;
 
       const myReplaysSection = document.getElementById('my-replays-section');
       const myReplaysList = document.getElementById('my-replays-list');
@@ -97,12 +104,20 @@
       const initialSort = localStorage.getItem(SORT_KEY) || 'newest';
       if (sortSelect) sortSelect.value = initialSort;
 
+      // Rail shows uploaded games only. References are surfaced as cards
+      // in the Your Builds section above the pro grid; they no longer
+      // need a filter pivot here. The chip array is kept so we can still
+      // wire the (single) "My games" pill without special-casing.
+      let railFilter = 'games';
+      const filterChips = Array.from(document.querySelectorAll('.mine-filter-chip'));
+
       const refreshPanel = async () => {
         const sort = (sortSelect && sortSelect.value) || 'newest';
         const result = await my.renderPanel(myReplaysList, {
           viewerPath: '/viewer',
           limit: RAIL_LIMIT,
-          sort
+          sort,
+          filter: railFilter
         });
         // Keep the section visible even when empty so the column doesn't
         // collapse and shove the pros grid into the narrow track.
@@ -130,7 +145,147 @@
         });
       }
 
-      // Re-render after a delete elsewhere on the page.
+      filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          railFilter = chip.dataset.filter || 'all';
+          filterChips.forEach(c => {
+            const active = c === chip;
+            c.classList.toggle('mine-filter-chip-active', active);
+            c.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+          refreshPanel();
+        });
+      });
+
+      // ── User-uploaded pro replay editor ──────────────────────────────
+      const editor = document.getElementById('user-build-editor');
+      const editorForm = document.getElementById('ub-editor-form');
+      const editorInputs = {
+        name: document.getElementById('ub-name'),
+        desc: document.getElementById('ub-desc'),
+        tags: document.getElementById('ub-tags'),
+        points: [0, 1, 2].map(i => editorForm.querySelector(`[data-ub-point="${i}"]`))
+      };
+      let editingId = null;
+
+      const openEditor = async (localId) => {
+        const record = await my.get(localId);
+        if (!record) return;
+        const ub = record.userBuild || window.MyReplays.seedUserBuild(record);
+        editingId = localId;
+        editorInputs.name.value = ub.name || '';
+        editorInputs.desc.value = ub.description || '';
+        editorInputs.tags.value = (ub.tags || []).join(', ');
+        const pts = ub.strategyPoints || [];
+        for (let i = 0; i < 3; i++) {
+          editorInputs.points[i].value = pts[i] || '';
+        }
+        editor.hidden = false;
+        editorInputs.name.focus();
+      };
+      // The pro-builds grid (script 2) opens this editor when the
+      // pencil icon on a user-uploaded card is clicked.
+      window.__wc3vOpenUserBuildEditor = openEditor;
+
+      // Two-state inline confirm for the destructive delete action.
+      // Lives at editor scope so closeEditor below can reset it on every
+      // close path (Esc / cancel / save / unmark / delete commit).
+      let deleteArmTimeout = null;
+      const resetDeleteButton = () => {
+        if (deleteArmTimeout) { clearTimeout(deleteArmTimeout); deleteArmTimeout = null; }
+        const btn = editor.querySelector('[data-action="ub-delete"]');
+        if (btn) {
+          btn.classList.remove('ub-editor-btn-delete-armed');
+          btn.textContent = 'Delete replay';
+        }
+      };
+
+      const closeEditor = () => {
+        resetDeleteButton();
+        editor.hidden = true;
+        editingId = null;
+      };
+
+      editor.addEventListener('click', async (e) => {
+        if (e.target.closest('[data-action="ub-cancel"]')) {
+          e.preventDefault();
+          closeEditor();
+          return;
+        }
+        if (e.target.closest('[data-action="ub-unmark"]')) {
+          e.preventDefault();
+          if (!editingId) return;
+          // Demote: drop the pro-replay flag so the record returns to
+          // the rail. The change event triggers rail + pro-grid
+          // re-renders so the row reappears and the card vanishes.
+          const id = editingId;
+          await my.setReferenceState(id, { isReference: false });
+          closeEditor();
+          try {
+            document.dispatchEvent(new CustomEvent('wc3v:my-replays-changed', {
+              detail: { changedId: id, isReference: false }
+            }));
+          } catch {}
+          return;
+        }
+        const deleteBtn = e.target.closest('[data-action="ub-delete"]');
+        if (deleteBtn) {
+          e.preventDefault();
+          if (!editingId) return;
+          if (!deleteBtn.classList.contains('ub-editor-btn-delete-armed')) {
+            // First click — arm. Second click within the timeout commits;
+            // any other interaction (cancel / save / Esc / re-open editor)
+            // calls closeEditor() which resets via resetDeleteButton().
+            deleteBtn.classList.add('ub-editor-btn-delete-armed');
+            deleteBtn.textContent = 'Click again to permanently delete';
+            if (deleteArmTimeout) clearTimeout(deleteArmTimeout);
+            deleteArmTimeout = setTimeout(resetDeleteButton, 4000);
+            return;
+          }
+          // Second click — commit. Permanent removal from IDB; the
+          // change event drops the card from the pro grid in place and
+          // refreshes the rail.
+          const removedId = editingId;
+          await my.remove(removedId);
+          closeEditor();
+          try {
+            document.dispatchEvent(new CustomEvent('wc3v:my-replays-changed', {
+              detail: { removedId }
+            }));
+          } catch {}
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !editor.hidden) closeEditor();
+      });
+
+      editorForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!editingId) return;
+        const tagsRaw = editorInputs.tags.value || '';
+        const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean).slice(0, 5);
+        const points = editorInputs.points.map(input => (input.value || '').trim()).filter(Boolean).slice(0, 3);
+        const savedId = editingId;
+        await my.setUserBuild(savedId, {
+          name: (editorInputs.name.value || '').trim() || 'Your build',
+          description: (editorInputs.desc.value || '').trim(),
+          strategyPoints: points,
+          tags
+        });
+        closeEditor();
+        // Fire the same change event the rail uses; the pro-grid script
+        // listens and re-renders the merged grid.
+        try {
+          document.dispatchEvent(new CustomEvent('wc3v:my-replays-changed', {
+            detail: { changedId: savedId, isReference: true, edited: true }
+          }));
+        } catch {}
+      });
+
+      // The pro-builds grid (script 2) listens for the same event and
+      // re-pulls user-uploaded pros itself. Here we just keep the rail
+      // in sync (a row appearing/disappearing on promote/unmark).
       document.addEventListener('wc3v:my-replays-changed', () => refreshPanel());
 
       await refreshPanel();
@@ -156,13 +311,22 @@
           if (isFreshUpload) {
             document.body.dataset.freshUpload = '1';
           }
-        } else if (!isFreshUpload) {
-          // The link points to a replay that isn't in this browser's library
-          // — almost always because someone shared a "share link" not
-          // realizing replays are stored locally. Show a friendly modal
-          // instead of letting the user wonder why nothing happened.
-          const missing = document.getElementById('missing-replay-overlay');
-          if (missing) missing.style.display = 'flex';
+        } else {
+          // User-uploaded pro replays live in the pro-builds grid, not
+          // the rail. If the deep-link points at one, scroll to its
+          // card so the user lands where they expect (no compare
+          // drawer — these are anchors, not subjects to be graded).
+          const userProCard = document.querySelector(`#all-builds-grid [data-local-id="${localParam}"]`);
+          if (userProCard) {
+            userProCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          } else if (!isFreshUpload) {
+            // The link points to a replay that isn't in this browser's library
+            // — almost always because someone shared a "share link" not
+            // realizing replays are stored locally. Show a friendly modal
+            // instead of letting the user wonder why nothing happened.
+            const missing = document.getElementById('missing-replay-overlay');
+            if (missing) missing.style.display = 'flex';
+          }
         }
       }
 
@@ -247,6 +411,30 @@
         overlay.setAttribute('aria-hidden', 'true');
       };
 
+      // After parse + IDB write, ask the user how they want to use the
+      // replay. Two branches:
+      //   - "It's my game" (default): run the player-slot picker so future
+      //     comparisons know which slot is them, then navigate into the
+      //     post-upload compare drawer (?local=ID&new=1).
+      //   - "It's a reference replay": mark the record as a reference,
+      //     compute its summary, refresh the panel — no navigation. The
+      //     reference now appears in the chooser whenever the user uploads
+      //     one of their own games to compare.
+      const handlePostParse = async (record) => {
+        const choice = window.ReplayTypePicker
+          ? await window.ReplayTypePicker.open({ filename: record.originalFilename })
+          : 'game';
+        if (choice === 'reference') {
+          // Both players in a reference replay are pros — the matcher
+          // indexes both slots automatically, no slot prompt needed.
+          await my.setReferenceState(record.id, { isReference: true });
+          await refreshPanel();
+          return;
+        }
+        await promptForUserSlotAndPersist(record);
+        window.location.href = '/?local=' + encodeURIComponent(record.id) + '&new=1';
+      };
+
       // After parse + IDB write, ask the user "Which player are you?". They
       // MUST pick — the auto-pick (slot 1) is wrong as often as it's right
       // in 1v1s and is meaningless in 2v2/FFA. Persists the chosen slot on
@@ -300,14 +488,11 @@
           const res = await uploader.pickAndParse();
           console.log('[homepage] pickAndParse returned', res);
           if (!res) { hideOverlay(); return; }
-          // Hide the parse overlay so the player-picker modal isn't behind
-          // the spinner. Then run the picker (it's modal, blocks input).
+          // Hide the parse overlay so the type/player picker modals aren't
+          // behind the spinner. handlePostParse drives the rest of the flow
+          // (type prompt → slot picker or reference flag).
           hideOverlay();
-          await promptForUserSlotAndPersist(res.record);
-          // Land on the homepage with `new=1` so the deep-link handler
-          // auto-opens the compare drawer for a "post-upload summary"
-          // experience BEFORE the user enters the viewer.
-          window.location.href = '/?local=' + encodeURIComponent(res.id) + '&new=1';
+          await handlePostParse(res.record);
         } catch (e) {
           console.error('[homepage] upload failed:', e);
           hideOverlay();
@@ -375,8 +560,7 @@
             const result = await uploader.parseFile(file);
             if (result) {
               hideOverlay();
-              await promptForUserSlotAndPersist(result.record);
-              window.location.href = '/?local=' + encodeURIComponent(result.id) + '&new=1';
+              await handlePostParse(result.record);
             }
           } catch (err) {
             console.error('[homepage] drop upload failed:', err);
@@ -538,6 +722,11 @@
                 <option value="map">Map</option>
               </select>
             </label>
+            <!-- Rail shows raw user replays only. References live in
+                 the Your Builds section above the pro grid. -->
+            <div class="mine-toolbar-filter" role="tablist" aria-label="Show">
+              <button type="button" class="mine-filter-chip mine-filter-chip-active" data-filter="games" role="tab" aria-selected="true">My games</button>
+            </div>
             <span class="mine-toolbar-count" id="mine-count">—</span>
           </div>
         </div>
@@ -550,12 +739,15 @@
           <div class="site-mine-empty-icon" aria-hidden="true">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
-          <div class="site-mine-empty-title">Drop a .w3g to start your library</div>
-          <div class="site-mine-empty-sub">Each replay you analyze gets a Compare button right here, with auto-matched pros.</div>
+          <div class="site-mine-empty-title">Drop a .w3g to add a replay</div>
+          <div class="site-mine-empty-sub">Upload one of your own games to grade against pros — or upload a pro replay you want to compare your play against.</div>
         </div>
       </section>
 
-      <!-- Right column: filter bar + pro library. -->
+      <!-- Pro Builds: curated cards + any user-uploaded pro replays.
+           User-uploaded pros mix into this grid (sorted user-first) with
+           a subtle "Added by you" marker so they're identifiable but
+           don't claim a separate authority. -->
       <section id="builds" class="site-pros" aria-labelledby="pros-title">
         <div class="site-pros-head">
           <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
@@ -592,6 +784,13 @@
                 </div>
               </div>
             </div>
+            <!-- Browse-mode entry into the Advanced search modal —
+                 same picker the compare drawer uses, just opened
+                 without an uploaded replay. -->
+            <button id="pfb-advanced-search" class="pfb-advanced-btn" type="button" title="Browse all pro replays with rich filters">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
+              <span>Advanced search</span>
+            </button>
             <!-- Live count, right-aligned -->
             <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
           </div>
@@ -612,6 +811,46 @@
       <div class="compare-drawer-foot" id="compare-drawer-foot"></div>
     </aside>
     <div class="compare-drawer-backdrop" id="compare-drawer-backdrop" hidden></div>
+
+    <!-- Editor for user-uploaded pro replays. Hosted at body level so
+         it can overflow the card's clipped surface; opens on pencil
+         click, saves through MyReplays.setUserBuild. Save fires
+         wc3v:my-replays-changed so the pro grid re-renders without a
+         reload. -->
+    <div id="user-build-editor" class="ub-editor" hidden role="dialog" aria-modal="true" aria-labelledby="ub-editor-title">
+      <div class="ub-editor-backdrop" data-action="ub-cancel"></div>
+      <form class="ub-editor-box" id="ub-editor-form">
+        <header class="ub-editor-head">
+          <h3 id="ub-editor-title" class="ub-editor-title">Edit pro replay</h3>
+          <button type="button" class="ub-editor-close" data-action="ub-cancel" aria-label="Close">×</button>
+        </header>
+        <label class="ub-editor-field">
+          <span class="ub-editor-label">Name</span>
+          <input type="text" id="ub-name" maxlength="60" autocomplete="off" />
+        </label>
+        <label class="ub-editor-field">
+          <span class="ub-editor-label">Description <span class="ub-editor-hint">(optional, 1–2 sentences)</span></span>
+          <textarea id="ub-desc" maxlength="200" rows="2"></textarea>
+        </label>
+        <fieldset class="ub-editor-field">
+          <legend class="ub-editor-label">Strategy points <span class="ub-editor-hint">(up to 3)</span></legend>
+          <input type="text" data-ub-point="0" maxlength="80" placeholder="e.g. Tower at 7:00" />
+          <input type="text" data-ub-point="1" maxlength="80" placeholder="e.g. Expand on T2" />
+          <input type="text" data-ub-point="2" maxlength="80" placeholder="" />
+        </fieldset>
+        <label class="ub-editor-field">
+          <span class="ub-editor-label">Tags <span class="ub-editor-hint">(comma-separated, optional)</span></span>
+          <input type="text" id="ub-tags" maxlength="80" placeholder="fast-expo, harass" />
+        </label>
+        <footer class="ub-editor-actions">
+          <button type="button" class="ub-editor-btn ub-editor-btn-unmark" data-action="ub-unmark" title="Remove this from pro builds — replay returns to your replays as a regular game">Move back to my replays</button>
+          <button type="button" class="ub-editor-btn ub-editor-btn-delete" data-action="ub-delete" title="Permanently delete this replay from your library">Delete replay</button>
+          <span class="ub-editor-actions-spacer"></span>
+          <button type="button" class="ub-editor-btn ub-editor-btn-cancel" data-action="ub-cancel">Cancel</button>
+          <button type="submit" class="ub-editor-btn ub-editor-btn-save">Save</button>
+        </footer>
+      </form>
+    </div>
   </main>
 
   <footer class="site-footer">
@@ -1073,9 +1312,22 @@
         }).join('');
         matchupPills = `<div class="site-card-matchups">${pills}</div>`;
       }
+      // User-uploaded pro replays get a small "Added by you" pill + a
+      // pencil edit affordance. The pill is calmer than a hard chip so
+      // user-uploaded pros read as "the same kind of thing" as curated
+      // pros, just attributed to the user. Pencil right-aligns via
+      // margin-left:auto.
+      const addedByYou = build._isUserBuild
+        ? `<span class="site-card-added-pill" title="You uploaded this pro replay">Added by you</span>`
+        : '';
+      const editBtn = build._isUserBuild
+        ? `<button class="site-card-edit-btn" type="button" data-action="edit-user-build" data-local-id="${build._localId}" title="Edit name & notes" aria-label="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>`
+        : '';
       const headerHtml = `<div class="site-card-header">
         <img class="site-card-race-watermark" src="/assets/wc3icons/${iconId}.jpg" alt="${raceLabel(build.race)}" />
         <span class="mh-build-label">${build.name}</span>
+        ${addedByYou}
+        ${editBtn}
         ${matchupPills}
       </div>`;
 
@@ -1203,7 +1455,11 @@
       let replaySection = '';
       if (hasReplay) {
         const first = replays[0];
-        const firstHref = `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}`;
+        // User-build cards pass an explicit href that points at the
+        // local-IDB viewer path; pro entries fall back to the standard
+        // server-replay URL pattern.
+        const firstHref = first.href
+          || `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}`;
         const firstTournamentName = first.tournamentId && tournamentMap[first.tournamentId]
           ? tournamentMap[first.tournamentId].shortName : '';
         const firstStageText = [first.stage, first.round].filter(Boolean).join(' · ');
@@ -1213,9 +1469,16 @@
         const firstStageChip = firstStageText
           ? `<span class="site-replay-stage">${firstStageText}</span>`
           : '';
-        const firstMapChip = first.map
-          ? `<span class="site-replay-map">${formatMap(first.map)}</span>`
-          : '';
+        const firstMapText = first.map ? formatMap(first.map) : '';
+        // Identity line: "{player} vs {opponent}". Opponent is optional
+        // (older curated entries may lack it); when missing we just show
+        // the player name. This keeps the same shape across curated +
+        // user-uploaded cards.
+        const playerText = first.playerName || '';
+        const opponentText = first.opponentName || '';
+        const identityHtml = opponentText
+          ? `<span class="site-replay-player">${playerText}</span><span class="site-replay-vs"> vs </span><span class="site-replay-opponent">${opponentText}</span>`
+          : `<span class="site-replay-player">${playerText}</span>`;
 
         let moreBtn = '';
         let moreModal = '';
@@ -1324,18 +1587,26 @@
             </div>`;
         }
 
+        // Two-row strip with predictable structure:
+        //   Row 1: "{player} vs {opponent}" (left, truncates)  ·  map (right)
+        //   Row 2: tournament + stage chips (left, may be empty)  ·  [+N more] [Watch] (right)
+        // Row 2 has a guaranteed min-height so cards in the same grid
+        // row line up regardless of whether tournament info is present
+        // (curated pros have it; user-uploaded pros don't).
         const firstItem = `<div class="site-replay-item">
-          <div class="site-replay-item-meta">
-            ${firstTournamentChip}
-            ${firstStageChip}
+          <div class="site-replay-item-identity">
+            <span class="site-replay-item-players">${identityHtml}</span>
+            ${firstMapText ? `<span class="site-replay-item-map">${firstMapText}</span>` : ''}
           </div>
-          <div class="site-replay-item-info">
-            <span class="site-replay-player">${first.playerName}</span>
-            ${firstMapChip}
-          </div>
-          <div class="site-replay-item-actions">
-            ${moreBtn}
-            <a href="${firstHref}" class="site-replay-view-btn">View</a>
+          <div class="site-replay-item-row">
+            <div class="site-replay-item-chips">
+              ${firstTournamentChip}
+              ${firstStageChip}
+            </div>
+            <div class="site-replay-item-actions">
+              ${moreBtn}
+              <a href="${firstHref}" class="site-replay-view-btn">Watch</a>
+            </div>
           </div>
         </div>`;
 
@@ -1350,18 +1621,62 @@
       }
 
       const cardHref = hasReplay
-        ? `/viewer?r=${replays[0].replayId}&player=${replays[0].playerSlot}&buildId=${build.id}`
+        ? (replays[0].href
+            || `/viewer?r=${replays[0].replayId}&player=${replays[0].playerSlot}&buildId=${build.id}`)
         : '';
 
+      // User-build optional copy: short description + 1–3 strategy bullets.
+      // Only renders when there's something to show — empty user builds
+      // (just promoted, no edits yet) skip the block entirely so the card
+      // doesn't grow a hollow notes section.
+      let userNotesHtml = '';
+      if (build._isUserBuild) {
+        const desc = (build.description || '').trim();
+        const points = (build.strategyPoints || []).filter(p => p && p.trim());
+        const tags = (build.tags || []).filter(t => t && t.trim());
+        const descBlock = desc
+          ? `<p class="site-card-user-desc">${escapeHtmlSimple(desc)}</p>`
+          : '';
+        const pointsBlock = points.length
+          ? `<ul class="site-card-user-points">${
+              points.slice(0, 3).map(p => `<li>${escapeHtmlSimple(p)}</li>`).join('')
+            }</ul>`
+          : '';
+        const tagsBlock = tags.length
+          ? `<div class="site-card-user-tags">${
+              tags.slice(0, 5).map(t => `<span class="site-card-user-tag">${escapeHtmlSimple(t)}</span>`).join('')
+            }</div>`
+          : '';
+        if (descBlock || pointsBlock || tagsBlock) {
+          userNotesHtml = `<div class="site-card-user-notes">${descBlock}${pointsBlock}${tagsBlock}</div>`;
+        }
+      }
+
+      const userClass = build._isUserBuild ? ' is-user-build' : '';
+
       return `
-        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}>
+        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
           ${headerHtml}
           ${heroesHtml}
           ${unitsHtml}
           ${upgradesHtml}
+          ${userNotesHtml}
           ${replaySection}
         </div>
       `;
+    }
+
+    // Minimal HTML escape for user-authored card copy (description /
+    // strategy points / tags). Mirrors the CommonMark-safe escape set;
+    // we keep it inline rather than reaching into Security.escapeHtml so
+    // this script doesn't need extra dependencies on the homepage.
+    function escapeHtmlSimple(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // ─── Search index builder ──────────────────────────────
@@ -1428,6 +1743,7 @@
 
     // ─── State ──────────────────────────────────────────────
     let allBuilds = [];
+    let userBuilds = [];   // user-uploaded pro replays (IDB-backed)
     let summaryMap = {}; // replayId → summary JSON
     let tournamentMap = {}; // tournamentId → tournament object
     let buildSearchIndex = []; // parallel array of searchable strings
@@ -1436,6 +1752,57 @@
     let selectedMatchup = '';
     let selectedTournament = '';
     const axisFilters = { opener: '', gamePlan: '', army: '' };
+
+    // ─── User-uploaded pro replays (IDB → buildCard props) ──
+    // Pulled from MyReplays whenever the user promotes / edits / unmarks
+    // an upload. The bootstrap script exposes its instance on
+    // window.__wc3vMyReplays so we read the same IDB without spinning up
+    // a second connection.
+    async function loadUserBuilds() {
+      const my = window.__wc3vMyReplays;
+      if (!my || !window.MyReplays || !window.MyReplays.buildCardPropsFromRecord) {
+        return [];
+      }
+      let refs;
+      try { refs = await my.list({ filter: 'references' }); }
+      catch (e) { return []; }
+      if (!refs.length) return [];
+      const fulls = await Promise.all(refs.map(async r => {
+        const full = await my.get(r.id);
+        if (!full) return null;
+        // Lazy-build the cachedSummary if missing — the adapter needs it
+        // to derive heroes / units / upgrades for the card.
+        if (!full.cachedSummary && window.CompareInline && window.CompareInline.buildUserSummary) {
+          try {
+            if (window.CompareInline.ensureMapFoldersManifest) {
+              await window.CompareInline.ensureMapFoldersManifest();
+            }
+            full.cachedSummary = window.CompareInline.buildUserSummary(full);
+            await my.put(full);
+          } catch (e) { /* fall through with bare record */ }
+        }
+        return full;
+      }));
+      return fulls
+        .filter(Boolean)
+        .map(r => window.MyReplays.buildCardPropsFromRecord(r))
+        .filter(Boolean);
+    }
+
+    // Lighter search-text builder for user-uploaded pros (no parallel
+    // search index — built on demand). Mirrors buildSearchText() but
+    // uses props that exist on the adapter output.
+    function buildSearchTextLite(b) {
+      const parts = [];
+      parts.push(b.name || '');
+      parts.push(b.description || '');
+      parts.push(raceLabel(b.race), raceAbbr(b.race));
+      (b.heroItemIds || []).forEach(id => parts.push(unitFull(id), unitShort(id)));
+      (b.keyUnits || []).forEach(id => parts.push(unitFull(id), unitShort(id)));
+      (b.matchups || []).forEach(m => parts.push(m));
+      (b.tags || []).forEach(t => parts.push(t));
+      return parts.join(' ').toLowerCase();
+    }
 
     // ─── Build race filter buttons ──────────────────────────
     function buildRaceFilter() {
@@ -1604,9 +1971,12 @@
     }
 
     // ─── Apply filters ──────────────────────────────────────
+    // User-uploaded pro replays + curated builds share one filter
+    // pipeline. User uploads render first so the user's own additions
+    // are immediately visible in the grid; curated pros follow.
     function applyFilter() {
-      let visible = allBuilds.filter((b, i) => {
-        if (searchQuery && !matchesSearch(buildSearchIndex[i], searchQuery)) return false;
+      const buildPasses = (b, searchText) => {
+        if (searchQuery && searchText && !matchesSearch(searchText, searchQuery)) return false;
         if (selectedRace && b.race !== selectedRace) return false;
         if (selectedMatchup && !(b.matchups || []).includes(selectedMatchup)) return false;
         if (axisFilters.opener && b.opener !== axisFilters.opener) return false;
@@ -1614,7 +1984,11 @@
         if (axisFilters.army && b.army !== axisFilters.army) return false;
         if (selectedTournament && !(b.replays || []).some(r => r.tournamentId === selectedTournament)) return false;
         return true;
-      });
+      };
+
+      const visibleUser = userBuilds.filter(b => buildPasses(b, buildSearchTextLite(b)));
+      const visiblePro = allBuilds.filter((b, i) => buildPasses(b, buildSearchIndex[i]));
+      const visible = [...visibleUser, ...visiblePro];
 
       document.getElementById('all-builds-grid').innerHTML =
         visible.length
@@ -1629,7 +2003,7 @@
       // Live count in the filter bar.
       const countEl = document.getElementById('pfb-count');
       if (countEl) {
-        const total = allBuilds.length;
+        const total = allBuilds.length + userBuilds.length;
         countEl.textContent = visible.length === total
           ? `${total} builds`
           : `${visible.length} of ${total}`;
@@ -1689,6 +2063,36 @@
       buildAxisFilters();
       buildTournamentFilter();
 
+      // Wire the "Advanced search" entry point — opens the same picker
+      // the compare drawer uses, but in browse mode (no userSummary).
+      // Picking a row navigates straight to the viewer for that replay.
+      // We share the same MyReplays instance the bootstrap script uses
+      // so user-uploaded pro replays show up under "Added by you".
+      const advBtn = document.getElementById('pfb-advanced-search');
+      if (advBtn && window.AdvancedComparePicker && window.CompareMatcher) {
+        advBtn.addEventListener('click', async () => {
+          const myInstance = window.__wc3vMyReplays || null;
+          const matcher = new window.CompareMatcher(myInstance);
+          const picker = new window.AdvancedComparePicker({
+            matcher,
+            onPick: (entry) => {
+              if (!entry) return;
+              // User-uploaded pros use replayId='local::<id>' and carry
+              // sourceRecordId for the IDB lookup; everything else is a
+              // server replay routed through /viewer?r=...
+              if (entry.isUserReference && entry.sourceRecordId) {
+                window.location.href = '/viewer?local=' + encodeURIComponent(entry.sourceRecordId);
+              } else {
+                const slot = entry.playerSlot || '1';
+                const buildId = entry.buildId ? `&buildId=${encodeURIComponent(entry.buildId)}` : '';
+                window.location.href = `/viewer?r=${encodeURIComponent(entry.replayId)}&player=${encodeURIComponent(slot)}${buildId}`;
+              }
+            }
+          });
+          await picker.open();
+        });
+      }
+
       // Wire up the "+ More filters" popover toggle.
       const moreBtn = document.getElementById('pfb-more-btn');
       const morePop = document.getElementById('pfb-more-pop');
@@ -1715,10 +2119,40 @@
         if (btn) btn.classList.add('active');
       }
 
+      // Pull user-uploaded pros once before the first render so they
+      // appear in the grid alongside curated pros from page-load.
+      userBuilds = await loadUserBuilds();
+
       applyFilter();
+
+      // Re-pull + re-render whenever the user promotes / unpromotes /
+      // edits an upload. The bootstrap script dispatches this event
+      // after every userBuild mutation.
+      document.addEventListener('wc3v:my-replays-changed', async (ev) => {
+        userBuilds = await loadUserBuilds();
+        applyFilter();
+        // Scroll a freshly-promoted card into view so the user lands on
+        // their new card instead of wondering where it went.
+        const detail = ev && ev.detail;
+        if (detail && detail.isReference && detail.changedId && !detail.edited) {
+          const card = document.querySelector(`#all-builds-grid [data-local-id="${detail.changedId}"]`);
+          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
 
       // Card click → load first replay (let replay buttons handle themselves)
       document.getElementById('all-builds-grid').addEventListener('click', function(e) {
+        // Pencil icon on a user-uploaded card → open the editor (hosted
+        // by the bootstrap script and exposed on window).
+        const editBtn = e.target.closest('[data-action="edit-user-build"]');
+        if (editBtn) {
+          e.preventDefault();
+          const id = editBtn.dataset.localId;
+          if (id && typeof window.__wc3vOpenUserBuildEditor === 'function') {
+            window.__wc3vOpenUserBuildEditor(id);
+          }
+          return;
+        }
         if (e.target.closest('.site-replay-view-btn')) return;
         if (e.target.closest('.site-replay-toggle')) return;
         if (e.target.closest('.site-replay-modal')) return;
