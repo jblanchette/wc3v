@@ -35,6 +35,10 @@ const BuildOrderRenderer = class {
     this.currentLiveBoEvent = null;
     this._responsiveObserver = null;
     this._responsiveTimeout = null;
+    // Mobile-only: which player's BO is currently shown. Persisted between
+    // page loads in sessionStorage so navigating away and back lands on the
+    // same player. Index into viewer.buildOrderPlayers.
+    this.activeMobilePlayerIdx = 0;
   }
 
   _updateResponsiveClass () {
@@ -70,7 +74,80 @@ const BuildOrderRenderer = class {
       this.viewer.buildOrderPlayers.push(player);
     });
 
+    // Restore last-viewed mobile player for this replay, if any.
+    if (this.viewer.mobileMode) {
+      try {
+        const key = `wc3v.mobileBoPlayerIdx.${this.viewer.replayId || 'default'}`;
+        const stored = parseInt(sessionStorage.getItem(key), 10);
+        if (Number.isFinite(stored) && stored >= 0 && stored < this.viewer.buildOrderPlayers.length) {
+          this.activeMobilePlayerIdx = stored;
+        } else {
+          this.activeMobilePlayerIdx = 0;
+        }
+      } catch (e) {
+        this.activeMobilePlayerIdx = 0;
+      }
+    }
+
     this.renderBuildOrder();
+  }
+
+  _persistMobilePlayerIdx () {
+    try {
+      const key = `wc3v.mobileBoPlayerIdx.${this.viewer.replayId || 'default'}`;
+      sessionStorage.setItem(key, String(this.activeMobilePlayerIdx));
+    } catch (e) { /* sessionStorage may be disabled */ }
+  }
+
+  // Renders a sticky chip bar above the BO columns when in mobile mode.
+  // One chip per non-neutral player; tapping a chip swaps which player's
+  // BO is rendered. The unused side container is hidden via CSS.
+  _renderMobilePlayerSwitch () {
+    const content = document.getElementById('bo-content');
+    if (!content) return;
+
+    let bar = document.getElementById('bo-mobile-player-switch');
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = 'bo-mobile-player-switch';
+      bar.classList.add('bo-mobile-player-switch');
+      const columns = document.getElementById('bo-columns');
+      content.insertBefore(bar, columns || content.firstChild);
+    }
+
+    bar.innerHTML = '';
+
+    this.viewer.buildOrderPlayers.forEach((player, idx) => {
+      const raceMeta = (typeof RaceLabels !== 'undefined' && RaceLabels[player.race]) || null;
+      const raceLabel = raceMeta ? raceMeta.label : (player.race || '');
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.classList.add('bo-mobile-chip');
+      if (idx === this.activeMobilePlayerIdx) chip.classList.add('bo-mobile-chip-active');
+      chip.style.setProperty('--chip-color', player.playerColor || '#666');
+
+      const nameEl = document.createElement('span');
+      nameEl.classList.add('bo-mobile-chip-name');
+      nameEl.textContent = Security.sanitizeUserText(player.displayName || `Player ${idx + 1}`);
+
+      const raceEl = document.createElement('span');
+      raceEl.classList.add('bo-mobile-chip-race');
+      raceEl.textContent = raceLabel;
+
+      chip.append(nameEl, raceEl);
+
+      chip.addEventListener('click', () => {
+        if (this.activeMobilePlayerIdx === idx) return;
+        this.activeMobilePlayerIdx = idx;
+        this._persistMobilePlayerIdx();
+        this.renderBuildOrder();
+        // Reset scroll to top of new player
+        const buildArea = document.getElementById('build-area');
+        if (buildArea) buildArea.scrollTop = 0;
+      });
+
+      bar.append(chip);
+    });
   }
 
   applyRaceTheme (element, race) {
@@ -89,11 +166,21 @@ const BuildOrderRenderer = class {
   }
 
   renderBuildOrder () {
-    const { buildOrderPlayers } = this.viewer;
+    const allPlayers = this.viewer.buildOrderPlayers;
 
     const columnsEl = document.getElementById('bo-columns');
     const emptyEl = document.getElementById('bo-empty');
     if (!columnsEl || !emptyEl) return;
+
+    // Mobile: render the player switcher and narrow the visible set to the
+    // active player. Other player chips remain in the switcher bar so the
+    // user can swap between them with a tap.
+    let buildOrderPlayers = allPlayers;
+    if (this.viewer.mobileMode) {
+      this._renderMobilePlayerSwitch();
+      const idx = Math.max(0, Math.min(this.activeMobilePlayerIdx, allPlayers.length - 1));
+      buildOrderPlayers = allPlayers.length ? [allPlayers[idx]] : [];
+    }
 
     // Clear side containers (not the structural elements)
     const leftSide = columnsEl.querySelector('.bo-side-left');

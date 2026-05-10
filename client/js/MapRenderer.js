@@ -141,7 +141,7 @@ const MapRenderer = class {
 
   // Note: this method mutates neutralGroup.isHidden and unit.isNeutralGroupHidden
   // on the data objects passed via mapData and players (by-reference side effects).
-  renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid) {
+  renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid, campHitOut) {
     const { world } = mapData;
 
     const {
@@ -165,6 +165,8 @@ const MapRenderer = class {
     const PI2 = Math.PI * 2;
     const START_ANGLE = -Math.PI / 2; // 12 o'clock
     const RING_PAD = 4;
+
+    if (campHitOut) campHitOut.length = 0;
 
     const groups = Object.values(world.neutralGroups);
     const claimPaths = {};
@@ -198,6 +200,11 @@ const MapRenderer = class {
       const centerX = drawX + rectWidth / 2;
       const centerY = drawY + rectHeight / 2;
       const radius = Math.max(rectWidth, rectHeight) / 2 + RING_PAD;
+
+      // Publish what we just drew so the hit-test uses the exact same numbers.
+      if (campHitOut) {
+        campHitOut.push({ rawGroup: neutralGroup, cx: centerX, cy: centerY, r: radius });
+      }
 
       // look up current progress from timeline
       const snapshot = this._findProgress(progressTimeline, gameTime);

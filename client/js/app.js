@@ -4,6 +4,40 @@ const Wc3vViewer = class {
   }
 
   bootstrap () {
+    // True phone sizes only. Tablets (641-1023px) keep the existing
+    // tablet-fallback CSS that hides the canvas and shows both players'
+    // build orders side-by-side; only at ≤640px do we go all the way to
+    // skipping the map/canvas/3D loads and the single-player switcher.
+    const mql = window.matchMedia('(max-width: 640px)');
+    this.mobileMode = mql.matches;
+
+    // If the user resizes across the breakpoint mid-session, the cleanest
+    // way to swap modes is a full reload — initialization paths diverge so
+    // far (canvas + 3D init only happen on desktop) that an in-place
+    // transition would be much more code for a rare action.
+    if (mql.addEventListener) {
+      mql.addEventListener('change', () => window.location.reload());
+    } else if (mql.addListener) {
+      mql.addListener(() => window.location.reload());
+    }
+
+    if (this.mobileMode) {
+      this.layoutMode = LayoutMode.mobileBuildOrder;
+      document.body.classList.add('viewer-mobile-mode');
+      const appEl = document.getElementById('app');
+      if (appEl) {
+        appEl.classList.remove('layout-mode-gameplay', 'layout-mode-static-bo', 'layout-mode-live-bo');
+        appEl.classList.add('layout-mode-mobile-bo');
+      }
+      // The #loading-overlay lives inside #gameplay-area which is
+      // display:none in mobile mode — hoist it to body so the loading state
+      // remains visible while the replay JSON is fetched.
+      const overlay = document.getElementById('loading-overlay');
+      if (overlay && overlay.parentNode !== document.body) {
+        document.body.appendChild(overlay);
+      }
+    }
+
     this.setupControls();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -1086,7 +1120,7 @@ const Wc3vViewer = class {
     const app = document.getElementById('app');
 
     // Remove all layout mode classes
-    app.classList.remove('layout-mode-gameplay', 'layout-mode-static-bo', 'layout-mode-live-bo');
+    app.classList.remove('layout-mode-gameplay', 'layout-mode-static-bo', 'layout-mode-live-bo', 'layout-mode-mobile-bo');
 
     // Apply current mode
     app.classList.add(`layout-mode-${this.layoutMode}`);
@@ -1094,6 +1128,13 @@ const Wc3vViewer = class {
     // Keep old viewMode/buildViewMode in sync for any code still reading them
     this.viewMode = (this.layoutMode === LayoutMode.gameplay) ? ViewModes.gameplay : ViewModes.buildOrder;
     this.buildViewMode = (this.layoutMode === LayoutMode.liveBuildOrder) ? BuildView.live : BuildView.static;
+
+    // Mobile mode: BO-only, no canvas, no playback. Render BO and exit.
+    if (this.layoutMode === LayoutMode.mobileBuildOrder) {
+      if (this.matchHeader) this.matchHeader.updateLayoutMode(this.layoutMode);
+      if (this.gameLoaded && this.boRenderer) this.boRenderer.renderBuildOrder();
+      return;
+    }
 
     // Handle render loop — stop RAF when canvas is not visible
     if (this.layoutMode === LayoutMode.staticBuildOrder) {
@@ -1136,6 +1177,7 @@ const Wc3vViewer = class {
   }
 
   scaleLiveModeCanvas () {
+    if (this.mobileMode) return;
     if (!this.gameScaler) return;
 
     const mainWrapper = document.getElementById('main-wrapper');
@@ -1227,91 +1269,119 @@ const Wc3vViewer = class {
     const params = new URLSearchParams(window.location.search);
     const hasBuildParam = params.has('showBuildOrder');
 
-    this.layoutMode = hasBuildParam ? LayoutMode.staticBuildOrder : LayoutMode.liveBuildOrder;
-    this.viewMode = hasBuildParam ? ViewModes.buildOrder : ViewModes.gameplay;
-    this.buildViewMode = BuildView.live;
+    if (this.mobileMode) {
+      this.layoutMode = LayoutMode.mobileBuildOrder;
+      this.viewMode = ViewModes.buildOrder;
+      this.buildViewMode = BuildView.static;
+    } else {
+      this.layoutMode = hasBuildParam ? LayoutMode.staticBuildOrder : LayoutMode.liveBuildOrder;
+      this.viewMode = hasBuildParam ? ViewModes.buildOrder : ViewModes.gameplay;
+      this.buildViewMode = BuildView.live;
+    }
 
     // reference to which players build order we are viewing
     this.buildOrderPlayers = [];
 
-    this.setStatusTab('heroes');
-    this.setupViewOptions();
+    if (!this.mobileMode) {
+      this.setStatusTab('heroes');
+      this.setupViewOptions();
+    }
 
     this.setupPlayers();
     this.setupMap();
 
     this.buildWrapper = document.getElementById("build-wrapper");
-    this.mainWrapper = document.getElementById("main-wrapper");
 
-    this.canvas = document.getElementById("main-canvas");
-    this.ctx = this.canvas.getContext("2d");
+    if (!this.mobileMode) {
+      this.mainWrapper = document.getElementById("main-wrapper");
 
-    // initialize the 3D terrain renderer on #three-canvas
-    this.threeCanvas = document.getElementById("three-canvas");
-    if (this.threeCanvas && window.THREE && window.ThreeMapRenderer) {
-      try {
-        this.threeMapRenderer = new window.ThreeMapRenderer(this.threeCanvas, this);
-      } catch (err) {
-        console.warn('ThreeMapRenderer init failed:', err);
-        this.threeMapRenderer = null;
+      this.canvas = document.getElementById("main-canvas");
+      this.ctx = this.canvas.getContext("2d");
+
+      // initialize the 3D terrain renderer on #three-canvas
+      this.threeCanvas = document.getElementById("three-canvas");
+      if (this.threeCanvas && window.THREE && window.ThreeMapRenderer) {
+        try {
+          this.threeMapRenderer = new window.ThreeMapRenderer(this.threeCanvas, this);
+        } catch (err) {
+          console.warn('ThreeMapRenderer init failed:', err);
+          this.threeMapRenderer = null;
+        }
       }
+
+      this.playerStatusCanvas = document.getElementById("player-status-canvas");
+      this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
+
+      this.playerCanvas = document.getElementById("player-canvas");
+      this.playerCtx = this.playerCanvas.getContext("2d");
+
+      this.utilityCanvas = document.getElementById("utility-canvas");
+      this.utilityCtx = this.utilityCanvas.getContext("2d");
+
+      this.megaPlayButton = document.getElementById("mega-play-overlay");
+
+      // player-status-toggles + player boxes
+      this.playerStatusCanvas.height = 50 + (this.players.length * 140);
+
+      this.playerStatusCtx.lineWidth = 1;
+      this.playerStatusCtx.fillStyle = "#29373E";
+      this.playerStatusCtx.strokeStyle = "#FFF";
+      this.playerStatusCtx.font = '12px Arial';
     }
-
-    this.playerStatusCanvas = document.getElementById("player-status-canvas");
-    this.playerStatusCtx = this.playerStatusCanvas.getContext("2d");
-
-    this.playerCanvas = document.getElementById("player-canvas");
-    this.playerCtx = this.playerCanvas.getContext("2d");
-
-    this.utilityCanvas = document.getElementById("utility-canvas");
-    this.utilityCtx = this.utilityCanvas.getContext("2d");
-
-    this.megaPlayButton = document.getElementById("mega-play-overlay");
-
-    // Mode switcher is in the menu bar now; no title text needed
-
-    // player-status-toggles + player boxes
-    this.playerStatusCanvas.height = 50 + (this.players.length * 140);
-
-    this.playerStatusCtx.lineWidth = 1;
-    this.playerStatusCtx.fillStyle = "#29373E";
-    this.playerStatusCtx.strokeStyle = "#FFF";
-    this.playerStatusCtx.font = '12px Arial';
 
     const playerLoadedPromiseList = this.players.map(player => {
       return player.setup();
     });
 
     this.hideTutorial();
-    this.clearCanvas();
+    if (!this.mobileMode) this.clearCanvas();
 
-    // finishes the setup promise — load independent data in parallel
-    this.updateLoadingStatus('Loading map data...');
-    return Promise.all([
+    // Mobile mode skips all map / terrain / doodad / walkmap / grid / neutral
+    // building loads. Only the per-player BO data + the lightweight unit
+    // balance lookup are needed to render build orders.
+    const heavyMapLoads = this.mobileMode ? [] : [
       this.loadMapFile(),
       this.loadMapFile("grid"),
       this.loadDoodadFile(),
       this.loadWalkmap(),
       this.loadNeutralBuildings(),
-      this.loadGridFile(),
+      this.loadGridFile()
+    ];
+
+    // finishes the setup promise — load independent data in parallel
+    this.updateLoadingStatus('Loading map data...');
+    return Promise.all([
+      ...heavyMapLoads,
       this.loadUnitBalance(),
       ...playerLoadedPromiseList
     ])
     .then(() => {
+      if (this.mobileMode) return;
       this.updateLoadingStatus('Building terrain...');
       this.setupDrawing();
       return this.setup3DTerrain();
     })
     .then(() => {
       this.updateLoadingStatus('Preparing UI...');
-      this.buildTerrainIndex();
-      this.timelineSpline = new TimelineSpline(this);
+
       this.boRenderer = new BuildOrderRenderer(this);
-      this.chapterMarkers = new ChapterMarkers(this);
       this.matchHeader = new MatchHeader(this);
-      this.placementViewer.setup();
       this.matchSummary.setup();
       this.setupBuildOrder();
+
+      if (this.mobileMode) {
+        // Skip canvas-bound subsystems entirely. BO renderer + match header
+        // are sufficient for the mobile build-order-only experience.
+        this.gameLoaded = true;
+        this.matchHeader.render();
+        this.applyLayoutMode();
+        return;
+      }
+
+      this.buildTerrainIndex();
+      this.timelineSpline = new TimelineSpline(this);
+      this.chapterMarkers = new ChapterMarkers(this);
+      this.placementViewer.setup();
       this.matchHeader.render();
 
       this.chapterMarkers.detectChapters(this.players, this.matchEndTime);
@@ -1627,12 +1697,10 @@ const Wc3vViewer = class {
     }
 
     this.gameDisplayBox = new GameDisplayBox(this.teamColorMap, this.assignedPlayerColors);
-    this.gameDisplayBox.setData(
-      world.neutralGroups, GameDisplayBox.neutralCampHandler(this.gameScaler, this.transform));
-
-    console.log('[CampSetup] gameDisplayBox created, data set, tree items:', this.gameDisplayBox.data.tree.all().length);
-    console.log('[CampSetup] transform at setup:', JSON.stringify(this.transform));
-    console.log('[CampSetup] canvas element:', this.canvas.id, this.canvas.width, 'x', this.canvas.height);
+    // The spatial index is now rebuilt per-mousemove from current projection
+    // state, so we just hand over the source data — no handler-built tree
+    // captured at setup-time (which would go stale after camera changes).
+    this.gameDisplayBox.setData(world.neutralGroups);
 
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
@@ -1701,22 +1769,19 @@ const Wc3vViewer = class {
     }
     this._initialZoomTransform = initialT;
 
-    // camp + building hover
     this.zoomContainer.on('mousemove.camphover', () => {
-      if (self.state === ScrubStates.stopped) return;
-
-      // Building hover takes priority — if a building is hovered, skip camp hover
-      if (self.buildingHoverLabel && self.buildingHoverLabel.handleMouse(d3.event, self.transform)) {
+      const ev = d3.event;
+      const campHit = self.gameDisplayBox && self.gameDisplayBox.handleMouse(ev, self.transform);
+      if (campHit) {
+        if (self.buildingHoverLabel) self.buildingHoverLabel.hide();
+      } else if (self.buildingHoverLabel && self.buildingHoverLabel.handleMouse(ev, self.transform)) {
         if (self.gameDisplayBox.hoveredCampUuid) {
           self.gameDisplayBox.hoveredCampUuid = null;
           self.gameDisplayBox.hide();
         }
-        return;
+      } else {
+        if (self.buildingHoverLabel) self.buildingHoverLabel.hide();
       }
-
-      // Fall through to camp hover
-      if (self.buildingHoverLabel) self.buildingHoverLabel.hide();
-      self.gameDisplayBox.handleMouse(d3.event, self.transform);
     });
 
     this.scrubber.onZoomChange = (k) => {
@@ -1795,6 +1860,7 @@ const Wc3vViewer = class {
   }
 
   clearCanvas () {
+    if (this.mobileMode || !this.canvas) return;
     const {
       ctx,
       playerCtx,
@@ -1817,6 +1883,7 @@ const Wc3vViewer = class {
 
   // Coalesced render request — multiple calls per frame collapse into one RAF
   requestRender () {
+    if (this.mobileMode) return;
     if (this._renderPending) return;
     this._renderPending = true;
     requestAnimationFrame(() => {
@@ -1826,6 +1893,7 @@ const Wc3vViewer = class {
   }
 
   startRenderLoop () {
+    if (this.mobileMode) return;
     this.lastFrameTimestamp = 0;
     this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
   }
@@ -2274,10 +2342,12 @@ const Wc3vViewer = class {
   }
 
   render () {
-    // No canvas rendering needed in static BO mode
-    if (this.layoutMode === LayoutMode.staticBuildOrder) {
+    // No canvas rendering needed in static or mobile BO mode
+    if (this.layoutMode === LayoutMode.staticBuildOrder ||
+        this.layoutMode === LayoutMode.mobileBuildOrder) {
       return;
     }
+    if (!this.canvas) return;
 
     // Split-screen mode: render two diagonal halves
     if (this.broadcastCamera && this.broadcastCamera.isSplitActive) {
@@ -2364,7 +2434,9 @@ const Wc3vViewer = class {
     // Trees deferred to Phase 2 (3D billboard sprites); flat green circles looked out of place on the 3D terrain.
     // this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
     const hoveredCampUuid = this.gameDisplayBox ? this.gameDisplayBox.hoveredCampUuid : null;
-    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid);
+    if (!this._campHitBuf) this._campHitBuf = [];
+    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid, this._campHitBuf);
+    if (this.gameDisplayBox) this.gameDisplayBox.setHitData(this._campHitBuf);
     this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
 
     players.forEach(player => {

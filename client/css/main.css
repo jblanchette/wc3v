@@ -6754,56 +6754,182 @@ body {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   VIEWER RESPONSIVE — desktop minimum + mobile build-order-only layout
+   VIEWER RESPONSIVE — three tiers
+     1. Desktop (>1023px): full canvas + 3D + side-by-side build orders
+     2. Tablet (641-1023px): canvas hidden via @media, both BOs side-by-side
+     3. Phone (≤640px): JS skips map/3D/canvas loads entirely + single-player
+        switcher (controlled by .layout-mode-mobile-bo class on #app)
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* Below the viewer minimum: #app enforces 960px via min-width, html scrolls.
-   No additional rules needed here — the min-width on #app handles it.       */
-
-/* Tablet portrait & narrower (≤ 1023px): collapse to build-order-only, no canvas. */
+/* Tier 2 — tablet portrait & narrower (≤1023px) but wider than a phone.
+   Hide the gameplay area and show the build order panel side-by-side. */
 @media (max-width: 1023px) {
   #app {
-    min-width: 0; /* let the viewer fill a narrow mobile/tablet screen */
+    min-width: 0;
   }
-
-  /* Override all layout-mode grid variants to show build order only */
   #content {
     grid-template-areas: "buildorder" !important;
     grid-template-rows: 1fr !important;
     grid-template-columns: 1fr !important;
   }
-
   #gameplay-area { display: none !important; }
   #scrubber-bar  { display: none !important; }
-
   #build-area {
     display: block !important;
     grid-area: buildorder;
     overflow-y: auto;
   }
-
   #build-wrapper {
     width: 100%;
     height: 100%;
     position: relative;
     top: auto;
   }
-
-  /* Compact menu bar on mobile */
-  #menu {
-    flex-wrap: wrap;
-    max-height: none;
-    padding: 0.3rem 0.5rem;
-    gap: 0.25rem;
-  }
-
-  /* Slightly tighter rows */
   .bo-row { min-height: 34px; padding: 2px 4px; }
   .bo-row-desc { font-size: 14px; gap: 6px; }
   .bo-row-icon { width: 28px; height: 28px; }
 }
 
-/* Small phone (≤ 480px): stack the two BO sides into a single column. */
+/* Tier 3 — JS-driven phone mode (≤640px). The class is set in app.js when
+   matchMedia('(max-width: 640px)').matches; nothing depends on the @media
+   query here. Single-player view + chip switcher. */
+.layout-mode-mobile-bo {
+  min-width: 0 !important;
+}
+
+.layout-mode-mobile-bo #content {
+  grid-template-areas: "buildorder" !important;
+  grid-template-rows: 1fr !important;
+  grid-template-columns: 1fr !important;
+}
+
+.layout-mode-mobile-bo #gameplay-area,
+.layout-mode-mobile-bo #scrubber-bar,
+.layout-mode-mobile-bo #match-header {
+  display: none !important;
+}
+
+/* The #loading-overlay normally sits inside #gameplay-area (display:none on
+   mobile). app.js hoists it to <body> in mobile mode; this rule pins it to
+   the full viewport so the user sees the loading state while the replay
+   JSON is fetched. */
+body.viewer-mobile-mode #loading-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 9999 !important;
+}
+
+.layout-mode-mobile-bo #build-area {
+  display: block !important;
+  grid-area: buildorder;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: 100vh;
+}
+
+.layout-mode-mobile-bo #build-wrapper {
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+  position: relative;
+  top: auto;
+}
+
+.layout-mode-mobile-bo #bo-columns {
+  flex-direction: column;
+  max-width: 100%;
+  padding: 0 4px;
+  gap: 0;
+}
+
+.layout-mode-mobile-bo #bo-timeline-gap,
+.layout-mode-mobile-bo #bo-timeline-svg,
+.layout-mode-mobile-bo .bo-side-right {
+  display: none !important;
+}
+
+.layout-mode-mobile-bo .bo-side-left {
+  width: 100%;
+  flex: none;
+}
+
+.layout-mode-mobile-bo .bo-column {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.layout-mode-mobile-bo .bo-row { min-height: 36px; padding: 3px 6px; }
+.layout-mode-mobile-bo .bo-row-desc { font-size: 14px; gap: 6px; }
+.layout-mode-mobile-bo .bo-row-icon { width: 32px; height: 32px; }
+
+/* Mobile player switcher — tap a chip to swap which player's BO is shown */
+.bo-mobile-player-switch {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 8px;
+  gap: 8px;
+  background: rgba(15, 22, 30, 0.96);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.layout-mode-mobile-bo .bo-mobile-player-switch {
+  display: flex;
+}
+
+.bo-mobile-chip {
+  flex: 1 1 0;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 2px solid var(--chip-color, #444);
+  background: rgba(20, 28, 36, 0.85);
+  color: #ddd;
+  font: 600 14px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.08s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bo-mobile-chip:active {
+  transform: scale(0.97);
+}
+
+.bo-mobile-chip-active {
+  background: var(--chip-color, #444);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+}
+
+.bo-mobile-chip-name {
+  font-size: 14px;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.bo-mobile-chip-race {
+  font-size: 11px;
+  opacity: 0.85;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Small phone (≤ 480px): kept as a fallback for the rare case where mobile
+   JS detection somehow fails — guarantees the desktop side-by-side layout
+   doesn't render with broken proportions. */
 @media (max-width: 480px) {
   #bo-columns {
     flex-direction: column;
@@ -13795,4 +13921,250 @@ fieldset.ub-editor-field input[type="text"] {
 .ub-editor-btn-save:hover {
   background: rgba(240,214,140,0.16);
   border-color: #f0d68c;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE HOMEPAGE — phone-only condensed shell, ≤640px
+   ══════════════════════════════════════════════════════════════════════════
+   Desktop and tablet (>640px) keep their existing layout untouched. On
+   phones we hide the bulky hero details and surface a compact action bar
+   with: tagline, prominent search, "Your replays" disclosure, "Filters"
+   disclosure. The pro grid + the my-replays rail collapse by default and
+   re-expand when the user taps a toggle. */
+
+.mobile-action-bar { display: none; }
+
+@media (max-width: 640px) {
+  /* ── Hero bar slimming ─────────────────────────────── */
+  .hero-bar-inner {
+    padding: 6px 10px !important;
+    gap: 6px !important;
+    min-height: 40px;
+  }
+  .hero-bar-logo img { height: 28px; }
+  .hero-bar-help,
+  .hero-bar-private { display: none; }
+  .hero-bar-upload {
+    flex-basis: auto !important;
+    margin-left: auto !important;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .hero-bar-upload-label { font-size: 12px; }
+  .hero-bar-upload-icon { width: 12px; height: 12px; }
+
+  /* ── Mobile-only condensed action bar ──────────────── */
+  .mobile-action-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px 8px;
+    background: linear-gradient(180deg, rgba(22,25,40,0.92) 0%, rgba(15,18,28,0.85) 100%);
+    border-bottom: 1px solid var(--site-border);
+  }
+  .mobile-tagline {
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--site-text);
+    text-align: center;
+    opacity: 0.85;
+    margin: 0 0 2px;
+  }
+  .mobile-tagline em {
+    color: #f0d68c;
+    font-style: normal;
+    font-weight: 600;
+  }
+  .mobile-build-search {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.10);
+    color: var(--site-text);
+    font-size: 16px; /* 16px keeps iOS from auto-zooming */
+    font-family: inherit;
+    outline: none;
+  }
+  .mobile-build-search::placeholder { color: rgba(255,255,255,0.55); }
+  .mobile-build-search:focus {
+    border-color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.16);
+  }
+  .mobile-action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  .mobile-action-btn {
+    flex: 1 1 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.08);
+    color: var(--site-text);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px;
+    font: 600 13px/1.2 inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mobile-action-btn[hidden] { display: none; }
+  .mobile-action-btn[aria-expanded="true"] {
+    background: rgba(240,214,140,0.18);
+    border-color: rgba(240,214,140,0.5);
+    color: #fff;
+  }
+  .mobile-action-btn[aria-expanded="true"] .mobile-action-caret {
+    transform: rotate(90deg);
+  }
+  .mobile-action-caret {
+    display: inline-block;
+    transition: transform 0.15s;
+    font-size: 10px;
+    opacity: 0.7;
+  }
+  .mobile-action-count {
+    display: inline-block;
+    min-width: 20px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.35);
+    font-size: 11px;
+    font-weight: 700;
+    color: #f0d68c;
+  }
+  .mobile-action-count[hidden] { display: none; }
+
+  /* Hide the nav search since we have the prominent mobile one */
+  .site-nav-search-wrap { display: none !important; }
+  /* Tighten up the nav itself */
+  .site-nav-inner {
+    padding: 0.2rem 0.5rem;
+    gap: 0.4rem;
+  }
+  .site-nav-link { padding: 0.25rem 0.5rem; font-size: 11px; }
+
+  /* ── Collapse "Your replays" + "Filters" by default ─── */
+  body:not(.mobile-mine-open) #my-replays-section { display: none; }
+  body:not(.mobile-filters-open) .pro-filter-bar { display: none; }
+  body.mobile-filters-open .pro-filter-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  body.mobile-filters-open .pfb-group { width: 100%; }
+  body.mobile-filters-open .pfb-chips { flex-wrap: wrap; gap: 4px; }
+  body.mobile-filters-open .pfb-more,
+  body.mobile-filters-open .pfb-advanced-btn { width: 100%; }
+  body.mobile-filters-open .pfb-more-pop { position: static; width: 100%; }
+
+  /* Tighten the browse layout to a single column */
+  .site-browse-layout {
+    display: block !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+  .site-pros-head {
+    padding: 8px 10px 0;
+  }
+  .site-pros-title { font-size: 16px; }
+  .site-content { padding: 0 0 2rem; }
+
+  /* ── Compact pro build cards ───────────────────────── */
+  .site-build-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    padding: 6px 8px;
+  }
+  .site-build-card {
+    padding: 8px !important;
+    border-radius: 8px !important;
+  }
+  .site-card-race-watermark { display: none; }
+  .site-card-section-label { display: none; }
+  .site-card-user-tags,
+  .site-card-user-points { display: none; }
+  .site-card-user-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 4px 0 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .site-card-header { gap: 6px; padding-bottom: 4px; }
+  .mh-build-label { font-size: 14px; }
+  .site-card-matchups { font-size: 11px; }
+  .site-card-heroes-row { gap: 8px; }
+  .mh-hero-portrait { width: 36px !important; height: 36px !important; }
+  .site-card-hero-skills { gap: 2px; }
+  .site-skill-icon { width: 18px !important; height: 18px !important; }
+  .site-skill-icon img { width: 18px !important; height: 18px !important; }
+  .site-skill-lvl { font-size: 9px !important; }
+  .site-card-key-units { gap: 4px; flex-wrap: wrap; }
+  .site-card-key-icon { width: 28px !important; height: 28px !important; }
+  .site-card-key-label { font-size: 11px; }
+  .site-card-upgrade-row { gap: 4px; flex-wrap: wrap; }
+  .site-upgrade-badge { padding: 2px 5px; font-size: 11px; }
+  .site-upgrade-icon { width: 14px !important; height: 14px !important; }
+  .site-card-replay { padding-top: 6px; margin-top: 4px; }
+  .site-replay-meta-row { font-size: 11px; gap: 4px; flex-wrap: wrap; }
+  .site-watch-btn {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    padding: 10px;
+    margin-top: 6px;
+    font-size: 13px;
+  }
+
+  /* ── Modals as bottom-sheets ───────────────────────── */
+  .compare-drawer {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    inset: 0 !important;
+    transform: none !important;
+    margin: 0 !important;
+  }
+  .compare-drawer-body { padding: 12px !important; }
+  .ub-editor {
+    align-items: flex-end !important;
+  }
+  .ub-editor-box {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 12px 12px 0 0 !important;
+    margin: 0 !important;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .help-modal-card {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .help-modal-body { overflow-y: auto; }
+  .acp-modal { padding: 0 !important; }
+  .acp-card {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+  }
 }

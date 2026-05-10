@@ -126,7 +126,7 @@ const ClientUnit = class {
       "collisionSize", "isInferred", "destroyedAt", "isSummon",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
-      "constructionStartTime"
+      "constructionStartTime", "uprootStream"
     ];
 
     dataFields.forEach(field => {
@@ -570,8 +570,8 @@ const ClientUnit = class {
     // checks and updates current level record, setting this.fullName
     this.getCurrentLevelRecord(gameTime);
 
-    // early exit for buildings
-    if (this.isBuilding) {
+    // early exit for buildings — uprooted ancients need path interpolation
+    if (this.isBuilding && !this.isUprootedAt(gameTime)) {
       return;
     }
 
@@ -780,7 +780,8 @@ const ClientUnit = class {
 
     const minimumIconSize = this.meta.hero ?
       minimumHeroIconSize : minimumUnitSize;
-    const iconSize = Math.max(this.iconSize, minimumIconSize);
+    const baseIconSize = this._renderingUprooted ? IconSizes.unit : this.iconSize;
+    const iconSize = Math.max(baseIconSize, minimumIconSize);
 
     const halfIconSize = iconSize / 2.5;
     
@@ -911,6 +912,17 @@ const ClientUnit = class {
     ctx.globalAlpha = 1;
   }
 
+  isUprootedAt (gameTime) {
+    if (!this.uprootStream || !this.uprootStream.length) return false;
+    let state = false;
+    for (let i = 0; i < this.uprootStream.length; i++) {
+      const entry = this.uprootStream[i];
+      if (entry.gameTime > gameTime) break;
+      state = !!entry.isUprooted;
+    }
+    return state;
+  }
+
   preRender (frameData, ctx, buildingCtx, transform, gameTime, xScale, yScale, viewOptions) {
     if (gameTime < this.readyTime) {
       return;
@@ -925,10 +937,14 @@ const ClientUnit = class {
       return;
     }
 
-    if (this.isBuilding) {
+    const uprooted = this.isBuilding && this.isUprootedAt(gameTime);
+
+    if (this.isBuilding && !uprooted) {
       this.renderBuilding(buildingCtx, frameData, transform, xScale, yScale, viewOptions);
     } else {
+      this._renderingUprooted = uprooted;
       this.renderUnit(ctx, frameData, transform, gameTime, xScale, yScale, viewOptions);
+      this._renderingUprooted = false;
     }
   }
 

@@ -55,27 +55,27 @@
   }
   </script>
 
-  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/main.css?v=2">
   <style>
     body { margin: 0; }
   </style>
 </head>
 <body class="site-page">
-  <script src="js/SiteNav.js"></script>
-  <script src="js/TosBanner.js"></script>
-  <script src="js/Security.js"></script>
-  <script src="js/MyReplays.js"></script>
-  <script src="js/vendor/wc3v-parser.bundle.js"></script>
-  <script src="js/UploadManager.js"></script>
-  <script src="js/PlayerPicker.js"></script>
-  <script src="js/ReplayTypePicker.js"></script>
-  <script src="js/SummaryExtract.js"></script>
-  <script src="js/ReplayAnalyzer.js"></script>
-  <script src="js/CompareMatcher.js"></script>
-  <script src="js/AdvancedComparePicker.js"></script>
-  <script src="js/CompareCharts.js"></script>
-  <script src="js/CompareInline.js"></script>
-  <script src="js/BugReport.js"></script>
+  <script src="js/SiteNav.js?v=2"></script>
+  <script src="js/TosBanner.js?v=2"></script>
+  <script src="js/Security.js?v=2"></script>
+  <script src="js/MyReplays.js?v=2"></script>
+  <script src="js/vendor/wc3v-parser.bundle.js?v=2"></script>
+  <script src="js/UploadManager.js?v=2"></script>
+  <script src="js/PlayerPicker.js?v=2"></script>
+  <script src="js/ReplayTypePicker.js?v=2"></script>
+  <script src="js/SummaryExtract.js?v=2"></script>
+  <script src="js/ReplayAnalyzer.js?v=2"></script>
+  <script src="js/CompareMatcher.js?v=2"></script>
+  <script src="js/AdvancedComparePicker.js?v=2"></script>
+  <script src="js/CompareCharts.js?v=2"></script>
+  <script src="js/CompareInline.js?v=2"></script>
+  <script src="js/BugReport.js?v=2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       SiteNav.render('home');
@@ -128,6 +128,13 @@
           else if (result.total <= RAIL_LIMIT) countEl.textContent = `${result.total} ${result.total === 1 ? 'replay' : 'replays'}`;
           else countEl.textContent = `${result.rendered} of ${result.total}`;
         }
+        // Mirror the count to the mobile toggle and hide it entirely when
+        // the user has no replays — the empty-state has no value above the
+        // fold on a phone, so we'd rather collapse it out of the way.
+        const mobileBtn = document.getElementById('mobile-mine-toggle');
+        const mobileCount = document.getElementById('mobile-mine-count');
+        if (mobileBtn) mobileBtn.hidden = result.total === 0;
+        if (mobileCount) mobileCount.textContent = String(result.total);
         if (viewAllLink) {
           if (result.total > RAIL_LIMIT) {
             viewAllLink.hidden = false;
@@ -700,6 +707,29 @@
             Drag any <code>.w3g</code> file onto the <strong>Upload a replay</strong> button — or click it to open a file picker. The replay is parsed entirely on this machine; nothing leaves your browser.
           </p>
         </div>
+      </div>
+    </div>
+
+    <!-- Mobile-only condensed action bar. Hidden on desktop via CSS. Holds
+         the tagline (so the brand voice survives on phones), the prominent
+         search input, and the "Your replays" + "Filters" disclosure toggles
+         that keep the rest of the page collapsed by default. -->
+    <div class="mobile-action-bar" id="mobile-action-bar">
+      <div class="mobile-tagline">Learn how the <em>pros</em> play.</div>
+      <input type="search" id="mobile-build-search" class="mobile-build-search"
+             placeholder="Search builds, heroes, players, maps&hellip;"
+             autocomplete="off" spellcheck="false" enterkeyhint="search" />
+      <div class="mobile-action-buttons">
+        <button type="button" id="mobile-mine-toggle" class="mobile-action-btn" aria-expanded="false" hidden>
+          <span class="mobile-action-label">Your replays</span>
+          <span class="mobile-action-count" id="mobile-mine-count">0</span>
+          <span class="mobile-action-caret" aria-hidden="true">&#9656;</span>
+        </button>
+        <button type="button" id="mobile-filters-toggle" class="mobile-action-btn" aria-expanded="false">
+          <span class="mobile-action-label">Filters</span>
+          <span class="mobile-action-count" id="mobile-filters-count" hidden>0</span>
+          <span class="mobile-action-caret" aria-hidden="true">&#9656;</span>
+        </button>
       </div>
     </div>
 
@@ -2008,6 +2038,24 @@
           ? `${total} builds`
           : `${visible.length} of ${total}`;
       }
+
+      // Active filter count badge on the mobile "Filters" button.
+      const mobileFiltersCount = document.getElementById('mobile-filters-count');
+      if (mobileFiltersCount) {
+        let active = 0;
+        if (selectedRace) active++;
+        if (selectedMatchup) active++;
+        if (axisFilters.opener) active++;
+        if (axisFilters.gamePlan) active++;
+        if (axisFilters.army) active++;
+        if (selectedTournament) active++;
+        if (active > 0) {
+          mobileFiltersCount.textContent = String(active);
+          mobileFiltersCount.hidden = false;
+        } else {
+          mobileFiltersCount.hidden = true;
+        }
+      }
     }
 
     // ─── Init ───────────────────────────────────────────────
@@ -2050,12 +2098,40 @@
       // Build search index
       buildSearchIndex = allBuilds.map(buildSearchText);
 
-      // Wire up search bar
-      const searchInput = document.getElementById('build-search');
-      if (searchInput) {
-        searchInput.addEventListener('input', () => {
-          searchQuery = searchInput.value.trim();
+      // Wire up search bar(s) — the nav input lives in SiteNav, the mobile
+      // input lives in the condensed mobile-action-bar. Both feed the same
+      // searchQuery state and stay in sync as the user types in either one.
+      const navSearch = document.getElementById('build-search');
+      const mobileSearch = document.getElementById('mobile-build-search');
+      const wireSearchInput = (input, peer) => {
+        if (!input) return;
+        input.addEventListener('input', () => {
+          searchQuery = input.value.trim();
+          if (peer && peer.value !== input.value) peer.value = input.value;
           applyFilter();
+        });
+      };
+      wireSearchInput(navSearch, mobileSearch);
+      wireSearchInput(mobileSearch, navSearch);
+
+      // Mobile-only collapse toggles: "Your replays" reveals the rail,
+      // "Filters" reveals the pro filter bar. Both default to closed so the
+      // above-the-fold above-the-fold view stays compact.
+      const mobileFiltersBtn = document.getElementById('mobile-filters-toggle');
+      const mobileMineBtn = document.getElementById('mobile-mine-toggle');
+      const setBodyClass = (cls, on) => document.body.classList.toggle(cls, on);
+      if (mobileFiltersBtn) {
+        mobileFiltersBtn.addEventListener('click', () => {
+          const open = mobileFiltersBtn.getAttribute('aria-expanded') === 'true';
+          mobileFiltersBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+          setBodyClass('mobile-filters-open', !open);
+        });
+      }
+      if (mobileMineBtn) {
+        mobileMineBtn.addEventListener('click', () => {
+          const open = mobileMineBtn.getAttribute('aria-expanded') === 'true';
+          mobileMineBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
+          setBodyClass('mobile-mine-open', !open);
         });
       }
 

@@ -44,86 +44,98 @@ const GameDisplayBox = class {
     this.teamColorMap = teamColorMap;
     this.playerColorMap = playerColorMap;
 
-    this.data = null;
+    this.hitData = null;
     this.hoveredCampUuid = null;
   }
 
-  setData (data, handlerFn) {
-    this.data = handlerFn(data);
+  setData (neutralGroups) {
+    // accept for back-compat; hit positions now come from setHitData per frame
+    this.neutralGroups = neutralGroups || null;
+  }
+
+  setHitData (campCircles) {
+    this.hitData = campCircles || null;
+  }
+
+  _buildTree () {
+    if (!this.hitData || !this.hitData.length) return null;
+    const HIT_PAD = 14;
+    const tree = new rbush();
+    const groupBoxes = this.hitData.map(c => ({
+      rawGroup: c.rawGroup,
+      cx: c.cx,
+      cy: c.cy,
+      r: c.r + HIT_PAD,
+      minX: c.cx - (c.r + HIT_PAD),
+      maxX: c.cx + (c.r + HIT_PAD),
+      minY: c.cy - (c.r + HIT_PAD),
+      maxY: c.cy + (c.r + HIT_PAD)
+    }));
+    tree.load(groupBoxes);
+    return { tree, groupBoxes };
   }
 
   handleMouse (e, transform) {
-    if (!this.data || !this.data.tree) {
-      return;
+    if (!this.hitData || !this.hitData.length) return false;
+    if (!e || !transform) return false;
+
+    const { offsetX, offsetY } = e;
+    if (offsetX === undefined || offsetY === undefined) return false;
+
+    const canvas = document.getElementById('main-canvas');
+    if (!canvas || !canvas.width) return false;
+
+    const cssWidth = canvas.clientWidth || canvas.width;
+    const cssHeight = canvas.clientHeight || canvas.height;
+    const scaleX = canvas.width / cssWidth;
+    const scaleY = canvas.height / cssHeight;
+    const canvasX = offsetX * scaleX;
+    const canvasY = offsetY * scaleY;
+
+    if (Number.isNaN(canvasX) || Number.isNaN(canvasY)) return false;
+
+    const indexed = this._buildTree();
+    if (!indexed) return false;
+
+    const hitBox = { minX: canvasX, maxX: canvasX, minY: canvasY, maxY: canvasY };
+    const candidates = indexed.tree.search(hitBox);
+
+    let searchHit = null;
+    let bestDist = Infinity;
+    for (const c of candidates) {
+      const dx = canvasX - c.cx;
+      const dy = canvasY - c.cy;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d <= c.r && d < bestDist) {
+        bestDist = d;
+        searchHit = c;
+      }
     }
 
-    if (!e || !transform) {
-      return;
-    }
-
-    const { offsetX, offsetY, target } = e;
-
-    if (offsetX === undefined || offsetY === undefined) {
-      return;
-    }
-
-    // convert CSS pixels to canvas pixels, then inverse-transform to canvas-space
-    const scaleX = target.width / (target.clientWidth || target.width);
-    const scaleY = target.height / (target.clientHeight || target.height);
-    const screenX = offsetX * scaleX;
-    const screenY = offsetY * scaleY;
-    const canvasX = (screenX - transform.x) / transform.k;
-    const canvasY = (screenY - transform.y) / transform.k;
-
-    const hitBox = {
-      minX: canvasX,
-      maxX: canvasX,
-      minY: canvasY,
-      maxY: canvasY
-    };
-
-    const searchHits = this.data.tree.search(hitBox);
-    if (searchHits.length) {
-      const searchHit = searchHits[0];
+    if (searchHit) {
       const campUuid = searchHit.rawGroup.uuid;
 
-      // same camp already shown, just update cursor
       if (this.hoveredCampUuid === campUuid) {
         document.body.style.cursor = 'pointer';
-        return;
+        return true;
       }
 
       this.hoveredCampUuid = campUuid;
       document.body.style.cursor = 'pointer';
 
-      // position the popup — keep within canvas bounds
-      const drawBounds = target.getBoundingClientRect();
-      const canvasW = drawBounds ? drawBounds.width : target.clientWidth;
-      const canvasH = drawBounds ? drawBounds.height : target.clientHeight;
+      const drawBounds = canvas.getBoundingClientRect();
+      const canvasW = drawBounds ? drawBounds.width : canvas.clientWidth;
+      const canvasH = drawBounds ? drawBounds.height : canvas.clientHeight;
       const popW = boxDesignSize.width;
       const popH = boxDesignSize.height;
       const gap = 12;
 
       let popX = offsetX + gap;
       let popY = offsetY + gap;
-
-      // flip horizontally if overflows right
-      if (popX + popW > canvasW) {
-        popX = offsetX - popW - gap;
-      }
-      // clamp to left edge
-      if (popX < 0) {
-        popX = gap;
-      }
-
-      // flip vertically if overflows bottom
-      if (popY + popH > canvasH) {
-        popY = offsetY - popH - gap;
-      }
-      // clamp to top edge
-      if (popY < 0) {
-        popY = gap;
-      }
+      if (popX + popW > canvasW) popX = offsetX - popW - gap;
+      if (popX < 0) popX = gap;
+      if (popY + popH > canvasH) popY = offsetY - popH - gap;
+      if (popY < 0) popY = gap;
 
       this.box.style.left = `${popX}px`;
       this.box.style.top = `${popY}px`;
@@ -138,10 +150,9 @@ const GameDisplayBox = class {
         this.box.classList.add('visible');
       });
 
-      return;
+      return true;
     }
 
-    // no hit
     if (this.hoveredCampUuid) {
       this.hoveredCampUuid = null;
       this.hide();
@@ -150,6 +161,8 @@ const GameDisplayBox = class {
     if (document.body.style.cursor === 'pointer') {
       document.body.style.cursor = 'default';
     }
+
+    return false;
   }
 
   render (item) {
@@ -409,47 +422,6 @@ const GameDisplayBox = class {
     `;
   }
 
-  static neutralCampHandler (gameScaler, transform) {
-    const { xScale, yScale, middleX, middleY } = gameScaler;
-
-    return (data) => {
-      const groups = Object.values(data);
-      const tree = new rbush();
-
-      // store positions in canvas-space — handleMouse inverse-transforms mouse coords
-      const groupBoxes = groups.reduce((acc, group) => {
-        // use tight unitBounds for hover detection
-        const b = group.unitBounds || group.bounds;
-
-        // Project the 4 corners through the 3D camera and take the screen
-        // AABB. Good enough for coarse RBush hit-testing under a tilted camera.
-        const _gs = window.wc3v && window.wc3v.gameScaler;
-        const p1 = _gs.projectXY(b.minX, b.minY);
-        const p2 = _gs.projectXY(b.maxX, b.minY);
-        const p3 = _gs.projectXY(b.minX, b.maxY);
-        const p4 = _gs.projectXY(b.maxX, b.maxY);
-
-        const record = {
-          rawGroup: group,
-
-          minX: Math.min(p1.x, p2.x, p3.x, p4.x) + middleX,
-          maxX: Math.max(p1.x, p2.x, p3.x, p4.x) + middleX,
-
-          minY: Math.min(p1.y, p2.y, p3.y, p4.y) + middleY,
-          maxY: Math.max(p1.y, p2.y, p3.y, p4.y) + middleY
-        };
-
-        acc.push(record);
-        return acc;
-      }, []);
-
-      tree.load(groupBoxes);
-
-      return {
-        tree
-      };
-    };
-  }
 };
 
 window.GameDisplayBox = GameDisplayBox;

@@ -38,7 +38,8 @@ const BuildView = {
 const LayoutMode = {
   gameplay: 'gameplay',
   staticBuildOrder: 'static-bo',
-  liveBuildOrder: 'live-bo'
+  liveBuildOrder: 'live-bo',
+  mobileBuildOrder: 'mobile-bo'
 };
 
 const RaceTheme = {

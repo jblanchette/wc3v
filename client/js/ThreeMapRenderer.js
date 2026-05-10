@@ -1219,6 +1219,9 @@
       if (this._projMatrixCached && !this._viewProjDirty) {
         // Already cached from last render() call
       } else {
+        // matrixWorldInverse only auto-refreshes during render(); call this
+        // explicitly when projecting between a camera move and the next frame.
+        this.camera.updateMatrixWorld(true);
         this._viewProjMatrix.multiplyMatrices(
           this.camera.projectionMatrix,
           this.camera.matrixWorldInverse
@@ -2024,7 +2027,8 @@
             wx, wy,
             readyTime: unit.readyTime || unit.constructionStartTime || unit.spawnTime || 0,
             destroyedAt: unit.destroyedAt || null,
-            playerColor: player.playerColor || '#cccccc'
+            playerColor: player.playerColor || '#cccccc',
+            unit
           });
         }
       }
@@ -2095,7 +2099,10 @@
                 wx: entry.wx,
                 wy: entry.wy,
                 itemId: entry.itemId,
-                _treesCleared: false
+                unit: entry.unit,
+                _treesCleared: false,
+                _lastRootedX: entry.wx,
+                _lastRootedY: entry.wy
               });
             }
 
@@ -2122,8 +2129,37 @@
       }
       this._lastBuildingGameTime = gameTime;
 
+      const ext = this.mapInfo.bounds.map;
+      const mapCenterX = (ext[0][0] + ext[0][1]) / 2;
+      const mapCenterY = (ext[1][0] + ext[1][1]) / 2;
+
       for (const b of this._playerBuildings) {
-        const visible = gameTime >= b.readyTime && (!b.destroyedAt || gameTime < b.destroyedAt);
+        // Hide 3D mesh while uprooted (2D unit canvas owns rendering then);
+        // snap to latest root location when re-rooted.
+        let isUprooted = false;
+        if (b.unit && b.unit.uprootStream && b.unit.uprootStream.length) {
+          let lastRoot = null;
+          for (let i = 0; i < b.unit.uprootStream.length; i++) {
+            const e = b.unit.uprootStream[i];
+            if (e.gameTime > gameTime) break;
+            isUprooted = !!e.isUprooted;
+            if (!e.isUprooted) lastRoot = e;
+          }
+          if (lastRoot && (lastRoot.x !== b._lastRootedX || lastRoot.y !== b._lastRootedY)) {
+            const groundY = this.sampleHeight(lastRoot.x, lastRoot.y) + 18;
+            b.mesh.position.set(
+              lastRoot.x - mapCenterX,
+              groundY,
+              -(lastRoot.y - mapCenterY)
+            );
+            b._lastRootedX = lastRoot.x;
+            b._lastRootedY = lastRoot.y;
+            changed = true;
+          }
+        }
+
+        const aliveAndReady = gameTime >= b.readyTime && (!b.destroyedAt || gameTime < b.destroyedAt);
+        const visible = aliveAndReady && !isUprooted;
         if (b.mesh.visible !== visible) {
           b.mesh.visible = visible;
           changed = true;

@@ -14,6 +14,25 @@ services:
       - path: /*
         name: Referrer-Policy
         value: strict-origin-when-cross-origin
+      # HTML must always revalidate so a deploy is picked up on the next
+      # navigation. Without this, browsers heuristic-cache HTML for ~10% of
+      # its age and Cloudflare edge-caches per its own defaults — both have
+      # caused stale-content reports after deploys.
+      - path: /
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /*.html
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      # JS/CSS get a short TTL. Versioned URLs (?v=N in index.html) bust
+      # the cache on deploy; the short TTL is a fallback for anything that
+      # slips through unversioned.
+      - path: /js/*
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
+      - path: /css/*
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
     routes:
       # Heavy assets are hosted on R2 at cdn.wc3v.com. The client code uses
       # root-relative paths (e.g. /assets/wc3icons/foo.jpg, /maps/X/map.jpg)

@@ -169,6 +169,9 @@ if (showAll || showSections.includes('events')) {
       } else if (e.key === 'research') {
         const bName = e.building ? ` @ ${e.building.displayName}` : '';
         console.log(`    [${time}] research: ${e.displayName} Lv${e.level} [${e.category}] gold=${e.goldCost||0} lum=${e.lumberCost||0}${bName} | workers: ${wStr}`);
+      } else if (e.key === 'uproot' || e.key === 'root') {
+        const b = e.building || {};
+        console.log(`    [${time}] ${e.key.toUpperCase()}: ${b.displayName||'?'} (${b.itemId||'?'})`);
       } else {
         const name = (e.unit && e.unit.displayName) || (e.building && e.building.displayName) || '';
         console.log(`    [${time}] ${e.key}${name ? ': ' + name : ''} | workers: ${wStr}`);
