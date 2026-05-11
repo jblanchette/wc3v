@@ -104,15 +104,22 @@ function injectHeroBarPills () {
   document.querySelectorAll('.hero-bar-inner').forEach((bar) => {
     if (bar.querySelector('.hero-bar-bug')) return;
     const a = document.createElement('a');
-    a.className = 'hero-bar-help hero-bar-bug';
+    a.className = 'hero-bar-bug';
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
     a.title = 'Report a bug';
-    a.innerHTML = bugIcon(14) + '<span>Report a bug</span>';
+    a.innerHTML = bugIcon(15) + '<span>Report a bug</span>';
     attachClickRebuild(a, 'hero');
-    // Sit directly after the existing "Where are my replays?" pill so the
-    // two help-pills cluster together. .hero-bar-bug overrides the
-    // margin-left:auto so the bug pill doesn't get pushed right.
+    // Preferred home: the front of the right-hand action cluster, just
+    // before the BROWSER-ONLY badge. Falls back to sitting after the
+    // legacy "Where are my replays?" pill on pages without the cluster.
+    const actions = bar.querySelector('.hero-bar-actions');
+    if (actions) {
+      const privateBadge = actions.querySelector('.hero-bar-private');
+      if (privateBadge) actions.insertBefore(a, privateBadge);
+      else actions.insertBefore(a, actions.firstChild);
+      return;
+    }
     const existingHelp = bar.querySelector('.hero-bar-help:not(.hero-bar-bug)');
     if (existingHelp) {
       existingHelp.insertAdjacentElement('afterend', a);
