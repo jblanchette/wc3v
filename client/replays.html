@@ -8,15 +8,21 @@
   <meta name="robots" content="noindex">
   <link rel="canonical" href="https://wc3v.com/replays">
 
+  <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.wc3v.com">
+
   <link rel="stylesheet" href="css/main.css">
   <style>body { margin: 0; }</style>
 </head>
 <body class="site-page">
+  <script src="js/clientConfig.js"></script>
   <script src="js/SiteNav.js"></script>
   <script src="js/TosBanner.js"></script>
   <script src="js/Security.js"></script>
   <script src="js/MyReplays.js"></script>
-  <script src="js/vendor/wc3v-parser.bundle.js"></script>
+  <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
+       Worker (parser-worker.js) that importScripts() the bundle itself, and
+       UploadManager.prefetchParser() warms the HTTP cache on first user intent. -->
   <script src="js/UploadManager.js"></script>
   <script src="js/PlayerPicker.js"></script>
   <script src="js/ReplayTypePicker.js"></script>
@@ -264,7 +270,12 @@
         }
       };
       const heroCard = document.getElementById('hero-upload-card');
-      if (heroCard) heroCard.addEventListener('click', triggerUpload);
+      if (heroCard) {
+        const warmParser = () => window.UploadManager && window.UploadManager.prefetchParser();
+        heroCard.addEventListener('mouseenter', warmParser, { once: true });
+        heroCard.addEventListener('focus', warmParser, { once: true });
+        heroCard.addEventListener('click', triggerUpload);
+      }
 
       // Help modal.
       const findBtn = document.getElementById('hero-find-replays-btn');

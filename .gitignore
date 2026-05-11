@@ -3,6 +3,9 @@ client/logs/
 client/replays/*
 *.sublime-workspace
 
+# Generated at deploy time by tools/gen-asset-manifest.js (Render buildCommand).
+client/asset-manifest.json
+
 client/assets/wc3icons/*
 client/assets/models/*
 client/assets/textures/*

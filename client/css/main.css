@@ -9096,13 +9096,13 @@ svg.about-feat-icon {
   flex-shrink: 0;
 }
 .hero-bar-logo img {
-  height: 40px;
+  height: 50px;
   width: auto;
   display: block;
 }
 
 .hero-bar-tagline {
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: #d0d0d0;
   font-weight: 500;
   white-space: nowrap;
@@ -9137,29 +9137,32 @@ svg.about-feat-icon {
 .hero-bar-upload-icon { color: #b8e0a0; flex-shrink: 0; }
 
 /* ── Stamped "BROWSER-ONLY" privacy badge ────────────────────────────
-   Sits to the left of the upload button. Two-tone treatment: a darker
-   tactical-green inset that visually reads as a hardware status indicator
-   rather than a generic UI pill. The shield icon has an always-on slow
-   pulse so the badge feels "live" without the text needing to animate. */
+   Lives in the hero-bar action cluster. Two-tone treatment: a darker
+   tactical-green inset that reads as a hardware status indicator rather
+   than a generic UI pill. The shield icon has an always-on slow pulse so
+   the badge feels "live" without the text needing to animate. */
 .hero-bar-private {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 11px 0 9px;
+  gap: 10px;
+  padding: 0 13px 0 11px;
   margin-left: auto;
-  height: 36px;
+  height: 42px;
   box-sizing: border-box;
   background:
-    linear-gradient(180deg, rgba(60,140,80,0.18), rgba(40,90,55,0.22));
-  border: 1px solid rgba(120,200,140,0.45);
-  border-radius: 5px;
+    linear-gradient(180deg, rgba(64,150,86,0.24), rgba(40,90,55,0.30));
+  border: 1px solid rgba(120,200,140,0.55);
+  border-radius: 6px;
   box-shadow:
-    inset 0 1px 0 rgba(180,224,160,0.18),
-    inset 0 -1px 0 rgba(0,0,0,0.25),
-    0 0 0 1px rgba(0,0,0,0.25);
+    inset 0 1px 0 rgba(180,224,160,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.28),
+    0 0 0 1px rgba(0,0,0,0.25),
+    0 1px 6px rgba(40,120,60,0.25);
   flex-shrink: 0;
   user-select: none;
 }
+/* Inside the action cluster the wrapper already owns margin-left:auto. */
+.hero-bar-actions .hero-bar-private { margin-left: 0; }
 
 .hero-bar-private-shield {
   color: #8cf09a;
@@ -9182,30 +9185,39 @@ svg.about-feat-icon {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  line-height: 1;
-  gap: 2px;
+  line-height: 1.05;
+  gap: 3px;
   font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 .hero-bar-private-line1 {
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 800;
-  letter-spacing: 1.2px;
-  color: #d8f5cc;
-  text-shadow: 0 0 6px rgba(140,240,154,0.4);
+  letter-spacing: 1.4px;
+  color: #e2f7d6;
+  text-shadow: 0 0 6px rgba(140,240,154,0.45);
 }
 .hero-bar-private-line2 {
-  font-size: 0.6rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.3px;
-  color: rgba(184,224,160,0.7);
+  color: rgba(196,232,176,0.85);
   text-transform: uppercase;
 }
 
-/* The upload button no longer needs margin-left:auto — the privacy badge
-   has it instead, pushing both right-aligned together. */
-.hero-bar-upload { margin-left: 0; }
+/* ── Right-hand action cluster (bug report · privacy badge · drop zone) ──
+   A single flex group pinned to the right edge. BugReport.js injects the
+   "Report a bug" button at the start of this wrapper. */
+.hero-bar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
 
-/* "Where are my replays?" help button — sits right next to the upload. */
+/* "Where are my replays?" help pill — legacy standalone variant (still used
+   on /replays.html). On the homepage the helper lives inside the drop zone
+   and uses .hero-bar-findreplays instead. */
 .hero-bar-help {
   margin-left: auto;
   display: inline-flex;
@@ -9217,7 +9229,7 @@ svg.about-feat-icon {
   color: #c0c0c0;
   border-radius: 6px;
   font-family: inherit;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
@@ -9228,10 +9240,10 @@ svg.about-feat-icon {
   color: #fff;
 }
 
-/* Upload becomes a compact dashed pill on the right of the bar — still a
-   real button + drag-drop target, just visually tight. Height matches
-   .hero-bar-private exactly (36px box-sized). */
+/* The upload button: standalone dashed pill on /replays.html, but inside
+   the homepage drop zone it becomes the borderless prominent green action. */
 .hero-bar-upload {
+  margin-left: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -9246,7 +9258,7 @@ svg.about-feat-icon {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
   white-space: nowrap;
 }
 .hero-bar-upload:hover {
@@ -9257,14 +9269,80 @@ svg.about-feat-icon {
 .hero-bar-upload svg { flex-shrink: 0; }
 .hero-bar-upload-label { white-space: nowrap; }
 .hero-bar-upload-sub {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: #c4915b;
+  color: #ffd9a0;
   margin-left: 4px;
 }
 .hero-bar-upload-sub:empty { display: none; }
 
-/* Drag-over state (replaces the old .hero-tile-dragover). */
+/* ── Replay drop zone ────────────────────────────────────────────────
+   Dashed-bordered region that bundles the prominent upload action with
+   the "Where are my replays?" helper, so the help text sits where you
+   actually drop the file. */
+.hero-bar-dropzone {
+  display: inline-flex;
+  align-items: stretch;
+  height: 42px;
+  box-sizing: border-box;
+  border: 1.5px dashed rgba(92,184,120,0.55);
+  border-radius: 8px;
+  background: rgba(92,184,120,0.05);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+/* The dragover class lands on #hero-upload-card (the inner button); light
+   up the whole zone when it does. */
+.hero-bar-dropzone:has(.hero-tile-dragover),
+.hero-bar-dropzone.hero-tile-dragover {
+  border-color: #5cb878;
+  border-style: solid;
+  background: rgba(92,184,120,0.16);
+}
+.hero-bar-dropzone .hero-bar-upload {
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 0 16px;
+  gap: 10px;
+  background: rgba(92,184,120,0.16);
+  color: #d8f5cc;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+.hero-bar-dropzone .hero-bar-upload:hover {
+  background: rgba(92,184,120,0.30);
+  color: #fff;
+}
+
+/* "Where are my replays?" helper inside the drop zone — a quiet segment
+   divided from the upload action by a dashed hairline. */
+.hero-bar-findreplays {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  height: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-left: 1px dashed rgba(92,184,120,0.4);
+  color: #b9c4d8;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.hero-bar-findreplays:hover {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+.hero-bar-findreplays svg { flex-shrink: 0; opacity: 0.8; }
+
+/* Drag-over tint for the upload button itself (the :has() rule above
+   handles the surrounding zone's border). */
 .hero-tile-dragover {
   background: rgba(92,184,120,0.2) !important;
   border-color: #5cb878 !important;
@@ -9272,18 +9350,25 @@ svg.about-feat-icon {
 }
 
 @media (max-width: 900px) {
-  /* Drop the tagline, keep logo + help + upload. */
+  /* Short hero taglines (e.g. /replays.html) drop here. */
   .hero-bar-tagline { display: none; }
 }
+@media (max-width: 1440px) {
+  /* The homepage's longer tagline only fits comfortably on wide monitors;
+     below that it's the logo + action cluster (still plenty of identity).
+     The mobile action bar carries the tagline on phones. */
+  .hero-bar-tagline-long { display: none; }
+}
 @media (max-width: 1000px) {
-  /* Drop the badge's secondary line first — keeps the BROWSER-ONLY label
-     visible for as long as possible. */
+  /* Tighten the right cluster: drop the badge's secondary line and let the
+     bug button + drop-zone helper collapse to icons (titles still hover). */
   .hero-bar-private-line2 { display: none; }
-  .hero-bar-private { padding: 0 10px 0 8px; }
+  .hero-bar-private { padding: 0 11px 0 9px; }
+  .hero-bar-findreplays span { display: none; }
+  .hero-bar-findreplays { padding: 0 11px; }
 }
 @media (max-width: 760px) {
-  /* Drop the text entirely; keep just the pulsing shield as a glanceable
-     icon. The title attribute carries the full message on hover. */
+  /* Drop the badge text entirely; keep just the pulsing shield. */
   .hero-bar-private-text { display: none; }
   .hero-bar-private { padding: 0 8px; }
 }
@@ -9300,6 +9385,7 @@ svg.about-feat-icon {
 /* Small phone (≤ 480px): upload button takes its own row. */
 @media (max-width: 480px) {
   .hero-bar-inner { padding: 8px 12px; }
+  .hero-bar-actions { gap: 8px; }
   .hero-bar-upload {
     flex-basis: 100%;
     justify-content: center;
@@ -13602,24 +13688,39 @@ body.help-modal-active {
   color: #ffe8a3;
 }
 
-/* Hero-bar pill — same shape as .hero-bar-help (it inherits the class)
-   but without the margin-left:auto, so it sits flush next to the
-   existing "Where are my replays?" pill instead of being shoved right.
-   Warm amber tint keeps it visually distinct from the help pill. */
+/* Hero-bar "Report a bug" button — self-contained styling (no longer
+   inherits .hero-bar-help). A proper amber-tinted button: bigger hit area,
+   visible fill, sits at the front of the action cluster so it's an obvious
+   top-of-page affordance rather than a faint pill. */
 .hero-bar-bug {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  height: 42px;
+  box-sizing: border-box;
   margin-left: 0;
   text-decoration: none;
-  color: #f0d68c;
-  border-color: rgba(240,214,140,0.30);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #f4dc94;
+  background: rgba(240,214,140,0.12);
+  border: 1px solid rgba(240,214,140,0.42);
+  border-radius: 6px;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
 .hero-bar-bug:hover {
-  color: #ffe8a3;
-  border-color: rgba(240,214,140,0.55);
-  background: rgba(240,214,140,0.08);
+  color: #fff2c4;
+  border-color: rgba(240,214,140,0.7);
+  background: rgba(240,214,140,0.20);
 }
-@media (max-width: 700px) {
+.hero-bar-bug svg { flex-shrink: 0; }
+@media (max-width: 1000px) {
   .hero-bar-bug span { display: none; }
-  .hero-bar-bug { padding: 5px 8px; }
+  .hero-bar-bug { padding: 0 11px; gap: 0; }
 }
 
 /* Nav-link variant — used on viewer.html (no footer, no hero bar) where
@@ -13941,14 +14042,31 @@ fieldset.ub-editor-field input[type="text"] {
     gap: 6px !important;
     min-height: 40px;
   }
-  .hero-bar-logo img { height: 28px; }
+  .hero-bar-logo img { height: 34px; }
   .hero-bar-help,
-  .hero-bar-private { display: none; }
-  .hero-bar-upload {
+  .hero-bar-private,
+  .hero-bar-bug,
+  .hero-bar-findreplays { display: none; }
+  /* The drop zone collapses to just the upload button on phones. */
+  .hero-bar-dropzone {
+    height: auto;
+    border: none;
+    background: transparent;
+    overflow: visible;
+    margin-left: auto;
+  }
+  .hero-bar-upload,
+  .hero-bar-dropzone .hero-bar-upload {
     flex-basis: auto !important;
+    height: auto;
     margin-left: auto !important;
     padding: 6px 10px;
     font-size: 12px;
+    font-weight: 600;
+    border: 1px dashed rgba(92,184,120,0.45);
+    border-radius: 6px;
+    background: rgba(92,184,120,0.10);
+    color: #b8e0a0;
   }
   .hero-bar-upload-label { font-size: 12px; }
   .hero-bar-upload-icon { width: 12px; height: 12px; }
@@ -14167,4 +14285,98 @@ fieldset.ub-editor-field input[type="text"] {
     border-left: none !important;
     border-right: none !important;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY & LOW-GRAPHICS  (appended — keep at end of file)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The UI is a single dark theme; declare it so browsers render form controls,
+   scrollbars, and the like to match and don't double-invert in dark mode. */
+:root { color-scheme: dark; }
+
+/* Skip-to-content link — first focusable element on each page, off-screen
+   until focused. Targets #content in the viewer / <main> elsewhere. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100000;
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--site-accent, #4488ff);
+  color: #fff;
+  font: 600 0.9rem/1 verdana, sans-serif;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 8px;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Firefox: kill the inner dotted focus ring / extra padding on buttons so our
+   :focus-visible outline is the only indicator. */
+button::-moz-focus-inner { border: 0; padding: 0; }
+
+/* Global keyboard-focus indicator. The site pages style a handful of elements
+   explicitly above; this is the catch-all so every focusable thing in the
+   viewer (now real <button>s) and modals gets a visible ring. Mouse clicks
+   don't trigger :focus-visible, so this won't affect pointer users. */
+:focus-visible {
+  outline: 2px solid var(--site-accent, #4488ff);
+  outline-offset: 2px;
+}
+/* Belt-and-suspenders for the dark canvas chrome — a brighter ring there. */
+#scrubber-bar :focus-visible,
+#mega-play-overlay :focus-visible,
+#player-status-toggles :focus-visible,
+#match-complete-banner :focus-visible {
+  outline-color: #ffffff;
+}
+
+/* Honor a stronger contrast preference: firm up borders, lift muted text. */
+@media (prefers-contrast: more) {
+  :root {
+    --site-border: rgba(255, 255, 255, 0.4);
+    --site-text-muted: #c7d2e0;
+  }
+  :focus-visible { outline-width: 3px; }
+  .site-build-card, .ms-panel, .help-modal-card, .compare-drawer {
+    border-color: rgba(255, 255, 255, 0.45);
+  }
+}
+
+/* Reduced motion: kill non-essential animation/transition site-wide. The two
+   pre-existing rules above only covered the intro video + build cards. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The viewer's interactive controls used to be <div onClick>; they're now
+   real <button>s (keyboard-operable, announced by screen readers). Strip the
+   UA button chrome so the existing class styling renders exactly as before.
+   (Each of these elements already sets its own background/border/padding via
+   its class/id rule, so we only neutralise the UA appearance + font here.) */
+button.status-toggle,
+button.mega-hint,
+button.mega-hint-featured,
+button#mega-play-button,
+button#mega-play-title-logo,
+button.mcb-restart,
+button.mcb-summary {
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+  line-height: normal;
+  text-align: inherit;
+  letter-spacing: inherit;
+  margin: 0;
+  box-sizing: border-box;
 }

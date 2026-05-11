@@ -6,14 +6,27 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 
+    <!-- Warm the TLS+DNS path to the asset CDN and the script CDNs. -->
+    <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.wc3v.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
     <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
     <script>
-      // dev cache buster — forces fresh loads every page load
-      const _t = Date.now();
+      // Cache buster for the local /js/* files. In dev (localhost) we want a
+      // fresh load every reload; in prod, tools/gen-asset-manifest.js (run as
+      // the Render build step) rewrites the marker block below to pin
+      // _assetVersion to the content hash so /js/* can be cached immutable.
+      // Don't reformat the marker comments — the rewrite regex matches them.
+      /* @asset-version-begin */ const _assetVersion = null; /* @asset-version-end */
+      const _t = _assetVersion || Date.now();
       const _scripts = [
+        '/js/clientConfig.js',
         '/js/Helpers.js',
         '/js/Drawing.js',
         '/js/Constants.js',
@@ -46,7 +59,9 @@
         '/js/MatchSummary.js',
         '/js/MatchHeader.js',
         '/js/MyReplays.js',
-        '/js/vendor/wc3v-parser.bundle.js',
+        // wc3v-parser.bundle.js (~1 MB) loads on demand: parsing runs in a
+        // Web Worker (parser-worker.js) that importScripts() the bundle itself;
+        // UploadManager.prefetchParser() warms the cache on first upload intent.
         '/js/UploadManager.js',
         '/js/app.js',
         '/js/SiteNav.js',
@@ -81,9 +96,9 @@
     <!-- Loading overlay shown when arriving at /viewer?local=ID, hidden by
          loadLocal once setup() resolves. Plain CSS — no script dependency
          on the rest of the bundle. -->
-    <div id="local-loading-overlay" class="parse-overlay" style="display:none">
+    <div id="local-loading-overlay" class="parse-overlay" style="display:none" role="status" aria-live="polite">
       <div class="parse-overlay-card">
-        <div class="parse-overlay-spinner"></div>
+        <div class="parse-overlay-spinner" aria-hidden="true"></div>
         <div class="parse-overlay-title">Loading your replay…</div>
         <div class="parse-overlay-sub">Hydrating from your local library and rendering the map.</div>
       </div>
@@ -92,7 +107,7 @@
     <!-- Friendly error shown when ?local=ID points to a replay that isn't in
          this browser's IndexedDB (most often: a friend sent a "share link"
          not realizing replays are stored locally, never on a server). -->
-    <div id="missing-replay-overlay" class="parse-overlay" style="display:none">
+    <div id="missing-replay-overlay" class="parse-overlay" style="display:none" role="alert">
       <div class="missing-replay-card">
         <div class="missing-replay-icon" aria-hidden="true">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -120,15 +135,15 @@
           </div>
           <div id="gameplay-row">
             <div id="player-status-wrapper">
-              <div id="player-status-toggles">
-                <div id="heroes-toggle"
-                  onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected">Heroes</div>
-                <div id="units-toggle"
-                  onClick="wc3v.setStatusTab('units')" class="status-toggle">Selection</div>
-                <div id="groups-toggle"
-                  onClick="wc3v.setStatusTab('groups')" class="status-toggle">Groups</div>
+              <div id="player-status-toggles" role="group" aria-label="Player status panel view">
+                <button type="button" id="heroes-toggle"
+                  onClick="wc3v.setStatusTab('heroes')" class="status-toggle selected" aria-pressed="true">Heroes</button>
+                <button type="button" id="units-toggle"
+                  onClick="wc3v.setStatusTab('units')" class="status-toggle" aria-pressed="false">Selection</button>
+                <button type="button" id="groups-toggle"
+                  onClick="wc3v.setStatusTab('groups')" class="status-toggle" aria-pressed="false">Groups</button>
               </div>
-              <canvas id="player-status-canvas" width="265" height="200"></canvas>
+              <canvas id="player-status-canvas" width="265" height="200" aria-hidden="true"></canvas>
             </div>
 
             <div id="map-container">
@@ -137,42 +152,42 @@
               <div id="mega-play-overlay">
                   <div id="mega-play-title-group">
                     <div id="mega-play-title">Watch Rewindable Replay</div>
-                    <div id="mega-play-title-logo" onClick="wc3v.play()"><img src="/assets/wc3v.svg" alt="WC3V" /><img src="/assets/play-icon.svg" alt="Play" class="logo-play-icon" /></div>
+                    <button type="button" id="mega-play-title-logo" onClick="wc3v.play()" aria-label="Play replay"><img src="/assets/wc3v.svg" alt="" /><img src="/assets/play-icon.svg" alt="" class="logo-play-icon" /></button>
                   </div>
-                  <div id="mega-play-button" onClick="wc3v.play()"></div>
-                  <div id="mega-play-hints">
+                  <button type="button" id="mega-play-button" onClick="wc3v.play()" aria-label="Play replay"></button>
+                  <div id="mega-play-hints" role="group" aria-label="View options">
                     <div id="mega-play-hints-title">View Options</div>
-                    <div class="mega-hint mega-hint-featured on" data-option="displayCreepRoute" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="displayPath" onClick="wc3v.toggleViewOption('displayPath')">Unit Trails<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="displayLevelPins" onClick="wc3v.toggleViewOption('displayLevelPins')">Level Pins<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="displayFloatingText" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Text<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="displayText" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="decayEffects" onClick="wc3v.toggleViewOption('decayEffects')">Fade FX<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="displayTreeGrid" onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid<span class="mega-hint-icon"></span></div>
-                    <div class="mega-hint on" data-option="autoSplitScreen" onClick="wc3v.toggleViewOption('autoSplitScreen')">Split Screen<span class="mega-hint-icon"></span></div>
+                    <button type="button" class="mega-hint mega-hint-featured on" data-option="displayCreepRoute" aria-pressed="true" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="displayPath" aria-pressed="true" onClick="wc3v.toggleViewOption('displayPath')">Unit Trails<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="displayLevelPins" aria-pressed="true" onClick="wc3v.toggleViewOption('displayLevelPins')">Level Pins<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="displayFloatingText" aria-pressed="true" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Text<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="displayText" aria-pressed="true" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="decayEffects" aria-pressed="true" onClick="wc3v.toggleViewOption('decayEffects')">Fade FX<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="displayTreeGrid" aria-pressed="true" onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="autoSplitScreen" aria-pressed="true" onClick="wc3v.toggleViewOption('autoSplitScreen')">Split Screen<span class="mega-hint-icon" aria-hidden="true"></span></button>
                   </div>
                 </div>
 
-                <div id="canvas-group">
-                  <canvas id="three-canvas" width="550" height="650"></canvas>
-                  <canvas id="main-canvas" width="550" height="650"></canvas>
-                  <canvas id="player-canvas" width="550" height="650"></canvas>
-                  <canvas id="utility-canvas" width="550" height="650"></canvas>
+                <div id="canvas-group" role="img" aria-label="Replay map and unit playback. The build order is summarized in the build order panel below.">
+                  <canvas id="three-canvas" width="550" height="650" aria-hidden="true"></canvas>
+                  <canvas id="main-canvas" width="550" height="650" aria-hidden="true"></canvas>
+                  <canvas id="player-canvas" width="550" height="650" aria-hidden="true"></canvas>
+                  <canvas id="utility-canvas" width="550" height="650" aria-hidden="true"></canvas>
                 </div>
 
-                <div id="loading-overlay">
-                  <img src="/assets/loading-icon.svg" alt="Loading" />
+                <div id="loading-overlay" role="status" aria-live="polite">
+                  <img src="/assets/loading-icon.svg" alt="" aria-hidden="true" />
                   <div id="loading-status">Loading replay...</div>
                 </div>
-                <img id="loading-icon" src="/assets/loading-icon.svg" />
+                <img id="loading-icon" src="/assets/loading-icon.svg" alt="" aria-hidden="true" />
 
                 <div id="game-display-box"></div>
                 <div id="building-info-tooltip"></div>
 
-                <div id="match-complete-banner">
+                <div id="match-complete-banner" role="status">
                   <div class="mcb-text">Match Complete</div>
-                  <div class="mcb-restart" onClick="wc3v.restart()">Replay Again</div>
-                  <div class="mcb-summary" onClick="wc3v.showMatchSummary()">View Summary</div>
+                  <button type="button" class="mcb-restart" onClick="wc3v.restart()">Replay Again</button>
+                  <button type="button" class="mcb-summary" onClick="wc3v.showMatchSummary()">View Summary</button>
                 </div>
 
                 <div id="empty-game-wrapper">

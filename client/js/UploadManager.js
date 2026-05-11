@@ -28,6 +28,24 @@ const UploadManager = class {
     this.workerPath = options.workerPath || '/js/parser-worker.js';
   }
 
+  // Warm the HTTP cache for the parser worker + its ~1 MB bundle so the
+  // first actual upload doesn't pay the download. Safe to call repeatedly;
+  // injects low-priority <link rel="prefetch"> once. Callers should invoke
+  // this on first user intent (drag-enter / button hover / focus).
+  static prefetchParser () {
+    if (UploadManager._parserPrefetched) return;
+    UploadManager._parserPrefetched = true;
+    ['/js/parser-worker.js', '/js/vendor/wc3v-parser.bundle.js'].forEach((href) => {
+      try {
+        const link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.as = 'script';
+        link.href = href;
+        document.head.appendChild(link);
+      } catch (e) {}
+    });
+  }
+
   // Trigger a file picker. Resolves with { id } on success or null if user
   // cancelled. Rejects on parse failure.
   //

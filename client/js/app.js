@@ -972,7 +972,10 @@ const Wc3vViewer = class {
     const els = document.querySelectorAll(
       `#viewer-option-${optionKey}, .mega-hint[data-option="${optionKey}"]`
     );
-    els.forEach(el => isOn ? el.classList.add('on') : el.classList.remove('on'));
+    els.forEach(el => {
+      isOn ? el.classList.add('on') : el.classList.remove('on');
+      if (el.tagName === 'BUTTON') el.setAttribute('aria-pressed', isOn ? 'true' : 'false');
+    });
 
     // Sync auto-split preference to broadcast camera
     if (optionKey === 'autoSplitScreen' && this.broadcastCamera) {
@@ -1250,7 +1253,11 @@ const Wc3vViewer = class {
     const oldList = Array.from(document.getElementsByClassName("status-toggle selected"));
 
     oldList.forEach(oldEl => oldEl.classList.remove('selected'));
-    el.classList.add('selected');
+    if (el) el.classList.add('selected');
+    // Reflect the active tab to assistive tech (these are <button aria-pressed>).
+    document.querySelectorAll('#player-status-toggles .status-toggle').forEach(b => {
+      b.setAttribute('aria-pressed', b === el ? 'true' : 'false');
+    });
 
     this.players.forEach(player => player.setStatusTab(tab));
 
@@ -1473,6 +1480,14 @@ const Wc3vViewer = class {
       this.viewOptions[optionKey] ?
         el.classList.add('on') :
         el.classList.remove('on');
+    });
+
+    // Sync the mega-hint toggle buttons (and their aria-pressed) to the
+    // current viewOptions in case the defaults ever drift from the HTML.
+    document.querySelectorAll('.mega-hint[data-option]').forEach(el => {
+      const on = !!this.viewOptions[el.dataset.option];
+      el.classList.toggle('on', on);
+      if (el.tagName === 'BUTTON') el.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
 
     // populate settings modal with view option toggles

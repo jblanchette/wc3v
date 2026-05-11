@@ -3,7 +3,9 @@
 	"version": "0.1.0",
 	"description": "WC3 Replay Viewer",
 	"scripts": {
-		"build:parser": "node tools/build-parser-bundle.js"
+		"build:parser": "node tools/build-parser-bundle.js",
+		"gen-manifest": "node tools/gen-asset-manifest.js",
+		"check-manifest": "node tools/gen-asset-manifest.js --check"
 	},
 	"devDependencies": {
 		"assert": "^2.1.0",

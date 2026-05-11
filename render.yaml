@@ -4,6 +4,14 @@ services:
     name: wc3v
     staticPublishPath: ./client
     pullRequestPreviewsEnabled: true
+    # Content-hash the JS/CSS before publishing: rewrites the ?v=… query
+    # strings in client/*.html (and viewer.html's dev cache buster) to a
+    # per-deploy hash, and emits client/asset-manifest.json. This is what
+    # makes the `immutable` Cache-Control on /js/* and /css/* safe — a new
+    # deploy changes the hash, so browsers re-fetch. Uses only Node built-ins
+    # (no npm install needed). If this command fails the deploy fails, which
+    # is safe (the previous deploy keeps serving).
+    buildCommand: node tools/gen-asset-manifest.js
     headers:
       - path: /*
         name: X-Frame-Options
@@ -24,15 +32,27 @@ services:
       - path: /*.html
         name: Cache-Control
         value: public, max-age=0, must-revalidate
-      # JS/CSS get a short TTL. Versioned URLs (?v=N in index.html) bust
-      # the cache on deploy; the short TTL is a fallback for anything that
-      # slips through unversioned.
+      # JS/CSS are content-versioned (?v=<hash> rewritten by the buildCommand
+      # above), so they can be cached hard. A new deploy = new hash = new URL.
       - path: /js/*
         name: Cache-Control
-        value: public, max-age=300, must-revalidate
+        value: public, max-age=31536000, immutable
       - path: /css/*
         name: Cache-Control
+        value: public, max-age=31536000, immutable
+      # The parser worker + its bundle are loaded by importScripts()/new Worker()
+      # WITHOUT a ?v= query (can't self-reference the hash), so they must keep a
+      # revalidating TTL rather than being immutable. They change rarely.
+      - path: /js/parser-worker.js
+        name: Cache-Control
         value: public, max-age=300, must-revalidate
+      - path: /js/vendor/*
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
+      # The asset manifest itself is the index of hashes — never cache it.
+      - path: /asset-manifest.json
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
     routes:
       # Heavy assets are hosted on R2 at cdn.wc3v.com. The client code uses
       # root-relative paths (e.g. /assets/wc3icons/foo.jpg, /maps/X/map.jpg)
