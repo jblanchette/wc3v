@@ -714,16 +714,107 @@ body {
   gap: 10px;
   align-items: baseline;
   padding: 4px 2px;
+  min-width: 0;
 }
 .bo-cmp-row-wide { grid-template-columns: 96px 1fr 1fr; }
 .bo-cmp-row + .bo-cmp-row { border-top: 1px solid rgba(255,255,255,0.04); }
-.bo-cmp-rlabel { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.5); }
-.bo-cmp-rme   { font-size: 0.86rem; color: rgba(232,234,240,0.95); }
-.bo-cmp-rthem { font-size: 0.86rem; color: rgba(232,234,240,0.78); }
+.bo-cmp-rlabel { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.5); min-width: 0; }
+.bo-cmp-rme   { font-size: 0.86rem; color: rgba(232,234,240,0.95); min-width: 0; }
+.bo-cmp-rthem { font-size: 0.86rem; color: rgba(232,234,240,0.78); min-width: 0; }
 .bo-cmp-row-wide .bo-cmp-rme,
 .bo-cmp-row-wide .bo-cmp-rthem { font-size: 0.82rem; line-height: 1.35; }
 .bo-cmp-sub { font-size: 0.74rem; color: rgba(255,255,255,0.5); font-weight: 500; }
 .bo-cmp-na { color: rgba(255,255,255,0.3); }
+
+/* Two-line row label: e.g. "Early army" / "20 food". The economy block uses
+   this so beginner-friendly names sit above the raw food count. */
+.bo-cmp-rlabel-stack { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
+.bo-cmp-rlabel-sub { font-size: 0.66rem; font-weight: 500; color: rgba(255,255,255,0.32); text-transform: none; letter-spacing: 0; }
+
+/* ── Icon strips in the Army Built block ───────────────────────────────
+   Replaces the old comma-separated text ("13 Troll Headhunters, 10 Raiders…")
+   with a flex-wrap row of unit / type icons. Each chip has a native title=
+   tooltip carrying the name + combat-rules text. Icons reflow naturally so
+   the column never overflows or wraps mid-word. */
+.bo-cmp-iconstrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+  min-width: 0;
+}
+.bo-cmp-unit-chip,
+.bo-cmp-type-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 5px 2px 2px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 5px;
+  line-height: 1;
+}
+.bo-cmp-unit-chip img,
+.bo-cmp-type-chip img {
+  width: 26px; height: 26px;
+  border-radius: 3px;
+  object-fit: cover;
+  border: 1px solid rgba(0,0,0,0.35);
+  background: rgba(0,0,0,0.25);
+  flex: none;
+}
+.bo-cmp-type-chip img { width: 22px; height: 22px; }
+.bo-cmp-chip-n {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(232,234,240,0.95);
+  font-family: var(--bo-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  white-space: nowrap;
+}
+.bo-cmp-unit-chip-caster { border-color: rgba(170,130,220,0.5); background: rgba(170,130,220,0.08); }
+.bo-cmp-chip-mark {
+  position: absolute; top: -4px; right: -4px;
+  font-size: 0.62rem; line-height: 1;
+  background: #2a1a3a; border: 1px solid rgba(170,130,220,0.6);
+  border-radius: 50%;
+  padding: 1px 2px;
+  pointer-events: none;
+}
+
+/* ── Stacked rows for the Army Built block ─────────────────────────────
+   The me/them split (3-col grid) squeezes ~80px per side at the panel's
+   common widths, which isn't enough room for icon rosters. The stacked
+   variant gives each player their own full-width row of chips, with a small
+   colored tag indicating which side it is. */
+.bo-cmp-row-stack { padding: 8px 2px; min-width: 0; }
+.bo-cmp-row-stack + .bo-cmp-row-stack { border-top: 1px solid rgba(255,255,255,0.04); }
+.bo-cmp-stack-label {
+  font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 5px;
+}
+.bo-cmp-stack-side {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  min-width: 0;
+}
+.bo-cmp-stack-side + .bo-cmp-stack-side { margin-top: 2px; }
+.bo-cmp-stack-tag {
+  font-size: 0.64rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: right;
+  padding-right: 2px;
+  white-space: nowrap;
+}
+.bo-cmp-stack-tag-me   { color: var(--me-color, #6fc18a); }
+.bo-cmp-stack-tag-them { color: var(--them-color, #9ca3b8); }
 
 /* The leading side on a row: its value goes green + bold, with a small,
    muted delta after it (− = "this much sooner", + = "this many more"). */
@@ -738,18 +829,6 @@ body {
   font-size: 0.84rem; line-height: 1.45;
   color: rgba(232,234,240,0.9);
 }
-
-.bo-cmp-legend {
-  list-style: none;
-  margin: 6px 0 0; padding: 8px 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 7px;
-  font-size: 0.76rem; line-height: 1.45;
-  color: rgba(232,234,240,0.7);
-}
-.bo-cmp-legend li { margin: 0; padding: 1px 0; }
-.bo-cmp-legend li + li { border-top: 1px solid rgba(255,255,255,0.05); }
 
 @media (max-width: 640px) {
   .bo-cmp-colhead,
@@ -1068,6 +1147,245 @@ body {
   text-transform: uppercase; letter-spacing: 0.07em;
 }
 .gh-takeaway-text { color: #f1e3c2; }
+
+/* ── Level-3 skill-spike step (.gh-spike-*) ───────────────────────────────
+   Two stacked hero rows (each one: header line + a row of 3 skill picks),
+   then a single explainer block with the L1→L2 stat table. The "spike"
+   pick (whichever skill got doubled at level 3) is gold-ringed to read at
+   a glance. Layout is intentionally full-width per hero rather than 2-col
+   side-by-side — the panel is narrow, and stacking leaves room for the
+   spell names under each icon without truncation. */
+.gh-spike-caption {
+  margin: 0 0 4px;
+  padding: 0 2px;
+  font-size: 0.92rem; line-height: 1.45;
+  color: #cfd2dc;
+}
+.gh-spike-hero {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.10);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.gh-spike-hero-followed {
+  background: color-mix(in srgb, var(--gh-chip-color, #6fc18a) 8%, rgba(255,255,255,0.04));
+  border-color: color-mix(in srgb, var(--gh-chip-color, #6fc18a) 28%, rgba(255,255,255,0.10));
+}
+.gh-spike-hero-opp {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+}
+.gh-spike-hero-head {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.92rem;
+}
+.gh-spike-hero-head .gh-row-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--gh-chip-color, #6fc18a);
+  flex-shrink: 0;
+}
+.gh-spike-hero-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  border: 1.5px solid var(--gh-chip-color, #6fc18a);
+  background: #0e1018;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.gh-spike-hero-name {
+  font-weight: 800; color: #eef0f6;
+}
+.gh-spike-hero-sep { color: rgba(216,218,226,0.40); }
+.gh-spike-hero-label { color: #d8dae2; }
+.gh-spike-hero-race {
+  display: inline-flex; align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(216,218,226,0.78);
+  font-size: 0.78rem;
+}
+.gh-spike-hero-lvl {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(232,182,90,0.18);
+  border: 1px solid rgba(232,182,90,0.45);
+  color: #f5d989;
+  font-size: 0.82rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.gh-spike-hero-at {
+  color: rgba(216,218,226,0.70);
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+.gh-spike-time-delta {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: rgba(216,218,226,0.70);
+  font-size: 0.78rem;
+}
+
+.gh-spike-picks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.gh-spike-pick {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px;
+  padding: 8px 6px 6px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255,255,255,0.08);
+  min-width: 0;
+}
+.gh-spike-pick-icon-wrap {
+  position: relative;
+  display: inline-block;
+}
+.gh-spike-pick-icon {
+  width: 40px; height: 40px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(255,255,255,0.16);
+  background: #0e1018;
+  object-fit: cover;
+  display: block;
+}
+.gh-spike-pick-icon-empty {
+  display: inline-block;
+  background: rgba(255,255,255,0.06);
+  border-style: dashed;
+}
+.gh-spike-pick-level {
+  position: absolute;
+  right: -3px; bottom: -3px;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #0e1018;
+  border: 1px solid rgba(255,255,255,0.30);
+  color: #f4f5f8;
+  font-size: 0.66rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.gh-spike-pick-name {
+  text-align: center;
+  font-size: 0.8rem;
+  color: #d8dae2;
+  line-height: 1.25;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  /* Wrap freely — never truncate (UI feedback: ellipsis on spell names hides info). */
+}
+
+/* Spike modifier — the doubled-up pick. Gold ring + glow + a brighter name. */
+.gh-spike-pick-spike {
+  background: rgba(232,182,90,0.10);
+  border-color: rgba(232,182,90,0.55);
+  box-shadow: 0 0 0 1px rgba(232,182,90,0.25), 0 0 14px rgba(232,182,90,0.20) inset;
+}
+.gh-spike-pick-spike .gh-spike-pick-icon {
+  border-color: #e8b65a;
+}
+.gh-spike-pick-spike .gh-spike-pick-level {
+  background: #e8b65a;
+  border-color: #f5d989;
+  color: #2b2008;
+}
+.gh-spike-pick-spike .gh-spike-pick-name {
+  color: #f5d989;
+  font-weight: 700;
+}
+
+/* ── Explainer block: the rule, the stat table, the optional context note. */
+.gh-spike-explain {
+  margin: 2px 0 0;
+  padding: 10px 12px 12px;
+  border-radius: 10px;
+  background: rgba(111,193,138,0.10);
+  border: 1px solid rgba(111,193,138,0.32);
+  color: #d8eadf;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.gh-spike-explain-label {
+  display: block;
+  font-size: 0.72rem; font-weight: 800; color: #6fc18a;
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+.gh-spike-rule {
+  margin: 0;
+  font-size: 0.9rem; line-height: 1.5;
+  color: #e0eee5;
+}
+.gh-spike-fallback {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.88rem; line-height: 1.5;
+  color: #d8eadf;
+}
+.gh-spike-fallback strong { color: #f5d989; }
+
+.gh-spike-table {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.gh-spike-table-head {
+  font-size: 0.84rem;
+  color: rgba(216,218,226,0.85);
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.gh-spike-table-head strong { color: #f5d989; font-weight: 700; }
+.gh-spike-stat-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) auto 16px auto auto;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 3px 0;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+.gh-spike-stat-label { color: rgba(216,218,226,0.75); }
+.gh-spike-stat-l1    { color: rgba(216,218,226,0.65); text-align: right; }
+.gh-spike-stat-arrow { color: rgba(216,218,226,0.40); text-align: center; }
+.gh-spike-stat-l2    { color: #b6e6c6; font-weight: 700; text-align: right; }
+.gh-spike-stat-delta {
+  color: #6fc18a;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.gh-spike-context {
+  margin: 0;
+  font-size: 0.86rem; line-height: 1.5;
+  color: rgba(216,234,223,0.86);
+  font-style: italic;
+}
+
+/* Narrow-panel fallback: when the panel is squeezed, 3-up picks become 1-up
+   stack rather than wrap-mid-row. */
+@media (max-width: 420px) {
+  .gh-spike-picks { grid-template-columns: 1fr; }
+  .gh-spike-stat-row { grid-template-columns: 1fr auto auto; }
+  .gh-spike-stat-row .gh-spike-stat-arrow { display: none; }
+}
 
 .gh-intro {
   background: rgba(255,255,255,0.03);

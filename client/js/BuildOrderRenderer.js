@@ -295,17 +295,29 @@ const BuildOrderRenderer = class {
     const themHeroL5 = themHeroId ? heroLevelTime(oppStream, themHeroId, 5) : Infinity;
 
     const meArmy = armyUnits(meStream), themArmy = armyUnits(oppStream);
-    const topListHtml = (arr) => arr.length ? arr.slice(0, 4).map(it => it.n + ' ' + _esc(plural(it.name, it.n))).join(', ') : '<span class="bo-cmp-na">none built</span>';
+    // Merge by displayName: Headhunter / Berserker share a name but differ in
+    // itemId after morph, so the same name otherwise lists twice. Keep the
+    // first itemId we saw for the icon — they look the same anyway.
+    const mergeByName = (arr) => {
+      const byName = Object.create(null);
+      for (const it of arr) {
+        const k = it.name;
+        if (!byName[k]) byName[k] = { itemId: it.itemId, name: it.name, n: 0, attackType: it.attackType, armorType: it.armorType };
+        byName[k].n += it.n;
+      }
+      return Object.values(byName).sort((a, b) => b.n - a.n);
+    };
+    const meArmyMerged = mergeByName(meArmy), themArmyMerged = mergeByName(themArmy);
     const typeTally = (arr, field) => { const t = Object.create(null); for (const it of arr) { const k = it[field]; if (!k) continue; t[k] = (t[k] || 0) + it.n; } return Object.entries(t).sort((a, b) => b[1] - a[1]); };
     const atkLabel = (k) => (typeof ATTACK_TYPES !== 'undefined' && ATTACK_TYPES[k] && ATTACK_TYPES[k].label) || (k === 'hero' ? 'Hero' : k);
     const armLabel = (k) => (typeof ARMOR_TYPES !== 'undefined' && ARMOR_TYPES[k] && ARMOR_TYPES[k].label) || (k === 'hero' ? 'Hero' : k);
-    const tallyHtml = (tally, labelFn) => tally.length ? tally.map(([k, n]) => _esc(labelFn(k)) + ' ×' + n).join(', ') : '<span class="bo-cmp-na">—</span>';
-    const casterHtml = (arr) => { const c = arr.filter(it => CASTERS.has(it.itemId)); return c.length ? c.map(it => it.n + ' ' + _esc(plural(it.name, it.n))).join(', ') : '<span class="bo-cmp-na">none</span>'; };
+    const atkIcon = (k) => (typeof ATTACK_TYPES !== 'undefined' && ATTACK_TYPES[k] && ATTACK_TYPES[k].icon) || '';
+    const armIcon = (k) => (typeof ARMOR_TYPES !== 'undefined' && ARMOR_TYPES[k] && ARMOR_TYPES[k].icon) || '';
     const meAtkTally = typeTally(meArmy, 'attackType'),  themAtkTally = typeTally(themArmy, 'attackType');
     const meArmTally = typeTally(meArmy, 'armorType'),   themArmTally = typeTally(themArmy, 'armorType');
 
-    // Plain-English notes for whichever attack / armor types showed up — the
-    // game's own combat rules, no strategy attached.
+    // Combat rule blurbs — shown as native tooltips on each type chip so we
+    // don't need a wall-of-text legend underneath.
     const ATK_NOTE = {
       normal: 'Normal attack — extra damage to Medium armor.',
       pierce: 'Pierce attack — extra damage to flyers and Light armor; weak vs Heavy armor.',
@@ -319,18 +331,43 @@ const BuildOrderRenderer = class {
       small:  'Light armor — takes extra from Pierce and Magic.',
       none:   'Unarmored — takes extra damage from almost everything.'
     };
-    const legendKeys = (() => {
-      const atk = new Set(), arm = new Set();
-      [...meAtkTally, ...themAtkTally].forEach(([k]) => { if (ATK_NOTE[k]) atk.add(k); });
-      [...meArmTally, ...themArmTally].forEach(([k]) => { if (ARM_NOTE[k]) arm.add(k); });
-      return { atk: [...atk], arm: [...arm] };
-    })();
-    const legendHtml = (legendKeys.atk.length || legendKeys.arm.length)
-      ? '<ul class="bo-cmp-legend">'
-        + legendKeys.atk.map(k => '<li>' + ATK_NOTE[k] + '</li>').join('')
-        + legendKeys.arm.map(k => '<li>' + ARM_NOTE[k] + '</li>').join('')
-        + '</ul>'
-      : '';
+
+    // Icon-chip builders for the Army block — icon + count, tooltip carries
+    // the details (attack/armor types for units; combat-rules blurb for type
+    // chips). Replaces the long comma-separated text rows that wouldn't fit.
+    const unitChipHtml = (it) => {
+      const id = _icon(it.itemId);
+      const parts = [plural(it.name, it.n) + ' ×' + it.n];
+      if (it.attackType) parts.push(atkLabel(it.attackType) + ' attack');
+      if (it.armorType)  parts.push(armLabel(it.armorType) + ' armor');
+      const isCaster = CASTERS.has(it.itemId);
+      const cls = 'bo-cmp-unit-chip' + (isCaster ? ' bo-cmp-unit-chip-caster' : '');
+      return '<span class="' + cls + '" title="' + _attr(parts.join(' · ')) + '">'
+        +    (id ? '<img loading="lazy" src="/assets/wc3icons/' + id + '.jpg" alt="" onerror="this.style.visibility=\'hidden\'"/>' : '<span class="bo-cmp-chip-noicon"></span>')
+        +    '<b class="bo-cmp-chip-n">×' + it.n + '</b>'
+        +    (isCaster ? '<span class="bo-cmp-chip-mark" title="Spellcaster" aria-label="Spellcaster">✨</span>' : '')
+        + '</span>';
+    };
+    const unitsStripHtml = (arr) => {
+      if (!arr.length) return '<span class="bo-cmp-na">none built</span>';
+      return '<span class="bo-cmp-iconstrip">' + arr.slice(0, 8).map(unitChipHtml).join('') + '</span>';
+    };
+    // Whitelist: only allow icons we ship under /assets/wc3icons/ — defang any
+    // unexpected path that might come from ATTACK_TYPES / ARMOR_TYPES.
+    const safeTypeIcon = (path) => /^\/assets\/wc3icons\/[A-Za-z0-9_\-]+\.(jpg|svg|png)$/.test(String(path || '')) ? path : '';
+    const typeChipHtml = (k, n, kind) => {
+      const label = (kind === 'atk' ? atkLabel : armLabel)(k);
+      const note  = (kind === 'atk' ? ATK_NOTE : ARM_NOTE)[k] || label;
+      const icon  = safeTypeIcon((kind === 'atk' ? atkIcon : armIcon)(k));
+      return '<span class="bo-cmp-type-chip" title="' + _attr(note) + '">'
+        +    (icon ? '<img loading="lazy" src="' + icon + '" alt="" onerror="this.style.visibility=\'hidden\'"/>' : '')
+        +    '<b class="bo-cmp-chip-n">×' + n + '</b>'
+        + '</span>';
+    };
+    const typeStripHtml = (tally, kind) => {
+      if (!tally.length) return '<span class="bo-cmp-na">—</span>';
+      return '<span class="bo-cmp-iconstrip">' + tally.map(([k, n]) => typeChipHtml(k, n, kind)).join('') + '</span>';
+    };
 
     // ── verdicts — one factual sentence per block ───────────────────────
     const xpVerdict = (() => {
@@ -407,11 +444,19 @@ const BuildOrderRenderer = class {
       if (c.na) return '';
       return row(label, tCell(meT), tCell(themT), c);
     };
-    const rowWide = (label, meHtml, themHtml) =>
-      '<div class="bo-cmp-row bo-cmp-row-wide">'
-      + '<span class="bo-cmp-rlabel">' + label + '</span>'
-      + '<span class="bo-cmp-rme">' + meHtml + '</span>'
-      + '<span class="bo-cmp-rthem">' + themHtml + '</span>'
+    // Two-line label: "Early army" + "20 food" beneath it. Lets us give the
+    // economy milestones beginner-friendly names without dropping the raw food
+    // number new players actually see on their resource bar.
+    const labelSub = (top, sub) => '<span class="bo-cmp-rlabel-stack">' + top
+      + (sub ? '<span class="bo-cmp-rlabel-sub">' + sub + '</span>' : '') + '</span>';
+    // Stacked row for the Army block — each side gets its own full-width row
+    // of icons (You on top, Them under) so a long army roster reflows naturally
+    // instead of being squished into a ~80px column.
+    const stackRow = (label, meHtml, themHtml) =>
+      '<div class="bo-cmp-row-stack">'
+      + '<div class="bo-cmp-stack-label">' + label + '</div>'
+      + '<div class="bo-cmp-stack-side"><span class="bo-cmp-stack-tag bo-cmp-stack-tag-me">You</span>'   + meHtml   + '</div>'
+      + '<div class="bo-cmp-stack-side"><span class="bo-cmp-stack-tag bo-cmp-stack-tag-them">Them</span>' + themHtml + '</div>'
       + '</div>';
     const naCell = (s) => '<span class="bo-cmp-na">' + s + '</span>';
 
@@ -446,16 +491,17 @@ const BuildOrderRenderer = class {
       + '</section>'
 
       // ── Economy ──
-      // Food milestones are race-fair (every army fills the same supply); the
-      // raw worker count is NOT (Undead plays on a small acolyte count by
-      // design), so the worker rows are plain snapshots — no "who's ahead".
+      // Beginner-friendly milestone names ("Early army" etc.) with the raw
+      // food count beneath — new players still see the food number on their
+      // resource bar, but the label now says what hitting it MEANS. Race
+      // caveat lives in the section-head tooltip, not as a long subtitle.
       + '<section class="bo-cmp-block">'
-      +   '<div class="bo-cmp-block-head">Economy<span class="bo-cmp-block-sub">— food = when you reached it; workers = count then (no single "right" number — varies by race)</span></div>'
-      +   tRow('Hit 20 food', supplyReach(meStream, 20), supplyReach(oppStream, 20))
-      +   tRow('Hit 30 food', supplyReach(meStream, 30), supplyReach(oppStream, 30))
-      +   tRow('Hit 50 food', supplyReach(meStream, 50), supplyReach(oppStream, 50))
-      +   (function () { const a = workersAt(meStream, 300000), b = workersAt(oppStream, 300000); return row('Workers at 5:00', a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
-      +   (function () { const a = workersAt(meStream, 600000), b = workersAt(oppStream, 600000); return row('Workers at 10:00', a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
+      +   '<div class="bo-cmp-block-head" title="Food = the supply your army takes (you see this on your resource bar). It\'s a race-fair yardstick. Raw worker counts are not — Undead plays on fewer workers by design.">Economy<span class="bo-cmp-block-sub">how fast each side scaled up</span></div>'
+      +   tRow(labelSub('Early army',    '20 food'), supplyReach(meStream, 20), supplyReach(oppStream, 20))
+      +   tRow(labelSub('Standing army', '30 food'), supplyReach(meStream, 30), supplyReach(oppStream, 30))
+      +   tRow(labelSub('Maxed army',    '50 food'), supplyReach(meStream, 50), supplyReach(oppStream, 50))
+      +   (function () { const a = workersAt(meStream, 300000), b = workersAt(oppStream, 300000); return row(labelSub('Workers', 'at 5:00'),  a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
+      +   (function () { const a = workersAt(meStream, 600000), b = workersAt(oppStream, 600000); return row(labelSub('Workers', 'at 10:00'), a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
       +   '<p class="bo-cmp-verdict">' + econVerdict + '</p>'
       + '</section>'
 
@@ -469,13 +515,15 @@ const BuildOrderRenderer = class {
       + '</section>'
 
       // ── Army built ──
+      // Icon strips instead of comma-soup text. Each side gets its own full-
+      // width row (You on top, Them under) so a roster of 5+ unit types isn't
+      // crammed into ~80px. Type info (attack/armor) lives on chip tooltips,
+      // so we don't need a wall-of-text legend underneath either.
       + '<section class="bo-cmp-block">'
-      +   '<div class="bo-cmp-block-head">Army built<span class="bo-cmp-block-sub">— everything trained, deaths aside</span></div>'
-      +   rowWide('Top units', topListHtml(meArmy), topListHtml(themArmy))
-      +   rowWide('Attack types', tallyHtml(meAtkTally, atkLabel), tallyHtml(themAtkTally, atkLabel))
-      +   rowWide('Armor types', tallyHtml(meArmTally, armLabel), tallyHtml(themArmTally, armLabel))
-      +   rowWide('Spellcasters', casterHtml(meArmy), casterHtml(themArmy))
-      +   legendHtml
+      +   '<div class="bo-cmp-block-head" title="Everything trained over the whole game — deaths are not subtracted. Hover any icon for the unit name, attack type, and armor type.">Army built<span class="bo-cmp-block-sub">hover an icon for details</span></div>'
+      +   stackRow('Units built',  unitsStripHtml(meArmyMerged),     unitsStripHtml(themArmyMerged))
+      +   stackRow('Attack types', typeStripHtml(meAtkTally, 'atk'), typeStripHtml(themAtkTally, 'atk'))
+      +   stackRow('Armor types',  typeStripHtml(meArmTally, 'arm'), typeStripHtml(themArmTally, 'arm'))
       + '</section>';
     return aside;
   }

@@ -1609,6 +1609,31 @@ const Wc3vViewer = class {
         break;
       }
       case 'compare': {
+        // The level-3 spike step compares hero progressions, not armies — if
+        // both heroes are on the field, frame just the two of them (ring them
+        // too). Falls through to the army-compare framing when a hero is
+        // missing or dead.
+        const curStep = (this.guide && this.guide.steps && this.guideStepIdx >= 0) ? this.guide.steps[this.guideStepIdx] : null;
+        if (curStep && curStep.key === 'heroSpike') {
+          const myHero = (me && me.heroes && me.heroes[0]) ? me.heroes[0] : null;
+          const opHero = (them && them.heroes && them.heroes[0]) ? them.heroes[0] : null;
+          const myA = (myHero && alive(myHero)) ? myHero : null;
+          const opA = (opHero && alive(opHero)) ? opHero : null;
+          if (myA || opA) {
+            const heroBox = (() => {
+              const xs = [], ys = [];
+              if (myA) { xs.push(myA.currentX); ys.push(myA.currentY); }
+              if (opA) { xs.push(opA.currentX); ys.push(opA.currentY); }
+              const pad = 900;
+              return { minX: Math.min(...xs) - pad, maxX: Math.max(...xs) + pad, minY: Math.min(...ys) - pad, maxY: Math.max(...ys) + pad };
+            })();
+            rect = heroBox;
+            if (myA) ringUnits.push(myA);
+            if (opA) ringUnits.push(opA);
+            break;
+          }
+          // Fall through to the regular compare framing if neither hero is alive.
+        }
         const a = (me ? bboxOf((me.units || []).filter(isArmy)) : null) || baseRectFor(me);
         const b = them ? ((bboxOf((them.units || []).filter(isArmy))) || baseRectFor(them)) : null;
         rect = (a && b)
@@ -2049,6 +2074,249 @@ const Wc3vViewer = class {
     return `<ol class="gh-steplist">${items}</ol>`;
   }
 
+  // The hero-level-3 "spike" step's focal block: each hero's three skill
+  // picks rendered as a row of icons (with overlaid level badges and spell
+  // names underneath), then a single "why level 3 is the spike" callout
+  // that pulls L1→L2 stats from HeroAbilityStats when available. The two
+  // hero rows are stacked full-width (panel is narrow; side-by-side would
+  // squeeze the labels). The spike pick gets a gold ring + ★ to read at a
+  // glance.
+  _guideSpikeBlock (spike) {
+    if (!spike || !spike.followed) return '';
+    const g = this.guide;
+    const fName = (g && g.followedName) || 'Us';
+    const oName = (g && g.oppName) || '';
+    const fmt = (ms) => (typeof formatGameTime === 'function')
+      ? formatGameTime(ms)
+      : (() => { const s = Math.max(0, Math.round((Number(ms) || 0) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); })();
+    const raceLabel = (() => {
+      const map = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead' };
+      return (r) => map[r] || '';
+    })();
+    const safeAssetId = (id) => (typeof id === 'string' && /^[A-Za-z0-9_\-]{1,32}$/.test(id)) ? id : null;
+
+    // One hero block — colored header + 3 pick cells.
+    const heroBlock = (row, variant, color, playerName, race, deltaTag) => {
+      if (!row) return '';
+      const safeColor = (typeof color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(color)) ? color : '#888';
+      const heroIconId = safeAssetId(row.heroItemId);
+      const heroIco = heroIconId
+        ? `<img class="gh-spike-hero-icon" src="/assets/wc3icons/${heroIconId}.jpg" alt="" onerror="this.style.visibility='hidden'" />`
+        : '';
+      const picksHtml = (row.picks || []).map(p => {
+        const sid = safeAssetId(p.spellItemId);
+        const ico = sid
+          ? `<img class="gh-spike-pick-icon" src="/assets/wc3icons/${sid}.jpg" alt="" onerror="this.style.visibility='hidden'" />`
+          : `<span class="gh-spike-pick-icon gh-spike-pick-icon-empty" aria-hidden="true"></span>`;
+        const lvlBadge = `<span class="gh-spike-pick-level">${p.isSpike ? 'L' + p.level + ' ★' : 'L' + p.level}</span>`;
+        const cls = 'gh-spike-pick' + (p.isSpike ? ' gh-spike-pick-spike' : '');
+        return `<div class="${cls}">`
+          + `<span class="gh-spike-pick-icon-wrap">${ico}${lvlBadge}</span>`
+          + `<span class="gh-spike-pick-name">${this._guideText(p.displayName || '')}</span>`
+          + `</div>`;
+      }).join('');
+      const raceTag = race ? `<span class="gh-spike-hero-race">${this._guideEsc(race)}</span>` : '';
+      const lvlTag = `<span class="gh-spike-hero-lvl">Lv ${row.level}</span>`;
+      const atTag = row.levelAtMs != null
+        ? `<span class="gh-spike-hero-at">${this._guideEsc(fmt(row.levelAtMs))}</span>`
+        : '';
+      const dTag = deltaTag ? `<span class="gh-spike-time-delta">${this._guideEsc(deltaTag)}</span>` : '';
+      return `<div class="gh-spike-hero gh-spike-hero-${variant}" style="--gh-chip-color:${safeColor}">`
+        + `<div class="gh-spike-hero-head">`
+        +   `<span class="gh-row-dot"></span>`
+        +   heroIco
+        +   `<span class="gh-spike-hero-name">${this._guideEsc(playerName)}</span>`
+        +   `<span class="gh-spike-hero-sep">·</span>`
+        +   `<span class="gh-spike-hero-label">${this._guideText(row.heroName || '')}</span>`
+        +   raceTag
+        +   lvlTag
+        +   atTag
+        +   dTag
+        + `</div>`
+        + `<div class="gh-spike-picks">${picksHtml}</div>`
+        + `</div>`;
+    };
+
+    // Time-delta annotation on the opp row when both reached L3.
+    let oppDelta = '';
+    if (spike.opp && spike.opp.levelAtMs != null && spike.followed.levelAtMs != null && spike.opp.level === 3) {
+      const d = Math.round((spike.opp.levelAtMs - spike.followed.levelAtMs) / 1000);
+      if (Math.abs(d) <= 30) oppDelta = '— wash';
+      else if (d > 0) oppDelta = `+${d}s later`;
+      else oppDelta = `${d}s earlier`;
+    }
+
+    const followedRace = (g && g.followedRace) || '';
+    const oppRace = (g && g.oppRace) || '';
+    const fBlock = heroBlock(spike.followed, 'followed', g && g.followedColor, fName, raceLabel(followedRace), '');
+    const oBlock = spike.opp ? heroBlock(spike.opp, 'opp', g && g.oppColor, oName, raceLabel(oppRace), oppDelta) : '';
+
+    // Explainer: stat table if we have one, otherwise generic copy. Falls back
+    // gracefully when the followed player didn't double up (no doubledSpellId).
+    const linkify = (txt) => (typeof Glossary !== 'undefined' && Glossary.linkifyText) ? Glossary.linkifyText(txt || '') : this._guideEsc(txt || '');
+    const ruleCopy = "You can't put two skill points in the same skill back-to-back, so levels 1 and 2 force one point each into separate basics. Level 3 is the first chance to double up — and that second point in a basic skill is usually a bigger jump than the level itself.";
+
+    // Build the table rows dynamically from the strict per-level data
+    // (HeroAbilityStats is regenerated from CASC by tools/parse-ability-data.js).
+    // Each row is included only if it actually changes between L1 and L2 —
+    // we don't show "Cost: 75 → 75 (same)" rows because they're noise.
+    const buildRows = (stats) => {
+      if (!stats) return [];
+      const rows = [];
+      const push = (label, l1, l2, fmtVal, fmtDelta) => {
+        if (l1 == null || l2 == null) return;
+        if (l1 === l2) return;          // unchanged stat: skip (rule: only show what differs)
+        const dn = (typeof fmtDelta === 'function') ? fmtDelta(l1, l2) : '';
+        rows.push({ label, l1: fmtVal(l1), l2: fmtVal(l2), delta: dn });
+      };
+      const pct = (a, b) => {
+        if (a === 0) return b > 0 ? '' : '';
+        const p = Math.round(((b - a) / a) * 100);
+        return (p > 0 ? '+' : '') + p + '%';
+      };
+      const sec = (v) => v + 's';
+      const flat = (v) => String(v);
+      // Compare level 1 → level 2 from the strict arrays.
+      const get = (arr, i) => Array.isArray(arr) ? arr[i] : null;
+      push('Mana cost',     get(stats.manaCost, 0),    get(stats.manaCost, 1),    flat, pct);
+      push('Cooldown',      get(stats.cooldown, 0),    get(stats.cooldown, 1),    sec,  pct);
+      push('Duration',      get(stats.duration, 0),    get(stats.duration, 1),    sec,  pct);
+      push('Hero duration', get(stats.durationHero, 0),get(stats.durationHero, 1),sec,  pct);
+      push('Area',          get(stats.area, 0),        get(stats.area, 1),        flat, pct);
+      push('Cast range',    get(stats.castRange, 0),   get(stats.castRange, 1),   flat, pct);
+      // Per-spell Data fields (from AbilityMetaData.slk, labelled by the
+      // INTERNAL_ID_LABELS hand-map in the parse tool). Only included if
+      // L1 and L2 differ — flat fields would just be noise.
+      if (stats.data && stats.dataMeta) {
+        const fmtByCode = {
+          pct:  (v) => Math.round(v * 100) + '%',     // 0.10 → "10%"
+          sec:  (v) => v + 's',
+          mult: (v) => v + 'x',
+          pps:  (v) => v + '/s',
+          flat: (v) => String(v)
+        };
+        const pctDelta = (a, b) => {
+          if (a === 0 || a == null || b == null) return '';
+          const p = Math.round(((b - a) / a) * 100);
+          return (p > 0 ? '+' : '') + p + '%';
+        };
+        const ppDelta = (a, b) => {   // pp delta for percent-encoded fields
+          if (a == null || b == null) return '';
+          const d = Math.round((b - a) * 100);
+          return (d > 0 ? '+' : '') + d + 'pp';
+        };
+        for (const letter of Object.keys(stats.dataMeta)) {
+          const meta = stats.dataMeta[letter];
+          const arr = stats.data[letter];
+          if (!meta || !meta.label || !Array.isArray(arr)) continue;
+          const l1 = arr[0], l2 = arr[1];
+          if (l1 == null || l2 == null || l1 === l2) continue;
+          const fmt = fmtByCode[meta.format] || fmtByCode.flat;
+          const delta = meta.format === 'pct' ? ppDelta(l1, l2) : pctDelta(l1, l2);
+          rows.push({ label: meta.label, l1: fmt(l1), l2: fmt(l2), delta });
+        }
+      }
+      // Ubertip-derived effect numbers (only present if the locale namespace
+      // ever lands in tools/ability-data/). Tooltip order per level, paired
+      // index-by-index. Skipped today; harmless when absent.
+      const uberL1 = (stats.ubertipNumbers && stats.ubertipNumbers[0]) || null;
+      const uberL2 = (stats.ubertipNumbers && stats.ubertipNumbers[1]) || null;
+      if (uberL1 && uberL2 && uberL1.length === uberL2.length) {
+        for (let i = 0; i < uberL1.length; i++) {
+          push('Effect ' + (i + 1), uberL1[i], uberL2[i], flat, pct);
+        }
+      }
+      return rows;
+    };
+
+    // For summon spells, the interesting per-level scaling is the SUMMONED
+    // UNIT's stats (HP, dmg, abilities), not the spell-level fields. Render
+    // an extra mini-table comparing L1 → L2 summoned unit stats when the
+    // tool extracted them.
+    const buildSummonRows = (stats) => {
+      if (!stats || !Array.isArray(stats.summons) || stats.summons.length < 2) return [];
+      const a = stats.summons[0], b = stats.summons[1];
+      if (!a || !b) return [];
+      const rows = [];
+      const pct = (x, y) => {
+        if (x === 0 || x == null || y == null) return '';
+        const p = Math.round(((y - x) / x) * 100);
+        return (p > 0 ? '+' : '') + p + '%';
+      };
+      const push = (label, l1, l2, fmt) => {
+        if (l1 == null || l2 == null || l1 === l2) return;
+        rows.push({ label, l1: fmt(l1), l2: fmt(l2), delta: pct(l1, l2) });
+      };
+      push('HP',         a.hp,        b.hp,        String);
+      push('Damage avg', a.damageAvg, b.damageAvg, String);
+      push('Armor',      a.armor,     b.armor,     String);
+      push('Speed',      a.speed,     b.speed,     String);
+      // Ability deltas: which abilities the L2 unit gained over the L1 unit.
+      // (e.g. Spirit Wolves: L2 gains ACct = Critical Strike; L3 gains Apiv =
+      // Permanent Invisibility — verified from unitabilities.slk.)
+      const aAbs = new Set(a.abilities || []);
+      const bAbs = (b.abilities || []).filter(x => !aAbs.has(x));
+      if (bAbs.length) {
+        const map = {
+          'ACct': 'Critical Strike',
+          'Apiv': 'Permanent Invisibility',
+          'Aroc': 'Resistant Skin',
+          'Aroa': 'Roar',
+          'Aetf': 'Entangle',
+          // Add more known creep ability IDs as needed; unknown ones fall
+          // through as their raw ID.
+        };
+        const named = bAbs.map(id => map[id] || id).join(', ');
+        rows.push({ label: 'Gains', l1: '—', l2: named, delta: 'unlock' });
+      }
+      return rows;
+    };
+
+    let tableHtml = '';
+    let contextHtml = '';
+    const derivedRows = buildRows(spike.stats).concat(buildSummonRows(spike.stats));
+    if (spike.stats && derivedRows.length) {
+      const rowsHtml = derivedRows.map(r => `<div class="gh-spike-stat-row">`
+        + `<span class="gh-spike-stat-label">${this._guideText(r.label)}</span>`
+        + `<span class="gh-spike-stat-l1">${this._guideText(r.l1)}</span>`
+        + `<span class="gh-spike-stat-arrow" aria-hidden="true">→</span>`
+        + `<span class="gh-spike-stat-l2">${this._guideText(r.l2)}</span>`
+        + `<span class="gh-spike-stat-delta">${this._guideText(r.delta)}</span>`
+        + `</div>`).join('');
+      const spellName = this._guideText(spike.stats.name || '');
+      tableHtml = `<div class="gh-spike-table">`
+        + `<div class="gh-spike-table-head">${this._guideEsc(fName)} doubled <strong>${spellName}</strong></div>`
+        + rowsHtml
+        + `</div>`;
+    } else if (spike.doubledSpellId) {
+      // We know they doubled up but the spell isn't in our stats table.
+      const doubledName = (spike.followed.picks.find(p => p.spellItemId === spike.doubledSpellId) || {}).displayName || 'their main skill';
+      tableHtml = `<div class="gh-spike-fallback">${this._guideEsc(fName)} doubled <strong>${this._guideText(doubledName)}</strong> — the L2 of any basic skill is the real cost-per-effect jump, usually bigger than the third skill being unlocked at L1 would have been.</div>`;
+    } else {
+      // No double-up. Acknowledge the choice rather than implying it was wrong.
+      tableHtml = `<div class="gh-spike-fallback">${this._guideEsc(fName)} skipped the level-3 double-up and put one point on each basic. That trades the L2 jump on the strongest skill for having a third skill available at L1 — sometimes the right call against a specific matchup, but the L2 of the strongest spell is usually the bigger return.</div>`;
+    }
+
+    // Opp "passed on the spike" note when only one side doubled up.
+    let oppNote = '';
+    if (spike.doubledSpellId && spike.opp && spike.opp.level === 3 && !spike.oppDoubledSpellId) {
+      oppNote = `<p class="gh-spike-context">${this._guideEsc(oName)} spread points across three skills instead of doubling — passed on the spike.</p>`;
+    } else if (!spike.doubledSpellId && spike.opp && spike.oppDoubledSpellId) {
+      const oppName = (spike.opp.picks.find(p => p.spellItemId === spike.oppDoubledSpellId) || {}).displayName || '';
+      oppNote = `<p class="gh-spike-context">${this._guideEsc(oName)} took the double-up on <strong>${this._guideText(oppName)}</strong> — the spike we passed on.</p>`;
+    }
+
+    const explainHtml = `<div class="gh-spike-explain">`
+      + `<span class="gh-spike-explain-label">Why level 3 is the spike</span>`
+      + `<p class="gh-spike-rule">${linkify(ruleCopy)}</p>`
+      + tableHtml
+      + contextHtml
+      + oppNote
+      + `</div>`;
+
+    return fBlock + oBlock + explainHtml;
+  }
+
   // Walk the build-sequence list (the .gh-sl-item rows in #guide-hud-body) as
   // the replay plays: the row whose time the playhead has just passed is the
   // "active" one (highlight box); earlier rows are "done" (a slow grey/✓
@@ -2113,6 +2381,7 @@ const Wc3vViewer = class {
         const TOPIC = {
           opening:      'the first build moves, in the order to do them',
           hero:         'which creep camps level the hero, and the order to take them',
+          heroSpike:    'the level 3 skill spike, and the stat jump from doubling up',
           tier2:        'when to start Tier 2, and how the timing compared',
           tier3:        'Tier 3, and whether going for it that early paid off',
           expansion:    'taking a second base, and how to play safe around it',
@@ -2171,8 +2440,27 @@ const Wc3vViewer = class {
     }
 
     const isCreepTour = !!(step.focus && step.focus.kind === 'creepTour' && this._guideCreepTour);
+    const isSpike = step.key === 'heroSpike' && step.spike;
     if (body) {
       const parts = [];
+      if (isSpike) {
+        // The spike step has its own focal layout (per-hero pick rows + the
+        // L1→L2 stat callout). The framing sentence is shown as a plain
+        // caption above the block, not a speaker row — the "speaker" here is
+        // the coach narrating both sides, not the followed player.
+        if (step.action) {
+          const linkify = (txt) => (typeof Glossary !== 'undefined' && Glossary.linkifyText) ? Glossary.linkifyText(txt || '') : this._guideEsc(txt || '');
+          parts.push(`<p class="gh-spike-caption">${linkify(step.action)}</p>`);
+        }
+        parts.push(this._guideSpikeBlock(step.spike));
+        body.innerHTML = parts.join('');
+        this._guideStepListEls = null;
+        this._guideStepListIdx = -2;
+        if (dots) dots.innerHTML = '<span class="gh-dot"></span>' + g.steps.map((s, k) => `<span class="gh-dot${k === i ? ' gh-dot-active' : ''}"></span>`).join('');
+        if (prev) prev.disabled = false;
+        if (next) next.textContent = (i === n - 1) ? 'Finish' : 'Next →';
+        return;
+      }
       // "Me" speaker row — followed player's colour + their action.
       parts.push(this._guideRow('me', g.followedColor, g.followedName, step.action || ''));
       if (isCreepTour) {

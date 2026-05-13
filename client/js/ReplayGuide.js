@@ -68,15 +68,8 @@
     upgradeArmy:   "A weapon or armor level, or an ability upgrade, applies to every unit of that type, including the ones you haven't built yet. It's cheap, it never expires, and it's the easiest thing to skip by accident."
   };
 
-  // Why level 3 is the early hero power spike: it's the first level you can put a
-  // SECOND point in one skill (levels 1 and 2 force your two points into separate
-  // abilities), so it's where your most-used spell jumps a tier. Keyed by hero
-  // itemId; _default covers the rest. DK gets the exact numbers since it's the
-  // textbook case (Death Coil, Unholy Aura, then a 2nd Coil at level 3).
-  const HERO_SPIKE = {
-    Udea: "And level 3 is the real spike, more than the level itself: it's the first level you can double up a skill (at levels 1 and 2 your two points have to go in different abilities). DK players almost always go Death Coil, then Unholy Aura, then a second point in Coil at 3, and Coil level 2 jumps from 75 mana for 100 damage-or-healing to 130 mana for 200. That turns Coil from a top-up into pulling a unit out of a fight, for barely more mana per cast.",
-    _default: "And level 3 is the real spike, more than the level itself: it's the first level you can double up a skill (at levels 1 and 2 your two points have to go in different abilities), so it's where your most-used spell jumps a tier, a bigger heal or more damage or more area, for not much more mana than level 1 cost."
-  };
+  // (HERO_SPIKE inline copy was moved into HeroAbilityStats.js as structured
+  // per-spell stat rows, which the heroSpike step renders visually.)
 
   // Counters: when the followed player makes one of `byIds`, and the opponent
   // has >= `threshold` units from `vsIds` made by then, emit a step. Kept small
@@ -178,6 +171,83 @@
       }
     }
     return best;
+  }
+
+  // The first N hero skill picks (in chronological order) for `heroItemId`.
+  // Each entry: { spellItemId, displayName, level, atMs } — level is the
+  // spell's level AFTER this pick (1 for a fresh skill, 2 if doubled, etc.).
+  // Used by buildHeroSpike to render the "level 3 spike" step's pick row.
+  function firstNHeroPicks(stream, heroItemId, n) {
+    const out = [];
+    const evts = heroLevelEvents(stream)
+      .filter(e => e.unit.itemId === heroItemId)
+      .sort((a, b) => a.gameTime - b.gameTime);
+    for (const e of evts) {
+      if (out.length >= n) break;
+      if (!e.spellItemId) continue;
+      const spLvl = Number(e.spell && e.spell.level) || 0;
+      out.push({
+        spellItemId: String(e.spellItemId),
+        displayName: String((e.spell && e.spell.displayName) || ''),
+        level: spLvl,
+        atMs: Math.max(0, Number(e.gameTime) || 0)
+      });
+    }
+    return out;
+  }
+  // The spellItemId of the doubled-up pick (a basic skill brought to level 2)
+  // among the first three picks, or null if no double-up happened.
+  function pickedDoubleUp(picks) {
+    if (!Array.isArray(picks)) return null;
+    for (const p of picks) if (p && p.level === 2) return p.spellItemId;
+    return null;
+  }
+  // Pack one hero's side of the spike comparison.
+  function heroSpikeRow(hero, picks, doubledSpellId) {
+    const last = picks[picks.length - 1];
+    return {
+      heroItemId: hero.itemId,
+      heroName: hero.name,
+      level: picks.length,
+      levelAtMs: last ? last.atMs : null,
+      picks: picks.map(p => ({
+        spellItemId: p.spellItemId,
+        displayName: p.displayName,
+        level: p.level,
+        isSpike: !!(doubledSpellId && p.spellItemId === doubledSpellId && p.level === 2)
+      }))
+    };
+  }
+  // Resolve HeroAbilityStats both in-browser (window.HeroAbilityStats) and in
+  // node (preview tool: require it lazily so this module stays dep-free in
+  // contexts that don't need it). Returns {} if not available.
+  function getAbilityStats() {
+    if (typeof HeroAbilityStats !== 'undefined') return HeroAbilityStats || {};
+    if (typeof require === 'function') {
+      try { return require('./HeroAbilityStats') || {}; } catch (e) { /* fall through */ }
+    }
+    return {};
+  }
+  // Build the level-3 skill-spike payload: each side's three picks + L1→L2
+  // stats for whichever pick the followed player doubled up. Returns null
+  // when the followed hero's first three level-up events don't carry skill
+  // data (older replays missing spellItemId), so the caller skips the step
+  // rather than render an empty card.
+  function buildHeroSpike(fStream, fh, oStream, oh) {
+    const myPicks = firstNHeroPicks(fStream, fh.itemId, 3);
+    if (!myPicks || myPicks.length < 3) return null;
+    const oppPicks = oh ? firstNHeroPicks(oStream, oh.itemId, 3) : null;
+    const doubled = pickedDoubleUp(myPicks);
+    const oppDoubled = (oppPicks && oppPicks.length === 3) ? pickedDoubleUp(oppPicks) : null;
+    const HAS = getAbilityStats();
+    const stats = (doubled && HAS[doubled]) || null;
+    return {
+      followed: heroSpikeRow(fh, myPicks, doubled),
+      opp:      (oh && oppPicks && oppPicks.length === 3) ? heroSpikeRow(oh, oppPicks, oppDoubled) : null,
+      doubledSpellId: doubled,
+      oppDoubledSpellId: oppDoubled,
+      stats
+    };
   }
 
   // Count of army units (by itemId) made up to time `ms` — a rough "they've got
@@ -317,6 +387,11 @@
               count: Math.max(1, Math.round(Number(it && it.count) || 1))
             }))
           : null,
+        // Optional level-3 skill-spike payload (the heroSpike step only).
+        // Renderer-defined shape; passed through verbatim by the allowlist so
+        // the renderer's helpers can lay out the per-hero pick rows + the
+        // L1→L2 stat table. Null on every other step.
+        spike: (s.spike && typeof s.spike === 'object') ? s.spike : null,
         eventTimes: { followed: (s.fTimes || []).slice(), opp: (s.oTimes || []).slice() }
       });
     };
@@ -414,44 +489,78 @@
       }
     }
 
-    // 2. Hero opener + first creep level.
+    // 2a. The creep route to level 3 — which camps the hero cleared, in order.
+    //     The "why level 3 matters" half of the old XP race step lives in 2b
+    //     below as its own step, where we have room to render the picks visually.
     {
       const fh = firstHero(fStream);
       if (fh) {
         const oh = firstHero(oStream);
-        // When does our hero hit level 3 (or its peak early level)?
         const lvl3 = heroReachesLevelMs(fStream, fh.itemId, 3);
         const at = (lvl3 !== Infinity) ? lvl3 : fh.trainTime;
         const ourLvl = (lvl3 !== Infinity) ? 3 : heroLevelAt(fStream, fh.itemId, at);
-        let contrast = null;
-        if (oh) {
-          const oppLvl = heroLevelAt(oStream, oh.itemId, at);
-          if (oppLvl > 0) {
-            contrast = ourLvl > oppLvl
-              ? `By then ${oName}'s ${oh.name} is only level ${oppLvl}, so we go into the next fight a level up.`
-              : ourLvl < oppLvl
-                ? `${oName}'s ${oh.name} is already level ${oppLvl} by then, so the hero lead is theirs, not ours.`
-                : `${oName}'s ${oh.name} is also level ${oppLvl} by then, so the hero race is a wash here.`;
-          } else if (oh.trainTime > 0) {
-            contrast = `${oName}'s ${oh.name} is out by ${fmt(oh.trainTime)} but has no levels yet, so the hero XP is ours so far.`;
-          }
-        }
         const ourHeroTimes = heroLevelEvents(fStream).filter(e => e.unit.itemId === fh.itemId && e.gameTime <= at).map(e => e.gameTime).concat([fh.trainTime]);
         const oppHeroTimes = oh ? heroLevelEvents(oStream).filter(e => e.unit.itemId === oh.itemId && e.gameTime <= at).map(e => e.gameTime).concat([oh.trainTime]) : [];
         const action = (lvl3 !== Infinity)
           ? `${fh.name} reaches level ${ourLvl} by ${fmt(at)}. These are the camps it cleared to get there, in order:`
           : `${fh.name} comes out at ${fmt(fh.trainTime)} and goes straight to creep. The camps it took, in order:`;
         push({
-          gameTimeMs: fh.trainTime, key: 'hero', title: 'The XP race', iconId: fh.itemId,
-          action, contrast,
-          why: `${PRINCIPLES.creepEarly} ${HERO_SPIKE[fh.itemId] || HERO_SPIKE._default}`,
-          takeaway: `When your hero pops, the first move is a creep camp, not the opponent's base. Keep it creeping between fights. And at level 3, the standard move is a second point in your most-used ability rather than a third one, since that second point is a bigger jump than the level itself.`,
+          gameTimeMs: fh.trainTime, key: 'hero', title: 'The route to level 3', iconId: fh.itemId,
+          action,
+          contrast: null,                                                          // moved into the spike step
+          why: PRINCIPLES.creepEarly,                                              // skill-spike copy moved into spike step
+          takeaway: `When your hero pops, the first move is a creep camp, not the opponent's base. Keep it creeping between fights.`,
           // The viewer turns this into a guided creep tour — it has the map /
           // camp data; here we just flag it. (Falls back to following the hero
           // if it can't resolve the camps.)
           focus: { kind: 'creepTour', player: 'followed', highlight: null },
           fTimes: ourHeroTimes, oTimes: oppHeroTimes
         });
+
+        // 2b. The level 3 skill-spike — only when the followed hero actually
+        //     hits L3 AND the parsed events include skill-pick data on each
+        //     level-up (older .wc3v outputs may lack it).
+        if (lvl3 !== Infinity) {
+          const spike = buildHeroSpike(fStream, fh, oStream, oh);
+          if (spike) {
+            const fSpell = spike.doubledSpellId;
+            const fSpellName = fSpell ? (spike.followed.picks.find(p => p.spellItemId === fSpell) || {}).displayName : null;
+            const oppHasL3 = !!(spike.opp && spike.opp.level === 3);
+            const oppSpell = spike.oppDoubledSpellId;
+            const oppSpellName = oppSpell ? (spike.opp.picks.find(p => p.spellItemId === oppSpell) || {}).displayName : null;
+
+            // Action line is a short framing sentence — the visual block does
+            // the heavy lifting. Cover the four shapes the data can take:
+            // followed doubled / didn't, opp present / absent, opp reached L3 / not.
+            let action2;
+            if (fSpell && oppHasL3 && oppSpell) {
+              const fTime = spike.followed.levelAtMs, oTime = spike.opp.levelAtMs;
+              const delta = Math.round(Math.abs(fTime - oTime) / 1000);
+              const sameWindow = delta <= 30;
+              action2 = sameWindow
+                ? `Both heroes hit level 3 in the same window — neither side pulls ahead on hero levels. What matters is what each player spent that third point on.`
+                : (fTime < oTime
+                    ? `We hit level 3 about ${delta}s before ${oName}, both doubling up a basic skill.`
+                    : `${oName} hits level 3 about ${delta}s before we do, both doubling up a basic skill.`);
+            } else if (fSpell && oppHasL3 && !oppSpell) {
+              action2 = `We double up ${fSpellName} at level 3. ${oName} reaches level 3 too but spreads points across three skills.`;
+            } else if (fSpell && !oppHasL3) {
+              action2 = `We double up ${fSpellName} at level 3 — the first time the same skill can take two points.`;
+            } else if (!fSpell && oppHasL3 && oppSpell) {
+              action2 = `We reach level 3 but spread points across three skills. ${oName} doubles up ${oppSpellName} instead.`;
+            } else {
+              action2 = `We reach level 3 having spent one point on each basic skill — no double-up taken here.`;
+            }
+            push({
+              gameTimeMs: lvl3, key: 'heroSpike', title: 'The level 3 spike', iconId: fh.itemId,
+              action: action2,
+              contrast: null, why: null, takeaway: null,
+              spike,
+              focus: { kind: 'compare', player: 'followed' },
+              fTimes: [lvl3], oTimes: oppHasL3 ? [spike.opp.levelAtMs] : []
+            });
+          }
+        }
       }
     }
 
@@ -633,6 +742,19 @@
 
     // Sort by time; de-dupe near-identical timestamps lightly; cap.
     steps.sort((a, b) => a.gameTimeMs - b.gameTimeMs || (a.key < b.key ? -1 : 1));
+    // Pin heroSpike immediately after the hero (route) step. The spike step's
+    // gameTimeMs is the L3-reached time (so its clock + timeline-jump land on
+    // the actual moment the spike happened), but in the narrative it belongs
+    // with the hero arc, not sandwiched between T2 and T3 by chronology.
+    {
+      const heroIdx = steps.findIndex(s => s.key === 'hero');
+      const spikeIdx = steps.findIndex(s => s.key === 'heroSpike');
+      if (heroIdx !== -1 && spikeIdx !== -1 && spikeIdx !== heroIdx + 1) {
+        const [spike] = steps.splice(spikeIdx, 1);
+        const insertAt = (spikeIdx < heroIdx) ? heroIdx : heroIdx + 1;
+        steps.splice(insertAt, 0, spike);
+      }
+    }
     let out = steps;
     if (out.length > MAX_STEPS) {
       // Always keep opening + final; trim from the middle, lowest-priority first.

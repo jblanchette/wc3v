@@ -17,6 +17,9 @@ const zlib = require('zlib');
 // ReplayGuide reads window.PlayerNames when present (browser); expose it as a
 // global here so the preview shows the same official pro names the UI does.
 global.PlayerNames = require('../client/js/PlayerNames.js');
+// Same trick for HeroAbilityStats — ReplayGuide's spike step looks it up via
+// `typeof HeroAbilityStats !== 'undefined'` first, then falls back to require.
+global.HeroAbilityStats = require('../client/js/HeroAbilityStats.js');
 const ReplayGuide = require('../client/js/ReplayGuide.js');
 
 const args = {};
@@ -83,6 +86,57 @@ for (const followId of want) {
     if (s.takeaway) console.log(`     Takeaway:  ${s.takeaway}`);
     if (s.focus && s.focus.kind && s.focus.kind !== 'map') {
       console.log(`     Focus:     ${s.focus.kind} (${s.focus.player})${s.focus.highlight ? ' → ' + s.focus.highlight.join(', ') : ''}`);
+    }
+    // Level-3 spike payload — show each side's picks + the looked-up stats
+    // entry so we can sanity-check the doubled-up detection / icon resolution.
+    if (s.spike) {
+      const fmtPicks = (row) => (row.picks || []).map(p =>
+        `${p.displayName || p.spellItemId} L${p.level}${p.isSpike ? ' ★' : ''}`).join(' → ');
+      console.log(`     Spike:`);
+      console.log(`       Followed:  ${s.spike.followed.heroName} Lv${s.spike.followed.level} @ ${fmtT(s.spike.followed.levelAtMs)}  ${fmtPicks(s.spike.followed)}`);
+      if (s.spike.opp) {
+        console.log(`       Opp:       ${s.spike.opp.heroName} Lv${s.spike.opp.level} @ ${fmtT(s.spike.opp.levelAtMs)}  ${fmtPicks(s.spike.opp)}`);
+      }
+      console.log(`       Doubled:   followed=${s.spike.doubledSpellId || '(none)'}, opp=${s.spike.oppDoubledSpellId || '(none)'}`);
+      if (s.spike.stats) {
+        const st = s.spike.stats;
+        const summarize = (label, arr) => {
+          if (!Array.isArray(arr) || arr.length < 2) return null;
+          if (arr[0] == null || arr[1] == null) return null;   // SLK omitted the field at one of the levels
+          if (arr[0] === arr[1]) return null;
+          return `${label} ${arr[0]}→${arr[1]}`;
+        };
+        const changed = ['manaCost', 'cooldown', 'duration', 'durationHero', 'area', 'castRange']
+          .map(k => summarize(k, st[k])).filter(Boolean);
+        const uberTip = st.ubertipNumbers && st.ubertipNumbers[0] && st.ubertipNumbers[1]
+          ? `ubertip L1=[${st.ubertipNumbers[0].join(',')}] L2=[${st.ubertipNumbers[1].join(',')}]`
+          : '(no ubertips)';
+        // Per-spell Data field changes (the hand-labelled ones from
+        // INTERNAL_ID_LABELS in parse-ability-data.js).
+        if (st.data && st.dataMeta) {
+          for (const letter of Object.keys(st.dataMeta)) {
+            const meta = st.dataMeta[letter];
+            const arr = st.data[letter];
+            if (!meta || !meta.label || !Array.isArray(arr) || arr.length < 2) continue;
+            if (arr[0] == null || arr[1] == null || arr[0] === arr[1]) continue;
+            changed.push(`${meta.label} ${arr[0]}→${arr[1]} [${meta.format || 'flat'}]`);
+          }
+        }
+        console.log(`       Stats:     ${st.name} — ${changed.length ? changed.join(', ') : 'no SLK fields differ L1→L2'}; ${uberTip}`);
+        if (Array.isArray(st.summons) && st.summons.length >= 2) {
+          const a = st.summons[0], b = st.summons[1];
+          const sumLine = [];
+          if (a.hp != null && b.hp != null && a.hp !== b.hp) sumLine.push(`HP ${a.hp}→${b.hp}`);
+          if (a.damageAvg != null && b.damageAvg != null && a.damageAvg !== b.damageAvg) sumLine.push(`dmg ${a.damageMin}-${a.damageMax}→${b.damageMin}-${b.damageMax}`);
+          if (a.armor !== b.armor) sumLine.push(`armor ${a.armor}→${b.armor}`);
+          const aAbs = new Set(a.abilities || []);
+          const gains = (b.abilities || []).filter(x => !aAbs.has(x));
+          if (gains.length) sumLine.push(`gains [${gains.join(', ')}]`);
+          console.log(`       Summons:   ${a.unitId}→${b.unitId}: ${sumLine.length ? sumLine.join(', ') : 'no stat changes'}`);
+        }
+      } else {
+        console.log(`       Stats:     (no table — generic fallback)`);
+      }
     }
   });
 }

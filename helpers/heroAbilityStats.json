@@ -1,0 +1,8383 @@
+{
+  "AHbz": {
+    "name": "Blizzard",
+    "slkComment": "Arch Mage - Blizzard",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      6,
+      6,
+      6
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        6,
+        8,
+        10
+      ],
+      "DataB": [
+        30,
+        40,
+        50
+      ],
+      "DataC": [
+        6,
+        7,
+        10
+      ],
+      "DataD": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ],
+      "DataF": [
+        150,
+        200,
+        250
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hbz1",
+        "westring": "WESTRING_AEVAL_HBZ1",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Wave count",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Hbz2",
+        "westring": "WESTRING_AEVAL_HBZ2",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Damage / wave",
+        "format": "flat"
+      },
+      "DataC": {
+        "internalId": "Hbz3",
+        "westring": "WESTRING_AEVAL_HBZ3",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Wave duration",
+        "format": "sec"
+      },
+      "DataD": {
+        "internalId": "Hbz4",
+        "westring": "WESTRING_AEVAL_HBZ4",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ]
+      },
+      "DataE": {
+        "internalId": "Hbz5",
+        "westring": "WESTRING_AEVAL_HBZ5",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ]
+      },
+      "DataF": {
+        "internalId": "Hbz6",
+        "westring": "WESTRING_AEVAL_HBZ6",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Effect radius",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHwe": {
+    "name": "Summon Water Elemental",
+    "slkComment": "Arch Mage - Water Elemental",
+    "maxLevel": 3,
+    "manaCost": [
+      125,
+      125,
+      125
+    ],
+    "cooldown": [
+      20,
+      20,
+      20
+    ],
+    "duration": [
+      60,
+      60,
+      60
+    ],
+    "durationHero": [
+      60,
+      60,
+      60
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": [
+      {
+        "unitId": "hwat",
+        "comment": "WaterElemental",
+        "hp": 500,
+        "mana": null,
+        "armor": 0,
+        "sight": 1200,
+        "speed": 220,
+        "damageMin": 19,
+        "damageMax": 23,
+        "damageAvg": 21,
+        "attackCooldown": 1.5,
+        "attackType": "pierce",
+        "abilities": [],
+        "spellLevel": 1
+      },
+      {
+        "unitId": "hwt2",
+        "comment": "WaterElemental level 2",
+        "hp": 625,
+        "mana": null,
+        "armor": 1,
+        "sight": 1200,
+        "speed": 220,
+        "damageMin": 32,
+        "damageMax": 40,
+        "damageAvg": 36,
+        "attackCooldown": 1.5,
+        "attackType": "pierce",
+        "abilities": [],
+        "spellLevel": 2
+      },
+      {
+        "unitId": "hwt3",
+        "comment": "WaterElemental level 3",
+        "hp": 825,
+        "mana": null,
+        "armor": 2,
+        "sight": 1200,
+        "speed": 220,
+        "damageMin": 44,
+        "damageMax": 52,
+        "damageAvg": 48,
+        "attackCooldown": 1.5,
+        "attackType": "pierce",
+        "abilities": [],
+        "spellLevel": 3
+      }
+    ],
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHab": {
+    "name": "Brilliance Aura",
+    "slkComment": "Arch Mage - Brilliance Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.75,
+        1.25,
+        2
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hab1",
+        "westring": "WESTRING_AEVAL_HAB1",
+        "useSpecific": [
+          "AHab",
+          "ACba",
+          "AIba"
+        ],
+        "label": "Mana regen /s",
+        "format": "pps"
+      },
+      "DataB": {
+        "internalId": "Hab2",
+        "westring": "WESTRING_AEVAL_HAB2",
+        "useSpecific": [
+          "AHab",
+          "ACba",
+          "AIba"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHmt": {
+    "name": "Mass Teleport",
+    "slkComment": "Arch Mage - Mass Teleport",
+    "maxLevel": 1,
+    "manaCost": [
+      100
+    ],
+    "cooldown": [
+      30
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      800
+    ],
+    "castRange": [
+      99999
+    ],
+    "data": {
+      "DataA": [
+        24
+      ],
+      "DataB": [
+        3
+      ],
+      "DataC": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hmt1",
+        "westring": "WESTRING_AEVAL_HMT1",
+        "useSpecific": [
+          "AHmt",
+          "AImt"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hmt2",
+        "westring": "WESTRING_AEVAL_HMT2",
+        "useSpecific": [
+          "AHmt",
+          "AImt"
+        ]
+      },
+      "DataC": {
+        "internalId": "Hmt3",
+        "westring": "WESTRING_AEVAL_HMT3",
+        "useSpecific": [
+          "AHmt",
+          "AImt",
+          "AUds"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHtb": {
+    "name": "Storm Bolt",
+    "slkComment": "Mountain King - Thunder Bolt",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      9,
+      9,
+      9
+    ],
+    "duration": [
+      5,
+      5,
+      5
+    ],
+    "durationHero": [
+      3,
+      3,
+      3
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      600,
+      600,
+      600
+    ],
+    "data": {
+      "DataA": [
+        100,
+        200,
+        310
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Htb1",
+        "westring": "WESTRING_AEVAL_HTB1",
+        "useSpecific": [
+          "AHtb",
+          "ANfb",
+          "Awfb",
+          "ACfb",
+          "ACcb"
+        ],
+        "label": "Damage",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHtc": {
+    "name": "Thunder Clap",
+    "slkComment": "Mountain King - Thunder Clap",
+    "maxLevel": 3,
+    "manaCost": [
+      90,
+      90,
+      90
+    ],
+    "cooldown": [
+      7,
+      7,
+      7
+    ],
+    "duration": [
+      5,
+      5,
+      5
+    ],
+    "durationHero": [
+      3,
+      3,
+      3
+    ],
+    "area": [
+      300,
+      325,
+      350
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        60,
+        110,
+        150
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataD": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Htc1",
+        "westring": "WESTRING_AEVAL_HTC1",
+        "useSpecific": [
+          "AHtc"
+        ],
+        "label": "Damage",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Htc2",
+        "westring": "WESTRING_AEVAL_HTC2",
+        "useSpecific": [
+          "AHtc"
+        ]
+      },
+      "DataC": {
+        "internalId": "Htc3",
+        "westring": "WESTRING_AEVAL_HTC3",
+        "useSpecific": [
+          "AHtc"
+        ]
+      },
+      "DataD": {
+        "internalId": "Htc4",
+        "westring": "WESTRING_AEVAL_HTC4",
+        "useSpecific": [
+          "AHtc"
+        ]
+      },
+      "DataE": {
+        "internalId": "Htc5",
+        "westring": "WESTRING_AEVAL_HTC5",
+        "useSpecific": [
+          "AHtc"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHbh": {
+    "name": "Bash",
+    "slkComment": "Mountain King - Bash",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      2,
+      2,
+      2
+    ],
+    "durationHero": [
+      1,
+      1,
+      1
+    ],
+    "area": [
+      0,
+      0,
+      0
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        20,
+        30,
+        40
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        25,
+        40,
+        55
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hbh1",
+        "westring": "WESTRING_AEVAL_HBH1",
+        "useSpecific": [
+          "AHbh",
+          "ACbh"
+        ],
+        "label": "Bonus damage",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Hbh2",
+        "westring": "WESTRING_AEVAL_HBH2",
+        "useSpecific": [
+          "AHbh",
+          "ACbh"
+        ]
+      },
+      "DataC": {
+        "internalId": "Hbh3",
+        "westring": "WESTRING_AEVAL_HBH3",
+        "useSpecific": [
+          "AHbh",
+          "ACbh"
+        ],
+        "label": "Proc chance",
+        "format": "flat"
+      },
+      "DataD": {
+        "internalId": "Hbh4",
+        "westring": "WESTRING_AEVAL_HBH4",
+        "useSpecific": [
+          "AHbh",
+          "ACbh"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHav": {
+    "name": "Avatar",
+    "slkComment": "Mountain King - Avatar",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      60
+    ],
+    "durationHero": [
+      60
+    ],
+    "area": [
+      0.5
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        5
+      ],
+      "DataB": [
+        500
+      ],
+      "DataC": [
+        20
+      ],
+      "DataD": [
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hav1",
+        "westring": "WESTRING_AEVAL_HAV1",
+        "useSpecific": [
+          "AHav"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hav2",
+        "westring": "WESTRING_AEVAL_HAV2",
+        "useSpecific": [
+          "AHav"
+        ]
+      },
+      "DataC": {
+        "internalId": "Hav3",
+        "westring": "WESTRING_AEVAL_HAV3",
+        "useSpecific": [
+          "AHav"
+        ]
+      },
+      "DataD": {
+        "internalId": "Hav4",
+        "westring": "WESTRING_AEVAL_HAV4",
+        "useSpecific": [
+          "AHav"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHhb": {
+    "name": "Holy Light",
+    "slkComment": "Paladin - Holy Light",
+    "maxLevel": 3,
+    "manaCost": [
+      65,
+      65,
+      65
+    ],
+    "cooldown": [
+      5.5,
+      5.5,
+      5.5
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        200,
+        400,
+        600
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hhb1",
+        "westring": "WESTRING_AEVAL_HHB1",
+        "useSpecific": [
+          "AHhb"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHds": {
+    "name": "Divine Shield",
+    "slkComment": "Paladin - Divine Shield",
+    "maxLevel": 3,
+    "manaCost": [
+      25,
+      25,
+      25
+    ],
+    "cooldown": [
+      35,
+      50,
+      65
+    ],
+    "duration": [
+      15,
+      25,
+      35
+    ],
+    "durationHero": [
+      15,
+      25,
+      35
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hds1",
+        "westring": "WESTRING_AEVAL_HDS1",
+        "useSpecific": [
+          "AHds"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHad": {
+    "name": "Devotion Aura",
+    "slkComment": "Paladin - Devotion Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      0,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      4,
+      4
+    ],
+    "durationHero": [
+      0,
+      2,
+      2
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        2,
+        3.5,
+        5
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Had1",
+        "westring": "WESTRING_AEVAL_HAD1",
+        "useSpecific": [
+          "AHad",
+          "AIad",
+          "ACav"
+        ]
+      },
+      "DataB": {
+        "internalId": "Had2",
+        "westring": "WESTRING_AEVAL_HAD2",
+        "useSpecific": [
+          "AHad",
+          "AIad",
+          "ACav"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHre": {
+    "name": "Resurrection",
+    "slkComment": "Paladin - Resurrection",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      240
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      900
+    ],
+    "castRange": [
+      400
+    ],
+    "data": {
+      "DataA": [
+        6
+      ],
+      "DataB": [
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hre1",
+        "westring": "WESTRING_AEVAL_HRE1",
+        "useSpecific": [
+          "AHre",
+          "AIrs"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hre2",
+        "westring": "WESTRING_AEVAL_HRE2",
+        "useSpecific": [
+          "AUan",
+          "AHre",
+          "ACad",
+          "AIan",
+          "AIrs",
+          "APrl",
+          "APrr",
+          "AUa2"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHdr": {
+    "name": "Siphon Mana",
+    "slkComment": "Blood Mage - Siphon Mana",
+    "maxLevel": 3,
+    "manaCost": [
+      25,
+      25,
+      25
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      6,
+      6,
+      6
+    ],
+    "durationHero": [
+      6,
+      6,
+      6
+    ],
+    "area": [
+      700,
+      700,
+      700
+    ],
+    "castRange": [
+      600,
+      600,
+      600
+    ],
+    "data": {
+      "DataA": [
+        0,
+        0,
+        0
+      ],
+      "DataB": [
+        15,
+        25,
+        40
+      ],
+      "DataC": [
+        1,
+        1,
+        1
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        30,
+        60,
+        90
+      ],
+      "DataF": [
+        0,
+        0,
+        0
+      ],
+      "DataG": [
+        0,
+        0,
+        0
+      ],
+      "DataH": [
+        1,
+        1,
+        1
+      ],
+      "DataI": [
+        3,
+        3,
+        3
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ndr1",
+        "westring": "WESTRING_AEVAL_NDR1",
+        "useSpecific": [
+          "ANdr",
+          "AHdr"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ndr2",
+        "westring": "WESTRING_AEVAL_NDR2",
+        "useSpecific": [
+          "ANdr",
+          "AHdr"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ndr3",
+        "westring": "WESTRING_AEVAL_NDR3",
+        "useSpecific": [
+          "ANdr",
+          "AHdr"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ndr4",
+        "westring": "WESTRING_AEVAL_NDR4",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ndr5",
+        "westring": "WESTRING_AEVAL_NDR5",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataF": {
+        "internalId": "Ndr6",
+        "westring": "WESTRING_AEVAL_NDR6",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataG": {
+        "internalId": "Ndr7",
+        "westring": "WESTRING_AEVAL_NDR8",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataH": {
+        "internalId": "Ndr8",
+        "westring": "WESTRING_AEVAL_NDR7",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataI": {
+        "internalId": "Ndr9",
+        "westring": "WESTRING_AEVAL_NDR9",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHfs": {
+    "name": "Flame Strike",
+    "slkComment": "Blood Mage - Flame Strike",
+    "maxLevel": 3,
+    "manaCost": [
+      125,
+      125,
+      125
+    ],
+    "cooldown": [
+      10,
+      10,
+      10
+    ],
+    "duration": [
+      9,
+      9,
+      9
+    ],
+    "durationHero": [
+      2.67,
+      2.67,
+      2.67
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        15,
+        26.666,
+        36.666
+      ],
+      "DataB": [
+        0.33,
+        0.33,
+        0.33
+      ],
+      "DataC": [
+        4,
+        6,
+        8
+      ],
+      "DataD": [
+        1,
+        1,
+        1
+      ],
+      "DataE": [
+        0.75,
+        0.75,
+        0.75
+      ],
+      "DataF": [
+        90,
+        160,
+        220
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hfs1",
+        "westring": "WESTRING_AEVAL_HFS1",
+        "useSpecific": [
+          "AHfs",
+          "ACfs",
+          "Abof"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hfs2",
+        "westring": "WESTRING_AEVAL_HFS2",
+        "useSpecific": [
+          "AHfs",
+          "ACfs",
+          "Abof"
+        ]
+      },
+      "DataC": {
+        "internalId": "Hfs3",
+        "westring": "WESTRING_AEVAL_HFS3",
+        "useSpecific": [
+          "AHfs",
+          "ACfs",
+          "Abof"
+        ]
+      },
+      "DataD": {
+        "internalId": "Hfs4",
+        "westring": "WESTRING_AEVAL_HFS4",
+        "useSpecific": [
+          "AHfs",
+          "ACfs",
+          "Abof"
+        ]
+      },
+      "DataE": {
+        "internalId": "Hfs5",
+        "westring": "WESTRING_AEVAL_HFS5",
+        "useSpecific": [
+          "AHfs",
+          "ACfs",
+          "Abof"
+        ]
+      },
+      "DataF": {
+        "internalId": "Hfs6",
+        "westring": "WESTRING_AEVAL_HFS6",
+        "useSpecific": [
+          "AHfs",
+          "ACfs",
+          "Abof"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHbn": {
+    "name": "Banish",
+    "slkComment": "Blood Mage - Banish",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      60,
+      50
+    ],
+    "cooldown": [
+      4,
+      2,
+      0
+    ],
+    "duration": [
+      12,
+      15,
+      18
+    ],
+    "durationHero": [
+      4,
+      5,
+      6
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hbn1",
+        "westring": "WESTRING_AEVAL_HBN1",
+        "useSpecific": [
+          "AHbn",
+          "Apsh"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hbn2",
+        "westring": "WESTRING_AEVAL_HBN2",
+        "useSpecific": [
+          "AHbn",
+          "Apsh"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHpx": {
+    "name": "Summon Phoenix",
+    "slkComment": "Blood Mage - Phoenix",
+    "maxLevel": 1,
+    "manaCost": [
+      175
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      200
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEmb": {
+    "name": "Mana Burn",
+    "slkComment": "Demon Hunter - Mana Burn",
+    "maxLevel": 3,
+    "manaCost": [
+      50,
+      50,
+      50
+    ],
+    "cooldown": [
+      7,
+      6,
+      5
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      300,
+      300,
+      300
+    ],
+    "data": {
+      "DataA": [
+        50,
+        100,
+        150
+      ],
+      "DataB": [
+        0.25,
+        0.25,
+        0.25
+      ],
+      "DataC": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Emb1",
+        "westring": "WESTRING_AEVAL_EMB1",
+        "useSpecific": [
+          "AEmb",
+          "Amnb",
+          "Ambd"
+        ],
+        "label": "Mana burned",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Emb2",
+        "westring": "WESTRING_AEVAL_EMB2",
+        "useSpecific": [
+          "AEmb",
+          "Amnb",
+          "Ambd"
+        ],
+        "label": "Damage per mana",
+        "format": "pct"
+      },
+      "DataC": {
+        "internalId": "Emb3",
+        "westring": "WESTRING_AEVAL_EMB3",
+        "useSpecific": [
+          "AEmb",
+          "Amnb",
+          "Ambd"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEim": {
+    "name": "Immolation",
+    "slkComment": "Demon Hunter - Immolation",
+    "maxLevel": 3,
+    "manaCost": [
+      10,
+      10,
+      10
+    ],
+    "cooldown": [
+      0,
+      0,
+      0
+    ],
+    "duration": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "durationHero": [
+      0.5,
+      0.5,
+      0.5
+    ],
+    "area": [
+      160,
+      160,
+      160
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        6,
+        11,
+        17
+      ],
+      "DataB": [
+        7,
+        7,
+        7
+      ],
+      "DataC": [
+        10,
+        10,
+        10
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Eim1",
+        "westring": "WESTRING_AEVAL_EIM1",
+        "useSpecific": [
+          "AEim",
+          "ACim",
+          "ANpi",
+          "Apmf",
+          "Apig"
+        ],
+        "label": "Damage /s",
+        "format": "pps"
+      },
+      "DataB": {
+        "internalId": "Eim2",
+        "westring": "WESTRING_AEVAL_EIM2",
+        "useSpecific": [
+          "AEim",
+          "ACim",
+          "ANpi",
+          "Apmf",
+          "Apig"
+        ]
+      },
+      "DataC": {
+        "internalId": "Eim3",
+        "westring": "WESTRING_AEVAL_EIM3",
+        "useSpecific": [
+          "AEim",
+          "ACim",
+          "ANpi",
+          "Apmf",
+          "Apig"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEev": {
+    "name": "Evasion",
+    "slkComment": "Demon Hunter - Evasion",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.1,
+        0.2,
+        0.3
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Eev1",
+        "westring": "WESTRING_AEVAL_EEV1",
+        "useSpecific": [
+          "AEev",
+          "AIev",
+          "ACev",
+          "ACes"
+        ],
+        "label": "Dodge chance",
+        "format": "pct"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEme": {
+    "name": "Metamorphosis",
+    "slkComment": "Demon Hunter - Metamorphosis",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      1.5
+    ],
+    "durationHero": [
+      45
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataB": [
+        1
+      ],
+      "DataC": [
+        0
+      ],
+      "DataE": [
+        500
+      ]
+    },
+    "dataMeta": {
+      "DataB": {
+        "internalId": "Eme2",
+        "westring": "WESTRING_AEVAL_EME2",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi",
+          "Abrf",
+          "Arav",
+          "Amrf",
+          "Astn",
+          "Aspx",
+          "Aave",
+          "Abur",
+          "Abu2",
+          "Abu3",
+          "Aetf",
+          "Acpf",
+          "Aphx",
+          "Asb1",
+          "Asb2",
+          "Asb3",
+          "ANcr",
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataC": {
+        "internalId": "Eme3",
+        "westring": "WESTRING_AEVAL_EME3",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi",
+          "Abrf",
+          "Arav",
+          "Amrf",
+          "Astn",
+          "Aspx",
+          "Aave",
+          "Abur",
+          "Abu2",
+          "Abu3",
+          "Aetf",
+          "Acpf",
+          "Aphx",
+          "Asb1",
+          "Asb2",
+          "Asb3",
+          "ANcr",
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataE": {
+        "internalId": "Eme5",
+        "westring": "WESTRING_AEVAL_EME5",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEer": {
+    "name": "Entangling Roots",
+    "slkComment": "Keeper - Entangling Roots",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      9,
+      17,
+      25
+    ],
+    "durationHero": [
+      3,
+      4,
+      6
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      600,
+      600,
+      800
+    ],
+    "data": {
+      "DataA": [
+        15,
+        20,
+        30
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Eer1",
+        "westring": "WESTRING_AEVAL_EER1",
+        "useSpecific": [
+          "AEer",
+          "Aenr",
+          "Aenw"
+        ],
+        "label": "Damage /s",
+        "format": "pps"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEfn": {
+    "name": "Force of Nature",
+    "slkComment": "Keeper - Force of Nature",
+    "maxLevel": 3,
+    "manaCost": [
+      100,
+      100,
+      100
+    ],
+    "cooldown": [
+      20,
+      20,
+      20
+    ],
+    "duration": [
+      60,
+      60,
+      60
+    ],
+    "durationHero": [
+      60,
+      60,
+      60
+    ],
+    "area": [
+      150,
+      225,
+      300
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        2,
+        3,
+        4
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Efn1",
+        "westring": "WESTRING_AEVAL_EFN1",
+        "useSpecific": [
+          "AEfn",
+          "ACfr"
+        ],
+        "label": "Treants summoned",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEah": {
+    "name": "Thorns Aura",
+    "slkComment": "Keeper - Thorns Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.15,
+        0.3,
+        0.45
+      ],
+      "DataB": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Eah1",
+        "westring": "WESTRING_AEVAL_EAH1",
+        "useSpecific": [
+          "AEah"
+        ],
+        "label": "Return damage",
+        "format": "pct"
+      },
+      "DataB": {
+        "internalId": "Eah2",
+        "westring": "WESTRING_AEVAL_EAH2",
+        "useSpecific": [
+          "AEah"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEtq": {
+    "name": "Tranquility",
+    "slkComment": "Keeper - Tranquility",
+    "maxLevel": 1,
+    "manaCost": [
+      125
+    ],
+    "cooldown": [
+      100
+    ],
+    "duration": [
+      12
+    ],
+    "durationHero": [
+      12
+    ],
+    "area": [
+      900
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        48
+      ],
+      "DataB": [
+        1
+      ],
+      "DataC": [
+        1
+      ],
+      "DataD": [
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Etq1",
+        "westring": "WESTRING_AEVAL_ETQ1",
+        "useSpecific": [
+          "AEtq"
+        ]
+      },
+      "DataB": {
+        "internalId": "Etq2",
+        "westring": "WESTRING_AEVAL_ETQ2",
+        "useSpecific": [
+          "AEtq"
+        ]
+      },
+      "DataC": {
+        "internalId": "Etq3",
+        "westring": "WESTRING_AEVAL_ETQ3",
+        "useSpecific": [
+          "AEtq"
+        ]
+      },
+      "DataD": {
+        "internalId": "Etq4",
+        "westring": "WESTRING_AEVAL_ETQ4",
+        "useSpecific": [
+          "AEtq"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEst": {
+    "name": "Scout",
+    "slkComment": "Priestess - Scout",
+    "maxLevel": 3,
+    "manaCost": [
+      50,
+      50,
+      50
+    ],
+    "cooldown": [
+      20,
+      20,
+      20
+    ],
+    "duration": [
+      60,
+      90,
+      120
+    ],
+    "durationHero": [
+      60,
+      90,
+      120
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AHfa": {
+    "name": "Searing Arrows",
+    "slkComment": "Priestess - Searing Arrows",
+    "maxLevel": 3,
+    "manaCost": [
+      8,
+      8,
+      8
+    ],
+    "cooldown": [
+      0,
+      0,
+      0
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      600,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        12,
+        24,
+        48
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hfa1",
+        "westring": "WESTRING_AEVAL_HFA1",
+        "useSpecific": [
+          "AHfa",
+          "ACsa"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEar": {
+    "name": "Trueshot Aura",
+    "slkComment": "Priestess - Trueshot Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        1,
+        1,
+        1
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ear1",
+        "westring": "WESTRING_AEVAL_EAR1",
+        "useSpecific": [
+          "AEar",
+          "AIar",
+          "ACat"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ear2",
+        "westring": "WESTRING_AEVAL_EAR2",
+        "useSpecific": [
+          "AEar",
+          "AIar",
+          "ACat",
+          "ACac",
+          "AIcd",
+          "Aakb"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ear3",
+        "westring": "WESTRING_AEVAL_EAR3",
+        "useSpecific": [
+          "AEar",
+          "AIar",
+          "ACat",
+          "ACac",
+          "AIcd",
+          "Aakb"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ear4",
+        "westring": "WESTRING_AEVAL_EAR4",
+        "useSpecific": [
+          "AEar",
+          "AIar",
+          "ACat",
+          "ACac",
+          "AIcd",
+          "Aakb"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEsf": {
+    "name": "Starfall",
+    "slkComment": "Priestess - Starfall",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      120
+    ],
+    "duration": [
+      30
+    ],
+    "durationHero": [
+      30
+    ],
+    "area": [
+      1000
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        60
+      ],
+      "DataB": [
+        1.5
+      ],
+      "DataC": [
+        0.35
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Esf1",
+        "westring": "WESTRING_AEVAL_ESF1",
+        "useSpecific": [
+          "AEsf",
+          "AEsb",
+          "ANmo",
+          "ACmo"
+        ]
+      },
+      "DataB": {
+        "internalId": "Esf2",
+        "westring": "WESTRING_AEVAL_ESF2",
+        "useSpecific": [
+          "AEsf",
+          "AEsb",
+          "ANmo",
+          "ACmo"
+        ]
+      },
+      "DataC": {
+        "internalId": "Esf3",
+        "westring": "WESTRING_AEVAL_ESF3",
+        "useSpecific": [
+          "AEsf",
+          "AEsb",
+          "ANmo",
+          "ACmo"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEbl": {
+    "name": "Blink",
+    "slkComment": "Warden - Blink",
+    "maxLevel": 3,
+    "manaCost": [
+      50,
+      10,
+      10
+    ],
+    "cooldown": [
+      10,
+      5,
+      2.5
+    ],
+    "duration": [
+      0.33,
+      0.33,
+      0.33
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      99999,
+      99999,
+      99999
+    ],
+    "data": {
+      "DataA": [
+        1000,
+        1075,
+        1150
+      ],
+      "DataB": [
+        200,
+        200,
+        200
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ebl1",
+        "westring": "WESTRING_AEVAL_EBL1",
+        "useSpecific": [
+          "AEbl"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ebl2",
+        "westring": "WESTRING_AEVAL_EBL2",
+        "useSpecific": [
+          "AEbl"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEfk": {
+    "name": "Fan of Knives",
+    "slkComment": "Warden - Fan of Knives",
+    "maxLevel": 3,
+    "manaCost": [
+      100,
+      100,
+      100
+    ],
+    "cooldown": [
+      9,
+      9,
+      9
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      400,
+      450,
+      475
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        70,
+        130,
+        200
+      ],
+      "DataB": [
+        420,
+        780,
+        1200
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        100,
+        100,
+        100
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Efk1",
+        "westring": "WESTRING_AEVAL_EFK1",
+        "useSpecific": [
+          "AEfk",
+          "Aroc"
+        ]
+      },
+      "DataB": {
+        "internalId": "Efk2",
+        "westring": "WESTRING_AEVAL_EFK2",
+        "useSpecific": [
+          "AEfk",
+          "Aroc"
+        ]
+      },
+      "DataC": {
+        "internalId": "Efk3",
+        "westring": "WESTRING_AEVAL_EFK3",
+        "useSpecific": [
+          "AEfk",
+          "Aroc"
+        ]
+      },
+      "DataD": {
+        "internalId": "Efk4",
+        "westring": "WESTRING_AEVAL_EFK4",
+        "useSpecific": [
+          "AEfk"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEsh": {
+    "name": "Shadow Strike",
+    "slkComment": "Warden - Shadow Strike",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      15.1,
+      15.1,
+      15.1
+    ],
+    "durationHero": [
+      15.1,
+      15.1,
+      15.1
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      300,
+      300,
+      300
+    ],
+    "data": {
+      "DataA": [
+        10,
+        30,
+        45
+      ],
+      "DataB": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        3,
+        3,
+        3
+      ],
+      "DataE": [
+        75,
+        150,
+        225
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Esh1",
+        "westring": "WESTRING_AEVAL_ESH1",
+        "useSpecific": [
+          "AEsh",
+          "ACss"
+        ]
+      },
+      "DataB": {
+        "internalId": "Esh2",
+        "westring": "WESTRING_AEVAL_ESH2",
+        "useSpecific": [
+          "AEsh",
+          "ACss"
+        ]
+      },
+      "DataC": {
+        "internalId": "Esh3",
+        "westring": "WESTRING_AEVAL_ESH3",
+        "useSpecific": [
+          "AEsh",
+          "ACss"
+        ]
+      },
+      "DataD": {
+        "internalId": "Esh4",
+        "westring": "WESTRING_AEVAL_ESH4",
+        "useSpecific": [
+          "AEsh",
+          "ACss"
+        ]
+      },
+      "DataE": {
+        "internalId": "Esh5",
+        "westring": "WESTRING_AEVAL_ESH5",
+        "useSpecific": [
+          "AEsh",
+          "ACss"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AEsv": {
+    "name": "Spirit of Vengeance",
+    "slkComment": "Warden - Spirit of Vengeance",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      180
+    ],
+    "durationHero": [
+      180
+    ],
+    "area": [
+      200
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Esv1",
+        "westring": "WESTRING_AEVAL_ESV1",
+        "useSpecific": [
+          "AEsv"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOwk": {
+    "name": "Wind Walk",
+    "slkComment": "Blade Master - Wind Walk",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      2,
+      2,
+      2
+    ],
+    "duration": [
+      20,
+      35,
+      50
+    ],
+    "durationHero": [
+      20,
+      35,
+      50
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.6,
+        0.6,
+        0.6
+      ],
+      "DataB": [
+        0.1,
+        0.4,
+        0.7
+      ],
+      "DataC": [
+        40,
+        70,
+        100
+      ],
+      "DataD": [
+        1,
+        1,
+        1
+      ],
+      "DataE": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Owk1",
+        "westring": "WESTRING_AEVAL_OWK1",
+        "useSpecific": [
+          "AOwk"
+        ]
+      },
+      "DataB": {
+        "internalId": "Owk2",
+        "westring": "WESTRING_AEVAL_OWK2",
+        "useSpecific": [
+          "AOwk"
+        ],
+        "label": "Speed bonus",
+        "format": "pct"
+      },
+      "DataC": {
+        "internalId": "Owk3",
+        "westring": "WESTRING_AEVAL_OWK3",
+        "useSpecific": [
+          "AOwk"
+        ],
+        "label": "Backstab damage",
+        "format": "flat"
+      },
+      "DataD": {
+        "internalId": "Owk4",
+        "westring": "WESTRING_AEVAL_OWK3",
+        "useSpecific": [
+          "AOwk",
+          "ANwk"
+        ]
+      },
+      "DataE": {
+        "internalId": "Owk5",
+        "westring": "WESTRING_AEVAL_OWK5",
+        "useSpecific": [
+          "AOwk",
+          "ANwk"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOmi": {
+    "name": "Mirror Image",
+    "slkComment": "Blade Master - Mirror Image",
+    "maxLevel": 3,
+    "manaCost": [
+      80,
+      80,
+      80
+    ],
+    "cooldown": [
+      5,
+      5,
+      5
+    ],
+    "duration": [
+      60,
+      60,
+      60
+    ],
+    "durationHero": [
+      60,
+      60,
+      60
+    ],
+    "area": [
+      1000,
+      1000,
+      1000
+    ],
+    "castRange": [
+      128,
+      128,
+      128
+    ],
+    "data": {
+      "DataA": [
+        1,
+        2,
+        3
+      ],
+      "DataB": [
+        0.2,
+        0.2,
+        0.2
+      ],
+      "DataC": [
+        2,
+        2,
+        2
+      ],
+      "DataD": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Omi1",
+        "westring": "WESTRING_AEVAL_OMI1",
+        "useSpecific": [
+          "AOmi"
+        ],
+        "label": "Images summoned",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Omi2",
+        "westring": "WESTRING_AEVAL_OMI2",
+        "useSpecific": [
+          "AOmi"
+        ]
+      },
+      "DataC": {
+        "internalId": "Omi3",
+        "westring": "WESTRING_AEVAL_OMI3",
+        "useSpecific": [
+          "AOmi"
+        ]
+      },
+      "DataD": {
+        "internalId": "Omi4",
+        "westring": "WESTRING_AEVAL_OMI4",
+        "useSpecific": [
+          "AOmi"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOcr": {
+    "name": "Critical Strike",
+    "slkComment": "Blade Master - Critical Strike",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      0,
+      0,
+      0
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        15,
+        15,
+        15
+      ],
+      "DataB": [
+        2,
+        3,
+        4
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ],
+      "DataF": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ocr1",
+        "westring": "WESTRING_AEVAL_OCR1",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ocr2",
+        "westring": "WESTRING_AEVAL_OCR2",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ],
+        "label": "Damage multiplier",
+        "format": "mult"
+      },
+      "DataC": {
+        "internalId": "Ocr3",
+        "westring": "WESTRING_AEVAL_OCR3",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ocr4",
+        "westring": "WESTRING_AEVAL_OCR4",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ocr5",
+        "westring": "WESTRING_AEVAL_OCR5",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataF": {
+        "internalId": "Ocr6",
+        "westring": "WESTRING_AEVAL_OCR6",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOww": {
+    "name": "Bladestorm",
+    "slkComment": "Blade Master - Bladestorm",
+    "maxLevel": 1,
+    "manaCost": [
+      200
+    ],
+    "cooldown": [
+      120
+    ],
+    "duration": [
+      7
+    ],
+    "durationHero": [
+      5
+    ],
+    "area": [
+      200
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        140
+      ],
+      "DataB": [
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Oww1",
+        "westring": "WESTRING_AEVAL_OWW1",
+        "useSpecific": [
+          "AOww"
+        ]
+      },
+      "DataB": {
+        "internalId": "Oww2",
+        "westring": "WESTRING_AEVAL_OWW2",
+        "useSpecific": [
+          "AOww"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOcl": {
+    "name": "Chain Lighting",
+    "slkComment": "Farseer - Chain Lightning",
+    "maxLevel": 3,
+    "manaCost": [
+      110,
+      110,
+      110
+    ],
+    "cooldown": [
+      9,
+      9,
+      9
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      500,
+      500,
+      500
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        85,
+        125,
+        180
+      ],
+      "DataB": [
+        4,
+        6,
+        8
+      ],
+      "DataC": [
+        0.1,
+        0.1,
+        0.1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ocl1",
+        "westring": "WESTRING_AEVAL_OCL1",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv",
+          "ANfl"
+        ],
+        "label": "Damage",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Ocl2",
+        "westring": "WESTRING_AEVAL_OCL2",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv",
+          "ANfl"
+        ],
+        "label": "Targets hit",
+        "format": "flat"
+      },
+      "DataC": {
+        "internalId": "Ocl3",
+        "westring": "WESTRING_AEVAL_OCL3",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOfs": {
+    "name": "Far Sight",
+    "slkComment": "Farseer - Far Sight",
+    "maxLevel": 3,
+    "manaCost": [
+      0,
+      0,
+      0
+    ],
+    "cooldown": [
+      30,
+      30,
+      30
+    ],
+    "duration": [
+      8,
+      8,
+      8
+    ],
+    "durationHero": [
+      8,
+      8,
+      8
+    ],
+    "area": [
+      900,
+      1800,
+      2700
+    ],
+    "castRange": [
+      99999,
+      99999,
+      99999
+    ],
+    "data": {
+      "DataA": [
+        3,
+        3,
+        3
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ofs1",
+        "westring": "WESTRING_AEVAL_OFS1",
+        "useSpecific": [
+          "AOfs"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOsf": {
+    "name": "Feral Spirit",
+    "slkComment": "Farseer - Spirit Wolf",
+    "maxLevel": 3,
+    "manaCost": [
+      85,
+      85,
+      85
+    ],
+    "cooldown": [
+      30,
+      30,
+      30
+    ],
+    "duration": [
+      60,
+      60,
+      60
+    ],
+    "durationHero": [
+      60,
+      60,
+      60
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataB": [
+        2,
+        2,
+        2
+      ]
+    },
+    "dataMeta": {
+      "DataB": {
+        "internalId": "Osf2",
+        "westring": "WESTRING_AEVAL_OSF2",
+        "useSpecific": [
+          "AOsf",
+          "ACsf",
+          "ACs9",
+          "AIsh"
+        ],
+        "label": "Wolves summoned",
+        "format": "flat"
+      }
+    },
+    "summons": [
+      {
+        "unitId": "osw1",
+        "comment": "spirit wolf level 1",
+        "hp": 250,
+        "mana": null,
+        "armor": 0,
+        "sight": 1200,
+        "speed": 320,
+        "damageMin": 11,
+        "damageMax": 12,
+        "damageAvg": 11.5,
+        "attackCooldown": 1,
+        "attackType": "normal",
+        "abilities": [],
+        "spellLevel": 1
+      },
+      {
+        "unitId": "osw2",
+        "comment": "spirit wolf level 2",
+        "hp": 350,
+        "mana": null,
+        "armor": 0,
+        "sight": 1200,
+        "speed": 350,
+        "damageMin": 16,
+        "damageMax": 17,
+        "damageAvg": 16.5,
+        "attackCooldown": 1,
+        "attackType": "normal",
+        "abilities": [
+          "ACct"
+        ],
+        "spellLevel": 2
+      },
+      {
+        "unitId": "osw3",
+        "comment": "spirit wolf level 3",
+        "hp": 500,
+        "mana": null,
+        "armor": 0,
+        "sight": 1200,
+        "speed": 350,
+        "damageMin": 21,
+        "damageMax": 22,
+        "damageAvg": 21.5,
+        "attackCooldown": 1,
+        "attackType": "normal",
+        "abilities": [
+          "ACct",
+          "Apiv"
+        ],
+        "spellLevel": 3
+      }
+    ],
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOeq": {
+    "name": "Earth Quake",
+    "slkComment": "Farseer - Earthquake",
+    "maxLevel": 1,
+    "manaCost": [
+      125
+    ],
+    "cooldown": [
+      90
+    ],
+    "duration": [
+      20
+    ],
+    "durationHero": [
+      20
+    ],
+    "area": [
+      250
+    ],
+    "castRange": [
+      1000
+    ],
+    "data": {
+      "DataA": [
+        0.5
+      ],
+      "DataB": [
+        60
+      ],
+      "DataC": [
+        0.75
+      ],
+      "DataD": [
+        250
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Oeq1",
+        "westring": "WESTRING_AEVAL_OEQ1",
+        "useSpecific": [
+          "AOeq",
+          "SNeq"
+        ]
+      },
+      "DataB": {
+        "internalId": "Oeq2",
+        "westring": "WESTRING_AEVAL_OEQ2",
+        "useSpecific": [
+          "AOeq",
+          "SNeq"
+        ]
+      },
+      "DataC": {
+        "internalId": "Oeq3",
+        "westring": "WESTRING_AEVAL_OEQ3",
+        "useSpecific": [
+          "AOeq",
+          "SNeq"
+        ]
+      },
+      "DataD": {
+        "internalId": "Oeq4",
+        "westring": "WESTRING_AEVAL_OEQ4",
+        "useSpecific": [
+          "AOeq",
+          "SNeq"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOsh": {
+    "name": "Shockwave",
+    "slkComment": "Chieftain - Shock Wave",
+    "maxLevel": 3,
+    "manaCost": [
+      90,
+      90,
+      90
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      125,
+      125,
+      125
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        75,
+        130,
+        200
+      ],
+      "DataB": [
+        900,
+        1560,
+        2400
+      ],
+      "DataC": [
+        800,
+        800,
+        800
+      ],
+      "DataD": [
+        125,
+        125,
+        125
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Osh1",
+        "westring": "WESTRING_AEVAL_OSH1",
+        "useSpecific": [
+          "AOsh",
+          "ACsh",
+          "ACst"
+        ]
+      },
+      "DataB": {
+        "internalId": "Osh2",
+        "westring": "WESTRING_AEVAL_OSH2",
+        "useSpecific": [
+          "AOsh",
+          "ACsh",
+          "ACst"
+        ]
+      },
+      "DataC": {
+        "internalId": "Osh3",
+        "westring": "WESTRING_AEVAL_OSH3",
+        "useSpecific": [
+          "AOsh",
+          "ACsh",
+          "ACst"
+        ]
+      },
+      "DataD": {
+        "internalId": "Osh4",
+        "westring": "WESTRING_AEVAL_OSH4",
+        "useSpecific": [
+          "AOsh",
+          "ACsh",
+          "ACst"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOae": {
+    "name": "Endurance Aura",
+    "slkComment": "Chieftain - Endurance Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.1,
+        0.15,
+        0.2
+      ],
+      "DataB": [
+        0.05,
+        0.1,
+        0.15
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Oae1",
+        "westring": "WESTRING_AEVAL_OAE1",
+        "useSpecific": [
+          "AOae",
+          "AIae",
+          "SCae"
+        ]
+      },
+      "DataB": {
+        "internalId": "Oae2",
+        "westring": "WESTRING_AEVAL_OAE2",
+        "useSpecific": [
+          "AOae",
+          "AIae",
+          "SCae"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOws": {
+    "name": "War Stomp",
+    "slkComment": "Chieftain - War Stomp",
+    "maxLevel": 3,
+    "manaCost": [
+      90,
+      90,
+      90
+    ],
+    "cooldown": [
+      7,
+      7,
+      7
+    ],
+    "duration": [
+      3,
+      4,
+      5
+    ],
+    "durationHero": [
+      2,
+      2.5,
+      3
+    ],
+    "area": [
+      250,
+      300,
+      350
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        30,
+        60,
+        90
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Wrs1",
+        "westring": "WESTRING_AEVAL_WRS1",
+        "useSpecific": [
+          "Awrs",
+          "Ahrs",
+          "Awrh",
+          "Awrg",
+          "AOws"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOre": {
+    "name": "Reincarnation",
+    "slkComment": "Chieftain - Reincarnation",
+    "maxLevel": 1,
+    "manaCost": [
+      null
+    ],
+    "cooldown": [
+      240
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ore1",
+        "westring": "WESTRING_AEVAL_ORE1",
+        "useSpecific": [
+          "AOre",
+          "ACrn",
+          "ANrn"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOhw": {
+    "name": "Healing Wave",
+    "slkComment": "Shadow Hunter - Healing Wave",
+    "maxLevel": 3,
+    "manaCost": [
+      90,
+      90,
+      90
+    ],
+    "cooldown": [
+      9,
+      9,
+      9
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      500,
+      500,
+      500
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        130,
+        215,
+        300
+      ],
+      "DataB": [
+        3,
+        4,
+        5
+      ],
+      "DataC": [
+        0.25,
+        0.25,
+        0.25
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ocl1",
+        "westring": "WESTRING_AEVAL_OCL1",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv",
+          "ANfl"
+        ],
+        "label": "Damage",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Ocl2",
+        "westring": "WESTRING_AEVAL_OCL2",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv",
+          "ANfl"
+        ],
+        "label": "Targets hit",
+        "format": "flat"
+      },
+      "DataC": {
+        "internalId": "Ocl3",
+        "westring": "WESTRING_AEVAL_OCL3",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOhx": {
+    "name": "Hex",
+    "slkComment": "Shadow Hunter - Hex",
+    "maxLevel": 3,
+    "manaCost": [
+      70,
+      70,
+      70
+    ],
+    "cooldown": [
+      7,
+      7,
+      7
+    ],
+    "duration": [
+      15,
+      30,
+      45
+    ],
+    "durationHero": [
+      4,
+      5,
+      6
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        99,
+        99,
+        99
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ply1",
+        "westring": "WESTRING_AEVAL_PLY1",
+        "useSpecific": [
+          "Aply",
+          "ACpy",
+          "AOhx",
+          "AChx"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOsw": {
+    "name": "Serpent Ward",
+    "slkComment": "Shadow Hunter - Serpent Ward",
+    "maxLevel": 3,
+    "manaCost": [
+      30,
+      30,
+      30
+    ],
+    "cooldown": [
+      6.5,
+      6.5,
+      6.5
+    ],
+    "duration": [
+      40,
+      40,
+      40
+    ],
+    "durationHero": [
+      40,
+      40,
+      40
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      500,
+      500,
+      500
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AOvd": {
+    "name": "Big Bad Voodoo",
+    "slkComment": "Shadow Hunter - Voodooo",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      30
+    ],
+    "durationHero": [
+      30
+    ],
+    "area": [
+      800
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {},
+    "dataMeta": null,
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUdc": {
+    "name": "Death Coil",
+    "slkComment": "Death Knight - Death Coil",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      6,
+      6,
+      6
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        200,
+        400,
+        600
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Udc1",
+        "westring": "WESTRING_AEVAL_UDC1",
+        "useSpecific": [
+          "AUdc",
+          "ACdc"
+        ],
+        "label": "Heal value (dmg = ½)",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUdp": {
+    "name": "Death Pact",
+    "slkComment": "Death Knight - Death Pact",
+    "maxLevel": 3,
+    "manaCost": [
+      50,
+      50,
+      50
+    ],
+    "cooldown": [
+      15,
+      15,
+      15
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        0,
+        0,
+        0
+      ],
+      "DataB": [
+        1,
+        2,
+        3
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Udp1",
+        "westring": "WESTRING_AEVAL_UDP1",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ],
+        "label": "Mana returned",
+        "format": "pct"
+      },
+      "DataB": {
+        "internalId": "Udp2",
+        "westring": "WESTRING_AEVAL_UDP2",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ],
+        "label": "HP gained mult",
+        "format": "mult"
+      },
+      "DataC": {
+        "internalId": "Udp3",
+        "westring": "WESTRING_AEVAL_UDP3",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ]
+      },
+      "DataD": {
+        "internalId": "Udp4",
+        "westring": "WESTRING_AEVAL_UDP4",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ]
+      },
+      "DataE": {
+        "internalId": "Udp5",
+        "westring": "WESTRING_AEVAL_UDP5",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste",
+          "AIdg",
+          "AIg2"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUau": {
+    "name": "Unholy Aura",
+    "slkComment": "Death Knight - Unholy Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.1,
+        0.15,
+        0.2
+      ],
+      "DataB": [
+        0.5,
+        1,
+        1.5
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uau1",
+        "westring": "WESTRING_AEVAL_UAU1",
+        "useSpecific": [
+          "AUau",
+          "AIau",
+          "ACua"
+        ],
+        "label": "Move speed bonus",
+        "format": "pct"
+      },
+      "DataB": {
+        "internalId": "Uau2",
+        "westring": "WESTRING_AEVAL_UAU2",
+        "useSpecific": [
+          "AUau",
+          "AIau",
+          "ACua"
+        ],
+        "label": "HP regen /s",
+        "format": "pps"
+      },
+      "DataC": {
+        "internalId": "Uau3",
+        "westring": "WESTRING_AEVAL_UAU3",
+        "useSpecific": [
+          "AUau",
+          "AIau",
+          "ACua"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUan": {
+    "name": "Animate Dead",
+    "slkComment": "Death Knight - Animate Dead",
+    "maxLevel": 1,
+    "manaCost": [
+      125
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      40
+    ],
+    "durationHero": [
+      40
+    ],
+    "area": [
+      900
+    ],
+    "castRange": [
+      400
+    ],
+    "data": {
+      "DataA": [
+        6
+      ],
+      "DataB": [
+        0
+      ],
+      "DataC": [
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uan1",
+        "westring": "WESTRING_AEVAL_UAN1",
+        "useSpecific": [
+          "AUan",
+          "AUa2"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hre2",
+        "westring": "WESTRING_AEVAL_HRE2",
+        "useSpecific": [
+          "AUan",
+          "AHre",
+          "ACad",
+          "AIan",
+          "AIrs",
+          "APrl",
+          "APrr",
+          "AUa2"
+        ]
+      },
+      "DataC": {
+        "internalId": "Uan3",
+        "westring": "WESTRING_AEVAL_UAN3",
+        "useSpecific": [
+          "AUan",
+          "ACad",
+          "AIan",
+          "AInd",
+          "AUa2"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUcs": {
+    "name": "Carrion Swarm",
+    "slkComment": "Dreadlord - Carrion Swarm",
+    "maxLevel": 3,
+    "manaCost": [
+      100,
+      100,
+      100
+    ],
+    "cooldown": [
+      10,
+      10,
+      10
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      100,
+      100,
+      100
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        75,
+        135,
+        200
+      ],
+      "DataB": [
+        400,
+        700,
+        1200
+      ],
+      "DataC": [
+        800,
+        800,
+        800
+      ],
+      "DataD": [
+        300,
+        300,
+        300
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ucs1",
+        "westring": "WESTRING_AEVAL_UCS1",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ucs2",
+        "westring": "WESTRING_AEVAL_UCS2",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ucs3",
+        "westring": "WESTRING_AEVAL_UCS3",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv",
+          "ANfl"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ucs4",
+        "westring": "WESTRING_AEVAL_UCS4",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv",
+          "ANfl"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUsl": {
+    "name": "Sleep",
+    "slkComment": "Dreadlord - Sleep",
+    "maxLevel": 3,
+    "manaCost": [
+      80,
+      65,
+      50
+    ],
+    "cooldown": [
+      4,
+      4,
+      4
+    ],
+    "duration": [
+      15,
+      35,
+      55
+    ],
+    "durationHero": [
+      4,
+      8,
+      12
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        2,
+        2,
+        2
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Usl1",
+        "westring": "WESTRING_AEVAL_USL1",
+        "useSpecific": [
+          "AUsl",
+          "ACsl"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUav": {
+    "name": "Vampiric Aura",
+    "slkComment": "Dreadlord - Vampiric Aura",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.2,
+        0.35,
+        0.5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uav1",
+        "westring": "WESTRING_AEVAL_UAV1",
+        "useSpecific": [
+          "AUav",
+          "AIav",
+          "ACvp"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUin": {
+    "name": "Inferno",
+    "slkComment": "Dreadlord - Inferno",
+    "maxLevel": 1,
+    "manaCost": [
+      175
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      4
+    ],
+    "durationHero": [
+      2
+    ],
+    "area": [
+      250
+    ],
+    "castRange": [
+      900
+    ],
+    "data": {
+      "DataA": [
+        50
+      ],
+      "DataB": [
+        180
+      ],
+      "DataC": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uin1",
+        "westring": "WESTRING_AEVAL_UIN1",
+        "useSpecific": [
+          "AUin",
+          "ANin",
+          "SNin",
+          "AIin"
+        ]
+      },
+      "DataB": {
+        "internalId": "Uin2",
+        "westring": "WESTRING_AEVAL_UIN2",
+        "useSpecific": [
+          "AUin",
+          "ANin",
+          "SNin",
+          "AIin"
+        ]
+      },
+      "DataC": {
+        "internalId": "Uin3",
+        "westring": "WESTRING_AEVAL_UIN3",
+        "useSpecific": [
+          "AUin",
+          "ANin",
+          "SNin",
+          "AIin"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUfn": {
+    "name": "Frost Nova",
+    "slkComment": "Lich - Frost Nova",
+    "maxLevel": 3,
+    "manaCost": [
+      125,
+      125,
+      125
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      4,
+      5,
+      6
+    ],
+    "durationHero": [
+      2,
+      3,
+      4
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      750,
+      750,
+      750
+    ],
+    "data": {
+      "DataA": [
+        50,
+        100,
+        150
+      ],
+      "DataB": [
+        100,
+        100,
+        100
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ufn1",
+        "westring": "WESTRING_AEVAL_UFN1",
+        "useSpecific": [
+          "AUfn",
+          "ACfn"
+        ],
+        "label": "Splash damage",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Ufn2",
+        "westring": "WESTRING_AEVAL_UFN2",
+        "useSpecific": [
+          "AUfn",
+          "ACfn"
+        ],
+        "label": "Splash radius",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUfa": {
+    "name": "Frost Armor",
+    "slkComment": "Lich - Frost Armor",
+    "maxLevel": 3,
+    "manaCost": [
+      40,
+      40,
+      40
+    ],
+    "cooldown": [
+      2,
+      2,
+      2
+    ],
+    "duration": [
+      4,
+      4,
+      4
+    ],
+    "durationHero": [
+      4,
+      4,
+      4
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        45,
+        45,
+        45
+      ],
+      "DataB": [
+        3,
+        5,
+        7
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ufa1",
+        "westring": "WESTRING_AEVAL_UFA1",
+        "useSpecific": [
+          "AUfa",
+          "AUfu",
+          "ACfa"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ufa2",
+        "westring": "WESTRING_AEVAL_UFA2",
+        "useSpecific": [
+          "AUfa",
+          "AUfu",
+          "ACfa"
+        ],
+        "label": "Armor bonus",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUdr": {
+    "name": "Dark Ritual",
+    "slkComment": "Lich - Dark Ritual",
+    "maxLevel": 3,
+    "manaCost": [
+      25,
+      25,
+      25
+    ],
+    "cooldown": [
+      20,
+      20,
+      20
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        0.33,
+        0.55,
+        0.8
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Udp1",
+        "westring": "WESTRING_AEVAL_UDP1",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ],
+        "label": "Mana returned",
+        "format": "pct"
+      },
+      "DataB": {
+        "internalId": "Udp2",
+        "westring": "WESTRING_AEVAL_UDP2",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ],
+        "label": "HP gained mult",
+        "format": "mult"
+      },
+      "DataC": {
+        "internalId": "Udp3",
+        "westring": "WESTRING_AEVAL_UDP3",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ]
+      },
+      "DataD": {
+        "internalId": "Udp4",
+        "westring": "WESTRING_AEVAL_UDP4",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste"
+        ]
+      },
+      "DataE": {
+        "internalId": "Udp5",
+        "westring": "WESTRING_AEVAL_UDP5",
+        "useSpecific": [
+          "AUdp",
+          "AUdr",
+          "Aste",
+          "AIdg",
+          "AIg2"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUdd": {
+    "name": "Death and Decay",
+    "slkComment": "Lich - Death and Decay",
+    "maxLevel": 1,
+    "manaCost": [
+      200
+    ],
+    "cooldown": [
+      150
+    ],
+    "duration": [
+      35
+    ],
+    "durationHero": [
+      35
+    ],
+    "area": [
+      300
+    ],
+    "castRange": [
+      1000
+    ],
+    "data": {
+      "DataA": [
+        0.04
+      ],
+      "DataB": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Udd1",
+        "westring": "WESTRING_AEVAL_UDD1",
+        "useSpecific": [
+          "AUdd",
+          "SNdd"
+        ]
+      },
+      "DataB": {
+        "internalId": "Udd2",
+        "westring": "WESTRING_AEVAL_UDD2",
+        "useSpecific": [
+          "AUdd",
+          "SNdd"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUim": {
+    "name": "Impale",
+    "slkComment": "Crypt Lord - Impale",
+    "maxLevel": 3,
+    "manaCost": [
+      90,
+      90,
+      90
+    ],
+    "cooldown": [
+      9,
+      9,
+      9
+    ],
+    "duration": [
+      2,
+      3,
+      4
+    ],
+    "durationHero": [
+      1,
+      1.5,
+      2
+    ],
+    "area": [
+      250,
+      250,
+      250
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        600,
+        600,
+        600
+      ],
+      "DataB": [
+        0.3,
+        0.3,
+        0.3
+      ],
+      "DataC": [
+        60,
+        105,
+        150
+      ],
+      "DataD": [
+        1,
+        1,
+        1
+      ],
+      "DataE": [
+        1,
+        1,
+        1
+      ],
+      "DataF": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uim1",
+        "westring": "WESTRING_AEVAL_UIM1",
+        "useSpecific": [
+          "AUim",
+          "ACmp"
+        ]
+      },
+      "DataB": {
+        "internalId": "Uim2",
+        "westring": "WESTRING_AEVAL_UIM2",
+        "useSpecific": [
+          "AUim",
+          "ACmp"
+        ]
+      },
+      "DataC": {
+        "internalId": "Uim3",
+        "westring": "WESTRING_AEVAL_UIM3",
+        "useSpecific": [
+          "AUim",
+          "ACmp"
+        ]
+      },
+      "DataD": {
+        "internalId": "Uim4",
+        "westring": "WESTRING_AEVAL_UIM4",
+        "useSpecific": [
+          "AUim",
+          "ACmp"
+        ]
+      },
+      "DataE": {
+        "internalId": "Uim5",
+        "westring": "WESTRING_AEVAL_UIM5",
+        "useSpecific": [
+          "AUim",
+          "ACmp"
+        ]
+      },
+      "DataF": {
+        "internalId": "Uim6",
+        "westring": "WESTRING_AEVAL_UIM6",
+        "useSpecific": [
+          "AUim",
+          "ACmp"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUts": {
+    "name": "Spiked Carapace",
+    "slkComment": "Crypt Lord - Spiked Carapace",
+    "maxLevel": 3,
+    "manaCost": [
+      null,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.15,
+        0.3,
+        0.45
+      ],
+      "DataB": [
+        1,
+        1,
+        1
+      ],
+      "DataC": [
+        4,
+        8,
+        12
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uts1",
+        "westring": "WESTRING_AEVAL_UTS1",
+        "useSpecific": [
+          "AUts",
+          "ANth"
+        ]
+      },
+      "DataB": {
+        "internalId": "Uts2",
+        "westring": "WESTRING_AEVAL_UTS2",
+        "useSpecific": [
+          "AUts",
+          "ANth"
+        ]
+      },
+      "DataC": {
+        "internalId": "Uts3",
+        "westring": "WESTRING_AEVAL_UTS3",
+        "useSpecific": [
+          "AUts",
+          "ANth"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUcb": {
+    "name": "Carrion Beetles",
+    "slkComment": "Crypt Lord - Carrion Scarabs",
+    "maxLevel": 3,
+    "manaCost": [
+      50,
+      50,
+      50
+    ],
+    "cooldown": [
+      9,
+      9,
+      9
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      900,
+      900,
+      900
+    ],
+    "castRange": [
+      900,
+      900,
+      900
+    ],
+    "data": {
+      "DataA": [
+        2,
+        2,
+        2
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        6,
+        6,
+        6
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Rai1",
+        "westring": "WESTRING_AEVAL_RAI1",
+        "useSpecific": [
+          "Arai",
+          "ACrd",
+          "AUcb",
+          "AIrd",
+          "Avng"
+        ]
+      },
+      "DataB": {
+        "internalId": "Rai2",
+        "westring": "WESTRING_AEVAL_RAI2",
+        "useSpecific": [
+          "Arai",
+          "ACrd",
+          "AUcb",
+          "AIrd",
+          "Avng"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ucb5",
+        "westring": "WESTRING_AEVAL_UCB5",
+        "useSpecific": [
+          "AUcb",
+          "Avng"
+        ]
+      }
+    },
+    "summons": [
+      {
+        "unitId": "ucs1",
+        "comment": "carrion scarab level 1",
+        "hp": 170,
+        "mana": null,
+        "armor": 2,
+        "sight": 1200,
+        "speed": 280,
+        "damageMin": 8,
+        "damageMax": 9,
+        "damageAvg": 8.5,
+        "attackCooldown": 1.5,
+        "attackType": "normal",
+        "abilities": [],
+        "spellLevel": 1
+      },
+      {
+        "unitId": "ucs1",
+        "comment": "carrion scarab level 1",
+        "hp": 170,
+        "mana": null,
+        "armor": 2,
+        "sight": 1200,
+        "speed": 280,
+        "damageMin": 8,
+        "damageMax": 9,
+        "damageAvg": 8.5,
+        "attackCooldown": 1.5,
+        "attackType": "normal",
+        "abilities": [],
+        "spellLevel": 2
+      },
+      {
+        "unitId": "ucs1",
+        "comment": "carrion scarab level 1",
+        "hp": 170,
+        "mana": null,
+        "armor": 2,
+        "sight": 1200,
+        "speed": 280,
+        "damageMin": 8,
+        "damageMax": 9,
+        "damageAvg": 8.5,
+        "attackCooldown": 1.5,
+        "attackType": "normal",
+        "abilities": [],
+        "spellLevel": 3
+      }
+    ],
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "AUls": {
+    "name": "Locust Swarm",
+    "slkComment": "Crypt Lord - Locust Swarm",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      30
+    ],
+    "durationHero": [
+      30
+    ],
+    "area": [
+      800
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataA": [
+        20
+      ],
+      "DataB": [
+        0.2
+      ],
+      "DataC": [
+        7
+      ],
+      "DataD": [
+        0.75
+      ],
+      "DataE": [
+        20
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Uls1",
+        "westring": "WESTRING_AEVAL_ULS1",
+        "useSpecific": [
+          "AUls"
+        ]
+      },
+      "DataB": {
+        "internalId": "Uls2",
+        "westring": "WESTRING_AEVAL_ULS2",
+        "useSpecific": [
+          "AUls"
+        ]
+      },
+      "DataC": {
+        "internalId": "Uls3",
+        "westring": "WESTRING_AEVAL_ULS3",
+        "useSpecific": [
+          "AUls"
+        ]
+      },
+      "DataD": {
+        "internalId": "Uls4",
+        "westring": "WESTRING_AEVAL_ULS4",
+        "useSpecific": [
+          "AUls"
+        ]
+      },
+      "DataE": {
+        "internalId": "Uls5",
+        "westring": "WESTRING_AEVAL_ULS5",
+        "useSpecific": [
+          "AUls"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANbf": {
+    "name": "Breath of Fire",
+    "slkComment": "Brewmaster - Breath of Fire",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      10,
+      10,
+      10
+    ],
+    "duration": [
+      5,
+      5,
+      5
+    ],
+    "durationHero": [
+      5,
+      5,
+      5
+    ],
+    "area": [
+      90,
+      90,
+      90
+    ],
+    "castRange": [
+      375,
+      375,
+      375
+    ],
+    "data": {
+      "DataA": [
+        80,
+        130,
+        180
+      ],
+      "DataB": [
+        600,
+        900,
+        1200
+      ],
+      "DataC": [
+        375,
+        375,
+        375
+      ],
+      "DataD": [
+        175,
+        175,
+        175
+      ],
+      "DataE": [
+        10,
+        15,
+        25
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ucs1",
+        "westring": "WESTRING_AEVAL_UCS1",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ucs2",
+        "westring": "WESTRING_AEVAL_UCS2",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ucs3",
+        "westring": "WESTRING_AEVAL_UCS3",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv",
+          "ANfl"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ucs4",
+        "westring": "WESTRING_AEVAL_UCS4",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv",
+          "ANfl"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nbf5",
+        "westring": "WESTRING_AEVAL_NBF5",
+        "useSpecific": [
+          "ANbf",
+          "ACbc",
+          "ACbf"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANdb": {
+    "name": "Drunken Brawler",
+    "slkComment": "Brewmaster - Drunken Brawler",
+    "maxLevel": 3,
+    "manaCost": [
+      0,
+      null,
+      null
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      0,
+      null,
+      null
+    ],
+    "durationHero": [
+      0,
+      null,
+      null
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        10,
+        10,
+        10
+      ],
+      "DataB": [
+        2,
+        3,
+        4
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        0.07,
+        0.14,
+        0.21
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ocr1",
+        "westring": "WESTRING_AEVAL_OCR1",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ocr2",
+        "westring": "WESTRING_AEVAL_OCR2",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ],
+        "label": "Damage multiplier",
+        "format": "mult"
+      },
+      "DataC": {
+        "internalId": "Ocr3",
+        "westring": "WESTRING_AEVAL_OCR3",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ocr4",
+        "westring": "WESTRING_AEVAL_OCR4",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ocr5",
+        "westring": "WESTRING_AEVAL_OCR5",
+        "useSpecific": [
+          "AOcr",
+          "ACct",
+          "ANdb"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANdh": {
+    "name": "Drunken Haze",
+    "slkComment": "Brewmaster - Drunken Haze",
+    "maxLevel": 3,
+    "manaCost": [
+      70,
+      70,
+      70
+    ],
+    "cooldown": [
+      12,
+      12,
+      12
+    ],
+    "duration": [
+      12,
+      12,
+      12
+    ],
+    "durationHero": [
+      5,
+      5,
+      5
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      550,
+      550,
+      550
+    ],
+    "data": {
+      "DataA": [
+        0,
+        0,
+        0
+      ],
+      "DataB": [
+        0.45,
+        0.65,
+        0.8
+      ],
+      "DataC": [
+        0.15,
+        0.3,
+        0.5
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nsi1",
+        "westring": "WESTRING_AEVAL_NSI1",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nsi2",
+        "westring": "WESTRING_AEVAL_NSI2",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nsi3",
+        "westring": "WESTRING_AEVAL_NSI3",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nsi4",
+        "westring": "WESTRING_AEVAL_NSI4",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANef": {
+    "name": "Storm Earth and Fire",
+    "slkComment": "Brewmaster - Storm, Earth and Fire",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      45
+    ],
+    "durationHero": [
+      45
+    ],
+    "area": [
+      128
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {},
+    "dataMeta": null,
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANdr": {
+    "name": "Life Drain",
+    "slkComment": "Dark Ranger - Drain",
+    "maxLevel": 3,
+    "manaCost": [
+      30,
+      30,
+      30
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      8,
+      8,
+      8
+    ],
+    "durationHero": [
+      8,
+      8,
+      8
+    ],
+    "area": [
+      700,
+      700,
+      700
+    ],
+    "castRange": [
+      600,
+      600,
+      600
+    ],
+    "data": {
+      "DataA": [
+        30,
+        45,
+        60
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        1,
+        1,
+        1
+      ],
+      "DataD": [
+        30,
+        45,
+        60
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ],
+      "DataF": [
+        0,
+        0,
+        0
+      ],
+      "DataG": [
+        0,
+        0,
+        0
+      ],
+      "DataH": [
+        0,
+        0,
+        0
+      ],
+      "DataI": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ndr1",
+        "westring": "WESTRING_AEVAL_NDR1",
+        "useSpecific": [
+          "ANdr",
+          "AHdr"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ndr2",
+        "westring": "WESTRING_AEVAL_NDR2",
+        "useSpecific": [
+          "ANdr",
+          "AHdr"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ndr3",
+        "westring": "WESTRING_AEVAL_NDR3",
+        "useSpecific": [
+          "ANdr",
+          "AHdr"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ndr4",
+        "westring": "WESTRING_AEVAL_NDR4",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ndr5",
+        "westring": "WESTRING_AEVAL_NDR5",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataF": {
+        "internalId": "Ndr6",
+        "westring": "WESTRING_AEVAL_NDR6",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataG": {
+        "internalId": "Ndr7",
+        "westring": "WESTRING_AEVAL_NDR8",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataH": {
+        "internalId": "Ndr8",
+        "westring": "WESTRING_AEVAL_NDR7",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      },
+      "DataI": {
+        "internalId": "Ndr9",
+        "westring": "WESTRING_AEVAL_NDR9",
+        "useSpecific": [
+          "ANdr",
+          "AHdr",
+          "ACdr",
+          "ACsm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANsi": {
+    "name": "Silence",
+    "slkComment": "Dark Ranger - Silence",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      15,
+      15,
+      15
+    ],
+    "duration": [
+      16,
+      20,
+      24
+    ],
+    "durationHero": [
+      8,
+      10,
+      12
+    ],
+    "area": [
+      200,
+      275,
+      350
+    ],
+    "castRange": [
+      900,
+      900,
+      900
+    ],
+    "data": {
+      "DataA": [
+        8,
+        8,
+        8
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nsi1",
+        "westring": "WESTRING_AEVAL_NSI1",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nsi2",
+        "westring": "WESTRING_AEVAL_NSI2",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nsi3",
+        "westring": "WESTRING_AEVAL_NSI3",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nsi4",
+        "westring": "WESTRING_AEVAL_NSI4",
+        "useSpecific": [
+          "ANsi",
+          "ACsi",
+          "ANdh",
+          "Aclf",
+          "AIse",
+          "AIfg"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANba": {
+    "name": "Black Arrow",
+    "slkComment": "Dark Ranger - Black Arrow",
+    "maxLevel": 3,
+    "manaCost": [
+      6,
+      6,
+      6
+    ],
+    "cooldown": [
+      0,
+      0,
+      0
+    ],
+    "duration": [
+      2,
+      2,
+      2
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      600,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        2,
+        10,
+        20
+      ],
+      "DataB": [
+        1,
+        1,
+        1
+      ],
+      "DataC": [
+        80,
+        80,
+        80
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nba1",
+        "westring": "WESTRING_AEVAL_NBA1",
+        "useSpecific": [
+          "ANba",
+          "ANbs"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nba2",
+        "westring": "WESTRING_AEVAL_NBA2",
+        "useSpecific": [
+          "ANba",
+          "ANbs"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nba3",
+        "westring": "WESTRING_AEVAL_NBA3",
+        "useSpecific": [
+          "ANba",
+          "ANbs"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANch": {
+    "name": "Charm",
+    "slkComment": "Dark Ranger - Charm",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      45
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      700
+    ],
+    "data": {
+      "DataA": [
+        5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nch1",
+        "westring": "WESTRING_AEVAL_NCH1",
+        "useSpecific": [
+          "ANch",
+          "ACch",
+          "Acmg"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANms": {
+    "name": "Mana Shield",
+    "slkComment": "Sea Witch - Mana Shield",
+    "maxLevel": 3,
+    "manaCost": [
+      10,
+      10,
+      10
+    ],
+    "cooldown": [
+      10,
+      10,
+      10
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      128,
+      128,
+      128
+    ],
+    "data": {
+      "DataA": [
+        2,
+        3,
+        4
+      ],
+      "DataB": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nms1",
+        "westring": "WESTRING_AEVAL_NMS1",
+        "useSpecific": [
+          "ANms",
+          "ACmf"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nms2",
+        "westring": "WESTRING_AEVAL_NMS2",
+        "useSpecific": [
+          "ANms",
+          "ACmf"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANfa": {
+    "name": "Frost Arrows",
+    "slkComment": "Sea Witch - Frost Arrows",
+    "maxLevel": 3,
+    "manaCost": [
+      10,
+      10,
+      10
+    ],
+    "cooldown": [
+      0,
+      null,
+      null
+    ],
+    "duration": [
+      5,
+      5,
+      5
+    ],
+    "durationHero": [
+      1.5,
+      1.5,
+      1.5
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      600,
+      600,
+      600
+    ],
+    "data": {
+      "DataA": [
+        5,
+        10,
+        15
+      ],
+      "DataB": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "DataC": [
+        0.3,
+        0.5,
+        0.7
+      ],
+      "DataD": [
+        7,
+        7,
+        7
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hca1",
+        "westring": "WESTRING_AEVAL_HCA1",
+        "useSpecific": [
+          "AHca",
+          "ACcw",
+          "ANfa"
+        ]
+      },
+      "DataB": {
+        "internalId": "Hca2",
+        "westring": "WESTRING_AEVAL_HCA2",
+        "useSpecific": [
+          "AHca",
+          "ACcw",
+          "ANfa"
+        ]
+      },
+      "DataC": {
+        "internalId": "Hca3",
+        "westring": "WESTRING_AEVAL_HCA3",
+        "useSpecific": [
+          "AHca",
+          "ACcw",
+          "ANfa"
+        ]
+      },
+      "DataD": {
+        "internalId": "Hca4",
+        "westring": "WESTRING_AEVAL_HCA4",
+        "useSpecific": [
+          "AHca",
+          "ACcw",
+          "ANfa"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANfl": {
+    "name": "Forked Lightning",
+    "slkComment": "Sea Witch - Forked Lightning",
+    "maxLevel": 3,
+    "manaCost": [
+      110,
+      110,
+      110
+    ],
+    "cooldown": [
+      11,
+      11,
+      11
+    ],
+    "duration": [
+      0.7,
+      0.7,
+      0.7
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      125,
+      125,
+      125
+    ],
+    "castRange": [
+      600,
+      600,
+      600
+    ],
+    "data": {
+      "DataA": [
+        85,
+        160,
+        250
+      ],
+      "DataB": [
+        3,
+        3,
+        3
+      ],
+      "DataC": [
+        900,
+        900,
+        900
+      ],
+      "DataD": [
+        300,
+        300,
+        300
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ocl1",
+        "westring": "WESTRING_AEVAL_OCL1",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv",
+          "ANfl"
+        ],
+        "label": "Damage",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Ocl2",
+        "westring": "WESTRING_AEVAL_OCL2",
+        "useSpecific": [
+          "AOcl",
+          "AOhw",
+          "ACcl",
+          "AChv",
+          "ANfl"
+        ],
+        "label": "Targets hit",
+        "format": "flat"
+      },
+      "DataC": {
+        "internalId": "Ucs3",
+        "westring": "WESTRING_AEVAL_UCS3",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv",
+          "ANfl"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ucs4",
+        "westring": "WESTRING_AEVAL_UCS4",
+        "useSpecific": [
+          "AUcs",
+          "ANbf",
+          "ACbc",
+          "ACbf",
+          "ACca",
+          "ACcv",
+          "ANfl"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANto": {
+    "name": "Tornado",
+    "slkComment": "Sea Witch - Tornado",
+    "maxLevel": 1,
+    "manaCost": [
+      125
+    ],
+    "cooldown": [
+      120
+    ],
+    "duration": [
+      20
+    ],
+    "durationHero": [
+      20
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      700
+    ],
+    "data": {},
+    "dataMeta": null,
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANrf": {
+    "name": "Rain of Fire",
+    "slkComment": "Pit Lord - Rain of Fire",
+    "maxLevel": 3,
+    "manaCost": [
+      85,
+      85,
+      85
+    ],
+    "cooldown": [
+      8,
+      8,
+      8
+    ],
+    "duration": [
+      3,
+      3,
+      3
+    ],
+    "durationHero": [
+      3,
+      3,
+      3
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        6,
+        8,
+        10
+      ],
+      "DataB": [
+        25,
+        30,
+        35
+      ],
+      "DataC": [
+        6,
+        7,
+        10
+      ],
+      "DataD": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataE": [
+        5,
+        10,
+        15
+      ],
+      "DataF": [
+        125,
+        150,
+        175
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hbz1",
+        "westring": "WESTRING_AEVAL_HBZ1",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Wave count",
+        "format": "flat"
+      },
+      "DataB": {
+        "internalId": "Hbz2",
+        "westring": "WESTRING_AEVAL_HBZ2",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Damage / wave",
+        "format": "flat"
+      },
+      "DataC": {
+        "internalId": "Hbz3",
+        "westring": "WESTRING_AEVAL_HBZ3",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Wave duration",
+        "format": "sec"
+      },
+      "DataD": {
+        "internalId": "Hbz4",
+        "westring": "WESTRING_AEVAL_HBZ4",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ]
+      },
+      "DataE": {
+        "internalId": "Hbz5",
+        "westring": "WESTRING_AEVAL_HBZ5",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ]
+      },
+      "DataF": {
+        "internalId": "Hbz6",
+        "westring": "WESTRING_AEVAL_HBZ6",
+        "useSpecific": [
+          "AHbz",
+          "ACbz",
+          "ANrf",
+          "ACrf"
+        ],
+        "label": "Effect radius",
+        "format": "flat"
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANca": {
+    "name": "Cleaving Attack",
+    "slkComment": "Pit Lord - Cleaving Attack",
+    "maxLevel": 3,
+    "manaCost": [
+      0,
+      0,
+      0
+    ],
+    "cooldown": [
+      0,
+      0,
+      0
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      250,
+      250,
+      250
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.4,
+        0.65,
+        0.9
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "nca1",
+        "westring": "WESTRING_AEVAL_NCA1",
+        "useSpecific": [
+          "ANca"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANht": {
+    "name": "Howl of Terror",
+    "slkComment": "Pit Lord - Howl of Terror",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      12,
+      12,
+      12
+    ],
+    "duration": [
+      15,
+      15,
+      15
+    ],
+    "durationHero": [
+      15,
+      15,
+      15
+    ],
+    "area": [
+      500,
+      500,
+      500
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.3,
+        0.4,
+        0.5
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ],
+      "DataF": [
+        0,
+        0,
+        0
+      ],
+      "DataG": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Roa1",
+        "westring": "WESTRING_AEVAL_ROA1",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht"
+        ]
+      },
+      "DataB": {
+        "internalId": "Roa2",
+        "westring": "WESTRING_AEVAL_ROA2",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht",
+          "ANbr"
+        ]
+      },
+      "DataC": {
+        "internalId": "Roa3",
+        "westring": "WESTRING_AEVAL_ROA3",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht",
+          "ANbr"
+        ]
+      },
+      "DataD": {
+        "internalId": "Roa4",
+        "westring": "WESTRING_AEVAL_ROA4",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht",
+          "ANbr",
+          "Ahnl"
+        ]
+      },
+      "DataE": {
+        "internalId": "Roa5",
+        "westring": "WESTRING_AEVAL_ROA5",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht",
+          "ANbr",
+          "Ahnl"
+        ]
+      },
+      "DataF": {
+        "internalId": "Roa6",
+        "westring": "WESTRING_AEVAL_ROA6",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht",
+          "ANbr",
+          "Ahnl"
+        ]
+      },
+      "DataG": {
+        "internalId": "Roa7",
+        "westring": "WESTRING_AEVAL_ROA7",
+        "useSpecific": [
+          "Aroa",
+          "Ara2",
+          "ACro",
+          "ACr1",
+          "AIrr",
+          "ANht",
+          "ANbr",
+          "Ahnl"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANdo": {
+    "name": "Doom",
+    "slkComment": "Pit Lord - Doom",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      120
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      650
+    ],
+    "data": {
+      "DataA": [
+        40
+      ],
+      "DataB": [
+        1
+      ],
+      "DataC": [
+        120
+      ],
+      "DataD": [
+        5
+      ],
+      "DataE": [
+        0.5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ndo1",
+        "westring": "WESTRING_AEVAL_NDO1",
+        "useSpecific": [
+          "ANdo"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ndo2",
+        "westring": "WESTRING_AEVAL_NDO2",
+        "useSpecific": [
+          "ANdo"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ndo3",
+        "westring": "WESTRING_AEVAL_NDO3",
+        "useSpecific": [
+          "ANdo"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ndo4",
+        "westring": "WESTRING_AEVAL_NDO4",
+        "useSpecific": [
+          "ANdo"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ndo5",
+        "westring": "WESTRING_AEVAL_NDO5",
+        "useSpecific": [
+          "ANdo"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANsg": {
+    "name": "Summon Bear",
+    "slkComment": "Beast Master - Summon Bear",
+    "maxLevel": 3,
+    "manaCost": [
+      100,
+      100,
+      100
+    ],
+    "cooldown": [
+      40,
+      40,
+      40
+    ],
+    "duration": [
+      70,
+      70,
+      70
+    ],
+    "durationHero": [
+      70,
+      70,
+      70
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANsq": {
+    "name": "Summon Quilbeast",
+    "slkComment": "Beast Master - Summon Quilbeast",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      25,
+      25,
+      25
+    ],
+    "duration": [
+      70,
+      70,
+      70
+    ],
+    "durationHero": [
+      70,
+      70,
+      70
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANsw": {
+    "name": "Summon Hawk",
+    "slkComment": "Beast Master - Summon Hawk",
+    "maxLevel": 3,
+    "manaCost": [
+      50,
+      50,
+      50
+    ],
+    "cooldown": [
+      70,
+      70,
+      70
+    ],
+    "duration": [
+      70,
+      70,
+      70
+    ],
+    "durationHero": [
+      70,
+      70,
+      70
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANst": {
+    "name": "Stampede",
+    "slkComment": "Beast Master - Stampede",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      30
+    ],
+    "durationHero": [
+      30
+    ],
+    "area": [
+      1000
+    ],
+    "castRange": [
+      300
+    ],
+    "data": {
+      "DataA": [
+        2
+      ],
+      "DataB": [
+        55
+      ],
+      "DataC": [
+        60
+      ],
+      "DataD": [
+        275
+      ],
+      "DataE": [
+        0.2
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nst1",
+        "westring": "WESTRING_AEVAL_NST1",
+        "useSpecific": [
+          "ANst"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nst2",
+        "westring": "WESTRING_AEVAL_NST2",
+        "useSpecific": [
+          "ANst"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nst3",
+        "westring": "WESTRING_AEVAL_NST3",
+        "useSpecific": [
+          "ANst"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nst4",
+        "westring": "WESTRING_AEVAL_NST4",
+        "useSpecific": [
+          "ANst"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nst5",
+        "westring": "WESTRING_AEVAL_NST5",
+        "useSpecific": [
+          "ANst"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANeg": {
+    "name": "Engineering Upgrade",
+    "slkComment": "Tinkerer - Engineering Upgrade",
+    "maxLevel": 3,
+    "manaCost": [
+      0,
+      0,
+      0
+    ],
+    "cooldown": [
+      0,
+      0,
+      0
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "DataB": [
+        2,
+        4,
+        6
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Neg1",
+        "westring": "WESTRING_AEVAL_NEG1",
+        "useSpecific": [
+          "ANeg"
+        ]
+      },
+      "DataB": {
+        "internalId": "Neg2",
+        "westring": "WESTRING_AEVAL_NEG2",
+        "useSpecific": [
+          "ANeg"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANcs": {
+    "name": "Cluster Rockets",
+    "slkComment": "Tinkerer - Cluster Rockets (Level 0)",
+    "maxLevel": 3,
+    "manaCost": [
+      70,
+      70,
+      70
+    ],
+    "cooldown": [
+      6,
+      6,
+      6
+    ],
+    "duration": [
+      1.01,
+      1.01,
+      1.01
+    ],
+    "durationHero": [
+      1.01,
+      1.01,
+      1.01
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        11.25,
+        19.75,
+        30.5
+      ],
+      "DataB": [
+        0.25,
+        0.25,
+        0.25
+      ],
+      "DataC": [
+        6,
+        12,
+        18
+      ],
+      "DataD": [
+        200,
+        250,
+        300
+      ],
+      "DataE": [
+        1,
+        1,
+        1
+      ],
+      "DataF": [
+        1.01,
+        1.01,
+        1.01
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ncs1",
+        "westring": "WESTRING_AEVAL_NCS1",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ncs2",
+        "westring": "WESTRING_AEVAL_NCS2",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ncs3",
+        "westring": "WESTRING_AEVAL_NCS3",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ncs4",
+        "westring": "WESTRING_AEVAL_NCS4",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ncs5",
+        "westring": "WESTRING_AEVAL_NCS5",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataF": {
+        "internalId": "Ncs6",
+        "westring": "WESTRING_AEVAL_NCS6",
+        "useSpecific": [
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANsy": {
+    "name": "Pocket Factory",
+    "slkComment": "Tinkerer - Summon Factory (Level 0)",
+    "maxLevel": 3,
+    "manaCost": [
+      125,
+      125,
+      125
+    ],
+    "cooldown": [
+      35,
+      35,
+      35
+    ],
+    "duration": [
+      40,
+      40,
+      40
+    ],
+    "durationHero": [
+      40,
+      40,
+      40
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      500,
+      500,
+      500
+    ],
+    "data": {
+      "DataA": [
+        4.5,
+        4.5,
+        4.5
+      ],
+      "DataC": [
+        12,
+        12,
+        12
+      ],
+      "DataD": [
+        200,
+        200,
+        200
+      ],
+      "DataE": [
+        1100,
+        1100,
+        1100
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nsy1",
+        "westring": "WESTRING_AEVAL_NSY1",
+        "useSpecific": [
+          "ANsy",
+          "ANs1",
+          "ANs2",
+          "ANs3"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nsy3",
+        "westring": "WESTRING_AEVAL_NSY3",
+        "useSpecific": [
+          "ANsy",
+          "ANs1",
+          "ANs2",
+          "ANs3"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nsy4",
+        "westring": "WESTRING_AEVAL_NSY4",
+        "useSpecific": [
+          "ANsy",
+          "ANs1",
+          "ANs2",
+          "ANs3"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nsy5",
+        "westring": "WESTRING_AEVAL_NSY5",
+        "useSpecific": [
+          "ANsy",
+          "ANs1",
+          "ANs2",
+          "ANs3"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANrg": {
+    "name": "Robo-Goblin",
+    "slkComment": "Tinkerer - Robo-Goblin (Level 0)",
+    "maxLevel": 1,
+    "manaCost": [
+      25
+    ],
+    "cooldown": [
+      1
+    ],
+    "duration": [
+      1.5
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      null
+    ],
+    "data": {
+      "DataB": [
+        1
+      ],
+      "DataC": [
+        0
+      ],
+      "DataE": [
+        5
+      ],
+      "DataF": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataB": {
+        "internalId": "Eme2",
+        "westring": "WESTRING_AEVAL_EME2",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi",
+          "Abrf",
+          "Arav",
+          "Amrf",
+          "Astn",
+          "Aspx",
+          "Aave",
+          "Abur",
+          "Abu2",
+          "Abu3",
+          "Aetf",
+          "Acpf",
+          "Aphx",
+          "Asb1",
+          "Asb2",
+          "Asb3",
+          "ANcr",
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataC": {
+        "internalId": "Eme3",
+        "westring": "WESTRING_AEVAL_EME3",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi",
+          "Abrf",
+          "Arav",
+          "Amrf",
+          "Astn",
+          "Aspx",
+          "Aave",
+          "Abur",
+          "Abu2",
+          "Abu3",
+          "Aetf",
+          "Acpf",
+          "Aphx",
+          "Asb1",
+          "Asb2",
+          "Asb3",
+          "ANcr",
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nrg5",
+        "westring": "WESTRING_AEVAL_NRG5",
+        "useSpecific": [
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataF": {
+        "internalId": "Nrg6",
+        "westring": "WESTRING_AEVAL_NRG6",
+        "useSpecific": [
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANic": {
+    "name": "Incinerate",
+    "slkComment": "Firelord - Incinerate",
+    "maxLevel": 3,
+    "manaCost": [
+      0,
+      0,
+      0
+    ],
+    "cooldown": [
+      0,
+      0,
+      0
+    ],
+    "duration": [
+      4,
+      4,
+      4
+    ],
+    "durationHero": [
+      4,
+      4,
+      4
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        2,
+        3,
+        4
+      ],
+      "DataB": [
+        30,
+        45,
+        60
+      ],
+      "DataC": [
+        120,
+        120,
+        120
+      ],
+      "DataD": [
+        15,
+        22,
+        30
+      ],
+      "DataE": [
+        240,
+        240,
+        240
+      ],
+      "DataF": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nic1",
+        "westring": "WESTRING_AEVAL_NIC1",
+        "useSpecific": [
+          "ANic"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nic2",
+        "westring": "WESTRING_AEVAL_NIC2",
+        "useSpecific": [
+          "ANic"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nic3",
+        "westring": "WESTRING_AEVAL_NIC3",
+        "useSpecific": [
+          "ANic"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nic4",
+        "westring": "WESTRING_AEVAL_NIC4",
+        "useSpecific": [
+          "ANic"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nic5",
+        "westring": "WESTRING_AEVAL_NIC5",
+        "useSpecific": [
+          "ANic"
+        ]
+      },
+      "DataF": {
+        "internalId": "Nic6",
+        "westring": "WESTRING_AEVAL_NIC6",
+        "useSpecific": [
+          "ANic"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANso": {
+    "name": "Soul Burn",
+    "slkComment": "Firelord - Soul Burn",
+    "maxLevel": 3,
+    "manaCost": [
+      65,
+      65,
+      65
+    ],
+    "cooldown": [
+      12,
+      12,
+      12
+    ],
+    "duration": [
+      16,
+      18,
+      20
+    ],
+    "durationHero": [
+      8,
+      9,
+      10
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        5,
+        11.11,
+        17
+      ],
+      "DataB": [
+        1,
+        1,
+        1
+      ],
+      "DataC": [
+        0.75,
+        0.75,
+        0.75
+      ],
+      "DataD": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        0,
+        0,
+        0
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nso1",
+        "westring": "WESTRING_AEVAL_NSO1",
+        "useSpecific": [
+          "ANso"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nso2",
+        "westring": "WESTRING_AEVAL_NSO2",
+        "useSpecific": [
+          "ANso"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nso3",
+        "westring": "WESTRING_AEVAL_NSO3",
+        "useSpecific": [
+          "ANso"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nso4",
+        "westring": "WESTRING_AEVAL_NSO4",
+        "useSpecific": [
+          "ANso"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nso5",
+        "westring": "WESTRING_AEVAL_NSO5",
+        "useSpecific": [
+          "ANso"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANlm": {
+    "name": "Summon Lava Spawn",
+    "slkComment": "Firelord - Summon Lava Spawn",
+    "maxLevel": 3,
+    "manaCost": [
+      150,
+      150,
+      150
+    ],
+    "cooldown": [
+      32,
+      32,
+      32
+    ],
+    "duration": [
+      70,
+      70,
+      70
+    ],
+    "durationHero": [
+      70,
+      70,
+      70
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataA": [
+        1,
+        1,
+        1
+      ],
+      "DataB": [
+        5,
+        5,
+        5
+      ],
+      "DataC": [
+        13,
+        13,
+        13
+      ],
+      "DataD": [
+        0.5,
+        0.75,
+        0.75
+      ],
+      "DataE": [
+        12,
+        12,
+        12
+      ],
+      "DataF": [
+        3,
+        3,
+        3
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Hwe2",
+        "westring": "WESTRING_AEVAL_HWE2",
+        "useSpecific": [
+          "AHwe",
+          "AEst",
+          "ANsg",
+          "ANsq",
+          "ANsw",
+          "ANwm",
+          "AOsw",
+          "AOwd",
+          "Anwm",
+          "ACwe",
+          "AHpx",
+          "ACtn",
+          "ANlm"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nlm2",
+        "westring": "WESTRING_AEVAL_NLM2",
+        "useSpecific": [
+          "ANlm"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nlm3",
+        "westring": "WESTRING_AEVAL_NLM3",
+        "useSpecific": [
+          "ANlm"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nlm4",
+        "westring": "WESTRING_AEVAL_NLM4",
+        "useSpecific": [
+          "ANlm"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nlm5",
+        "westring": "WESTRING_AEVAL_NLM5",
+        "useSpecific": [
+          "ANlm"
+        ]
+      },
+      "DataF": {
+        "internalId": "Nlm6",
+        "westring": "WESTRING_AEVAL_NLM6",
+        "useSpecific": [
+          "ANlm"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANvc": {
+    "name": "Volcano",
+    "slkComment": "Firelord - Volcano",
+    "maxLevel": 1,
+    "manaCost": [
+      200
+    ],
+    "cooldown": [
+      180
+    ],
+    "duration": [
+      2
+    ],
+    "durationHero": [
+      1
+    ],
+    "area": [
+      500
+    ],
+    "castRange": [
+      800
+    ],
+    "data": {
+      "DataA": [
+        3
+      ],
+      "DataB": [
+        5
+      ],
+      "DataC": [
+        3
+      ],
+      "DataD": [
+        2
+      ],
+      "DataE": [
+        125
+      ],
+      "DataF": [
+        0.5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nvc1",
+        "westring": "WESTRING_AEVAL_NVC1",
+        "useSpecific": [
+          "ANvc"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nvc2",
+        "westring": "WESTRING_AEVAL_NVC2",
+        "useSpecific": [
+          "ANvc"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nvc3",
+        "westring": "WESTRING_AEVAL_NVC3",
+        "useSpecific": [
+          "ANvc"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nvc4",
+        "westring": "WESTRING_AEVAL_NVC4",
+        "useSpecific": [
+          "ANvc"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nvc5",
+        "westring": "WESTRING_AEVAL_NVC5",
+        "useSpecific": [
+          "ANvc"
+        ]
+      },
+      "DataF": {
+        "internalId": "Nvc6",
+        "westring": "WESTRING_AEVAL_NVC6",
+        "useSpecific": [
+          "ANvc"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANhs": {
+    "name": "Healing Spray",
+    "slkComment": "Alchemist - Healing Spray",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      6,
+      6,
+      6
+    ],
+    "duration": [
+      0,
+      0,
+      0
+    ],
+    "durationHero": [
+      0,
+      0,
+      0
+    ],
+    "area": [
+      250,
+      250,
+      250
+    ],
+    "castRange": [
+      800,
+      800,
+      800
+    ],
+    "data": {
+      "DataA": [
+        30,
+        45,
+        60
+      ],
+      "DataB": [
+        1,
+        1,
+        1
+      ],
+      "DataC": [
+        6,
+        6,
+        6
+      ],
+      "DataD": [
+        280,
+        385,
+        490
+      ],
+      "DataE": [
+        1,
+        1,
+        1
+      ],
+      "DataF": [
+        3,
+        4,
+        5
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ncs1",
+        "westring": "WESTRING_AEVAL_NCS1",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ncs2",
+        "westring": "WESTRING_AEVAL_NCS2",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ncs3",
+        "westring": "WESTRING_AEVAL_NCS3",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ncs4",
+        "westring": "WESTRING_AEVAL_NCS4",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ncs5",
+        "westring": "WESTRING_AEVAL_NCS5",
+        "useSpecific": [
+          "ANhs",
+          "ANcs",
+          "ANc1",
+          "ANc2",
+          "ANc3"
+        ]
+      },
+      "DataF": {
+        "internalId": "Nhs6",
+        "westring": "WESTRING_AEVAL_NHS6",
+        "useSpecific": [
+          "ANhs"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANab": {
+    "name": "Acid Bomb",
+    "slkComment": "Alchemist - Acid Bomb",
+    "maxLevel": 3,
+    "manaCost": [
+      75,
+      75,
+      75
+    ],
+    "cooldown": [
+      12,
+      12,
+      12
+    ],
+    "duration": [
+      15,
+      15,
+      15
+    ],
+    "durationHero": [
+      15,
+      15,
+      15
+    ],
+    "area": [
+      200,
+      200,
+      200
+    ],
+    "castRange": [
+      700,
+      700,
+      700
+    ],
+    "data": {
+      "DataA": [
+        0,
+        0,
+        0
+      ],
+      "DataB": [
+        0,
+        0,
+        0
+      ],
+      "DataC": [
+        3,
+        4,
+        5
+      ],
+      "DataD": [
+        5,
+        10,
+        17
+      ],
+      "DataE": [
+        3,
+        6,
+        11
+      ],
+      "DataF": [
+        1,
+        1,
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Nab1",
+        "westring": "WESTRING_AEVAL_NAB1",
+        "useSpecific": [
+          "ANab"
+        ]
+      },
+      "DataB": {
+        "internalId": "Nab2",
+        "westring": "WESTRING_AEVAL_NAB2",
+        "useSpecific": [
+          "ANab"
+        ]
+      },
+      "DataC": {
+        "internalId": "Nab3",
+        "westring": "WESTRING_AEVAL_NAB3",
+        "useSpecific": [
+          "ANab"
+        ]
+      },
+      "DataD": {
+        "internalId": "Nab4",
+        "westring": "WESTRING_AEVAL_NAB4",
+        "useSpecific": [
+          "ANab"
+        ]
+      },
+      "DataE": {
+        "internalId": "Nab5",
+        "westring": "WESTRING_AEVAL_NAB5",
+        "useSpecific": [
+          "ANab"
+        ]
+      },
+      "DataF": {
+        "internalId": "Nab6",
+        "westring": "WESTRING_AEVAL_NAB6",
+        "useSpecific": [
+          "ANab"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANcr": {
+    "name": "Chemical Rage",
+    "slkComment": "Alchemist - Chemical Rage",
+    "maxLevel": 3,
+    "manaCost": [
+      25,
+      25,
+      25
+    ],
+    "cooldown": [
+      30,
+      30,
+      30
+    ],
+    "duration": [
+      0.35,
+      0.35,
+      0.35
+    ],
+    "durationHero": [
+      15,
+      15,
+      15
+    ],
+    "area": [
+      null,
+      null,
+      null
+    ],
+    "castRange": [
+      null,
+      null,
+      null
+    ],
+    "data": {
+      "DataB": [
+        1,
+        1,
+        1
+      ],
+      "DataC": [
+        0,
+        0,
+        0
+      ],
+      "DataE": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "DataF": [
+        0.25,
+        0.75,
+        1.25
+      ]
+    },
+    "dataMeta": {
+      "DataB": {
+        "internalId": "Eme2",
+        "westring": "WESTRING_AEVAL_EME2",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi",
+          "Abrf",
+          "Arav",
+          "Amrf",
+          "Astn",
+          "Aspx",
+          "Aave",
+          "Abur",
+          "Abu2",
+          "Abu3",
+          "Aetf",
+          "Acpf",
+          "Aphx",
+          "Asb1",
+          "Asb2",
+          "Asb3",
+          "ANcr",
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataC": {
+        "internalId": "Eme3",
+        "westring": "WESTRING_AEVAL_EME3",
+        "useSpecific": [
+          "AEme",
+          "AEIl",
+          "AEvi",
+          "Abrf",
+          "Arav",
+          "Amrf",
+          "Astn",
+          "Aspx",
+          "Aave",
+          "Abur",
+          "Abu2",
+          "Abu3",
+          "Aetf",
+          "Acpf",
+          "Aphx",
+          "Asb1",
+          "Asb2",
+          "Asb3",
+          "ANcr",
+          "ANrg",
+          "ANg1",
+          "ANg2",
+          "ANg3"
+        ]
+      },
+      "DataE": {
+        "internalId": "Ncr5",
+        "westring": "WESTRING_AEVAL_NCR5",
+        "useSpecific": [
+          "ANcr"
+        ]
+      },
+      "DataF": {
+        "internalId": "Ncr6",
+        "westring": "WESTRING_AEVAL_NCR6",
+        "useSpecific": [
+          "ANcr"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  },
+  "ANtm": {
+    "name": "Transmute",
+    "slkComment": "Alchemist - Transmute",
+    "maxLevel": 1,
+    "manaCost": [
+      150
+    ],
+    "cooldown": [
+      45
+    ],
+    "duration": [
+      0
+    ],
+    "durationHero": [
+      0
+    ],
+    "area": [
+      null
+    ],
+    "castRange": [
+      650
+    ],
+    "data": {
+      "DataA": [
+        1
+      ],
+      "DataB": [
+        0
+      ],
+      "DataC": [
+        5
+      ],
+      "DataD": [
+        1
+      ]
+    },
+    "dataMeta": {
+      "DataA": {
+        "internalId": "Ntm1",
+        "westring": "WESTRING_AEVAL_NTM1",
+        "useSpecific": [
+          "ANtm",
+          "AIts"
+        ]
+      },
+      "DataB": {
+        "internalId": "Ntm2",
+        "westring": "WESTRING_AEVAL_NTM2",
+        "useSpecific": [
+          "ANtm",
+          "AIts"
+        ]
+      },
+      "DataC": {
+        "internalId": "Ntm3",
+        "westring": "WESTRING_AEVAL_NTM3",
+        "useSpecific": [
+          "ANtm",
+          "AIts"
+        ]
+      },
+      "DataD": {
+        "internalId": "Ntm4",
+        "westring": "WESTRING_AEVAL_NTM4",
+        "useSpecific": [
+          "ANtm",
+          "AIts"
+        ]
+      }
+    },
+    "summons": null,
+    "tip": null,
+    "ubertips": null,
+    "ubertipNumbers": null
+  }
+}
