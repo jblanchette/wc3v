@@ -611,7 +611,12 @@ const BuildOrderData = class {
   }
 
   processBuildOrderData (player) {
-    const { tierStream, race, displayName, playerColor } = player;
+    const { tierStream, race, playerColor } = player;
+    // Show the official pro name everywhere; the raw replay handle is kept
+    // on rawDisplayName for the match-header tooltip (PlayerNames.js is the
+    // single source of truth for this mapping).
+    const rawDisplayName = PlayerNames.original(player.displayName);
+    const displayName = PlayerNames.canonical(player.displayName);
     const raceInfo = RaceLabels[race] || { label: '??', accent: '#8B949E' };
 
     const tier2Event = tierStream.find(t => t.tier === 2);
@@ -634,7 +639,7 @@ const BuildOrderData = class {
     // Expansion detection
     const hasExpansion = grouped.some(e => e.type === 'expansion');
 
-    return { race, raceInfo, displayName, playerColor, tiers, snapshots, finalSnapshot, production, tierProduction, tier2Time, tier3Time, hasExpansion };
+    return { race, raceInfo, displayName, rawDisplayName, playerColor, tiers, snapshots, finalSnapshot, production, tierProduction, tier2Time, tier3Time, hasExpansion };
   }
 };
 

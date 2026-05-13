@@ -16,9 +16,11 @@
 </head>
 <body class="site-page">
   <script src="js/clientConfig.js"></script>
+  <script src="js/BandSwitcher.js"></script>
   <script src="js/SiteNav.js"></script>
   <script src="js/TosBanner.js"></script>
   <script src="js/Security.js"></script>
+  <script src="js/PlayerNames.js"></script>
   <script src="js/MyReplays.js"></script>
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
@@ -330,7 +332,12 @@
           if (state.race !== 'all' && r.race !== state.race) return false;
           if (q) {
             const map = (r.mapName || '').toLowerCase();
-            const players = (r.players || []).map(p => (p.name || '').toLowerCase()).join(' ');
+            // Search by the official pro name too (PlayerNames.js) — and keep
+            // the raw handle searchable so "KAHO#..." still finds the game.
+            const players = (r.players || []).map(p => {
+              const raw = (p.name || '');
+              return (raw + ' ' + PlayerNames.canonical(raw)).toLowerCase();
+            }).join(' ');
             if (!map.includes(q) && !players.includes(q)) return false;
           }
           return true;

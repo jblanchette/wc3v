@@ -32,7 +32,9 @@ const buildPlayerCards = (parsed) => {
     if (slotNum >= 24) continue;
     const replayP = replayPlayers[slot] || {};
     const race = p.race || replayP.raceDetected || 'R';
-    const name = (replayP.name || `Player ${slot}`).trim();
+    // Show the official pro name (PlayerNames.js) — the picker only needs
+    // a label; the raw replay handle is surfaced in the match header.
+    const name = PlayerNames.canonical(replayP.name) || `Player ${slot}`;
     let heroName = null, heroItemId = null;
     for (const ev of (p.eventStream || [])) {
       // Tavern heroes are emitted as 'makeTavernHero' (not 'addUnit') because

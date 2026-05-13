@@ -18,6 +18,7 @@ const replaysDir = path.join(__dirname, '..', 'replays');
 const outputDir = path.join(__dirname, '..', 'client', 'replays');
 
 const { getManifestReplayIds } = require('../helpers/utils');
+const PlayerNames = require('../client/js/PlayerNames.js');
 
 // --- arg parsing ---
 
@@ -233,7 +234,11 @@ function printSummary(replayIds) {
 
     for (const [pid, pdata] of playerEntries) {
       const meta = (data.replay && data.replay.players && data.replay.players[pid]) || {};
-      const name = meta.name || '??';
+      const rawName = meta.name || '??';
+      const proName = PlayerNames.canonical(rawName);
+      // Show "rawHandle → OfficialName" when they differ so onboarding makes
+      // the alias mapping visible (PlayerNames.js is the source of truth).
+      const name = (proName && proName !== rawName) ? `${rawName} → ${proName}` : rawName;
       const race = pdata.race || meta.raceDetected || '?';
       races.push(race);
 
@@ -262,10 +267,10 @@ function printSummary(replayIds) {
       console.log(`\n  Manifest templates:`);
       for (const [pid] of playerEntries) {
         const meta = (data.replay && data.replay.players && data.replay.players[pid]) || {};
-        const name = (meta.name || '??').replace(/#\d+$/, '');
+        const name = PlayerNames.canonical(meta.name || '??');
         const otherEntry = playerEntries.find(([p]) => p !== pid);
         const opMeta = otherEntry ? ((data.replay && data.replay.players && data.replay.players[otherEntry[0]]) || {}) : {};
-        const opponent = (opMeta.name || '??').replace(/#\d+$/, '');
+        const opponent = PlayerNames.canonical(opMeta.name || '??');
 
         const template = {
           replayId: id,
@@ -315,10 +320,84 @@ function manifestCheck() {
     unlisted.forEach(id => console.log(`  - ${id}`));
   }
 
-  if (!missingW3g.length && !missingParsed.length && !unlisted.length) {
+  // Skill-band integrity: every curated build needs a valid `level` (the band
+  // the homepage band-switch filters on) and `difficulty` pill value.
+  const bandIssues = checkBuildBands();
+
+  if (!missingW3g.length && !missingParsed.length && !unlisted.length && !bandIssues) {
     console.log('  All clear!');
   }
   console.log('');
+}
+
+// Validate `level` / `difficulty` (and optional `alsoShownIn`) on every build
+// in builds-manifest.json. Returns the number of problems found.
+function checkBuildBands() {
+  const VALID_LEVELS = new Set(['new', 'improving', 'pro']);
+  const VALID_DIFFS  = new Set(['easy', 'medium', 'hard']);
+  const manifestPath = path.join(__dirname, '..', 'client', 'data', 'builds-manifest.json');
+  let builds;
+  try { builds = (JSON.parse(fs.readFileSync(manifestPath, 'utf8')).builds) || []; }
+  catch (e) { console.log(`\n⚠  Could not read builds-manifest.json: ${e.message}`); return 1; }
+
+  const problems = [];
+  const warnings = [];
+  const byBand = { new: 0, improving: 0, pro: 0 }; // effective membership (level OR alsoShownIn)
+  const isStrArr = (v) => Array.isArray(v) && v.every(s => typeof s === 'string' && s.trim());
+  const inBand = (b, band) => b.level === band || (Array.isArray(b.alsoShownIn) && b.alsoShownIn.includes(band));
+  for (const b of builds) {
+    const id = b.id || '(no id)';
+    if (!VALID_LEVELS.has(b.level)) problems.push(`${id}: level "${b.level}" — must be new | improving | pro`);
+    for (const band of ['new', 'improving', 'pro']) if (inBand(b, band)) byBand[band]++;
+    if (!VALID_DIFFS.has(b.difficulty)) problems.push(`${id}: difficulty "${b.difficulty}" — must be easy | medium | hard`);
+    if (b.alsoShownIn !== undefined) {
+      if (!Array.isArray(b.alsoShownIn)) problems.push(`${id}: alsoShownIn must be an array`);
+      else {
+        for (const x of b.alsoShownIn) {
+          if (!VALID_LEVELS.has(x)) problems.push(`${id}: alsoShownIn has invalid band "${x}"`);
+          if (x === b.level) problems.push(`${id}: alsoShownIn lists its own band "${x}"`);
+        }
+      }
+    }
+    // Optional learner teaching fields — validate shape if present.
+    if (b.beginnerNotes !== undefined && !isStrArr(b.beginnerNotes)) problems.push(`${id}: beginnerNotes must be an array of non-empty strings`);
+    if (b.prerequisites !== undefined && !isStrArr(b.prerequisites)) problems.push(`${id}: prerequisites must be an array of non-empty strings`);
+    if (b.commonMistakes !== undefined) {
+      if (!Array.isArray(b.commonMistakes)) problems.push(`${id}: commonMistakes must be an array`);
+      else b.commonMistakes.forEach((m, i) => {
+        if (!m || typeof m !== 'object' || typeof m.mistake !== 'string' || typeof m.fix !== 'string') {
+          problems.push(`${id}: commonMistakes[${i}] must be { mistake: string, fix: string }`);
+        }
+      });
+    }
+    if (b.recommendedReplayId !== undefined) {
+      if (typeof b.recommendedReplayId !== 'string') problems.push(`${id}: recommendedReplayId must be a string`);
+      else if (!(b.replays || []).some(r => r.replayId === b.recommendedReplayId)) {
+        problems.push(`${id}: recommendedReplayId "${b.recommendedReplayId}" is not in this build's replays[]`);
+      }
+    }
+    // Coverage warning (not a hard failure): anything that appears in the New
+    // band (by level or via alsoShownIn) but has no beginner guidance renders a
+    // bare learner card.
+    if (inBand(b, 'new') && !(Array.isArray(b.beginnerNotes) && b.beginnerNotes.length)) {
+      warnings.push(`${id}: appears in the New band but has no beginnerNotes (run: node tools/seed-starter-content.js)`);
+    }
+  }
+  for (const band of ['new', 'improving', 'pro']) {
+    if (!byBand[band]) problems.push(`band "${band}" has no builds`);
+  }
+
+  if (problems.length) {
+    console.log(`\nBand issues (${problems.length}):`);
+    problems.forEach(p => console.log(`  - ${p}`));
+    console.log(`  (level/difficulty: node tools/backfill-levels.js · starter content: node tools/seed-starter-content.js)`);
+  }
+  if (warnings.length) {
+    console.log(`\nBand warnings (${warnings.length}):`);
+    warnings.forEach(w => console.log(`  - ${w}`));
+  }
+  console.log(`\nBand membership (incl. alsoShownIn): new=${byBand.new}  improving=${byBand.improving}  pro=${byBand.pro}`);
+  return problems.length;
 }
 
 // --- main ---

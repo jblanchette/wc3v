@@ -372,9 +372,9 @@ const MyReplays = class {
 
         <div class="rep-card-meta">
           <div class="rep-card-players">
-            <strong>${safePlayerName((userPlayer && userPlayer.name) || 'You')}</strong>
+            <strong>${safePlayerName((userPlayer && PlayerNames.canonical(userPlayer.name)) || 'You')}</strong>
             <span class="rep-card-vs-text">vs</span>
-            <span>${safePlayerName((oppPlayer && oppPlayer.name) || 'Opponent')}</span>
+            <span>${safePlayerName((oppPlayer && PlayerNames.canonical(oppPlayer.name)) || 'Opponent')}</span>
           </div>
           <div class="rep-card-map-line">${escapeHtml(mapDisplay)} · ${escapeHtml(durStr)} · ${escapeHtml(ageStr)}</div>
         </div>
@@ -889,6 +889,9 @@ const defaultUserBuildName = (record) => {
     const o = pickOpponent(record, u);
     if (o) oppName = o.name || '';
   }
+  // Show the official pro names (PlayerNames.js).
+  userName = PlayerNames.canonical(userName);
+  oppName = PlayerNames.canonical(oppName);
   // Map: prefer the cleaned summary map; fall back to the record's
   // raw mapName (cleaned) or the canonical map dir.
   const mapName = (record.cachedSummary && record.cachedSummary.map)
@@ -1088,8 +1091,8 @@ const buildCardPropsFromRecord = (record) => {
     _isLocal: true,
     replayId: '_local_' + record.id,
     playerSlot: slot != null ? String(slot) : '1',
-    playerName: userName || 'You',
-    opponentName: oppName || '',
+    playerName: PlayerNames.canonical(userName) || 'You',
+    opponentName: PlayerNames.canonical(oppName),
     map: mapDisplay,
     href: '/viewer?local=' + encodeURIComponent(record.id)
   }];

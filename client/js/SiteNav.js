@@ -41,19 +41,36 @@ const SiteNav = {
 
     const isHome = activeSection === 'home';
 
-    // Back-to-builds link for viewer pages with buildId
+    // Same compact skill-band on every page — driven by BandSwitcher.js (which
+    // owns state, persistence, URL sync, and click delegation). The hero
+    // variant on the homepage is rendered in index.html; the nav variant
+    // below is what users see everywhere else. Icon ids (phea/tkno/ckng) come
+    // from the BANDS const in BandSwitcher.js.
+    const bandIco = (id) => `<img class="skill-band-ico" src="${root}/assets/wc3icons/${id}.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />`;
+    const skillBandHtml = `
+      <div class="skill-band skill-band--compact" id="skill-band-nav" role="group" aria-label="Skill level">
+        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="New to WC3 — your first builds, the few that matter">${bandIco('phea')}<span class="skill-band-label">New to WC3</span></button>
+        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Ladder — solid tournament play you can copy">${bandIco('tkno')}<span class="skill-band-label">Ladder</span></button>
+        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="Pro meta — top-level builds, tight execution">${bandIco('ckng')}<span class="skill-band-label">Pro meta</span></button>
+      </div>`;
+
     let leftHtml = '';
     if (isHome) {
       leftHtml = `
         <div class="site-nav-search-wrap">
           <input type="text" id="build-search" class="site-nav-search"
                  placeholder="Search builds" autocomplete="off" spellcheck="false" />
-        </div>`;
+        </div>
+        ${skillBandHtml}`;
     } else if (document.getElementById('app')) {
+      // Viewer page: optional "← Builds" back link (when opened from a build
+      // card) plus the same compact band.
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('buildId')) {
-        leftHtml = `<a class="site-nav-back" href="/">← Builds</a>`;
-      }
+      const backLink = urlParams.get('buildId') ? `<a class="site-nav-back" href="/">← Builds</a>` : '';
+      leftHtml = `${backLink}${skillBandHtml}`;
+    } else {
+      // About / Community / Replays / etc. — band only.
+      leftHtml = skillBandHtml;
     }
 
     const navLinks = `
@@ -86,6 +103,14 @@ const SiteNav = {
       document.body.insertBefore(nav, skip.nextSibling);
     } else {
       document.body.insertBefore(nav, document.body.firstChild);
+    }
+
+    // Sync the just-rendered band cards' aria-pressed / .is-active state to
+    // the current band. BandSwitcher.init() must have run by now; if a page
+    // loads SiteNav before BandSwitcher (it shouldn't), this is a no-op and
+    // BandSwitcher's own applyUI() will catch it on init.
+    if (window.BandSwitcher && typeof window.BandSwitcher.applyUI === 'function') {
+      window.BandSwitcher.applyUI();
     }
   }
 };

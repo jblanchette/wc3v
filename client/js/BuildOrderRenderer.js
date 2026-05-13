@@ -9,6 +9,17 @@
 const _esc  = (s) => Security.escapeHtml(Security.sanitizeUserText(s));
 const _attr = (s) => Security.escapeAttr(Security.sanitizeUserText(s));
 const _icon = (id) => /^[A-Za-z0-9_\-]{1,32}$/.test(String(id == null ? '' : id)) ? id : '';
+// For OUR authored prose only (the beginner-view callouts) — escapes the text
+// and wraps known jargon in glossary tooltips when Glossary.js is loaded.
+const _gloss = (s) => (window.Glossary && window.Glossary.linkifyText)
+  ? window.Glossary.linkifyText(String(s == null ? '' : s))
+  : _esc(s);
+
+// Build-order filter preset used in "Beginner view": the skeleton only —
+// buildings + tier transitions, units / heroes / worker moves, and tier
+// composition summaries. Upgrades, research, and items are hidden (switch to
+// "Full detail" for those). Same shape as viewer.boFilters.
+const LEARNER_BO_FILTERS = { buildings: true, units: true, upgrades: false, research: false, items: false, summaries: true };
 
 const BO_FILTER_CATEGORIES = [
   { id: 'buildings', label: 'Bldg',  title: 'Buildings',        types: ['building', 'tierUpgrade', 'expansion', 'supplyComplete'] },
@@ -89,7 +100,384 @@ const BuildOrderRenderer = class {
       }
     }
 
+    this._wireBeginnerHandlers();
     this.renderBuildOrder();
+  }
+
+  // One-time wiring for the dynamically-rendered beginner-view affordances
+  // (player pick gate, "switch player" link, "show full detail" link inside
+  // the opp summary, walkthrough CTA). Also warms the jargon glossary so
+  // beginner-view callouts get tooltips on the first render. The site-wide
+  // skill-band switch itself (Beginner / Full detail) is handled by
+  // BandSwitcher.js — no per-page wiring needed.
+  _wireBeginnerHandlers () {
+    if (!this._beginnerHandlersWired) {
+      this._beginnerHandlersWired = true;
+      document.addEventListener('click', (e) => {
+        const t = e.target;
+        if (!t || !t.closest) return;
+        const pickOpt = t.closest('.bo-pick-opt[data-bo-pick-slot]');
+        if (pickOpt) { e.preventDefault(); this.viewer.setBeginnerPick(pickOpt.dataset.boPickSlot); return; }
+        if (t.closest('[data-bo-switch-player]'))    { e.preventDefault(); this.viewer.clearBeginnerPick(); return; }
+        if (t.closest('[data-bo-show-full-opp]'))    {
+          // The "show full detail" link inside the beginner-view opp summary
+          // exits beginner view by switching the site band to pro. This is
+          // the only path in the viewer that mutates the band programmatically.
+          e.preventDefault();
+          if (window.BandSwitcher) window.BandSwitcher.setBand('pro', { persist: true });
+          return;
+        }
+        if (t.closest('[data-bo-start-walkthrough]')) { e.preventDefault(); this.viewer.enterGuideMode(this.viewer._getBeginnerPickedPlayer()); return; }
+      });
+    }
+    if (this.viewer.setupGuide) this.viewer.setupGuide();
+    if (window.Glossary && window.Glossary.load) { try { window.Glossary.load(); } catch (e) {} }
+  }
+
+  // A plain-language callout shown only in Beginner view. `kind`: 'opening'
+  // (top of Tier 1) or 'tier' (after a tier-upgrade card, with `tierTarget`).
+  renderLearnerCallout (kind, tierTarget) {
+    let tag, body;
+    if (kind === 'opening') {
+      tag = 'The opening';
+      body = "Copy the order of these first buildings and units more than the exact times — the sequence is what makes the build work.";
+    } else if (kind === 'tier' && Number(tierTarget) === 2) {
+      tag = 'Tier 2';
+      body = "Usually the build's biggest timing — reaching it on schedule unlocks your main army and key upgrades.";
+    } else if (kind === 'tier' && Number(tierTarget) === 3) {
+      tag = 'Tier 3';
+      body = "Often optional — many games are decided before this. Tech here for top-tier units and upgrades if the game runs long.";
+    } else {
+      return null;
+    }
+    const el = document.createElement('div');
+    el.classList.add('bo-learn-callout');
+    el.innerHTML = `<b class="bo-learn-callout-tag">${_esc(tag)}</b> ${_gloss(body)}`;
+    return el;
+  }
+
+  // ── Beginner view: pick gate / walkthrough CTA / opp summary ─────────
+  _renderBeginnerPickGate (panelEl, players) {
+    if (!panelEl) return;
+    panelEl.innerHTML = '';
+    const head = document.createElement('div');
+    head.classList.add('bo-pick-head');
+    head.innerHTML =
+      '<h2 class="bo-pick-title">Whose game do you want to learn from?</h2>'
+      + '<p class="bo-pick-sub">The build order is shown from this player’s point of view; the opponent’s build becomes a short summary on the side.</p>';
+    panelEl.append(head);
+    const opts = document.createElement('div');
+    opts.classList.add('bo-pick-opts');
+    players.forEach(p => {
+      const raceLabel = (typeof RaceLabels !== 'undefined' && RaceLabels[p.race] && RaceLabels[p.race].label) || p.race || '';
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'bo-pick-opt';
+      card.dataset.boPickSlot = String(p.playerId != null ? p.playerId : p.slot);
+      card.style.setProperty('--p-color', p.playerColor || '#888');
+      card.innerHTML =
+        '<span class="bo-pick-opt-color" aria-hidden="true"></span>'
+        + '<span class="bo-pick-opt-text">'
+        + '<span class="bo-pick-opt-name">' + _esc(PlayerNames.canonical(p.displayName)) + '</span>'
+        + '<span class="bo-pick-opt-race">' + _esc(raceLabel) + '</span>'
+        + '</span>';
+      opts.append(card);
+    });
+    panelEl.append(opts);
+    const skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'bo-pick-skip';
+    skip.dataset.boShowFullOpp = '1';
+    skip.textContent = 'Just show me both builds — switch to Full detail';
+    panelEl.append(skip);
+  }
+
+  // Beginner-view CTA strip: just the button (the walkthrough HUD itself
+  // carries the explanation; a paragraph here is redundant). When the
+  // walkthrough is currently open the button is disabled, not hidden — so
+  // the control stays where the user expects it. `syncWalkthroughCta` flips
+  // that disabled state and is called by app.js on enter/exit guide mode.
+  _renderWalkthroughCta (ctaEl, mePlayer) {
+    if (!ctaEl) return;
+    const ok = (typeof ReplayGuide !== 'undefined') && (this.viewer.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer).length >= 2;
+    if (!ok) { ctaEl.innerHTML = ''; ctaEl.hidden = true; return; }
+    const label = this.viewer._guideOpenedOnce ? '▶ Re-open the walkthrough' : '▶ Start the walkthrough';
+    ctaEl.innerHTML = '<button type="button" class="bo-walkthrough-cta-btn" data-bo-start-walkthrough>' + label + '</button>';
+    this.syncWalkthroughCta();
+  }
+
+  // Disable the "Start/Re-open the walkthrough" button while the walkthrough
+  // HUD is open (it's already on screen — re-launching would be a no-op /
+  // confusing). Safe to call any time; no-op if the CTA isn't rendered.
+  syncWalkthroughCta () {
+    const btn = document.querySelector('#bo-walkthrough-cta .bo-walkthrough-cta-btn');
+    if (!btn) return;
+    const open = !!(this.viewer && this.viewer.guideMode);
+    btn.disabled = open;
+    btn.classList.toggle('is-disabled', open);
+    btn.title = open ? 'The walkthrough is open below — use Exit there to close it' : '';
+  }
+
+  // Beginner view: in place of the opponent's full BO column, a PURE-DATA
+  // "you vs them" scoreboard — objective milestones a new player can read to
+  // gauge how fast they're going. No jargon, no strategy advice. The XP race
+  // (hero out / hero levels) is the headline block because out-leveling on
+  // creeps is the single biggest early advantage in WC3.
+  _renderRaceComparison (mePlayer, oppPlayer) {
+    const fmtT = (typeof formatGameTime === 'function')
+      ? formatGameTime
+      : (ms) => { const s = Math.max(0, Math.round((ms || 0) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+    const meStream  = (mePlayer  && mePlayer.eventStream)  || [];
+    const oppStream = (oppPlayer && oppPlayer.eventStream) || [];
+
+    const WORKERS = new Set(['opeo', 'hpea', 'uaco', 'ewsp']);
+    const SUMMONS = new Set(['uske', 'hwat', 'hwt2', 'hwt3', 'efon', 'osw1', 'osw2', 'osw3', 'ucs1']);
+    // Spellcaster ARMY units (not heroes — every hero casts). Used for the
+    // "did you build spellcasters?" comparison row.
+    const CASTERS = new Set(['hmpr', 'hsor', 'oshm', 'odoc', 'ospm', 'ospw', 'unec', 'uban', 'edot', 'efdr']);
+
+    // ── stream readers ──────────────────────────────────────────────────
+    const firstHero = (s) => { for (const e of s) if (e && e.key === 'addUnit' && e.unit && e.unit.isHero) return { itemId: e.unit.itemId, name: e.unit.displayName || 'hero', at: e.gameTime }; return null; };
+    const heroLevelTime = (s, id, lvl) => { for (const e of s) { if (e && e.key === 'HeroLevel' && e.unit && e.unit.itemId === id) { const nl = Number(e.newLevel != null ? e.newLevel : e.level) || 0; if (nl >= lvl) return e.gameTime; } } return Infinity; };
+    const heroMaxLevel = (s, id) => { let m = 0; for (const e of s) { if (e && e.key === 'HeroLevel' && e.unit && e.unit.itemId === id) { const nl = Number(e.newLevel != null ? e.newLevel : e.level) || 0; if (nl > m) m = nl; } } return m; };
+    const tierTime = (s, t) => { for (const e of s) if (e && e.key === 'tierUpgrade' && e.building && Number(e.building.tierTarget) === t) return e.gameTime; return Infinity; };
+    const expansionTime = (s) => { for (const e of s) if (e && e.key === 'addBuilding' && e.isExpansion === true) return e.gameTime; return Infinity; };
+    // supplyUsed & workers ride along on every event, so a first-crossing scan
+    // is a fine (slightly coarse) "when did they hit N" measure.
+    const supplyReach = (s, n) => { for (const e of s) if (e && typeof e.supplyUsed === 'number' && e.supplyUsed >= n) return e.gameTime; return Infinity; };
+    const workerCount = (e) => { const w = e && e.workers; if (!w) return 0; return (Number(w.totalWorkers) || 0) + (Number(w.ghoulsOnLumber) || 0); };
+    // Worker count from the last event at or before `ms` (null = no data yet).
+    const workersAt = (s, ms) => { let v = null; for (const e of s) { if (!e || typeof e.gameTime !== 'number') continue; if (e.gameTime > ms) break; if (e.workers) v = workerCount(e); } return v; };
+    const armyUnits = (s) => {
+      const counts = Object.create(null);
+      for (const e of s) {
+        if (!e || e.key !== 'addUnit' || !e.unit) continue;
+        const u = e.unit;
+        if (!u.isUnit || u.isBuilding || u.isHero || u.isSummon) continue;
+        if (WORKERS.has(u.itemId) || SUMMONS.has(u.itemId)) continue;
+        if (!counts[u.itemId]) counts[u.itemId] = { itemId: u.itemId, name: u.displayName || u.itemId, n: 0, attackType: u.attackType || null, armorType: u.armorType || null };
+        counts[u.itemId].n++;
+      }
+      return Object.values(counts).sort((a, b) => b.n - a.n);
+    };
+    const plural = (name, n) => { if (Number(n) === 1) return name; name = String(name); const m = name.match(/^(.+?) of the (.+)$/); if (m) return plural(m[1], 2) + ' of the ' + m[2]; if (/(?<!a)man$/.test(name)) return name.replace(/man$/, 'men'); if (/(s|x|z|ch|sh)$/i.test(name)) return name + 'es'; return name + 's'; };
+
+    // ── who's ahead on a row ────────────────────────────────────────────
+    // Rather than a verbose "you · 6s sooner" badge crammed into its own
+    // column (overflows; reads as filler), we just colour the winning side's
+    // value and tuck a tiny delta after it. cmp* return { side, delta, na }.
+    // Render a second-gap compactly: "42s" up to 90s, then "1m 30s".
+    const gapStr = (d) => d < 90 ? d + 's' : Math.floor(d / 60) + 'm' + (d % 60 ? ' ' + (d % 60) + 's' : '');
+    const cmpTime = (meT, themT) => {
+      if (meT === Infinity && themT === Infinity) return { side: null, na: true };
+      if (meT === Infinity)   return { side: 'them' };       // only they reached it
+      if (themT === Infinity) return { side: 'me' };         // only you reached it
+      const d = Math.round(Math.abs(meT - themT) / 1000);
+      if (d <= 5) return { side: null };                     // ≈ same
+      return { side: meT < themT ? 'me' : 'them', delta: '−' + gapStr(d) };  // faster = winner; delta = how much sooner
+    };
+    const cmpNum = (meV, themV) => {
+      const a = Number(meV) || 0, b = Number(themV) || 0;
+      if (a === b) return { side: null, na: !a && !b };
+      return { side: a > b ? 'me' : 'them', delta: '+' + Math.abs(a - b) };
+    };
+    const tCell = (t) => t === Infinity ? '<span class="bo-cmp-na">—</span>' : _esc(fmtT(t));
+
+    // ── gather ──────────────────────────────────────────────────────────
+    const meHero = firstHero(meStream), themHero = firstHero(oppStream);
+    const meHeroId = meHero ? meHero.itemId : null, themHeroId = themHero ? themHero.itemId : null;
+    const meHeroOut = meHero ? meHero.at : Infinity, themHeroOut = themHero ? themHero.at : Infinity;
+    const meHeroMax = meHeroId ? heroMaxLevel(meStream, meHeroId) : 0;
+    const themHeroMax = themHeroId ? heroMaxLevel(oppStream, themHeroId) : 0;
+    const meHeroL3 = meHeroId ? heroLevelTime(meStream, meHeroId, 3) : Infinity;
+    const themHeroL3 = themHeroId ? heroLevelTime(oppStream, themHeroId, 3) : Infinity;
+    const meHeroL5 = meHeroId ? heroLevelTime(meStream, meHeroId, 5) : Infinity;
+    const themHeroL5 = themHeroId ? heroLevelTime(oppStream, themHeroId, 5) : Infinity;
+
+    const meArmy = armyUnits(meStream), themArmy = armyUnits(oppStream);
+    const topListHtml = (arr) => arr.length ? arr.slice(0, 4).map(it => it.n + ' ' + _esc(plural(it.name, it.n))).join(', ') : '<span class="bo-cmp-na">none built</span>';
+    const typeTally = (arr, field) => { const t = Object.create(null); for (const it of arr) { const k = it[field]; if (!k) continue; t[k] = (t[k] || 0) + it.n; } return Object.entries(t).sort((a, b) => b[1] - a[1]); };
+    const atkLabel = (k) => (typeof ATTACK_TYPES !== 'undefined' && ATTACK_TYPES[k] && ATTACK_TYPES[k].label) || (k === 'hero' ? 'Hero' : k);
+    const armLabel = (k) => (typeof ARMOR_TYPES !== 'undefined' && ARMOR_TYPES[k] && ARMOR_TYPES[k].label) || (k === 'hero' ? 'Hero' : k);
+    const tallyHtml = (tally, labelFn) => tally.length ? tally.map(([k, n]) => _esc(labelFn(k)) + ' ×' + n).join(', ') : '<span class="bo-cmp-na">—</span>';
+    const casterHtml = (arr) => { const c = arr.filter(it => CASTERS.has(it.itemId)); return c.length ? c.map(it => it.n + ' ' + _esc(plural(it.name, it.n))).join(', ') : '<span class="bo-cmp-na">none</span>'; };
+    const meAtkTally = typeTally(meArmy, 'attackType'),  themAtkTally = typeTally(themArmy, 'attackType');
+    const meArmTally = typeTally(meArmy, 'armorType'),   themArmTally = typeTally(themArmy, 'armorType');
+
+    // Plain-English notes for whichever attack / armor types showed up — the
+    // game's own combat rules, no strategy attached.
+    const ATK_NOTE = {
+      normal: 'Normal attack — extra damage to Medium armor.',
+      pierce: 'Pierce attack — extra damage to flyers and Light armor; weak vs Heavy armor.',
+      siege:  'Siege attack — extra damage to buildings; weak vs most units.',
+      magic:  'Magic attack — extra damage to Heavy armor; weak vs Medium armor.',
+      chaos:  'Chaos attack — full damage to every armor type.'
+    };
+    const ARM_NOTE = {
+      large:  'Heavy armor — tough vs Normal and Pierce; takes extra from Magic.',
+      medium: 'Medium armor — takes extra from Normal; tough vs Pierce, Siege and Magic.',
+      small:  'Light armor — takes extra from Pierce and Magic.',
+      none:   'Unarmored — takes extra damage from almost everything.'
+    };
+    const legendKeys = (() => {
+      const atk = new Set(), arm = new Set();
+      [...meAtkTally, ...themAtkTally].forEach(([k]) => { if (ATK_NOTE[k]) atk.add(k); });
+      [...meArmTally, ...themArmTally].forEach(([k]) => { if (ARM_NOTE[k]) arm.add(k); });
+      return { atk: [...atk], arm: [...arm] };
+    })();
+    const legendHtml = (legendKeys.atk.length || legendKeys.arm.length)
+      ? '<ul class="bo-cmp-legend">'
+        + legendKeys.atk.map(k => '<li>' + ATK_NOTE[k] + '</li>').join('')
+        + legendKeys.arm.map(k => '<li>' + ARM_NOTE[k] + '</li>').join('')
+        + '</ul>'
+      : '';
+
+    // ── verdicts — one factual sentence per block ───────────────────────
+    const xpVerdict = (() => {
+      if (!meHero && !themHero) return 'Neither player trained a hero in this game.';
+      if (meHero && !themHero) return 'You had a hero; they didn\'t.';
+      if (!meHero && themHero) return 'They had a hero; you didn\'t — a big early disadvantage.';
+      if (meHeroL3 !== Infinity && themHeroL3 !== Infinity) {
+        const d = Math.round(Math.abs(meHeroL3 - themHeroL3) / 1000);
+        if (d <= 5) return 'Both heroes reached level 3 at about the same time.';
+        return meHeroL3 < themHeroL3
+          ? 'Your hero reached level 3 about ' + gapStr(d) + ' sooner.'
+          : 'Their hero reached level 3 about ' + gapStr(d) + ' sooner — that\'s the kind of gap that decides early fights.';
+      }
+      if (meHeroL3 !== Infinity) return 'Your hero reached level 3; theirs never did.';
+      if (themHeroL3 !== Infinity) return 'Their hero reached level 3; yours never did — a clear XP gap.';
+      const d = Math.round(Math.abs(meHeroOut - themHeroOut) / 1000);
+      if (d <= 5) return 'Both heroes came out at about the same time, and neither hit level 3.';
+      return meHeroOut < themHeroOut
+        ? 'Your hero came out about ' + gapStr(d) + ' sooner (neither reached level 3).'
+        : 'Their hero came out about ' + gapStr(d) + ' sooner (neither reached level 3).';
+    })();
+    const econVerdict = (() => {
+      // Judge on the biggest food milestone both sides actually reached
+      // (food is race-fair — every army fills the same supply).
+      for (const n of [50, 30, 20]) {
+        const a = supplyReach(meStream, n), b = supplyReach(oppStream, n);
+        if (a === Infinity || b === Infinity) continue;
+        const d = Math.round(Math.abs(a - b) / 1000);
+        if (d <= 10) return 'Your economies kept pace with each other (both hit ' + n + ' food around the same time).';
+        return a < b
+          ? 'You hit ' + n + ' food about ' + gapStr(d) + ' sooner — you were ahead on economy.'
+          : 'They hit ' + n + ' food about ' + gapStr(d) + ' sooner — they out-developed you.';
+      }
+      const a20 = supplyReach(meStream, 20), b20 = supplyReach(oppStream, 20);
+      if (a20 !== Infinity && b20 === Infinity) return 'You reached 20 food; they never did this game.';
+      if (b20 !== Infinity && a20 === Infinity) return 'They reached 20 food; you never did.';
+      return 'Not enough economy data to compare.';
+    })();
+    const techVerdict = (() => {
+      const meT2 = tierTime(meStream, 2), themT2 = tierTime(oppStream, 2);
+      const meExp = expansionTime(meStream), themExp = expansionTime(oppStream);
+      const expBit = (meExp !== Infinity && themExp !== Infinity) ? ' Both of you took a second base.'
+        : (meExp !== Infinity) ? ' You took a second base at ' + fmtT(meExp) + '.'
+        : (themExp !== Infinity) ? ' They took a second base at ' + fmtT(themExp) + '.'
+        : ' Neither of you expanded.';
+      if (meT2 === Infinity && themT2 === Infinity) return 'Neither player upgraded past Tier 1.' + expBit;
+      if (meT2 === Infinity) return 'They reached Tier 2; you stayed on Tier 1.' + expBit;
+      if (themT2 === Infinity) return 'You reached Tier 2; they stayed on Tier 1.' + expBit;
+      const d = Math.round(Math.abs(meT2 - themT2) / 1000);
+      if (d <= 5) return 'You both reached Tier 2 at about the same time.' + expBit;
+      return (meT2 < themT2
+        ? 'You reached Tier 2 about ' + gapStr(d) + ' sooner — a window to press your T2 units.'
+        : 'They reached Tier 2 about ' + gapStr(d) + ' sooner — expect their T2 units on the field first.') + expBit;
+    })();
+
+    // ── row builders ────────────────────────────────────────────────────
+    // 3-column row: label | you | them. The winning side's value is coloured
+    // and gets a small inline delta (− = "this much sooner", + = "this many
+    // more") — no separate "flag" column to overflow / vanish on narrow widths.
+    const decorate = (html, win, delta) => win
+      ? '<span class="bo-cmp-win">' + html + (delta ? ' <span class="bo-cmp-delta">' + delta + '</span>' : '') + '</span>'
+      : html;
+    const row = (label, meHtml, themHtml, cmp) => {
+      cmp = cmp || {};
+      return '<div class="bo-cmp-row">'
+        + '<span class="bo-cmp-rlabel">' + label + '</span>'
+        + '<span class="bo-cmp-rme">'   + decorate(meHtml,   cmp.side === 'me',   cmp.delta) + '</span>'
+        + '<span class="bo-cmp-rthem">' + decorate(themHtml, cmp.side === 'them', cmp.delta) + '</span>'
+        + '</div>';
+    };
+    // Time row, auto-hidden when neither side reached the milestone.
+    const tRow = (label, meT, themT) => {
+      const c = cmpTime(meT, themT);
+      if (c.na) return '';
+      return row(label, tCell(meT), tCell(themT), c);
+    };
+    const rowWide = (label, meHtml, themHtml) =>
+      '<div class="bo-cmp-row bo-cmp-row-wide">'
+      + '<span class="bo-cmp-rlabel">' + label + '</span>'
+      + '<span class="bo-cmp-rme">' + meHtml + '</span>'
+      + '<span class="bo-cmp-rthem">' + themHtml + '</span>'
+      + '</div>';
+    const naCell = (s) => '<span class="bo-cmp-na">' + s + '</span>';
+
+    const meName = _esc((mePlayer && PlayerNames.canonical(mePlayer.displayName)) || 'You');
+    const themName = _esc((oppPlayer && PlayerNames.canonical(oppPlayer.displayName)) || 'Opponent');
+    const themRace = _esc((typeof RaceLabels !== 'undefined' && RaceLabels[oppPlayer && oppPlayer.race] && RaceLabels[oppPlayer.race].label) || (oppPlayer && oppPlayer.race) || '');
+    const heroCell = (h, lvl) => h ? _esc(h.name) + (lvl ? ' <span class="bo-cmp-sub">lvl ' + lvl + '</span>' : '') : naCell('none');
+
+    const aside = document.createElement('aside');
+    aside.classList.add('bo-cmp');
+    aside.style.setProperty('--me-color', (mePlayer && mePlayer.playerColor) || '#6fc18a');
+    aside.style.setProperty('--them-color', (oppPlayer && oppPlayer.playerColor) || '#9ca3b8');
+    aside.innerHTML =
+      '<div class="bo-cmp-head">'
+      +   '<div class="bo-cmp-players">'
+      +     '<span class="bo-cmp-chip bo-cmp-chip-me"><i class="bo-cmp-dot" aria-hidden="true"></i>You · ' + meName + '</span>'
+      +     '<span class="bo-cmp-vs">vs</span>'
+      +     '<span class="bo-cmp-chip bo-cmp-chip-them"><i class="bo-cmp-dot" aria-hidden="true"></i>' + themName + (themRace ? ' <i class="bo-cmp-race">' + themRace + '</i>' : '') + '</span>'
+      +   '</div>'
+      +   '<button type="button" class="bo-cmp-fulllink" data-bo-show-full-opp>See their full build →</button>'
+      + '</div>'
+      + '<div class="bo-cmp-colhead"><span></span><span>You</span><span>Them</span></div>'
+
+      // ── XP race — the headline block ──
+      + '<section class="bo-cmp-block bo-cmp-block-xp">'
+      +   '<div class="bo-cmp-block-head"><span class="bo-cmp-bolt" aria-hidden="true">⚔</span>The XP race<span class="bo-cmp-block-sub">— the biggest early lead in the game</span></div>'
+      +   row('Hero', heroCell(meHero, meHeroMax), heroCell(themHero, themHeroMax), cmpNum(meHeroMax, themHeroMax))
+      +   tRow('On the field', meHeroOut, themHeroOut)
+      +   tRow('Reached lvl 3', meHeroL3, themHeroL3)
+      +   tRow('Reached lvl 5', meHeroL5, themHeroL5)
+      +   '<p class="bo-cmp-verdict">' + xpVerdict + '</p>'
+      + '</section>'
+
+      // ── Economy ──
+      // Food milestones are race-fair (every army fills the same supply); the
+      // raw worker count is NOT (Undead plays on a small acolyte count by
+      // design), so the worker rows are plain snapshots — no "who's ahead".
+      + '<section class="bo-cmp-block">'
+      +   '<div class="bo-cmp-block-head">Economy<span class="bo-cmp-block-sub">— food = when you reached it; workers = count then (no single "right" number — varies by race)</span></div>'
+      +   tRow('Hit 20 food', supplyReach(meStream, 20), supplyReach(oppStream, 20))
+      +   tRow('Hit 30 food', supplyReach(meStream, 30), supplyReach(oppStream, 30))
+      +   tRow('Hit 50 food', supplyReach(meStream, 50), supplyReach(oppStream, 50))
+      +   (function () { const a = workersAt(meStream, 300000), b = workersAt(oppStream, 300000); return row('Workers at 5:00', a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
+      +   (function () { const a = workersAt(meStream, 600000), b = workersAt(oppStream, 600000); return row('Workers at 10:00', a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
+      +   '<p class="bo-cmp-verdict">' + econVerdict + '</p>'
+      + '</section>'
+
+      // ── Teching up ──
+      + '<section class="bo-cmp-block">'
+      +   '<div class="bo-cmp-block-head">Teching up</div>'
+      +   tRow('Tier 2', tierTime(meStream, 2), tierTime(oppStream, 2))
+      +   tRow('Tier 3', tierTime(meStream, 3), tierTime(oppStream, 3))
+      +   row('Second base', (expansionTime(meStream) === Infinity ? naCell('no') : tCell(expansionTime(meStream))), (expansionTime(oppStream) === Infinity ? naCell('no') : tCell(expansionTime(oppStream))), null)
+      +   '<p class="bo-cmp-verdict">' + techVerdict + '</p>'
+      + '</section>'
+
+      // ── Army built ──
+      + '<section class="bo-cmp-block">'
+      +   '<div class="bo-cmp-block-head">Army built<span class="bo-cmp-block-sub">— everything trained, deaths aside</span></div>'
+      +   rowWide('Top units', topListHtml(meArmy), topListHtml(themArmy))
+      +   rowWide('Attack types', tallyHtml(meAtkTally, atkLabel), tallyHtml(themAtkTally, atkLabel))
+      +   rowWide('Armor types', tallyHtml(meArmTally, armLabel), tallyHtml(themArmTally, armLabel))
+      +   rowWide('Spellcasters', casterHtml(meArmy), casterHtml(themArmy))
+      +   legendHtml
+      + '</section>';
+    return aside;
   }
 
   _persistMobilePlayerIdx () {
@@ -128,7 +516,7 @@ const BuildOrderRenderer = class {
 
       const nameEl = document.createElement('span');
       nameEl.classList.add('bo-mobile-chip-name');
-      nameEl.textContent = Security.sanitizeUserText(player.displayName || `Player ${idx + 1}`);
+      nameEl.textContent = Security.sanitizeUserText(PlayerNames.canonical(player.displayName) || `Player ${idx + 1}`);
 
       const raceEl = document.createElement('span');
       raceEl.classList.add('bo-mobile-chip-race');
@@ -172,14 +560,57 @@ const BuildOrderRenderer = class {
     const emptyEl = document.getElementById('bo-empty');
     if (!columnsEl || !emptyEl) return;
 
+    // Beginner-view state — used throughout: a simpler filter preset, no
+    // per-column filter chips, plain-language callouts, a CSS hook. Driven
+    // by the site-wide skill band (BandSwitcher; band === 'new' → beginner).
+    const learnerMode = !!this.viewer.boLearnerMode;
+    const effFilters = learnerMode ? LEARNER_BO_FILTERS : (this.viewer.boFilters || {});
+
+    // Beginner mode: pick a "Me" player. Without a pick, the BO area is taken
+    // over by a full-panel chooser. With a pick, the panel renders Me's BO on
+    // the left and a small opponent summary on the right (the full opp BO is
+    // not shown). Pro mode is unchanged.
+    const nonNeutral = (allPlayers || []).filter(p => p && !p.isNeutralPlayer);
+    const mePlayer = learnerMode ? this.viewer._getBeginnerPickedPlayer() : null;
+    const pickPanelEl = document.getElementById('bo-pick-panel');
+    const ctaEl = document.getElementById('bo-walkthrough-cta');
+    const showPickGate = learnerMode && !mePlayer && nonNeutral.length >= 2;
+
+    if (showPickGate) {
+      if (pickPanelEl) { this._renderBeginnerPickGate(pickPanelEl, nonNeutral); pickPanelEl.hidden = false; }
+      if (columnsEl) columnsEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (ctaEl) { ctaEl.hidden = true; ctaEl.innerHTML = ''; }
+      const ls = columnsEl && columnsEl.querySelector('.bo-side-left');
+      const rs = columnsEl && columnsEl.querySelector('.bo-side-right');
+      if (ls) ls.innerHTML = '';
+      if (rs) rs.innerHTML = '';
+      if (this.viewer.timelineSpline) this.viewer.timelineSpline.destroy();
+      return;
+    }
+    if (pickPanelEl) pickPanelEl.hidden = true;
+    if (ctaEl) {
+      if (learnerMode && mePlayer) { this._renderWalkthroughCta(ctaEl, mePlayer); ctaEl.hidden = false; }
+      else { ctaEl.hidden = true; ctaEl.innerHTML = ''; }
+    }
+
     // Mobile: render the player switcher and narrow the visible set to the
-    // active player. Other player chips remain in the switcher bar so the
-    // user can swap between them with a tap.
+    // active player. In beginner-with-pick mode we lock to Me and suppress
+    // the switcher entirely (the per-column "ME" header carries the label).
     let buildOrderPlayers = allPlayers;
     if (this.viewer.mobileMode) {
-      this._renderMobilePlayerSwitch();
-      const idx = Math.max(0, Math.min(this.activeMobilePlayerIdx, allPlayers.length - 1));
-      buildOrderPlayers = allPlayers.length ? [allPlayers[idx]] : [];
+      const sw = document.getElementById('bo-mobile-player-switch');
+      if (learnerMode && mePlayer) {
+        if (sw) sw.hidden = true;
+        buildOrderPlayers = [mePlayer];
+      } else {
+        if (sw) sw.hidden = false;
+        this._renderMobilePlayerSwitch();
+        const idx = Math.max(0, Math.min(this.activeMobilePlayerIdx, allPlayers.length - 1));
+        buildOrderPlayers = allPlayers.length ? [allPlayers[idx]] : [];
+      }
+    } else if (learnerMode && mePlayer) {
+      buildOrderPlayers = [mePlayer];
     }
 
     // Clear side containers (not the structural elements)
@@ -204,7 +635,10 @@ const BuildOrderRenderer = class {
 
     const timelineGap = document.getElementById('bo-timeline-gap');
 
-    if (buildOrderPlayers.length === 1) {
+    // In beginner-with-pick mode the right side carries the opp summary, so
+    // it's a two-visual-column layout even though we only render Me's column.
+    const visualSingle = (buildOrderPlayers.length === 1) && !(learnerMode && mePlayer);
+    if (visualSingle) {
       columnsEl.classList.add('bo-single');
       if (timelineGap) timelineGap.style.display = 'none';
     } else {
@@ -213,27 +647,31 @@ const BuildOrderRenderer = class {
     }
 
     // Build team-to-side mapping: first team seen -> left, rest -> right
-    // For FFA (all unique teams), split evenly
+    // For FFA (all unique teams), split evenly. Beginner-with-pick: force Me
+    // to the left (regardless of team) so the opp summary lands on the right.
     const teamSideMap = {};
-    let firstTeam = null;
-    let leftCount = 0;
-    let rightCount = 0;
-    const totalPlayers = buildOrderPlayers.filter(p => !p.isNeutralPlayer).length;
-    const halfPoint = Math.ceil(totalPlayers / 2);
-
-    buildOrderPlayers.forEach(player => {
-      if (player.isNeutralPlayer) return;
-      const team = player.teamColor;
-      if (firstTeam === null) {
-        firstTeam = team;
-        teamSideMap[team] = 'left';
-      } else if (!(team in teamSideMap)) {
-        // Check if all unique teams (FFA) — split evenly
-        teamSideMap[team] = (leftCount < halfPoint) ? 'left' : 'right';
-      }
-      if (teamSideMap[team] === 'left') leftCount++;
-      else rightCount++;
-    });
+    if (learnerMode && mePlayer) {
+      teamSideMap[mePlayer.teamColor] = 'left';
+    } else {
+      let firstTeam = null;
+      let leftCount = 0;
+      let rightCount = 0;
+      const totalPlayers = buildOrderPlayers.filter(p => !p.isNeutralPlayer).length;
+      const halfPoint = Math.ceil(totalPlayers / 2);
+      buildOrderPlayers.forEach(player => {
+        if (player.isNeutralPlayer) return;
+        const team = player.teamColor;
+        if (firstTeam === null) {
+          firstTeam = team;
+          teamSideMap[team] = 'left';
+        } else if (!(team in teamSideMap)) {
+          // Check if all unique teams (FFA) — split evenly
+          teamSideMap[team] = (leftCount < halfPoint) ? 'left' : 'right';
+        }
+        if (teamSideMap[team] === 'left') leftCount++;
+        else rightCount++;
+      });
+    }
 
     const cfg = BuildOrderData.CONFIG;
 
@@ -261,6 +699,8 @@ const BuildOrderRenderer = class {
       column.classList.add('bo-column');
       column.style.setProperty('--player-color', playerColor);
       this.applyRaceTheme(column, race);
+      const isMe = !!(learnerMode && mePlayer && player === mePlayer);
+      if (isMe) column.classList.add('bo-me-column');
 
       // --- Player Header (name + build name + tier + race) ---
       const header = document.createElement('div');
@@ -280,12 +720,19 @@ const BuildOrderRenderer = class {
         header.classList.add('bo-hdr-selected');
       }
 
+      // Beginner mode: a "ME" badge on the picked column + a "switch player"
+      // link that re-opens the picker.
+      const meTag = isMe ? `<span class="bo-hdr-me-tag" title="You're learning from this player's game">ME</span>` : '';
+      const switchLink = isMe ? `<button type="button" class="bo-hdr-switch-player" data-bo-switch-player>switch player</button>` : '';
+
       const toggleBar = document.createElement('div');
       toggleBar.classList.add('bo-hdr-toggle');
       toggleBar.innerHTML = `
+        ${meTag}
         <span class="bo-hdr-player-name" style="color:${_attr(playerColor)}">${_esc(displayName)}${buildLabel}</span>
         <span class="bo-hdr-tier-badge t${Number(maxTier) || 1}">T${Number(maxTier) || 1}</span>
-        <span class="bo-hdr-race-badge">${_esc(raceInfo.label)}</span>`;
+        <span class="bo-hdr-race-badge">${_esc(raceInfo.label)}</span>
+        ${switchLink}`;
 
       // Base Layout button
       const baseBtn = document.createElement('span');
@@ -309,7 +756,8 @@ const BuildOrderRenderer = class {
       }
 
       // --- Filter bar ---
-      column.append(this.renderBoFilterBar());
+      if (learnerMode) column.classList.add('bo-learner');
+      else column.append(this.renderBoFilterBar());
 
       // --- Column header (sticky icon labels) ---
       const colHeader = document.createElement('div');
@@ -323,6 +771,11 @@ const BuildOrderRenderer = class {
       let lastArmySummary = null;
 
       const seenUnitTypes = {};
+      // Beginner-with-pick: dedupe building/unit events across ALL tiers so we
+      // show only the first appearance of each type (landmarks, not repetition).
+      const landmarkMode = !!(learnerMode && mePlayer);
+      const seenBuilding = new Set();
+      const seenUnit = new Set();
 
       [1, 2, 3].forEach(tierNum => {
         const tierData = tiers[tierNum];
@@ -334,14 +787,35 @@ const BuildOrderRenderer = class {
         // Tier headers removed — tier transitions are shown via inline
         // tierUpgrade (start) and tierComplete (finish + summary) cards
 
-        const boFilters = this.viewer.boFilters || {};
+        // Beginner view: lead Tier 1 with a "the opening" callout.
+        if (learnerMode && tierNum === 1) {
+          const intro = this.renderLearnerCallout('opening');
+          if (intro) tierSection.append(intro);
+        }
 
         // Events — dispatched by type
         tierData.events.forEach(event => {
 
           // Filter bar: skip events whose category is toggled off
           const filterCat = BO_EVENT_TYPE_TO_CATEGORY[event.type];
-          if (filterCat && boFilters[filterCat] === false) return;
+          if (filterCat && effFilters[filterCat] === false) return;
+
+          // Beginner-with-pick: keep only landmark moments. Worker assignments,
+          // supply-building completions, scout calls, and the noisy hero-train
+          // event are dropped. Building/unit events keep only the first
+          // occurrence of each itemId across the whole game.
+          if (landmarkMode) {
+            if (event.type === 'workerAssign' || event.type === 'supplyComplete'
+                || event.type === 'scout' || event.type === 'heroTraining') return;
+            if (event.type === 'building' && event.building && event.building.itemId) {
+              if (seenBuilding.has(event.building.itemId)) return;
+              seenBuilding.add(event.building.itemId);
+            }
+            if (event.type === 'unit' && event.unit && event.unit.itemId) {
+              if (seenUnit.has(event.unit.itemId)) return;
+              seenUnit.add(event.unit.itemId);
+            }
+          }
 
           const isCard = event.type === 'heroLevel' || event.type === 'heroTraining';
 
@@ -372,11 +846,17 @@ const BuildOrderRenderer = class {
           if (liveMode) el.addEventListener('click', () => this.viewer.seekToGameTime(event.gameTime));
 
           tierSection.append(el);
+
+          // Beginner view: explain the tier transition right after its card.
+          if (learnerMode && event.type === 'tierUpgrade') {
+            const note = this.renderLearnerCallout('tier', event.tierTarget);
+            if (note) tierSection.append(note);
+          }
         });
 
         // Final composition summary at end of tier 3 only
         // (tier 1/2 summaries are now shown inline via tierComplete events)
-        if (tierNum === 3 && finalSnapshot && boFilters.summaries !== false) {
+        if (tierNum === 3 && finalSnapshot && effFilters.summaries !== false) {
           const summary = this.renderArmySummary(finalSnapshot, 'Final Composition');
           tierSection.append(summary);
           lastArmySummary = summary;
@@ -388,7 +868,7 @@ const BuildOrderRenderer = class {
       if (lastArmySummary) lastArmySummary.classList.add('sticky');
 
       // Final economy summary card
-      if (finalSnapshot && this.viewer.boFilters?.summaries !== false) {
+      if (finalSnapshot && effFilters.summaries !== false) {
         column.append(this.renderEconomySummary(finalSnapshot));
       }
 
@@ -401,6 +881,15 @@ const BuildOrderRenderer = class {
         columnsEl.append(column);
       }
     });
+
+    // Beginner-with-pick: where the opponent's full BO would have gone, render
+    // a pure-data "you vs them" scoreboard instead.
+    if (learnerMode && mePlayer) {
+      const oppPlayer = nonNeutral.find(p => p !== mePlayer);
+      if (oppPlayer && rightSide) {
+        rightSide.append(this._renderRaceComparison(mePlayer, oppPlayer));
+      }
+    }
 
     // Cache event elements for live mode highlighting
     if (this.viewer.layoutMode === LayoutMode.liveBuildOrder) {

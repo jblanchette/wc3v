@@ -65,8 +65,10 @@ const CompareMatcher = class {
         index.push({
           replayId: r.replayId,
           playerSlot: String(r.playerSlot || '1'),
-          playerName: r.playerName,
-          opponentName: r.opponentName,
+          // Official pro names everywhere (PlayerNames.js) — the manifest is
+          // kept canonical, but normalize defensively for older entries.
+          playerName: PlayerNames.canonical(r.playerName),
+          opponentName: PlayerNames.canonical(r.opponentName),
           opponentRace: oppRace,
           map: r.map,
           tournament: r.tournamentId,
@@ -138,18 +140,19 @@ const CompareMatcher = class {
             if (!proPlayer.race || proPlayer.race === 'R') continue;
             const matchups = deriveMatchupsForSlot(cached, slot);
             const heroIds = (proPlayer.heroBuilds || []).map(h => h && h.itemId).filter(Boolean).slice(0, 3);
+            const refProName = PlayerNames.canonical(proPlayer.name);
             index.push({
               replayId,
               playerSlot: String(slot),
-              playerName: proPlayer.name || full.referenceLabel || 'Reference',
-              opponentName: deriveOpponentName(cached, slot),
+              playerName: refProName || full.referenceLabel || 'Reference',
+              opponentName: PlayerNames.canonical(deriveOpponentName(cached, slot)),
               opponentRace: deriveOpponentRace(cached, slot),
               map: cached.map || full.mapName,
               tournament: null,
               stage: null,
               fingerprint: cached.fingerprint || null,
               buildId: `${replayId}::${slot}`,
-              buildName: full.referenceLabel || `Your reference · ${proPlayer.name || ''}`.trim(),
+              buildName: full.referenceLabel || `Your reference · ${refProName || ''}`.trim(),
               buildRace: proPlayer.race,
               buildMatchups: matchups,
               buildOpener: null,
@@ -317,10 +320,12 @@ const CompareMatcher = class {
     const player = userSummary && userSummary.players && userSummary.players[String(userSlot)];
     const userName = player && player.name ? String(player.name).trim() : '';
     if (!userName) return null;
-    const lower = userName.toLowerCase();
+    // Match against the official pro name (PlayerNames.js) so an upload
+    // logged in as e.g. "KAHO#31819" still resolves to "Kaho".
+    const lower = PlayerNames.canonical(userName).toLowerCase();
     const hit = this.proIndex.find(e => e.playerName && String(e.playerName).toLowerCase() === lower);
     if (!hit) return null;
-    return { proName: hit.playerName, uploadedName: userName };
+    return { proName: hit.playerName, uploadedName: PlayerNames.canonical(userName) };
   }
 
   // Highest-level helper: pick the auto-match, return null if anything other

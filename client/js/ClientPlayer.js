@@ -438,9 +438,9 @@ const ClientPlayer = class {
     const oldStyle = playerStatusCtx.strokeStyle;
     const oldFill = playerStatusCtx.fillStyle;
 
-    // player name
+    // player name — show the official pro name (PlayerNames.js)
     playerStatusCtx.font = `16px Arial`;
-    playerStatusCtx.strokeText(this.displayName, drawTextX, drawTextY);
+    playerStatusCtx.strokeText(PlayerNames.canonical(this.displayName), drawTextX, drawTextY);
 
     // which tier
     playerStatusCtx.strokeStyle = TierColors[this.tier];

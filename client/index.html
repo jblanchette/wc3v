@@ -25,6 +25,32 @@
   <meta name="twitter:description" content="Browse pro Warcraft III builds, drop a .w3g for a local in-browser breakdown, or compare your replay to a pro's with graded feedback.">
   <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
 
+  <!-- Per-band SEO: if the page was opened at ?level=new|improving|pro, swap
+       the title / description / canonical (and OG / Twitter variants) to that
+       band's copy before paint. Self-contained — runs long before the main
+       script. All three bands are fully indexable; one tool, one brand, three
+       lenses — not three tools. -->
+  <script>
+  (function () {
+    var L = (new URLSearchParams(location.search).get('level') || '').toLowerCase();
+    var M = {
+      'new':       { t: 'WC3V — Starter Build Orders for New Warcraft III Players', d: 'Beginner-friendly Warcraft III build orders: the few things that matter, common mistakes to avoid, and clean replays to learn from. Pick your race and get a first build you can actually execute.' },
+      'improving': { t: 'WC3V — Ladder Build Orders & Tournament Replays for Improving Players', d: 'Solid, copyable Warcraft III build orders from real tournament play, with replays you can study — the middle rung between your first builds and the pro meta.' },
+      'pro':       { t: 'WC3V — Pro Warcraft III Build Orders & Tournament Replay Analysis', d: 'Current top-level Warcraft III build orders from major tournaments, with full in-browser replay analysis and pro-comparison feedback.' }
+    };
+    var v = M[L]; if (!v) return;
+    document.title = v.t;
+    var set = function (sel, attr, val) { var el = document.querySelector(sel); if (el) el.setAttribute(attr, val); };
+    set('meta[name="description"]', 'content', v.d);
+    set('meta[property="og:title"]', 'content', v.t);
+    set('meta[property="og:description"]', 'content', v.d);
+    set('meta[name="twitter:title"]', 'content', v.t);
+    set('meta[name="twitter:description"]', 'content', v.d);
+    set('meta[property="og:url"]', 'content', 'https://wc3v.com/?level=' + L);
+    set('link[rel="canonical"]', 'href', 'https://wc3v.com/?level=' + L);
+  })();
+  </script>
+
   <!-- Additional SEO -->
   <meta name="robots" content="index, follow">
   <meta name="keywords" content="Warcraft 3, WC3, build orders, replay analysis, replay parser, w3g, pro builds, strategy, Human, Orc, Night Elf, Undead, competitive, esports">
@@ -67,9 +93,12 @@
 </head>
 <body class="site-page">
   <script src="js/clientConfig.js?v=2"></script>
+  <script src="js/BandSwitcher.js?v=2"></script>
   <script src="js/SiteNav.js?v=2"></script>
   <script src="js/TosBanner.js?v=2"></script>
   <script src="js/Security.js?v=2"></script>
+  <script src="js/PlayerNames.js?v=2"></script>
+  <script src="js/Glossary.js?v=2"></script>
   <script src="js/MyReplays.js?v=2"></script>
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
@@ -86,6 +115,9 @@
   <script src="js/BugReport.js?v=2"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      // BandSwitcher must init before SiteNav so the nav's compact band
+      // renders with the correct active state on first paint.
+      window.BandSwitcher.init();
       SiteNav.render('home');
       window.BugReport && window.BugReport.install();
 
@@ -763,6 +795,40 @@
       </div>
     </div>
 
+    <!-- Hero variant of the site-wide skill-band switch. The compact form
+         lives in the top nav (SiteNav.js) on every page. Both share the same
+         `.skill-band-card[data-band]` JS hook handled by BandSwitcher.js.
+         `.skill-band-hint` is only visible when BandSwitcher sets
+         `data-first-visit` on the root (no stored band, no URL hint). Band
+         icons are a rising-power item progression: Potion of Healing → Tome
+         of Knowledge → Crown of Kings. -->
+    <div class="skill-band skill-band--hero" id="skill-band-hero" role="group" aria-label="Skill level">
+      <p class="skill-band-hint">Pick where you're at — it sets which builds you see and what your own replays get graded against. Change anytime.</p>
+      <div class="skill-band-row">
+        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false">
+          <img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
+          <span class="skill-band-text">
+            <span class="skill-band-label">New to WC3</span>
+            <span class="skill-band-desc">Your first builds — the few things that matter</span>
+          </span>
+        </button>
+        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false">
+          <img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
+          <span class="skill-band-text">
+            <span class="skill-band-label">Ladder</span>
+            <span class="skill-band-desc">Solid tournament play you can copy</span>
+          </span>
+        </button>
+        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false">
+          <img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
+          <span class="skill-band-text">
+            <span class="skill-band-label">Pro meta</span>
+            <span class="skill-band-desc">Top-level builds, tight execution</span>
+          </span>
+        </button>
+      </div>
+    </div>
+
     <div class="site-browse-layout">
 
       <!-- Left rail: your replays. Empty state shown when no replays in IDB. -->
@@ -811,6 +877,7 @@
       <section id="builds" class="site-pros" aria-labelledby="pros-title">
         <div class="site-pros-head">
           <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
+          <p class="band-intro" id="band-intro">Current top-level builds from major tournaments — tight execution, the latest strategies.</p>
           <div id="pro-filter-bar" class="pro-filter-bar" role="toolbar" aria-label="Filter pro builds">
             <!-- Race chips (always visible) -->
             <div class="pfb-group" id="race-filter-host">
@@ -966,6 +1033,34 @@
         }
       }
     };
+
+    // ─── Skill bands ────────────────────────────────────────
+    // Band metadata + state live in BandSwitcher.js (site-wide source of
+    // truth). The local aliases below keep the existing card-rendering and
+    // filter code readable. `BANDS` exposes per-band labels / icon ids /
+    // intro copy used by the homepage chrome (#pros-title, #band-intro).
+    const BANDS = window.BandSwitcher.BANDS;
+    const BAND_KEYS = window.BandSwitcher.BAND_KEYS;
+    const DEFAULT_BAND = window.BandSwitcher.DEFAULT_BAND;
+    const isValidBand = window.BandSwitcher.isValidBand;
+    const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+
+    function bandIcoImg(band, cls) {
+      const meta = BANDS[band];
+      if (!meta || !meta.icon) return '';
+      return `<img class="${cls || 'band-ico'}" src="/assets/wc3icons/${meta.icon}.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />`;
+    }
+
+    // Does this build belong in the given band? Curated builds match on
+    // `level` (+ optional `alsoShownIn`); user-uploaded pros are band-exempt
+    // — they're "yours" and always visible (they carry an "Added by you"
+    // marker instead of a band pill).
+    function buildInBand(b, band) {
+      if (!band) return true;
+      if (b._isUserBuild) return true;
+      if (b.level === band) return true;
+      return Array.isArray(b.alsoShownIn) && b.alsoShownIn.includes(band);
+    }
 
     function raceColor(key) { return (RACE_META[key] || {}).color || '#888'; }
     function raceAbbr(key)  { return (RACE_META[key] || {}).abbr  || '??';  }
@@ -1362,6 +1457,27 @@
       const tp = build.tierProgression;
       const heroIds = build.heroItemIds || (build.heroItemId ? [build.heroItemId] : []);
 
+      // ── Band + difficulty pill (curated builds only) ──────
+      // The grid is already filtered to one band, so the band name shows only
+      // when this card surfaced via `alsoShownIn` (its home band ≠ the band
+      // you're viewing). Difficulty always shows — it varies within a band.
+      let bandPill = '';
+      if (!build._isUserBuild) {
+        const diffLabel = DIFFICULTY_LABELS[build.difficulty];
+        const showBand = build.level && BANDS[build.level] && build.level !== currentBand;
+        if (diffLabel || showBand) {
+          const cls = `site-card-band${build.level ? ' band-' + build.level : ''}${build.difficulty ? ' diff-' + build.difficulty : ''}`;
+          const ico = showBand ? bandIcoImg(build.level, 'site-card-band-ico') : '';
+          const label = showBand
+            ? `${BANDS[build.level].shortLabel}${diffLabel ? ' · ' + diffLabel : ''}`
+            : diffLabel;
+          const tip = showBand
+            ? `${BANDS[build.level].seg} build${diffLabel ? ' · ' + diffLabel + ' to execute' : ''}`
+            : `${diffLabel} to execute`;
+          bandPill = `<span class="${cls}" title="${tip}">${ico}${label}</span>`;
+        }
+      }
+
       // ── Header: build name + matchups + floating race watermark
       const iconId = raceIcon(build.race);
       let matchupPills = '';
@@ -1460,7 +1576,7 @@
           : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
 
         const unitsLabel = keyUnits.length ? `<span class="site-card-section-label">Units</span>` : '';
-        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}<div class="site-card-expo-row">${expoHtml}</div></div>`;
+        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}<div class="site-card-expo-row">${expoHtml}${bandPill}</div></div>`;
 
         // ── Upgrades section: all researched upgrades from replay, or coreUpgrades as fallback
         const coreUpgrades = build.coreUpgrades || [];
@@ -1519,7 +1635,12 @@
         // local-IDB viewer path; pro entries fall back to the standard
         // server-replay URL pattern.
         const firstHref = first.href
-          || `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}`;
+          || `/viewer?r=${first.replayId}&player=${first.playerSlot}&buildId=${build.id}&level=${currentBand}`;
+        // "Guide me" opens the viewer straight into the guided walkthrough for
+        // this replay (from the build's player's POV when we know it; otherwise
+        // the viewer asks which player to follow).
+        const guideHref = firstHref + (firstHref.includes('?') ? '&' : '?') + 'guide=1'
+          + (first.playerSlot != null && !/[?&]player=/.test(firstHref) ? '&player=' + encodeURIComponent(first.playerSlot) : '');
         const firstTournamentName = first.tournamentId && tournamentMap[first.tournamentId]
           ? tournamentMap[first.tournamentId].shortName : '';
         const firstStageText = [first.stage, first.round].filter(Boolean).join(' · ');
@@ -1534,8 +1655,8 @@
         // (older curated entries may lack it); when missing we just show
         // the player name. This keeps the same shape across curated +
         // user-uploaded cards.
-        const playerText = first.playerName || '';
-        const opponentText = first.opponentName || '';
+        const playerText = PlayerNames.canonical(first.playerName);
+        const opponentText = PlayerNames.canonical(first.opponentName);
         const identityHtml = opponentText
           ? `<span class="site-replay-player">${playerText}</span><span class="site-replay-vs"> vs </span><span class="site-replay-opponent">${opponentText}</span>`
           : `<span class="site-replay-player">${playerText}</span>`;
@@ -1568,7 +1689,7 @@
 
           const extraGroups = mapKeys.map(mapName => {
             const rowsHtml = byMap.get(mapName).map(r => {
-              const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}`;
+              const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}&level=${currentBand}`;
               const tName = r.tournamentId && tournamentMap[r.tournamentId]
                 ? tournamentMap[r.tournamentId].shortName : '';
               const stageText = [r.stage, r.round].filter(Boolean).join(' · ');
@@ -1578,8 +1699,9 @@
               const sChip = stageText
                 ? `<span class="site-replay-modal-stage">${stageText}</span>`
                 : '';
-              const opponentHtml = r.opponentName
-                ? `<span class="vs">vs</span><span class="opponent">${r.opponentName}</span>`
+              const rOppName = PlayerNames.canonical(r.opponentName);
+              const opponentHtml = rOppName
+                ? `<span class="vs">vs</span><span class="opponent">${rOppName}</span>`
                 : '';
 
               // Compute diff vs main replay.
@@ -1609,7 +1731,7 @@
                 ${heroPortrait}
                 <div class="site-replay-modal-identity">
                   <span class="site-replay-modal-matchup">
-                    <span class="player">${r.playerName || ''}</span>
+                    <span class="player">${PlayerNames.canonical(r.playerName)}</span>
                     ${opponentHtml}
                   </span>
                   ${tChip}
@@ -1647,24 +1769,29 @@
             </div>`;
         }
 
-        // Two-row strip with predictable structure:
-        //   Row 1: "{player} vs {opponent}" (left, truncates)  ·  map (right)
-        //   Row 2: tournament + stage chips (left, may be empty)  ·  [+N more] [Watch] (right)
-        // Row 2 has a guaranteed min-height so cards in the same grid
-        // row line up regardless of whether tournament info is present
-        // (curated pros have it; user-uploaded pros don't).
+        // Three-row strip — each piece gets its own row so nothing has to
+        // shrink-and-truncate when the card is narrow (~280px in the grid):
+        //   Row 1 (identity):  "{player} vs {opponent}"   ·   {map}
+        //   Row 2 (meta):      [tournament] [stage]              — wraps freely,
+        //                      reserves min-height so cards align even when empty
+        //   Row 3 (actions):   [+N more]            [▸ Guide me] [Watch]
+        //                      primary group is kept together; whole right
+        //                      group wraps to a new line on very narrow cards
         const firstItem = `<div class="site-replay-item">
           <div class="site-replay-item-identity">
             <span class="site-replay-item-players">${identityHtml}</span>
             ${firstMapText ? `<span class="site-replay-item-map">${firstMapText}</span>` : ''}
           </div>
-          <div class="site-replay-item-row">
-            <div class="site-replay-item-chips">
-              ${firstTournamentChip}
-              ${firstStageChip}
-            </div>
-            <div class="site-replay-item-actions">
+          <div class="site-replay-item-meta">
+            ${firstTournamentChip}
+            ${firstStageChip}
+          </div>
+          <div class="site-replay-item-actions">
+            <div class="site-replay-actions-left">
               ${moreBtn}
+            </div>
+            <div class="site-replay-actions-right">
+              <a href="${guideHref}" class="site-replay-guide-btn" title="Step through this game with commentary">▸ Guide me</a>
               <a href="${firstHref}" class="site-replay-view-btn">Watch</a>
             </div>
           </div>
@@ -1682,7 +1809,7 @@
 
       const cardHref = hasReplay
         ? (replays[0].href
-            || `/viewer?r=${replays[0].replayId}&player=${replays[0].playerSlot}&buildId=${build.id}`)
+            || `/viewer?r=${replays[0].replayId}&player=${replays[0].playerSlot}&buildId=${build.id}&level=${currentBand}`)
         : '';
 
       // User-build optional copy: short description + 1–3 strategy bullets.
@@ -1712,14 +1839,62 @@
         }
       }
 
+      // ── Learner block: a tabbed, bounded "beginner guide" pane ──────────
+      // Curated builds only, and only while viewing the "new" band. Two tabs
+      // ("First steps" = beginnerNotes, "Mistakes" = commonMistakes) over a
+      // fixed-height, scrollable pane so the card stays a sane size. Tab clicks
+      // are handled in the #all-builds-grid click handler; clicks inside the
+      // block never navigate the card.
+      let learnerHtml = '';
+      if (!build._isUserBuild && currentBand === 'new') {
+        const esc = escapeHtmlSimple;
+        // Body copy gets jargon glossary tooltips (escapes + wraps known terms);
+        // falls back to plain escaping if Glossary.js isn't loaded.
+        const gloss = (window.Glossary && window.Glossary.linkifyText) || escapeHtmlSimple;
+        const notes = (build.beginnerNotes || []).filter(s => s && s.trim());
+        const mistakes = (build.commonMistakes || []).filter(m => m && (m.mistake || m.fix));
+        const prereqs = (build.prerequisites || []).filter(s => s && s.trim());
+        const tabs = [];
+        const panes = [];
+        if (notes.length) {
+          tabs.push({ key: 'steps', label: 'Key ideas' });
+          const prereqLine = prereqs.length
+            ? `<div class="scl-prereq">Assumes you're comfortable: ${prereqs.map(gloss).join(' · ')}</div>`
+            : '';
+          panes.push({ key: 'steps', html: `<ul class="scl-list">${notes.map(n => `<li>${gloss(n)}</li>`).join('')}</ul>${prereqLine}` });
+        }
+        if (mistakes.length) {
+          tabs.push({ key: 'mistakes', label: `Mistakes (${mistakes.length})` });
+          panes.push({ key: 'mistakes', html: `<ul class="scl-mlist">${mistakes.map(m => `<li>
+              <span class="scl-bad">${gloss(m.mistake || '')}</span>
+              ${m.fix ? `<span class="scl-fix"><b class="scl-fix-tag">Fix</b> ${gloss(m.fix)}</span>` : ''}
+            </li>`).join('')}</ul>` });
+        }
+        if (tabs.length) {
+          const firstKey = tabs[0].key;
+          const tabBar = tabs.map((t, i) =>
+            `<button type="button" class="scl-tab${i === 0 ? ' active' : ''}" data-learn-pane="${t.key}" role="tab" aria-selected="${i === 0 ? 'true' : 'false'}">${esc(t.label)}</button>`
+          ).join('');
+          const paneEls = panes.map(p =>
+            `<div class="scl-pane" data-learn-pane="${p.key}"${p.key === firstKey ? '' : ' hidden'}>${p.html}</div>`
+          ).join('');
+          learnerHtml = `<div class="site-card-learn">
+            <span class="site-card-section-label">How this build works</span>
+            <div class="scl-tabs" role="tablist" aria-label="How this build works">${tabBar}</div>
+            <div class="scl-panes">${paneEls}</div>
+          </div>`;
+        }
+      }
+
       const userClass = build._isUserBuild ? ' is-user-build' : '';
 
       return `
-        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
+        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}${currentBand === 'new' && learnerHtml ? ' is-learner' : ''}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
           ${headerHtml}
           ${heroesHtml}
           ${unitsHtml}
           ${upgradesHtml}
+          ${learnerHtml}
           ${userNotesHtml}
           ${replaySection}
         </div>
@@ -1795,8 +1970,8 @@
           }
           parts.push(r.tournamentId);
         }
-        if (r.playerName) parts.push(r.playerName);
-        if (r.opponentName) parts.push(r.opponentName);
+        if (r.playerName) parts.push(PlayerNames.canonical(r.playerName));
+        if (r.opponentName) parts.push(PlayerNames.canonical(r.opponentName));
       });
       return parts.join(' ').toLowerCase();
     }
@@ -1808,6 +1983,10 @@
     let tournamentMap = {}; // tournamentId → tournament object
     let buildSearchIndex = []; // parallel array of searchable strings
     let searchQuery = '';
+    // Mirror of BandSwitcher.getBand() — kept in sync via BandSwitcher.onChange
+    // below so the existing card-rendering / filter code can read it without
+    // a function call per access.
+    let currentBand = window.BandSwitcher.getBand();
     let selectedRace = '';
     let selectedMatchup = '';
     let selectedTournament = '';
@@ -2014,6 +2193,31 @@
       });
     }
 
+    // ─── Skill band switch ──────────────────────────────────
+    // State / persistence / URL sync / card click delegation all live in
+    // BandSwitcher.js (site-wide). Here we just sync the homepage-specific
+    // chrome (#pros-title + #band-intro) and re-render the grid when the
+    // band changes. Card aria-pressed state on every .skill-band-card is
+    // handled generically by BandSwitcher.applyUI().
+    function applyBandChrome(band) {
+      const meta = BANDS[band] || BANDS[DEFAULT_BAND];
+      const title = document.getElementById('pros-title');
+      if (title) title.textContent = meta.h2;
+      const intro = document.getElementById('band-intro');
+      if (intro) intro.textContent = meta.intro;
+    }
+    function setupBands() {
+      // Initial chrome sync (BandSwitcher.init() already ran in the bootstrap
+      // script before SiteNav rendered).
+      currentBand = window.BandSwitcher.getBand();
+      applyBandChrome(currentBand);
+      window.BandSwitcher.onChange((band) => {
+        currentBand = band;
+        applyBandChrome(band);
+        applyFilter();
+      });
+    }
+
     // ─── Search matching ─────────────────────────────────────
     function matchesSearch(buildIndex, query) {
       if (!query) return true;
@@ -2036,6 +2240,7 @@
     // are immediately visible in the grid; curated pros follow.
     function applyFilter() {
       const buildPasses = (b, searchText) => {
+        if (!buildInBand(b, currentBand)) return false;
         if (searchQuery && searchText && !matchesSearch(searchText, searchQuery)) return false;
         if (selectedRace && b.race !== selectedRace) return false;
         if (selectedMatchup && !(b.matchups || []).includes(selectedMatchup)) return false;
@@ -2060,13 +2265,14 @@
         document.body.appendChild(modal);
       });
 
-      // Live count in the filter bar.
+      // Live count in the filter bar — relative to the current band, not the
+      // whole library (the band switch is "above" the other filters).
       const countEl = document.getElementById('pfb-count');
       if (countEl) {
-        const total = allBuilds.length + userBuilds.length;
-        countEl.textContent = visible.length === total
-          ? `${total} builds`
-          : `${visible.length} of ${total}`;
+        const bandTotal = allBuilds.filter(b => buildInBand(b, currentBand)).length + userBuilds.length;
+        countEl.textContent = visible.length === bandTotal
+          ? `${bandTotal} build${bandTotal === 1 ? '' : 's'}`
+          : `${visible.length} of ${bandTotal}`;
       }
 
       // Active filter count badge on the mobile "Filters" button.
@@ -2168,6 +2374,7 @@
       buildRaceFilter();
       buildAxisFilters();
       buildTournamentFilter();
+      setupBands();
 
       // Wire the "Advanced search" entry point — opens the same picker
       // the compare drawer uses, but in browse mode (no userSummary).
@@ -2229,6 +2436,12 @@
       // appear in the grid alongside curated pros from page-load.
       userBuilds = await loadUserBuilds();
 
+      // Warm the jargon glossary so learner-card tooltips are present on the
+      // first render (degrades gracefully if it 404s or Glossary.js is absent).
+      if (window.Glossary && window.Glossary.load) {
+        try { await window.Glossary.load(); } catch (e) {}
+      }
+
       applyFilter();
 
       // Re-pull + re-render whenever the user promotes / unpromotes /
@@ -2260,8 +2473,26 @@
           return;
         }
         if (e.target.closest('.site-replay-view-btn')) return;
+        if (e.target.closest('.site-replay-guide-btn')) return;
         if (e.target.closest('.site-replay-toggle')) return;
         if (e.target.closest('.site-replay-modal')) return;
+        // Learner block: a tab click switches panes within that card; any
+        // other click inside the block is swallowed (never navigates).
+        const learnTab = e.target.closest('.scl-tab');
+        if (learnTab) {
+          const wrap = learnTab.closest('.site-card-learn');
+          const key = learnTab.dataset.learnPane;
+          if (wrap && key) {
+            wrap.querySelectorAll('.scl-tab').forEach(t => {
+              const on = t.dataset.learnPane === key;
+              t.classList.toggle('active', on);
+              t.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            wrap.querySelectorAll('.scl-pane').forEach(p => { p.hidden = p.dataset.learnPane !== key; });
+          }
+          return;
+        }
+        if (e.target.closest('.site-card-learn')) return;
         const card = e.target.closest('.site-build-card[data-href]');
         if (card) window.location.href = card.dataset.href;
       });

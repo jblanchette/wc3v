@@ -1,6 +1,31 @@
 const Wc3vViewer = class {
   constructor () {
     this.reset();
+    // Subscribe to the site-wide skill-band switch (BandSwitcher.js). Beginner
+    // view = band 'new'. The onChange callback fires on same-page mutations
+    // (clicks on .skill-band-card anywhere); the storage listener catches
+    // cross-tab changes. Both route through _applyBand().
+    if (window.BandSwitcher) {
+      window.BandSwitcher.onChange((band) => this._applyBand(band));
+    }
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'wc3v.level') this._applyBand(e.newValue);
+    });
+  }
+
+  // Recompute beginner-view state from the current band, toggle the
+  // `is-beginner` chrome class, and re-render the build-order panel if a
+  // game is loaded. Called by BandSwitcher.onChange and the cross-tab
+  // storage listener.
+  _applyBand (band) {
+    const on = (band === 'new');
+    if (this.boLearnerMode === on) return;
+    this.boLearnerMode = on;
+    const app = document.getElementById('app');
+    if (app) app.classList.toggle('is-beginner', on);
+    if (this.gameLoaded && this.boRenderer && this.layoutMode !== LayoutMode.gameplay) {
+      this.boRenderer.renderBuildOrder();
+    }
   }
 
   bootstrap () {
@@ -198,6 +223,37 @@ const Wc3vViewer = class {
       items:     true,
       summaries: true
     };
+    // "Beginner view" of the build-order panel: a simplified skeleton + plain-
+    // language callouts (see BuildOrderRenderer). Driven by the site-wide
+    // skill band (BandSwitcher.js) — band === 'new' means beginner view.
+    // Live-synced via the BandSwitcher.onChange / 'storage' listeners wired
+    // below in this constructor.
+    this.boLearnerMode = (window.BandSwitcher && window.BandSwitcher.getBand() === 'new');
+    // Guided walkthrough (auto replay coaching — see ReplayGuide.js). When
+    // active, a corner HUD steps you through key moments and each step drives
+    // the replay camera (zoom to the relevant base / army / unit) — see
+    // _guideApplyFocus / _renderGuideHighlights.
+    this.guideMode = false;
+    this.guide = null;            // { followedName, oppName, intro, steps: [...] }
+    this.guideStepIdx = 0;        // -1 = the "what this build is" intro screen
+    this.guideFollowedPlayer = null;
+    this.guideBuildName = null;   // curated build name (from buildContextBySlot), if known
+    this._guideOpenedOnce = false; // once the walkthrough has been opened (or auto-opened) we don't pop it again on re-render
+    this._guideHighlight = null;   // { units:[ClientUnit], typeIds:[itemId], typePlayer:ClientPlayer, color } — drawn each frame by _renderGuideHighlights
+    this._guideHighlightStartTime = 0; // performance.now() when the current step's highlight was applied — drives the loud→calm fade
+    this._guidePrevCameraMode = null; // BroadcastCamera mode to restore when the walkthrough exits
+    this._guidePlayUntil = null;   // while set, playback auto-parks at this gameTime (the end of the current step's play-out window)
+    this._guideStepListEls = null; // cached NodeList of the current step's .gh-sl-item rows (the build-sequence list), or null
+    this._guideStepListIdx = -2;   // last "active" index applied to the step list (-2 = not applied yet) — so we only touch the DOM on a change
+    this._guideCreepTour = null;   // { camps:[{wx,wy,rWorld,startMs,clearMs,label,levelStr,iconId,boundsRect}], idx, summaryShown } — the hero step's camp tour, or null
+    this._guidePrevCreepRoute = null; // saved viewOptions.displayCreepRoute so the tour can flip it on for the summary and restore it after
+    this._guideCreepStepShownAt = 0; // performance.now() when the current creep-tour camp was first framed — enforces a minimum on-screen time before hopping
+
+    // Beginner view of the build-order panel is opinionated: you pick a player
+    // ("Me") and the panel hides the opponent's full BO in favour of a small
+    // summary. The pick sticks per replay (sessionStorage) so reloads don't
+    // re-ask. Restored / overridden by ?player= in the load .then.
+    this.beginnerPickedSlot = null;
     this.boData = new BuildOrderData();
     this.mapRenderer = new MapRenderer();
     this.threeMapRenderer = null; // created in setupCanvas once #three-canvas exists
@@ -961,7 +1017,7 @@ const Wc3vViewer = class {
       return;
     }
 
-    this.placementViewer.show(playerData.baseGrid, playerData.baseSnapshots, player.playerColor, this.neutralBuildings, this.mapImage, this.gameScaler, player.displayName, player.race, this.threeMapRenderer);
+    this.placementViewer.show(playerData.baseGrid, playerData.baseSnapshots, player.playerColor, this.neutralBuildings, this.mapImage, this.gameScaler, PlayerNames.canonical(player.displayName), player.race, this.threeMapRenderer);
   }
 
   toggleViewOption (optionKey) {
@@ -992,6 +1048,10 @@ const Wc3vViewer = class {
 
   play () {
     const { wrapperId } = this.scrubber;
+
+    // If the user hits Play after a walkthrough step's auto-play has parked at
+    // its window end, let them watch freely (drop the auto-park).
+    if (this._guidePlayUntil != null && this.gameTime >= this._guidePlayUntil - 100) this._guidePlayUntil = null;
 
     this.scrubber.loadSvg(`#${wrapperId}-play`, 'pause-icon');
     this.state = ScrubStates.playing;
@@ -1128,6 +1188,9 @@ const Wc3vViewer = class {
     // Apply current mode
     app.classList.add(`layout-mode-${this.layoutMode}`);
 
+    // Beginner mode strips the viewer chrome (CSS targets #app.is-beginner).
+    app.classList.toggle('is-beginner', !!this.boLearnerMode);
+
     // Keep old viewMode/buildViewMode in sync for any code still reading them
     this.viewMode = (this.layoutMode === LayoutMode.gameplay) ? ViewModes.gameplay : ViewModes.buildOrder;
     this.buildViewMode = (this.layoutMode === LayoutMode.liveBuildOrder) ? BuildView.live : BuildView.static;
@@ -1179,6 +1242,1045 @@ const Wc3vViewer = class {
     }
   }
 
+  // ── Beginner-view "Me" pick ───────────────────────────────────────────
+  // Per-replay sessionStorage key so a refresh keeps the pick but a different
+  // replay re-asks.
+  _beginnerPickKey () { return `wc3v.beginnerPlayer.${this.replayId || 'default'}`; }
+
+  _getBeginnerPickedPlayer () {
+    const slot = this.beginnerPickedSlot;
+    if (slot == null) return null;
+    const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
+    return players.find(p => p.playerId == slot || p.slot == slot) || null;  // eslint-disable-line eqeqeq
+  }
+
+  setBeginnerPick (playerOrSlot) {
+    let slot = null;
+    if (playerOrSlot && typeof playerOrSlot === 'object') {
+      slot = (playerOrSlot.playerId != null) ? playerOrSlot.playerId : playerOrSlot.slot;
+    } else if (playerOrSlot != null) {
+      slot = playerOrSlot;
+    }
+    this.beginnerPickedSlot = (slot != null) ? String(slot) : null;
+    try { sessionStorage.setItem(this._beginnerPickKey(), this.beginnerPickedSlot || ''); } catch (e) {}
+    if (this.gameLoaded && this.boRenderer) this.boRenderer.renderBuildOrder();
+    // First time the user picks a player, auto-open the walkthrough — the
+    // commentary HUD is the teaching, the BO panel is reference. Subsequent
+    // picks (after the user has exited the HUD once) don't re-open.
+    this._maybeAutoOpenWalkthrough();
+  }
+
+  clearBeginnerPick () {
+    this.beginnerPickedSlot = null;
+    try { sessionStorage.removeItem(this._beginnerPickKey()); } catch (e) {}
+    if (this.gameLoaded && this.boRenderer) this.boRenderer.renderBuildOrder();
+  }
+
+  // Called from the load .then once the BO panel is set up. Restores any saved
+  // pick for this replay; ?player=N overrides (deep links from build cards).
+  _loadBeginnerPick () {
+    let stored = null;
+    try { stored = sessionStorage.getItem(this._beginnerPickKey()); } catch (e) {}
+    let pick = stored && stored.trim() ? stored.trim() : null;
+    try {
+      const u = new URLSearchParams(window.location.search).get('player');
+      if (u != null && u !== '') pick = u;
+    } catch (e) {}
+    this.beginnerPickedSlot = pick;
+    if (pick && stored !== pick) { try { sessionStorage.setItem(this._beginnerPickKey(), pick); } catch (e) {} }
+  }
+
+  // ── Guided walkthrough ────────────────────────────────────────────────
+  // Wires the HUD + player-pick DOM once (called from BuildOrderRenderer
+  // ._wireBeginnerHandlers, which runs per replay load — guarded so it's a
+  // no-op after the first call).
+  setupGuide () {
+    if (this._guideWired) return;
+    this._guideWired = true;
+    const $ = (id) => document.getElementById(id);
+    if ($('guide-prev-btn')) $('guide-prev-btn').addEventListener('click', () => this.guidePrev());
+    if ($('guide-next-btn')) $('guide-next-btn').addEventListener('click', () => this.guideNext());
+    if ($('guide-exit-btn')) $('guide-exit-btn').addEventListener('click', () => this.exitGuideMode());
+    document.querySelectorAll('#guide-player-pick [data-guide-cancel]').forEach(el =>
+      el.addEventListener('click', () => { const m = $('guide-player-pick'); if (m) m.hidden = true; }));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const pick = $('guide-player-pick');
+        if (pick && !pick.hidden) { pick.hidden = true; return; }
+        if (this.guideMode) this.exitGuideMode();
+      }
+    });
+  }
+
+  // For raw player names: 32-char default + "…" overflow is the right defense.
+  _guideEsc (s) { return Security.escapeHtml(Security.sanitizeUserText(s)); }
+  // For app-authored copy and generated narrative (TOC subtitles, camp-tour
+  // sentences, step-list labels from our own unit table): control-char + bidi
+  // scrub, but DO NOT truncate. Truncating to 32 chars chops every TOC subtitle
+  // (40-60 chars) mid-word and stamps "…" on it — never do that to our own copy.
+  _guideText (s) { return Security.escapeHtml(Security.sanitizeUserText(s, { maxLen: 4096, allowNewlines: true })); }
+  _raceLabel (r) { return (typeof RaceLabels !== 'undefined' && RaceLabels[r] && RaceLabels[r].label) || r || ''; }
+
+  // Open the guided walkthrough. `who` may be a ClientPlayer, a playerId, a
+  // slot, or be omitted (then we show the "pick a player" gate when there's
+  // more than one non-neutral player).
+  enterGuideMode (who) {
+    if (typeof ReplayGuide === 'undefined' || !ReplayGuide.buildGuide) return;
+    const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
+    if (players.length < 2) return; // need two players to compare
+
+    let followed = null;
+    if (who && typeof who === 'object') followed = who;
+    // `who` may be an id/slot as a string or number — match loosely.
+    else if (who != null) followed = players.find(p => p.playerId == who || p.slot == who) || null;  // eslint-disable-line eqeqeq
+
+    if (!followed) {
+      if (players.length > 1) { this._showGuidePlayerPick(); return; }
+      followed = players[0];
+    }
+    const opp = players.find(p => p !== followed);
+    if (!opp) return;
+
+    let guide;
+    try { guide = ReplayGuide.buildGuide(followed, opp); } catch (e) { return; }
+    if (!guide || !guide.steps || !guide.steps.length) return;
+
+    this.guide = guide;
+    this.guideFollowedPlayer = followed;
+    this.guideStepIdx = -1;       // start on the "what this build is" intro screen
+    this.guideMode = true;
+    this._guideOpenedOnce = true; // suppresses the auto-open from running again on the same load
+    const bc = this.buildContextBySlot && (this.buildContextBySlot[String(followed.playerId)] || this.buildContextBySlot[String(followed.slot)]);
+    this.guideBuildName = (bc && bc.name) || null;
+
+    const pick = document.getElementById('guide-player-pick'); if (pick) pick.hidden = true;
+    // Need playback + the BO panel both visible. (Mobile stays BO-only — the
+    // walkthrough still steps through the rows, just without playback sync.)
+    if (!this.mobileMode && this.layoutMode !== LayoutMode.liveBuildOrder) {
+      this.layoutMode = LayoutMode.liveBuildOrder;
+      this.applyLayoutMode();
+    }
+    // Pin the camera: the walkthrough drives it per step (zoom to base / army /
+    // unit — see _guideApplyFocus). Remember what mode to restore on exit, then
+    // freeze playback so the camera + commentary stay put, and keep one render
+    // loop alive (mainLoop won't self-stop while guideMode — the highlight
+    // rings pulse). Desktop only — the mobile viewer has no canvas.
+    if (!this.mobileMode && this.broadcastCamera && typeof CameraMode !== 'undefined') {
+      this._guidePrevCameraMode = this.broadcastCamera.mode;
+      this.broadcastCamera.setMode(CameraMode.FREE);
+    }
+    // Clear any creep-camp / building hover that was up — the walkthrough
+    // suppresses them (see the mousemove.camphover handler + render()).
+    if (this.gameDisplayBox) { this.gameDisplayBox.hoveredCampUuid = null; this.gameDisplayBox.hide(); }
+    if (this.buildingHoverLabel) this.buildingHoverLabel.hide();
+    if (!this.mobileMode) this.pause();   // settle playback; each step decides whether to roll the tape (guideGoToStep)
+    const hud = document.getElementById('guide-hud'); if (hud) hud.hidden = false;
+    this.guideGoToStep(-1);
+    if (this.boRenderer && this.boRenderer.syncWalkthroughCta) this.boRenderer.syncWalkthroughCta();
+  }
+
+  exitGuideMode () {
+    this.guideMode = false;
+    this.guide = null;
+    this.guideFollowedPlayer = null;
+    this._guideHighlight = null;
+    this._guidePlayUntil = null;          // drop the per-step auto-park — watch freely now
+    this._guideStepListEls = null; this._guideStepListIdx = -2;
+    this._guideCreepTour = null;
+    // Put the creep-route view option back the way the user had it (the tour's
+    // summary turns it on).
+    if (this.viewOptions && this._guidePrevCreepRoute != null) this.viewOptions.displayCreepRoute = this._guidePrevCreepRoute;
+    this._guidePrevCreepRoute = null;
+    const hud = document.getElementById('guide-hud'); if (hud) hud.hidden = true;
+    document.querySelectorAll('#bo-columns .guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
+    // Hand the camera back to whatever mode it was in before the walkthrough
+    // took over (default: the auto action-focus camera). setMode resets the
+    // lerp so it glides to the new framing; restart the render loop so the
+    // glide actually animates (it'll self-stop once the camera settles).
+    if (!this.mobileMode && this.broadcastCamera && typeof CameraMode !== 'undefined') {
+      this.broadcastCamera.setMode(this._guidePrevCameraMode || CameraMode.ACTION_FOCUS);
+      this.stopRenderLoop(); this.startRenderLoop();
+    }
+    if (this.boRenderer && this.boRenderer.syncWalkthroughCta) this.boRenderer.syncWalkthroughCta();
+  }
+
+  guideNext () {
+    if (!this.guideMode || !this.guide) return;
+    if (this.guideStepIdx < 0) { this.guideGoToStep(0); return; }                                 // intro → step 1
+    if (this.guideStepIdx >= this.guide.steps.length - 1) { this.exitGuideMode(); return; }        // last step → finish
+    this.guideGoToStep(this.guideStepIdx + 1);
+  }
+  guidePrev () { if (this.guideMode) this.guideGoToStep(this.guideStepIdx - 1); }                  // step 0 → intro; intro stays
+
+  guideGoToStep (idx) {
+    if (!this.guideMode || !this.guide) return;
+    const steps = this.guide.steps;
+    idx = Math.max(-1, Math.min(idx, steps.length - 1));
+    this.guideStepIdx = idx;
+    if (idx < 0) {                          // the intro screen — pull the camera back to a full-map overview
+      this._highlightGuideStep(null);
+      if (!this.mobileMode) { this._guidePlayUntil = null; this.pause(); }
+      if (!this.mobileMode && this.gameLoaded) this._guideApplyFocus({ kind: 'map', player: 'followed', highlight: null });
+      this._renderGuideHud();
+      this._scheduleGuideFocusReassert(idx);
+      return;
+    }
+    const step = steps[idx];
+    if (!this.mobileMode && this.gameLoaded) {
+      // It's a video player — *play out* the sequence rather than freeze on a
+      // frame. The play-out window runs from ~1.5s before the action through
+      // the step's content (its highlighted events + a 6s tail), capped at
+      // ~60s of game time and clamped to the game; mainLoop parks playback at
+      // the end (see the _guidePlayUntil check there).
+      const evt = [].concat((step.eventTimes && step.eventTimes.followed) || [], (step.eventTimes && step.eventTimes.opp) || []).filter(Number.isFinite);
+      const lo = Math.max(0, Math.min(step.gameTimeMs, evt.length ? Math.min(...evt) : step.gameTimeMs) - 1500);
+      let hi = evt.length ? (Math.max(...evt) + 6000) : (step.gameTimeMs + 12000);
+      hi = Math.min(hi, lo + 90000);   // cap a step's auto-play at ~90s of game time (≈30s at 3×)
+      if (this.matchEndTime) hi = Math.min(hi, this.matchEndTime);
+      hi = Math.max(hi, lo + 3000);
+      this.seekToGameTime(lo);                // jump to just before the action (camera untouched — it's FREE / FOLLOW_HERO)
+      this._guideApplyFocus(step.focus);      // …frame the relevant base / army / unit (or follow the hero, or set up the creep tour)
+      // The creep tour seeks itself to camp 1 and manages its own stop point;
+      // every other step parks at the play-out window end.
+      this._guidePlayUntil = this._guideCreepTour ? null : hi;
+      this.stopRenderLoop();                  // cancel any running loop so play()'s startRenderLoop doesn't double it
+      this.play();                            // …and roll the tape
+    }
+    this._highlightGuideStep(step);
+    this._renderGuideHud();
+    this._scheduleGuideFocusReassert(idx);
+  }
+
+  // The layout and the live-mode canvas can still be settling for a frame or two
+  // after the walkthrough opens (the BO panel renders, #gameplay-area resizes,
+  // the canvas rescales) — long enough that the camera framing applied above can
+  // be computed against stale viewport dimensions and land wrong (the on-and-off
+  // "did it zoom in?" race). Re-assert it on the next couple of frames, once
+  // those have settled. Bails if the walkthrough has moved on to another step.
+  _scheduleGuideFocusReassert (idx) {
+    if (this.mobileMode || !this.gameLoaded) return;
+    let left = 2;
+    const tick = () => {
+      if (!this.guideMode || this.guideStepIdx !== idx || this.mobileMode) return;
+      this._reapplyGuideFocus();
+      if (--left > 0) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+
+  _highlightGuideStep (step) {
+    document.querySelectorAll('#bo-columns .guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
+    const et = step && step.eventTimes;
+    const times = [].concat((et && et.followed) || [], (et && et.opp) || []);
+    if (!times.length) return;
+    const rows = document.querySelectorAll('#bo-columns [data-gametime]');
+    rows.forEach(row => {
+      const ms = Number(row.dataset.gametime);
+      // Wide-ish window: a step's times can be the build-COMMAND time while the
+      // BO row is timed at construction-start (a couple of seconds later).
+      if (Number.isFinite(ms) && times.some(t => Math.abs(t - ms) < 2500)) row.classList.add('guide-highlight');
+    });
+    // Scroll the first highlighted row toward the TOP of the build panel — the
+    // walkthrough HUD sits in the bottom-right corner, so the top of the panel
+    // is the part that stays clear (block:'center' could tuck a row under it).
+    const first = document.querySelector('#bo-columns .guide-highlight');
+    if (first && first.scrollIntoView) { try { first.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
+  }
+
+  // ── Walkthrough camera / emphasis ─────────────────────────────────────
+  // Each step carries a `focus` directive (ReplayGuide.js — a small fixed set:
+  // base / hero / army / expansion / compare / map). seekToGameTime has already
+  // moved every player to the step's time, so here we resolve the directive to
+  // a world-space rect from the players' current unit positions, frame it, and
+  // remember which units/buildings to ring (_renderGuideHighlights pulses them
+  // each frame). Desktop only — the mobile viewer has no canvas.
+  _guideApplyFocus (focus) {
+    if (this.mobileMode || !this.gameLoaded || !this.gameScaler || !this.gameScaler.viewExtent || !this.zoom || !this.zoomContainer) {
+      this._guideHighlight = null;
+      return;
+    }
+    const f = (focus && typeof focus === 'object' && focus.kind) ? focus : { kind: 'map', player: 'followed', highlight: null };
+    // Leaving the creep tour (for another step / the intro): tear it down and
+    // put the creep-route view option back the way the user had it.
+    if (this._guideCreepTour && f.kind !== 'creepTour') {
+      this._guideCreepTour = null;
+      if (this.viewOptions && this._guidePrevCreepRoute != null) this.viewOptions.displayCreepRoute = this._guidePrevCreepRoute;
+      this._guidePrevCreepRoute = null;
+    }
+    const nonNeutral = (this.players || []).filter(p => p && !p.isNeutralPlayer);
+    const followed = (this.guideFollowedPlayer && nonNeutral.indexOf(this.guideFollowedPlayer) !== -1) ? this.guideFollowedPlayer : nonNeutral[0];
+    const opp  = nonNeutral.find(p => p !== followed) || null;
+    const me   = (f.player === 'opp') ? opp : followed;
+    const them = (f.player === 'opp') ? followed : opp;
+    const gt = this.gameTime || 0;
+
+    // The hero step is a guided creep tour — set it up and bail (it does its
+    // own seeking / camera / highlight). Falls back to following the hero.
+    if (f.kind === 'creepTour') {
+      this._guideHighlight = null;
+      if (this._setupGuideCreepTour(me)) return;
+      const bc0 = this.broadcastCamera;
+      if (bc0 && typeof CameraMode !== 'undefined' && me) {
+        const i0 = (this.players || []).indexOf(me);
+        if (i0 >= 0) { bc0.setMode(CameraMode.FOLLOW_HERO, i0); return; }
+      }
+      if (bc0 && typeof CameraMode !== 'undefined' && bc0.mode !== CameraMode.FREE) bc0.setMode(CameraMode.FREE);
+      if (me && me.startingPosition) this._guideZoomToRect({ minX: me.startingPosition.x - 1600, maxX: me.startingPosition.x + 1600, minY: me.startingPosition.y - 1600, maxY: me.startingPosition.y + 1600 });
+      return;
+    }
+
+    const hlIds = [];
+    if (Array.isArray(f.highlight)) f.highlight.forEach(id => { if (typeof id === 'string' && /^[A-Za-z0-9_]{1,16}$/.test(id) && hlIds.indexOf(id) === -1) hlIds.push(id); });
+
+    const alive = (u) => !!u && Number.isFinite(u.currentX) && Number.isFinite(u.currentY)
+      && ((u.readyTime || u.spawnTime || u.trainedTime || 0) <= gt) && (!u.destroyedAt || u.destroyedAt > gt);
+    const isArmy = (u) => alive(u) && !u.isBuilding && !u.isSummon && !u.isIllusion && !(u.meta && (u.meta.hero || u.meta.worker));
+    const isBldg = (u) => alive(u) && u.isBuilding;
+
+    const bboxOf = (units) => {
+      let n = 0, minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const u of units) { n++; if (u.currentX < minX) minX = u.currentX; if (u.currentX > maxX) maxX = u.currentX; if (u.currentY < minY) minY = u.currentY; if (u.currentY > maxY) maxY = u.currentY; }
+      return n ? { minX, maxX, minY, maxY } : null;
+    };
+    const around = (pt, r) => (pt && Number.isFinite(pt.x) && Number.isFinite(pt.y)) ? { minX: pt.x - r, maxX: pt.x + r, minY: pt.y - r, maxY: pt.y + r } : null;
+    // The player's main base, framed TIGHT (the goal is "the base fills the
+    // screen", split-screen-ish): a small box around the start location, grown
+    // only to cover their close-in base buildings — the ones already standing,
+    // plus the ones the build-command log says they'll drop within the step's
+    // play-out window (so the opening's altar / crypt / etc. are already in
+    // frame at game time 0). Anything past ~2200 units of the start (the
+    // expansion, forward towers, far-flung stuff) is left out on purpose.
+    const baseRectFor = (p) => {
+      if (!p) return null;
+      const sp = p.startingPosition;
+      const attempts = (Array.isArray(p.buildingAttempts) && p.buildingAttempts.length) ? p.buildingAttempts : null;
+      // With a build-command log we can frame TIGHT (a small floor, grown to the
+      // close-in buildings the log says they place during this step's play-out
+      // window); without one, use a wider floor so the base still reads.
+      let r = around(sp, attempts ? 1000 : 1800);
+      if (!r) return bboxOf((p.units || []).filter(isBldg));   // no known start location — best effort
+      const cutoff = gt + 90000;   // build commands past the play-out window aren't this step's base
+      const eat = (x, y) => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        if (Number.isFinite(sp.x) && Math.hypot(x - sp.x, y - sp.y) > 2200) return;   // not the tight main base (expansion/forward towers excluded)
+        if (x - 140 < r.minX) r.minX = x - 140;
+        if (x + 140 > r.maxX) r.maxX = x + 140;
+        if (y - 140 < r.minY) r.minY = y - 140;
+        if (y + 140 > r.maxY) r.maxY = y + 140;
+      };
+      for (const u of (p.units || [])) if (isBldg(u)) eat(u.currentX, u.currentY);
+      if (attempts) {
+        for (const a of attempts) {
+          if (a && a.status !== 'cancelled' && a.status !== 'replaced' && (Number(a.gameTime) || 0) <= cutoff) eat(a.x, a.y);
+        }
+      }
+      return r;
+    };
+
+    let rect = null;
+    const ringUnits = [];          // specific ClientUnit refs to ring (hero / expansion)
+    let typePlayer = null;         // player whose units of `hlIds` types we ring (base / army)
+
+    switch (f.kind) {
+      case 'hero': {
+        const h = (me && me.heroes && me.heroes[0]) ? me.heroes[0] : null;
+        rect = (h && alive(h)) ? around({ x: h.currentX, y: h.currentY }, 1100) : (me ? around(me.startingPosition, 1600) : null);
+        if (h && alive(h)) ringUnits.push(h);
+        break;
+      }
+      case 'army': {
+        rect = (me ? bboxOf((me.units || []).filter(isArmy)) : null) || baseRectFor(me);
+        if (hlIds.length) typePlayer = me;
+        break;
+      }
+      case 'expansion': {
+        let best = null, bestD = -1;
+        if (me) {
+          const sp = me.startingPosition || null;
+          (me.units || []).forEach(u => {
+            if (!isBldg(u)) return;
+            if (hlIds.length && hlIds.indexOf(u.itemId) === -1) return;
+            const d = sp ? Math.hypot(u.currentX - sp.x, u.currentY - sp.y) : 0;
+            if (d > bestD) { bestD = d; best = u; }
+          });
+        }
+        if (best) { rect = around({ x: best.currentX, y: best.currentY }, 1700); ringUnits.push(best); }
+        else rect = me ? around(me.startingPosition, 1700) : null;
+        break;
+      }
+      case 'compare': {
+        const a = (me ? bboxOf((me.units || []).filter(isArmy)) : null) || baseRectFor(me);
+        const b = them ? ((bboxOf((them.units || []).filter(isArmy))) || baseRectFor(them)) : null;
+        rect = (a && b)
+          ? { minX: Math.min(a.minX, b.minX), maxX: Math.max(a.maxX, b.maxX), minY: Math.min(a.minY, b.minY), maxY: Math.max(a.maxY, b.maxY) }
+          : (a || b);
+        break;
+      }
+      case 'base': {
+        rect = baseRectFor(me);
+        if (hlIds.length) typePlayer = me;
+        break;
+      }
+      case 'map':
+      default: {
+        const ve = this.gameScaler.viewExtent;
+        rect = { minX: Math.min(ve.x[0], ve.x[1]), maxX: Math.max(ve.x[0], ve.x[1]), minY: Math.min(ve.y[0], ve.y[1]), maxY: Math.max(ve.y[0], ve.y[1]) };
+        break;
+      }
+    }
+
+    this._guideHighlight = (ringUnits.length || (typePlayer && hlIds.length))
+      ? { units: ringUnits.slice(), typeIds: hlIds.slice(), typePlayer, color: (me && me.playerColor) || '#6fc18a' }
+      : null;
+    this._guideHighlightStartTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+
+    // For the hero step, hand the camera to BroadcastCamera's FOLLOW_HERO mode
+    // so it actually *tracks* the hero as the replay plays the creeping out;
+    // every other kind frames a (mostly static) world rect and the broadcast
+    // camera stays out of it (FREE).
+    const bc = this.broadcastCamera;
+    if (f.kind === 'hero' && bc && typeof CameraMode !== 'undefined' && me) {
+      const idx = (this.players || []).indexOf(me);
+      if (idx >= 0) { bc.setMode(CameraMode.FOLLOW_HERO, idx); return; }
+    }
+    if (bc && typeof CameraMode !== 'undefined' && bc.mode !== CameraMode.FREE) bc.setMode(CameraMode.FREE);
+    if (rect) this._guideZoomToRect(rect);
+  }
+
+  // ── Guided creep tour (the "XP race" step) ────────────────────────────
+  // Build the camp tour from the parsed map data: the camps `player`'s team
+  // cleared with the hero present, in per-team order, up to the one that took
+  // the hero to level 3. Seeks to camp 1, frames + rings it, rolls the tape;
+  // _advanceGuideCreepTour (called each frame) jumps camp→camp as each clears
+  // and parks on a zoom-to-fit summary at the end. Returns false (no data) so
+  // the caller can fall back to following the hero.
+  _setupGuideCreepTour (player) {
+    this._guideCreepTour = null;
+    const md = this.mapData;
+    const ngObj = md && md.world && md.world.neutralGroups;
+    const pid = player && player.playerId;
+    const pinfo = (md && md.players && pid != null) ? md.players[String(pid)] : null;
+    const teamId = pinfo ? pinfo.teamId : null;
+    if (!ngObj || teamId == null) return false;
+
+    // hero lvl-3 time (the followed player's first hero), from the event stream
+    const es = (player && player.eventStream) || [];
+    let heroId = null;
+    for (const e of es) { if (e && e.key === 'addUnit' && e.unit && e.unit.isHero) { heroId = e.unit.itemId; break; } }
+    let heroL3 = Infinity;
+    for (const e of es) {
+      if (e && e.key === 'HeroLevel' && e.unit && (heroId == null || e.unit.itemId === heroId)) {
+        const nl = Number(e.newLevel != null ? e.newLevel : e.level) || 0;
+        if (nl >= 3 && e.gameTime < heroL3) heroL3 = e.gameTime;
+      }
+    }
+
+    const camps = [];
+    Object.keys(ngObj).forEach(k => {
+      const g = ngObj[k];
+      if (!g || !g.bounds) return;
+      if (!g.teamOrders || g.teamOrders[teamId] == null) return;            // this team got no order here (didn't take it)
+      if (g.claimOwnerId == null || Number(g.claimOwnerId) !== Number(teamId)) return;   // a different team (or nobody) actually cleared it
+      const claim = g.claimers && g.claimers[teamId];
+      const pclaim = claim && claim.players && claim.players[String(pid)];
+      const hadHero = pclaim && Array.isArray(pclaim.units) && pclaim.units.some(u => u && u.isHero);
+      if (!hadHero) return;                                                 // the hero wasn't here — not "a camp the hero creeped"
+      const start = Number(g.firstInteractionTime) || Number(g.claimTime) || 0;
+      if (heroL3 !== Infinity && start >= heroL3) return;                   // it started after the hero hit lvl 3 — beyond "to level 3"
+      const b = g.bounds;
+      const wx = (b.minX + b.maxX) / 2, wy = (b.minY + b.maxY) / 2;
+      const rWorld = Math.max(220, Math.hypot(b.maxX - b.minX, b.maxY - b.minY) / 2 + 130);
+      const big = (Array.isArray(g.units) && g.units[0] && g.units[0].displayName) || null;
+      const label = big ? (big.charAt(0).toUpperCase() + big.slice(1) + ' camp') : 'Creep camp';
+      const iconId = (Array.isArray(g.units) && g.units[0] && typeof g.units[0].itemId === 'string') ? g.units[0].itemId : null;
+      const clear = Number(g.claimTime) || (start + 18000);
+      camps.push({
+        wx, wy, rWorld,
+        startMs: Math.max(0, Math.round(start)), clearMs: Math.max(0, Math.round(Math.max(clear, start + 1000))),
+        label, levelStr: g.totalLevel ? ('lvl ' + g.totalLevel) : '', iconId,
+        order: Number(g.teamOrders[teamId]) || (camps.length + 1),
+        boundsRect: { minX: wx - rWorld, maxX: wx + rWorld, minY: wy - rWorld, maxY: wy + rWorld }
+      });
+    });
+    if (!camps.length) return false;
+    camps.sort((a, b) => a.order - b.order);   // the canonical clear order assignCampOrder() gave the team
+    if (camps.length > 12) camps.length = 12;
+
+    let mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
+    camps.forEach(c => { if (c.wx - c.rWorld < mnX) mnX = c.wx - c.rWorld; if (c.wx + c.rWorld > mxX) mxX = c.wx + c.rWorld; if (c.wy - c.rWorld < mnY) mnY = c.wy - c.rWorld; if (c.wy + c.rWorld > mxY) mxY = c.wy + c.rWorld; });
+    this._guideCreepTour = { camps, idx: 0, summaryShown: false, allRect: { minX: mnX, maxX: mxX, minY: mnY, maxY: mxY } };
+    if (this.viewOptions && this._guidePrevCreepRoute == null) this._guidePrevCreepRoute = !!this.viewOptions.displayCreepRoute;
+
+    // jump to camp 1, frame + ring it, roll the tape
+    const bc = this.broadcastCamera;
+    if (bc && typeof CameraMode !== 'undefined' && bc.mode !== CameraMode.FREE) bc.setMode(CameraMode.FREE);
+    this._guidePlayUntil = null;   // the tour controller decides when playback stops, not the window mechanism
+    const c0 = camps[0];
+    this.seekToGameTime(Math.max(0, c0.startMs - 800));   // start just before the hero engages camp 1
+    this._guideZoomToRect(c0.boundsRect);
+    this._guideHighlight = { worldPoints: [{ wx: c0.wx, wy: c0.wy, rWorld: c0.rWorld }], color: (player && player.playerColor) || '#6fc18a' };
+    const tNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    this._guideHighlightStartTime = tNow;
+    this._guideCreepStepShownAt = tNow;
+    return true;
+  }
+
+  // Called every frame in guideMode while a creep tour is active: play each camp
+  // out, then freeze on it and hold a minimum on-screen beat before cutting to
+  // the next one (no walk shown) / park on the zoom-to-fit summary at the end.
+  _advanceGuideCreepTour () {
+    const MIN_CAMP_DWELL_MS = 3000;   // keep each camp on screen at least this long (real time) so the hops aren't a blur
+    const tour = this._guideCreepTour;
+    if (!tour || tour.summaryShown) return;
+    const cur = tour.camps[tour.idx];
+    if (!cur) return;
+    // Still playing this camp out (in game time)? — let it run.
+    if (this.gameTime < cur.clearMs + 1500) return;
+    // Camp's cleared: freeze on it so we never show the hero walking off, and
+    // hold for at least MIN_CAMP_DWELL real seconds — a camp can die in two
+    // game-seconds, which at playback speed is a blink. (pause() is safe here:
+    // _advanceGuideCreepTour runs inside render()/mainLoop, which re-arms the
+    // RAF on its own; calling play()/startRenderLoop() from here would double it,
+    // so the un-freeze below just flips state directly.)
+    if (this.state !== ScrubStates.paused) this.pause();
+    const nowMs = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    if (nowMs - (this._guideCreepStepShownAt || 0) < MIN_CAMP_DWELL_MS) return;
+
+    tour.idx++;
+    const next = tour.camps[tour.idx];
+    if (next) {
+      this.seekToGameTime(Math.max(this.gameTime, next.startMs - 600));   // hop forward to the next camp — skip the walk
+      this._guideZoomToRect(next.boundsRect);
+      this._guideHighlight = { worldPoints: [{ wx: next.wx, wy: next.wy, rWorld: next.rWorld }], color: (this.guideFollowedPlayer && this.guideFollowedPlayer.playerColor) || '#6fc18a' };
+      this._guideHighlightStartTime = nowMs;
+      this._guideCreepStepShownAt = nowMs;
+      this._updateGuideCreepList(tour.idx);
+      // resume playback so the next camp plays out (flip state directly — see note above)
+      this.state = ScrubStates.playing;
+      if (this.scrubber) this.scrubber.loadSvg(`#${this.scrubber.wrapperId}-play`, 'pause-icon');
+    } else {
+      // all camps done — the summary: zoom to fit them all + show the route lines
+      tour.summaryShown = true;
+      this.pause();
+      if (this.viewOptions) this.viewOptions.displayCreepRoute = true;
+      this._guideHighlight = null;                            // the route badges + lines carry the summary
+      this._guideZoomToRect(tour.allRect);
+      this._updateGuideCreepList(tour.idx);                   // idx === camps.length → all done, none active
+      this._renderGuideHud();                                 // re-render the body to swap in the summary line
+    }
+  }
+
+  // Toggle the .gh-sl-active / .gh-sl-done classes on the camp list rows for an
+  // explicit active index (the creep tour drives this directly rather than from
+  // a per-row time, since "all done" isn't expressible as just a timestamp).
+  _updateGuideCreepList (activeIdx) {
+    const els = this._guideStepListEls;
+    if (!els || !els.length) return;
+    els.forEach((el, i) => {
+      el.classList.toggle('gh-sl-done', i < activeIdx);
+      el.classList.toggle('gh-sl-active', i === activeIdx);
+    });
+  }
+
+  // The camp list shown in the HUD body for the creep-tour step — same .gh-sl-*
+  // chrome as the opening's build list, one row per camp (order = the number
+  // badge, the camp name, its total level, the time it was cleared).
+  _guideCampList (camps) {
+    if (!Array.isArray(camps) || !camps.length) return '';
+    const fmt = (ms) => (typeof formatGameTime === 'function')
+      ? formatGameTime(ms)
+      : (() => { const s = Math.max(0, Math.round((Number(ms) || 0) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); })();
+    const items = camps.map((c, idx) => {
+      const safeId = (c && typeof c.iconId === 'string' && /^[A-Za-z0-9_\-]{1,32}$/.test(c.iconId)) ? c.iconId : null;
+      const ico = safeId
+        ? `<img class="gh-sl-icon" src="/assets/wc3icons/${safeId}.jpg" alt="" onerror="this.style.visibility='hidden'" />`
+        : `<span class="gh-sl-icon gh-sl-icon-empty" aria-hidden="true"></span>`;
+      const lvl = (c && c.levelStr) ? `<span class="gh-sl-x">${this._guideText(c.levelStr)}</span>` : '';
+      return `<li class="gh-sl-item gh-sl-creep">`
+        + `<span class="gh-sl-n">${idx + 1}</span>`
+        + ico
+        + `<span class="gh-sl-label">${this._guideText((c && c.label) || 'Camp')}${lvl}</span>`
+        + `<span class="gh-sl-time">${this._guideEsc(fmt(c && c.clearMs))}</span>`
+        + `</li>`;
+    }).join('');
+    return `<ol class="gh-steplist gh-steplist-camps">${items}</ol>`;
+  }
+
+  // Re-apply the current walkthrough step's camera framing — used after a window
+  // resize / fullscreen toggle, which reset the d3 zoom to identity (its
+  // internal state goes stale when the canvas changes size). Without this the
+  // camera just sits at full-map zoom for the rest of the walkthrough.
+  _reapplyGuideFocus () {
+    if (!this.guideMode || !this.guide || this.mobileMode) return;
+    // Mid-creep-tour: don't rebuild the tour (that would restart it from camp
+    // 1) — just re-frame the camp / summary we're on.
+    if (this._guideCreepTour) {
+      const t = this._guideCreepTour;
+      const r = t.summaryShown ? t.allRect : (t.camps[t.idx] && t.camps[t.idx].boundsRect);
+      if (r) this._guideZoomToRect(r);
+      return;
+    }
+    if (this.guideStepIdx < 0) { this._guideApplyFocus({ kind: 'map', player: 'followed', highlight: null }); return; }
+    const step = this.guide.steps[this.guideStepIdx];
+    if (step) this._guideApplyFocus(step.focus);
+  }
+
+  // Frame a world-space rect: pad it, clamp to the playable extent, fit it into
+  // the viewport at a sane zoom, and drive the d3 zoom there — the same
+  // scaleTo + translateTo pair BroadcastCamera.update uses (it's in FREE mode
+  // during the walkthrough, so it won't fight back). The walkthrough HUD sits
+  // over the build-order panel, not the map, so the framed point is centred.
+  // Padding is intentionally tight — this is "look at THIS", not a wide overview.
+  _guideZoomToRect (rect) {
+    const gs = this.gameScaler;
+    if (!gs || !gs.viewExtent || !gs.xScale || !this.zoom || !this.zoomContainer) return;
+    let { minX, maxX, minY, maxY } = rect;
+    const ex = Math.max(0, maxX - minX), ey = Math.max(0, maxY - minY);
+    // Same padding ratios BroadcastCamera uses for its tight cluster framing;
+    // the difference is the zoom cap below (9× vs the auto-camera's 4×) — a
+    // single base / hero / building should fill the screen, not float in it.
+    const padX = Math.max(ex * 0.12, 280);
+    const padTop = Math.max(ey * 0.12, 280);   // WC3 +Y = north = top of screen
+    const padBot = Math.max(ey * 0.20, 420);   // a touch more south padding for the camera tilt
+    minX -= padX; maxX += padX; maxY += padTop; minY -= padBot;
+    const vx0 = Math.min(gs.viewExtent.x[0], gs.viewExtent.x[1]), vx1 = Math.max(gs.viewExtent.x[0], gs.viewExtent.x[1]);
+    const vy0 = Math.min(gs.viewExtent.y[0], gs.viewExtent.y[1]), vy1 = Math.max(gs.viewExtent.y[0], gs.viewExtent.y[1]);
+    minX = Math.max(minX, vx0); maxX = Math.min(maxX, vx1);
+    minY = Math.max(minY, vy0); maxY = Math.min(maxY, vy1);
+    const focusX = (minX + maxX) / 2, focusY = (minY + maxY) / 2;
+    const extentX = Math.max(1, maxX - minX), extentY = Math.max(1, maxY - minY);
+    const viewW = Math.max(1, vx1 - vx0), viewH = Math.max(1, vy1 - vy0);
+    const k = Math.max(1.0, Math.min(9.0, Math.min(viewW / extentX, viewH / extentY)));
+    const ds = this.displayScale || 1;
+    const cssPx = (gs.xScale(focusX) + gs.middleX) * ds;
+    const cssPy = (gs.yScale(focusY) + gs.middleY) * ds;
+    if (!Number.isFinite(cssPx) || !Number.isFinite(cssPy) || !Number.isFinite(k)) return;
+    const bc = this.broadcastCamera;
+    try {
+      if (bc) bc._isProgrammatic = true;
+      this.zoomContainer.call(this.zoom.scaleTo, k);
+      this.zoomContainer.call(this.zoom.translateTo, cssPx, cssPy);
+    } catch (e) { /* d3 not ready — ignore */ }
+    if (bc) bc._isProgrammatic = false;
+  }
+
+  // "Look HERE" overlay for the current step's emphasised units/buildings.
+  // Deliberately loud — the focal point must be unmissable: a soft spotlight
+  // (dim the rest of the map, punch a bright hole at each ring) plus a thick
+  // glowing gold ring with a dark outline + white inner edge (reads on any
+  // terrain) and an expanding "ping" ripple. Targets whose rings would overlap
+  // (e.g. two adjacent buildings) are merged into ONE ring around the group, so
+  // it never reads as a tangle of overlapping circles. Drawn on the (top)
+  // utility canvas in screen space, using the same projectXY + middleX/middleY
+  // mapping the unit icons use so the rings sit on them. Called from render()
+  // while guideMode is active.
+  _renderGuideHighlights (ctx, transform) {
+    const hl = this._guideHighlight;
+    if (!hl || !ctx || !this.gameScaler) return;
+    const gs = this.gameScaler;
+    const gt = this.gameTime || 0;
+    const k = (transform && transform.k) || 1;
+
+    const targets = [];
+    (hl.units || []).forEach(u => { if (u) targets.push(u); });
+    if (hl.typePlayer && hl.typeIds && hl.typeIds.length) {
+      const ids = hl.typeIds;
+      (hl.typePlayer.units || []).forEach(u => {
+        if (!u || ids.indexOf(u.itemId) === -1) return;
+        if (!Number.isFinite(u.currentX) || !Number.isFinite(u.currentY)) return;
+        if ((u.readyTime || u.spawnTime || u.trainedTime || 0) > gt) return;
+        if (u.destroyedAt && u.destroyedAt <= gt) return;
+        targets.push(u);
+      });
+    }
+
+    const scale = Math.max(0.8, Math.min(2.4, k * 0.85));
+    const pts = [];
+    for (const u of targets) {
+      if (!Number.isFinite(u.currentX) || !Number.isFinite(u.currentY)) continue;
+      let p; try { p = gs.projectXY(u.currentX, u.currentY); } catch (e) { continue; }
+      if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
+      pts.push({ x: p.x + gs.middleX, y: p.y + gs.middleY, r: (u.isBuilding ? 36 : 22) * scale });
+    }
+    // World-space ring targets (creep camps): a {wx, wy, rWorld} → project the
+    // centre and a point rWorld away to get the screen radius at this zoom.
+    (hl.worldPoints || []).forEach(wp => {
+      if (!wp || !Number.isFinite(wp.wx) || !Number.isFinite(wp.wy)) return;
+      let p, pe; try { p = gs.projectXY(wp.wx, wp.wy); pe = gs.projectXY(wp.wx + (Number(wp.rWorld) || 300), wp.wy); } catch (e) { return; }
+      if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+      const rPx = (pe && Number.isFinite(pe.x)) ? Math.hypot(pe.x - p.x, pe.y - p.y) : 70;
+      pts.push({ x: p.x + gs.middleX, y: p.y + gs.middleY, r: Math.max(44, Math.min(240, rPx)) });
+    });
+    if (!pts.length) return;
+
+    // ── merge points whose rings overlap into clusters, then one bounding
+    //    circle per cluster (transitive union-find: A near B, B near C → all
+    //    one ring). A lone point stays its own ring.
+    const N = pts.length;
+    const parent = pts.map((_, i) => i);
+    const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+      if (Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < (pts[i].r + pts[j].r) * 1.2) {
+        const a = find(i), b = find(j); if (a !== b) parent[a] = b;
+      }
+    }
+    const groups = new Map();
+    for (let i = 0; i < N; i++) { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(pts[i]); }
+    const rings = [];
+    for (const members of groups.values()) {
+      if (members.length === 1) { rings.push({ x: members[0].x, y: members[0].y, r: members[0].r }); continue; }
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const m of members) { if (m.x < minX) minX = m.x; if (m.x > maxX) maxX = m.x; if (m.y < minY) minY = m.y; if (m.y > maxY) maxY = m.y; }
+      const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+      let r = 0; for (const m of members) r = Math.max(r, Math.hypot(m.x - cx, m.y - cy) + m.r);
+      rings.push({ x: cx, y: cy, r: r * 1.05 });   // hair of margin so it clears the buildings
+    }
+
+    const now    = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+    const pulse  = 0.5 + 0.5 * Math.sin(now / 300);          // 0..1, gentle breathing (always on)
+    const ripple = (now % 1300) / 1300;                       // 0..1, loops
+    // `loud` 1 at step start → 0 after ~1.7s: an attention grab that fades down
+    // into a calm, unobtrusive highlight. Everything that should be loud-then-
+    // quiet scales by it (spotlight dim, glow, ring weight, ping); the ring
+    // itself + its outline/inner-edge stay constant so it never disappears.
+    const age = now - (this._guideHighlightStartTime || now);
+    const loud = Math.max(0, 1 - age / 1700);
+    const cw = ctx.canvas ? ctx.canvas.width : 0;
+    const ch = ctx.canvas ? ctx.canvas.height : 0;
+    const GOLD = '#ffce3a';
+
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // 1. Spotlight — dim the whole map, then punch a soft bright hole at each
+    //    ring (destination-out uses source alpha to "erase" the dim layer).
+    //    The dim is heavy at first and settles to a barely-there ~0.13.
+    const dimA = 0.13 + 0.31 * loud;
+    if (cw > 0 && ch > 0 && dimA > 0.02) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(5,7,12,' + dimA.toFixed(3) + ')';
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.globalCompositeOperation = 'destination-out';
+      for (const ring of rings) {
+        const r0 = ring.r * 1.25, r1 = ring.r * 2.4;
+        const g = ctx.createRadialGradient(ring.x, ring.y, r0, ring.x, ring.y, r1);
+        g.addColorStop(0, 'rgba(0,0,0,1)');
+        g.addColorStop(0.55, 'rgba(0,0,0,0.85)');
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(ring.x, ring.y, r1, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // 2. The marker — drawn over everything (source-over) so it pops on any bg.
+    ctx.lineCap = 'round';
+    const lwBase = Math.max(3, 4.5 * scale);
+    for (const ring of rings) {
+      const r = ring.r + pulse * Math.min(ring.r * 0.13, 9);   // breathing, but a fixed cap so big group rings don't heave
+      const lw = lwBase * (1 + 0.35 * loud);
+      // dark outline so the gold reads even on snow/light terrain
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = lw + 5;
+      ctx.beginPath(); ctx.arc(ring.x, ring.y, r, 0, Math.PI * 2); ctx.stroke();
+      // glowing gold ring — bright halo at first, settles to a soft one
+      ctx.save();
+      ctx.shadowColor = GOLD;
+      ctx.shadowBlur = (6 + 16 * loud) * (0.65 + 0.35 * pulse);
+      ctx.strokeStyle = GOLD;
+      ctx.lineWidth = lw;
+      ctx.globalAlpha = 0.78 + 0.22 * loud;
+      ctx.beginPath(); ctx.arc(ring.x, ring.y, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+      // crisp white inner edge
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = Math.max(1.5, 1.8 * scale);
+      ctx.beginPath(); ctx.arc(ring.x, ring.y, r - lw * 0.5, 0, Math.PI * 2); ctx.stroke();
+      // expanding "ping" ripple — strong at first, a faint pulse afterward
+      ctx.globalAlpha = (0.16 + 0.4 * loud) * (1 - ripple);
+      ctx.strokeStyle = GOLD;
+      ctx.lineWidth = Math.max(2, 3 * scale);
+      ctx.beginPath(); ctx.arc(ring.x, ring.y, r + ripple * r * 1.6, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  // Build the colour-chipped speaker row used for the per-step "action" and
+  // "contrast" lines. The chip is a small dot + the player name in their team
+  // colour; the text is glossary-linkified plain copy. Returns an HTML string
+  // (caller drops it into the body container).
+  _guideRow (variant, color, name, text) {
+    const linkify = (txt) => (typeof Glossary !== 'undefined' && Glossary.linkifyText) ? Glossary.linkifyText(txt || '') : this._guideEsc(txt || '');
+    const safeColor = (typeof color === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(color)) ? color : '#888';
+    const safeName = this._guideEsc(name || '');
+    return `<div class="gh-row gh-row-${variant}">`
+      + `<span class="gh-row-chip" style="--gh-chip-color:${safeColor}"><span class="gh-row-dot"></span><span class="gh-row-name">${safeName}</span></span>`
+      + `<span class="gh-row-text">${linkify(text)}</span>`
+      + `</div>`;
+  }
+
+  // The step's "do this, in order" list (e.g. the opening sequence) — rendered
+  // big and scannable: a numbered <ol>, each item = number badge + unit/building
+  // icon + name (+ "×N" for a run of the same worker) + the game time it
+  // landed. This is the focal block of the step. data-guide-time on each row
+  // lets _updateGuideStepList check rows off as the replay reaches them.
+  _guideStepList (list) {
+    if (!Array.isArray(list) || !list.length) return '';
+    const fmt = (ms) => (typeof formatGameTime === 'function')
+      ? formatGameTime(ms)
+      : (() => { const s = Math.max(0, Math.round((Number(ms) || 0) / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); })();
+    const items = list.map((it, idx) => {
+      const safeId = (it && typeof it.iconId === 'string' && /^[A-Za-z0-9_\-]{1,32}$/.test(it.iconId)) ? it.iconId : null;
+      const ico = safeId
+        ? `<img class="gh-sl-icon" src="/assets/wc3icons/${safeId}.jpg" alt="" onerror="this.style.visibility='hidden'" />`
+        : `<span class="gh-sl-icon gh-sl-icon-empty" aria-hidden="true"></span>`;
+      const kind = (it && (it.kind === 'building' || it.kind === 'hero' || it.kind === 'worker')) ? it.kind : 'unit';
+      const tMs = Math.max(0, Math.round(Number(it && it.timeMs) || 0));
+      const n = (it && it.count > 1) ? `<span class="gh-sl-x">×${it.count}</span>` : '';
+      return `<li class="gh-sl-item gh-sl-${kind}" data-guide-time="${tMs}">`
+        + `<span class="gh-sl-n">${idx + 1}</span>`
+        + ico
+        + `<span class="gh-sl-label">${this._guideText((it && it.label) || '')}${n}</span>`
+        + `<span class="gh-sl-time">${this._guideEsc(fmt(tMs))}</span>`
+        + `</li>`;
+    }).join('');
+    return `<ol class="gh-steplist">${items}</ol>`;
+  }
+
+  // Walk the build-sequence list (the .gh-sl-item rows in #guide-hud-body) as
+  // the replay plays: the row whose time the playhead has just passed is the
+  // "active" one (highlight box); earlier rows are "done" (a slow grey/✓
+  // fade — see the CSS transitions). Cheap — caches the rows and only touches
+  // the DOM when the active index changes.
+  _updateGuideStepList (gameTime) {
+    const els = this._guideStepListEls;
+    if (!els || !els.length) return;
+    const gt = Number(gameTime) || 0;
+    let activeIdx = -1;
+    els.forEach((el, i) => { if ((Number(el.dataset.guideTime) || 0) <= gt) activeIdx = i; });
+    if (activeIdx === this._guideStepListIdx) return;
+    this._guideStepListIdx = activeIdx;
+    els.forEach((el, i) => {
+      el.classList.toggle('gh-sl-done', i < activeIdx);
+      el.classList.toggle('gh-sl-active', i === activeIdx);
+    });
+  }
+
+  // The walkthrough HUD is a *designed step card*, not a paragraph blob:
+  //   eyebrow → big game-time + "step n/total" → step title with optional icon
+  //   → structured body (us-row, opp-row, why-callout, takeaway-block)
+  //   → back/dots/next
+  // The intro screen uses the same chrome but drops the rows in favour of a
+  // single .gh-intro block (synthesized "what this build is" copy). All
+  // replay-derived strings go through linkify (escape + glossary wrap).
+  _renderGuideHud () {
+    if (!this.guideMode || !this.guide) return;
+    const g = this.guide, n = g.steps.length, i = this.guideStepIdx;
+    const linkify = (txt) => (typeof Glossary !== 'undefined' && Glossary.linkifyText) ? Glossary.linkifyText(txt || '') : this._guideEsc(txt || '');
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    const eyebrow = document.getElementById('guide-hud-eyebrow');
+    const body = document.getElementById('guide-hud-body');
+    const titleText = document.getElementById('guide-hud-step-title-text');
+    const iconImg = document.getElementById('guide-hud-step-icon');
+    const dots = document.getElementById('guide-hud-dots');
+    const prev = document.getElementById('guide-prev-btn');
+    const next = document.getElementById('guide-next-btn');
+
+    // Eyebrow uses colored dots so the "me vs opp" framing is visible at a
+    // glance — same chip vocabulary as the per-step speaker rows below.
+    if (eyebrow) {
+      const fc = (typeof g.followedColor === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(g.followedColor)) ? g.followedColor : '#6fc18a';
+      const oc = (typeof g.oppColor === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(g.oppColor)) ? g.oppColor : '#9ca3b8';
+      eyebrow.innerHTML = `<span class="gh-eyebrow-label">Walkthrough</span>`
+        + `<span class="gh-eyebrow-vs"><span class="gh-eyebrow-dot" style="background:${fc}"></span>${this._guideEsc(g.followedName)}</span>`
+        + `<span class="gh-eyebrow-sep">vs</span>`
+        + `<span class="gh-eyebrow-vs"><span class="gh-eyebrow-dot" style="background:${oc}"></span>${this._guideEsc(g.oppName)}</span>`;
+    }
+
+    // ── Intro screen: the build name + a one-line "what it is" + a contents
+    //    list of the steps (so the first screen advertises what the walkthrough
+    //    actually covers), then a quiet "how it works" footnote. ──
+    if (i < 0) {
+      set('guide-hud-time', '');
+      set('guide-hud-progress', `Intro · ${n} step${n === 1 ? '' : 's'}`);
+      if (titleText) titleText.textContent = this.guideBuildName || g.buildTitle || 'Walkthrough';
+      if (iconImg) { iconImg.hidden = true; iconImg.removeAttribute('src'); }
+      if (body) {
+        // One line per step-type: what that step shows you.
+        const TOPIC = {
+          opening:      'the first build moves, in the order to do them',
+          hero:         'which creep camps level the hero, and the order to take them',
+          tier2:        'when to start Tier 2, and how the timing compared',
+          tier3:        'Tier 3, and whether going for it that early paid off',
+          expansion:    'taking a second base, and how to play safe around it',
+          oppExpansion: 'what to do when the opponent expands first',
+          upgrade:      'the weapon or armor upgrade that is easy to forget',
+          counter:      'the unit that hard-counters a caster-heavy army',
+          siege:        'siege units, and keeping them alive while they work',
+          midgame:      'a supply check on where the two armies stand',
+          final:        'the final army composition, and the one thing to take away'
+        };
+        const seenKeys = new Set();
+        const tocRows = g.steps
+          .filter(s => { if (seenKeys.has(s.key)) return false; seenKeys.add(s.key); return true; })
+          .map((s, idx) => {
+            const safeId = (typeof s.iconId === 'string' && /^[A-Za-z0-9_\-]{1,32}$/.test(s.iconId)) ? s.iconId : null;
+            const ico = safeId
+              ? `<img class="gh-toc-icon" src="/assets/wc3icons/${safeId}.jpg" alt="" onerror="this.classList.add('gh-toc-icon-empty');this.removeAttribute('src')" />`
+              : `<span class="gh-toc-icon gh-toc-icon-empty" aria-hidden="true"></span>`;
+            // TOC titles + subtitles are our own copy (the title from ReplayGuide.js's
+            // hardcoded step.title, the sub from the TOPIC table just above) — use the
+            // non-truncating escaper so they aren't chopped at 32 chars with a "…".
+            const sub = TOPIC[s.key] ? `<span class="gh-toc-sub">${this._guideText(TOPIC[s.key])}</span>` : '';
+            return `<li class="gh-toc-item"><span class="gh-toc-n">${idx + 1}</span>${ico}`
+              + `<span class="gh-toc-text"><span class="gh-toc-title">${this._guideText(s.title || '')}</span>${sub}</span></li>`;
+          }).join('');
+        body.innerHTML = `<div class="gh-intro">${linkify(g.intro || '')}</div>`
+          + `<div class="gh-toc"><span class="gh-toc-label">Walkthrough Step by Step</span><ol class="gh-toc-list">${tocRows}</ol></div>`
+          + `<p class="gh-howto">Hit <strong>Next</strong> to begin. Each step jumps the replay to that moment and highlights the matching rows in the build order panel. You can exit and watch on your own at any time.</p>`;
+      }
+      this._guideStepListEls = null; this._guideStepListIdx = -2;
+      if (dots) dots.innerHTML = '<span class="gh-dot gh-dot-active"></span>' + g.steps.map(() => '<span class="gh-dot"></span>').join('');
+      if (prev) prev.disabled = true;
+      if (next) next.textContent = 'Start the walkthrough →';
+      return;
+    }
+
+    // ── Per-step screen ──
+    const step = g.steps[i];
+    set('guide-hud-time', (typeof formatGameTime === 'function') ? formatGameTime(step.gameTimeMs) : '');
+    set('guide-hud-progress', `Step ${i + 1} of ${n}`);
+    if (titleText) titleText.textContent = step.title || '';
+
+    // Icon is optional. Whitelist the asset path so a stray itemId can't
+    // smuggle anything past the static /assets/wc3icons/ namespace. If the
+    // file 404s we just hide the <img> (no broken-image glyph).
+    if (iconImg) {
+      const safeId = (typeof step.iconId === 'string' && /^[A-Za-z0-9_\-]{1,32}$/.test(step.iconId)) ? step.iconId : null;
+      if (safeId) {
+        iconImg.hidden = false;
+        iconImg.onerror = () => { iconImg.hidden = true; iconImg.onerror = null; };
+        iconImg.src = `/assets/wc3icons/${safeId}.jpg`;
+      } else {
+        iconImg.hidden = true;
+        iconImg.removeAttribute('src');
+      }
+    }
+
+    const isCreepTour = !!(step.focus && step.focus.kind === 'creepTour' && this._guideCreepTour);
+    if (body) {
+      const parts = [];
+      // "Me" speaker row — followed player's colour + their action.
+      parts.push(this._guideRow('me', g.followedColor, g.followedName, step.action || ''));
+      if (isCreepTour) {
+        // The creep tour — its camp list IS the focal block; once the tour's
+        // played through, a one-line "here's the route" summary above the why.
+        const tour = this._guideCreepTour;
+        parts.push(this._guideCampList(tour.camps));
+        if (tour.summaryShown) {
+          const names = tour.camps.map((c, i) => (i + 1) + '. ' + c.label.replace(/ camp$/, '')).join('  →  ');
+          parts.push(`<div class="gh-why"><span class="gh-why-label">The route to level 3</span>`
+            + `<span class="gh-why-text">${this._guideText(names)}. The numbers and the line on the map trace this route. Aim for roughly these camps, in this order, every game.</span></div>`);
+        }
+      } else if (step.list && step.list.length) {
+        // Ordered breakdown (e.g. the opening sequence) — a big numbered list
+        // with icons + timings, easy to glance + drill.
+        parts.push(this._guideStepList(step.list));
+      }
+      // "Opp" speaker row only when there's a contrast sentence to show.
+      if (step.contrast) parts.push(this._guideRow('opp', g.oppColor, g.oppName, step.contrast));
+      // "Why it matters" — green-tinted callout. Pulls from PRINCIPLES.
+      if (step.why) {
+        parts.push(`<div class="gh-why">`
+          + `<span class="gh-why-label">Why it matters</span>`
+          + `<span class="gh-why-text">${linkify(step.why)}</span>`
+          + `</div>`);
+      }
+      // "Try in your games" — gold-tinted takeaway, the part the learner
+      // actually carries out of the step.
+      if (step.takeaway) {
+        parts.push(`<div class="gh-takeaway">`
+          + `<span class="gh-takeaway-label">Try in your games</span>`
+          + `<span class="gh-takeaway-text">${linkify(step.takeaway)}</span>`
+          + `</div>`);
+      }
+      body.innerHTML = parts.join('');
+      // Cache the list rows (build sequence OR camp tour) so the per-frame
+      // updater can check them off; seed the initial state now (before the next
+      // paint, so it doesn't fade in from "all upcoming").
+      if (isCreepTour) {
+        this._guideStepListEls = body.querySelectorAll('.gh-sl-item');
+        this._updateGuideCreepList(this._guideCreepTour.idx);
+      } else if (step.list && step.list.length) {
+        this._guideStepListEls = body.querySelectorAll('.gh-sl-item[data-guide-time]');
+        this._guideStepListIdx = -2;
+        this._updateGuideStepList(this.gameTime);
+      } else {
+        this._guideStepListEls = null;
+        this._guideStepListIdx = -2;
+      }
+    }
+
+    if (dots) dots.innerHTML = '<span class="gh-dot"></span>' + g.steps.map((s, k) => `<span class="gh-dot${k === i ? ' gh-dot-active' : ''}"></span>`).join('');
+    if (prev) prev.disabled = false; // Back from step 1 returns to the intro
+    if (next) next.textContent = (i === n - 1) ? 'Finish' : 'Next →';
+  }
+
+  _showGuidePlayerPick () {
+    const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
+    if (players.length < 2) return;
+    const opts = document.getElementById('guide-player-pick-opts');
+    if (!opts) { if (players[0]) this.enterGuideMode(players[0]); return; }
+    opts.innerHTML = '';
+    players.forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'guide-player-pick-opt';
+      btn.style.setProperty('--p-color', p.playerColor || '#888');
+      btn.innerHTML = `<span class="gpp-name">${this._guideEsc(PlayerNames.canonical(p.displayName))}</span><span class="gpp-race">${this._guideEsc(this._raceLabel(p.race))}</span>`;
+      btn.addEventListener('click', () => {
+        const m = document.getElementById('guide-player-pick'); if (m) m.hidden = true;
+        this.enterGuideMode(p);
+      });
+      opts.appendChild(btn);
+    });
+    const modal = document.getElementById('guide-player-pick'); if (modal) modal.hidden = false;
+  }
+
+  // ?guide=1 (optionally ?player=N) in the URL → open the guided walkthrough.
+  // Deferred a tick so the rest of the load .then (layout apply, first render)
+  // finishes first. If ?player is missing/unresolvable, enterGuideMode shows
+  // the "whose game?" picker.
+  _maybeAutoEnterGuide () {
+    let params;
+    try { params = new URLSearchParams(window.location.search); } catch (e) { return; }
+    if (!params.get('guide')) return;
+    const p = params.get('player');
+    let who = (p != null && p !== '') ? (/^\d+$/.test(p) ? parseInt(p, 10) : p) : undefined;
+    // Beginner mode owns the "pick a player" step in the BO panel — if no
+    // player is specified and the user hasn't picked yet, don't pop the
+    // walkthrough's own picker too. The CTA strip will let them launch the
+    // walkthrough manually once they've picked.
+    if (who == null && this.boLearnerMode && !this.beginnerPickedSlot) return;
+    if (who == null && this.beginnerPickedSlot != null) who = this.beginnerPickedSlot;
+    setTimeout(() => { try { this.enterGuideMode(who); } catch (e) {} }, 0);
+  }
+
+  // Beginner mode is a guided experience — once a player has been picked,
+  // auto-open the walkthrough so the user lands on the lesson, not the wall
+  // of build-order rows. Runs at most once per page load (flag is on the
+  // viewer). Skips if the walkthrough is already open / opened earlier.
+  _maybeAutoOpenWalkthrough () {
+    if (!this.boLearnerMode) return;
+    if (this.guideMode || this._guideOpenedOnce) return;
+    const me = this._getBeginnerPickedPlayer();
+    if (!me) return;
+    setTimeout(() => { try { if (!this.guideMode && !this._guideOpenedOnce) this.enterGuideMode(me); } catch (e) {} }, 60);
+  }
+
   scaleLiveModeCanvas () {
     if (this.mobileMode) return;
     if (!this.gameScaler) return;
@@ -1214,6 +2316,13 @@ const Wc3vViewer = class {
       this.displayScale = scale;
 
       if (this.minimapPip) this.minimapPip.resize();
+
+      // The canvas just rescaled, so displayScale changed. If a walkthrough is
+      // open, its camera framing was computed against the old scale (and the
+      // open transition often switches layout, which lands here a frame later) —
+      // re-assert the framing now that displayScale is current. This is the fix
+      // for the "sometimes the first slide zooms in, sometimes it doesn't" race.
+      if (this.guideMode && !this.mobileMode && this.gameLoaded) this._reapplyGuideFocus();
 
       if (this.gameLoaded) {
         this.requestRender();
@@ -1374,7 +2483,10 @@ const Wc3vViewer = class {
       this.boRenderer = new BuildOrderRenderer(this);
       this.matchHeader = new MatchHeader(this);
       this.matchSummary.setup();
+      this._loadBeginnerPick();    // restore the "Me" pick (or take it from ?player=) BEFORE the first BO render
       this.setupBuildOrder();
+      this._maybeAutoEnterGuide(); // ?guide=1 deep link → open the walkthrough once the BO panel is up
+      this._maybeAutoOpenWalkthrough(); // beginner-with-pick view: auto-open the walkthrough on landing
 
       if (this.mobileMode) {
         // Skip canvas-bound subsystems entirely. BO renderer + match header
@@ -1580,6 +2692,7 @@ const Wc3vViewer = class {
         tierStream,
         itemStream,
         apmData,
+        buildingAttempts,
         teamId,
         isNeutralPlayer
       } = this.mapData.players[playerId];
@@ -1607,6 +2720,10 @@ const Wc3vViewer = class {
         itemStream,
         apmData
       );
+      // The build-COMMAND log (when each building was ordered, not when
+      // construction started) — ReplayGuide uses it so the opening reads in the
+      // real command order. [{ itemId, displayName, gameTime, x, y, status }]
+      player.buildingAttempts = Array.isArray(buildingAttempts) ? buildingAttempts : null;
 
       this.assignedPlayerColors[playerId] = this.playerColorMap[index];
 
@@ -1722,7 +2839,7 @@ const Wc3vViewer = class {
 
     this.zoomContainer = d3.select("#canvas-group");
 
-    const zoomScaleExtent = [1.0, 6.0];
+    const zoomScaleExtent = [1.0, 9.0];   // 9× max so the walkthrough can frame a single base / hero tightly
 
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)
@@ -1785,6 +2902,10 @@ const Wc3vViewer = class {
     this._initialZoomTransform = initialT;
 
     this.zoomContainer.on('mousemove.camphover', () => {
+      // The guided walkthrough drives the camera and frames things itself —
+      // suppress the creep-camp / building hover tooltips so they don't pop up
+      // (stale-pointer hits when the camera pans/zooms under a still cursor).
+      if (self.guideMode) return;
       const ev = d3.event;
       const campHit = self.gameDisplayBox && self.gameDisplayBox.handleMouse(ev, self.transform);
       if (campHit) {
@@ -1831,6 +2952,9 @@ const Wc3vViewer = class {
       if (self.broadcastCamera && self.broadcastCamera.enabled) {
         self.broadcastCamera._initialized = false;
       }
+      // Walkthrough drives the camera itself — re-frame the current step so
+      // it doesn't get stranded at full-map zoom after a resize.
+      if (self.guideMode && !self.mobileMode) self._reapplyGuideFocus();
       if (self.state !== ScrubStates.stopped) {
         self.requestRender();
       }
@@ -1870,6 +2994,8 @@ const Wc3vViewer = class {
           self.broadcastCamera._initialized = false;
           self.startRenderLoop();
         }
+        // …and re-frame the walkthrough step if one's active.
+        if (self.guideMode && !self.mobileMode) self._reapplyGuideFocus();
       }
     });
   }
@@ -1941,6 +3067,17 @@ const Wc3vViewer = class {
         this.lastFrameDelta -= timeStep;
     }
 
+    // Guided walkthrough: a step plays out from just before the action to the
+    // end of its content window, then parks (the next step rolls the tape
+    // again). Snap cleanly to the window end and pause; the loop keeps running
+    // (guideMode) so the emphasis rings keep pulsing.
+    if (this.guideMode && this._guidePlayUntil != null && this.gameTime >= this._guidePlayUntil) {
+      const t = this._guidePlayUntil;
+      this._guidePlayUntil = null;
+      this.pause();
+      this.seekToGameTime(t);
+    }
+
     // Broadcast camera: drive D3 zoom toward computed target each frame
     if (this.broadcastCamera && this.broadcastCamera.enabled) {
       this.broadcastCamera.update(this.gameTime, this.players);
@@ -1958,8 +3095,9 @@ const Wc3vViewer = class {
       return;
     }
 
-    // If paused and camera has settled, stop the loop to save CPU
-    if (this.state === ScrubStates.paused &&
+    // If paused and camera has settled, stop the loop to save CPU — but keep
+    // it alive during the guided walkthrough so the emphasis rings can pulse.
+    if (this.state === ScrubStates.paused && !this.guideMode &&
         this.broadcastCamera && this.broadcastCamera.settled) {
       return;
     }
@@ -2291,8 +3429,8 @@ const Wc3vViewer = class {
     if (splitPlayers && splitPlayers.length >= 2) {
       const p1Color = splitPlayers[0].teamColor || '#ff0000';
       const p2Color = splitPlayers[1].teamColor || '#0000ff';
-      const p1Name = splitPlayers[0].displayName || 'Player 1';
-      const p2Name = splitPlayers[1].displayName || 'Player 2';
+      const p1Name = PlayerNames.canonical(splitPlayers[0].displayName) || 'Player 1';
+      const p2Name = PlayerNames.canonical(splitPlayers[1].displayName) || 'Player 2';
 
       // Color accent bars at each end of the diagonal
       ctx.lineWidth = 4;
@@ -2448,10 +3586,15 @@ const Wc3vViewer = class {
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
     // Trees deferred to Phase 2 (3D billboard sprites); flat green circles looked out of place on the 3D terrain.
     // this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
-    const hoveredCampUuid = this.gameDisplayBox ? this.gameDisplayBox.hoveredCampUuid : null;
+    // No camp hover-highlight during the guided walkthrough (and keep the
+    // tooltip box hidden every frame in case it was up when the walkthrough opened).
+    const hoveredCampUuid = (!this.guideMode && this.gameDisplayBox) ? this.gameDisplayBox.hoveredCampUuid : null;
     if (!this._campHitBuf) this._campHitBuf = [];
     this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid, this._campHitBuf);
-    if (this.gameDisplayBox) this.gameDisplayBox.setHitData(this._campHitBuf);
+    if (this.gameDisplayBox) {
+      this.gameDisplayBox.setHitData(this._campHitBuf);
+      if (this.guideMode) this.gameDisplayBox.hide();
+    }
     this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
 
     players.forEach(player => {
@@ -2613,6 +3756,15 @@ const Wc3vViewer = class {
     if (viewOptions.displayFloatingText && this.floatingText) {
       this.floatingText.update(players, gameTime);
       this.floatingText.render(playerCtx, transform, gameTime, xScale, yScale);
+    }
+
+    // Guided walkthrough: pulse a ring on the step's emphasised units/buildings
+    // (utility canvas is the top layer, so the rings sit over the unit icons),
+    // and check off the build-sequence list rows as the replay reaches them.
+    if (this.guideMode) {
+      if (this._guideHighlight) this._renderGuideHighlights(utilityCtx, transform);
+      if (this._guideCreepTour) this._advanceGuideCreepTour();   // hop camp→camp / land on the summary
+      else this._updateGuideStepList(this.gameTime);
     }
 
     ctx.restore();

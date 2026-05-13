@@ -115,7 +115,7 @@ const CompareView = class {
     for (const r of this.userRecords) {
       const opt = document.createElement('option');
       opt.value = r.id;
-      const p = (r.players || []).filter(x => x.slot < 24).map(x => x.name).join(' vs ');
+      const p = (r.players || []).filter(x => x.slot < 24).map(x => PlayerNames.canonical(x.name)).join(' vs ');
       const ts = r.uploadedAt ? ` (${new Date(r.uploadedAt).toLocaleDateString()})` : '';
       opt.textContent = `${r.mapName || 'Unknown map'} — ${p}${ts}`;
       this.userSelect.appendChild(opt);
@@ -133,8 +133,8 @@ const CompareView = class {
         seen.add(r.replayId);
         refs.push({
           replayId: r.replayId,
-          playerName: r.playerName,
-          opponentName: r.opponentName,
+          playerName: PlayerNames.canonical(r.playerName),
+          opponentName: PlayerNames.canonical(r.opponentName),
           map: r.map,
           buildName: b.name,
           buildRace: b.race,
@@ -170,7 +170,7 @@ const CompareView = class {
       if (p.slot >= 24) continue;
       const opt = document.createElement('option');
       opt.value = String(p.slot);
-      opt.textContent = `Slot ${p.slot}: ${p.name} (${p.race})`;
+      opt.textContent = `Slot ${p.slot}: ${PlayerNames.canonical(p.name)} (${p.race})`;
       this.userSlotSelect.appendChild(opt);
     }
     // Filter pro replays to same race as user's selected race.
@@ -207,7 +207,7 @@ const CompareView = class {
         const p = players[slot];
         const opt = document.createElement('option');
         opt.value = slot;
-        opt.textContent = `Slot ${slot}: ${p.name} (${p.race})`;
+        opt.textContent = `Slot ${slot}: ${PlayerNames.canonical(p.name)} (${p.race})`;
         this.proSlotSelect.appendChild(opt);
       }
     });
@@ -368,7 +368,7 @@ const CompareView = class {
     }
 
     return {
-      name: replayPlayerData.name,
+      name: PlayerNames.canonical(replayPlayerData.name),
       race,
       heroOpener,
       tier2Time,
@@ -421,7 +421,7 @@ const CompareView = class {
     document.getElementById('overall-score').textContent = report.overall.score;
     if (report.meta) {
       document.getElementById('overall-vs').textContent =
-        `${report.meta.userPlayer.name} (${report.meta.userPlayer.race}) vs ${report.meta.proPlayer.name} (${report.meta.proPlayer.race})`;
+        `${PlayerNames.canonical(report.meta.userPlayer.name)} (${report.meta.userPlayer.race}) vs ${PlayerNames.canonical(report.meta.proPlayer.name)} (${report.meta.proPlayer.race})`;
       document.getElementById('overall-context').textContent =
         `${report.meta.userMap} → ${report.meta.proMap}` +
         (report.meta.userPlayer.archetype && report.meta.proPlayer.archetype

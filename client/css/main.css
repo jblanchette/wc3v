@@ -322,10 +322,13 @@ body {
 
 /* --- Static Build Order Mode (Build Only) --- */
 .layout-mode-static-bo #gameplay-area { display: none; }
-.layout-mode-static-bo #build-area { display: block; position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow-y: auto; }
+.layout-mode-static-bo #build-area { display: block; position: absolute; top: 0; right: 0; bottom: 0; left: 0; overflow: auto; }
 
 .layout-mode-static-bo #build-wrapper {
+  /* Don't let a narrow window squeeze the two BO columns + timeline gap into
+     clipping — keep a desktop floor and let #build-area scroll horizontally. */
   width: 100%;
+  min-width: 560px;
   height: 100%;
   position: relative;
   top: auto;
@@ -338,7 +341,11 @@ body {
 }
 
 .layout-mode-live-bo #gameplay-area { position: relative; flex: 1 1 0%; min-width: 340px; min-height: 0; max-height: 100%; border-left: 1px solid var(--bo-border-solid); background: var(--bo-bg); padding-right: 12px; }
-.layout-mode-live-bo #build-area { display: block; flex: 0 0 auto; width: 660px; min-width: 480px; overflow-y: auto; order: -1; padding: 0 12px; }
+/* Wide enough that the two BO columns + the 40px timeline gap never get
+   squeezed into clipping; the page picks up a horizontal scrollbar (via #app's
+   desktop min-width) before the panel degrades. overflow:auto so a long
+   name/badge can scroll instead of overflowing the panel edge. */
+.layout-mode-live-bo #build-area { display: block; flex: 0 0 auto; width: 660px; min-width: 600px; overflow: auto; order: -1; padding: 0 12px; }
 
 .layout-mode-live-bo #build-wrapper {
   width: 100%;
@@ -470,6 +477,716 @@ body {
 
 #bo-content {
   position: relative;
+}
+
+/* Plain-language callout shown only in Beginner view. Full border + tinted bg
+   (no single-edge stripe — house style). */
+.bo-learn-callout {
+  margin: 8px 4px;
+  padding: 7px 10px;
+  background: rgba(79,184,107,0.10);
+  border: 1px solid rgba(79,184,107,0.30);
+  border-radius: 5px;
+  font-size: 0.85rem;
+  line-height: 1.42;
+  color: rgba(232,234,240,0.85);
+}
+.bo-learn-callout-tag {
+  color: #6fc18a;
+  font-weight: 700;
+  margin-right: 5px;
+}
+
+/* ── Beginner mode: strip the viewer chrome to keep the focus on the lesson ─
+   Hides the top duplicate player cards (they show the opp's full info — the
+   opposite of one-sided beginner mode) and the power-user View Options popup
+   (Creep Routes / Unit Trails / Tree Grid / etc. — defaults are fine for a
+   beginner). Toggled by app.js (`#app.is-beginner`). */
+#app.is-beginner #match-header { display: none !important; }
+#app.is-beginner #mega-play-hints { display: none !important; }
+
+/* ── Beginner view: "Whose game?" pick gate ─────────────────────────────
+   Replaces the BO columns until the user picks a player. Rendered by
+   BuildOrderRenderer._renderBeginnerPickGate; clicks delegated in
+   _wireBeginnerHandlers. */
+.bo-pick-panel {
+  width: 100%;
+  max-width: 640px;
+  margin: 18px auto 0;
+  padding: 16px 18px;
+  background: rgba(20,22,34,0.55);
+  border: 1px solid rgba(79,184,107,0.30);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bo-pick-panel[hidden] { display: none; }
+.bo-pick-head { display: flex; flex-direction: column; gap: 4px; }
+.bo-pick-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--site-text, #e8eaf0);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.bo-pick-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--site-text-muted, #9ca3b8);
+}
+.bo-pick-opts { display: flex; flex-direction: column; gap: 8px; }
+.bo-pick-opt {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: rgba(20,22,34,0.6);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--site-text, #e8eaf0);
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s, transform 0.06s;
+}
+.bo-pick-opt:hover {
+  background: color-mix(in srgb, var(--p-color, #888) 18%, rgba(20,22,34,0.6));
+  border-color: var(--p-color, #888);
+}
+.bo-pick-opt:active { transform: translateY(1px); }
+.bo-pick-opt-color {
+  width: 12px; height: 36px; flex-shrink: 0;
+  border-radius: 3px;
+  background: var(--p-color, #888);
+}
+.bo-pick-opt-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bo-pick-opt-name { font-size: 1rem; font-weight: 700; color: var(--p-color, #e8eaf0); }
+.bo-pick-opt-race { font-size: 0.85rem; color: var(--site-text-muted, #9ca3b8); }
+.bo-pick-skip {
+  align-self: flex-start;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--site-text-muted, #9ca3b8);
+  text-decoration: underline;
+}
+.bo-pick-skip:hover { color: var(--site-text, #e8eaf0); }
+
+/* ── Beginner view: "Start the walkthrough" CTA — just the button, centered.
+   The walkthrough HUD carries its own explanation, so no descriptive text
+   here. While the HUD is open the button is disabled (not hidden). ──────── */
+.bo-walkthrough-cta {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 8px auto 0;
+}
+.bo-walkthrough-cta[hidden] { display: none; }
+.bo-walkthrough-cta-btn {
+  padding: 7px 18px;
+  background: rgba(79,184,107,0.22);
+  border: 1px solid rgba(79,184,107,0.55);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #8fd6a6;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
+}
+.bo-walkthrough-cta-btn:hover:not(:disabled) { background: rgba(79,184,107,0.32); color: #b6e6c6; }
+.bo-walkthrough-cta-btn:disabled,
+.bo-walkthrough-cta-btn.is-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* ── Beginner view: "ME" badge + "switch player" link in the column header ── */
+.bo-hdr-me-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  background: rgba(79,184,107,0.22);
+  border: 1px solid rgba(79,184,107,0.55);
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #8fd6a6;
+}
+.bo-hdr-switch-player {
+  margin-left: 8px;
+  padding: 1px 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.72rem;
+  color: var(--site-text-muted, #9ca3b8);
+  text-decoration: underline;
+}
+.bo-hdr-switch-player:hover { color: var(--site-text, #e8eaf0); }
+
+/* ── Beginner view: "you vs them" scoreboard (right side, replaces the
+   opponent's full BO). Pure data — milestones, no advice. The XP-race block
+   is visually emphasized because out-leveling on creeps is the single
+   biggest early lead in the game. ─────────────────────────────────────── */
+.bo-cmp {
+  margin: 0 6px;
+  padding: 12px 14px;
+  background: rgba(20,22,34,0.6);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 10px;
+  color: rgba(232,234,240,0.92);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.bo-cmp-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 8px; margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.bo-cmp-players { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.bo-cmp-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 700; font-size: 0.86rem;
+  white-space: nowrap;
+}
+.bo-cmp-chip-me   { color: var(--me-color, #6fc18a); }
+.bo-cmp-chip-them { color: var(--them-color, #cdd1de); }
+.bo-cmp-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,0.35); }
+.bo-cmp-chip-me   .bo-cmp-dot { background: var(--me-color, #6fc18a); }
+.bo-cmp-chip-them .bo-cmp-dot { background: var(--them-color, #9ca3b8); }
+.bo-cmp-race { font-style: normal; font-weight: 600; font-size: 0.78rem; color: var(--site-text-muted, #9ca3b8); }
+.bo-cmp-vs { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6c7088; font-weight: 700; }
+.bo-cmp-fulllink {
+  flex-shrink: 0;
+  background: transparent; border: none; padding: 0; margin: 0;
+  cursor: pointer; font-family: inherit; font-size: 0.78rem;
+  color: #6fc18a; text-decoration: underline;
+}
+.bo-cmp-fulllink:hover { color: #8fd6a6; }
+
+/* Column headers ("You" / "Them") — line up with the row cells below. */
+.bo-cmp-colhead {
+  display: grid;
+  grid-template-columns: 96px 1fr 1fr;
+  gap: 10px;
+  padding: 0 2px 4px;
+  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.4);
+}
+.bo-cmp-colhead span:nth-child(2) { color: var(--me-color, rgba(255,255,255,0.55)); }
+.bo-cmp-colhead span:nth-child(3) { color: var(--them-color, rgba(255,255,255,0.55)); }
+
+.bo-cmp-block { margin-bottom: 12px; }
+.bo-cmp-block:last-child { margin-bottom: 0; }
+.bo-cmp-block-head {
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 4px;
+  font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.62);
+}
+.bo-cmp-block-sub { font-size: 0.7rem; font-weight: 600; text-transform: none; letter-spacing: 0; color: rgba(255,255,255,0.36); }
+
+/* The XP-race block — tinted, bordered, with a louder header. */
+.bo-cmp-block-xp {
+  padding: 10px 10px 8px;
+  background: rgba(232,182,90,0.08);
+  border: 1px solid rgba(232,182,90,0.30);
+  border-radius: 9px;
+}
+.bo-cmp-block-xp .bo-cmp-block-head { color: #e8b65a; font-size: 0.82rem; }
+.bo-cmp-bolt { font-size: 0.95rem; line-height: 1; }
+
+/* Comparison rows. 3 cols: label | you | them. The leading side's value gets
+   .bo-cmp-win (coloured + a tiny inline delta) — no separate "flag" pill that
+   overflows the row / disappears on a narrow panel. Wide variant lets the
+   you/them cells run full-width for text lists (units, type tallies). */
+.bo-cmp-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding: 4px 2px;
+}
+.bo-cmp-row-wide { grid-template-columns: 96px 1fr 1fr; }
+.bo-cmp-row + .bo-cmp-row { border-top: 1px solid rgba(255,255,255,0.04); }
+.bo-cmp-rlabel { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.5); }
+.bo-cmp-rme   { font-size: 0.86rem; color: rgba(232,234,240,0.95); }
+.bo-cmp-rthem { font-size: 0.86rem; color: rgba(232,234,240,0.78); }
+.bo-cmp-row-wide .bo-cmp-rme,
+.bo-cmp-row-wide .bo-cmp-rthem { font-size: 0.82rem; line-height: 1.35; }
+.bo-cmp-sub { font-size: 0.74rem; color: rgba(255,255,255,0.5); font-weight: 500; }
+.bo-cmp-na { color: rgba(255,255,255,0.3); }
+
+/* The leading side on a row: its value goes green + bold, with a small,
+   muted delta after it (− = "this much sooner", + = "this many more"). */
+.bo-cmp-win { color: #8fd6a6; font-weight: 700; }
+.bo-cmp-delta { font-size: 0.74rem; font-weight: 600; color: rgba(143,214,166,0.7); white-space: nowrap; }
+
+.bo-cmp-verdict {
+  margin: 6px 0 0;
+  padding: 6px 9px;
+  background: rgba(0,0,0,0.18);
+  border-radius: 6px;
+  font-size: 0.84rem; line-height: 1.45;
+  color: rgba(232,234,240,0.9);
+}
+
+.bo-cmp-legend {
+  list-style: none;
+  margin: 6px 0 0; padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  font-size: 0.76rem; line-height: 1.45;
+  color: rgba(232,234,240,0.7);
+}
+.bo-cmp-legend li { margin: 0; padding: 1px 0; }
+.bo-cmp-legend li + li { border-top: 1px solid rgba(255,255,255,0.05); }
+
+@media (max-width: 640px) {
+  .bo-cmp-colhead,
+  .bo-cmp-row,
+  .bo-cmp-row-wide { grid-template-columns: 84px 1fr 1fr; gap: 8px; }
+}
+
+/* ── Guided walkthrough ──────────────────────────────────────────────────
+   Launched from the beginner-view CTA / a build card's "Guide me" link. A
+   "pick a player" gate, a corner HUD (.gh-*, bottom-right over the map) that
+   steps through the replay with commentary, a highlight on the build-order
+   rows for the current step, and a pulse ring on the emphasised units on the
+   map (drawn by app.js _renderGuideHighlights). All wired in app.js. */
+
+/* Build-order rows for the current walkthrough step. The scroll-margin keeps
+   the row clear of the sticky column header when a step scrolls it to the top
+   (see _highlightGuideStep — block:'start'). */
+#bo-columns .guide-highlight {
+  outline: 2px solid #6fc18a;
+  outline-offset: -1px;
+  border-radius: 4px;
+  background: rgba(79,184,107,0.12);
+  scroll-margin-top: 40px;
+}
+
+/* "Whose game?" gate. */
+.guide-player-pick {
+  position: fixed; inset: 0; z-index: 1200;
+  display: flex; align-items: center; justify-content: center;
+}
+.guide-player-pick[hidden] { display: none; }
+.guide-player-pick-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.55); }
+.guide-player-pick-card {
+  position: relative;
+  max-width: 420px; width: calc(100% - 32px);
+  padding: 18px 20px;
+  background: #1b1f30;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  color: #e8eaf0;
+}
+.guide-player-pick-title { margin: 0 0 4px; font-size: 1.05rem; font-weight: 700; }
+.guide-player-pick-sub { margin: 0 0 12px; font-size: 0.88rem; color: #9ca3b8; }
+.guide-player-pick-opts { display: flex; flex-direction: column; gap: 8px; }
+.guide-player-pick-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: rgba(20,22,34,0.6);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-left: none;            /* (no edge stripe) */
+  border-radius: 8px;
+  cursor: pointer; font-family: inherit; text-align: left;
+  transition: background 0.12s, border-color 0.12s;
+}
+.guide-player-pick-opt:hover { background: color-mix(in srgb, var(--p-color, #888) 18%, rgba(20,22,34,0.6)); border-color: var(--p-color, #888); }
+.guide-player-pick-opt .gpp-name { font-size: 0.98rem; font-weight: 700; color: var(--p-color, #e8eaf0); }
+.guide-player-pick-opt .gpp-race { font-size: 0.82rem; color: #9ca3b8; }
+.guide-player-pick-cancel {
+  margin-top: 12px; padding: 4px 8px;
+  background: transparent; border: none; cursor: pointer;
+  font-family: inherit; font-size: 0.85rem; color: #9ca3b8; text-decoration: underline;
+}
+.guide-player-pick-cancel:hover { color: #e8eaf0; }
+
+/* ─── Guided walkthrough HUD (.gh-*) ─────────────────────────────────────
+ * A designed step card that floats over the BOTTOM of the build-order panel
+ * (the left ~660px column in live-bo mode), just above the scrubber — so the
+ * whole replay map on the right stays clear for the step's camera framing +
+ * highlight rings. The build-order rows scroll above the card; the current
+ * step's highlighted rows scroll to the top of the panel so they stay visible.
+ * On phones (single scrolling BO column, no map) it docks to the bottom edge
+ * full width instead — see the ≤640px block below. Layered hierarchy:
+ *   1. Top strip: eyebrow (label + "ME vs OPP" colour-chipped pills) + exit
+ *   2. Step meta strip: large game-time on the left, "Step n of N" on the right
+ *   3. Step title (large, bold) with optional unit/building icon
+ *   4. Body: structured rows — `.gh-row.gh-row-me`, `.gh-row.gh-row-opp`,
+ *      `.gh-why` callout, `.gh-takeaway` block. Intro screen uses `.gh-intro`.
+ *   5. Footer nav: back / progress dots / next
+ * No single-edge border accents — full borders + tinted backgrounds only. */
+
+.gh {
+  position: fixed;
+  /* Hug the left edge (over the BO panel) and sit just above the 2.25rem
+     scrubber. The BO panel is always ≥660px wide in desktop layouts, so a
+     ~620px card at left:12px never spills over onto the map. The max-height
+     leaves room for the sticky nav up top and the scrubber down bottom. */
+  left: 12px;
+  bottom: calc(2.25rem + 8px);
+  z-index: 1100;
+  width: min(620px, calc(100vw - 24px));
+  max-height: calc(100vh - 2.25rem - 80px);
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #1e2335 0%, #181c2b 100%);
+  border: 1px solid rgba(111,193,138,0.45);
+  border-radius: 14px;
+  box-shadow: 0 8px 36px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.4);
+  color: #e8eaf0;
+  overflow: hidden;
+  font-size: 0.92rem;
+}
+.gh[hidden] { display: none; }
+
+/* Top strip — eyebrow on the left, exit on the right. Slightly tinted band
+ * so it reads as a card chrome, not just inset padding. */
+.gh-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px;
+  background: rgba(111,193,138,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.gh-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.78rem; color: #d8dae2;
+  flex-wrap: wrap;
+}
+.gh-eyebrow-label {
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  color: #6fc18a; font-size: 0.74rem;
+  padding: 2px 8px;
+  background: rgba(111,193,138,0.14); border: 1px solid rgba(111,193,138,0.32);
+  border-radius: 999px;
+}
+.gh-eyebrow-vs { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: #e8eaf0; }
+.gh-eyebrow-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,0.35); }
+.gh-eyebrow-sep { color: #6c7088; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.gh-exit {
+  flex-shrink: 0; padding: 4px 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14); border-radius: 7px;
+  cursor: pointer; font-family: inherit; font-size: 0.8rem; font-weight: 600; color: #9ca3b8;
+}
+.gh-exit:hover { color: #f4f5f8; background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.24); }
+
+/* Step meta — big game-time + step counter. */
+.gh-step-meta {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 12px 16px 4px;
+}
+.gh-time {
+  font-size: 1.5rem; font-weight: 800; color: #f4f5f8;
+  font-variant-numeric: tabular-nums; letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+.gh-step-num {
+  font-size: 0.74rem; font-weight: 700; color: #9ca3b8;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* Step title — bold, with an optional unit/building icon to the left. */
+.gh-step-title {
+  margin: 0; padding: 0 16px 10px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 1.08rem; font-weight: 700; color: #f4f5f8; line-height: 1.25;
+}
+.gh-step-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: #0e1018;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.gh-step-icon[hidden] { display: none; }
+.gh-step-title-text { flex: 1; min-width: 0; }
+
+/* Body container — scrolls if a step's content overflows the card. */
+.gh-body {
+  padding: 0 16px 14px;
+  overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* Speaker rows — colored chip + action/contrast sentence. The two rows
+ * (me/opp) make the comparative framing visual: a single glance tells you
+ * what each player did. */
+.gh-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 22%) 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.gh-row-me {
+  background: color-mix(in srgb, var(--gh-chip-color, #6fc18a) 8%, rgba(255,255,255,0.02));
+  border-color: color-mix(in srgb, var(--gh-chip-color, #6fc18a) 28%, rgba(255,255,255,0.1));
+}
+.gh-row-opp {
+  background: rgba(255,255,255,0.03);
+}
+.gh-row-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--gh-chip-color, #e8eaf0);
+  text-transform: uppercase; letter-spacing: 0.03em;
+  min-width: 0;
+}
+.gh-row-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--gh-chip-color, #888);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+.gh-row-name {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gh-row-text {
+  font-size: 0.9rem; line-height: 1.5; color: #e8eaf0;
+}
+
+/* ── Step breakdown list (.gh-steplist) — the step's "do this, in order" list
+   (e.g. the opening sequence). Deliberately the loudest block of the step:
+   a numbered list with unit/building icons + the game time each one landed,
+   so it reads at a glance and is easy to drill. */
+.gh-steplist {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: rgba(111,193,138,0.09);
+  border: 1px solid rgba(111,193,138,0.30);
+  border-radius: 10px;
+}
+.gh-sl-item {
+  display: grid;
+  grid-template-columns: 26px 36px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  /* As the replay reaches each row it checks off (slow fade to dim/grey) and
+     the active highlight box slides down — all via these transitions, driven
+     by app.js _updateGuideStepList toggling .gh-sl-active / .gh-sl-done. */
+  transition: opacity 0.7s ease, filter 0.7s ease, background-color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+.gh-sl-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(111,193,138,0.20);
+  border: 1px solid rgba(111,193,138,0.45);
+  color: #b6e6c6;
+  font-size: 0.82rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.gh-sl-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: #0e1018;
+  object-fit: cover;
+}
+.gh-sl-icon-empty { background: rgba(255,255,255,0.05); }
+.gh-sl-label {
+  font-size: 0.98rem; font-weight: 600; color: #f1f3f8;
+  line-height: 1.25; min-width: 0;
+}
+.gh-sl-time {
+  font-size: 0.82rem; font-weight: 700; color: rgba(232,234,240,0.5);
+  font-variant-numeric: tabular-nums;
+}
+/* "×N" suffix on a collapsed run of the same worker / unit. */
+.gh-sl-x { margin-left: 6px; font-size: 0.86rem; font-weight: 800; color: #b6e6c6; }
+/* Hero step in the list gets a gold tint so it pops out of the building run. */
+.gh-sl-hero { background: rgba(232,182,90,0.10); border-color: rgba(232,182,90,0.24); }
+.gh-sl-hero .gh-sl-n { background: rgba(232,182,90,0.22); border-color: rgba(232,182,90,0.5); color: #f1dfb8; }
+.gh-sl-hero .gh-sl-label { color: #f6ecd2; }
+.gh-sl-hero .gh-sl-x { color: #f1dfb8; }
+/* Worker training rows are slightly muted so the buildings/units carry the eye. */
+.gh-sl-worker { background: rgba(255,255,255,0.018); }
+.gh-sl-worker .gh-sl-label { color: rgba(241,243,248,0.78); font-weight: 500; }
+
+/* The replay's reached this row — it "checks off": a slow fade to dim + grey. */
+.gh-sl-done { opacity: 0.42; filter: grayscale(0.6) brightness(0.95); }
+/* The row the replay is on right now — a soft green highlight box that slides
+   down the list as each step happens. (Defined after the kind tints so it wins
+   the background.) */
+.gh-sl-active {
+  background: rgba(111,193,138,0.18);
+  border-color: rgba(111,193,138,0.45);
+  box-shadow: 0 0 0 1px rgba(111,193,138,0.30), 0 0 14px rgba(111,193,138,0.18);
+}
+
+/* Callouts — full borders + tinted backgrounds (NO single-edge accents). */
+.gh-why, .gh-takeaway, .gh-intro {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 0.88rem; line-height: 1.5;
+}
+.gh-why {
+  background: rgba(111,193,138,0.10);
+  border: 1px solid rgba(111,193,138,0.32);
+  color: #cfe9d8;
+}
+.gh-why-label {
+  font-size: 0.72rem; font-weight: 800; color: #6fc18a;
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+.gh-why-text { color: #d8eadf; }
+
+.gh-takeaway {
+  background: rgba(232,182,90,0.10);
+  border: 1px solid rgba(232,182,90,0.34);
+  color: #f1dfb8;
+}
+.gh-takeaway-label {
+  font-size: 0.72rem; font-weight: 800; color: #e8b65a;
+  text-transform: uppercase; letter-spacing: 0.07em;
+}
+.gh-takeaway-text { color: #f1e3c2; }
+
+.gh-intro {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: #d8dae2;
+  font-size: 0.92rem;
+}
+
+/* ── Intro contents page (.gh-toc) — the walkthrough's table of contents:
+   one row per step (number, icon, title, one-line "what it covers"), so the
+   first screen advertises what the walkthrough actually teaches. */
+.gh-toc {
+  margin: 2px 0 0;
+  padding: 10px 12px 12px;
+  border-radius: 9px;
+  background: rgba(111,193,138,0.07);
+  border: 1px solid rgba(111,193,138,0.26);
+}
+.gh-toc-label {
+  display: block;
+  font-size: 0.72rem; font-weight: 800; color: #6fc18a;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  margin-bottom: 8px;
+}
+.gh-toc-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.gh-toc-item {
+  display: grid;
+  grid-template-columns: 24px 36px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.gh-toc-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: rgba(111,193,138,0.18);
+  border: 1px solid rgba(111,193,138,0.40);
+  color: #b6e6c6;
+  font-size: 0.8rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.gh-toc-icon {
+  width: 36px; height: 36px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: #0e1018;
+  object-fit: cover;
+}
+.gh-toc-icon-empty { background: rgba(255,255,255,0.05); border-style: dashed; }
+.gh-toc-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.gh-toc-title { font-size: 0.95rem; font-weight: 700; color: #eef0f6; line-height: 1.2; }
+.gh-toc-sub { font-size: 0.82rem; color: rgba(216,218,226,0.62); line-height: 1.3; }
+
+/* "How it works" footnote under the contents page — quiet, not a callout. */
+.gh-howto {
+  margin: 8px 0 0;
+  font-size: 0.86rem; line-height: 1.5;
+  color: rgba(216,218,226,0.65);
+}
+.gh-howto strong { color: rgba(232,234,240,0.92); }
+
+/* Footer nav — back / dots / next, slightly tinted band like the top. */
+.gh-nav {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.18);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.gh-btn {
+  padding: 7px 14px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.16); border-radius: 8px;
+  cursor: pointer; font-family: inherit; font-size: 0.88rem; font-weight: 600; color: #d8dae2;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.gh-btn:hover:not(:disabled) { background: rgba(255,255,255,0.10); color: #fff; border-color: rgba(255,255,255,0.26); }
+.gh-btn:disabled { opacity: 0.35; cursor: default; }
+.gh-btn-primary {
+  margin-left: auto;
+  background: rgba(111,193,138,0.22); border-color: rgba(111,193,138,0.55); color: #b6e6c6;
+}
+.gh-btn-primary:hover { background: rgba(111,193,138,0.34); color: #d6f0de; border-color: rgba(111,193,138,0.7); }
+
+.gh-dots { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.gh-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  transition: background 0.15s, transform 0.15s;
+}
+.gh-dot-active { background: #6fc18a; transform: scale(1.25); }
+
+@media (max-width: 640px) {
+  /* Phones: the viewer is a single scrolling build-order column (no map), so
+     dock the HUD to the bottom edge, centred and full-width. */
+  .gh {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 8px;
+    width: calc(100% - 16px);
+    max-height: calc(100vh - 16px);
+    font-size: 0.88rem;
+  }
+  .gh-step-meta { padding: 10px 12px 2px; }
+  .gh-time { font-size: 1.28rem; }
+  .gh-step-title { padding: 0 12px 8px; font-size: 1rem; }
+  .gh-body { padding: 0 12px 12px; }
+  .gh-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 9px 10px;
+  }
+  .gh-nav { padding: 9px 12px; }
 }
 
 #bo-columns {
@@ -681,7 +1398,8 @@ body {
 .bo-hdr-toggle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;          /* name + tier/race badges (+ "ME" / "switch player" in beginner view) wrap rather than overflow on narrow columns */
+  gap: 6px 8px;
   padding: 4px 6px;
   margin: -4px -6px;
   border-radius: 4px;
@@ -5349,6 +6067,163 @@ body {
   margin-top: 6px;
 }
 
+/* ── Learner block (new-band cards): a tabbed, bounded "beginner guide" pane.
+   Rendered by buildCard() only while viewing the "new" band. Two tabs over a
+   fixed-height, scrollable pane so the card never balloons. Tab clicks are
+   handled in the #all-builds-grid click handler; clicks inside don't navigate. */
+.site-card-learn {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--card-divider, rgba(255,255,255,0.06));
+}
+.scl-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.scl-tab {
+  flex: 1;
+  padding: 4px 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--site-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font: 600 0.7rem Verdana;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: rgba(255,255,255,0.5);
+  font-family: inherit;
+  text-align: center;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.scl-tab:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.75); }
+.scl-tab.active {
+  background: rgba(79,184,107,0.16);     /* new-band accent (green) */
+  border-color: rgba(79,184,107,0.45);
+  color: #6fc18a;
+}
+.scl-panes { position: relative; }
+.scl-pane {
+  max-height: 160px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+.scl-pane[hidden] { display: none !important; }
+.scl-pane::-webkit-scrollbar { width: 6px; }
+.scl-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 3px; }
+.scl-pane::-webkit-scrollbar-track { background: transparent; }
+.scl-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.scl-list li {
+  position: relative;
+  padding-left: 13px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: rgba(232,234,240,0.88);
+}
+.scl-list li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.55em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #4fb86b;            /* new-band accent (green) */
+}
+.scl-prereq {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,0.08);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.4);
+}
+.scl-mlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scl-mlist li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+  font-size: 0.82rem;
+}
+.scl-bad { color: rgba(232,234,240,0.62); }
+.scl-fix { color: rgba(232,234,240,0.92); }
+.scl-fix-tag {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6fc18a;
+  background: rgba(79,184,107,0.16);
+  border-radius: 3px;
+  padding: 0 4px;
+  margin-right: 5px;
+  vertical-align: 1px;
+}
+
+/* ── Glossary tooltips ───────────────────────────────────────────────────
+   Known WC3 jargon (see Glossary.js / glossary.json) gets a subtle dotted
+   underline + a native hover/focus tooltip. Used in learner-card body copy;
+   reusable elsewhere later. (Native title tooltips don't appear on touch.) */
+abbr.gloss {
+  text-decoration: underline dotted rgba(255,255,255,0.32);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+  cursor: help;
+  font-style: inherit;          /* override the UA italic some browsers apply */
+  letter-spacing: inherit;
+}
+abbr.gloss:hover,
+abbr.gloss:focus-visible {
+  text-decoration-color: rgba(255,255,255,0.7);
+}
+abbr.gloss:focus-visible {
+  outline: 1px solid rgba(255,255,255,0.4);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* Tap/click/keyboard popover for glossary terms (Glossary.js) — native title
+   tooltips don't show on touch, so this works everywhere. One shared element,
+   appended to <body>, positioned next to the term. */
+#gloss-popover {
+  position: fixed;
+  z-index: 9999;
+  max-width: 280px;
+  padding: 8px 11px;
+  background: #232739;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+  font-size: 0.85rem;
+  line-height: 1.42;
+  color: var(--site-text, #e8eaf0);
+}
+#gloss-popover[hidden] { display: none; }
+.gloss-pop-term {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 3px;
+  color: var(--site-accent, #4488ff);
+}
+.gloss-pop-def { color: var(--site-text-muted, #9ca3b8); }
+
 /* ── Card Header (Zone A) — colored header band ──────────── */
 .site-card-header {
   display: flex;
@@ -5517,7 +6392,31 @@ body {
 
 .site-card-expo-row {
   margin-top: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
 }
+
+/* Band + difficulty pill (sits next to the expo marker). Difficulty is
+   colour-coded; the band name + icon only appear when a card is showing in
+   an adjacent band via `alsoShownIn`. */
+.site-card-band {
+  font: 700 0.65rem Verdana;
+  padding: 0 5px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  color: #9aa3b8;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+.site-card-band-ico { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+.site-card-band.diff-easy   { color: #6fc18a; background: rgba(79,184,107,0.12); border-color: rgba(79,184,107,0.30); }
+.site-card-band.diff-medium { color: #e0b94e; background: rgba(200,168,78,0.12); border-color: rgba(200,168,78,0.30); }
+.site-card-band.diff-hard   { color: #e08a6a; background: rgba(224,109,80,0.12); border-color: rgba(224,109,80,0.30); }
 
 /* ── Core Upgrades Section ─────────────────────────────── */
 .site-card-upgrades {
@@ -6573,12 +7472,15 @@ body {
   z-index: 1;
 }
 
-/* The strip is two rows:
-     Row 1 (.site-replay-item-identity): "{player} vs {opponent}" + map
-     Row 2 (.site-replay-item-row):      tournament/stage chips + actions
-   Row 2 has a fixed min-height so user-uploaded cards (no chips) match
-   curated cards (with chips) in total height. No background, no border —
-   we let the divider above + the typography do the visual work. */
+/* The strip is THREE rows, each with its own job. Cards in the grid can be
+   as narrow as ~280px, so we never try to put more than 2 logical pieces on
+   one row — text and chips always have room to breathe (no truncation).
+     Row 1 (.site-replay-item-identity): "{player} vs {opponent}" · {map}
+     Row 2 (.site-replay-item-meta):     [tournament] [stage]   wraps freely
+     Row 3 (.site-replay-item-actions):  [+N more]      [Guide me] [Watch]
+   Each row has a min-height so curated cards (full metadata) and user-uploaded
+   cards (sparse) line up across the grid. No background, no border — the top
+   divider on .site-replay-section + typography carry the visual weight. */
 .site-replay-item {
   display: flex;
   flex-direction: column;
@@ -6586,54 +7488,68 @@ body {
   font-size: 0.82rem;
 }
 
+/* ── Row 1: Identity (player vs opponent) + map ─────────────────────── */
 .site-replay-item-identity {
   display: flex;
+  flex-wrap: wrap;              /* very narrow cards: map drops below identity */
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
-  min-width: 0;
+  column-gap: 8px;
+  row-gap: 2px;
 }
 
 .site-replay-item-players {
   flex: 1 1 auto;
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;      /* long names wrap mid-word rather than overflow */
 }
 
 .site-replay-item-map {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   color: #999;
   font-size: 0.76rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 50%;
+  overflow-wrap: anywhere;
 }
 
-.site-replay-item-row {
+/* ── Row 2: Metadata chips (tournament + stage) ────────────────────────
+   Reserves min-height so cards that lack chips still align with chip cards
+   one grid row over. Chips wrap freely — no element ever ellipses. */
+.site-replay-item-meta {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-height: 20px;
+}
+
+/* ── Row 3: Actions — "+N more" left, primary group right ─────────────
+   The two sub-groups are themselves flex containers, which lets the primary
+   group (Guide + Watch) stay glued together when the row wraps on narrow
+   cards. justify-content: space-between pins them to opposite edges when
+   they fit on one line. */
+.site-replay-item-actions {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  min-height: 26px;       /* alignment guarantee across cards in a row */
+  gap: 6px;
+  min-height: 28px;
 }
 
-.site-replay-item-chips {
+.site-replay-actions-left {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 4px 6px;
-  flex: 1 1 auto;
+  gap: 6px;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
-.site-replay-item-actions {
+.site-replay-actions-right {
   display: flex;
   align-items: center;
   gap: 6px;
   flex: 0 0 auto;
+  margin-left: auto;            /* keeps primary actions right-aligned even when wrapped alone */
 }
 
 /* Identity line typography: bold player, muted "vs", regular opponent. */
@@ -6650,15 +7566,13 @@ body {
   font-weight: 500;
 }
 
-/* Stage / round line — sits next to the tournament chip on row 2. */
+/* Stage / round text — plain muted text alongside the tournament chip on
+   the meta row. Wraps with the rest, no truncation. */
 .site-replay-stage {
   color: #999;
   font-size: 0.74rem;
   line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Legacy aliases — these classes used to render the map + outcome on
@@ -6715,7 +7629,6 @@ body {
 }
 
 .site-replay-view-btn {
-  margin-left: auto;
   flex-shrink: 0;
   font-size: 0.78rem;
   font-weight: 600;
@@ -6732,6 +7645,28 @@ body {
 .site-replay-view-btn:hover {
   background: color-mix(in srgb, var(--race-color) 22%, transparent);
   border-color: color-mix(in srgb, var(--race-color) 50%, transparent);
+}
+
+/* "Guide me" — opens the viewer's guided walkthrough. Green (the guide accent),
+   sits just left of "Watch". Both are wrapped in .site-replay-actions-right
+   which handles the right-alignment, so no margin-left here. */
+.site-replay-guide-btn {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6fc18a;
+  background: rgba(79,184,107,0.12);
+  border: 1px solid rgba(79,184,107,0.30);
+  border-radius: 4px;
+  padding: 3px 9px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.site-replay-guide-btn:hover {
+  background: rgba(79,184,107,0.22);
+  border-color: rgba(79,184,107,0.5);
+  color: #8fd6a6;
 }
 
 .site-replay-none {
@@ -6777,10 +7712,17 @@ body {
   #build-area {
     display: block !important;
     grid-area: buildorder;
-    overflow-y: auto;
+    /* In .layout-mode-live-bo #build-area is fixed at width:660px / min-width:600px
+       — that overflows (and gets clipped) once the window is narrower than that.
+       In the tablet collapse it must fit the single-column #content. */
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow: auto;
   }
   #build-wrapper {
     width: 100%;
+    min-width: 0;
     height: 100%;
     position: relative;
     top: auto;
@@ -6848,6 +7790,17 @@ body.viewer-mobile-mode #loading-overlay {
 .layout-mode-mobile-bo #bo-timeline-svg,
 .layout-mode-mobile-bo .bo-side-right {
   display: none !important;
+}
+
+/* Exception — beginner-view "I picked a player" layout (Me's column on the
+   left, the You-vs-them comparison panel on the right). The right side
+   normally holds the second player's full BO and is hidden on phones; here it
+   holds the compact .bo-cmp digest, which we DO want, stacked under Me's
+   build. (.bo-me-column is only added in that layout — see BuildOrderRenderer.) */
+.layout-mode-mobile-bo #bo-columns:has(.bo-me-column) .bo-side-right {
+  display: block !important;
+  width: 100%;
+  flex: none;
 }
 
 .layout-mode-mobile-bo .bo-side-left {
@@ -11829,6 +12782,181 @@ svg.about-feat-icon {
   letter-spacing: 0.6px;
 }
 
+/* ── Skill band switch ────────────────────────────────────────────────────
+   One control rendered in two variants, both bound to BandSwitcher.js by the
+   `.skill-band-card[data-band]` hook:
+     • `.skill-band--hero` lives full-width on the homepage hero (below the
+       action bar). Cards show icon + label + description. The first-visit
+       hint (`.skill-band-hint`) appears only when BandSwitcher sets
+       `data-first-visit` on the root.
+     • `.skill-band--compact` lives in the top nav on every page (rendered
+       by SiteNav.render). Icon + label only; descriptions kept in `title=`.
+   Per-band accent (green/blue/gold) is driven by `[data-band]` on each card.
+   Flat surfaces, hairline dividers between cards, accent-color top edge on
+   the active card — explicitly NOT pill-rounded. */
+
+.skill-band {
+  --band-accent: var(--site-accent);
+  display: block;
+}
+
+/* The hero variant is an onboarding control — it only appears on the
+   homepage on a first visit (BandSwitcher sets data-first-visit when no
+   band is stored). Once the visitor picks any band, the attribute is
+   removed and the hero hides; from then on the compact nav band is the
+   only switch on screen. */
+.skill-band--hero { display: none; margin: 12px 0 18px; }
+.skill-band--hero[data-first-visit] { display: block; }
+
+/* While the homepage hero is in first-visit mode, suppress the compact
+   nav band so the user sees one obvious onboarding control, not two.
+   Once a band is picked the hero hides, the :has() match fails, and the
+   compact nav band returns to view automatically (no JS coordination). */
+body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: none; }
+
+.skill-band-hint {
+  display: none;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: var(--site-text-muted);
+}
+.skill-band--hero[data-first-visit] .skill-band-hint { display: block; }
+
+.skill-band-row {
+  display: flex;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.skill-band-card {
+  --band-accent: var(--site-accent);
+  flex: 1 1 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--site-border);
+  border-top: 3px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  color: var(--site-text);
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+/* Hairline divider between adjacent cards — share borders, no double-line. */
+.skill-band-row .skill-band-card + .skill-band-card { border-left: 0; }
+
+.skill-band-card[data-band="new"]       { --band-accent: #4fb86b; }
+.skill-band-card[data-band="improving"] { --band-accent: #5ea8d4; }
+.skill-band-card[data-band="pro"]       { --band-accent: #c8a84e; }
+
+.skill-band-card:hover {
+  background: color-mix(in srgb, var(--band-accent) 10%, rgba(255,255,255,0.04));
+  border-color: color-mix(in srgb, var(--band-accent) 40%, var(--site-border));
+}
+
+.skill-band-card[aria-pressed="true"],
+.skill-band-card.is-active {
+  background: color-mix(in srgb, var(--band-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--band-accent) 55%, var(--site-border));
+  border-top-color: var(--band-accent);
+  color: #fff;
+}
+
+.skill-band-card:focus-visible {
+  outline: 2px solid var(--band-accent);
+  outline-offset: 1px;
+}
+
+.skill-band-ico {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.12s;
+}
+.skill-band-card:hover .skill-band-ico,
+.skill-band-card[aria-pressed="true"] .skill-band-ico,
+.skill-band-card.is-active .skill-band-ico { opacity: 1; }
+
+.skill-band-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.skill-band-label { font-size: 0.92rem; font-weight: 700; line-height: 1.2; }
+.skill-band-desc {
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--site-text-muted);
+}
+
+/* Hero variant: larger icon, descriptions always visible. */
+.skill-band--hero .skill-band-card { padding: 14px 16px; align-items: center; }
+.skill-band--hero .skill-band-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+}
+
+/* Compact variant (nav): icon + label only, smaller padding, descriptions
+   live in title attributes. */
+.skill-band--compact {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.skill-band--compact .skill-band-row { gap: 0; }
+.skill-band--compact .skill-band-card {
+  padding: 5px 11px;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.86rem;
+}
+.skill-band--compact .skill-band-label { font-size: 0.86rem; font-weight: 600; }
+.skill-band--compact .skill-band-desc { display: none; }
+.skill-band--compact .skill-band-hint { display: none; }
+.skill-band--compact .skill-band-ico { width: 20px; height: 20px; }
+
+/* The compact variant is rendered as the .skill-band root directly (no
+   intermediate .skill-band-row), so apply card-adjacency border collapsing
+   on the .skill-band itself too. */
+.skill-band--compact .skill-band-card + .skill-band-card { border-left: 0; }
+
+/* Tiny screens: collapse compact-nav cards to icons. title attribute keeps
+   the accessible / hover description. */
+@media (max-width: 560px) {
+  .skill-band--compact .skill-band-label { display: none; }
+  .skill-band--compact .skill-band-card { padding: 5px 8px; }
+}
+
+/* Hero variant on phones: stack the cards vertically so descriptions stay
+   readable instead of crushing into 3 columns. */
+@media (max-width: 720px) {
+  .skill-band--hero .skill-band-row { flex-direction: column; }
+  .skill-band--hero .skill-band-card + .skill-band-card {
+    border-left: 1px solid var(--site-border);
+    border-top: 3px solid transparent;
+  }
+  .skill-band--hero .skill-band-card[aria-pressed="true"] + .skill-band-card,
+  .skill-band--hero .skill-band-card.is-active + .skill-band-card {
+    border-top-color: transparent;
+  }
+}
+
+/* One-line band framing — sits just under the #builds section heading on
+   the homepage. Independent of the band control; left as-is. */
+.band-intro {
+  margin: 2px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--site-text-muted);
+}
+
 /* ── Horizontal filter bar ── */
 
 .pro-filter-bar {
@@ -14192,6 +15320,7 @@ fieldset.ub-editor-field input[type="text"] {
     padding: 8px 10px 0;
   }
   .site-pros-title { font-size: 16px; }
+  .skill-band--hero { padding: 0 10px; margin: 8px 0 12px; }
   .site-content { padding: 0 0 2rem; }
 
   /* ── Compact pro build cards ───────────────────────── */

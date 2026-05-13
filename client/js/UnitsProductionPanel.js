@@ -249,7 +249,7 @@ const UnitsProductionPanel = class {
 
     const name = document.createElement('span');
     name.className = 'up-player-name';
-    name.textContent = player.displayName;
+    name.textContent = PlayerNames.canonical(player.displayName);
 
     header.appendChild(colorSwatch);
     header.appendChild(name);

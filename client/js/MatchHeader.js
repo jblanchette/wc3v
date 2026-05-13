@@ -67,9 +67,15 @@ const MatchHeader = class {
   }
 
   renderPlayerCard (boData, player) {
-    const { race, raceInfo, displayName, playerColor, tierProduction, tier2Time, tier3Time, hasExpansion, finalSnapshot } = boData;
+    const { race, raceInfo, displayName, rawDisplayName, playerColor, tierProduction, tier2Time, tier3Time, hasExpansion, finalSnapshot } = boData;
     // Strip non-word chars then cap — produces a safe DOM id slug.
     const uid = String(displayName == null ? '' : displayName).replace(/\W/g, '').slice(0, 32) || 'p';
+    // The header shows the official pro name (like everywhere else), but —
+    // and this is the ONE place in the UI that does this — when the player
+    // logged in under a different handle we expose the raw replay name in a
+    // hover tooltip. See PlayerNames.js.
+    const showRawTip = rawDisplayName && rawDisplayName !== displayName;
+    const nameTitleAttr = showRawTip ? ` title="${_mhAttr(rawDisplayName)}"` : '';
 
     // Build name from build context (if this player's slot has a matching build)
     const ctxBySlot = this.viewer.buildContextBySlot;
@@ -80,7 +86,7 @@ const MatchHeader = class {
     const raceIconId = _mhIcon(BuildOrderData.CONFIG.raceStarterIcons[race] || '');
     let html = `<div class="mh-player-header">
       <div class="mh-player-header-text">
-        <div class="mh-player-name" style="color:${_mhAttr(playerColor)}">${_mhEsc(displayName)}</div>${buildNameHtml}
+        <div class="mh-player-name"${nameTitleAttr} style="color:${_mhAttr(playerColor)}">${_mhEsc(displayName)}</div>${buildNameHtml}
       </div>
       <img class="mh-race-icon-lg" src="/assets/wc3icons/${raceIconId}.jpg" title="${_mhAttr(raceInfo.label)}" style="border-color:${_mhAttr(raceInfo.accent)}" />
     </div>`;

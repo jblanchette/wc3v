@@ -1049,11 +1049,11 @@ const CompareInline = class {
         ${divergenceBanner}
         <div class="ci-vs-grid">
           <div class="ci-bo-track">
-            <div class="ci-side-label">You — ${escapeHtml(u.name || '')}</div>
+            <div class="ci-side-label">You — ${escapeHtml(PlayerNames.canonical(u.name) || '')}</div>
             <div class="ci-bo-rows">${renderRows(userPreview, proIds, divPt ? divPt.index : null)}</div>
           </div>
           <div class="ci-bo-track">
-            <div class="ci-side-label">Pro — ${escapeHtml(p.name || this._proEntry.playerName || '')}</div>
+            <div class="ci-side-label">Pro — ${escapeHtml(PlayerNames.canonical(p.name) || this._proEntry.playerName || '')}</div>
             <div class="ci-bo-rows">${renderRows(proPreview, userIds, divPt ? divPt.index : null)}</div>
           </div>
         </div>
@@ -1079,8 +1079,8 @@ const CompareInline = class {
     const RACE_ACCENT = { H: '#4eb6e0', O: '#d04848', E: '#5cb878', U: '#9b59b6', R: '#888' };
     const tierBars = `
       <div class="ci-tier-bars">
-        ${window.CompareCharts.tierProgressionRow(`You (${u.race || '?'}) — ${escapeHtml(u.name || '')}`, u.tier2Time, u.tier3Time, totalMs, RACE_ACCENT[u.race])}
-        ${window.CompareCharts.tierProgressionRow(`Pro (${p.race || '?'}) — ${escapeHtml(p.name || this._proEntry.playerName || '')}`, p.tier2Time, p.tier3Time, totalMs, RACE_ACCENT[p.race])}
+        ${window.CompareCharts.tierProgressionRow(`You (${u.race || '?'}) — ${escapeHtml(PlayerNames.canonical(u.name) || '')}`, u.tier2Time, u.tier3Time, totalMs, RACE_ACCENT[u.race])}
+        ${window.CompareCharts.tierProgressionRow(`Pro (${p.race || '?'}) — ${escapeHtml(PlayerNames.canonical(p.name) || this._proEntry.playerName || '')}`, p.tier2Time, p.tier3Time, totalMs, RACE_ACCENT[p.race])}
         <div class="ci-tier-legend">
           <span class="ci-tier-legend-pip ci-tier-legend-t1"></span>T1
           <span class="ci-tier-legend-pip ci-tier-legend-t2"></span>T2
