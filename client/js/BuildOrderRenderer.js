@@ -1377,8 +1377,11 @@ const BuildOrderRenderer = class {
         seenUnitTypes[itemId] = true;
         const atkInfo = ATTACK_TYPES[event.attackType];
         const defInfo = ARMOR_TYPES[event.armorType];
-        if (atkInfo) typeIcons += `<img class="bo-row-type-icon" src="${_attr(atkInfo.icon)}" title="${_attr(atkInfo.label)} attack" />`;
-        if (defInfo) typeIcons += `<img class="bo-row-type-icon" src="${_attr(defInfo.icon)}" title="${_attr(defInfo.label)} armor" />`;
+        // icon paths come from ATTACK_TYPES/ARMOR_TYPES (Constants.js) — trusted,
+        // so use them raw. Routing them through _attr() would truncate at 32
+        // chars + "…" and break the longer ones (e.g. def-unarmored.jpg → 404).
+        if (atkInfo) typeIcons += `<img class="bo-row-type-icon" src="${atkInfo.icon}" title="${_attr(atkInfo.label)} attack" />`;
+        if (defInfo) typeIcons += `<img class="bo-row-type-icon" src="${defInfo.icon}" title="${_attr(defInfo.label)} armor" />`;
       }
       descText = `${countPrefix}${_esc(verb)} ${safeName}${typeIcons}`;
     }
