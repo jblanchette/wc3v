@@ -493,6 +493,13 @@ const ChapterMarkers = class {
   // Types that are redundant as standalone BO buttons (covered by nearby events)
   static SKIP_BO_TYPES = { gameStart: true, buildPhaseOver: true };
 
+  // Quick-jump grouping: event type -> group key. Unmapped types fall to 'game'.
+  static BO_JUMP_GROUPS = [
+    { key: 'tech',   label: 'TECH',   types: ['tier2', 'tier3', 'firstExpansion', 'firstUpgrade'] },
+    { key: 'heroes', label: 'HEROES', types: ['heroTraining', 'heroRevive'] },
+    { key: 'game',   label: 'GAME',   types: ['firstScout', 'transportLoad', 'hireMercenary'] }
+  ];
+
   renderBoQuickJump (playerIndex) {
     // Flatten clusters into individual events, keep majors + this player's minors
     // Skip types that aren't useful as standalone jump targets
@@ -508,16 +515,7 @@ const ChapterMarkers = class {
 
     if (allEvents.length === 0) return null;
 
-    const nav = document.createElement('div');
-    nav.className = 'bo-chapter-nav';
-
-    // "Quick Jump" label
-    const heading = document.createElement('span');
-    heading.className = 'bo-chapter-heading';
-    heading.textContent = 'QUICK JUMP';
-    nav.appendChild(heading);
-
-    allEvents.forEach(ev => {
+    const makeBtn = (ev) => {
       const btn = document.createElement('button');
       btn.className = `bo-chapter-btn bo-chapter-${ev.severity}`;
       btn.dataset.time = ev.gameTime;
@@ -531,13 +529,61 @@ const ChapterMarkers = class {
       const label = document.createTextNode(`${ev.shortLabel} ${formatGameTime(ev.gameTime)}`);
       btn.appendChild(label);
       btn.title = ev.label;
-
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.seekAndPlay(ev.gameTime);
       });
+      return btn;
+    };
 
-      nav.appendChild(btn);
+    // Collapsed summary: first tech, first hero, first game event (max 3)
+    const typeToGroup = {};
+    ChapterMarkers.BO_JUMP_GROUPS.forEach(g => {
+      g.types.forEach(t => { typeToGroup[t] = g.key; });
+    });
+    const firstOf = (key) =>
+      allEvents.find(ev => (typeToGroup[ev.type] || 'game') === key);
+    const summaryEvents = ['tech', 'heroes', 'game']
+      .map(firstOf)
+      .filter(Boolean);
+
+    const nav = document.createElement('div');
+    nav.className = 'bo-chapter-nav';
+    if (!this._boJumpExpanded) this._boJumpExpanded = {};
+    const expanded = !!this._boJumpExpanded[playerIndex];
+    if (expanded) nav.classList.add('bo-chapter-expanded');
+
+    // Header bar: toggle (label + chevron) + collapsed summary chips
+    const bar = document.createElement('div');
+    bar.className = 'bo-chapter-bar';
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'bo-chapter-toggle';
+    toggle.innerHTML =
+      '<span class="bo-chapter-heading">QUICK JUMP</span>' +
+      '<span class="bo-chapter-chevron" aria-hidden="true">▾</span>';
+    toggle.title = expanded ? 'Collapse quick jump' : 'Show all quick-jump events';
+    bar.appendChild(toggle);
+
+    const summary = document.createElement('div');
+    summary.className = 'bo-chapter-summary';
+    summaryEvents.forEach(ev => summary.appendChild(makeBtn(ev)));
+    bar.appendChild(summary);
+    nav.appendChild(bar);
+
+    // Expanded: every quick-jumpable event (no category headers)
+    const all = document.createElement('div');
+    all.className = 'bo-chapter-all';
+    allEvents.forEach(ev => all.appendChild(makeBtn(ev)));
+    nav.appendChild(all);
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const now = !nav.classList.contains('bo-chapter-expanded');
+      nav.classList.toggle('bo-chapter-expanded', now);
+      this._boJumpExpanded[playerIndex] = now;
+      toggle.title = now ? 'Collapse quick jump' : 'Show all quick-jump events';
     });
 
     return nav;

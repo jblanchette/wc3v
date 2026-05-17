@@ -773,11 +773,12 @@ const BuildOrderRenderer = class {
       const meTag = isMe ? `<span class="bo-hdr-me-tag" title="You're learning from this player's game">ME</span>` : '';
       const switchLink = isMe ? `<button type="button" class="bo-hdr-switch-player" data-bo-switch-player>switch player</button>` : '';
 
+      // Row 1: name + tier/race badges + Base button
       const toggleBar = document.createElement('div');
       toggleBar.classList.add('bo-hdr-toggle');
       toggleBar.innerHTML = `
         ${meTag}
-        <span class="bo-hdr-player-name" style="color:${_attr(playerColor)}">${_esc(displayName)}${buildLabel}</span>
+        <span class="bo-hdr-player-name" style="color:${_attr(playerColor)}">${_esc(displayName)}</span>
         <span class="bo-hdr-tier-badge t${Number(maxTier) || 1}">T${Number(maxTier) || 1}</span>
         <span class="bo-hdr-race-badge">${_esc(raceInfo.label)}</span>
         ${switchLink}`;
@@ -794,6 +795,14 @@ const BuildOrderRenderer = class {
       toggleBar.append(baseBtn);
 
       header.append(toggleBar);
+
+      // Row 2: full build name on its own line (never truncated)
+      if (buildLabel) {
+        const buildRow = document.createElement('div');
+        buildRow.classList.add('bo-hdr-build');
+        buildRow.innerHTML = buildLabel;
+        header.append(buildRow);
+      }
 
       column.append(header);
 

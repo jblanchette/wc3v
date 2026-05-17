@@ -1699,9 +1699,12 @@ body {
 .bo-player-header {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border-bottom: 3px solid var(--race-border, var(--bo-text-muted));
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--race-border, var(--bo-text-muted));
+  border-color: color-mix(in srgb, var(--race-border, var(--bo-text-muted)) 45%, transparent);
+  border-radius: 7px;
+  margin: 4px 6px;
   background: var(--race-bg-grad, var(--bo-header-bg));
   position: relative;
 }
@@ -1709,7 +1712,7 @@ body {
 .bo-player-header.bo-hdr-selected {
   outline: 2px solid #daa520;
   outline-offset: -2px;
-  border-radius: 4px;
+  border-radius: 7px;
 }
 
 /* --- Toggle bar (always visible) --- */
@@ -1718,26 +1721,27 @@ body {
   align-items: center;
   flex-wrap: wrap;          /* name + tier/race badges (+ "ME" / "switch player" in beginner view) wrap rather than overflow on narrow columns */
   gap: 6px 8px;
-  padding: 4px 6px;
-  margin: -4px -6px;
+  padding: 2px 0;
   border-radius: 4px;
 }
 
+/* Row 2: full build name on its own line, wraps (never truncated) */
+.bo-hdr-build {
+  font-weight: 400;
+  font-size: 12.8px;
+  line-height: 1.35;
+  color: var(--bo-text-muted);
+}
 .bo-hdr-build-name {
   font-weight: 400;
-  font-size: 13px;
-  color: var(--bo-text-muted);
-  margin-left: 4px;
+  color: inherit;
 }
 
 .bo-hdr-player-name {
   font-weight: 700;
   font-size: 18px;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex: 1; /* shrink to available space before ellipsis kicks in */
+  flex: 1;
 }
 
 .bo-hdr-tier-badge {
@@ -1763,7 +1767,6 @@ body {
   color: #FFFFFF;
   background: var(--race-border, var(--bo-text-muted));
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .bo-hdr-base-btn {
@@ -8868,35 +8871,78 @@ svg.about-feat-icon {
   z-index: 0;
 }
 
-/* BO Quick-Jump nav */
+/* BO Quick-Jump nav (collapsible) */
 .bo-chapter-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #1a2a3e;
+  border: 1px solid #2e4560;
+  border-radius: 7px;
+  margin: 4px 6px;
+}
+
+/* Single header line: toggle + up to 3 summary chips */
+.bo-chapter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.bo-chapter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.bo-chapter-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #c0c8d0;
+}
+.bo-chapter-chevron {
+  font-size: 0.7rem;
+  line-height: 1;
+  color: #7d8a9c;
+  transition: transform 0.15s ease;
+}
+.bo-chapter-toggle:hover .bo-chapter-heading { color: #fff; }
+.bo-chapter-toggle:hover .bo-chapter-chevron { color: #c0c8d0; }
+.bo-chapter-expanded .bo-chapter-chevron { transform: rotate(180deg); }
+
+.bo-chapter-summary {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 10px 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #3a4a55 transparent;
+  min-width: 0;
+  overflow: hidden;
+}
+/* Summary collapses when the full list is open */
+.bo-chapter-expanded .bo-chapter-summary { display: none; }
+
+/* Expanded: every event, wrapping, no category headers */
+.bo-chapter-all {
+  display: none;
   flex-wrap: wrap;
-  background: #1a2a3e;
-  border: 1px solid #2e4560;
-  border-radius: 6px;
-  margin: 4px 6px;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #2e4560;
 }
-.bo-chapter-heading {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #c0c8d0;
-  flex-shrink: 0;
-  padding-right: 3px;
-}
+.bo-chapter-expanded .bo-chapter-all { display: flex; }
 
 .bo-chapter-btn {
   font-family: inherit;
   font-size: 0.8rem;
   line-height: 1.2;
-  padding: 2px 10px;
+  padding: 4px 11px;
   border-radius: 10px;
   border: 1px solid var(--race-muted, #3a4a55);
   background: rgba(15, 22, 32, 0.85);
@@ -8931,11 +8977,11 @@ svg.about-feat-icon {
 .bo-filter-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 3px;
-  margin: 0 6px 6px;
+  gap: 4px;
+  padding: 5px;
+  margin: 4px 6px 6px;
   background: linear-gradient(180deg, #0a1220 0%, #0d1625 100%);
-  border: 1px solid #1f2d42;
+  border: 1px solid #2e4560;
   border-radius: 7px;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
   flex-wrap: nowrap;
@@ -8953,11 +8999,11 @@ svg.about-feat-icon {
   font-family: inherit;
   font-size: 0.8rem;
   line-height: 1;
-  padding: 6px 4px;
+  padding: 8px 4px;
   border-radius: 4px;
   border: none;
   background: transparent;
-  color: #4e5a6c;
+  color: #7d8a9c;
   cursor: pointer;
   white-space: nowrap;
   flex: 1 1 0;
