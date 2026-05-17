@@ -4,6 +4,7 @@
 	"description": "WC3 Replay Viewer",
 	"scripts": {
 		"build:parser": "node tools/build-parser-bundle.js",
+		"gen-builds-cards": "node tools/gen-builds-cards.js",
 		"gen-manifest": "node tools/gen-asset-manifest.js",
 		"check-manifest": "node tools/gen-asset-manifest.js --check"
 	},

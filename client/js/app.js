@@ -274,29 +274,79 @@ const Wc3vViewer = class {
     this.setLoadingStatus(true);
 
     this.loadFile(filename, (res) => {
-      try {
-
-        if (res.target.status >= 300) {
-          self.showUploadContents("upload-error");
-
-          return;
-        }
-
-        const { target } = res;
-        const jsonData = JSON.parse(target.responseText);
-
-        self.replayId = filename;
-        self.mapData = jsonData;
-
-        self.setup().then(() => {
-          // removing loading status indicator only after full setup completes
-          self.setLoadingStatus(false);
-        });
-      } catch (e) {
-        const size = res.target && res.target.responseText ? res.target.responseText.length : 0;
-        console.error(`Failed to load replay "${filename}" (response size: ${size} chars): ${e.message}`);
-        console.error('If JSON is truncated, re-parse with: node wc3v.js --replay=NAME --debug');
+      if (res.target.status >= 300) {
+        self.showUploadContents("upload-error");
+        return;
       }
+
+      // Offload the multi-MB JSON.parse to a worker so it doesn't freeze the
+      // main thread. The setup() chain (which IS main-thread / DOM) resumes
+      // on the worker's 'done' message — a later tick, exactly like the old
+      // synchronous-parse-in-XHR-callback path, so scrubber.init() (called
+      // synchronously below) still runs first.
+      const text = res.target.responseText;
+      const fail = (msg) => {
+        console.error(`Failed to load replay "${filename}" (response size: ${text ? text.length : 0} chars): ${msg}`);
+        console.error('If JSON is truncated, re-parse with: node wc3v.js --replay=NAME --debug');
+      };
+
+      let worker, timer, done = false;
+      const finish = () => {
+        done = true;
+        clearTimeout(timer);
+        if (worker) worker.terminate();
+      };
+
+      try {
+        worker = new Worker('/js/replay-json-worker.js');
+      } catch (e) {
+        // Worker unavailable (very old browser / blocked) — fall back to a
+        // synchronous parse so the viewer still works.
+        try {
+          self.replayId = filename;
+          self.mapData = JSON.parse(text);
+          self.setup().then(() => { self.setLoadingStatus(false); });
+        } catch (e2) {
+          fail(e2.message);
+        }
+        return;
+      }
+
+      // Hard timeout mirrors UploadManager's parser-worker guard.
+      timer = setTimeout(() => {
+        if (done) return;
+        finish();
+        fail('JSON parse timed out');
+      }, 30000);
+
+      worker.onmessage = (ev) => {
+        if (done) return;
+        const m = ev && ev.data;
+        if (!m) return;
+        if (m.type === 'done') {
+          finish();
+          try {
+            self.replayId = filename;
+            self.mapData = m.result;
+            self.setup().then(() => {
+              // removing loading status indicator only after full setup completes
+              self.setLoadingStatus(false);
+            });
+          } catch (e) {
+            fail(e.message);
+          }
+        } else if (m.type === 'error') {
+          finish();
+          fail(m.message);
+        }
+      };
+      worker.onerror = (err) => {
+        if (done) return;
+        finish();
+        fail((err && err.message) || 'worker error');
+      };
+
+      worker.postMessage({ type: 'parse', text });
     });
 
     this.scrubber.init();

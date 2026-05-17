@@ -24,7 +24,7 @@ const ROOT = path.resolve(__dirname, '..');
 const CLIENT = path.resolve(ROOT, 'client');
 
 const HASH_DIRS = ['js', 'css'];
-const EXTRA_FILES = ['data/builds-manifest.json'];
+const EXTRA_FILES = ['data/builds-manifest.json', 'data/builds-cards.json'];
 const HTML_FILES = [
   'index.html', 'viewer.html', 'replays.html',
   'about.html', 'community.html', 'terms.html', 'privacy.html'
@@ -93,25 +93,30 @@ function main () {
     let html = fs.readFileSync(p, 'utf8');
     const before = html;
 
-    // a) <script src="js/...js"> / <link href="css/...css"> — with or without
-    //    an existing ?v=… — normalise to ?v=<bundleVersion>.
+    // a) <script src="js/...js"> / <link href="[/]css/...css"> — with or
+    //    without an existing ?v=… — normalise to ?v=<bundleVersion>. Handles
+    //    both index.html's "css/main.css" and viewer.html's "/css/main.css"
+    //    (the leading-slash <link> that replaced viewer's old @import).
     html = html.replace(
       /((?:src|href)=")((?:\.{0,2}\/)?(?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[\w.]+)?(")/g,
       (_m, pre, file, post) => `${pre}${file}?v=${bundleVersion}${post}`
     );
 
-    // b) viewer.html: @import "/css/main.css?v=…"
-    html = html.replace(
-      /(@import\s+"\/css\/main\.css)(?:\?v=[\w.]+)?(")/g,
-      (_m, pre, post) => `${pre}?v=${bundleVersion}${post}`
-    );
-
-    // c) viewer.html dev cache buster — between the marker comments. The
+    // b) viewer.html dev cache buster — between the marker comments. The
     //    committed source leaves `_assetVersion = null` so dev falls back to
     //    Date.now(); here we pin it to the deploy hash.
     html = html.replace(
       /(\/\* @asset-version-begin \*\/)[\s\S]*?(\/\* @asset-version-end \*\/)/,
       (_m, begin, end) => `${begin} const _assetVersion = '${bundleVersion}'; ${end}`
+    );
+
+    // c) index.html: window.__WC3V_ASSET_VERSION__ marker. Lets the homepage
+    //    JS cache-bust /data/builds-cards.json (its fetch URL is in JS, so the
+    //    src/href rewrite in (a) can't reach it). Separate from (b) — that one
+    //    is viewer.html's `const _assetVersion`.
+    html = html.replace(
+      /(\/\* @wc3v-asset-version-begin \*\/)[\s\S]*?(\/\* @wc3v-asset-version-end \*\/)/,
+      (_m, begin, end) => `${begin} window.__WC3V_ASSET_VERSION__ = '${bundleVersion}'; ${end}`
     );
 
     if (html !== before) {

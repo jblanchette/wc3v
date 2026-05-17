@@ -90,6 +90,13 @@
   <style>
     body { margin: 0; }
   </style>
+  <script>
+    // Pinned to the deploy content-hash by tools/gen-asset-manifest.js so the
+    // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
+    // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
+    // Don't reformat the marker comments — the rewrite regex matches them.
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = null; /* @wc3v-asset-version-end */
+  </script>
 </head>
 <body class="site-page">
   <script src="js/clientConfig.js?v=2"></script>
@@ -1452,6 +1459,125 @@
     }
 
     // ─── Card renderer ─────────────────────────────────────
+    // Lookup across pro + user-uploaded builds, used by the lazy modal handler.
+    function findBuildById(id) {
+      if (!id) return null;
+      return (allBuilds || []).find(b => b.id === id)
+        || (userBuilds || []).find(b => b.id === id)
+        || null;
+    }
+
+    // Render the "+more replays" modal body on first open. This is where the
+    // per-replay summaries are actually fetched (lazily) — replacing the old
+    // eager Promise.all over every summary in init(). Idempotent via the
+    // modal's data-loaded flag so re-opening never refetches.
+    async function renderReplayModalBody(modalEl, build) {
+      if (!modalEl || modalEl.dataset.loaded === '1') return;
+      modalEl.dataset.loaded = '1';
+      const listEl = modalEl.querySelector('.site-replay-modal-list');
+      const replays = (build && build.replays) || [];
+      const first = replays[0];
+      const allExtras = replays.slice(1);
+      if (!first || !allExtras.length) {
+        if (listEl) listEl.innerHTML = '<div class="site-replay-modal-diff site-replay-modal-diff-empty">No comparison data</div>';
+        return;
+      }
+
+      // Fetch only the summaries this build needs and doesn't already have.
+      const needed = [...new Set([first, ...allExtras]
+        .map(r => r && r.replayId).filter(Boolean))]
+        .filter(rid => !summaryMap[rid]);
+      if (needed.length) {
+        await Promise.all(needed.map(rid =>
+          fetch(`/data/summaries/${rid}.json`)
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data) summaryMap[rid] = data; })
+            .catch(() => {})
+        ));
+      }
+
+      // Group remaining replays by map, sort maps naturally, rows by player.
+      const byMap = new Map();
+      for (const r of allExtras) {
+        const mapKey = (r.map || 'Unknown').trim();
+        if (!byMap.has(mapKey)) byMap.set(mapKey, []);
+        byMap.get(mapKey).push(r);
+      }
+      const mapKeys = [...byMap.keys()].sort((a, b) =>
+        a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+      );
+      for (const k of mapKeys) {
+        byMap.get(k).sort((a, b) =>
+          (a.playerName || '').localeCompare(b.playerName || '', undefined, { sensitivity: 'base' })
+        );
+      }
+
+      const mainSummary = summaryMap[first.replayId];
+      const mainPlayer = (mainSummary && mainSummary.players)
+        ? mainSummary.players[first.playerSlot] : null;
+
+      const extraGroups = mapKeys.map(mapName => {
+        const rowsHtml = byMap.get(mapName).map(r => {
+          const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}&level=${currentBand}`;
+          const tName = r.tournamentId && tournamentMap[r.tournamentId]
+            ? tournamentMap[r.tournamentId].shortName : '';
+          const stageText = [r.stage, r.round].filter(Boolean).join(' · ');
+          const tChip = tName
+            ? `<span class="site-replay-modal-tournament">${tName}</span>`
+            : '';
+          const sChip = stageText
+            ? `<span class="site-replay-modal-stage">${stageText}</span>`
+            : '';
+          const rOppName = PlayerNames.canonical(r.opponentName);
+          const opponentHtml = rOppName
+            ? `<span class="vs">vs</span><span class="opponent">${rOppName}</span>`
+            : '';
+          const extraSummary = summaryMap[r.replayId];
+          const extraPlayer = (extraSummary && extraSummary.players)
+            ? extraSummary.players[r.playerSlot] : null;
+          const diff = compareReplaySummaries(mainPlayer, extraPlayer, first, r);
+          const pillsHtml = renderDiffPills(diff);
+          const chipsHtml = renderDeltaChips(diff);
+          let diffHtml;
+          if (pillsHtml || chipsHtml) {
+            diffHtml = `<div class="site-replay-modal-diff">${pillsHtml}${chipsHtml}</div>`;
+          } else if (!extraPlayer) {
+            diffHtml = `<div class="site-replay-modal-diff site-replay-modal-diff-empty">No comparison data</div>`;
+          } else {
+            diffHtml = `<div class="site-replay-modal-diff site-replay-modal-diff-empty">Identical to main replay</div>`;
+          }
+          const heroId = (extraPlayer && extraPlayer.heroOpener && extraPlayer.heroOpener.itemId) || '';
+          const heroName = (extraPlayer && extraPlayer.heroOpener && extraPlayer.heroOpener.name) || '';
+          const heroPortrait = heroId
+            ? `<img class="site-replay-modal-hero" src="/assets/wc3icons/${heroId.toLowerCase()}.jpg" alt="${heroName}" title="${heroName}" loading="lazy" onerror="this.style.visibility='hidden'">`
+            : `<span class="site-replay-modal-hero site-replay-modal-hero-empty"></span>`;
+          return `<div class="site-replay-modal-row">
+            ${heroPortrait}
+            <div class="site-replay-modal-identity">
+              <span class="site-replay-modal-matchup">
+                <span class="player">${PlayerNames.canonical(r.playerName)}</span>
+                ${opponentHtml}
+              </span>
+              ${tChip}
+              ${sChip}
+            </div>
+            ${diffHtml}
+            <a href="${href}" class="site-replay-view-btn">View</a>
+          </div>`;
+        }).join('');
+        return `<div class="site-replay-modal-group">
+          <div class="site-replay-modal-group-header">
+            <span class="site-replay-modal-map">${formatMap(mapName)}</span>
+            <span class="site-replay-modal-count">${byMap.get(mapName).length}</span>
+          </div>
+          <div class="site-replay-modal-group-rows">${rowsHtml}</div>
+        </div>`;
+      }).join('');
+
+      if (listEl) listEl.innerHTML = extraGroups
+        || '<div class="site-replay-modal-diff site-replay-modal-diff-empty">No comparison data</div>';
+    }
+
     function buildCard(build) {
       const rc = raceColor(build.race);
       const tp = build.tierProgression;
@@ -1547,9 +1673,11 @@
         // Get replay summary data for upgrade levels
         const replayId = (build.replays && build.replays[0]) ? build.replays[0].replayId : null;
         const playerSlot = (build.replays && build.replays[0]) ? build.replays[0].playerSlot : null;
-        const summary = replayId ? summaryMap[replayId] : null;
-        const playerSummary = summary && playerSlot ? summary.players[playerSlot] : null;
-        const researched = (playerSummary && playerSummary.researched) || [];
+        // Upgrade badges come from the precomputed per-card slice (keyed
+        // replayId → playerSlot). Full summaries are no longer fetched up
+        // front; the coreUpgrades fallback below still fires when absent.
+        const cardSlots = (window.__buildsCards && replayId) ? window.__buildsCards[replayId] : null;
+        const researched = (cardSlots && playerSlot != null && cardSlots[String(playerSlot)]) || [];
 
         // ── Key units (enlarged portraits, no per-unit type icons)
         let keyHtml = '';
@@ -1665,106 +1793,27 @@
         let moreModal = '';
         if (replays.length > 1) {
           const modalId = `replay-modal-${(build.id || '').replace(/\W/g, '')}`;
-          // Group remaining replays by map, sort maps naturally, sort rows by player.
+          // Lightweight shell only — no summary access here. The per-replay
+          // diff rows (which need the full summaries) render lazily via
+          // renderReplayModalBody() the first time the modal is opened, so
+          // the grid no longer waits on a ~6-8MB summary fetch storm.
           const allExtras = replays.slice(1);
-          const byMap = new Map();
-          for (const r of allExtras) {
-            const mapKey = (r.map || 'Unknown').trim();
-            if (!byMap.has(mapKey)) byMap.set(mapKey, []);
-            byMap.get(mapKey).push(r);
-          }
-          const mapKeys = [...byMap.keys()].sort((a, b) =>
-            a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
-          );
-          for (const k of mapKeys) {
-            byMap.get(k).sort((a, b) =>
-              (a.playerName || '').localeCompare(b.playerName || '', undefined, { sensitivity: 'base' })
-            );
-          }
-
-          // Pull the main replay's player summary once for diff comparison.
-          const mainSummary = summaryMap[first.replayId];
-          const mainPlayer = (mainSummary && mainSummary.players)
-            ? mainSummary.players[first.playerSlot] : null;
-
-          const extraGroups = mapKeys.map(mapName => {
-            const rowsHtml = byMap.get(mapName).map(r => {
-              const href = `/viewer?r=${r.replayId}&player=${r.playerSlot}&buildId=${build.id}&level=${currentBand}`;
-              const tName = r.tournamentId && tournamentMap[r.tournamentId]
-                ? tournamentMap[r.tournamentId].shortName : '';
-              const stageText = [r.stage, r.round].filter(Boolean).join(' · ');
-              const tChip = tName
-                ? `<span class="site-replay-modal-tournament">${tName}</span>`
-                : '';
-              const sChip = stageText
-                ? `<span class="site-replay-modal-stage">${stageText}</span>`
-                : '';
-              const rOppName = PlayerNames.canonical(r.opponentName);
-              const opponentHtml = rOppName
-                ? `<span class="vs">vs</span><span class="opponent">${rOppName}</span>`
-                : '';
-
-              // Compute diff vs main replay.
-              const extraSummary = summaryMap[r.replayId];
-              const extraPlayer = (extraSummary && extraSummary.players)
-                ? extraSummary.players[r.playerSlot] : null;
-              const diff = compareReplaySummaries(mainPlayer, extraPlayer, first, r);
-              const pillsHtml = renderDiffPills(diff);
-              const chipsHtml = renderDeltaChips(diff);
-              let diffHtml;
-              if (pillsHtml || chipsHtml) {
-                diffHtml = `<div class="site-replay-modal-diff">${pillsHtml}${chipsHtml}</div>`;
-              } else if (!extraPlayer) {
-                diffHtml = `<div class="site-replay-modal-diff site-replay-modal-diff-empty">No comparison data</div>`;
-              } else {
-                diffHtml = `<div class="site-replay-modal-diff site-replay-modal-diff-empty">Identical to main replay</div>`;
-              }
-
-              // Leading hero portrait (extra replay's hero opener).
-              const heroId = (extraPlayer && extraPlayer.heroOpener && extraPlayer.heroOpener.itemId) || '';
-              const heroName = (extraPlayer && extraPlayer.heroOpener && extraPlayer.heroOpener.name) || '';
-              const heroPortrait = heroId
-                ? `<img class="site-replay-modal-hero" src="/assets/wc3icons/${heroId.toLowerCase()}.jpg" alt="${heroName}" title="${heroName}" loading="lazy" onerror="this.style.visibility='hidden'">`
-                : `<span class="site-replay-modal-hero site-replay-modal-hero-empty"></span>`;
-
-              return `<div class="site-replay-modal-row">
-                ${heroPortrait}
-                <div class="site-replay-modal-identity">
-                  <span class="site-replay-modal-matchup">
-                    <span class="player">${PlayerNames.canonical(r.playerName)}</span>
-                    ${opponentHtml}
-                  </span>
-                  ${tChip}
-                  ${sChip}
-                </div>
-                ${diffHtml}
-                <a href="${href}" class="site-replay-view-btn">View</a>
-              </div>`;
-            }).join('');
-            return `<div class="site-replay-modal-group">
-              <div class="site-replay-modal-group-header">
-                <span class="site-replay-modal-map">${formatMap(mapName)}</span>
-                <span class="site-replay-modal-count">${byMap.get(mapName).length}</span>
-              </div>
-              <div class="site-replay-modal-group-rows">${rowsHtml}</div>
-            </div>`;
-          }).join('');
-
           const extraCount = allExtras.length;
-          const subtitleText = `${extraCount} more replay${extraCount === 1 ? '' : 's'} · ${mapKeys.length} map${mapKeys.length === 1 ? '' : 's'}`;
+          const mapCount = new Set(allExtras.map(r => (r.map || 'Unknown').trim())).size;
+          const subtitleText = `${extraCount} more replay${extraCount === 1 ? '' : 's'} · ${mapCount} map${mapCount === 1 ? '' : 's'}`;
 
-          moreBtn = `<button class="site-replay-toggle" onclick="event.stopPropagation(); document.getElementById('${modalId}').classList.add('open');" title="Show ${extraCount} more replay${extraCount === 1 ? '' : 's'}">+${extraCount} more</button>`;
+          moreBtn = `<button class="site-replay-toggle" data-modal-id="${modalId}" title="Show ${extraCount} more replay${extraCount === 1 ? '' : 's'}">+${extraCount} more</button>`;
 
-          moreModal = `<div class="site-replay-modal" id="${modalId}" onclick="if(event.target===this)this.classList.remove('open')">
+          moreModal = `<div class="site-replay-modal" id="${modalId}" data-build-id="${Security.escapeHtml(build.id || '')}" onclick="if(event.target===this)this.classList.remove('open')">
               <div class="site-replay-modal-box" style="--race-color:${rc}">
                 <div class="site-replay-modal-header">
                   <div class="site-replay-modal-title-block">
                     <div class="site-replay-modal-title">${build.name}</div>
                     <div class="site-replay-modal-subtitle">${subtitleText}</div>
                   </div>
-                  <button class="site-replay-modal-close" onclick="event.stopPropagation(); this.closest('.site-replay-modal').classList.remove('open')">\u2715</button>
+                  <button class="site-replay-modal-close" onclick="event.stopPropagation(); this.closest('.site-replay-modal').classList.remove('open')">✕</button>
                 </div>
-                <div class="site-replay-modal-list">${extraGroups}</div>
+                <div class="site-replay-modal-list"><div class="site-replay-modal-diff site-replay-modal-diff-empty">Loading…</div></div>
               </div>
             </div>`;
         }
@@ -2318,18 +2367,20 @@
         // tournaments.json is optional — proceed without tournament data
       }
 
-      // Load summaries for ALL replays (main + extras) — used for upgrade rendering
-      // on the card and for diff/similarity tagging in the "+more replays" modal.
-      const replayIds = [...new Set(
-        allBuilds.filter(b => b.replays && b.replays.length)
-          .flatMap(b => b.replays.map(r => r.replayId))
-      )];
-      await Promise.all(replayIds.map(rid =>
-        fetch(`/data/summaries/${rid}.json`)
-          .then(r => r.ok ? r.json() : null)
-          .then(data => { if (data) summaryMap[rid] = data; })
-          .catch(() => {})
-      ));
+      // Precomputed per-card upgrade data — the only summary slice the grid
+      // needs at first paint (built by tools/gen-builds-cards.js, content-
+      // hashed via gen-asset-manifest.js → window.__WC3V_ASSET_VERSION__).
+      // Replaces the old ~6-8MB Promise.all over every replay summary. Full
+      // per-replay summaries are now loaded lazily when a card's "+more
+      // replays" modal is opened (see renderReplayModalBody).
+      try {
+        const v = window.__WC3V_ASSET_VERSION__;
+        const cRes = await fetch('/data/builds-cards.json' + (v ? '?v=' + v : ''));
+        const cData = await cRes.json();
+        window.__buildsCards = (cData && cData.cards) || {};
+      } catch (e) {
+        window.__buildsCards = {};
+      }
 
       // Build search index
       buildSearchIndex = allBuilds.map(buildSearchText);
@@ -2474,7 +2525,20 @@
         }
         if (e.target.closest('.site-replay-view-btn')) return;
         if (e.target.closest('.site-replay-guide-btn')) return;
-        if (e.target.closest('.site-replay-toggle')) return;
+        // "+N more" → open the modal and lazily render its body (fetches that
+        // build's summaries on first open only). Keep stopPropagation so the
+        // card's data-href navigation doesn't also fire.
+        const toggle = e.target.closest('.site-replay-toggle');
+        if (toggle) {
+          e.stopPropagation();
+          const modalEl = toggle.dataset.modalId && document.getElementById(toggle.dataset.modalId);
+          if (modalEl) {
+            modalEl.classList.add('open');
+            const build = findBuildById(modalEl.dataset.buildId);
+            if (build) renderReplayModalBody(modalEl, build);
+          }
+          return;
+        }
         if (e.target.closest('.site-replay-modal')) return;
         // Learner block: a tab click switches panes within that card; any
         // other click inside the block is swallowed (never navigates).

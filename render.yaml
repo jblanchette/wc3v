@@ -11,7 +11,7 @@ services:
     # deploy changes the hash, so browsers re-fetch. Uses only Node built-ins
     # (no npm install needed). If this command fails the deploy fails, which
     # is safe (the previous deploy keeps serving).
-    buildCommand: node tools/gen-asset-manifest.js
+    buildCommand: node tools/gen-builds-cards.js && node tools/gen-asset-manifest.js
     headers:
       - path: /*
         name: X-Frame-Options
@@ -40,10 +40,26 @@ services:
       - path: /css/*
         name: Cache-Control
         value: public, max-age=31536000, immutable
+      # builds-cards.json is fetched with ?v=<bundleVersion> (gen-asset-
+      # manifest hashes it into the marker the homepage reads), so a data
+      # change = new URL = re-fetch — safe to cache hard. Do NOT add a
+      # blanket /data/* immutable rule: the per-replay summaries below are
+      # unversioned and load lazily.
+      - path: /data/builds-cards.json
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /data/summaries/*
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
       # The parser worker + its bundle are loaded by importScripts()/new Worker()
       # WITHOUT a ?v= query (can't self-reference the hash), so they must keep a
       # revalidating TTL rather than being immutable. They change rarely.
       - path: /js/parser-worker.js
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
+      # Loaded via new Worker() without a ?v= query (can't self-reference the
+      # hash), so it revalidates rather than being immutable. Changes rarely.
+      - path: /js/replay-json-worker.js
         name: Cache-Control
         value: public, max-age=300, must-revalidate
       - path: /js/vendor/*
