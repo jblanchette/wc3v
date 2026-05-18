@@ -141,6 +141,9 @@ const FloatingText = class {
     if (event.key === 'itemUse' && event.category === 'tome') return;
     if (event.key === 'dropItem' && event.type === 'potentialUnregisteredItem') return;
     if (event.key === 'dropItem' && event.item && event.item.itemId === 'Jwid') return;
+    // Scouting is 1v1-only — detection mis-credits in team/FFA games.
+    if (event.key === 'scout' && window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
+        && window.wc3v.isNonOneVsOne()) return;
 
     const pos = this._resolvePosition(event);
     if (!pos) return;

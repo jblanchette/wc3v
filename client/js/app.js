@@ -1081,6 +1081,8 @@ const Wc3vViewer = class {
   }
 
   toggleViewOption (optionKey) {
+    // Creep route detection is permanently off for non-1v1 (mis-credits teams).
+    if (optionKey === 'displayCreepRoute' && this.isNonOneVsOne()) return;
     this.viewOptions[optionKey] = !this.viewOptions[optionKey];
     const isOn = this.viewOptions[optionKey];
 
@@ -2950,6 +2952,13 @@ const Wc3vViewer = class {
       autoSplitScreen: true
     };
 
+    // Creep/spawn-camp route detection is keyed off 1v1 team heuristics and
+    // mis-credits routes to red/blue aggregate teams in team/FFA games.
+    // Force it off and lock the toggle for non-1v1.
+    if (this.isNonOneVsOne()) {
+      this.viewOptions.displayCreepRoute = false;
+    }
+
     Object.keys(this.viewOptions).forEach(optionKey => {
       const el = document.getElementById(`viewer-option-${optionKey}`);
       if (!el) {
@@ -2985,18 +2994,27 @@ const Wc3vViewer = class {
 
       settingsModalEl.innerHTML = '';
 
+      const creepRouteLocked = this.isNonOneVsOne();
+
       buttons.forEach(btn => {
         const el = document.createElement('div');
         el.classList.add('vc-btn');
         if (btn.featured) el.classList.add('vc-featured');
         el.id = `viewer-option-${btn.key}`;
 
+        const locked = btn.key === 'displayCreepRoute' && creepRouteLocked;
+        if (locked) {
+          el.classList.add('vc-disabled');
+          el.title = 'Creep route detection is 1v1-only';
+        }
+
         el.textContent = btn.label;
         el.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (locked) return;
           this.toggleViewOption(btn.key);
         });
-        if (this.viewOptions[btn.key]) el.classList.add('on');
+        if (this.viewOptions[btn.key] && !locked) el.classList.add('on');
 
         settingsModalEl.append(el);
       });

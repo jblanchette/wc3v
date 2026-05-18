@@ -3033,6 +3033,19 @@ body {
   background: #4a8cb5;
 }
 
+.vc-btn.vc-disabled,
+.vc-btn.vc-disabled:hover {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #2a3a45;
+  color: #6a7a85;
+  border-color: #3a4a55;
+}
+
+.vc-btn.vc-disabled::before {
+  background: #4a5a65;
+}
+
 /* ============================================================
    MATCH HEADER — replay info dashboard above content
    ============================================================ */

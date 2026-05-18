@@ -289,6 +289,9 @@ const BuildOrderData = class {
         }));
 
       } else if (key === 'scout') {
+        // Scouting is 1v1-only — detection mis-credits in team/FFA games.
+        if (window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
+            && window.wc3v.isNonOneVsOne()) return;
         events.push(create('scout', gameTime, supplyUsed, supplyMax, w, {
           displayName: event.isLumberScout
             ? 'Wisp Lumber Scout'

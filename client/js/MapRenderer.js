@@ -168,6 +168,12 @@ const MapRenderer = class {
 
     if (campHitOut) campHitOut.length = 0;
 
+    // Creep camp team attribution (colored fills, split wedges, clear-order
+    // badges, route lines) is 1v1-only — it aggregates into red/blue teams and
+    // mis-credits in team/FFA games. Render plain neutral rings instead.
+    const nonOneVsOne = !!(window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
+      && window.wc3v.isNonOneVsOne());
+
     const groups = Object.values(world.neutralGroups);
     const claimPaths = {};
 
@@ -236,7 +242,7 @@ const MapRenderer = class {
       }
 
       // collect route paths — add to each team that has progress
-      if (hasCampProgress && claimTime != null && gameTime >= claimTime && currentTeams) {
+      if (hasCampProgress && claimTime != null && gameTime >= claimTime && currentTeams && !nonOneVsOne) {
         Object.entries(currentTeams).forEach(([teamId, progress]) => {
           if (progress <= 0.005) return;
           if (!claimPaths[teamId]) {
@@ -248,7 +254,7 @@ const MapRenderer = class {
 
       const isHovered = (uuid === hoveredCampUuid);
 
-      if (maxProgress > 0.02 && currentTeams) {
+      if (maxProgress > 0.02 && currentTeams && !nonOneVsOne) {
         //
         // camp has been interacted with — solid fill
         //
@@ -332,7 +338,7 @@ const MapRenderer = class {
       }
 
       // camp order badges — one per team that participated
-      if (maxProgress > 0.02 && claimTime != null && gameTime >= claimTime && teamOrders) {
+      if (maxProgress > 0.02 && claimTime != null && gameTime >= claimTime && teamOrders && !nonOneVsOne) {
         const teamIds = Object.keys(teamOrders);
         teamIds.forEach((tid, idx) => {
           const teamOrder = teamOrders[tid];

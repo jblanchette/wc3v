@@ -133,6 +133,14 @@ const ClientUnit = class {
       this[field] = unitData[field] || null;
     });
 
+    // Scouting attribution (label, fade lifecycle, broadcast-camera focus,
+    // BO/floating-text "SCOUTING" tags) is 1v1-only. The detection keys off
+    // 2-player heuristics and mis-credits in team/FFA games — drop it entirely.
+    if (this.scoutInfo && window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
+        && window.wc3v.isNonOneVsOne()) {
+      this.scoutInfo = null;
+    }
+
     // units in training shouldn't render until training completes
     // buildings shouldn't render until construction starts
     this.readyTime = this.constructionStartTime || this.trainedTime || this.spawnTime;
