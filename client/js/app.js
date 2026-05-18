@@ -18,7 +18,9 @@ const Wc3vViewer = class {
   // game is loaded. Called by BandSwitcher.onChange and the cross-tab
   // storage listener.
   _applyBand (band) {
-    const on = (band === 'new');
+    // Non-1v1 replays are full-detail only — the skill-band switch must not
+    // re-enable beginner view here even if the user flips it mid-session.
+    const on = (band === 'new') && !this._proFeaturesDisabled;
     if (this.boLearnerMode === on) return;
     this.boLearnerMode = on;
     const app = document.getElementById('app');
@@ -929,13 +931,18 @@ const Wc3vViewer = class {
     toolbar.id = 'camera-toolbar';
     toolbar.className = 'camera-toolbar';
 
-    toolbar.innerHTML = [
+    // Non-1v1: split-screen and per-player (P1/P2) cameras don't generalize
+    // past two players — only Auto (fits all action) and Free are offered.
+    toolbar.innerHTML = (this.isNonOneVsOne() ? [
+      '<button class="cam-btn cam-btn-active" data-mode="auto">AUTO</button>',
+      '<button class="cam-btn" data-mode="free">FREE</button>'
+    ] : [
       '<button class="cam-btn cam-btn-active" data-mode="auto">AUTO</button>',
       '<button class="cam-btn" data-mode="split">SPLIT</button>',
       '<button class="cam-btn" data-mode="p1">P1</button>',
       '<button class="cam-btn" data-mode="p2">P2</button>',
       '<button class="cam-btn" data-mode="free">FREE</button>'
-    ].join('');
+    ]).join('');
     container.appendChild(toolbar);
 
     toolbar.addEventListener('click', (e) => {
@@ -946,11 +953,12 @@ const Wc3vViewer = class {
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (!this.broadcastCamera) return;
+      const non1v1 = this.isNonOneVsOne();
       switch (e.key.toLowerCase()) {
         case 'a': this._handleCameraButton('auto'); break;
-        case 's': this._handleCameraButton('split'); break;
-        case '1': this._handleCameraButton('p1'); break;
-        case '2': this._handleCameraButton('p2'); break;
+        case 's': if (!non1v1) this._handleCameraButton('split'); break;
+        case '1': if (!non1v1) this._handleCameraButton('p1'); break;
+        case '2': if (!non1v1) this._handleCameraButton('p2'); break;
         case 'f': this._handleCameraButton('free'); break;
       }
     });
@@ -958,6 +966,8 @@ const Wc3vViewer = class {
 
   _handleCameraButton (mode) {
     if (!this.broadcastCamera) return;
+    // Non-1v1: split-screen / per-player cameras are unsupported.
+    if (this.isNonOneVsOne() && (mode === 'split' || mode === 'p1' || mode === 'p2')) return;
     switch (mode) {
       case 'auto':  this.broadcastCamera.setMode(CameraMode.ACTION_FOCUS); break;
       case 'split':
@@ -1085,7 +1095,8 @@ const Wc3vViewer = class {
 
     // Sync auto-split preference to broadcast camera
     if (optionKey === 'autoSplitScreen' && this.broadcastCamera) {
-      this.broadcastCamera._autoSplitEnabled = isOn;
+      // Auto-split is permanently off for non-1v1 regardless of the toggle.
+      this.broadcastCamera._autoSplitEnabled = isOn && !this.isNonOneVsOne();
       if (!isOn && this.broadcastCamera.mode === CameraMode.SPLIT_SCREEN) {
         this.broadcastCamera.setMode(CameraMode.ACTION_FOCUS);
       }
@@ -1375,6 +1386,7 @@ const Wc3vViewer = class {
   // slot, or be omitted (then we show the "pick a player" gate when there's
   // more than one non-neutral player).
   enterGuideMode (who) {
+    if (this._proFeaturesDisabled) return; // 1v1-only feature
     if (typeof ReplayGuide === 'undefined' || !ReplayGuide.buildGuide) return;
     const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
     if (players.length < 2) return; // need two players to compare
@@ -2593,6 +2605,7 @@ const Wc3vViewer = class {
   // finishes first. If ?player is missing/unresolvable, enterGuideMode shows
   // the "whose game?" picker.
   _maybeAutoEnterGuide () {
+    if (this._proFeaturesDisabled) return; // walkthrough is 1v1-only
     let params;
     try { params = new URLSearchParams(window.location.search); } catch (e) { return; }
     if (!params.get('guide')) return;
@@ -2818,6 +2831,20 @@ const Wc3vViewer = class {
     .then(() => {
       this.updateLoadingStatus('Preparing UI...');
 
+      // Non-1v1 games are full-detail only: pro-analysis features (beginner
+      // view, guided walkthrough, Compare) are 1v1-only and don't generalize.
+      // This is the single chokepoint — runs after setupPlayers() so
+      // getGameMode() is resolvable, before any BO/guide/compare wiring.
+      this._proFeaturesDisabled = this.isNonOneVsOne();
+      if (this._proFeaturesDisabled) {
+        this.boLearnerMode = false;
+        const appEl = document.getElementById('app');
+        if (appEl) {
+          appEl.classList.remove('is-beginner');
+          appEl.classList.add('is-non-1v1');
+        }
+      }
+
       this.boRenderer = new BuildOrderRenderer(this);
       this.matchHeader = new MatchHeader(this);
       this.matchSummary.setup();
@@ -2831,6 +2858,7 @@ const Wc3vViewer = class {
         // are sufficient for the mobile build-order-only experience.
         this.gameLoaded = true;
         this.matchHeader.render();
+        this._renderNon1v1Banner();
         this.applyLayoutMode();
         return;
       }
@@ -2840,6 +2868,7 @@ const Wc3vViewer = class {
       this.chapterMarkers = new ChapterMarkers(this);
       this.placementViewer.setup();
       this.matchHeader.render();
+      this._renderNon1v1Banner();
 
       this.chapterMarkers.detectChapters(this.players, this.matchEndTime);
       const cmTrack = document.getElementById('scrubber-bar-track');
@@ -2991,6 +3020,66 @@ const Wc3vViewer = class {
         }
       }
     });
+  }
+
+  // Game-mode categorization. Prefer the parser-emitted `gameMode` on the
+  // .wc3v file; fall back to recomputing from raw player/team data so legacy
+  // files (and pre-rebuild bundles) still classify correctly. STRICT rule —
+  // must stay in sync with helpers/utils.js computeGameMode and the
+  // UploadManager fallback.
+  getGameMode () {
+    if (this.mapData && typeof this.mapData.gameMode === 'string') {
+      return this.mapData.gameMode;
+    }
+    const pmap = (this.mapData && this.mapData.players) || {};
+    const humans = Object.values(pmap).filter(p => p && !p.isNeutralPlayer);
+    const n = humans.length;
+    if (n < 2) return 'custom';
+    const byTeam = {};
+    humans.forEach(p => { byTeam[p.teamId] = (byTeam[p.teamId] || 0) + 1; });
+    const counts = Object.values(byTeam);
+    const tc = counts.length;
+    if (n === 2 && tc === 2) return '1v1';
+    if (tc === 2 && counts[0] === counts[1]) {
+      return ({ 2: '2v2', 3: '3v3', 4: '4v4' })[counts[0]] || 'custom';
+    }
+    if (n >= 3 && tc === n) return 'ffa';
+    return 'custom';
+  }
+
+  isNonOneVsOne () {
+    const m = this.getGameMode();
+    return !!m && m !== '1v1';
+  }
+
+  // Persistent, dismissible banner shown at the top of the viewer for
+  // non-1v1 games. Explains the restricted experience. Dismissal is
+  // remembered per replay for the session (matches the per-replay
+  // sessionStorage convention used elsewhere, e.g. bo player index).
+  _renderNon1v1Banner () {
+    if (!this.isNonOneVsOne()) return;
+    if (document.getElementById('non1v1-banner')) return;
+    const key = `wc3v.non1v1BannerDismissed.${this.replayId || 'default'}`;
+    try { if (sessionStorage.getItem(key) === '1') return; } catch (e) { /* sessionStorage off */ }
+
+    const host = document.getElementById('app') || document.body;
+    const modeLabel = ({ '2v2': '2v2', '3v3': '3v3', '4v4': '4v4', ffa: 'FFA', custom: 'Custom' })[this.getGameMode()] || this.getGameMode().toUpperCase();
+    const bar = document.createElement('div');
+    bar.id = 'non1v1-banner';
+    bar.className = 'non1v1-banner';
+    const msg = document.createElement('span');
+    msg.textContent = `${modeLabel} game — fully viewable. Build orders show one player at a time; pro comparison, guided walkthrough and beginner view are 1v1-only and disabled here.`;
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'non1v1-banner-x';
+    x.setAttribute('aria-label', 'Dismiss');
+    x.textContent = '×';
+    x.addEventListener('click', () => {
+      bar.remove();
+      try { sessionStorage.setItem(key, '1'); } catch (e) { /* sessionStorage off */ }
+    });
+    bar.append(msg, x);
+    host.insertBefore(bar, host.firstChild);
   }
 
   setupPlayers () {
@@ -3266,7 +3355,7 @@ const Wc3vViewer = class {
     if (window.BroadcastCamera) {
       this.broadcastCamera = new BroadcastCamera(this);
       this.broadcastCamera.attachToZoom(this.zoom, this.zoomContainer);
-      this.broadcastCamera._autoSplitEnabled = this.viewOptions.autoSplitScreen;
+      this.broadcastCamera._autoSplitEnabled = this.isNonOneVsOne() ? false : this.viewOptions.autoSplitScreen;
       this.broadcastCamera.onModeChange = (mode) => {
         this._updateCameraToolbar(mode);
       };

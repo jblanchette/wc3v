@@ -522,6 +522,28 @@ const assignCampOrder = (world, wc3vPlayers) => {
 // write wc3v output to file
 ////
 
+// Categorize a game by its non-neutral player/team shape. STRICT: only exact
+// equal-team shapes get a clean label; anything off-pattern is 'custom'. The
+// client mirrors this exactly (Wc3vViewer.getGameMode, UploadManager fallback);
+// keep all three in sync.
+const computeGameMode = (playersMap) => {
+  const humans = Object.values(playersMap || {}).filter(p => p && !p.isNeutralPlayer);
+  const n = humans.length;
+  if (n < 2) return 'custom';
+
+  const byTeam = {};
+  humans.forEach(p => { byTeam[p.teamId] = (byTeam[p.teamId] || 0) + 1; });
+  const counts = Object.values(byTeam);
+  const teamCount = counts.length;
+
+  if (n === 2 && teamCount === 2) return '1v1';
+  if (teamCount === 2 && counts[0] === counts[1]) {
+    return ({ 2: '2v2', 3: '3v3', 4: '4v4' })[counts[0]] || 'custom';
+  }
+  if (n >= 3 && teamCount === n) return 'ffa';
+  return 'custom';
+};
+
 // Pure assembly: produces the .wc3v output object. No filesystem I/O.
 // Mutates `replay` (strips gameData, replaces replay.players); same as the
 // pre-refactor writeOutput behavior — kept identical so callers see no change.
@@ -725,6 +747,10 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
     })())
   };
 
+  // Categorize the game from the players actually emitted (unit-less players
+  // already dropped above — matches what the viewer renders).
+  output.gameMode = computeGameMode(output.players);
+
   return output;
 };
 
@@ -874,6 +900,7 @@ module.exports = {
 	readCliArgs,
 	writeOutput,
 	buildOutputObject,
+	computeGameMode,
 
   findIndexFrom,
   StandardStreamSearch,

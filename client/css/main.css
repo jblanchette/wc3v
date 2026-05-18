@@ -1517,10 +1517,26 @@ body {
   position: relative;
 }
 
-#bo-columns.bo-single {
-  justify-content: center;
-  padding-left: 40px;
+/* Non-1v1 / single-player BO: only one column renders, so the panel doesn't
+   need the 660px width sized for two side-by-side columns + the timeline gap.
+   Narrow it (freeing horizontal space for the map) — scoped to desktop
+   live-bo; mobile-bo overrides #bo-columns later in the cascade. */
+#app.layout-mode-live-bo.is-non-1v1 #build-area {
+  width: 372px;
+  min-width: 360px;
 }
+
+#bo-columns.bo-single {
+  justify-content: flex-start;
+  /* No timeline spline in single-player BO (removed for non-1v1), so no need
+     to reserve a left gutter for it — keep the base 6px and use the width. */
+  padding-left: 6px;
+  max-width: 372px;
+}
+
+/* Let the lone column consume the freed width instead of leaving dead
+   space to its right (the 280px cap is sized for the two-column layout). */
+#bo-columns.bo-single .bo-column { max-width: none; }
 
 .bo-side {
   flex: 1;
@@ -8201,6 +8217,86 @@ body.viewer-mobile-mode #loading-overlay {
   text-transform: uppercase;
 }
 
+/* ── Non-1v1: desktop single-player BO selector ──────────
+   Shown above the (single) BO column for 2v2/3v3/4v4/FFA/custom games
+   where side-by-side team columns don't scale. Mirrors the dark, sticky
+   mobile-switch container. */
+.bo-player-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 10px 12px;
+  background: rgba(15, 22, 30, 0.96);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.bo-player-select-wrap[hidden] { display: none; }
+.bo-player-select-label {
+  font: 600 0.85rem/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9fb2c2;
+}
+.bo-player-select {
+  flex: 1 1 auto;
+  min-height: 40px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(20, 28, 36, 0.95);
+  color: #e6edf3;
+  font: 600 0.95rem/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+.bo-player-select:focus-visible {
+  outline: 2px solid #5ea8d4;
+  outline-offset: 1px;
+}
+
+/* ── Non-1v1: viewer notice banner ───────────────────────
+   Dismissible, sticky strip at the top of #app explaining the
+   restricted (full-detail, single-player BO, auto/free camera)
+   experience for non-1v1 replays. */
+.non1v1-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  padding: 9px 16px;
+  background: linear-gradient(180deg, rgba(200,168,78,0.20), rgba(200,168,78,0.10));
+  border-bottom: 1px solid rgba(200,168,78,0.45);
+  color: #e8dcb6;
+  font: 500 0.85rem/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.non1v1-banner span { flex: 1 1 auto; }
+.non1v1-banner-x {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: #e8dcb6;
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.non1v1-banner-x:hover { background: rgba(255,255,255,0.16); }
+
+/* Defense-in-depth: hide any pro-analysis affordance inside the viewer
+   for non-1v1 games (beginner pick gate, walkthrough CTA, in-viewer
+   skill-band card). The JS chokepoint already disables their behavior;
+   this guarantees they never paint. */
+#app.is-non-1v1 #bo-pick-panel,
+#app.is-non-1v1 .bo-walkthrough-cta,
+#app.is-non-1v1 .skill-band-row,
+#app.is-non-1v1 .skill-band-card { display: none !important; }
+
 /* Small phone (≤ 480px): kept as a fallback for the rare case where mobile
    JS detection somehow fails — guarantees the desktop side-by-side layout
    doesn't render with broken proportions. */
@@ -13619,6 +13715,36 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
   align-items: center;
   gap: 6px;
 }
+/* Right cluster of the card header: game-format badge + grade/reference
+   badge, pinned to the top-right corner. */
+.rep-card-head-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+/* Game-format badge (1v1 / 2v2 / FFA / …). 1v1 is the quiet default;
+   non-1v1 formats get a warmer accent since they're viewable-only. */
+.rep-card-mode-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #c7d2dd;
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.14);
+  white-space: nowrap;
+}
+.rep-card-mode-badge.rep-card-mode-multi {
+  color: #f0c46e;
+  background: rgba(242,196,110,0.16);
+  border-color: rgba(242,196,110,0.42);
+}
 .rep-card-race-badge {
   display: inline-block;
   padding: 3px 8px;
@@ -14032,6 +14158,113 @@ body.help-modal-active {
 }
 
 /* .help-path is already a single-column flex layout, no breakpoint needed. */
+
+/* ─── Non-1v1 notice modal ───────────────────────────────────────
+   Polished, self-contained card: accent icon badge, game-mode pill,
+   info note and a real primary button. Overrides the generic
+   .help-modal-card chrome (no header bar / close X). */
+#non1v1-notice-modal .help-modal-backdrop {
+  background: rgba(6, 8, 12, 0.78);
+  backdrop-filter: blur(5px);
+}
+.n1-card {
+  max-width: 460px;
+  text-align: center;
+  padding: 34px 32px 28px;
+  border: 1px solid rgba(122, 178, 242, 0.18);
+  background: linear-gradient(180deg, rgba(40, 46, 60, 0.99), rgba(22, 26, 34, 0.99));
+  box-shadow: 0 24px 64px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  animation: n1-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes n1-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.n1-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #7ab2f2;
+  background: radial-gradient(circle at 50% 40%, rgba(122,178,242,0.22), rgba(122,178,242,0.06));
+  border: 1px solid rgba(122,178,242,0.32);
+}
+.n1-icon svg { width: 30px; height: 30px; }
+
+.n1-title {
+  margin: 0 0 10px;
+  font-size: 1.32rem;
+  font-weight: 700;
+  color: #f4f6fa;
+  letter-spacing: -0.01em;
+}
+
+.n1-lead {
+  margin: 0 auto 20px;
+  max-width: 38ch;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #b6bdca;
+}
+.n1-lead strong { color: #e6eaf2; font-weight: 600; }
+
+.n1-mode-pill {
+  display: inline-block;
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #cfe2fb;
+  background: rgba(122,178,242,0.16);
+  border: 1px solid rgba(122,178,242,0.38);
+}
+
+.n1-note {
+  display: flex;
+  gap: 10px;
+  text-align: left;
+  padding: 12px 14px;
+  margin-bottom: 24px;
+  border-radius: 9px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #aab2c0;
+  font-size: 0.87rem;
+  line-height: 1.5;
+}
+.n1-note strong { color: #d6dbe4; font-weight: 600; }
+.n1-note-ico {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: #7ab2f2;
+}
+
+.n1-actions { display: flex; justify-content: center; }
+.n1-btn {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  min-width: 160px;
+  padding: 11px 28px;
+  border-radius: 9px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0c1118;
+  background: linear-gradient(180deg, #8ec2f7, #5d97e0);
+  box-shadow: 0 6px 18px rgba(93,151,224,0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.n1-btn:hover { filter: brightness(1.07); box-shadow: 0 8px 22px rgba(93,151,224,0.45); }
+.n1-btn:active { transform: translateY(1px); box-shadow: 0 3px 10px rgba(93,151,224,0.35); }
+.n1-btn:focus-visible { outline: 2px solid #cfe2fb; outline-offset: 2px; }
 
 /* =============================================================
    Your Replays rail v2: toolbar, hero portraits, confirm-delete,

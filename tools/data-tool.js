@@ -60,51 +60,106 @@ async function main() {
   let listOnly = false;
   let mapPrefix = 'w3c_';
 
+  let downloadMode = false;
+  let force = false;
+
   args.forEach(arg => {
     if (arg.startsWith('--version=')) version = arg.split('=')[1];
     if (arg.startsWith('--source=')) sourcePath = arg.split('=')[1];
     if (arg === '--list') listOnly = true;
     if (arg.startsWith('--prefix=')) mapPrefix = arg.split('=')[1];
+    // Battle.net auto-download folder: maps live in per-hash subdirectories
+    // (Maps/Download/<sha1>/<RealName>.w3x), not as flat files. Defaults the
+    // source to the standard Battle.net Download path.
+    if (arg === '--download') downloadMode = true;
+    // Re-extract maps even if the client output folder already exists.
+    if (arg === '--force') force = true;
   });
 
   FS.mkdir('/stormjs');
 
   const homedir = require('os').homedir();
 
-  // support custom source path or default W3Champions path
+  // support custom source path, the Battle.net Download folder, or the
+  // default W3Champions path
+  const defaultSource = downloadMode
+    ? `../../../Documents/Warcraft III/Maps/Download`
+    : `../../../Documents/Warcraft III/Maps/W3Champions/${version}`;
   const mapDirectoryPathPosix = sourcePath
     ? path.relative(process.cwd(), sourcePath).replace(/\\/g, '/')
-    : `../../../Documents/Warcraft III/Maps/W3Champions/${version}`;
+    : defaultSource;
 
-  console.log(`Map source: ${mapDirectoryPathPosix}`);
+  console.log(`Map source: ${mapDirectoryPathPosix}${downloadMode ? ' (Battle.net Download — recursing per-hash subdirs)' : ''}`);
   console.log(`Map prefix: "${mapPrefix}" (strip from filename for map name)`);
 
   // mount our map folder to stormjs
   FS.mount(FS.filesystems.NODEFS, { root: mapDirectoryPathPosix }, '/stormjs');
 
-  // read all the maps in
-  const maps = FS.readdir('./stormjs').filter(m => m !== '.' && m !== '..' && m.endsWith('.w3x'));
+  // Build the list of map paths (relative to the mount root). Flat .w3x for
+  // W3Champions; one level of hash subdirectories for the Download folder.
+  let maps;
+  if (downloadMode) {
+    maps = [];
+    const entries = FS.readdir('./stormjs').filter(m => m !== '.' && m !== '..');
+    for (const entry of entries) {
+      let inner;
+      try {
+        inner = FS.readdir(`./stormjs/${entry}`);
+      } catch (e) {
+        continue; // not a directory (or unreadable) — skip
+      }
+      const w3x = inner.find(f => f.endsWith('.w3x'));
+      if (w3x) maps.push(`${entry}/${w3x}`);
+    }
+  } else {
+    maps = FS.readdir('./stormjs').filter(m => m !== '.' && m !== '..' && m.endsWith('.w3x'));
+  }
 
   if (listOnly) {
-    console.log(`\nFound ${maps.length} maps:`);
-    maps.forEach((map, i) => {
+    // De-dupe by normalized name so the Download folder's many duplicate
+    // hashes of the same map don't drown the list.
+    const seen = new Map();
+    maps.forEach(map => {
       const name = normalizeW3xFilename(map);
-      console.log(`  ${i + 1}. ${name} (${map})`);
+      if (!seen.has(name)) seen.set(name, map);
     });
+    console.log(`\nFound ${maps.length} .w3x files, ${seen.size} unique map names:`);
+    let i = 1;
+    for (const [name, map] of [...seen.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+      const exists = fs.existsSync(`${CLIENT_OUTPUT_DIR}/${name}`);
+      console.log(`  ${i++}. ${name}${exists ? '  [already extracted]' : ''}  (${map})`);
+    }
     return;
   }
 
+  // Skip maps whose client output already exists (unless --force). Keeps
+  // re-runs cheap and lets a long Download extraction resume after a crash.
+  const seenNames = new Set();
+  let processed = 0, skipped = 0, failed = 0;
   for (let i = 0; i < maps.length; i++) {
     const map = maps[i];
+    const normName = normalizeW3xFilename(map);
+
+    // De-dupe within this run (Download has many hashes of the same map).
+    if (seenNames.has(normName)) { skipped++; continue; }
+    seenNames.add(normName);
+
+    if (!force && fs.existsSync(`${CLIENT_OUTPUT_DIR}/${normName}`)) {
+      skipped++;
+      continue;
+    }
 
     try {
-      console.log(`reading map: ${map} (${(i+1)}/${maps.length})`);
+      console.log(`reading map: ${map} -> ${normName} (${(i+1)}/${maps.length})`);
       await readMapFile(map, mapPrefix);
+      processed++;
     } catch (err) {
+      failed++;
       console.log("failed on map: ", map);
-      console.log(err);
+      console.log(err && err.message ? err.message : err);
     }
   }
+  console.log(`\nextraction summary: ${processed} processed, ${skipped} skipped, ${failed} failed`);
 
   console.log("finished data extraction");
 };
@@ -118,25 +173,40 @@ async function main() {
  *   S13x: w3c_s13.1_{MapName}.w3x  → MapName
  *   Plain: w3c_{MapName}.w3x  → MapName
  */
+// Sanitize a derived map name so it is both filesystem-safe and matchable by
+// the client resolver (parserEntry.resolveMapDataName). That resolver strips
+// spaces from the replay's map name but NOT from our stored name, so a stored
+// name with spaces could never match — strip them. Keep alnum, _ - . and '
+// (existing maps like Kal'drassil rely on the apostrophe); drop anything else
+// (parens, brackets, etc. — also rejected by browserMapLoader.SAFE_MAP_NAME).
+function sanitizeMapName(name) {
+  return name.replace(/\s+/g, '').replace(/[^A-Za-z0-9_\-.']/g, '').trim();
+}
+
 function normalizeW3xFilename(filename) {
-  let name = filename.replace(/\.w3x$/i, '');
+  // Drop any directory part (Download maps arrive as "<hash>/<file>.w3x").
+  let name = path.basename(filename).replace(/\.w3x$/i, '');
+
+  // Battle.net / Blizzard ladder maps carry a leading "(N)" start-location
+  // count, e.g. "(6)BloodstoneMesa_LV" → "BloodstoneMesa_LV".
+  name = name.replace(/^\(\d+\)/, '');
 
   // Pattern: 1v1_{MapName}_{ver}_w3c_{date}_{time}_{hash}
   const newPattern = name.match(/^1v1_(.+?)_w3c_\d+_\d+_\d+$/);
-  if (newPattern) return newPattern[1];
+  if (newPattern) return sanitizeMapName(newPattern[1]);
 
   // Pattern: {num}_w3c_{date}_{time}_{MapName}
   const oldPattern = name.match(/^\d+_w3c_\d+_\d+_(.+)$/);
-  if (oldPattern) return oldPattern[1];
+  if (oldPattern) return sanitizeMapName(oldPattern[1]);
 
   // Pattern: w3c_s13.x_{MapName} or w3c_s13_{MapName}
   const s13Pattern = name.match(/^w3c_s\d+(?:\.\d+)?_(.+)$/);
-  if (s13Pattern) return s13Pattern[1];
+  if (s13Pattern) return sanitizeMapName(s13Pattern[1]);
 
   // Pattern: w3c_{MapName}
-  if (name.startsWith('w3c_')) return name.substring(4);
+  if (name.startsWith('w3c_')) return sanitizeMapName(name.substring(4));
 
-  return name;
+  return sanitizeMapName(name);
 }
 
 async function readMapFile(mapFilePath, mapPrefix = 'w3c_') {

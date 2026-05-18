@@ -591,19 +591,31 @@ async function main() {
   let targetMap = null;
   let dryRun = false;
 
+  let skipExisting = false;
+
   args.forEach(arg => {
     if (arg.startsWith('--map=')) targetMap = arg.split('=')[1];
     if (arg === '--dry-run') dryRun = true;
     if (arg.startsWith('--terrain-size=')) terrainSize = parseInt(arg.split('=')[1], 10);
     if (arg.startsWith('--terrain-quality=')) terrainQuality = parseFloat(arg.split('=')[1]);
+    // Only (re)generate maps that don't already have heights.bin.gz — used
+    // after a bulk data-tool extraction to fill in just the new maps without
+    // re-baking the already-good ones.
+    if (arg === '--skip-existing') skipExisting = true;
   });
 
-  const maps = targetMap
+  let maps = targetMap
     ? [targetMap]
     : fs.readdirSync(MAPDATA_DIR).filter(f => {
         const stat = fs.statSync(`${MAPDATA_DIR}/${f}`);
         return stat.isDirectory();
       });
+
+  if (skipExisting && !targetMap) {
+    const before = maps.length;
+    maps = maps.filter(m => !fs.existsSync(`${CLIENT_MAPS_DIR}/${m}/heights.bin.gz`));
+    console.log(`--skip-existing: ${before - maps.length} already have heights.bin.gz, ${maps.length} to process`);
+  }
 
   console.log(`\nRegenerating map images (${maps.length} maps)${dryRun ? ' [DRY RUN]' : ''}...\n`);
 

@@ -85,11 +85,11 @@ const BuildOrderRenderer = class {
       this.viewer.buildOrderPlayers.push(player);
     });
 
-    // Restore last-viewed mobile player for this replay, if any.
-    if (this.viewer.mobileMode) {
+    // Restore last-viewed player for this replay in single-player BO mode
+    // (mobile, or any non-1v1 game). Defaults to the first player.
+    if (this._singleBoMode()) {
       try {
-        const key = `wc3v.mobileBoPlayerIdx.${this.viewer.replayId || 'default'}`;
-        const stored = parseInt(sessionStorage.getItem(key), 10);
+        const stored = parseInt(sessionStorage.getItem(this._boPlayerKey()), 10);
         if (Number.isFinite(stored) && stored >= 0 && stored < this.viewer.buildOrderPlayers.length) {
           this.activeMobilePlayerIdx = stored;
         } else {
@@ -528,10 +528,20 @@ const BuildOrderRenderer = class {
     return aside;
   }
 
-  _persistMobilePlayerIdx () {
+  // Single-player BO mode: one player's build at a time with a selector.
+  // True on mobile (any game) and for non-1v1 games on any viewport — the
+  // side-by-side team layout doesn't scale past two players.
+  _singleBoMode () {
+    return this.viewer.isNonOneVsOne() || this.viewer.mobileMode;
+  }
+
+  _boPlayerKey () {
+    return `wc3v.boPlayerIdx.${this.viewer.replayId || 'default'}`;
+  }
+
+  _persistBoPlayerIdx () {
     try {
-      const key = `wc3v.mobileBoPlayerIdx.${this.viewer.replayId || 'default'}`;
-      sessionStorage.setItem(key, String(this.activeMobilePlayerIdx));
+      sessionStorage.setItem(this._boPlayerKey(), String(this.activeMobilePlayerIdx));
     } catch (e) { /* sessionStorage may be disabled */ }
   }
 
@@ -575,7 +585,7 @@ const BuildOrderRenderer = class {
       chip.addEventListener('click', () => {
         if (this.activeMobilePlayerIdx === idx) return;
         this.activeMobilePlayerIdx = idx;
-        this._persistMobilePlayerIdx();
+        this._persistBoPlayerIdx();
         this.renderBuildOrder();
         // Reset scroll to top of new player
         const buildArea = document.getElementById('build-area');
@@ -583,6 +593,59 @@ const BuildOrderRenderer = class {
       });
 
       bar.append(chip);
+    });
+  }
+
+  // Desktop, non-1v1: a dropdown above the BO column to pick which player's
+  // build to show (only one is rendered at a time). Mirrors the mobile chip
+  // switcher's data flow (activeMobilePlayerIdx + _persistBoPlayerIdx).
+  _renderDesktopPlayerSelect () {
+    const content = document.getElementById('bo-content');
+    if (!content) return;
+
+    let wrap = document.getElementById('bo-player-select-wrap');
+    let select;
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'bo-player-select-wrap';
+      wrap.classList.add('bo-player-select-wrap');
+
+      const label = document.createElement('label');
+      label.classList.add('bo-player-select-label');
+      label.setAttribute('for', 'bo-player-select');
+      label.textContent = 'Player';
+
+      select = document.createElement('select');
+      select.id = 'bo-player-select';
+      select.classList.add('bo-player-select');
+      select.addEventListener('change', () => {
+        const idx = parseInt(select.value, 10);
+        if (!Number.isFinite(idx) || idx === this.activeMobilePlayerIdx) return;
+        this.activeMobilePlayerIdx = idx;
+        this._persistBoPlayerIdx();
+        this.renderBuildOrder();
+        const buildArea = document.getElementById('build-area');
+        if (buildArea) buildArea.scrollTop = 0;
+      });
+
+      wrap.append(label, select);
+      const columns = document.getElementById('bo-columns');
+      content.insertBefore(wrap, columns || content.firstChild);
+    } else {
+      select = wrap.querySelector('#bo-player-select');
+    }
+
+    wrap.hidden = false;
+    select.innerHTML = '';
+    this.viewer.buildOrderPlayers.forEach((player, idx) => {
+      const raceMeta = (typeof RaceLabels !== 'undefined' && RaceLabels[player.race]) || null;
+      const raceLabel = raceMeta ? raceMeta.label : (player.race || '');
+      const name = Security.sanitizeUserText(PlayerNames.canonical(player.displayName) || `Player ${idx + 1}`);
+      const opt = document.createElement('option');
+      opt.value = String(idx);
+      opt.textContent = raceLabel ? `${name} — ${raceLabel}` : name;
+      if (idx === this.activeMobilePlayerIdx) opt.selected = true;
+      select.append(opt);
     });
   }
 
@@ -642,23 +705,30 @@ const BuildOrderRenderer = class {
       else { ctaEl.hidden = true; ctaEl.innerHTML = ''; }
     }
 
-    // Mobile: render the player switcher and narrow the visible set to the
-    // active player. In beginner-with-pick mode we lock to Me and suppress
-    // the switcher entirely (the per-column "ME" header carries the label).
+    // Single-player BO mode (mobile, or any non-1v1 game): render a player
+    // selector and narrow the visible set to the active player — mobile uses
+    // the sticky chip bar, desktop non-1v1 uses a dropdown. In
+    // beginner-with-pick mode we lock to Me and suppress the selector entirely
+    // (the per-column "ME" header carries the label). Beginner view is forced
+    // off for non-1v1, so that branch only ever fires on mobile 1v1.
     let buildOrderPlayers = allPlayers;
-    if (this.viewer.mobileMode) {
-      const sw = document.getElementById('bo-mobile-player-switch');
-      if (learnerMode && mePlayer) {
-        if (sw) sw.hidden = true;
-        buildOrderPlayers = [mePlayer];
-      } else {
+    const sw = document.getElementById('bo-mobile-player-switch');
+    const selWrap = document.getElementById('bo-player-select-wrap');
+    if (this._singleBoMode() && !(learnerMode && mePlayer)) {
+      const idx = Math.max(0, Math.min(this.activeMobilePlayerIdx, allPlayers.length - 1));
+      buildOrderPlayers = allPlayers.length ? [allPlayers[idx]] : [];
+      if (this.viewer.mobileMode) {
         if (sw) sw.hidden = false;
+        if (selWrap) selWrap.hidden = true;
         this._renderMobilePlayerSwitch();
-        const idx = Math.max(0, Math.min(this.activeMobilePlayerIdx, allPlayers.length - 1));
-        buildOrderPlayers = allPlayers.length ? [allPlayers[idx]] : [];
+      } else {
+        if (sw) sw.hidden = true;
+        this._renderDesktopPlayerSelect();
       }
-    } else if (learnerMode && mePlayer) {
-      buildOrderPlayers = [mePlayer];
+    } else {
+      if (sw) sw.hidden = true;
+      if (selWrap) selWrap.hidden = true;
+      if (learnerMode && mePlayer) buildOrderPlayers = [mePlayer];
     }
 
     // Clear side containers (not the structural elements)
@@ -953,9 +1023,16 @@ const BuildOrderRenderer = class {
       this.cacheLiveBoEventElements();
     }
 
-    // Trigger timeline spline computation (after DOM layout)
-    if (this.viewer.timelineSpline && buildOrderPlayers.length >= 1) {
-      this.viewer.timelineSpline.compute();
+    // Trigger timeline spline computation (after DOM layout). The spline maps
+    // events onto a shared time spine — only meaningful when comparing two
+    // builds side by side, so it's skipped for non-1v1 (single-player BO)
+    // games. 1v1 (desktop and mobile) keeps it unchanged.
+    if (this.viewer.timelineSpline) {
+      if (this.viewer.isNonOneVsOne()) {
+        this.viewer.timelineSpline.destroy();
+      } else if (buildOrderPlayers.length >= 1) {
+        this.viewer.timelineSpline.compute();
+      }
     }
   }
 

@@ -110,7 +110,7 @@
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
        UploadManager.prefetchParser() warms the HTTP cache on first user intent. -->
-  <script src="js/UploadManager.js?v=2"></script>
+  <script src="js/UploadManager.js?v=3"></script>
   <script src="js/PlayerPicker.js?v=2"></script>
   <script src="js/ReplayTypePicker.js?v=2"></script>
   <script src="js/SummaryExtract.js?v=2"></script>
@@ -474,7 +474,41 @@
       //     compute its summary, refresh the panel — no navigation. The
       //     reference now appears in the chooser whenever the user uploads
       //     one of their own games to compare.
+      // Blocking acknowledgement modal for non-1v1 uploads. Resolves when the
+      // user clicks "Got it" (or presses Escape / clicks the backdrop).
+      const showNon1v1Notice = (gameMode) => new Promise((resolve) => {
+        const modal = document.getElementById('non1v1-notice-modal');
+        if (!modal) { resolve(); return; }
+        const label = ({ '2v2': '2v2', '3v3': '3v3', '4v4': '4v4', ffa: 'FFA', custom: 'custom' })[gameMode] || gameMode;
+        const modeEl = document.getElementById('non1v1-notice-mode');
+        if (modeEl) modeEl.textContent = label;
+        modal.hidden = false;
+        document.body.classList.add('help-modal-active');
+        const close = () => {
+          modal.hidden = true;
+          document.body.classList.remove('help-modal-active');
+          modal.removeEventListener('click', onClick);
+          document.removeEventListener('keydown', onKey);
+          resolve();
+        };
+        const onClick = (e) => {
+          const a = e.target.dataset && e.target.dataset.action;
+          if (a === 'ack' || e.target.classList.contains('help-modal-backdrop')) close();
+        };
+        const onKey = (e) => { if (e.key === 'Escape' && !modal.hidden) close(); };
+        modal.addEventListener('click', onClick);
+        document.addEventListener('keydown', onKey);
+      });
+
       const handlePostParse = async (record) => {
+        if (record.gameMode && record.gameMode !== '1v1') {
+          // Non-1v1: viewable but no pro analysis. Skip the type/slot pickers
+          // and the homepage compare drawer (all 1v1-only) — go straight to
+          // the viewer.
+          await showNon1v1Notice(record.gameMode);
+          window.location.href = '/viewer?local=' + encodeURIComponent(record.id);
+          return;
+        }
         const choice = window.ReplayTypePicker
           ? await window.ReplayTypePicker.open({ filename: record.originalFilename })
           : 'game';
@@ -552,7 +586,7 @@
           hideOverlay();
           let msg = e.message || String(e);
           if (e.code === 'missing_map') msg = `That map (${e.rawMapName || 'unknown'}) isn't in our library yet, so we can't render it.`;
-          else if (e.code === 'too_large' || e.code === 'unsupported_media' || e.code === 'not_1v1') msg = e.message;
+          else if (e.code === 'too_large' || e.code === 'unsupported_media' || e.code === 'no_players') msg = e.message;
           setStatus(statusTarget, '');
           const errOverlay = document.getElementById('upload-error-overlay');
           const errMsg = document.getElementById('upload-error-message');
@@ -775,6 +809,41 @@
           <p class="help-modal-tip">
             Drag any <code>.w3g</code> file onto the <strong>Drop or upload a replay</strong> zone — or click it to open a file picker. The replay is parsed entirely on this machine; nothing leaves your browser.
           </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notice shown after parsing a non-1v1 replay. The game is fully
+         viewable but pro-analysis features (compare, guided walkthrough,
+         beginner view) are 1v1-only. Blocking — user must acknowledge
+         before the slot picker / viewer opens. -->
+    <div id="non1v1-notice-modal" class="help-modal" hidden role="dialog" aria-modal="true" aria-labelledby="non1v1-notice-title">
+      <div class="help-modal-backdrop"></div>
+      <div class="help-modal-card n1-card">
+        <div class="n1-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M2.5 19a6.5 6.5 0 0 1 13 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M16 10.5a3 3 0 1 0 0-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M16 13a6.2 6.2 0 0 1 5.5 5.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="n1-body">
+          <h2 id="non1v1-notice-title" class="n1-title">This isn&rsquo;t a 1v1 game</h2>
+          <p class="n1-lead">
+            This is a <span class="n1-mode-pill"><span id="non1v1-notice-mode">team</span></span> game, so it won&rsquo;t be available for
+            <strong>pro analysis</strong> &mdash; but you can still watch the full replay.
+          </p>
+          <div class="n1-note">
+            <svg class="n1-note-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <span>Build orders show one player at a time (pick from the dropdown), and the map camera uses <strong>Auto</strong> or <strong>Free</strong> only.</span>
+          </div>
+          <div class="n1-actions">
+            <button class="n1-btn" type="button" data-action="ack">Got it</button>
+          </div>
         </div>
       </div>
     </div>

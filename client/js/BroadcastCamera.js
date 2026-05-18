@@ -544,7 +544,67 @@
     //  Cluster-based ACTION_FOCUS
     // ---------------------------------------------------------------
 
+    // Non-1v1 auto camera: there's no single "main fight" to track across
+    // 4-8 players, so frame ALL the action — every non-neutral player's
+    // heroes and mobile units. Buildings are excluded so a lone far-flung
+    // expansion doesn't force a permanent map-out. Lower zoom floor than the
+    // 1v1 paths so widely-spread players still all fit.
+    _fitAllNonNeutral (players) {
+      const FIT_ALL_MIN_ZOOM = 1.0;
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+      let any = false;
+
+      for (const player of players) {
+        if (!player || player.isNeutralPlayer) continue;
+        for (const hero of (player.heroes || [])) {
+          if (hero.currentX == null || isNaN(hero.currentX)) continue;
+          minX = Math.min(minX, hero.currentX); maxX = Math.max(maxX, hero.currentX);
+          minY = Math.min(minY, hero.currentY); maxY = Math.max(maxY, hero.currentY);
+          any = true;
+        }
+        for (const unit of (player.units || [])) {
+          if (unit.currentX == null || unit.isBuilding) continue;
+          minX = Math.min(minX, unit.currentX); maxX = Math.max(maxX, unit.currentX);
+          minY = Math.min(minY, unit.currentY); maxY = Math.max(maxY, unit.currentY);
+          any = true;
+        }
+      }
+      if (!any) return null;
+
+      const padX = (maxX - minX) * PAD_X_FRAC || PAD_X_MIN;
+      const padYTop = (maxY - minY) * PAD_Y_TOP_FRAC || PAD_Y_TOP_MIN;
+      const padYBot = (maxY - minY) * PAD_Y_BOT_FRAC || PAD_Y_BOT_MIN;
+      minX -= padX; maxX += padX;
+      maxY += padYTop; minY -= padYBot;
+
+      const focusX = (minX + maxX) / 2;
+      const focusY = (minY + maxY) / 2;
+      const extentX = maxX - minX;
+      const extentY = maxY - minY;
+
+      const gs = this.viewer.gameScaler;
+      if (!gs || !gs.viewExtent) return { wx: focusX, wy: focusY, k: FIT_ALL_MIN_ZOOM };
+
+      const viewWorldW = gs.viewExtent.x[1] - gs.viewExtent.x[0];
+      const viewWorldH = Math.abs(gs.viewExtent.y[1] - gs.viewExtent.y[0]);
+      const kX = viewWorldW / extentX;
+      const kY = viewWorldH / extentY;
+      const k = Math.max(FIT_ALL_MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(kX, kY)));
+
+      return { wx: focusX, wy: focusY, k };
+    }
+
     _actionFocus (players) {
+      // Non-1v1: deterministic "fit everything" framing — bypass cluster
+      // scoring/hysteresis entirely (a single steady bound reads better for
+      // team games than hopping between fights). The update() lerp still
+      // smooths the motion.
+      if (this.viewer.isNonOneVsOne && this.viewer.isNonOneVsOne()) {
+        const all = this._fitAllNonNeutral(players);
+        if (all) return all;
+      }
+
       const clusters = this._clusterHeroes(players);
       if (clusters.length === 0) return null;
 

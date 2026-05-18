@@ -105,6 +105,7 @@ const MyReplays = class {
             durationMs: v.durationMs,
             players: v.players,
             originalFilename: v.originalFilename,
+            gameMode: v.gameMode || null,
             userSlot: v.userSlot ?? null,
             lastCompare: v.lastCompare || null,
             isReference: !!v.isReference,
@@ -340,6 +341,12 @@ const MyReplays = class {
     // a pro" button in the action row is the obvious next action.
     const lastCompare = record.lastCompare || null;
 
+    // Game format badge (top-right). Older records predate the gameMode
+    // field — they're virtually all 1v1 (non-1v1 support is recent), so
+    // default to '1v1' rather than leaving the corner unmarked.
+    const gameMode = (record.gameMode || '1v1').toLowerCase();
+    const gameModeLabel = formatGameMode(gameMode);
+
     // Heroes from the parsed replay — up to 3 in pick order.
     const heroes = extractHeroes(record, userPlayer);
 
@@ -363,11 +370,14 @@ const MyReplays = class {
             <span class="rep-card-vs">vs</span>
             <span class="rep-card-race-badge race-${oppRace} rep-card-opp">${RACE_LABEL[oppRace] || oppRace}</span>
           </div>
-          ${record.isReference
-            ? `<span class="rep-card-reference-badge" title="In your pro builds grid — not graded itself">★ Pro replay</span>`
-            : (lastCompare
-              ? `<span class="rep-card-grade-badge ${gradeClass(lastCompare.grade)}" title="Last compare: ${lastCompare.score}/100${lastCompare.proPlayerName ? ' vs ' + escapeAttr(lastCompare.proPlayerName) : ''}">${escapeHtml(lastCompare.grade)}</span>`
-              : '')}
+          <div class="rep-card-head-right">
+            <span class="rep-card-mode-badge${gameMode === '1v1' ? '' : ' rep-card-mode-multi'}" title="${gameMode === '1v1' ? '1v1 ladder game' : escapeAttr(gameModeLabel) + ' game — viewable but not graded against pros'}">${escapeHtml(gameModeLabel)}</span>
+            ${record.isReference
+              ? `<span class="rep-card-reference-badge" title="In your pro builds grid — not graded itself">★ Pro replay</span>`
+              : (lastCompare
+                ? `<span class="rep-card-grade-badge ${gradeClass(lastCompare.grade)}" title="Last compare: ${lastCompare.score}/100${lastCompare.proPlayerName ? ' vs ' + escapeAttr(lastCompare.proPlayerName) : ''}">${escapeHtml(lastCompare.grade)}</span>`
+                : '')}
+          </div>
         </header>
 
         <div class="rep-card-meta">
@@ -397,10 +407,12 @@ const MyReplays = class {
 
         <footer class="rep-card-actions">
           <a class="rep-card-btn rep-card-btn-primary" data-action="watch" href="${(options.viewerPath || '/viewer')}?local=${encodeURIComponent(record.id)}">Watch</a>
-          ${record.isReference
-            ? `<button class="rep-card-btn rep-card-btn-unref" data-action="unmark-reference" type="button" title="Remove from pro builds — this replay returns to your replays as a regular game">Move back to my replays</button>`
-            : `<button class="rep-card-btn rep-card-btn-compare" data-action="compare" type="button" aria-expanded="false">Compare to a pro</button>
-               <button class="rep-card-btn rep-card-btn-mark-ref" data-action="mark-reference" type="button" title="Add this replay to the Pro Builds grid so it can be used as a comparison anchor">Promote to pro replay</button>`}
+          ${(record.gameMode && record.gameMode !== '1v1')
+            ? '' /* format shown by the top-right badge; non-1v1 isn't graded so no compare/promote actions */
+            : (record.isReference
+              ? `<button class="rep-card-btn rep-card-btn-unref" data-action="unmark-reference" type="button" title="Remove from pro builds — this replay returns to your replays as a regular game">Move back to my replays</button>`
+              : `<button class="rep-card-btn rep-card-btn-compare" data-action="compare" type="button" aria-expanded="false">Compare to a pro</button>
+               <button class="rep-card-btn rep-card-btn-mark-ref" data-action="mark-reference" type="button" title="Add this replay to the Pro Builds grid so it can be used as a comparison anchor">Promote to pro replay</button>`)}
           <button class="rep-card-btn rep-card-btn-icon" data-action="remove" type="button" title="Remove from your library" aria-label="Remove">×</button>
         </footer>
       </div>
@@ -708,6 +720,14 @@ const MyReplays = class {
 // ===== File-local helpers (broadcast card renderer) =====
 
 const RACE_LABEL = { H: 'HU', O: 'ORC', E: 'NE', U: 'UD', R: '?' };
+
+// Display label for the game-format corner badge. Mirrors the gameMode
+// values produced by UploadManager / helpers/utils.js computeGameMode:
+// '1v1' | '2v2' | '3v3' | '4v4' | 'ffa' | 'custom'.
+const formatGameMode = (mode) => ({
+  '1v1': '1v1', '2v2': '2v2', '3v3': '3v3', '4v4': '4v4',
+  ffa: 'FFA', custom: 'Custom'
+}[mode] || String(mode || '').toUpperCase() || '1v1');
 
 // Aliases into the shared Security helpers (see client/js/Security.js).
 const escapeAttr = Security.escapeAttr;

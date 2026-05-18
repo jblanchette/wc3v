@@ -34,6 +34,14 @@ const TimelineSpline = class {
   }
 
   _render () {
+    // The spline maps two builds onto a shared time spine — pointless for
+    // non-1v1 (single-player BO) games. Bail here too so a build-area resize
+    // (via observeResize → recompute) can't resurrect it. 1v1 is unchanged.
+    if (this.viewer && this.viewer.isNonOneVsOne && this.viewer.isNonOneVsOne()) {
+      this.destroy();
+      return;
+    }
+
     const columnsEl = document.getElementById('bo-columns');
     const gap = document.getElementById('bo-timeline-gap');
     if (!columnsEl) return;

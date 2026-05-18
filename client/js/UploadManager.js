@@ -22,9 +22,18 @@ const UploadManager = class {
     }
     this.onProgress = options.onProgress || (() => {});
     this.onError = options.onError || ((msg) => console.error('Upload error:', msg));
-    // Wall-clock cap on the parser. A malformed .w3g can trigger
-    // unbounded loops in w3gjs; the worker also bounds memory blowup.
-    this.parseTimeoutMs = options.parseTimeoutMs || 30000;
+    // Parser timeouts. The parser emits a progress message ~every 100ms
+    // during a healthy parse, so we don't use a flat wall-clock (it kills
+    // legitimately long parses — big 2v2/3v3/4v4/FFA games have far more
+    // actions than a 1v1). Instead:
+    //   - idle watchdog: abort only if NO progress for parseIdleTimeoutMs
+    //     (a true hang / unbounded loop in w3gjs on a malformed file).
+    //   - hard cap: absolute ceiling so a parser stuck in a tight loop that
+    //     still dribbles progress can't run forever.
+    // `parseTimeoutMs` is accepted for back-compat and maps to the idle
+    // watchdog.
+    this.parseIdleTimeoutMs = options.parseIdleTimeoutMs || options.parseTimeoutMs || 30000;
+    this.parseHardCapMs = options.parseHardCapMs || 5 * 60 * 1000;
     this.workerPath = options.workerPath || '/js/parser-worker.js';
   }
 
@@ -140,14 +149,29 @@ const UploadManager = class {
       throw err;
     }
 
-    // Reject anything that isn't a 1v1. We only support 2 non-neutral players
-    // on different teams; multi-player formats render incorrectly in the viewer.
+    // Categorize the game. Non-1v1 formats (2v2/3v3/4v4/FFA/custom) are now
+    // viewable — they get a single-player build order and a restricted camera
+    // in the viewer, plus a "not available for pro analysis" notice. We only
+    // hard-reject replays with no opposing players to show.
     const humans = Object.values(parsed.players || {})
       .filter(p => p && !p.isNeutralPlayer);
-    const teams = new Set(humans.map(p => p.teamId));
-    if (humans.length !== 2 || teams.size !== 2) {
-      const err = new Error('wc3v only supports 1v1 right now, please try a different replay.');
-      err.code = 'not_1v1';
+    let gameMode = (parsed && typeof parsed.gameMode === 'string') ? parsed.gameMode : null;
+    if (!gameMode) {
+      // Legacy / pre-rebuild bundle fallback. STRICT — must match
+      // helpers/utils.js computeGameMode and Wc3vViewer.getGameMode.
+      const byTeam = {};
+      humans.forEach(p => { byTeam[p.teamId] = (byTeam[p.teamId] || 0) + 1; });
+      const counts = Object.values(byTeam);
+      const n = humans.length, tc = counts.length;
+      if (n < 2) gameMode = 'custom';
+      else if (n === 2 && tc === 2) gameMode = '1v1';
+      else if (tc === 2 && counts[0] === counts[1]) gameMode = ({ 2: '2v2', 3: '3v3', 4: '4v4' })[counts[0]] || 'custom';
+      else if (n >= 3 && tc === n) gameMode = 'ffa';
+      else gameMode = 'custom';
+    }
+    if (humans.length < 2) {
+      const err = new Error('This replay has no opposing players to display.');
+      err.code = 'no_players';
       throw err;
     }
 
@@ -163,6 +187,7 @@ const UploadManager = class {
       mapName: summary.mapName,
       durationMs: summary.durationMs,
       players: summary.players,
+      gameMode,
       originalFilename: file.name
     };
 
@@ -185,9 +210,10 @@ const UploadManager = class {
   //
   // Returns the parsed wc3v object on success. Rejects with a coded error
   // on parser-emitted failure (missing_map, missing_map_cache, …) or with
-  // code 'parse_timeout' if we hit parseTimeoutMs.
+  // code 'parse_timeout' on an idle stall or the absolute hard cap.
   _parseInWorker (arrayBuffer) {
-    const timeoutMs = this.parseTimeoutMs;
+    const idleMs = this.parseIdleTimeoutMs;
+    const hardCapMs = this.parseHardCapMs;
     const workerPath = this.workerPath;
     const onProgress = (evt) => this.onProgress(evt);
 
@@ -205,22 +231,41 @@ const UploadManager = class {
       const finish = (fn) => {
         if (settled) return;
         settled = true;
-        clearTimeout(timer);
+        clearTimeout(idleTimer);
+        clearTimeout(hardTimer);
         try { worker.terminate(); } catch {}
         fn();
       };
 
-      const timer = setTimeout(() => {
+      // Idle watchdog: rearmed on every worker message (see onmessage).
+      // Fires only if the parser goes silent — a genuine hang.
+      let idleTimer;
+      const armIdle = () => {
+        clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+          finish(() => {
+            const err = new Error(`Parser stalled — no progress for ${(idleMs / 1000).toFixed(0)}s. The replay may be malformed.`);
+            err.code = 'parse_timeout';
+            reject(err);
+          });
+        }, idleMs);
+      };
+      armIdle();
+
+      // Absolute ceiling regardless of progress.
+      const hardTimer = setTimeout(() => {
         finish(() => {
-          const err = new Error(`Parse timed out after ${(timeoutMs / 1000).toFixed(0)}s — replay may be malformed`);
+          const err = new Error(`Parse exceeded the ${Math.round(hardCapMs / 60000)} min limit — replay is unusually large or malformed.`);
           err.code = 'parse_timeout';
           reject(err);
         });
-      }, timeoutMs);
+      }, hardCapMs);
 
       worker.onmessage = (e) => {
         const msg = e && e.data;
         if (!msg || !msg.type) return;
+        // Any sign of life from the worker rearms the idle watchdog.
+        armIdle();
         if (msg.type === 'progress') {
           if (msg.evt) onProgress(msg.evt);
           return;
