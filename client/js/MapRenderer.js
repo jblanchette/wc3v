@@ -354,6 +354,50 @@ const MapRenderer = class {
           Drawing.drawCampOrderBadge(ctx, `${teamOrder}`, badgeX, badgeY, badgeColor, teamIds.length > 1 ? 0.8 : 1);
         });
       }
+
+      //
+      // Project C: per-player credit markers. A checkmark per player credited
+      // at the current playback time (live-synced via playerCreditTimeline),
+      // and an explicit "?" when the camp's call is low-confidence. 1v1 only
+      // (matches the team-attribution gate) — non-1v1 keeps plain rings.
+      //
+      const pcredit = neutralGroup.playerCredit;
+      if (!nonOneVsOne && pcredit && Object.keys(pcredit).length) {
+        const snap = this._findProgress(neutralGroup.playerCreditTimeline, gameTime);
+        const creditedNow = [];
+        if (snap && snap.players) {
+          Object.keys(snap.players).forEach(pid => {
+            if (snap.players[pid] && snap.players[pid].credited) creditedNow.push(pid);
+          });
+        }
+
+        // checkmark badges along the lower arc, spaced for multiple players
+        creditedNow.forEach((pid, idx) => {
+          const teamId = pcredit[pid] ? pcredit[pid].teamId : null;
+          const color = teamColorMap[teamId] || '#3fbf6f';
+          const baseAngle = Math.PI * 0.75; // lower-left
+          const off = creditedNow.length > 1 ? (idx - (creditedNow.length - 1) / 2) * 0.55 : 0;
+          const a = baseAngle + off;
+          Drawing.drawCampCreditBadge(
+            ctx,
+            centerX + Math.cos(a) * (radius + 13),
+            centerY + Math.sin(a) * (radius + 13),
+            color,
+            creditedNow.length > 1 ? 0.8 : 1
+          );
+        });
+
+        // uncertainty glyph if the final call for any participant is shaky
+        const anyUncertain = Object.keys(pcredit).some(pid => pcredit[pid] && pcredit[pid].uncertain);
+        if (anyUncertain && hasCampProgress) {
+          Drawing.drawCampUncertainGlyph(
+            ctx,
+            centerX + Math.cos(Math.PI / 2) * (radius + 14),
+            centerY + Math.sin(Math.PI / 2) * (radius + 14),
+            0.8
+          );
+        }
+      }
     });
 
     // creep route lines

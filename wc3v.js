@@ -7,6 +7,8 @@ const utils = require("./helpers/utils"),
 const config = require("./config/config");
 const ReplayValidator = require("./lib/ReplayValidator");
 const TERRAINFile = require("./lib/parsers/TERRAINFile");
+const MiscFile = require("./lib/parsers/MiscFile");
+const { resolveCampLeash } = require("./helpers/mappings");
 const { TILESET_EXTRAS, DEFAULT_EXTRAS } = require("./helpers/tilesetColors");
 const fs = require('fs');
 const path = require('path');
@@ -290,6 +292,10 @@ const doParsing = async (input, options = {}) => {
     // Whitelist safe chars and verify resolved path stays inside mapdata/.
     // Browser path skips this entirely (cosmetic — base-grid color falls back).
     const SAFE_MAP_NAME = /^[A-Za-z0-9_\-. ]+$/;
+    // Creep camp leash: prefer map-supplied gameplay-constant overrides
+    // (war3mapMisc.txt, parsed by MiscFile) when present; otherwise the
+    // documented WC3 default. Surfaced honestly via leashSource downstream.
+    let campLeash = resolveCampLeash(null);
     if (!options.skipTerrainRead && mapData && mapData.name && SAFE_MAP_NAME.test(mapData.name)) {
       const mapdataRoot = path.resolve(__dirname, 'mapdata');
       const w3ePath = path.resolve(mapdataRoot, mapData.name, 'war3map.w3e');
@@ -301,6 +307,17 @@ const doParsing = async (input, options = {}) => {
           // fallback to default if W3E read fails
         }
       }
+      const miscPath = path.resolve(mapdataRoot, mapData.name, 'war3mapMisc.txt');
+      if (miscPath.startsWith(mapdataRoot + path.sep)) {
+        try {
+          campLeash = resolveCampLeash(new MiscFile(miscPath).constants);
+        } catch (e) {
+          // keep the documented WC3 default on any read/parse failure
+        }
+      }
+    }
+    if (playerManager.world) {
+      playerManager.world.campLeash = campLeash;
     }
 
     // get doo grid for tree filtering

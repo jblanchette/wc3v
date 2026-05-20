@@ -1,0 +1,36 @@
+{
+  "_README": [
+    "Expected creep-camp outcomes for evidence-based tuning of the per-player",
+    "credit determination. Run: node tools/validate-camp-credit.js --fixtures=client/data/camp-fixtures.json",
+    "",
+    "These are GROUND TRUTH you supply by watching the replay — do NOT copy the",
+    "parser's own output back in (that would be circular). Fill in only what you",
+    "are sure of; omit fields you can't judge. Match a camp by totalLevel + a few",
+    "creep names (subset match). Per-player expected values accept comparator",
+    "tokens: true/false, 123, '>=N', '<=N', '>N', '<N', '==N', or 'A..B' range.",
+    "",
+    "Keys you can assert per player: credited, uncertain, confidence,",
+    "interactionCount, itemInteractions, effectiveMs, requiredMs, inCampMs,",
+    "pullMs, share, engagedWindowMs.",
+    "",
+    "Tune the named constants in lib/NeutralGroup.js (CAMP_CREDIT_MODELS,",
+    "IN_CAMP_PADDING) and helpers/mappings.js (CREEP_GUARD_RETURN_DISTANCE),",
+    "reparse, and re-run this harness until precision/recall are acceptable."
+  ],
+  "replays": [
+    {
+      "id": "happy-vs-grubby",
+      "_note": "EXAMPLE skeleton — replace expectations with your verified observations.",
+      "camps": [
+        {
+          "match": { "totalLevel": 8, "units": ["Murloc Tide Runner"] },
+          "expect": {
+            "players": {
+              "1": { "credited": true, "interactionCount": ">=2" }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

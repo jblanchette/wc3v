@@ -13,6 +13,7 @@
  *                          expansions - only addBuilding events flagged as expansions
  *                          units      - exported unit list with flags
  *                          paths      - unit movement paths with groupId data
+ *                          positions  - position-stream health (density, gaps, integrity)
  *                          workers    - worker snapshots from events
  *                          tiers      - tier transition data
  *                          validation - validator severity/confidence + warnings
@@ -22,6 +23,7 @@
  *                          summary    - compact build order overview
  *                          camps      - neutral creep camp claim data
  *                          camps-debug - camp progressive timeline + interval details
+ *                          camps-credit - per-player credit, confidence, evidence (Project C)
  *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
@@ -274,6 +276,51 @@ if (showAll || showSections.includes('paths')) {
         });
         if (groupMoves.length > 3) console.log(`      ... (${groupMoves.length - 3} more group moves)`);
       }
+    });
+  }
+  console.log('');
+}
+
+// --- Position-stream health (Project A diagnostic) ---
+if (showAll || showSections.includes('positions')) {
+  console.log('=== POSITION STREAM HEALTH ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    let units = (pdata.units || []).filter(u => u.path && u.path.length > 1 && !u.isBuilding);
+    if (searchText) {
+      units = units.filter(u => (u.displayName || '').toLowerCase().includes(searchText));
+    }
+
+    units.slice(0, limit).forEach(u => {
+      const p = u.path;
+      let maxGap = 0;       // largest non-jump temporal gap (ms)
+      let nonMono = 0;      // gameTime went backwards
+      let nan = 0;          // NaN coords
+      let jumps = 0;
+      for (let i = 0; i < p.length; i++) {
+        if (isNaN(p[i].x) || isNaN(p[i].y)) nan++;
+        if (p[i].isJump) { jumps++; continue; }
+        if (i > 0) {
+          const dt = p[i].gameTime - p[i - 1].gameTime;
+          if (dt < 0) nonMono++;
+          else if (!p[i - 1].isJump && dt > maxGap) maxGap = dt;
+        }
+      }
+      const span = p[p.length - 1].gameTime - p[0].gameTime;
+      const flags = [];
+      if (nan) flags.push(`NaN=${nan}`);
+      if (nonMono) flags.push(`NON-MONOTONIC=${nonMono}`);
+      console.log(
+        `    ${u.displayName} (${u.itemId}) samples=${p.length} ` +
+        `span=${formatTime(p[0].gameTime)}->${formatTime(p[p.length - 1].gameTime)} ` +
+        `maxGap=${(maxGap / 1000).toFixed(2)}s jumps=${jumps}` +
+        (flags.length ? `  !! ${flags.join(' ')}` : '')
+      );
     });
   }
   console.log('');
@@ -790,4 +837,50 @@ if (showSections.includes('camps-debug')) {
 
     console.log('');
   });
+}
+
+// --- Per-player camp credit (Project C) ---
+if (showSections.includes('camps-credit')) {
+  console.log('=== Neutral Creep Camps — Per-Player Credit ===');
+  const groups = (data.world && data.world.neutralGroups) || {};
+  const groupList = Object.values(groups).sort((a, b) => {
+    const at = a.firstInteractionTime != null ? a.firstInteractionTime : Infinity;
+    const bt = b.firstInteractionTime != null ? b.firstInteractionTime : Infinity;
+    return at - bt;
+  }).slice(0, limit);
+
+  groupList.forEach((g, i) => {
+    const pc = g.playerCredit || {};
+    const pids = Object.keys(pc);
+    const unitNames = (g.units || []).map(u => u.displayName).join(', ');
+    console.log(`\n  Camp ${i + 1}: Lv${g.totalLevel} model=${g.creditModel || '?'} ` +
+      `leash=${g.leashDistance || '?'}(${g.leashSource || '?'}) events=${(g.perPlayerEvents || []).length}`);
+    console.log(`    Units: ${unitNames}`);
+
+    if (!pids.length) { console.log('    (no per-player events)'); return; }
+
+    pids.forEach(pid => {
+      const p = pc[pid];
+      const meta = (data.replay && data.replay.players[pid]) || {};
+      const m = p.measured || {};
+      const tag = p.credited ? 'CREDITED' : 'NOT credited';
+      const unc = p.uncertain ? ` [UNCERTAIN conf=${p.confidence}]` : ` conf=${p.confidence}`;
+      console.log(`    p${pid} ${meta.name || ''} (team${p.teamId}): ${tag}${unc}`);
+      console.log(`      effective=${(m.effectiveMs/1000).toFixed(1)}s / req ${(m.requiredMs/1000).toFixed(1)}s ` +
+        `inCamp=${(m.inCampMs/1000).toFixed(1)}s pull=${(m.pullMs/1000).toFixed(1)}s ` +
+        `interactions=${m.interactionCount} items=${m.itemInteractions} share=${m.share}`);
+      (p.criteria || []).forEach(c => {
+        console.log(`        [${c.pass ? 'x' : ' '}] ${c.label}: ${c.measured}${c.unit || ''} / ${c.required}${c.unit || ''}`);
+      });
+      if (p.whyNot) console.log(`      WHY NOT: ${p.whyNot}`);
+      if (p.confidenceReasons && p.confidenceReasons.length) {
+        console.log(`      uncertainty: ${p.confidenceReasons.join('; ')}`);
+      }
+      if (p.evidence && p.evidence.length) {
+        console.log(`      evidence: ${p.evidence.map(e => `${formatTime(e.gameTime)} ${e.stage}/${e.zone}${e.labels.indexOf('contested')>=0?'(contested)':''}`).join(', ')}`);
+      }
+    });
+    console.log(`    creditTimeline: ${(g.playerCreditTimeline || []).length} snapshots`);
+  });
+  console.log('');
 }

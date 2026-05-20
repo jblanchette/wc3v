@@ -2796,6 +2796,23 @@ const Wc3vViewer = class {
       this.playerStatusCtx.fillStyle = "#29373E";
       this.playerStatusCtx.strokeStyle = "#FFF";
       this.playerStatusCtx.font = '12px Arial';
+
+      // Detached offscreen buffer for the player-status panel. It lives
+      // outside the DOM, so the per-frame ctx.font/text work that used to
+      // force "Recalculate Style" + "Layout" on the live canvas can't
+      // trigger any style/layout recalc here. The panel is re-rendered into
+      // this buffer only when its inputs change (see _refreshPlayerStatusPanel)
+      // and blitted to the visible canvas with one drawImage each frame.
+      this._psOffscreen = document.createElement("canvas");
+      this._psOffscreen.width = this.playerStatusCanvas.width;
+      this._psOffscreen.height = this.playerStatusCanvas.height;
+      this._psOffscreenCtx = this._psOffscreen.getContext("2d");
+      this._psOffscreenCtx.lineWidth = 1;
+      this._psOffscreenCtx.fillStyle = "#29373E";
+      this._psOffscreenCtx.strokeStyle = "#FFF";
+      this._psOffscreenCtx.font = '12px Arial';
+      this._psSig = null;
+      this._psLastBucket = -1;
     }
 
     const playerLoadedPromiseList = this.players.map(player => {
@@ -2866,6 +2883,8 @@ const Wc3vViewer = class {
       }
 
       this.buildTerrainIndex();
+      this.baseNameplateRenderer = new BaseNameplateRenderer();
+      this.baseNameplateRenderer.computeAnchors(this.players, this.neutralBuildings, this.gameScaler, this.mapData);
       this.timelineSpline = new TimelineSpline(this);
       this.chapterMarkers = new ChapterMarkers(this);
       this.placementViewer.setup();
@@ -2941,6 +2960,7 @@ const Wc3vViewer = class {
       displayFloatingText: true,
       decayEffects: true,
       displayText: true,
+      displayBaseLabels: true,
 
       displayMapGrid: false,
       displayTreeGrid: true,
@@ -2987,6 +3007,7 @@ const Wc3vViewer = class {
         { key: 'displayLevelPins', label: 'Level Pins' },
         { key: 'displayFloatingText', label: 'Action Text' },
         { key: 'displayText', label: 'Unit Names' },
+        { key: 'displayBaseLabels', label: 'Base Labels' },
         { key: 'decayEffects', label: 'Fade FX' },
         { key: 'displayTreeGrid', label: 'Tree Grid' },
         { key: 'autoSplitScreen', label: 'Split Screen' }
@@ -3070,34 +3091,27 @@ const Wc3vViewer = class {
     return !!m && m !== '1v1';
   }
 
-  // Persistent, dismissible banner shown at the top of the viewer for
-  // non-1v1 games. Explains the restricted experience. Dismissal is
-  // remembered per replay for the session (matches the per-replay
-  // sessionStorage convention used elsewhere, e.g. bo player index).
+  // The nav skill-band (New / Ladder / Pro) does nothing in non-1v1 games —
+  // pro comparison, guided walkthrough and beginner view are all 1v1-only.
+  // So for non-1v1 we swap SiteNav's nav band for a static, non-interactive
+  // "Viewing <mode> game" notice in the same spot. Idempotent.
   _renderNon1v1Banner () {
     if (!this.isNonOneVsOne()) return;
-    if (document.getElementById('non1v1-banner')) return;
-    const key = `wc3v.non1v1BannerDismissed.${this.replayId || 'default'}`;
-    try { if (sessionStorage.getItem(key) === '1') return; } catch (e) { /* sessionStorage off */ }
+    const band = document.getElementById('skill-band-nav');
+    if (!band || band.dataset.non1v1 === '1') return;
 
-    const host = document.getElementById('app') || document.body;
     const modeLabel = ({ '2v2': '2v2', '3v3': '3v3', '4v4': '4v4', ffa: 'FFA', custom: 'Custom' })[this.getGameMode()] || this.getGameMode().toUpperCase();
-    const bar = document.createElement('div');
-    bar.id = 'non1v1-banner';
-    bar.className = 'non1v1-banner';
-    const msg = document.createElement('span');
-    msg.textContent = `${modeLabel} game — fully viewable. Build orders show one player at a time; pro comparison, guided walkthrough and beginner view are 1v1-only and disabled here.`;
-    const x = document.createElement('button');
-    x.type = 'button';
-    x.className = 'non1v1-banner-x';
-    x.setAttribute('aria-label', 'Dismiss');
-    x.textContent = '×';
-    x.addEventListener('click', () => {
-      bar.remove();
-      try { sessionStorage.setItem(key, '1'); } catch (e) { /* sessionStorage off */ }
-    });
-    bar.append(msg, x);
-    host.insertBefore(bar, host.firstChild);
+
+    band.dataset.non1v1 = '1';
+    band.classList.add('skill-band--non1v1');
+    band.removeAttribute('role');
+    band.setAttribute('aria-label', `Viewing ${modeLabel} game`);
+
+    const label = document.createElement('span');
+    label.className = 'skill-band-non1v1-label';
+    label.textContent = `Viewing ${modeLabel} game`;
+    band.innerHTML = '';
+    band.appendChild(label);
   }
 
   setupPlayers () {
@@ -3273,6 +3287,11 @@ const Wc3vViewer = class {
       if (self.threeMapRenderer) self.threeMapRenderer.resize();
     }
 
+    if (typeof CampPanel !== 'undefined') {
+      this.campPanel = new CampPanel(this);
+      this.campPanel.setData(world.neutralGroups);
+    }
+
     this.gameDisplayBox = new GameDisplayBox(this.teamColorMap, this.assignedPlayerColors);
     // The spatial index is now rebuilt per-mousemove from current projection
     // state, so we just hand over the source data — no handler-built tree
@@ -3443,6 +3462,41 @@ const Wc3vViewer = class {
         if (self.guideMode && !self.mobileMode) self._reapplyGuideFocus();
       }
     });
+  }
+
+  // Re-render the player-status panel into the detached offscreen buffer,
+  // but only when something visible actually changed. Tier/tab/selection/
+  // hero-count changes redraw immediately; continuously-ticking values
+  // (unit counts, hero HP/mana) refresh at ~4Hz via a 250ms time bucket
+  // instead of every frame. The caller blits _psOffscreen each frame.
+  _refreshPlayerStatusPanel (transform, gameTime, xScale, yScale, viewOptions) {
+    if (!this._psOffscreenCtx) return;
+
+    let sig = '';
+    for (const p of this.players) {
+      if (p.isNeutralPlayer) continue;
+      const sel = p.currentGroup ? p.currentGroup.length : 0;
+      sig += p.tier + ':' + p.tab + ':' + sel + ':' + p.heroes.length + '|';
+    }
+    const bucket = Math.floor(gameTime / 250);
+    if (sig === this._psSig && bucket === this._psLastBucket) return;
+    this._psSig = sig;
+    this._psLastBucket = bucket;
+
+    const octx = this._psOffscreenCtx;
+    octx.setTransform(1, 0, 0, 1, 0, 0);
+    octx.clearRect(0, 0, this._psOffscreen.width, this._psOffscreen.height);
+    this.players.forEach(player => {
+      player.renderPlayerIcon(octx, transform, gameTime, xScale, yScale, viewOptions);
+    });
+  }
+
+  // Refresh (throttled) + blit the status panel onto the visible canvas.
+  // One drawImage per frame; no text/font work touches the live DOM canvas.
+  _drawPlayerStatusPanel (transform, gameTime, xScale, yScale, viewOptions) {
+    if (!this._psOffscreen || !this.playerStatusCtx) return;
+    this._refreshPlayerStatusPanel(transform, gameTime, xScale, yScale, viewOptions);
+    this.playerStatusCtx.drawImage(this._psOffscreen, 0, 0);
   }
 
   clearCanvas () {
@@ -3734,6 +3788,12 @@ const Wc3vViewer = class {
       { target: right, transform: transformR, side: 'right' }
     ];
 
+    // Project camp hit geometry per half (each side uses its own camera).
+    // A camp belongs to whichever side's diagonal clip actually shows it,
+    // matching the rings the user sees, so the icons land correctly.
+    const _splitCampHits = [];
+    const _seenSplitCamp = {};
+
     for (const half of halves) {
       const t = half.transform;
 
@@ -3803,8 +3863,23 @@ const Wc3vViewer = class {
       frameData.gameTime = gameTime;
 
       // --- Map overlays ---
-      this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, t, this.mapData, viewOptions, gs, players, this.teamColorMap, null);
+      const _halfHits = [];
+      this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, t, this.mapData, viewOptions, gs, players, this.teamColorMap, null, _halfHits);
       this.mapRenderer.renderNeutralBuildings(utilityCtx, t, viewOptions, this.neutralBuildings, gs);
+
+      // keep only camps inside THIS half's diagonal clip (so each camp's icon
+      // appears on the side that actually renders it). Boundary x at height
+      // cy runs from diagTopX (y=0) to diagBotX (y=ch); left clip is cx<=bx.
+      for (const hh of _halfHits) {
+        const uuid = hh.rawGroup && hh.rawGroup.uuid;
+        if (!uuid || _seenSplitCamp[uuid]) continue;
+        const bx = diagTopX + (diagBotX - diagTopX) * (ch ? (hh.cy / ch) : 0);
+        const isLeft = hh.cx <= bx;
+        if ((half.side === 'left' && isLeft) || (half.side === 'right' && !isLeft)) {
+          _seenSplitCamp[uuid] = true;
+          _splitCampHits.push(hh);
+        }
+      }
 
       // --- Units: projectXY uses the 3D camera just positioned ---
       players.forEach(player => {
@@ -3817,8 +3892,10 @@ const Wc3vViewer = class {
       });
 
       players.forEach(player => {
-        player.render(frameData, ctx, playerCtx, utilityCtx, playerStatusCtx, t, gameTime, xScale, yScale, viewOptions);
+        player.render(frameData, ctx, playerCtx, utilityCtx, null, t, gameTime, xScale, yScale, viewOptions);
       });
+
+      this._drawPlayerStatusPanel(t, gameTime, xScale, yScale, viewOptions);
 
       // One-shot death FX (queued during the per-unit renderUnit pass) flushed
       // here so all players' FX render together on top of unit icons.
@@ -3835,6 +3912,14 @@ const Wc3vViewer = class {
       ctx.restore();
       playerCtx.restore();
       utilityCtx.restore();
+    }
+
+    // Publish split hit geometry and live-sync the camp UI for this frame
+    // (the normal render path's campPanel hook is skipped in split mode).
+    this._campHitBuf = _splitCampHits;
+    if (this.campPanel && !this.guideMode) {
+      this.campPanel.syncIcons(this._campHitBuf);
+      this.campPanel.update(gameTime);
     }
 
     // --- Diagonal divider ---
@@ -4040,6 +4125,10 @@ const Wc3vViewer = class {
       this.gameDisplayBox.setHitData(this._campHitBuf);
       if (this.guideMode) this.gameDisplayBox.hide();
     }
+    if (this.campPanel && !this.guideMode) {
+      this.campPanel.syncIcons(this._campHitBuf);
+      this.campPanel.update(gameTime);
+    }
     this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
 
     players.forEach(player => {
@@ -4081,97 +4170,12 @@ const Wc3vViewer = class {
       }
     });
 
-    // always build allReps (needed by terrain clamp below even when skipBloom)
-    const allReps = [];
-    players.forEach(player => {
-      if (!player.isNeutralPlayer && player._resolved) {
-        player._resolved.representatives.forEach(rep => allReps.push(rep));
-      }
-    });
-
-    if (!skipBloom) {
-      // compute engagement for NEXT frame (hysteretic thresholds)
-      const armyPlayers = players.filter(p => !p.isNeutralPlayer && p._armyMeta);
-      armyPlayers.forEach(p => { p._willEngage = false; });
-      for (let i = 0; i < armyPlayers.length; i++) {
-        for (let j = i + 1; j < armyPlayers.length; j++) {
-          const metaA = armyPlayers[i]._armyMeta;
-          const metaB = armyPlayers[j]._armyMeta;
-          const dx = metaA.centroidX - metaB.centroidX;
-          const dy = metaA.centroidY - metaB.centroidY;
-          const distSq = dx * dx + dy * dy;
-          // hysteretic: enter engaged < 120px, exit > 180px
-          const threshold = (armyPlayers[i]._wasEngaged || armyPlayers[j]._wasEngaged) ? 180 : 120;
-          if (distSq < threshold * threshold) {
-            armyPlayers[i]._willEngage = true;
-            armyPlayers[j]._willEngage = true;
-          }
-        }
-      }
-      armyPlayers.forEach(p => { p._wasEngaged = p._willEngage; });
-
-      // cross-player collision — push apart units from different players
-      ClientPlayer.crossPlayerCollision(allReps, 3, 25, this._treeIndex);
-
-      // smooth cross-player collision displacements
-      players.forEach(player => {
-        if (!player._resolved || player.isNeutralPlayer) return;
-        if (!player._crossCollisionCache) player._crossCollisionCache = new Map();
-
-        const ccLerp = 0.3;
-        player._resolved.representatives.forEach(rep => {
-          const ccDx = rep.drawX - (rep._preCollisionX || rep.drawX);
-          const ccDy = rep.drawY - (rep._preCollisionY || rep.drawY);
-          const prev = player._crossCollisionCache.get(rep.uuid);
-          if (prev) {
-            const sx = prev.ox + (ccDx - prev.ox) * ccLerp;
-            const sy = prev.oy + (ccDy - prev.oy) * ccLerp;
-            rep.drawX = (rep._preCollisionX || rep.drawX) + sx;
-            rep.drawY = (rep._preCollisionY || rep.drawY) + sy;
-            player._crossCollisionCache.set(rep.uuid, { ox: sx, oy: sy });
-          } else {
-            player._crossCollisionCache.set(rep.uuid, { ox: ccDx, oy: ccDy });
-          }
-        });
-      });
-
-      // absolute displacement cap after ALL modifications — 35px max from true position
-      const maxFinalDisp = 35;
-      const maxFinalDispSq = maxFinalDisp * maxFinalDisp;
-      allReps.forEach(u => {
-        if (!u._origX) return;
-        const dx = u.drawX - u._origX;
-        const dy = u.drawY - u._origY;
-        const distSq = dx * dx + dy * dy;
-        if (distSq > maxFinalDispSq) {
-          const scale = maxFinalDisp / Math.sqrt(distSq);
-          u.drawX = u._origX + dx * scale;
-          u.drawY = u._origY + dy * scale;
-        }
-      });
-
-      this._lastResolveGameTime = gameTime;
-    }
-
-    // terrain + tree clamp
-    if (this._terrainIndex || this._treeIndex) {
-      allReps.forEach(u => {
-        if (Wc3vViewer.isBlockedTerrain(this._terrainIndex, u.drawX, u.drawY)) {
-          u.drawX = u._origX;
-          u.drawY = u._origY;
-          return;
-        }
-        const hit = Wc3vViewer.treeCollisionCheck(this._treeIndex, u.drawX, u.drawY, u.halfIconSize);
-        if (hit) {
-          const tdx = u.drawX - hit.tree.x;
-          const tdy = u.drawY - hit.tree.y;
-          const d = hit.dist || 0.01;
-          const push = hit.minDist - d;
-          u.drawX += (tdx / d) * push;
-          u.drawY += (tdy / d) * push;
-        }
-      });
-    }
+    // RAW POSITION MODE: units render at their authoritative parser
+    // positions. All client repositioning (engagement detection,
+    // cross-player collision, offset smoothing, displacement caps,
+    // terrain/tree clamp) has been removed — parser output is
+    // ground-truth verified, so no client massaging is applied.
+    this._lastResolveGameTime = gameTime;
 
     players.forEach(player => {
       player.render(
@@ -4179,7 +4183,7 @@ const Wc3vViewer = class {
         ctx,
         playerCtx,
         utilityCtx,
-        playerStatusCtx,
+        null, // status panel drawn separately via _drawPlayerStatusPanel
         transform,
         gameTime,
         xScale,
@@ -4188,9 +4192,17 @@ const Wc3vViewer = class {
       );
     });
 
+    this._drawPlayerStatusPanel(transform, gameTime, xScale, yScale, viewOptions);
+
     // One-shot death FX (queued during the per-unit renderUnit pass) flushed
     // here so all players' FX render together on top of unit icons.
     ClientPlayer.drawDeathFxQueue(frameData, playerCtx);
+
+    // Per-player base nameplates — drawn on the unit layer so live unit
+    // nameplates / floating text (rendered just after) sit on top of them.
+    if (this.baseNameplateRenderer) {
+      this.baseNameplateRenderer.render(playerCtx, players, this.gameScaler, gameTime, viewOptions);
+    }
 
     // global nameplate pass — all players' unit icons as obstacles in one tree
     if (viewOptions.displayText) {

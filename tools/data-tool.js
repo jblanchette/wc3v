@@ -289,6 +289,30 @@ async function readMapFile(mapFilePath, mapPrefix = 'w3c_') {
     }
   });
 
+  // Truly-optional files: extract if the map ships them, silent if absent.
+  // war3mapMisc.txt = Gameplay Constants overrides (creep guard/leash, etc.).
+  // Melee maps don't ship it; custom maps may — parsed later by MiscFile so
+  // those maps get an exact creep leash instead of the WC3 default.
+  const bonusFiles = ['war3mapMisc.txt'];
+  bonusFiles.forEach(bonusFile => {
+    const hasFile = listFile.files.some(listItem => listItem == bonusFile);
+    if (!hasFile) {
+      return;
+    }
+    try {
+      const file = mpq.openFile(bonusFile);
+      const data = file.read();
+      const filePath = `${outputDirectory}/${bonusFile}`;
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      fs.appendFileSync(filePath, Buffer.from(data));
+      file.close();
+    } catch (err) {
+      console.log("error extracting optional file: ", bonusFile, "error: ", err);
+    }
+  });
+
   mpq.close();
   await parseMapData(normalizedMapName, mapFilePath, outputDirectory, isLuaMap);
 };

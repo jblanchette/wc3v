@@ -2015,6 +2015,37 @@ function resolveDropItem (itemId) {
   return { itemId, displayName: itemId, isRandom: true };
 }
 
+//
+// Creep camp leash / guard-return distance.
+//
+// HONEST LIMITATION: the per-camp creep guard/leash distance is NOT recorded
+// in the replay, and is NOT present in the melee map files we parse —
+// war3mapUnits.doo only carries a camp flag (targetAcquisition === -2), and
+// war3mapMisc.txt (gameplay-constant overrides) is absent from every melee map
+// in this project. The real leash is a WC3 engine value. We therefore use one
+// documented default and surface `leashSource` to the UI so it can state
+// whether the in-camp vs creep-pull boundary is map-exact or a standard
+// default — we never present the boundary as more precise than it is.
+//
+// ~1000u beyond the camp's tight unit bounds matches the commonly observed
+// melee creep aggro/return radius. Tunable via Project C's evidence harness.
+//
+const CREEP_GUARD_RETURN_DISTANCE = 1000;
+
+//
+// Resolve the effective creep leash for a parsed map. If a (future/custom) map
+// supplied gameplay-constant overrides — extracted by lib/parsers/MiscFile and
+// surfaced as `gameConstants.creepGuardReturnDistance` — prefer that exact
+// value; otherwise fall back to the documented WC3 default.
+//
+function resolveCampLeash (gameConstants) {
+  const v = gameConstants && gameConstants.creepGuardReturnDistance;
+  if (typeof v === 'number' && isFinite(v) && v > 0) {
+    return { distance: v, source: 'mapConstants' };
+  }
+  return { distance: CREEP_GUARD_RETURN_DISTANCE, source: 'wc3Default' };
+}
+
 module.exports = {
 	getUnitInfo,
 	buildings,
@@ -2061,6 +2092,9 @@ module.exports = {
   NEUTRAL_HIRE_BUILDINGS,
 
   resolveDropItem,
+
+  CREEP_GUARD_RETURN_DISTANCE,
+  resolveCampLeash,
 
   NEUTRAL_PLAYER_ID: 1042,
   NEUTRAL_PLAYER_SLOT: 1044,

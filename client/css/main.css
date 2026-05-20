@@ -8273,33 +8273,26 @@ body.viewer-mobile-mode #loading-overlay {
    Dismissible, sticky strip at the top of #app explaining the
    restricted (full-detail, single-player BO, auto/free camera)
    experience for non-1v1 replays. */
-.non1v1-banner {
-  display: flex;
+/* Non-1v1 games: the skill-band control is useless here (pro/beginner/
+   walkthrough are 1v1-only), so the viewer's nav band is swapped for this
+   static notice. See Wc3vViewer._renderNon1v1Banner. */
+.skill-band--non1v1 {
+  display: inline-flex;
   align-items: center;
-  gap: 14px;
-  position: sticky;
-  top: 0;
-  z-index: 120;
-  padding: 9px 16px;
-  background: linear-gradient(180deg, rgba(200,168,78,0.20), rgba(200,168,78,0.10));
-  border-bottom: 1px solid rgba(200,168,78,0.45);
-  color: #e8dcb6;
-  font: 500 0.85rem/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-.non1v1-banner span { flex: 1 1 auto; }
-.non1v1-banner-x {
-  flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-  border: 0;
+.skill-band-non1v1-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  background: rgba(200,168,78,0.12);
+  border: 1px solid rgba(200,168,78,0.40);
   border-radius: 6px;
-  background: rgba(255,255,255,0.08);
   color: #e8dcb6;
-  font-size: 1.05rem;
-  line-height: 1;
-  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
 }
-.non1v1-banner-x:hover { background: rgba(255,255,255,0.16); }
 
 /* Defense-in-depth: hide any pro-analysis affordance inside the viewer
    for non-1v1 games (beginner pick gate, walkthrough CTA, in-viewer
@@ -16119,3 +16112,198 @@ button.mcb-summary {
   margin: 0;
   box-sizing: border-box;
 }
+
+/* ===== Project C: click-driven creep-camp UI ===== */
+#camp-icon-layer {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: visible;      /* edge-of-map camp icons must not clip */
+  pointer-events: none;   /* only the buttons capture clicks */
+  /* Just above the 4 map canvases (z 0-3), but BELOW all interactive
+     chrome: mega-play overlay (20), viewer/map options, scrubber,
+     game-display-box (100). Must never cover the play button or controls. */
+  z-index: 4;
+}
+.camp-icon-wrap {
+  position: absolute;
+  left: 0; top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+}
+.camp-icon-btn {
+  pointer-events: auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid #3a4a5c;
+  background: rgba(20, 26, 38, 0.92);
+  color: #e6ebf2;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition: background 0.12s, border-color 0.12s, transform 0.08s;
+}
+.camp-icon-btn:hover { background: #243247; border-color: #5b7da0; transform: scale(1.08); }
+.camp-icon-btn:focus-visible { outline: 2px solid #f0b232; outline-offset: 2px; }
+.camp-icon-timeline { color: #f0b232; }
+.camp-icon-info { color: #6fb3ff; }
+
+#camp-detail-panel {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  width: 360px;
+  max-width: calc(100% - 28px);
+  max-height: calc(100% - 28px);
+  overflow-y: auto;
+  background: #161b27;
+  border: 1px solid #3a4a5c;
+  border-radius: 6px;
+  color: #d6dce6;
+  font-size: 13px;
+  z-index: 130;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+#camp-detail-panel[hidden] { display: none; }
+.cdp-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 8px 0 8px;
+  border-bottom: 1px solid #2a3647;
+  position: sticky;
+  top: 0;
+  background: #161b27;
+}
+.cdp-tab {
+  background: transparent;
+  border: none;
+  color: #9aa7b8;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+}
+.cdp-tab.active { color: #fff; background: #212a3a; }
+.cdp-close {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #9aa7b8;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.cdp-close:hover { color: #fff; }
+.cdp-body { padding: 12px 14px 16px; }
+.cdp-gate, .cdp-empty {
+  color: #9aa7b8;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 8px 0;
+}
+.cdp-head h3 { margin: 0 0 2px; font-size: 15px; color: #fff; }
+.cdp-sub { font-size: 12px; color: #8794a6; margin-bottom: 8px; }
+.cdp-approx { color: #e8b84a; }
+.cdp-exact { color: #5fbf8f; }
+.cdp-override-badge {
+  background: rgba(240, 178, 50, 0.14);
+  border: 1px solid #6a5320;
+  color: #f0b232;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 4px;
+  margin: 6px 0 4px;
+}
+.cdp-ov-clear {
+  margin-left: 8px;
+  background: transparent;
+  border: 1px solid #6a5320;
+  color: #f0b232;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.cdp-player {
+  border-top: 1px solid #2a3647;
+  padding: 10px 0;
+}
+.cdp-prow { display: flex; align-items: center; gap: 7px; }
+.cdp-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+.cdp-pname { font-weight: 700; color: #fff; font-size: 13px; }
+.cdp-status {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+.cdp-status.cdp-yes { color: #2fd07a; background: rgba(47, 208, 122, 0.12); }
+.cdp-status.cdp-no  { color: #e0697a; background: rgba(224, 105, 122, 0.10); }
+.cdp-status.cdp-ov  { color: #f0b232; background: rgba(240, 178, 50, 0.14); }
+.cdp-uncertain { margin-left: auto; color: #e8b84a; font-size: 12px; font-weight: 700; }
+.cdp-conf { margin-left: auto; color: #8794a6; font-size: 12px; }
+.cdp-crits { list-style: none; margin: 7px 0 0; padding: 0; }
+.cdp-crit {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  padding: 2px 0;
+}
+.cdp-box { width: 16px; text-align: center; font-weight: 800; }
+.cdp-crit-pass .cdp-box { color: #2fd07a; }
+.cdp-crit-fail .cdp-box { color: #e0697a; }
+.cdp-crit-label { flex: 1; color: #c4ccd8; }
+.cdp-crit-val { color: #8794a6; font-variant-numeric: tabular-nums; }
+.cdp-measure { font-size: 12px; color: #9aa7b8; margin-top: 6px; line-height: 1.5; }
+.cdp-measure b { color: #d6dce6; }
+.cdp-final { color: #7f8da0; }
+.cdp-why {
+  font-size: 12.5px;
+  color: #e8b84a;
+  background: rgba(232, 184, 74, 0.08);
+  border-radius: 4px;
+  padding: 6px 8px;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+.cdp-reasons { font-size: 12px; color: #8794a6; margin-top: 5px; line-height: 1.5; }
+.cdp-evidence { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
+.cdp-ev {
+  font-size: 11.5px;
+  color: #9aa7b8;
+  background: #1f2735;
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+.cdp-ev.in-camp { border-left: 0; color: #7fc4a0; }
+.cdp-ev.creep-pull { color: #d6b06a; }
+.cdp-override {
+  border-top: 1px solid #2a3647;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.cdp-override label { font-size: 12.5px; color: #c4ccd8; display: block; }
+.cdp-ov-select {
+  margin-top: 5px;
+  width: 100%;
+  background: #1f2735;
+  color: #d6dce6;
+  border: 1px solid #3a4a5c;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.cdp-ov-hint { font-size: 11.5px; color: #7f8da0; margin-top: 5px; }
+.cdp-player.cdp-live-credited { background: rgba(47, 208, 122, 0.05); }

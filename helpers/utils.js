@@ -682,6 +682,8 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         researchStream,
         ...(player.itemStream ? { itemStream: player.itemStream } : {}),
         ...(player.apmData ? { apmData: player.apmData } : {}),
+        ...(player.moveTrace ? { moveTrace: player.moveTrace } : {}),
+        ...(player._mvStats ? { mvStats: player._mvStats } : {}),
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit()).concat(
           (player.destroyedSummons || [])
@@ -854,6 +856,10 @@ const readCliArgs = (argv) => {
       case "debug":
         config.debugOutput = true;
         options.jsonPadding = 4;
+      break;
+
+      case "move-trace":
+        config.moveTrace = true;
       break;
 
       case "prod":

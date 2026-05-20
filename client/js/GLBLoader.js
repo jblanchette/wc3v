@@ -169,7 +169,16 @@
               // world-space normals with world-space light is equivalent and
               // keeps lighting camera-independent.
               vNormal = normalize(mat3(worldMatrix) * normal);
-              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              // Buildings are rendered as InstancedMesh (one draw call per
+              // model+team). three.js defines USE_INSTANCING and the
+              // instanceMatrix attribute for instanced objects regardless of
+              // material. Instance transforms are translation-only, so the
+              // normal transform above stays correct (worldMatrix = identity).
+              #ifdef USE_INSTANCING
+                gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+              #else
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              #endif
             }
           `,
           fragmentShader: `

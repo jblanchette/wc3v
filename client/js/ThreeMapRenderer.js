@@ -158,7 +158,11 @@
         alpha: true,
         preserveDrawingBuffer: false
       });
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      // Cap at 1.5 (was 2): on a HiDPI display, 2.0 renders ~78% more
+      // fragments than 1.5 with no readable quality gain at this camera
+      // distance, and busy 3v3s are fill-bound. antialias stays on (MSAA is
+      // far cheaper than the supersampling a higher pixelRatio implies).
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
       this.renderer.setClearColor(0x0b1014, 1);
       this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -769,6 +773,7 @@
       const mesh = new THREE.Mesh(geo, mats.length ? mats : new THREE.MeshLambertMaterial({ color: 0x666666 }));
       mesh.position.set(0, 0, 0);
       this.scene.add(mesh);
+      this._freezeMatrix(mesh);
       this.terrainMesh = mesh;
       console.log('[ThreeMapRenderer] multi-material terrain:',
         positions.length / 3, 'verts,', mergedIndices.length / 3, 'tris,',
@@ -912,6 +917,7 @@
       const waterMesh = new THREE.Mesh(waterGeo, waterMat);
       waterMesh.position.set(0, 0, 0);
       this.scene.add(waterMesh);
+      this._freezeMatrix(waterMesh);
       this.waterMesh = waterMesh;
       console.log('[ThreeMapRenderer] terrain Y range', minY.toFixed(1), '..', maxY.toFixed(1),
                   '| water verts:', waterVertCount, '/', vertCount);
@@ -1140,6 +1146,8 @@
 
       this.scene.add(trunkMesh);
       this.scene.add(leafMesh);
+      this._freezeMatrix(trunkMesh);
+      this._freezeMatrix(leafMesh);
       this.trunkMesh = trunkMesh;
       this.leafMesh = leafMesh;
       console.log('[ThreeMapRenderer] spawned', count, 'trees');
@@ -1611,6 +1619,7 @@
           }
           mesh.instanceMatrix.needsUpdate = true;
           this.scene.add(mesh);
+          this._freezeMatrix(mesh);
           this.requestRender();
           loadedCount++;
           if (loadedCount === totalGroups) {
@@ -1796,6 +1805,10 @@
           }
           mesh.instanceMatrix.needsUpdate = true;
           this.scene.add(mesh);
+          // Trees can be hidden later (clearTreesAroundPoint) via setMatrixAt
+          // + instanceMatrix.needsUpdate — that path doesn't need per-frame
+          // matrixAutoUpdate, so freezing the mesh transform is safe.
+          this._freezeMatrix(mesh);
           modelCount += instCount;
           loadedCount++;
           this.requestRender();
@@ -2055,55 +2068,110 @@
           loader.load(url, (result) => {
             if (!result) { resolve(); return; }
 
-            for (const entry of entries) {
-              const groundY = this.sampleHeight(entry.wx, entry.wy) + 18;
-              const teamColor = new THREE.Color(entry.playerColor);
+            // Extract render prims. A multi-primitive model loads as a Group
+            // of meshes (each with its own geometry + WC3 ShaderMaterial); a
+            // single-primitive model loads as a bare BufferGeometry we light
+            // with a flat Lambert material.
+            const prims = [];
+            if (result.isGroup) {
+              result.traverse(c => {
+                if (c.isMesh && c.geometry && c.material) {
+                  prims.push({ geometry: c.geometry, baseMat: c.material, shader: true });
+                }
+              });
+            } else {
+              prims.push({ geometry: result, baseMat: null, shader: false });
+            }
+            if (!prims.length) { resolve(); return; }
 
-              let obj;
-              if (result.isGroup) {
-                obj = result.clone();
-                // Add subtle team color emissive to all child materials
-                obj.traverse(child => {
-                  if (child.isMesh && child.material) {
-                    child.material = child.material.clone();
-                    if (child.material.uniforms && child.material.uniforms.emissiveColor) {
-                      child.material.uniforms.emissiveColor.value = teamColor;
-                      child.material.uniforms.emissiveIntensity.value = 0.15;
-                    } else if (child.material.emissive) {
-                      child.material.emissive = teamColor;
-                      child.material.emissiveIntensity = 0.15;
-                    }
-                  }
-                });
-              } else {
-                // Legacy single-geometry fallback
-                const mat = new THREE.MeshLambertMaterial({
-                  color: 0x998877, flatShading: true,
-                  emissive: teamColor, emissiveIntensity: 0.3
-                });
-                obj = new THREE.Mesh(result, mat);
+            // Bucket this model's buildings by player color. Every
+            // (model, prim, color) becomes ONE InstancedMesh = one draw call,
+            // instead of a per-building Group. three.js getParameters/Qt cost
+            // scales with the number of meshes in the render list, so a busy
+            // 3v3 (hundreds of building meshes) collapses to a handful.
+            const byColor = {};
+            for (const e of entries) {
+              (byColor[e.playerColor] || (byColor[e.playerColor] = [])).push(e);
+            }
+
+            if (!this._buildingMatCache) this._buildingMatCache = new Map();
+            if (!this._buildingInstanced) this._buildingInstanced = [];
+            const matCache = this._buildingMatCache;
+            const IDENT = this._identityMat || (this._identityMat = new THREE.Matrix4());
+            const HIDDEN = this._hiddenMat || (this._hiddenMat = new THREE.Matrix4().makeScale(0, 0, 0));
+
+            for (const color of Object.keys(byColor)) {
+              const bucket = byColor[color];
+              const teamColor = new THREE.Color(color);
+
+              // One shared _playerBuildings record per building, referenced by
+              // every prim's InstancedMesh via _slots.
+              const records = [];
+              for (let i = 0; i < bucket.length; i++) {
+                const e = bucket[i];
+                const groundY = this.sampleHeight(e.wx, e.wy) + 18;
+                const rec = {
+                  readyTime: e.readyTime,
+                  destroyedAt: e.destroyedAt,
+                  wx: e.wx, wy: e.wy,
+                  itemId: e.itemId,
+                  unit: e.unit,
+                  _slots: [],
+                  _matrix: new THREE.Matrix4().makeTranslation(
+                    e.wx - mapCenterX, groundY, -(e.wy - mapCenterY)),
+                  _visible: false,
+                  _treesCleared: false,
+                  _lastRootedX: e.wx,
+                  _lastRootedY: e.wy
+                };
+                records.push(rec);
+                this._playerBuildings.push(rec);
               }
 
-              obj.position.set(
-                entry.wx - mapCenterX,
-                groundY,
-                -(entry.wy - mapCenterY)
-              );
-              obj.visible = false;
-              this.scene.add(obj);
+              for (const prim of prims) {
+                let mat;
+                if (prim.shader) {
+                  const key = prim.baseMat.uuid + '|' + color;
+                  mat = matCache.get(key);
+                  if (!mat) {
+                    mat = prim.baseMat.clone();
+                    if (mat.uniforms && mat.uniforms.emissiveColor) {
+                      mat.uniforms.emissiveColor.value = teamColor;
+                      mat.uniforms.emissiveIntensity.value = 0.15;
+                    }
+                    // InstancedMesh world matrix is identity (instances carry
+                    // the translation); the shader's normal transform is
+                    // translation-invariant, so a fixed identity is correct.
+                    if (mat.uniforms && mat.uniforms.worldMatrix) {
+                      mat.uniforms.worldMatrix.value = IDENT;
+                    }
+                    matCache.set(key, mat);
+                  }
+                } else {
+                  const key = modelName + '|' + color;
+                  mat = matCache.get(key);
+                  if (!mat) {
+                    mat = new THREE.MeshLambertMaterial({
+                      color: 0x998877, flatShading: true,
+                      emissive: teamColor, emissiveIntensity: 0.3
+                    });
+                    matCache.set(key, mat);
+                  }
+                }
 
-              this._playerBuildings.push({
-                mesh: obj,
-                readyTime: entry.readyTime,
-                destroyedAt: entry.destroyedAt,
-                wx: entry.wx,
-                wy: entry.wy,
-                itemId: entry.itemId,
-                unit: entry.unit,
-                _treesCleared: false,
-                _lastRootedX: entry.wx,
-                _lastRootedY: entry.wy
-              });
+                const im = new THREE.InstancedMesh(prim.geometry, mat, records.length);
+                // Instances span the whole map; a geometry-derived bounding
+                // sphere would wrongly frustum-cull the entire batch.
+                im.frustumCulled = false;
+                for (let i = 0; i < records.length; i++) {
+                  im.setMatrixAt(i, HIDDEN); // hidden until readyTime
+                  records[i]._slots.push({ mesh: im, index: i });
+                }
+                im.instanceMatrix.needsUpdate = true;
+                this.scene.add(im);
+                this._freezeMatrix(im);
+                this._buildingInstanced.push(im);
+              }
             }
 
             this.requestRender();
@@ -2114,6 +2182,36 @@
       return Promise.all(loadPromises).then(() => {
         console.log('[ThreeMapRenderer] player buildings ready:', this._playerBuildings.length);
       });
+    }
+
+    // Show/hide an instanced building by swapping its per-instance matrix
+    // (zero-scale = hidden). Returns true if the state actually changed.
+    _setBuildingVisible (b, visible) {
+      if (b._visible === visible) return false;
+      b._visible = visible;
+      const HIDDEN = this._hiddenMat || (this._hiddenMat = new THREE.Matrix4().makeScale(0, 0, 0));
+      const m = visible ? b._matrix : HIDDEN;
+      for (const s of b._slots) {
+        s.mesh.setMatrixAt(s.index, m);
+        s.mesh.instanceMatrix.needsUpdate = true;
+      }
+      return true;
+    }
+
+    // Re-root an uprooted building at a new world position (rebakes its
+    // shared instance matrix; reapplies it if currently visible).
+    _setBuildingRoot (b, wx, wy) {
+      const ext = this.mapInfo.bounds.map;
+      const cx = (ext[0][0] + ext[0][1]) / 2;
+      const cy = (ext[1][0] + ext[1][1]) / 2;
+      const groundY = this.sampleHeight(wx, wy) + 18;
+      b._matrix.makeTranslation(wx - cx, groundY, -(wy - cy));
+      if (b._visible) {
+        for (const s of b._slots) {
+          s.mesh.setMatrixAt(s.index, b._matrix);
+          s.mesh.instanceMatrix.needsUpdate = true;
+        }
+      }
     }
 
     // Update player building visibility based on current game time.
@@ -2129,12 +2227,8 @@
       }
       this._lastBuildingGameTime = gameTime;
 
-      const ext = this.mapInfo.bounds.map;
-      const mapCenterX = (ext[0][0] + ext[0][1]) / 2;
-      const mapCenterY = (ext[1][0] + ext[1][1]) / 2;
-
       for (const b of this._playerBuildings) {
-        // Hide 3D mesh while uprooted (2D unit canvas owns rendering then);
+        // Hide while uprooted (2D unit canvas owns rendering then);
         // snap to latest root location when re-rooted.
         let isUprooted = false;
         if (b.unit && b.unit.uprootStream && b.unit.uprootStream.length) {
@@ -2146,12 +2240,7 @@
             if (!e.isUprooted) lastRoot = e;
           }
           if (lastRoot && (lastRoot.x !== b._lastRootedX || lastRoot.y !== b._lastRootedY)) {
-            const groundY = this.sampleHeight(lastRoot.x, lastRoot.y) + 18;
-            b.mesh.position.set(
-              lastRoot.x - mapCenterX,
-              groundY,
-              -(lastRoot.y - mapCenterY)
-            );
+            this._setBuildingRoot(b, lastRoot.x, lastRoot.y);
             b._lastRootedX = lastRoot.x;
             b._lastRootedY = lastRoot.y;
             changed = true;
@@ -2160,8 +2249,7 @@
 
         const aliveAndReady = gameTime >= b.readyTime && (!b.destroyedAt || gameTime < b.destroyedAt);
         const visible = aliveAndReady && !isUprooted;
-        if (b.mesh.visible !== visible) {
-          b.mesh.visible = visible;
+        if (this._setBuildingVisible(b, visible)) {
           changed = true;
 
           // Clear trees when a building first appears
@@ -2210,7 +2298,7 @@
       const savedBuildingVis = [];
       if (this._playerBuildings) {
         for (const b of this._playerBuildings) {
-          savedBuildingVis.push(b.mesh.visible);
+          savedBuildingVis.push(b._visible);
         }
       }
 
@@ -2233,12 +2321,12 @@
 
       // Show only the snapshot buildings, hide others
       if (this._playerBuildings) {
-        for (const b of this._playerBuildings) b.mesh.visible = false;
+        for (const b of this._playerBuildings) this._setBuildingVisible(b, false);
         // Match snapshot buildings by position
         for (const sb of snapshotBuildings) {
           for (const b of this._playerBuildings) {
             if (Math.abs(b.wx - sb.x) < 10 && Math.abs(b.wy - sb.y) < 10) {
-              b.mesh.visible = true;
+              this._setBuildingVisible(b, true);
               break;
             }
           }
@@ -2309,7 +2397,7 @@
       // Restore building visibility
       if (this._playerBuildings) {
         for (let i = 0; i < this._playerBuildings.length; i++) {
-          this._playerBuildings[i].mesh.visible = savedBuildingVis[i];
+          this._setBuildingVisible(this._playerBuildings[i], savedBuildingVis[i]);
         }
       }
 
@@ -2319,6 +2407,18 @@
       // Re-render main view
       this.requestRender();
       return true;
+    }
+
+    // Freeze an object's transform: bake its current local matrix once and
+    // stop three.js from recomputing it (and its children's) every frame.
+    // Static scene content (terrain, water, trees, cliffs, placed buildings)
+    // never moves, so per-frame updateMatrixWorld traversal is pure waste.
+    // Call _unfreezeMatrix()/updateMatrix() before moving a frozen object.
+    _freezeMatrix (obj) {
+      obj.traverse(c => {
+        c.updateMatrix();
+        c.matrixAutoUpdate = false;
+      });
     }
 
     // Request a single render frame (for use after async model loads when

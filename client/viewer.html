@@ -49,6 +49,7 @@
         '/js/BroadcastCamera.js',
         '/js/TimelineSpline.js',
         '/js/BuildOrderRenderer.js',
+        '/js/BaseNameplateRenderer.js',
         '/js/HeroAbilityStats.js',
         '/js/ReplayGuide.js',
         '/js/ChapterMarkers.js',
@@ -68,6 +69,7 @@
         // Web Worker (parser-worker.js) that importScripts() the bundle itself;
         // UploadManager.prefetchParser() warms the cache on first upload intent.
         '/js/UploadManager.js',
+        '/js/CampPanel.js',
         '/js/app.js',
         '/js/SiteNav.js',
         '/js/BugReport.js'
@@ -177,6 +179,9 @@
                   <canvas id="main-canvas" width="550" height="650" aria-hidden="true"></canvas>
                   <canvas id="player-canvas" width="550" height="650" aria-hidden="true"></canvas>
                   <canvas id="utility-canvas" width="550" height="650" aria-hidden="true"></canvas>
+                  <!-- Project C: camp icons live inside canvas-group so they
+                       share the canvases' exact box + any live-mode transform -->
+                  <div id="camp-icon-layer"></div>
                 </div>
 
                 <div id="loading-overlay" role="status" aria-live="polite">
@@ -187,6 +192,9 @@
 
                 <div id="game-display-box"></div>
                 <div id="building-info-tooltip"></div>
+
+                <!-- Project C: click-driven creep-camp UI -->
+                <div id="camp-detail-panel" role="dialog" aria-modal="false" aria-label="Creep camp details" hidden></div>
 
                 <div id="match-complete-banner" role="status">
                   <div class="mcb-text">Match Complete</div>

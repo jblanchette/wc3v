@@ -67,6 +67,73 @@ const Drawing = class {
     ctx.textBaseline = 'alphabetic';
   }
 
+  //
+  // Per-player credit checkmark badge (Project C). Drawn when a player has
+  // been credited for the camp at the current playback time.
+  //
+  static drawCampCreditBadge (ctx, centerX, centerY, color, scale) {
+    const radius = Math.max(13, 16 * scale);
+
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 4, 0, Math.PI * 2);
+    ctx.fillStyle = color || '#FFF';
+    ctx.fill();
+
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#111';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = color || '#3fbf6f';
+    ctx.stroke();
+
+    // checkmark
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = Math.max(2, 3 * scale);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(centerX - radius * 0.42, centerY + radius * 0.02);
+    ctx.lineTo(centerX - radius * 0.10, centerY + radius * 0.38);
+    ctx.lineTo(centerX + radius * 0.48, centerY - radius * 0.34);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  //
+  // Uncertainty glyph (Project C). Drawn when the camp's credit call is
+  // low-confidence — we surface the doubt instead of faking certainty.
+  //
+  static drawCampUncertainGlyph (ctx, centerX, centerY, scale) {
+    const radius = Math.max(13, 16 * scale);
+    const fontSize = Math.max(15, 19 * scale);
+
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#111';
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#e8b84a';
+    ctx.stroke();
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#e8b84a';
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('?', centerX, centerY + 1);
+
+    ctx.restore();
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+  }
+
   static drawDiamond (ctx, x, y, size, fillColor, strokeColor = '#000') {
     ctx.beginPath();
     ctx.moveTo(x, y - size);
