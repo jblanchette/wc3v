@@ -524,9 +524,12 @@ const Wc3vViewer = class {
 
     req.addEventListener("load", cb);
 
-    // Use absolute URL for dev (with port), relative for production to avoid mixed-content issues
+    // Use absolute URL for dev (with port), relative for production to avoid mixed-content issues.
+    // Dev appends a cache-buster: replays are re-parsed constantly while developing, and the
+    // browser otherwise serves a stale .wc3v.gz (e.g. missing newly-added fields like hero
+    // footprints) until a hard refresh. Production replays are immutable, so they stay cacheable.
     const url = this.isDev
-      ? `http://127.0.0.1:8080/replays/${filename}`
+      ? `http://127.0.0.1:8080/replays/${filename}?t=${Date.now()}`
       : `/replays/${filename}`;
 
     req.open("GET", url);

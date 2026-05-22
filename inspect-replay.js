@@ -13,6 +13,7 @@
  *                          expansions - only addBuilding events flagged as expansions
  *                          units      - exported unit list with flags
  *                          paths      - unit movement paths with groupId data
+ *                          footprints - per-hero pre-baked footprint stamp counts (trail render)
  *                          positions  - position-stream health (density, gaps, integrity)
  *                          workers    - worker snapshots from events
  *                          tiers      - tier transition data
@@ -276,6 +277,39 @@ if (showAll || showSections.includes('paths')) {
         });
         if (groupMoves.length > 3) console.log(`      ... (${groupMoves.length - 3} more group moves)`);
       }
+    });
+  }
+  console.log('');
+}
+
+// --- Footprints (hero trail pre-bake diagnostic) ---
+if (showAll || showSections.includes('footprints')) {
+  console.log('=== HERO FOOTPRINTS ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    const heroes = (pdata.units || []).filter(u => u.meta && u.meta.hero && !u.isIllusion);
+    if (!heroes.length) {
+      console.log('    (no hero units)');
+      continue;
+    }
+    heroes.forEach(u => {
+      const pathLen = (u.path || []).length;
+      let status;
+      if (!('footprints' in u)) {
+        status = '!! MISSING footprints key';
+      } else if (!Array.isArray(u.footprints)) {
+        status = `!! footprints not array (${typeof u.footprints})`;
+      } else if (u.footprints.length === 0) {
+        status = 'footprints=[] (empty — path too short / all gaps)';
+      } else {
+        status = `footprints=${u.footprints.length}`;
+      }
+      console.log(`    ${u.displayName} (${u.itemId}) uuid=${u.uuid} path=${pathLen} ${status}`);
     });
   }
   console.log('');
