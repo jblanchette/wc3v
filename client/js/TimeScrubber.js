@@ -202,6 +202,42 @@ const TimeScrubber = class {
     const matchPercentDone = Math.min(100, (gameTime / matchEndTime) * 100);
     this.moveTracker(matchPercentDone);
   }
+
+  // Battle chevrons — small clickable marks above the scrubber track for every
+  // detected battle. Mirrors the DOM-driven nature of the rest of the scrubber
+  // (track is a <div>, not a canvas) so we use absolute-positioned DOM nodes.
+  // Called once per replay load from Wc3vViewer.setupBattleMarkers.
+  setBattleMarkers (battles, matchEndTime, onClick) {
+    const trackEl = document.getElementById(`${this.wrapperId}-track`);
+    if (!trackEl) return;
+
+    // Wipe any previous markers (e.g. on replay-switch reload).
+    const old = trackEl.querySelectorAll('.battle-marker');
+    old.forEach(n => n.remove());
+
+    if (!battles || !battles.length || !matchEndTime) return;
+
+    for (const b of battles) {
+      const startPct = Math.max(0, Math.min(100, (b.startTime / matchEndTime) * 100));
+      const widthPct = Math.max(0.4, Math.min(100, ((b.endTime - b.startTime) / matchEndTime) * 100));
+      const color = (window.BattleCategoryColor && window.BattleCategoryColor[b.category]) || '#FFD166';
+      const el = document.createElement('div');
+      el.className = `battle-marker battle-marker-${b.category}`;
+      el.style.left  = `${startPct}%`;
+      el.style.width = `${widthPct}%`;
+      el.style.backgroundColor = color;
+      el.title = `${b.category}  ${Math.floor(b.startTime/60000)}:${String(Math.floor((b.startTime%60000)/1000)).padStart(2,'0')}` +
+                 `  (${(b.durationMs/1000).toFixed(0)}s)`;
+      el.dataset.battleId = b.id;
+      if (typeof onClick === 'function') {
+        el.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          onClick(b);
+        });
+      }
+      trackEl.appendChild(el);
+    }
+  }
 };
 
 window.TimeScrubber = TimeScrubber;

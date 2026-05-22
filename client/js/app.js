@@ -258,6 +258,9 @@ const Wc3vViewer = class {
     this.beginnerPickedSlot = null;
     this.boData = new BuildOrderData();
     this.mapRenderer = new MapRenderer();
+    this.battleData = new BattleData();         // pure pipeline (BattleDetector output → indexed)
+    this.battleRenderer = new BattleRenderer(); // utility-canvas overlay (dashed tracker boxes)
+    this.processedBattles = null;               // populated by setup() once mapData is available
     this.threeMapRenderer = null; // created in setupCanvas once #three-canvas exists
     this.displayScale = 1.0;
 
@@ -1962,6 +1965,71 @@ const Wc3vViewer = class {
   // (dim the rest of the map, punch a bright hole at each ring) plus a thick
   // glowing gold ring with a dark outline + white inner edge (reads on any
   // terrain) and an expanding "ping" ripple. Targets whose rings would overlap
+  // Update the floating battle info panel based on the currently active battles
+  // at gameTime. Shows category, duration, participants, and a short tag line
+  // (possiblyDead count, hero involvement, creep-jack). When multiple battles
+  // are active simultaneously we show the one with the latest startTime (most
+  // recent intent) — picking deterministically.
+  _updateBattleInfoPanel (gameTime) {
+    const panel = document.getElementById('battle-info-panel');
+    if (!panel) return;
+    if (!this.processedBattles || !this.viewOptions || !this.viewOptions.displayBattles) {
+      if (!panel.hidden) panel.hidden = true;
+      return;
+    }
+    const active = this.processedBattles.activeAt(gameTime);
+    if (!active.length) {
+      if (!panel.hidden) panel.hidden = true;
+      return;
+    }
+    // Pick the most-recently-started battle so simultaneous events show the
+    // latest one.
+    const battle = active.reduce((a, b) => (b.startTime > a.startTime ? b : a));
+
+    const color = (window.BattleCategoryColor && window.BattleCategoryColor[battle.category]) || '#FFD166';
+    const bar = panel.querySelector('.bip-bar');
+    if (bar) bar.style.background = color;
+
+    const catEl = panel.querySelector('.bip-category');
+    if (catEl) {
+      catEl.textContent = battle.category + (battle.creepJack ? ' ★ creep-jack' : '');
+      catEl.style.color = color;
+    }
+    const durEl = panel.querySelector('.bip-duration');
+    if (durEl) {
+      const dur = Math.max(0, ((Math.min(battle.endTime, gameTime) - battle.startTime) / 1000));
+      const total = (battle.durationMs / 1000).toFixed(1);
+      durEl.textContent = `${dur.toFixed(1)}s / ${total}s`;
+    }
+
+    const partsEl = panel.querySelector('.bip-participants');
+    if (partsEl) {
+      const escape = (s) => (window.Security && Security.escapeHtml)
+        ? Security.escapeHtml(Security.sanitizeUserText(s, { maxLen: 40 }))
+        : String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+      const chips = battle.participants.map(p => {
+        const player = this.players && this.players.find(pl => String(pl.playerId) === String(p.playerId));
+        const rawName = player ? (player.displayName || player.name || `P${p.playerId}`) : `P${p.playerId}`;
+        const teamColor = (this.teamColorMap && this.teamColorMap[p.teamId]) || '#888';
+        return `<span class="bip-pchip"><span class="bip-pchip-dot" style="background:${teamColor}"></span>${escape(rawName)}${p.role === 'initiator' ? ' ⚔' : ''}</span>`;
+      }).join('');
+      partsEl.innerHTML = chips;
+    }
+
+    const metaEl = panel.querySelector('.bip-meta');
+    if (metaEl) {
+      const tags = [];
+      if (battle.flags && battle.flags.involvesHero) tags.push('<span class="bip-tag">hero</span>');
+      if (battle.flags && battle.flags.hasSpellCasts) tags.push('<span class="bip-tag">spells</span>');
+      const outcomes = battle.unitOutcomes || [];
+      const pdCount = outcomes.filter(o => o.status === 'possiblyDead').length;
+      if (pdCount) tags.push(`<span class="bip-tag bip-tag-warn">${pdCount} possibly dead</span>`);
+      metaEl.innerHTML = tags.join('');
+    }
+
+    if (panel.hidden) panel.hidden = false;
+  }
+
   // (e.g. two adjacent buildings) are merged into ONE ring around the group, so
   // it never reads as a tangle of overlapping circles. Drawn on the (top)
   // utility canvas in screen space, using the same projectXY + middleX/middleY
@@ -2763,6 +2831,11 @@ const Wc3vViewer = class {
     this.setupPlayers();
     this.setupMap();
 
+    // Process detected battles once mapData is available. Old replays parsed
+    // before the BattleDetector landed simply have no `battles` array; the
+    // pipeline produces an empty processed object and the overlay no-ops.
+    this.processedBattles = this.battleData.processBattles(this.mapData);
+
     this.buildWrapper = document.getElementById("build-wrapper");
 
     if (!this.mobileMode) {
@@ -2902,6 +2975,19 @@ const Wc3vViewer = class {
         this.chapterMarkers.renderHeatmap(cmTrack, this.players, this.matchEndTime);
       }
 
+      // Battle scrubber markers — clickable chevrons over the track for every
+      // detected battle. Click scrubs to the battle's start.
+      if (this.processedBattles && this.scrubber && this.scrubber.setBattleMarkers) {
+        this.scrubber.setBattleMarkers(
+          this.processedBattles.battles,
+          this.matchEndTime,
+          (battle) => {
+            this.gameTime = Math.max(0, battle.startTime - 1000);  // small pre-roll
+            this.requestRender();
+          }
+        );
+      }
+
       this.timelineSpline.observeResize();
 
       this.unitsProductionPanel.setup(this.players);
@@ -2973,6 +3059,7 @@ const Wc3vViewer = class {
       displayWaterGrid: false,
       displayCreepRoute: true,
       displayNeutralBuildings: true,
+      displayBattles: true,           // BattleRenderer overlay (utility canvas)
       autoSplitScreen: true
     };
 
@@ -4112,6 +4199,13 @@ const Wc3vViewer = class {
       this.campPanel.update(gameTime);
     }
     this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
+
+    // Battle overlay (dashed tracker boxes that follow the action). Drawn after
+    // neutral buildings so the overlay sits on top of any camps it overlaps.
+    if (this.battleRenderer && this.processedBattles) {
+      this.battleRenderer.render(utilityCtx, transform, gameTime, viewOptions, this.gameScaler, this.processedBattles, this.teamColorMap);
+      this._updateBattleInfoPanel(gameTime);
+    }
 
     players.forEach(player => {
       player.preRender(

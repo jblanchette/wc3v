@@ -40,7 +40,9 @@
         '/js/ClientPlayer.js',
         '/js/gameData.js',
         '/js/BuildOrderData.js',
+        '/js/BattleData.js',
         '/js/MapRenderer.js',
+        '/js/BattleRenderer.js',
         '/js/FogOfWar.js',
         '/js/GLBLoader.js',
         '/js/ThreeMapRenderer.js',
@@ -154,6 +156,20 @@
             <div id="map-container">
               <div id="main-wrapper">
                 <div id="map-name-overlay"></div>
+                <!--
+                  Battle info panel — hidden by default, populated by
+                  Wc3vViewer._updateBattleInfoPanel during render whenever a
+                  battle is active at the current gameTime.
+                -->
+                <div id="battle-info-panel" class="battle-info-panel" hidden>
+                  <div class="bip-bar"></div>
+                  <div class="bip-row">
+                    <span class="bip-category"></span>
+                    <span class="bip-duration"></span>
+                  </div>
+                  <div class="bip-participants"></div>
+                  <div class="bip-meta"></div>
+                </div>
               <div id="mega-play-overlay">
                   <div id="mega-play-title-group">
                     <div id="mega-play-title">Watch Rewindable Replay</div>

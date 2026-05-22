@@ -2046,6 +2046,67 @@ function resolveCampLeash (gameConstants) {
   return { distance: CREEP_GUARD_RETURN_DISTANCE, source: 'wc3Default' };
 }
 
+/*
+ * Combat-spell whitelists for BattleDetector signal emission.
+ *
+ * `spell-target-unit` is whitelist-independent — a spell that resolves to an
+ * enemy unit is always combat (you can't Heal an enemy). These sets gate the
+ * weaker forms:
+ *
+ *   combatSpellsGroundTarget — for `useAbilityWithTarget` (point-targeted).
+ *     Includes AoE damage (Blizzard, Carrion Swarm), AoE control (Earthquake),
+ *     and battlefield-redeploy (Mass Teleport).
+ *
+ *   combatSpellsNoTarget — for `useAbilityNoTarget` cast by a combat actor.
+ *     Includes ult buffs, summons, and emergency abilities only used in fights.
+ *
+ * Conservative initial lists. Expanding is a corpus-driven tuning task —
+ * over-inclusion produces false-positive battles (e.g. Heal-a-friend during
+ * idle would spuriously open a battle if added here). New additions should
+ * cite the replay+timestamp where they were observed and judged "combat".
+ *
+ * Source of ability ids: spellOrderIds.json values (e.g. 'AHbz' = Blizzard).
+ */
+const combatSpellsGroundTarget = new Set([
+  // Hero AoE / battlefield
+  'AHbz',   // Archmage — Blizzard
+  'AHfa',   // Archmage — Flame Strike (variant)
+  'AHmt',   // Archmage — Mass Teleport (combat redeploy)
+  'AOsh',   // Tauren Chieftain — Shockwave
+  'AOeq',   // Tauren Chieftain — Earthquake (siege)
+  'AUcs',   // Death Knight — Carrion Swarm (chain-AoE damage)
+  'AUdp',   // Death Knight — Death and Decay (target-ground AoE)
+  'AUin',   // Dreadlord — Inferno (target-ground summon-bomb)
+  'ANcs',   // Tinker — Cluster Rockets
+  'ANvc',   // Firelord — Volcano
+  'ANfl',   // Firelord — Soul Burn / Fire variants
+  // Unit ground-target combat spells
+  'Ufla',   // Sorceress — Flame Strike (Polymorph variant?)
+]);
+
+const combatSpellsNoTarget = new Set([
+  // Hero self/aoe combat abilities
+  'AOws',   // Tauren Chieftain — War Stomp
+  'AOww',   // Blademaster — Wind Walk
+  'AOmi',   // Blademaster — Mirror Image
+  'AHav',   // Archmage — Brilliance Aura? No — AHav is Avatar (Mountain King ult)
+  'AHre',   // Paladin — Resurrection (post-fight recovery)
+  'AUls',   // Crypt Lord — Locust Swarm (ult)
+  'AUan',   // Death Knight — Animate Dead (ult)
+  'ANic',   // Pandaren Brewmaster — Drunken Brawler / Storm Earth Fire?
+  // Wisp Detonate (target-unit but no target id resolved cleanly in some paths)
+  'Udet',
+]);
+
+const combatSpellHelpers = Object.freeze({
+  isCombatGroundSpell (abilityId) {
+    return !!abilityId && combatSpellsGroundTarget.has(abilityId);
+  },
+  isCombatNoTargetSpell (abilityId) {
+    return !!abilityId && combatSpellsNoTarget.has(abilityId);
+  }
+});
+
 module.exports = {
 	getUnitInfo,
 	buildings,
@@ -2086,6 +2147,10 @@ module.exports = {
   spellOrderIds,
   lookupSpellFromOrderId,
   unitAbilities,
+
+  combatSpellsGroundTarget,
+  combatSpellsNoTarget,
+  combatSpellHelpers,
 
   TECH_TREE_REQUIREMENTS,
   BUILDING_TIER_REQUIREMENTS,

@@ -4976,6 +4976,106 @@ body {
   border-radius: 100%;
 }
 
+/* Battle scrubber markers — coloured DOM bars over the scrubber track for each
+ * detected battle. Width encodes duration; color encodes category (see
+ * window.BattleCategoryColor in Constants.js). Click scrubs to battle start. */
+.battle-marker {
+  position: absolute;
+  top: -6px;
+  height: 4px;
+  min-width: 3px;
+  border-radius: 2px;
+  opacity: 0.75;
+  z-index: 3;
+  cursor: pointer;
+  transition: transform 80ms ease-out, opacity 80ms ease-out;
+  pointer-events: auto;
+}
+.battle-marker:hover {
+  opacity: 1;
+  transform: scaleY(1.6);
+}
+
+/* Battle info panel — floating card in the map's upper-right showing the
+ * currently active battle. Populated by Wc3vViewer._updateBattleInfoPanel. */
+.battle-info-panel {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  min-width: 240px;
+  max-width: 320px;
+  padding: 0.6rem 0.75rem 0.55rem 0.85rem;
+  background: rgba(10, 14, 20, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #e8eaed;
+  font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  z-index: 50;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  pointer-events: none;          /* don't intercept clicks meant for the canvas */
+}
+.battle-info-panel .bip-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: #FFD166;            /* JS overrides with category color */
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+.battle-info-panel .bip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.battle-info-panel .bip-category {
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.battle-info-panel .bip-duration {
+  color: #9aa0a6;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.battle-info-panel .bip-participants {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+.battle-info-panel .bip-pchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,0.06);
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-size: 11px;
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.battle-info-panel .bip-pchip .bip-pchip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #888;
+}
+.battle-info-panel .bip-meta {
+  margin-top: 0.35rem;
+  color: #9aa0a6;
+  font-size: 11px;
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.battle-info-panel .bip-meta .bip-tag {
+  display: inline-block;
+}
+.battle-info-panel .bip-meta .bip-tag-warn {
+  color: #ff8c42;
+}
+
 /* --- Zoom Control (inside scrubber bar) --- */
 
 .zoom-control {

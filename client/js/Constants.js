@@ -25,6 +25,21 @@ const TeamColorList = [
   "#FFFC01"
 ];
 
+// Per-battle-category colors for the BattleRenderer overlay and scrubber
+// chevrons. Tuned for legibility on the 3D terrain — purposely brighter than
+// the team colors so battles read as "annotation" not as ownership.
+window.BattleCategoryColor = {
+  'harass':           '#FFD166',   // soft yellow — opportunistic
+  'skirmish':         '#06D6A0',   // green — small contact
+  'engagement':       '#118AB2',   // blue — standard mid-game clash
+  'pitched-battle':   '#EF476F',   // red — the big one
+  'base-defense':     '#7B68EE',   // purple — defenders
+  'expansion-fight':  '#FF8C42',   // orange — expansion-flavored
+  'tower-dive':       '#C03221',   // deep red — dive
+  'creep-fight':      '#9AA0A6',   // grey — PvE
+  'unknown-combat':   '#888888'    // grey — debug-only
+};
+
 const ViewModes = {
   gameplay: 0,
   buildOrder: 1

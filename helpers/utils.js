@@ -544,6 +544,43 @@ const computeGameMode = (playersMap) => {
   return 'custom';
 };
 
+// Battle export helper — strips intermediate underscored fields and caps the
+// signal array to keep .wc3v size reasonable. Tail signals (attached during
+// cooldown) are pruned first; primary signals are preserved.
+const MAX_EXPORT_SIGNALS_PER_BATTLE = 400;
+const serializeBattles = (battles) => {
+  if (!Array.isArray(battles)) return [];
+  return battles.map(b => {
+    const sigs = (b.signals || []).slice(-MAX_EXPORT_SIGNALS_PER_BATTLE);
+    return {
+      id: b.id,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      durationMs: b.durationMs,
+      category: b.category,
+      flags: b.flags,
+      creepJack: !!b.creepJack,
+      campUuid: b.campUuid || null,
+      startingPlayerId: b.startingPlayerId,
+      participants: b.participants,
+      trackerBox: b.trackerBox,
+      outerBbox: b.outerBbox,
+      signals: sigs.map(s => ({
+        gameTime: s.gameTime,
+        playerId: s.playerId,
+        kind: s.kind,
+        x: s.targetX,
+        y: s.targetY,
+        actorUuid: s.actorUnitUuid || null,
+        targetUuid: s.targetUnitUuid || null,
+        spellAbilityId: s.spellAbilityId || null,
+        hostile: !!s.hostile
+      })),
+      unitOutcomes: b.unitOutcomes || []
+    };
+  });
+};
+
 // Pure assembly: produces the .wc3v output object. No filesystem I/O.
 // Mutates `replay` (strips gameData, replaces replay.players); same as the
 // pre-refactor writeOutput behavior — kept identical so callers see no change.
@@ -713,7 +750,23 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         ...(player._baseGrid ? { baseGrid: player._baseGrid } : {}),
         ...(player._baseSnapshots && player._baseSnapshots.length
           ? { baseSnapshots: player._baseSnapshots }
-          : {})
+          : {}),
+        // Per-player battle summary — small mirror of world.battles for clients
+        // that show a "Player X was in N battles" widget without loading the
+        // whole battles array. Built from the same world.battles source.
+        battleParticipation: (world.battles || [])
+          .filter(b => b.participants.some(p => String(p.playerId) === String(playerId)))
+          .map(b => {
+            const self = b.participants.find(p => String(p.playerId) === String(playerId));
+            return {
+              battleId: b.id,
+              startTime: b.startTime,
+              endTime: b.endTime,
+              category: b.category,
+              side: self && self.side,
+              role: self && self.role
+            };
+          })
     	};
 
     	return acc;
@@ -725,6 +778,11 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         return acc;
       }, {})
     },
+    // Serialized battles + summary stats from BattleDetector (post-validation
+    // pass in wc3v.js). Strip the internal underscored fields and cap per-
+    // battle signal arrays to keep .wc3v file size sane.
+    battles: serializeBattles(world.battles),
+    battleStats: world.battleStats || { totalBattles: 0, totalSignals: 0, byCategory: {}, byPlayer: {} },
     replay: (() => {
       // strip raw decompressed replay binary — client never uses it
       delete replay.metadata.gameData;

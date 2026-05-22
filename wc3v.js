@@ -6,6 +6,7 @@ const utils = require("./helpers/utils"),
 
 const config = require("./config/config");
 const ReplayValidator = require("./lib/ReplayValidator");
+const BattleDetector  = require("./lib/BattleDetector");
 const TERRAINFile = require("./lib/parsers/TERRAINFile");
 const MiscFile = require("./lib/parsers/MiscFile");
 const { resolveCampLeash } = require("./helpers/mappings");
@@ -465,6 +466,16 @@ const doParsing = async (input, options = {}) => {
       console.logger(`  [${w.type}] Player ${w.player}: ${w.details}`);
     });
   }
+
+  // Battle detection — clusters combat-intent signals + opposing-unit proximity
+  // into deterministic, non-overlapping battles. Stashed on world so
+  // utils.buildOutputObject can serialize them. See lib/BattleDetector.js.
+  emitProgress('postprocess', 97, { detail: 'battles' });
+  const battleDetector = new BattleDetector(playerManager);
+  const battleResult = battleDetector.run();
+  playerManager.world.battles = battleResult.battles;
+  playerManager.world.battleStats = battleResult.stats;
+  console.logger(`Battle detection: ${battleResult.battles.length} battle(s) from ${battleResult.stats.totalSignals} signals`);
 
   // output action type summary when debug is enabled
   if (config.debugActions) {

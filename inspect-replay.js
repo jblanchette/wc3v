@@ -25,6 +25,8 @@
  *                          camps      - neutral creep camp claim data
  *                          camps-debug - camp progressive timeline + interval details
  *                          camps-credit - per-player credit, confidence, evidence (Project C)
+ *                          battles    - detected combat battles with category + tracker box bounds
+ *                          battles-debug - one battle's full signal list + tracker samples (needs --battle=ID)
  *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
@@ -919,4 +921,78 @@ if (showSections.includes('camps-credit')) {
     console.log(`    creditTimeline: ${(g.playerCreditTimeline || []).length} snapshots`);
   });
   console.log('');
+}
+
+// === Battles ================================================================
+// Detected combat battles from BattleDetector. Each battle has a time interval,
+// outer bbox, time-varying tracker box, signal list, participants, category +
+// flags, and possiblyDead unit outcomes.
+if (showAll || showSections.includes('battles')) {
+  const battles = data.battles || [];
+  console.log(`\n=== Battles (${battles.length}) ===`);
+  battles.forEach((b) => {
+    const start = formatTime(b.startTime);
+    const end   = formatTime(b.endTime);
+    const dur   = (b.durationMs / 1000).toFixed(1);
+    const pids  = b.participants.map(p => `p${p.playerId}(${p.role})`).join(',');
+    const cj    = b.creepJack ? ` ★creep-jack camp=${(b.campUuid || '').slice(0, 8)}` : '';
+    const obb   = b.outerBbox;
+    const bbox  = obb
+      ? `[${Math.round(obb.minX)},${Math.round(obb.minY)}]→[${Math.round(obb.maxX)},${Math.round(obb.maxY)}]`
+      : '-';
+    console.log(`  ${b.id}  ${b.category.padEnd(15)}  ${start}–${end} (${dur}s)  ` +
+      `signals=${b.signals.length}  participants=${pids}  bbox=${bbox}${cj}`);
+    if (b.unitOutcomes && b.unitOutcomes.length) {
+      const counts = b.unitOutcomes.reduce((acc, o) => { acc[o.status] = (acc[o.status]||0)+1; return acc; }, {});
+      const parts = Object.entries(counts).map(([k,v]) => `${k}=${v}`).join(' ');
+      console.log(`              outcomes: ${parts}`);
+    }
+  });
+  const stats = data.battleStats || {};
+  console.log(`\nBy category: ${JSON.stringify(stats.byCategory || {})}`);
+  console.log(`By player:   ${JSON.stringify(stats.byPlayer   || {})}`);
+  console.log(`Total signals consumed: ${stats.totalSignals}`);
+  console.log('');
+}
+
+// Deep-dive on one battle: full signal log + tracker-box samples. Use to tune
+// constants in lib/battleConstants.js or diagnose a mis-categorization.
+if (showSections.includes('battles-debug')) {
+  const battles = data.battles || [];
+  const wanted = args.battle;
+  if (!wanted) {
+    console.log('battles-debug requires --battle=ID (e.g. --battle=battle-0003)');
+  } else {
+    const b = battles.find(x => x.id === wanted);
+    if (!b) {
+      console.log(`battles-debug: no battle with id "${wanted}". Available:`,
+        battles.map(x => x.id).slice(0, 20).join(', '));
+    } else {
+      console.log(`\n=== ${b.id} (${b.category}) ===`);
+      console.log(`time: ${formatTime(b.startTime)} → ${formatTime(b.endTime)}  (${(b.durationMs/1000).toFixed(1)}s)`);
+      console.log(`outer bbox: [${Math.round(b.outerBbox.minX)},${Math.round(b.outerBbox.minY)}]→[${Math.round(b.outerBbox.maxX)},${Math.round(b.outerBbox.maxY)}]`);
+      console.log(`flags: ${JSON.stringify(b.flags)}  creepJack=${b.creepJack}  camp=${b.campUuid || '-'}`);
+      console.log(`participants:`);
+      b.participants.forEach(p => {
+        console.log(`  side ${p.side}  p${p.playerId} (team ${p.teamId}) — ${p.role}, ${p.signalCount} signals, ${p.unitUuids.length} units`);
+      });
+      console.log(`\nsignals (${b.signals.length}):`);
+      b.signals.forEach(s => {
+        const sp = s.spellAbilityId ? ` spell=${s.spellAbilityId}` : '';
+        const tgt = s.targetUuid ? ` →${s.targetUuid.slice(0,8)}` : '';
+        console.log(`  ${formatTime(s.gameTime).padStart(7)}  p${s.playerId}  ${s.kind.padEnd(28)}  @(${Math.round(s.x)},${Math.round(s.y)})${tgt}${sp}`);
+      });
+      console.log(`\ntracker box samples (${b.trackerBox.length}, first 8 + last 4):`);
+      const first = b.trackerBox.slice(0, 8);
+      const last  = b.trackerBox.length > 12 ? b.trackerBox.slice(-4) : [];
+      first.concat(last).forEach(s => {
+        console.log(`  ${formatTime(s.gameTime).padStart(7)}  [${Math.round(s.minX)},${Math.round(s.minY)}]→[${Math.round(s.maxX)},${Math.round(s.maxY)}]`);
+      });
+      console.log(`\nunit outcomes:`);
+      (b.unitOutcomes || []).forEach(o => {
+        console.log(`  ${o.unitUuid.slice(0,8)}  ${o.status.padEnd(15)} conf=${o.confidence}  lastSeen=${formatTime(o.lastSeenTime)}`);
+      });
+      console.log('');
+    }
+  }
 }
