@@ -35,14 +35,88 @@
   const RING_HEAD_ALPHA      = 1.15;       // can exceed 1 with additive
 
   // ---- footsteps ----
-  // Stamp position / yaw / side are pre-baked into hero.footprints by
-  // lib/footprintGen.js. Client renders strictly from that data; missing
-  // footprints log an error and the replay needs re-parsing.
+  // Stamp position / yaw / side are normally pre-baked into hero.footprints by
+  // lib/footprintGen.js at parse time. Replays parsed before that feature (or
+  // any stale .wc3v) lack the field — `generateFootprints` below recomputes it
+  // client-side from the hero's path. The algorithm is identical & fully
+  // deterministic, so the fallback matches the server pre-bake exactly.
   const FOOT_W               = 40;         // sprite world width
   const FOOT_L               = 62;         // sprite world length
   const FOOT_MAX             = 56;         // max visible stamps per hero per frame
   const FOOT_HEAD_ALPHA      = 1.1;        // can exceed 1 with additive
   const FOOT_Y               = Y_OFFSET + 3;
+
+  // ---- footprint generation (mirror of lib/footprintGen.js) -------------
+  // Keep these in sync with the server module. They must produce byte-identical
+  // stamps so a re-parsed replay and a fallback-computed one render the same.
+  const FOOT_SPACING         = 180;        // world units between stamps
+  const FOOT_LATERAL         = 20;         // perpendicular offset from centerline
+  const PATH_MIN_TIME_GAP    = 5 * 1000;
+  const PATH_MIN_GAP_DIST    = 1500;
+  const PATH_MAX_TIME_GAP    = 300 * 1000;
+  const PATH_MAX_GAP_DIST    = 500;
+  const PATH_IDLE_GAP_TIME   = 10 * 1000;
+
+  function footIsGap (a, b) {
+    if (!a || !b) return false;
+    if (b.isJump) return true;
+    const dt = b.gameTime - a.gameTime;
+    if (dt > PATH_IDLE_GAP_TIME) return true;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > PATH_MIN_GAP_DIST && dt < PATH_MIN_TIME_GAP) return true;
+    if (dist > PATH_MAX_GAP_DIST && dt > PATH_MAX_TIME_GAP) return true;
+    return false;
+  }
+
+  function generateFootprints (path) {
+    if (!path || path.length < 2) return [];
+
+    const out = [];
+    let stampIdx = 0;
+    let carry = 0;
+    let segmentStart = true;
+
+    for (let i = 0; i < path.length - 1; i++) {
+      const a = path[i];
+      const b = path[i + 1];
+      if (!a || !b) continue;
+      if (isNaN(a.x) || isNaN(a.y) || isNaN(b.x) || isNaN(b.y)) continue;
+
+      if (segmentStart) { carry = 0; segmentStart = false; }
+      if (footIsGap(a, b)) { segmentStart = true; continue; }
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const segLen = Math.sqrt(dx * dx + dy * dy);
+      if (segLen <= 0) continue;
+
+      const dirX = dx / segLen;
+      const dirY = dy / segLen;
+      const yaw = Math.atan2(dx, -dy);
+
+      let walked = -carry;
+      while (walked + FOOT_SPACING <= segLen) {
+        walked += FOOT_SPACING;
+        const sign = (stampIdx % 2 === 0) ? 1 : -1;
+        const perpX = -dirY * FOOT_LATERAL * sign;
+        const perpY =  dirX * FOOT_LATERAL * sign;
+        const tInEdge = walked / segLen;
+        out.push({
+          x: a.x + dirX * walked + perpX,
+          y: a.y + dirY * walked + perpY,
+          yaw: yaw,
+          gameTime: a.gameTime + (b.gameTime - a.gameTime) * tInEdge,
+          side: sign
+        });
+        stampIdx++;
+      }
+      carry = segLen - walked;
+    }
+
+    return out;
+  }
 
   // ---- procedural textures (lazy) ----
   let _footTex = null, _ringTex = null;
@@ -386,21 +460,13 @@
       this._ensureFootMesh(entry);
       const inst = entry.footMesh;
 
-      // Strict: footprints must be pre-baked by lib/footprintGen.js. If they're
-      // missing, the .wc3v file is stale and the replay must be re-parsed.
-      const stamps = hero.footprints;
+      // Footprints are normally pre-baked by lib/footprintGen.js. Stale .wc3v
+      // files (parsed before that feature) lack the field — recompute it once
+      // from the hero's path and cache it on the hero. Deterministic, so the
+      // result is identical to a freshly re-parsed replay.
+      let stamps = hero.footprints;
       if (!stamps) {
-        if (!hero._footprintsMissingLogged) {
-          console.error(
-            `[PathTrailRenderer3D] hero "${hero.displayName || hero.uuid}" is missing footprints; ` +
-            `re-parse the replay (node wc3v.js --replay=NAME) to regenerate the .wc3v file.`
-          );
-          hero._footprintsMissingLogged = true;
-        }
-        inst.count = 0;
-        inst.visible = false;
-        this._markRebuilt(entry, hero, realNow);
-        return;
+        stamps = hero.footprints = generateFootprints(hero.path);
       }
       if (!stamps.length) {
         inst.count = 0;
