@@ -853,8 +853,10 @@ if (showSections.includes('camps-credit')) {
     const pc = g.playerCredit || {};
     const pids = Object.keys(pc);
     const unitNames = (g.units || []).map(u => u.displayName).join(', ');
-    console.log(`\n  Camp ${i + 1}: Lv${g.totalLevel} model=${g.creditModel || '?'} ` +
-      `leash=${g.leashDistance || '?'}(${g.leashSource || '?'}) events=${(g.perPlayerEvents || []).length}`);
+    const clearedStr = (g.clearedTime != null) ? formatTime(g.clearedTime) : 'not cleared';
+    console.log(`\n  Camp ${i + 1}: Lv${g.totalLevel} [${g.creditModel || '?'}] ` +
+      `cleared=${clearedStr} leash=${g.leashDistance || '?'}(${g.leashSource || '?'}) ` +
+      `events=${(g.perPlayerEvents || []).length}`);
     console.log(`    Units: ${unitNames}`);
 
     if (!pids.length) { console.log('    (no per-player events)'); return; }
@@ -866,18 +868,18 @@ if (showSections.includes('camps-credit')) {
       const tag = p.credited ? 'CREDITED' : 'NOT credited';
       const unc = p.uncertain ? ` [UNCERTAIN conf=${p.confidence}]` : ` conf=${p.confidence}`;
       console.log(`    p${pid} ${meta.name || ''} (team${p.teamId}): ${tag}${unc}`);
-      console.log(`      effective=${(m.effectiveMs/1000).toFixed(1)}s / req ${(m.requiredMs/1000).toFixed(1)}s ` +
-        `inCamp=${(m.inCampMs/1000).toFixed(1)}s pull=${(m.pullMs/1000).toFixed(1)}s ` +
-        `interactions=${m.interactionCount} items=${m.itemInteractions} share=${m.share}`);
+      const win = (m.windowStart != null && m.windowEnd != null)
+        ? `${formatTime(m.windowStart)}-${formatTime(m.windowEnd)}` : '-';
+      console.log(`      cleared ${Math.round((m.contributionShare || 0) * 100)}% of camp ` +
+        `(${((m.contributionMs || 0) / 1000).toFixed(1)}s work) · ~${m.estimatedXp || 0} XP · ` +
+        `interactions=${m.interactionCount} items=${m.itemInteractions} · engaged ${win}` +
+        `${m.onlyAfterClear ? ' · ONLY AFTER CLEAR' : ''}`);
       (p.criteria || []).forEach(c => {
         console.log(`        [${c.pass ? 'x' : ' '}] ${c.label}: ${c.measured}${c.unit || ''} / ${c.required}${c.unit || ''}`);
       });
       if (p.whyNot) console.log(`      WHY NOT: ${p.whyNot}`);
       if (p.confidenceReasons && p.confidenceReasons.length) {
         console.log(`      uncertainty: ${p.confidenceReasons.join('; ')}`);
-      }
-      if (p.evidence && p.evidence.length) {
-        console.log(`      evidence: ${p.evidence.map(e => `${formatTime(e.gameTime)} ${e.stage}/${e.zone}${e.labels.indexOf('contested')>=0?'(contested)':''}`).join(', ')}`);
       }
     });
     console.log(`    creditTimeline: ${(g.playerCreditTimeline || []).length} snapshots`);

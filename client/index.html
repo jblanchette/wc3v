@@ -555,11 +555,19 @@
         return record;
       };
 
+      // Gated debug logging — see clientConfig.js. Silent in production;
+      // flip WC3V_CONFIG.logging.parser to surface the upload trace.
+      const hlog = (...args) => {
+        if (window.WC3V_CONFIG && WC3V_CONFIG.logging && WC3V_CONFIG.logging.parser) {
+          console.log('[homepage]', ...args);
+        }
+      };
+
       // Wrap the uploader's pickAndParse so the overlay shows IMMEDIATELY
       // after the user selects a file (not just when 'parsing' phase fires).
       // pickAndParse returns null on cancel; we hide the overlay then.
       const triggerUpload = async (statusTarget) => {
-        console.log('[homepage] triggerUpload', statusTarget);
+        hlog('triggerUpload', statusTarget);
         setStatus(statusTarget, '');
         try {
           uploader.onProgress = (p) => {
@@ -574,7 +582,7 @@
             }
           };
           const res = await uploader.pickAndParse();
-          console.log('[homepage] pickAndParse returned', res);
+          hlog('pickAndParse returned', res);
           if (!res) { hideOverlay(); return; }
           // Hide the parse overlay so the type/player picker modals aren't
           // behind the spinner. handlePostParse drives the rest of the flow
@@ -582,7 +590,7 @@
           hideOverlay();
           await handlePostParse(res.record);
         } catch (e) {
-          console.error('[homepage] upload failed:', e);
+          hlog('upload failed:', e);
           hideOverlay();
           let msg = e.message || String(e);
           if (e.code === 'missing_map') msg = `That map (${e.rawMapName || 'unknown'}) isn't in our library yet, so we can't render it.`;
@@ -648,7 +656,7 @@
         el.addEventListener('drop', async (e) => {
           e.preventDefault();
           const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-          console.log('[homepage] drop event, file:', file && file.name);
+          hlog('drop event, file:', file && file.name);
           if (!file) return;
           setStatus(statusTarget, '');
           showOverlay(file.name);
@@ -660,7 +668,7 @@
               await handlePostParse(result.record);
             }
           } catch (err) {
-            console.error('[homepage] drop upload failed:', err);
+            hlog('drop upload failed:', err);
             hideOverlay();
             let msg = 'Upload failed: ' + (err.message || err);
             if (err.code === 'missing_map') msg = 'Map not in our library yet: ' + (err.rawMapName || '');

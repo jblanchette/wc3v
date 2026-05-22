@@ -11,6 +11,25 @@
 //   worker → main:  { type: 'progress', evt: {...} }
 //                   { type: 'done', result: {...} }
 //                   { type: 'error', message, code?, rawMapName?, mapDataName? }
+//
+// Console hygiene: the bundled wc3v + vendored w3gjs code emits raw
+// console.log/warn/error while parsing — noisy on every upload, and louder
+// on malformed or hostile replays (w3gjs prints "Unknown chunk detected",
+// "unknown action id", etc. for any bytes it doesn't recognise). None of it
+// is actionable for an end user. It is not a security issue — a Worker has
+// no DOM, and console output is rendered as inert text, never executed —
+// but it is noise we don't want in a production console. We no-op the
+// console here before the bundle loads; pass the `?log=1` worker URL param
+// (UploadManager does this when WC3V_CONFIG.logging.parser is on) to keep it.
+
+(function () {
+  var keepLogs = /[?&]log=1(?:&|$)/.test(self.location && self.location.search || '');
+  if (keepLogs) return;
+  var noop = function () {};
+  ['log', 'info', 'debug', 'warn', 'error'].forEach(function (method) {
+    try { console[method] = noop; } catch (e) {}
+  });
+})();
 
 importScripts('/js/vendor/wc3v-parser.bundle.js');
 

@@ -38,7 +38,6 @@
         '/js/GameScaler.js',
         '/js/ClientUnit.js',
         '/js/ClientPlayer.js',
-        '/js/GameDisplayBox.js',
         '/js/gameData.js',
         '/js/BuildOrderData.js',
         '/js/MapRenderer.js',
@@ -190,11 +189,13 @@
                 </div>
                 <img id="loading-icon" src="/assets/loading-icon.svg" alt="" aria-hidden="true" />
 
-                <div id="game-display-box"></div>
                 <div id="building-info-tooltip"></div>
 
                 <!-- Project C: click-driven creep-camp UI -->
                 <div id="camp-detail-panel" role="dialog" aria-modal="false" aria-label="Creep camp details" hidden></div>
+
+                <!-- Project C: key for the segmented camp progress rings -->
+                <div id="camp-legend" hidden></div>
 
                 <div id="match-complete-banner" role="status">
                   <div class="mcb-text">Match Complete</div>

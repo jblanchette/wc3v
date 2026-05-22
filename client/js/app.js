@@ -1161,7 +1161,6 @@ const Wc3vViewer = class {
     this.lastFrameDelta = 0;
     this.lastFrameTimestamp = 0;
 
-    if (this.gameDisplayBox) this.gameDisplayBox.hide();
     if (this.buildingHoverLabel) this.buildingHoverLabel.hide();
 
     this.gameTime = 0;
@@ -1433,9 +1432,7 @@ const Wc3vViewer = class {
       this._guidePrevCameraMode = this.broadcastCamera.mode;
       this.broadcastCamera.setMode(CameraMode.FREE);
     }
-    // Clear any creep-camp / building hover that was up — the walkthrough
-    // suppresses them (see the mousemove.camphover handler + render()).
-    if (this.gameDisplayBox) { this.gameDisplayBox.hoveredCampUuid = null; this.gameDisplayBox.hide(); }
+    // Clear any building hover that was up — the walkthrough suppresses it.
     if (this.buildingHoverLabel) this.buildingHoverLabel.hide();
     if (!this.mobileMode) this.pause();   // settle playback; each step decides whether to roll the tape (guideGoToStep)
     const hud = document.getElementById('guide-hud'); if (hud) hud.hidden = false;
@@ -1768,31 +1765,35 @@ const Wc3vViewer = class {
     Object.keys(ngObj).forEach(k => {
       const g = ngObj[k];
       if (!g || !g.bounds) return;
-      if (!g.teamOrders || g.teamOrders[teamId] == null) return;            // this team got no order here (didn't take it)
-      if (g.claimOwnerId == null || Number(g.claimOwnerId) !== Number(teamId)) return;   // a different team (or nobody) actually cleared it
-      const claim = g.claimers && g.claimers[teamId];
-      const pclaim = claim && claim.players && claim.players[String(pid)];
-      const hadHero = pclaim && Array.isArray(pclaim.units) && pclaim.units.some(u => u && u.isHero);
-      if (!hadHero) return;                                                 // the hero wasn't here — not "a camp the hero creeped"
-      const start = Number(g.firstInteractionTime) || Number(g.claimTime) || 0;
-      if (heroL3 !== Infinity && start >= heroL3) return;                   // it started after the hero hit lvl 3 — beyond "to level 3"
+      // Per-player credit model is the single source of truth here — the same
+      // model the map ring and the Camp Info panel render from. A camp belongs
+      // in this player's tour only if the model credits them for clearing it.
+      // `credited` already implies the camp was cleared, this player did real
+      // clearing work, and a hero was present (REQUIRE_HERO).
+      const pc = g.playerCredit && g.playerCredit[String(pid)];
+      if (!pc || !pc.credited) return;
+      const m = pc.measured || {};
+      // when this player started working the camp (pre-clear engagement window)
+      const start = Number(m.windowStart != null ? m.windowStart : m.firstEngagement) || 0;
+      if (heroL3 !== Infinity && start >= heroL3) return;                   // started after the hero hit lvl 3 — beyond "to level 3"
       const b = g.bounds;
       const wx = (b.minX + b.maxX) / 2, wy = (b.minY + b.maxY) / 2;
       const rWorld = Math.max(220, Math.hypot(b.maxX - b.minX, b.maxY - b.minY) / 2 + 130);
       const big = (Array.isArray(g.units) && g.units[0] && g.units[0].displayName) || null;
       const label = big ? (big.charAt(0).toUpperCase() + big.slice(1) + ' camp') : 'Creep camp';
       const iconId = (Array.isArray(g.units) && g.units[0] && typeof g.units[0].itemId === 'string') ? g.units[0].itemId : null;
-      const clear = Number(g.claimTime) || (start + 18000);
+      const clear = Number(g.clearedTime) || (start + 18000);
       camps.push({
         wx, wy, rWorld,
         startMs: Math.max(0, Math.round(start)), clearMs: Math.max(0, Math.round(Math.max(clear, start + 1000))),
         label, levelStr: g.totalLevel ? ('lvl ' + g.totalLevel) : '', iconId,
-        order: Number(g.teamOrders[teamId]) || (camps.length + 1),
         boundsRect: { minX: wx - rWorld, maxX: wx + rWorld, minY: wy - rWorld, maxY: wy + rWorld }
       });
     });
     if (!camps.length) return false;
-    camps.sort((a, b) => a.order - b.order);   // the canonical clear order assignCampOrder() gave the team
+    // Order by when this player engaged each camp — the tour seeks to each
+    // camp's startMs, so visit order keeps playback moving forward cleanly.
+    camps.sort((a, b) => a.startMs - b.startMs);
     if (camps.length > 12) camps.length = 12;
 
     let mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
@@ -3292,12 +3293,6 @@ const Wc3vViewer = class {
       this.campPanel.setData(world.neutralGroups);
     }
 
-    this.gameDisplayBox = new GameDisplayBox(this.teamColorMap, this.assignedPlayerColors);
-    // The spatial index is now rebuilt per-mousemove from current projection
-    // state, so we just hand over the source data — no handler-built tree
-    // captured at setup-time (which would go stale after camera changes).
-    this.gameDisplayBox.setData(world.neutralGroups);
-
     this.toggleMegaPlayButton(true);
     this.gameLoaded = true;
 
@@ -3339,7 +3334,6 @@ const Wc3vViewer = class {
           this.transform.y = 0;
         }
 
-        this.gameDisplayBox.hide();
         if (this.buildingHoverLabel) this.buildingHoverLabel.hide();
         this.scrubber.updateZoomDisplay(this.transform.k);
 
@@ -3365,23 +3359,13 @@ const Wc3vViewer = class {
     }
     this._initialZoomTransform = initialT;
 
-    this.zoomContainer.on('mousemove.camphover', () => {
-      // The guided walkthrough drives the camera and frames things itself —
-      // suppress the creep-camp / building hover tooltips so they don't pop up
-      // (stale-pointer hits when the camera pans/zooms under a still cursor).
+    this.zoomContainer.on('mousemove.buildinghover', () => {
+      // The guided walkthrough drives the camera itself — suppress the
+      // building hover tooltip so it doesn't pop up on stale-pointer hits.
+      // (Creep camps use the click-driven CampPanel, not hover.)
       if (self.guideMode) return;
       const ev = d3.event;
-      const campHit = self.gameDisplayBox && self.gameDisplayBox.handleMouse(ev, self.transform);
-      if (campHit) {
-        if (self.buildingHoverLabel) self.buildingHoverLabel.hide();
-      } else if (self.buildingHoverLabel && self.buildingHoverLabel.handleMouse(ev, self.transform)) {
-        if (self.gameDisplayBox.hoveredCampUuid) {
-          self.gameDisplayBox.hoveredCampUuid = null;
-          self.gameDisplayBox.hide();
-        }
-      } else {
-        if (self.buildingHoverLabel) self.buildingHoverLabel.hide();
-      }
+      if (self.buildingHoverLabel) self.buildingHoverLabel.handleMouse(ev, self.transform);
     });
 
     this.scrubber.onZoomChange = (k) => {
@@ -4116,15 +4100,10 @@ const Wc3vViewer = class {
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
     // Trees deferred to Phase 2 (3D billboard sprites); flat green circles looked out of place on the 3D terrain.
     // this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
-    // No camp hover-highlight during the guided walkthrough (and keep the
-    // tooltip box hidden every frame in case it was up when the walkthrough opened).
-    const hoveredCampUuid = (!this.guideMode && this.gameDisplayBox) ? this.gameDisplayBox.hoveredCampUuid : null;
+    // Creep camps use the click-driven CampPanel (no hover). _campHitBuf is
+    // the per-frame camp screen geometry the panel positions its icons from.
     if (!this._campHitBuf) this._campHitBuf = [];
-    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, hoveredCampUuid, this._campHitBuf);
-    if (this.gameDisplayBox) {
-      this.gameDisplayBox.setHitData(this._campHitBuf);
-      if (this.guideMode) this.gameDisplayBox.hide();
-    }
+    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, null, this._campHitBuf);
     if (this.campPanel && !this.guideMode) {
       this.campPanel.syncIcons(this._campHitBuf);
       this.campPanel.update(gameTime);

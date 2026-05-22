@@ -16210,19 +16210,20 @@ button.mcb-summary {
   line-height: 1.5;
   padding: 8px 0;
 }
-.cdp-head h3 { margin: 0 0 2px; font-size: 15px; color: #fff; }
-.cdp-sub { font-size: 12px; color: #8794a6; margin-bottom: 8px; }
-.cdp-approx { color: #e8b84a; }
-.cdp-exact { color: #5fbf8f; }
+/* credit tab — header */
+.cdp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.cdp-head .camp-level-badge { flex-shrink: 0; }
+.cdp-head-text { min-width: 0; }
+.cdp-head h3 { margin: 0; font-size: 15px; color: #fff; }
+.cdp-sub { font-size: 12px; color: #8794a6; margin-top: 1px; line-height: 1.4; }
 .cdp-override-badge {
   background: rgba(240, 178, 50, 0.14);
   border: 1px solid #6a5320;
   color: #f0b232;
   font-size: 12px;
-  font-weight: 700;
   padding: 5px 8px;
   border-radius: 4px;
-  margin: 6px 0 4px;
+  margin: 8px 0 2px;
 }
 .cdp-ov-clear {
   margin-left: 8px;
@@ -16234,67 +16235,184 @@ button.mcb-summary {
   border-radius: 3px;
   cursor: pointer;
 }
+
+/* credit tab — camp-level uncertainty banner (echoes the dashed map ring).
+   collapsible <details>: collapsed = a compact one-line chip. */
+.cdp-uncertain-banner {
+  margin: 7px 0 2px;
+  border: 1.5px dashed #e8b84a;
+  border-radius: 6px;
+  background: rgba(232, 184, 74, 0.09);
+}
+.cdp-uncertain-sum {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.cdp-uncertain-sum::-webkit-details-marker { display: none; }
+.cdp-uncertain-sum::after {
+  content: '\25B8';
+  margin-left: auto;
+  color: #b2904a;
+  font-size: 10px;
+}
+.cdp-uncertain-banner[open] .cdp-uncertain-sum::after { content: '\25BE'; }
+.cdp-uncertain-ico {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e8b84a;
+  color: #1a1206;
+  font-weight: 900;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+}
+.cdp-uncertain-h {
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  color: #e8b84a;
+}
+.cdp-uncertain-w {
+  padding: 0 9px 7px 32px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: #c8bd9d;
+}
+
+/* camp ring legend — map-corner key for the segmented progress rings */
+#camp-legend {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 5;
+  max-width: 244px;
+  pointer-events: auto;
+}
+#camp-legend[hidden] { display: none; }
+.cl-d {
+  background: rgba(14, 18, 26, 0.86);
+  border: 1px solid #2a3647;
+  border-radius: 6px;
+  opacity: 0.72;
+  transition: opacity 0.12s;
+}
+.cl-d:hover, .cl-d[open] { opacity: 1; }
+.cl-sum {
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #d6dce6;
+  list-style: none;
+  user-select: none;
+}
+.cl-sum::-webkit-details-marker { display: none; }
+.cl-sum::before { content: '\25B8'; color: #6f7d8f; margin-right: 6px; }
+.cl-d[open] .cl-sum::before { content: '\25BE'; }
+.cl-rows { margin: 0; padding: 0 10px 8px; list-style: none; }
+.cl-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 0;
+}
+.cl-g { width: 34px; height: 34px; flex-shrink: 0; }
+.cl-row span {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: #aeb7c4;
+}
+.cl-row i { font-style: italic; color: #8794a6; }
+
+/* credit tab — per-player card */
 .cdp-player {
   border-top: 1px solid #2a3647;
-  padding: 10px 0;
+  padding: 9px 0;
 }
+.cdp-player.cdp-live-credited { background: rgba(47, 208, 122, 0.05); }
 .cdp-prow { display: flex; align-items: center; gap: 7px; }
 .cdp-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
-.cdp-pname { font-weight: 700; color: #fff; font-size: 13px; }
-.cdp-status {
-  font-size: 12px;
+.cdp-pname { font-weight: 700; color: #fff; font-size: 13px; flex: 1; min-width: 0; }
+.cdp-verdict {
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  padding: 1px 6px;
-  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 10px;
 }
-.cdp-status.cdp-yes { color: #2fd07a; background: rgba(47, 208, 122, 0.12); }
-.cdp-status.cdp-no  { color: #e0697a; background: rgba(224, 105, 122, 0.10); }
-.cdp-status.cdp-ov  { color: #f0b232; background: rgba(240, 178, 50, 0.14); }
-.cdp-uncertain { margin-left: auto; color: #e8b84a; font-size: 12px; font-weight: 700; }
-.cdp-conf { margin-left: auto; color: #8794a6; font-size: 12px; }
+.cdp-verdict.cdp-v-yes       { color: #2fd07a; background: rgba(47, 208, 122, 0.14); }
+.cdp-verdict.cdp-v-no        { color: #8794a6; background: rgba(135, 148, 166, 0.12); }
+.cdp-verdict.cdp-v-manual    { color: #f0b232; background: rgba(240, 178, 50, 0.16); }
+.cdp-verdict.cdp-v-manual-no { color: #e0697a; background: rgba(224, 105, 122, 0.12); }
+.cdp-conf { font-size: 11px; color: #7f8da0; cursor: help; }
+.cdp-conf.cdp-conf-low { color: #e8b84a; font-weight: 700; }
+
+/* credit tab — criteria checklist */
 .cdp-crits { list-style: none; margin: 7px 0 0; padding: 0; }
 .cdp-crit {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 7px;
   font-size: 12.5px;
   padding: 2px 0;
 }
-.cdp-box { width: 16px; text-align: center; font-weight: 800; }
+.cdp-box { width: 14px; text-align: center; font-weight: 800; flex-shrink: 0; }
 .cdp-crit-pass .cdp-box { color: #2fd07a; }
 .cdp-crit-fail .cdp-box { color: #e0697a; }
 .cdp-crit-label { flex: 1; color: #c4ccd8; }
-.cdp-crit-val { color: #8794a6; font-variant-numeric: tabular-nums; }
-.cdp-measure { font-size: 12px; color: #9aa7b8; margin-top: 6px; line-height: 1.5; }
-.cdp-measure b { color: #d6dce6; }
-.cdp-final { color: #7f8da0; }
+.cdp-crit-fail .cdp-crit-label { color: #e6b8b8; }
+.cdp-crit-val { color: #d6dce6; font-variant-numeric: tabular-nums; font-weight: 600; }
+.cdp-crit-req { color: #6f7d90; font-weight: 400; }
 .cdp-why {
-  font-size: 12.5px;
+  font-size: 12px;
   color: #e8b84a;
   background: rgba(232, 184, 74, 0.08);
   border-radius: 4px;
   padding: 6px 8px;
   margin-top: 6px;
-  line-height: 1.5;
+  line-height: 1.45;
 }
-.cdp-reasons { font-size: 12px; color: #8794a6; margin-top: 5px; line-height: 1.5; }
-.cdp-evidence { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 5px; }
-.cdp-ev {
-  font-size: 11.5px;
-  color: #9aa7b8;
-  background: #1f2735;
-  border-radius: 3px;
-  padding: 2px 6px;
-}
-.cdp-ev.in-camp { border-left: 0; color: #7fc4a0; }
-.cdp-ev.creep-pull { color: #d6b06a; }
-.cdp-override {
+
+/* credit tab — Advanced Settings (manual override) */
+.cdp-adv {
+  margin-top: 12px;
   border-top: 1px solid #2a3647;
-  margin-top: 10px;
-  padding-top: 10px;
+  padding-top: 8px;
 }
-.cdp-override label { font-size: 12.5px; color: #c4ccd8; display: block; }
+.cdp-adv > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #9aa7b8;
+  padding: 3px 0;
+  list-style: none;
+  user-select: none;
+}
+.cdp-adv > summary:hover { color: #d6dce6; }
+.cdp-adv > summary::-webkit-details-marker { display: none; }
+.cdp-adv[open] > summary { color: #d6dce6; margin-bottom: 6px; }
+.cdp-adv-body { padding: 2px 2px 4px; }
+.cdp-adv-explain {
+  font-size: 12px;
+  color: #8794a6;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+.cdp-ov-label {
+  display: block;
+  font-size: 12.5px;
+  color: #c4ccd8;
+  font-weight: 600;
+}
 .cdp-ov-select {
   margin-top: 5px;
   width: 100%;
@@ -16305,5 +16423,211 @@ button.mcb-summary {
   padding: 6px 8px;
   font-size: 13px;
 }
-.cdp-ov-hint { font-size: 11.5px; color: #7f8da0; margin-top: 5px; }
-.cdp-player.cdp-live-credited { background: rgba(47, 208, 122, 0.05); }
+.cdp-verdict.cdp-v-pending { color: #6fb3ff; background: rgba(111, 179, 255, 0.12); }
+.cdp-verdict.cdp-v-partial { color: #e8b84a; background: rgba(232, 184, 74, 0.14); }
+
+/* credit tab — structured per-player stat grid */
+.cdp-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 8px 0 2px;
+}
+.cdp-stat {
+  background: #1c2433;
+  border: 1px solid #2a3647;
+  border-radius: 5px;
+  padding: 0 4px 7px;
+  text-align: center;
+  overflow: hidden;
+}
+/* header label — sits on TOP of each box as a clear title bar */
+.cdp-stat-cap {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #aab4c2;
+  background: #232d3e;
+  margin: 0 -4px 7px;
+  padding: 4px 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* credit tab — hero XP progression */
+.cdp-hp { margin-bottom: 2px; }
+.cdp-hp-hero {
+  background: #1c2433;
+  border: 1px solid #2a3647;
+  border-radius: 5px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+.cdp-hp-head { display: flex; align-items: center; gap: 8px; }
+.cdp-hp-icon {
+  width: 36px; height: 36px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+/* fountain heal — distinct border treatment on the hero icon */
+.cdp-hp-icon-fountain {
+  box-shadow: 0 0 0 2px #2bb6c4, 0 0 7px 1px rgba(43, 182, 196, 0.6);
+}
+.cdp-hp-name { font-size: 13px; font-weight: 700; color: #fff; flex: 1; min-width: 0; }
+.cdp-hp-fountain {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6fd3e0;
+  background: rgba(43, 182, 196, 0.14);
+  border-radius: 9px;
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.cdp-hp-levels { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.cdp-hp-from, .cdp-hp-flat {
+  font-size: 12.5px; font-weight: 800;
+  color: #8794a6;
+  background: #232d3e;
+  padding: 2px 7px; border-radius: 9px;
+}
+.cdp-hp-to {
+  font-size: 12.5px; font-weight: 800;
+  color: #1a1f2e;
+  background: #f6c455;
+  padding: 2px 7px; border-radius: 9px;
+}
+.cdp-hp-arrow { color: #6fd3e0; font-size: 12px; }
+.cdp-hp-bar {
+  height: 7px;
+  background: #2a3647;
+  border-radius: 4px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.cdp-hp-fill { height: 100%; background: linear-gradient(90deg, #4aa8c0, #6fd3e0); }
+.cdp-hp-xptext { font-size: 12px; color: #9aa7b8; margin-top: 5px; }
+.cdp-hp-xptext b { color: #6fd3e0; }
+.cdp-hp-skill {
+  font-size: 12.5px;
+  color: #2fd07a;
+  background: rgba(47, 208, 122, 0.09);
+  border-radius: 4px;
+  padding: 5px 8px;
+  margin-top: 6px;
+}
+.cdp-hp-skill b { color: #57e89a; }
+.cdp-stat-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.cdp-stat-val.cdp-stat-xp { color: #6fd3e0; }
+.cdp-stat-val.cdp-stat-time { font-size: 14px; }
+
+/* credit tab — section labels + per-player sub-line */
+.cdp-section-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #7f8da0;
+  margin: 14px 0 5px;
+}
+.cdp-psub { font-size: 12px; color: #9aa7b8; margin-top: 3px; }
+.cdp-psub b { color: #d6dce6; }
+
+/* credit tab — chronological event log */
+.cdp-log {
+  border: 1px solid #2a3647;
+  border-radius: 5px;
+  overflow: hidden auto;
+  max-height: 268px;
+}
+.cdp-log-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  border-bottom: 1px solid #222c3a;
+  transition: background 0.1s;
+}
+.cdp-log-row:last-child { border-bottom: 0; }
+.cdp-log-row.cdp-log-reached { background: rgba(111, 179, 255, 0.07); }
+.cdp-log-row.cdp-log-blob { background: rgba(135, 148, 166, 0.05); }
+.cdp-log-after { opacity: 0.5; }
+.cdp-log-time {
+  color: #8794a6;
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  white-space: nowrap;
+  width: 84px;
+  flex-shrink: 0;
+}
+.cdp-log-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.cdp-log-dot-multi { background: linear-gradient(135deg, #6f86ff 0 50%, #e0697a 50% 100%); }
+.cdp-log-main { flex: 1; min-width: 0; line-height: 1.35; }
+.cdp-log-who { color: #d6dce6; font-weight: 600; }
+.cdp-log-what { color: #aab4c2; }
+.cdp-log-blob .cdp-log-what { font-style: italic; }
+.cdp-log-zone {
+  font-size: 10.5px;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+.cdp-log-zone.in-camp    { color: #7fc4a0; background: rgba(127, 196, 160, 0.14); }
+.cdp-log-zone.creep-pull { color: #d6b06a; background: rgba(214, 176, 106, 0.14); }
+.cdp-log-contested {
+  font-size: 10.5px;
+  color: #e0697a;
+  font-weight: 700;
+}
+.cdp-log-aftertag {
+  font-size: 10.5px;
+  color: #8794a6;
+  font-style: italic;
+}
+.cdp-log-cleared {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #f0b232;
+  background: rgba(240, 178, 50, 0.12);
+  border-bottom: 1px solid #222c3a;
+}
+.cdp-log-cleared.cdp-log-notcleared { color: #8794a6; background: rgba(135, 148, 166, 0.1); }
+
+/* credit tab — winner treatment + estimated XP */
+.cdp-player-winner {
+  background: rgba(240, 178, 50, 0.07);
+  border: 1px solid rgba(240, 178, 50, 0.35);
+  border-radius: 6px;
+  padding: 0 9px 9px;
+  margin-top: 8px;
+}
+.cdp-crown {
+  margin: 0 -9px 7px;
+  padding: 5px 9px;
+  background: linear-gradient(90deg, rgba(240, 178, 50, 0.22), rgba(240, 178, 50, 0.08));
+  border-radius: 5px 5px 0 0;
+  color: #f6c455;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.cdp-xp {
+  color: #6fd3e0;
+  font-weight: 700;
+  cursor: help;
+}

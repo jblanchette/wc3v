@@ -20,7 +20,11 @@
       three:      isDev,
       buildOrder: isDev,
       map:        isDev,
-      net:        isDev
+      net:        isDev,
+      // Parser + upload pipeline. Also propagated into the parser Web
+      // Worker via a `?log=1` URL param, since the worker runs in its own
+      // global scope and can't read this object.
+      parser:     isDev
     }
   };
 

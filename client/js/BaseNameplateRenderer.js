@@ -51,14 +51,21 @@ class BaseNameplateRenderer {
     this.FULL_ALPHA = 0.95;
     this.FLOOR_ALPHA = 0.72;
 
-    // plate style
-    this.FONT_PX  = Math.max(12.8, 13);  // CLAUDE.md desktop-min readable size
-    this.PAD_X    = 8;
-    this.PAD_Y    = 5;
-    this.GAP      = 8;
-    this.CHIP_PAD_X = 7;
-    this.RADIUS   = 5;
+    // plate style — every pixel dimension is derived per-render from
+    // SCREEN_FONT_PX scaled by the canvas backing-store->CSS ratio, so the
+    // plate lands at a consistent ON-SCREEN size regardless of how large the
+    // map image (and therefore the canvas backing store) is.
+    this.SCREEN_FONT_PX  = 11;   // intended on-screen font size
     this.FALLBACK_ACCENT = '#8B949E';
+
+    // WC3V logo badge — loaded once, drawn as a small square tile at the left
+    // of the plate. The PNG is already a rounded purple tile, so it is drawn
+    // as-is. Until it loads, the plate renders without the logo slot.
+    this._logo = new Image();
+    this._logoReady = false;
+    this._logo.onload  = () => { this._logoReady = true; };
+    this._logo.onerror = () => { this._logoReady = false; };
+    this._logo.src = '/android-chrome-512x512.png';
   }
 
   /**
@@ -230,13 +237,27 @@ class BaseNameplateRenderer {
     const alpha = this.fadeAlpha(gameTime);
     if (alpha <= 0) return;
 
-    const oldFill   = ctx.fillStyle;
-    const oldStroke = ctx.strokeStyle;
-    const oldAlpha  = ctx.globalAlpha;
-    const oldLineW  = ctx.lineWidth;
-    const oldFont   = ctx.font;
-    const oldAlign  = ctx.textAlign;
-    const oldBase   = ctx.textBaseline;
+    // The player canvas backing store is the (large) map-image size but is
+    // CSS-downscaled to fit the viewport. Render the plate scaled by that
+    // ratio so it has a consistent on-screen size on every map. Computed
+    // once per call — reading clientWidth forces a layout.
+    const cw = ctx.canvas.clientWidth;
+    const ratio = (cw > 0 && Number.isFinite(cw))
+      ? ctx.canvas.width / cw
+      : 1;
+
+    const oldFill    = ctx.fillStyle;
+    const oldStroke  = ctx.strokeStyle;
+    const oldAlpha   = ctx.globalAlpha;
+    const oldLineW   = ctx.lineWidth;
+    const oldFont    = ctx.font;
+    const oldAlign   = ctx.textAlign;
+    const oldBase    = ctx.textBaseline;
+    const oldSmooth  = ctx.imageSmoothingEnabled;
+    const oldSmoothQ = ctx.imageSmoothingQuality;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     for (let i = 0; i < players.length; i++) {
       const player = players[i];
@@ -250,7 +271,7 @@ class BaseNameplateRenderer {
       const py = proj.y + gameScaler.middleY;
       if (!Number.isFinite(px) || !Number.isFinite(py)) continue;
 
-      this._drawPlate(ctx, player, px, py, alpha);
+      this._drawPlate(ctx, player, px, py, alpha, ratio);
     }
 
     ctx.fillStyle = oldFill;
@@ -260,9 +281,11 @@ class BaseNameplateRenderer {
     ctx.font = oldFont;
     ctx.textAlign = oldAlign;
     ctx.textBaseline = oldBase;
+    ctx.imageSmoothingEnabled = oldSmooth;
+    ctx.imageSmoothingQuality = oldSmoothQ;
   }
 
-  _drawPlate (ctx, player, px, py, alpha) {
+  _drawPlate (ctx, player, px, py, alpha, ratio) {
     const race = (typeof RaceLabels !== 'undefined')
       ? RaceLabels[player.race]
       : null;
@@ -273,50 +296,89 @@ class BaseNameplateRenderer {
       ? PlayerNames.canonical(player.displayName)
       : player.displayName;
 
-    const F = this.FONT_PX;
+    // Every dimension scales with the backing-store ratio so the plate has a
+    // consistent on-screen size regardless of map image resolution.
+    const F        = this.SCREEN_FONT_PX * ratio;
+    const padX     = Math.round(F * 0.62);
+    const padY     = Math.round(F * 0.40);
+    const gap      = Math.round(F * 0.55);
+    const chipPadX = Math.round(F * 0.50);
+    const radius   = Math.round(F * 0.36);
+    const borderW  = Math.max(1, F * 0.11);
+    const chipR    = Math.round(F * 0.22);
+    const logoOn   = this._logoReady;
+    const logoSize = logoOn ? Math.round(F * 1.20) : 0;
+
     ctx.font = `bold ${Math.ceil(F)}px Arial`;
 
-    const raceW = ctx.measureText(raceTxt).width;
-    const chipW = raceW + this.CHIP_PAD_X * 2;
+    const raceMetrics = ctx.measureText(raceTxt);
+    const raceW = raceMetrics.width;
+    const chipW = raceW + chipPadX * 2;
     const nameW = ctx.measureText(name).width;
+    const chipH = Math.round(F);
 
-    const plateH = F + this.PAD_Y * 2;
-    const plateW = this.PAD_X + chipW + this.GAP + nameW + this.PAD_X;
+    const bandH  = Math.max(chipH, logoSize);
+    const plateH = bandH + padY * 2;
+    const plateW = padX
+      + (logoOn ? logoSize + gap : 0)
+      + chipW + gap + nameW
+      + padX;
 
-    const bgX = px - plateW / 2;
-    const bgY = py - plateH / 2;
+    // pixel-snap the origin + content centerline to kill sub-pixel shimmer
+    const bgX = Math.round(px - plateW / 2);
+    const bgY = Math.round(py - plateH / 2);
+    const cy  = Math.round(bgY + plateH / 2);
 
     ctx.globalAlpha = alpha;
 
     // (1) dark fill
     ctx.fillStyle = 'rgba(17, 17, 17, 0.92)';
-    this._roundRectPath(ctx, bgX, bgY, plateW, plateH, this.RADIUS);
+    this._roundRectPath(ctx, bgX, bgY, plateW, plateH, radius);
     ctx.fill();
 
     // (2) FULL player-color border (no single-edge stripe)
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = borderW;
     ctx.strokeStyle = player.playerColor || '#FFFFFF';
-    this._roundRectPath(ctx, bgX, bgY, plateW, plateH, this.RADIUS);
+    this._roundRectPath(ctx, bgX, bgY, plateW, plateH, radius);
     ctx.stroke();
 
-    // (3) race chip
-    const chipX = bgX + this.PAD_X;
-    const chipY = bgY + this.PAD_Y;
-    const chipH = F;
+    let cursorX = bgX + padX;
+
+    // (3) WC3V logo badge — drawn as-is (the PNG is already a rounded tile)
+    if (logoOn) {
+      ctx.drawImage(
+        this._logo,
+        cursorX, Math.round(cy - logoSize / 2),
+        logoSize, logoSize
+      );
+      cursorX += logoSize + gap;
+    }
+
+    // (4) race chip
+    const chipX = cursorX;
+    const chipY = Math.round(cy - chipH / 2);
     ctx.fillStyle = accent;
-    this._roundRectPath(ctx, chipX, chipY, chipW, chipH, 3);
+    this._roundRectPath(ctx, chipX, chipY, chipW, chipH, chipR);
     ctx.fill();
 
+    // Optically center the all-caps label on the chip. The 'middle' baseline
+    // centers the em box — which counts unused descender space — leaving the
+    // caps sitting too high; center by the actual glyph box instead.
+    const rAsc  = raceMetrics.actualBoundingBoxAscent;
+    const rDesc = raceMetrics.actualBoundingBoxDescent;
+    const rOff  = (Number.isFinite(rAsc) && Number.isFinite(rDesc))
+      ? (rAsc - rDesc) / 2
+      : F * 0.36;
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(raceTxt, chipX + chipW / 2, chipY + chipH / 2 + 0.5);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(raceTxt, Math.round(chipX + chipW / 2), Math.round(cy + rOff));
 
-    // (4) player name
+    // (5) player name
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name, chipX + chipW + this.GAP, py + 0.5);
+    ctx.fillText(name, Math.round(chipX + chipW + gap), cy);
   }
 
   _roundRectPath (ctx, x, y, w, h, r) {

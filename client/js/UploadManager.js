@@ -12,6 +12,16 @@
 // in app.js. No network calls except the map cache fetches that the parser
 // itself makes during parse.
 
+// Gated debug logging for the upload pipeline — see clientConfig.js. Silent
+// in production; flip WC3V_CONFIG.logging.parser to surface the trace.
+const _parserLogEnabled = () => {
+  const cfg = (typeof window !== 'undefined') && window.WC3V_CONFIG;
+  return !!(cfg && cfg.logging && cfg.logging.parser);
+};
+const _log = (...args) => {
+  if (_parserLogEnabled()) console.log('[UploadManager]', ...args);
+};
+
 const UploadManager = class {
   constructor (options = {}) {
     this.maxBytes = options.maxBytes || 5 * 1024 * 1024;
@@ -34,7 +44,14 @@ const UploadManager = class {
     // watchdog.
     this.parseIdleTimeoutMs = options.parseIdleTimeoutMs || options.parseTimeoutMs || 30000;
     this.parseHardCapMs = options.parseHardCapMs || 5 * 60 * 1000;
-    this.workerPath = options.workerPath || '/js/parser-worker.js';
+    // The worker can't read WC3V_CONFIG (separate global scope), so when
+    // parser logging is on we pass it through as a URL param the worker
+    // checks before silencing the bundle's console output.
+    let workerPath = options.workerPath || '/js/parser-worker.js';
+    if (_parserLogEnabled() && workerPath.indexOf('log=1') === -1) {
+      workerPath += (workerPath.indexOf('?') === -1 ? '?' : '&') + 'log=1';
+    }
+    this.workerPath = workerPath;
   }
 
   // Warm the HTTP cache for the parser worker + its ~1 MB bundle so the
@@ -62,7 +79,7 @@ const UploadManager = class {
   // for `onchange` to fire reliably. We attach hidden, click, then remove on
   // any terminal event.
   pickAndParse () {
-    console.log('[UploadManager] pickAndParse: opening file picker');
+    _log('pickAndParse: opening file picker');
     return new Promise((resolve, reject) => {
       const input = document.createElement('input');
       input.type = 'file';
@@ -76,7 +93,7 @@ const UploadManager = class {
 
       input.onchange = async () => {
         const file = input.files && input.files[0];
-        console.log('[UploadManager] file picker change, file =', file && file.name, 'size =', file && file.size);
+        _log('file picker change, file =', file && file.name, 'size =', file && file.size);
         cleanup();
         if (!file) return resolve(null);
         try {
@@ -88,7 +105,7 @@ const UploadManager = class {
       };
       // 'cancel' fires in Chrome 113+ when the user dismisses the picker.
       input.addEventListener('cancel', () => {
-        console.log('[UploadManager] file picker cancelled');
+        _log('file picker cancelled');
         cleanup();
         resolve(null);
       });
@@ -99,7 +116,7 @@ const UploadManager = class {
 
   // Parse a File / Blob. Returns { id, record } on success.
   async parseFile (file) {
-    console.log('[UploadManager] parseFile start:', file && file.name);
+    _log('parseFile start:', file && file.name);
     if (!file) throw new Error('no file');
     if (file.size > this.maxBytes) {
       const err = new Error(`File too large (${(file.size / 1024 / 1024).toFixed(1)} MB > ${(this.maxBytes / 1024 / 1024).toFixed(0)} MB)`);
@@ -109,7 +126,7 @@ const UploadManager = class {
 
     this.onProgress({ phase: 'reading', percent: 0 });
     const arrayBuffer = await file.arrayBuffer();
-    console.log('[UploadManager] file read into ArrayBuffer:', arrayBuffer.byteLength, 'bytes');
+    _log('file read into ArrayBuffer:', arrayBuffer.byteLength, 'bytes');
 
     // Magic bytes: "Warcraft III recorded game\x1a\x00" (28 bytes)
     if (!checkW3gMagic(new Uint8Array(arrayBuffer))) {
@@ -120,13 +137,13 @@ const UploadManager = class {
 
     this.onProgress({ phase: 'parsing', percent: 0 });
 
-    console.log('[UploadManager] dispatching parse to worker...');
+    _log('dispatching parse to worker...');
     let parsed;
     try {
       parsed = await this._parseInWorker(arrayBuffer);
-      console.log('[UploadManager] parser returned, top-level keys:', parsed && Object.keys(parsed));
+      _log('parser returned, top-level keys:', parsed && Object.keys(parsed));
     } catch (e) {
-      console.error('[UploadManager] parse failed:', e);
+      _log('parse failed:', e);
       // Map-not-in-library is the most common user-facing error. Preserve
       // the code so the UI can give a precise message.
       if (e && e.code === 'missing_map') {

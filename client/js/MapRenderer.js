@@ -139,6 +139,59 @@ const MapRenderer = class {
     return timeline[lo];
   }
 
+  // Per-team progress at a point in time, derived from the per-player credit
+  // model: each contributing player's share is summed onto their team. This is
+  // the single source the camp ring renders from, so the map and the Camp Info
+  // credit panel can never visibly disagree. Returns null when untouched.
+  _teamProgressAt (neutralGroup, gameTime) {
+    const snap = this._findProgress(neutralGroup.playerCreditTimeline, gameTime);
+    if (!snap || !snap.players) return null;
+    const pc = neutralGroup.playerCredit || {};
+    const teams = {};
+    Object.keys(snap.players).forEach(pid => {
+      const sp = snap.players[pid];
+      if (!sp || !(sp.contributionShare > 0)) return;
+      const teamId = pc[pid] ? pc[pid].teamId : null;
+      if (teamId == null) return;
+      teams[teamId] = (teams[teamId] || 0) + sp.contributionShare;
+    });
+    return Object.keys(teams).length ? teams : null;
+  }
+
+  // Clear-order per team across every camp, ranked by the credit model's
+  // clearedTime. A camp counts for a team only once it is cleared and that
+  // team did contributing work in it — matching the credit panel exactly.
+  // Returns { [campUuid]: { [teamId]: orderNumber } }.
+  _computeCampOrders (groups, nonOneVsOne) {
+    const orders = {};
+    if (nonOneVsOne) return orders;
+
+    const byTeam = {};
+    groups.forEach(g => {
+      if (g.clearedTime == null) return;
+      const pc = g.playerCredit || {};
+      const teamsHere = {};
+      Object.keys(pc).forEach(pid => {
+        const c = pc[pid];
+        const m = c && c.measured;
+        if (c && m && m.contributionMs > 0 && c.teamId != null) {
+          teamsHere[c.teamId] = true;
+        }
+      });
+      Object.keys(teamsHere).forEach(tid => {
+        (byTeam[tid] = byTeam[tid] || []).push({ uuid: g.uuid, clearedTime: g.clearedTime });
+      });
+    });
+
+    Object.keys(byTeam).forEach(tid => {
+      byTeam[tid].sort((a, b) => a.clearedTime - b.clearedTime);
+      byTeam[tid].forEach((entry, idx) => {
+        (orders[entry.uuid] = orders[entry.uuid] || {})[tid] = idx + 1;
+      });
+    });
+    return orders;
+  }
+
   // Note: this method mutates neutralGroup.isHidden and unit.isNeutralGroupHidden
   // on the data objects passed via mapData and players (by-reference side effects).
   renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid, campHitOut) {
@@ -177,11 +230,13 @@ const MapRenderer = class {
     const groups = Object.values(world.neutralGroups);
     const claimPaths = {};
 
+    // Camp markers are driven entirely by the per-player credit model so the
+    // map and the Camp Info credit panel always agree. Clear order per team is
+    // ranked by clearedTime across every camp that team contributed work in.
+    const campOrders = this._computeCampOrders(groups, nonOneVsOne);
+
     groups.forEach((neutralGroup) => {
-      const {
-        claimState, claimTime, claimOwnerId, uuid, order,
-        teamOrders, progressTimeline
-      } = neutralGroup;
+      const { uuid, clearedTime } = neutralGroup;
 
       // use tight unitBounds for rendering (falls back to padded bounds)
       const b = neutralGroup.unitBounds || neutralGroup.bounds;
@@ -212,15 +267,12 @@ const MapRenderer = class {
         campHitOut.push({ rawGroup: neutralGroup, cx: centerX, cy: centerY, r: radius });
       }
 
-      // look up current progress from timeline
-      const snapshot = this._findProgress(progressTimeline, gameTime);
-      const currentTeams = snapshot ? snapshot.teams : null;
-      const maxProgress = currentTeams
-        ? Math.max(...Object.values(currentTeams))
-        : 0;
-
-      const hasCampProgress = maxProgress > 0.02;
-      const isCleared = maxProgress >= 0.85;
+      // per-team progress from the per-player credit timeline; `isCleared`
+      // keys off the credit model's clearedTime so the map agrees with the
+      // credit panel rather than the legacy team-claim estimate.
+      const currentTeams = this._teamProgressAt(neutralGroup, gameTime);
+      const hasCampProgress = !!currentTeams;
+      const isCleared = (clearedTime != null) && (gameTime >= clearedTime);
 
       // hide neutral units once any team has interacted with the camp
       if (hasCampProgress) {
@@ -241,107 +293,137 @@ const MapRenderer = class {
         });
       }
 
-      // collect route paths — add to each team that has progress
-      if (hasCampProgress && claimTime != null && gameTime >= claimTime && currentTeams && !nonOneVsOne) {
+      // collect route paths — one node per team that cleared this camp,
+      // placed in clear order (clearedTime)
+      if (isCleared && currentTeams && !nonOneVsOne) {
         Object.entries(currentTeams).forEach(([teamId, progress]) => {
           if (progress <= 0.005) return;
           if (!claimPaths[teamId]) {
             claimPaths[teamId] = [];
           }
-          claimPaths[teamId].push({ claimTime, drawX, drawY, rectWidth, rectHeight });
+          claimPaths[teamId].push({ clearedTime, drawX, drawY, rectWidth, rectHeight });
         });
       }
 
       const isHovered = (uuid === hoveredCampUuid);
 
-      if (maxProgress > 0.02 && currentTeams && !nonOneVsOne) {
-        //
-        // camp has been interacted with — solid fill
-        //
-        const teamsWithProgress = Object.entries(currentTeams)
-          .filter(([, v]) => v > 0.005)
-          .sort((a, b) => b[1] - a[1]);
+      // ---- camp marker: segmented progress ring (Project C5) -------------
+      // A faint full-circle track sits on every camp. A bright team-coloured
+      // arc fills it clockwise from 12 o'clock as the camp is cleared, split
+      // into one segment per team sized by that team's share of the clearing
+      // work. A complete ring + a small centre dot (winner's colour) = cleared;
+      // a dashed arc = a low-confidence verdict. A manual override (set in the
+      // Camp panel) wins over the engine. Non-1v1 keeps a plain track ring.
 
-        if (teamsWithProgress.length === 1) {
-          // single team: solid filled circle
-          const color = teamColorMap[teamsWithProgress[0][0]] || '#FFF';
+      // 1) track ring — a dark casing under a faint light line, drawn on
+      // every camp so the ring reads on light (snow) and dark terrain alike
+      const trackW = isHovered ? 3 : 2.5;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, PI2);
+      ctx.strokeStyle = '#0a0d13';
+      ctx.globalAlpha = isHovered ? 0.7 : 0.5;
+      ctx.lineWidth = trackW + 2.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, PI2);
+      ctx.strokeStyle = '#FFF';
+      ctx.globalAlpha = isHovered ? 0.7 : 0.42;
+      ctx.lineWidth = trackW;
+      ctx.stroke();
 
-          // black border
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius + 2, 0, PI2);
-          ctx.fillStyle = '#000';
-          ctx.globalAlpha = 0.7;
-          ctx.fill();
+      if (currentTeams && !nonOneVsOne) {
+        const pcredit = neutralGroup.playerCredit || {};
 
-          // team color fill
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, PI2);
-          ctx.fillStyle = color;
-          ctx.globalAlpha = 0.75;
-          ctx.fill();
-        } else {
-          // multiple teams: equal split wedges
-          const wedgeAngle = PI2 / teamsWithProgress.length;
+        // resolve the ring's team breakdown + state, applying any override
+        let ringTeams = Object.entries(currentTeams).filter(([, v]) => v > 0.004);
+        let ringUncertain = Object.keys(pcredit)
+          .some(pid => pcredit[pid] && pcredit[pid].uncertain);
+        let ringNeutral = false;     // grey ring — override said 'no credit'
+        let suppressDot = false;
 
-          // black border behind
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius + 2, 0, PI2);
-          ctx.fillStyle = '#000';
-          ctx.globalAlpha = 0.7;
-          ctx.fill();
-
-          let angle = START_ANGLE;
-          teamsWithProgress.forEach(([teamId]) => {
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, radius, angle, angle + wedgeAngle);
-            ctx.closePath();
-            ctx.fillStyle = teamColorMap[teamId] || '#FFF';
-            ctx.globalAlpha = 0.75;
-            ctx.fill();
-            angle += wedgeAngle;
-          });
-
-          // divider lines between wedges
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 2;
-          ctx.globalAlpha = 0.6;
-          angle = START_ANGLE;
-          for (let i = 0; i < teamsWithProgress.length; i++) {
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.lineTo(
-              centerX + Math.cos(angle) * radius,
-              centerY + Math.sin(angle) * radius
-            );
-            ctx.stroke();
-            angle += wedgeAngle;
+        const ov = neutralGroup._creditOverride;
+        if (ov && ov.creditedPlayerId != null) {
+          ringUncertain = false;     // a human has resolved this camp
+          if (ov.creditedPlayerId === 'none') {
+            ringNeutral = true; suppressDot = true;
+          } else if (ov.creditedPlayerId === 'unclear') {
+            ringUncertain = true; suppressDot = true;
+          } else if (pcredit[ov.creditedPlayerId] &&
+                     pcredit[ov.creditedPlayerId].teamId != null) {
+            // collapse the ring onto the single overridden team
+            const ovTeam = String(pcredit[ov.creditedPlayerId].teamId);
+            const tot = ringTeams.reduce((s, t) => s + t[1], 0);
+            ringTeams = [[ovTeam, tot]];
           }
         }
 
-        // white outline on top
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, PI2);
-        ctx.strokeStyle = isHovered ? '#FFF' : 'rgba(255,255,255,0.5)';
-        ctx.lineWidth = isHovered ? 3 : 1.5;
-        ctx.globalAlpha = isHovered ? 0.9 : 0.6;
-        ctx.stroke();
+        // biggest contributor first — stable segment order + dot colour
+        ringTeams.sort((a, b) => b[1] - a[1]);
+        const total = ringTeams.reduce((s, t) => s + t[1], 0);
+        const dotTeamId = (!suppressDot && ringTeams.length) ? ringTeams[0][0] : null;
 
-      } else {
-        // untouched: thin white circle
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, PI2);
-        ctx.strokeStyle = '#FFF';
-        ctx.lineWidth = isHovered ? 3 : 1.5;
-        ctx.globalAlpha = isHovered ? 0.8 : 0.35;
-        ctx.stroke();
+        if (total > 0) {
+          // a cleared camp is a whole circle (segments scaled to fill 360°);
+          // an in-progress camp sweeps only `total` of the way round.
+          const arcScale = isCleared ? (PI2 / total) : PI2;
+          const halfGap = ringTeams.length > 1 ? 0.07 : 0;
+          const arcW = isHovered ? 6 : 4.5;
+
+          ctx.lineCap = 'butt';
+          if (ringUncertain) ctx.setLineDash([7, 5]);
+
+          // each segment is stroked twice — a wide dark casing, then the team
+          // colour on top — so the ring keeps a contrasting border on both
+          // edges and stays legible over any terrain colour.
+          let angle = START_ANGLE;
+          ringTeams.forEach(([teamId, share]) => {
+            const seg = share * arcScale;
+            const a0 = angle + halfGap;
+            const a1 = angle + seg - halfGap;
+            if (a1 - a0 > 0.03) {
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, radius, a0, a1);
+              ctx.strokeStyle = '#0a0d13';
+              ctx.globalAlpha = isHovered ? 0.95 : 0.85;
+              ctx.lineWidth = arcW + 3;
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(centerX, centerY, radius, a0, a1);
+              ctx.strokeStyle = ringNeutral ? '#aab4c2' : (teamColorMap[teamId] || '#FFF');
+              ctx.globalAlpha = isHovered ? 1 : 0.96;
+              ctx.lineWidth = arcW;
+              ctx.stroke();
+            }
+            angle += seg;
+          });
+          ctx.setLineDash([]);
+
+          // cleared — a small centre dot in the winning team's colour,
+          // dark-ringed so it shows on any background
+          if (isCleared && dotTeamId != null) {
+            const dotR = Math.max(3.5, radius * 0.18);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, dotR, 0, PI2);
+            ctx.fillStyle = teamColorMap[dotTeamId] || '#FFF';
+            ctx.globalAlpha = 1;
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#0a0d13';
+            ctx.globalAlpha = 0.85;
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
       }
 
-      // camp order badges — one per team that participated
-      if (maxProgress > 0.02 && claimTime != null && gameTime >= claimTime && teamOrders && !nonOneVsOne) {
-        const teamIds = Object.keys(teamOrders);
+      // camp order badges — clear order per team, shown once the camp is
+      // cleared (ranked by clearedTime, matches the credit panel)
+      const orderMap = campOrders[uuid];
+      if (isCleared && orderMap && !nonOneVsOne) {
+        const teamIds = Object.keys(orderMap);
         teamIds.forEach((tid, idx) => {
-          const teamOrder = teamOrders[tid];
+          const teamOrder = orderMap[tid];
           if (!teamOrder) return;
 
           // position badges around the circle edge, spaced apart for multi-team
@@ -355,49 +437,8 @@ const MapRenderer = class {
         });
       }
 
-      //
-      // Project C: per-player credit markers. A checkmark per player credited
-      // at the current playback time (live-synced via playerCreditTimeline),
-      // and an explicit "?" when the camp's call is low-confidence. 1v1 only
-      // (matches the team-attribution gate) — non-1v1 keeps plain rings.
-      //
-      const pcredit = neutralGroup.playerCredit;
-      if (!nonOneVsOne && pcredit && Object.keys(pcredit).length) {
-        const snap = this._findProgress(neutralGroup.playerCreditTimeline, gameTime);
-        const creditedNow = [];
-        if (snap && snap.players) {
-          Object.keys(snap.players).forEach(pid => {
-            if (snap.players[pid] && snap.players[pid].credited) creditedNow.push(pid);
-          });
-        }
-
-        // checkmark badges along the lower arc, spaced for multiple players
-        creditedNow.forEach((pid, idx) => {
-          const teamId = pcredit[pid] ? pcredit[pid].teamId : null;
-          const color = teamColorMap[teamId] || '#3fbf6f';
-          const baseAngle = Math.PI * 0.75; // lower-left
-          const off = creditedNow.length > 1 ? (idx - (creditedNow.length - 1) / 2) * 0.55 : 0;
-          const a = baseAngle + off;
-          Drawing.drawCampCreditBadge(
-            ctx,
-            centerX + Math.cos(a) * (radius + 13),
-            centerY + Math.sin(a) * (radius + 13),
-            color,
-            creditedNow.length > 1 ? 0.8 : 1
-          );
-        });
-
-        // uncertainty glyph if the final call for any participant is shaky
-        const anyUncertain = Object.keys(pcredit).some(pid => pcredit[pid] && pcredit[pid].uncertain);
-        if (anyUncertain && hasCampProgress) {
-          Drawing.drawCampUncertainGlyph(
-            ctx,
-            centerX + Math.cos(Math.PI / 2) * (radius + 14),
-            centerY + Math.sin(Math.PI / 2) * (radius + 14),
-            0.8
-          );
-        }
-      }
+      // (credit verdict — credited team(s) + low-confidence + manual override
+      // — is rendered into the progress ring itself above; no separate badges)
     });
 
     // creep route lines
@@ -408,7 +449,7 @@ const MapRenderer = class {
 
     Object.keys(claimPaths).forEach(teamClaimId => {
       const claimPath = claimPaths[teamClaimId].sort((a, b) => {
-        return a.claimTime - b.claimTime;
+        return a.clearedTime - b.clearedTime;
       });
 
       ctx.strokeStyle = teamColorMap[teamClaimId] || '#FFF';
