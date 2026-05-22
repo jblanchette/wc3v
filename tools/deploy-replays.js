@@ -4,16 +4,29 @@
  * The static site on Render only serves HTML/JS/CSS. Anything under
  * /replays/* gets a 301 redirect to https://cdn.wc3v.com/replays/* (see
  * render.yaml), which is backed by the Cloudflare R2 bucket `wc3v-cdn`.
- * That means after `node tools/reparse-builds.js` regenerates local
- * .wc3v.gz files, viewers see no change until those files are uploaded
- * to R2. This script is the upload step.
+ * That means after a reparse regenerates local .wc3v.gz files, viewers see
+ * no change until those files are uploaded to R2. This script is that step.
+ *
+ * IMPORTANT — what the CDN actually serves:
+ *   The client fetches `/replays/<name>.wc3v` (UNCOMPRESSED — app.js loadFile),
+ *   and the CDN serves the R2 object at that exact key. It does NOT decompress
+ *   a .wc3v.gz on the fly. So the object that must be fresh in R2 is the
+ *   uncompressed `<name>.wc3v`, not `<name>.wc3v.gz`.
+ *
+ *   Local parser output is `<name>.wc3v.gz` (the uncompressed `.wc3v` is a
+ *   debug-only artifact). So this script decompresses each .wc3v.gz into a
+ *   temp staging dir and uploads the resulting `.wc3v` to R2.
+ *
+ *   (An earlier version of this script uploaded `.wc3v.gz` only — those
+ *   objects exist in the bucket but are never read by the client. Harmless,
+ *   but don't rely on them.)
  *
  * Usage:
- *   node tools/deploy-replays.js              — sync all .wc3v.gz to R2
+ *   node tools/deploy-replays.js              — sync all replays to R2
  *   node tools/deploy-replays.js --dry-run    — preview transfers without uploading
- *   node tools/deploy-replays.js --replay=ID  — sync a single replay (.wc3v.gz)
+ *   node tools/deploy-replays.js --replay=ID  — sync a single replay
  *   node tools/deploy-replays.js --manifest   — sync only replays referenced by builds-manifest.json
- *   node tools/deploy-replays.js --force      — re-upload even if size+mtime match (use to refresh metadata like Cache-Control on already-uploaded files)
+ *   node tools/deploy-replays.js --force      — re-upload even if size+mtime match
  *
  * Requires: rclone configured with an `r2` remote pointing at the
  * Cloudflare R2 endpoint that owns `wc3v-cdn`. (Check `rclone listremotes`.)
@@ -22,18 +35,15 @@
  *   - We use `rclone copy`, not `sync` — never deletes anything in R2 even
  *     if it's missing locally. Replays are write-once-ish; deletion should
  *     be a deliberate manual step, not a side effect of this script.
- *   - Only *.wc3v.gz is uploaded. Uncompressed *.wc3v debug files stay local.
- *   - rclone skips files whose size+mtime already match the destination, so
- *     re-running after a partial reparse only uploads the changed files.
  *   - Every upload sets Cache-Control: public, max-age=300, must-revalidate.
- *     Without this, browsers fall back to heuristic caching (~10% of file age)
- *     and may serve stale .wc3v.gz from disk cache long after a reparse.
  *     5 minutes is short enough that a viewer reload after a fresh deploy
  *     gets the new data, and ETag/304 keeps revalidation cheap.
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
+const zlib = require('zlib');
 const { spawnSync } = require('child_process');
 
 const REMOTE = 'r2:wc3v-cdn/replays';
@@ -77,9 +87,19 @@ function getManifestReplayIds () {
   return ids;
 }
 
-function buildIncludeArgs () {
+// Resolve which replay base-names (no extension) to deploy.
+function selectReplayIds () {
+  const onDisk = fs.readdirSync(LOCAL_DIR)
+    .filter(f => f.endsWith('.wc3v.gz'))
+    .map(f => f.slice(0, -'.wc3v.gz'.length));
+  const onDiskSet = new Set(onDisk);
+
   if (singleReplay) {
-    return ['--include', `${singleReplay}.wc3v.gz`];
+    if (!onDiskSet.has(singleReplay)) {
+      console.error(`No local file: ${path.join(LOCAL_DIR, singleReplay + '.wc3v.gz')}`);
+      process.exit(1);
+    }
+    return [singleReplay];
   }
   if (manifestOnly) {
     const ids = getManifestReplayIds();
@@ -87,14 +107,13 @@ function buildIncludeArgs () {
       console.error('Manifest had no replay IDs. Aborting.');
       process.exit(1);
     }
-    const includeArgs = [];
-    for (const id of ids) {
-      includeArgs.push('--include', `${id}.wc3v.gz`);
-    }
-    console.log(`Manifest filter: ${ids.size} replay(s) selected`);
-    return includeArgs;
+    const selected = [...ids].filter(id => onDiskSet.has(id));
+    const missing = [...ids].filter(id => !onDiskSet.has(id));
+    console.log(`Manifest filter: ${selected.length}/${ids.size} replay(s) present locally`);
+    if (missing.length) console.log(`  (not on disk, skipped: ${missing.join(', ')})`);
+    return selected;
   }
-  return ['--include', '*.wc3v.gz'];
+  return onDisk;
 }
 
 function main () {
@@ -105,36 +124,63 @@ function main () {
     process.exit(1);
   }
 
-  const localCount = fs.readdirSync(LOCAL_DIR).filter(f => f.endsWith('.wc3v.gz')).length;
-  console.log(`Local: ${localCount} .wc3v.gz file(s) in ${LOCAL_DIR}`);
+  const ids = selectReplayIds();
+  if (!ids.length) {
+    console.error('No replays selected to deploy.');
+    process.exit(1);
+  }
+
+  console.log(`Selected: ${ids.length} replay(s)`);
   console.log(`Remote: ${REMOTE}`);
   if (isDryRun) console.log('(dry run — no upload)');
 
-  const cmd = [
-    'copy',
-    LOCAL_DIR,
-    REMOTE,
-    ...buildIncludeArgs(),
-    '--header-upload', `Cache-Control: ${CACHE_CONTROL}`,
-    '--progress',
-    '--stats-one-line',
-    '--stats=2s',
-    '--transfers=8',
-    '--checkers=16'
-  ];
-  if (isDryRun) cmd.push('--dry-run');
-  // --ignore-times forces rclone to re-upload even when size+mtime match.
-  // Use this once after introducing/changing Cache-Control to push the new
-  // header onto previously-uploaded files; otherwise rclone skips them.
-  if (isForce) cmd.push('--ignore-times');
+  // Decompress each .wc3v.gz into a temp staging dir as .wc3v — that uncompressed
+  // object is what the CDN serves. Staging is removed in the finally block.
+  const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'wc3v-deploy-'));
+  let exitCode = 0;
+  try {
+    console.log(`\nDecompressing ${ids.length} file(s) to staging…`);
+    let done = 0;
+    for (const id of ids) {
+      const gz = path.join(LOCAL_DIR, `${id}.wc3v.gz`);
+      const out = path.join(staging, `${id}.wc3v`);
+      fs.writeFileSync(out, zlib.gunzipSync(fs.readFileSync(gz)));
+      done++;
+      if (done % 50 === 0 || done === ids.length) {
+        console.log(`  ${done}/${ids.length}`);
+      }
+    }
 
-  console.log(`\n+ rclone ${cmd.join(' ')}\n`);
+    const cmd = [
+      'copy',
+      staging,
+      REMOTE,
+      '--include', '*.wc3v',
+      '--header-upload', `Cache-Control: ${CACHE_CONTROL}`,
+      '--progress',
+      '--stats-one-line',
+      '--stats=2s',
+      '--transfers=8',
+      '--checkers=16'
+    ];
+    if (isDryRun) cmd.push('--dry-run');
+    // Staged files always have a fresh mtime, so rclone re-uploads them by
+    // default; --ignore-times is only needed to also refresh metadata
+    // (Cache-Control) on bytes-identical objects.
+    if (isForce) cmd.push('--ignore-times');
 
-  const res = spawnSync('rclone', cmd, { stdio: 'inherit' });
-  if (res.status !== 0) {
-    console.error(`\nrclone exited with status ${res.status}`);
-    process.exit(res.status || 1);
+    console.log(`\n+ rclone ${cmd.join(' ')}\n`);
+
+    const res = spawnSync('rclone', cmd, { stdio: 'inherit' });
+    if (res.status !== 0) {
+      console.error(`\nrclone exited with status ${res.status}`);
+      exitCode = res.status || 1;
+    }
+  } finally {
+    fs.rmSync(staging, { recursive: true, force: true });
   }
+
+  if (exitCode !== 0) process.exit(exitCode);
   console.log(`\nDeploy complete${isDryRun ? ' (dry run)' : ''}.`);
 }
 
