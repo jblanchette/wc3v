@@ -572,6 +572,19 @@
       }
       if (!any) return null;
 
+      // Battle-aware framing for non-1v1: union the active battle's tracker
+      // box. In team games / FFA this guarantees the active fight stays
+      // framed even when one player is idle far away (which would otherwise
+      // pull the "fit-all" rectangle out to the map edges and shrink the
+      // battle into a pinpoint).
+      const bbox = this._activeBattleBbox();
+      if (bbox) {
+        minX = Math.min(minX, bbox.minX);
+        maxX = Math.max(maxX, bbox.maxX);
+        minY = Math.min(minY, bbox.minY);
+        maxY = Math.max(maxY, bbox.maxY);
+      }
+
       const padX = (maxX - minX) * PAD_X_FRAC || PAD_X_MIN;
       const padYTop = (maxY - minY) * PAD_Y_TOP_FRAC || PAD_Y_TOP_MIN;
       const padYBot = (maxY - minY) * PAD_Y_BOT_FRAC || PAD_Y_BOT_MIN;
