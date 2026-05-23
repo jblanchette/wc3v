@@ -3058,7 +3058,11 @@ const Wc3vViewer = class {
       displayCreepRoute: true,
       displayNeutralBuildings: true,
       displayBattles: true,           // BattleRenderer overlay (utility canvas)
-      autoSplitScreen: true
+      // autoSplitScreen default OFF: when on, BroadcastCamera fires SPLIT_SCREEN
+      // the first time hero distance crosses SPLIT_ENTER_DISTANCE with no
+      // engagement nearby (BroadcastCamera.js:208-215). User reported it as
+      // surprising — it now requires explicit opt-in via the view-options menu.
+      autoSplitScreen: false
     };
 
     // Creep/spawn-camp route detection is keyed off 1v1 team heuristics and
