@@ -667,28 +667,38 @@ const Wc3vViewer = class {
     });
   }
 
-  loadDoodadFile () {
-    const self = this;
-    const { name } = this.mapInfo;
-    const filePath = `../maps/${name}/doo.json`;
+  // Try uncompressed JSON first, then fall back to the gzipped variant
+  // via DecompressionStream. Newer maps (May 2026 batch onward) ship
+  // only `.json.gz`; older maps have both — keep both code paths working.
+  async _fetchMapJson (name, file) {
+    const buster = this.isDev ? `?t=${Date.now()}` : '';
+    const base = `/maps/${encodeURIComponent(name)}/${file}`;
+    try {
+      const r = await fetch(base + buster);
+      if (r.ok) return await r.json();
+    } catch (e) { /* fall through */ }
+    if (typeof DecompressionStream !== 'function') return null;
+    try {
+      const r = await fetch(base + '.gz' + buster);
+      if (!r.ok) return null;
+      const stream = r.body.pipeThrough(new DecompressionStream('gzip'));
+      const text = await new Response(stream).text();
+      return JSON.parse(text);
+    } catch (e) {
+      return null;
+    }
+  }
 
-    return new Promise((resolve) => {
-      this.loadFile(filePath, (res) => {
-        try {
-          if (res.target.status < 300) {
-            const jsonData = JSON.parse(res.target.responseText);
-            self.doodadData = jsonData.grid;
-          } else {
-            console.warn(`doodad file not found: ${filePath} (status ${res.target.status})`);
-            self.doodadData = null;
-          }
-        } catch (e) {
-          console.error(`Failed to parse ${filePath}: ${e.message}`);
-          self.doodadData = null;
-        }
-        resolve(true);
-      });
-    })
+  async loadDoodadFile () {
+    const { name } = this.mapInfo;
+    const jsonData = await this._fetchMapJson(name, 'doo.json');
+    if (jsonData) {
+      this.doodadData = jsonData.grid;
+    } else {
+      console.warn(`doodad file not found: /maps/${name}/doo.json(.gz)`);
+      this.doodadData = null;
+    }
+    return true;
   }
 
   // Build a canvas-space walkability bitmap from WPM pathing data + tree positions.
@@ -783,23 +793,11 @@ const Wc3vViewer = class {
     return null;
   }
 
-  loadNeutralBuildings () {
+  async loadNeutralBuildings () {
     const { name } = this.mapInfo;
-
-    return new Promise((resolve) => {
-      this.loadFile(`../maps/${name}/neutralBuildings.json`, (res) => {
-        try {
-          if (res.target.status < 300) {
-            this.neutralBuildings = JSON.parse(res.target.responseText);
-          } else {
-            this.neutralBuildings = [];
-          }
-        } catch (e) {
-          this.neutralBuildings = [];
-        }
-        resolve(true);
-      });
-    });
+    const data = await this._fetchMapJson(name, 'neutralBuildings.json');
+    this.neutralBuildings = data || [];
+    return true;
   }
 
   ////
