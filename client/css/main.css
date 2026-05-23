@@ -4996,79 +4996,10 @@ body {
   transform: scaleY(1.6);
 }
 
-/* Battle info panel — floating card in the map's LOWER-right (clear of the
- * camera toolbar at top-right). Populated by Wc3vViewer._updateBattleInfoPanel.
- * Category is encoded in the .bip-category text color, not in an edge stripe
- * (single-edge accents are forbidden by project style). */
-.battle-info-panel {
-  position: absolute;
-  bottom: 0.75rem;
-  right: 0.75rem;
-  min-width: 240px;
-  max-width: 320px;
-  padding: 0.55rem 0.75rem 0.5rem 0.75rem;
-  background: rgba(10, 14, 20, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
-  color: #e8eaed;
-  font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  z-index: 18;                   /* below camera toolbar (z-index 20) just in case */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  pointer-events: none;          /* don't intercept clicks meant for the canvas */
-}
-.battle-info-panel .bip-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-.battle-info-panel .bip-category {
-  font-weight: 700;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.battle-info-panel .bip-duration {
-  color: #9aa0a6;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.battle-info-panel .bip-participants {
-  margin-top: 0.35rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-.battle-info-panel .bip-pchip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255,255,255,0.06);
-  padding: 2px 7px;
-  border-radius: 9999px;
-  font-size: 11px;
-  border: 1px solid rgba(255,255,255,0.10);
-}
-.battle-info-panel .bip-pchip .bip-pchip-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #888;
-}
-.battle-info-panel .bip-meta {
-  margin-top: 0.35rem;
-  color: #9aa0a6;
-  font-size: 11px;
-  display: flex;
-  gap: 0.7rem;
-  flex-wrap: wrap;
-}
-.battle-info-panel .bip-meta .bip-tag {
-  display: inline-block;
-}
-.battle-info-panel .bip-meta .bip-tag-warn {
-  color: #ff8c42;
-}
+/* (Battle info panel removed — its content moved into the canvas banner
+ * above each battle box. The floating panel kept colliding with the minimap
+ * and duplicated info already shown in the banner; the banner is the single
+ * glance-value surface for active battles now.) */
 
 /* --- Zoom Control (inside scrubber bar) --- */
 

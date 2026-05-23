@@ -576,7 +576,19 @@ const serializeBattles = (battles) => {
         spellAbilityId: s.spellAbilityId || null,
         hostile: !!s.hostile
       })),
-      unitOutcomes: b.unitOutcomes || []
+      unitOutcomes: b.unitOutcomes || [],
+      unitTrips: (b.unitTrips || []).map(t => ({
+        unitUuid: t.unitUuid,
+        tag: t.tag,
+        destination: t.destination,
+        destinationKind: t.destinationKind,
+        destinationOwnerId: t.destinationOwnerId == null ? null : t.destinationOwnerId,
+        departedAt: t.departedAt,
+        arrivedAt: t.arrivedAt,
+        confidence: t.confidence,
+        ...(t.campUuid ? { campUuid: t.campUuid } : {}),
+        ...(t.reengageBattleId ? { reengageBattleId: t.reengageBattleId } : {})
+      }))
     };
   });
 };

@@ -947,6 +947,11 @@ if (showAll || showSections.includes('battles')) {
       const parts = Object.entries(counts).map(([k,v]) => `${k}=${v}`).join(' ');
       console.log(`              outcomes: ${parts}`);
     }
+    if (b.unitTrips && b.unitTrips.length) {
+      const tripCounts = b.unitTrips.reduce((acc, t) => { acc[t.tag] = (acc[t.tag]||0)+1; return acc; }, {});
+      const tripParts = Object.entries(tripCounts).map(([k,v]) => `${k}=${v}`).join(' ');
+      console.log(`              trips: ${tripParts}`);
+    }
   });
   const stats = data.battleStats || {};
   console.log(`\nBy category: ${JSON.stringify(stats.byCategory || {})}`);
@@ -992,6 +997,18 @@ if (showSections.includes('battles-debug')) {
       (b.unitOutcomes || []).forEach(o => {
         console.log(`  ${o.unitUuid.slice(0,8)}  ${o.status.padEnd(15)} conf=${o.confidence}  lastSeen=${formatTime(o.lastSeenTime)}`);
       });
+      if (b.unitTrips && b.unitTrips.length) {
+        console.log(`\nunit trips (macro engine):`);
+        b.unitTrips.forEach(t => {
+          const dep = formatTime(t.departedAt);
+          const arr = t.arrivedAt != null ? formatTime(t.arrivedAt) : '   ?  ';
+          const dest = t.destination
+            ? `@(${Math.round(t.destination.x)},${Math.round(t.destination.y)})`
+            : '';
+          const extra = t.reengageBattleId ? ` reengage=${t.reengageBattleId}` : '';
+          console.log(`  ${t.unitUuid.slice(0,8)}  ${t.tag.padEnd(22)} conf=${t.confidence}  ${dep}→${arr}  ${dest}${extra}`);
+        });
+      }
       console.log('');
     }
   }
