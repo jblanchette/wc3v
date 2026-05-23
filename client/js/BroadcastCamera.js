@@ -795,6 +795,20 @@
     /**
      * Compute bounding box and zoom from the selected cluster + nearby units.
      */
+    // Returns the tracker-box (interpolated at current gameTime) of whichever
+    // battle is active right now, or null. When multiple battles overlap we
+    // pick the most-recently-started — matches what the info panel shows.
+    _activeBattleBbox () {
+      const pb = this.viewer && this.viewer.processedBattles;
+      if (!pb || !pb.activeAt) return null;
+      const gt = this.viewer.gameTime;
+      if (gt == null) return null;
+      const active = pb.activeAt(gt);
+      if (!active || !active.length) return null;
+      const battle = active.reduce((a, b) => (b.startTime > a.startTime ? b : a));
+      return pb.trackerBoxAt(battle, gt);
+    }
+
     _computeClusterBounds (cluster, players) {
       let minX = Infinity, maxX = -Infinity;
       let minY = Infinity, maxY = -Infinity;
@@ -823,6 +837,19 @@
             maxY = Math.max(maxY, unit.currentY);
           }
         }
+      }
+
+      // Battle-aware framing: if BattleDetector has an active battle at the
+      // current gameTime, union its tracker box into the cluster bbox so the
+      // box never clips out of frame. The cluster scoring still decides which
+      // battle the camera follows (no override); this just guarantees fit.
+      // Camera follow lerp (LERP_RATE) handles the smoothness.
+      const bbox = this._activeBattleBbox();
+      if (bbox) {
+        minX = Math.min(minX, bbox.minX);
+        maxX = Math.max(maxX, bbox.maxX);
+        minY = Math.min(minY, bbox.minY);
+        maxY = Math.max(maxY, bbox.maxY);
       }
 
       // Tighter padding than the old approach
