@@ -23,7 +23,8 @@
  * Usage:
  *   node tools/deploy-assets.js                - sync everything
  *   node tools/deploy-assets.js --dry-run      - preview transfers, no upload
- *   node tools/deploy-assets.js --only=icons   - one group: icons|models|textures|terrain|maps-immutable|maps-mutable
+ *   node tools/deploy-assets.js --only=icons   - one group: icons|models|textures|terrain|maps-immutable|maps-mutable-json|maps-mutable-jpg
+ *                                                (prefix match: --only=maps-mutable runs both maps-mutable-* groups)
  *   node tools/deploy-assets.js --force        - re-upload even if size+mtime match (use after changing Cache-Control)
  *
  * Requires: rclone with an `r2:` remote (same as deploy-replays.js).
@@ -47,16 +48,22 @@ const isDryRun = !!args['dry-run'];
 const isForce = !!args.force;
 const only = (args.only && args.only !== true) ? String(args.only) : null;
 
-// Each group: a local dir, a remote prefix, an optional include filter, and a
-// Cache-Control header. rclone copy (never sync) — uploads only, never deletes.
+// Each group: a local dir, a remote prefix, an optional include filter, a
+// Cache-Control header, and optional extraHeaders (e.g. Content-Encoding for
+// pre-gzipped JSON). rclone copy (never sync) — uploads only, never deletes.
+//
+// `maps-mutable-json` ships `.json.gz` with `Content-Encoding: gzip` +
+// `Content-Type: application/json` so browsers transparently decompress —
+// callers can use `fetch(url).json()` without DecompressionStream.
 const GROUPS = [
-  { name: 'icons',          localDir: path.join(CLIENT, 'assets/wc3icons'),  remote: 'r2:wc3v-cdn/assets/wc3icons',  include: null,                       cache: IMMUTABLE },
-  { name: 'models',         localDir: path.join(CLIENT, 'assets/models'),    remote: 'r2:wc3v-cdn/assets/models',    include: null,                       cache: IMMUTABLE },
-  { name: 'textures',       localDir: path.join(CLIENT, 'assets/textures'),  remote: 'r2:wc3v-cdn/assets/textures',  include: null,                       cache: IMMUTABLE },
-  { name: 'terrain',        localDir: path.join(CLIENT, 'assets/terrain'),   remote: 'r2:wc3v-cdn/assets/terrain',   include: null,                       cache: IMMUTABLE },
-  // Maps split into two passes over the same dir tree, by file kind.
-  { name: 'maps-immutable', localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/heights.bin.gz'],       cache: IMMUTABLE },
-  { name: 'maps-mutable',   localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.jpg', '*/*.json.gz'], cache: MUTABLE_1D }
+  { name: 'icons',             localDir: path.join(CLIENT, 'assets/wc3icons'),  remote: 'r2:wc3v-cdn/assets/wc3icons',  include: null,                  cache: IMMUTABLE },
+  { name: 'models',            localDir: path.join(CLIENT, 'assets/models'),    remote: 'r2:wc3v-cdn/assets/models',    include: null,                  cache: IMMUTABLE },
+  { name: 'textures',          localDir: path.join(CLIENT, 'assets/textures'),  remote: 'r2:wc3v-cdn/assets/textures',  include: null,                  cache: IMMUTABLE },
+  { name: 'terrain',           localDir: path.join(CLIENT, 'assets/terrain'),   remote: 'r2:wc3v-cdn/assets/terrain',   include: null,                  cache: IMMUTABLE },
+  // Maps split by file kind so each gets the right Content-* headers.
+  { name: 'maps-immutable',    localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/heights.bin.gz'],  cache: IMMUTABLE },
+  { name: 'maps-mutable-json', localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.json.gz'],       cache: MUTABLE_1D, extraHeaders: ['Content-Encoding: gzip', 'Content-Type: application/json'] },
+  { name: 'maps-mutable-jpg',  localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.jpg'],           cache: MUTABLE_1D }
 ];
 
 function checkRclone () {
@@ -79,14 +86,15 @@ function runGroup (g) {
   }
   const cmd = ['copy', g.localDir, g.remote];
   for (const inc of (g.include || [])) cmd.push('--include', inc);
+  cmd.push('--header-upload', `Cache-Control: ${g.cache}`);
+  for (const h of (g.extraHeaders || [])) cmd.push('--header-upload', h);
   cmd.push(
-    '--header-upload', `Cache-Control: ${g.cache}`,
     '--progress', '--stats-one-line', '--stats=2s',
     '--transfers=16', '--checkers=32'
   );
   if (isDryRun) cmd.push('--dry-run');
   if (isForce) cmd.push('--ignore-times');
-  console.log(`\n[${g.name}] Cache-Control: ${g.cache}`);
+  console.log(`\n[${g.name}] Cache-Control: ${g.cache}${(g.extraHeaders || []).length ? '  +' + g.extraHeaders.join('  +') : ''}`);
   console.log(`+ rclone ${cmd.join(' ')}`);
   const res = spawnSync('rclone', cmd, { stdio: 'inherit' });
   if (res.status !== 0) {
@@ -97,7 +105,8 @@ function runGroup (g) {
 
 function main () {
   checkRclone();
-  const groups = only ? GROUPS.filter(g => g.name === only) : GROUPS;
+  // Prefix-match so --only=maps-mutable picks up maps-mutable-json + maps-mutable-jpg.
+  const groups = only ? GROUPS.filter(g => g.name === only || g.name.startsWith(only + '-')) : GROUPS;
   if (!groups.length) {
     console.error(`Unknown --only=${only}. Valid: ${GROUPS.map(g => g.name).join(', ')}`);
     process.exit(1);

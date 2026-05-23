@@ -667,23 +667,25 @@ const Wc3vViewer = class {
     });
   }
 
-  // Try uncompressed JSON first, then fall back to the gzipped variant
-  // via DecompressionStream. Newer maps (May 2026 batch onward) ship
-  // only `.json.gz`; older maps have both — keep both code paths working.
+  // R2 serves `.json.gz` with `Content-Encoding: gzip`, so the browser
+  // auto-decompresses transparently. Local dev servers usually don't set
+  // that header, so we sniff the gzip magic and decompress manually as
+  // a fallback — keeps `npx http-server client` working.
   async _fetchMapJson (name, file) {
     const buster = this.isDev ? `?t=${Date.now()}` : '';
-    const base = `/maps/${encodeURIComponent(name)}/${file}`;
+    const url = `/maps/${encodeURIComponent(name)}/${file}.gz${buster}`;
     try {
-      const r = await fetch(base + buster);
-      if (r.ok) return await r.json();
-    } catch (e) { /* fall through */ }
-    if (typeof DecompressionStream !== 'function') return null;
-    try {
-      const r = await fetch(base + '.gz' + buster);
+      const r = await fetch(url);
       if (!r.ok) return null;
-      const stream = r.body.pipeThrough(new DecompressionStream('gzip'));
-      const text = await new Response(stream).text();
-      return JSON.parse(text);
+      const ab = await r.arrayBuffer();
+      const bytes = new Uint8Array(ab);
+      if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+        if (typeof DecompressionStream !== 'function') return null;
+        const stream = new Response(ab).body.pipeThrough(new DecompressionStream('gzip'));
+        const text = await new Response(stream).text();
+        return JSON.parse(text);
+      }
+      return JSON.parse(new TextDecoder('utf-8').decode(bytes));
     } catch (e) {
       return null;
     }
