@@ -2151,6 +2151,7 @@ module.exports = {
   combatSpellsGroundTarget,
   combatSpellsNoTarget,
   combatSpellHelpers,
+  ...require('./teleportAbilities'),
 
   TECH_TREE_REQUIREMENTS,
   BUILDING_TIER_REQUIREMENTS,

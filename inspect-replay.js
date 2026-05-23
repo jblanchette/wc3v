@@ -27,6 +27,7 @@
  *                          camps-credit - per-player credit, confidence, evidence (Project C)
  *                          battles    - detected combat battles with category + tracker box bounds
  *                          battles-debug - one battle's full signal list + tracker samples (needs --battle=ID)
+ *                          teleports  - structured teleport events (TP Scroll, Mass Teleport, Blink, Staff)
  *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
@@ -1012,4 +1013,42 @@ if (showSections.includes('battles-debug')) {
       console.log('');
     }
   }
+}
+
+// === Teleports ==============================================================
+// Structured teleport events (TP Scroll, Mass Teleport, Blink, Staff). Each
+// row shows cast → apply time, caster, origin/destination, grabbed count, and
+// cancellation status if any. Useful for verifying isJump path samples land
+// at the right spot.
+if (showAll || showSections.includes('teleports')) {
+  console.log(`\n=== Teleports ===`);
+  const pids = Object.keys(data.players || {}).sort((a, b) => Number(a) - Number(b));
+  let total = 0;
+  for (const pid of pids) {
+    const p = data.players[pid];
+    if (p.isNeutralPlayer) continue;
+    const tps = p.teleportEvents || [];
+    if (!tps.length) continue;
+    console.log(`\n  Player ${pid}: ${tps.length} teleport(s)`);
+    tps.forEach(t => {
+      const cast = formatTime(t.gameTime);
+      const app  = (t.appliedAt != null) ? formatTime(t.appliedAt) : '    ?   ';
+      const dest = t.destination
+        ? `(${Math.round(t.destination.x)},${Math.round(t.destination.y)})`
+        : '?';
+      const orig = t.origin
+        ? `(${Math.round(t.origin.x)},${Math.round(t.origin.y)})`
+        : '?';
+      const inv   = t.invulnerable ? '⛨' : ' ';
+      const can   = t.cancellable ? '⤬' : ' ';
+      const tag   = t.cancelled ? `CANCELLED(${t.cancelReason})` : 'applied';
+      const grabbed = t.grabbedCount ? ` grabbed=${t.grabbedCount}` : '';
+      const bldg  = t.destBuildingDisplayName ? ` → ${t.destBuildingDisplayName}` : '';
+      console.log(`    ${t.abilityCode.padEnd(5)} ${inv}${can}  cast=${cast} apply=${app}  ` +
+                  `${orig} → ${dest}${bldg}${grabbed}  ${tag}`);
+      total++;
+    });
+  }
+  if (total === 0) console.log('  (no teleports detected)');
+  console.log('');
 }

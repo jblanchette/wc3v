@@ -260,6 +260,7 @@ const Wc3vViewer = class {
     this.mapRenderer = new MapRenderer();
     this.battleData = new BattleData();         // pure pipeline (BattleDetector output → indexed)
     this.battleRenderer = new BattleRenderer(); // utility-canvas overlay (dashed tracker boxes)
+    this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
     this.processedBattles = null;               // populated by setup() once mapData is available
     this.threeMapRenderer = null; // created in setupCanvas once #three-canvas exists
     this.displayScale = 1.0;
@@ -2995,6 +2996,7 @@ const Wc3vViewer = class {
       displayCreepRoute: true,
       displayNeutralBuildings: true,
       displayBattles: true,           // BattleRenderer overlay (utility canvas)
+      displayTeleports: true,         // TeleportFx cast/arrival cinematic
       // autoSplitScreen default OFF: when on, BroadcastCamera fires SPLIT_SCREEN
       // the first time hero distance crosses SPLIT_ENTER_DISTANCE with no
       // engagement nearby (BroadcastCamera.js:208-215). User reported it as
@@ -3182,6 +3184,7 @@ const Wc3vViewer = class {
         itemStream,
         apmData,
         buildingAttempts,
+        teleportEvents,
         teamId,
         isNeutralPlayer
       } = this.mapData.players[playerId];
@@ -3213,6 +3216,9 @@ const Wc3vViewer = class {
       // construction started) — ReplayGuide uses it so the opening reads in the
       // real command order. [{ itemId, displayName, gameTime, x, y, status }]
       player.buildingAttempts = Array.isArray(buildingAttempts) ? buildingAttempts : null;
+      // Teleport events (TP Scroll / Mass Teleport / Blink) — TeleportFx
+      // reads this to render the cast ring, banner, arrival flash, and trail.
+      player.teleportEvents = Array.isArray(teleportEvents) ? teleportEvents : [];
 
       this.assignedPlayerColors[playerId] = this.playerColorMap[index];
 
@@ -4146,6 +4152,12 @@ const Wc3vViewer = class {
     // floating panel.
     if (this.battleRenderer && this.processedBattles) {
       this.battleRenderer.render(utilityCtx, transform, gameTime, viewOptions, this.gameScaler, this.processedBattles, this.teamColorMap);
+    }
+    // Teleport cinematic — channel ring + announcement banner + arrival flash.
+    // Reads each player's teleportEvents (from the parser). Drawn last so the
+    // ring sits on top of unit icons during the cast.
+    if (this.teleportFx) {
+      this.teleportFx.render(utilityCtx, transform, gameTime, viewOptions, this.gameScaler, this.players);
     }
 
     players.forEach(player => {

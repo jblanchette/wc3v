@@ -733,6 +733,33 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         ...(player.apmData ? { apmData: player.apmData } : {}),
         ...(player.moveTrace ? { moveTrace: player.moveTrace } : {}),
         ...(player._mvStats ? { mvStats: player._mvStats } : {}),
+        // Structured teleport events (TP Scroll, Mass Teleport, Blink, etc.).
+        // See lib/Player.js _applyTeleport and helpers/teleportAbilities.js.
+        // Clients render banner notifications + glow rings + arrival flashes
+        // off this list. Empty array for players who never teleported.
+        teleportEvents: (player._teleportEvents || []).map(t => ({
+          gameTime: t.gameTime,
+          appliedAt: t.appliedAt,
+          abilityCode: t.abilityCode,
+          abilityKind: t.abilityKind,
+          abilityDisplayName: t.abilityDisplayName,
+          abilityIcon: t.abilityIcon,
+          channelMs: t.channelMs,
+          invulnerable: t.invulnerable,
+          cancellable: t.cancellable,
+          cancelled: t.cancelled,
+          cancelReason: t.cancelReason,
+          casterUuid: t.casterUuid,
+          casterItemId: t.caster && t.caster.itemId,
+          origin: t.origin,
+          destination: t.destination,
+          destBuildingUuid: t.destBuildingUuid,
+          destBuildingItemId: t.destBuildingItemId,
+          destBuildingDisplayName: t.destBuildingDisplayName,
+          grabbedUnitUuids: t.grabbedUnitUuids,
+          grabbedUnitItemIds: t.grabbedUnitItemIds,
+          grabbedCount: t.grabbedCount
+        })),
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit()).concat(
           (player.destroyedSummons || [])
