@@ -1,7 +1,8 @@
 //
 // CampPanel — click-driven neutral creep-camp UI (Project C).
 //
-// Two clickable icons per camp open a detail panel with two tabs:
+// One clickable icon per camp opens a detail panel that lands on the Credit
+// tab; the panel itself still exposes both tabs:
 //   • Credit    : per-player credit verdict + criteria checklist + confidence,
 //                 honest "uncertain / why" labelling, and (behind an Advanced
 //                 Settings toggle) a durable per-camp manual override.
@@ -192,7 +193,7 @@ const CampPanel = class {
         els = this._makeIconPair(g.uuid);
         this._iconEls[g.uuid] = els;
       }
-      const ICON_W = 24, ICON_H = 50;
+      const ICON_W = 24, ICON_H = 24;
       let x = (hit.cx + hit.r + 6) / scaleX;
       let y = (hit.cy - hit.r) / scaleY;
       if (x + ICON_W > cssW - 2) x = (hit.cx - hit.r - 6) / scaleX - ICON_W;
@@ -214,23 +215,14 @@ const CampPanel = class {
     const timeline = document.createElement('button');
     timeline.type = 'button';
     timeline.className = 'camp-icon-btn camp-icon-timeline';
-    timeline.title = 'Player camp credit';
-    timeline.setAttribute('aria-label', 'Show per-player creep-camp credit');
+    timeline.title = 'Creep camp details';
+    timeline.setAttribute('aria-label', 'Show creep-camp credit and info');
     timeline.textContent = '⚔';
     timeline.addEventListener('click', (e) => { e.stopPropagation(); this.open(uuid, 'credit'); });
 
-    const info = document.createElement('button');
-    info.type = 'button';
-    info.className = 'camp-icon-btn camp-icon-info';
-    info.title = 'Camp creeps & drops';
-    info.setAttribute('aria-label', 'Show creep-camp unit and drop info');
-    info.textContent = 'ⓘ';
-    info.addEventListener('click', (e) => { e.stopPropagation(); this.open(uuid, 'info'); });
-
     wrap.appendChild(timeline);
-    wrap.appendChild(info);
     this.iconLayer.appendChild(wrap);
-    return { wrap, timeline, info };
+    return { wrap, timeline };
   }
 
   _group (uuid) {

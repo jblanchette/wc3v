@@ -4996,31 +4996,25 @@ body {
   transform: scaleY(1.6);
 }
 
-/* Battle info panel — floating card in the map's upper-right showing the
- * currently active battle. Populated by Wc3vViewer._updateBattleInfoPanel. */
+/* Battle info panel — floating card in the map's LOWER-right (clear of the
+ * camera toolbar at top-right). Populated by Wc3vViewer._updateBattleInfoPanel.
+ * Category is encoded in the .bip-category text color, not in an edge stripe
+ * (single-edge accents are forbidden by project style). */
 .battle-info-panel {
   position: absolute;
-  top: 0.75rem;
+  bottom: 0.75rem;
   right: 0.75rem;
   min-width: 240px;
   max-width: 320px;
-  padding: 0.6rem 0.75rem 0.55rem 0.85rem;
-  background: rgba(10, 14, 20, 0.86);
+  padding: 0.55rem 0.75rem 0.5rem 0.75rem;
+  background: rgba(10, 14, 20, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   color: #e8eaed;
   font: 12px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-  z-index: 50;
+  z-index: 18;                   /* below camera toolbar (z-index 20) just in case */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
   pointer-events: none;          /* don't intercept clicks meant for the canvas */
-}
-.battle-info-panel .bip-bar {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: #FFD166;            /* JS overrides with category color */
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
 }
 .battle-info-panel .bip-row {
   display: flex;

@@ -1987,8 +1987,6 @@ const Wc3vViewer = class {
     const battle = active.reduce((a, b) => (b.startTime > a.startTime ? b : a));
 
     const color = (window.BattleCategoryColor && window.BattleCategoryColor[battle.category]) || '#FFD166';
-    const bar = panel.querySelector('.bip-bar');
-    if (bar) bar.style.background = color;
 
     const catEl = panel.querySelector('.bip-category');
     if (catEl) {

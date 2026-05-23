@@ -55,17 +55,38 @@ class BaseNameplateRenderer {
     // SCREEN_FONT_PX scaled by the canvas backing-store->CSS ratio, so the
     // plate lands at a consistent ON-SCREEN size regardless of how large the
     // map image (and therefore the canvas backing store) is.
-    this.SCREEN_FONT_PX  = 11;   // intended on-screen font size
+    this.SCREEN_FONT_PX  = 11;
     this.FALLBACK_ACCENT = '#8B949E';
+    this.LOGO_FALLBACK   = '#5b5bf5';  // matches the WC3V app-icon purple
 
-    // WC3V logo badge — loaded once, drawn as a small square tile at the left
-    // of the plate. The PNG is already a rounded purple tile, so it is drawn
-    // as-is. Until it loads, the plate renders without the logo slot.
-    this._logo = new Image();
-    this._logoReady = false;
-    this._logo.onload  = () => { this._logoReady = true; };
-    this._logo.onerror = () => { this._logoReady = false; };
-    this._logo.src = '/android-chrome-512x512.png';
+    // Race -> portrait icon under /assets/wc3icons/. Hero portraits are the
+    // most colorful + recognizable race symbol available in the existing
+    // icon set; they read clearly even at ~14-18 device px.
+    this.RACE_ICON_FILES = {
+      'H': 'hpal.jpg',  // Paladin
+      'O': 'obla.jpg',  // Blademaster
+      'U': 'udea.jpg',  // Death Knight
+      'E': 'edem.jpg'   // Demon Hunter
+    };
+
+    // Image cache — load every tile once. If a tile isn't ready (still
+    // loading, failed, or unknown race) the plate draws a same-size colored
+    // square in its place so the layout never pops in shape.
+    this._images = {};
+    this._imagesReady = {};
+    this._loadImage('logo', '/android-chrome-512x512.png');
+    Object.keys(this.RACE_ICON_FILES).forEach(race => {
+      this._loadImage('race:' + race,
+        '/assets/wc3icons/' + this.RACE_ICON_FILES[race]);
+    });
+  }
+
+  _loadImage (key, src) {
+    const img = new Image();
+    img.onload  = () => { this._imagesReady[key] = true; };
+    img.onerror = () => { this._imagesReady[key] = false; };
+    img.src = src;
+    this._images[key] = img;
   }
 
   /**
@@ -285,49 +306,46 @@ class BaseNameplateRenderer {
     ctx.imageSmoothingQuality = oldSmoothQ;
   }
 
+  /**
+   * Plate layout:
+   *   [ padX | V-tile | gap | race-portrait | gap | name | padX ]
+   *
+   * All dimensions are derived from `F = SCREEN_FONT_PX * ratio` so the
+   * plate renders at a consistent on-screen size regardless of the canvas
+   * backing-store resolution. Origin and content row are pixel-snapped to
+   * kill sub-pixel shimmer as the 3D camera pans.
+   *
+   * Both tiles ALWAYS occupy a fixed-size slot. If the image hasn't
+   * finished loading (or the race is unknown), the slot draws a same-size
+   * colored fallback square so the plate dimensions never pop.
+   */
   _drawPlate (ctx, player, px, py, alpha, ratio) {
-    const race = (typeof RaceLabels !== 'undefined')
-      ? RaceLabels[player.race]
-      : null;
-    const raceTxt = race ? race.label : (player.race || '?');
+    const race   = (typeof RaceLabels !== 'undefined') ? RaceLabels[player.race] : null;
     const accent = race ? race.accent : this.FALLBACK_ACCENT;
-
-    const name = (typeof PlayerNames !== 'undefined')
+    const name   = (typeof PlayerNames !== 'undefined')
       ? PlayerNames.canonical(player.displayName)
       : player.displayName;
 
-    // Every dimension scales with the backing-store ratio so the plate has a
-    // consistent on-screen size regardless of map image resolution.
+    // dimensions
     const F        = this.SCREEN_FONT_PX * ratio;
     const padX     = Math.round(F * 0.62);
     const padY     = Math.round(F * 0.40);
     const gap      = Math.round(F * 0.55);
-    const chipPadX = Math.round(F * 0.50);
     const radius   = Math.round(F * 0.36);
     const borderW  = Math.max(1, F * 0.11);
-    const chipR    = Math.round(F * 0.22);
-    const logoOn   = this._logoReady;
-    const logoSize = logoOn ? Math.round(F * 1.20) : 0;
+    const tileSize = Math.round(F * 1.20);
+    const tileR    = Math.max(2, Math.round(tileSize * 0.18));
 
     ctx.font = `bold ${Math.ceil(F)}px Arial`;
-
-    const raceMetrics = ctx.measureText(raceTxt);
-    const raceW = raceMetrics.width;
-    const chipW = raceW + chipPadX * 2;
     const nameW = ctx.measureText(name).width;
-    const chipH = Math.round(F);
 
-    const bandH  = Math.max(chipH, logoSize);
-    const plateH = bandH + padY * 2;
-    const plateW = padX
-      + (logoOn ? logoSize + gap : 0)
-      + chipW + gap + nameW
-      + padX;
+    const plateH = tileSize + padY * 2;
+    const plateW = padX + tileSize + gap + tileSize + gap + nameW + padX;
 
-    // pixel-snap the origin + content centerline to kill sub-pixel shimmer
-    const bgX = Math.round(px - plateW / 2);
-    const bgY = Math.round(py - plateH / 2);
-    const cy  = Math.round(bgY + plateH / 2);
+    const bgX   = Math.round(px - plateW / 2);
+    const bgY   = Math.round(py - plateH / 2);
+    const cy    = Math.round(bgY + plateH / 2);
+    const tileY = Math.round(cy - tileSize / 2);
 
     ctx.globalAlpha = alpha;
 
@@ -336,7 +354,7 @@ class BaseNameplateRenderer {
     this._roundRectPath(ctx, bgX, bgY, plateW, plateH, radius);
     ctx.fill();
 
-    // (2) FULL player-color border (no single-edge stripe)
+    // (2) full player-color border
     ctx.lineWidth = borderW;
     ctx.strokeStyle = player.playerColor || '#FFFFFF';
     this._roundRectPath(ctx, bgX, bgY, plateW, plateH, radius);
@@ -344,41 +362,49 @@ class BaseNameplateRenderer {
 
     let cursorX = bgX + padX;
 
-    // (3) WC3V logo badge — drawn as-is (the PNG is already a rounded tile)
-    if (logoOn) {
-      ctx.drawImage(
-        this._logo,
-        cursorX, Math.round(cy - logoSize / 2),
-        logoSize, logoSize
-      );
-      cursorX += logoSize + gap;
-    }
+    // (3) WC3V logo tile — PNG is already a rounded purple tile, draw as-is
+    this._drawTile(ctx, cursorX, tileY, tileSize, tileR,
+                   'logo', this.LOGO_FALLBACK, /*clip=*/false);
+    cursorX += tileSize + gap;
 
-    // (4) race chip
-    const chipX = cursorX;
-    const chipY = Math.round(cy - chipH / 2);
-    ctx.fillStyle = accent;
-    this._roundRectPath(ctx, chipX, chipY, chipW, chipH, chipR);
-    ctx.fill();
+    // (4) race portrait tile — square JPG, clip to rounded rect
+    this._drawTile(ctx, cursorX, tileY, tileSize, tileR,
+                   'race:' + player.race, accent, /*clip=*/true);
+    cursorX += tileSize + gap;
 
-    // Optically center the all-caps label on the chip. The 'middle' baseline
-    // centers the em box — which counts unused descender space — leaving the
-    // caps sitting too high; center by the actual glyph box instead.
-    const rAsc  = raceMetrics.actualBoundingBoxAscent;
-    const rDesc = raceMetrics.actualBoundingBoxDescent;
-    const rOff  = (Number.isFinite(rAsc) && Number.isFinite(rDesc))
-      ? (rAsc - rDesc) / 2
-      : F * 0.36;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(raceTxt, Math.round(chipX + chipW / 2), Math.round(cy + rOff));
-
-    // (5) player name
+    // (5) player name — single text element. 'middle' baseline is the
+    // natural fit for mixed-case names; no per-glyph centering math.
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText(name, Math.round(chipX + chipW + gap), cy);
+    ctx.fillText(name, cursorX, cy);
+  }
+
+  /**
+   * Draw one square tile from the image cache. If the image isn't ready
+   * (still loading, failed, or unknown key), draw a same-size colored
+   * fallback so the plate layout stays stable. `clip` rounds the corners
+   * for a square JPG; pass false for images that already have a rounded
+   * silhouette (e.g. the WC3V logo PNG).
+   */
+  _drawTile (ctx, x, y, size, radius, key, fallback, clip) {
+    const img   = this._images[key];
+    const ready = img && this._imagesReady[key];
+    if (ready) {
+      if (clip) {
+        ctx.save();
+        this._roundRectPath(ctx, x, y, size, size, radius);
+        ctx.clip();
+        ctx.drawImage(img, x, y, size, size);
+        ctx.restore();
+      } else {
+        ctx.drawImage(img, x, y, size, size);
+      }
+      return;
+    }
+    ctx.fillStyle = fallback;
+    this._roundRectPath(ctx, x, y, size, size, radius);
+    ctx.fill();
   }
 
   _roundRectPath (ctx, x, y, w, h, r) {

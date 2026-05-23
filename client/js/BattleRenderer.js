@@ -87,16 +87,18 @@ const BattleRenderer = class {
     const color = (window.BattleCategoryColor && window.BattleCategoryColor[battle.category])
       || '#FFD166';
 
-    // Dashed rectangle.
-    ctx.setLineDash([6, 4]);
-    ctx.globalAlpha = 0.45 * alpha;
-    ctx.lineWidth = (battle.category === 'pitched-battle') ? 2.5 : 1.6;
+    // Dashed rectangle. Higher contrast than the original draft — user
+    // feedback was that the box was too subtle / too faded to read on 3D
+    // terrain.
+    ctx.setLineDash([7, 5]);
+    ctx.globalAlpha = 0.95 * alpha;
+    ctx.lineWidth = (battle.category === 'pitched-battle') ? 3.2 : 2.2;
     ctx.strokeStyle = color;
     ctx.strokeRect(x, y, w, h);
 
-    // Faint interior tint so the box reads on busy minimap.
+    // Interior tint — lifts the box off the terrain without obscuring units.
     ctx.setLineDash([]);
-    ctx.globalAlpha = 0.06 * alpha;
+    ctx.globalAlpha = 0.12 * alpha;
     ctx.fillStyle = color;
     ctx.fillRect(x, y, w, h);
 
