@@ -32,7 +32,24 @@
  */
 const TeleportFx = class {
   constructor () {
-    // No persistent state — visual is pure function of gameTime + teleport data.
+    // Preload the WC3 ability/item icons used by the cinematic banner so they
+    // render the first time a teleport fires (without this the banner shows
+    // a missing-image gap for the first ~50ms). Mirrors MapRenderer's pattern.
+    this._icons = {};
+    this._iconsReady = false;
+    const types = ['stwp', 'stel', 'AHmt', 'AEbl'];
+    let loaded = 0;
+    types.forEach(type => {
+      const img = new Image();
+      img.onload = () => {
+        this._icons[type] = img;
+        if (++loaded === types.length) this._iconsReady = true;
+      };
+      img.onerror = () => {
+        if (++loaded === types.length) this._iconsReady = true;
+      };
+      img.src = `/assets/wc3icons/${type}.jpg`;
+    });
   }
 
   render (utilityCtx, transform, gameTime, viewOptions, gameScaler, players) {
@@ -265,42 +282,81 @@ const TeleportFx = class {
     }
   }
 
+  // Larger label with a 48px WC3 icon left of the text. Two-line layout:
+  //   [icon]  HEADING (cancellable status + ability name)
+  //           subline (grabbed count, channel/instant)
   _drawBanner (ctx, ax, ay, tp, cancelled) {
-    const label = cancelled
-      ? `✕ ${tp.abilityDisplayName.toUpperCase()} CANCELLED`
-      : `⚡ ${tp.abilityDisplayName.toUpperCase()}`;
-    const sub = tp.grabbedCount > 0
-      ? `+${tp.grabbedCount} unit${tp.grabbedCount === 1 ? '' : 's'}`
-      : '';
+    const iconKey = tp.abilityCode || null;
+    const icon = (iconKey && this._icons[iconKey]) || null;
 
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
-    const labelW = ctx.measureText(label).width;
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
-    const subW = sub ? ctx.measureText(sub).width : 0;
+    const headingPrefix = cancelled ? '✕' : '⚡';
+    const headingMain = tp.abilityDisplayName.toUpperCase() + (cancelled ? ' — CANCELLED' : '');
+    const subLine = (() => {
+      const parts = [];
+      if (tp.grabbedCount > 0) {
+        parts.push(`+${tp.grabbedCount} unit${tp.grabbedCount === 1 ? '' : 's'}`);
+      }
+      if (tp.channelMs > 0) parts.push(`${(tp.channelMs / 1000).toFixed(1)}s channel`);
+      else                  parts.push('instant');
+      if (tp.invulnerable && !cancelled) parts.push('invulnerable');
+      return parts.join(' · ');
+    })();
 
-    const padX = 10, padY = 5;
-    const gap = sub ? 10 : 0;
-    const w = padX * 2 + labelW + gap + subW;
-    const h = 18 + padY * 2;
+    const iconSize = 48;
+    const headFont = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    const subFont  = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+
+    ctx.font = headFont;
+    const headPrefixW = ctx.measureText(headingPrefix + ' ').width;
+    const headMainW   = ctx.measureText(headingMain).width;
+    const headW = headPrefixW + headMainW;
+    ctx.font = subFont;
+    const subW = ctx.measureText(subLine).width;
+    const textW = Math.max(headW, subW);
+
+    const padX = 12, padY = 8, iconGap = 10;
+    const innerH = iconSize;
+    const w = padX * 2 + (icon ? iconSize + iconGap : 0) + textW;
+    const h = innerH + padY * 2;
     const x = ax - w / 2;
     const y = ay - h;
 
-    ctx.globalAlpha = 0.96;
+    // Background block.
+    ctx.globalAlpha = 0.97;
     ctx.fillStyle = 'rgba(8, 12, 18, 0.97)';
     ctx.fillRect(x, y, w, h);
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.6;
     ctx.strokeStyle = cancelled ? '#FF6B6B' : '#FFD24A';
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = cancelled ? '#FF8E8E' : '#FFE072';
-    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
-    ctx.fillText(label, x + padX, y + h / 2);
-    if (sub) {
-      ctx.fillStyle = '#cbd1d8';
-      ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
-      ctx.fillText(sub, x + padX + labelW + gap, y + h / 2);
+    // Icon — large, with a soft border so it pops on any background.
+    const textX = x + padX + (icon ? iconSize + iconGap : 0);
+    if (icon) {
+      const ix = x + padX;
+      const iy = y + padY;
+      ctx.globalAlpha = cancelled ? 0.55 : 1;
+      ctx.drawImage(icon, ix, iy, iconSize, iconSize);
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = cancelled ? '#FF6B6B' : '#FFD24A';
+      ctx.strokeRect(ix - 1, iy - 1, iconSize + 2, iconSize + 2);
     }
+
+    // Heading line — gold/red prefix glyph then white-ish heading.
+    ctx.globalAlpha = 1;
+    ctx.textBaseline = 'middle';
+    ctx.font = headFont;
+    const headY = y + padY + iconSize / 2 - 8;
+    ctx.fillStyle = cancelled ? '#FF8E8E' : '#FFE072';
+    ctx.fillText(headingPrefix + ' ', textX, headY);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(headingMain, textX + headPrefixW, headY);
+
+    // Sub line — muted detail.
+    ctx.font = subFont;
+    ctx.fillStyle = '#9aa6b0';
+    ctx.fillText(subLine, textX, y + padY + iconSize / 2 + 12);
+
     ctx.textBaseline = 'alphabetic';
   }
 };

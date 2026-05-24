@@ -48,23 +48,26 @@ const teleportAbilities = Object.freeze({
     kind: 'item',
     code: 'stwp',
     displayName: 'Scroll of Town Portal',
-    icon: 'btnscrolloftownportal',
+    icon: 'stwp',
     channelMs: 3000,
     invulnerable: true,
     cancellable: false,
     grabRadius: 900,
-    grabsHero: true,
-    grabsAlliedUnits: true,
+    grabsHero: true,                 // caster teleports
+    grabsAlliedUnits: true,          // ALL friendly units in radius — including
+                                     // other heroes. Confirmed via happy-vs-grubby
+                                     // where Lich was 265u from the casting DK
+                                     // and should have come along.
     grabsSummons: false,
-    targetType: 'allied-building',   // must target an allied structure
-    sourceAction: 'TeleportScroll'   // how Player.useAbilityWithTargetAndObjectId dispatches
+    targetType: 'allied-building',
+    sourceAction: 'TeleportScroll'
   },
 
   'stel': {
     kind: 'item',
     code: 'stel',
     displayName: 'Staff of Teleportation',
-    icon: 'btnstaffofteleportation',
+    icon: 'stel',
     channelMs: 1500,
     invulnerable: false,
     cancellable: true,
@@ -81,7 +84,7 @@ const teleportAbilities = Object.freeze({
     kind: 'ultimate',
     code: 'AHmt',
     displayName: 'Mass Teleport',
-    icon: 'btnmasstele',
+    icon: 'AHmt',
     channelMs: 3000,
     invulnerable: false,
     cancellable: true,
@@ -96,7 +99,7 @@ const teleportAbilities = Object.freeze({
     kind: 'spell',
     code: 'AEbl',
     displayName: 'Blink',
-    icon: 'btnvanish',
+    icon: 'AEbl',
     channelMs: 0,                    // 0.33s anim lock, treated as instant
     invulnerable: true,              // instant — no window to interrupt
     cancellable: false,
