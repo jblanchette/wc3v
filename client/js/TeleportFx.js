@@ -1,42 +1,40 @@
 /*
- * TeleportFx — canvas overlay rendering teleport-scroll-class casts as a
- * cinematic moment on the map.
+ * TeleportFx — cinematic teleport renderer.
  *
  * Reads each player's `teleportEvents[]` (populated by the parser's
- * Player._applyTeleport). For each event we draw three phases against the
- * current gameTime:
+ * Player._applyTeleport) and draws a multi-layer visual against the current
+ * gameTime:
  *
- *   1. CHANNEL (cast → apply)
- *      A pulsing yellow ring at the caster's origin (NOT their interpolated
- *      path position — during the channel the parser's path may show false
- *      walking samples; the cast origin is the truthful anchor). A second,
- *      smaller ring on each grabbed unit's origin position.
- *      Above the caster: a "⚡ TELEPORT SCROLL" banner with the ability name
- *      and a count of grabbed units.
+ *   1. GRAB RADIUS — faint dashed circle at the actual game-unit grab radius
+ *      around the caster. Shows what's eligible to be pulled. (Skipped for
+ *      grabRadius === 0 abilities like Blink and Staff.)
  *
- *   2. ARRIVAL FLASH (apply → apply+800ms)
- *      A bright expanding circle at the destination, fades quickly. Conveys
- *      "this is where they landed".
+ *   2. HERO RING — bright primary ring at the caster's origin (NOT
+ *      path-interpolated; during the channel the parser's path may show false
+ *      walking samples — the cast origin is the truthful anchor).
+ *      Surrounded by a radial glow gradient. A channel-progress arc fills
+ *      clockwise outside the main ring as the 3s channel completes.
  *
- *   3. POST (apply+800 → apply+3000ms)
- *      A faint trail line origin→destination, fading out. Helps the eye trace
- *      what happened if the user scrubs past quickly.
+ *   3. UNIT RINGS — smaller secondary rings on each grabbed unit's origin.
+ *      Looked up by uuid via ClientUnit.getInterpolatedPosition(castTime).
+ *      Synced pulse with the hero ring so the user sees the WHOLE squad is
+ *      being teleported, not just the hero.
  *
- * Cancelled casts (cancellable abilities interrupted by stun/silence) get the
- * channel ring but no arrival flash; a red "✕ CANCELLED" tag replaces the
- * normal banner near the end of the channel window.
+ *   4. BANNER — "⚡ SCROLL OF TOWN PORTAL  +N units" centered above the ring.
+ *      Red and "✕ CANCELLED" when cancellable cast was interrupted.
  *
- * Drawn on `#utility-canvas` (same layer as BattleRenderer + camp rings).
+ *   5. ARRIVAL FLASH — at apply: a bright expanding shockwave ring at the
+ *      destination + a brief inner solid flash. Bigger than v1.
+ *
+ *   6. TRAIL — faint dashed origin → destination line, fading over 3s post.
+ *
+ * Drawn on #utility-canvas (same layer as BattleRenderer + camp rings).
  */
 const TeleportFx = class {
   constructor () {
-    // Reuse the same icons BattleRenderer loaded (no duplicate fetches).
-    // The actual lookup happens at render time via window.wc3v.battleRenderer._icons.
+    // No persistent state — visual is pure function of gameTime + teleport data.
   }
 
-  // gameTime in ms, gameScaler: standard, processedBattles: optional but we
-  // don't strictly need it. players is the array of ClientPlayer used by
-  // Wc3vViewer.
   render (utilityCtx, transform, gameTime, viewOptions, gameScaler, players) {
     if (!viewOptions || viewOptions.displayTeleports === false) return;
     if (!players || !players.length) return;
@@ -54,17 +52,15 @@ const TeleportFx = class {
     };
 
     for (const player of players) {
-      const tps = (player.raw && player.raw.teleportEvents) || player.teleportEvents || [];
+      const tps = player.teleportEvents || [];
       if (!tps.length) continue;
       for (const tp of tps) {
-        // Visibility window: cast time → apply (+postroll) for normal, or
-        // cast → cast+channel for cancelled.
         const cast = tp.gameTime;
         const apply = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
         const fadeEnd = (tp.cancelled ? (cast + tp.channelMs) : apply) + POSTROLL_MS;
         if (gameTime < cast - 200) continue;
         if (gameTime > fadeEnd) continue;
-        this._drawTeleport(utilityCtx, gameScaler, gameTime, tp);
+        this._drawTeleport(utilityCtx, gameScaler, gameTime, tp, players);
       }
     }
 
@@ -77,76 +73,189 @@ const TeleportFx = class {
     utilityCtx.restore();
   }
 
-  _drawTeleport (ctx, gameScaler, gameTime, tp) {
-    const middleX = gameScaler.middleX;
-    const middleY = gameScaler.middleY;
-    const proj = (x, y) => {
-      const p = gameScaler.projectXY(x, y);
-      return { x: p.x + middleX, y: p.y + middleY };
-    };
+  // Project a game-space point to canvas pixels — same recipe MapRenderer +
+  // BattleRenderer use (projectXY samples 3D terrain height, then add middleX/Y).
+  _proj (gameScaler, x, y) {
+    const p = gameScaler.projectXY(x, y);
+    return { x: p.x + gameScaler.middleX, y: p.y + gameScaler.middleY };
+  }
 
+  // Convert a game-unit radius into screen pixels at the caster's location.
+  // Uses two projected points to capture per-perspective distortion correctly.
+  _radiusPx (gameScaler, originX, originY, gameRadius) {
+    if (!gameRadius || gameRadius <= 0) return 0;
+    const a = gameScaler.projectXY(originX, originY);
+    const b = gameScaler.projectXY(originX + gameRadius, originY);
+    return Math.max(8, Math.abs(b.x - a.x));
+  }
+
+  // Look up a grabbed unit's position at castTime via ClientUnit's path.
+  // Returns null if the unit isn't found (cross-player ID collision shouldn't
+  // happen but we guard).
+  _grabbedUnitPos (players, uuid, castTime) {
+    for (const player of players) {
+      if (!player.units) continue;
+      for (const u of player.units) {
+        if (u.uuid !== uuid) continue;
+        if (typeof u.getInterpolatedPosition === 'function') {
+          return u.getInterpolatedPosition(castTime);
+        }
+        // Fallback: nearest path sample by gameTime.
+        const path = u.path || [];
+        if (!path.length) return null;
+        let best = path[0];
+        let bestD = Math.abs(path[0].gameTime - castTime);
+        for (const s of path) {
+          const d = Math.abs(s.gameTime - castTime);
+          if (d < bestD) { best = s; bestD = d; }
+        }
+        return { x: best.x, y: best.y };
+      }
+    }
+    return null;
+  }
+
+  _drawTeleport (ctx, gameScaler, gameTime, tp, players) {
     const cast = tp.gameTime;
     const apply = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
     const channelMs = Math.max(1, apply - cast);
-
     const inChannel = gameTime >= cast && gameTime < apply;
     const postApply = gameTime >= apply;
     const cancelled = !!tp.cancelled;
 
-    const oPx = proj(tp.origin.x, tp.origin.y);
-    const dPx = proj(tp.destination.x, tp.destination.y);
+    const oPx = this._proj(gameScaler, tp.origin.x, tp.origin.y);
+    const dPx = this._proj(gameScaler, tp.destination.x, tp.destination.y);
 
-    // --- Channel ring at origin --------------------------------------------
+    // Grab radius from the registry (defaults below cover Scroll/MT/Blink).
+    const grabRadius = tp.abilityCode === 'stwp' ? 900
+                     : tp.abilityCode === 'AHmt' ? 800
+                     : 0;
+    const grabPx = this._radiusPx(gameScaler, tp.origin.x, tp.origin.y, grabRadius);
+
+    // ────────────────────────────────────────────────────────────────────
+    // CHANNEL phase
+    // ────────────────────────────────────────────────────────────────────
     if (inChannel || (cancelled && gameTime < cast + tp.channelMs)) {
-      const t = Math.min(1, (gameTime - cast) / channelMs);
-      // Pulsing radius: 38px ± a bit of breathing.
-      const r = 32 + 6 * Math.sin((gameTime - cast) / 80);
-      ctx.globalAlpha = 0.9;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = cancelled ? '#FF6B6B' : '#FFD24A';
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.arc(oPx.x, oPx.y, r, 0, Math.PI * 2);
-      ctx.stroke();
-      // Inner fill — fills as channel progresses (winds up like an hourglass).
-      ctx.globalAlpha = 0.15 + 0.25 * t;
-      ctx.fillStyle = cancelled ? '#FF6B6B' : '#FFD24A';
-      ctx.beginPath();
-      ctx.arc(oPx.x, oPx.y, r * 0.75, 0, Math.PI * 2);
-      ctx.fill();
+      const tProg = Math.min(1, (gameTime - cast) / channelMs);
+      const color = cancelled ? '#FF6B6B' : '#FFD24A';
+      const colorBright = cancelled ? '#FF8E8E' : '#FFE072';
 
-      // Banner above the caster.
-      this._drawBanner(ctx, oPx.x, oPx.y - r - 6, tp, cancelled, t);
-    }
-
-    // --- Arrival flash at destination --------------------------------------
-    if (postApply && !cancelled) {
-      const since = gameTime - apply;
-      const FLASH_MS = 800;
-      if (since <= FLASH_MS) {
-        const tf = since / FLASH_MS;          // 0 → 1
-        const r = 16 + 56 * tf;
-        ctx.globalAlpha = 0.85 * (1 - tf);
-        ctx.lineWidth = 4 * (1 - tf * 0.5);
-        ctx.strokeStyle = '#FFE072';
+      // 1) GRAB RADIUS — faint dashed circle showing eligibility footprint.
+      if (grabPx > 30 && !cancelled) {
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = color;
+        ctx.setLineDash([6, 8]);
         ctx.beginPath();
-        ctx.arc(dPx.x, dPx.y, r, 0, Math.PI * 2);
+        ctx.arc(oPx.x, oPx.y, grabPx, 0, Math.PI * 2);
         ctx.stroke();
-        ctx.globalAlpha = 0.5 * (1 - tf);
-        ctx.fillStyle = '#FFE072';
-        ctx.beginPath();
-        ctx.arc(dPx.x, dPx.y, r * 0.6, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.setLineDash([]);
       }
 
-      // --- Faint trail line origin → destination ---------------------------
+      // 2) RADIAL GLOW around the caster — soft halo that grows over the channel.
+      const mainR = 60;
+      const glowR = mainR * (1.6 + 0.2 * tProg);
+      const glow = ctx.createRadialGradient(
+        oPx.x, oPx.y, mainR * 0.4,
+        oPx.x, oPx.y, glowR
+      );
+      glow.addColorStop(0, cancelled ? 'rgba(255, 107, 107, 0.45)' : 'rgba(255, 210, 74, 0.55)');
+      glow.addColorStop(0.6, cancelled ? 'rgba(255, 107, 107, 0.15)' : 'rgba(255, 210, 74, 0.18)');
+      glow.addColorStop(1, 'rgba(255, 210, 74, 0)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(oPx.x, oPx.y, glowR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3) PRIMARY RING — bold, bright.
+      ctx.globalAlpha = 0.95;
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = colorBright;
+      ctx.beginPath();
+      ctx.arc(oPx.x, oPx.y, mainR, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 4) CHANNEL PROGRESS ARC — fills clockwise from 12 o'clock around the
+      //    primary ring as the 3-second channel completes.
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 7;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.arc(oPx.x, oPx.y, mainR + 10, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * tProg);
+      ctx.stroke();
+
+      // 5) PER-UNIT RINGS — small synced ring on each grabbed unit.
+      const pulse = 0.7 + 0.3 * Math.sin((gameTime - cast) / 90);
+      ctx.globalAlpha = 0.9 * pulse;
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = colorBright;
+      ctx.setLineDash([]);
+      for (const uuid of (tp.grabbedUnitUuids || [])) {
+        const pos = this._grabbedUnitPos(players, uuid, cast);
+        if (!pos) continue;
+        const gp = this._proj(gameScaler, pos.x, pos.y);
+        // Skip if the unit ring would overlap the caster ring (visual clutter).
+        const dx = gp.x - oPx.x;
+        const dy = gp.y - oPx.y;
+        if ((dx * dx + dy * dy) < (mainR * mainR * 0.5)) continue;
+        ctx.beginPath();
+        ctx.arc(gp.x, gp.y, 24, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // 6) BANNER above the ring.
+      this._drawBanner(ctx, oPx.x, oPx.y - mainR - 14, tp, cancelled);
+    }
+
+    // ────────────────────────────────────────────────────────────────────
+    // ARRIVAL phase
+    // ────────────────────────────────────────────────────────────────────
+    if (postApply && !cancelled) {
+      const since = gameTime - apply;
+
+      // FLASH — bright expanding shockwave at destination. Multi-ring so it
+      // reads as an impact, not just a single circle.
+      const FLASH_MS = 1000;
+      if (since <= FLASH_MS) {
+        const tf = since / FLASH_MS;
+
+        // Outer shockwave
+        const ringR = 30 + 90 * tf;
+        ctx.globalAlpha = 0.85 * (1 - tf);
+        ctx.lineWidth = 5 * (1 - tf * 0.7);
+        ctx.strokeStyle = '#FFE072';
+        ctx.beginPath();
+        ctx.arc(dPx.x, dPx.y, ringR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner solid burst
+        const innerR = 18 + 30 * tf;
+        ctx.globalAlpha = 0.6 * (1 - tf);
+        ctx.fillStyle = '#FFE072';
+        ctx.beginPath();
+        ctx.arc(dPx.x, dPx.y, innerR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bright pinprick at center for first 250ms
+        if (since < 250) {
+          const tfp = since / 250;
+          ctx.globalAlpha = 1 - tfp;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(dPx.x, dPx.y, 12 * (1 - tfp * 0.4), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // TRAIL — dashed origin→destination, fading over 3s.
       const POST_TAIL_MS = 3000;
       if (since <= POST_TAIL_MS) {
-        const tt = since / POST_TAIL_MS;       // 0 → 1
-        ctx.globalAlpha = 0.4 * (1 - tt);
-        ctx.lineWidth = 2;
+        const tt = since / POST_TAIL_MS;
+        ctx.globalAlpha = 0.5 * (1 - tt);
+        ctx.lineWidth = 2.2;
         ctx.strokeStyle = '#FFD24A';
-        ctx.setLineDash([4, 6]);
+        ctx.setLineDash([5, 7]);
         ctx.beginPath();
         ctx.moveTo(oPx.x, oPx.y);
         ctx.lineTo(dPx.x, dPx.y);
@@ -156,7 +265,7 @@ const TeleportFx = class {
     }
   }
 
-  _drawBanner (ctx, ax, ay, tp, cancelled, t) {
+  _drawBanner (ctx, ax, ay, tp, cancelled) {
     const label = cancelled
       ? `✕ ${tp.abilityDisplayName.toUpperCase()} CANCELLED`
       : `⚡ ${tp.abilityDisplayName.toUpperCase()}`;
@@ -164,32 +273,32 @@ const TeleportFx = class {
       ? `+${tp.grabbedCount} unit${tp.grabbedCount === 1 ? '' : 's'}`
       : '';
 
-    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
     const labelW = ctx.measureText(label).width;
-    ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
     const subW = sub ? ctx.measureText(sub).width : 0;
 
-    const padX = 8, padY = 4;
-    const gap = sub ? 8 : 0;
+    const padX = 10, padY = 5;
+    const gap = sub ? 10 : 0;
     const w = padX * 2 + labelW + gap + subW;
-    const h = 17 + padY * 2;
+    const h = 18 + padY * 2;
     const x = ax - w / 2;
     const y = ay - h;
 
-    ctx.globalAlpha = 0.95;
-    ctx.fillStyle = 'rgba(8, 12, 18, 0.96)';
+    ctx.globalAlpha = 0.96;
+    ctx.fillStyle = 'rgba(8, 12, 18, 0.97)';
     ctx.fillRect(x, y, w, h);
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.strokeStyle = cancelled ? '#FF6B6B' : '#FFD24A';
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
     ctx.textBaseline = 'middle';
     ctx.fillStyle = cancelled ? '#FF8E8E' : '#FFE072';
-    ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
     ctx.fillText(label, x + padX, y + h / 2);
     if (sub) {
       ctx.fillStyle = '#cbd1d8';
-      ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+      ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
       ctx.fillText(sub, x + padX + labelW + gap, y + h / 2);
     }
     ctx.textBaseline = 'alphabetic';
