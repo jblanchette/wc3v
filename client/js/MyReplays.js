@@ -325,6 +325,12 @@ const MyReplays = class {
     const oppPlayer = pickOpponent(record, userPlayer);
     const userRace = (userPlayer && userPlayer.race) || record.race || 'R';
     const oppRace = (oppPlayer && oppPlayer.race) || 'R';
+    // Team-grouped player list — works for 1v1, 2v2, 3v3, 4v4, FFA. See
+    // buildTeams. For 1v1 this produces two single-player teams; the same
+    // template handles all formats.
+    const teams = buildTeams(record, userPlayer);
+    const isTeamGame = teams.some(t => t.players.length > 1);
+    const isMultiSide = teams.length > 2;
 
     // Timing pills + archetype come from the parsed JSON. Fallback gracefully
     // when fields are missing (older records).
@@ -355,6 +361,42 @@ const MyReplays = class {
     const mapSrc = mapDir ? `/maps/${encodeURIComponent(mapDir)}/gridmap.jpg` : '';
     const bannerSrc = `/assets/race-banners/${userRace}.jpg`;
 
+    // Build the races + names rows from the team grouping. Falls back to the
+    // legacy 1v1 layout when teams resolution failed (older records).
+    const renderRaces = (() => {
+      if (!teams.length) {
+        // Legacy single-pair fallback.
+        return `<span class="rep-card-race-badge race-${userRace}">${RACE_LABEL[userRace] || userRace}</span>` +
+               `<span class="rep-card-vs">vs</span>` +
+               `<span class="rep-card-race-badge race-${oppRace} rep-card-opp">${RACE_LABEL[oppRace] || oppRace}</span>`;
+      }
+      return teams.map(team => {
+        const badges = team.players.map(p => {
+          const oppCls = team.isUserTeam ? '' : ' rep-card-opp';
+          return `<span class="rep-card-race-badge race-${p.race}${oppCls}">${RACE_LABEL[p.race] || p.race}</span>`;
+        }).join('');
+        return badges;
+      }).join('<span class="rep-card-vs">vs</span>');
+    })();
+
+    const renderNames = (() => {
+      if (!teams.length) {
+        // Legacy single-pair fallback.
+        return `<strong>${safePlayerName((userPlayer && PlayerNames.canonical(userPlayer.name)) || 'You')}</strong>` +
+               `<span class="rep-card-vs-text">vs</span>` +
+               `<span>${safePlayerName((oppPlayer && PlayerNames.canonical(oppPlayer.name)) || 'Opponent')}</span>`;
+      }
+      const sep = isMultiSide ? '<span class="rep-card-vs-text rep-card-vs-text-ffa">vs</span>'
+                              : '<span class="rep-card-vs-text">vs</span>';
+      return teams.map(team => {
+        const names = team.players.map(p => {
+          const canonical = safePlayerName(PlayerNames.canonical(p.name) || (p.isUser ? 'You' : 'Player'));
+          return p.isUser ? `<strong>${canonical}</strong>` : `<span>${canonical}</span>`;
+        }).join('<span class="rep-card-name-join"> + </span>');
+        return names;
+      }).join(sep);
+    })();
+
     card.innerHTML = `
       <div class="rep-card-bg" aria-hidden="true">
         <div class="rep-card-banner" style="background-image: url('${escapeAttr(bannerSrc)}')"></div>
@@ -365,10 +407,8 @@ const MyReplays = class {
 
       <div class="rep-card-fg">
         <header class="rep-card-head">
-          <div class="rep-card-races">
-            <span class="rep-card-race-badge race-${userRace}">${RACE_LABEL[userRace] || userRace}</span>
-            <span class="rep-card-vs">vs</span>
-            <span class="rep-card-race-badge race-${oppRace} rep-card-opp">${RACE_LABEL[oppRace] || oppRace}</span>
+          <div class="rep-card-races${isTeamGame ? ' rep-card-races-team' : ''}${isMultiSide ? ' rep-card-races-ffa' : ''}">
+            ${renderRaces}
           </div>
           <div class="rep-card-head-right">
             <span class="rep-card-mode-badge${gameMode === '1v1' ? '' : ' rep-card-mode-multi'}" title="${gameMode === '1v1' ? '1v1 ladder game' : escapeAttr(gameModeLabel) + ' game — viewable but not graded against pros'}">${escapeHtml(gameModeLabel)}</span>
@@ -381,10 +421,8 @@ const MyReplays = class {
         </header>
 
         <div class="rep-card-meta">
-          <div class="rep-card-players">
-            <strong>${safePlayerName((userPlayer && PlayerNames.canonical(userPlayer.name)) || 'You')}</strong>
-            <span class="rep-card-vs-text">vs</span>
-            <span>${safePlayerName((oppPlayer && PlayerNames.canonical(oppPlayer.name)) || 'Opponent')}</span>
+          <div class="rep-card-players${isTeamGame ? ' rep-card-players-team' : ''}${isMultiSide ? ' rep-card-players-ffa' : ''}">
+            ${renderNames}
           </div>
           <div class="rep-card-map-line">${escapeHtml(mapDisplay)} · ${escapeHtml(durStr)} · ${escapeHtml(ageStr)}</div>
         </div>
@@ -771,6 +809,50 @@ const pickOpponent = (record, userPlayer) => {
   const all = (record.players || []).filter(p => p && typeof p.slot === 'number' && p.slot < 24);
   if (!userPlayer) return all[0] || null;
   return all.find(p => p.slot !== userPlayer.slot) || null;
+};
+
+// Group the record's real players by team for non-1v1 cards. Returns
+// [{ teamId, isUserTeam, players:[{name, race, slot, isUser}] }, ...] with
+// the user's team first, then other teams sorted by teamId. FFA assigns
+// each player a distinct teamId, so it naturally produces one-player teams
+// — the same renderer handles 1v1 / 2v2 / 3v3 / 4v4 / FFA without branches.
+const buildTeams = (record, userPlayer) => {
+  const all = (record.players || []).filter(p => p && typeof p.slot === 'number' && p.slot < 24);
+  if (!all.length) return [];
+  const byTeam = new Map();
+  for (const p of all) {
+    const tid = p.teamId != null ? p.teamId : p.slot;   // FFA: distinct slots → distinct teams
+    if (!byTeam.has(tid)) byTeam.set(tid, []);
+    byTeam.get(tid).push(p);
+  }
+  const userTeamId = userPlayer
+    ? (userPlayer.teamId != null ? userPlayer.teamId : userPlayer.slot)
+    : null;
+  const teams = [...byTeam.entries()].map(([teamId, players]) => {
+    // Within a team, put the user's slot first.
+    players.sort((a, b) => {
+      const au = userPlayer && a.slot === userPlayer.slot ? 0 : 1;
+      const bu = userPlayer && b.slot === userPlayer.slot ? 0 : 1;
+      if (au !== bu) return au - bu;
+      return a.slot - b.slot;
+    });
+    return {
+      teamId,
+      isUserTeam: userTeamId != null && teamId === userTeamId,
+      players: players.map(p => ({
+        name: p.name || '',
+        race: p.race || 'R',
+        slot: p.slot,
+        isUser: !!(userPlayer && p.slot === userPlayer.slot)
+      }))
+    };
+  });
+  teams.sort((a, b) => {
+    if (a.isUserTeam && !b.isUserTeam) return -1;
+    if (!a.isUserTeam && b.isUserTeam) return 1;
+    return a.teamId - b.teamId;
+  });
+  return teams;
 };
 
 // Extract timing + archetype from parsedJson for the user's slot. Walks

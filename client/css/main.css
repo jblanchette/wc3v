@@ -313,7 +313,7 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 2.25rem;
+  height: 2.85rem;
   /* z-index 60: must beat #main-wrapper's stacking-context (z 1) AND any
    * popups/canvas overlays inside it. Scrubber controls + their modals
    * (speed picker, settings menu, zoom slider) MUST sit above everything
@@ -377,7 +377,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 2.25rem;
+  bottom: 2.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -922,15 +922,15 @@ body {
 
 .gh {
   position: fixed;
-  /* Hug the left edge (over the BO panel) and sit just above the 2.25rem
+  /* Hug the left edge (over the BO panel) and sit just above the 2.85rem
      scrubber. The BO panel is always ≥660px wide in desktop layouts, so a
      ~620px card at left:12px never spills over onto the map. The max-height
      leaves room for the sticky nav up top and the scrubber down bottom. */
   left: 12px;
-  bottom: calc(2.25rem + 8px);
+  bottom: calc(2.85rem + 8px);
   z-index: 1100;
   width: min(620px, calc(100vw - 24px));
-  max-height: calc(100vh - 2.25rem - 80px);
+  max-height: calc(100vh - 2.85rem - 80px);
   display: flex; flex-direction: column;
   background: linear-gradient(180deg, #1e2335 0%, #181c2b 100%);
   border: 1px solid rgba(111,193,138,0.45);
@@ -4901,7 +4901,7 @@ body {
   align-items: center;
   position: relative;
   top: 0rem;
-  height: 2.25rem;
+  height: 2.85rem;
   border-top: 1px solid #2a3a45;
   background-color: #1a2830;
   cursor: pointer;
@@ -5001,6 +5001,48 @@ body {
   background-color: #FFF;
   border: 2px solid #000;
   border-radius: 100%;
+}
+
+/* Quarter-time guide markers — subtle ticks through the track at 1/4, 1/2, 3/4
+ * with a pie-fill icon and minute label below. Read-only references; do not
+ * intercept clicks. Rendered by TimeScrubber.setTimeGuides. */
+.scrubber-tg-marker {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.scrubber-tg-tick {
+  width: 1.5px;
+  height: 0.75rem; /* match .time-scrubber-track height exactly */
+  background: rgba(255, 255, 255, 0.22);
+  flex-shrink: 0;
+}
+.scrubber-tg-icon {
+  width: 10px;
+  height: 10px;
+  margin-top: 3px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: conic-gradient(
+    rgba(255, 255, 255, 0.75) 0 calc(var(--fill) * 100%),
+    transparent calc(var(--fill) * 100%) 100%
+  );
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+.scrubber-tg-label {
+  margin-top: 1px;
+  font: 11px Verdana;
+  font-weight: 600;
+  color: rgba(220, 230, 240, 0.65);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Battle scrubber markers — coloured DOM bars over the scrubber track for each
@@ -5142,7 +5184,7 @@ body {
   display: none;
   position: absolute;
   right: 0;
-  bottom: 2.25rem;
+  bottom: 2.85rem;
   min-width: 10rem;
   padding: 0.5rem;
   background-color: #1a2830;
@@ -13772,6 +13814,23 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
+}
+/* Team game variant: race badges of the same team sit flush (no gap),
+ * with the "vs" separator providing visual break between sides.
+ * Engaged when the rep has at least one team of 2+ players. */
+.rep-card-races-team {
+  gap: 4px;
+}
+.rep-card-races-team .rep-card-race-badge + .rep-card-race-badge {
+  margin-left: -2px;   /* slight overlap so a 4-stack reads as one cluster */
+}
+.rep-card-races-team .rep-card-vs {
+  margin: 0 6px;
+}
+/* FFA variant: badges separated by "vs", no team grouping. */
+.rep-card-races-ffa .rep-card-vs {
+  margin: 0 4px;
 }
 /* Right cluster of the card header: game-format badge + grade/reference
    badge, pinned to the top-right corner. */
@@ -13862,6 +13921,27 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
 }
 .rep-card-players strong { font-weight: 700; }
 .rep-card-vs-text { color: #888; font-weight: 400; margin: 0 4px; }
+.rep-card-name-join { color: #888; font-weight: 400; margin: 0 2px; }
+/* Team game / FFA variants need to wrap across lines so 3v3 / 4v4 / 8-player
+ * FFA player names fit in the card without ellipsing the whole roster. */
+.rep-card-players-team,
+.rep-card-players-ffa {
+  white-space: normal;
+  line-height: 1.35;
+  overflow: visible;
+  text-overflow: clip;
+  font-size: 0.92rem;
+}
+/* FFA cards can have a lot of "vs" separators — give them a touch more
+ * weight so the row reads as N players, not a single sentence. */
+.rep-card-players-ffa .rep-card-vs-text-ffa {
+  color: #888;
+  margin: 0 6px;
+  font-weight: 600;
+  font-size: 0.7em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 .rep-card-map-line {
   font-size: 0.82rem;
   color: #aaa;
