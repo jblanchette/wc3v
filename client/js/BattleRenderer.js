@@ -180,6 +180,12 @@ const BattleRenderer = class {
 
     const tripChips = this._summarizeTrips(battle);   // [{ iconKey, count, fallbackGlyph }]
     const pdCount = this._possiblyDeadCount(battle);
+    // Battle-vs-teleport linkage chips (BattleData pre-computed these).
+    //   ⚡→N TP arrivals INTO this battle (reinforcements)
+    //   ⚡←N TP departures FROM this battle (escapes)
+    // Hidden when zero.
+    const tpInCount  = battle._tpInUnits  || 0;
+    const tpOutCount = battle._tpOutUnits || 0;
 
     // Trip chip metrics
     const iconSize = 16;
@@ -195,6 +201,14 @@ const BattleRenderer = class {
     }
     if (tripChips.length) tripChipsW -= chipGap;   // last chip no trailing gap
 
+    // TP chip metrics
+    let tpInChipW = 0, tpOutChipW = 0;
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    if (tpInCount > 0)  tpInChipW  = ctx.measureText(`⚡→${tpInCount}`).width + 8;
+    if (tpOutCount > 0) tpOutChipW = ctx.measureText(`⚡←${tpOutCount}`).width + 8;
+    const gapTpIn  = tpInCount  > 0 ? 10 : 0;
+    const gapTpOut = tpOutCount > 0 ? 10 : 0;
+
     // Possibly-dead chip
     let pdChipW = 0;
     if (pdCount > 0) {
@@ -209,7 +223,8 @@ const BattleRenderer = class {
     const gapDots = teamColors.length ? 10 : 0;
     const gapTrips = tripChips.length ? 12 : 0;
     const gapPd = pdCount > 0 ? 12 : 0;
-    const bannerW = padX * 2 + headW + gapMid + timeW + gapDots + dotsW + gapTrips + tripChipsW + gapPd + pdChipW;
+    const bannerW = padX * 2 + headW + gapMid + timeW + gapDots + dotsW + gapTrips + tripChipsW +
+                    gapTpIn + tpInChipW + gapTpOut + tpOutChipW + gapPd + pdChipW;
     const bannerH = Math.max(iconSize, 14) + padY * 2;
     const bannerX = x;
     const bannerY = Math.max(0, y - bannerH - 3);
@@ -272,6 +287,23 @@ const BattleRenderer = class {
       cx += chip._textWidth + chipGap;
     }
     if (tripChips.length) cx -= chipGap;
+
+    // --- TP-in / TP-out chips ---
+    // ⚡→N is a "reinforcement landed" chip — units arrived via teleport during
+    // this battle. ⚡←N is "someone escaped" — units left via teleport.
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    if (tpInCount > 0) {
+      cx += gapTpIn;
+      ctx.fillStyle = '#FFE072';   // gold — same family as the TP cinematic
+      ctx.fillText(`⚡→${tpInCount}`, cx, midY);
+      cx += tpInChipW - 8;          // subtract the +8 padding from measure
+    }
+    if (tpOutCount > 0) {
+      cx += gapTpOut;
+      ctx.fillStyle = '#9aa6b0';   // muted — escape is less urgent than arrival
+      ctx.fillText(`⚡←${tpOutCount}`, cx, midY);
+      cx += tpOutChipW - 8;
+    }
 
     // --- possibly-dead chip ---
     if (pdCount > 0) {

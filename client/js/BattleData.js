@@ -18,6 +18,49 @@ const BattleData = class {
     const byId = Object.create(null);
     for (const b of battles) byId[b.id] = b;
 
+    // Pre-compute TP-in / TP-out counts for each battle. A TP is:
+    //   TP-IN  if its destination lands inside the battle's outerBbox AND its
+    //          arrival falls within [startTime, endTime + 4000].
+    //   TP-OUT if its origin sits inside the outerBbox AND its cast falls
+    //          within [startTime - 1000, endTime].
+    // The banner renders compact chips: ⚡→N (in) and ⚡←N (out).
+    const allTeleports = [];
+    if (mapData && mapData.players) {
+      for (const [pid, p] of Object.entries(mapData.players)) {
+        if (p.isNeutralPlayer) continue;
+        for (const tp of (p.teleportEvents || [])) {
+          allTeleports.push({ ...tp, _playerId: pid });
+        }
+      }
+    }
+    const inBox = (x, y, b) => b && b.outerBbox &&
+      x >= b.outerBbox.minX && x <= b.outerBbox.maxX &&
+      y >= b.outerBbox.minY && y <= b.outerBbox.maxY;
+    for (const b of battles) {
+      b._tpIn  = 0;
+      b._tpOut = 0;
+      b._tpInUnits  = 0;
+      b._tpOutUnits = 0;
+      for (const tp of allTeleports) {
+        if (tp.cancelled) continue;
+        const applyT = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
+        // TP-IN
+        if (tp.destination &&
+            inBox(tp.destination.x, tp.destination.y, b) &&
+            applyT >= b.startTime - 500 && applyT <= b.endTime + 4000) {
+          b._tpIn += 1;
+          b._tpInUnits += (tp.grabbedCount || 0) + 1;
+        }
+        // TP-OUT
+        if (tp.origin &&
+            inBox(tp.origin.x, tp.origin.y, b) &&
+            tp.gameTime >= b.startTime - 1000 && tp.gameTime <= b.endTime) {
+          b._tpOut += 1;
+          b._tpOutUnits += (tp.grabbedCount || 0) + 1;
+        }
+      }
+    }
+
     // Window during which a battle is considered "active" for overlay purposes.
     // Slight pre-roll fades the box in just before the first signal; the post-
     // roll lets the box linger briefly so a snap-disappear at endTime doesn't
