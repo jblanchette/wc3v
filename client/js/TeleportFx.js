@@ -68,6 +68,11 @@ const TeleportFx = class {
       dash: utilityCtx.getLineDash()
     };
 
+    // Collect every active TP first, then group ones sharing a destination so
+    // their mirror indicators merge. Caster-side overlays (ring/banner/trail)
+    // remain per-TP — each hero channels independently. Only the destination
+    // indicator counts up.
+    const active = [];
     for (const player of players) {
       const tps = player.teleportEvents || [];
       if (!tps.length) continue;
@@ -77,8 +82,31 @@ const TeleportFx = class {
         const fadeEnd = (tp.cancelled ? (cast + tp.channelMs) : apply) + POSTROLL_MS;
         if (gameTime < cast - 200) continue;
         if (gameTime > fadeEnd) continue;
-        this._drawTeleport(utilityCtx, gameScaler, gameTime, tp, players);
+        active.push(tp);
       }
+    }
+    if (!active.length) {
+      // restore + return
+      utilityCtx.setLineDash(restore.dash);
+      utilityCtx.globalAlpha = restore.alpha;
+      utilityCtx.strokeStyle = restore.stroke;
+      utilityCtx.fillStyle = restore.fill;
+      utilityCtx.font = restore.font;
+      utilityCtx.lineWidth = restore.lw;
+      utilityCtx.restore();
+      return;
+    }
+
+    // Build destination groups (by destBuildingUuid OR proximity within 200u).
+    // Each group → one merged destination indicator.
+    const destGroups = this._groupByDestination(active);
+    // Mark which TPs share a group so per-TP destination indicators can skip.
+    const tpToGroup = new Map();
+    for (const g of destGroups) for (const tp of g.tps) tpToGroup.set(tp, g);
+
+    for (const tp of active) {
+      const group = tpToGroup.get(tp);
+      this._drawTeleport(utilityCtx, gameScaler, gameTime, tp, players, group);
     }
 
     utilityCtx.setLineDash(restore.dash);
@@ -132,7 +160,46 @@ const TeleportFx = class {
     return null;
   }
 
-  _drawTeleport (ctx, gameScaler, gameTime, tp, players) {
+  // Cluster active TPs by destination. Two TPs share a group if either:
+  //   (a) they share a non-null destBuildingUuid, OR
+  //   (b) their destination points are within 200 game units of each other.
+  // Output: array of { tps:[], leaderTp, totalIncomingUnits, destX, destY }.
+  // `leaderTp` is the earliest-cast TP in the group — that one owns the
+  // destination indicator (others skip drawing it to avoid stacking).
+  _groupByDestination (tps) {
+    const groups = [];
+    const PROX_SQ = 200 * 200;
+    for (const tp of tps) {
+      if (!tp.destination) continue;
+      let placed = false;
+      for (const g of groups) {
+        const same =
+          (tp.destBuildingUuid && g.destBuildingUuid && tp.destBuildingUuid === g.destBuildingUuid) ||
+          (g.destX != null && g.destY != null && tp.destination &&
+            ((tp.destination.x - g.destX) ** 2 + (tp.destination.y - g.destY) ** 2 <= PROX_SQ));
+        if (same) {
+          g.tps.push(tp);
+          g.totalIncomingUnits += (tp.grabbedCount || 0) + 1;
+          if (tp.gameTime < g.leaderTp.gameTime) g.leaderTp = tp;
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) {
+        groups.push({
+          tps: [tp],
+          leaderTp: tp,
+          destBuildingUuid: tp.destBuildingUuid || null,
+          destX: tp.destination.x,
+          destY: tp.destination.y,
+          totalIncomingUnits: (tp.grabbedCount || 0) + 1
+        });
+      }
+    }
+    return groups;
+  }
+
+  _drawTeleport (ctx, gameScaler, gameTime, tp, players, group) {
     const cast = tp.gameTime;
     const apply = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
     const channelMs = Math.max(1, apply - cast);
@@ -239,11 +306,13 @@ const TeleportFx = class {
         ctx.setLineDash([]);
       }
 
-      // 7) DESTINATION MIRROR INDICATOR — small ring + WC3 icon + "INCOMING"
-      //    label at the target so users know WHERE the squad is heading
-      //    before they arrive. Dota 2's TP-in indicator inspiration.
-      if (!cancelled) {
-        this._drawDestinationIndicator(ctx, dPx.x, dPx.y, tp, gameTime, cast, channelMs);
+      // 7) DESTINATION MIRROR INDICATOR — only drawn ONCE per group (by the
+      //    earliest-cast TP). Subsequent TPs sharing the same destination
+      //    skip this so we don't stack indicators on top of each other.
+      const isGroupLeader = !group || group.leaderTp === tp;
+      if (!cancelled && isGroupLeader) {
+        const totalIncoming = group ? group.totalIncomingUnits : ((tp.grabbedCount || 0) + 1);
+        this._drawDestinationIndicator(ctx, dPx.x, dPx.y, tp, gameTime, cast, channelMs, totalIncoming, group && group.tps.length > 1 ? group.tps.length : 0);
       }
 
       // 8) BANNER above the caster ring.
@@ -314,12 +383,13 @@ const TeleportFx = class {
   //   - The ability's WC3 icon (32px) centered inside the ring
   //   - "INCOMING ⚡N" mini-label below the ring (count = grabbed + 1 hero)
   //   - Urgency bump in the last 600ms of channel
-  _drawDestinationIndicator (ctx, dx, dy, tp, gameTime, cast, channelMs) {
+  _drawDestinationIndicator (ctx, dx, dy, tp, gameTime, cast, channelMs, totalIncoming, groupSize) {
     const elapsed = gameTime - cast;
     const tProg = Math.min(1, elapsed / channelMs);
     const remainingMs = channelMs - elapsed;
     const isUrgent = remainingMs <= 600;
     const pulse = 0.78 + 0.22 * Math.sin(elapsed / (isUrgent ? 55 : 110));
+    if (totalIncoming == null) totalIncoming = (tp.grabbedCount || 0) + 1;
 
     const ringR = isUrgent ? 42 : 36;
     const iconSize = 32;
@@ -379,9 +449,11 @@ const TeleportFx = class {
       ctx.textBaseline = 'alphabetic';
     }
 
-    // "INCOMING ⚡N" mini-label below the ring.
-    const total = (tp.grabbedCount || 0) + 1;   // hero + grabbed
-    const label = `INCOMING ⚡${total}`;
+    // "INCOMING ⚡N" mini-label below the ring. When multiple TPs converge
+    // on the same destination, append a "×K TPs" suffix (K = group size).
+    const label = (groupSize && groupSize > 1)
+      ? `INCOMING ⚡${totalIncoming} (×${groupSize} TPs)`
+      : `INCOMING ⚡${totalIncoming}`;
     ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
     const labelW = ctx.measureText(label).width;
     const padX = 6, padY = 3;

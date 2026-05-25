@@ -272,6 +272,57 @@
       } else {
         ctx.strokeRect(viewRect.rx + 0.5, viewRect.ry + 0.5, viewRect.rw - 1, viewRect.rh - 1);
       }
+
+      // Teleport destination pulses — small bright dot at each active TP's
+      // target so users notice incoming portals even when looking away. See
+      // client/docs/Z_INDEX.md (L5 ACTION INDICATORS — minimap mirror).
+      this._drawTeleportPulses(ctx);
+    }
+
+    /** Small pulsing yellow dot at each active TP destination on the minimap. */
+    _drawTeleportPulses (ctx) {
+      const v = this.viewer;
+      if (!v.viewOptions || v.viewOptions.displayTeleports === false) return;
+      if (!v.players || !v.players.length) return;
+      const gt = v.gameTime;
+      ctx.save();
+      for (const player of v.players) {
+        const tps = player.teleportEvents || [];
+        for (const tp of tps) {
+          const cast = tp.gameTime;
+          const apply = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
+          // Pulse during channel and for a brief moment after apply.
+          if (gt < cast - 200 || gt > apply + 800) continue;
+          if (!tp.destination) continue;
+          const mx = this._worldToMinimapX(tp.destination.x);
+          const my = this._worldToMinimapY(tp.destination.y);
+          if (!isFinite(mx) || !isFinite(my)) continue;
+          const elapsed = gt - cast;
+          const channelMs = Math.max(1, apply - cast);
+          const inChannel = gt >= cast && gt < apply;
+          const pulse = 0.65 + 0.35 * Math.sin(elapsed / (inChannel ? 90 : 60));
+          // Outer halo
+          ctx.globalAlpha = 0.5 * pulse;
+          ctx.fillStyle = '#FFD24A';
+          ctx.beginPath();
+          ctx.arc(mx, my, inChannel ? 6 : 8, 0, Math.PI * 2);
+          ctx.fill();
+          // Bright core
+          ctx.globalAlpha = 0.95;
+          ctx.fillStyle = '#FFE072';
+          ctx.beginPath();
+          ctx.arc(mx, my, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          // Ring
+          ctx.globalAlpha = 0.85;
+          ctx.lineWidth = 1;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(mx, my, inChannel ? 5 : 7, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
     }
 
     /** Draw two viewport rectangles for split-screen mode, each in player color */
