@@ -4001,6 +4001,23 @@ body {
   object-fit: contain;
 }
 
+/* L5 ACTION INDICATORS — teleport cinematics, future "big event" callouts.
+ * Topmost canvas; renders above nameplates. See client/docs/Z_INDEX.md.
+ * Same positioning + scaling rules as the other canvas siblings. */
+#action-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 50% 50% 0;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+  z-index: 4;
+  pointer-events: none;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 .logo-colors {
   color: #ded599;
 }

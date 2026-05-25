@@ -221,7 +221,32 @@ const TeleportFx = class {
         ctx.stroke();
       }
 
-      // 6) BANNER above the ring.
+      // 6) ANIMATED DASHED TRAIL — origin → destination during the channel.
+      //    Dashes scroll toward the destination as channel progresses (visually
+      //    "the units are flowing through"). Becomes more solid near apply.
+      if (!cancelled) {
+        const dashOffset = -((gameTime - cast) / 12) % 14;
+        ctx.globalAlpha = 0.45 + 0.35 * tProg;
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+        ctx.setLineDash([6, 8]);
+        ctx.lineDashOffset = dashOffset;
+        ctx.beginPath();
+        ctx.moveTo(oPx.x, oPx.y);
+        ctx.lineTo(dPx.x, dPx.y);
+        ctx.stroke();
+        ctx.lineDashOffset = 0;
+        ctx.setLineDash([]);
+      }
+
+      // 7) DESTINATION MIRROR INDICATOR — small ring + WC3 icon + "INCOMING"
+      //    label at the target so users know WHERE the squad is heading
+      //    before they arrive. Dota 2's TP-in indicator inspiration.
+      if (!cancelled) {
+        this._drawDestinationIndicator(ctx, dPx.x, dPx.y, tp, gameTime, cast, channelMs);
+      }
+
+      // 8) BANNER above the caster ring.
       this._drawBanner(ctx, oPx.x, oPx.y - mainR - 14, tp, cancelled);
     }
 
@@ -280,6 +305,100 @@ const TeleportFx = class {
         ctx.setLineDash([]);
       }
     }
+  }
+
+  // Destination-mirror indicator drawn at the TP target during the channel.
+  // Shows users WHERE the squad is going before they actually arrive.
+  // Composition:
+  //   - A mirror pulsing ring (smaller than the origin ring; ~36px)
+  //   - The ability's WC3 icon (32px) centered inside the ring
+  //   - "INCOMING ⚡N" mini-label below the ring (count = grabbed + 1 hero)
+  //   - Urgency bump in the last 600ms of channel
+  _drawDestinationIndicator (ctx, dx, dy, tp, gameTime, cast, channelMs) {
+    const elapsed = gameTime - cast;
+    const tProg = Math.min(1, elapsed / channelMs);
+    const remainingMs = channelMs - elapsed;
+    const isUrgent = remainingMs <= 600;
+    const pulse = 0.78 + 0.22 * Math.sin(elapsed / (isUrgent ? 55 : 110));
+
+    const ringR = isUrgent ? 42 : 36;
+    const iconSize = 32;
+
+    // Soft glow behind the ring so the icon reads against varied terrain.
+    const glow = ctx.createRadialGradient(dx, dy, 6, dx, dy, ringR * 1.9);
+    glow.addColorStop(0, 'rgba(255, 210, 74, 0.55)');
+    glow.addColorStop(0.6, 'rgba(255, 210, 74, 0.18)');
+    glow.addColorStop(1, 'rgba(255, 210, 74, 0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(dx, dy, ringR * 1.9, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ring proper.
+    ctx.globalAlpha = 0.95 * pulse;
+    ctx.lineWidth = isUrgent ? 3.5 : 2.5;
+    ctx.strokeStyle = '#FFE072';
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(dx, dy, ringR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // A subtler outer rotating ring for "incoming" feel.
+    const rotR = ringR + 9;
+    ctx.globalAlpha = 0.7 * pulse;
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = '#FFD24A';
+    ctx.setLineDash([3, 5]);
+    ctx.lineDashOffset = -((gameTime - cast) / 10) % 8;
+    ctx.beginPath();
+    ctx.arc(dx, dy, rotR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineDashOffset = 0;
+    ctx.setLineDash([]);
+
+    // Ability icon centered in the ring.
+    const icon = this._icons[tp.abilityCode];
+    if (icon) {
+      ctx.globalAlpha = 1;
+      ctx.drawImage(icon, dx - iconSize / 2, dy - iconSize / 2, iconSize, iconSize);
+      // 1px border in category color so the icon reads on busy terrain.
+      ctx.globalAlpha = 0.85;
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = '#FFD24A';
+      ctx.strokeRect(dx - iconSize / 2 - 0.5, dy - iconSize / 2 - 0.5, iconSize + 1, iconSize + 1);
+    } else {
+      // Fallback: bold "⚡" glyph if the icon hasn't loaded.
+      ctx.globalAlpha = 0.95;
+      ctx.fillStyle = '#FFE072';
+      ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚡', dx, dy);
+      ctx.textAlign = 'start';
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    // "INCOMING ⚡N" mini-label below the ring.
+    const total = (tp.grabbedCount || 0) + 1;   // hero + grabbed
+    const label = `INCOMING ⚡${total}`;
+    ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    const labelW = ctx.measureText(label).width;
+    const padX = 6, padY = 3;
+    const lW = labelW + padX * 2;
+    const lH = 14 + padY * 2;
+    const lX = dx - lW / 2;
+    const lY = dy + ringR + 6;
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = 'rgba(8, 12, 18, 0.96)';
+    ctx.fillRect(lX, lY, lW, lH);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = isUrgent ? '#FFE072' : '#FFD24A';
+    ctx.strokeRect(lX + 0.5, lY + 0.5, lW - 1, lH - 1);
+    ctx.fillStyle = isUrgent ? '#FFFFFF' : '#FFE072';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, lX + padX, lY + lH / 2);
+    ctx.textBaseline = 'alphabetic';
   }
 
   // Larger label with a 48px WC3 icon left of the text. Two-line layout:

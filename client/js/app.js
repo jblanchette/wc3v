@@ -182,6 +182,10 @@ const Wc3vViewer = class {
 
     this.utilityCanvas = null;
     this.utilityCtx = null;
+    // L5 ACTION INDICATORS — teleport cinematics + future big-event callouts.
+    // Topmost canvas (CSS z-index 4). See client/docs/Z_INDEX.md.
+    this.actionCanvas = null;
+    this.actionCtx = null;
 
     if (this.unitsProductionPanel) this.unitsProductionPanel.destroy();
     this.unitsProductionPanel = new window.UnitsProductionPanel(this);
@@ -2669,6 +2673,10 @@ const Wc3vViewer = class {
       this.playerCanvas.style.height = displayHeight + 'px';
       this.utilityCanvas.style.width = displayWidth + 'px';
       this.utilityCanvas.style.height = displayHeight + 'px';
+      if (this.actionCanvas) {
+        this.actionCanvas.style.width = displayWidth + 'px';
+        this.actionCanvas.style.height = displayHeight + 'px';
+      }
       if (this.threeCanvas) {
         this.threeCanvas.style.width = displayWidth + 'px';
         this.threeCanvas.style.height = displayHeight + 'px';
@@ -2799,6 +2807,8 @@ const Wc3vViewer = class {
 
       this.utilityCanvas = document.getElementById("utility-canvas");
       this.utilityCtx = this.utilityCanvas.getContext("2d");
+      this.actionCanvas = document.getElementById("action-canvas");
+      this.actionCtx = this.actionCanvas && this.actionCanvas.getContext("2d");
 
       this.megaPlayButton = document.getElementById("mega-play-overlay");
 
@@ -2944,7 +2954,7 @@ const Wc3vViewer = class {
           );
           const dw = Math.floor(this.gameScaler.mapImage.width * scale) + 'px';
           const dh = Math.floor(this.gameScaler.mapImage.height * scale) + 'px';
-          [this.canvas, this.playerCanvas, this.utilityCanvas].forEach(c => {
+          [this.canvas, this.playerCanvas, this.utilityCanvas, this.actionCanvas].filter(Boolean).forEach(c => {
             c.style.width = dw;
             c.style.height = dh;
           });
@@ -3315,6 +3325,11 @@ const Wc3vViewer = class {
     self.utilityCanvas.width = mapWidth;
     self.utilityCanvas.height = mapHeight;
 
+    if (self.actionCanvas) {
+      self.actionCanvas.width = mapWidth;
+      self.actionCanvas.height = mapHeight;
+    }
+
     if (self.threeCanvas) {
       self.threeCanvas.width = mapWidth;
       self.threeCanvas.height = mapHeight;
@@ -3538,6 +3553,10 @@ const Wc3vViewer = class {
     playerCtx.clearRect(0, 0, w, h);
     utilityCtx.setTransform(1, 0, 0, 1, 0, 0);
     utilityCtx.clearRect(0, 0, w, h);
+    if (this.actionCtx) {
+      this.actionCtx.setTransform(1, 0, 0, 1, 0, 0);
+      this.actionCtx.clearRect(0, 0, w, h);
+    }
   }
 
   // Coalesced render request — multiple calls per frame collapse into one RAF
@@ -4153,11 +4172,11 @@ const Wc3vViewer = class {
     if (this.battleRenderer && this.processedBattles) {
       this.battleRenderer.render(utilityCtx, transform, gameTime, viewOptions, this.gameScaler, this.processedBattles, this.teamColorMap);
     }
-    // Teleport cinematic — channel ring + announcement banner + arrival flash.
-    // Reads each player's teleportEvents (from the parser). Drawn last so the
-    // ring sits on top of unit icons during the cast.
-    if (this.teleportFx) {
-      this.teleportFx.render(utilityCtx, transform, gameTime, viewOptions, this.gameScaler, this.players);
+    // Teleport cinematic — channel ring + destination mirror + banner + flash.
+    // L5 ACTION INDICATORS layer (#action-canvas, z 4) so it stays above unit
+    // nameplates which draw on #player-canvas (z 3). See client/docs/Z_INDEX.md.
+    if (this.teleportFx && this.actionCtx) {
+      this.teleportFx.render(this.actionCtx, transform, gameTime, viewOptions, this.gameScaler, this.players);
     }
 
     players.forEach(player => {
