@@ -314,7 +314,11 @@ body {
   left: 0;
   right: 0;
   height: 2.25rem;
-  z-index: 10;
+  /* z-index 60: must beat #main-wrapper's stacking-context (z 1) AND any
+   * popups/canvas overlays inside it. Scrubber controls + their modals
+   * (speed picker, settings menu, zoom slider) MUST sit above everything
+   * on the canvas group. See client/docs/Z_INDEX.md. */
+  z-index: 60;
 }
 
 /* --- Gameplay Mode (Replay Only) --- */
@@ -379,6 +383,12 @@ body {
   justify-content: center;
   overflow: hidden;
   container-type: inline-size;
+  /* Explicit z-index 1 creates a stacking context so #canvas-group's z 50
+   * (and the canvases inside it) stay CONTAINED within main-wrapper and
+   * don't leak up to outrank sibling chrome like #scrubber-bar.
+   * Without this, the canvas group's high z floats out and covers the
+   * scrubber + its popups. See client/docs/Z_INDEX.md. */
+  z-index: 1;
 }
 
 /* --- Build Area --- */

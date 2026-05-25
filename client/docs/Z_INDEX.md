@@ -32,14 +32,39 @@ glance) belongs here, not below the nameplates.
 
 | z-index | Element                  | Purpose                                                          |
 | ------- | ------------------------ | ---------------------------------------------------------------- |
-| 2       | `.time-scrubber-tracker` | The white dot indicating playback position on the scrubber       |
+| 1       | `#main-wrapper`          | Wraps `#canvas-group` and creates a stacking context for it      |
+| 2       | `.time-scrubber-tracker` | White dot indicating playback position (inside scrubber-bar)     |
 | 3       | `.battle-marker`         | Coloured chevrons over the scrubber for detected battles         |
-| 5       | `.minimap-pip`           | Small minimap in the bottom-right corner                         |
+| 5       | `.minimap-pip`           | Small minimap in the bottom-right corner (inside main-wrapper)   |
 | 18      | (former battle panel)    | Removed — kept as a marker so future panels avoid this slot      |
 | 20      | `.camera-toolbar`        | AUTO / SPLIT / P1 / P2 / FREE buttons in the upper-right         |
-| 50-99   | Floating tooltips        | Camp info panel, hero stats hover cards, build-order tooltips    |
+| 60      | `#scrubber-bar`          | Bottom playback bar + its popups (speed picker, settings, zoom). Must beat the canvas group. |
 | 100     | Match header             | Top-of-map match info bar                                        |
 | 1000+   | Modals                   | Match summary modal, full-screen dialogs                         |
+
+## Stacking-context rule (the subtle gotcha)
+
+**`position: absolute` alone does NOT create a stacking context.** Only
+`position: absolute` PLUS an explicit `z-index` (or one of: opacity < 1,
+transform, filter, isolation, mix-blend-mode, will-change for any of those)
+creates one.
+
+When a positioned ancestor does NOT establish a stacking context, the
+z-indexes of its descendants **leak up** and compete with the ancestor's
+own siblings.
+
+Concretely: `#main-wrapper` is `position: absolute` and originally had no
+z-index. `#canvas-group` inside it has z 50. That z 50 was leaking up to
+compete at the `#map-container` level — beating `#scrubber-bar` at z 10
+and burying its popups behind the canvas.
+
+**Fix:** any positioned container that has children with high z-indexes
+should set its own explicit z-index to create a stacking context. We added
+`z-index: 1` to `#main-wrapper` for this reason.
+
+If you add a new wrapper that contains z-indexed children, set an explicit
+`z-index` on the wrapper — even a low value works. The point is to create
+the stacking context, not to compete vertically.
 
 Reserved corner zones (always grep CSS for `position: absolute` corner offsets before placing anything here):
 
@@ -109,6 +134,14 @@ camera toolbar" — that's L5 ACTION CANVAS. Add it there.
   right: 0.5rem`. Fixed by moving to lower-right — then collided with the
   minimap pip there. Fixed for real by removing the panel and folding its
   content into the canvas battle banner.
+- **Scrubber popups buried behind canvases** (2026-05): `#canvas-group`'s
+  z-index 50 was leaking out of `#main-wrapper` (which had no stacking
+  context) and outranking `#scrubber-bar` at z 10. Speed picker, settings
+  menu, and zoom slider appeared *behind* the action-canvas overlay. Fixed
+  by giving `#main-wrapper` an explicit z-index 1 (creates stacking context;
+  contains its children's z values) and bumping `#scrubber-bar` to z 60 as
+  defensive cover. **Lesson:** positioned wrappers must declare their own
+  z-index when they contain z-indexed children — see "Stacking-context rule".
 - **Lich didn't teleport with the casting DK** (2026-05): a different kind of
   bug (game-mechanic exclusion, not z-index) but worth noting the pattern:
   visual contradictions between what we draw and what should happen often
