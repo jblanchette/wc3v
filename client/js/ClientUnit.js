@@ -9,64 +9,32 @@ const HighlightModes = {
 
 ////
 // drawing sizes
+//
+// Main-map in-world unit rendering is driven by WC3 collisionSize (world
+// units) × pxPerUnit (canvas pixels per world unit). This intentionally
+// REMOVES the old hardcoded IconSizes / readability minimum clamps — a
+// Footman now renders at ~16 WU diameter, a Tauren at ~48 WU diameter,
+// etc. (the same sizes WC3 uses for actual collision).
+//
+// NOTE: per CLAUDE.md "no icon below 36px on desktop" is intentionally
+// violated here for non-hero units. User opted in; will tune if needed.
+//
+// Battle banners, BO chips, scrubber popups, nameplate text are UI
+// elements and keep their hardcoded readability sizes (see BattleRenderer,
+// BuildOrderRenderer, TimeScrubber).
 ////
 
-const IconSizes = {
-  'hero': 42,
-  'secondaryHero': 38,
-  'unit': 36,
-  'worker': 32,
-  'building': 16,
-  'neutral': 22
+// Fallback collision radii (world units) for ancient replays that don't
+// have collisionSize exported. Mirrors UnitBalance.json typical values.
+const FALLBACK_COLLISION_WU = {
+  hero: 32, worker: 16, unit: 24, building: 96
 };
-
-const minimumUnitSize     = 20,
-      minimumBuildingSize = 12,
-      minimumHeroIconSize = 36;
 
 const minFontSize         = 13,
       maxFontSize         = 18;
 
-////
-// WC3 building placement footprint in tiles.
-// Primary lookup by itemId (handles race-specific exceptions like NE town halls).
-// Fallback by collisionSize for unknown buildings.
-////
-
-const BUILDING_FOOTPRINT_BY_ID = {
-  // 4x4 town halls (3.5 visual to reduce crowding on canvas)
-  'htow': 3.5, 'hkee': 3.5, 'hcas': 3.5,   // Human
-  'ogre': 3.5, 'ostr': 3.5, 'ofrt': 3.5,   // Orc
-  'etol': 3.5, 'etoa': 3.5, 'etoe': 3.5,   // NE (collision=144 but footprint is 4x4!)
-  'unpl': 3.5, 'unp1': 3.5, 'unp2': 3.5,   // UD
-
-  // 3x3 production / tech buildings
-  'halt': 3, 'hbar': 3, 'hbla': 3, 'harm': 3, 'hars': 3, 'hlum': 3,  // Human
-  'oalt': 3, 'obar': 3, 'obea': 3, 'ofor': 3, 'oshy': 3, 'otto': 3, 'osld': 3, // Orc
-  'eate': 3, 'eaow': 3, 'eaom': 3, 'eaoe': 3, 'edob': 3, 'eden': 3,  // NE
-  'uaod': 3, 'usep': 3, 'ugrv': 3, 'utod': 3, 'uslh': 3, 'ugol': 3,  // UD
-
-  // 2x2 small buildings
-  'hhou': 2, 'hatw': 2, 'hwtw': 2, 'hvlt': 2,  // Human
-  'otrb': 2, 'owtw': 2, 'ovln': 2,              // Orc
-  'emow': 2, 'etrp': 2,                          // NE
-  'uzig': 2, 'uzg1': 2, 'uzg2': 2, 'utom': 2,  // UD
-
-  // Neutral
-  'ngol': 2, 'ntav': 2, 'ngme': 2, 'nmer': 2, 'nmrk': 2,
-};
-
-function getBuildingFootprintTiles (itemId, collisionSize) {
-  // exact itemId match first
-  if (itemId && BUILDING_FOOTPRINT_BY_ID[itemId] !== undefined) {
-    return BUILDING_FOOTPRINT_BY_ID[itemId];
-  }
-  // fallback by collisionSize
-  if (!collisionSize) return 2;
-  if (collisionSize <= 130) return 2;
-  if (collisionSize <= 160) return 3;
-  return 3.5;
-}
+// Building footprint comes from the server-exported `footprint` field
+// (derived from WC3's pathing.tga manifest). No client-side fallback.
 
 ////
 // drawing constants
@@ -123,7 +91,8 @@ const ClientUnit = class {
       "path", "footprints", "meta", "items", "spawnTime", "trainedTime",
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
-      "collisionSize", "isInferred", "destroyedAt", "isSummon",
+      "collisionSize", "footprint", "isInferred", "destroyedAt", "isSummon",
+      "lostState", "hiddenStream",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
       "constructionStartTime", "uprootStream"
@@ -362,31 +331,37 @@ const ClientUnit = class {
     //
     // setup defaults for different unit / building types
     //
+    // collisionRadiusWU is the WC3 collision radius in WORLD UNITS. Render
+    // sizing converts to pixels at draw time via gameScaler.pxPerUnit.
+    // Legacy `iconSize` is also set as a pixel-space approximation for any
+    // UI subsystem that still reads it (decoration layout, sort helpers).
+    //
+
+    const fallback = this.meta.hero ? FALLBACK_COLLISION_WU.hero
+                    : this.isBuilding ? FALLBACK_COLLISION_WU.building
+                    : this.meta.worker ? FALLBACK_COLLISION_WU.worker
+                    : FALLBACK_COLLISION_WU.unit;
+    this.collisionRadiusWU = (this.collisionSize > 0) ? this.collisionSize : fallback;
+    // ~0.25 px/WU is a typical default; subsystems that care about real
+    // pixel size should consult gameScaler.pxPerUnit directly.
+    this.iconSize = Math.max(8, this.collisionRadiusWU * 2 * 0.25);
 
     if (this.isNeutralPlayer) {
-      this.iconSize = IconSizes.neutral;
       this.minDecayLevel = 0.75;
       this.decayLevel = 0.75;
-
       return;
     }
 
     if (this.meta.hero) {
-      this.iconSize = IconSizes.hero;
       this.minDecayLevel = 0.0;
     } else if (this.isBuilding) {
-      this.iconSize = IconSizes.building;
       this.decayLevel = 0.475;
     } else if (this.meta.worker) {
-      this.iconSize = IconSizes.worker;
-
       // don't fully decay workers, since they often idle
       this.minDecayLevel = 0.475;
     } else if (this.isTransport) {
-      this.iconSize = IconSizes.hero;  // larger icon for transports — important gameplay element
       this.minDecayLevel = 0.3;
     } else {
-      this.iconSize = IconSizes.unit;
       this.minDecayLevel = 0.0;
     }
   }
@@ -632,6 +607,78 @@ const ClientUnit = class {
       return;
     }
 
+    // Hidden (NE shadowmeld heuristic) — wins over lostState/heuristic so
+    // the unit reads as "ghosted" while a server-detected hide window is active.
+    this._isHiddenNow = false;
+    if (this.hiddenStream && this.hiddenStream.length) {
+      for (let i = 0; i < this.hiddenStream.length; i++) {
+        const w = this.hiddenStream[i];
+        if (gameTime >= w.start && gameTime <= w.end) {
+          this._isHiddenNow = true;
+          this.decayLevel = 0.32;       // very faint
+          this._deathFxActive = false;
+          this._deathFxStartTime = null;
+          return;
+        }
+      }
+    }
+
+    // Server-supplied 4-state lost tracking (parser's DeathInference pass).
+    // Wins over the heuristic fallback when available. State semantics:
+    //   active       — normal render
+    //   idle         — small fade, no death FX, faint idle pulse
+    //   possiblyLost — stronger fade, slow player-colour pulse (still selectable)
+    //   lost         — one-shot death FX at `since` time, then ghosted out
+    if (this.lostState && this.lostState.state) {
+      const ls = this.lostState;
+      const t = ls.since || 0;
+      const elapsed = gameTime - t;
+
+      if (ls.state === 'lost') {
+        if (gameTime < t) {
+          // Scrubbed back before death — clear FX, render normal.
+          this._lostFxFired = false;
+          this._deathFxStartTime = null;
+          this._deathFxActive = false;
+          this.resetDecay();
+          return;
+        }
+        if (elapsed < DEATH_FX_DURATION_MS) {
+          const floor = this._staleFadeFloor();
+          this.decayLevel = Math.max(0, floor * (1 - elapsed / DEATH_FX_DURATION_MS));
+          this._deathFxStartTime = t;
+          this._deathFxActive = true;
+          // Mark for one-shot FX emission in renderUnit.
+          this._lostFxPending = !this._lostFxFired;
+          return;
+        }
+        // Past FX window — stop drawing entirely.
+        this._destroyed = true;
+        this._deathFxActive = false;
+        return;
+      }
+
+      if (ls.state === 'possiblyLost') {
+        // Slow player-colour pulse around 0.5 decay so it reads as "might
+        // be gone" without disappearing.
+        const pulse = 0.5 + 0.15 * Math.sin(gameTime / 600);
+        this.decayLevel = pulse;
+        this._deathFxActive = false;
+        this._deathFxStartTime = null;
+        return;
+      }
+
+      if (ls.state === 'idle') {
+        // Visible but not fully bright — small visual cue.
+        this.decayLevel = 0.85;
+        this._deathFxActive = false;
+        this._deathFxStartTime = null;
+        return;
+      }
+
+      // active — fall through to normal pipeline (resets decay below).
+    }
+
     // Lifetime-aware fade. _lastActivityTime is the latest gameTime we have
     // any signal that this unit was alive (path / moveHistory / selection).
     // Replay is fully parsed up front, so silence past PROBABLY_GONE_MS is a
@@ -694,13 +741,33 @@ const ClientUnit = class {
     const _proj = wc3v.gameScaler.projectXY(x, y);
     const drawX = Math.round(_proj.x + wc3v.gameScaler.middleX);
     const drawY = Math.round(_proj.y + wc3v.gameScaler.middleY);
-    const footprintTiles = getBuildingFootprintTiles(this.itemId, this.collisionSize);
-    const halfIcon = Math.round(footprintTiles * 128 * wc3v.gameScaler.pxPerUnit / 2);
+
+    // Server-exported footprint (from WC3 pathing.tga manifest). Required.
+    if (!this.footprint) {
+      throw new Error('Building missing footprint field: ' + this.itemId +
+                      ' — re-parse replay with current parser.');
+    }
+    const widthTiles  = this.footprint.widthTiles;
+    const heightTiles = this.footprint.heightTiles;
+    const offsetX     = this.footprint.offsetX || 0;
+    const offsetY     = this.footprint.offsetY || 0;
+    const pxPerWU     = wc3v.gameScaler.pxPerUnit;
+    const halfWidthPx  = Math.round(widthTiles * 128 * pxPerWU / 2);
+    const halfHeightPx = Math.round(heightTiles * 128 * pxPerWU / 2);
+    // Apply walk-bbox offset (in world units) — the bbox may not be centered
+    // on the building origin for asymmetric pathing textures.
+    const centerX = drawX + Math.round(offsetX * pxPerWU);
+    const centerY = drawY + Math.round(offsetY * pxPerWU);
+    // halfSize is the worker-overlap-hide scalar — use the larger dim so
+    // workers inside a non-square footprint stay hidden along its long axis.
+    const halfIcon = Math.max(halfWidthPx, halfHeightPx);
 
     frameData.buildingPositions.push({
-      x: drawX,
-      y: drawY,
+      x: centerX,
+      y: centerY,
       halfSize: halfIcon,
+      halfWidth: halfWidthPx,
+      halfHeight: halfHeightPx,
       playerId: this.playerId,
       displayName: this.displayName,
       itemId: this.itemId,
@@ -786,13 +853,24 @@ const ClientUnit = class {
 
     drawnUnits[this.uuid] = true;
 
-    const minimumIconSize = this.meta.hero ?
-      minimumHeroIconSize : minimumUnitSize;
-    const baseIconSize = this._renderingUprooted ? IconSizes.unit : this.iconSize;
-    const iconSize = Math.max(baseIconSize, minimumIconSize);
+    // True WC3 collision diameter in canvas pixels. No readability floor —
+    // a Footman (collisionSize=16) at typical zoom (pxPerUnit~0.125) draws
+    // at ~4px diameter; a Tauren (48) at ~12px; heroes (32) at ~8px. Apply
+    // d3-zoom transform.k so units scale with the user's zoom level.
+    // _renderingUprooted: NE ancient that has uprooted — use the unit
+    // fallback so the icon doesn't shrink to its tiny center-collision.
+    const radiusWU = this._renderingUprooted
+      ? FALLBACK_COLLISION_WU.unit
+      : this.collisionRadiusWU;
+    const zoomK = (transform && transform.k) ? transform.k : 1;
+    const pxPerUnit = (wc3v.gameScaler && wc3v.gameScaler.pxPerUnit) || 0.125;
+    const iconSize = Math.max(2, Math.round(radiusWU * 2 * pxPerUnit * zoomK));
 
-    const halfIconSize = iconSize / 2.5;
-    
+    // Half is the true geometric half — old /2.5 was a readability hack.
+    const halfIconSize = iconSize / 2;
+
+    // Font keeps a readability floor independent of icon size: even tiny
+    // unit icons need legible labels.
     const fontSize = Math.max(Math.min(halfIconSize, maxFontSize), minFontSize);
 
     // add unit to draw frame unit positions
@@ -807,6 +885,13 @@ const ClientUnit = class {
 
     const scoutLabel = isActiveScout ? 'SCOUT' : null;
 
+    // Spotlight: brighten the player-color halo on units that are currently
+    // participating in an active detected battle. Set is pre-computed once
+    // per frame by app.js from processedBattles.activeAt(gameTime).
+    const isInBattle = !!(frameData &&
+      frameData.activeBattleParticipants &&
+      frameData.activeBattleParticipants.has(this.uuid));
+
     unitDrawPositions.push({
       uuid: this.uuid,
       itemId: this.itemId,
@@ -820,6 +905,7 @@ const ClientUnit = class {
       decayLevel: this.decayLevel,
       isHero: this.meta.hero,
       isWorker: this.meta.worker,
+      isHidden: !!this._isHiddenNow,
       isNeutralPlayer: this.isNeutralPlayer,
       isMainHero: this.isMainHero,
       heroRank: this.heroRank,
@@ -828,6 +914,7 @@ const ClientUnit = class {
       cargoCount: cargoCount,
       cargoItems: cargoItems,
       scoutLabel: scoutLabel,
+      isInBattle: isInBattle,
       x: drawX,
       y: drawY,
       count: 1,
@@ -838,7 +925,12 @@ const ClientUnit = class {
     // position while the FX window is active. Drawn after the unit pass so
     // the ring renders on top of the icon's resting alpha.
     if (this._deathFxActive && this._deathFxStartTime != null && frameData.deathFx) {
-      frameData.deathFx.push({
+      // Server-driven "lost" units get a richer treatment: red overlay
+      // flash + green XP popup. Heuristic deaths (no lostState) use the
+      // legacy plain ring.
+      const ls = this.lostState;
+      const richDeath = !!(ls && ls.state === 'lost');
+      const fx = {
         x: drawX,
         y: drawY,
         ageMs: gameTime - this._deathFxStartTime,
@@ -846,7 +938,23 @@ const ClientUnit = class {
         iconSize: iconSize,
         playerColor: this.playerColor,
         label: this._deathFxLabel(),
-        isHero: !!(this.meta && this.meta.hero)
+        isHero: !!(this.meta && this.meta.hero),
+        richDeath: richDeath,
+        xpAwarded: (richDeath && ls.xpAwarded > 0) ? ls.xpAwarded : null
+      };
+      frameData.deathFx.push(fx);
+      this._lostFxFired = true;
+      this._lostFxPending = false;
+    }
+
+    // Idle indicator: small subtle dot above the unit when state is 'idle'.
+    // Communicates "I see this unit, it's just standing" — distinct from
+    // possiblyLost (pulsing fade) and active (no marker).
+    if (this.lostState && this.lostState.state === 'idle' && frameData.idleMarkers) {
+      frameData.idleMarkers.push({
+        x: drawX,
+        y: drawY - (iconSize / 2) - 6,
+        playerColor: this.playerColor
       });
     }
   }

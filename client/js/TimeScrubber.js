@@ -238,6 +238,38 @@ const TimeScrubber = class {
       trackEl.appendChild(el);
     }
   }
+
+  // Quarter-time guide markers — subtle ticks at 1/4, 1/2, 3/4 of the match with
+  // a pie-fill icon and minute label below the track. Read-only references; do not
+  // intercept clicks. Called once per replay load from Wc3vViewer setup.
+  setTimeGuides (matchEndTime) {
+    const trackEl = document.getElementById(`${this.wrapperId}-track`);
+    if (!trackEl) return;
+
+    const old = trackEl.querySelectorAll('.scrubber-tg-marker');
+    old.forEach(n => n.remove());
+
+    if (!matchEndTime || matchEndTime < 240000) return;
+
+    const guides = [
+      { pct: 25, fill: 0.25 },
+      { pct: 50, fill: 0.5 },
+      { pct: 75, fill: 0.75 }
+    ];
+
+    for (const g of guides) {
+      const minutes = Math.round((matchEndTime * g.pct / 100) / 60000);
+      const marker = document.createElement('div');
+      marker.className = 'scrubber-tg-marker';
+      marker.style.left = `${g.pct}%`;
+      marker.innerHTML = `
+        <div class="scrubber-tg-tick"></div>
+        <div class="scrubber-tg-icon" style="--fill: ${g.fill}"></div>
+        <div class="scrubber-tg-label">${minutes}m</div>
+      `;
+      trackEl.appendChild(marker);
+    }
+  }
 };
 
 window.TimeScrubber = TimeScrubber;

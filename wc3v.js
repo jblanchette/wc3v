@@ -7,6 +7,8 @@ const utils = require("./helpers/utils"),
 const config = require("./config/config");
 const ReplayValidator = require("./lib/ReplayValidator");
 const BattleDetector  = require("./lib/BattleDetector");
+const DeathInference  = require("./lib/DeathInference");
+const HideInference   = require("./lib/HideInference");
 const TERRAINFile = require("./lib/parsers/TERRAINFile");
 const MiscFile = require("./lib/parsers/MiscFile");
 const { resolveCampLeash } = require("./helpers/mappings");
@@ -477,6 +479,28 @@ const doParsing = async (input, options = {}) => {
   playerManager.world.battleStats = battleResult.stats;
   console.logger(`Battle detection: ${battleResult.battles.length} battle(s) from ${battleResult.stats.totalSignals} signals`);
 
+  // Death inference — consume battle outcomes + path silence to backfill
+  // a `lostState` on every Unit. Client uses this to render the 4-state
+  // active/idle/possiblyLost/lost visual state machine.
+  emitProgress('postprocess', 98, { detail: 'deaths' });
+  const deathStats = new DeathInference(playerManager).run();
+  console.log('----------------------------------');
+  console.log('DEATH INFERENCE');
+  console.log('----------------------------------');
+  console.log(`scanned ${deathStats.unitsScanned} units: ` +
+    `active=${deathStats.active}, idle=${deathStats.idle}, ` +
+    `possiblyLost=${deathStats.possiblyLost}, lost=${deathStats.lost}`);
+
+  // Shadowmeld heuristic — flags NE units that went idle during night with
+  // no enemies nearby. Writes `hiddenStream[]` per unit.
+  emitProgress('postprocess', 99, { detail: 'hide' });
+  const hideStats = new HideInference(playerManager).run();
+  console.log('----------------------------------');
+  console.log('HIDE INFERENCE (Night Elf shadowmeld)');
+  console.log('----------------------------------');
+  console.log(`NE units: ${hideStats.neUnits}, hide windows: ${hideStats.windowsDetected}, ` +
+    `total hidden: ${(hideStats.totalHideTimeMs / 1000).toFixed(1)}s`);
+
   // output action type summary when debug is enabled
   if (config.debugActions) {
     const actionSummary = playerManager.getActionSummary();
@@ -557,6 +581,9 @@ const parseReplays = async (options) => {
 
         // log pathfinding stats (after logging re-enabled)
         world.pathFinder.logCacheStats();
+        if (world.collisionWorld) {
+          world.collisionWorld.logStats();
+        }
 
         if (options.inTestMode) {
           console.log("TEST PASSED: ", file);

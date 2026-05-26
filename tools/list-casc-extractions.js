@@ -73,7 +73,58 @@ console.log('Tree/doodad models reference BLP textures. Extract:');
 console.log('  war3.w3mod\\Textures\\   → client/assets/textures/');
 console.log('  (Or extract specific textures after analyzing MDX references)');
 
+// --- Building Pathing Textures ---
+//
+// WC3 buildings use shared "pathing" TGAs from war3.w3mod\PathTextures\.
+// Each pixel in a pathing texture = 1 WPM cell (32 world units). The red
+// channel marks cells that block walking; green = unbuildable but walkable;
+// blue = no-fly. This is the same source the WC3 engine uses, so it gives
+// us the exact buildable footprint per building (entrances, notches, etc.).
+//
+// unitdata.slk's `pathTex` column maps each building itemId → texture filename.
+// We list the UNIQUE texture filenames here (~29 files) — much smaller surface
+// than per-building extraction. tools/parse-building-pathing.js reads the
+// extracted TGAs + unitdata.slk to build helpers/buildingPathing.json.
+console.log('');
+console.log('=== 6. BUILDING PATHING TEXTURES ===');
+console.log('Source of truth for building footprints. ~29 shared TGAs.');
+console.log('');
+const unitDataPath = path.join(__dirname, 'map-data', 'units', 'unitdata.slk');
+let pathingSection = '';
+try {
+  const unitSLK = parseSLK(unitDataPath);
+  const pathTexById = {};
+  for (const row of unitSLK.rows) {
+    const id = row.unitID;
+    const tex = row.pathTex;
+    if (!id || !tex || tex === '_' || tex === '') continue;
+    pathTexById[id] = tex;
+  }
+  const uniqueTexs = Array.from(new Set(Object.values(pathTexById))).sort();
+  console.log('  FROM: war3.w3mod\\' + (uniqueTexs[0] ? uniqueTexs[0].split('\\')[0] : 'PathTextures') + '\\');
+  console.log('  TO:   tools/map-data/buildings/_pathing-tgas/');
+  console.log('');
+  console.log('  (CascView path may differ — search for "*Simple.tga" / "*Solid.tga"');
+  console.log('   in the war3.w3mod tree. Reforged installs may also have these as');
+  console.log('   DDS — prefer TGA when offered.)');
+  console.log('');
+  console.log('  Required texture filenames (' + uniqueTexs.length + ' unique, referenced by ' +
+              Object.keys(pathTexById).length + ' building itemIds):');
+  for (const tex of uniqueTexs) {
+    console.log('    ' + tex);
+  }
+  console.log('');
+  console.log('  Also extract (verification only — pathTex column drives the manifest):');
+  console.log('    war3.w3mod\\Units\\UnitData.slk');
+  console.log('    → tools/map-data/units/unitdata.slk  (already extracted)');
+} catch (err) {
+  console.log('  [unable to parse ' + unitDataPath + ']');
+  console.log('  ' + err.message);
+  console.log('  Run extraction #6 manually: grab everything under war3.w3mod\\PathTextures\\');
+}
+
 console.log('');
 console.log('=== SUMMARY ===');
 console.log('Start with #1 (cliffs) and #3 (metadata) — those are needed first.');
 console.log('Then #4 (trees) for the tileset your test map uses (L = LordaeronSummer).');
+console.log('#6 (pathing) is required for accurate building footprints (Phase 1 of collision work).');

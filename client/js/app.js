@@ -2934,6 +2934,11 @@ const Wc3vViewer = class {
         );
       }
 
+      // Quarter-time guide markers — 1/4, 1/2, 3/4 reference ticks with minute labels.
+      if (this.scrubber && this.scrubber.setTimeGuides) {
+        this.scrubber.setTimeGuides(this.matchEndTime);
+      }
+
       this.timelineSpline.observeResize();
 
       this.unitsProductionPanel.setup(this.players);
@@ -3899,6 +3904,7 @@ const Wc3vViewer = class {
       frameData.deathFx.length = 0;
       for (const k in frameData.drawnUnits) delete frameData.drawnUnits[k];
       frameData.gameTime = gameTime;
+      this._refreshActiveBattleParticipants(frameData, gameTime);
 
       // --- Map overlays ---
       const _halfHits = [];
@@ -3923,6 +3929,11 @@ const Wc3vViewer = class {
       players.forEach(player => {
         player.preRender(frameData, ctx, playerCtx, utilityCtx, playerStatusCtx, t, gameTime, xScale, yScale, viewOptions);
       });
+
+      // Per-frame collision pass — same purpose as in the main render path.
+      if (window.CollisionResolver) {
+        window.CollisionResolver.resolveFrame(frameData);
+      }
 
       // Skip bloom in split mode
       players.forEach(player => {
@@ -3971,6 +3982,35 @@ const Wc3vViewer = class {
 
     if (this.boRenderer) this.boRenderer.updateLiveBoHighlight();
     if (this.unitsProductionPanel) this.unitsProductionPanel.update(gameTime);
+  }
+
+  /**
+   * Per-frame: refresh the set of unit uuids that are participating in a
+   * currently-active detected battle. ClientUnit.renderUnit reads this from
+   * frameData.activeBattleParticipants and flags isInBattle on the draw
+   * descriptor so Drawing.drawUnit can brighten the player-color halo for
+   * the fighters ("spotlight on the action").
+   *
+   * Strict-window gate: only the [startTime, endTime] range counts — we do
+   * not spotlight during the BattleData PREROLL/POSTROLL fade envelopes,
+   * since those are visual easing for the box, not active combat.
+   */
+  _refreshActiveBattleParticipants (frameData, gameTime) {
+    if (!frameData._activeBattleParticipantsSet) {
+      frameData._activeBattleParticipantsSet = new Set();
+    }
+    const set = frameData._activeBattleParticipantsSet;
+    set.clear();
+    if (this.processedBattles && this.processedBattles.activeAt) {
+      const active = this.processedBattles.activeAt(gameTime);
+      for (const b of active) {
+        if (gameTime < b.startTime || gameTime > b.endTime) continue;
+        const uuids = b._participantUuids;
+        if (!uuids) continue;
+        for (let i = 0; i < uuids.length; i++) set.add(uuids[i]);
+      }
+    }
+    frameData.activeBattleParticipants = set;
   }
 
   /**
@@ -4148,8 +4188,11 @@ const Wc3vViewer = class {
     frameData.buildingPositions.length = 0;
     if (!frameData.deathFx) frameData.deathFx = [];
     frameData.deathFx.length = 0;
+    if (!frameData.idleMarkers) frameData.idleMarkers = [];
+    frameData.idleMarkers.length = 0;
     for (const k in frameData.drawnUnits) delete frameData.drawnUnits[k];
     frameData.gameTime = gameTime;
+    this._refreshActiveBattleParticipants(frameData, gameTime);
 
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
     // Trees deferred to Phase 2 (3D billboard sprites); flat green circles looked out of place on the 3D terrain.
@@ -4193,6 +4236,15 @@ const Wc3vViewer = class {
         viewOptions
       );
     });
+
+    // STRICT NO-OVERLAP: per-frame collision pass. Parser snaps recorded
+    // positions but client interpolates between samples — without this,
+    // crossing units visually overlap during interpolation. Mutates
+    // frameData.unitDrawPositions in place; downstream draws read resolved
+    // positions. Also pushes units out of building rectangles.
+    if (window.CollisionResolver) {
+      window.CollisionResolver.resolveFrame(frameData);
+    }
 
     // compute spawn bias angles once (lazy init)
     if (!this._spawnBiasComputed) {

@@ -129,21 +129,93 @@ const BattleRenderer = class {
 
     const color = (window.BattleCategoryColor && window.BattleCategoryColor[battle.category])
       || '#FFD166';
+    const isPitched = (battle.category === 'pitched-battle');
 
-    // Dashed rectangle, fairly high contrast.
-    ctx.setLineDash([7, 5]);
-    ctx.globalAlpha = 0.95 * alpha;
-    ctx.lineWidth = (battle.category === 'pitched-battle') ? 3.2 : 2.2;
-    ctx.strokeStyle = color;
-    ctx.strokeRect(x, y, w, h);
-
-    // Interior tint.
+    // Interior tint first so it sits under the border.
     ctx.setLineDash([]);
-    ctx.globalAlpha = 0.12 * alpha;
+    ctx.globalAlpha = 0.10 * alpha;
     ctx.fillStyle = color;
-    ctx.fillRect(x, y, w, h);
+    this._tracePath(ctx, x, y, w, h, 8);
+    ctx.fill();
+
+    // Faint full perimeter — defines the edge without dominating. Dashed,
+    // low alpha. Middle of long sides becomes a soft hint rather than a
+    // hard claim that those units are exactly where the box ends.
+    ctx.setLineDash([6, 6]);
+    ctx.globalAlpha = 0.30 * alpha;
+    ctx.lineWidth = isPitched ? 1.5 : 1.2;
+    ctx.strokeStyle = color;
+    this._tracePath(ctx, x, y, w, h, 8);
+    ctx.stroke();
+
+    // Strong corner brackets — broadcast / scope-reticle treatment. Each
+    // corner gets a short L-shape that follows the rounded path; the corners
+    // do the visual work of defining the box, the dashed perimeter just
+    // connects them.
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.95 * alpha;
+    ctx.lineWidth = isPitched ? 3.2 : 2.4;
+    ctx.lineCap = 'round';
+    this._drawCornerBrackets(ctx, x, y, w, h, 8);
+    ctx.lineCap = 'butt';
 
     this._drawBanner(ctx, battle, x, y, w, color, alpha, gameTime);
+  }
+
+  // Trace a rounded rectangle path. Caller fills or strokes.
+  _tracePath (ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + rr, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + h - rr);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    ctx.lineTo(x + rr, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.closePath();
+  }
+
+  // Four L-shaped corner brackets. Length scales with the box up to a cap so
+  // tiny battles don't get cartoonish brackets and huge battles still feel
+  // contained. ctx state (strokeStyle, lineWidth, alpha) must be set by caller.
+  _drawCornerBrackets (ctx, x, y, w, h, r) {
+    const rr = Math.min(r, w / 2, h / 2);
+    const armLen = Math.min(22, Math.max(12, Math.min(w, h) * 0.18));
+
+    // Top-left
+    ctx.beginPath();
+    ctx.moveTo(x, y + rr + armLen);
+    ctx.lineTo(x, y + rr);
+    ctx.quadraticCurveTo(x, y, x + rr, y);
+    ctx.lineTo(x + rr + armLen, y);
+    ctx.stroke();
+
+    // Top-right
+    ctx.beginPath();
+    ctx.moveTo(x + w - rr - armLen, y);
+    ctx.lineTo(x + w - rr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+    ctx.lineTo(x + w, y + rr + armLen);
+    ctx.stroke();
+
+    // Bottom-right
+    ctx.beginPath();
+    ctx.moveTo(x + w, y + h - rr - armLen);
+    ctx.lineTo(x + w, y + h - rr);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    ctx.lineTo(x + w - rr - armLen, y + h);
+    ctx.stroke();
+
+    // Bottom-left
+    ctx.beginPath();
+    ctx.moveTo(x + rr + armLen, y + h);
+    ctx.lineTo(x + rr, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+    ctx.lineTo(x, y + h - rr - armLen);
+    ctx.stroke();
   }
 
   // Banner layout (left → right):
@@ -186,6 +258,16 @@ const BattleRenderer = class {
     // Hidden when zero.
     const tpInCount  = battle._tpInUnits  || 0;
     const tpOutCount = battle._tpOutUnits || 0;
+    // Engaged-buildings chip — towers / town halls / production buildings
+    // that took fire during this battle. "🏰 Watch Tower" if there's a
+    // single building, "🏰 ×N" when several were under attack.
+    const engagedBuildings = battle.engagedBuildings || [];
+    const ebCount = engagedBuildings.length;
+    const ebLabel = ebCount === 1
+      ? `🏰 ${engagedBuildings[0].displayName}`
+      : ebCount > 1
+        ? `🏰 ×${ebCount}`
+        : null;
 
     // Trip chip metrics
     const iconSize = 16;
@@ -209,6 +291,14 @@ const BattleRenderer = class {
     const gapTpIn  = tpInCount  > 0 ? 10 : 0;
     const gapTpOut = tpOutCount > 0 ? 10 : 0;
 
+    // Engaged-buildings chip metrics
+    let ebChipW = 0;
+    if (ebLabel) {
+      ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+      ebChipW = ctx.measureText(ebLabel).width + 8;
+    }
+    const gapEb = ebLabel ? 10 : 0;
+
     // Possibly-dead chip
     let pdChipW = 0;
     if (pdCount > 0) {
@@ -224,7 +314,7 @@ const BattleRenderer = class {
     const gapTrips = tripChips.length ? 12 : 0;
     const gapPd = pdCount > 0 ? 12 : 0;
     const bannerW = padX * 2 + headW + gapMid + timeW + gapDots + dotsW + gapTrips + tripChipsW +
-                    gapTpIn + tpInChipW + gapTpOut + tpOutChipW + gapPd + pdChipW;
+                    gapTpIn + tpInChipW + gapTpOut + tpOutChipW + gapEb + ebChipW + gapPd + pdChipW;
     const bannerH = Math.max(iconSize, 14) + padY * 2;
     const bannerX = x;
     const bannerY = Math.max(0, y - bannerH - 3);
@@ -303,6 +393,16 @@ const BattleRenderer = class {
       ctx.fillStyle = '#9aa6b0';   // muted — escape is less urgent than arrival
       ctx.fillText(`⚡←${tpOutCount}`, cx, midY);
       cx += tpOutChipW - 8;
+    }
+
+    // --- engaged-buildings chip ---
+    // Towers / production / town halls that took fire during the fight.
+    if (ebLabel) {
+      cx += gapEb;
+      ctx.fillStyle = '#FFA66E';   // soft amber — siege-on-buildings flavor
+      ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+      ctx.fillText(ebLabel, cx, midY);
+      cx += ebChipW - 8;
     }
 
     // --- possibly-dead chip ---

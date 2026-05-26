@@ -565,6 +565,7 @@ const serializeBattles = (battles) => {
       participants: b.participants,
       trackerBox: b.trackerBox,
       outerBbox: b.outerBbox,
+      engagedBuildings: b.engagedBuildings || [],
       signals: sigs.map(s => ({
         gameTime: s.gameTime,
         playerId: s.playerId,

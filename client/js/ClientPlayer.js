@@ -269,7 +269,10 @@ const ClientPlayer = class {
     heroes = heroes.sort(hero => hero.spawnTime);
     heroes.forEach((hero, ind) => {
       hero.heroRank = ind + 1;
-      if (ind > 0) hero.iconSize = IconSizes.secondaryHero;
+      // True-size rendering: all heroes use their WC3 collision size.
+      // Secondary heroes used to be ~4px smaller for visual distinction —
+      // dropped because it doesn't fit the 1:1 sizing doctrine. Reintroduce
+      // as a heroRank-driven render-time scale if user wants it back.
     });
 
     if (firstHero) {
@@ -665,7 +668,8 @@ const ClientPlayer = class {
         isTransport: isTransport || false,
         cargoCount: cargoCount || 0,
         cargoItems: cargoItems || null,
-        scoutLabel: scoutLabel || null
+        scoutLabel: scoutLabel || null,
+        isHidden: item.isHidden || false
       };
 
       acc.push(unitBox);
@@ -855,6 +859,8 @@ const ClientPlayer = class {
 
         ctx.fillStyle = '#44DDBB';
         ctx.fillText(unitBox.scoutLabel, lx, ly);
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'left';
         ctx.globalAlpha = 1;
       }
     });
@@ -864,11 +870,27 @@ const ClientPlayer = class {
   // once per frame from app.js after every player has rendered, so FX from
   // all players are flushed in a single pass on top of unit icons.
   static drawDeathFxQueue (frameData, ctx) {
-    if (!frameData || !frameData.deathFx || !frameData.deathFx.length) return;
-    for (let i = 0; i < frameData.deathFx.length; i++) {
-      Drawing.drawDeathFx(ctx, frameData.deathFx[i]);
+    if (!frameData) return;
+    if (frameData.deathFx && frameData.deathFx.length) {
+      for (let i = 0; i < frameData.deathFx.length; i++) {
+        Drawing.drawDeathFx(ctx, frameData.deathFx[i]);
+      }
+      frameData.deathFx.length = 0;
     }
-    frameData.deathFx.length = 0;
+    // Idle markers: small player-coloured dot above units in 'idle' state.
+    if (frameData.idleMarkers && frameData.idleMarkers.length) {
+      for (let i = 0; i < frameData.idleMarkers.length; i++) {
+        const m = frameData.idleMarkers[i];
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = m.playerColor || '#999';
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+      frameData.idleMarkers.length = 0;
+    }
   }
 
   static isValidBox (box) {
@@ -880,7 +902,7 @@ const ClientPlayer = class {
     const { unitDrawPositions } = frameData;
 
     return unitDrawPositions.reduce((acc, item) => {
-      const { x, y, iconSize, fontSize, isHero, heroRank, fullName, decayLevel, count, isNeutralPlayer } = item;
+      const { x, y, iconSize, fontSize, isHero, heroRank, fullName, decayLevel, count, isNeutralPlayer, playerColor } = item;
 
       if (item.hideNameplate) {
         return acc;
@@ -932,7 +954,8 @@ const ClientPlayer = class {
         iconSize: iconSize,
         isHero:   isHero,
         priority: priority,
-        count:    count
+        count:    count,
+        playerColor: playerColor
       });
 
       return acc;
@@ -969,12 +992,14 @@ const ClientPlayer = class {
     };
 
     allBoxes.forEach(nameBox => {
-      const { drawX, baseY, nameStr, iconSize, fontSize, isHero } = nameBox;
+      const { drawX, baseY, nameStr, iconSize, fontSize, isHero, playerColor } = nameBox;
       let { minX, maxX, minY, maxY, drawY } = nameBox;
 
       const collisionAbove = hasRealCollision({ minX, minY, maxX, maxY }, drawX, baseY);
 
-      let bgAlpha = isHero ? 0.7 : 0.5;
+      // Slightly more opaque background than before so the player-color
+      // stripe along the bottom has a stable dark band to sit on.
+      let bgAlpha = isHero ? 0.85 : 0.75;
       let textAlpha = 1;
 
       if (collisionAbove) {
@@ -1008,24 +1033,50 @@ const ClientPlayer = class {
       const bgH = textH + padY * 2;
       const radius = 5;
 
+      const traceRoundedRect = () => {
+        ctx.beginPath();
+        ctx.moveTo(bgX + radius, bgY);
+        ctx.lineTo(bgX + bgW - radius, bgY);
+        ctx.quadraticCurveTo(bgX + bgW, bgY, bgX + bgW, bgY + radius);
+        ctx.lineTo(bgX + bgW, bgY + bgH - radius);
+        ctx.quadraticCurveTo(bgX + bgW, bgY + bgH, bgX + bgW - radius, bgY + bgH);
+        ctx.lineTo(bgX + radius, bgY + bgH);
+        ctx.quadraticCurveTo(bgX, bgY + bgH, bgX, bgY + bgH - radius);
+        ctx.lineTo(bgX, bgY + radius);
+        ctx.quadraticCurveTo(bgX, bgY, bgX + radius, bgY);
+        ctx.closePath();
+      };
+
+      // Dark base fill.
       ctx.globalAlpha = bgAlpha;
-      ctx.fillStyle = '#111';
-      ctx.beginPath();
-      ctx.moveTo(bgX + radius, bgY);
-      ctx.lineTo(bgX + bgW - radius, bgY);
-      ctx.quadraticCurveTo(bgX + bgW, bgY, bgX + bgW, bgY + radius);
-      ctx.lineTo(bgX + bgW, bgY + bgH - radius);
-      ctx.quadraticCurveTo(bgX + bgW, bgY + bgH, bgX + bgW - radius, bgY + bgH);
-      ctx.lineTo(bgX + radius, bgY + bgH);
-      ctx.quadraticCurveTo(bgX, bgY + bgH, bgX, bgY + bgH - radius);
-      ctx.lineTo(bgX, bgY + radius);
-      ctx.quadraticCurveTo(bgX, bgY, bgX + radius, bgY);
-      ctx.closePath();
+      ctx.fillStyle = '#0d0d10';
+      traceRoundedRect();
       ctx.fill();
+
+      // Faint full-area playerColor tint diffused into the dark background —
+      // the color is everywhere, not on a single edge. Mirrors WC3 selection-
+      // circle / faction-tint idiom on the entire plate.
+      if (playerColor) {
+        ctx.globalAlpha = 0.20 * bgAlpha;
+        ctx.fillStyle = playerColor;
+        traceRoundedRect();
+        ctx.fill();
+
+        // Full-perimeter playerColor outline. Symmetric, so it doesn't read
+        // as a single-edge accent — the color goes all the way around at
+        // equal weight. 1.5px is enough to scan from a glance without
+        // overwhelming the text.
+        ctx.globalAlpha = 0.95;
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = playerColor;
+        traceRoundedRect();
+        ctx.stroke();
+      }
 
       // text
       ctx.globalAlpha = textAlpha;
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
       ctx.font = `bold ${Math.ceil(fontSize)}px Arial`;
       ctx.fillStyle = '#FFF';
       ctx.fillText(nameStr, drawX, drawY);

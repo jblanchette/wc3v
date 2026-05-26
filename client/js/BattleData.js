@@ -36,6 +36,24 @@ const BattleData = class {
     const inBox = (x, y, b) => b && b.outerBbox &&
       x >= b.outerBbox.minX && x <= b.outerBbox.maxX &&
       y >= b.outerBbox.minY && y <= b.outerBbox.maxY;
+
+    // Flatten participants[].unitUuids into a deduped uuid list per battle.
+    // The server stripped this on export (only participants per player are
+    // serialized), but the unit-spotlight wants a flat membership test —
+    // computed once here, O(1) per-frame Set membership in app.js.
+    for (const b of battles) {
+      const seen = new Set();
+      const flat = [];
+      for (const p of (b.participants || [])) {
+        for (const uuid of (p.unitUuids || [])) {
+          if (seen.has(uuid)) continue;
+          seen.add(uuid);
+          flat.push(uuid);
+        }
+      }
+      b._participantUuids = flat;
+    }
+
     for (const b of battles) {
       b._tpIn  = 0;
       b._tpOut = 0;

@@ -129,26 +129,52 @@ const Drawing = class {
       halfIconSize,
       decayLevel,
       icon,
-      playerColor
+      playerColor,
+      isHero,
+      isInBattle
     } = unit;
 
-    ctx.strokeStyle = playerColor || "#FFFC01";
+    const safeColor = playerColor || "#FFFC01";
     ctx.globalAlpha = decayLevel;
 
-    // Transport outer ring
+    // Transport outer ring sits outside the identity halo.
     if (unit.isTransport) {
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = playerColor || "#FFFC01";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = safeColor;
       ctx.beginPath();
-      ctx.arc(drawX, drawY, halfIconSize + 7, 0, Math.PI * 2, true);
+      ctx.arc(drawX, drawY, halfIconSize + 9, 0, Math.PI * 2, true);
       ctx.stroke();
       ctx.lineWidth = 1;
     }
 
-    ctx.fillStyle = playerColor;
+    // Player-color identity halo. Brighter when the unit is participating
+    // in the currently-active detected battle — "spotlight on the fighters".
+    const haloAlpha = (isInBattle ? 1.0 : 0.85) * decayLevel;
+    ctx.globalAlpha = haloAlpha;
+    ctx.fillStyle = safeColor;
     ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize + 3, 0, Math.PI * 2, true);
+    ctx.arc(drawX, drawY, halfIconSize + 6, 0, Math.PI * 2, true);
     ctx.fill();
+
+    // Heroes get a thin gold accent ring just outside the player-color halo.
+    if (isHero) {
+      ctx.globalAlpha = decayLevel;
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#FFD24A';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, halfIconSize + 6.5, 0, Math.PI * 2, true);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+    }
+
+    // Dark gasket kills the icon's anti-aliased edge bleeding into the
+    // colored halo and gives the ring a crisp inner border.
+    ctx.globalAlpha = decayLevel;
+    ctx.fillStyle = '#0d0d10';
+    ctx.beginPath();
+    ctx.arc(drawX, drawY, halfIconSize + 2, 0, Math.PI * 2, true);
+    ctx.fill();
+
     ctx.fillStyle = "#000";
 
     if (!icon) {
@@ -156,6 +182,29 @@ const Drawing = class {
     }
 
     Drawing.drawImageCircle(ctx, icon, drawX, drawY, iconSize);
+
+    // Shadowmeld ghost overlay: dashed white outline + "HIDE" tag. Only
+    // applies when server's HideInference flagged the unit hidden NOW.
+    if (unit.isHidden) {
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = '#E8F4FF';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, halfIconSize + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Small "HIDE" tag below the icon.
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillText('HIDE', drawX + 1, drawY + halfIconSize + 3);
+      ctx.fillStyle = '#E8F4FF';
+      ctx.fillText('HIDE', drawX, drawY + halfIconSize + 2);
+      ctx.restore();
+    }
 
     // Cargo orbital icons for transports
     if (unit.isTransport && unit.cargoItems && unit.cargoItems.length) {
@@ -218,24 +267,49 @@ const Drawing = class {
   // of [0, durationMs] under fast scrubbing; we clamp.
   static drawDeathFx (ctx, fx) {
     const {
-      x, y, ageMs, durationMs, iconSize, playerColor, label, isHero
+      x, y, ageMs, durationMs, iconSize, playerColor, label, isHero,
+      richDeath, xpAwarded
     } = fx;
     const t = Math.max(0, Math.min(1, ageMs / durationMs));
     const halfIcon = iconSize / 2;
 
     ctx.save();
 
+    // Red flash overlay — only for richDeath (server-confirmed lost unit).
+    // Brief burst that peaks early then fades. Communicates "this unit took
+    // lethal damage" the way WC3's red hurt flash does.
+    if (richDeath) {
+      const flashAlpha = Math.max(0, (1 - t * 3)) * 0.75;
+      if (flashAlpha > 0.01) {
+        ctx.globalAlpha = flashAlpha;
+        ctx.fillStyle = '#FF2A2A';
+        ctx.beginPath();
+        ctx.arc(x, y, halfIcon * 1.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     // Expanding ring: starts at icon edge, grows ~1.5x icon size. Alpha
-    // peaks mid-window then fades out.
-    const ringR = halfIcon + (iconSize * 0.85) * t;
+    // peaks mid-window then fades out. Rich death uses a thicker, redder ring.
+    const ringR = halfIcon + (iconSize * (richDeath ? 1.1 : 0.85)) * t;
     const ringAlpha = (1 - Math.abs(t - 0.35) / 0.65) * 0.85;
     if (ringAlpha > 0.01) {
       ctx.globalAlpha = Math.max(0, Math.min(1, ringAlpha));
-      ctx.lineWidth = isHero ? 4 : 3;
-      ctx.strokeStyle = playerColor || '#FF5252';
+      ctx.lineWidth = isHero ? 5 : (richDeath ? 4 : 3);
+      ctx.strokeStyle = richDeath ? '#FF5252' : (playerColor || '#FF5252');
       ctx.beginPath();
       ctx.arc(x, y, ringR, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Player-color inner ring so attribution is visible even on rich-death.
+      if (richDeath && playerColor) {
+        ctx.globalAlpha = Math.max(0, Math.min(1, ringAlpha * 0.6));
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = playerColor;
+        ctx.beginPath();
+        ctx.arc(x, y, ringR * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+      }
 
       // Inner darkening disc to imply the unit is "gone" — fades fastest.
       const discAlpha = (1 - t) * 0.35;
@@ -246,6 +320,23 @@ const Drawing = class {
         ctx.arc(x, y, halfIcon, 0, Math.PI * 2);
         ctx.fill();
       }
+    }
+
+    // Green XP popup — drifts up like WC3's "+N" text on hero kill. Only for
+    // rich (server-confirmed) deaths so we don't spam every heuristic stale-fade.
+    if (richDeath && xpAwarded > 0) {
+      const drift = 36 * t;
+      const xpY = y - halfIcon - 28 - drift;
+      const xpAlpha = Math.max(0, 1 - t * 1.2);
+      ctx.globalAlpha = xpAlpha;
+      ctx.font = 'bold 14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // Black shadow for legibility on any background.
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillText('+' + xpAwarded, x + 1, xpY + 1);
+      ctx.fillStyle = '#33FF55';
+      ctx.fillText('+' + xpAwarded, x, xpY);
     }
 
     // Floating label drifts upward and fades. Heroes use larger, redder text.
@@ -277,20 +368,32 @@ const Drawing = class {
     if (count < 2) return;
     const radius = 11;
     ctx.save();
-    ctx.globalAlpha = 0.9;
+
+    // Solid player-color disc with a dark outline for legibility on any terrain.
+    // Carries player identity onto stacked groups (Lich x3, Mortar Team x2)
+    // which are the densest information in a battle.
+    ctx.globalAlpha = 0.95;
     ctx.beginPath();
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#111';
+    ctx.fillStyle = playerColor || '#444';
     ctx.fill();
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = playerColor || '#FFF';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#0d0d10';
     ctx.stroke();
+
+    // Number — white with a soft black shadow so it stays readable over the
+    // lighter player colors (yellow, teal, light blue, pink).
     ctx.globalAlpha = 1;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+    ctx.shadowBlur = 2;
     ctx.fillStyle = '#FFF';
     ctx.font = 'bold 15px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(count, centerX, centerY + 0.5);
+    ctx.shadowBlur = 0;
+    ctx.shadowColor = 'transparent';
+
     ctx.restore();
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
@@ -345,11 +448,18 @@ const Drawing = class {
     }
 
     const { iconSize, halfIconSize } = unit;
+    // True-collision unit icons can shrink to ~4px for Footmen — using that
+    // as the layout step would collapse hero rank decorations on top of each
+    // other. LAYOUT_ICON_STEP is a fixed UI step that keeps the rank chips
+    // visually separated even when the underlying unit icon is tiny.
+    const LAYOUT_ICON_STEP = 36;
+    const step = Math.max(iconSize, LAYOUT_ICON_STEP);
+    const halfStep = step / 2;
 
     if (isHero) {
       // heroes are always drawn left + right of main hero
       return {
-        xOffset: (heroRank > 2) ? iconSize : -(iconSize),
+        xOffset: (heroRank > 2) ? step : -(step),
         yOffset: 0,
         spot: null
       };
@@ -370,11 +480,11 @@ const Drawing = class {
      *********************************************************************/
 
     const spotMap = {
-      2: { spot, xOffset: -(iconSize),                yOffset: -(iconSize) },
-      1: { spot, xOffset: -(iconSize) + halfIconSize, yOffset: -(iconSize) },
-      0: { spot, xOffset: 0,                          yOffset: -(iconSize) },
-      3: { spot, xOffset:  (iconSize) + halfIconSize, yOffset: -(iconSize) },
-      4: { spot, xOffset: -(iconSize),                yOffset: -(iconSize) }
+      2: { spot, xOffset: -(step),            yOffset: -(step) },
+      1: { spot, xOffset: -(step) + halfStep, yOffset: -(step) },
+      0: { spot, xOffset: 0,                  yOffset: -(step) },
+      3: { spot, xOffset:  (step) + halfStep, yOffset: -(step) },
+      4: { spot, xOffset: -(step),            yOffset: -(step) }
     };
 
     return spotMap[spot];
