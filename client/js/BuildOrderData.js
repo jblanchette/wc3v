@@ -273,8 +273,71 @@ const BuildOrderData = class {
           itemId: item.itemId,
           goldCost: event.goldCost || 0,
           shop: event.shop,
+          shopItemId: event.shopItemId,
           isNeutralShop: event.isNeutralShop,
-          confidence: event.confidence || 'high'
+          confidence: event.confidence || 'high',
+          // Phase 3 provenance — `source` lets the renderer show an
+          // [INFERRED] chip when the purchase was backfilled from a
+          // use-reclassification or post-parse reconciliation.
+          source: event.source || 'shop-known',
+          inferred: !!event.inferred,
+          actionText: event.actionText || null
+        }));
+
+      } else if (key === 'itemUse') {
+        const { item, unit } = event;
+        if (!item) return;
+        // Inference gate: an itemUse event tagged cancelled by the
+        // inference-layer commit pass (typically a phantom Scroll of
+        // Town Portal use rejected by the claims system) is skipped
+        // entirely. The BO panel showed false positives like Happy's
+        // 2:12 "TP" before this gate.
+        if (event.cancelled) return;
+        const isUnknown = !item.itemId;
+        // Tomes don't show up as use events (consumed-on-pickup); the
+        // server already routes them through itemPurchase. Random/lost-
+        // slot fallback uses are kept so the validator can flag them.
+        events.push(create('itemUse', gameTime, supplyUsed, supplyMax, w, {
+          displayName: item.displayName || 'Unknown consumable',
+          itemId: item.itemId || null,
+          category: event.category || 'unknown',
+          unitName: unit && unit.displayName,
+          unitItemId: unit && unit.itemId,
+          confidence: event.confidence || (isUnknown ? 'low' : 'high'),
+          source: event.source || (isUnknown ? 'use-no-slot' : 'observed'),
+          inferred: !!event.inferred,
+          inferenceConfidence: event.inferenceConfidence || null
+        }));
+
+      } else if (key === 'pickupItem') {
+        const { item, unit } = event;
+        if (!item) return;
+        events.push(create('pickupItem', gameTime, supplyUsed, supplyMax, w, {
+          displayName: item.displayName || 'Unknown ground item',
+          itemId: item.itemId || null,
+          unitName: unit && unit.displayName,
+          unitItemId: unit && unit.itemId,
+          campUuid: event.campUuid || null,
+          isRandomDrop: !!event.isRandomDrop,
+          confidence: event.confidence || 'high',
+          source: event.source || 'creep-drop',
+          actionText: event.actionText || null
+        }));
+
+      } else if (key === 'sellItem') {
+        const { item, unit } = event;
+        if (!item) return;
+        events.push(create('sellItem', gameTime, supplyUsed, supplyMax, w, {
+          displayName: item.displayName,
+          itemId: item.itemId,
+          unitName: unit && unit.displayName,
+          unitItemId: unit && unit.itemId,
+          shop: event.shop,
+          shopItemId: event.shopItemId,
+          goldRefunded: event.goldRefunded || 0,
+          confidence: event.confidence || 'medium',
+          source: event.source || 'shop-known',
+          actionText: event.actionText || null
         }));
 
       } else if (key === 'hireMercenary') {

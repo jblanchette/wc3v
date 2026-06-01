@@ -61,6 +61,12 @@ const BattleData = class {
       b._tpOutUnits = 0;
       for (const tp of allTeleports) {
         if (tp.cancelled) continue;
+        // Inference gate: skip teleports the parser flagged as low-
+        // confidence phantoms. Anything below 'possible' (i.e. unlikely
+        // / rejected) is excluded from battle TP-in/TP-out counts so a
+        // phantom doesn't appear as a real banner chip.
+        if (tp.inferenceConfidence === 'rejected' ||
+            tp.inferenceConfidence === 'unlikely') continue;
         const applyT = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
         // TP-IN
         if (tp.destination &&
@@ -76,6 +82,60 @@ const BattleData = class {
           b._tpOut += 1;
           b._tpOutUnits += (tp.grabbedCount || 0) + 1;
         }
+      }
+    }
+
+    // Phase 6 — battle-scoped item activity. Flatten purchases / uses /
+    // sells across all non-neutral players, then per battle count those
+    // whose buyer hero participated AND whose gameTime falls within the
+    // battle window. The banner shows compact chips ('🛒 N', '💊 N',
+    // '💰 N') in the same column as the existing TP chips so a glance
+    // tells you "Grubby Healing-Salve'd x3 during this Lvl-3 hippo fight".
+    const allItemPurchases = [];
+    const allItemUses = [];
+    const allItemSells = [];
+    if (mapData && mapData.players) {
+      for (const [pid, p] of Object.entries(mapData.players)) {
+        if (p.isNeutralPlayer) continue;
+        for (const ev of (p.eventStream || [])) {
+          if (ev.key === 'itemPurchase' && ev.item && ev.item.itemId !== 'Jwid') {
+            allItemPurchases.push({ ...ev, _playerId: pid });
+          } else if (ev.key === 'itemUse' && ev.item && ev.item.itemId
+                     && ev.source !== 'use-no-slot') {
+            allItemUses.push({ ...ev, _playerId: pid });
+          } else if (ev.key === 'sellItem' && ev.item) {
+            allItemSells.push({ ...ev, _playerId: pid });
+          }
+        }
+      }
+    }
+
+    // Pre-build a participant uuid lookup per battle (cheap O(1) check).
+    for (const b of battles) {
+      b._itemsBoughtDuring = 0;
+      b._itemsUsedDuring = 0;
+      b._itemsSoldDuring = 0;
+      const partSet = new Set(b._participantUuids || []);
+      const heroFor = (ev) => ev.unit && (ev.unit.uuid || ev.unit.itemId);
+      const inWindow = (t) => t >= b.startTime - 1000 && t <= b.endTime + 1000;
+
+      for (const ev of allItemPurchases) {
+        if (!inWindow(ev.gameTime)) continue;
+        const h = heroFor(ev);
+        if (!h || !partSet.has(h)) continue;
+        b._itemsBoughtDuring += 1;
+      }
+      for (const ev of allItemUses) {
+        if (!inWindow(ev.gameTime)) continue;
+        const h = heroFor(ev);
+        if (!h || !partSet.has(h)) continue;
+        b._itemsUsedDuring += 1;
+      }
+      for (const ev of allItemSells) {
+        if (!inWindow(ev.gameTime)) continue;
+        const h = heroFor(ev);
+        if (!h || !partSet.has(h)) continue;
+        b._itemsSoldDuring += 1;
       }
     }
 

@@ -1,0 +1,50 @@
+{
+  "_comment": "Score → confidence-rung thresholds per claim type. Score is the signed sum of evidence weights, clamped to [-1, +1]. A claim's confidence = the first rung whose cutoff the score meets. Below the 'unlikely' cutoff falls to 'rejected'. Per-type tuning — different claim subjects can demand different evidence levels.",
+
+  "default": {
+    "confirmed": 0.85,
+    "likely":    0.5,
+    "possible":  0.0,
+    "unlikely": -0.5
+  },
+
+  "teleport": {
+    "_comment": "Teleports are visible, expensive, and load-bearing — a false positive corrupts hero path data and pollutes battle banners. Demand a real positive evidence to confirm; tolerate ambiguity at 'possible'. The look-ahead pass needs to find post-cast action locality at the destination to confirm.",
+    "confirmed": 0.7,
+    "likely":    0.35,
+    "possible":  0.0,
+    "unlikely": -0.4
+  },
+
+  "itemUse": {
+    "_comment": "Item uses are common and a wrong one is annoying but rarely cascades — backfill at 'likely' is fine.",
+    "confirmed": 0.8,
+    "likely":    0.45,
+    "possible":  0.0,
+    "unlikely": -0.5
+  },
+
+  "slotBinding": {
+    "_comment": "Slot.item bindings (Phase B). Easy to confirm from a real purchase or a fresh observation; the startup-grant assumption starts at 'possible' until corroborated.",
+    "confirmed": 0.8,
+    "likely":    0.4,
+    "possible":  0.0,
+    "unlikely": -0.5
+  },
+
+  "summon": {
+    "_comment": "Summon attribution (Phase C placeholder).",
+    "confirmed": 0.8,
+    "likely":    0.45,
+    "possible":  0.0,
+    "unlikely": -0.5
+  },
+
+  "expansion": {
+    "_comment": "Expansion detection (Phase C placeholder).",
+    "confirmed": 0.85,
+    "likely":    0.5,
+    "possible":  0.0,
+    "unlikely": -0.5
+  }
+}

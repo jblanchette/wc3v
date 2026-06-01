@@ -22,6 +22,9 @@
  *
  *   4. BANNER — "⚡ SCROLL OF TOWN PORTAL  +N units" centered above the ring.
  *      Red and "✕ CANCELLED" when cancellable cast was interrupted.
+ *      Single-unit teleport items (stel / spre / ssan) use a CYAN accent so
+ *      users instantly read them as "hero-only", and the sub-line shows
+ *      "single-unit teleport" instead of the +N units count.
  *
  *   5. ARRIVAL FLASH — at apply: a bright expanding shockwave ring at the
  *      destination + a brief inner solid flash. Bigger than v1.
@@ -37,7 +40,7 @@ const TeleportFx = class {
     // a missing-image gap for the first ~50ms). Mirrors MapRenderer's pattern.
     this._icons = {};
     this._iconsReady = false;
-    const types = ['stwp', 'stel', 'AHmt', 'AEbl'];
+    const types = ['stwp', 'stel', 'spre', 'ssan', 'AHmt', 'AEbl'];
     let loaded = 0;
     types.forEach(type => {
       const img = new Image();
@@ -77,6 +80,13 @@ const TeleportFx = class {
       const tps = player.teleportEvents || [];
       if (!tps.length) continue;
       for (const tp of tps) {
+        // Inference gate: phantom teleports (inferenceConfidence ∈
+        // {unlikely, rejected}) skip all FX rendering. The hero pip path
+        // may still show a spurious jump in v1 (Phase B fixes path
+        // data); FX suppression at least keeps banners + rings + trails
+        // off so the user doesn't see a fake TP visual.
+        if (tp.inferenceConfidence === 'rejected' ||
+            tp.inferenceConfidence === 'unlikely') continue;
         const cast = tp.gameTime;
         const apply = tp.appliedAt != null ? tp.appliedAt : (tp.gameTime + tp.channelMs);
         const fadeEnd = (tp.cancelled ? (cast + tp.channelMs) : apply) + POSTROLL_MS;
@@ -118,10 +128,33 @@ const TeleportFx = class {
     utilityCtx.restore();
   }
 
+  // Per-category accent palette. Single-unit teleports get a cyan look so a
+  // glance is enough to tell "hero/staff jump" apart from a Town Portal mass
+  // recall. Cancelled casts always switch to red regardless of category.
+  // `abilityCategory` is set by the parser from helpers/teleportAbilities;
+  // older replays without it fall back to inferring from abilityCode.
+  _palette (tp, cancelled) {
+    if (cancelled) return { core: '#FF6B6B', bright: '#FF8E8E', glowRGB: '255, 107, 107' };
+    const cat = tp.abilityCategory || this._inferCategory(tp.abilityCode);
+    if (cat === 'single-unit') {
+      return { core: '#4FD2FF', bright: '#A8EAFF', glowRGB: '79, 210, 255' };
+    }
+    // town-portal, mass, blink, unknown → original gold palette
+    return { core: '#FFD24A', bright: '#FFE072', glowRGB: '255, 210, 74' };
+  }
+
+  _inferCategory (abilityCode) {
+    if (abilityCode === 'stel' || abilityCode === 'spre' || abilityCode === 'ssan') return 'single-unit';
+    if (abilityCode === 'AHmt') return 'mass';
+    if (abilityCode === 'AEbl') return 'blink';
+    return 'town-portal';
+  }
+
   // Project a game-space point to canvas pixels — same recipe MapRenderer +
   // BattleRenderer use (projectXY samples 3D terrain height, then add middleX/Y).
   _proj (gameScaler, x, y) {
     const p = gameScaler.projectXY(x, y);
+    if (!p) return null;  // outside the camera frustum
     return { x: p.x + gameScaler.middleX, y: p.y + gameScaler.middleY };
   }
 
@@ -131,6 +164,7 @@ const TeleportFx = class {
     if (!gameRadius || gameRadius <= 0) return 0;
     const a = gameScaler.projectXY(originX, originY);
     const b = gameScaler.projectXY(originX + gameRadius, originY);
+    if (!a || !b) return 0;
     return Math.max(8, Math.abs(b.x - a.x));
   }
 
@@ -209,6 +243,11 @@ const TeleportFx = class {
 
     const oPx = this._proj(gameScaler, tp.origin.x, tp.origin.y);
     const dPx = this._proj(gameScaler, tp.destination.x, tp.destination.y);
+    // FX has nothing to draw if both endpoints are outside the camera frustum;
+    // in that case we'd dereference null below. If one endpoint is visible and
+    // the other isn't, the unguarded reference would still crash, so bail too —
+    // the user can't see the cinematic anyway.
+    if (!oPx || !dPx) return;
 
     // Grab radius from the registry (defaults below cover Scroll/MT/Blink).
     const grabRadius = tp.abilityCode === 'stwp' ? 900
@@ -216,13 +255,15 @@ const TeleportFx = class {
                      : 0;
     const grabPx = this._radiusPx(gameScaler, tp.origin.x, tp.origin.y, grabRadius);
 
+    const palette = this._palette(tp, cancelled);
+
     // ────────────────────────────────────────────────────────────────────
     // CHANNEL phase
     // ────────────────────────────────────────────────────────────────────
     if (inChannel || (cancelled && gameTime < cast + tp.channelMs)) {
       const tProg = Math.min(1, (gameTime - cast) / channelMs);
-      const color = cancelled ? '#FF6B6B' : '#FFD24A';
-      const colorBright = cancelled ? '#FF8E8E' : '#FFE072';
+      const color = palette.core;
+      const colorBright = palette.bright;
 
       // 1) GRAB RADIUS — faint dashed circle showing eligibility footprint.
       if (grabPx > 30 && !cancelled) {
@@ -243,9 +284,9 @@ const TeleportFx = class {
         oPx.x, oPx.y, mainR * 0.4,
         oPx.x, oPx.y, glowR
       );
-      glow.addColorStop(0, cancelled ? 'rgba(255, 107, 107, 0.45)' : 'rgba(255, 210, 74, 0.55)');
-      glow.addColorStop(0.6, cancelled ? 'rgba(255, 107, 107, 0.15)' : 'rgba(255, 210, 74, 0.18)');
-      glow.addColorStop(1, 'rgba(255, 210, 74, 0)');
+      glow.addColorStop(0,   `rgba(${palette.glowRGB}, 0.55)`);
+      glow.addColorStop(0.6, `rgba(${palette.glowRGB}, 0.18)`);
+      glow.addColorStop(1,   `rgba(${palette.glowRGB}, 0)`);
       ctx.globalAlpha = 1;
       ctx.fillStyle = glow;
       ctx.beginPath();
@@ -279,6 +320,7 @@ const TeleportFx = class {
         const pos = this._grabbedUnitPos(players, uuid, cast);
         if (!pos) continue;
         const gp = this._proj(gameScaler, pos.x, pos.y);
+        if (!gp) continue;  // grabbed unit is off-screen
         // Skip if the unit ring would overlap the caster ring (visual clutter).
         const dx = gp.x - oPx.x;
         const dy = gp.y - oPx.y;
@@ -312,11 +354,11 @@ const TeleportFx = class {
       const isGroupLeader = !group || group.leaderTp === tp;
       if (!cancelled && isGroupLeader) {
         const totalIncoming = group ? group.totalIncomingUnits : ((tp.grabbedCount || 0) + 1);
-        this._drawDestinationIndicator(ctx, dPx.x, dPx.y, tp, gameTime, cast, channelMs, totalIncoming, group && group.tps.length > 1 ? group.tps.length : 0);
+        this._drawDestinationIndicator(ctx, dPx.x, dPx.y, tp, gameTime, cast, channelMs, totalIncoming, group && group.tps.length > 1 ? group.tps.length : 0, palette);
       }
 
       // 8) BANNER above the caster ring.
-      this._drawBanner(ctx, oPx.x, oPx.y - mainR - 14, tp, cancelled);
+      this._drawBanner(ctx, oPx.x, oPx.y - mainR - 14, tp, cancelled, palette);
     }
 
     // ────────────────────────────────────────────────────────────────────
@@ -335,7 +377,7 @@ const TeleportFx = class {
         const ringR = 30 + 90 * tf;
         ctx.globalAlpha = 0.85 * (1 - tf);
         ctx.lineWidth = 5 * (1 - tf * 0.7);
-        ctx.strokeStyle = '#FFE072';
+        ctx.strokeStyle = palette.bright;
         ctx.beginPath();
         ctx.arc(dPx.x, dPx.y, ringR, 0, Math.PI * 2);
         ctx.stroke();
@@ -343,7 +385,7 @@ const TeleportFx = class {
         // Inner solid burst
         const innerR = 18 + 30 * tf;
         ctx.globalAlpha = 0.6 * (1 - tf);
-        ctx.fillStyle = '#FFE072';
+        ctx.fillStyle = palette.bright;
         ctx.beginPath();
         ctx.arc(dPx.x, dPx.y, innerR, 0, Math.PI * 2);
         ctx.fill();
@@ -365,7 +407,7 @@ const TeleportFx = class {
         const tt = since / POST_TAIL_MS;
         ctx.globalAlpha = 0.5 * (1 - tt);
         ctx.lineWidth = 2.2;
-        ctx.strokeStyle = '#FFD24A';
+        ctx.strokeStyle = palette.core;
         ctx.setLineDash([5, 7]);
         ctx.beginPath();
         ctx.moveTo(oPx.x, oPx.y);
@@ -383,7 +425,8 @@ const TeleportFx = class {
   //   - The ability's WC3 icon (32px) centered inside the ring
   //   - "INCOMING ⚡N" mini-label below the ring (count = grabbed + 1 hero)
   //   - Urgency bump in the last 600ms of channel
-  _drawDestinationIndicator (ctx, dx, dy, tp, gameTime, cast, channelMs, totalIncoming, groupSize) {
+  _drawDestinationIndicator (ctx, dx, dy, tp, gameTime, cast, channelMs, totalIncoming, groupSize, palette) {
+    if (!palette) palette = this._palette(tp, false);
     const elapsed = gameTime - cast;
     const tProg = Math.min(1, elapsed / channelMs);
     const remainingMs = channelMs - elapsed;
@@ -391,14 +434,19 @@ const TeleportFx = class {
     const pulse = 0.78 + 0.22 * Math.sin(elapsed / (isUrgent ? 55 : 110));
     if (totalIncoming == null) totalIncoming = (tp.grabbedCount || 0) + 1;
 
+    // Single-unit teleports never "grab" anyone — counting "+1 hero" is
+    // accurate but the cinematic ⚡N count implies a squad. Hide the count
+    // for single-unit casts so the destination tag just says HERO TP.
+    const isSingleUnit = (tp.abilityCategory || this._inferCategory(tp.abilityCode)) === 'single-unit';
+
     const ringR = isUrgent ? 42 : 36;
     const iconSize = 32;
 
     // Soft glow behind the ring so the icon reads against varied terrain.
     const glow = ctx.createRadialGradient(dx, dy, 6, dx, dy, ringR * 1.9);
-    glow.addColorStop(0, 'rgba(255, 210, 74, 0.55)');
-    glow.addColorStop(0.6, 'rgba(255, 210, 74, 0.18)');
-    glow.addColorStop(1, 'rgba(255, 210, 74, 0)');
+    glow.addColorStop(0,   `rgba(${palette.glowRGB}, 0.55)`);
+    glow.addColorStop(0.6, `rgba(${palette.glowRGB}, 0.18)`);
+    glow.addColorStop(1,   `rgba(${palette.glowRGB}, 0)`);
     ctx.globalAlpha = 1;
     ctx.fillStyle = glow;
     ctx.beginPath();
@@ -408,7 +456,7 @@ const TeleportFx = class {
     // Ring proper.
     ctx.globalAlpha = 0.95 * pulse;
     ctx.lineWidth = isUrgent ? 3.5 : 2.5;
-    ctx.strokeStyle = '#FFE072';
+    ctx.strokeStyle = palette.bright;
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.arc(dx, dy, ringR, 0, Math.PI * 2);
@@ -418,7 +466,7 @@ const TeleportFx = class {
     const rotR = ringR + 9;
     ctx.globalAlpha = 0.7 * pulse;
     ctx.lineWidth = 1.4;
-    ctx.strokeStyle = '#FFD24A';
+    ctx.strokeStyle = palette.core;
     ctx.setLineDash([3, 5]);
     ctx.lineDashOffset = -((gameTime - cast) / 10) % 8;
     ctx.beginPath();
@@ -435,12 +483,12 @@ const TeleportFx = class {
       // 1px border in category color so the icon reads on busy terrain.
       ctx.globalAlpha = 0.85;
       ctx.lineWidth = 1.2;
-      ctx.strokeStyle = '#FFD24A';
+      ctx.strokeStyle = palette.core;
       ctx.strokeRect(dx - iconSize / 2 - 0.5, dy - iconSize / 2 - 0.5, iconSize + 1, iconSize + 1);
     } else {
       // Fallback: bold "⚡" glyph if the icon hasn't loaded.
       ctx.globalAlpha = 0.95;
-      ctx.fillStyle = '#FFE072';
+      ctx.fillStyle = palette.bright;
       ctx.font = 'bold 22px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
       ctx.textBaseline = 'middle';
       ctx.textAlign = 'center';
@@ -449,11 +497,14 @@ const TeleportFx = class {
       ctx.textBaseline = 'alphabetic';
     }
 
-    // "INCOMING ⚡N" mini-label below the ring. When multiple TPs converge
-    // on the same destination, append a "×K TPs" suffix (K = group size).
-    const label = (groupSize && groupSize > 1)
-      ? `INCOMING ⚡${totalIncoming} (×${groupSize} TPs)`
-      : `INCOMING ⚡${totalIncoming}`;
+    // Destination label below the ring. Group TPs (stwp / Mass Teleport)
+    // show "INCOMING ⚡N" with the squad size; single-unit teleports
+    // (stel / spre / ssan) show "HERO TP" — clearer about what's arriving.
+    const label = isSingleUnit
+      ? 'HERO TP'
+      : (groupSize && groupSize > 1)
+        ? `INCOMING ⚡${totalIncoming} (×${groupSize} TPs)`
+        : `INCOMING ⚡${totalIncoming}`;
     ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
     const labelW = ctx.measureText(label).width;
     const padX = 6, padY = 3;
@@ -465,9 +516,9 @@ const TeleportFx = class {
     ctx.fillStyle = 'rgba(8, 12, 18, 0.96)';
     ctx.fillRect(lX, lY, lW, lH);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = isUrgent ? '#FFE072' : '#FFD24A';
+    ctx.strokeStyle = isUrgent ? palette.bright : palette.core;
     ctx.strokeRect(lX + 0.5, lY + 0.5, lW - 1, lH - 1);
-    ctx.fillStyle = isUrgent ? '#FFFFFF' : '#FFE072';
+    ctx.fillStyle = isUrgent ? '#FFFFFF' : palette.bright;
     ctx.textBaseline = 'middle';
     ctx.fillText(label, lX + padX, lY + lH / 2);
     ctx.textBaseline = 'alphabetic';
@@ -476,16 +527,26 @@ const TeleportFx = class {
   // Larger label with a 48px WC3 icon left of the text. Two-line layout:
   //   [icon]  HEADING (cancellable status + ability name)
   //           subline (grabbed count, channel/instant)
-  _drawBanner (ctx, ax, ay, tp, cancelled) {
+  _drawBanner (ctx, ax, ay, tp, cancelled, palette) {
+    if (!palette) palette = this._palette(tp, cancelled);
     const iconKey = tp.abilityCode || null;
     const icon = (iconKey && this._icons[iconKey]) || null;
+    const isSingleUnit = (tp.abilityCategory || this._inferCategory(tp.abilityCode)) === 'single-unit';
 
     const headingPrefix = cancelled ? '✕' : '⚡';
     const headingMain = tp.abilityDisplayName.toUpperCase() + (cancelled ? ' — CANCELLED' : '');
     const subLine = (() => {
       const parts = [];
-      if (tp.grabbedCount > 0) {
+      // Single-unit teleports never bring company — show the qualifier
+      // explicitly so the reader doesn't expect a missing "+N units".
+      // Group teleports (stwp / AHmt) that happened to land with grabbedCount=0
+      // get a "hero only" tag so the reader doesn't have to count the rings.
+      if (isSingleUnit) {
+        parts.push('single-unit teleport');
+      } else if (tp.grabbedCount > 0) {
         parts.push(`+${tp.grabbedCount} unit${tp.grabbedCount === 1 ? '' : 's'}`);
+      } else {
+        parts.push('hero only');
       }
       if (tp.channelMs > 0) parts.push(`${(tp.channelMs / 1000).toFixed(1)}s channel`);
       else                  parts.push('instant');
@@ -517,7 +578,7 @@ const TeleportFx = class {
     ctx.fillStyle = 'rgba(8, 12, 18, 0.97)';
     ctx.fillRect(x, y, w, h);
     ctx.lineWidth = 1.6;
-    ctx.strokeStyle = cancelled ? '#FF6B6B' : '#FFD24A';
+    ctx.strokeStyle = palette.core;
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
 
     // Icon — large, with a soft border so it pops on any background.
@@ -529,16 +590,16 @@ const TeleportFx = class {
       ctx.drawImage(icon, ix, iy, iconSize, iconSize);
       ctx.globalAlpha = 0.9;
       ctx.lineWidth = 2;
-      ctx.strokeStyle = cancelled ? '#FF6B6B' : '#FFD24A';
+      ctx.strokeStyle = palette.core;
       ctx.strokeRect(ix - 1, iy - 1, iconSize + 2, iconSize + 2);
     }
 
-    // Heading line — gold/red prefix glyph then white-ish heading.
+    // Heading line — palette-tinted prefix glyph then white-ish heading.
     ctx.globalAlpha = 1;
     ctx.textBaseline = 'middle';
     ctx.font = headFont;
     const headY = y + padY + iconSize / 2 - 8;
-    ctx.fillStyle = cancelled ? '#FF8E8E' : '#FFE072';
+    ctx.fillStyle = palette.bright;
     ctx.fillText(headingPrefix + ' ', textX, headY);
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText(headingMain, textX + headPrefixW, headY);

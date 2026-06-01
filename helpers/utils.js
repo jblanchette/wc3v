@@ -155,6 +155,17 @@ const normalizeAction = (action) => {
     delete action.units;
   }
 
+  // Newer w3gjs builds emit objectId / itemObjectId as unsigned 32-bit ints,
+  // so the "no target" sentinel arrives as 4294967295 (0xFFFFFFFF) instead
+  // of -1. Every `objectId === -1` check in the codebase would silently
+  // fall through. Found via pick-trade-drop.w3g — ground-drop detection in
+  // giveOrDropItem missed both drops because the comparison failed.
+  // Normalize all four ID fields here so downstream code sees -1 only.
+  if (action.objectId1 === 4294967295) action.objectId1 = -1;
+  if (action.objectId2 === 4294967295) action.objectId2 = -1;
+  if (action.itemObjectId1 === 4294967295) action.itemObjectId1 = -1;
+  if (action.itemObjectId2 === 4294967295) action.itemObjectId2 = -1;
+
   return action;
 };
 
@@ -578,6 +589,7 @@ const serializeBattles = (battles) => {
         hostile: !!s.hostile
       })),
       unitOutcomes: b.unitOutcomes || [],
+      summary: b.summary || null,
       unitTrips: (b.unitTrips || []).map(t => ({
         unitUuid: t.unitUuid,
         tag: t.tag,
@@ -734,6 +746,7 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         ...(player.apmData ? { apmData: player.apmData } : {}),
         ...(player.moveTrace ? { moveTrace: player.moveTrace } : {}),
         ...(player._mvStats ? { mvStats: player._mvStats } : {}),
+        ...(player.resourceSeries ? { resourceSeries: player.resourceSeries } : {}),
         // Structured teleport events (TP Scroll, Mass Teleport, Blink, etc.).
         // See lib/Player.js _applyTeleport and helpers/teleportAbilities.js.
         // Clients render banner notifications + glow rings + arrival flashes
@@ -743,6 +756,7 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
           appliedAt: t.appliedAt,
           abilityCode: t.abilityCode,
           abilityKind: t.abilityKind,
+          abilityCategory: t.abilityCategory || null,
           abilityDisplayName: t.abilityDisplayName,
           abilityIcon: t.abilityIcon,
           channelMs: t.channelMs,
@@ -750,6 +764,8 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
           cancellable: t.cancellable,
           cancelled: t.cancelled,
           cancelReason: t.cancelReason,
+          inferenceConfidence: t.inferenceConfidence || null,
+          evidenceSummary: t.evidenceSummary || null,
           casterUuid: t.casterUuid,
           casterItemId: t.caster && t.caster.itemId,
           origin: t.origin,
@@ -761,6 +777,10 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
           grabbedUnitItemIds: t.grabbedUnitItemIds,
           grabbedCount: t.grabbedCount
         })),
+        // Inference layer claims. Exported so inspect-replay --show=claims
+        // and the validator can explain confidence verdicts. Empty when
+        // a player has no inference-tracked events.
+        claims: player._claimRegistry ? player._claimRegistry.toJSON() : [],
         isNeutralPlayer,
     		units: units.map(unit => unit.exportUnit()).concat(
           (player.destroyedSummons || [])
@@ -787,6 +807,24 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
           newMax: b.newMax,
           triggerEvent: b.triggerEvent
         })),
+        // Phase 2/3 item-ledger surfacing. The chronological `itemEvents`
+        // array carries add / remove / reclassify records with provenance
+        // (source, confidence, actionText) — same shape downstream consumers
+        // expect from the unified ledger. Inferred + reclassified records
+        // are surfaced separately so the validator + BO panel can flag them
+        // even when they don't have a clean gameTime in the event stream.
+        ...(player._itemEvents && player._itemEvents.length
+          ? { itemEvents: player._itemEvents }
+          : {}),
+        ...(player._inferredItems && player._inferredItems.length
+          ? { inferredItems: player._inferredItems }
+          : {}),
+        ...(player._itemReclassifications && player._itemReclassifications.length
+          ? { itemReclassifications: player._itemReclassifications }
+          : {}),
+        ...(player._itemSlotDrift && player._itemSlotDrift.length
+          ? { itemSlotDrift: player._itemSlotDrift }
+          : {}),
         ...(player._baseGrid ? { baseGrid: player._baseGrid } : {}),
         ...(player._baseSnapshots && player._baseSnapshots.length
           ? { baseSnapshots: player._baseSnapshots }
@@ -958,6 +996,10 @@ const readCliArgs = (argv) => {
 
       case "move-trace":
         config.moveTrace = true;
+      break;
+
+      case "debug-items":
+        config.debugItemDispatch = true;
       break;
 
       case "prod":

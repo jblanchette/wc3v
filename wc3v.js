@@ -1,3 +1,76 @@
+// Patch w3gjs BEFORE loading any of its modules. Single-player replays
+// emit `GameCache` actions (0x6b-0x72) and other long-tail actions whose
+// data blocks can be shorter than the parser expects (common in non-
+// ladder saves and TFT-era replays). When that happens the raw Buffer
+// read methods (readInt8 / readFloatLE / readUInt32LE) throw RangeError
+// and abort the timeslot block — every subsequent action in that tick
+// is dropped, so the event stream collapses to 3-9 events across multi-
+// minute replays.
+//
+// We patch every read method on StatefulBufferParser.prototype to detect
+// EOF and throw a controlled RangeError BEFORE the underlying Buffer
+// would. The ActionParser's inner try/catch then breaks the action loop
+// cleanly for that one block, and the next timeslot picks up normally.
+// Net effect: instead of losing whole tail-of-game action streams, we
+// only lose the single action whose data was truncated.
+{
+  const sbp = require('./node_modules/w3gjs/dist/lib/parsers/StatefulBufferParser.js');
+  const SbpClass = sbp.default || sbp.StatefulBufferParser;
+  if (SbpClass && SbpClass.prototype && !SbpClass.prototype._wc3vBoundsSafe) {
+    SbpClass.prototype._wc3vBoundsSafe = true;
+    // Zero-terminated string — return empty at EOF, advance to end.
+    SbpClass.prototype.readZeroTermString = function (encoding) {
+      const buf = this.buffer;
+      let pos = this.offset;
+      while (pos < buf.length && buf.readInt8(pos) !== 0) {
+        pos++;
+      }
+      const eof = pos >= buf.length;
+      const value = eof ? '' : buf.subarray(this.offset, pos).toString(encoding);
+      this.offset = eof ? pos : pos + 1;
+      return value;
+    };
+    // Fixed-width numeric reads — pre-check bounds so we throw a tagged
+    // EOF error the action parser's catch can ignore.
+    const ensureBytes = (parser, n) => {
+      if (parser.offset + n > parser.buffer.length) {
+        const err = new RangeError('wc3v-eof: buffer exhausted (need ' + n +
+          ' bytes at offset ' + parser.offset + '/' + parser.buffer.length + ')');
+        err.wc3vEof = true;
+        throw err;
+      }
+    };
+    SbpClass.prototype.readUInt32LE = function () {
+      ensureBytes(this, 4);
+      const val = this.buffer.readUInt32LE(this.offset);
+      this.offset += 4;
+      return val;
+    };
+    SbpClass.prototype.readUInt16LE = function () {
+      ensureBytes(this, 2);
+      const val = this.buffer.readUInt16LE(this.offset);
+      this.offset += 2;
+      return val;
+    };
+    SbpClass.prototype.readUInt8 = function () {
+      ensureBytes(this, 1);
+      const val = this.buffer.readUInt8(this.offset);
+      this.offset += 1;
+      return val;
+    };
+    SbpClass.prototype.peekUInt8 = function () {
+      ensureBytes(this, 1);
+      return this.buffer.readUInt8(this.offset);
+    };
+    SbpClass.prototype.readFloatLE = function () {
+      ensureBytes(this, 4);
+      const val = this.buffer.readFloatLE(this.offset);
+      this.offset += 4;
+      return val;
+    };
+  }
+}
+
 const ReplayParser = require('./node_modules/w3gjs/dist/lib/parsers/ReplayParser').default;
 
 const utils = require("./helpers/utils"),
@@ -9,6 +82,8 @@ const ReplayValidator = require("./lib/ReplayValidator");
 const BattleDetector  = require("./lib/BattleDetector");
 const DeathInference  = require("./lib/DeathInference");
 const HideInference   = require("./lib/HideInference");
+const BattleSummary   = require("./lib/BattleSummary");
+const ResourceSeries  = require("./lib/ResourceSeries");
 const TERRAINFile = require("./lib/parsers/TERRAINFile");
 const MiscFile = require("./lib/parsers/MiscFile");
 const { resolveCampLeash } = require("./helpers/mappings");
@@ -456,6 +531,22 @@ const doParsing = async (input, options = {}) => {
     }
   });
 
+  // Inference passes: settle confidence for every parser-tentative
+  // claim (teleports today; item-slot bindings, summons, expansions in
+  // later phases) before validation reads the final state. The commit
+  // pass (Player.commitClaims) patches eventStream + _teleportEvents
+  // with `inferenceConfidence` + `cancelled` so downstream consumers
+  // can gate FX. See lib/inference/.
+  emitProgress('postprocess', 95, { detail: 'inference' });
+  const inferencePasses = require("./lib/inference/passes");
+  const inferenceSummary = inferencePasses.runAll(playerManager);
+  for (const pid of Object.keys(inferenceSummary.convergence || {})) {
+    const cv = inferenceSummary.convergence[pid];
+    if (!cv.converged) {
+      console.logger(`Inference: player ${pid} did NOT converge after ${cv.iterations} iterations`);
+    }
+  }
+
   emitProgress('postprocess', 96, { detail: 'validation' });
 
   // post-parse validation: detect contradictions in parsed data
@@ -500,6 +591,27 @@ const doParsing = async (input, options = {}) => {
   console.log('----------------------------------');
   console.log(`NE units: ${hideStats.neUnits}, hide windows: ${hideStats.windowsDetected}, ` +
     `total hidden: ${(hideStats.totalHideTimeMs / 1000).toFixed(1)}s`);
+
+  // Battle summary — aggregates per-battle losses by player + confidence so
+  // the client can render transient banners and a persistent battle log.
+  emitProgress('postprocess', 99, { detail: 'battle-summary' });
+  const summaryStats = new BattleSummary(playerManager).run();
+  console.log('----------------------------------');
+  console.log('BATTLE SUMMARY');
+  console.log('----------------------------------');
+  console.log(`battles: ${summaryStats.battlesScanned}, with losses: ${summaryStats.withLosses}, ` +
+    `with hero death: ${summaryStats.withHeroDeath}`);
+  console.log(`unit losses tallied: definite=${summaryStats.totalDefinite}, ` +
+    `estimated=${summaryStats.totalEstimated}`);
+
+  // Resource time series — per-player gold/lumber/food spent + lost, sampled
+  // every 10s for broadcast-style line charts.
+  emitProgress('postprocess', 99, { detail: 'resource-series' });
+  const resStats = new ResourceSeries(playerManager).run();
+  console.log('----------------------------------');
+  console.log('RESOURCE SERIES');
+  console.log('----------------------------------');
+  console.log(`players: ${resStats.players}, samples total: ${resStats.samplesTotal}`);
 
   // output action type summary when debug is enabled
   if (config.debugActions) {

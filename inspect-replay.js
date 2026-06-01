@@ -463,21 +463,45 @@ if (showAll || showSections.includes('items')) {
     const events = pdata.eventStream || [];
     const purchases = events.filter(e => e.key === 'itemPurchase');
     const uses = events.filter(e => e.key === 'itemUse');
+    const pickups = events.filter(e => e.key === 'pickupItem');
+    const sells = events.filter(e => e.key === 'sellItem');
     const drops = events.filter(e => e.key === 'dropItem');
 
     console.log(`    Purchases: ${purchases.length}`);
     purchases.slice(0, limit).forEach(e => {
-      const conf = e.confidence === 'low' ? ' [UNCERTAIN]' : '';
+      const tags = [];
+      if (e.confidence === 'low') tags.push('UNCERTAIN');
+      else if (e.confidence === 'medium') tags.push('PARTIAL');
+      if (e.source === 'reclassification-backfill') tags.push('INFERRED-RECLASS');
+      else if (e.source === 'inferred-from-uses') tags.push('INFERRED-USES');
+      const tagStr = tags.length ? ` [${tags.join(',')}]` : '';
       const gold = e.goldCost ? ` (${e.goldCost}g)` : '';
       const shop = e.shop ? ` from ${e.shop}` : '';
-      console.log(`      ${formatTime(e.gameTime)} ${e.item.displayName}${gold}${shop}${conf}`);
+      console.log(`      ${formatTime(e.gameTime)} ${e.item.displayName}${gold}${shop}${tagStr}`);
     });
 
     console.log(`    Uses: ${uses.length}`);
     uses.slice(0, limit).forEach(e => {
       const itemName = (e.item && e.item.displayName) || (e.item && e.item.knownItemId) || '?';
       const cat = e.category ? ` [${e.category}]` : '';
-      console.log(`      ${formatTime(e.gameTime)} ${itemName}${cat}`);
+      const noslot = e.source === 'use-no-slot' ? ' [USE-NO-SLOT]' : '';
+      console.log(`      ${formatTime(e.gameTime)} ${itemName}${cat}${noslot}`);
+    });
+
+    console.log(`    Pickups: ${pickups.length}`);
+    pickups.slice(0, limit).forEach(e => {
+      const itemName = (e.item && e.item.displayName) || '?';
+      const camp = e.campUuid ? ` from camp ${String(e.campUuid).slice(0, 8)}` : '';
+      const random = e.isRandomDrop ? ' [RANDOM]' : '';
+      console.log(`      ${formatTime(e.gameTime)} ${itemName}${camp}${random}`);
+    });
+
+    console.log(`    Sells: ${sells.length}`);
+    sells.slice(0, limit).forEach(e => {
+      const itemName = (e.item && e.item.displayName) || '?';
+      const refund = e.goldRefunded ? ` +${e.goldRefunded}g` : '';
+      const shop = e.shop ? ` to ${e.shop}` : '';
+      console.log(`      ${formatTime(e.gameTime)} ${itemName}${shop}${refund}`);
     });
 
     console.log(`    Drops/Trades: ${drops.length}`);
@@ -494,6 +518,21 @@ if (showAll || showSections.includes('items')) {
       });
       (pdata.itemStream.uses || []).forEach(u => {
         console.log(`      Used: ${u.displayName} x${u.count}`);
+      });
+    }
+
+    if (pdata.inferredItems && pdata.inferredItems.length) {
+      console.log(`    Inferred from use-count imbalance: ${pdata.inferredItems.length}`);
+      pdata.inferredItems.slice(0, limit).forEach(i => {
+        console.log(`      ${i.displayName} (${i.itemId}) — ${i.reason}`);
+      });
+    }
+    if (pdata.itemReclassifications && pdata.itemReclassifications.length) {
+      console.log(`    Slot reclassifications: ${pdata.itemReclassifications.length}`);
+      pdata.itemReclassifications.slice(0, limit).forEach(r => {
+        const fromName = r.from ? r.from.itemId : '?';
+        const toName = r.to ? r.to.itemId : '?';
+        console.log(`      ${formatTime(r.gameTime)} ${fromName} -> ${toName} (${r.reason})`);
       });
     }
   }
@@ -1044,11 +1083,55 @@ if (showAll || showSections.includes('teleports')) {
       const tag   = t.cancelled ? `CANCELLED(${t.cancelReason})` : 'applied';
       const grabbed = t.grabbedCount ? ` grabbed=${t.grabbedCount}` : '';
       const bldg  = t.destBuildingDisplayName ? ` → ${t.destBuildingDisplayName}` : '';
+      const conf  = t.inferenceConfidence ? ` [conf=${t.inferenceConfidence}]` : '';
       console.log(`    ${t.abilityCode.padEnd(5)} ${inv}${can}  cast=${cast} apply=${app}  ` +
-                  `${orig} → ${dest}${bldg}${grabbed}  ${tag}`);
+                  `${orig} → ${dest}${bldg}${grabbed}  ${tag}${conf}`);
+      if (t.evidenceSummary && t.evidenceSummary.length) {
+        t.evidenceSummary.forEach(e => {
+          const w = (e.weight >= 0 ? '+' : '') + e.weight.toFixed(2);
+          console.log(`        ${w}  ${e.source}  ${JSON.stringify(e.detail || {}).slice(0, 120)}`);
+        });
+      }
       total++;
     });
   }
   if (total === 0) console.log('  (no teleports detected)');
+  console.log('');
+}
+
+// === Claims ================================================================
+// Inference-layer claims dump. Every claim built by Pass 0 (emit) and
+// scored through passes 1-4. Useful when debugging why a teleport
+// settled at a given confidence, or when adding new strategies and
+// verifying their evidence lands on the right claims.
+if (showAll || showSections.includes('claims')) {
+  console.log(`\n=== Claims ===`);
+  const pids = Object.keys(data.players || {}).sort((a, b) => Number(a) - Number(b));
+  let total = 0;
+  for (const pid of pids) {
+    if (!shouldIncludePlayer(pid)) continue;
+    const p = data.players[pid];
+    if (p.isNeutralPlayer) continue;
+    const claims = p.claims || [];
+    if (!claims.length) continue;
+    console.log(`\n  Player ${pid}: ${claims.length} claim(s)`);
+    for (const c of claims) {
+      const t = (c.payload && c.payload.gameTime != null)
+        ? formatTime(c.payload.gameTime)
+        : '?';
+      const val = c.value ? JSON.stringify(c.value).slice(0, 80) : '';
+      console.log(`    [${c.confidence.padEnd(9)}] ${c.subject} @ ${t}  ${val}`);
+      for (const e of (c.evidence || [])) {
+        const w = (e.weight >= 0 ? '+' : '') + e.weight.toFixed(2);
+        const detail = JSON.stringify(e.detail || {}).slice(0, 100);
+        console.log(`        ${w}  ${e.source.padEnd(28)} ${detail}`);
+      }
+      for (const h of (c.history || []).slice(1)) {     // skip 'created' entry
+        console.log(`        history: pass=${h.pass} ${h.from || '-'}→${h.confidence} (${h.source || h.note || ''})`);
+      }
+      total++;
+    }
+  }
+  if (total === 0) console.log('  (no claims tracked — only teleport-class events use the inference layer in Phase A)');
   console.log('');
 }
