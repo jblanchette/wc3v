@@ -370,7 +370,10 @@ async function sectionC () {
     // valid action verb.
     const validActions = new Set([
       'add', 'remove', 'use', 'pickup', 'drop',
-      'trade-out', 'trade-in', 'sell', 'reclassify', 'purchase'
+      'trade-out', 'trade-in', 'sell', 'reclassify', 'purchase',
+      // Phase B: pending-item lifecycle (auto-grant unbound from slot
+      // until first-use observation, then resolved into a slot).
+      'grant-pending', 'resolve-pending'
     ]);
     const ledger = [];
     const badAction = [];
