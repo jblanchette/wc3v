@@ -116,6 +116,7 @@ const BattleRenderer = class {
 
     const a = gameScaler.projectXY(box.minX, box.minY);
     const c = gameScaler.projectXY(box.maxX, box.maxY);
+    if (!a || !c) return;  // box is fully outside the camera frustum
     const sx = a.x + middleX, sy = a.y + middleY;
     const ex = c.x + middleX, ey = c.y + middleY;
     const x = Math.min(sx, ex);
@@ -291,6 +292,19 @@ const BattleRenderer = class {
     const gapTpIn  = tpInCount  > 0 ? 10 : 0;
     const gapTpOut = tpOutCount > 0 ? 10 : 0;
 
+    // Item activity chips (Phase 6) — purchases / uses / sells during the
+    // battle window. 🛒 = bought, 💊 = consumed/activated, 💰 = sold.
+    const itemBought = battle._itemsBoughtDuring || 0;
+    const itemUsed   = battle._itemsUsedDuring   || 0;
+    const itemSold   = battle._itemsSoldDuring   || 0;
+    let itemBoughtW = 0, itemUsedW = 0, itemSoldW = 0;
+    if (itemBought > 0) itemBoughtW = ctx.measureText(`🛒${itemBought}`).width + 8;
+    if (itemUsed > 0)   itemUsedW   = ctx.measureText(`💊${itemUsed}`).width + 8;
+    if (itemSold > 0)   itemSoldW   = ctx.measureText(`💰${itemSold}`).width + 8;
+    const gapItemBought = itemBought > 0 ? 10 : 0;
+    const gapItemUsed   = itemUsed   > 0 ? 10 : 0;
+    const gapItemSold   = itemSold   > 0 ? 10 : 0;
+
     // Engaged-buildings chip metrics
     let ebChipW = 0;
     if (ebLabel) {
@@ -314,7 +328,9 @@ const BattleRenderer = class {
     const gapTrips = tripChips.length ? 12 : 0;
     const gapPd = pdCount > 0 ? 12 : 0;
     const bannerW = padX * 2 + headW + gapMid + timeW + gapDots + dotsW + gapTrips + tripChipsW +
-                    gapTpIn + tpInChipW + gapTpOut + tpOutChipW + gapEb + ebChipW + gapPd + pdChipW;
+                    gapTpIn + tpInChipW + gapTpOut + tpOutChipW +
+                    gapItemBought + itemBoughtW + gapItemUsed + itemUsedW + gapItemSold + itemSoldW +
+                    gapEb + ebChipW + gapPd + pdChipW;
     const bannerH = Math.max(iconSize, 14) + padY * 2;
     const bannerX = x;
     const bannerY = Math.max(0, y - bannerH - 3);
@@ -393,6 +409,26 @@ const BattleRenderer = class {
       ctx.fillStyle = '#9aa6b0';   // muted — escape is less urgent than arrival
       ctx.fillText(`⚡←${tpOutCount}`, cx, midY);
       cx += tpOutChipW - 8;
+    }
+
+    // --- Item activity chips (Phase 6) ---
+    if (itemBought > 0) {
+      cx += gapItemBought;
+      ctx.fillStyle = '#a0e8c0';   // muted green — same family as BO item bar
+      ctx.fillText(`🛒${itemBought}`, cx, midY);
+      cx += itemBoughtW - 8;
+    }
+    if (itemUsed > 0) {
+      cx += gapItemUsed;
+      ctx.fillStyle = '#b7dcff';   // soft blue — same family as bo-item-use
+      ctx.fillText(`💊${itemUsed}`, cx, midY);
+      cx += itemUsedW - 8;
+    }
+    if (itemSold > 0) {
+      cx += gapItemSold;
+      ctx.fillStyle = '#ffc7a8';   // warm orange — same family as bo-item-sell
+      ctx.fillText(`💰${itemSold}`, cx, midY);
+      cx += itemSoldW - 8;
     }
 
     // --- engaged-buildings chip ---

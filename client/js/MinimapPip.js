@@ -49,7 +49,11 @@
       const canvas = document.createElement('canvas');
       container.appendChild(canvas);
 
-      const wrapper = document.getElementById('main-wrapper');
+      // Prefer the bottom-right corner stack so the economy panel stacks
+      // cleanly above the minimap. Falls back to main-wrapper when the
+      // stack wrapper isn't present (legacy layout).
+      const stack = document.getElementById('bottom-right-stack');
+      const wrapper = stack || document.getElementById('main-wrapper');
       if (wrapper) {
         wrapper.appendChild(container);
       }
@@ -301,15 +305,23 @@
           const channelMs = Math.max(1, apply - cast);
           const inChannel = gt >= cast && gt < apply;
           const pulse = 0.65 + 0.35 * Math.sin(elapsed / (inChannel ? 90 : 60));
+          // Category-aware pulse: single-unit hero teleports get a cyan
+          // dot so a player glancing at the minimap can tell "1 hero TP'd"
+          // apart from "Town Portal landed". Falls back to gold for
+          // group / mass / blink and for older replays missing the field.
+          const isSingleUnit = (tp.abilityCategory === 'single-unit') ||
+            (tp.abilityCode === 'stel' || tp.abilityCode === 'spre' || tp.abilityCode === 'ssan');
+          const haloColor  = isSingleUnit ? '#4FD2FF' : '#FFD24A';
+          const coreColor  = isSingleUnit ? '#A8EAFF' : '#FFE072';
           // Outer halo
           ctx.globalAlpha = 0.5 * pulse;
-          ctx.fillStyle = '#FFD24A';
+          ctx.fillStyle = haloColor;
           ctx.beginPath();
           ctx.arc(mx, my, inChannel ? 6 : 8, 0, Math.PI * 2);
           ctx.fill();
           // Bright core
           ctx.globalAlpha = 0.95;
-          ctx.fillStyle = '#FFE072';
+          ctx.fillStyle = coreColor;
           ctx.beginPath();
           ctx.arc(mx, my, 2.5, 0, Math.PI * 2);
           ctx.fill();

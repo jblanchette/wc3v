@@ -264,6 +264,11 @@ const Wc3vViewer = class {
     this.mapRenderer = new MapRenderer();
     this.battleData = new BattleData();         // pure pipeline (BattleDetector output → indexed)
     this.battleRenderer = new BattleRenderer(); // utility-canvas overlay (dashed tracker boxes)
+    this.bottomPanel = (window.BottomPanel) ? new window.BottomPanel() : null;
+    this.battleReportRenderer = (window.BattleReportRenderer)
+      ? new window.BattleReportRenderer(this) : null;
+    this.resourceCharts = (window.ResourceCharts)
+      ? new window.ResourceCharts(this) : null;
     this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
     this.processedBattles = null;               // populated by setup() once mapData is available
     this.threeMapRenderer = null; // created in setupCanvas once #three-canvas exists
@@ -2780,6 +2785,59 @@ const Wc3vViewer = class {
     // pipeline produces an empty processed object and the overlay no-ops.
     this.processedBattles = this.battleData.processBattles(this.mapData);
 
+    // Insights panel: tabbed container for Battle Report, Economy, Camp Key.
+    if (this.bottomPanel) {
+      this.bottomPanel.setup();
+
+      // Battle Report tab.
+      if (this.battleReportRenderer && this.mapData && Array.isArray(this.mapData.battles)) {
+        this.battleReportRenderer.setBattles(this.mapData.battles);
+        if (this.battleReportRenderer._battles.length > 0) {
+          const tabContent = document.createElement('div');
+          this.battleReportRenderer.setContainer(tabContent);
+          this.battleReportRenderer.buildPanel();
+          this.bottomPanel.addTab('battles', 'Battles', tabContent, {
+            default: true,
+            badge: this.battleReportRenderer._battles.length
+          });
+        }
+      }
+
+      // Economy tab.
+      if (this.resourceCharts && this.mapData && this.mapData.players) {
+        const playerInfos = [];
+        for (const [pid, p] of Object.entries(this.mapData.players)) {
+          if (p && p.resourceSeries && p.resourceSeries.length) {
+            const cp = this.players.find(cp => String(cp.playerId) === String(pid));
+            playerInfos.push({
+              id: pid,
+              color: (cp && cp.playerColor) || '#888',
+              resourceSeries: p.resourceSeries
+            });
+          }
+        }
+        if (playerInfos.length) {
+          const tabContent = document.createElement('div');
+          this.resourceCharts.setContainer(tabContent);
+          this.resourceCharts.setPlayers(playerInfos);
+          this.resourceCharts.build();
+          this.bottomPanel.addTab('economy', 'Economy', tabContent);
+        }
+      }
+
+      // Camp Key tab — adopt the existing #camp-legend element if present.
+      const campLegend = document.getElementById('camp-legend');
+      if (campLegend) {
+        // Legend's own hidden attribute was for its standalone visibility;
+        // inside a tabbed panel the tab controls visibility instead.
+        campLegend.hidden = false;
+        this.bottomPanel.addTab('camps', 'Camp Key', campLegend);
+        // The legend's own <details> chrome is redundant inside the tab.
+        const det = campLegend.querySelector('details');
+        if (det) det.open = true;
+      }
+    }
+
     this.buildWrapper = document.getElementById("build-wrapper");
 
     if (!this.mobileMode) {
@@ -3831,12 +3889,6 @@ const Wc3vViewer = class {
       { target: right, transform: transformR, side: 'right' }
     ];
 
-    // Project camp hit geometry per half (each side uses its own camera).
-    // A camp belongs to whichever side's diagonal clip actually shows it,
-    // matching the rings the user sees, so the icons land correctly.
-    const _splitCampHits = [];
-    const _seenSplitCamp = {};
-
     for (const half of halves) {
       const t = half.transform;
 
@@ -3907,22 +3959,18 @@ const Wc3vViewer = class {
       this._refreshActiveBattleParticipants(frameData, gameTime);
 
       // --- Map overlays ---
-      const _halfHits = [];
-      this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, t, this.mapData, viewOptions, gs, players, this.teamColorMap, null, _halfHits);
+      this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, t, this.mapData, viewOptions, gs, players, this.teamColorMap, null);
       this.mapRenderer.renderNeutralBuildings(utilityCtx, t, viewOptions, this.neutralBuildings, gs);
 
-      // keep only camps inside THIS half's diagonal clip (so each camp's icon
-      // appears on the side that actually renders it). Boundary x at height
-      // cy runs from diagTopX (y=0) to diagBotX (y=ch); left clip is cx<=bx.
-      for (const hh of _halfHits) {
-        const uuid = hh.rawGroup && hh.rawGroup.uuid;
-        if (!uuid || _seenSplitCamp[uuid]) continue;
-        const bx = diagTopX + (diagBotX - diagTopX) * (ch ? (hh.cy / ch) : 0);
-        const isLeft = hh.cx <= bx;
-        if ((half.side === 'left' && isLeft) || (half.side === 'right' && !isLeft)) {
-          _seenSplitCamp[uuid] = true;
-          _splitCampHits.push(hh);
-        }
+      // Position camp icons against THIS half's 3D camera (which is the one
+      // threeMapRenderer.render(t) just synced). The diagonal-clip filter is
+      // applied inside the panel so each camp's icon lands on the side that
+      // actually shows its ring.
+      if (this.campPanel && !this.guideMode) {
+        this.campPanel.syncIcons({
+          side: half.side,
+          diagTopX, diagBotX, canvasH: ch
+        });
       }
 
       // --- Units: projectXY uses the 3D camera just positioned ---
@@ -3963,11 +4011,10 @@ const Wc3vViewer = class {
       utilityCtx.restore();
     }
 
-    // Publish split hit geometry and live-sync the camp UI for this frame
-    // (the normal render path's campPanel hook is skipped in split mode).
-    this._campHitBuf = _splitCampHits;
+    // Each half called syncIcons; finish the split pass so any camp neither
+    // half claimed gets hidden, then refresh the camp detail panel content.
     if (this.campPanel && !this.guideMode) {
-      this.campPanel.syncIcons(this._campHitBuf);
+      this.campPanel.syncIconsSplitFinish();
       this.campPanel.update(gameTime);
     }
 
@@ -4197,12 +4244,12 @@ const Wc3vViewer = class {
     this.mapRenderer.renderMapGrid(utilityCtx, transform, viewOptions, this.gameScaler, this.mapInfo, this.gridData, this.canvas);
     // Trees deferred to Phase 2 (3D billboard sprites); flat green circles looked out of place on the 3D terrain.
     // this.mapRenderer.renderMapTrees(utilityCtx, transform, viewOptions, this.doodadData, this.gameScaler, this.mapInfo);
-    // Creep camps use the click-driven CampPanel (no hover). _campHitBuf is
-    // the per-frame camp screen geometry the panel positions its icons from.
-    if (!this._campHitBuf) this._campHitBuf = [];
-    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, null, this._campHitBuf);
+    // Camp rings draw on utilityCtx via MapRenderer. CampPanel positions its
+    // HTML icons via the same projectXY path, so no hit buffer hand-off is
+    // needed — both stay glued to the 3D camera under any mode.
+    this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, null);
     if (this.campPanel && !this.guideMode) {
-      this.campPanel.syncIcons(this._campHitBuf);
+      this.campPanel.syncIcons(null);
       this.campPanel.update(gameTime);
     }
     this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
@@ -4220,6 +4267,18 @@ const Wc3vViewer = class {
     // nameplates which draw on #player-canvas (z 3). See client/docs/Z_INDEX.md.
     if (this.teleportFx && this.actionCtx) {
       this.teleportFx.render(this.actionCtx, transform, gameTime, viewOptions, this.gameScaler, this.players);
+    }
+
+    // Battle Report transient banner: same canvas (action-canvas) as the
+    // teleport cinematic so it sits above unit icons. Also syncs the panel
+    // active-row highlight.
+    if (this.battleReportRenderer && this.actionCtx) {
+      this.battleReportRenderer.render(this.actionCtx, gameTime, this.gameScaler);
+      this.battleReportRenderer.syncPanel(gameTime);
+    }
+    // Resource Charts now-cursor.
+    if (this.resourceCharts) {
+      this.resourceCharts.setCursor(gameTime);
     }
 
     players.forEach(player => {

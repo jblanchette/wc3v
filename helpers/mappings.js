@@ -184,11 +184,11 @@ const itemAbilityData = {
     'sman': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
     'spro': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
     'shas': { 'category': 'consumable', 'uses': 1, 'goldCost': 50 },
-    'dust': { 'category': 'consumable', 'uses': 1, 'goldCost': 75 },
+    'dust': { 'category': 'consumable', 'uses': 2, 'goldCost': 75 },
     'sreg': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
     'hlst': { 'category': 'consumable', 'uses': 1, 'goldCost': 300 },
     'mnst': { 'category': 'consumable', 'uses': 1, 'goldCost': 350 },
-    'hslv': { 'category': 'consumable', 'uses': 1, 'goldCost': 100 },
+    'hslv': { 'category': 'consumable', 'uses': 3, 'goldCost': 100 },
     'pclr': { 'category': 'consumable', 'uses': 1, 'goldCost': 60 },
     'plcl': { 'category': 'consumable', 'uses': 1, 'goldCost': 40 },
     'pomn': { 'category': 'consumable', 'uses': 1, 'goldCost': 150 },
@@ -1561,6 +1561,13 @@ const unitAbilities = {
   'Uabs': { displayName: 'Absorb Mana', icon: 'Aabs' },
   'Urlf': { displayName: 'Replenish Life', isAutocast: true, icon: 'Arpl' },
   'Urlm': { displayName: 'Replenish Mana', isAutocast: true, icon: 'Arpm' },
+
+  // ── Neutral building abilities ──
+  // Reveal (Goblin Laboratory) — ground-target paid scout reveal. Confirmed
+  // via goblab-suite.w3g fixture: action 0x11 with orderId bytes 55,0,13,0,
+  // targetX/Y at the revealed location. Pre-fix this had no spellOrderIds
+  // entry → useAbilityWithTarget's default branch silently dropped it.
+  'ARev': { displayName: 'Reveal', icon: 'Aspy', isNeutralBuildingAbility: true }
 };
 
 const tierBuildings = {
@@ -1622,6 +1629,26 @@ const playerShopBuildings = {
   'ovln': 'Orc Shop',
   'eden': 'Night Elf Shop',
   'hvlt': 'Human Shop'
+};
+
+// Every building that can sell items to a player, regardless of whether the
+// game also treats it as a hire-building (nmer/ngad sell BOTH units and
+// items). Prior to this flag the buy-dispatch was gated on
+// `player.neutralShopSelected`, which only fires for ngme — so Goblin Lab
+// and Merchant item purchases (Staff of Teleportation, Tome of Retraining,
+// Goblin Land Mines, etc.) were silently dropped from the event stream.
+// Used by Building.isItemShop() and the buy-action dispatch in
+// lib/Building.js.
+const itemSellingBuildings = {
+  // Neutral shops
+  'ngme': 'Goblin Merchant',
+  'ngad': 'Goblin Laboratory',
+  'nmer': 'Merchant',
+  // Player-owned race shops
+  'utom': 'Tomb of Relics',          // UD
+  'ovln': 'Voodoo Lounge',           // ORC
+  'eden': 'Ancient of Wonders',      // NE
+  'hvlt': 'Arcane Vault'             // HU
 };
 
 let specialBuildingList = { ...specialBuildings };
@@ -1832,6 +1859,10 @@ const getUnitInfo = (itemId) => {
   const isFountain = (inFountainList);
   const isPlayerShop = !!(playerShopBuildings[itemId]);
   const isInteractiveShop = isPlayerShop || !!(interactiveShops[itemId]);
+  // True for any building that can sell items — covers neutral shops
+  // (ngme), hybrid hire+shop buildings (ngad, nmer), and player-owned race
+  // shops. Drives the buy-dispatch path in lib/Building.js.
+  const isItemShop = !!(itemSellingBuildings[itemId]);
   const isGoldmine = (itemId == 'ngol');
 
 	const isBuildingUpgrade = (inUnitList && units[itemId].startsWith("b"));
@@ -1855,13 +1886,24 @@ const getUnitInfo = (itemId) => {
 		displayName = isBuildingUpgrade ? units[itemId] : buildings[itemId];
 
     if (!displayName) {
-      displayName = specialBuildingList[itemId] || fountains[itemId];
+      // Prefer the canonical name in allItemIds ('Goblin Merchant',
+      // 'Goblin Laboratory', etc.) over specialBuildingList's reverse-key
+      // lookup, which would otherwise label ngme as "NeutralShop" and ngol
+      // as "Goldmine" instead of the in-game display names players know.
+      displayName = allItemIds[itemId] || specialBuildingList[itemId] || fountains[itemId];
     }
 
 	} else if (isUnit) {
 		displayName = units[itemId] || heroes[itemId] || critters[itemId];
   } else if (isItem) {
+    // Prefer the curated `items` map (covers most melee items) but fall
+    // back to the CASC dropTables dump for items that exist in WC3 data
+    // but aren't in our hand-maintained list (campaign items, the
+    // occasional melee item like war2 / Warsong Battle Drums (Kodo)).
     displayName = items[itemId];
+    if (!displayName && dropTablesData && dropTablesData.items && dropTablesData.items[itemId]) {
+      displayName = dropTablesData.items[itemId].displayName;
+    }
 	} else if (isKnownId) {
     displayName = allItemIds[itemId];
   }
@@ -1894,6 +1936,7 @@ const getUnitInfo = (itemId) => {
     isCritter,
     isInteractiveShop,
     isPlayerShop,
+    isItemShop,
     isGoldmine,
 		meta,
     balanceInfo
@@ -1993,14 +2036,49 @@ const RANDOM_ITEM_CLASSES = {
   'o': 'Powerup'
 };
 
+// Pre-computed random-item pools generated from CASC itemdata.slk by
+// tools/parse-drop-tables.js. Lets us expand a "Random Lv2 Permanent"
+// drop reference into its actual candidate items.
+let dropTablesData = null;
+try {
+  dropTablesData = require('./dropTables.json');
+} catch (e) {
+  // dropTables.json is optional — if absent, resolveDropItem falls back
+  // to the simple "Random Lv{N} {Class}" label. Run
+  // `node tools/parse-drop-tables.js` to generate.
+}
+
 /**
- * Resolve a dropped item ID to a display name.
- * Handles known items (allItemIds / w3gMappings.items) and WC3 random item patterns.
+ * Resolve a dropped item ID to a display name + (for random refs) pool.
+ * Handles known items (allItemIds / w3gMappings.items) and WC3 random
+ * item patterns (Y{class}I{level}).
+ *
+ * For random refs, when dropTables.json is loaded, the returned object
+ * includes a `pool: [{itemId, displayName}, ...]` field listing every
+ * candidate item the game could have rolled for that ref. This lets the
+ * client show users "the item that dropped was one of: Pendant of Mana,
+ * Periapt of Vitality, Ring of Protection +1, ..." even though the
+ * replay doesn't say which specific item.
  */
+// Fallback display-name lookup that walks all known sources. Used by
+// resolveDropItem AND any other call-site that needs a friendly item
+// name. The dropTables CASC dump is the most exhaustive — campaign
+// items (Horn of Cenarius, Heart of Aszune, etc.) and a handful of
+// melee items (Warsong Drums, Engraved Scale, etc.) are only there.
+function getItemDisplayName (itemId) {
+  if (!itemId) return null;
+  if (allItemIds[itemId]) return allItemIds[itemId];
+  if (items[itemId]) return items[itemId];
+  if (dropTablesData && dropTablesData.items && dropTablesData.items[itemId]) {
+    return dropTablesData.items[itemId].displayName;
+  }
+  return null;
+}
+
 function resolveDropItem (itemId) {
   if (!itemId) return { itemId, displayName: 'Unknown', isRandom: true };
 
-  const knownName = allItemIds[itemId] || items[itemId];
+  const knownName = getItemDisplayName(itemId);
   if (knownName) {
     return { itemId, displayName: knownName, isRandom: false };
   }
@@ -2009,7 +2087,14 @@ function resolveDropItem (itemId) {
   if (itemId.length === 4 && itemId[0] === 'Y' && itemId[2] === 'I') {
     const itemClass = RANDOM_ITEM_CLASSES[itemId[1]] || 'Random';
     const level = itemId[3];
-    return { itemId, displayName: `Random Lv${level} ${itemClass}`, isRandom: true };
+    const result = { itemId, displayName: `Random Lv${level} ${itemClass}`, isRandom: true };
+    if (dropTablesData && dropTablesData.pools && dropTablesData.pools[itemId]) {
+      result.pool = dropTablesData.pools[itemId].map(poolItemId => ({
+        itemId: poolItemId,
+        displayName: getItemDisplayName(poolItemId) || poolItemId
+      }));
+    }
+    return result;
   }
 
   return { itemId, displayName: itemId, isRandom: true };
@@ -2156,8 +2241,11 @@ module.exports = {
   TECH_TREE_REQUIREMENTS,
   BUILDING_TIER_REQUIREMENTS,
   NEUTRAL_HIRE_BUILDINGS,
+  itemSellingBuildings,
+  playerShopBuildings,
 
   resolveDropItem,
+  getItemDisplayName,
 
   CREEP_GUARD_RETURN_DISTANCE,
   resolveCampLeash,

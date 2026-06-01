@@ -1,0 +1,3038 @@
+{
+  "_generated": "2026-05-30T20:53:54.203Z",
+  "_source": "itemdata.slk",
+  "items": {
+    "ckng": {
+      "itemId": "ckng",
+      "displayName": "Crown of Kings +5",
+      "scriptName": "CrownofKings5",
+      "class": "Artifact",
+      "level": 8,
+      "pickRandom": true,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "modt": {
+      "itemId": "modt",
+      "displayName": "mask of death",
+      "scriptName": "maskofdeath",
+      "class": "Artifact",
+      "level": 8,
+      "pickRandom": true,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "tkno": {
+      "itemId": "tkno",
+      "displayName": "Tome of Power",
+      "scriptName": "TomeofPower",
+      "class": "Artifact",
+      "level": 8,
+      "pickRandom": true,
+      "goldCost": 1250,
+      "uses": 1
+    },
+    "ratf": {
+      "itemId": "ratf",
+      "displayName": "Claws of Attack +15",
+      "scriptName": "ClawsofAttack15",
+      "class": "Artifact",
+      "level": 7,
+      "pickRandom": true,
+      "goldCost": 800,
+      "uses": null
+    },
+    "ofro": {
+      "itemId": "ofro",
+      "displayName": "Orb of Frost",
+      "scriptName": "OrbofFrost",
+      "class": "Artifact",
+      "level": 7,
+      "pickRandom": true,
+      "goldCost": 800,
+      "uses": null
+    },
+    "infs": {
+      "itemId": "infs",
+      "displayName": "Inferno Stone",
+      "scriptName": "InfernoStone",
+      "class": "Artifact",
+      "level": 7,
+      "pickRandom": true,
+      "goldCost": 800,
+      "uses": 1
+    },
+    "desc": {
+      "itemId": "desc",
+      "displayName": "Dagger of Escape",
+      "scriptName": "DaggerofEscape",
+      "class": "Artifact",
+      "level": 7,
+      "pickRandom": true,
+      "goldCost": 800,
+      "uses": null
+    },
+    "fgdg": {
+      "itemId": "fgdg",
+      "displayName": "Demonic Figurine",
+      "scriptName": "DemonicFigurine",
+      "class": "Charged",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "engr": {
+      "itemId": "engr",
+      "displayName": "Engraved Scale",
+      "scriptName": "EngravedScale",
+      "class": "Charged",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "shar": {
+      "itemId": "shar",
+      "displayName": "Ice Shard",
+      "scriptName": "IceShard",
+      "class": "Charged",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "ccmd": {
+      "itemId": "ccmd",
+      "displayName": "Scepter of Mastery",
+      "scriptName": "ScepterofMastery",
+      "class": "Charged",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "wild": {
+      "itemId": "wild",
+      "displayName": "Amulet of the Wild",
+      "scriptName": "AmuletoftheWild",
+      "class": "Charged",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "scav": {
+      "itemId": "scav",
+      "displayName": "Scepter of Avarice",
+      "scriptName": "ScepterOfAvarice",
+      "class": "Charged",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "odef": {
+      "itemId": "odef",
+      "displayName": "Orb of Darkness",
+      "scriptName": "OrbofDarkness",
+      "class": "Permanent",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 600,
+      "uses": null
+    },
+    "rde4": {
+      "itemId": "rde4",
+      "displayName": "Ring of Protection +5",
+      "scriptName": "RingofProtection5",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": null
+    },
+    "pmna": {
+      "itemId": "pmna",
+      "displayName": "Pendant of Mana",
+      "scriptName": "PendantofMana",
+      "class": "Permanent",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 600,
+      "uses": null
+    },
+    "rhth": {
+      "itemId": "rhth",
+      "displayName": "Khadgar's Gem of Health",
+      "scriptName": "KhadgarsGemofHealth",
+      "class": "Permanent",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 600,
+      "uses": null
+    },
+    "ssil": {
+      "itemId": "ssil",
+      "displayName": "Staff of Silence",
+      "scriptName": "StaffofSilence",
+      "class": "Permanent",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 600,
+      "uses": null
+    },
+    "spsh": {
+      "itemId": "spsh",
+      "displayName": "Amulet of Spell Shield",
+      "scriptName": "AmuletofSpellShield",
+      "class": "Permanent",
+      "level": 6,
+      "pickRandom": true,
+      "goldCost": 600,
+      "uses": null
+    },
+    "sres": {
+      "itemId": "sres",
+      "displayName": "Scroll of Restoration",
+      "scriptName": "ScrollofRestoration",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "pdi2": {
+      "itemId": "pdi2",
+      "displayName": "Potion of Divinity (Invulnerability)",
+      "scriptName": "PotionofDivinity2",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "pres": {
+      "itemId": "pres",
+      "displayName": "Potion of Restoration",
+      "scriptName": "PotionofRestoration",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "iotw": {
+      "itemId": "iotw",
+      "displayName": "Idol of the wild",
+      "scriptName": "Idolofthewild",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "fgfh": {
+      "itemId": "fgfh",
+      "displayName": "Spiked Collar",
+      "scriptName": "SpikedCollar",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "fgbd": {
+      "itemId": "fgbd",
+      "displayName": "Blue Drake Egg",
+      "scriptName": "BlueDrakeEgg",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "fgrg": {
+      "itemId": "fgrg",
+      "displayName": "Stone Token",
+      "scriptName": "StoneToken",
+      "class": "Charged",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "hcun": {
+      "itemId": "hcun",
+      "displayName": "Hood of Cunning",
+      "scriptName": "HoodofCunning",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "hval": {
+      "itemId": "hval",
+      "displayName": "Helm of Valor",
+      "scriptName": "HelmofValor",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "mcou": {
+      "itemId": "mcou",
+      "displayName": "Medallion of Courage",
+      "scriptName": "MedallionofCourage",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "ajen": {
+      "itemId": "ajen",
+      "displayName": "Ancient Janggo of Endurance",
+      "scriptName": "AncientJanggoofEndurance",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "clfm": {
+      "itemId": "clfm",
+      "displayName": "Cloak of Flames",
+      "scriptName": "CloakofFlames",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "ratc": {
+      "itemId": "ratc",
+      "displayName": "Claws of Attack +12",
+      "scriptName": "ClawsofAttack12",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "war2": {
+      "itemId": "war2",
+      "displayName": "Warsong Battle Drums (Kodo)",
+      "scriptName": "WarsongBattleDrums2",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "kpin": {
+      "itemId": "kpin",
+      "displayName": "Khadgar's Pipe of Insight",
+      "scriptName": "KhadgarsPipeofInsight",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "lgdh": {
+      "itemId": "lgdh",
+      "displayName": "Legion Doom-Horn",
+      "scriptName": "LegionDoomHorn",
+      "class": "Permanent",
+      "level": 5,
+      "pickRandom": true,
+      "goldCost": 500,
+      "uses": null
+    },
+    "ankh": {
+      "itemId": "ankh",
+      "displayName": "Ankh of Reincarnation",
+      "scriptName": "AnkhofReincarnation",
+      "class": "Charged",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 450,
+      "uses": 1
+    },
+    "whwd": {
+      "itemId": "whwd",
+      "displayName": "Healing Wards",
+      "scriptName": "HealingWards",
+      "class": "Charged",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 450,
+      "uses": 2
+    },
+    "fgsk": {
+      "itemId": "fgsk",
+      "displayName": "Book of the Dead",
+      "scriptName": "BookoftheDead",
+      "class": "Charged",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 450,
+      "uses": 1
+    },
+    "wcyc": {
+      "itemId": "wcyc",
+      "displayName": "Wand of the Wind",
+      "scriptName": "WandoftheWind",
+      "class": "Charged",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 450,
+      "uses": 2
+    },
+    "hlst": {
+      "itemId": "hlst",
+      "displayName": "Health Stone",
+      "scriptName": "HealthStone",
+      "class": "Charged",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 450,
+      "uses": 1
+    },
+    "mnst": {
+      "itemId": "mnst",
+      "displayName": "Mana Stone",
+      "scriptName": "ManaStone",
+      "class": "Charged",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 450,
+      "uses": 1
+    },
+    "belv": {
+      "itemId": "belv",
+      "displayName": "Boots of Quel'Thalas +6",
+      "scriptName": "BootsofQuelThalas6",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "bgst": {
+      "itemId": "bgst",
+      "displayName": "Belt of Giant Strength +6",
+      "scriptName": "BeltofGiantStrength6",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "ciri": {
+      "itemId": "ciri",
+      "displayName": "Robe of the Magi +6",
+      "scriptName": "RobeoftheMagi6",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "lhst": {
+      "itemId": "lhst",
+      "displayName": "Lion Horn of Stormwind",
+      "scriptName": "LionHornofStormwind",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "afac": {
+      "itemId": "afac",
+      "displayName": "Alleria's Flute of Accuracy",
+      "scriptName": "AlleriasFluteofAccuracy",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "sbch": {
+      "itemId": "sbch",
+      "displayName": "Scourge Bone Chimes",
+      "scriptName": "ScourgeBoneChimes",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "brac": {
+      "itemId": "brac",
+      "displayName": "Runed Bracers",
+      "scriptName": "RunedBracers",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "rwiz": {
+      "itemId": "rwiz",
+      "displayName": "Sobi Mask",
+      "scriptName": "SobiMask",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "pghe": {
+      "itemId": "pghe",
+      "displayName": "potion of greater healing",
+      "scriptName": "potionofgreaterhealing",
+      "class": "Charged",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": 1
+    },
+    "pgma": {
+      "itemId": "pgma",
+      "displayName": "Potion of Greater Mana",
+      "scriptName": "PotionofGreaterMana",
+      "class": "Charged",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": 1
+    },
+    "pnvu": {
+      "itemId": "pnvu",
+      "displayName": "potion of invulnerability",
+      "scriptName": "potionofinvulnerability",
+      "class": "Charged",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": 1
+    },
+    "sror": {
+      "itemId": "sror",
+      "displayName": "Scroll of the Beast",
+      "scriptName": "ScrolloftheBeast",
+      "class": "Charged",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": 1
+    },
+    "woms": {
+      "itemId": "woms",
+      "displayName": "Wand of Mana Stealing",
+      "scriptName": "WandofManaStealing",
+      "class": "Charged",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": 2
+    },
+    "crys": {
+      "itemId": "crys",
+      "displayName": "Crystal Ball",
+      "scriptName": "CrystalBall",
+      "class": "Charged",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 3
+    },
+    "evtl": {
+      "itemId": "evtl",
+      "displayName": "Talisman of Evasion",
+      "scriptName": "TalismanofEvasion",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": null
+    },
+    "penr": {
+      "itemId": "penr",
+      "displayName": "Pendant of Energy",
+      "scriptName": "PendantofEnergy",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": null
+    },
+    "prvt": {
+      "itemId": "prvt",
+      "displayName": "Periapt of Vitality",
+      "scriptName": "PeriaptofVitality",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": null
+    },
+    "rat9": {
+      "itemId": "rat9",
+      "displayName": "Claws of Attack +9",
+      "scriptName": "ClawsofAttack9",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": null
+    },
+    "rde3": {
+      "itemId": "rde3",
+      "displayName": "Ring of Protection +4",
+      "scriptName": "RingofProtection4",
+      "class": "Permanent",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 125,
+      "uses": null
+    },
+    "rlif": {
+      "itemId": "rlif",
+      "displayName": "Ring of regeneration",
+      "scriptName": "Ringofregeneration",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": null
+    },
+    "bspd": {
+      "itemId": "bspd",
+      "displayName": "Boots of Speed",
+      "scriptName": "BootsofSpeed",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": null
+    },
+    "rej3": {
+      "itemId": "rej3",
+      "displayName": "Replenishment Potion",
+      "scriptName": "ReplenishmentPotion",
+      "class": "Charged",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "will": {
+      "itemId": "will",
+      "displayName": "Wand of Illusion",
+      "scriptName": "WandofIllusion",
+      "class": "Charged",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 2
+    },
+    "wlsd": {
+      "itemId": "wlsd",
+      "displayName": "Wand of Lightning Shield",
+      "scriptName": "WandofLightningShield",
+      "class": "Charged",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 2
+    },
+    "wswd": {
+      "itemId": "wswd",
+      "displayName": "Sentry Wards",
+      "scriptName": "SentryWards",
+      "class": "Charged",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 2
+    },
+    "cnob": {
+      "itemId": "cnob",
+      "displayName": "Circlet of Nobility",
+      "scriptName": "CircletofNobility",
+      "class": "Permanent",
+      "level": 3,
+      "pickRandom": true,
+      "goldCost": 200,
+      "uses": null
+    },
+    "gcel": {
+      "itemId": "gcel",
+      "displayName": "Gloves of Haste",
+      "scriptName": "GlovesofHaste",
+      "class": "Permanent",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 125,
+      "uses": null
+    },
+    "rat6": {
+      "itemId": "rat6",
+      "displayName": "Claws of Attack +6",
+      "scriptName": "ClawsofAttack6",
+      "class": "Permanent",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 125,
+      "uses": null
+    },
+    "rde2": {
+      "itemId": "rde2",
+      "displayName": "Ring of Protection +3",
+      "scriptName": "RingofProtection3",
+      "class": "Permanent",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 125,
+      "uses": null
+    },
+    "tdx2": {
+      "itemId": "tdx2",
+      "displayName": "Tome of Agility +2",
+      "scriptName": "TomeofAgility2",
+      "class": "PowerUp",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "tin2": {
+      "itemId": "tin2",
+      "displayName": "Tome of Intelligence +2",
+      "scriptName": "TomeofIntelligence2",
+      "class": "PowerUp",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "tpow": {
+      "itemId": "tpow",
+      "displayName": "Tome of Knowledge",
+      "scriptName": "TomeofKnowledge",
+      "class": "PowerUp",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "tst2": {
+      "itemId": "tst2",
+      "displayName": "Tome of Strength +2",
+      "scriptName": "TomeofStrength2",
+      "class": "PowerUp",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "pnvl": {
+      "itemId": "pnvl",
+      "displayName": "Potion of Lesser Invulnerability",
+      "scriptName": "PotionofLesserInvulnerability",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "clsd": {
+      "itemId": "clsd",
+      "displayName": "Cloak of Shadows",
+      "scriptName": "CloakofShadows",
+      "class": "Permanent",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 100,
+      "uses": null
+    },
+    "rag1": {
+      "itemId": "rag1",
+      "displayName": "Slippers of Agility +3",
+      "scriptName": "SlippersofAgility3",
+      "class": "Permanent",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 100,
+      "uses": null
+    },
+    "rin1": {
+      "itemId": "rin1",
+      "displayName": "Mantle of Intelligence +3",
+      "scriptName": "MantleofIntelligence3",
+      "class": "Permanent",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 100,
+      "uses": null
+    },
+    "rst1": {
+      "itemId": "rst1",
+      "displayName": "Gauntlets of Ogre Strength +3",
+      "scriptName": "GauntletsofOgreStrength3",
+      "class": "Permanent",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 100,
+      "uses": null
+    },
+    "manh": {
+      "itemId": "manh",
+      "displayName": "Manual of Health",
+      "scriptName": "ManualofHealth",
+      "class": "PowerUp",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "tdex": {
+      "itemId": "tdex",
+      "displayName": "Tome of Agility +1",
+      "scriptName": "TomeofAgility1",
+      "class": "PowerUp",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "tint": {
+      "itemId": "tint",
+      "displayName": "Tome of Intelligence",
+      "scriptName": "TomeofIntelligence",
+      "class": "PowerUp",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "tstr": {
+      "itemId": "tstr",
+      "displayName": "Tome of Strength +1",
+      "scriptName": "TomeofStrength1",
+      "class": "PowerUp",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "pomn": {
+      "itemId": "pomn",
+      "displayName": "Potion of Omniscience",
+      "scriptName": "PotionofOmniscience",
+      "class": "Charged",
+      "level": 0,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": 1
+    },
+    "wshs": {
+      "itemId": "wshs",
+      "displayName": "Wand of Shadowsight",
+      "scriptName": "WandofShadowsight",
+      "class": "Charged",
+      "level": 0,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 2
+    },
+    "rej6": {
+      "itemId": "rej6",
+      "displayName": "Greater Scroll of Replenishment",
+      "scriptName": "GreaterScrollofReplenishment",
+      "class": "Miscellaneous",
+      "level": 6,
+      "pickRandom": false,
+      "goldCost": 500,
+      "uses": 1
+    },
+    "rej5": {
+      "itemId": "rej5",
+      "displayName": "Lesser Scroll of Replenishment",
+      "scriptName": "LesserScrollofReplenishment",
+      "class": "Miscellaneous",
+      "level": 5,
+      "pickRandom": false,
+      "goldCost": 400,
+      "uses": 1
+    },
+    "rej4": {
+      "itemId": "rej4",
+      "displayName": "Greater Replenishment Potion",
+      "scriptName": "GreaterReplenishmentPotion",
+      "class": "Miscellaneous",
+      "level": 4,
+      "pickRandom": false,
+      "goldCost": 450,
+      "uses": 1
+    },
+    "ram4": {
+      "itemId": "ram4",
+      "displayName": "Fourth Ring of the Archmagi",
+      "scriptName": "FourthRingoftheArchmagi",
+      "class": "Miscellaneous",
+      "level": 4,
+      "pickRandom": false,
+      "goldCost": 750,
+      "uses": null
+    },
+    "dsum": {
+      "itemId": "dsum",
+      "displayName": "Diamond of Summoning",
+      "scriptName": "DiamondofSummoning",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": false,
+      "goldCost": 400,
+      "uses": null
+    },
+    "ofir": {
+      "itemId": "ofir",
+      "displayName": "Orb of Fire",
+      "scriptName": "OrbofFire",
+      "class": "Miscellaneous",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": null
+    },
+    "ocor": {
+      "itemId": "ocor",
+      "displayName": "Orb of Corruption",
+      "scriptName": "OrbofCorruption",
+      "class": "Miscellaneous",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 375,
+      "uses": null
+    },
+    "oli2": {
+      "itemId": "oli2",
+      "displayName": "Orb of Lightning",
+      "scriptName": "OrbofLightning",
+      "class": "Miscellaneous",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 375,
+      "uses": null
+    },
+    "oven": {
+      "itemId": "oven",
+      "displayName": "Orb of Venom",
+      "scriptName": "OrbofVenom",
+      "class": "Miscellaneous",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 325,
+      "uses": null
+    },
+    "ram3": {
+      "itemId": "ram3",
+      "displayName": "Third Ring of the Archmagi",
+      "scriptName": "ThirdRingoftheArchmagi",
+      "class": "Permanent",
+      "level": 4,
+      "pickRandom": true,
+      "goldCost": 400,
+      "uses": null
+    },
+    "tret": {
+      "itemId": "tret",
+      "displayName": "Tome of Retraining",
+      "scriptName": "TomeofRetraining",
+      "class": "Purchasable",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "tgrh": {
+      "itemId": "tgrh",
+      "displayName": "Tiny Great Hall",
+      "scriptName": "TinyGreatHall",
+      "class": "Purchasable",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 600,
+      "uses": 1
+    },
+    "rej2": {
+      "itemId": "rej2",
+      "displayName": "Lesser Replenishment Potion",
+      "scriptName": "LesserReplenishmentPotion",
+      "class": "Miscellaneous",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "gemt": {
+      "itemId": "gemt",
+      "displayName": "Gem of True Seeing",
+      "scriptName": "GemofTrueSeeing",
+      "class": "Miscellaneous",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "ram2": {
+      "itemId": "ram2",
+      "displayName": "Second Ring of the Archmagi",
+      "scriptName": "SecondRingoftheArchmagi",
+      "class": "Miscellaneous",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": null
+    },
+    "stel": {
+      "itemId": "stel",
+      "displayName": "Staff of Teleportation",
+      "scriptName": "StaffofTeleportation",
+      "class": "Permanent",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": null
+    },
+    "stwp": {
+      "itemId": "stwp",
+      "displayName": "Scroll of Town Portal",
+      "scriptName": "ScrollofTownPortal",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 325,
+      "uses": 1
+    },
+    "wneg": {
+      "itemId": "wneg",
+      "displayName": "Wand of Negation",
+      "scriptName": "WandofNegation",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 120,
+      "uses": 3
+    },
+    "sneg": {
+      "itemId": "sneg",
+      "displayName": "Staff of Negation",
+      "scriptName": "StaffofNegation",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "wneu": {
+      "itemId": "wneu",
+      "displayName": "Wand of Neutralization",
+      "scriptName": "WandofNeutralization",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 4
+    },
+    "shea": {
+      "itemId": "shea",
+      "displayName": "Scroll of Healing",
+      "scriptName": "ScrollofHealing",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": 1
+    },
+    "sman": {
+      "itemId": "sman",
+      "displayName": "Scroll of Mana",
+      "scriptName": "ScrollofMana",
+      "class": "Purchasable",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "rej1": {
+      "itemId": "rej1",
+      "displayName": "Minor Replenishment Potion",
+      "scriptName": "MinorReplenishmentPotion",
+      "class": "Miscellaneous",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "pspd": {
+      "itemId": "pspd",
+      "displayName": "Potion of Speed",
+      "scriptName": "PotionofSpeed",
+      "class": "Miscellaneous",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 1
+    },
+    "dust": {
+      "itemId": "dust",
+      "displayName": "Dust of Appearance",
+      "scriptName": "DustofAppearance",
+      "class": "Miscellaneous",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 2
+    },
+    "ram1": {
+      "itemId": "ram1",
+      "displayName": "First Ring of the Archmagi",
+      "scriptName": "FirstRingoftheArchmagi",
+      "class": "Miscellaneous",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 125,
+      "uses": null
+    },
+    "pinv": {
+      "itemId": "pinv",
+      "displayName": "potion of invisibility",
+      "scriptName": "potionofinvisibility",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "phea": {
+      "itemId": "phea",
+      "displayName": "potion of healing",
+      "scriptName": "potionofhealing",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "pman": {
+      "itemId": "pman",
+      "displayName": "Potion of Mana",
+      "scriptName": "PotionofMana",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "spro": {
+      "itemId": "spro",
+      "displayName": "Scroll of Protection",
+      "scriptName": "ScrollofProtection",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "hslv": {
+      "itemId": "hslv",
+      "displayName": "Healing Salve",
+      "scriptName": "HealingSalve",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 3
+    },
+    "moon": {
+      "itemId": "moon",
+      "displayName": "Moonstone",
+      "scriptName": "Moonstone",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": 1
+    },
+    "shas": {
+      "itemId": "shas",
+      "displayName": "Scroll of Speed",
+      "scriptName": "ScrollofSpeed",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 70,
+      "uses": 1
+    },
+    "skul": {
+      "itemId": "skul",
+      "displayName": "Sacrificial Skull",
+      "scriptName": "SacrificialSkull",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": 1
+    },
+    "mcri": {
+      "itemId": "mcri",
+      "displayName": "Mechanical Critter",
+      "scriptName": "MechanicalCritter",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": 1
+    },
+    "rnec": {
+      "itemId": "rnec",
+      "displayName": "Rod of Necromancy",
+      "scriptName": "RodofNecromancy",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 4
+    },
+    "ritd": {
+      "itemId": "ritd",
+      "displayName": "Ritual Dagger",
+      "scriptName": "RitualDagger",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 1
+    },
+    "tsct": {
+      "itemId": "tsct",
+      "displayName": "Ivory Tower",
+      "scriptName": "IvoryTower",
+      "class": "Purchasable",
+      "level": 1,
+      "pickRandom": false,
+      "goldCost": 40,
+      "uses": 1
+    },
+    "azhr": {
+      "itemId": "azhr",
+      "displayName": "Heart of Aszune",
+      "scriptName": "HeartofAszune",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "bzbe": {
+      "itemId": "bzbe",
+      "displayName": "Empty Vial",
+      "scriptName": "EmptyVial",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "bzbf": {
+      "itemId": "bzbf",
+      "displayName": "Full Vial",
+      "scriptName": "FullVial",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "ches": {
+      "itemId": "ches",
+      "displayName": "Cheese",
+      "scriptName": "Cheese",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": null
+    },
+    "cnhn": {
+      "itemId": "cnhn",
+      "displayName": "Horn of Cenarius",
+      "scriptName": "HornofCenarius",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "glsk": {
+      "itemId": "glsk",
+      "displayName": "Guldan's Skull",
+      "scriptName": "GuldansSkull",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "gopr": {
+      "itemId": "gopr",
+      "displayName": "Glyph of Purification",
+      "scriptName": "GlyphofPurification",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": null
+    },
+    "k3m1": {
+      "itemId": "k3m1",
+      "displayName": "Key of 3 Moons - 1",
+      "scriptName": "Keyof3Moons1",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "k3m2": {
+      "itemId": "k3m2",
+      "displayName": "Key of 3 Moons - 2",
+      "scriptName": "Keyof3Moons2",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "k3m3": {
+      "itemId": "k3m3",
+      "displayName": "Key of 3 Moons - 3",
+      "scriptName": "Keyof3Moons3",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "ktrm": {
+      "itemId": "ktrm",
+      "displayName": "Urn of Kel'Thuzad",
+      "scriptName": "UrnofKelThuzad",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "kybl": {
+      "itemId": "kybl",
+      "displayName": "bloody key",
+      "scriptName": "bloodykey",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "kygh": {
+      "itemId": "kygh",
+      "displayName": "ghost key",
+      "scriptName": "ghostkey",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "kymn": {
+      "itemId": "kymn",
+      "displayName": "moon key",
+      "scriptName": "moonkey",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "kysn": {
+      "itemId": "kysn",
+      "displayName": "sun key",
+      "scriptName": "sunkey",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "ledg": {
+      "itemId": "ledg",
+      "displayName": "Gerard's Lost Ledger",
+      "scriptName": "GerardsLostLedger",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "phlt": {
+      "itemId": "phlt",
+      "displayName": "Phat Lewt",
+      "scriptName": "PhatLewt",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 500,
+      "uses": null
+    },
+    "sehr": {
+      "itemId": "sehr",
+      "displayName": "Searinox's Heart",
+      "scriptName": "SearinoxsHeart",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "engs": {
+      "itemId": "engs",
+      "displayName": "Enchanted Gemstone",
+      "scriptName": "EnchantedGemstone",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "sorf": {
+      "itemId": "sorf",
+      "displayName": "Shadow Orb Fragment",
+      "scriptName": "ShadowOrbFragment",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "gmfr": {
+      "itemId": "gmfr",
+      "displayName": "Gem Fragment",
+      "scriptName": "GemFragment",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "jpnt": {
+      "itemId": "jpnt",
+      "displayName": "note to jaina proudmoore",
+      "scriptName": "notetojainaproudmoore",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "shwd": {
+      "itemId": "shwd",
+      "displayName": "shimmerweed",
+      "scriptName": "shimmerweed",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "skrt": {
+      "itemId": "skrt",
+      "displayName": "Skeletal Artifact",
+      "scriptName": "SkeletalArtifact",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": null
+    },
+    "thle": {
+      "itemId": "thle",
+      "displayName": "thunder lizard egg",
+      "scriptName": "thunderlizardegg",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "sclp": {
+      "itemId": "sclp",
+      "displayName": "secret level powerup",
+      "scriptName": "secretlevelpowerup",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 1
+    },
+    "wtlg": {
+      "itemId": "wtlg",
+      "displayName": "Wirt's Leg",
+      "scriptName": "WirtsLeg",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "wolg": {
+      "itemId": "wolg",
+      "displayName": "Wirt's Other Leg",
+      "scriptName": "WirtsOtherLeg",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "mgtk": {
+      "itemId": "mgtk",
+      "displayName": "Magtheridon's Keys",
+      "scriptName": "MagtheridonsKeys",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "mort": {
+      "itemId": "mort",
+      "displayName": "Mogrin's Report",
+      "scriptName": "MogrinsReport",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "dphe": {
+      "itemId": "dphe",
+      "displayName": "Thunder Hawk Egg",
+      "scriptName": "ThunderHawkEgg",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "dkfw": {
+      "itemId": "dkfw",
+      "displayName": "Keg of Thunderwater",
+      "scriptName": "KegofThunderwater",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "dthb": {
+      "itemId": "dthb",
+      "displayName": "Thunderbloom Bulb",
+      "scriptName": "ThunderbloomBulb",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "fgun": {
+      "itemId": "fgun",
+      "displayName": "Flare Gun",
+      "scriptName": "FlareGun",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 125,
+      "uses": 3
+    },
+    "lure": {
+      "itemId": "lure",
+      "displayName": "Monster Lure",
+      "scriptName": "MonsterLure",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "olig": {
+      "itemId": "olig",
+      "displayName": "Orb of Lightning(old)",
+      "scriptName": "OrbofLightningold",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 450,
+      "uses": null
+    },
+    "amrc": {
+      "itemId": "amrc",
+      "displayName": "Amulet of Recall",
+      "scriptName": "AmuletofRecall",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": 1
+    },
+    "flag": {
+      "itemId": "flag",
+      "displayName": "human flag",
+      "scriptName": "humanflag",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "gobm": {
+      "itemId": "gobm",
+      "displayName": "Goblin Land Mine",
+      "scriptName": "GoblinLandMine",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 225,
+      "uses": 3
+    },
+    "gsou": {
+      "itemId": "gsou",
+      "displayName": "Soul Gem",
+      "scriptName": "SoulGem",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": 1
+    },
+    "nflg": {
+      "itemId": "nflg",
+      "displayName": "NightElf flag",
+      "scriptName": "NightElfflag",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "nspi": {
+      "itemId": "nspi",
+      "displayName": "Necklace of Spell Immunity",
+      "scriptName": "NecklaceofSpellImmunity",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "oflg": {
+      "itemId": "oflg",
+      "displayName": "Orc flag",
+      "scriptName": "Orcflag",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "pams": {
+      "itemId": "pams",
+      "displayName": "Anti-Magic Potion",
+      "scriptName": "AntiMagicPotion",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "pgin": {
+      "itemId": "pgin",
+      "displayName": "potion of greater invisibility",
+      "scriptName": "potionofgreaterinvisibility",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "rat3": {
+      "itemId": "rat3",
+      "displayName": "Claws of Attack +3",
+      "scriptName": "ClawsofAttack3",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "rde0": {
+      "itemId": "rde0",
+      "displayName": "Ring of Protection +1",
+      "scriptName": "RingofProtection1",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "rde1": {
+      "itemId": "rde1",
+      "displayName": "Ring of Protection +2",
+      "scriptName": "RingofProtection2",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 125,
+      "uses": null
+    },
+    "rnsp": {
+      "itemId": "rnsp",
+      "displayName": "Ring of Superiority",
+      "scriptName": "RingofSuperiority",
+      "class": "Permanent",
+      "level": 1,
+      "pickRandom": true,
+      "goldCost": 100,
+      "uses": null
+    },
+    "soul": {
+      "itemId": "soul",
+      "displayName": "Soul",
+      "scriptName": "Soul",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "tels": {
+      "itemId": "tels",
+      "displayName": "Goblin Night Scope",
+      "scriptName": "GoblinNightScope",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "tgxp": {
+      "itemId": "tgxp",
+      "displayName": "Tome of Greater Experience",
+      "scriptName": "TomeofGreaterExperience",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": 1
+    },
+    "uflg": {
+      "itemId": "uflg",
+      "displayName": "Undead flag",
+      "scriptName": "Undeadflag",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "anfg": {
+      "itemId": "anfg",
+      "displayName": "Ancient Figurine",
+      "scriptName": "AncientFigurine",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": null
+    },
+    "brag": {
+      "itemId": "brag",
+      "displayName": "Bracer of Agility",
+      "scriptName": "BracerofAgility",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "drph": {
+      "itemId": "drph",
+      "displayName": "Druid Pouch",
+      "scriptName": "DruidPouch",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "iwbr": {
+      "itemId": "iwbr",
+      "displayName": "Ironwood Branch",
+      "scriptName": "IronwoodBranch",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "jdrn": {
+      "itemId": "jdrn",
+      "displayName": "Jade Ring",
+      "scriptName": "JadeRing",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "lnrn": {
+      "itemId": "lnrn",
+      "displayName": "Lion's Ring",
+      "scriptName": "LionsRing",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "mlst": {
+      "itemId": "mlst",
+      "displayName": "Maul of Strength",
+      "scriptName": "MaulofStrength",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "oslo": {
+      "itemId": "oslo",
+      "displayName": "Orb of Slow",
+      "scriptName": "OrbofSlow",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 325,
+      "uses": null
+    },
+    "sbok": {
+      "itemId": "sbok",
+      "displayName": "Spell Book",
+      "scriptName": "SpellBook",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 325,
+      "uses": null
+    },
+    "sksh": {
+      "itemId": "sksh",
+      "displayName": "Skull Shield",
+      "scriptName": "SkullShield",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "sprn": {
+      "itemId": "sprn",
+      "displayName": "Spider Ring",
+      "scriptName": "SpiderRing",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "tmmt": {
+      "itemId": "tmmt",
+      "displayName": "Totem of Might",
+      "scriptName": "TotemofMight",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "vddl": {
+      "itemId": "vddl",
+      "displayName": "Voodoo Doll",
+      "scriptName": "VoodooDoll",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "spre": {
+      "itemId": "spre",
+      "displayName": "Staff of Preservation",
+      "scriptName": "StaffofPreservation",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": null
+    },
+    "sfog": {
+      "itemId": "sfog",
+      "displayName": "Horn of the Clouds",
+      "scriptName": "HornoftheClouds",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "sor1": {
+      "itemId": "sor1",
+      "displayName": "Shadow Orb +1",
+      "scriptName": "ShadowOrb1",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": null
+    },
+    "sor2": {
+      "itemId": "sor2",
+      "displayName": "Shadow Orb +2",
+      "scriptName": "ShadowOrb2",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": null
+    },
+    "sor3": {
+      "itemId": "sor3",
+      "displayName": "Shadow Orb +3",
+      "scriptName": "ShadowOrb3",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "sor4": {
+      "itemId": "sor4",
+      "displayName": "Shadow Orb +4",
+      "scriptName": "ShadowOrb4",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": null
+    },
+    "sor5": {
+      "itemId": "sor5",
+      "displayName": "Shadow Orb +5",
+      "scriptName": "ShadowOrb5",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 350,
+      "uses": null
+    },
+    "sor6": {
+      "itemId": "sor6",
+      "displayName": "Shadow Orb +6",
+      "scriptName": "ShadowOrb6",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 400,
+      "uses": null
+    },
+    "sor7": {
+      "itemId": "sor7",
+      "displayName": "Shadow Orb +7",
+      "scriptName": "ShadowOrb7",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 550,
+      "uses": null
+    },
+    "sor8": {
+      "itemId": "sor8",
+      "displayName": "Shadow Orb +8",
+      "scriptName": "ShadowOrb8",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 700,
+      "uses": null
+    },
+    "sor9": {
+      "itemId": "sor9",
+      "displayName": "Shadow Orb +9",
+      "scriptName": "ShadowOrb9",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 900,
+      "uses": null
+    },
+    "sora": {
+      "itemId": "sora",
+      "displayName": "Shadow Orb +10",
+      "scriptName": "ShadowOrb10",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1250,
+      "uses": null
+    },
+    "fwss": {
+      "itemId": "fwss",
+      "displayName": "Frostwyrm Skull Shield",
+      "scriptName": "FrostwyrmSkullShield",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 750,
+      "uses": null
+    },
+    "shtm": {
+      "itemId": "shtm",
+      "displayName": "Shamanic Totem",
+      "scriptName": "ShamanicTotem",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 600,
+      "uses": null
+    },
+    "esaz": {
+      "itemId": "esaz",
+      "displayName": "Essence of Aszune",
+      "scriptName": "EssenceofAszune",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 600,
+      "uses": null
+    },
+    "btst": {
+      "itemId": "btst",
+      "displayName": "orcish battle standard",
+      "scriptName": "orcishbattlestandard",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": null
+    },
+    "tbsm": {
+      "itemId": "tbsm",
+      "displayName": "Tiny Blacksmith",
+      "scriptName": "TinyBlacksmith",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "tfar": {
+      "itemId": "tfar",
+      "displayName": "Tiny Farm",
+      "scriptName": "TinyFarm",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 1
+    },
+    "tlum": {
+      "itemId": "tlum",
+      "displayName": "Tiny Lumber Mill",
+      "scriptName": "TinyLumberMill",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "tbar": {
+      "itemId": "tbar",
+      "displayName": "Tiny Barracks",
+      "scriptName": "TinyBarracks",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 160,
+      "uses": 1
+    },
+    "tbak": {
+      "itemId": "tbak",
+      "displayName": "Tiny Altar of Kings",
+      "scriptName": "TinyAltarofKings",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 180,
+      "uses": 1
+    },
+    "gldo": {
+      "itemId": "gldo",
+      "displayName": "Orb of Kil'jaeden",
+      "scriptName": "OrbofKiljaeden",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 450,
+      "uses": null
+    },
+    "stre": {
+      "itemId": "stre",
+      "displayName": "Staff of Reanimation",
+      "scriptName": "StaffofReanimation",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "horl": {
+      "itemId": "horl",
+      "displayName": "Holy Relic",
+      "scriptName": "HolyRelic",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 950,
+      "uses": null
+    },
+    "hbth": {
+      "itemId": "hbth",
+      "displayName": "Helm of Battlethirst",
+      "scriptName": "HelmofBattlethirst",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 4200,
+      "uses": null
+    },
+    "blba": {
+      "itemId": "blba",
+      "displayName": "Bladebane Armor",
+      "scriptName": "BladebaneArmor",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 3500,
+      "uses": null
+    },
+    "rugt": {
+      "itemId": "rugt",
+      "displayName": "Runed Gauntlets",
+      "scriptName": "RunedGauntlets",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 725,
+      "uses": null
+    },
+    "frhg": {
+      "itemId": "frhg",
+      "displayName": "Firehand Gauntlets",
+      "scriptName": "FirehandGauntlets",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 3500,
+      "uses": null
+    },
+    "gvsm": {
+      "itemId": "gvsm",
+      "displayName": "Gloves of Spell Mastery",
+      "scriptName": "GlovesofSpellMastery",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1400,
+      "uses": null
+    },
+    "crdt": {
+      "itemId": "crdt",
+      "displayName": "Crown of the Deathlord",
+      "scriptName": "CrownoftheDeathlord",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 6400,
+      "uses": null
+    },
+    "arsc": {
+      "itemId": "arsc",
+      "displayName": "Arcane Scroll",
+      "scriptName": "ArcaneScroll",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": 1
+    },
+    "scul": {
+      "itemId": "scul",
+      "displayName": "Scroll of the Unholy Legion",
+      "scriptName": "ScrolloftheUnholyLegion",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 950,
+      "uses": 1
+    },
+    "tmsc": {
+      "itemId": "tmsc",
+      "displayName": "Tome of Sacrifices",
+      "scriptName": "TomeofSacrifices",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1250,
+      "uses": null
+    },
+    "dtsb": {
+      "itemId": "dtsb",
+      "displayName": "Drek'thar's Spellbook",
+      "scriptName": "DrektharsSpellbook",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 3350,
+      "uses": null
+    },
+    "grsl": {
+      "itemId": "grsl",
+      "displayName": "Grimoire of Souls",
+      "scriptName": "GrimoireofSouls",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1350,
+      "uses": 10
+    },
+    "arsh": {
+      "itemId": "arsh",
+      "displayName": "Arcanite Shield",
+      "scriptName": "ArcaniteShield",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 3500,
+      "uses": null
+    },
+    "shdt": {
+      "itemId": "shdt",
+      "displayName": "Shield of the Deathlord",
+      "scriptName": "ShieldoftheDeathlord",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 9000,
+      "uses": null
+    },
+    "shhn": {
+      "itemId": "shhn",
+      "displayName": "Shield of Honor",
+      "scriptName": "ShieldofHonor",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 3350,
+      "uses": null
+    },
+    "shen": {
+      "itemId": "shen",
+      "displayName": "Enchanted Shield",
+      "scriptName": "EnchantedShield",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 650,
+      "uses": null
+    },
+    "thdm": {
+      "itemId": "thdm",
+      "displayName": "Thunderlizard Diamond",
+      "scriptName": "ThunderlizardDiamond",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1190,
+      "uses": null
+    },
+    "stpg": {
+      "itemId": "stpg",
+      "displayName": "Stuffed Penguin",
+      "scriptName": "StuffedPenguin",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 450,
+      "uses": null
+    },
+    "shrs": {
+      "itemId": "shrs",
+      "displayName": "Shimmerglaze Roast",
+      "scriptName": "ShimmerglazeRoast",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 6
+    },
+    "bfhr": {
+      "itemId": "bfhr",
+      "displayName": "Bloodfeather's Heart",
+      "scriptName": "BloodfeathersHeart",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 2500,
+      "uses": null
+    },
+    "cosl": {
+      "itemId": "cosl",
+      "displayName": "Celestial Orb of Souls",
+      "scriptName": "CelestialOrbofSouls",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 10000,
+      "uses": null
+    },
+    "shcw": {
+      "itemId": "shcw",
+      "displayName": "Shaman Claws",
+      "scriptName": "ShamanClaws",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 950,
+      "uses": null
+    },
+    "srbd": {
+      "itemId": "srbd",
+      "displayName": "Searing Blade",
+      "scriptName": "SearingBlade",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1650,
+      "uses": null
+    },
+    "frgd": {
+      "itemId": "frgd",
+      "displayName": "Frostguard",
+      "scriptName": "Frostguard",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1400,
+      "uses": null
+    },
+    "envl": {
+      "itemId": "envl",
+      "displayName": "Enchanted Vial",
+      "scriptName": "EnchantedVial",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 450,
+      "uses": 5
+    },
+    "rump": {
+      "itemId": "rump",
+      "displayName": "Rusty Mining Pick",
+      "scriptName": "RustyMiningPick",
+      "class": "Miscellaneous",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": null
+    },
+    "srtl": {
+      "itemId": "srtl",
+      "displayName": "Serathil",
+      "scriptName": "Serathil",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 5500,
+      "uses": null
+    },
+    "stwa": {
+      "itemId": "stwa",
+      "displayName": "Sturdy War Axe",
+      "scriptName": "SturdyWarAxe",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 600,
+      "uses": null
+    },
+    "klmm": {
+      "itemId": "klmm",
+      "displayName": "Killmaim",
+      "scriptName": "Killmaim",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 7500,
+      "uses": null
+    },
+    "rots": {
+      "itemId": "rots",
+      "displayName": "Rod of the Sea",
+      "scriptName": "RodoftheSea",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1000,
+      "uses": 5
+    },
+    "axas": {
+      "itemId": "axas",
+      "displayName": "Ancestral Staff",
+      "scriptName": "AncestralStaff",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 3000,
+      "uses": null
+    },
+    "mnsf": {
+      "itemId": "mnsf",
+      "displayName": "Mindstaff",
+      "scriptName": "Mindstaff",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 1800,
+      "uses": null
+    },
+    "schl": {
+      "itemId": "schl",
+      "displayName": "Scepter of Healing",
+      "scriptName": "ScepterofHealing",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 4200,
+      "uses": null
+    },
+    "asbl": {
+      "itemId": "asbl",
+      "displayName": "Assassin's Blade",
+      "scriptName": "AssassinsBlade",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 2000,
+      "uses": null
+    },
+    "kgal": {
+      "itemId": "kgal",
+      "displayName": "Keg of Ale",
+      "scriptName": "KegofAle",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 850,
+      "uses": null
+    },
+    "ward": {
+      "itemId": "ward",
+      "displayName": "Warsong Battle Drums",
+      "scriptName": "WarsongBattleDrums",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 500,
+      "uses": null
+    },
+    "gold": {
+      "itemId": "gold",
+      "displayName": "Chest of Gold",
+      "scriptName": "ChestofGold",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "lmbr": {
+      "itemId": "lmbr",
+      "displayName": "Bundle of Lumber",
+      "scriptName": "BundleofLumber",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "gfor": {
+      "itemId": "gfor",
+      "displayName": "Glyph of Fortification",
+      "scriptName": "GlyphofFortification",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "guvi": {
+      "itemId": "guvi",
+      "displayName": "Glyph of UltraVision",
+      "scriptName": "GlyphofUltraVision",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 125,
+      "uses": 1
+    },
+    "rspl": {
+      "itemId": "rspl",
+      "displayName": "Rune of Spirit Link",
+      "scriptName": "RuneofSpiritLink",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "rre1": {
+      "itemId": "rre1",
+      "displayName": "Rune of Lesser Resurrection",
+      "scriptName": "RuneofLesserResurrection",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "rre2": {
+      "itemId": "rre2",
+      "displayName": "Rune of Greater Resurrection",
+      "scriptName": "RuneofGreaterResurrection",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "gomn": {
+      "itemId": "gomn",
+      "displayName": "Glyph of Omniscience",
+      "scriptName": "GlyphofOmniscience",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "rsps": {
+      "itemId": "rsps",
+      "displayName": "Rune of Shielding",
+      "scriptName": "RuneofShielding",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "rspd": {
+      "itemId": "rspd",
+      "displayName": "Rune of Speed",
+      "scriptName": "RuneofSpeed",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "rman": {
+      "itemId": "rman",
+      "displayName": "Rune of Mana(Lesser)",
+      "scriptName": "RuneofManaLesser",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "rma2": {
+      "itemId": "rma2",
+      "displayName": "Rune of Mana(Greater)",
+      "scriptName": "RuneofManaGreater",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "rres": {
+      "itemId": "rres",
+      "displayName": "Rune of Restoration",
+      "scriptName": "RuneofRestoration",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": 1
+    },
+    "rreb": {
+      "itemId": "rreb",
+      "displayName": "Rune of Rebirth",
+      "scriptName": "RuneofRebirth",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": 1
+    },
+    "rhe1": {
+      "itemId": "rhe1",
+      "displayName": "Rune of Lesser Healing",
+      "scriptName": "RuneofLesserHealing",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": true,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "rhe2": {
+      "itemId": "rhe2",
+      "displayName": "Rune of Healing",
+      "scriptName": "RuneofHealing",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": 1
+    },
+    "rhe3": {
+      "itemId": "rhe3",
+      "displayName": "Rune of Greater Healing",
+      "scriptName": "RuneofGreaterHealing",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 300,
+      "uses": 1
+    },
+    "rdis": {
+      "itemId": "rdis",
+      "displayName": "Rune of Dispel Magic",
+      "scriptName": "RuneofDispelMagic",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 1
+    },
+    "texp": {
+      "itemId": "texp",
+      "displayName": "Tome of Experience",
+      "scriptName": "TomeofExperience",
+      "class": "PowerUp",
+      "level": 2,
+      "pickRandom": false,
+      "goldCost": 500,
+      "uses": 1
+    },
+    "rwat": {
+      "itemId": "rwat",
+      "displayName": "Rune of the Watcher",
+      "scriptName": "RuneoftheWatcher",
+      "class": "PowerUp",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 75,
+      "uses": 1
+    },
+    "pclr": {
+      "itemId": "pclr",
+      "displayName": "Clarity Potion",
+      "scriptName": "ClarityPotion",
+      "class": "Purchasable",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 160,
+      "uses": 1
+    },
+    "plcl": {
+      "itemId": "plcl",
+      "displayName": "Lesser Clarity Potion",
+      "scriptName": "LesserClarityPotion",
+      "class": "Purchasable",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 70,
+      "uses": 1
+    },
+    "silk": {
+      "itemId": "silk",
+      "displayName": "Spider Silk",
+      "scriptName": "SpiderSilk",
+      "class": "Purchasable",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 50,
+      "uses": 4
+    },
+    "vamp": {
+      "itemId": "vamp",
+      "displayName": "Potion of Vampirism",
+      "scriptName": "PotionofVampirism",
+      "class": "Charged",
+      "level": 0,
+      "pickRandom": true,
+      "goldCost": 150,
+      "uses": 1
+    },
+    "sreg": {
+      "itemId": "sreg",
+      "displayName": "Scroll of Regeneration",
+      "scriptName": "ScrollofRegeneration",
+      "class": "Purchasable",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 100,
+      "uses": 1
+    },
+    "tcas": {
+      "itemId": "tcas",
+      "displayName": "Tiny Castle",
+      "scriptName": "TinyCastle",
+      "class": "Purchasable",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 800,
+      "uses": 1
+    },
+    "ssan": {
+      "itemId": "ssan",
+      "displayName": "Staff of Sanctuary",
+      "scriptName": "StaffofSanctuary",
+      "class": "Purchasable",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "ofr2": {
+      "itemId": "ofr2",
+      "displayName": "Orb of Fire v2",
+      "scriptName": "OrbofFirev2",
+      "class": "Miscellaneous",
+      "level": 3,
+      "pickRandom": false,
+      "goldCost": 250,
+      "uses": null
+    },
+    "sxpl": {
+      "itemId": "sxpl",
+      "displayName": "Seed of Expulsion",
+      "scriptName": "SeedofExpulsion",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "vpur": {
+      "itemId": "vpur",
+      "displayName": "Vine of Purification",
+      "scriptName": "VineofPurification",
+      "class": "Campaign",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 200,
+      "uses": null
+    },
+    "pdiv": {
+      "itemId": "pdiv",
+      "displayName": "Potion of Divinity (Divine Shield)",
+      "scriptName": "PotionofDivinity",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "fgrd": {
+      "itemId": "fgrd",
+      "displayName": "Red Drake Egg",
+      "scriptName": "RedDrakeEgg",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 550,
+      "uses": 1
+    },
+    "totw": {
+      "itemId": "totw",
+      "displayName": "talisman of the wild",
+      "scriptName": "talismanofthewild",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 550,
+      "uses": 3
+    },
+    "sand": {
+      "itemId": "sand",
+      "displayName": "Scroll of Animate Dead",
+      "scriptName": "ScrollofAnimateDead",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 700,
+      "uses": 1
+    },
+    "srrc": {
+      "itemId": "srrc",
+      "displayName": "Scroll of Resurrection",
+      "scriptName": "ScrollofResurrection",
+      "class": "Miscellaneous",
+      "level": 0,
+      "pickRandom": false,
+      "goldCost": 700,
+      "uses": 1
+    }
+  },
+  "pools": {
+    "YkI6": [
+      "ccmd",
+      "engr",
+      "fgdg",
+      "scav",
+      "shar",
+      "wild"
+    ],
+    "YiI6": [
+      "ccmd",
+      "engr",
+      "fgdg",
+      "odef",
+      "pmna",
+      "rhth",
+      "scav",
+      "shar",
+      "spsh",
+      "ssil",
+      "wild"
+    ],
+    "YjI6": [
+      "odef",
+      "pmna",
+      "rhth",
+      "spsh",
+      "ssil"
+    ],
+    "YjI3": [
+      "cnob",
+      "evtl",
+      "penr",
+      "prvt",
+      "rat9",
+      "rde4",
+      "rlif"
+    ],
+    "YiI3": [
+      "cnob",
+      "evtl",
+      "penr",
+      "pghe",
+      "pgma",
+      "pnvu",
+      "prvt",
+      "rat9",
+      "rde4",
+      "rlif",
+      "sror",
+      "woms"
+    ],
+    "YkI5": [
+      "fgbd",
+      "fgfh",
+      "fgrg",
+      "iotw",
+      "pdi2",
+      "pres",
+      "sres"
+    ],
+    "YiI5": [
+      "ajen",
+      "clfm",
+      "fgbd",
+      "fgfh",
+      "fgrg",
+      "hcun",
+      "hval",
+      "iotw",
+      "kpin",
+      "lgdh",
+      "mcou",
+      "pdi2",
+      "pres",
+      "ratc",
+      "sres",
+      "war2"
+    ],
+    "YjI5": [
+      "ajen",
+      "clfm",
+      "hcun",
+      "hval",
+      "kpin",
+      "lgdh",
+      "mcou",
+      "ratc",
+      "war2"
+    ],
+    "YkI4": [
+      "ankh",
+      "fgsk",
+      "hlst",
+      "mnst",
+      "wcyc",
+      "whwd"
+    ],
+    "YiI4": [
+      "afac",
+      "ankh",
+      "belv",
+      "bgst",
+      "brac",
+      "ciri",
+      "fgsk",
+      "hlst",
+      "lhst",
+      "mnst",
+      "ram3",
+      "rwiz",
+      "sbch",
+      "wcyc",
+      "whwd"
+    ],
+    "YjI4": [
+      "afac",
+      "belv",
+      "bgst",
+      "brac",
+      "ciri",
+      "lhst",
+      "ram3",
+      "rwiz",
+      "sbch"
+    ],
+    "YkI3": [
+      "pghe",
+      "pgma",
+      "pnvu",
+      "sror",
+      "woms"
+    ],
+    "YkI2": [
+      "crys",
+      "rej3",
+      "will",
+      "wswd"
+    ],
+    "YiI2": [
+      "crys",
+      "gcel",
+      "rat6",
+      "rde2",
+      "rej3",
+      "tdx2",
+      "tin2",
+      "tpow",
+      "tst2",
+      "will",
+      "wswd"
+    ],
+    "YjI2": [
+      "gcel",
+      "rat6",
+      "rde2"
+    ],
+    "YoI2": [
+      "tdx2",
+      "tin2",
+      "tpow",
+      "tst2"
+    ],
+    "YjI1": [
+      "clsd",
+      "rag1",
+      "rin1",
+      "rnsp",
+      "rst1"
+    ],
+    "YiI1": [
+      "clsd",
+      "manh",
+      "rag1",
+      "rin1",
+      "rnsp",
+      "rst1",
+      "tdex",
+      "tint",
+      "tstr"
+    ],
+    "YoI1": [
+      "manh",
+      "tdex",
+      "tint",
+      "tstr"
+    ],
+    "YkI0": [
+      "pomn",
+      "vamp",
+      "wshs"
+    ],
+    "YiI0": [
+      "pomn",
+      "rhe1",
+      "vamp",
+      "wshs"
+    ],
+    "YoI0": [
+      "rhe1"
+    ]
+  }
+}

@@ -26,7 +26,7 @@ const BO_FILTER_CATEGORIES = [
   { id: 'units',     label: 'Unit',  title: 'Units & Workers',  types: ['unit', 'heroTraining', 'heroComplete', 'heroLevel', 'workerAssign'] },
   { id: 'upgrades',  label: 'Upg',   title: 'Attack/Def Upgrades', types: ['attackUpgrade', 'defenseUpgrade'] },
   { id: 'research',  label: 'Res',   title: 'Research',         types: ['research'] },
-  { id: 'items',     label: 'Item',  title: 'Items & Mercs',    types: ['itemPurchase', 'hireMercenary'] },
+  { id: 'items',     label: 'Item',  title: 'Items & Mercs',    types: ['itemPurchase', 'itemUse', 'pickupItem', 'sellItem', 'hireMercenary'] },
   { id: 'summaries', label: 'Sum',   title: 'Tier Summaries',   types: ['tierComplete', 'scout'] }
 ];
 
@@ -805,6 +805,9 @@ const BuildOrderRenderer = class {
       defenseUpgrade:(event)     => this.renderUpgradeCard(event),
       research:      (event)     => this.renderResearchCard(event),
       itemPurchase:  (event)     => this.renderItemPurchaseCard(event),
+      itemUse:       (event)     => this.renderItemUseCard(event),
+      pickupItem:    (event)     => this.renderItemPickupCard(event),
+      sellItem:      (event)     => this.renderItemSellCard(event),
       hireMercenary: (event)     => this.renderMercHireCard(event)
     };
 
@@ -1227,7 +1230,14 @@ const BuildOrderRenderer = class {
   renderItemPurchaseCard (event) {
     const bar = document.createElement('div');
     bar.classList.add('bo-item-bar');
-    if (event.confidence === 'low') bar.classList.add('bo-item-uncertain');
+    if (event.confidence === 'low' || event.confidence === 'medium') {
+      bar.classList.add('bo-item-uncertain');
+    }
+    const inferred = event.inferred ||
+      event.source === 'reclassification-backfill' ||
+      event.source === 'inferred-from-uses' ||
+      event.source === 'use-no-slot';
+    if (inferred) bar.classList.add('bo-item-inferred');
 
     const iconSrc = `/assets/wc3icons/${_icon(event.itemId)}.jpg`;
     const gold = event.goldCost || 0;
@@ -1235,12 +1245,81 @@ const BuildOrderRenderer = class {
     const count = Number(event.count) || 1;
     const countStr = count > 1 ? ` x${count}` : '';
     const shopLabel = event.isNeutralShop ? 'LOOT' : 'ITEM';
+    const inferredChip = inferred
+      ? ' <span class="bo-inferred-chip" title="Backfilled — parser inferred this purchase from later events">[INFERRED]</span>'
+      : '';
 
     bar.innerHTML = `
       <div class="bo-row-desc">
         ${iconHtml}
         <span class="bo-item-label">${shopLabel}</span>
-        <span class="bo-item-name">${_esc(event.displayName)}${countStr}</span>
+        <span class="bo-item-name">${_esc(event.displayName)}${countStr}${inferredChip}</span>
+      </div>`;
+    return bar;
+  }
+
+  // --- Item use bar (consumable / active effect activation) ---
+  renderItemUseCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-item-bar');
+    bar.classList.add('bo-item-use');
+    const isUnknown = !event.itemId;
+    if (event.confidence === 'low' || isUnknown) bar.classList.add('bo-item-uncertain');
+
+    const iconSrc = event.itemId
+      ? `/assets/wc3icons/${_icon(event.itemId)}.jpg`
+      : '/assets/wc3icons/PASBTNHelpDisabled.jpg';
+    const iconHtml = this.buildIconWithCost(iconSrc, 0, 0, true);
+    const label = 'USE';
+
+    bar.innerHTML = `
+      <div class="bo-row-desc">
+        ${iconHtml}
+        <span class="bo-item-label">${label}</span>
+        <span class="bo-item-name">${_esc(event.displayName)}</span>
+      </div>`;
+    return bar;
+  }
+
+  // --- Item pickup bar (ground item retrieved from creep camp / drop) ---
+  renderItemPickupCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-item-bar');
+    bar.classList.add('bo-item-pickup');
+    if (event.confidence === 'low' || event.isRandomDrop) bar.classList.add('bo-item-uncertain');
+
+    const iconSrc = event.itemId
+      ? `/assets/wc3icons/${_icon(event.itemId)}.jpg`
+      : '/assets/wc3icons/PASBTNHelpDisabled.jpg';
+    const iconHtml = this.buildIconWithCost(iconSrc, 0, 0, true);
+    const label = event.campUuid ? 'LOOT' : 'PICKUP';
+
+    bar.innerHTML = `
+      <div class="bo-row-desc">
+        ${iconHtml}
+        <span class="bo-item-label">${label}</span>
+        <span class="bo-item-name">${_esc(event.displayName)}</span>
+      </div>`;
+    return bar;
+  }
+
+  // --- Item sell bar (refunded to a shop) ---
+  renderItemSellCard (event) {
+    const bar = document.createElement('div');
+    bar.classList.add('bo-item-bar');
+    bar.classList.add('bo-item-sell');
+    if (event.confidence === 'low') bar.classList.add('bo-item-uncertain');
+
+    const iconSrc = `/assets/wc3icons/${_icon(event.itemId)}.jpg`;
+    const iconHtml = this.buildIconWithCost(iconSrc, 0, 0, true);
+    const refund = Number(event.goldRefunded) || 0;
+    const refundStr = refund > 0 ? ` (+${refund}g)` : '';
+
+    bar.innerHTML = `
+      <div class="bo-row-desc">
+        ${iconHtml}
+        <span class="bo-item-label">SELL</span>
+        <span class="bo-item-name">${_esc(event.displayName)}${refundStr}</span>
       </div>`;
     return bar;
   }

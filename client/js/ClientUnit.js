@@ -739,6 +739,7 @@ const ClientUnit = class {
     // Still track positions for worker-overlap hiding logic.
     const { x, y } = this.lastPosition;
     const _proj = wc3v.gameScaler.projectXY(x, y);
+    if (!_proj) return;  // building is outside the camera frustum
     const drawX = Math.round(_proj.x + wc3v.gameScaler.middleX);
     const drawY = Math.round(_proj.y + wc3v.gameScaler.middleY);
 
@@ -817,6 +818,7 @@ const ClientUnit = class {
     }
 
     const _projCur = wc3v.gameScaler.projectXY(this.currentX, this.currentY);
+    if (!_projCur) return;  // unit is outside the camera frustum
     let drawX = _projCur.x + wc3v.gameScaler.middleX;
     let drawY = _projCur.y + wc3v.gameScaler.middleY;
 
@@ -892,6 +894,15 @@ const ClientUnit = class {
       frameData.activeBattleParticipants &&
       frameData.activeBattleParticipants.has(this.uuid));
 
+    // Visible outer radius — the unit's COLOURED HALO (drawn in
+    // Drawing.drawUnit at halfIconSize + 6, or +9 for transports). The
+    // server-side collision is based on bare collisionSize, but the
+    // client renders the halo OUTSIDE that radius, so two units packed
+    // at collisionSize tangent have halos that overlap. CollisionResolver
+    // uses this `visualRadius` for the push math so visible halos touch
+    // but never overlap.
+    const visualRadius = halfIconSize + (this.isTransport ? 9 : 6);
+
     unitDrawPositions.push({
       uuid: this.uuid,
       itemId: this.itemId,
@@ -901,6 +912,7 @@ const ClientUnit = class {
       icon: this.icon,
       iconSize: iconSize,
       halfIconSize: halfIconSize,
+      visualRadius: visualRadius,
       fontSize: fontSize,
       decayLevel: this.decayLevel,
       isHero: this.meta.hero,
@@ -973,6 +985,7 @@ const ClientUnit = class {
       const { x, y } = levelRecord.position;
 
       const _projL = wc3v.gameScaler.projectXY(x, y);
+      if (!_projL) return;  // continue level-stream scan; pin is off-screen
       const drawX = _projL.x + wc3v.gameScaler.middleX;
       const drawY = _projL.y + wc3v.gameScaler.middleY;
 

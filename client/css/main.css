@@ -383,12 +383,13 @@ body {
   justify-content: center;
   overflow: hidden;
   container-type: inline-size;
-  /* Explicit z-index 1 creates a stacking context so #canvas-group's z 50
-   * (and the canvases inside it) stay CONTAINED within main-wrapper and
-   * don't leak up to outrank sibling chrome like #scrubber-bar.
-   * Without this, the canvas group's high z floats out and covers the
-   * scrubber + its popups. See client/docs/Z_INDEX.md. */
-  z-index: 1;
+  /* z-index 2 (was 1): still creates a stacking context so #canvas-group's
+   * z 50 stays CONTAINED within main-wrapper and doesn't leak up to outrank
+   * sibling chrome like #scrubber-bar. Bumped from 1→2 so this sibling
+   * outranks #player-status-wrapper (z 1) — without the bump, the player
+   * status panel overlaps the bottom-left corner-stack (battle report,
+   * camp legend) in narrow viewports. See client/docs/Z_INDEX.md. */
+  z-index: 2;
 }
 
 /* --- Build Area --- */
@@ -1564,7 +1565,7 @@ body {
 .bo-column {
   flex: 1;
   min-width: 170px;
-  max-width: 280px;
+  max-width: 320px;
 }
 
 /* --- Timeline Spline SVG overlay --- */
@@ -2112,6 +2113,51 @@ body {
 .bo-item-uncertain {
   opacity: 0.6;
   border-left-style: dashed;
+}
+
+/* Phase 8: inferred chip — small inline tag on backfilled purchases.
+   Distinct from .bo-item-uncertain so users can tell "low confidence"
+   apart from "parser inferred this entirely". */
+.bo-inferred-chip {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 1px 4px;
+  margin-left: 4px;
+  border-radius: 2px;
+  background: rgba(168, 132, 234, 0.25);
+  color: #d6c3ff;
+  vertical-align: middle;
+}
+
+/* Phase 8: item-action variants — tinted background + relabeled chip so
+   USE / LOOT / SELL read distinct from a normal purchase without adding
+   another edge stripe (per project no-single-edge-stripe rule).
+   bo-item-bar still owns the green left edge that signals "items lane". */
+.bo-item-use {
+  background: linear-gradient(90deg, rgba(120, 200, 255, 0.18), rgba(120, 200, 255, 0.04));
+  color: #b7dcff;
+}
+.bo-item-use .bo-item-label {
+  background: rgba(120, 200, 255, 0.28);
+  color: #d3ebff;
+}
+.bo-item-pickup {
+  background: linear-gradient(90deg, rgba(240, 196, 100, 0.20), rgba(240, 196, 100, 0.04));
+  color: #fae6b7;
+}
+.bo-item-pickup .bo-item-label {
+  background: rgba(240, 196, 100, 0.30);
+  color: #fff0c8;
+}
+.bo-item-sell {
+  background: linear-gradient(90deg, rgba(240, 138, 84, 0.22), rgba(240, 138, 84, 0.04));
+  color: #ffc7a8;
+}
+.bo-item-sell .bo-item-label {
+  background: rgba(240, 138, 84, 0.32);
+  color: #ffd9c2;
 }
 
 /* --- Mercenary hire bar --- */
@@ -5336,10 +5382,8 @@ body {
 /* --- Minimap Pip (camera viewport indicator) --- */
 
 .minimap-pip {
-  position: absolute;
-  bottom: 0.75rem;
-  right: 0.75rem;
-  z-index: 5;
+  /* Now positioned by #bottom-right-stack (flex column-reverse). */
+  position: static;
   border: 2px solid rgba(255, 255, 255, 0.5);
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.7);
@@ -5349,6 +5393,13 @@ body {
   opacity: 0;
   transition: opacity 0.2s ease;
   overflow: hidden;
+}
+/* Legacy fallback: when no stack is present, restore the old anchor. */
+#main-wrapper > .minimap-pip {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  z-index: 5;
 }
 
 .minimap-pip.minimap-pip-visible {
@@ -9067,31 +9118,32 @@ svg.about-feat-icon {
   z-index: 0;
 }
 
-/* BO Quick-Jump nav (collapsible) */
+/* BO Quick-Jump nav (collapsible)
+   Layout: heading row (QUICK JUMP ▾) stacked above the pills row.
+   Pills row wraps onto multiple lines instead of clipping at the edge. */
 .bo-chapter-nav {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 6px;
+  padding: 5px 10px 7px;
   background: #1a2a3e;
   border: 1px solid #2e4560;
   border-radius: 7px;
   margin: 4px 6px;
 }
 
-/* Single header line: toggle + up to 3 summary chips */
 .bo-chapter-bar {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
 }
 .bo-chapter-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
+  gap: 4px;
+  align-self: flex-start;
   padding: 0;
   border: none;
   background: transparent;
@@ -9099,13 +9151,14 @@ svg.about-feat-icon {
   font-family: inherit;
 }
 .bo-chapter-heading {
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.07em;
-  color: #c0c8d0;
+  letter-spacing: 0.08em;
+  color: #a8b3c0;
+  text-transform: uppercase;
 }
 .bo-chapter-chevron {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   line-height: 1;
   color: #7d8a9c;
   transition: transform 0.15s ease;
@@ -9117,9 +9170,8 @@ svg.about-feat-icon {
 .bo-chapter-summary {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 5px;
-  min-width: 0;
-  overflow: hidden;
 }
 /* Summary collapses when the full list is open */
 .bo-chapter-expanded .bo-chapter-summary { display: none; }
@@ -9224,6 +9276,33 @@ svg.about-feat-icon {
 .bo-filter-chip.selected:hover {
   background: color-mix(in srgb, var(--race-accent, #6BA3FF) 24%, transparent);
   filter: brightness(1.08);
+}
+
+/* ============================================================
+   BO panel responsive tweaks
+   .bo-wide / .bo-medium / .bo-narrow are toggled on #build-wrapper
+   by BuildOrderRenderer.applyResponsiveClass() based on its width:
+   >600px = wide, >400px = medium, ≤400px = narrow.
+   ============================================================ */
+
+#build-wrapper.bo-narrow .bo-chapter-nav {
+  padding: 4px 8px 6px;
+}
+#build-wrapper.bo-narrow .bo-chapter-heading {
+  display: none;
+}
+#build-wrapper.bo-narrow .bo-filter-chip {
+  padding: 7px 2px;
+  font-size: 0.74rem;
+}
+
+#build-wrapper.bo-medium .bo-chapter-btn {
+  padding: 3px 9px;
+  font-size: 0.76rem;
+}
+#build-wrapper.bo-medium .bo-chapter-icon {
+  width: 16px;
+  height: 16px;
 }
 
 /* ===== Match Summary Modal ===== */
@@ -16419,37 +16498,15 @@ button.mcb-summary {
 }
 
 /* camp ring legend — map-corner key for the segmented progress rings */
+/* Camp legend — hosted as the "Camp Key" tab inside #insights-panel. The
+   tab system controls visibility; the legend itself is just a plain UL of
+   rows. Dead .cl-d / .cl-sum chrome (from the old <details><summary>
+   wrapper) was removed alongside the wrapper itself. */
 #camp-legend {
-  position: absolute;
-  left: 10px;
-  bottom: 10px;
-  z-index: 5;
-  max-width: 244px;
+  position: static;
   pointer-events: auto;
 }
-#camp-legend[hidden] { display: none; }
-.cl-d {
-  background: rgba(14, 18, 26, 0.86);
-  border: 1px solid #2a3647;
-  border-radius: 6px;
-  opacity: 0.72;
-  transition: opacity 0.12s;
-}
-.cl-d:hover, .cl-d[open] { opacity: 1; }
-.cl-sum {
-  cursor: pointer;
-  padding: 6px 10px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #d6dce6;
-  list-style: none;
-  user-select: none;
-}
-.cl-sum::-webkit-details-marker { display: none; }
-.cl-sum::before { content: '\25B8'; color: #6f7d8f; margin-right: 6px; }
-.cl-d[open] .cl-sum::before { content: '\25BE'; }
-.cl-rows { margin: 0; padding: 0 10px 8px; list-style: none; }
+.cl-rows { margin: 0; padding: 6px 8px; list-style: none; }
 .cl-row {
   display: flex;
   align-items: center;
@@ -16762,4 +16819,296 @@ button.mcb-summary {
   color: #6fd3e0;
   font-weight: 700;
   cursor: help;
+}
+
+/* ============================================================
+   Battle Report Panel — collapsible loss summary for each
+   detected battle. Sits at the bottom of #map-container. Click
+   a row to seek; gets a highlight when its battle is active.
+   ============================================================ */
+/* Corner stacks: hold the existing corner UI (camp legend, minimap pip)
+   plus the new feature panels in a flex column anchored to the bottom of
+   #main-wrapper. Stack flows top→bottom in HTML order; existing elements
+   are appended by their own setup code so they land BELOW the new panels
+   that ship in the HTML. The stack's own bottom-anchored absolute position
+   keeps the whole pile pinned to the bottom of the map. */
+.corner-stack {
+  position: absolute;
+  bottom: 10px;
+  z-index: 20;                 /* above other corner overlays in main-wrapper */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;        /* let map clicks pass through gaps */
+  max-height: calc(100% - 80px);
+}
+.corner-stack > * { pointer-events: auto; }
+.corner-stack-left  { left: 10px;  align-items: flex-start; }
+.corner-stack-right { right: 12px; align-items: flex-end; }
+
+/* ============================================================
+   Insights Panel (#insights-panel) — tabbed container hosting
+   Battle Report, Economy, Camp Key. Replaces the three separate
+   floating panels with a single visually-tidy box.
+   ============================================================ */
+.ip {
+  width: 320px;
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(12, 12, 18, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  color: #FFF;
+  font-family: sans-serif;
+  overflow: hidden;
+  pointer-events: auto;
+}
+.ip-header {
+  flex: 0 0 auto;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ip-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+  color: #FFF;
+  font-weight: 700;
+  font-size: 12px;
+  text-align: left;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ip-title:hover { background: rgba(255, 255, 255, 0.10); }
+.ip-title-chevron::before {
+  content: '▾';
+  display: inline-block;
+  font-size: 10px;
+  opacity: 0.6;
+  transition: transform 0.12s;
+}
+.ip.ip-collapsed .ip-title-chevron::before { content: '▸'; }
+.ip-tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 1px;
+  background: rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ip-tab {
+  flex: 1;
+  padding: 6px 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.12s, color 0.12s;
+}
+.ip-tab:hover { background: rgba(255, 255, 255, 0.07); color: #FFF; }
+.ip-tab.ip-tab-active {
+  background: rgba(255, 212, 59, 0.10);
+  color: #FFD43B;
+  box-shadow: inset 0 -2px 0 #FFD43B;
+}
+.ip-tab-badge {
+  background: rgba(255, 82, 82, 0.85);
+  color: #FFF;
+  border-radius: 8px;
+  padding: 0 5px;
+  font-size: 9px;
+  min-width: 14px;
+  text-align: center;
+}
+.ip-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+.ip.ip-collapsed .ip-tabs,
+.ip.ip-collapsed .ip-body { display: none; }
+.ip-tab-content { display: block; }
+.ip-tab-content[hidden] { display: none; }
+/* Battle Report (tab content inside #insights-panel). v2 visual:
+   compact per-battle card with header chip + two-column player compare.
+   No single-edge stripe accents (forbidden per project convention);
+   colour-coding is carried by the type chip and per-cell swatch dots. */
+.brp-list { padding: 4px 0; }
+.brp-row-v2 {
+  display: block;
+  padding: 6px 8px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.1s;
+}
+.brp-row-v2:hover  { background: rgba(255, 255, 255, 0.04); }
+.brp-row-v2.brp-active { background: rgba(255, 212, 59, 0.08); }
+
+/* Header line: chip · time · duration. */
+.brp-rh {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.brp-chip {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.10);
+  color: #FFF;
+  flex: 0 0 auto;
+}
+.brp-chip-campClear { background: #2A6A30; }
+.brp-chip-creepJack { background: #1F4F2C; }
+.brp-chip-baseRaid  { background: #8C2A2A; }
+.brp-chip-defense   { background: #2A5A8C; }
+.brp-chip-heroSnipe { background: #FFD43B; color: #1a1a1a; }
+.brp-chip-wipe      { background: #A04A00; }
+.brp-chip-harass    { background: #555; }
+.brp-chip-skirmish  { background: #4A4A4A; }
+.brp-rh-time {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.85);
+  margin-left: auto;
+}
+.brp-rh-dur {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Two-column player compare grid. */
+.brp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.brp-cell {
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 3px;
+  min-height: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+}
+.brp-cell-empty { background: transparent; }
+.brp-cell-empty-label {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  padding-top: 4px;
+}
+.brp-cell-swatch {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.brp-cell-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.brp-uic {
+  position: relative;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #0a0a10;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.brp-uic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.brp-uic.brp-uic-est { opacity: 0.55; }
+.brp-uic.brp-uic-hero {
+  width: 22px;
+  height: 22px;
+  box-shadow: 0 0 0 2px #FFD43B;
+}
+.brp-uic-n {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  background: #1a1a1a;
+  color: #FFD43B;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 0 2px;
+  border-radius: 5px;
+  line-height: 10px;
+  font-style: normal;
+  box-shadow: 0 0 0 1px #FFD43B;
+}
+.brp-cell-totals {
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.7);
+}
+.brp-tot-food   { color: #FFFFFF; font-weight: 700; }
+.brp-tot-gold   { color: #FFD43B; }
+.brp-tot-lumber { color: #8AE890; }
+.brp-cell-trips {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.brp-trip {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 2px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+  font-size: 9px;
+}
+.brp-trip i {
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 700;
+}
+.brp-trip svg { vertical-align: middle; width: 12px; height: 12px; }
+
+/* Resource Charts (now tab content inside #insights-panel). */
+.rcp-charts { padding: 6px; }
+.rcp-chart { margin-bottom: 4px; }
+.rcp-chart-title {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 2px 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.rcp-chart-svg {
+  /* SVG fills the tab width; height is fixed in CSS for consistent reading.
+     preserveAspectRatio="none" on the SVG lets viewBox stretch to fill. */
+  width: 100%;
+  height: 56px;
+  display: block;
 }

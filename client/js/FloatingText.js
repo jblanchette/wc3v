@@ -139,8 +139,14 @@ const FloatingText = class {
     // filter noisy item events
     if (event.key === 'itemPurchase' && event.item && event.item.itemId === 'Jwid') return;
     if (event.key === 'itemUse' && event.category === 'tome') return;
+    // Don't spam "Unknown consumable" floating text for use-no-slot fallbacks
+    // — they're diagnostic, not user-facing. BO panel + inspect still show them.
+    if (event.key === 'itemUse' && event.source === 'use-no-slot') return;
     if (event.key === 'dropItem' && event.type === 'potentialUnregisteredItem') return;
     if (event.key === 'dropItem' && event.item && event.item.itemId === 'Jwid') return;
+    // Random ground drops with no known itemId are noise — the camp panel
+    // already shows item-loot context from the camp side.
+    if (event.key === 'pickupItem' && event.isRandomDrop && !event.item.itemId) return;
     // Scouting is 1v1-only — detection mis-credits in team/FFA games.
     if (event.key === 'scout' && window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
         && window.wc3v.isNonOneVsOne()) return;
@@ -260,6 +266,7 @@ const FloatingText = class {
       const floatY = -65 * easedProgress;
 
       const _projFT = wc3v.gameScaler.projectXY(entry.x, entry.y);
+      if (!_projFT) return;  // text origin is outside the camera frustum
       const drawX = _projFT.x + wc3v.gameScaler.middleX;
       const drawY = _projFT.y + wc3v.gameScaler.middleY + floatY;
 
@@ -559,6 +566,32 @@ FloatingText.EVENT_STYLES = {
     fontSize: 18,
     bold: false,
     duration: 3000,
+    fadeStart: 0.55,
+    priority: 10
+  },
+  'pickupItem': {
+    text: (e) => e.item ? e.item.displayName : null,
+    label: (e) => e.campUuid ? 'LOOT FROM CAMP' : 'ITEM PICKED UP',
+    icon: (e) => e.item ? e.item.itemId : null,
+    color: '#F0C464',
+    labelColor: '#D6A848',
+    borderColor: '#F0C464',
+    fontSize: 19,
+    bold: false,
+    duration: 3500,
+    fadeStart: 0.55,
+    priority: 10
+  },
+  'sellItem': {
+    text: (e) => e.item ? e.item.displayName : null,
+    label: (e) => e.goldRefunded ? `SOLD — +${e.goldRefunded}g` : 'ITEM SOLD',
+    icon: (e) => e.item ? (e.item.knownItemId || e.item.itemId) : null,
+    color: '#F08A54',
+    labelColor: '#C66A38',
+    borderColor: '#F08A54',
+    fontSize: 19,
+    bold: false,
+    duration: 3500,
     fadeStart: 0.55,
     priority: 10
   },

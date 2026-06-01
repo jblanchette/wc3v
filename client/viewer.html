@@ -44,6 +44,9 @@
         '/js/BattleData.js',
         '/js/MapRenderer.js',
         '/js/BattleRenderer.js',
+        '/js/BottomPanel.js',
+        '/js/BattleReportRenderer.js',
+        '/js/ResourceCharts.js',
         '/js/TeleportFx.js',
         '/js/FogOfWar.js',
         '/js/GLBLoader.js',
@@ -213,6 +216,30 @@
                 <div id="empty-game-wrapper">
                   <div class="empty-game-label">No replay loaded.</div>
                   <a href="/builds" class="empty-game-browse">Browse Build Orders →</a>
+                </div>
+
+                <!-- Bottom-left stack: ONE tabbed Insights panel hosts
+                     Battle Report, Economy, Camp Key as tabs. Each
+                     renderer (BattleReportRenderer, ResourceCharts,
+                     CampPanel) owns the DOM of its tab content and
+                     BottomPanel routes the chrome around it. -->
+                <div id="bottom-left-stack" class="corner-stack corner-stack-left">
+                  <div id="insights-panel" class="ip" hidden>
+                    <div class="ip-header">
+                      <button type="button" class="ip-title" aria-label="Collapse/expand insights">
+                        <span class="ip-title-chevron"></span>
+                        <span class="ip-title-text">Match Insights</span>
+                      </button>
+                    </div>
+                    <div class="ip-tabs" role="tablist"></div>
+                    <div class="ip-body"></div>
+                  </div>
+                </div>
+
+                <!-- Bottom-right stack: minimap only (Economy moved to
+                     Insights panel as a tab). -->
+                <div id="bottom-right-stack" class="corner-stack corner-stack-right">
+                  <!-- .minimap-pip joins this stack at runtime via JS placement. -->
                 </div>
               </div>
               <div id="scrubber-bar"></div>

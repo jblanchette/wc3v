@@ -53,7 +53,13 @@ const CampPanel = class {
       ((canvasGroup && canvasGroup.parentNode) || document.body).appendChild(this.panel);
     }
 
-    // map-corner key explaining the segmented camp rings
+    // map-corner key explaining the segmented camp rings. Placement is
+    // owned by BottomPanel (which adopts this element into the "Camp Key"
+    // tab in app.js). Previously CampPanel reparented the legend itself,
+    // which yanked it back OUT of the tab once BottomPanel had adopted it
+    // — producing both an empty tab AND a duplicate legend rendered as a
+    // sibling under the panel. So we only place it if it doesn't already
+    // exist; placement after that is BottomPanel's job.
     this.legend = document.getElementById('camp-legend');
     if (!this.legend) {
       this.legend = document.createElement('div');
@@ -61,8 +67,6 @@ const CampPanel = class {
       this.legend.hidden = true;
       ((canvasGroup && canvasGroup.parentNode) || document.body).appendChild(this.legend);
     }
-    this._legendCollapsed = false;
-    try { this._legendCollapsed = localStorage.getItem('wc3v.campLegend.collapsed') === '1'; } catch (e) {}
     this._buildLegend();
 
     document.addEventListener('keydown', (e) => {
@@ -93,30 +97,29 @@ const CampPanel = class {
     const gSolid = `<svg ${G}>${ring('stroke="#cfd6e0"')}</svg>`;
     const gDashed = `<svg ${G}>${ring('stroke="#cfd6e0" stroke-dasharray="5 4"')}</svg>`;
 
+    // Plain list: BottomPanel's "Camp Key" tab IS the disclosure now, so
+    // the legacy <details>/<summary> wrapper would duplicate that chrome
+    // inside the tab body. Drop it entirely.
     const row = (glyph, text) => `<li class="cl-row">${glyph}<span>${text}</span></li>`;
     this.legend.innerHTML =
-      `<details class="cl-d"${this._legendCollapsed ? '' : ' open'}>` +
-        `<summary class="cl-sum">Camp ring key</summary>` +
-        `<ul class="cl-rows">` +
-          row(gClearing, 'fills as the camp is cleared <i>(each colour = a team’s share)</i>') +
-          row(gCleared, 'centre dot — camp fully cleared') +
-          row(gSolid, 'solid ring — confident verdict') +
-          row(gDashed, 'dashed ring — uncertain verdict') +
-        `</ul>` +
-      `</details>`;
-
-    const det = this.legend.querySelector('.cl-d');
-    if (det) det.addEventListener('toggle', () => {
-      this._legendCollapsed = !det.open;
-      try {
-        localStorage.setItem('wc3v.campLegend.collapsed', det.open ? '0' : '1');
-      } catch (e) { /* storage may be blocked — non-fatal */ }
-    });
+      `<ul class="cl-rows">` +
+        row(gClearing, 'fills as the camp is cleared <i>(each colour = a team share)</i>') +
+        row(gCleared, 'centre dot, camp fully cleared') +
+        row(gSolid, 'solid ring, confident verdict') +
+        row(gDashed, 'dashed ring, uncertain verdict') +
+      `</ul>`;
   }
 
   setData (neutralGroups) {
     this.neutralGroups = neutralGroups || null;
     this.replayId = (this.viewer && this.viewer.replayId) || 'default';
+
+    // Drive our own rAF loop so icon sync never depends on the main render
+    // loop's lifecycle. The main loop guards syncIcons behind
+    // `!this.guideMode` and exits entirely when the camera is settled +
+    // game paused, both of which leave icons stale. We re-sync any frame
+    // the d3 transform actually changed.
+    this._startOwnLoop();
     // Stamp persisted overrides onto the group objects so the map markers
     // honour them too (the renderer reads g._creditOverride). Shadow data —
     // never serialized back into the parsed replay.
@@ -125,16 +128,59 @@ const CampPanel = class {
         if (g && g.uuid) g._creditOverride = this.getOverride(g.uuid);
       });
     }
-    // the ring key is 1v1-only (segments / dashed verdicts are 1v1 features)
-    if (this.legend) {
-      const hasCamps = !!(this.neutralGroups && Object.keys(this.neutralGroups).length);
-      this.legend.hidden = !(hasCamps && !this._isNonOneVsOne());
+    // The ring key is 1v1-only (segments / dashed verdicts are 1v1 features)
+    // and pointless on creep-less maps. Visibility is now controlled by
+    // showing/hiding the entire "Camp Key" TAB in BottomPanel; do NOT touch
+    // the legend's own `hidden` attribute — when the legend is inside a tab,
+    // its hidden state is owned by the tab activation system, and bypassing
+    // it makes the legend leak through under whichever tab is currently
+    // active.
+    const hasCamps = !!(this.neutralGroups && Object.keys(this.neutralGroups).length);
+    const showLegendTab = hasCamps && !this._isNonOneVsOne();
+    if (this.viewer && this.viewer.bottomPanel && typeof this.viewer.bottomPanel.setTabVisible === 'function') {
+      this.viewer.bottomPanel.setTabVisible('camps', showLegendTab);
+    } else if (this.legend) {
+      // Legacy fallback when BottomPanel isn't present.
+      this.legend.hidden = !showLegendTab;
     }
   }
 
   _isNonOneVsOne () {
     return !!(window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
       && window.wc3v.isNonOneVsOne());
+  }
+
+  // Independent rAF loop — runs every frame, but only invokes syncIcons
+  // when the viewer's d3 transform has actually changed since last tick
+  // (so no work in the steady state). This decouples icon updates from
+  // the main render loop, which has multiple early-exit paths (guideMode,
+  // paused+settled, layoutMode) that left icons stale.
+  _startOwnLoop () {
+    if (this._ownLoopRunning) return;
+    this._ownLoopRunning = true;
+    const tick = () => {
+      if (!this._ownLoopRunning) return;
+      try {
+        const v = this.viewer;
+        const t = v && v.transform;
+        if (t && this.neutralGroups) {
+          const sig = `${t.k}|${t.x}|${t.y}`;
+          if (sig !== this._lastTickSig) {
+            this._lastTickSig = sig;
+            // Split-screen path drives its own sideFilter calls per half —
+            // skip the wholesale sync so we don't fight it.
+            const bc = v && v.broadcastCamera;
+            if (!bc || !bc.isSplitActive) {
+              this.syncIcons(null);
+            }
+          }
+        }
+      } catch (e) {
+        if (window.console) console.warn('[CampPanel] own-loop tick failed', e);
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
   }
 
   // ---- per-camp manual override (durable shadow data) ------------------
@@ -160,52 +206,133 @@ const CampPanel = class {
 
   // ---- on-screen icons -------------------------------------------------
 
-  syncIcons (campHitBuf) {
+  // Position one HTML icon per touched camp via gameScaler.projectToCssPixels
+  // — the same 3D-camera projection the ring uses (so icon and ring move
+  // together under any camera mode: AUTO, SPLIT, P1, P2, FREE).
+  //
+  // sideFilter is null for the normal render path, or
+  //   { side: 'left'|'right', diagTopX, diagBotX, canvasH }
+  // for the split-screen path, in which case the panel hides any camp whose
+  // projected centre lies on the wrong half of the diagonal clip.
+  //
+  // Off-screen camps are hidden entirely — no edge-pinning, no clamping. The
+  // old clamp produced phantom icons stuck to the canvas edge whenever the
+  // 3D projection (frustum-aware now, see ThreeMapRenderer.projectToCanvas)
+  // returned a near-edge pixel for a camp that wasn't really visible.
+  syncIcons (sideFilter) {
     if (!this.iconLayer) return;
+    if (!this.neutralGroups) return;
     const canvas = document.getElementById('main-canvas');
     if (!canvas || !canvas.width) return;
+    const gs = this.viewer && this.viewer.gameScaler;
+    if (!gs) return;
     const cssW = canvas.clientWidth || canvas.width;
     const cssH = canvas.clientHeight || canvas.height;
-    const scaleX = canvas.width / cssW;
-    const scaleY = canvas.height / cssH;
-    if (!scaleX || !scaleY || !isFinite(scaleX) || !isFinite(scaleY)) return;
-    const seen = {};
 
-    (campHitBuf || []).forEach(hit => {
-      const g = hit.rawGroup;
+    const ICON_W = 24, ICON_H = 24;
+    const ICON_GAP = 6;
+    const RING_PAD = 4;
+    const seen = sideFilter ? (this._sideSeen || (this._sideSeen = {})) : {};
+    if (!sideFilter) this._sideSeen = null;
+
+    Object.values(this.neutralGroups).forEach(g => {
       if (!g || !g.uuid) return;
       const hasEvents = g.perPlayerEvents && g.perPlayerEvents.length;
       const touched = (g.claimState && g.claimState !== 0) || hasEvents;
       if (!touched) return;
+      // In split mode the same panel is called twice per frame (once per
+      // half). Skip groups already placed by the other half's call.
+      if (sideFilter && seen[g.uuid]) return;
 
-      const cCssX = hit.cx / scaleX;
-      const cCssY = hit.cy / scaleY;
-      const M = 30;
-      if (cCssX < -M || cCssX > cssW + M || cCssY < -M || cCssY > cssH + M) {
-        const ex = this._iconEls[g.uuid];
+      const b = g.unitBounds || g.bounds;
+      if (!b) return;
+
+      const wCenterX = (b.minX + b.maxX) / 2;
+      const wCenterY = (b.minY + b.maxY) / 2;
+
+      // Require every bbox corner to project inside the frustum — same rule
+      // MapRenderer.renderNeutralGroups uses to draw the ring. Without this
+      // check, a distant camp whose centre lands at the horizon (NDC≈[0,
+      // 0.95]) is "on-canvas" but visually a meaningless dot — the old bug
+      // where icons appeared everywhere in P1/P2 focus.
+      const ex = this._iconEls[g.uuid];
+      const k1 = gs.projectToCssPixels(b.minX, b.minY, canvas);
+      const k2 = gs.projectToCssPixels(b.maxX, b.minY, canvas);
+      const k3 = gs.projectToCssPixels(b.minX, b.maxY, canvas);
+      const k4 = gs.projectToCssPixels(b.maxX, b.maxY, canvas);
+      if (!k1.valid || !k2.valid || !k3.valid || !k4.valid) {
         if (ex) ex.wrap.style.display = 'none';
         return;
       }
-      seen[g.uuid] = true;
 
-      let els = this._iconEls[g.uuid];
+      const c = gs.projectToCssPixels(wCenterX, wCenterY, canvas);
+      if (!c.valid || !c.onScreen) {
+        if (ex) ex.wrap.style.display = 'none';
+        return;
+      }
+
+      if (sideFilter) {
+        const bx = sideFilter.diagTopX +
+          (sideFilter.diagBotX - sideFilter.diagTopX) *
+          (sideFilter.canvasH ? (c.cssY / sideFilter.canvasH) : 0);
+        const isLeft = c.cssX <= bx;
+        if ((sideFilter.side === 'left' && !isLeft) ||
+            (sideFilter.side === 'right' && isLeft)) {
+          if (ex) ex.wrap.style.display = 'none';
+          return;
+        }
+      }
+
+      // Ring radius in CSS pixels — use the SAME screen-space AABB of the 4
+      // projected corners that MapRenderer.renderNeutralGroups uses, so the
+      // icon always hugs the ring exactly regardless of perspective distortion.
+      const minPX = Math.min(k1.cssX, k2.cssX, k3.cssX, k4.cssX);
+      const maxPX = Math.max(k1.cssX, k2.cssX, k3.cssX, k4.cssX);
+      const minPY = Math.min(k1.cssY, k2.cssY, k3.cssY, k4.cssY);
+      const maxPY = Math.max(k1.cssY, k2.cssY, k3.cssY, k4.cssY);
+      const ringR = Math.max(maxPX - minPX, maxPY - minPY) / 2 + RING_PAD;
+      // Skip degenerate camps — too small to be visually meaningful and the
+      // icon would land in a misleading spot.
+      if (ringR < 8) {
+        if (ex) ex.wrap.style.display = 'none';
+        return;
+      }
+
+      let x = c.cssX + ringR + ICON_GAP;
+      const y = c.cssY - ringR;
+      if (x + ICON_W > cssW - 2) {
+        x = c.cssX - ringR - ICON_GAP - ICON_W;
+      }
+      if (x < 2 || x + ICON_W > cssW - 2 || y < 2 || y + ICON_H > cssH - 2) {
+        if (ex) ex.wrap.style.display = 'none';
+        return;
+      }
+
+      seen[g.uuid] = true;
+      let els = ex;
       if (!els) {
         els = this._makeIconPair(g.uuid);
         this._iconEls[g.uuid] = els;
       }
-      const ICON_W = 24, ICON_H = 24;
-      let x = (hit.cx + hit.r + 6) / scaleX;
-      let y = (hit.cy - hit.r) / scaleY;
-      if (x + ICON_W > cssW - 2) x = (hit.cx - hit.r - 6) / scaleX - ICON_W;
-      x = Math.max(2, Math.min(x, cssW - ICON_W - 2));
-      y = Math.max(2, Math.min(y, cssH - ICON_H - 2));
       els.wrap.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
       els.wrap.style.display = '';
     });
 
+    if (!sideFilter) {
+      Object.keys(this._iconEls).forEach(uuid => {
+        if (!seen[uuid]) this._iconEls[uuid].wrap.style.display = 'none';
+      });
+    }
+  }
+
+  // Split-screen caller invokes syncIcons twice (once per half). After the
+  // second call, hide any icons that neither half claimed.
+  syncIconsSplitFinish () {
+    const seen = this._sideSeen || {};
     Object.keys(this._iconEls).forEach(uuid => {
       if (!seen[uuid]) this._iconEls[uuid].wrap.style.display = 'none';
     });
+    this._sideSeen = null;
   }
 
   _makeIconPair (uuid) {

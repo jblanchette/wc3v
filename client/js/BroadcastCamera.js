@@ -91,7 +91,27 @@
       this._heroDistance = Infinity;
       this._lastGameTime = 0;         // for rewind detection
 
+      // Multi-listener emitter for mode changes. Existing single-callback
+      // `onModeChange` keeps working (still invoked by _emitModeChange) so
+      // call sites that assign `bc.onModeChange = fn` don't need to migrate.
       this.onModeChange = null;
+      this._modeListeners = [];
+    }
+
+    on (event, fn) {
+      if (event !== 'modechange' || typeof fn !== 'function') return;
+      this._modeListeners.push(fn);
+    }
+
+    off (event, fn) {
+      if (event !== 'modechange') return;
+      const i = this._modeListeners.indexOf(fn);
+      if (i >= 0) this._modeListeners.splice(i, 1);
+    }
+
+    _emitModeChange () {
+      for (const fn of this._modeListeners) fn(this.mode);
+      if (this.onModeChange) this.onModeChange(this.mode);
     }
 
     reset () {
@@ -114,7 +134,7 @@
       this._hasAutoSplitFired = false;
       this._heroDistance = Infinity;
       this._lastGameTime = 0;
-      if (this.onModeChange) this.onModeChange(this.mode);
+      this._emitModeChange();
     }
 
     get enabled () { return this._enabled; }
@@ -146,7 +166,7 @@
         this._manualSplit = false;
       }
 
-      if (this.onModeChange) this.onModeChange(this.mode);
+      this._emitModeChange();
     }
 
     attachToZoom (zoom) {
@@ -157,7 +177,7 @@
             this._enabled = false;
             this._splitExiting = false;
             this._splitTransition = 0;
-            if (this.onModeChange) this.onModeChange(this.mode);
+            this._emitModeChange();
           }
         }
       });

@@ -194,7 +194,7 @@ const MapRenderer = class {
 
   // Note: this method mutates neutralGroup.isHidden and unit.isNeutralGroupHidden
   // on the data objects passed via mapData and players (by-reference side effects).
-  renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid, campHitOut) {
+  renderNeutralGroups (ctx, gameTime, transform, mapData, viewOptions, gameScaler, players, teamColorMap, hoveredCampUuid) {
     const { world } = mapData;
 
     const {
@@ -218,8 +218,6 @@ const MapRenderer = class {
     const PI2 = Math.PI * 2;
     const START_ANGLE = -Math.PI / 2; // 12 o'clock
     const RING_PAD = 4;
-
-    if (campHitOut) campHitOut.length = 0;
 
     // Creep camp team attribution (colored fills, split wedges, clear-order
     // badges, route lines) is 1v1-only — it aggregates into red/blue teams and
@@ -248,6 +246,10 @@ const MapRenderer = class {
       const _c2 = _gs.projectXY(b.maxX, b.minY);
       const _c3 = _gs.projectXY(b.minX, b.maxY);
       const _c4 = _gs.projectXY(b.maxX, b.maxY);
+      // Any corner outside the frustum means the screen AABB would be wrong;
+      // drop the camp entirely (CampPanel will hide its icon for the same
+      // reason via its own projectToCssPixels check).
+      if (!_c1 || !_c2 || !_c3 || !_c4) return;
       const _minPX = Math.min(_c1.x, _c2.x, _c3.x, _c4.x);
       const _maxPX = Math.max(_c1.x, _c2.x, _c3.x, _c4.x);
       const _minPY = Math.min(_c1.y, _c2.y, _c3.y, _c4.y);
@@ -261,11 +263,6 @@ const MapRenderer = class {
       const centerX = drawX + rectWidth / 2;
       const centerY = drawY + rectHeight / 2;
       const radius = Math.max(rectWidth, rectHeight) / 2 + RING_PAD;
-
-      // Publish what we just drew so the hit-test uses the exact same numbers.
-      if (campHitOut) {
-        campHitOut.push({ rawGroup: neutralGroup, cx: centerX, cy: centerY, r: radius });
-      }
 
       // per-team progress from the per-player credit timeline; `isCleared`
       // keys off the credit model's clearedTime so the map agrees with the
@@ -506,6 +503,7 @@ const MapRenderer = class {
 
     neutralBuildings.forEach(nb => {
       const _projNB = window.wc3v.gameScaler.projectXY(nb.x, nb.y);
+      if (!_projNB) return;  // neutral building is outside the camera frustum
       const drawX = _projNB.x + middleX;
       const drawY = _projNB.y + middleY;
       const icon = this._neutralIcons[nb.type];

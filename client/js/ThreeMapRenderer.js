@@ -1220,7 +1220,12 @@
 
       const { mapCenterX, mapCenterY, cw, ch } = this._projCache;
 
-      if (!this._projVec) this._projVec = new THREE.Vector3();
+      // Vector4 (not Vector3) so we keep the homogeneous w after the projection
+      // matrix multiply — needed to reject points behind the camera. Vector3's
+      // applyMatrix4 silently divides by w and produces flipped NDC for w<=0,
+      // which is what caused the "camp icons scattered across the canvas" bug
+      // when the camera zoomed in for FOLLOW_HERO (P1/P2) mode.
+      if (!this._projVec4) this._projVec4 = new THREE.Vector4();
 
       // Cache the combined viewProjection matrix once per frame (set in render())
       if (!this._viewProjMatrix) this._viewProjMatrix = new THREE.Matrix4();
@@ -1237,18 +1242,22 @@
         this._viewProjDirty = false;
       }
 
-      this._projVec.set(
+      this._projVec4.set(
         wx - mapCenterX,
         this.sampleHeight(wx, wy),
-        -(wy - mapCenterY)
+        -(wy - mapCenterY),
+        1
       );
+      this._projVec4.applyMatrix4(this._viewProjMatrix);
 
-      // Manual projection using cached matrix — avoids per-call camera.updateMatrixWorld
-      this._projVec.applyMatrix4(this._viewProjMatrix);
+      if (this._projVec4.w <= 0) return null;            // behind camera
+      const ndcX = this._projVec4.x / this._projVec4.w;
+      const ndcY = this._projVec4.y / this._projVec4.w;
+      if (ndcX < -1 || ndcX > 1 || ndcY < -1 || ndcY > 1) return null;  // outside frustum
 
       return {
-        x: (this._projVec.x + 1) * 0.5 * cw,
-        y: (1 - this._projVec.y) * 0.5 * ch
+        x: (ndcX + 1) * 0.5 * cw,
+        y: (1 - ndcY) * 0.5 * ch
       };
     }
 

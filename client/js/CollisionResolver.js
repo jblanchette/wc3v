@@ -30,11 +30,12 @@
     const buildings = frameData.buildingPositions;
     if (!units || units.length < 1) return;
 
-    // Per-unit collision radii — halfIconSize is the true geometric half
-    // (set in ClientUnit.renderUnit). Snapshot once outside the loop.
+    // Per-unit collision radii — visualRadius is the VISIBLE outer disc
+    // (halfIconSize + halo width), set in ClientUnit.renderUnit. Using bare
+    // halfIconSize lets the player-colour halos overlap by ~12px at perfect
+    // tangent. visualRadius makes the visible discs sit edge-to-edge.
     for (const u of units) {
-      u._cr = (u.halfIconSize || 0);
-      // Skip if no radius (defensive — shouldn't happen for real units).
+      u._cr = (u.visualRadius || u.halfIconSize || 0);
       if (u._cr < 1) u._cr = 0;
     }
 

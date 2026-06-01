@@ -196,11 +196,36 @@ const GameScaler = class {
     const three = this.threeMapRenderer;
     if (three && three.ready) {
       const p = three.projectToCanvas(wx, wy);
-      if (p) {
-        return { x: p.x - this.middleX, y: p.y - this.middleY };
-      }
+      // null = point is behind camera or outside frustum; the d3 fallback
+      // would invent a flat-scale pixel that has no relationship to where
+      // the 3D camera is actually looking, so propagate the null instead.
+      return p ? { x: p.x - this.middleX, y: p.y - this.middleY } : null;
     }
     return { x: this.xScale(wx), y: this.yScale(wy) };
+  }
+
+  // Canonical projector for HTML/CSS overlay elements (camp icons, hover
+  // labels, etc). Returns CSS pixel coords plus two flags:
+  //   valid    — projection succeeded (point is inside the camera frustum)
+  //   onScreen — pixel is inside the canvas CSS box, honouring `inset`
+  // Callers typically gate visibility on onScreen but may still want valid
+  // pixels (e.g. to measure a ring radius from an off-canvas edge point).
+  // `canvas` is any of the four 2D canvases — they share a CSS box.
+  projectToCssPixels (wx, wy, canvas, inset = 0) {
+    const p = this.projectXY(wx, wy);
+    if (!p) return { cssX: 0, cssY: 0, valid: false, onScreen: false };
+    const cssW = canvas.clientWidth  || canvas.width;
+    const cssH = canvas.clientHeight || canvas.height;
+    const sx = canvas.width  / cssW;
+    const sy = canvas.height / cssH;
+    if (!sx || !sy || !isFinite(sx) || !isFinite(sy)) {
+      return { cssX: 0, cssY: 0, valid: false, onScreen: false };
+    }
+    const cssX = (p.x + this.middleX) / sx;
+    const cssY = (p.y + this.middleY) / sy;
+    const onScreen = cssX >= inset && cssX <= cssW - inset
+                  && cssY >= inset && cssY <= cssH - inset;
+    return { cssX, cssY, valid: true, onScreen };
   }
 }
 

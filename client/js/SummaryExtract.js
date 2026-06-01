@@ -464,7 +464,9 @@
   }
 
   // Item purchases (from shops) — already emitted as 'itemPurchase' events on
-  // the eventStream by Building.js when a hero buys at a shop.
+  // the eventStream by Building.js when a hero buys at a shop. Phase 2/3:
+  // also includes `confidence` + `source` so downstream consumers can tell
+  // an observed buy from a parser-inferred backfill.
   function extractItemPurchases (eventStream) {
     const out = [];
     for (const ev of (eventStream || [])) {
@@ -476,7 +478,11 @@
         gameTimeFormatted: formatMs(ev.gameTime),
         goldCost: ev.goldCost || 0,
         isNeutralShop: !!ev.isNeutralShop,
-        heroUuid: ev.unit && ev.unit.uuid
+        shop: ev.shop || null,
+        heroUuid: ev.unit && ev.unit.uuid,
+        confidence: ev.confidence || 'high',
+        source: ev.source || 'shop-known',
+        inferred: !!ev.inferred
       });
     }
     return out;
@@ -492,7 +498,49 @@
         name: ev.item.displayName || ev.item.itemId || '',
         gameTimeMs: ev.gameTime,
         gameTimeFormatted: formatMs(ev.gameTime),
-        heroUuid: ev.unit && ev.unit.uuid
+        heroUuid: ev.unit && ev.unit.uuid,
+        category: ev.category || 'unknown',
+        confidence: ev.confidence || 'high',
+        source: ev.source || 'observed'
+      });
+    }
+    return out;
+  }
+
+  // Phase 4 — Ground pickups (creep drops + standalone item pickups).
+  function extractItemPickups (eventStream) {
+    const out = [];
+    for (const ev of (eventStream || [])) {
+      if (ev.key !== 'pickupItem' || !ev.item) continue;
+      out.push({
+        itemId: ev.item.itemId || '',
+        name: ev.item.displayName || ev.item.itemId || '',
+        gameTimeMs: ev.gameTime,
+        gameTimeFormatted: formatMs(ev.gameTime),
+        heroUuid: ev.unit && ev.unit.uuid,
+        campUuid: ev.campUuid || null,
+        isRandomDrop: !!ev.isRandomDrop,
+        confidence: ev.confidence || 'high',
+        source: ev.source || 'creep-drop'
+      });
+    }
+    return out;
+  }
+
+  // Phase 4 — Sell-back to shops.
+  function extractItemSells (eventStream) {
+    const out = [];
+    for (const ev of (eventStream || [])) {
+      if (ev.key !== 'sellItem' || !ev.item) continue;
+      out.push({
+        itemId: ev.item.itemId || '',
+        name: ev.item.displayName || ev.item.itemId || '',
+        gameTimeMs: ev.gameTime,
+        gameTimeFormatted: formatMs(ev.gameTime),
+        heroUuid: ev.unit && ev.unit.uuid,
+        shop: ev.shop || null,
+        goldRefunded: ev.goldRefunded || 0,
+        confidence: ev.confidence || 'medium'
       });
     }
     return out;
@@ -602,6 +650,8 @@
     const heroBuilds = extractHeroBuilds(units, race, worldNeutralGroups);
     const itemPurchases = extractItemPurchases(eventStream);
     const itemUses = extractItemUses(eventStream);
+    const itemPickups = extractItemPickups(eventStream);
+    const itemSells = extractItemSells(eventStream);
     const mercenariesHired = extractMercenaries(eventStream);
     const upgradeTimeline = extractUpgradeTimeline(researchStream);
     const researched = extractResearched(researchStream);
@@ -641,6 +691,8 @@
       heroBuilds,
       itemPurchases,
       itemUses,
+      itemPickups,
+      itemSells,
       mercenariesHired,
       upgradeTimeline,
       combatUnitsTrack,
