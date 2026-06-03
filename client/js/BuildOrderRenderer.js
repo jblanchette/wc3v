@@ -111,14 +111,21 @@ const BuildOrderRenderer = class {
   // skill-band switch itself (Beginner / Full detail) is handled by
   // BandSwitcher.js — no per-page wiring needed.
   _wireBeginnerHandlers () {
-    if (!this._beginnerHandlersWired) {
-      this._beginnerHandlersWired = true;
+    // A fresh BuildOrderRenderer is constructed on every replay load (app.js
+    // setup()), so a per-INSTANCE guard would re-add this document listener
+    // each load and the captured `this` would go stale. Use a class-level flag
+    // for a single page-lifetime listener, and resolve the CURRENT renderer
+    // from the global coordinator inside the handler so it never points at a
+    // discarded instance.
+    if (!BuildOrderRenderer._beginnerHandlersWired) {
+      BuildOrderRenderer._beginnerHandlersWired = true;
       document.addEventListener('click', (e) => {
         const t = e.target;
         if (!t || !t.closest) return;
+        const r = (window.wc3v && window.wc3v.boRenderer) || this;
         const pickOpt = t.closest('.bo-pick-opt[data-bo-pick-slot]');
-        if (pickOpt) { e.preventDefault(); this.viewer.setBeginnerPick(pickOpt.dataset.boPickSlot); return; }
-        if (t.closest('[data-bo-switch-player]'))    { e.preventDefault(); this.viewer.clearBeginnerPick(); return; }
+        if (pickOpt) { e.preventDefault(); r.viewer.setBeginnerPick(pickOpt.dataset.boPickSlot); return; }
+        if (t.closest('[data-bo-switch-player]'))    { e.preventDefault(); r.viewer.clearBeginnerPick(); return; }
         if (t.closest('[data-bo-show-full-opp]'))    {
           // The "show full detail" link inside the beginner-view opp summary
           // exits beginner view by switching the site band to pro. This is
@@ -127,7 +134,7 @@ const BuildOrderRenderer = class {
           if (window.BandSwitcher) window.BandSwitcher.setBand('pro', { persist: true });
           return;
         }
-        if (t.closest('[data-bo-start-walkthrough]')) { e.preventDefault(); this.viewer.enterGuideMode(this.viewer._getBeginnerPickedPlayer()); return; }
+        if (t.closest('[data-bo-start-walkthrough]')) { e.preventDefault(); r.viewer.enterGuideMode(r.viewer._getBeginnerPickedPlayer()); return; }
       });
     }
     if (this.viewer.setupGuide) this.viewer.setupGuide();
@@ -369,60 +376,6 @@ const BuildOrderRenderer = class {
       return '<span class="bo-cmp-iconstrip">' + tally.map(([k, n]) => typeChipHtml(k, n, kind)).join('') + '</span>';
     };
 
-    // ── verdicts — one factual sentence per block ───────────────────────
-    const xpVerdict = (() => {
-      if (!meHero && !themHero) return 'Neither player trained a hero in this game.';
-      if (meHero && !themHero) return 'You had a hero; they didn\'t.';
-      if (!meHero && themHero) return 'They had a hero; you didn\'t — a big early disadvantage.';
-      if (meHeroL3 !== Infinity && themHeroL3 !== Infinity) {
-        const d = Math.round(Math.abs(meHeroL3 - themHeroL3) / 1000);
-        if (d <= 5) return 'Both heroes reached level 3 at about the same time.';
-        return meHeroL3 < themHeroL3
-          ? 'Your hero reached level 3 about ' + gapStr(d) + ' sooner.'
-          : 'Their hero reached level 3 about ' + gapStr(d) + ' sooner — that\'s the kind of gap that decides early fights.';
-      }
-      if (meHeroL3 !== Infinity) return 'Your hero reached level 3; theirs never did.';
-      if (themHeroL3 !== Infinity) return 'Their hero reached level 3; yours never did — a clear XP gap.';
-      const d = Math.round(Math.abs(meHeroOut - themHeroOut) / 1000);
-      if (d <= 5) return 'Both heroes came out at about the same time, and neither hit level 3.';
-      return meHeroOut < themHeroOut
-        ? 'Your hero came out about ' + gapStr(d) + ' sooner (neither reached level 3).'
-        : 'Their hero came out about ' + gapStr(d) + ' sooner (neither reached level 3).';
-    })();
-    const econVerdict = (() => {
-      // Judge on the biggest food milestone both sides actually reached
-      // (food is race-fair — every army fills the same supply).
-      for (const n of [50, 30, 20]) {
-        const a = supplyReach(meStream, n), b = supplyReach(oppStream, n);
-        if (a === Infinity || b === Infinity) continue;
-        const d = Math.round(Math.abs(a - b) / 1000);
-        if (d <= 10) return 'Your economies kept pace with each other (both hit ' + n + ' food around the same time).';
-        return a < b
-          ? 'You hit ' + n + ' food about ' + gapStr(d) + ' sooner — you were ahead on economy.'
-          : 'They hit ' + n + ' food about ' + gapStr(d) + ' sooner — they out-developed you.';
-      }
-      const a20 = supplyReach(meStream, 20), b20 = supplyReach(oppStream, 20);
-      if (a20 !== Infinity && b20 === Infinity) return 'You reached 20 food; they never did this game.';
-      if (b20 !== Infinity && a20 === Infinity) return 'They reached 20 food; you never did.';
-      return 'Not enough economy data to compare.';
-    })();
-    const techVerdict = (() => {
-      const meT2 = tierTime(meStream, 2), themT2 = tierTime(oppStream, 2);
-      const meExp = expansionTime(meStream), themExp = expansionTime(oppStream);
-      const expBit = (meExp !== Infinity && themExp !== Infinity) ? ' Both of you took a second base.'
-        : (meExp !== Infinity) ? ' You took a second base at ' + fmtT(meExp) + '.'
-        : (themExp !== Infinity) ? ' They took a second base at ' + fmtT(themExp) + '.'
-        : ' Neither of you expanded.';
-      if (meT2 === Infinity && themT2 === Infinity) return 'Neither player upgraded past Tier 1.' + expBit;
-      if (meT2 === Infinity) return 'They reached Tier 2; you stayed on Tier 1.' + expBit;
-      if (themT2 === Infinity) return 'You reached Tier 2; they stayed on Tier 1.' + expBit;
-      const d = Math.round(Math.abs(meT2 - themT2) / 1000);
-      if (d <= 5) return 'You both reached Tier 2 at about the same time.' + expBit;
-      return (meT2 < themT2
-        ? 'You reached Tier 2 about ' + gapStr(d) + ' sooner — a window to press your T2 units.'
-        : 'They reached Tier 2 about ' + gapStr(d) + ' sooner — expect their T2 units on the field first.') + expBit;
-    })();
-
     // ── row builders ────────────────────────────────────────────────────
     // 3-column row: label | you | them. The winning side's value is coloured
     // and gets a small inline delta (− = "this much sooner", + = "this many
@@ -460,25 +413,32 @@ const BuildOrderRenderer = class {
       + '</div>';
     const naCell = (s) => '<span class="bo-cmp-na">' + s + '</span>';
 
-    const meName = _esc((mePlayer && PlayerNames.canonical(mePlayer.displayName)) || 'You');
     const themName = _esc((oppPlayer && PlayerNames.canonical(oppPlayer.displayName)) || 'Opponent');
     const themRace = _esc((typeof RaceLabels !== 'undefined' && RaceLabels[oppPlayer && oppPlayer.race] && RaceLabels[oppPlayer.race].label) || (oppPlayer && oppPlayer.race) || '');
-    const heroCell = (h, lvl) => h ? _esc(h.name) + (lvl ? ' <span class="bo-cmp-sub">lvl ' + lvl + '</span>' : '') : naCell('none');
+    // Hero cell: stacked name + lvl badge so a long hero name like "Death
+    // Knight" never gets squeezed sideways next to the level chip.
+    const heroCell = (h, lvl) => h
+      ? '<span class="bo-cmp-hero">'
+      +   '<span class="bo-cmp-hero-name">' + _esc(h.name) + '</span>'
+      +   (lvl ? '<span class="bo-cmp-hero-lvl">lvl ' + lvl + '</span>' : '')
+      + '</span>'
+      : naCell('none');
 
     const aside = document.createElement('aside');
     aside.classList.add('bo-cmp');
     aside.style.setProperty('--me-color', (mePlayer && mePlayer.playerColor) || '#6fc18a');
     aside.style.setProperty('--them-color', (oppPlayer && oppPlayer.playerColor) || '#9ca3b8');
     aside.innerHTML =
+      // Panel header — tells the reader WHAT this whole box is. The old
+      // "You · {me} vs {them}" chip row was redundant with the picked-player
+      // header on the left; the "See their full build →" link was confusing
+      // (the band-switch already exposes the full opponent view).
       '<div class="bo-cmp-head">'
-      +   '<div class="bo-cmp-players">'
-      +     '<span class="bo-cmp-chip bo-cmp-chip-me"><i class="bo-cmp-dot" aria-hidden="true"></i>You · ' + meName + '</span>'
-      +     '<span class="bo-cmp-vs">vs</span>'
-      +     '<span class="bo-cmp-chip bo-cmp-chip-them"><i class="bo-cmp-dot" aria-hidden="true"></i>' + themName + (themRace ? ' <i class="bo-cmp-race">' + themRace + '</i>' : '') + '</span>'
-      +   '</div>'
-      +   '<button type="button" class="bo-cmp-fulllink" data-bo-show-full-opp>See their full build →</button>'
+      +   '<h3 class="bo-cmp-title">How you compared</h3>'
+      +   '<p class="bo-cmp-subtitle">Milestone-by-milestone vs <span class="bo-cmp-them-name">' + themName + '</span>'
+      +     (themRace ? ' <span class="bo-cmp-them-race">(' + themRace + ')</span>' : '')
+      +   '</p>'
       + '</div>'
-      + '<div class="bo-cmp-colhead"><span></span><span>You</span><span>Them</span></div>'
 
       // ── XP race — the headline block ──
       + '<section class="bo-cmp-block bo-cmp-block-xp">'
@@ -487,14 +447,12 @@ const BuildOrderRenderer = class {
       +   tRow('On the field', meHeroOut, themHeroOut)
       +   tRow('Reached lvl 3', meHeroL3, themHeroL3)
       +   tRow('Reached lvl 5', meHeroL5, themHeroL5)
-      +   '<p class="bo-cmp-verdict">' + xpVerdict + '</p>'
       + '</section>'
 
       // ── Economy ──
       // Beginner-friendly milestone names ("Early army" etc.) with the raw
-      // food count beneath — new players still see the food number on their
-      // resource bar, but the label now says what hitting it MEANS. Race
-      // caveat lives in the section-head tooltip, not as a long subtitle.
+      // food count beneath. Race caveat lives in the section-head tooltip,
+      // not as a long subtitle.
       + '<section class="bo-cmp-block">'
       +   '<div class="bo-cmp-block-head" title="Food = the supply your army takes (you see this on your resource bar). It\'s a race-fair yardstick. Raw worker counts are not — Undead plays on fewer workers by design.">Economy<span class="bo-cmp-block-sub">how fast each side scaled up</span></div>'
       +   tRow(labelSub('Early army',    '20 food'), supplyReach(meStream, 20), supplyReach(oppStream, 20))
@@ -502,7 +460,6 @@ const BuildOrderRenderer = class {
       +   tRow(labelSub('Maxed army',    '50 food'), supplyReach(meStream, 50), supplyReach(oppStream, 50))
       +   (function () { const a = workersAt(meStream, 300000), b = workersAt(oppStream, 300000); return row(labelSub('Workers', 'at 5:00'),  a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
       +   (function () { const a = workersAt(meStream, 600000), b = workersAt(oppStream, 600000); return row(labelSub('Workers', 'at 10:00'), a == null ? naCell('—') : String(a), b == null ? naCell('—') : String(b), null); })()
-      +   '<p class="bo-cmp-verdict">' + econVerdict + '</p>'
       + '</section>'
 
       // ── Teching up ──
@@ -511,7 +468,6 @@ const BuildOrderRenderer = class {
       +   tRow('Tier 2', tierTime(meStream, 2), tierTime(oppStream, 2))
       +   tRow('Tier 3', tierTime(meStream, 3), tierTime(oppStream, 3))
       +   row('Second base', (expansionTime(meStream) === Infinity ? naCell('no') : tCell(expansionTime(meStream))), (expansionTime(oppStream) === Infinity ? naCell('no') : tCell(expansionTime(oppStream))), null)
-      +   '<p class="bo-cmp-verdict">' + techVerdict + '</p>'
       + '</section>'
 
       // ── Army built ──
@@ -823,61 +779,66 @@ const BuildOrderRenderer = class {
       const isMe = !!(learnerMode && mePlayer && player === mePlayer);
       if (isMe) column.classList.add('bo-me-column');
 
-      // --- Player Header (name + build name + tier + race) ---
+      // --- Player Header: name + race-icon row, subtitle line (tier \u00b7 build),
+      //     then a full-width BASE button below. ---
       const header = document.createElement('div');
       header.classList.add('bo-player-header');
 
       const maxTier = tier3Time !== Infinity ? 3 : (tier2Time !== Infinity ? 2 : 1);
 
-      // Look up build name for this player by their playerId
+      // Curated-build lookup (homepage builds dictionary, keyed by playerId).
       const bcSlots = this.viewer.buildContextBySlot || {};
       const bc = bcSlots[String(player.playerId)];
-      // bc.name comes from buildContextBySlot \u2014 looked up against our
-      // own builds dictionary, not from replay metadata. Still escape
-      // defensively in case the dictionary grows.
-      const buildLabel = bc ? `<span class="bo-hdr-build-name">\u2014 ${_esc(bc.name)}</span>` : '';
+      if (bc && bc.selected) header.classList.add('bo-hdr-selected');
 
-      if (bc && bc.selected) {
-        header.classList.add('bo-hdr-selected');
-      }
+      // Race icon: reuse the raceStarterIcons mapping (the starting building
+      // used as a race symbol throughout MatchHeader / MatchSummary). In
+      // beginner mode the icon also re-opens the player picker (same as the
+      // explicit "Switch player" button).
+      const raceIconId = _icon((BuildOrderData.CONFIG && BuildOrderData.CONFIG.raceStarterIcons && BuildOrderData.CONFIG.raceStarterIcons[race]) || '');
+      const raceAccent = (raceInfo && raceInfo.accent) || '#888';
+      const raceIconCls = 'bo-hdr-race-icon' + (isMe ? ' bo-hdr-race-icon-clickable' : '');
+      const raceIconExtras = isMe
+        ? ` data-bo-switch-player title="${_attr(raceInfo.label + ' \u2014 click to switch player')}"`
+        : ` title="${_attr(raceInfo.label)}"`;
+      const raceIconHtml = raceIconId
+        ? `<img class="${raceIconCls}" src="/assets/wc3icons/${raceIconId}.jpg" alt="${_attr(raceInfo.label)}" style="border-color:${_attr(raceAccent)}"${raceIconExtras} onerror="this.style.display='none'" />`
+        : '';
 
-      // Beginner mode: a "ME" badge on the picked column + a "switch player"
-      // link that re-opens the picker.
       const meTag = isMe ? `<span class="bo-hdr-me-tag" title="You're learning from this player's game">ME</span>` : '';
-      const switchLink = isMe ? `<button type="button" class="bo-hdr-switch-player" data-bo-switch-player>switch player</button>` : '';
+      const switchBtn = isMe ? `<button type="button" class="bo-hdr-switch-player" data-bo-switch-player title="Pick a different player">\u21bb Switch player</button>` : '';
 
-      // Row 1: name + tier/race badges + Base button
-      const toggleBar = document.createElement('div');
-      toggleBar.classList.add('bo-hdr-toggle');
-      toggleBar.innerHTML = `
+      const nameRow = document.createElement('div');
+      nameRow.classList.add('bo-hdr-name-row');
+      nameRow.innerHTML = `
         ${meTag}
         <span class="bo-hdr-player-name" style="color:${_attr(playerColor)}">${_esc(displayName)}</span>
-        <span class="bo-hdr-tier-badge t${Number(maxTier) || 1}">T${Number(maxTier) || 1}</span>
-        <span class="bo-hdr-race-badge">${_esc(raceInfo.label)}</span>
-        ${switchLink}`;
+        ${raceIconHtml}
+        ${switchBtn}`;
+      header.append(nameRow);
 
-      // Base Layout button
-      const baseBtn = document.createElement('span');
-      baseBtn.classList.add('bo-hdr-base-btn');
-      baseBtn.title = 'View base layout';
-      baseBtn.textContent = 'Base';
+      // Subtitle: tier badge + (optional) build name on a single line. Build
+      // name stays inline beside the tier instead of taking its own row.
+      const subtitle = document.createElement('div');
+      subtitle.classList.add('bo-hdr-subtitle');
+      subtitle.innerHTML = `<span class="bo-hdr-tier-badge t${Number(maxTier) || 1}">T${Number(maxTier) || 1}</span>`
+        + (bc ? ` <span class="bo-hdr-build-name">\u00b7 ${_esc(bc.name)}</span>` : '');
+      header.append(subtitle);
+
+      column.append(header);
+
+      // Full-width BASE LAYOUT button, between the header card and the
+      // QUICK JUMP nav. Renders in every mode.
+      const baseBtn = document.createElement('button');
+      baseBtn.type = 'button';
+      baseBtn.classList.add('bo-base-btn');
+      baseBtn.title = 'View this player\'s base layout';
+      baseBtn.innerHTML = '<span class="bo-base-btn-icon" aria-hidden="true">\u2302</span>VIEW BASE LAYOUT';
       baseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.viewer.showPlacementViewer(player.playerId);
       });
-      toggleBar.append(baseBtn);
-
-      header.append(toggleBar);
-
-      // Row 2: full build name on its own line (never truncated)
-      if (buildLabel) {
-        const buildRow = document.createElement('div');
-        buildRow.classList.add('bo-hdr-build');
-        buildRow.innerHTML = buildLabel;
-        header.append(buildRow);
-      }
-
-      column.append(header);
+      column.append(baseBtn);
 
       // --- Chapter Quick-Jump ---
       if (this.viewer.chapterMarkers) {
@@ -1053,6 +1014,14 @@ const BuildOrderRenderer = class {
     return parts.join(' ');
   }
 
+  // Whitelist an icon path before it goes into a src="" attribute. Icon paths
+  // are first-party (/assets/...) so callers pass them raw, but validating here
+  // makes the helper self-protecting regardless of caller discipline — and
+  // (unlike _attr/sanitizeUserText) it doesn't truncate longer valid filenames.
+  _safeIconSrc (src) {
+    return /^\/assets\/[A-Za-z0-9_\/\-]+\.(jpg|svg|png)$/.test(String(src || '')) ? String(src) : '';
+  }
+
   // --- Icon with inline cost badge underneath ---
   buildIconWithCost (iconSrc, gold, lumber, onerror) {
     const errAttr = onerror ? ' onerror="this.style.display=\'none\'"' : '';
@@ -1063,7 +1032,9 @@ const BuildOrderRenderer = class {
       const lSpan = lumber ? `<span class="bo-cost-lumber">${lumber}</span>` : '';
       costHtml = `<span class="bo-icon-cost">${gSpan}${sep}${lSpan}</span>`;
     }
-    return `<div class="bo-icon-wrap"><img class="bo-row-icon" src="${iconSrc}"${errAttr} />${costHtml}</div>`;
+    const safeSrc = this._safeIconSrc(iconSrc);
+    const imgHtml = safeSrc ? `<img class="bo-row-icon" src="${safeSrc}"${errAttr} />` : '';
+    return `<div class="bo-icon-wrap">${imgHtml}${costHtml}</div>`;
   }
 
   // --- Tier header ---
@@ -1545,8 +1516,8 @@ const BuildOrderRenderer = class {
         // icon paths come from ATTACK_TYPES/ARMOR_TYPES (Constants.js) — trusted,
         // so use them raw. Routing them through _attr() would truncate at 32
         // chars + "…" and break the longer ones (e.g. def-unarmored.jpg → 404).
-        if (atkInfo) typeIcons += `<img class="bo-row-type-icon" src="${atkInfo.icon}" title="${_attr(atkInfo.label)} attack" />`;
-        if (defInfo) typeIcons += `<img class="bo-row-type-icon" src="${defInfo.icon}" title="${_attr(defInfo.label)} armor" />`;
+        if (atkInfo) typeIcons += `<img class="bo-row-type-icon" src="${this._safeIconSrc(atkInfo.icon)}" title="${_attr(atkInfo.label)} attack" />`;
+        if (defInfo) typeIcons += `<img class="bo-row-type-icon" src="${this._safeIconSrc(defInfo.icon)}" title="${_attr(defInfo.label)} armor" />`;
       }
       descText = `${countPrefix}${_esc(verb)} ${safeName}${typeIcons}`;
     }

@@ -217,9 +217,51 @@ const BuildingSplats = class {
 
     this._splats.push({
       mesh,
+      wx,
+      wy,
       readyTime,
-      destroyedAt
+      destroyedAt,
+      isNeutral: (readyTime === 0)
     });
+  }
+
+  /**
+   * Capture current splat visibility so a base snapshot render can be undone.
+   * @returns {boolean[]} per-splat visibility, index-aligned to this._splats
+   */
+  captureVisibility () {
+    return this._splats.map(s => s.mesh.visible);
+  }
+
+  /**
+   * Restore splat visibility captured by captureVisibility().
+   * @param {boolean[]} saved
+   */
+  restoreVisibility (saved) {
+    if (!saved) return;
+    for (let i = 0; i < this._splats.length; i++) {
+      if (this._splats[i]) this._splats[i].mesh.visible = !!saved[i];
+    }
+  }
+
+  /**
+   * Show only the splats under a snapshot's buildings. Player splats are
+   * hidden unless they match a snapshot building by position; neutral splats
+   * (readyTime === 0, e.g. gold mine) stay visible as in the live scene.
+   * @param {Array} snapshotBuildings — [{itemId, x, y}]
+   */
+  showOnlyForSnapshot (snapshotBuildings) {
+    for (const s of this._splats) {
+      if (s.isNeutral) continue; // neutral — leave visible
+      let match = false;
+      for (const sb of snapshotBuildings) {
+        if (Math.abs(s.wx - sb.x) < 10 && Math.abs(s.wy - sb.y) < 10) {
+          match = true;
+          break;
+        }
+      }
+      s.mesh.visible = match;
+    }
   }
 
   /**

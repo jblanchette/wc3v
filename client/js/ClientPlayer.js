@@ -51,7 +51,7 @@ const ClientPlayer = class {
     this.currentGroup = null;
     this.setupUnits(units);
 
-    console.log("setup player: ", this);
+    if (window.WC3V_CONFIG) window.WC3V_CONFIG.log('app', "setup player: ", this);
   }
 
   setupUnits (rawUnits) {
@@ -174,7 +174,10 @@ const ClientPlayer = class {
       return null;
     }
 
-    this.recordIndexes.path = index;
+    // Advance the TIER cursor (was mistakenly writing to a non-existent
+    // `.path` field, so the cursor never moved and every call re-scanned
+    // tierStream from the start).
+    this.recordIndexes.tier = index;
 
     // return back the new record
     return tierStream[index];
@@ -291,7 +294,7 @@ const ClientPlayer = class {
         return resolve(true);
       };
       img.onerror = () => {
-        console.log("img error: ", imgSrc);
+        if (window.WC3V_CONFIG) window.WC3V_CONFIG.log('app', "img error: ", imgSrc);
         return resolve(false);
       };
     });

@@ -24,26 +24,30 @@ const MatchSummary = class {
     this.modal = document.getElementById('ms-modal');
     if (!this.modal) return;
 
+    // A fresh MatchSummary is constructed on every replay load, but #ms-modal
+    // and document persist — so a per-instance guard can't prevent re-binding.
+    // Remove the listeners a prior instance bound (stashed on the modal) before
+    // re-wiring, or each reload stacks another keydown/click handler set.
+    if (this.modal._msTeardown) this.modal._msTeardown();
+
+    const onClose = () => this.hide();
+    const onBackdrop = (e) => { if (e.target === this.modal) this.hide(); };
+    const onKeydown = (e) => { if (e.key === 'Escape' && this.visible) this.hide(); };
+    const onTab = (e) => this._switchTab(e.currentTarget.dataset.tab);
+
     const closeBtn = this.modal.querySelector('.ms-close');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.hide());
-    }
+    if (closeBtn) closeBtn.addEventListener('click', onClose);
+    this.modal.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKeydown);
+    const tabs = [...this.modal.querySelectorAll('.ms-tab')];
+    tabs.forEach(tab => tab.addEventListener('click', onTab));
 
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) this.hide();
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.visible) {
-        this.hide();
-      }
-    });
-
-    this.modal.querySelectorAll('.ms-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        this._switchTab(tab.dataset.tab);
-      });
-    });
+    this.modal._msTeardown = () => {
+      if (closeBtn) closeBtn.removeEventListener('click', onClose);
+      this.modal.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKeydown);
+      tabs.forEach(tab => tab.removeEventListener('click', onTab));
+    };
 
     this._createTriggerButton();
   }

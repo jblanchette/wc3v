@@ -616,31 +616,44 @@ body {
   cursor: default;
 }
 
-/* ── Beginner view: "ME" badge + "switch player" link in the column header ── */
+/* ── Beginner view: "ME" badge + "switch player" button in the column header ── */
 .bo-hdr-me-tag {
-  display: inline-block;
-  margin-right: 6px;
-  padding: 1px 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
   background: rgba(79,184,107,0.22);
   border: 1px solid rgba(79,184,107,0.55);
   border-radius: 4px;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: #8fd6a6;
+  flex-shrink: 0;
 }
 .bo-hdr-switch-player {
-  margin-left: 8px;
-  padding: 1px 6px;
-  background: transparent;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 5px;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.72rem;
-  color: var(--site-text-muted, #9ca3b8);
-  text-decoration: underline;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--site-text-muted, #c0c8d0);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.bo-hdr-switch-player:hover { color: var(--site-text, #e8eaf0); }
+.bo-hdr-switch-player:hover {
+  background: rgba(255,255,255,0.10);
+  border-color: rgba(255,255,255,0.32);
+  color: var(--site-text, #fff);
+}
 
 /* ── Beginner view: "you vs them" scoreboard (right side, replaces the
    opponent's full BO). Pure data — milestones, no advice. The XP-race block
@@ -656,44 +669,28 @@ body {
   font-size: 0.85rem;
   line-height: 1.4;
 }
+/* Panel title — tells the reader what this whole box IS. */
 .bo-cmp-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  flex-wrap: wrap;
-  padding-bottom: 8px; margin-bottom: 8px;
+  padding-bottom: 9px;
+  margin-bottom: 10px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.bo-cmp-players { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
-.bo-cmp-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  font-weight: 700; font-size: 0.86rem;
-  white-space: nowrap;
+.bo-cmp-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #e8eaf0;
 }
-.bo-cmp-chip-me   { color: var(--me-color, #6fc18a); }
-.bo-cmp-chip-them { color: var(--them-color, #cdd1de); }
-.bo-cmp-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(0,0,0,0.35); }
-.bo-cmp-chip-me   .bo-cmp-dot { background: var(--me-color, #6fc18a); }
-.bo-cmp-chip-them .bo-cmp-dot { background: var(--them-color, #9ca3b8); }
-.bo-cmp-race { font-style: normal; font-weight: 600; font-size: 0.78rem; color: var(--site-text-muted, #9ca3b8); }
-.bo-cmp-vs { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: #6c7088; font-weight: 700; }
-.bo-cmp-fulllink {
-  flex-shrink: 0;
-  background: transparent; border: none; padding: 0; margin: 0;
-  cursor: pointer; font-family: inherit; font-size: 0.78rem;
-  color: #6fc18a; text-decoration: underline;
+.bo-cmp-subtitle {
+  margin: 3px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.55);
 }
-.bo-cmp-fulllink:hover { color: #8fd6a6; }
-
-/* Column headers ("You" / "Them") — line up with the row cells below. */
-.bo-cmp-colhead {
-  display: grid;
-  grid-template-columns: 96px 1fr 1fr;
-  gap: 10px;
-  padding: 0 2px 4px;
-  font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
-  color: rgba(255,255,255,0.4);
-}
-.bo-cmp-colhead span:nth-child(2) { color: var(--me-color, rgba(255,255,255,0.55)); }
-.bo-cmp-colhead span:nth-child(3) { color: var(--them-color, rgba(255,255,255,0.55)); }
+.bo-cmp-subtitle .bo-cmp-them-name { font-weight: 700; color: var(--them-color, #cdd1de); }
+.bo-cmp-subtitle .bo-cmp-them-race { font-weight: 600; color: rgba(255,255,255,0.45); }
 
 .bo-cmp-block { margin-bottom: 12px; }
 .bo-cmp-block:last-child { margin-bottom: 0; }
@@ -721,20 +718,47 @@ body {
    you/them cells run full-width for text lists (units, type tallies). */
 .bo-cmp-row {
   display: grid;
-  grid-template-columns: 96px 1fr 1fr;
+  grid-template-columns: 110px 1fr 1fr;
   gap: 10px;
-  align-items: baseline;
-  padding: 4px 2px;
+  align-items: start;
+  padding: 5px 2px;
   min-width: 0;
 }
-.bo-cmp-row-wide { grid-template-columns: 96px 1fr 1fr; }
+.bo-cmp-row-wide { grid-template-columns: 110px 1fr 1fr; }
 .bo-cmp-row + .bo-cmp-row { border-top: 1px solid rgba(255,255,255,0.04); }
-.bo-cmp-rlabel { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.5); min-width: 0; }
+.bo-cmp-rlabel { font-size: 0.74rem; font-weight: 600; color: rgba(255,255,255,0.5); min-width: 0; padding-top: 2px; }
 .bo-cmp-rme   { font-size: 0.86rem; color: rgba(232,234,240,0.95); min-width: 0; }
 .bo-cmp-rthem { font-size: 0.86rem; color: rgba(232,234,240,0.78); min-width: 0; }
+
+/* Hero cell: stack the hero name and an "lvl N" badge vertically inside the
+   cell so a long name like "Death Knight" never gets squeezed beside the
+   level badge. Used by heroCell() in _renderRaceComparison. */
+.bo-cmp-hero {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.bo-cmp-hero-name {
+  font-weight: 700;
+  font-size: 0.86rem;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+.bo-cmp-hero-lvl {
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.72);
+  white-space: nowrap;
+}
 .bo-cmp-row-wide .bo-cmp-rme,
 .bo-cmp-row-wide .bo-cmp-rthem { font-size: 0.82rem; line-height: 1.35; }
-.bo-cmp-sub { font-size: 0.74rem; color: rgba(255,255,255,0.5); font-weight: 500; }
 .bo-cmp-na { color: rgba(255,255,255,0.3); }
 
 /* Two-line row label: e.g. "Early army" / "20 food". The economy block uses
@@ -828,23 +852,14 @@ body {
 .bo-cmp-stack-tag-them { color: var(--them-color, #9ca3b8); }
 
 /* The leading side on a row: its value goes green + bold, with a small,
-   muted delta after it (− = "this much sooner", + = "this many more"). */
-.bo-cmp-win { color: #8fd6a6; font-weight: 700; }
+   muted delta after it (− = "this much sooner", + = "this many more"). The
+   wrapper is nowrap so "1:07 −6s" stays on one line. */
+.bo-cmp-win { color: #8fd6a6; font-weight: 700; white-space: nowrap; }
 .bo-cmp-delta { font-size: 0.74rem; font-weight: 600; color: rgba(143,214,166,0.7); white-space: nowrap; }
 
-.bo-cmp-verdict {
-  margin: 6px 0 0;
-  padding: 6px 9px;
-  background: rgba(0,0,0,0.18);
-  border-radius: 6px;
-  font-size: 0.84rem; line-height: 1.45;
-  color: rgba(232,234,240,0.9);
-}
-
 @media (max-width: 640px) {
-  .bo-cmp-colhead,
   .bo-cmp-row,
-  .bo-cmp-row-wide { grid-template-columns: 84px 1fr 1fr; gap: 8px; }
+  .bo-cmp-row-wide { grid-template-columns: 96px 1fr 1fr; gap: 8px; }
 }
 
 /* ── Guided walkthrough ──────────────────────────────────────────────────
@@ -1721,15 +1736,14 @@ body {
   --bo-font-mono: 'Consolas', 'Cascadia Mono', monospace;
 }
 
-/* === REDESIGNED PLAYER HEADER === */
+/* === BO column header: name + race icon, subtitle (tier · build), full-width BASE button === */
 
 .bo-player-header {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--race-border, var(--bo-text-muted));
-  border-color: color-mix(in srgb, var(--race-border, var(--bo-text-muted)) 45%, transparent);
+  gap: 6px;
+  padding: 8px 12px 9px;
+  border: 1px solid color-mix(in srgb, var(--race-border, var(--bo-text-muted)) 45%, transparent);
   border-radius: 7px;
   margin: 4px 6px;
   background: var(--race-bg-grad, var(--bo-header-bg));
@@ -1742,80 +1756,89 @@ body {
   border-radius: 7px;
 }
 
-/* --- Toggle bar (always visible) --- */
-.bo-hdr-toggle {
+/* Row 1: ME chip + player name (flex:1) + race icon + (beginner) Switch button */
+.bo-hdr-name-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;          /* name + tier/race badges (+ "ME" / "switch player" in beginner view) wrap rather than overflow on narrow columns */
-  gap: 6px 8px;
-  padding: 2px 0;
-  border-radius: 4px;
+  gap: 8px;
+  min-width: 0;
 }
-
-/* Row 2: full build name on its own line, wraps (never truncated) */
-.bo-hdr-build {
-  font-weight: 400;
-  font-size: 12.8px;
-  line-height: 1.35;
-  color: var(--bo-text-muted);
-}
-.bo-hdr-build-name {
-  font-weight: 400;
-  color: inherit;
-}
-
 .bo-hdr-player-name {
   font-weight: 700;
   font-size: 18px;
+  line-height: 1.15;
   min-width: 0;
   flex: 1;
+  overflow-wrap: anywhere;
 }
 
+/* Race icon — uses raceStarterIcons (a starting building image) as a race
+   symbol. In beginner mode it also triggers the player-switcher (same as
+   the Switch button). */
+.bo-hdr-race-icon {
+  width: 38px; height: 38px;
+  border-radius: 4px;
+  border: 2px solid var(--race-border, #888);
+  object-fit: cover;
+  background: rgba(0,0,0,0.25);
+  flex-shrink: 0;
+}
+.bo-hdr-race-icon-clickable { cursor: pointer; }
+.bo-hdr-race-icon-clickable:hover { filter: brightness(1.18); }
+
+/* Row 2: subtitle line — tier badge then build name, single row, wraps if needed */
+.bo-hdr-subtitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: var(--bo-text-muted, #9aa3b0);
+}
 .bo-hdr-tier-badge {
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  letter-spacing: 1px;
-  padding: 2px 7px;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
   border-radius: 3px;
   flex-shrink: 0;
 }
-
 .bo-hdr-tier-badge.t1 { color: var(--bo-tier1); border: 1px solid rgba(255,255,255,0.25); }
 .bo-hdr-tier-badge.t2 { color: var(--bo-tier2); border: 1px solid rgba(33,165,227,0.35); }
 .bo-hdr-tier-badge.t3 { color: var(--bo-tier3); border: 1px solid rgba(255,255,51,0.35); }
-
-.bo-hdr-race-badge {
-  display: inline-block;
-  font-weight: 800;
-  font-size: 13px;
-  letter-spacing: 2px;
-  padding: 3px 10px;
-  border-radius: 3px;
-  color: #FFFFFF;
-  background: var(--race-border, var(--bo-text-muted));
-  flex-shrink: 0;
+.bo-hdr-build-name {
+  font-weight: 500;
+  color: var(--bo-text, #c0c8d0);
 }
 
-.bo-hdr-base-btn {
-  display: inline-block;
-  font-size: 11px;
+/* Full-width BASE button — sits between the header card and QUICK JUMP. */
+.bo-base-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: calc(100% - 12px);
+  margin: 4px 6px 0;
+  padding: 9px 12px;
+  background: linear-gradient(180deg, #1d2939 0%, #15202d 100%);
+  border: 1px solid #3a4a55;
+  border-radius: 7px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 2px 8px;
-  border-radius: 3px;
-  color: #aab;
-  border: 1px solid #3a4a55;
-  background: #1a2830;
-  cursor: pointer;
-  flex-shrink: 0;
-  margin-left: 6px;
   text-transform: uppercase;
+  color: #c8d4e0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-.bo-hdr-base-btn:hover {
-  color: #fff;
+.bo-base-btn:hover {
+  background: linear-gradient(180deg, #243549 0%, #1a2839 100%);
   border-color: #5a7a8a;
-  background: #243540;
+  color: #fff;
 }
+.bo-base-btn-icon { font-size: 14px; line-height: 1; }
 
 /* --- Tier header --- */
 
@@ -8999,6 +9022,25 @@ svg.about-feat-icon {
   cursor: default;
 }
 
+.pv-grid-toggle {
+  margin-left: 0.6rem;
+}
+
+.pv-grid-size-select {
+  background: #1a2830;
+  color: #c0c8d0;
+  border: 1px solid #3a4a55;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.pv-grid-size-select:hover {
+  border-color: #5a6a75;
+}
+
 .placement-viewer-label {
   color: #889098;
   font-size: 0.8rem;
@@ -9118,37 +9160,27 @@ svg.about-feat-icon {
   z-index: 0;
 }
 
-/* BO Quick-Jump nav (collapsible)
-   Layout: heading row (QUICK JUMP ▾) stacked above the pills row.
-   Pills row wraps onto multiple lines instead of clipping at the edge. */
+/* BO Quick-Jump nav
+   Compact tabular grid of jump cells (icon/pip + label + right-aligned time).
+   Shows up to MAX_VISIBLE_JUMPS cells; overflow rolls into the "+N" modal.
+   Never scrolls — auto-fit columns keep it dense at any panel width. */
 .bo-chapter-nav {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 6px;
-  padding: 5px 10px 7px;
+  padding: 6px 8px 8px;
   background: #1a2a3e;
   border: 1px solid #2e4560;
   border-radius: 7px;
   margin: 4px 6px;
 }
 
-.bo-chapter-bar {
+.bo-chapter-head {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
-}
-.bo-chapter-toggle {
-  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  align-self: flex-start;
-  padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-family: inherit;
+  justify-content: space-between;
+  gap: 6px;
 }
 .bo-chapter-heading {
   font-size: 0.65rem;
@@ -9157,67 +9189,163 @@ svg.about-feat-icon {
   color: #a8b3c0;
   text-transform: uppercase;
 }
-.bo-chapter-chevron {
-  font-size: 0.65rem;
+.bo-chapter-more {
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
   line-height: 1;
-  color: #7d8a9c;
-  transition: transform 0.15s ease;
+  padding: 4px 8px;
+  border-radius: 9px;
+  border: 1px solid var(--race-accent, #6BA3FF);
+  background: color-mix(in srgb, var(--race-accent, #6BA3FF) 14%, transparent);
+  color: var(--race-accent, #6BA3FF);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-.bo-chapter-toggle:hover .bo-chapter-heading { color: #fff; }
-.bo-chapter-toggle:hover .bo-chapter-chevron { color: #c0c8d0; }
-.bo-chapter-expanded .bo-chapter-chevron { transform: rotate(180deg); }
+.bo-chapter-more:hover {
+  background: color-mix(in srgb, var(--race-accent, #6BA3FF) 26%, transparent);
+  color: #fff;
+}
 
-.bo-chapter-summary {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 5px;
+/* Tabular grid — columns auto-fit to width, rows stay aligned */
+.bo-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 4px;
 }
-/* Summary collapses when the full list is open */
-.bo-chapter-expanded .bo-chapter-summary { display: none; }
-
-/* Expanded: every event, wrapping, no category headers */
-.bo-chapter-all {
-  display: none;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-top: 8px;
-  border-top: 1px solid #2e4560;
-}
-.bo-chapter-expanded .bo-chapter-all { display: flex; }
 
 .bo-chapter-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-family: inherit;
   font-size: 0.8rem;
   line-height: 1.2;
-  padding: 4px 11px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 6px;
   border: 1px solid var(--race-muted, #3a4a55);
   background: rgba(15, 22, 32, 0.85);
-  color: #999;
+  color: #b6bfca;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
+  overflow: hidden;
   transition: background 0.15s ease, color 0.15s ease;
 }
 .bo-chapter-btn:hover {
   background: rgba(40, 60, 85, 0.9);
-  color: #ddd;
+  color: #fff;
 }
+.bo-chapter-label {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bo-chapter-time {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  color: #7d8a9c;
+}
+.bo-chapter-btn:hover .bo-chapter-time { color: #aeb9c6; }
 .bo-chapter-btn.bo-chapter-major {
-  color: #ccc;
+  color: #e6ebf0;
   border-color: var(--race-accent, #6BA3FF);
   font-weight: 600;
 }
-.bo-chapter-btn.bo-chapter-major:hover {
-  color: #fff;
-}
+.bo-chapter-btn.bo-chapter-major .bo-chapter-time { color: #94a3b3; }
 .bo-chapter-icon {
+  flex: 0 0 auto;
   width: 18px;
   height: 18px;
   border-radius: 3px;
-  vertical-align: middle;
-  margin-right: 2px;
+}
+.bo-chapter-pip {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+/* Type glyph — small accented symbol marking the kind of event */
+.bo-chapter-glyph {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+}
+.bo-glyph-tech { background: rgba(255, 196, 84, 0.22); color: #ffce6b; }
+.bo-glyph-hero { background: rgba(177, 132, 255, 0.22); color: #c4a6ff; }
+.bo-glyph-game { background: rgba(86, 196, 196, 0.22); color: #6fd0d0; }
+
+/* Quick-Jump overflow modal */
+.bo-qj-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 5200;
+}
+.bo-qj-modal {
+  width: min(440px, 92vw);
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  background: #111a26;
+  border: 1px solid #2e4560;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.bo-qj-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #2e4560;
+  background: rgba(0, 0, 0, 0.25);
+}
+.bo-qj-modal-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #c0cad6;
+  text-transform: uppercase;
+}
+.bo-qj-modal-close {
+  border: none;
+  background: transparent;
+  color: #7d8a9c;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  transition: color 0.15s ease;
+}
+.bo-qj-modal-close:hover { color: #fff; }
+.bo-qj-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  overflow-y: auto;
+}
+.bo-qj-group-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #6f7d8e;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
 /* ===== BO Filter Bar ===== */
@@ -9288,8 +9416,8 @@ svg.about-feat-icon {
 #build-wrapper.bo-narrow .bo-chapter-nav {
   padding: 4px 8px 6px;
 }
-#build-wrapper.bo-narrow .bo-chapter-heading {
-  display: none;
+#build-wrapper.bo-narrow .bo-chapter-grid {
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
 }
 #build-wrapper.bo-narrow .bo-filter-chip {
   padding: 7px 2px;
@@ -9297,7 +9425,7 @@ svg.about-feat-icon {
 }
 
 #build-wrapper.bo-medium .bo-chapter-btn {
-  padding: 3px 9px;
+  padding: 3px 7px;
   font-size: 0.76rem;
 }
 #build-wrapper.bo-medium .bo-chapter-icon {

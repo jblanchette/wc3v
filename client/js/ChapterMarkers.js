@@ -64,7 +64,7 @@ const ChapterMarkers = class {
         if (ev.key === 'addBuilding' && ev.isExpansion) {
           if (ev.gameTime < firstExpansionTime) {
             firstExpansionTime = ev.gameTime;
-            firstExpansionData = { playerIndex: pIdx, playerColor: pc };
+            firstExpansionData = { playerIndex: pIdx, playerColor: pc, race: player.race };
           }
         }
 
@@ -157,11 +157,11 @@ const ChapterMarkers = class {
       (player.tierStream || []).forEach(t => {
         if (t.tier === 2 && t.gameTime < firstTier2Time) {
           firstTier2Time = t.gameTime;
-          firstTier2Data = { playerIndex: pIdx, playerColor: pc };
+          firstTier2Data = { playerIndex: pIdx, playerColor: pc, race: player.race };
         }
         if (t.tier === 3 && t.gameTime < firstTier3Time) {
           firstTier3Time = t.gameTime;
-          firstTier3Data = { playerIndex: pIdx, playerColor: pc };
+          firstTier3Data = { playerIndex: pIdx, playerColor: pc, race: player.race };
         }
       });
     });
@@ -231,7 +231,7 @@ const ChapterMarkers = class {
         severity: 'major',
         playerIndex: firstTier2Data.playerIndex,
         playerColor: firstTier2Data.playerColor,
-        icon: null
+        icon: ChapterMarkers.tierBuildingIcon(firstTier2Data.race, 2)
       });
     }
 
@@ -245,7 +245,7 @@ const ChapterMarkers = class {
         severity: 'major',
         playerIndex: firstTier3Data.playerIndex,
         playerColor: firstTier3Data.playerColor,
-        icon: null
+        icon: ChapterMarkers.tierBuildingIcon(firstTier3Data.race, 3)
       });
     }
 
@@ -259,7 +259,7 @@ const ChapterMarkers = class {
         severity: 'major',
         playerIndex: firstExpansionData.playerIndex,
         playerColor: firstExpansionData.playerColor,
-        icon: null
+        icon: ChapterMarkers.EXPANSION_BUILDINGS[firstExpansionData.race] || null
       });
     }
 
@@ -500,6 +500,98 @@ const ChapterMarkers = class {
     { key: 'game',   label: 'GAME',   types: ['firstScout', 'transportLoad', 'hireMercenary'] }
   ];
 
+  // Tier building per race — subject icon for tier2/tier3 jump cells.
+  // [tier2, tier3] itemIds (mirrors helpers/mappings.js tierBuildings).
+  static TIER_BUILDINGS = {
+    U: ['unp1', 'unp2'], O: ['ostr', 'ofrt'],
+    E: ['etoa', 'etoe'], H: ['hkee', 'hcas']
+  };
+  // Town hall per race — subject icon for the expansion jump cell.
+  static EXPANSION_BUILDINGS = { O: 'ogre', H: 'htow', E: 'etol', U: 'unpl' };
+
+  static tierBuildingIcon (race, tier) {
+    const pair = ChapterMarkers.TIER_BUILDINGS[race];
+    return pair ? pair[tier - 2] || null : null;
+  }
+
+  // Type glyph: a small symbol marking the *kind* of event, shown alongside
+  // the subject icon (e.g. ⬆ + Keep for a tier-up, ✦ + hero for a spawn).
+  // cls drives the accent color (tech / hero / game).
+  static TYPE_GLYPH = {
+    tier2:          { glyph: '⬆', cls: 'tech' }, // ⬆
+    tier3:          { glyph: '⬆', cls: 'tech' },
+    firstExpansion: { glyph: '⌂', cls: 'tech' }, // ⌂
+    firstUpgrade:   { glyph: '⚔', cls: 'tech' }, // ⚔ (defense overridden below)
+    heroTraining:   { glyph: '✦', cls: 'hero' }, // ✦
+    heroRevive:     { glyph: '↺', cls: 'hero' }, // ↺
+    firstScout:     { glyph: '◉', cls: 'game' }, // ◉
+    hireMercenary:  { glyph: '⚑', cls: 'game' }, // ⚑
+    transportLoad:  { glyph: '✈', cls: 'game' }  // ✈
+  };
+
+  _typeGlyph (ev) {
+    const g = ChapterMarkers.TYPE_GLYPH[ev.type];
+    if (!g) return null;
+    // Attack vs defense share the firstUpgrade type — pick by label.
+    if (ev.type === 'firstUpgrade' && /def/i.test(ev.shortLabel || '')) {
+      return { glyph: '◈', cls: 'tech' }; // ◈ shield-ish for defense
+    }
+    return g;
+  }
+
+  // Max jump cells shown inline before overflow rolls into the "+N" modal.
+  static MAX_VISIBLE_JUMPS = 6;
+
+  // Build a compact tabular jump cell: icon (or player-color pip) + label + time.
+  _makeJumpBtn (ev, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = `bo-chapter-btn bo-chapter-${ev.severity}`;
+    btn.dataset.time = ev.gameTime;
+    btn.title = `${ev.label} — ${formatGameTime(ev.gameTime)}`;
+
+    // Type glyph — marks the kind of event (spawn / tier-up / scout / ...)
+    const g = this._typeGlyph(ev);
+    if (g) {
+      const gl = document.createElement('span');
+      gl.className = `bo-chapter-glyph bo-glyph-${g.cls}`;
+      gl.textContent = g.glyph;
+      gl.setAttribute('aria-hidden', 'true');
+      btn.appendChild(gl);
+    }
+
+    // Subject icon — the specific hero / building / unit involved
+    if (ev.icon) {
+      const img = document.createElement('img');
+      img.className = 'bo-chapter-icon';
+      img.src = `/assets/wc3icons/${ev.icon}.jpg`;
+      img.alt = '';
+      btn.appendChild(img);
+    } else if (!g) {
+      const pip = document.createElement('span');
+      pip.className = 'bo-chapter-pip';
+      pip.style.backgroundColor = ev.playerColor || '#aaa';
+      btn.appendChild(pip);
+    }
+
+    const label = document.createElement('span');
+    label.className = 'bo-chapter-label';
+    label.textContent = ev.shortLabel;
+    btn.appendChild(label);
+
+    const time = document.createElement('span');
+    time.className = 'bo-chapter-time';
+    time.textContent = formatGameTime(ev.gameTime);
+    btn.appendChild(time);
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.seekAndPlay(ev.gameTime);
+      if (onClick) onClick();
+    });
+    return btn;
+  }
+
   renderBoQuickJump (playerIndex) {
     // Flatten clusters into individual events, keep majors + this player's minors
     // Skip types that aren't useful as standalone jump targets
@@ -515,78 +607,131 @@ const ChapterMarkers = class {
 
     if (allEvents.length === 0) return null;
 
-    const makeBtn = (ev) => {
-      const btn = document.createElement('button');
-      btn.className = `bo-chapter-btn bo-chapter-${ev.severity}`;
-      btn.dataset.time = ev.gameTime;
-      if (ev.icon) {
-        const img = document.createElement('img');
-        img.className = 'bo-chapter-icon';
-        img.src = `/assets/wc3icons/${ev.icon}.jpg`;
-        img.alt = '';
-        btn.appendChild(img);
-      }
-      const label = document.createTextNode(`${ev.shortLabel} ${formatGameTime(ev.gameTime)}`);
-      btn.appendChild(label);
-      btn.title = ev.label;
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.seekAndPlay(ev.gameTime);
-      });
-      return btn;
-    };
+    // Chronological order for display and the overflow modal.
+    allEvents.sort((a, b) => a.gameTime - b.gameTime);
 
-    // Collapsed summary: first tech, first hero, first game event (max 3)
+    // Pick the inline set: majors are most valuable, fill remaining slots with
+    // the earliest minors, then re-sort the chosen set chronologically.
+    const MAX = ChapterMarkers.MAX_VISIBLE_JUMPS;
+    let visible;
+    if (allEvents.length <= MAX) {
+      visible = allEvents;
+    } else {
+      const majors = allEvents.filter(ev => ev.severity === 'major');
+      const minors = allEvents.filter(ev => ev.severity !== 'major');
+      visible = majors.concat(minors).slice(0, MAX)
+        .sort((a, b) => a.gameTime - b.gameTime);
+    }
+    const overflow = allEvents.length - visible.length;
+
+    const nav = document.createElement('div');
+    nav.className = 'bo-chapter-nav';
+
+    // Header: heading + (optional) "+N" overflow button
+    const head = document.createElement('div');
+    head.className = 'bo-chapter-head';
+    const heading = document.createElement('span');
+    heading.className = 'bo-chapter-heading';
+    heading.textContent = 'QUICK JUMP';
+    head.appendChild(heading);
+
+    if (overflow > 0) {
+      const more = document.createElement('button');
+      more.type = 'button';
+      more.className = 'bo-chapter-more';
+      more.textContent = `+${overflow}`;
+      more.title = `Show all ${allEvents.length} quick-jump events`;
+      more.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this._showQuickJumpModal(allEvents);
+      });
+      head.appendChild(more);
+    }
+    nav.appendChild(head);
+
+    // Tabular grid of jump cells
+    const grid = document.createElement('div');
+    grid.className = 'bo-chapter-grid';
+    visible.forEach(ev => grid.appendChild(this._makeJumpBtn(ev)));
+    nav.appendChild(grid);
+
+    return nav;
+  }
+
+  // --- Quick-Jump overflow modal ---
+
+  _showQuickJumpModal (allEvents) {
+    this._hideQuickJumpModal();
+
     const typeToGroup = {};
     ChapterMarkers.BO_JUMP_GROUPS.forEach(g => {
       g.types.forEach(t => { typeToGroup[t] = g.key; });
     });
-    const firstOf = (key) =>
-      allEvents.find(ev => (typeToGroup[ev.type] || 'game') === key);
-    const summaryEvents = ['tech', 'heroes', 'game']
-      .map(firstOf)
-      .filter(Boolean);
 
-    const nav = document.createElement('div');
-    nav.className = 'bo-chapter-nav';
-    if (!this._boJumpExpanded) this._boJumpExpanded = {};
-    const expanded = !!this._boJumpExpanded[playerIndex];
-    if (expanded) nav.classList.add('bo-chapter-expanded');
+    const overlay = document.createElement('div');
+    overlay.className = 'bo-qj-modal-overlay';
 
-    // Header bar: toggle (label + chevron) + collapsed summary chips
-    const bar = document.createElement('div');
-    bar.className = 'bo-chapter-bar';
+    const modal = document.createElement('div');
+    modal.className = 'bo-qj-modal';
+    overlay.appendChild(modal);
 
-    const toggle = document.createElement('button');
-    toggle.type = 'button';
-    toggle.className = 'bo-chapter-toggle';
-    toggle.innerHTML =
-      '<span class="bo-chapter-heading">QUICK JUMP</span>' +
-      '<span class="bo-chapter-chevron" aria-hidden="true">▾</span>';
-    toggle.title = expanded ? 'Collapse quick jump' : 'Show all quick-jump events';
-    bar.appendChild(toggle);
+    const head = document.createElement('div');
+    head.className = 'bo-qj-modal-head';
+    head.innerHTML = '<span class="bo-qj-modal-title">QUICK JUMP</span>';
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'bo-qj-modal-close';
+    close.innerHTML = '×';
+    close.title = 'Close';
+    close.addEventListener('click', () => this._hideQuickJumpModal());
+    head.appendChild(close);
+    modal.appendChild(head);
 
-    const summary = document.createElement('div');
-    summary.className = 'bo-chapter-summary';
-    summaryEvents.forEach(ev => summary.appendChild(makeBtn(ev)));
-    bar.appendChild(summary);
-    nav.appendChild(bar);
+    const body = document.createElement('div');
+    body.className = 'bo-qj-modal-body';
 
-    // Expanded: every quick-jumpable event (no category headers)
-    const all = document.createElement('div');
-    all.className = 'bo-chapter-all';
-    allEvents.forEach(ev => all.appendChild(makeBtn(ev)));
-    nav.appendChild(all);
+    ChapterMarkers.BO_JUMP_GROUPS.forEach(g => {
+      const events = allEvents.filter(ev => (typeToGroup[ev.type] || 'game') === g.key);
+      if (events.length === 0) return;
 
-    toggle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const now = !nav.classList.contains('bo-chapter-expanded');
-      nav.classList.toggle('bo-chapter-expanded', now);
-      this._boJumpExpanded[playerIndex] = now;
-      toggle.title = now ? 'Collapse quick jump' : 'Show all quick-jump events';
+      const group = document.createElement('div');
+      group.className = 'bo-qj-group';
+      const gl = document.createElement('div');
+      gl.className = 'bo-qj-group-label';
+      gl.textContent = g.label;
+      group.appendChild(gl);
+
+      const ggrid = document.createElement('div');
+      ggrid.className = 'bo-chapter-grid';
+      events.forEach(ev =>
+        ggrid.appendChild(this._makeJumpBtn(ev, () => this._hideQuickJumpModal())));
+      group.appendChild(ggrid);
+      body.appendChild(group);
     });
 
-    return nav;
+    modal.appendChild(body);
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) this._hideQuickJumpModal();
+    });
+    this._qjEscHandler = (e) => {
+      if (e.key === 'Escape') this._hideQuickJumpModal();
+    };
+    document.addEventListener('keydown', this._qjEscHandler);
+
+    document.body.appendChild(overlay);
+    this._qjModalEl = overlay;
+  }
+
+  _hideQuickJumpModal () {
+    if (this._qjModalEl) {
+      this._qjModalEl.remove();
+      this._qjModalEl = null;
+    }
+    if (this._qjEscHandler) {
+      document.removeEventListener('keydown', this._qjEscHandler);
+      this._qjEscHandler = null;
+    }
   }
 
   getChaptersForPlayer (playerIndex) {
@@ -612,6 +757,7 @@ const ChapterMarkers = class {
     }
 
     this._hideTooltip();
+    this._hideQuickJumpModal();
     this.chapters = [];
   }
 };

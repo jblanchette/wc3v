@@ -212,7 +212,7 @@ const ClientUnit = class {
       };
 
       img.onerror = (e) => {
-        console.log("img error: ", imgSrc);
+        if (window.WC3V_CONFIG) window.WC3V_CONFIG.log('app', "img error: ", imgSrc);
         return resolve(false);
       };
     });
@@ -316,16 +316,18 @@ const ClientUnit = class {
     //
     // figure out initial position
     //
-    if (this.spawnPosition) {
-      const { x, y } = this.spawnPosition;
-
-      this.currentX = x;
-      this.currentY = y;
+    // Both spawnPosition and lastPosition come through `unitData[field] || null`,
+    // so a unit with neither leaves lastPosition === null — destructuring that
+    // throws and aborts the whole player's unit construction. renderUnit()
+    // already early-returns on null currentX/currentY, so a position-less unit
+    // simply doesn't draw instead of crashing playback.
+    const initialPos = this.spawnPosition || this.lastPosition;
+    if (initialPos) {
+      this.currentX = initialPos.x;
+      this.currentY = initialPos.y;
     } else {
-      const { x, y } = this.lastPosition;
-
-      this.currentX = x;
-      this.currentY = y;
+      this.currentX = null;
+      this.currentY = null;
     }
 
     //

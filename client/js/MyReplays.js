@@ -287,6 +287,12 @@ const MyReplays = class {
     const records = (typeof options.limit === 'number') ? all.slice(0, options.limit) : all;
     const total = all.length;
 
+    // Detached cards in a transient state (promote-info / delete-confirm) leave
+    // a document keydown listener (+timer) bound to document, not the card — so
+    // clearing innerHTML would orphan them. Run any pending cleanup first.
+    containerEl.querySelectorAll('.rep-card').forEach(c => {
+      if (typeof c._wc3vBarCleanup === 'function') c._wc3vBarCleanup();
+    });
     containerEl.innerHTML = '';
 
     const emptyEl = options.emptyEl || document.getElementById('my-replays-empty');
@@ -415,7 +421,7 @@ const MyReplays = class {
             ${record.isReference
               ? `<span class="rep-card-reference-badge" title="In your pro builds grid — not graded itself">★ Pro replay</span>`
               : (lastCompare
-                ? `<span class="rep-card-grade-badge ${gradeClass(lastCompare.grade)}" title="Last compare: ${lastCompare.score}/100${lastCompare.proPlayerName ? ' vs ' + escapeAttr(lastCompare.proPlayerName) : ''}">${escapeHtml(lastCompare.grade)}</span>`
+                ? `<span class="rep-card-grade-badge ${gradeClass(lastCompare.grade)}" title="Last compare: ${Number(lastCompare.score) || 0}/100${lastCompare.proPlayerName ? ' vs ' + escapeAttr(lastCompare.proPlayerName) : ''}">${escapeHtml(lastCompare.grade)}</span>`
                 : '')}
           </div>
         </header>
@@ -591,11 +597,15 @@ const MyReplays = class {
       if (rm) rm.addEventListener('click', (e) => { e.stopPropagation(); this._enterDeleteConfirm(cardEl, record); });
       document.removeEventListener('keydown', escHandler);
       clearTimeout(autoTimer);
+      cardEl._wc3vBarCleanup = null;
     };
     const escHandler = (e) => { if (e.key === 'Escape') restore(); };
     document.addEventListener('keydown', escHandler);
     actionsEl.querySelector('[data-info="ok"]').addEventListener('click', restore);
     const autoTimer = setTimeout(restore, 5000);
+    // If the panel re-renders (card detached) before restore/timer fires, the
+    // renderPanel sweep calls this to drop the dangling document listener+timer.
+    cardEl._wc3vBarCleanup = () => { document.removeEventListener('keydown', escHandler); clearTimeout(autoTimer); };
   }
 
   // Two-step delete confirm: replace the actions row with a confirm bar
@@ -629,14 +639,18 @@ const MyReplays = class {
         this._enterDeleteConfirm(cardEl, record);
       });
       document.removeEventListener('keydown', escHandler);
+      cardEl._wc3vBarCleanup = null;
     };
 
     const escHandler = (e) => { if (e.key === 'Escape') restore(); };
     document.addEventListener('keydown', escHandler);
+    // Swept by renderPanel if the card is detached while still confirming.
+    cardEl._wc3vBarCleanup = () => { document.removeEventListener('keydown', escHandler); };
 
     actionsEl.querySelector('[data-confirm="cancel"]').addEventListener('click', restore);
     actionsEl.querySelector('[data-confirm="delete"]').addEventListener('click', async () => {
       document.removeEventListener('keydown', escHandler);
+      cardEl._wc3vBarCleanup = null;
       cardEl.classList.add('rep-card-removing');
       // Brief fade before removing from DOM.
       await new Promise(r => setTimeout(r, 160));
@@ -680,9 +694,12 @@ const MyReplays = class {
     const closeBtn = document.getElementById('compare-drawer-close');
     if (closeBtn) closeBtn.onclick = close;
     if (backdrop) backdrop.onclick = close;
-    document.addEventListener('keydown', this._drawerEscHandler = (e) => {
-      if (e.key === 'Escape') close();
-    });
+    // Remove any prior handler first so reopening the drawer before closing
+    // it can't stack duplicate keydown listeners (the old assignment never
+    // detached the previous one).
+    if (this._drawerEscHandler) document.removeEventListener('keydown', this._drawerEscHandler);
+    this._drawerEscHandler = (e) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('keydown', this._drawerEscHandler);
 
     if (typeof window.CompareInline !== 'function') {
       body.innerHTML = '<div class="ci-empty">CompareInline subsystem not loaded.</div>';

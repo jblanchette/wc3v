@@ -112,7 +112,10 @@
     name = String(name);
     const m = name.match(/^(.+?) of the (.+)$/);
     if (m) return pluralize(m[1], 2) + ' of the ' + m[2];
-    if (/(?<!a)man$/.test(name)) return name.replace(/man$/, 'men');
+    // "man"→"men" (Footman→Footmen) but NOT "...aman" (Shaman stays Shaman).
+    // Avoids a lookbehind regex literal, which throws a SyntaxError at parse
+    // time in older Safari and would take this whole file down.
+    if (/man$/.test(name) && !/aman$/.test(name)) return name.replace(/man$/, 'men');
     if (/(s|x|z|ch|sh)$/i.test(name)) return name + 'es';
     return name + 's';
   }

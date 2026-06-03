@@ -54,9 +54,9 @@
       gridY.push(`<line x1="${PAD.l}" y1="${y}" x2="${PAD.l + innerW}" y2="${y}" class="ci-chart-grid"/>` +
                  `<text x="${PAD.l - 6}" y="${y + 3}" text-anchor="end" class="ci-chart-axis">${Math.round(v)}</text>`);
     }
-    const title = opts.title ? `<text x="${PAD.l}" y="${PAD.t - 2}" class="ci-chart-title">${opts.title}</text>` : '';
+    const title = opts.title ? `<text x="${PAD.l}" y="${PAD.t - 2}" class="ci-chart-title">${escapeHtml(opts.title)}</text>` : '';
     return `
-      <svg class="ci-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${(opts.title || 'comparison chart')}">
+      <svg class="ci-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(opts.title || 'comparison chart')}">
         ${title}
         ${gridX.join('')}
         ${gridY.join('')}

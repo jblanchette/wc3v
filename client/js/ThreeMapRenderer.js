@@ -15,6 +15,13 @@
       transform.y) so the 3D view lines up 1:1 with the 2D unit overlay.
 */
 (function () {
+  // Gated debug logger — routes through WC3V_CONFIG so the ~15 per-load
+  // [ThreeMapRenderer] debug lines stay silent in production (logging.three).
+  // console.warn paths are intentionally left raw — they report real failures.
+  const _tlog = (...args) => {
+    if (typeof window !== 'undefined' && window.WC3V_CONFIG) window.WC3V_CONFIG.log('three', ...args);
+  };
+
   // Canonical WC3 terrain constants (HiveWE / W3E format spec).
   // Per-corner editor-height formula:
   //   worldY = ((groundHeight - 0x2000) + (layer - 2) * 0x0200) / 4
@@ -203,6 +210,13 @@
       this.waterMesh = null;
       this.heightData = null;
       this.mapTexture = null;
+
+      // Teardown bookkeeping. Loading a second replay constructs a fresh
+      // ThreeMapRenderer (app.js setup()), so the old instance MUST release
+      // its WebGL context + GPU resources via dispose() or contexts leak
+      // (browsers cap live contexts at ~16). See dispose() / requestRender().
+      this._disposed = false;
+      this._rafId = null;
     }
 
     // Load binary heightmap from /maps/{name}/heights.bin.gz.
@@ -352,7 +366,7 @@
         }
         const nGround = results.slice(0, paletteCodes.length).filter(r => r.tex).length;
         const nCliff = results.slice(paletteCodes.length).filter(r => r.tex).length;
-        console.log(`[ThreeMapRenderer] loaded ${nGround}/${paletteCodes.length} ground + ${nCliff}/${cliffCodes.length} cliff textures for tileset ${tilesetChar}`);
+        _tlog(`[ThreeMapRenderer] loaded ${nGround}/${paletteCodes.length} ground + ${nCliff}/${cliffCodes.length} cliff textures for tileset ${tilesetChar}`);
         return this.paletteTextures;
       });
     }
@@ -775,7 +789,7 @@
       this.scene.add(mesh);
       this._freezeMatrix(mesh);
       this.terrainMesh = mesh;
-      console.log('[ThreeMapRenderer] multi-material terrain:',
+      _tlog('[ThreeMapRenderer] multi-material terrain:',
         positions.length / 3, 'verts,', mergedIndices.length / 3, 'tris,',
         mats.length, 'palettes,',
         'Y', minY.toFixed(0), '..', maxY.toFixed(0));
@@ -919,7 +933,7 @@
       this.scene.add(waterMesh);
       this._freezeMatrix(waterMesh);
       this.waterMesh = waterMesh;
-      console.log('[ThreeMapRenderer] terrain Y range', minY.toFixed(1), '..', maxY.toFixed(1),
+      _tlog('[ThreeMapRenderer] terrain Y range', minY.toFixed(1), '..', maxY.toFixed(1),
                   '| water verts:', waterVertCount, '/', vertCount);
 
       // Position the perspective camera to frame the full map. We solve for
@@ -945,7 +959,7 @@
       this.camera.position.set(0, camHeight, camOffset);
       this.camera.lookAt(this._camFocus);
       this.camera.updateProjectionMatrix();
-      console.log('[ThreeMapRenderer] camera fit', { mapMajor, fitDistance, camDist, camHeight, camOffset });
+      _tlog('[ThreeMapRenderer] camera fit', { mapMajor, fitDistance, camDist, camHeight, camOffset });
 
       // Fog of war — darkens non-playable map edges. Pass gameScaler so the
       // fog uses the true playable bounds (gridSize.margins) instead of the
@@ -1050,7 +1064,7 @@
     }
 
     render (transform) {
-      if (!this.ready) return;
+      if (this._disposed || !this.ready) return;
       if (transform) this.syncTransform(transform);
       if (this.waterMesh && this.waterMesh.material.uniforms) {
         this.waterMesh.material.uniforms.uTime.value = performance.now() / 1000;
@@ -1150,7 +1164,7 @@
       this._freezeMatrix(leafMesh);
       this.trunkMesh = trunkMesh;
       this.leafMesh = leafMesh;
-      console.log('[ThreeMapRenderer] spawned', count, 'trees');
+      _tlog('[ThreeMapRenderer] spawned', count, 'trees');
     }
 
     // True if a WC3 world position is inside the camera-playable bounds.
@@ -1632,7 +1646,7 @@
           this.requestRender();
           loadedCount++;
           if (loadedCount === totalGroups) {
-            console.log('[ThreeMapRenderer] loaded', placements.length,
+            _tlog('[ThreeMapRenderer] loaded', placements.length,
               'cliff instances across', totalGroups, 'model types');
           }
         }, undefined, () => {
@@ -1692,7 +1706,7 @@
           return Promise.all(loads);
         })
         .then(() => {
-          console.log('[ThreeMapRenderer] doodad textures loaded:', this._doodadTextures.size);
+          _tlog('[ThreeMapRenderer] doodad textures loaded:', this._doodadTextures.size);
         })
         .catch(() => {
           console.warn('[ThreeMapRenderer] doodad texture manifest not found, using flat colors');
@@ -1760,7 +1774,7 @@
 
       let loadedCount = 0, modelCount = 0, skipCount = 0;
       const totalGroups = Object.keys(groups).length;
-      console.log('[ThreeMapRenderer] loading doodad models:', doodads.length, 'doodads in', totalGroups, 'groups');
+      _tlog('[ThreeMapRenderer] loading doodad models:', doodads.length, 'doodads in', totalGroups, 'groups');
 
       for (const [modelKey, group] of Object.entries(groups)) {
         const url = '/assets/models/trees/' + modelKey + '.glb';
@@ -1822,12 +1836,12 @@
           loadedCount++;
           this.requestRender();
           if (loadedCount === totalGroups) {
-            console.log('[ThreeMapRenderer] doodad models:', modelCount, 'placed,', skipCount, 'skipped (no glb)');
+            _tlog('[ThreeMapRenderer] doodad models:', modelCount, 'placed,', skipCount, 'skipped (no glb)');
           }
         }, undefined, (err) => {
           skipCount += group.instances.length;
           loadedCount++;
-          if (loadedCount <= 3) console.log('[ThreeMapRenderer] doodad glb not found:', modelKey);
+          if (loadedCount <= 3) _tlog('[ThreeMapRenderer] doodad glb not found:', modelKey);
         });
       }
     }
@@ -1907,8 +1921,14 @@
       this._buildingTextureManifest = null;
       this._buildingModelManifest = null;
 
-      // Cache buster to avoid stale GLB/JSON files
-      this._buildingCacheBuster = '?v=' + Date.now();
+      // Cache buster for GLB/JSON files. In dev, bust on every load so local
+      // asset edits show up immediately; in production use the stable
+      // WC3V_CONFIG.assetVersion so the browser + CDN can actually cache these
+      // (the heaviest assets the viewer fetches) across replay loads.
+      const cfg = (typeof window !== 'undefined' && window.WC3V_CONFIG) || null;
+      this._buildingCacheBuster = (cfg && cfg.isDev)
+        ? ('?v=' + Date.now())
+        : ('?v=' + ((cfg && cfg.assetVersion) || '2'));
 
       return Promise.all([
         fetch('/assets/textures/buildings/building-textures.json' + this._buildingCacheBuster)
@@ -1945,7 +1965,7 @@
           }, undefined, () => resolve());
         }));
       }
-      console.log('[ThreeMapRenderer] loading', loads.length, 'building textures (of',
+      _tlog('[ThreeMapRenderer] loading', loads.length, 'building textures (of',
         Object.keys(this._buildingTextureManifest).length, 'available)');
       return Promise.all(loads);
     }
@@ -1971,7 +1991,7 @@
       }
 
       const totalGroups = Object.keys(groups).length;
-      console.log('[ThreeMapRenderer] loading neutral buildings:', neutralBuildings.length,
+      _tlog('[ThreeMapRenderer] loading neutral buildings:', neutralBuildings.length,
         'in', totalGroups, 'model groups');
 
       const loadPromises = [];
@@ -1981,7 +2001,7 @@
         loadPromises.push(new Promise(resolve => {
           loader.load(url, (result) => {
             if (!result) { resolve(); return; }
-            console.log('[ThreeMapRenderer] neutral building loaded:', modelName,
+            _tlog('[ThreeMapRenderer] neutral building loaded:', modelName,
               'isGroup:', !!(result && result.isGroup), 'instances:', instances.length);
 
             // result is either a Group (multi-primitive with textures) or BufferGeometry (legacy)
@@ -2012,7 +2032,7 @@
         }));
       }
       return Promise.all(loadPromises).then(() => {
-        console.log('[ThreeMapRenderer] neutral buildings placed');
+        _tlog('[ThreeMapRenderer] neutral buildings placed');
       });
     }
 
@@ -2066,7 +2086,7 @@
 
       const loader = new window.GLBLoader();
       const totalModels = Object.keys(byModel).length;
-      console.log('[ThreeMapRenderer] loading player buildings:', buildingEntries.length,
+      _tlog('[ThreeMapRenderer] loading player buildings:', buildingEntries.length,
         'buildings,', totalModels, 'unique models');
 
       const loadPromises = [];
@@ -2189,7 +2209,7 @@
         }));
       }
       return Promise.all(loadPromises).then(() => {
-        console.log('[ThreeMapRenderer] player buildings ready:', this._playerBuildings.length);
+        _tlog('[ThreeMapRenderer] player buildings ready:', this._playerBuildings.length);
       });
     }
 
@@ -2277,10 +2297,17 @@
       return this._playerBuildings || [];
     }
 
+    // Register the BuildingSplats subsystem so renderBaseSnapshot can toggle
+    // ground splats to match the snapshot's buildings.
+    setBuildingSplats (splats) {
+      this._buildingSplats = splats;
+    }
+
     // Render the 3D scene focused on a player's base area into a target canvas.
     // Used by BuildingPlacementViewer to capture a 3D snapshot of the base.
     // snapshotBuildings: [{itemId, x, y}] — buildings to show in this snapshot
-    renderBaseSnapshot (baseGrid, snapshotBuildings, targetCanvas) {
+    // gridOptions: { enabled, size } — optional World-Editor-style tile grid
+    renderBaseSnapshot (baseGrid, snapshotBuildings, targetCanvas, gridOptions) {
       if (!this.ready || !this.renderer) return false;
 
       const ext = this.mapInfo.bounds.map;
@@ -2317,6 +2344,9 @@
         for (const t of this._treeInstances) savedTreeState.push(t.hidden);
       }
 
+      // Save building ground splat visibility
+      const savedSplatVis = this._buildingSplats ? this._buildingSplats.captureVisibility() : null;
+
       // Hide construction progress bars during snapshot — they would otherwise
       // float over buildings/gold mines if the snapshot's gameTime falls inside
       // a build window.
@@ -2342,6 +2372,9 @@
         }
       }
 
+      // Show only the splats under the snapshot's buildings (neutral splats stay)
+      if (this._buildingSplats) this._buildingSplats.showOnlyForSnapshot(snapshotBuildings);
+
       // Clear trees around snapshot buildings
       this.restoreAllTrees();
       for (const sb of snapshotBuildings) {
@@ -2363,6 +2396,15 @@
       this.camera.lookAt(cx, 0, cz);
       this.camera.updateProjectionMatrix();
 
+      // World-Editor-style tile grid (added to scene only for this one-shot
+      // render, removed below so it never appears in the live map).
+      let gridObj = null;
+      if (gridOptions && gridOptions.enabled) {
+        gridObj = this._buildSnapshotGrid(baseGrid, gridOptions.size, mapCenterX, mapCenterY,
+          gridOptions.footprints);
+        if (gridObj) this.scene.add(gridObj);
+      }
+
       // Render to the main renderer at target canvas size
       const tw = targetCanvas.width;
       const th = targetCanvas.height;
@@ -2374,6 +2416,16 @@
       // Copy rendered image to target canvas
       const targetCtx = targetCanvas.getContext('2d');
       targetCtx.drawImage(this.renderer.domElement, 0, 0);
+
+      // Tear down the one-shot grid overlay (a Group of line/mesh children)
+      if (gridObj) {
+        this.scene.remove(gridObj);
+        gridObj.traverse(c => {
+          if (c.geometry) c.geometry.dispose();
+          if (Array.isArray(c.material)) c.material.forEach(m => m && m.dispose());
+          else if (c.material) c.material.dispose();
+        });
+      }
 
       // Restore renderer size
       this.renderer.setSize(savedSize.w, savedSize.h, false);
@@ -2413,9 +2465,211 @@
       // Restore construction progress bar visibility
       for (const bar of hiddenBars) bar.visible = true;
 
+      // Restore building ground splat visibility
+      if (this._buildingSplats) this._buildingSplats.restoreVisibility(savedSplatVis);
+
       // Re-render main view
       this.requestRender();
       return true;
+    }
+
+    // Build the World-Editor-style overlay for a base snapshot: a tile grid
+    // plus per-cell buildability markings and building footprint outlines.
+    // The grid LINES are depth-tested so trees/buildings draw over them (WE
+    // look); the buildability marks and footprint outlines use depthTest:false
+    // and stay on top so the annotations remain readable.
+    // Returns a THREE.Group owned by the caller (add, then dispose via the
+    // group's children). footprints: [{x, y, w, h}] — center in WC3 world units,
+    // w/h the solid footprint in build cells.
+    _buildSnapshotGrid (baseGrid, gridSize, mapCenterX, mapCenterY, footprints) {
+      if (!gridSize || gridSize <= 0) return null;
+
+      const originX = baseGrid.originX;
+      const originY = baseGrid.originY;
+      const cs = baseGrid.cellSize;
+      const cols = baseGrid.cols;
+      const rows = baseGrid.rows;
+      const bw = cols * cs;
+      const bh = rows * cs;
+
+      // The overlay conforms to the terrain surface: every vertex samples the
+      // ground height so the grid, buildability marks and footprint outlines
+      // hug the slope instead of floating on one flat plane (which, under the
+      // tilted camera, drifts off the buildings and spills past the base edges).
+      const LIFT = 14; // small lift so lines read above the ground, not z-fighting
+      const hAt = (wx, wy) => this.sampleHeight(wx, wy) + LIFT;
+      // World (x, y) -> scene [x, z]. Height is sampled separately via hAt.
+      const sx = (wx) => wx - mapCenterX;
+      const sz = (wy) => -(wy - mapCenterY);
+
+      const group = new THREE.Group();
+      // Terrain-conforming quad from a world-space rect (wxa<wxb, wyTop>wyBot).
+      const pushQuadW = (arr, wxa, wyTop, wxb, wyBot) => {
+        const xa = sx(wxa), xb = sx(wxb), zt = sz(wyTop), zb = sz(wyBot);
+        const hTL = hAt(wxa, wyTop), hTR = hAt(wxb, wyTop);
+        const hBR = hAt(wxb, wyBot), hBL = hAt(wxa, wyBot);
+        arr.push(xa, hTL, zt, xb, hTR, zt, xb, hBR, zb,
+          xa, hTL, zt, xb, hBR, zb, xa, hBL, zb);
+      };
+      // Terrain-conforming line between two world points (one LineSegments pair).
+      const pushSegW = (arr, wxa, wya, wxb, wyb) => {
+        arr.push(sx(wxa), hAt(wxa, wya), sz(wya), sx(wxb), hAt(wxb, wyb), sz(wyb));
+      };
+      // A straight world-space run, subdivided per cell so it follows the slope.
+      const pushRunW = (arr, wxa, wya, wxb, wyb) => {
+        const segs = Math.max(1, Math.round(Math.hypot(wxb - wxa, wyb - wya) / cs));
+        let px = wxa, py = wya;
+        for (let i = 1; i <= segs; i++) {
+          const t = i / segs;
+          const nx = wxa + (wxb - wxa) * t, ny = wya + (wyb - wya) * t;
+          pushSegW(arr, px, py, nx, ny);
+          px = nx; py = ny;
+        }
+      };
+
+      // --- Per-cell buildability classification ---
+      // baseGrid.cells: 0=blocked, 1=walkable(no-build), 2=buildable, 3/4=water.
+      // Trees from the doodad layer are not in the static WPM, so stamp them in.
+      // flag: 0 = clear, 1 = tinted (no-build), 2 = tinted + X (hard obstacle).
+      const flags = new Array(rows);
+      for (let r = 0; r < rows; r++) {
+        flags[r] = new Array(cols).fill(0);
+        const rowCells = baseGrid.cells[r] || [];
+        for (let c = 0; c < cols; c++) {
+          const v = rowCells[c];
+          if (v === 0) flags[r][c] = 2;
+          else if (v === 1) flags[r][c] = 1;
+        }
+      }
+      if (baseGrid.trees) {
+        for (const t of baseGrid.trees) {
+          const c = Math.floor((t.x - originX) / cs);
+          const r = Math.floor((originY - t.y) / cs);
+          if (r >= 0 && r < rows && c >= 0 && c < cols) flags[r][c] = 2;
+        }
+      }
+
+      // Red tint quads (unbuildable cells) + X marks (hard obstacles).
+      const tintVerts = [];
+      const xVerts = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (!flags[r][c]) continue;
+          const wxa = originX + c * cs;
+          const wyTop = originY - r * cs;
+          pushQuadW(tintVerts, wxa, wyTop, wxa + cs, wyTop - cs);
+          if (flags[r][c] === 2) {
+            const m = cs * 0.18; // inset so the X reads inside the cell
+            pushSegW(xVerts, wxa + m, wyTop - m, wxa + cs - m, wyTop - cs + m);
+            pushSegW(xVerts, wxa + cs - m, wyTop - m, wxa + m, wyTop - cs + m);
+          }
+        }
+      }
+      if (tintVerts.length) {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(tintVerts, 3));
+        const m = new THREE.MeshBasicMaterial({
+          color: 0xe03434, transparent: true, opacity: 0.30,
+          depthTest: false, depthWrite: false, side: THREE.DoubleSide
+        });
+        const mesh = new THREE.Mesh(g, m);
+        mesh.renderOrder = 10;
+        group.add(mesh);
+      }
+      if (xVerts.length) {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(xVerts, 3));
+        const m = new THREE.LineBasicMaterial({
+          color: 0xff6464, transparent: true, opacity: 0.6,
+          depthTest: false, depthWrite: false
+        });
+        const lines = new THREE.LineSegments(g, m);
+        lines.renderOrder = 11;
+        group.add(lines);
+      }
+
+      // Grid lines, aligned to world-coordinate multiples of gridSize. The WPM
+      // lattice origin is itself a multiple of every grid size, so these lines
+      // fall exactly on the build-cell / tile boundaries the buildings snap to.
+      const wyBot = originY - bh;
+      const lineVerts = [];
+      const firstX = Math.ceil(originX / gridSize) * gridSize;
+      for (let wx = firstX; wx <= originX + bw; wx += gridSize) {
+        pushRunW(lineVerts, wx, originY, wx, wyBot);
+      }
+      const firstY = Math.ceil(wyBot / gridSize) * gridSize;
+      for (let wy = firstY; wy <= originY; wy += gridSize) {
+        pushRunW(lineVerts, originX, wy, originX + bw, wy);
+      }
+      // Clean bounding border. gridSize rarely divides the base rect evenly, so
+      // the interior lines stop short of the rect edges while their perpendicular
+      // partners run the full span — leaving lines that visibly overhang past the
+      // outermost cells. Framing the rect caps every line at a real edge.
+      pushRunW(lineVerts, originX, originY, originX + bw, originY);
+      pushRunW(lineVerts, originX, wyBot, originX + bw, wyBot);
+      pushRunW(lineVerts, originX, originY, originX, wyBot);
+      pushRunW(lineVerts, originX + bw, originY, originX + bw, wyBot);
+      if (lineVerts.length) {
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(lineVerts, 3));
+        const m = new THREE.LineBasicMaterial({
+          color: 0x66ccaa, transparent: true, opacity: 0.45,
+          // depthTest TRUE so trees/buildings draw OVER the grid lines (the
+          // World-Editor look). The grid sits +LIFT above terrain so the ground
+          // itself doesn't occlude it, but anything 3D standing on the ground
+          // does. Buildability marks + footprint outlines keep depthTest:false
+          // and stay on top.
+          depthTest: true, depthWrite: false
+        });
+        const lines = new THREE.LineSegments(g, m);
+        lines.renderOrder = 12;
+        group.add(lines);
+      }
+
+      // Building footprint outlines (where each building occupies grid space).
+      if (footprints && footprints.length) {
+        const fillVerts = [];
+        const outlineVerts = [];
+        for (const f of footprints) {
+          // WC3 places building centers on the 32-unit build-grid (verified in
+          // replay data: every center is an exact multiple of cellSize from the
+          // grid origin). f.w/f.h are the real solid footprint in cells (from
+          // the pathing manifest); snap the center to the grid and extend a whole
+          // number of half-cells each way so corners land exactly on grid lines.
+          const cx = originX + Math.round((f.x - originX) / cs) * cs;
+          const cy = originY - Math.round((originY - f.y) / cs) * cs;
+          const halfW = Math.max(1, Math.round((f.w || 4) / 2)) * cs;
+          const halfH = Math.max(1, Math.round((f.h || 4) / 2)) * cs;
+          const wxa = cx - halfW, wxb = cx + halfW;
+          const wyTop = cy + halfH, wyBot = cy - halfH;
+          pushQuadW(fillVerts, wxa, wyTop, wxb, wyBot);
+          pushRunW(outlineVerts, wxa, wyTop, wxb, wyTop);
+          pushRunW(outlineVerts, wxb, wyTop, wxb, wyBot);
+          pushRunW(outlineVerts, wxb, wyBot, wxa, wyBot);
+          pushRunW(outlineVerts, wxa, wyBot, wxa, wyTop);
+        }
+        const gf = new THREE.BufferGeometry();
+        gf.setAttribute('position', new THREE.Float32BufferAttribute(fillVerts, 3));
+        const mf = new THREE.MeshBasicMaterial({
+          color: 0xffd84a, transparent: true, opacity: 0.14,
+          depthTest: false, depthWrite: false, side: THREE.DoubleSide
+        });
+        const fill = new THREE.Mesh(gf, mf);
+        fill.renderOrder = 13;
+        group.add(fill);
+
+        const go = new THREE.BufferGeometry();
+        go.setAttribute('position', new THREE.Float32BufferAttribute(outlineVerts, 3));
+        const mo = new THREE.LineBasicMaterial({
+          color: 0xffd84a, transparent: true, opacity: 0.95,
+          depthTest: false, depthWrite: false
+        });
+        const outline = new THREE.LineSegments(go, mo);
+        outline.renderOrder = 14;
+        group.add(outline);
+      }
+
+      return group.children.length ? group : null;
     }
 
     // Freeze an object's transform: bake its current local matrix once and
@@ -2433,12 +2687,74 @@
     // Request a single render frame (for use after async model loads when
     // the main render loop isn't running yet).
     requestRender () {
-      if (this._pendingRender) return;
+      if (this._disposed || this._pendingRender) return;
       this._pendingRender = true;
-      requestAnimationFrame(() => {
+      this._rafId = requestAnimationFrame(() => {
+        this._rafId = null;
         this._pendingRender = false;
+        if (this._disposed || !this.ready) return;
         this.render();
       });
+    }
+
+    // Release the WebGL context and every GPU resource this renderer owns.
+    // MUST be called before dropping the reference (Wc3vViewer.reset()), or
+    // each replay reload orphans a live context + tens of MB of textures.
+    // A scene.traverse() catch-all covers terrain, water, trees, cliffs,
+    // buildings, ribbons, rings and pins without enumerating each field;
+    // the loose texture Maps are freed explicitly since not all are attached.
+    dispose () {
+      if (this._disposed) return;
+      this._disposed = true;
+      this.ready = false;
+
+      if (this._rafId != null) { cancelAnimationFrame(this._rafId); this._rafId = null; }
+      this._pendingRender = false;
+
+      if (this.fogOfWar && typeof this.fogOfWar.dispose === 'function') {
+        this.fogOfWar.dispose();
+      }
+
+      const disposeMaterial = (m) => {
+        if (!m) return;
+        for (const k in m) {            // free any texture maps the material holds
+          const v = m[k];
+          if (v && v.isTexture) v.dispose();
+        }
+        if (typeof m.dispose === 'function') m.dispose();
+      };
+      if (this.scene) {
+        this.scene.traverse((obj) => {
+          if (obj.geometry) obj.geometry.dispose();
+          if (Array.isArray(obj.material)) obj.material.forEach(disposeMaterial);
+          else if (obj.material) disposeMaterial(obj.material);
+        });
+      }
+
+      // Textures held in caches outside the live scene graph.
+      const disposeTexMap = (mapOrNull) => {
+        if (!mapOrNull) return;
+        mapOrNull.forEach((t) => { if (t && typeof t.dispose === 'function') t.dispose(); });
+      };
+      disposeTexMap(this.paletteTextures);
+      disposeTexMap(this._doodadTextures);
+      disposeTexMap(this._buildingTextures);
+      if (this.mapTexture && typeof this.mapTexture.dispose === 'function') this.mapTexture.dispose();
+
+      this.scene = null;
+      this.terrainMesh = this.waterMesh = this.trunkMesh = this.leafMesh = null;
+      this.paletteTextures = this._doodadTextures = this._buildingTextures = null;
+      this._pathRibbons = this._campRings = this._routeLines = this._levelPins = null;
+      this._treeInstances = this._buildingInstanced = null;
+      this._buildingSplats = null;
+
+      if (this.renderer) {
+        this.renderer.dispose();
+        if (typeof this.renderer.forceContextLoss === 'function') this.renderer.forceContextLoss();
+        // Detach from #three-canvas so a fresh renderer can bind a clean context.
+        this.renderer.domElement = null;
+        this.renderer = null;
+      }
     }
   }
 

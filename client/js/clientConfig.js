@@ -14,6 +14,13 @@
   var config = {
     isDev: isDev,
 
+    // Stable cache-buster for immutable assets (building GLBs, textures, SVGs).
+    // Bump this string whenever those assets are regenerated/redeployed so the
+    // browser + CDN refetch — using Date.now() instead defeats caching on every
+    // single load (every map re-downloads all building models). In dev we keep
+    // the always-fresh behaviour so local asset edits show up without a bump.
+    assetVersion: '1',
+
     // Per-area logging flags. Default off in production, on in dev.
     logging: {
       app:        isDev,

@@ -194,6 +194,7 @@ const Wc3vViewer = class {
     this.minimapPip = null;
 
     this.floatingText = new window.FloatingText();
+    if (this.placementViewer && typeof this.placementViewer.destroy === 'function') this.placementViewer.destroy();
     this.placementViewer = new window.BuildingPlacementViewer();
     this.matchSummary = new window.MatchSummary(this);
 
@@ -271,7 +272,13 @@ const Wc3vViewer = class {
       ? new window.ResourceCharts(this) : null;
     this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
     this.processedBattles = null;               // populated by setup() once mapData is available
-    this.threeMapRenderer = null; // created in setupCanvas once #three-canvas exists
+    // Release the prior WebGL context + GPU resources before dropping the
+    // reference; setup() builds a fresh renderer on every load and browsers
+    // cap live contexts (~16), so a bare null here leaks a context per reload.
+    if (this.threeMapRenderer && typeof this.threeMapRenderer.dispose === 'function') {
+      try { this.threeMapRenderer.dispose(); } catch (e) { /* never block reset */ }
+    }
+    this.threeMapRenderer = null; // re-created in setup() once #three-canvas exists
     this.displayScale = 1.0;
 
     this.isDev = (window.location.hostname === "127.0.0.1");
@@ -479,7 +486,7 @@ const Wc3vViewer = class {
     this.tutorialWindow.style.display = "none";
     this.tutorialBackdrop.style.display = "none";
 
-    console.log("setting do-not-show cookie");
+    if (window.WC3V_CONFIG) window.WC3V_CONFIG.log('app', "setting do-not-show cookie");
     document.cookie = "shownTutorial=1; path=/; expires=Tue, 19 Jan 2038 03:14:07 GMT";
   }
 
@@ -559,24 +566,25 @@ const Wc3vViewer = class {
     const { name } = this.mapInfo;
 
     if (mapType === "grid") {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         self.gridMapImage = new Image();
+        // Resolve (never reject) on error too: a missing/unshipped map image
+        // is a documented production case. Without this the Promise.all in
+        // setup() never settles and the loading overlay hangs forever. We keep
+        // the errored Image object (rather than nulling it) so downstream reads
+        // like gameScaler.mapImage.width return 0 instead of throwing.
+        self.gridMapImage.addEventListener('load', () => resolve(), false);
+        self.gridMapImage.addEventListener('error', () => resolve(), false);
+        // src set AFTER the listeners — a cached image can fire load synchronously.
         self.gridMapImage.src = `/maps/${name}/gridmap.jpg`;
-
-        self.gridMapImage.addEventListener('load', () => {
-          resolve();
-        }, false);
       });
     }
 
-    return new Promise((resolve, reject) => {
-      self.mapImage = new Image();   // Create new img element
-      self.mapImage.src = `/maps/${name}/map.jpg`; // Set source path
-
-      self.mapImage.addEventListener('load', () => {
-        resolve();
-      }, false);
-
+    return new Promise((resolve) => {
+      self.mapImage = new Image();
+      self.mapImage.addEventListener('load', () => resolve(), false);
+      self.mapImage.addEventListener('error', () => resolve(), false);
+      self.mapImage.src = `/maps/${name}/map.jpg`;
     });
   }
 
@@ -643,6 +651,7 @@ const Wc3vViewer = class {
     if (window.BuildingSplats) {
       this.buildingSplats = new BuildingSplats(this.threeMapRenderer);
       this.buildingSplats.setup(buildings, this.neutralBuildings);
+      this.threeMapRenderer.setBuildingSplats(this.buildingSplats);
     }
 
     // Building hover tooltip
@@ -746,7 +755,7 @@ const Wc3vViewer = class {
     }
 
     const blockedCount = Object.keys(blocked).length;
-    console.log(`[terrain] walkmap loaded: ${!!this._walkmap}, blocked cells: ${blockedCount}, trees: ${this.doodadData ? this.doodadData.length : 0}`);
+    if (window.WC3V_CONFIG) window.WC3V_CONFIG.log('map', `[terrain] walkmap loaded: ${!!this._walkmap}, blocked cells: ${blockedCount}, trees: ${this.doodadData ? this.doodadData.length : 0}`);
 
     this._terrainIndex = { blocked, cellSize: CELL_SIZE };
 
@@ -959,6 +968,12 @@ const Wc3vViewer = class {
       '<button class="cam-btn" data-mode="p2">P2</button>',
       '<button class="cam-btn" data-mode="free">FREE</button>'
     ]).join('');
+    // Idempotent: _setupCameraToolbar runs on every load — drop any prior
+    // toolbar so only one #camera-toolbar exists (also fixes highlight desync).
+    // The toolbar's own click listener is bound to the fresh node, so it's
+    // GC'd with the removed element — no leak there.
+    const oldToolbar = document.getElementById('camera-toolbar');
+    if (oldToolbar) oldToolbar.remove();
     container.appendChild(toolbar);
 
     toolbar.addEventListener('click', (e) => {
@@ -966,18 +981,24 @@ const Wc3vViewer = class {
       if (btn) this._handleCameraButton(btn.dataset.mode);
     });
 
-    document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      if (!this.broadcastCamera) return;
-      const non1v1 = this.isNonOneVsOne();
-      switch (e.key.toLowerCase()) {
-        case 'a': this._handleCameraButton('auto'); break;
-        case 's': if (!non1v1) this._handleCameraButton('split'); break;
-        case '1': if (!non1v1) this._handleCameraButton('p1'); break;
-        case '2': if (!non1v1) this._handleCameraButton('p2'); break;
-        case 'f': this._handleCameraButton('free'); break;
-      }
-    });
+    // Bind the document-level camera hotkeys exactly once — the handler reads
+    // this.broadcastCamera/isNonOneVsOne() live, so a single binding works
+    // across reloads. Re-binding per load would stack handlers.
+    if (!this._cameraKeysWired) {
+      this._cameraKeysWired = true;
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (!this.broadcastCamera) return;
+        const non1v1 = this.isNonOneVsOne();
+        switch (e.key.toLowerCase()) {
+          case 'a': this._handleCameraButton('auto'); break;
+          case 's': if (!non1v1) this._handleCameraButton('split'); break;
+          case '1': if (!non1v1) this._handleCameraButton('p1'); break;
+          case '2': if (!non1v1) this._handleCameraButton('p2'); break;
+          case 'f': this._handleCameraButton('free'); break;
+        }
+      });
+    }
   }
 
   _handleCameraButton (mode) {
@@ -3147,23 +3168,29 @@ const Wc3vViewer = class {
     }
 
     // close modals when clicking outside
-    document.addEventListener('click', (e) => {
-      const settingsBtn = document.getElementById(`${this.scrubber.wrapperId}-settings`);
-      const settingsModal = document.getElementById(`${this.scrubber.wrapperId}-settings-modal`);
-      if (settingsModal && settingsModal.style.display === 'block') {
-        if (!settingsBtn.contains(e.target)) {
-          settingsModal.style.display = 'none';
+    // Bind the outside-click dismiss handler once — setupViewOptions runs per
+    // load but the handler resolves the scrubber/modal elements live on each
+    // click, so a single binding stays correct across reloads.
+    if (!this._viewOptionsClickWired) {
+      this._viewOptionsClickWired = true;
+      document.addEventListener('click', (e) => {
+        const settingsBtn = document.getElementById(`${this.scrubber.wrapperId}-settings`);
+        const settingsModal = document.getElementById(`${this.scrubber.wrapperId}-settings-modal`);
+        if (settingsModal && settingsModal.style.display === 'block') {
+          if (!settingsBtn.contains(e.target)) {
+            settingsModal.style.display = 'none';
+          }
         }
-      }
 
-      const speedBtn = document.getElementById(`${this.scrubber.wrapperId}-speed`);
-      const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
-      if (speedModal && speedModal.style.display === 'block') {
-        if (!speedBtn.contains(e.target)) {
-          speedModal.style.display = 'none';
+        const speedBtn = document.getElementById(`${this.scrubber.wrapperId}-speed`);
+        const speedModal = document.getElementById(`${this.scrubber.wrapperId}-speed-modal`);
+        if (speedModal && speedModal.style.display === 'block') {
+          if (!speedBtn.contains(e.target)) {
+            speedModal.style.display = 'none';
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   // Game-mode categorization. Prefer the parser-emitted `gameMode` on the
@@ -3402,6 +3429,9 @@ const Wc3vViewer = class {
     }
 
     if (typeof CampPanel !== 'undefined') {
+      // Tear down the prior panel first — it owns a perpetual rAF loop and
+      // document listeners that would otherwise duplicate on every reload.
+      if (this.campPanel && typeof this.campPanel.destroy === 'function') this.campPanel.destroy();
       this.campPanel = new CampPanel(this);
       this.campPanel.setData(world.neutralGroups);
     }
@@ -3521,44 +3551,53 @@ const Wc3vViewer = class {
       }
     };
 
-    window.addEventListener('resize', resetZoomOnResize);
+    // Bind page-level resize / fullscreen listeners exactly once. setupDrawing
+    // runs on every replay load, but window/document/#gameplay-area persist for
+    // the whole viewer lifetime and these handlers read live state through the
+    // (reused) viewer instance — re-binding would stack a handler + observer
+    // per reload. The flag is intentionally NOT cleared in reset().
+    if (!this._drawingListenersBound) {
+      this._drawingListenersBound = true;
 
-    // ResizeObserver — watch gameplay-area (its size only changes from window/layout, not canvas)
-    const resizeTarget = document.getElementById('gameplay-area');
-    if (resizeTarget && typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(() => {
-        if (self.layoutMode === LayoutMode.liveBuildOrder) {
-          self.scaleLiveModeCanvas();
-        }
-        resetZoomOnResize();
-      }).observe(resizeTarget);
-    }
+      window.addEventListener('resize', resetZoomOnResize);
 
-    // Fullscreen change — rescale canvas and swap icon
-    document.addEventListener('fullscreenchange', () => {
-      const isFullscreen = !!document.fullscreenElement;
-
-      self.scrubber.loadSvg(
-        `#${self.scrubber.wrapperId}-fullscreen-icon`,
-        isFullscreen ? 'fullscreen-exit-icon' : 'fullscreen-icon'
-      );
-
-      self.scaleLiveModeCanvas();
-
-      if (self.gameLoaded && self.zoomContainer && self.zoom) {
-        self.transform = { x: 0, y: 0, k: 1.0 };
-        self.zoomContainer.call(self.zoom.transform, d3.zoomIdentity);
-        self.scrubber.updateZoomDisplay(1.0);
-
-        // Re-engage broadcast camera after fullscreen resize
-        if (self.broadcastCamera && self.broadcastCamera.enabled) {
-          self.broadcastCamera._initialized = false;
-          self.startRenderLoop();
-        }
-        // …and re-frame the walkthrough step if one's active.
-        if (self.guideMode && !self.mobileMode) self._reapplyGuideFocus();
+      // ResizeObserver — watch gameplay-area (its size only changes from window/layout, not canvas)
+      const resizeTarget = document.getElementById('gameplay-area');
+      if (resizeTarget && typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => {
+          if (self.layoutMode === LayoutMode.liveBuildOrder) {
+            self.scaleLiveModeCanvas();
+          }
+          resetZoomOnResize();
+        }).observe(resizeTarget);
       }
-    });
+
+      // Fullscreen change — rescale canvas and swap icon
+      document.addEventListener('fullscreenchange', () => {
+        const isFullscreen = !!document.fullscreenElement;
+
+        self.scrubber.loadSvg(
+          `#${self.scrubber.wrapperId}-fullscreen-icon`,
+          isFullscreen ? 'fullscreen-exit-icon' : 'fullscreen-icon'
+        );
+
+        self.scaleLiveModeCanvas();
+
+        if (self.gameLoaded && self.zoomContainer && self.zoom) {
+          self.transform = { x: 0, y: 0, k: 1.0 };
+          self.zoomContainer.call(self.zoom.transform, d3.zoomIdentity);
+          self.scrubber.updateZoomDisplay(1.0);
+
+          // Re-engage broadcast camera after fullscreen resize
+          if (self.broadcastCamera && self.broadcastCamera.enabled) {
+            self.broadcastCamera._initialized = false;
+            self.startRenderLoop();
+          }
+          // …and re-frame the walkthrough step if one's active.
+          if (self.guideMode && !self.mobileMode) self._reapplyGuideFocus();
+        }
+      });
+    }
   }
 
   // Re-render the player-status panel into the detached offscreen buffer,
@@ -3636,7 +3675,10 @@ const Wc3vViewer = class {
   startRenderLoop () {
     if (this.mobileMode) return;
     this.lastFrameTimestamp = 0;
-    this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
+    // Bind once and reuse — mainLoop re-arms itself every frame, so binding
+    // inline would allocate a new bound function on every animation frame.
+    if (!this._boundMainLoop) this._boundMainLoop = this.mainLoop.bind(this);
+    this.lastFrameId = requestAnimationFrame(this._boundMainLoop);
   }
 
   stopRenderLoop () {
@@ -3702,7 +3744,8 @@ const Wc3vViewer = class {
       return;
     }
 
-    this.lastFrameId = requestAnimationFrame(this.mainLoop.bind(this));
+    if (!this._boundMainLoop) this._boundMainLoop = this.mainLoop.bind(this);
+    this.lastFrameId = requestAnimationFrame(this._boundMainLoop);
   }
 
   update (dt) {

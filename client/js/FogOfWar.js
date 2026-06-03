@@ -133,10 +133,13 @@ const FogOfWar = class {
       ].join('\n')
     });
 
-    console.log('[FogOfWar] Three.js bounds:', { boundsXMin, boundsXMax, boundsZMin, boundsZMax });
-    console.log('[FogOfWar] playable WC3:', { playLeft, playRight, playTop, playBottom });
-    console.log('[FogOfWar] map WC3:', { mapLeft, mapRight, mapTop, mapBottom });
-    console.log('[FogOfWar] plane size:', planeW, 'x', planeH, '| fogY:', fogY);
+    const _cfg = (typeof window !== 'undefined' && window.WC3V_CONFIG) || null;
+    if (_cfg) {
+      _cfg.log('three', '[FogOfWar] Three.js bounds:', { boundsXMin, boundsXMax, boundsZMin, boundsZMax });
+      _cfg.log('three', '[FogOfWar] playable WC3:', { playLeft, playRight, playTop, playBottom });
+      _cfg.log('three', '[FogOfWar] map WC3:', { mapLeft, mapRight, mapTop, mapBottom });
+      _cfg.log('three', '[FogOfWar] plane size:', planeW, 'x', planeH, '| fogY:', fogY);
+    }
 
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(0, fogY, 0);

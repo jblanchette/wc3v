@@ -425,20 +425,37 @@ function stripMDXChunks (buffer, chunkNames) {
   return result;
 }
 
-// Determine which geosets are visible during the "Stand" animation sequence.
-// WC3 buildings have multiple geosets for different upgrade levels, effects, etc.
-// Only geosets visible during the Stand/Stand Work sequence should be exported.
-function getStandVisibleGeosets (mdx) {
+// Pick the ROOTED idle sequence whose geoset visibility defines the building's
+// stationary form. Night Elf Ancients carry "...Alternate" (and "Morph")
+// sequences for their UPROOTED walking-treant form; those expose a different
+// geoset set (legs/face, extending below ground) and must never be chosen.
+// A naive startsWith('stand work') matched "Stand Work Alternate" and baked the
+// uprooted geometry — the cause of ancients rendering as crouched creatures.
+function pickRootedStandSequence (mdx) {
   if (!mdx.Sequences || !mdx.Sequences.length) return null;
 
-  // Find the first Stand-like sequence (prefer "Stand Work" over "Stand")
-  const seqNames = ['Stand Work', 'Stand'];
-  let seq = null;
-  for (const name of seqNames) {
-    seq = mdx.Sequences.find(s => s.Name.toLowerCase().startsWith(name.toLowerCase()));
-    if (seq) break;
+  const candidates = mdx.Sequences.filter(s => {
+    const n = s.Name.toLowerCase();
+    return n.startsWith('stand') && !n.includes('alternate') && !n.includes('morph');
+  });
+  if (!candidates.length) return null;
+
+  // Prefer a rooted "Stand Work" idle (used by most non-ancient buildings),
+  // otherwise the earliest plain "Stand" variant.
+  const work = candidates.find(s => s.Name.toLowerCase().startsWith('stand work'));
+  if (work) return work;
+  return candidates.slice().sort((a, b) => a.Interval[0] - b.Interval[0])[0];
+}
+
+// Determine which geosets are visible during the rooted Stand sequence.
+// WC3 buildings have multiple geosets for different upgrade levels, effects, etc.
+// Only geosets visible during the rooted Stand/Stand Work sequence are exported.
+function getStandVisibleGeosets (mdx) {
+  const seq = pickRootedStandSequence(mdx);
+  if (!seq) {
+    console.log('  WARN: no rooted Stand sequence found — falling back to all structural geosets');
+    return null;
   }
-  if (!seq) return null;
 
   const [start, end] = [seq.Interval[0], seq.Interval[1]];
   const visible = new Set();

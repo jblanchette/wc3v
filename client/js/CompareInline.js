@@ -407,8 +407,8 @@ const CompareInline = class {
           <span class="ci-chooser-rec-eyebrow">RECOMMENDED</span>
           ${proRaceIcon}
           <span class="ci-chooser-rec-meta">
-            <span class="ci-chooser-rec-name">${escapeHtml(e.playerName || '?')}<span class="ci-chooser-rec-opp">${escapeHtml(opp)}</span></span>
-            <span class="ci-chooser-rec-sub">${escapeHtml([muLabel, buildLabel].filter(Boolean).join(' · '))}${escapeHtml(mapLabel)}</span>
+            <span class="ci-chooser-rec-name">${ut(e.playerName || '?')}<span class="ci-chooser-rec-opp">${ut(opp)}</span></span>
+            <span class="ci-chooser-rec-sub">${escapeHtml([muLabel, buildLabel].filter(Boolean).join(' · '))}${ut(mapLabel)}</span>
           </span>
           ${heroPortraits}
           <span class="ci-chooser-rec-dots" aria-label="Match summary">${dotsHtml}</span>
@@ -548,7 +548,7 @@ const CompareInline = class {
         ${vsChip}
         <span class="ci-chooser-opt-text">
           <span class="ci-chooser-opt-name">
-            ${refStar}${escapeHtml(e.playerName || '?')}
+            ${refStar}${ut(e.playerName || '?')}
             ${buildLabel && !hideMap ? `<span class="ci-chooser-opt-build">${escapeHtml(buildLabel)}</span>` : ''}
           </span>
           <span class="ci-chooser-opt-sub">${subContent}</span>
@@ -700,7 +700,7 @@ const CompareInline = class {
         ${this._slotPickerRegionHtml()}
         <div class="ci-header-region ci-header-pro">
           <span class="ci-pro-pill ${proLabelClass}">${escapeHtml(proLabel)}</span>
-          <span class="ci-meta-pro-name">${escapeHtml(proEntry.playerName || '?')}</span>
+          <span class="ci-meta-pro-name">${ut(proEntry.playerName || '?')}</span>
           ${proMeta}
           ${changeBtn}
         </div>
@@ -864,7 +864,7 @@ const CompareInline = class {
       return `
         <button class="ci-chip ${isCurrent ? 'ci-chip-active' : ''} ${cls}" data-replay-id="${escapeAttr(e.replayId)}" data-slot="${escapeAttr(e.playerSlot)}">
           <span class="ci-chip-race race-${escapeAttr(e.buildRace || '?')}">${escapeHtml(e.buildRace || '?')}</span>
-          <span class="ci-chip-name">${escapeHtml(e.playerName || '?')}</span>
+          <span class="ci-chip-name">${ut(e.playerName || '?')}</span>
           <span class="ci-chip-mu">${escapeHtml((e.buildMatchups && e.buildMatchups[0]) || '')}</span>
           ${gradedBadge}${divergentBadge}
         </button>
@@ -1049,11 +1049,11 @@ const CompareInline = class {
         ${divergenceBanner}
         <div class="ci-vs-grid">
           <div class="ci-bo-track">
-            <div class="ci-side-label">You — ${escapeHtml(PlayerNames.canonical(u.name) || '')}</div>
+            <div class="ci-side-label">You — ${ut(PlayerNames.canonical(u.name) || '')}</div>
             <div class="ci-bo-rows">${renderRows(userPreview, proIds, divPt ? divPt.index : null)}</div>
           </div>
           <div class="ci-bo-track">
-            <div class="ci-side-label">Pro — ${escapeHtml(PlayerNames.canonical(p.name) || this._proEntry.playerName || '')}</div>
+            <div class="ci-side-label">Pro — ${ut(PlayerNames.canonical(p.name) || this._proEntry.playerName || '')}</div>
             <div class="ci-bo-rows">${renderRows(proPreview, userIds, divPt ? divPt.index : null)}</div>
           </div>
         </div>
@@ -1079,8 +1079,8 @@ const CompareInline = class {
     const RACE_ACCENT = { H: '#4eb6e0', O: '#d04848', E: '#5cb878', U: '#9b59b6', R: '#888' };
     const tierBars = `
       <div class="ci-tier-bars">
-        ${window.CompareCharts.tierProgressionRow(`You (${u.race || '?'}) — ${escapeHtml(PlayerNames.canonical(u.name) || '')}`, u.tier2Time, u.tier3Time, totalMs, RACE_ACCENT[u.race])}
-        ${window.CompareCharts.tierProgressionRow(`Pro (${p.race || '?'}) — ${escapeHtml(PlayerNames.canonical(p.name) || this._proEntry.playerName || '')}`, p.tier2Time, p.tier3Time, totalMs, RACE_ACCENT[p.race])}
+        ${window.CompareCharts.tierProgressionRow(`You (${u.race || '?'}) — ${ut(PlayerNames.canonical(u.name) || '')}`, u.tier2Time, u.tier3Time, totalMs, RACE_ACCENT[u.race])}
+        ${window.CompareCharts.tierProgressionRow(`Pro (${p.race || '?'}) — ${ut(PlayerNames.canonical(p.name) || this._proEntry.playerName || '')}`, p.tier2Time, p.tier3Time, totalMs, RACE_ACCENT[p.race])}
         <div class="ci-tier-legend">
           <span class="ci-tier-legend-pip ci-tier-legend-t1"></span>T1
           <span class="ci-tier-legend-pip ci-tier-legend-t2"></span>T2
@@ -2312,6 +2312,11 @@ const REASON_PRETTY = {
 // Aliases into client/js/Security.js — shared escape helpers.
 const escapeHtml = Security.escapeHtml;
 const escapeAttr = Security.escapeAttr;
+// Untrusted replay free-text (player names, opponent labels, map names):
+// sanitize (strip control/bidi/zero-width chars + length-cap) THEN escape, so a
+// crafted name can't spoof UI via RTL-override / zero-width tricks. Hero/skill/
+// item names come from first-party game data and only need plain escaping.
+const ut = (s) => Security.escapeHtml(Security.sanitizeUserText(s, { maxLen: 48 }));
 
 const iconUrl = (itemId) => itemId ? `/assets/wc3icons/${encodeURIComponent(itemId)}.jpg` : '';
 

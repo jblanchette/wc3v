@@ -32,6 +32,12 @@ const SiteNav = {
 
   render(activeSection) {
     this._activeSection = activeSection;
+    // Idempotent: drop any prior nav so a second render() (e.g. SPA-style
+    // re-render) reuses the slot instead of stacking duplicate #site-nav /
+    // #skill-band-nav ids. SiteNav binds no listeners of its own (BandSwitcher
+    // uses one delegated document handler), so a replaced nav leaks nothing.
+    const existingNav = document.getElementById('site-nav');
+    if (existingNav) existingNav.remove();
     this._insertSkipLink();
     const root = this.rootPath();
     const nav = document.createElement('nav');

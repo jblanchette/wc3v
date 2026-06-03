@@ -534,7 +534,11 @@ const TeleportFx = class {
     const isSingleUnit = (tp.abilityCategory || this._inferCategory(tp.abilityCode)) === 'single-unit';
 
     const headingPrefix = cancelled ? '✕' : '⚡';
-    const headingMain = tp.abilityDisplayName.toUpperCase() + (cancelled ? ' — CANCELLED' : '');
+    // abilityDisplayName is parser-derived and may be absent on older replays;
+    // an unguarded .toUpperCase() would throw EVERY frame the TP is active
+    // (~6s), killing the action-overlay render loop. Fall back to the code.
+    const headingName = tp.abilityDisplayName || tp.abilityCode || 'Teleport';
+    const headingMain = String(headingName).toUpperCase() + (cancelled ? ' — CANCELLED' : '');
     const subLine = (() => {
       const parts = [];
       // Single-unit teleports never bring company — show the qualifier

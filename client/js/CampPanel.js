@@ -69,15 +69,36 @@ const CampPanel = class {
     }
     this._buildLegend();
 
-    document.addEventListener('keydown', (e) => {
+    // Named handlers so destroy() can remove them — a fresh CampPanel is
+    // constructed on every replay load (app.js setupDrawing), so anonymous
+    // document listeners would accumulate one pair per reload.
+    this._onKeydown = (e) => {
       if (e.key === 'Escape' && !this.panel.hidden) this.close();
-    });
-    document.addEventListener('mousedown', (e) => {
+    };
+    this._onMousedown = (e) => {
       if (this.panel.hidden) return;
       if (this.panel.contains(e.target)) return;
       if (e.target.closest && e.target.closest('.camp-icon-btn')) return;
       this.close();
+    };
+    document.addEventListener('keydown', this._onKeydown);
+    document.addEventListener('mousedown', this._onMousedown);
+  }
+
+  // Tear down everything this instance owns: the self-perpetuating rAF loop,
+  // the two document listeners, and the per-camp icon wraps it appended. The
+  // shared #camp-icon-layer / #camp-detail-panel / #camp-legend are reused by
+  // id across instances, so they are intentionally left in place.
+  destroy () {
+    this._ownLoopRunning = false;   // tick() early-returns on the next frame
+    if (this._onKeydown) document.removeEventListener('keydown', this._onKeydown);
+    if (this._onMousedown) document.removeEventListener('mousedown', this._onMousedown);
+    Object.values(this._iconEls || {}).forEach((els) => {
+      if (els && els.wrap && els.wrap.parentNode) els.wrap.parentNode.removeChild(els.wrap);
     });
+    this._iconEls = {};
+    this.neutralGroups = null;
+    if (this.panel) this.panel.hidden = true;
   }
 
   // Map-corner key for the segmented progress rings — same visual language

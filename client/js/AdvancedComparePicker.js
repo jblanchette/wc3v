@@ -51,6 +51,7 @@ const AdvancedComparePicker = class {
   close () {
     if (this.modalEl) this.modalEl.remove();
     this.modalEl = null;
+    if (this._onKey) { document.removeEventListener('keydown', this._onKey); this._onKey = null; }
   }
 
   _render () {
@@ -112,9 +113,12 @@ const AdvancedComparePicker = class {
 
     this._renderResults();
 
-    // Esc to close.
-    const onKey = (e) => { if (e.key === 'Escape') { this.close(); document.removeEventListener('keydown', onKey); } };
-    document.addEventListener('keydown', onKey);
+    // Esc to close. Stored on the instance and removed in close() on EVERY
+    // close path (button/backdrop/row/Esc) — the old inline handler only
+    // detached on the Esc path, leaking a listener per open via other paths.
+    if (this._onKey) document.removeEventListener('keydown', this._onKey);
+    this._onKey = (e) => { if (e.key === 'Escape') this.close(); };
+    document.addEventListener('keydown', this._onKey);
   }
 
   // labelMap: optional { value: displayLabel } override. Without it the
