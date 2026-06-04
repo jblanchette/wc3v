@@ -17068,39 +17068,31 @@ button.mcb-summary {
 .ip.ip-collapsed .ip-body { display: none; }
 .ip-tab-content { display: block; }
 .ip-tab-content[hidden] { display: none; }
-/* Battle Report (tab content inside #insights-panel). v2 visual:
-   compact per-battle card with header chip + two-column player compare.
-   No single-edge stripe accents (forbidden per project convention);
-   colour-coding is carried by the type chip and per-cell swatch dots. */
-.brp-list { padding: 4px 0; }
-.brp-row-v2 {
-  display: block;
-  padding: 6px 8px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  font-size: 11px;
-  transition: background 0.1s;
+/* Battle Report — the "Battles" tab inside #insights-panel.
+   Broadcast-style trade cards: each fight shows both sides head-to-head,
+   the lost units, and a plain-language outcome so a spectator can read who
+   won at a glance. Colour is carried by chips and swatch dots — no chunky
+   single-edge stripe accents (forbidden per project convention). */
+.brp-list { padding: 0 0 6px; }
+.brp-empty {
+  padding: 16px 12px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
+  line-height: 1.4;
 }
-.brp-row-v2:hover  { background: rgba(255, 255, 255, 0.04); }
-.brp-row-v2.brp-active { background: rgba(255, 212, 59, 0.08); }
 
-/* Header line: chip · time · duration. */
-.brp-rh {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
+/* Engagement-type chips (shared by cards + legend). */
 .brp-chip {
-  font-size: 9px;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 2px 6px;
-  border-radius: 3px;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.10);
   color: #FFF;
   flex: 0 0 auto;
+  white-space: nowrap;
 }
 .brp-chip-campClear { background: #2A6A30; }
 .brp-chip-creepJack { background: #1F4F2C; }
@@ -17110,61 +17102,278 @@ button.mcb-summary {
 .brp-chip-wipe      { background: #A04A00; }
 .brp-chip-harass    { background: #555; }
 .brp-chip-skirmish  { background: #4A4A4A; }
-.brp-rh-time {
-  font-weight: 700;
+
+/* ---- Match-wide scoreboard ------------------------------------------- */
+.brp-scoreboard {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.brp-sb-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.brp-sb-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+.brp-sb-count {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
   font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.85);
+}
+.brp-sb-row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto;
+  grid-template-areas:
+    "swatch name   won"
+    "track  track  track"
+    "stat   stat   stat";
+  align-items: center;
+  gap: 2px 8px;
+  margin-bottom: 8px;
+}
+.brp-sb-swatch {
+  grid-area: swatch;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+}
+.brp-sb-name {
+  grid-area: name;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+}
+.brp-sb-won {
+  grid-area: won;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+.brp-sb-track {
+  grid-area: track;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 2px 0;
+}
+.brp-sb-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #C0392B, #E74C3C);
+  border-radius: 3px;
+}
+.brp-sb-stat {
+  grid-area: stat;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-variant-numeric: tabular-nums;
+}
+.brp-sb-verdict {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFD43B;
+}
+
+/* ---- Legend ----------------------------------------------------------- */
+.brp-legend {
+  margin: 0;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.brp-legend > summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  list-style: revert;
+}
+.brp-legend > summary:hover { color: #fff; }
+.brp-legend-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 4px 0 10px;
+}
+.brp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brp-legend-desc {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+.brp-legend-sub {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.45);
+  padding-top: 2px;
+}
+.brp-legend-trip {
+  display: inline-flex;
+  width: 20px;
+  justify-content: center;
+}
+
+/* ---- Fight card ------------------------------------------------------- */
+.brp-fight {
+  padding: 8px 12px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.brp-fight:hover { background: rgba(255, 255, 255, 0.04); }
+.brp-fight.brp-active { background: rgba(255, 212, 59, 0.09); }
+/* Bigger fights read heavier without a stripe — just a touch more presence. */
+.brp-fight.brp-wt-lg { background: rgba(255, 255, 255, 0.025); }
+.brp-fight.brp-wt-lg .brp-fh-time { font-size: 1.05rem; }
+
+.brp-fh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.brp-fh-time {
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
   margin-left: auto;
 }
-.brp-rh-dur {
-  font-size: 9px;
+.brp-fh-dur {
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.5);
   font-variant-numeric: tabular-nums;
 }
 
-/* Two-column player compare grid. */
-.brp-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.brp-cell {
-  padding: 4px 6px;
-  background: rgba(255, 255, 255, 0.025);
-  border-radius: 3px;
-  min-height: 28px;
+.brp-arena {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  position: relative;
+  gap: 4px;
 }
-.brp-cell-empty { background: transparent; }
-.brp-cell-empty-label {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 12px;
+.brp-vs {
+  font-size: 0.78rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.28);
   text-align: center;
-  padding-top: 4px;
+  margin: -1px 0;
 }
-.brp-cell-swatch {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+
+/* A side reads as one tinted row keyed to the player colour, with a thin
+   colour edge carried by an inset ring (full perimeter — not a stripe). */
+.brp-side {
+  padding: 7px 9px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--brp-side-color, #888) 14%, transparent),
+      rgba(255, 255, 255, 0.02) 60%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
-.brp-cell-icons {
+.brp-side-win {
+  box-shadow: inset 0 0 0 1px rgba(138, 232, 144, 0.45);
+  background: rgba(138, 232, 144, 0.09);
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--brp-side-color, #888) 16%, transparent),
+      rgba(138, 232, 144, 0.06) 60%);
+}
+.brp-side-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.brp-side-id {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.brp-side-swatch {
+  width: 13px; height: 13px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+.brp-side-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #fff;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.brp-side-racelbl {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.4);
+  flex: 0 0 auto;
+}
+.brp-side-wontag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #0c140d;
+  background: #8AE890;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex: 0 0 auto;
+}
+.brp-side-loss {
+  font-size: 0.86rem;
+  color: #fff;
+  flex: 0 0 auto;
+  text-align: right;
+  white-space: nowrap;
+}
+.brp-side-loss strong { font-weight: 800; }
+.brp-side-cost {
+  font-size: 0.82rem;
+  color: #FFD43B;
+  font-variant-numeric: tabular-nums;
+  margin-left: 6px;
+}
+.brp-side-loss-none {
+  color: rgba(138, 232, 144, 0.85);
+  font-weight: 700;
+}
+.brp-side-hero {
+  margin-top: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #FFD43B;
+}
+.brp-side-detail {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px;
+  align-items: center;
+  gap: 4px;
+  margin-top: 7px;
 }
+
 .brp-uic {
   position: relative;
   display: inline-block;
-  width: 18px;
-  height: 18px;
-  border-radius: 2px;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
   overflow: hidden;
   background: #0a0a10;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
@@ -17175,54 +17384,68 @@ button.mcb-summary {
   object-fit: cover;
   display: block;
 }
-.brp-uic.brp-uic-est { opacity: 0.55; }
-.brp-uic.brp-uic-hero {
-  width: 22px;
-  height: 22px;
-  box-shadow: 0 0 0 2px #FFD43B;
-}
+.brp-uic.brp-uic-est { opacity: 0.5; }
+.brp-uic.brp-uic-hero { box-shadow: 0 0 0 2px #FFD43B; }
 .brp-uic-n {
   position: absolute;
   right: -2px;
   bottom: -2px;
   background: #1a1a1a;
   color: #FFD43B;
-  font-size: 8px;
+  font-size: 0.8rem;
   font-weight: 700;
-  padding: 0 2px;
-  border-radius: 5px;
-  line-height: 10px;
+  padding: 0 3px;
+  border-radius: 6px;
+  line-height: 1.3;
   font-style: normal;
   box-shadow: 0 0 0 1px #FFD43B;
-}
-.brp-cell-totals {
-  font-size: 9px;
-  font-variant-numeric: tabular-nums;
-  color: rgba(255, 255, 255, 0.7);
-}
-.brp-tot-food   { color: #FFFFFF; font-weight: 700; }
-.brp-tot-gold   { color: #FFD43B; }
-.brp-tot-lumber { color: #8AE890; }
-.brp-cell-trips {
-  display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
 }
 .brp-trip {
   display: inline-flex;
   align-items: center;
   gap: 1px;
-  padding: 0 2px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 2px;
-  font-size: 9px;
+  padding: 1px 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
 }
 .brp-trip i {
   font-style: normal;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8);
   font-weight: 700;
+  font-size: 0.8rem;
 }
-.brp-trip svg { vertical-align: middle; width: 12px; height: 12px; }
+.brp-trip svg { vertical-align: middle; width: 14px; height: 14px; }
+
+/* ---- Verdict bar ------------------------------------------------------ */
+.brp-verdict {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
+}
+.brp-v-arrow { color: inherit; opacity: 0.8; }
+.brp-v-swatch {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.brp-v-label { flex: 1 1 auto; }
+.brp-v-margin {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  color: #FFD43B;
+  flex: 0 0 auto;
+}
+.brp-v-decisive  { background: rgba(138, 232, 144, 0.14); color: #B6F0BB; }
+.brp-v-favorable { background: rgba(138, 232, 144, 0.08); color: #9FE0A6; }
+.brp-v-even      { background: rgba(255, 255, 255, 0.05); color: rgba(255, 255, 255, 0.6); }
+.brp-v-good      { background: rgba(138, 232, 144, 0.12); color: #B6F0BB; }
+.brp-v-bad       { background: rgba(231, 76, 60, 0.12); color: #F2A59C; }
 
 /* Resource Charts (now tab content inside #insights-panel). */
 .rcp-charts { padding: 6px; }
