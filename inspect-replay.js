@@ -363,6 +363,46 @@ if (showAll || showSections.includes('positions')) {
   console.log('');
 }
 
+// --- Lost-state / idle audit ---
+// Per-unit DeathInference verdict + last position + distance from the player's
+// start, so we can see which combat units linger as 'idle'/'possiblyLost' and
+// whether they sit in the base. Use with --search to focus (e.g. --search=fiend).
+if (showAll || showSections.includes('loststate')) {
+  console.log('=== LOST STATE (DeathInference) ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    const start = pdata.startingPosition || { x: 0, y: 0 };
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})  start=(${Math.round(start.x)},${Math.round(start.y)})`);
+
+    let units = (pdata.units || []).filter(u => !u.isBuilding);
+    if (searchText) units = units.filter(u => (u.displayName || '').toLowerCase().includes(searchText));
+
+    // Tally by state for a quick overview.
+    const tally = {};
+    units.forEach(u => { const s = (u.lostState && u.lostState.state) || 'none'; tally[s] = (tally[s] || 0) + 1; });
+    console.log(`    states: ${Object.entries(tally).map(([k, v]) => `${k}=${v}`).join('  ')}`);
+
+    units.slice(0, limit).forEach(u => {
+      const ls = u.lostState || {};
+      const last = (u.path && u.path.length) ? u.path[u.path.length - 1] : null;
+      const dist = last ? Math.round(Math.hypot(last.x - start.x, last.y - start.y)) : -1;
+      const worker = (u.meta && u.meta.worker) ? ' [worker]' : '';
+      const role = u.primaryRole ? ` role=${u.primaryRole}` : '';
+      const cot = (u.combatOrderTimes && u.combatOrderTimes.length) ? ` combatOrders=${u.combatOrderTimes.length}` : '';
+      console.log(
+        `    ${(u.displayName || '').padEnd(12)}(${u.itemId}) ${(ls.state || 'none').padEnd(12)} ` +
+        `src=${(ls.source || '-').padEnd(11)} conf=${String(ls.confidence != null ? ls.confidence : '-').padStart(3)} ` +
+        `lastPos=${last ? `(${Math.round(last.x)},${Math.round(last.y)})@${formatTime(last.gameTime)}` : 'none'} ` +
+        `distFromStart=${dist}${worker}${role}${cot}`
+      );
+    });
+  }
+  console.log('');
+}
+
 // --- Workers ---
 if (showAll || showSections.includes('workers')) {
   console.log('=== WORKER SNAPSHOTS ===');

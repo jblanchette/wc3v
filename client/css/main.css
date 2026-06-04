@@ -2585,7 +2585,8 @@ body {
   gap: 12px;
   background: var(--bo-card-bg);
   border-radius: 6px;
-  border-left: 4px solid var(--player-color, var(--bo-text-muted));
+  /* Player ownership is shown by the portrait ring (.bo-hero-portrait), not a
+     single-edge stripe. */
   padding: 8px 12px;
   margin: 4px 4px;
   min-height: 56px;
@@ -2640,7 +2641,7 @@ body {
   gap: 10px;
   background: var(--bo-card-bg);
   border-radius: 4px;
-  border-left: 3px solid;
+  /* Player ownership is the portrait ring (.bo-level-portrait), not a stripe. */
   padding: 6px 12px;
   margin: 2px 4px;
   min-height: 42px;
@@ -2653,7 +2654,7 @@ body {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 2px solid var(--bo-accent);
+  border: 2px solid var(--player-color, var(--bo-accent));
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -17239,4 +17240,234 @@ button.mcb-summary {
   width: 100%;
   height: 56px;
   display: block;
+}
+
+/* ============================================================
+   Unified Event System (ev-) — shared row component used by BOTH
+   the right-edge action feed (#event-feed) and the insights
+   "Events" tab (.ev-log). One look, two homes. The canvas-drawn
+   caster pips live in EventFeed.js; everything textual is here.
+   ============================================================ */
+
+/* --- Right-edge action feed -------------------------------- */
+#event-feed {
+  position: absolute;
+  top: 96px;              /* clear the top-right camera toolbar zone */
+  right: 8px;
+  width: 272px;
+  max-width: 46%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  pointer-events: none;   /* feed is glanceable, not interactive */
+  z-index: 5;
+}
+#event-feed.ev-feed-off { display: none; }
+.ev-feed-row {
+  animation: evRowIn 0.18s ease-out;
+  will-change: opacity;
+}
+@keyframes evRowIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+/* "+N hidden / slow down" note shown when bursts or high speed overflow. */
+.ev-feed-hidden {
+  align-self: flex-end;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(12, 12, 18, 0.88);
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- Shared event row -------------------------------------- */
+.ev-row {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px;
+  background: rgba(12, 12, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  color: #fff;
+  font-family: sans-serif;
+}
+/* Rows with a target/skill portrait get two extra columns: link glyph + icon. */
+.ev-row.ev-has-secondary { grid-template-columns: 34px 1fr auto 32px; }
+.ev-icon, .ev-secicon {
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  border-radius: 5px;
+  /* Player-color ring carries ownership (no single-edge stripe). The ring is
+     slightly thicker than before since it's now the primary owner cue. */
+  border: 2px solid var(--ev-pcolor, #888);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  flex: 0 0 auto;
+}
+/* Target/skill portrait isn't owned by the actor — keep it neutral, not the
+   player ring, so the actor icon stays the ownership signal. */
+.ev-secicon { border-color: rgba(255, 255, 255, 0.28); }
+.ev-icon img, .ev-secicon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Empty (icon-less) actor cells carry the category tint so the row still reads
+   its kind at a glance without an edge stripe. */
+.ev-icon-empty { background: color-mix(in srgb, var(--ev-cat-color, #888) 18%, rgba(0,0,0,0.4)); }
+.ev-main { min-width: 0; }
+.ev-line1 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+/* Kind kicker — the disambiguating verb (CAST / LEVEL UP / BUY ...). Tinted by
+   the event category so category reads here instead of from an edge stripe. */
+.ev-kind {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--ev-cat-color, #888) 30%, transparent);
+  color: #fff;
+  flex: 0 0 auto;
+}
+.ev-title {
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.2;
+  color: #fff;
+}
+/* Level / rank badge (e.g. "Lv 1"). */
+.ev-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #FFD700;
+  color: #1a1a1a;
+  flex: 0 0 auto;
+}
+.ev-line2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+.ev-meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.62);
+}
+.ev-time {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.5);
+  flex: 0 0 auto;
+}
+
+/* Relationship glyph between primary and secondary icon. */
+.ev-link {
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  flex: 0 0 auto;
+}
+.ev-link-target-enemy { color: #FF6B6B; }
+.ev-link-target-ally  { color: #7AA8FF; }
+.ev-link-skill        { color: #FFD700; }
+
+/* Secondary portrait ring carries the relationship colour. */
+.ev-sec-target-enemy { border-color: #FF6B6B; box-shadow: 0 0 0 1px rgba(255,107,107,0.5); }
+.ev-sec-target-ally  { border-color: #7AA8FF; }
+.ev-sec-skill        { border-color: #BB88FF; }
+.ev-secicon.ev-sec-hero { box-shadow: 0 0 0 2px rgba(255, 212, 59, 0.6); }
+
+/* AoE / self qualifier tag. */
+.ev-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  color: #1a1a1a;
+  background: #9fd9b0;
+}
+.ev-tag-muted { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.12); }
+.ev-tag-herodeath { color: #1a1a1a; background: #FFD43B; }
+
+/* Category accents — icon border + bar already carry player colour; the row's
+   left border edge stays neutral (no chunky single-edge stripe). */
+.ev-cat-combat      .ev-title { color: #cfe6ff; }
+.ev-cat-progression .ev-title { color: #ffe7ad; }
+.ev-cat-economy     .ev-title { color: #cdeed7; }
+.ev-cat-logistics   .ev-title { color: #d5e0f0; }
+.ev-cat-scouting    .ev-title { color: #c8f3ea; }
+
+/* --- Insights "Events" tab (log) --------------------------- */
+.ev-log { padding: 0; }
+.ev-filterbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 8px;
+  background: rgba(12, 12, 18, 0.96);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.ev-filter {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--ev-cat-color, #888);
+  background: transparent;
+  color: var(--ev-cat-color, #ccc);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.1s, background 0.1s;
+}
+.ev-filter:hover { opacity: 0.85; }
+.ev-filter.ev-filter-on {
+  opacity: 1;
+  background: color-mix(in srgb, var(--ev-cat-color, #888) 22%, transparent);
+  color: #fff;
+}
+.ev-log-list { padding: 6px 8px; display: flex; flex-direction: column; gap: 5px; }
+.ev-log-list .ev-row { font-size: 13px; }
+.ev-seekable { cursor: pointer; pointer-events: auto; transition: background 0.1s; }
+.ev-seekable:hover { background: rgba(255, 255, 255, 0.05); }
+.ev-row-active {
+  border-color: rgba(255, 212, 59, 0.55);
+  background: rgba(255, 212, 59, 0.08);
+}
+.ev-row-hidden { display: none; }
+
+/* Battle marker row inside the log. */
+.ev-icon-battle {
+  font-size: 16px;
+  color: #FFD166;
+  border-color: #EF476F;
+}
+.ev-battle-swatches { display: inline-flex; gap: 3px; }
+.ev-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
 }

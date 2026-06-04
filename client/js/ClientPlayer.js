@@ -636,7 +636,8 @@ const ClientPlayer = class {
         isTransport,
         cargoCount,
         cargoItems,
-        scoutLabel
+        scoutLabel,
+        isIllusion
       } = item;
 
       if (decayLevel < 0.45 || playerId != owningPlayerId) {
@@ -660,6 +661,7 @@ const ClientPlayer = class {
         uuid,
         isHero,
         isMainHero,
+        isIllusion: isIllusion || false,
         itemId,
         playerId,
         playerColor,
@@ -1089,7 +1091,30 @@ const ClientPlayer = class {
     ctx.globalAlpha = 1;
   }
 
+  // World-space anchors that define "the base": the start location plus every
+  // own town hall (covers expansions). Workers are hidden unless they leave
+  // this radius (or get pulled to fight). Computed once — halls don't move.
+  getBaseAnchors () {
+    if (this._baseAnchors) return this._baseAnchors;
+    const anchors = [];
+    if (this.startingPosition) {
+      anchors.push({ x: this.startingPosition.x, y: this.startingPosition.y });
+    }
+    for (const u of this.units) {
+      if (!u.isBuilding) continue;
+      if (!ClientPlayer.HALL_IDS.has(u.itemId)) continue;
+      const pos = u.lastPosition || (u.path && u.path[0]) || u.spawnPosition;
+      if (pos && pos.x != null) anchors.push({ x: pos.x, y: pos.y });
+    }
+    this._baseAnchors = anchors;
+    return this._baseAnchors;
+  }
+
   preRender (frameData, mainCtx, playerCtx, utilityCtx, playerStatusCtx, transform, gameTime, xScale, yScale, viewOptions) {
+    // Per-player base anchors for worker-visibility gating in ClientUnit. Set
+    // before this player's unit loop so each unit reads its OWN player's base.
+    frameData.baseAnchors = this.isNeutralPlayer ? null : this.getBaseAnchors();
+
     // draw units and buildings on playerCtx (z=3, above trees)
     this.units.forEach(unit =>
       unit.preRender(frameData, playerCtx, playerCtx, transform, gameTime, xScale, yScale, viewOptions));
@@ -1123,5 +1148,15 @@ const ClientPlayer = class {
     }
   }
 }
+
+// Town-hall itemIds per race (main + tier upgrades). Used to anchor the
+// "base" region for worker-visibility gating. Expansions reuse the base hall
+// id, so an expo hall counts too.
+ClientPlayer.HALL_IDS = new Set([
+  'htow', 'hkee', 'hcas',   // Human: Town Hall / Keep / Castle
+  'ogre', 'ostr', 'ofrt',   // Orc: Great Hall / Stronghold / Fortress
+  'etol', 'etoa', 'etoe',   // Night Elf: Tree of Life / Ages / Eternity
+  'unpl', 'unp1', 'unp2'    // Undead: Necropolis / Halls of the Dead / Black Citadel
+]);
 
 window.ClientPlayer = ClientPlayer;

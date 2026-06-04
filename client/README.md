@@ -38,7 +38,9 @@ Coordinator pattern. [Wc3vViewer](js/app.js) (in `app.js`) is the main class tha
 | [ClientPlayer](js/ClientPlayer.js) | Per-player state (units, buildings, tier, hero) |
 | [ClientUnit](js/ClientUnit.js) | Per-unit state + canvas drawing |
 | [Drawing](js/Drawing.js) | Static canvas helpers (drawUnit, drawBoxedLevel, drawImageCircle) |
-| [FloatingText](js/FloatingText.js) | On-map damage/heal/cast text |
+| [EventModel](js/EventModel.js) | Unified normalized event pipeline (one source for feed + log) |
+| [EventFeed](js/EventFeed.js) | Right-edge action feed + on-map caster pips |
+| [InsightsEventLog](js/InsightsEventLog.js) | Filterable event log (Events tab) with battle markers |
 | [BuildingHoverLabel](js/BuildingHoverLabel.js), [BuildingInfoTooltip](js/BuildingInfoTooltip.js) | Building hover + tooltip with production grid |
 | [BuildingProgressBar](js/BuildingProgressBar.js) | Construction progress bar |
 | [BuildingPlacementViewer](js/BuildingPlacementViewer.js) | Visualizes building placement decisions |

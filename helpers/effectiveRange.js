@@ -55,8 +55,22 @@ function getEffectiveRange (itemId, player) {
   return getBaseRange(itemId) + getPlayerRangeBonus(itemId, player);
 }
 
+// Acquisition range: how far away a unit will "see" an enemy and start moving
+// to attack it (WC3 "acquire" field from UnitWeapons.slk). Always >= the unit's
+// attack range. Range research that extends attack range extends acquisition by
+// the same delta in WC3, so we add the same bonus. Falls back to the unit's
+// effective attack range when no acquire datum exists (melee/no-weapon units),
+// then a small floor so a value is always usable as a search radius.
+function getAcquisitionRange (itemId, player) {
+  if (!itemId) return 0;
+  const entry = RANGES[itemId];
+  const base = (entry && entry.acquire != null) ? entry.acquire : getBaseRange(itemId);
+  return base + getPlayerRangeBonus(itemId, player);
+}
+
 module.exports = {
   getBaseRange,
   getPlayerRangeBonus,
-  getEffectiveRange
+  getEffectiveRange,
+  getAcquisitionRange
 };

@@ -336,8 +336,11 @@ const BattleRenderer = class {
     const bannerY = Math.max(0, y - bannerH - 3);
 
     // --- background ---
+    // Shares the unified event-system panel tokens (dark slate + 1px accent
+    // border) so the battle banner reads as the same family as the action feed
+    // and insights log.
     ctx.globalAlpha = 0.92 * alpha;
-    ctx.fillStyle = 'rgba(8, 12, 18, 0.96)';
+    ctx.fillStyle = 'rgba(12, 12, 18, 0.94)';
     ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
     ctx.globalAlpha = 0.9 * alpha;
     ctx.strokeStyle = color;

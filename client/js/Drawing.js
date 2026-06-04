@@ -135,6 +135,7 @@ const Drawing = class {
     } = unit;
 
     const safeColor = playerColor || "#FFFC01";
+    const isIllusion = !!unit.isIllusion;
     ctx.globalAlpha = decayLevel;
 
     // Transport outer ring sits outside the identity halo.
@@ -156,8 +157,21 @@ const Drawing = class {
     ctx.arc(drawX, drawY, halfIconSize + 6, 0, Math.PI * 2, true);
     ctx.fill();
 
-    // Heroes get a thin gold accent ring just outside the player-color halo.
-    if (isHero) {
+    // Illusions (Mirror Image, etc.) get a distinct cyan DASHED ring instead
+    // of the gold hero ring — immediately legible as "not the real unit". The
+    // real hero keeps its solid gold accent.
+    if (isIllusion) {
+      ctx.globalAlpha = Math.min(1, decayLevel + 0.15);
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = '#33E1FF';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, halfIconSize + 6.5, 0, Math.PI * 2, true);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+    } else if (isHero) {
+      // Heroes get a thin gold accent ring just outside the player-color halo.
       ctx.globalAlpha = decayLevel;
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = '#FFD24A';
@@ -182,6 +196,44 @@ const Drawing = class {
     }
 
     Drawing.drawImageCircle(ctx, icon, drawX, drawY, iconSize);
+
+    // Illusion treatment: a translucent cyan wash over the icon (ghostly,
+    // "not real") plus a bold "I" badge so it's unmistakable even at a glance
+    // or when zoomed out. Drawn over the icon, under nameplates.
+    if (isIllusion) {
+      ctx.save();
+      // cyan wash, clipped to the icon circle
+      ctx.globalAlpha = 0.30 * decayLevel;
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.fillStyle = '#33E1FF';
+      ctx.fillRect(drawX - halfIconSize, drawY - halfIconSize, iconSize, iconSize);
+      ctx.restore();
+
+      // "I" badge at the top-left of the icon.
+      const badgeR = Math.max(8, halfIconSize * 0.62);
+      const bx = drawX - halfIconSize - badgeR * 0.15;
+      const by = drawY - halfIconSize - badgeR * 0.15;
+      ctx.save();
+      ctx.globalAlpha = decayLevel;
+      ctx.beginPath();
+      ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+      ctx.fillStyle = '#0A2A33';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#33E1FF';
+      ctx.stroke();
+      ctx.fillStyle = '#EAFBFF';
+      ctx.font = `bold ${Math.round(badgeR * 1.5)}px Georgia, serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('I', bx, by + 0.5);
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.restore();
+    }
 
     // Shadowmeld ghost overlay: dashed white outline + "HIDE" tag. Only
     // applies when server's HideInference flagged the unit hidden NOW.

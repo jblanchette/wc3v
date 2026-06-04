@@ -2192,6 +2192,36 @@ const combatSpellHelpers = Object.freeze({
   }
 });
 
+/*
+ * Illusion-creating hero abilities. An illusion is a *copy of the caster*, so
+ * the spawned unit's itemId is the caster's own hero itemId (it wears the same
+ * icon/model) — we just flag it isIllusion. `imagesByLevel` is DataA from
+ * helpers/heroAbilityStats.json (images summoned per ability level); the parser
+ * picks the entry for the hero's learned skill level (defaults to level 1 when
+ * the skill level isn't tracked). `durationMs` is the spell's image lifetime.
+ *
+ * NOTE: the replay format does NOT record illusion movement/orders (commands go
+ * to the controlling player's selection, not per-illusion), so spawned images
+ * are anchored at the cast location for their lifetime. The goal is to make the
+ * spell legible and the illusion clearly marked — not to simulate image pathing.
+ */
+const illusionAbilities = {
+  'AOmi': { displayName: 'Mirror Image', imagesByLevel: [1, 2, 3], durationMs: 60 * 1000 }  // Blademaster
+};
+
+const illusionHelpers = Object.freeze({
+  isIllusionAbility (abilityId) {
+    return !!abilityId && Object.prototype.hasOwnProperty.call(illusionAbilities, abilityId);
+  },
+  // images for a given ability + learned level (1-based). Clamps to range.
+  imageCountFor (abilityId, level) {
+    const cfg = illusionAbilities[abilityId];
+    if (!cfg) return 0;
+    const lvl = Math.max(1, Math.min(level | 0 || 1, cfg.imagesByLevel.length));
+    return cfg.imagesByLevel[lvl - 1] || 1;
+  }
+});
+
 module.exports = {
 	getUnitInfo,
 	buildings,
@@ -2236,6 +2266,8 @@ module.exports = {
   combatSpellsGroundTarget,
   combatSpellsNoTarget,
   combatSpellHelpers,
+  illusionAbilities,
+  illusionHelpers,
   ...require('./teleportAbilities'),
 
   TECH_TREE_REQUIREMENTS,

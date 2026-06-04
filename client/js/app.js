@@ -193,7 +193,14 @@ const Wc3vViewer = class {
     if (this.minimapPip) this.minimapPip.destroy();
     this.minimapPip = null;
 
-    this.floatingText = new window.FloatingText();
+    // Unified event pipeline (replaces FloatingText). The model is built once
+    // when players load; EventFeed draws the right-edge feed + caster pips.
+    this.eventModel = new window.EventModel();
+    if (!this.eventFeed) {
+      this.eventFeed = new window.EventFeed(this);
+      this.eventFeed.setup();
+    }
+    this.eventFeed.setModel(this.eventModel);
     if (this.placementViewer && typeof this.placementViewer.destroy === 'function') this.placementViewer.destroy();
     this.placementViewer = new window.BuildingPlacementViewer();
     this.matchSummary = new window.MatchSummary(this);
@@ -268,6 +275,8 @@ const Wc3vViewer = class {
     this.bottomPanel = (window.BottomPanel) ? new window.BottomPanel() : null;
     this.battleReportRenderer = (window.BattleReportRenderer)
       ? new window.BattleReportRenderer(this) : null;
+    this.insightsEventLog = (window.InsightsEventLog)
+      ? new window.InsightsEventLog(this) : null;
     this.resourceCharts = (window.ResourceCharts)
       ? new window.ResourceCharts(this) : null;
     this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
@@ -1132,6 +1141,11 @@ const Wc3vViewer = class {
       if (el.tagName === 'BUTTON') el.setAttribute('aria-pressed', isOn ? 'true' : 'false');
     });
 
+    // Action feed (events): hide/show the right-edge DOM feed with the toggle.
+    if (optionKey === 'displayFloatingText' && this.eventFeed) {
+      this.eventFeed.setEnabled(isOn);
+    }
+
     // Sync auto-split preference to broadcast camera
     if (optionKey === 'autoSplitScreen' && this.broadcastCamera) {
       // Auto-split is permanently off for non-1v1 regardless of the toggle.
@@ -1213,7 +1227,7 @@ const Wc3vViewer = class {
 
     this.players.forEach(p => p.moveTracker(0));
 
-    if (this.floatingText) this.floatingText.reset();
+    if (this.eventFeed) this.eventFeed.reset();
     if (this.pathTrailRenderer) this.pathTrailRenderer.clear();
     if (this.broadcastCamera) this.broadcastCamera.reset();
 
@@ -2801,6 +2815,9 @@ const Wc3vViewer = class {
     this.setupPlayers();
     this.setupMap();
 
+    // Build the unified event model now that players + their streams exist.
+    if (this.eventModel) this.eventModel.build(this.players);
+
     // Process detected battles once mapData is available. Old replays parsed
     // before the BattleDetector landed simply have no `battles` array; the
     // pipeline produces an empty processed object and the overlay no-ops.
@@ -2822,6 +2839,22 @@ const Wc3vViewer = class {
             badge: this.battleReportRenderer._battles.length
           });
         }
+      }
+
+      // Events tab — full filterable action log (events + battle markers),
+      // visually identical to the right-edge action feed.
+      if (this.insightsEventLog && this.eventModel && this.eventModel.events.length) {
+        const logContent = document.createElement('div');
+        this.insightsEventLog.setContainer(logContent);
+        this.insightsEventLog.setModel(this.eventModel);
+        this.insightsEventLog.setBattles(
+          (this.mapData && Array.isArray(this.mapData.battles)) ? this.mapData.battles : []
+        );
+        this.insightsEventLog.build();
+        this.bottomPanel.addTab('events', 'Events', logContent, {
+          default: !(this.battleReportRenderer && this.battleReportRenderer._battles.length),
+          badge: this.eventModel.events.length || null
+        });
       }
 
       // Economy tab.
@@ -3131,7 +3164,7 @@ const Wc3vViewer = class {
         { key: 'displayCreepRoute', label: 'Creep Routes', featured: true },
         { key: 'displayPath', label: 'Unit Trails' },
         { key: 'displayLevelPins', label: 'Level Pins' },
-        { key: 'displayFloatingText', label: 'Action Text' },
+        { key: 'displayFloatingText', label: 'Action Feed' },
         { key: 'displayText', label: 'Unit Names' },
         { key: 'displayBaseLabels', label: 'Base Labels' },
         { key: 'decayEffects', label: 'Fade FX' },
@@ -4319,6 +4352,9 @@ const Wc3vViewer = class {
       this.battleReportRenderer.render(this.actionCtx, gameTime, this.gameScaler);
       this.battleReportRenderer.syncPanel(gameTime);
     }
+    if (this.insightsEventLog) {
+      this.insightsEventLog.sync(gameTime);
+    }
     // Resource Charts now-cursor.
     if (this.resourceCharts) {
       this.resourceCharts.setCursor(gameTime);
@@ -4412,9 +4448,9 @@ const Wc3vViewer = class {
       ClientPlayer.renderAllNameplates(frameData, playerCtx);
     }
 
-    if (viewOptions.displayFloatingText && this.floatingText) {
-      this.floatingText.update(players, gameTime);
-      this.floatingText.render(playerCtx, transform, gameTime, xScale, yScale);
+    if (viewOptions.displayFloatingText && this.eventFeed) {
+      this.eventFeed.update(gameTime);
+      this.eventFeed.renderPips(playerCtx, gameTime);
     }
 
     // Guided walkthrough: pulse a ring on the step's emphasised units/buildings

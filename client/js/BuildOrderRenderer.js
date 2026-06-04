@@ -1321,7 +1321,8 @@ const BuildOrderRenderer = class {
   renderHeroTrainingCard (event, playerColor) {
     const card = document.createElement('div');
     card.classList.add('bo-hero-training-card');
-    card.style.borderLeftColor = playerColor;
+    // Ownership is shown by the full player-color ring on the hero portrait
+    // (.bo-hero-portrait) — no redundant single-edge stripe on the card.
 
     const heroLevel = Number(event.level) || 1;
     const badgeText = event.isTavern ? 'TAVERN' : `Lv ${heroLevel}`;
@@ -1387,7 +1388,10 @@ const BuildOrderRenderer = class {
   renderHeroLevelCard (event, playerColor) {
     const card = document.createElement('div');
     card.classList.add('bo-hero-level-card');
-    card.style.borderLeftColor = playerColor;
+    // Ownership via the player-color portrait ring (.bo-level-portrait), not a
+    // single-edge stripe. Pin the color locally in case the card renders
+    // outside a column that sets --player-color.
+    card.style.setProperty('--player-color', playerColor);
 
     // Build skill bar from spellList + learnedSkills
     let skillsHtml = '';

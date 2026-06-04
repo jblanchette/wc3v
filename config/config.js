@@ -14,7 +14,12 @@ const config = {
 	// (gameTime, targetX/Y, unit uuids) into player.moveTrace for the
 	// path-verification harness. Opt-in via `--move-trace`; not exported
 	// in normal runs.
-	moveTrace: false
+	moveTrace: false,
+	// when true, capture combat-formation resolution context (per attack order:
+	// resolved slots, unit roles/ranges, enemy count, focus point, stop-vs-range
+	// error) into player.formationTrace for tools/formation-check.js. Opt-in via
+	// `--formation-trace`; not exported in normal runs.
+	debugFormation: false
 };
 
 module.exports = config;

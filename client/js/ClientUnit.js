@@ -57,9 +57,36 @@ const PROBABLY_GONE_MS = 90 * 1000;
 // One-shot death FX duration (game time). Kept in game time so it scales
 // with playback speed and survives scrub-back automatically.
 const DEATH_FX_DURATION_MS = 1500;
+// How long (game time, after `since`) a `possiblyLost` unit takes to settle
+// from full opacity down to its stale floor. A one-way ramp — NEVER a pulse.
+// Oscillating opacity on a live unit reads as "the engine is unsure it's
+// there", which is exactly the bug this fade revamp removes.
+const POSSIBLY_LOST_FADE_MS = 4000;
+// Presumed-lost cleanup: a NON-HERO unit that goes idle/possiblyLost (its last
+// activity trailed off and never resumed) fades fully out over this window
+// after `since`, then stops drawing entirely. Declutters units the player lost
+// in a fight that the parser couldn't pin to a confirmed death. `since` is the
+// unit's last activity, so nothing happens after it — removing is safe.
+const LOST_REMOVE_FADE_MS = 6000;
+// Worker visibility: workers are hidden while harvesting/idle in base. They
+// only draw when relevant — outside the base, pulled into a fight, or given a
+// direct attack order. BASE_RADIUS is world units from the nearest base anchor
+// (start location + own town halls). COMBAT window keeps a pulled worker
+// visible for a stretch after its attack order.
+const WORKER_BASE_RADIUS = 2000;
+const WORKER_COMBAT_VISIBLE_MS = 12 * 1000;
 // Stale fade floor — a unit that is silent past IDLE_GRACE but not yet
-// confidently dead fades to this alpha (per type) and holds.
-const STALE_DECAY_FLOOR = { hero: 0.55, worker: 0.65, transport: 0.45, default: 0.55 };
+// confidently dead fades to this alpha (per type) and holds. Heroes hold the
+// highest floor: the main hero is the single most identity-critical icon on
+// the map and must never read as "maybe gone" just because its owner stopped
+// issuing orders for a stretch.
+const STALE_DECAY_FLOOR = { hero: 0.78, worker: 0.65, transport: 0.45, default: 0.55 };
+// Resting opacity for illusions (Mirror Image, etc.) — faintly ghosted so
+// they read as "not the real unit" even before you spot the (I) marker.
+const ILLUSION_BASE_ALPHA = 0.82;
+// Fallback for illusions with no parser-stamped destroyedAt: fade out this long
+// after the image's last movement record.
+const ILLUSION_SILENCE_FADE_MS = 8 * 1000;
 
 // Path-gap detection — shared by ClientUnit.getInterpolatedPosition and
 // PathTrailRenderer3D so both decide identically where the trail line breaks.
@@ -92,7 +119,7 @@ const ClientUnit = class {
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
       "collisionSize", "footprint", "isInferred", "destroyedAt", "isSummon",
-      "lostState", "hiddenStream",
+      "lostState", "hiddenStream", "combatOrderTimes", "primaryRole",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
       "constructionStartTime", "uprootStream"
@@ -228,6 +255,7 @@ const ClientUnit = class {
   }
 
   loadSpellIcons () {
+    if (!this.spellList || !this.spellList.length) return [];
     return this.spellList.map((spellId, index) => {
       const imgSrc = `/assets/wc3icons/${spellId}.jpg`;
 
@@ -366,6 +394,41 @@ const ClientUnit = class {
     } else {
       this.minDecayLevel = 0.0;
     }
+  }
+
+  // A "harvester" for declutter purposes: true workers (acolyte/peon/peasant/
+  // wisp), plus units assigned a gold/lumber role — notably the lumber GHOUL,
+  // which is a fighting unit (meta.worker=false) doing economy. Army ghouls
+  // have no harvest role, so they're never hidden.
+  _isHarvester () {
+    if (this.meta && this.meta.worker) return true;
+    return this.primaryRole === 'lumber' || this.primaryRole === 'gold';
+  }
+
+  // Is this worker worth drawing on the tactical map right now? Hidden while it
+  // harvests/idles in base; shown when it matters. Mirrors WC3 micro: a pulled
+  // acolyte or a scouting peon is relevant; the mining workforce is noise.
+  _isWorkerRelevant (gameTime, frameData, isInBattle) {
+    if (this.scoutInfo) return true;          // flagged scout — already surfaced
+    if (isInBattle) return true;              // caught in / pulled to a fight
+    // a direct attack order was given to this worker recently
+    if (this.combatOrderTimes && this.combatOrderTimes.length) {
+      for (let i = 0; i < this.combatOrderTimes.length; i++) {
+        const t = this.combatOrderTimes[i];
+        if (gameTime >= t && gameTime <= t + WORKER_COMBAT_VISIBLE_MS) return true;
+      }
+    }
+    // outside the base (scouting, expanding, harvassing forward, pulled away)
+    const anchors = frameData && frameData.baseAnchors;
+    if (anchors && anchors.length) {
+      const r2 = WORKER_BASE_RADIUS * WORKER_BASE_RADIUS;
+      for (let i = 0; i < anchors.length; i++) {
+        const dx = this.currentX - anchors[i].x, dy = this.currentY - anchors[i].y;
+        if ((dx * dx + dy * dy) <= r2) return false;   // inside a base → hide
+      }
+      return true;   // far from every base anchor → relevant
+    }
+    return false;     // no base info — default to hiding harvesters
   }
 
   getFullName () {
@@ -570,11 +633,40 @@ const ClientUnit = class {
       return;
     }
 
-    // Illusions are never rendered; skip the lifetime/FX pipeline so we don't
-    // queue death FX at a position that won't be drawn anyway.
+    // Illusions (e.g. Blademaster Mirror Image) ARE rendered now, with a
+    // distinct ghostly look (see Drawing.drawUnit), and they track their REAL
+    // movement from the replay (each image has its own object handle). Lifetime:
+    // hold a faint baseline while active, fade out at the end, then stop
+    // drawing. End time is `destroyedAt` (cast + spell duration) when the parser
+    // set one; otherwise fall back to a short fade after the image's last known
+    // movement (covers illusions surfaced by the legacy duplicate-detection
+    // path, which doesn't stamp a duration).
     if (this.isIllusion) {
+      this.getCurrentMovePath(gameTime);  // keep path index current
       this._deathFxStartTime = null;
       this._deathFxActive = false;
+
+      let endTime = this.destroyedAt;
+      if (!endTime) {
+        const lastPath = (this.path && this.path.length)
+          ? this.path[this.path.length - 1] : null;
+        const lastSeen = lastPath && typeof lastPath.gameTime === 'number'
+          ? lastPath.gameTime : this.spawnTime;
+        endTime = lastSeen + ILLUSION_SILENCE_FADE_MS;
+      }
+
+      if (gameTime >= endTime) {
+        const fxAge = gameTime - endTime;
+        if (fxAge < DEATH_FX_DURATION_MS) {
+          this.decayLevel = Math.max(0, ILLUSION_BASE_ALPHA * (1 - fxAge / DEATH_FX_DURATION_MS));
+          this._destroyed = false;
+        } else {
+          this._destroyed = true;
+        }
+        return;
+      }
+      this._destroyed = false;
+      this.decayLevel = ILLUSION_BASE_ALPHA;
       return;
     }
 
@@ -626,14 +718,17 @@ const ClientUnit = class {
     }
 
     // Server-supplied 4-state lost tracking (parser's DeathInference pass).
-    // Wins over the heuristic fallback when available. State semantics:
+    // Wins over the heuristic fallback when available. State semantics — ALL
+    // gated on the unit's own `since` time so a verdict never applies before
+    // the moment the parser anchored it:
     //   active       — normal render
-    //   idle         — small fade, no death FX, faint idle pulse
-    //   possiblyLost — stronger fade, slow player-colour pulse (still selectable)
+    //   idle         — standing around; full/near-full opacity, small dot cue
+    //   possiblyLost — one-way settle to floor and hold (no pulse)
     //   lost         — one-shot death FX at `since` time, then ghosted out
     if (this.lostState && this.lostState.state) {
       const ls = this.lostState;
-      const t = ls.since || 0;
+      const since = ls.since || 0;
+      const t = since;
       const elapsed = gameTime - t;
 
       if (ls.state === 'lost') {
@@ -660,25 +755,56 @@ const ClientUnit = class {
         return;
       }
 
-      if (ls.state === 'possiblyLost') {
-        // Slow player-colour pulse around 0.5 decay so it reads as "might
-        // be gone" without disappearing.
-        const pulse = 0.5 + 0.15 * Math.sin(gameTime / 600);
-        this.decayLevel = pulse;
-        this._deathFxActive = false;
-        this._deathFxStartTime = null;
-        return;
+      // possiblyLost / idle are END-OF-TIMELINE verdicts: the parser computes
+      // them from how a unit's *final* activity trails off. They must only
+      // affect the unit at/after `since` — applying them globally (the old
+      // bug) smeared a unit's last-minute fate across its entire on-screen
+      // life, e.g. pulsing a 16-minute-alive main hero from the moment it
+      // spawned. Before `since`, fall through to the normal full-opacity path.
+      if (gameTime >= since) {
+        // Presumed-lost cleanup: a NON-HERO unit that trailed off into
+        // idle/possiblyLost and never came back is almost always a unit lost
+        // in a fight the parser couldn't pin to a confirmed death. Fade it out
+        // and remove it instead of leaving it lingering on the map. Heroes are
+        // exempt (they stay readable); confirmed 'lost' already has its own FX
+        // path above. Workers are included — a dead/abandoned worker shouldn't
+        // linger either; live in-base workers are hidden separately in
+        // renderUnit, and a live worker that acts again has a later `since`.
+        const isHero = !!(this.meta && this.meta.hero);
+        if (!isHero && (ls.state === 'possiblyLost' || ls.state === 'idle')) {
+          const k = Math.min(1, (gameTime - since) / LOST_REMOVE_FADE_MS);
+          this.decayLevel = 1 - k;          // full → 0
+          this._deathFxActive = false;
+          this._deathFxStartTime = null;
+          if (k >= 1) this._destroyed = true;   // fully faded — stop drawing
+          return;
+        }
+
+        if (ls.state === 'possiblyLost') {
+          // One-way settle from full opacity to the stale floor, then hold.
+          // Reads as "probably gone, unconfirmed" — dimmed, never oscillating.
+          const floor = this._staleFadeFloor();
+          const k = Math.min(1, (gameTime - since) / POSSIBLY_LOST_FADE_MS);
+          this.decayLevel = 1 - (1 - floor) * k;
+          this._deathFxActive = false;
+          this._deathFxStartTime = null;
+          return;
+        }
+
+        if (ls.state === 'idle') {
+          // Idle means "standing around", NOT uncertainty. Identity-critical
+          // units (heroes, workers) stay fully readable; everything else dims
+          // a hair. The small idle dot (renderUnit) carries the real cue.
+          const idleAlpha = (this.meta && (this.meta.hero || this.meta.worker)) ? 1.0 : 0.9;
+          this.decayLevel = idleAlpha;
+          this._deathFxActive = false;
+          this._deathFxStartTime = null;
+          return;
+        }
       }
 
-      if (ls.state === 'idle') {
-        // Visible but not fully bright — small visual cue.
-        this.decayLevel = 0.85;
-        this._deathFxActive = false;
-        this._deathFxStartTime = null;
-        return;
-      }
-
-      // active — fall through to normal pipeline (resets decay below).
+      // active, or pre-`since` idle/possiblyLost — fall through to the normal
+      // pipeline (resets decay to full below).
     }
 
     // Lifetime-aware fade. _lastActivityTime is the latest gameTime we have
@@ -686,12 +812,17 @@ const ClientUnit = class {
     // Replay is fully parsed up front, so silence past PROBABLY_GONE_MS is a
     // high-confidence death signal, not a guess.
     //
-    // Workers and transports opt out of the death pipeline — they routinely
-    // go silent for long stretches (peons mining gold, transports parked),
-    // and their genuine "death" paths are already covered by the explicit
-    // server signals above (consumed/destroyedByBuilding) or replay end.
-    // They still get the gentle stale fade so they look settled in place.
-    const skipDeathFx = !!(this.meta && this.meta.worker) || !!this.isTransport || !!this.isInferred;
+    // Workers, transports, and HEROES opt out of the heuristic *death*
+    // pipeline (snap-destroy + death FX). They still get the gentle stale
+    // fade, but silence alone never makes them vanish:
+    //   - workers/transports routinely go silent (mining, parked);
+    //   - heroes are the map's identity anchors and "die" only via an explicit
+    //     lostState='lost' (revive-elsewhere/destroyed) — a player who simply
+    //     stops microing the hero must never erase it from the map.
+    // Genuine deaths for these are covered by the explicit server signals
+    // above (destroyedAt / destroyedByBuilding / lostState).
+    const skipDeathFx = !!(this.meta && this.meta.worker) || !!this.isTransport
+                        || !!this.isInferred || !!(this.meta && this.meta.hero);
     const lastActivity = this._lastActivityTime;
     if (lastActivity != null) {
       const silentFor = gameTime - lastActivity;
@@ -788,10 +919,6 @@ const ClientUnit = class {
     }
 
     if (this.isNeutralPlayer && this.isNeutralGroupHidden) {
-      return;
-    }
-
-    if (this.isIllusion) {
       return;
     }
 
@@ -896,6 +1023,15 @@ const ClientUnit = class {
       frameData.activeBattleParticipants &&
       frameData.activeBattleParticipants.has(this.uuid));
 
+    // Worker declutter: harvesting / idle-in-base workers are hidden. A worker
+    // only draws when it's actually relevant — pulled into a fight, given a
+    // direct attack order, scouting, or out of the base entirely. Keeps the
+    // economy off the tactical map while still surfacing a defending acolyte or
+    // a pulled peon. (Buildings/heroes are never workers.)
+    if (this._isHarvester() && !this._isWorkerRelevant(gameTime, frameData, isInBattle)) {
+      return;
+    }
+
     // Visible outer radius — the unit's COLOURED HALO (drawn in
     // Drawing.drawUnit at halfIconSize + 6, or +9 for transports). The
     // server-side collision is based on bare collisionSize, but the
@@ -919,6 +1055,7 @@ const ClientUnit = class {
       decayLevel: this.decayLevel,
       isHero: this.meta.hero,
       isWorker: this.meta.worker,
+      isIllusion: !!this.isIllusion,
       isHidden: !!this._isHiddenNow,
       isNeutralPlayer: this.isNeutralPlayer,
       isMainHero: this.isMainHero,
@@ -963,8 +1100,10 @@ const ClientUnit = class {
 
     // Idle indicator: small subtle dot above the unit when state is 'idle'.
     // Communicates "I see this unit, it's just standing" — distinct from
-    // possiblyLost (pulsing fade) and active (no marker).
-    if (this.lostState && this.lostState.state === 'idle' && frameData.idleMarkers) {
+    // possiblyLost (settled fade) and active (no marker). Gated on `since` so
+    // it only appears once the unit actually goes idle, not for its whole life.
+    if (this.lostState && this.lostState.state === 'idle' && frameData.idleMarkers
+        && gameTime >= (this.lostState.since || 0)) {
       frameData.idleMarkers.push({
         x: drawX,
         y: drawY - (iconSize / 2) - 6,

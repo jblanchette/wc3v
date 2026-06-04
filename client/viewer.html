@@ -59,7 +59,9 @@
         '/js/HeroAbilityStats.js',
         '/js/ReplayGuide.js',
         '/js/ChapterMarkers.js',
-        '/js/FloatingText.js',
+        '/js/EventModel.js',
+        '/js/EventFeed.js',
+        '/js/InsightsEventLog.js',
         '/js/BuildingProgressBar.js',
         '/js/buildingProductionData.js',
         '/js/BuildingInfoTooltip.js',
@@ -173,7 +175,7 @@
                     <button type="button" class="mega-hint mega-hint-featured on" data-option="displayCreepRoute" aria-pressed="true" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="displayPath" aria-pressed="true" onClick="wc3v.toggleViewOption('displayPath')">Unit Trails<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="displayLevelPins" aria-pressed="true" onClick="wc3v.toggleViewOption('displayLevelPins')">Level Pins<span class="mega-hint-icon" aria-hidden="true"></span></button>
-                    <button type="button" class="mega-hint on" data-option="displayFloatingText" aria-pressed="true" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Text<span class="mega-hint-icon" aria-hidden="true"></span></button>
+                    <button type="button" class="mega-hint on" data-option="displayFloatingText" aria-pressed="true" onClick="wc3v.toggleViewOption('displayFloatingText')">Action Feed<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="displayText" aria-pressed="true" onClick="wc3v.toggleViewOption('displayText')">Unit Names<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="decayEffects" aria-pressed="true" onClick="wc3v.toggleViewOption('decayEffects')">Fade FX<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="displayTreeGrid" aria-pressed="true" onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid<span class="mega-hint-icon" aria-hidden="true"></span></button>
@@ -192,6 +194,10 @@
                   <!-- Project C: camp icons live inside canvas-group so they
                        share the canvases' exact box + any live-mode transform -->
                   <div id="camp-icon-layer"></div>
+                  <!-- Action feed: right-edge log of high-signal events. DOM
+                       (not canvas) so it shares the insights panel's ev- CSS.
+                       Caster pips for these events draw on #player-canvas. -->
+                  <div id="event-feed" aria-live="polite" aria-label="Recent actions"></div>
                 </div>
 
                 <div id="loading-overlay" role="status" aria-live="polite">

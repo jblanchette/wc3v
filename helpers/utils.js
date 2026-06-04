@@ -745,6 +745,8 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         ...(player.itemStream ? { itemStream: player.itemStream } : {}),
         ...(player.apmData ? { apmData: player.apmData } : {}),
         ...(player.moveTrace ? { moveTrace: player.moveTrace } : {}),
+        ...(player.formationTrace ? { formationTrace: player.formationTrace } : {}),
+        ...(player._formApply ? { formApply: player._formApply } : {}),
         ...(player._mvStats ? { mvStats: player._mvStats } : {}),
         ...(player.resourceSeries ? { resourceSeries: player.resourceSeries } : {}),
         // Structured teleport events (TP Scroll, Mass Teleport, Blink, etc.).
@@ -996,6 +998,10 @@ const readCliArgs = (argv) => {
 
       case "move-trace":
         config.moveTrace = true;
+      break;
+
+      case "formation-trace":
+        config.debugFormation = true;
       break;
 
       case "debug-items":
