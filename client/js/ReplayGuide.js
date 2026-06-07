@@ -26,7 +26,7 @@
 })(typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : this), function () {
   'use strict';
 
-  const MAX_STEPS = 12;
+  const MAX_STEPS = 14;
   const WORKER_IDS = new Set(['opeo', 'hpea', 'uaco', 'ewsp']);
   // Some summons aren't reliably flagged isSummon in the parsed data — same
   // safety net as BuildOrderData.CONFIG.summonUnitIds on the client.
@@ -65,7 +65,10 @@
     techLead:      "Reaching a tier first means a stretch where you have that tier's units and upgrades and the opponent doesn't. That stretch is the entire return on teching early; if you don't spend it, you paid for nothing.",
     techOptional:  "Plenty of games end before anyone reaches Tier 3. You go there for the top-tier units and upgrades, and only when the game runs long enough to need them.",
     expansionRisk: "An expansion is gold spent on a town hall instead of army, plus a second base to defend. It pays for itself later; for now it just makes you thinner and harder to hold.",
-    upgradeArmy:   "A weapon or armor level, or an ability upgrade, applies to every unit of that type, including the ones you haven't built yet. It's cheap, it never expires, and it's the easiest thing to skip by accident."
+    upgradeArmy:   "A weapon or armor level, or an ability upgrade, applies to every unit of that type, including the ones you haven't built yet. It's cheap, it never expires, and it's the easiest thing to skip by accident.",
+    consumables:   "A hero carrying a healing salve or a mana potion stays on the field through a fight or a creep camp that would otherwise send it home to heal. Items dropped by creeps are free power on top of that. The few gold the consumables cost buys time on the field, and time on the field is hero levels.",
+    townPortal:    "A Town Portal Scroll turns a lost position into a saved one. A hero about to die teleports out and lives instead; an undefended base gets the whole army back in three seconds instead of a long walk. Carrying one is the difference between a mistake that costs a hero and one that costs nothing.",
+    trading:       "Fights are won by trading up, which means losing less than the other side, not by killing the most. A hero is the most expensive thing on the board, so a hero that dies usually decides the trade on its own. The army that comes out ahead here gets to dictate the next few minutes."
   };
 
   // (HERO_SPIKE inline copy was moved into HeroAbilityStats.js as structured
@@ -133,6 +136,50 @@
   function heroLevelEvents(stream) { return stream.filter(e => e && e.key === 'HeroLevel' && e.unit); }
   function researchEvents(stream) { return stream.filter(e => e && e.key === 'research'); }
   function expansionEvents(stream) { return stream.filter(e => e && e.key === 'addBuilding' && e.isExpansion === true); }
+
+  // Successful, non-cancelled teleport jumps from the stream. The parser emits
+  // a 'teleport' event per phase (cast / arrival / cancelled) for the same jump
+  // — collapse them to one record per jump (keyed by caster + cast time), drop
+  // cancelled ones, and require channelled TPs (Town Portal) to have actually
+  // arrived. Returns the cast-phase records, sorted by time.
+  function teleportJumps(stream) {
+    const byId = new Map();
+    for (const e of stream) {
+      if (!e || e.key !== 'teleport' || !e.teleport) continue;
+      const t = e.teleport;
+      const id = (t.casterUuid || '') + '@' + (t.gameTime || 0);
+      let rec = byId.get(id);
+      if (!rec) { rec = { cast: null, arrived: false, cancelled: false }; byId.set(id, rec); }
+      const phase = t._phase || 'cast';
+      if (phase === 'arrival') { rec.arrived = true; if (!rec.cast) rec.cast = t; }
+      else if (phase === 'cancelled') rec.cancelled = true;
+      else if (!rec.cast) rec.cast = t;
+    }
+    const out = [];
+    for (const rec of byId.values()) {
+      if (!rec.cast || rec.cancelled) continue;
+      if ((Number(rec.cast.channelMs) || 0) > 0 && !rec.arrived) continue;
+      out.push(rec.cast);
+    }
+    return out.sort((a, b) => (Number(a.gameTime) || 0) - (Number(b.gameTime) || 0));
+  }
+
+  // Items the player bought or picked up, chronologically — the hero's loadout
+  // story. 'Jwid' (a placeholder ward id) and uncommitted buys are dropped.
+  // Each entry: { t, label, iconId, how: 'buy'|'pickup' }.
+  function itemAcquisitions(stream) {
+    const JUNK = new Set(['Jwid']);
+    const out = [];
+    for (const e of stream) {
+      if (!e) continue;
+      if (e.key === 'itemPurchase' && e.item && e.item.itemId && !JUNK.has(e.item.itemId) && !e.cancelled) {
+        out.push({ t: Number(e.gameTime) || 0, label: e.item.displayName || 'an item', iconId: e.item.itemId, how: 'buy' });
+      } else if (e.key === 'pickupItem' && e.item && e.item.itemId && !JUNK.has(e.item.itemId)) {
+        out.push({ t: Number(e.gameTime) || 0, label: e.item.displayName || 'an item', iconId: e.item.itemId, how: 'pickup' });
+      }
+    }
+    return out.sort((a, b) => a.t - b.t);
+  }
 
   // Time the player started upgrading to `tier` (2 or 3), or Infinity.
   function tierTimeMs(stream, tier) {
@@ -362,8 +409,9 @@
   // distinct DOM slots (action row → opp contrast row → "Why it matters"
   // callout → "Try in your games" takeaway). `iconId` is the wc3icons asset
   // name (no extension). Pass null where a section doesn't apply.
-  function buildSteps(F, O, fName, oName) {
+  function buildSteps(F, O, fName, oName, ctx) {
     const fStream = evStream(F), oStream = evStream(O);
+    ctx = ctx || {};
     const steps = [];
     const push = (s) => {
       if (!s || !s.action) return;
@@ -743,6 +791,147 @@
       });
     }
 
+    // 9. Hero items — what the hero shops for and picks up early. The loadout
+    //    is the lesson: consumables keep the hero on the field, creep drops are
+    //    free permanent power. We show the first handful of acquisitions as an
+    //    ordered list (same visual block as the opening).
+    {
+      const acks = itemAcquisitions(fStream);
+      if (acks.length >= 2) {
+        const list = [];
+        let iconId = null;
+        for (const a of acks) {
+          if (list.length >= 8) break;
+          const last = list[list.length - 1];
+          if (last && last.label === a.label) { last.count = (last.count || 1) + 1; continue; }
+          if (!iconId && a.iconId) iconId = a.iconId;
+          list.push({ label: a.label, timeMs: a.t, iconId: a.iconId, kind: 'unit', count: 1 });
+        }
+        if (list.length >= 2) {
+          const anyPickup = acks.some(a => a.how === 'pickup');
+          push({
+            gameTimeMs: list[0].timeMs, key: 'heroItems', title: 'What the hero carries', iconId,
+            action: `These are the items the hero buys and${anyPickup ? ' picks up' : ' carries'} early, in order:`,
+            contrast: null,
+            why: PRINCIPLES.consumables,
+            takeaway: `Before your hero goes creeping, stop at the shop for a healing salve and a clarity (mana) potion. They're cheap, and they roughly double how long the hero can stay out before it has to go home.`,
+            list,
+            focus: { kind: 'hero', player: 'followed' },
+            fTimes: list.map(it => it.timeMs), oTimes: []
+          });
+        }
+      }
+    }
+
+    // 10. Town Portal — the first Town Portal / Mass Teleport jump. The defining
+    //     defensive tool: save a low hero, escape a losing fight, or reinforce a
+    //     base in three seconds. (Blink is hero micro, a different lesson, so
+    //     it's left out of this one.)
+    {
+      const tp = teleportJumps(fStream).find(t => t.abilityCategory === 'town-portal' || t.abilityCategory === 'mass');
+      if (tp) {
+        const caster = tp.caster || {};
+        const casterIsHero = !!caster.isHero;
+        const casterName = caster.displayName || 'a unit';
+        const destName = tp.destBuildingDisplayName || null;
+        const grabbed = Math.max(0, Number(tp.grabbedCount) || 0);
+        const isMass = tp.abilityCategory === 'mass';
+        let action;
+        if (isMass) {
+          action = `We cast ${tp.abilityDisplayName || 'Mass Teleport'} at ${fmt(tp.gameTime)}, jumping the army ${destName ? `to the ${destName}` : 'across the map in one move'}.`;
+        } else {
+          const dest = destName ? `to the ${destName}` : 'back to base';
+          const withUnits = grabbed > 0 ? `, pulling ${nOf(grabbed, 'unit')} along with it` : '';
+          action = casterIsHero
+            ? `${casterName} Town Portals ${dest} at ${fmt(tp.gameTime)}${withUnits}.`
+            : `We Town Portal ${dest} at ${fmt(tp.gameTime)}${withUnits}.`;
+        }
+        push({
+          gameTimeMs: tp.gameTime, key: 'teleport', title: 'Town Portal',
+          iconId: isMass ? (caster.itemId || null) : (tp.abilityCode || caster.itemId || null),
+          action, contrast: null,
+          why: PRINCIPLES.townPortal,
+          takeaway: `Buy a Town Portal Scroll the moment you can spare the gold, and keep one on your hero at all times. The first time it saves a hero or a base, it has already paid for itself many times over.`,
+          focus: { kind: casterIsHero ? 'hero' : 'base', player: 'followed' },
+          fTimes: [tp.gameTime], oTimes: []
+        });
+      }
+    }
+
+    // 11. The decisive fight — the biggest player-vs-player engagement, from the
+    //     battle detector. New players rarely read a fight as a trade; this step
+    //     points at the one that mattered and says who came out ahead and why.
+    {
+      const battles = Array.isArray(ctx.battles) ? ctx.battles : null;
+      if (battles && battles.length && ctx.followedId != null && ctx.oppId != null) {
+        const fid = String(ctx.followedId), oid = String(ctx.oppId);
+        const lossEntry = (sum, id) => (sum && sum.perPlayer) ? (sum.perPlayer[id] || sum.perPlayer[Number(id)] || null) : null;
+        const valOf = (e) => e ? ((e.definite.gold + e.estimated.gold) + (e.definite.lumber + e.estimated.lumber) + (e.definite.food + e.estimated.food) * 25) : 0;
+        const countOfLoss = (e) => e ? (e.definite.count + e.estimated.count) : 0;
+        const heroesLost = (e) => (e && Array.isArray(e.heroDeaths)) ? e.heroDeaths : [];
+
+        let best = null, bestScore = -1;
+        for (const b of battles) {
+          const sum = b.summary;
+          if (!sum || !sum.hasLosses) continue;
+          if (b.creepJack || b.campUuid || sum.engagementType === 'campClear') continue;   // creeping, not a PvP fight
+          const parts = b.participants || [];
+          if (!parts.some(p => String(p.playerId) === fid) || !parts.some(p => String(p.playerId) === oid)) continue;
+          const fl = lossEntry(sum, fid), ol = lossEntry(sum, oid);
+          const combined = countOfLoss(fl) + countOfLoss(ol);
+          const nHeroes = heroesLost(fl).length + heroesLost(ol).length;
+          if (combined < 3 && nHeroes === 0) continue;     // a poke, not a fight worth a callout
+          const score = valOf(fl) + valOf(ol) + nHeroes * 2000;
+          if (score > bestScore) { bestScore = score; best = { b, sum, fl, ol }; }
+        }
+
+        if (best) {
+          const { b, sum, fl, ol } = best;
+          const fCount = countOfLoss(fl), oCount = countOfLoss(ol);
+          const fHeroes = heroesLost(fl).map(h => h.displayName).filter(Boolean);
+          const oHeroes = heroesLost(ol).map(h => h.displayName).filter(Boolean);
+          const lossLine = (verb, count, heroNames) => {
+            if (count === 0) return `come out of it clean`;
+            let s = `${verb} ${nOf(count, 'unit')}`;
+            if (heroNames.length) s += ` (including ${heroNames.join(' and ')})`;
+            return s;
+          };
+          // Who traded up. Two signals: hero deaths (heaviest) and total value
+          // lost. When they agree, call a winner; when they contradict (one
+          // side loses a hero but far more units, a mutual wipe), say so rather
+          // than overclaim. + = good for us on both.
+          const heroSign = Math.sign(oHeroes.length - fHeroes.length);
+          const valEdge = valOf(ol) - valOf(fl);
+          const valSign = Math.abs(valEdge) > 400 ? Math.sign(valEdge) : 0;
+          let verdict;
+          if (heroSign !== 0 && valSign !== 0 && heroSign !== valSign) {
+            verdict = `Both sides pay heavily here; it's close to an even trade.`;
+          } else if (heroSign > 0 || valSign > 0) {
+            verdict = `We come out ahead on this one.`;
+          } else if (heroSign < 0 || valSign < 0) {
+            verdict = `${oName} wins this trade.`;
+          } else {
+            verdict = `It's a roughly even trade.`;
+          }
+          // The action line already names the hero losses, so the title stays
+          // generic except where the location is the lesson (a fight at a base).
+          // 'heroSnipe' fires for any hero death, so it's too broad to title on.
+          const titleByType = { baseRaid: 'Fighting at a base', defense: 'Holding the base' };
+          const title = titleByType[sum.engagementType] || 'The biggest fight';
+          push({
+            gameTimeMs: b.startTime, key: 'battle', title,
+            iconId: topUnitId(fStream, b.startTime),
+            action: `The biggest fight of the game starts at ${fmt(b.startTime)}. We ${lossLine('lose', fCount, fHeroes)}.`,
+            contrast: `${oName} ${lossLine('loses', oCount, oHeroes)}. ${verdict}`,
+            why: PRINCIPLES.trading,
+            takeaway: `Before you commit to a fight, ask whether you'll trade up. If your hero drops low mid-fight, Town Portal it out: a hero that retreated and lived beats a hero that stayed and died.`,
+            focus: { kind: 'compare', player: 'followed' },
+            fTimes: [b.startTime], oTimes: [b.startTime]
+          });
+        }
+      }
+    }
+
     // Sort by time; de-dupe near-identical timestamps lightly; cap.
     steps.sort((a, b) => a.gameTimeMs - b.gameTimeMs || (a.key < b.key ? -1 : 1));
     // Pin heroSpike immediately after the hero (route) step. The spike step's
@@ -761,8 +950,8 @@
     let out = steps;
     if (out.length > MAX_STEPS) {
       // Always keep opening + final; trim from the middle, lowest-priority first.
-      const PRI = { opening: 0, hero: 0, tier2: 1, counter: 1, final: 0, expansion: 2, oppExpansion: 2, upgrade: 3, tier3: 3, siege: 4, midgame: 4 };
-      const keep = out.slice().sort((a, b) => (PRI[a.key] ?? 5) - (PRI[b.key] ?? 5)).slice(0, MAX_STEPS);
+      const PRI = { opening: 0, hero: 0, heroSpike: 1, final: 0, battle: 1, tier2: 2, counter: 2, teleport: 2, expansion: 3, oppExpansion: 3, heroItems: 3, upgrade: 4, tier3: 4, siege: 5, midgame: 5 };
+      const keep = out.slice().sort((a, b) => (PRI[a.key] ?? 6) - (PRI[b.key] ?? 6)).slice(0, MAX_STEPS);
       const keepSet = new Set(keep);
       out = out.filter(s => keepSet.has(s));
     }
@@ -776,7 +965,12 @@
     const canon = (s, fb) => (typeof s === 'string' && s.trim() && typeof PlayerNames !== 'undefined') ? PlayerNames.canonical(s) : (s || fb);
     const fName = canon(names.followed, null) || pname(followed, 'this player');
     const oName = canon(names.opp, null) || pname(opp, 'the opponent');
-    const steps = (followed && opp) ? buildSteps(followed, opp, fName, oName) : [];
+    const ctx = {
+      battles: Array.isArray(opts.battles) ? opts.battles : null,
+      followedId: (opts.followedId != null) ? opts.followedId : null,
+      oppId: (opts.oppId != null) ? opts.oppId : null
+    };
+    const steps = (followed && opp) ? buildSteps(followed, opp, fName, oName, ctx) : [];
     const fHero0 = followed ? firstHero(evStream(followed)) : null;
     const fRaceLabel = (RACE_LABELS[followed && followed.race] || (followed && followed.race) || '');
     return {

@@ -69,7 +69,11 @@ for (const followId of want) {
   const oe = entries.find(([id]) => id !== followId);
   const followed = asGuidePlayer(fe[0], fe[1]);
   const opp = asGuidePlayer(oe[0], oe[1]);
-  const guide = ReplayGuide.buildGuide(followed, opp);
+  const guide = ReplayGuide.buildGuide(followed, opp, {
+    battles: Array.isArray(raw.battles) ? raw.battles : null,
+    followedId: fe[0],
+    oppId: oe[0]
+  });
   console.log(`\n--- Following ${guide.followedName} (${guide.followedRace}) vs ${guide.oppName} (${guide.oppRace}) — ${guide.steps.length} steps, game ${fmtT(guide.gameLengthMs)} ---`);
   if (guide.intro) {
     console.log(`\n  INTRO:`);

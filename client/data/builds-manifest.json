@@ -21,7 +21,7 @@
         "ugho",
         "ucry"
       ],
-      "description": "The standard Undead build. Death Knight opener with mass Ghouls for early creeping and lumber, transitioning into Crypt Fiends and Obsidian Statues at T2. Lich second hero for Frost Nova burst.",
+      "description": "A simple Undead build for new players. Death Knight opener, Ghouls mine lumber, and your fighting army is Crypt Fiends -- you never have to micro Ghouls in a fight. Reach Tier 2, pump Fiends, add Obsidian Statues for sustain, and bring in a Lich second hero for Frost Nova burst.",
       "strategyPoints": [
         "Open DK for Unholy Aura speed and Death Coil sustain â€” creep efficiently to level 3",
         "Rush to tier 2 around 5:30â€“6:00, start Fiend production immediately from Crypt",
@@ -32,10 +32,10 @@
         "Loses to: very fast Orc harassment preventing creeping, well-timed NE Bear timing pushes"
       ],
       "beginnerNotes": [
-        "Send your acolyte to summon all four T1 buildings, then send it straight back to gold. Undead acolytes summon and leave -- don't leave them standing at the site.",
-        "Make Ghouls non-stop until you have ~5, then right-click 3-4 of them onto a tree. Ghouls are your lumber workers AND your early army -- pull them off lumber to creep or fight.",
-        "Creep with the Death Knight toward level 3 as fast as is safe. Death Coil heals undead units and the DK -- top off whoever's lowest mid-creep; you should rarely lose a Ghoul.",
-        "Don't worry about Statues, Destroyers, or T3 yet. Get to T2, build a Crypt, and start making Crypt Fiends. Everything past that is a bonus."
+        "Send your acolyte to summon all four T1 buildings, then send it straight back to gold. Undead acolytes summon and leave -- don't leave one standing at the build site.",
+        "Make Ghouls until you have about five, then right-click three or four of them onto a tree. From here on, Ghouls are lumber workers -- they mine wood and stay home. They are not part of your fighting army.",
+        "Creep with the Death Knight on the easy (green) camps, using Death Coil to keep it healthy. Leave the bigger camps until you have a couple of Crypt Fiends to help -- don't risk your Ghouls to creep faster.",
+        "Don't worry about Destroyers or Tier 3 yet. Get to Tier 2, build a Crypt, and make Crypt Fiends non-stop. Fiends plus a couple of Statues is your whole army; everything past that is a bonus."
       ],
       "commonMistakes": [
         {
@@ -47,8 +47,8 @@
           "fix": "Undead buildings finish on their own -- the acolyte is free the instant the summon starts. Right-click it back onto gold."
         },
         {
-          "mistake": "Losing Ghouls while creeping because you didn't use Death Coil.",
-          "fix": "A dead Ghoul is also a dead lumber worker. Death Coil the lowest unit during the creep fight."
+          "mistake": "Bringing Ghouls into a fight and losing them. A dead Ghoul is a dead lumber worker, and Ghouls need fast micro you don't have time for yet.",
+          "fix": "Keep Ghouls on wood. Let the Death Knight and your Crypt Fiends do the fighting -- Fiends are ranged and forgiving; Ghouls are not."
         },
         {
           "mistake": "Teching straight to fancy units and getting no Crypt Fiends out.",
@@ -57,7 +57,7 @@
       ],
       "prerequisites": [
         "Comfortable hotkeying your hero and using Death Coil mid-fight.",
-        "Know how to put a worker on lumber (right-click a tree) and pull it back off."
+        "Know how to send a Ghoul to mine lumber (right-click a tree)."
       ],
       "tags": [
         "standard",
@@ -82,7 +82,7 @@
           "units": [
             "ugho"
           ],
-          "goal": "DK + 4-5 Ghouls, creep to level 3"
+          "goal": "DK + ~5 Ghouls (Ghouls on lumber), DK creeps easy camps toward level 3"
         },
         "t2": {
           "buildings": [
@@ -118,6 +118,19 @@
         ]
       },
       "replays": [
+        {
+          "replayId": "1364826411_Inspired_Pcg123_NorthernIsles",
+          "playerSlot": "2",
+          "playerName": "Pcg123",
+          "opponentName": "Inspired",
+          "map": "Northern Isles",
+          "outcome": "",
+          "notes": "Beginner reference: Ghouls stay on lumber, the army is Crypt Fiends (no Ghoul micro in fights).",
+          "tournamentId": "",
+          "stage": "",
+          "round": "",
+          "fingerprint": "Northern Isles|1005|inspired#21581,sunlight#31816"
+        },
         {
           "replayId": "1342775468_Kaho_Happy_Hammerfall",
           "playerSlot": "2",

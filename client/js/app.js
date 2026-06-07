@@ -1456,7 +1456,16 @@ const Wc3vViewer = class {
     if (!opp) return;
 
     let guide;
-    try { guide = ReplayGuide.buildGuide(followed, opp); } catch (e) { return; }
+    try {
+      guide = ReplayGuide.buildGuide(followed, opp, {
+        // Battle detector output (mapData.battles, each with a .summary) lets
+        // the guide call out the decisive fight. IDs match the battle
+        // participants' playerId / summary.perPlayer keys.
+        battles: (this.mapData && Array.isArray(this.mapData.battles)) ? this.mapData.battles : null,
+        followedId: followed.playerId,
+        oppId: opp.playerId
+      });
+    } catch (e) { return; }
     if (!guide || !guide.steps || !guide.steps.length) return;
 
     this.guide = guide;
