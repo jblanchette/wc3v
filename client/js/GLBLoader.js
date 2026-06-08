@@ -51,6 +51,12 @@
       const binLen = view.getUint32(binOffset, true);
       const bin = arrayBuffer.slice(binOffset + 8, binOffset + 8 + binLen);
 
+      // Skinned/animated GLB (units) → build SkinnedMesh + Skeleton + clips.
+      // Static GLBs (buildings/trees) fall through to the legacy path below.
+      if (gltf.skins && gltf.skins.length) {
+        return this.parseSkinned(gltf, bin);
+      }
+
       if (!gltf.meshes || !gltf.meshes.length) return null;
       const primitives = gltf.meshes[0].primitives;
       if (!primitives || !primitives.length) return null;
@@ -257,6 +263,173 @@
 
       return group;
       }); // end Promise.all(imagePromises)
+    }
+
+    // Parse a skinned + animated GLB into a Three.js skeleton, SkinnedMesh(es),
+    // and AnimationClip[]. Returns a Promise resolving to:
+    //   { isSkinnedResult, root, placementNode, skinnedMeshes, animations, skeleton }
+    // - `root` is a Group containing the bone hierarchy + the SkinnedMeshes; add
+    //   it to the scene at origin.
+    // - `placementNode` is the wrapper (bone root, Z-up->Y-up + scale). Move THIS
+    //   to position a unit on terrain — never the SkinnedMesh (would double-transform).
+    parseSkinned (gltf, binAB) {
+      const COMPONENT = {
+        5120: Int8Array, 5121: Uint8Array, 5122: Int16Array,
+        5123: Uint16Array, 5125: Uint32Array, 5126: Float32Array
+      };
+      const TYPE_COUNT = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 };
+
+      // Accessor read → tightly-packed typed array. Handles gltf-transform's
+      // interleaved vertex bufferViews (byteStride) by de-interleaving, and is
+      // alignment-safe (slices copy into fresh buffers).
+      const readAcc = (accIdx) => {
+        const acc = gltf.accessors[accIdx];
+        const bv = gltf.bufferViews[acc.bufferView];
+        const TypedArray = COMPONENT[acc.componentType];
+        const comps = TYPE_COUNT[acc.type];
+        const elemBytes = comps * TypedArray.BYTES_PER_ELEMENT;
+        const base = (bv.byteOffset || 0) + (acc.byteOffset || 0);
+        const stride = bv.byteStride || elemBytes;
+        if (stride === elemBytes) {
+          return new TypedArray(binAB.slice(base, base + acc.count * elemBytes));
+        }
+        const out = new TypedArray(acc.count * comps);
+        for (let e = 0; e < acc.count; e++) {
+          const o = base + e * stride;
+          out.set(new TypedArray(binAB.slice(o, o + elemBytes)), e * comps);
+        }
+        return out;
+      };
+
+      const sanitize = (s) => (s || 'node').replace(/[\s.\[\]]/g, '_');
+
+      // --- 1. Node objects (Bone for joints, Object3D otherwise) ---
+      const skin = gltf.skins[0];
+      const jointSet = new Set(skin.joints);
+      const nodeObjs = gltf.nodes.map((n, i) => {
+        const obj = jointSet.has(i) ? new THREE.Bone() : new THREE.Object3D();
+        obj.name = sanitize(n.name) + '_' + i;
+        if (n.translation) obj.position.fromArray(n.translation);
+        if (n.rotation) obj.quaternion.fromArray(n.rotation);
+        if (n.scale) obj.scale.fromArray(n.scale);
+        return obj;
+      });
+      gltf.nodes.forEach((n, i) => {
+        if (n.children) n.children.forEach(ci => nodeObjs[i].add(nodeObjs[ci]));
+      });
+
+      // --- 2. Skeleton (bones in skin.joints order + inverse bind matrices) ---
+      const bones = skin.joints.map(ji => nodeObjs[ji]);
+      const ibm = readAcc(skin.inverseBindMatrices);
+      const boneInverses = [];
+      for (let i = 0; i < bones.length; i++) {
+        boneInverses.push(new THREE.Matrix4().fromArray(ibm, i * 16));
+      }
+      const skeleton = new THREE.Skeleton(bones, boneInverses);
+
+      // --- 3. Decode embedded textures (async), then build meshes/materials ---
+      const loadedTextures = {};
+      const imagePromises = [];
+      if (gltf.images) {
+        gltf.images.forEach((img, idx) => {
+          if (img.bufferView === undefined) return;
+          const bv = gltf.bufferViews[img.bufferView];
+          const imgData = new Uint8Array(binAB, bv.byteOffset || 0, bv.byteLength);
+          const blobUrl = URL.createObjectURL(new Blob([imgData], { type: img.mimeType || 'image/png' }));
+          imagePromises.push(new Promise(resolve => {
+            const el = new Image();
+            el.onload = () => {
+              const tex = new THREE.Texture(el);
+              tex.colorSpace = THREE.SRGBColorSpace;
+              tex.flipY = false;
+              tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+              tex.needsUpdate = true;
+              loadedTextures[idx] = tex;
+              URL.revokeObjectURL(blobUrl);
+              resolve();
+            };
+            el.onerror = () => { URL.revokeObjectURL(blobUrl); resolve(); };
+            el.src = blobUrl;
+          }));
+        });
+      }
+
+      const materialFor = (matIdx) => {
+        let map = null;
+        if (matIdx !== undefined && gltf.materials && gltf.materials[matIdx]) {
+          const pbr = gltf.materials[matIdx].pbrMetallicRoughness || {};
+          if (pbr.baseColorTexture) {
+            const t = gltf.textures[pbr.baseColorTexture.index];
+            if (t && loadedTextures[t.source]) map = loadedTextures[t.source];
+          }
+        }
+        return new THREE.MeshStandardMaterial({
+          map, color: map ? 0xffffff : 0x999999,
+          roughness: 1, metalness: 0, side: THREE.DoubleSide
+        });
+      };
+
+      return Promise.all(imagePromises).then(() => {
+        const root = new THREE.Group();
+        root.name = 'unit-root';
+
+        // Scene roots (wrapper holding bones + the skinned-mesh node).
+        const sceneDef = gltf.scenes[gltf.scene || 0];
+        let placementNode = null;
+        let meshNodeIdx = -1;
+        gltf.nodes.forEach((n, i) => { if (n.mesh !== undefined && n.skin !== undefined) meshNodeIdx = i; });
+
+        // --- 4. Build SkinnedMeshes (one per primitive), bind skeleton ---
+        const skinnedMeshes = [];
+        const meshDef = gltf.meshes[gltf.nodes[meshNodeIdx].mesh];
+        const meshHolder = nodeObjs[meshNodeIdx]; // Object3D, identity root
+        for (const prim of meshDef.primitives) {
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(readAcc(prim.attributes.POSITION), 3));
+          if (prim.attributes.NORMAL !== undefined) geo.setAttribute('normal', new THREE.BufferAttribute(readAcc(prim.attributes.NORMAL), 3));
+          if (prim.attributes.TEXCOORD_0 !== undefined) geo.setAttribute('uv', new THREE.BufferAttribute(readAcc(prim.attributes.TEXCOORD_0), 2));
+          geo.setAttribute('skinIndex', new THREE.BufferAttribute(readAcc(prim.attributes.JOINTS_0), 4));
+          geo.setAttribute('skinWeight', new THREE.BufferAttribute(readAcc(prim.attributes.WEIGHTS_0), 4));
+          if (prim.indices !== undefined) geo.setIndex(new THREE.BufferAttribute(readAcc(prim.indices), 1));
+
+          const sm = new THREE.SkinnedMesh(geo, materialFor(prim.material));
+          sm.frustumCulled = false; // skinned bounds drift; avoid false culling
+          sm.bind(skeleton, new THREE.Matrix4()); // identity bindMatrix (mesh node is identity)
+          skinnedMeshes.push(sm);
+          meshHolder.add(sm);
+        }
+
+        // Assemble graph: add scene roots to `root`. Identify the wrapper.
+        sceneDef.nodes.forEach(ri => {
+          root.add(nodeObjs[ri]);
+          if (ri !== meshNodeIdx) placementNode = nodeObjs[ri];
+        });
+        // The skeleton bones must live under root for world matrices to update.
+        // They already do (wrapper -> bones). meshHolder is also a scene root.
+
+        // --- 5. Animation clips ---
+        const animations = [];
+        if (gltf.animations) {
+          for (const animDef of gltf.animations) {
+            const tracks = [];
+            for (const ch of animDef.channels) {
+              const target = nodeObjs[ch.target.node];
+              if (!target) continue;
+              const samp = animDef.samplers[ch.sampler];
+              const times = readAcc(samp.input);
+              const values = readAcc(samp.output);
+              const prop = { translation: 'position', rotation: 'quaternion', scale: 'scale' }[ch.target.path];
+              if (!prop) continue;
+              const name = target.name + '.' + prop;
+              const Track = ch.target.path === 'rotation' ? THREE.QuaternionKeyframeTrack : THREE.VectorKeyframeTrack;
+              tracks.push(new Track(name, times, values));
+            }
+            animations.push(new THREE.AnimationClip(animDef.name || 'clip', -1, tracks));
+          }
+        }
+
+        return { isSkinnedResult: true, root, placementNode, skinnedMeshes, animations, skeleton };
+      });
     }
   }
 

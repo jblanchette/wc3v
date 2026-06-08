@@ -3871,6 +3871,87 @@ body {
   }
 }
 
+/* Beginner ("New to WC3") landing choice: two big labeled buttons that
+   replace the single circular mega play button. Hidden everywhere except
+   beginner mode (rules at the bottom of this block). */
+#mega-play-choice {
+  display: none;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  gap: clamp(0.75rem, 3cqw, 1.75rem);
+  width: min(92%, 620px);
+}
+
+.mega-choice-btn {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: clamp(0.9rem, 3.5cqw, 1.8rem) clamp(0.75rem, 3cqw, 1.5rem);
+  min-height: clamp(120px, 26cqw, 190px);
+  background: rgba(0, 0, 0, 0.82);
+  border: 3px solid rgba(58, 140, 197, 0.6);
+  border-radius: 0.75rem;
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(58, 140, 197, 0.3), inset 0 0 20px rgba(58, 140, 197, 0.1);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.mega-choice-icon {
+  font-size: clamp(2rem, 8cqw, 3.4rem);
+  line-height: 1;
+}
+
+.mega-choice-label {
+  font: 800 clamp(1.3rem, 5cqw, 2.1rem) Verdana, sans-serif;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+.mega-choice-sub {
+  font-size: clamp(0.8rem, 2.4cqw, 1.05rem);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.mega-choice-btn:hover {
+  transform: scale(1.04);
+  border-color: #8ed4ff;
+  box-shadow: 0 0 30px rgba(142, 212, 255, 0.6), inset 0 0 25px rgba(142, 212, 255, 0.15);
+}
+
+/* "Teach Me" gets the gold teaching accent (matches .mega-hint-featured). */
+.mega-choice-teach {
+  border-color: rgba(218, 165, 32, 0.6);
+  box-shadow: 0 0 20px rgba(218, 165, 32, 0.28), inset 0 0 20px rgba(218, 165, 32, 0.1);
+}
+
+.mega-choice-teach .mega-choice-icon,
+.mega-choice-teach .mega-choice-label {
+  color: #f0c75e;
+}
+
+.mega-choice-teach:hover {
+  border-color: #f0c75e;
+  box-shadow: 0 0 30px rgba(240, 199, 94, 0.55), inset 0 0 25px rgba(240, 199, 94, 0.15);
+}
+
+/* In beginner mode, swap the single circular play button + title for the
+   two-button choice. (View Options are already hidden — see #mega-play-hints
+   rule near the top of this file.) */
+#app.is-beginner #mega-play-choice { display: flex; }
+#app.is-beginner #mega-play-button,
+#app.is-beginner #mega-play-title-group { display: none; }
+
+/* Narrow viewports: stack the two cards vertically. */
+@container (max-width: 420px) {
+  #mega-play-choice { flex-direction: column; width: min(94%, 320px); }
+}
+
 #mega-play-hints {
   display: grid;
   grid-template-columns: 1fr 1fr;

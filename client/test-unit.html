@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Unit Model Test (skinned + animated)</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="/js/GLBLoader.js?v=skin1"></script>
+  <style>
+    body { margin: 0; background: #111; color: #fff; font-family: 'Segoe UI', monospace; overflow: hidden; }
+    canvas { display: block; }
+    #controls { position: absolute; top: 10px; left: 10px; z-index: 10; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; max-width: 90vw; }
+    #controls select, #controls button { font-size: 14px; padding: 4px 8px; background: #222; color: #ddd; border: 1px solid #555; border-radius: 4px; cursor: pointer; }
+    #controls button.active { border-color: #0f0; color: #bfb; }
+    #log { position: absolute; bottom: 10px; left: 10px; font-size: 12px; z-index: 10; white-space: pre; color: #8a9; max-height: 220px; overflow-y: auto; background: rgba(0,0,0,0.6); padding: 6px 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <select id="unit-select"></select>
+    <select id="clip-select"></select>
+    <button id="btn-play" class="active">Pause</button>
+    <button id="btn-skeleton">Skeleton</button>
+    <button id="btn-wire">Wireframe</button>
+    <button id="btn-rest">Rest pose</button>
+  </div>
+  <div id="log">Ready</div>
+  <script>
+    // Units with exported skinned GLBs. Add more as the exporter covers them.
+    const UNITS = {
+      'Footman (hfoo)': 'footman',
+      'Ghoul (ugho)': 'ghoul',
+      'Archmage (Hamg)': 'heroarchmage',
+      'Meat Wagon (umtw)': 'meatwagon'
+    };
+
+    const logEl = document.getElementById('log');
+    const addLog = (m) => { logEl.textContent += '\n' + m; logEl.scrollTop = logEl.scrollHeight; console.log(m); };
+    const clearLog = () => { logEl.textContent = ''; };
+
+    const unitSel = document.getElementById('unit-select');
+    const clipSel = document.getElementById('clip-select');
+    for (const [label, name] of Object.entries(UNITS)) {
+      const o = document.createElement('option'); o.textContent = label; o.value = name; unitSel.appendChild(o);
+    }
+
+    // ---- Three.js scene (lighting mirrors ThreeMapRenderer) ----
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x2a3a2a);
+    const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 1, 20000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+    addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+    scene.add(new THREE.AmbientLight(0xe8ebe3, 1.25));
+    const sun = new THREE.DirectionalLight(0xfff1c4, 1.6); sun.position.set(-1200, 3000, -1200); scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xc4d8ff, 0.3); fill.position.set(1200, 1000, 1200); scene.add(fill);
+    scene.add(new THREE.HemisphereLight(0xbfd8ec, 0x6b5a3a, 0.35));
+
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), new THREE.MeshLambertMaterial({ color: 0x3a6a2a }));
+    ground.rotation.x = -Math.PI / 2; ground.position.y = 0; scene.add(ground);
+    const grid = new THREE.GridHelper(4000, 40, 0x224422, 0x183018); scene.add(grid);
+
+    // ---- State ----
+    const loader = new GLBLoader();
+    const clock = new THREE.Clock();
+    let current = null;       // { root, placementNode, skinnedMeshes, animations, skeleton }
+    let mixer = null, action = null;
+    let skelHelper = null;
+    let playing = true, wire = false, showSkel = false;
+    let fitDist = 400, fitCenter = new THREE.Vector3(0, 60, 0);
+
+    function loadUnit (name) {
+      clearLog(); addLog('Loading ' + name + '.glb …');
+      if (current) { scene.remove(current.root); if (skelHelper) { scene.remove(skelHelper); skelHelper = null; } }
+      current = null; mixer = null; action = null;
+
+      loader.load('/assets/models/units/' + name + '.glb?v=' + Date.now(), (res) => {
+        if (!res || !res.isSkinnedResult) { addLog('ERROR: not a skinned result (got ' + (res && res.constructor.name) + ')'); return; }
+        current = res;
+        window.__unit = res; window.__scene = scene; // debug introspection
+        scene.add(res.root);
+
+        let verts = 0;
+        res.skinnedMeshes.forEach(sm => { verts += sm.geometry.attributes.position.count; });
+        addLog('SkinnedMeshes: ' + res.skinnedMeshes.length + ', verts: ' + verts + ', bones: ' + res.skeleton.bones.length);
+        addLog('Clips: ' + res.animations.map(a => '"' + a.name + '" ' + a.duration.toFixed(2) + 's').join(', '));
+
+        // Clip dropdown
+        clipSel.innerHTML = '';
+        res.animations.forEach((a, i) => { const o = document.createElement('option'); o.textContent = a.name; o.value = i; clipSel.appendChild(o); });
+
+        // Mixer
+        if (res.animations.length) {
+          mixer = new THREE.AnimationMixer(res.root);
+          window.__mixer = mixer; // debug
+          playClip(0);
+        }
+
+        applyWire(); applySkeleton();
+
+        // Fit camera from rest-pose bounds
+        const box = new THREE.Box3().setFromObject(res.root);
+        const size = box.getSize(new THREE.Vector3());
+        fitCenter = box.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z) || 200;
+        fitDist = maxDim * 2.2;
+        addLog('Bounds: ' + size.x.toFixed(0) + ' x ' + size.y.toFixed(0) + ' x ' + size.z.toFixed(0));
+      }, undefined, (err) => addLog('ERROR: ' + (err && (err.message || err))));
+    }
+
+    function playClip (idx) {
+      if (!mixer || !current.animations[idx]) return;
+      if (action) action.stop();
+      action = mixer.clipAction(current.animations[idx]);
+      action.reset();
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.play();
+      action.paused = !playing;
+    }
+
+    function applyWire () { if (current) current.skinnedMeshes.forEach(sm => sm.material.wireframe = wire); }
+    function applySkeleton () {
+      if (!current) return;
+      if (showSkel && !skelHelper) { skelHelper = new THREE.SkeletonHelper(current.root); skelHelper.material.linewidth = 2; scene.add(skelHelper); }
+      else if (!showSkel && skelHelper) { scene.remove(skelHelper); skelHelper = null; }
+    }
+
+    // ---- Controls ----
+    unitSel.onchange = () => loadUnit(unitSel.value);
+    clipSel.onchange = () => playClip(parseInt(clipSel.value, 10));
+    document.getElementById('btn-play').onclick = (e) => { playing = !playing; if (action) action.paused = !playing; e.target.textContent = playing ? 'Pause' : 'Play'; e.target.classList.toggle('active', playing); };
+    document.getElementById('btn-skeleton').onclick = (e) => { showSkel = !showSkel; e.target.classList.toggle('active', showSkel); applySkeleton(); };
+    document.getElementById('btn-wire').onclick = (e) => { wire = !wire; e.target.classList.toggle('active', wire); applyWire(); };
+    document.getElementById('btn-rest').onclick = () => { if (action) { action.stop(); action = null; } };
+
+    // ---- Manual orbit ----
+    let angle = 0.6, dragging = false, lastX = 0, lastY = 0, pitch = 0.35;
+    renderer.domElement.addEventListener('mousedown', (e) => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+    renderer.domElement.addEventListener('mousemove', (e) => { if (!dragging) return; angle += (e.clientX - lastX) * 0.01; pitch = Math.max(0.05, Math.min(1.4, pitch + (e.clientY - lastY) * 0.005)); lastX = e.clientX; lastY = e.clientY; });
+    addEventListener('mouseup', () => { dragging = false; });
+    renderer.domElement.addEventListener('wheel', (e) => { fitDist = Math.max(60, fitDist + e.deltaY * 0.6); e.preventDefault(); }, { passive: false });
+
+    function animate () {
+      requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+      if (mixer && playing) mixer.update(dt);
+      if (!dragging) angle += 0.004;
+      camera.position.x = fitCenter.x + Math.sin(angle) * fitDist * Math.cos(pitch);
+      camera.position.z = fitCenter.z + Math.cos(angle) * fitDist * Math.cos(pitch);
+      camera.position.y = fitCenter.y + fitDist * Math.sin(pitch);
+      camera.lookAt(fitCenter);
+      renderer.render(scene, camera);
+    }
+    animate();
+    loadUnit(unitSel.value);
+  </script>
+</body>
+</html>

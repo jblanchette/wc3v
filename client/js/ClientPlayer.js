@@ -724,15 +724,21 @@ const ClientPlayer = class {
     this._resolved = { representatives, collapsed, alwaysDrawSlots };
   }
 
-  drawResolvedUnits (frameData, ctx) {
+  drawResolvedUnits (frameData, ctx, viewOptions) {
     if (!this._resolved) return;
 
     const { unitDrawPositions } = frameData;
     const { representatives, collapsed, alwaysDrawSlots } = this._resolved;
 
+    // Units shown as 3D models this frame skip their 2D icon (UnitModelRenderer
+    // publishes the set on viewOptions._rendered3D). Hybrid: others stay 2D.
+    const rendered3D = viewOptions && viewOptions._rendered3D;
+    const skip3D = (u) => rendered3D && rendered3D.has(u.uuid);
+    const all3D = viewOptions && viewOptions.display3DUnits;
+
     // draw formation tethers — dashed lines from displaced non-hero units to nearest hero
     const heroReps = representatives.filter(r => r.isHero);
-    if (heroReps.length > 0 && representatives.length > 1) {
+    if (heroReps.length > 0 && representatives.length > 1 && !all3D) {
       ctx.save();
       ctx.setLineDash([4, 4]);
       ctx.lineWidth = 1.5;
@@ -767,9 +773,9 @@ const ClientPlayer = class {
 
     // draw representatives and count badges
     representatives.forEach(unitBox => {
-      Drawing.drawUnit(ctx, unitBox);
+      if (!skip3D(unitBox)) Drawing.drawUnit(ctx, unitBox);
 
-      if (unitBox.clusterCount > 1) {
+      if (!skip3D(unitBox) && unitBox.clusterCount > 1) {
         const badgeX = unitBox.drawX + unitBox.halfIconSize;
         const badgeY = unitBox.drawY + unitBox.halfIconSize;
         Drawing.drawCountBadge(ctx, unitBox.clusterCount, badgeX, badgeY, unitBox.playerColor);
@@ -831,6 +837,7 @@ const ClientPlayer = class {
 
     // always draw any unit in this list (neutrals fade when player units overlap)
     alwaysDrawSlots.forEach(unitBox => {
+      if (skip3D(unitBox)) return; // shown as a 3D model
       if (unitBox.isNeutralPlayer) {
         const halfIcon = unitBox.iconSize / 2;
         const overlapped = unitDrawPositions.some(u =>
@@ -1132,7 +1139,7 @@ const ClientPlayer = class {
     // render drawn units
     ////
 
-    this.drawResolvedUnits(frameData, playerCtx);
+    this.drawResolvedUnits(frameData, playerCtx, viewOptions);
 
     ////
     // render optional details

@@ -673,6 +673,11 @@ const Wc3vViewer = class {
     if (window.PathTrailRenderer3D) {
       this.pathTrailRenderer = new PathTrailRenderer3D(this.threeMapRenderer);
     }
+
+    // 3D animated unit models (hybrid: replaces 2D unit icons where a model exists)
+    if (window.UnitModelRenderer) {
+      this.unitModelRenderer = new UnitModelRenderer(this.threeMapRenderer, this);
+    }
   }
 
   loadWalkmap () {
@@ -3127,7 +3132,8 @@ const Wc3vViewer = class {
       // the first time hero distance crosses SPLIT_ENTER_DISTANCE with no
       // engagement nearby (BroadcastCamera.js:208-215). User reported it as
       // surprising — it now requires explicit opt-in via the view-options menu.
-      autoSplitScreen: false
+      autoSplitScreen: false,
+      display3DUnits: false           // render animated 3D unit models (hybrid; 2D fallback)
     };
 
     // Creep/spawn-camp route detection is keyed off 1v1 team heuristics and
@@ -4001,6 +4007,9 @@ const Wc3vViewer = class {
         if (this.pathTrailRenderer) {
           this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
         }
+        if (this.unitModelRenderer) {
+          this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
+        }
 
         // Force camera resync and render
         this.threeMapRenderer._lastSyncK = null;
@@ -4289,6 +4298,9 @@ const Wc3vViewer = class {
       if (this.buildingSplats) this.buildingSplats.updateVisibility(gameTime);
       if (this.pathTrailRenderer) {
         this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
+      }
+      if (this.unitModelRenderer) {
+        this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
       }
       this.threeMapRenderer.render(transform);
     }
