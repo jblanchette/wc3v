@@ -443,6 +443,10 @@
         // the renderer's helpers can lay out the per-hero pick rows + the
         // L1→L2 stat table. Null on every other step.
         spike: (s.spike && typeof s.spike === 'object') ? s.spike : null,
+        // Optional: the creep-route step's honest target level (min(3, peak the
+        // hero actually reached)). The viewer/validator read this so the title
+        // and tour never claim a level the hero never hit. Null elsewhere.
+        targetLevel: (s.targetLevel != null) ? (Number(s.targetLevel) || 0) : null,
         eventTimes: { followed: (s.fTimes || []).slice(), opp: (s.oTimes || []).slice() }
       });
     };
@@ -548,23 +552,32 @@
       if (fh) {
         const oh = firstHero(oStream);
         const lvl3 = heroReachesLevelMs(fStream, fh.itemId, 3);
+        // Level-honest: never claim a level the hero didn't reach. targetLevel
+        // is the peak it actually hit, capped at 3 (the classic spike). The
+        // viewer's creep tour gates on the same number (CreepRoute).
+        const reachedLevel = heroLevelAt(fStream, fh.itemId, Infinity);
+        const targetLevel = Math.min(3, reachedLevel);
         const at = (lvl3 !== Infinity) ? lvl3 : fh.trainTime;
-        const ourLvl = (lvl3 !== Infinity) ? 3 : heroLevelAt(fStream, fh.itemId, at);
         const ourHeroTimes = heroLevelEvents(fStream).filter(e => e.unit.itemId === fh.itemId && e.gameTime <= at).map(e => e.gameTime).concat([fh.trainTime]);
         const oppHeroTimes = oh ? heroLevelEvents(oStream).filter(e => e.unit.itemId === oh.itemId && e.gameTime <= at).map(e => e.gameTime).concat([oh.trainTime]) : [];
-        const action = (lvl3 !== Infinity)
-          ? `${fh.name} reaches level ${ourLvl} by ${fmt(at)}. These are the camps it cleared to get there, in order:`
-          : `${fh.name} comes out at ${fmt(fh.trainTime)} and goes straight to creep. The camps it took, in order:`;
+        const reachedL3 = (lvl3 !== Infinity);
+        const title = reachedL3 ? 'The route to level 3' : 'The early creep route';
+        const action = reachedL3
+          ? `${fh.name} reaches level 3 by ${fmt(lvl3)}. These are the camps it cleared to get there, in order:`
+          : (targetLevel >= 2
+              ? `${fh.name} comes out at ${fmt(fh.trainTime)} and creeps up to level ${targetLevel}. The camps it cleared, in order:`
+              : `${fh.name} comes out at ${fmt(fh.trainTime)} and does some early creeping. The camps it cleared, in order:`);
         push({
-          gameTimeMs: fh.trainTime, key: 'hero', title: 'The route to level 3', iconId: fh.itemId,
+          gameTimeMs: fh.trainTime, key: 'hero', title, iconId: fh.itemId,
           action,
           contrast: null,                                                          // moved into the spike step
           why: PRINCIPLES.creepEarly,                                              // skill-spike copy moved into spike step
           takeaway: `When your hero pops, the first move is a creep camp, not the opponent's base. Keep it creeping between fights.`,
           // The viewer turns this into a guided creep tour — it has the map /
           // camp data; here we just flag it. (Falls back to following the hero
-          // if it can't resolve the camps.)
+          // if it can't resolve the camps.) targetLevel keeps the tour + title honest.
           focus: { kind: 'creepTour', player: 'followed', highlight: null },
+          targetLevel,
           fTimes: ourHeroTimes, oTimes: oppHeroTimes
         });
 

@@ -1377,10 +1377,9 @@ const Wc3vViewer = class {
     this.beginnerPickedSlot = (slot != null) ? String(slot) : null;
     try { sessionStorage.setItem(this._beginnerPickKey(), this.beginnerPickedSlot || ''); } catch (e) {}
     if (this.gameLoaded && this.boRenderer) this.boRenderer.renderBuildOrder();
-    // First time the user picks a player, auto-open the walkthrough — the
-    // commentary HUD is the teaching, the BO panel is reference. Subsequent
-    // picks (after the user has exited the HUD once) don't re-open.
-    this._maybeAutoOpenWalkthrough();
+    // Picking a player no longer auto-opens the walkthrough — the beginner
+    // landing overlay's two buttons ("Just Watch" / "Teach Me") are now the
+    // explicit choice. (?guide=1 deep links still open it via _maybeAutoEnterGuide.)
   }
 
   clearBeginnerPick () {
@@ -1498,6 +1497,14 @@ const Wc3vViewer = class {
     const hud = document.getElementById('guide-hud'); if (hud) hud.hidden = false;
     this.guideGoToStep(-1);
     if (this.boRenderer && this.boRenderer.syncWalkthroughCta) this.boRenderer.syncWalkthroughCta();
+  }
+
+  // Beginner overlay "Teach Me" button: dismiss the mega-play overlay and open
+  // the guided walkthrough. enterGuideMode resolves the slot loosely and falls
+  // back to the "whose game?" picker when no player is picked yet.
+  startWalkthroughFromOverlay () {
+    this.toggleMegaPlayButton(false);
+    this.enterGuideMode(this.beginnerPickedSlot != null ? this.beginnerPickedSlot : undefined);
   }
 
   exitGuideMode () {
@@ -1809,56 +1816,50 @@ const Wc3vViewer = class {
     const teamId = pinfo ? pinfo.teamId : null;
     if (!ngObj || teamId == null) return false;
 
-    // hero lvl-3 time (the followed player's first hero), from the event stream
+    // The followed player's first hero + the level it actually reached, from
+    // the event stream. The route is evidence-based: CreepRoute only includes
+    // camps the HERO genuinely cleared (a dense run of in-camp/creep-pull hero
+    // interactions ending at the camp's clearedTime), seeks to that real fight
+    // window — NOT the old `windowStart` first-poke, which framed walk-throughs.
     const es = (player && player.eventStream) || [];
     let heroId = null;
     for (const e of es) { if (e && e.key === 'addUnit' && e.unit && e.unit.isHero) { heroId = e.unit.itemId; break; } }
-    let heroL3 = Infinity;
+    let reachedLevel = 0;
     for (const e of es) {
       if (e && e.key === 'HeroLevel' && e.unit && (heroId == null || e.unit.itemId === heroId)) {
         const nl = Number(e.newLevel != null ? e.newLevel : e.level) || 0;
-        if (nl >= 3 && e.gameTime < heroL3) heroL3 = e.gameTime;
+        if (nl > reachedLevel) reachedLevel = nl;
       }
     }
+    const levelTimeMs = (level) => {
+      let best = Infinity;
+      for (const e of es) {
+        if (e && e.key === 'HeroLevel' && e.unit && (heroId == null || e.unit.itemId === heroId)) {
+          const nl = Number(e.newLevel != null ? e.newLevel : e.level) || 0;
+          if (nl >= level && e.gameTime < best) best = e.gameTime;
+        }
+      }
+      return best;
+    };
 
-    const camps = [];
-    Object.keys(ngObj).forEach(k => {
-      const g = ngObj[k];
-      if (!g || !g.bounds) return;
-      // Per-player credit model is the single source of truth here — the same
-      // model the map ring and the Camp Info panel render from. A camp belongs
-      // in this player's tour only if the model credits them for clearing it.
-      // `credited` already implies the camp was cleared, this player did real
-      // clearing work, and a hero was present (REQUIRE_HERO).
-      const pc = g.playerCredit && g.playerCredit[String(pid)];
-      if (!pc || !pc.credited) return;
-      const m = pc.measured || {};
-      // when this player started working the camp (pre-clear engagement window)
-      const start = Number(m.windowStart != null ? m.windowStart : m.firstEngagement) || 0;
-      if (heroL3 !== Infinity && start >= heroL3) return;                   // started after the hero hit lvl 3 — beyond "to level 3"
-      const b = g.bounds;
-      const wx = (b.minX + b.maxX) / 2, wy = (b.minY + b.maxY) / 2;
-      const rWorld = Math.max(220, Math.hypot(b.maxX - b.minX, b.maxY - b.minY) / 2 + 130);
-      const big = (Array.isArray(g.units) && g.units[0] && g.units[0].displayName) || null;
-      const label = big ? (big.charAt(0).toUpperCase() + big.slice(1) + ' camp') : 'Creep camp';
-      const iconId = (Array.isArray(g.units) && g.units[0] && typeof g.units[0].itemId === 'string') ? g.units[0].itemId : null;
-      const clear = Number(g.clearedTime) || (start + 18000);
-      camps.push({
-        wx, wy, rWorld,
-        startMs: Math.max(0, Math.round(start)), clearMs: Math.max(0, Math.round(Math.max(clear, start + 1000))),
-        label, levelStr: g.totalLevel ? ('lvl ' + g.totalLevel) : '', iconId,
-        boundsRect: { minX: wx - rWorld, maxX: wx + rWorld, minY: wy - rWorld, maxY: wy + rWorld }
-      });
-    });
-    if (!camps.length) return false;
-    // Order by when this player engaged each camp — the tour seeks to each
-    // camp's startMs, so visit order keeps playback moving forward cleanly.
-    camps.sort((a, b) => a.startMs - b.startMs);
-    if (camps.length > 12) camps.length = 12;
+    const route = (typeof CreepRoute !== 'undefined')
+      ? CreepRoute.buildCreepRoute(ngObj, pid, heroId, { reachedLevel, levelTimeMs })
+      : { camps: [], targetLevel: null, reachedLevel };
+    if (!route.camps.length) return false;   // hero barely creeped → fall back to following the hero
+    // Map to the tour-camp shape. `startMs` is the SEEK anchor — now the real
+    // fight start (route.fightStartMs), so the camera lands on the clearing
+    // fight instead of an early walk-through.
+    const camps = route.camps.map(c => ({
+      wx: c.wx, wy: c.wy, rWorld: c.rWorld,
+      startMs: c.fightStartMs, clearMs: c.clearMs,
+      label: c.label, levelStr: c.levelStr, iconId: c.iconId,
+      boundsRect: c.boundsRect
+    }));
+    // CreepRoute already orders by fight time and caps the count.
 
     let mnX = Infinity, mxX = -Infinity, mnY = Infinity, mxY = -Infinity;
     camps.forEach(c => { if (c.wx - c.rWorld < mnX) mnX = c.wx - c.rWorld; if (c.wx + c.rWorld > mxX) mxX = c.wx + c.rWorld; if (c.wy - c.rWorld < mnY) mnY = c.wy - c.rWorld; if (c.wy + c.rWorld > mxY) mxY = c.wy + c.rWorld; });
-    this._guideCreepTour = { camps, idx: 0, summaryShown: false, allRect: { minX: mnX, maxX: mxX, minY: mnY, maxY: mxY } };
+    this._guideCreepTour = { camps, idx: 0, summaryShown: false, allRect: { minX: mnX, maxX: mxX, minY: mnY, maxY: mxY }, targetLevel: route.targetLevel, reachedLevel };
     if (this.viewOptions && this._guidePrevCreepRoute == null) this._guidePrevCreepRoute = !!this.viewOptions.displayCreepRoute;
 
     // jump to camp 1, frame + ring it, roll the tape
@@ -2683,18 +2684,6 @@ const Wc3vViewer = class {
     setTimeout(() => { try { this.enterGuideMode(who); } catch (e) {} }, 0);
   }
 
-  // Beginner mode is a guided experience — once a player has been picked,
-  // auto-open the walkthrough so the user lands on the lesson, not the wall
-  // of build-order rows. Runs at most once per page load (flag is on the
-  // viewer). Skips if the walkthrough is already open / opened earlier.
-  _maybeAutoOpenWalkthrough () {
-    if (!this.boLearnerMode) return;
-    if (this.guideMode || this._guideOpenedOnce) return;
-    const me = this._getBeginnerPickedPlayer();
-    if (!me) return;
-    setTimeout(() => { try { if (!this.guideMode && !this._guideOpenedOnce) this.enterGuideMode(me); } catch (e) {} }, 60);
-  }
-
   scaleLiveModeCanvas () {
     if (this.mobileMode) return;
     if (!this.gameScaler) return;
@@ -3014,7 +3003,8 @@ const Wc3vViewer = class {
       this._loadBeginnerPick();    // restore the "Me" pick (or take it from ?player=) BEFORE the first BO render
       this.setupBuildOrder();
       this._maybeAutoEnterGuide(); // ?guide=1 deep link → open the walkthrough once the BO panel is up
-      this._maybeAutoOpenWalkthrough(); // beginner-with-pick view: auto-open the walkthrough on landing
+      // (No auto-open on landing — the beginner overlay's "Just Watch" / "Teach Me"
+      //  buttons are the explicit choice. ?guide=1 deep links still auto-open above.)
 
       if (this.mobileMode) {
         // Skip canvas-bound subsystems entirely. BO renderer + match header
@@ -4333,7 +4323,16 @@ const Wc3vViewer = class {
     // HTML icons via the same projectXY path, so no hit buffer hand-off is
     // needed — both stay glued to the 3D camera under any mode.
     this.mapRenderer.renderNeutralGroups(utilityCtx, gameTime, transform, this.mapData, viewOptions, this.gameScaler, this.players, this.teamColorMap, null);
-    if (this.campPanel && !this.guideMode) {
+    // Sync the HTML icons here too in guideMode: the walkthrough drives the
+    // camera with a single one-shot d3 zoom, and CampPanel's own rAF loop can
+    // run before threeMapRenderer.syncTransform has moved the 3D camera — it
+    // would then project the icons through the stale (pre-zoom) matrix and,
+    // because the transform signature never changes again, leave them stuck in
+    // the wrong place. render() always runs after the camera matrix is rebuilt
+    // (and mainLoop never self-stops while guideMode), so positioning the icons
+    // here keeps them glued to the fresh camera. `update()` no-ops unless the
+    // camp detail panel is open, so it's safe to call during the walkthrough.
+    if (this.campPanel) {
       this.campPanel.syncIcons(null);
       this.campPanel.update(gameTime);
     }

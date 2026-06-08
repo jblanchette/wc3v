@@ -58,6 +58,7 @@
         '/js/BaseNameplateRenderer.js',
         '/js/HeroAbilityStats.js',
         '/js/ReplayGuide.js',
+        '/js/CreepRoute.js',
         '/js/ChapterMarkers.js',
         '/js/EventModel.js',
         '/js/EventFeed.js',
@@ -170,6 +171,18 @@
                     <button type="button" id="mega-play-title-logo" onClick="wc3v.play()" aria-label="Play replay"><img src="/assets/wc3v.svg" alt="" /><img src="/assets/play-icon.svg" alt="" class="logo-play-icon" /></button>
                   </div>
                   <button type="button" id="mega-play-button" onClick="wc3v.play()" aria-label="Play replay"></button>
+                  <div id="mega-play-choice" role="group" aria-label="How do you want to start?">
+                    <button type="button" class="mega-choice-btn mega-choice-watch" onClick="wc3v.play()">
+                      <span class="mega-choice-icon" aria-hidden="true">▶</span>
+                      <span class="mega-choice-label">Just Watch</span>
+                      <span class="mega-choice-sub">Play the replay yourself</span>
+                    </button>
+                    <button type="button" class="mega-choice-btn mega-choice-teach" onClick="wc3v.startWalkthroughFromOverlay()">
+                      <span class="mega-choice-icon" aria-hidden="true">🎓</span>
+                      <span class="mega-choice-label">Teach Me</span>
+                      <span class="mega-choice-sub">Step-by-step walkthrough</span>
+                    </button>
+                  </div>
                   <div id="mega-play-hints" role="group" aria-label="View options">
                     <div id="mega-play-hints-title">View Options</div>
                     <button type="button" class="mega-hint mega-hint-featured on" data-option="displayCreepRoute" aria-pressed="true" onClick="wc3v.toggleViewOption('displayCreepRoute')">Creep Routes<span class="mega-hint-icon" aria-hidden="true"></span></button>
