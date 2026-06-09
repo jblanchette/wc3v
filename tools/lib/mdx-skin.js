@@ -26,29 +26,54 @@ function stripMDXChunks (buffer, chunkNames) {
   return result;
 }
 
-// Pick the canonical idle ("Stand") sequence. WC3 units carry many stand variants:
-// rare fidgets (rarity>0), carrying/casting idles (Lumber/Gold/Channel/Work), and
-// pose variants (Ready/Victory/Defend/Turn). The default idle is the plain,
-// rarity-0 "Stand"; pick that, falling back to the lowest-rarity earliest stand.
-function pickStandSequence (mdx) {
+// Pick the canonical sequence whose name starts with `prefix`, excluding variant
+// keywords (carry/cast/pose/morph idles). Prefers the exact-named, lowest-rarity,
+// earliest one — so "Stand"/"Walk"/"Attack"/"Death" beat "Stand Ready", "Walk
+// Lumber", "Attack - 2", "Death Spin", etc.
+const BAD_COMMON = ['alternate', 'morph'];
+const SEQ_BAD = {
+  stand: ['lumber', 'gold', 'channel', 'work', 'victory', 'defend', 'ready', 'turn', 'spin', 'flesh', 'bone', 'decay', 'upgrade'],
+  walk: ['lumber', 'gold', 'defend'],
+  attack: ['lumber', 'gold', 'defend', 'spell', 'slam', 'throw'],
+  death: ['decay', 'flesh', 'bone', 'spin', 'upper', 'explode']
+};
+function pickByPrefix (mdx, prefix, extraBad) {
   if (!mdx.Sequences || !mdx.Sequences.length) return null;
-  const BAD = ['alternate', 'morph', 'lumber', 'gold', 'channel', 'work', 'victory',
-    'defend', 'ready', 'turn', 'spin', 'flesh', 'bone', 'decay', 'upgrade'];
+  const bad = BAD_COMMON.concat(extraBad || []);
   let cands = mdx.Sequences.filter(s => {
     const n = s.Name.toLowerCase();
-    return n.startsWith('stand') && !BAD.some(b => n.includes(b));
+    return n.startsWith(prefix) && !bad.some(b => n.includes(b));
   });
-  if (!cands.length) cands = mdx.Sequences.filter(s => s.Name.toLowerCase().startsWith('stand'));
+  if (!cands.length) {
+    cands = mdx.Sequences.filter(s => {
+      const n = s.Name.toLowerCase();
+      return n.startsWith(prefix) && !BAD_COMMON.some(b => n.includes(b));
+    });
+  }
   if (!cands.length) return null;
   cands = cands.slice().sort((a, b) => {
-    const ae = a.Name.toLowerCase().trim() === 'stand' ? 0 : 1;
-    const be = b.Name.toLowerCase().trim() === 'stand' ? 0 : 1;
-    if (ae !== be) return ae - be;                       // exact "Stand" wins
+    const ae = a.Name.toLowerCase().trim() === prefix ? 0 : 1;
+    const be = b.Name.toLowerCase().trim() === prefix ? 0 : 1;
+    if (ae !== be) return ae - be;                       // exact name wins
     const ar = a.Rarity || 0, br = b.Rarity || 0;
-    if (ar !== br) return ar - br;                        // then lowest rarity (non-fidget)
+    if (ar !== br) return ar - br;                        // then lowest rarity
     return a.Interval[0] - b.Interval[0];                 // then earliest
   });
   return cands[0];
+}
+
+// The idle "Stand" sequence (back-compat; used by check-skinning + inspect-mdx).
+function pickStandSequence (mdx) { return pickByPrefix(mdx, 'stand', SEQ_BAD.stand); }
+
+// Canonical clip set for the animation state machine. Categories whose sequence
+// is absent (e.g. statues have no Walk/Attack) come back null and are skipped.
+function pickSequences (mdx) {
+  return {
+    idle: pickByPrefix(mdx, 'stand', SEQ_BAD.stand),
+    walk: pickByPrefix(mdx, 'walk', SEQ_BAD.walk),
+    attack: pickByPrefix(mdx, 'attack', SEQ_BAD.attack),
+    death: pickByPrefix(mdx, 'death', SEQ_BAD.death)
+  };
 }
 
 // Evaluate a scalar AnimVector at `frame` WITHIN sequence interval [from,to],
@@ -95,4 +120,4 @@ function geosetVisibleDuringStand (mdx, gi, start, end) {
   return maxA > 0.1;
 }
 
-module.exports = { stripMDXChunks, pickStandSequence, evalAnimScalarInSeq, geosetVisibleDuringStand };
+module.exports = { stripMDXChunks, pickStandSequence, pickSequences, evalAnimScalarInSeq, geosetVisibleDuringStand };

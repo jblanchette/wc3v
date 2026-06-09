@@ -3133,7 +3133,7 @@ const Wc3vViewer = class {
       // engagement nearby (BroadcastCamera.js:208-215). User reported it as
       // surprising — it now requires explicit opt-in via the view-options menu.
       autoSplitScreen: false,
-      display3DUnits: false           // render animated 3D unit models (hybrid; 2D fallback)
+      display3DUnits: true            // 3D animated unit models are the default; toggle off for 2D icons
     };
 
     // Creep/spawn-camp route detection is keyed off 1v1 team heuristics and
@@ -3479,7 +3479,7 @@ const Wc3vViewer = class {
 
     this.zoomContainer = d3.select("#canvas-group");
 
-    const zoomScaleExtent = [1.0, 9.0];   // 9× max so the walkthrough can frame a single base / hero tightly
+    const zoomScaleExtent = [1.0, 24.0];  // up to 24× so you can zoom in close on individual 3D unit models (camera ~1000u up)
 
     this.zoom = d3.zoom()
       .scaleExtent(zoomScaleExtent)

@@ -507,6 +507,28 @@ const ClientUnit = class {
       : { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
   }
 
+  // World-space facing (radians, 0=+X, CCW) baked by lib/FacingInference, sampled
+  // by gameTime with shortest-arc interpolation (mirrors getInterpolatedPosition;
+  // seek-safe). Returns null for replays parsed before facing existed — the caller
+  // (UnitModelRenderer) then falls back to velocity-derived facing.
+  getInterpolatedFacing (gameTime) {
+    const path = this.path;
+    const i = this.recordIndexes.path;
+    if (i < 0 || !path || !path[i]) return null;
+    const a = path[i];
+    if (a.facing == null) return null; // pre-facing replay → caller falls back
+    const b = path[i + 1];
+    if (!b || b.facing == null || gameTime >= b.gameTime || gameTime < a.gameTime || isPathGap(a, b)) {
+      return a.facing;
+    }
+    const dt = b.gameTime - a.gameTime;
+    const t = dt > 0 ? Math.min(1, Math.max(0, (gameTime - a.gameTime) / dt)) : 0;
+    let d = b.facing - a.facing;            // shortest arc
+    if (d > Math.PI) d -= Math.PI * 2;
+    else if (d < -Math.PI) d += Math.PI * 2;
+    return a.facing + d * t;
+  }
+
   getCurrentLevelRecord (gameTime, verbose = false) {
     if (!this.meta.hero) {
       return;

@@ -19,7 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseMDX } = require('war3-model');
 const { mat4, vec3 } = require('gl-matrix');
-const { stripMDXChunks, pickStandSequence } = require('./lib/mdx-skin');
+const { stripMDXChunks, pickSequences } = require('./lib/mdx-skin');
 
 const UNITS_DIR = path.join(__dirname, 'map-data', 'units');
 const OUT_DIR = path.join(__dirname, '..', 'client', 'assets', 'models', 'units');
@@ -179,16 +179,17 @@ function main () {
   let glbFile = get('glb') || (unit && path.join(OUT_DIR, unit + '.glb'));
   if (!mdxFile || !glbFile) { console.error('Need --unit=NAME (or --file= and --glb=)'); process.exit(1); }
 
+  const category = get('clip') || 'idle'; // idle|walk|attack|death
   const mdx = parseMDX(stripMDXChunks(new Uint8Array(fs.readFileSync(mdxFile)).buffer, ['LITE']));
   const { gltf, read } = parseGLB(glbFile);
   const skin = gltf.skins[0];
-  const animClip = gltf.animations && gltf.animations[0];
+  const animClip = (gltf.animations || []).find(a => a.name === category) || (gltf.animations || [])[0];
 
-  // Stand sequence interval (engine frames).
-  const stand = pickStandSequence(mdx);
-  if (!stand) { console.log('no Stand sequence — static model, animation check skipped'); return; }
-  const start = stand.Interval[0], end = stand.Interval[1];
-  console.log('Comparing engine vs glTF skinning for "' + stand.Name + '" [' + start + '..' + end + ']');
+  // Engine-side sequence for this clip category.
+  const seq = pickSequences(mdx)[category];
+  if (!seq || !animClip) { console.log('no "' + category + '" clip — skipped'); return; }
+  const start = seq.Interval[0], end = seq.Interval[1];
+  console.log('Comparing engine vs glTF skinning for ' + category + ' = "' + seq.Name + '" [' + start + '..' + end + ']');
 
   // glTF prims align 1:1 with MDX geosets (export iterates geosets in order).
   const meshNodeIdx = gltf.nodes.findIndex(n => n.mesh !== undefined && n.skin !== undefined);

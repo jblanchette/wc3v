@@ -81,6 +81,7 @@ const config = require("./config/config");
 const ReplayValidator = require("./lib/ReplayValidator");
 const BattleDetector  = require("./lib/BattleDetector");
 const DeathInference  = require("./lib/DeathInference");
+const FacingInference = require("./lib/FacingInference");
 const HideInference   = require("./lib/HideInference");
 const BattleSummary   = require("./lib/BattleSummary");
 const ResourceSeries  = require("./lib/ResourceSeries");
@@ -581,6 +582,11 @@ const doParsing = async (input, options = {}) => {
   console.log(`scanned ${deathStats.unitsScanned} units: ` +
     `active=${deathStats.active}, idle=${deathStats.idle}, ` +
     `possiblyLost=${deathStats.possiblyLost}, lost=${deathStats.lost}`);
+
+  // Facing inference — bake a turn-rate-integrated facing angle onto every unit's
+  // path so the 3D viewer can face/rotate units the way they moved (seek-safe).
+  const facingStats = new FacingInference(playerManager).run();
+  console.log(`FACING INFERENCE: ${facingStats.units} units, ${facingStats.samples} path samples`);
 
   // Shadowmeld heuristic — flags NE units that went idle during night with
   // no enemies nearby. Writes `hiddenStream[]` per unit.

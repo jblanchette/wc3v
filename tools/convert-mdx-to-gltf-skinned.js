@@ -23,7 +23,7 @@ const path = require('path');
 const { parseMDX } = require('war3-model');
 const { Document, NodeIO } = require('@gltf-transform/core');
 const { createCanvas, ImageData } = require('canvas');
-const { stripMDXChunks, pickStandSequence, geosetVisibleDuringStand } = require('./lib/mdx-skin');
+const { stripMDXChunks, pickSequences, geosetVisibleDuringStand } = require('./lib/mdx-skin');
 
 const UNITS_DIR = path.join(__dirname, 'map-data', 'units');
 const TEXTURES_DIR = path.join(__dirname, 'map-data', 'textures');
@@ -217,53 +217,21 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
     jointNodes.push(jn);
   });
 
-  const stand = pickStandSequence(mdx);
-  const start = stand ? stand.Interval[0] : 0;
-  const end = stand ? stand.Interval[1] : 0;
-  const anim = stand ? doc.createAnimation(stand.Name) : null;
+  const sequences = pickSequences(mdx);
+  const idle = sequences.idle;
+  const idleStart = idle ? idle.Interval[0] : 0;
+  const idleEnd = idle ? idle.Interval[1] : 0;
 
-  // Set joint rest transforms + parenting + animation channels.
+  // Rest = bind pose: local TRS = translate(pivot − parentPivot), identity rot/scale
+  // (telescopes to translate(pivot)). Every clip animates from here. Wire parents.
   for (const n of ordered) {
     const jn = jointNodeByObjId[n.ObjectId];
     const pivot = Array.from(n.PivotPoint || [0, 0, 0]);
     const hasParent = n.Parent != null; // 0 is a valid ObjectId
     const parentPivot = hasParent && nodeByObjId[n.Parent]
       ? Array.from(nodeByObjId[n.Parent].PivotPoint || [0, 0, 0]) : [0, 0, 0];
-    const baseOffset = [pivot[0] - parentPivot[0], pivot[1] - parentPivot[1], pivot[2] - parentPivot[2]];
-
-    // Rest transforms
-    let restT = baseOffset.slice();
-    let restR = [0, 0, 0, 1];
-    let restS = [1, 1, 1];
-
-    if (stand) {
-      const tw = windowTrack(n.Translation, 3, start, end);
-      const rw = windowTrack(n.Rotation, 4, start, end);
-      const sw = windowTrack(n.Scaling, 3, start, end);
-
-      if (tw) {
-        // Translation track values are relative to pivot; add the bind offset.
-        const out = new Float32Array(tw.values.length);
-        for (let i = 0; i < tw.values.length; i += 3) {
-          out[i] = baseOffset[0] + tw.values[i];
-          out[i + 1] = baseOffset[1] + tw.values[i + 1];
-          out[i + 2] = baseOffset[2] + tw.values[i + 2];
-        }
-        restT = [out[0], out[1], out[2]];
-        addChannel(doc, anim, buffer, jn, 'translation', tw.times, out, 'VEC3');
-      }
-      if (rw) {
-        restR = [rw.values[0], rw.values[1], rw.values[2], rw.values[3]];
-        addChannel(doc, anim, buffer, jn, 'rotation', rw.times, rw.values, 'VEC4');
-      }
-      if (sw) {
-        restS = [sw.values[0], sw.values[1], sw.values[2]];
-        addChannel(doc, anim, buffer, jn, 'scale', sw.times, sw.values, 'VEC3');
-      }
-    }
-
-    jn.setTranslation(restT).setRotation(restR).setScale(restS);
-
+    jn.setTranslation([pivot[0] - parentPivot[0], pivot[1] - parentPivot[1], pivot[2] - parentPivot[2]])
+      .setRotation([0, 0, 0, 1]).setScale([1, 1, 1]);
     if (hasParent && jointNodeByObjId[n.Parent]) jointNodeByObjId[n.Parent].addChild(jn);
     else wrapper.addChild(jn);
   }
@@ -292,7 +260,7 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
     const g = mdx.Geosets[gi];
     const nv = g.Vertices.length / 3;
     if (nv === 0) continue;
-    if (stand && !geosetVisibleDuringStand(mdx, gi, start, end)) { hidden++; continue; }
+    if (idle && !geosetVisibleDuringStand(mdx, gi, idleStart, idleEnd)) { hidden++; continue; }
     // Skip geosets with no resolvable diffuse texture: particle/shadow/effect
     // planes (texInfo.skip) and team-glow/color-only additive overlays
     // (baseName null, e.g. archmage's rid2 glow geoset rendering as a gray plane).
@@ -376,8 +344,40 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
   const meshNode = doc.createNode('mesh').setMesh(mesh).setSkin(skin);
   scene.addChild(meshNode);
 
+  // --- Animation clips: one glTF animation per available canonical category,
+  // named idle|walk|attack|death so the client looks them up directly. Each
+  // windows every node's tracks to that sequence's interval (war3-model
+  // per-sequence semantics via windowTrack). The skeleton/skin/mesh are shared. ---
+  const clips = {};
+  for (const cat of ['idle', 'walk', 'attack', 'death']) {
+    const seq = sequences[cat];
+    if (!seq) continue;
+    const s = seq.Interval[0], e = seq.Interval[1];
+    const animClip = doc.createAnimation(cat);
+    let channels = 0;
+    for (const n of ordered) {
+      const jn = jointNodeByObjId[n.ObjectId];
+      const pivot = Array.from(n.PivotPoint || [0, 0, 0]);
+      const parentPivot = (n.Parent != null && nodeByObjId[n.Parent])
+        ? Array.from(nodeByObjId[n.Parent].PivotPoint || [0, 0, 0]) : [0, 0, 0];
+      const off = [pivot[0] - parentPivot[0], pivot[1] - parentPivot[1], pivot[2] - parentPivot[2]];
+      const tw = windowTrack(n.Translation, 3, s, e);
+      const rw = windowTrack(n.Rotation, 4, s, e);
+      const sw = windowTrack(n.Scaling, 3, s, e);
+      if (tw) {
+        const out = new Float32Array(tw.values.length);
+        for (let i = 0; i < tw.values.length; i += 3) { out[i] = off[0] + tw.values[i]; out[i + 1] = off[1] + tw.values[i + 1]; out[i + 2] = off[2] + tw.values[i + 2]; }
+        addChannel(doc, animClip, buffer, jn, 'translation', tw.times, out, 'VEC3'); channels++;
+      }
+      if (rw) { addChannel(doc, animClip, buffer, jn, 'rotation', rw.times, rw.values, 'VEC4'); channels++; }
+      if (sw) { addChannel(doc, animClip, buffer, jn, 'scale', sw.times, sw.values, 'VEC3'); channels++; }
+    }
+    if (!channels) { animClip.dispose(); continue; } // static sequence → no clip
+    clips[cat] = { name: seq.Name, duration: +((e - s) / 1000).toFixed(3), loop: !seq.NonLooping };
+  }
+
   if (n4plus) warnings.push(n4plus + ' vertices had >4 bone influences (truncated to 4)');
-  if (!stand) warnings.push('no Stand sequence — exported static');
+  if (!idle) warnings.push('no idle (Stand) sequence — exported static');
   if (hadHD) warnings.push('HD (SkinWeights) skin path used — verify visually');
 
   const exportedPrims = mesh.listPrimitives().length;
@@ -389,9 +389,9 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
       hiddenGeosets: hidden,
       exportedGeosets: exportedPrims,
       hd: hadHD,
-      stand: stand ? stand.Name : null,
-      duration: stand ? (end - start) / 1000 : 0,
-      channels: anim ? anim.listChannels().length : 0,
+      clips,
+      stand: idle ? idle.Name : null,
+      duration: idle ? (idleEnd - idleStart) / 1000 : 0,
       warnings
     }
   };
@@ -471,7 +471,7 @@ async function exportAll (ddsIndex) {
   }
   console.log('Roster: ' + Object.keys(mappings).length + ' itemIds → ' + Object.keys(byModel).length + ' unique models');
 
-  const manifest = {}; const ok = [], failed = [], hd = [], noStand = []; const usedOut = {};
+  const manifest = {}; const ok = [], failed = [], hd = [], noStand = [], noWalk = [], noAttack = []; const usedOut = {};
   for (const [mdxPath, m] of Object.entries(byModel)) {
     if (!fs.existsSync(mdxPath)) { failed.push(m.model + ': mdx missing'); continue; }
     let outName = m.model;
@@ -482,13 +482,16 @@ async function exportAll (ddsIndex) {
       ok.push(outName);
       if (info.hd) hd.push(outName);
       if (!info.stand) noStand.push(outName);
-      for (const id of m.itemIds) manifest[id] = { model: outName, scale: 1, clips: info.stand ? [info.stand] : [] };
+      if (!info.clips.walk) noWalk.push(outName);
+      if (!info.clips.attack) noAttack.push(outName);
+      for (const id of m.itemIds) manifest[id] = { model: outName, scale: 1, clips: info.clips };
     } catch (e) { failed.push(m.model + ': ' + e.message.slice(0, 70)); }
   }
 
   fs.writeFileSync(path.join(OUTPUT_DIR, 'unit-models.json'), JSON.stringify(manifest, null, 2));
   console.log('\n=== Batch summary ===');
-  console.log(ok.length + ' converted, ' + failed.length + ' failed, ' + hd.length + ' HD, ' + noStand.length + ' no-Stand');
+  console.log(ok.length + ' converted, ' + failed.length + ' failed, ' + hd.length + ' HD');
+  console.log('clip coverage: ' + (ok.length - noStand.length) + ' idle, ' + (ok.length - noWalk.length) + ' walk, ' + (ok.length - noAttack.length) + ' attack (of ' + ok.length + ')');
   if (failed.length) { console.log('\nFAILED (' + failed.length + '):'); failed.forEach(f => console.log('  ' + f)); }
   if (hd.length) console.log('\nHD models (verify): ' + hd.join(', '));
   if (noStand.length) console.log('\nno-Stand (static): ' + noStand.join(', '));
@@ -515,8 +518,9 @@ async function main () {
   console.log('Reading ' + file);
   const { info, kb } = await exportOne(file, scale, buildDdsIndex(), outPath);
   console.log('Wrote ' + outPath + '  (' + kb.toFixed(1) + ' KB)');
+  const clipStr = Object.entries(info.clips).map(([c, v]) => c + '=' + v.name + '(' + v.duration + 's' + (v.loop ? '' : ',1shot') + ')').join(' ');
   console.log('  joints=' + info.joints + ' geosets=' + info.exportedGeosets + '/' + info.geosets +
-    ' (hid ' + info.hiddenGeosets + ') clip=' + (info.stand || 'none') + ' (' + info.duration.toFixed(2) + 's, ' + info.channels + ' channels)');
+    ' (hid ' + info.hiddenGeosets + ')  clips: ' + (clipStr || 'none'));
   for (const w of info.warnings) console.log('  WARN: ' + w);
 }
 
