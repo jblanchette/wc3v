@@ -285,6 +285,51 @@ if (showAll || showSections.includes('paths')) {
   console.log('');
 }
 
+// --- Path dump (full coordinate trace + building footprints) ---
+// Diagnostic for "unit walks through a building" bugs: dumps every path node
+// (x,y,time,flags) for units matching --search, plus all building positions
+// and walk-footprint dims so you can see whether a recorded path crosses a
+// building's blocked cells (parser routing bug) vs a client-side spline cut.
+if (showSections.includes('pathdump')) {
+  console.log('=== PATH DUMP ===');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    let units = (pdata.units || []);
+    if (searchText) {
+      units = units.filter(u => (u.displayName || '').toLowerCase().includes(searchText));
+    }
+
+    // Buildings first — show position + footprint so paths can be checked.
+    const buildings = units.filter(u => u.isBuilding);
+    if (buildings.length) {
+      console.log(`    -- buildings (pos + walk footprint) --`);
+      buildings.forEach(b => {
+        const p = b.lastPosition || b.spawnPosition || {};
+        const fp = b.footprint || {};
+        const fpStr = fp.widthTiles != null
+          ? `walk=${fp.widthTiles}x${fp.heightTiles}tiles off=(${fp.offsetX||0},${fp.offsetY||0})`
+          : 'no footprint';
+        console.log(`      ${(b.displayName||'').padEnd(18)}(${b.itemId}) pos=(${Math.round(p.x||0)},${Math.round(p.y||0)}) ${fpStr}`);
+      });
+    }
+
+    const moveUnits = units.filter(u => !u.isBuilding && u.path && u.path.length);
+    moveUnits.slice(0, limit).forEach(u => {
+      const bw = (u.buildWindows || []).map(w => `${formatTime(w.start)}-${w.end==null?'open':formatTime(w.end)}`).join(',');
+      console.log(`    -- ${u.displayName} (${u.itemId}) uuid=${(u.uuid||'').slice(0,8)} role=${u.primaryRole||'-'} conf=${u.harvestConfident?'Y':'n'} nodes=${u.path.length}${bw?` build=[${bw}]`:''} --`);
+      u.path.forEach(p => {
+        const tags = [p.isJump && 'JUMP', p.wasSnapped && 'snap', p.groupId && `g${p.groupId}`].filter(Boolean).join(' ');
+        console.log(`        [${formatTime(p.gameTime)}] (${Math.round(p.x)},${Math.round(p.y)})${tags ? ' ' + tags : ''}`);
+      });
+    });
+  }
+  console.log('');
+}
+
 // --- Footprints (hero trail pre-bake diagnostic) ---
 if (showAll || showSections.includes('footprints')) {
   console.log('=== HERO FOOTPRINTS ===');

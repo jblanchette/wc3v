@@ -143,10 +143,29 @@
     addEventListener('mouseup', () => { dragging = false; });
     renderer.domElement.addEventListener('wheel', (e) => { fitDist = Math.max(60, fitDist + e.deltaY * 0.6); e.preventDefault(); }, { passive: false });
 
+    // Facing-calibration debug: world axes (red=+X/east, green=+Y/up, blue=+Z) +
+    // a movement-direction arrow. window.__dbg lets the harness drive facing/camera.
+    scene.add(new THREE.AxesHelper(160));
+    const moveArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 2, 0), 140, 0xff00ff, 30, 18);
+    scene.add(moveArrow);
+    const ZUP_TO_YUP = new THREE.Quaternion(-0.70710678, 0, 0, 0.70710678);
+    window.__dbg = {
+      // worldFacing rad; sceneYaw = sign*worldFacing + offset (to calibrate)
+      setFacing (worldFacing, sign = 1, offset = 0) {
+        if (current && current.placementNode) current.placementNode.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), sign * worldFacing + offset).multiply(ZUP_TO_YUP);
+        // arrow points along the scene movement dir for this world facing: (cos, 0, -sin)
+        moveArrow.setDirection(new THREE.Vector3(Math.cos(worldFacing), 0, -Math.sin(worldFacing)).normalize());
+      },
+      topView () { window.__freeze = true; camera.position.set(fitCenter.x, fitCenter.y + 500, fitCenter.z + 0.01); camera.lookAt(fitCenter); },
+      camFrom (px, py, pz) { window.__freeze = true; camera.position.set(px, py, pz); camera.lookAt(fitCenter.x, fitCenter.y, fitCenter.z); },
+      free () { window.__freeze = false; }
+    };
+
     function animate () {
       requestAnimationFrame(animate);
       const dt = clock.getDelta();
       if (mixer && playing) mixer.update(dt);
+      if (window.__freeze) { renderer.render(scene, camera); return; }
       if (!dragging) angle += 0.004;
       camera.position.x = fitCenter.x + Math.sin(angle) * fitDist * Math.cos(pitch);
       camera.position.z = fitCenter.z + Math.cos(angle) * fitDist * Math.cos(pitch);

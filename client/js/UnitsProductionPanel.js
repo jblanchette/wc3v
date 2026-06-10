@@ -181,16 +181,16 @@ const UnitsProductionPanel = class {
 
   /**
    * Assign split-screen positions based on BroadcastCamera split targets.
-   * splitPlayers[0] = left/top-left half, splitPlayers[1] = right/bottom-right half.
+   * splitPlayers[0] = top half, splitPlayers[1] = bottom half.
    */
   setSplitPositions (splitPlayers) {
     if (!splitPlayers || splitPlayers.length < 2) return;
     this._playerEls.forEach(pEl => {
       const id = pEl.player.playerId;
       if (id === splitPlayers[0].playerId) {
-        pEl.root.dataset.splitPos = 'left';
+        pEl.root.dataset.splitPos = 'top';
       } else if (id === splitPlayers[1].playerId) {
-        pEl.root.dataset.splitPos = 'right';
+        pEl.root.dataset.splitPos = 'bottom';
       }
     });
   }

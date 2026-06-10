@@ -442,8 +442,11 @@ function getUnitMappings () {
   const skin = parseINI(skinPath);
   const out = {};
   for (const [id, fields] of Object.entries(skin)) {
-    if (!fields.file) continue;
-    const fp = fields.file.replace(/\\/g, '/');
+    // Reforged unitskin.txt uses `file:sd=`/`file:hd=` for units with split SD/HD
+    // models (Death Knight, Demon Hunter, …); plain `file=` otherwise. Prefer SD.
+    const fileVal = fields.file || fields['file:sd'];
+    if (!fileVal) continue;
+    const fp = fileVal.replace(/\\/g, '/');
     if (!/^units\//i.test(fp)) continue; // skip buildings/other
     const rel = fp.replace(/^units\//i, '');
     out[id] = { model: path.basename(rel).toLowerCase(), mdxPath: path.join(UNITS_DIR, rel + '.mdx') };

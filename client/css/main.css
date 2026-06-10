@@ -1502,6 +1502,33 @@ body {
 }
 .gh-btn-primary:hover { background: rgba(111,193,138,0.34); color: #d6f0de; border-color: rgba(111,193,138,0.7); }
 
+/* Auto-continue nudge banner (between body and nav). Gold, gently pulsing, so
+   it reads as "about to move on" without being alarming. */
+.gh-autocontinue {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px;
+  background: linear-gradient(90deg, rgba(255,206,58,0.16), rgba(255,206,58,0.06));
+  border-top: 1px solid rgba(255,206,58,0.30);
+  animation: gh-ac-pulse 1.4s ease-in-out infinite;
+}
+.gh-autocontinue[hidden] { display: none; }
+.gh-ac-text { font-size: 0.9rem; font-weight: 600; color: #f0e6c8; }
+.gh-ac-count {
+  display: inline-block; min-width: 1.1em; text-align: center;
+  font-size: 1.05rem; font-weight: 800; color: #ffce3a;
+}
+.gh-ac-stay {
+  margin-left: auto; padding: 6px 12px;
+  background: rgba(255,206,58,0.16); border: 1px solid rgba(255,206,58,0.5); border-radius: 8px;
+  cursor: pointer; font-family: inherit; font-size: 0.85rem; font-weight: 600; color: #ffe9a8;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.gh-ac-stay:hover { background: rgba(255,206,58,0.28); color: #fff6dd; border-color: rgba(255,206,58,0.75); }
+@keyframes gh-ac-pulse {
+  0%, 100% { background: linear-gradient(90deg, rgba(255,206,58,0.16), rgba(255,206,58,0.06)); }
+  50%      { background: linear-gradient(90deg, rgba(255,206,58,0.26), rgba(255,206,58,0.10)); }
+}
+
 .gh-dots { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
 .gh-dot {
   width: 7px; height: 7px; border-radius: 50%;
@@ -5128,6 +5155,20 @@ body {
   color: #fff;
 }
 
+/* AUTO dynamic time-scale shows a live multiplier ("AUTO 8×") — let the button
+   grow to fit it and tint it so the auto-pacing state reads at a glance. */
+.time-scrubber-control.speed-button.is-auto {
+  width: auto;
+  min-width: 2.5rem;
+  padding: 0 0.45rem;
+  white-space: nowrap;
+  color: #8cc8ff;
+}
+
+.time-scrubber-control.speed-button.is-auto:hover {
+  color: #b8deff;
+}
+
 .time-scrubber-track {
   display: flex;
   align-items: center;
@@ -5625,18 +5666,18 @@ body {
   text-overflow: ellipsis;
 }
 
-/* Left player owns the top-left triangle of the split.
-   Card sits below the map name overlay, in the corner opposite the diagonal. */
-.up-split-mode .up-player[data-split-pos="left"] {
+/* Top player owns the top half of the split.
+   Card sits below the map name / split-view label, top-left. */
+.up-split-mode .up-player[data-split-pos="top"] {
   top: 4rem;
   left: 0.5rem;
 }
 
-/* Right player owns the bottom-right triangle of the split.
-   Card sits above the scrubber, offset left of the 180px minimap pip. */
-.up-split-mode .up-player[data-split-pos="right"] {
+/* Bottom player owns the bottom half of the split.
+   Card sits in the lower-left, above the scrubber bar. */
+.up-split-mode .up-player[data-split-pos="bottom"] {
   bottom: 3rem;
-  right: 13rem;
+  left: 0.5rem;
 }
 
 /* Player header: name with color swatch, clearly visible */

@@ -54,6 +54,7 @@
         '/js/PathTrailRenderer3D.js',
         '/js/UnitModelRenderer.js',
         '/js/BroadcastCamera.js',
+        '/js/AutoDirector.js',
         '/js/TimelineSpline.js',
         '/js/BuildOrderRenderer.js',
         '/js/BaseNameplateRenderer.js',
@@ -194,7 +195,6 @@
                     <button type="button" class="mega-hint on" data-option="decayEffects" aria-pressed="true" onClick="wc3v.toggleViewOption('decayEffects')">Fade FX<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="displayTreeGrid" aria-pressed="true" onClick="wc3v.toggleViewOption('displayTreeGrid')">Tree Grid<span class="mega-hint-icon" aria-hidden="true"></span></button>
                     <button type="button" class="mega-hint on" data-option="autoSplitScreen" aria-pressed="true" onClick="wc3v.toggleViewOption('autoSplitScreen')">Split Screen<span class="mega-hint-icon" aria-hidden="true"></span></button>
-                    <button type="button" class="mega-hint on" data-option="display3DUnits" aria-pressed="true" onClick="wc3v.toggleViewOption('display3DUnits')">3D Units<span class="mega-hint-icon" aria-hidden="true"></span></button>
                   </div>
                 </div>
 
@@ -377,6 +377,14 @@
           <span class="gh-step-title-text" id="guide-hud-step-title-text"></span>
         </h3>
         <div class="gh-body" id="guide-hud-body"></div>
+        <!-- Auto-continue nudge: shown when a step's content has played out. The
+             replay pauses, this counts 3→2→1 then advances to the next step; the
+             "Watch the rest" button plays the remainder of the segment instead and
+             auto-pauses there. Built/driven by app.js. -->
+        <div class="gh-autocontinue" id="guide-autocontinue" hidden>
+          <span class="gh-ac-text">Next part in <strong class="gh-ac-count" id="guide-ac-count">3</strong>…</span>
+          <button type="button" class="gh-btn gh-ac-stay" id="guide-ac-stay">Watch the rest</button>
+        </div>
         <footer class="gh-nav">
           <button type="button" class="gh-btn" id="guide-prev-btn">← Back</button>
           <div class="gh-dots" id="guide-hud-dots" aria-hidden="true"></div>

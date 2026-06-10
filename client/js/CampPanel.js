@@ -232,9 +232,9 @@ const CampPanel = class {
   // together under any camera mode: AUTO, SPLIT, P1, P2, FREE).
   //
   // sideFilter is null for the normal render path, or
-  //   { side: 'left'|'right', diagTopX, diagBotX, canvasH }
+  //   { side: 'top'|'bottom' }
   // for the split-screen path, in which case the panel hides any camp whose
-  // projected centre lies on the wrong half of the diagonal clip.
+  // projected centre lies on the wrong half of the horizontal divider (midline).
   //
   // Off-screen camps are hidden entirely — no edge-pinning, no clamping. The
   // old clamp produced phantom icons stuck to the canvas edge whenever the
@@ -293,12 +293,10 @@ const CampPanel = class {
       }
 
       if (sideFilter) {
-        const bx = sideFilter.diagTopX +
-          (sideFilter.diagBotX - sideFilter.diagTopX) *
-          (sideFilter.canvasH ? (c.cssY / sideFilter.canvasH) : 0);
-        const isLeft = c.cssX <= bx;
-        if ((sideFilter.side === 'left' && !isLeft) ||
-            (sideFilter.side === 'right' && isLeft)) {
+        // Horizontal split: the divider is the canvas vertical midline (CSS px).
+        const isTop = c.cssY <= cssH / 2;
+        if ((sideFilter.side === 'top' && !isTop) ||
+            (sideFilter.side === 'bottom' && isTop)) {
           if (ex) ex.wrap.style.display = 'none';
           return;
         }

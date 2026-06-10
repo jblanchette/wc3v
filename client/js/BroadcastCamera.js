@@ -6,10 +6,17 @@
  * camera directly — syncTransform handles that from the D3 transform.
  *
  * Modes:
- *   ACTION_FOCUS  — cluster-based: finds the most interesting hero cluster
- *                   and frames it tightly, ignoring distant idle heroes.
- *   SPLIT_SCREEN  — diagonal split showing each player's area at high zoom.
- *                   Auto-activates when heroes are far apart (early game).
+ *   ACTION_FOCUS  — the "AUTO" broadcast camera. Cluster-based: finds the most
+ *                   interesting hero cluster / active battle and frames it,
+ *                   leading the camera toward imminent fights via look-ahead.
+ *                   AUTO also owns SPLIT as an automatic SUB-STATE: when (1v1
+ *                   only) the two players are far apart with no fight active or
+ *                   imminent, it cuts into a horizontal top/bottom split and
+ *                   cuts back the moment they converge or a battle begins. The
+ *                   opening phase (no heroes yet, bases far apart) splits naturally.
+ *   SPLIT_SCREEN  — internal rendering state driven BY AUTO (no manual button).
+ *                   Horizontal top/bottom split showing each player's area at
+ *                   high zoom (north base on top, south base on bottom).
  *   FOLLOW_HERO   — centers on a specific player's hero at fixed zoom.
  *   FREE          — manual user control, camera is not driven.
  */
@@ -22,7 +29,24 @@
   };
 
   // --- Tuning constants ---
-  const LERP_RATE = 0.05;
+  // Smoothing — distance-scaled so big cuts feel responsive while small settles
+  // stay glassy. Per-axis rate eases from *_MIN (target nearly reached) up to
+  // *_MAX (target far away). Pan and zoom are tuned separately because abrupt
+  // zoom reads worse than abrupt pan on a broadcast.
+  const PAN_RATE_MIN = 0.055;
+  const PAN_RATE_MAX = 0.17;
+  const ZOOM_RATE_MIN = 0.045;
+  const ZOOM_RATE_MAX = 0.11;
+  const PAN_RATE_REF_PX = 900;   // css-px pan distance at which pan rate hits MAX
+  const ZOOM_RATE_REF = 0.9;     // |Δk|/k at which zoom rate hits MAX
+  const PAN_DEADZONE_PX = 3.5;   // ignore sub-pixel target jitter (anti-drift)
+
+  // Calm-when-fast: during fast-forward (auto time-scale or a high manual speed)
+  // widen the frame and damp the pan so skimming dead time isn't disorienting.
+  const CALM_SPEED_LO = 3.0;     // at/below this speed: normal framing
+  const CALM_SPEED_HI = 9.0;     // at/above this speed: full widen + calm
+  const CALM_WIDEN_FRAC = 0.32;  // max zoom-out fraction applied to target.k
+  const CALM_PAN_DAMP = 0.45;    // pan rate scaled down by up to this fraction
 
   // Cluster detection
   const CLUSTER_MERGE_DISTANCE = 2500;
@@ -33,34 +57,54 @@
   // Hysteresis: require a new cluster to win for N frames before switching
   const HYSTERESIS_FRAMES = 30;
 
-  // Zoom limits
-  const MIN_ZOOM_SINGLE = 2.0;   // single-player cluster — tight view
-  const MIN_ZOOM_ENGAGED = 1.5;  // cross-player engagement — allow wider
-  const MAX_ZOOM = 4.0;
-  const FOLLOW_HERO_ZOOM = 2.5;
+  // Zoom limits — tuned for 3D units (native model scale reads small, so the
+  // broadcast camera sits much closer than it did for the old 2D icons).
+  // Zoom floors. Close framing is reserved for an ACTIVE BATTLE (frame the clash
+  // tightly); the no-battle cluster/overview keeps a LOW floor so spread heroes /
+  // both bases still fit (otherwise the camera zooms into the empty map center).
+  // Loosened deliberately — the broadcast read better a little wider, showing
+  // more of the surrounding fight than a tight crop on the clash centroid.
+  const MIN_ZOOM_BATTLE = 7.0;    // active detected fight — frame the clash, but loose
+  const MIN_ZOOM_SINGLE = 3.5;    // one player's cluster, no fight
+  const MIN_ZOOM_OVERVIEW = 1.8;  // multi-player overview, no fight — wide
+  const MAX_ZOOM = 16.0;
+  const FOLLOW_HERO_ZOOM = 6.0;
+
+  // Battle framing: expand the detected clash bbox before fitting so the fight
+  // has breathing room (units pushed to the edge of the tracker box, incoming
+  // reinforcements, retreat lanes all stay visible).
+  const BATTLE_VIEW_PAD_FRAC = 0.30;
+
+  // Look-ahead: this is a replay, so upcoming battles are KNOWN. Lead the camera
+  // toward an imminent fight before it actually starts so the clash doesn't snap
+  // into frame. Also used to suppress split-screen right before an engagement.
+  const LOOKAHEAD_MS = 3000;        // how far ahead a battle counts as "imminent"
+  const LOOKAHEAD_LEAD = 0.6;       // max fraction to pre-pan toward the fight
+  const LOOKAHEAD_ZOOM_LEAD = 0.5;  // max fraction to pre-tighten zoom toward it
 
   // Split-screen zoom: bbox-driven, clamped to playable viewExtent
-  const SPLIT_MIN_ZOOM = 1.5;
-  const SPLIT_MAX_ZOOM = 3.5;
-  const TRIANGLE_FILL = 0.85;    // fraction of half-canvas the bbox should occupy
+  const SPLIT_MIN_ZOOM = 2.5;
+  const SPLIT_MAX_ZOOM = 10.0;
+  const SPLIT_FILL = 0.88;       // fraction of the half-viewport the bbox occupies
   const SPLIT_FOG_INSET = 384;   // world units kept inside viewExtent edge so the
                                  // FogOfWar feather (256 units) never bleeds in.
   const SPLIT_BBOX_MAX_FRAC = 0.45;  // soft cap on bbox extent vs viewExtent — far-
                                      // out buildings/scouts pull camera but don't
                                      // force zoom-out past ~half the playable map.
 
-  // Padding (fraction of bounding box extent)
-  const PAD_X_FRAC = 0.15;
-  const PAD_Y_TOP_FRAC = 0.15;
-  const PAD_Y_BOT_FRAC = 0.25;
+  // Padding (fraction of bounding box extent) — bumped up for a looser frame.
+  const PAD_X_FRAC = 0.20;
+  const PAD_Y_TOP_FRAC = 0.20;
+  const PAD_Y_BOT_FRAC = 0.30;
   const PAD_X_MIN = 350;
   const PAD_Y_TOP_MIN = 350;
   const PAD_Y_BOT_MIN = 500;
 
-  // Split-screen auto-transition thresholds
-  const SPLIT_ENTER_DISTANCE = 3000;  // heroes must be this far apart to enter split
-  const SPLIT_EXIT_DISTANCE = 2500;   // heroes within this distance — exit split
-  const SPLIT_TRANSITION_FRAMES = 150; // frames (~2.5s) for cinematic diagonal slide
+  // Split-screen auto-transition thresholds. Wide hysteresis band (enter ≫ exit)
+  // so the split doesn't flip-flop when separation hovers near the boundary.
+  const SPLIT_ENTER_DISTANCE = 3200;  // players must be this far apart to enter split
+  const SPLIT_EXIT_DISTANCE = 2400;   // once split, stay until they're this close
+  const SPLIT_TRANSITION_FRAMES = 30;  // frames (~0.5s) for the quick line-wipe cut
 
   class BroadcastCamera {
     constructor (viewer) {
@@ -80,16 +124,17 @@
       this._pendingClusterKey = null;
       this._switchCounter = 0;
 
-      // Split-screen state
+      // Split-screen state. Split is an automatic SUB-STATE of AUTO (ACTION_FOCUS),
+      // not a user-selectable mode — it enters/exits continuously based on player
+      // separation, with hysteresis, and is suppressed by active/imminent battles.
       this.splitTargets = null;        // { left: {wx,wy,k}, right: {wx,wy,k} }
       this._splitTransition = 0;       // 0→1 for entry, 1→0 for exit
       this._splitEntering = false;     // true during entry animation
       this._splitExiting = false;      // true during exit animation
       this._autoSplitEnabled = true;   // allow AUTO to enter split when appropriate
-      this._manualSplit = false;       // true when user manually activated split
-      this._hasAutoSplitFired = false; // true after first auto-split; prevents re-entry via AUTO
-      this._heroDistance = Infinity;
-      this._lastGameTime = 0;         // for rewind detection
+      this._separation = Infinity;     // min cross-player distance (heroes, or starts)
+      this._lastGameTime = 0;          // for rewind detection
+      this._speedFactor = 1;           // current playback speed (calm-when-fast)
 
       // Multi-listener emitter for mode changes. Existing single-callback
       // `onModeChange` keeps working (still invoked by _emitModeChange) so
@@ -130,11 +175,20 @@
       this._splitTransition = 0;
       this._splitEntering = false;
       this._splitExiting = false;
-      this._manualSplit = false;
-      this._hasAutoSplitFired = false;
-      this._heroDistance = Infinity;
+      this._separation = Infinity;
       this._lastGameTime = 0;
+      this._speedFactor = 1;
       this._emitModeChange();
+    }
+
+    /**
+     * Current playback speed, fed each frame by the viewer. When it climbs
+     * (auto time-scale fast-forward, or a high manual speed) the AUTO camera
+     * widens and calms its pan so skimming dead time stays watchable.
+     */
+    setSpeedFactor (speed) {
+      const s = +speed;
+      this._speedFactor = (isFinite(s) && s > 0) ? s : 1;
     }
 
     get enabled () { return this._enabled; }
@@ -163,7 +217,6 @@
         this._splitEntering = false;
         this._splitExiting = false;
         this._splitTransition = 0;
-        this._manualSplit = false;
       }
 
       this._emitModeChange();
@@ -188,10 +241,13 @@
       if (this.mode === CameraMode.SPLIT_SCREEN) {
         return this._initialized && !this._splitExiting && !this._splitEntering;
       }
+      // Pan threshold matches the smoothing deadzone — once the camera is within
+      // PAN_DEADZONE_PX it stops chasing, so "settled" must accept that band or
+      // the paused render loop would never sleep.
       return this._initialized &&
         Math.abs(this._lerpK - this._targetK) < 0.01 &&
-        Math.abs(this._lerpCssX - this._targetCssX) < 0.5 &&
-        Math.abs(this._lerpCssY - this._targetCssY) < 0.5;
+        Math.abs(this._lerpCssX - this._targetCssX) < PAN_DEADZONE_PX &&
+        Math.abs(this._lerpCssY - this._targetCssY) < PAN_DEADZONE_PX;
     }
 
     /** Whether we are in split-screen mode (including transitions) */
@@ -214,27 +270,31 @@
     update (gameTime, players) {
       if (!this._enabled || this.mode === CameraMode.FREE) return;
 
-      // Compute hero distance for split-screen logic
-      this._heroDistance = this._computeHeroDistance(players);
-
-      // Rewind detection: if game time jumped backward, allow split to re-trigger
-      if (gameTime < this._lastGameTime - 1000) {
-        this._hasAutoSplitFired = false;
-      }
+      // Player separation drives auto-split. Uses hero positions when available,
+      // and falls back to starting positions for any player without a hero yet —
+      // so the opening phase (no units, bases far apart) reads as "split".
+      this._separation = this._computeSeparation(players);
       this._lastGameTime = gameTime;
 
-      // Auto split-screen: only fires once after game starts (the initial entry).
-      // After that, user must manually press SPLIT to re-enter.
-      if (this.mode === CameraMode.ACTION_FOCUS && this._autoSplitEnabled &&
-          this.viewer.hasBeenPlayedOnce && !this._hasAutoSplitFired) {
-        if (this._heroDistance > SPLIT_ENTER_DISTANCE && !this._hasEngagedCluster(players)) {
-          this._hasAutoSplitFired = true;
-          this.setMode(CameraMode.SPLIT_SCREEN);
-          // Fall through to split-screen update
+      // ----- Auto-split decision (a sub-state of AUTO) -----
+      // Continuous + reversible: enter when the players are clearly apart with
+      // nothing happening, exit the instant a fight is active/imminent or they
+      // converge. Hysteresis (distinct enter/exit thresholds) prevents toggling.
+      const wantSplit = this._evaluateAutoSplit(players, gameTime, this._separation);
+
+      if (wantSplit) {
+        if (this.mode !== CameraMode.SPLIT_SCREEN) {
+          this.setMode(CameraMode.SPLIT_SCREEN);     // begins entry animation
+        } else if (this._splitExiting) {
+          this._splitExiting = false;                // reverse a partial exit
+          this._splitEntering = true;
         }
+      } else if (this.mode === CameraMode.SPLIT_SCREEN && !this._splitExiting) {
+        this._splitExiting = true;                   // begin exit animation
+        this._splitEntering = false;
       }
 
-      // Animate split entry transition (diagonal slides in)
+      // Animate split entry transition (divider line wipes out from centre)
       if (this._splitEntering) {
         this._splitTransition = Math.min(1, this._splitTransition + (1 / SPLIT_TRANSITION_FRAMES));
         if (this._splitTransition >= 1) {
@@ -243,15 +303,7 @@
         }
       }
 
-      // Handle split-screen exit when heroes converge (auto-split only)
-      if (this.mode === CameraMode.SPLIT_SCREEN && !this._splitExiting &&
-          !this._splitEntering && !this._manualSplit) {
-        if (this._heroDistance < SPLIT_EXIT_DISTANCE) {
-          this._splitExiting = true;
-        }
-      }
-
-      // Animate split exit transition (diagonal slides out)
+      // Animate split exit transition (divider line retracts to centre)
       if (this._splitExiting) {
         this._splitTransition = Math.max(0, this._splitTransition - (1 / SPLIT_TRANSITION_FRAMES));
         if (this._splitTransition <= 0) {
@@ -267,8 +319,13 @@
         return;
       }
 
-      const target = this._computeTarget(players);
+      let target = this._computeTarget(players);
       if (!target) return;
+
+      // Replay look-ahead: if a battle is about to start, lead the camera toward
+      // it (and pre-tighten zoom) so the clash doesn't snap into frame. Skipped
+      // while a battle is already active — _actionFocus already frames that one.
+      target = this._applyLookAhead(target, players, gameTime);
 
       const gs = this.viewer.gameScaler;
       if (!gs || !gs.xScale) return;
@@ -276,7 +333,14 @@
       const ds = this.viewer.displayScale || 1;
       const cssPx = (gs.xScale(target.wx) + gs.middleX) * ds;
       const cssPy = (gs.yScale(target.wy) + gs.middleY) * ds;
-      const targetK = Math.max(1.0, Math.min(6.0, target.k));
+
+      // Calm-when-fast: only the single AUTO view widens/damps with speed —
+      // a followed hero stays tight. fast ∈ [0,1] from the current playback speed.
+      const fast = (this.mode === CameraMode.ACTION_FOCUS)
+        ? Math.max(0, Math.min(1, (this._speedFactor - CALM_SPEED_LO) / (CALM_SPEED_HI - CALM_SPEED_LO)))
+        : 0;
+      let targetK = Math.max(1.0, Math.min(16.0, target.k)); // outer safety clamp (per-mode MIN/MAX govern)
+      if (fast > 0) targetK = Math.max(1.0, targetK * (1 - CALM_WIDEN_FRAC * fast));
 
       // Store targets for settled check
       this._targetK = targetK;
@@ -301,9 +365,24 @@
         this._initialized = true;
       }
 
-      this._lerpK += (targetK - this._lerpK) * LERP_RATE;
-      this._lerpCssX += (cssPx - this._lerpCssX) * LERP_RATE;
-      this._lerpCssY += (cssPy - this._lerpCssY) * LERP_RATE;
+      // --- Distance-scaled pan smoothing (with anti-drift deadzone) ---
+      const dPanX = cssPx - this._lerpCssX;
+      const dPanY = cssPy - this._lerpCssY;
+      const panDist = Math.hypot(dPanX, dPanY);
+      if (panDist >= PAN_DEADZONE_PX) {
+        let panRate = PAN_RATE_MIN +
+          (PAN_RATE_MAX - PAN_RATE_MIN) * Math.min(1, panDist / PAN_RATE_REF_PX);
+        panRate *= (1 - CALM_PAN_DAMP * fast);   // calmer pan when fast-forwarding
+        this._lerpCssX += dPanX * panRate;
+        this._lerpCssY += dPanY * panRate;
+      }
+
+      // --- Distance-scaled zoom smoothing (gentler than pan) ---
+      const dk = targetK - this._lerpK;
+      const zoomFrac = Math.abs(dk) / Math.max(0.0001, this._lerpK);
+      const zoomRate = ZOOM_RATE_MIN +
+        (ZOOM_RATE_MAX - ZOOM_RATE_MIN) * Math.min(1, zoomFrac / ZOOM_RATE_REF);
+      this._lerpK += dk * zoomRate;
 
       this._isProgrammatic = true;
       this.viewer.zoomContainer.call(this.viewer.zoom.scaleTo, this._lerpK);
@@ -321,13 +400,14 @@
     }
 
     /**
-     * Per-side camera target for diagonal split.
+     * Per-side camera target for the horizontal top/bottom split.
      *
      * For each player: build a content bbox (startingPosition + heroes +
      * active scouts), pick a zoom that fits the bbox into the player's
-     * triangular half, apply a corner shift so the bbox sits in that half,
-     * then clamp the visible rect to gs.viewExtent so the dark fog mesh
-     * never bleeds inside the visible triangle.
+     * half-height viewport (cw × ch/2), then bake a vertical world offset so
+     * the content sits centered in that half (translateTo lands the target at
+     * canvas center; we want it at ch/4 / 3·ch/4). The content center is first
+     * clamped to gs.viewExtent so the dark fog mesh never bleeds into the half.
      */
     _splitScreenTargets (players, gameTime) {
       const nonNeutral = players.filter(p => !p.isNeutralPlayer);
@@ -353,11 +433,12 @@
       const worldPerPxX = viewWorldW / sw;
       const worldPerPxY = viewWorldH / sh;
 
-      // Anti-fog floor: at this zoom, the canvas pixel buffer maps exactly
+      // Anti-fog floor: at this zoom the visible HALF (cw × ch/2) maps exactly
       // to viewExtent on the limiting axis. Below this, fog is unavoidable
       // regardless of how we pan. Above this, the clamp can keep the visible
-      // rect inside viewExtent and no fog leaks into view.
-      const kAntiFog = Math.max(cw / sw, ch / sh);
+      // half inside viewExtent and no fog leaks into view. The half is only
+      // ch/2 tall, so the vertical floor is half what a full-canvas view needs.
+      const kAntiFog = Math.max(cw / sw, (ch * 0.5) / sh);
 
       const buildBox = (player) => {
         let minX = Infinity, maxX = -Infinity;
@@ -444,91 +525,94 @@
       const box1 = buildBox(nonNeutral[1]);
       if (!box0 || !box1) return null;
 
-      // Diagonal goes top-right → bottom-left:
-      //   top-left half  = base more north-west (low x, high y → low x-y)
-      //   bot-right half = base more south-east (high x, low y → high x-y)
-      const score0 = box0.cx - box0.cy;
-      const score1 = box1.cx - box1.cy;
-      const topLeftIdx = score0 <= score1 ? 0 : 1;
-      const botRightIdx = 1 - topLeftIdx;
+      // Horizontal split: the more-northern base (higher WC3 Y) goes on TOP,
+      // the more-southern base on the BOTTOM — keeps the on-screen layout
+      // spatially intuitive (matches where each player actually sits on the map).
+      const baseY = (p, box) => (p.startingPosition && p.startingPosition.y != null)
+        ? p.startingPosition.y : box.cy;
+      const topIdx = baseY(nonNeutral[0], box0) >= baseY(nonNeutral[1], box1) ? 0 : 1;
+      const botIdx = 1 - topIdx;
       const boxes = [box0, box1];
 
+      const vx0 = gs.viewExtent.x[0];
+      const vx1 = gs.viewExtent.x[1];
+      const vyN = gs.viewExtent.y[0];  // north (high Y in WC3)
+      const vyS = gs.viewExtent.y[1];  // south (low Y)
+
       const computeTarget = (box, side) => {
-        // Triangle effective viewport ≈ half-canvas with margin so units
-        // near the diagonal divider aren't framed right at the edge.
-        const triPxW = cw * 0.5 * TRIANGLE_FILL;
-        const triPxH = ch * 0.5 * TRIANGLE_FILL;
-        const kFitX = (triPxW * worldPerPxX) / box.w;
-        const kFitY = (triPxH * worldPerPxY) / box.h;
+        // Fit the bbox into a half-height viewport (full width × ch/2) with a
+        // fill margin so content isn't framed hard against the divider.
+        const pxW = cw * SPLIT_FILL;
+        const pxH = (ch * 0.5) * SPLIT_FILL;
+        const kFitX = (pxW * worldPerPxX) / box.w;
+        const kFitY = (pxH * worldPerPxY) / box.h;
         const kFloor = Math.max(SPLIT_MIN_ZOOM, kAntiFog);
         const k = Math.max(kFloor,
                   Math.min(SPLIT_MAX_ZOOM, Math.min(kFitX, kFitY)));
 
-        // Corner shift: push focus into the player's triangle.
-        // d3 translateTo puts the target world point at canvas center —
-        // shifting the target away from the bbox center makes the bbox
-        // appear off-center on the opposite side (into the player's half).
-        const ofsX = (cw / 6) * worldPerPxX / k;
-        const ofsY = (ch / 6) * worldPerPxY / k;
-        let wx, wy;
-        if (side === 'left') {
-          wx = box.cx + ofsX;  // visible center east of bbox → bbox sits west
-          wy = box.cy - ofsY;  // visible center south of bbox → bbox sits north
-        } else {
-          wx = box.cx - ofsX;
-          wy = box.cy + ofsY;
-        }
-
-        // Clamp visible rect to viewExtent so fog never leaks inside the triangle.
-        const halfVisW = (cw * worldPerPxX) / k / 2;
-        const halfVisH = (ch * worldPerPxY) / k / 2;
-        const vx0 = gs.viewExtent.x[0];
-        const vx1 = gs.viewExtent.x[1];
-        const vyN = gs.viewExtent.y[0];  // north (high Y in WC3)
-        const vyS = gs.viewExtent.y[1];  // south (low Y)
-
-        // Inset by SPLIT_FOG_INSET so the FogOfWar feather (256 world units
-        // INTO viewExtent) doesn't darken the visible edge of the triangle.
+        // Visible half-region half-extents (the half is cw wide × ch/2 tall,
+        // centered on the content). Clamp the content center so this region —
+        // plus the fog inset — stays inside viewExtent: no fog in the half.
+        const halfVisW = (cw * 0.5) * worldPerPxX / k;
+        const halfVisH = (ch * 0.25) * worldPerPxY / k;
         const insetW = halfVisW + SPLIT_FOG_INSET;
         const insetH = halfVisH + SPLIT_FOG_INSET;
-        if (insetW * 2 >= viewWorldW) {
-          wx = (vx0 + vx1) / 2;
-        } else {
-          wx = Math.max(vx0 + insetW, Math.min(vx1 - insetW, wx));
-        }
-        if (insetH * 2 >= viewWorldH) {
-          wy = (vyN + vyS) / 2;
-        } else {
-          wy = Math.max(vyS + insetH, Math.min(vyN - insetH, wy));
-        }
+
+        let cx = box.cx;
+        let cy = box.cy;
+        if (insetW * 2 >= viewWorldW) cx = (vx0 + vx1) / 2;
+        else cx = Math.max(vx0 + insetW, Math.min(vx1 - insetW, cx));
+        if (insetH * 2 >= viewWorldH) cy = (vyN + vyS) / 2;
+        else cy = Math.max(vyS + insetH, Math.min(vyN - insetH, cy));
+
+        // d3 translateTo lands (wx,wy) at canvas CENTER (ch/2). To center the
+        // content in the player's half we offset the target by ch/4 in world
+        // units so it sits at ch/4 (top) or 3·ch/4 (bottom). Baking it into the
+        // world target keeps the 3D terrain and 2D overlays perfectly aligned.
+        const offWorldY = (ch * 0.25) * worldPerPxY / k;
+        const wx = cx;
+        const wy = (side === 'top') ? (cy - offWorldY) : (cy + offWorldY);
 
         return { wx, wy, k };
       };
 
       return {
-        left:    computeTarget(boxes[topLeftIdx],  'left'),
-        right:   computeTarget(boxes[botRightIdx], 'right'),
-        players: [nonNeutral[topLeftIdx], nonNeutral[botRightIdx]]
+        top:     computeTarget(boxes[topIdx], 'top'),
+        bottom:  computeTarget(boxes[botIdx], 'bottom'),
+        players: [nonNeutral[topIdx], nonNeutral[botIdx]]
       };
     }
 
-    _computeHeroDistance (players) {
-      const heroes = [];
+    /**
+     * Min cross-player separation. One representative point per non-neutral
+     * player: its first valid hero if it has one, else its starting position.
+     * The starting-position fallback is what makes the OPENING split — before
+     * heroes exist the bases are (always, in 1v1) far apart.
+     */
+    _computeSeparation (players) {
+      const pts = [];
       for (const player of players) {
-        if (!player.heroes || player.isNeutralPlayer) continue;
-        for (const hero of player.heroes) {
+        if (!player || player.isNeutralPlayer) continue;
+        let pt = null;
+        for (const hero of (player.heroes || [])) {
           if (hero.currentX != null && !isNaN(hero.currentX)) {
-            heroes.push({ x: hero.currentX, y: hero.currentY, playerId: player.playerId });
+            pt = { x: hero.currentX, y: hero.currentY };
+            break;
           }
         }
+        if (!pt && player.startingPosition &&
+            player.startingPosition.x != null && !isNaN(player.startingPosition.x)) {
+          pt = { x: player.startingPosition.x, y: player.startingPosition.y };
+        }
+        if (pt) { pt.playerId = player.playerId; pts.push(pt); }
       }
-      // Find min distance between heroes of different players
+
       let minDist = Infinity;
-      for (let i = 0; i < heroes.length; i++) {
-        for (let j = i + 1; j < heroes.length; j++) {
-          if (heroes[i].playerId === heroes[j].playerId) continue;
-          const dx = heroes[i].x - heroes[j].x;
-          const dy = heroes[i].y - heroes[j].y;
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          if (pts[i].playerId === pts[j].playerId) continue;
+          const dx = pts[i].x - pts[j].x;
+          const dy = pts[i].y - pts[j].y;
           minDist = Math.min(minDist, Math.sqrt(dx * dx + dy * dy));
         }
       }
@@ -538,6 +622,84 @@
     _hasEngagedCluster (players) {
       const clusters = this._clusterHeroes(players);
       return clusters.some(c => c.playerIds.size > 1);
+    }
+
+    /**
+     * Decide whether AUTO should be in its split sub-state this frame.
+     * 1v1 only; never over a fight (active OR imminent); hysteresis band so it
+     * doesn't flip-flop when separation hovers near the threshold.
+     */
+    _evaluateAutoSplit (players, gameTime, separation) {
+      if (!this._autoSplitEnabled) return false;
+      // Split only makes sense between two players — never in team games / FFA.
+      if (this.viewer.isNonOneVsOne && this.viewer.isNonOneVsOne()) return false;
+      // Only AUTO (or its own split sub-state) drives split — not FOLLOW/FREE.
+      if (this.mode !== CameraMode.ACTION_FOCUS && this.mode !== CameraMode.SPLIT_SCREEN) {
+        return false;
+      }
+      // Don't split into or across a fight we're showing or about to show.
+      if (this._activeBattleBbox()) return false;
+      if (this._imminentBattle(gameTime)) return false;
+      if (this._hasEngagedCluster(players)) return false;
+
+      // Hysteresis: harder to enter than to leave.
+      const threshold = (this.mode === CameraMode.SPLIT_SCREEN)
+        ? SPLIT_EXIT_DISTANCE
+        : SPLIT_ENTER_DISTANCE;
+      return separation > threshold;
+    }
+
+    /**
+     * The nearest battle that STARTS within LOOKAHEAD_MS of gameTime (i.e. not
+     * yet active). Returns { battle, dt, box } or null. Used both to lead the
+     * camera into a fight and to suppress split-screen just before one.
+     */
+    _imminentBattle (gameTime) {
+      const pb = this.viewer && this.viewer.processedBattles;
+      if (!pb || !pb.battles || gameTime == null) return null;
+      for (const b of pb.battles) {            // sorted ascending by startTime
+        const dt = b.startTime - gameTime;
+        if (dt <= 0) continue;                 // already started (handled as active)
+        if (dt > LOOKAHEAD_MS) break;          // sorted → nothing sooner past here
+        const box = pb.trackerBoxAt(b, b.startTime);  // first sample of the clash
+        if (!box) continue;
+        return { battle: b, dt, box };
+      }
+      return null;
+    }
+
+    /**
+     * Blend a computed AUTO target toward an imminent battle. The closer the
+     * battle's start, the more the camera pre-pans toward it and tightens zoom.
+     * No-op when a battle is already active (that's framed directly).
+     */
+    _applyLookAhead (target, players, gameTime) {
+      if (!target) return target;
+      // Only the AUTO camera anticipates fights — FOLLOW_HERO must strictly
+      // track its hero, not drift toward a clash elsewhere on the map.
+      if (this.mode !== CameraMode.ACTION_FOCUS) return target;
+      if (this._activeBattleBbox()) return target;  // already on the live fight
+      const imminent = this._imminentBattle(gameTime);
+      if (!imminent) return target;
+
+      const box = imminent.box;
+      const bx = (box.minX + box.maxX) / 2;
+      const by = (box.minY + box.maxY) / 2;
+
+      // lead: 0 at the far edge of the look-ahead window → 1 right as it starts.
+      let lead = (LOOKAHEAD_MS - imminent.dt) / LOOKAHEAD_MS;
+      lead = Math.max(0, Math.min(1, lead));
+      lead = lead * lead * (3 - 2 * lead);          // smoothstep
+
+      const panT = lead * LOOKAHEAD_LEAD;
+      const wx = target.wx + (bx - target.wx) * panT;
+      const wy = target.wy + (by - target.wy) * panT;
+
+      // Pre-tighten zoom toward the battle floor as the fight nears.
+      const zoomT = lead * LOOKAHEAD_ZOOM_LEAD;
+      const k = target.k + (Math.max(target.k, MIN_ZOOM_BATTLE) - target.k) * zoomT;
+
+      return { wx, wy, k };
     }
 
     // ---------------------------------------------------------------
@@ -845,52 +1007,47 @@
     _computeClusterBounds (cluster, players) {
       let minX = Infinity, maxX = -Infinity;
       let minY = Infinity, maxY = -Infinity;
+      let minZoom;
 
-      // Include all heroes in the selected cluster
-      for (const entry of cluster.heroes) {
-        minX = Math.min(minX, entry.x);
-        maxX = Math.max(maxX, entry.x);
-        minY = Math.min(minY, entry.y);
-        maxY = Math.max(maxY, entry.y);
-      }
-
-      // Include nearby non-hero units within cluster range
-      const cx = cluster.centroid.x;
-      const cy = cluster.centroid.y;
-      for (const player of players) {
-        if (!player.units || player.isNeutralPlayer) continue;
-        for (const unit of player.units) {
-          if (unit.currentX == null || unit.meta.hero || unit.isBuilding) continue;
-          const dx = unit.currentX - cx;
-          const dy = unit.currentY - cy;
-          if (Math.sqrt(dx * dx + dy * dy) < CLUSTER_UNIT_RANGE) {
-            minX = Math.min(minX, unit.currentX);
-            maxX = Math.max(maxX, unit.currentX);
-            minY = Math.min(minY, unit.currentY);
-            maxY = Math.max(maxY, unit.currentY);
+      const battleBbox = this._activeBattleBbox();
+      if (battleBbox) {
+        // ACTIVE FIGHT — frame the clash bbox and zoom in, but loosely: expand
+        // the tracker box so reinforcements / retreats / spell range stay in
+        // view rather than cropping tight on the clash centroid. (Still don't
+        // union the whole cluster's spread units — that's what kept it too far.)
+        const ex = (battleBbox.maxX - battleBbox.minX) * BATTLE_VIEW_PAD_FRAC;
+        const ey = (battleBbox.maxY - battleBbox.minY) * BATTLE_VIEW_PAD_FRAC;
+        minX = battleBbox.minX - ex; maxX = battleBbox.maxX + ex;
+        minY = battleBbox.minY - ey; maxY = battleBbox.maxY + ey;
+        minZoom = MIN_ZOOM_BATTLE;
+      } else {
+        // NO FIGHT — frame the hero cluster + nearby units as a wider overview.
+        // Low floor so spread heroes / both bases at the start still fit (else the
+        // camera zooms into the empty midpoint between bases).
+        for (const entry of cluster.heroes) {
+          minX = Math.min(minX, entry.x); maxX = Math.max(maxX, entry.x);
+          minY = Math.min(minY, entry.y); maxY = Math.max(maxY, entry.y);
+        }
+        const cx = cluster.centroid.x, cy = cluster.centroid.y;
+        for (const player of players) {
+          if (!player.units || player.isNeutralPlayer) continue;
+          for (const unit of player.units) {
+            if (unit.currentX == null || unit.meta.hero || unit.isBuilding) continue;
+            const dx = unit.currentX - cx, dy = unit.currentY - cy;
+            if (Math.sqrt(dx * dx + dy * dy) < CLUSTER_UNIT_RANGE) {
+              minX = Math.min(minX, unit.currentX); maxX = Math.max(maxX, unit.currentX);
+              minY = Math.min(minY, unit.currentY); maxY = Math.max(maxY, unit.currentY);
+            }
           }
         }
+        if (minX === Infinity) { minX = maxX = cx; minY = maxY = cy; } // heroes-only fallback
+        minZoom = cluster.playerIds.size > 1 ? MIN_ZOOM_OVERVIEW : MIN_ZOOM_SINGLE;
       }
 
-      // Battle-aware framing: if BattleDetector has an active battle at the
-      // current gameTime, union its tracker box into the cluster bbox so the
-      // box never clips out of frame. The cluster scoring still decides which
-      // battle the camera follows (no override); this just guarantees fit.
-      // Camera follow lerp (LERP_RATE) handles the smoothness.
-      const bbox = this._activeBattleBbox();
-      if (bbox) {
-        minX = Math.min(minX, bbox.minX);
-        maxX = Math.max(maxX, bbox.maxX);
-        minY = Math.min(minY, bbox.minY);
-        maxY = Math.max(maxY, bbox.maxY);
-      }
-
-      // Tighter padding than the old approach
       const padX = (maxX - minX) * PAD_X_FRAC || PAD_X_MIN;
       const padYTop = (maxY - minY) * PAD_Y_TOP_FRAC || PAD_Y_TOP_MIN;
       const padYBot = (maxY - minY) * PAD_Y_BOT_FRAC || PAD_Y_BOT_MIN;
-      minX -= padX;
-      maxX += padX;
+      minX -= padX; maxX += padX;
       maxY += padYTop;  // WC3 Y: positive = north = top of screen
       minY -= padYBot;  // extra south padding for camera tilt
 
@@ -899,17 +1056,13 @@
       const extentX = maxX - minX;
       const extentY = maxY - minY;
 
-      // Zoom relative to the camera view extent
       const gs = this.viewer.gameScaler;
-      if (!gs || !gs.viewExtent) return { wx: focusX, wy: focusY, k: MIN_ZOOM_SINGLE };
+      if (!gs || !gs.viewExtent) return { wx: focusX, wy: focusY, k: minZoom };
 
       const viewWorldW = gs.viewExtent.x[1] - gs.viewExtent.x[0];
       const viewWorldH = Math.abs(gs.viewExtent.y[1] - gs.viewExtent.y[0]);
       const kX = viewWorldW / extentX;
       const kY = viewWorldH / extentY;
-
-      // Use tighter min zoom for single-player clusters
-      const minZoom = cluster.playerIds.size > 1 ? MIN_ZOOM_ENGAGED : MIN_ZOOM_SINGLE;
       const k = Math.max(minZoom, Math.min(MAX_ZOOM, Math.min(kX, kY)));
 
       return { wx: focusX, wy: focusY, k };

@@ -119,7 +119,7 @@ const ClientUnit = class {
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
       "collisionSize", "footprint", "isInferred", "destroyedAt", "isSummon",
-      "lostState", "hiddenStream", "combatOrderTimes", "primaryRole",
+      "lostState", "hiddenStream", "combatOrderTimes", "primaryRole", "harvestConfident", "buildWindows",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
       "constructionStartTime", "uprootStream"
@@ -405,10 +405,43 @@ const ClientUnit = class {
     return this.primaryRole === 'lumber' || this.primaryRole === 'gold';
   }
 
+  // Confident harvest treatment for the 3D viewer, or null if we are NOT
+  // confident this worker is harvesting (parser only sets harvestConfident from
+  // an observed harvest command — not a spawn default). The 3D renderer hides
+  // null-kind workers in-base (e.g. a ghoul left idle on rally). 'static' workers
+  // channel in place (UD acolyte on gold, NE wisp on either resource); 'loop'
+  // workers (peon/peasant/ghoul) trip between resource and drop-off.
+  // True while this worker is a VISIBLE builder (walking to / summoning /
+  // constructing a building) per the parser's buildWindows. The viewer un-hides
+  // builders so they're never decluttered like an idle worker. end==null = a
+  // window still open at replay end (ongoing).
+  _inBuildWindow (gameTime) {
+    const w = this.buildWindows;
+    if (!w || !w.length) return false;
+    for (let i = 0; i < w.length; i++) {
+      if (gameTime >= w[i].start && (w[i].end == null || gameTime <= w[i].end)) return true;
+    }
+    return false;
+  }
+
+  harvestKind () {
+    if (!this.harvestConfident) return null;
+    const role = this.primaryRole;
+    if (role !== 'gold' && role !== 'lumber') return null;
+    if (this.itemId === 'uaco') return 'gold-static';    // acolyte stands ON the mine, channeling (visible)
+    if (this.itemId === 'ewsp') {
+      // wisp on gold channels INSIDE the mine (invisible in WC3); on lumber it
+      // stands at the tree with a beam (visible).
+      return role === 'gold' ? 'gold-internal' : 'lumber-static';
+    }
+    return role + '-loop';                                // peon / peasant / ghoul carry to a drop-off
+  }
+
   // Is this worker worth drawing on the tactical map right now? Hidden while it
   // harvests/idles in base; shown when it matters. Mirrors WC3 micro: a pulled
   // acolyte or a scouting peon is relevant; the mining workforce is noise.
   _isWorkerRelevant (gameTime, frameData, isInBattle) {
+    if (this._inBuildWindow(gameTime)) return true;  // actively building — never hide
     if (this.scoutInfo) return true;          // flagged scout — already surfaced
     if (isInBattle) return true;              // caught in / pulled to a fight
     // a direct attack order was given to this worker recently

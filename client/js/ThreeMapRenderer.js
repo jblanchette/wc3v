@@ -1070,6 +1070,7 @@
         this.waterMesh.material.uniforms.uTime.value = performance.now() / 1000;
       }
       this.animateLevelPins();
+      this._updateGuideRings();
 
       // Force camera matrix update once before rendering, so subsequent
       // projectToCanvas calls don't redundantly recompute it per-unit
@@ -1567,6 +1568,123 @@
       for (const pin of Object.values(this._levelPins)) {
         pin.rotation.y = t * 0.5; // slow spin
         pin.position.y += Math.sin(t * 2) * 0.1; // subtle bob
+      }
+    }
+
+    // ── Guided-walkthrough ground glow ───────────────────────────────────────
+    // A soft additive gold halo laid FLAT on the terrain under each highlighted
+    // building / creep camp. The object renders in front of it (it's on the
+    // ground, depthWrite off), so — unlike the old screen-space gold ring — it
+    // physically cannot cover the building, its nameplate, or HP bars. Buildings
+    // are instanced with shared materials so we can't glow a single building's
+    // body; this halo is the per-building cue instead. Pooled + reused.
+    //
+    // specs: [{ key, wx, wy, colorHex, r?, itemId? }] — r in world units, else
+    //   derived from the building's footprint table; `key` is stable per target
+    //   so each halo flashes once (when its target first appears) then fades out.
+    //   null/empty specs hides all.
+    highlightGroundRings (specs, epoch) {
+      if (!this._hlGlows) this._hlGlows = [];
+      // A new step (epoch = its start time) forgets prior first-seen times so
+      // every target of the new step flashes again — otherwise a building still
+      // highlighted from the previous step would show up already-faded.
+      if (epoch !== this._glowEpoch) { this._glowSeen = {}; this._glowEpoch = epoch; }
+      if (!this._glowSeen) this._glowSeen = {};
+      for (const g of this._hlGlows) g.visible = false;
+      if (!specs || !specs.length || !this.scene) { this._hlActive = null; return; }
+      // Shared geometry + texture; PER-glow material so each halo can fade on its
+      // own timeline (a building built mid-step flashes when IT appears, not at
+      // step start). depthTest OFF: a flat halo at one ground height gets clipped
+      // wherever surrounding terrain rises above it — ignoring depth keeps the
+      // whole halo visible (reads as projected light) and lightly washes the
+      // building's base gold; it never covers the upper body or the (separate
+      // canvas) nameplates/HP bars.
+      if (!this._hlGlowGeo) this._hlGlowGeo = new THREE.PlaneGeometry(2, 2);
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      const ext = this.mapInfo.bounds.map;
+      const cx = (ext[0][0] + ext[0][1]) / 2;
+      const cy = (ext[1][0] + ext[1][1]) / 2;
+      const liveKeys = {};
+      for (let i = 0; i < specs.length; i++) {
+        const s = specs[i];
+        const key = s.key || ('p' + i);
+        liveKeys[key] = true;
+        if (this._glowSeen[key] == null) this._glowSeen[key] = now; // first appearance → start its flash+fade
+        let g = this._hlGlows[i];
+        if (!g) {
+          g = new THREE.Mesh(this._hlGlowGeo, new THREE.MeshBasicMaterial({
+            map: this._guideGlowTexture(), transparent: true, depthWrite: false, depthTest: false,
+            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false
+          }));
+          g.rotation.x = -Math.PI / 2;   // lay flat on the ground (XZ plane)
+          g.renderOrder = 4;
+          g.frustumCulled = false;
+          this.scene.add(g);
+          this._hlGlows[i] = g;
+        }
+        const r = (s.r != null)
+          ? s.r
+          : ((ThreeMapRenderer.BUILDING_CLEAR_RADIUS[s.itemId] || 260) * 0.62);
+        const gy = (this.sampleHeight ? this.sampleHeight(s.wx, s.wy) : 0) + 3;
+        g.position.set(s.wx - cx, gy, -(s.wy - cy));
+        g._baseR = Math.max(80, r);
+        g.scale.setScalar(g._baseR);
+        g.material.color.set(s.colorHex || '#ffce3a');
+        g._seenAt = this._glowSeen[key];
+        g.visible = true;
+      }
+      // Forget targets that are no longer highlighted, so a target that genuinely
+      // re-appears later flashes again.
+      for (const k in this._glowSeen) { if (!liveKeys[k]) delete this._glowSeen[k]; }
+      this._hlActive = { count: specs.length };
+    }
+
+    // White radial halo + a defined rim ring, drawn once and tinted per-use via
+    // material.color (so additive blending glows in the highlight colour).
+    _guideGlowTexture () {
+      if (this._hlGlowTex) return this._hlGlowTex;
+      const S = 256, c = document.createElement('canvas');
+      c.width = c.height = S;
+      const ctx = c.getContext('2d');
+      const cx = S / 2, cy = S / 2;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, S * 0.5);
+      grad.addColorStop(0, 'rgba(255,255,255,0.18)');
+      grad.addColorStop(0.55, 'rgba(255,255,255,0.06)');
+      grad.addColorStop(0.74, 'rgba(255,255,255,0.0)');
+      grad.addColorStop(1, 'rgba(255,255,255,0.0)');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, S, S);
+      // a soft wide rim then a crisp inner rim, for a defined-but-glowy ring
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 22;
+      ctx.beginPath(); ctx.arc(cx, cy, S * 0.40, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,1)'; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.arc(cx, cy, S * 0.40, 0, Math.PI * 2); ctx.stroke();
+      const tex = new THREE.CanvasTexture(c);
+      if ('colorSpace' in tex && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+      this._hlGlowTex = tex;
+      return tex;
+    }
+
+    // Per-frame pulse for the guide ground glow. Each halo flashes hard when its
+    // target first appears (loud), then FADES OUT to nothing a few seconds later
+    // (vis) — so highlights never linger and pile up over a step's playback. Time
+    // is per-glow (g._seenAt), driven by performance.now so it animates while
+    // paused. A faded-out halo stays hidden for the rest of the step (its key
+    // remains "seen") and won't re-flash unless the target genuinely re-appears.
+    _updateGuideRings () {
+      if (!this._hlActive || !this._hlGlows) return;
+      const GLOW_HOLD_MS = 900;    // full strength for the initial grab
+      const GLOW_FADE_MS = 2400;   // then fade to gone over this long
+      const now = performance.now();
+      const pulse = 0.5 + 0.5 * Math.sin(now / 300);
+      for (let i = 0; i < this._hlActive.count; i++) {
+        const g = this._hlGlows[i];
+        if (!g || !g.visible) continue;
+        const age = now - (g._seenAt || now);
+        const loud = Math.max(0, 1 - age / 1700);
+        const vis = (age <= GLOW_HOLD_MS) ? 1 : Math.max(0, 1 - (age - GLOW_HOLD_MS) / GLOW_FADE_MS);
+        if (vis <= 0.01) { g.visible = false; continue; }
+        g.material.opacity = (0.55 + 0.4 * loud + 0.14 * pulse) * vis;
+        g.scale.setScalar(g._baseR * (1 + 0.05 * pulse));
       }
     }
 
@@ -2710,6 +2828,21 @@
 
       if (this._rafId != null) { cancelAnimationFrame(this._rafId); this._rafId = null; }
       this._pendingRender = false;
+
+      // Guide glow: pooled meshes share ONE geometry + texture but have per-glow
+      // materials. Remove them from the scene and dispose everything exactly once
+      // here, so the per-mesh scene.traverse below can't double-dispose the shared
+      // geometry/texture.
+      if (this._hlGlows) {
+        for (const g of this._hlGlows) {
+          if (this.scene) this.scene.remove(g);
+          if (g.material) g.material.dispose();
+        }
+      }
+      if (this._hlGlowGeo) this._hlGlowGeo.dispose();
+      if (this._hlGlowTex && typeof this._hlGlowTex.dispose === 'function') this._hlGlowTex.dispose();
+      this._hlGlows = this._hlActive = this._hlGlowGeo = this._hlGlowTex = this._glowSeen = null;
+      this._glowEpoch = undefined;
 
       if (this.fogOfWar && typeof this.fogOfWar.dispose === 'function') {
         this.fogOfWar.dispose();

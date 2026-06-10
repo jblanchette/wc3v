@@ -302,6 +302,12 @@ const MapRenderer = class {
         });
       }
 
+      // During the guide creep tour, suppress every per-camp ground ring (track
+      // ring + team progress arc + order badges) — the gold focus halo marks the
+      // active camp. Bookkeeping + claimPaths above already ran; the route LINES
+      // after this loop still draw (gated separately by displayCreepRoute).
+      if (viewOptions && viewOptions.suppressCreepRings) return;
+
       const isHovered = (uuid === hoveredCampUuid);
 
       // ---- camp marker: segmented progress ring (Project C5) -------------

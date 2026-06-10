@@ -253,10 +253,15 @@ const Wc3vViewer = class {
     this.guideFollowedPlayer = null;
     this.guideBuildName = null;   // curated build name (from buildContextBySlot), if known
     this._guideOpenedOnce = false; // once the walkthrough has been opened (or auto-opened) we don't pop it again on re-render
-    this._guideHighlight = null;   // { units:[ClientUnit], typeIds:[itemId], typePlayer:ClientPlayer, color } — drawn each frame by _renderGuideHighlights
-    this._guideHighlightStartTime = 0; // performance.now() when the current step's highlight was applied — drives the loud→calm fade
+    this._guideHighlight = null;   // { units:[ClientUnit], typeIds, typePlayer, worldPoints, color, fade } — resolved by _renderGuideHighlights into an in-scene 3D glow (unit emissive + ground-glow halos)
+    this._guideHighlightStartTime = 0; // performance.now() when the current step's highlight was applied — drives the loud→calm pulse (shared by both renderers)
     this._guidePrevCameraMode = null; // BroadcastCamera mode to restore when the walkthrough exits
     this._guidePlayUntil = null;   // while set, playback auto-parks at this gameTime (the end of the current step's play-out window)
+    this._guideSegmentEnd = null;  // the FULL end of the current segment (what "Watch the rest" plays to)
+    this._guideParkMode = null;    // what to do when _guidePlayUntil is reached: 'auto' (3-2-1 countdown → next step) | 'stay' (just pause)
+    if (this._guideCountdown && this._guideCountdown.timer) clearTimeout(this._guideCountdown.timer);
+    this._guideCountdown = null;   // { timer, gen } for the active auto-advance countdown, or null
+    this._guideCountdownGen = (this._guideCountdownGen || 0) + 1;   // monotonic id; a tick whose gen != this is stale and bails
     this._guideStepListEls = null; // cached NodeList of the current step's .gh-sl-item rows (the build-sequence list), or null
     this._guideStepListIdx = -2;   // last "active" index applied to the step list (-2 = not applied yet) — so we only touch the DOM on a change
     this._guideCreepTour = null;   // { camps:[{wx,wy,rWorld,startMs,clearMs,label,levelStr,iconId,boundsRect}], idx, summaryShown } — the hero step's camp tour, or null
@@ -864,6 +869,12 @@ const Wc3vViewer = class {
       this.broadcastCamera.setMode(CameraMode.ACTION_FOCUS);
     }
 
+    // Re-sync the auto time-scale to the scrubbed-to moment (no stale ramp).
+    if (this.scrubber.isAuto && this.autoDirector) {
+      this.autoDirector.update(gameTime, 0);
+      this.autoDirector.snap();
+    }
+
     this.render();
   }
 
@@ -970,14 +981,15 @@ const Wc3vViewer = class {
     toolbar.id = 'camera-toolbar';
     toolbar.className = 'camera-toolbar';
 
-    // Non-1v1: split-screen and per-player (P1/P2) cameras don't generalize
-    // past two players — only Auto (fits all action) and Free are offered.
+    // Split is no longer a user-selectable mode — AUTO owns it as an automatic
+    // sub-state (enters when the 1v1 players are far apart, exits on contact).
+    // Non-1v1: per-player (P1/P2) cameras don't generalize past two players —
+    // only Auto (fits all action) and Free are offered.
     toolbar.innerHTML = (this.isNonOneVsOne() ? [
       '<button class="cam-btn cam-btn-active" data-mode="auto">AUTO</button>',
       '<button class="cam-btn" data-mode="free">FREE</button>'
     ] : [
       '<button class="cam-btn cam-btn-active" data-mode="auto">AUTO</button>',
-      '<button class="cam-btn" data-mode="split">SPLIT</button>',
       '<button class="cam-btn" data-mode="p1">P1</button>',
       '<button class="cam-btn" data-mode="p2">P2</button>',
       '<button class="cam-btn" data-mode="free">FREE</button>'
@@ -1006,7 +1018,6 @@ const Wc3vViewer = class {
         const non1v1 = this.isNonOneVsOne();
         switch (e.key.toLowerCase()) {
           case 'a': this._handleCameraButton('auto'); break;
-          case 's': if (!non1v1) this._handleCameraButton('split'); break;
           case '1': if (!non1v1) this._handleCameraButton('p1'); break;
           case '2': if (!non1v1) this._handleCameraButton('p2'); break;
           case 'f': this._handleCameraButton('free'); break;
@@ -1017,14 +1028,10 @@ const Wc3vViewer = class {
 
   _handleCameraButton (mode) {
     if (!this.broadcastCamera) return;
-    // Non-1v1: split-screen / per-player cameras are unsupported.
-    if (this.isNonOneVsOne() && (mode === 'split' || mode === 'p1' || mode === 'p2')) return;
+    // Non-1v1: per-player cameras are unsupported.
+    if (this.isNonOneVsOne() && (mode === 'p1' || mode === 'p2')) return;
     switch (mode) {
       case 'auto':  this.broadcastCamera.setMode(CameraMode.ACTION_FOCUS); break;
-      case 'split':
-        this.broadcastCamera._manualSplit = true;
-        this.broadcastCamera.setMode(CameraMode.SPLIT_SCREEN);
-        break;
       case 'p1':    this.broadcastCamera.setMode(CameraMode.FOLLOW_HERO, 0); break;
       case 'p2':    this.broadcastCamera.setMode(CameraMode.FOLLOW_HERO, 1); break;
       case 'free':  this.broadcastCamera.setMode(CameraMode.FREE); break;
@@ -1041,7 +1048,7 @@ const Wc3vViewer = class {
     if (toolbar) {
       const modeMap = {
         action_focus: 'auto',
-        split_screen: 'split',
+        split_screen: 'auto',  // split is an AUTO sub-state — keep AUTO highlighted
         follow_hero: this.broadcastCamera._followPlayerId === 0 ? 'p1' : 'p2',
         free: 'free'
       };
@@ -1101,15 +1108,6 @@ const Wc3vViewer = class {
     }
   }
 
-  _updateSplitButtonState () {
-    if (!this.broadcastCamera) return;
-    const splitBtn = document.querySelector('.cam-btn[data-mode="split"]');
-    if (!splitBtn) return;
-    const isSplit = this.broadcastCamera.mode === CameraMode.SPLIT_SCREEN;
-    const tooClose = this.broadcastCamera._heroDistance < 2500 && !isSplit;
-    splitBtn.classList.toggle('cam-btn-unavailable', tooClose);
-  }
-
   showPlacementViewer (playerId) {
     const player = this.players.find(p => p.playerId === String(playerId));
     if (!player) {
@@ -1134,6 +1132,8 @@ const Wc3vViewer = class {
   toggleViewOption (optionKey) {
     // Creep route detection is permanently off for non-1v1 (mis-credits teams).
     if (optionKey === 'displayCreepRoute' && this.isNonOneVsOne()) return;
+    // Auto split view is 1v1-only — the toggle is locked for team games / FFA.
+    if (optionKey === 'autoSplitScreen' && this.isNonOneVsOne()) return;
     this.viewOptions[optionKey] = !this.viewOptions[optionKey];
     const isOn = this.viewOptions[optionKey];
 
@@ -1168,9 +1168,16 @@ const Wc3vViewer = class {
   play () {
     const { wrapperId } = this.scrubber;
 
+    // A genuine user Play during the auto-advance countdown means "let me keep
+    // watching" — cancel the nudge. (_guideWatchRest cancels before it calls
+    // play(), so this only fires on real user input.)
+    if (this._guideCountdown) this._cancelGuideAutoAdvance();
+
     // If the user hits Play after a walkthrough step's auto-play has parked at
-    // its window end, let them watch freely (drop the auto-park).
-    if (this._guidePlayUntil != null && this.gameTime >= this._guidePlayUntil - 100) this._guidePlayUntil = null;
+    // its window end, let them watch freely (drop the auto-park). EXCEPT a 'stay'
+    // park ("Watch the rest"): that's an explicit request to play to segmentEnd
+    // and pause there — dropping it would let playback run past, so keep it.
+    if (this._guideParkMode !== 'stay' && this._guidePlayUntil != null && this.gameTime >= this._guidePlayUntil - 100) this._guidePlayUntil = null;
 
     this.scrubber.loadSvg(`#${wrapperId}-play`, 'pause-icon');
     this.state = ScrubStates.playing;
@@ -1417,6 +1424,7 @@ const Wc3vViewer = class {
     const $ = (id) => document.getElementById(id);
     if ($('guide-prev-btn')) $('guide-prev-btn').addEventListener('click', () => this.guidePrev());
     if ($('guide-next-btn')) $('guide-next-btn').addEventListener('click', () => this.guideNext());
+    if ($('guide-ac-stay')) $('guide-ac-stay').addEventListener('click', () => this._guideWatchRest());
     if ($('guide-exit-btn')) $('guide-exit-btn').addEventListener('click', () => this.exitGuideMode());
     document.querySelectorAll('#guide-player-pick [data-guide-cancel]').forEach(el =>
       el.addEventListener('click', () => { const m = $('guide-player-pick'); if (m) m.hidden = true; }));
@@ -1441,9 +1449,10 @@ const Wc3vViewer = class {
   // Open the guided walkthrough. `who` may be a ClientPlayer, a playerId, a
   // slot, or be omitted (then we show the "pick a player" gate when there's
   // more than one non-neutral player).
-  enterGuideMode (who) {
+  enterGuideMode (who, opts) {
     if (this._proFeaturesDisabled) return; // 1v1-only feature
     if (typeof ReplayGuide === 'undefined' || !ReplayGuide.buildGuide) return;
+    const autoStart = !!(opts && opts.autoStart); // skip the intro/contents page, begin on step 0
     const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
     if (players.length < 2) return; // need two players to compare
 
@@ -1453,7 +1462,9 @@ const Wc3vViewer = class {
     else if (who != null) followed = players.find(p => p.playerId == who || p.slot == who) || null;  // eslint-disable-line eqeqeq
 
     if (!followed) {
-      if (players.length > 1) { this._showGuidePlayerPick(); return; }
+      // No player picked yet — pop the "whose game?" picker, carrying the
+      // autoStart intent so the chosen player also begins the walkthrough.
+      if (players.length > 1) { this._showGuidePlayerPick(autoStart); return; }
       followed = players[0];
     }
     const opp = players.find(p => p !== followed);
@@ -1500,7 +1511,9 @@ const Wc3vViewer = class {
     if (this.buildingHoverLabel) this.buildingHoverLabel.hide();
     if (!this.mobileMode) this.pause();   // settle playback; each step decides whether to roll the tape (guideGoToStep)
     const hud = document.getElementById('guide-hud'); if (hud) hud.hidden = false;
-    this.guideGoToStep(-1);
+    // autoStart begins on step 0 (rolls the tape); otherwise park on the
+    // intro/contents page (-1) and wait for the user to hit Next.
+    this.guideGoToStep(autoStart ? 0 : -1);
     if (this.boRenderer && this.boRenderer.syncWalkthroughCta) this.boRenderer.syncWalkthroughCta();
   }
 
@@ -1509,7 +1522,10 @@ const Wc3vViewer = class {
   // back to the "whose game?" picker when no player is picked yet.
   startWalkthroughFromOverlay () {
     this.toggleMegaPlayButton(false);
-    this.enterGuideMode(this.beginnerPickedSlot != null ? this.beginnerPickedSlot : undefined);
+    // autoStart: roll straight into the first step instead of parking on the
+    // intro/contents page — the beginner explicitly asked to be taught, so begin
+    // the walkthrough. (The contents page is still reachable via Back from step 1.)
+    this.enterGuideMode(this.beginnerPickedSlot != null ? this.beginnerPickedSlot : undefined, { autoStart: true });
   }
 
   exitGuideMode () {
@@ -1517,12 +1533,17 @@ const Wc3vViewer = class {
     this.guide = null;
     this.guideFollowedPlayer = null;
     this._guideHighlight = null;
+    this._clearGuideHighlight3D();         // render() won't call the applier once guideMode is false
+    this._cancelGuideAutoAdvance();        // kill any running countdown
     this._guidePlayUntil = null;          // drop the per-step auto-park — watch freely now
+    this._guideSegmentEnd = null;
+    this._guideParkMode = null;
     this._guideStepListEls = null; this._guideStepListIdx = -2;
     this._guideCreepTour = null;
     // Put the creep-route view option back the way the user had it (the tour's
     // summary turns it on).
     if (this.viewOptions && this._guidePrevCreepRoute != null) this.viewOptions.displayCreepRoute = this._guidePrevCreepRoute;
+    if (this.viewOptions) this.viewOptions.suppressCreepRings = false;
     this._guidePrevCreepRoute = null;
     const hud = document.getElementById('guide-hud'); if (hud) hud.hidden = true;
     document.querySelectorAll('#bo-columns .guide-highlight').forEach(el => el.classList.remove('guide-highlight'));
@@ -1545,8 +1566,67 @@ const Wc3vViewer = class {
   }
   guidePrev () { if (this.guideMode) this.guideGoToStep(this.guideStepIdx - 1); }                  // step 0 → intro; intro stays
 
+  // The step's content has played out (parked at autoAdvanceAt). Show a 3-2-1
+  // nudge banner, then advance to the next step. Real-time timer (the replay is
+  // paused here) so it ticks regardless of playback. No next step → no nudge.
+  _startGuideAutoAdvance () {
+    this._cancelGuideAutoAdvance();
+    if (!this.guideMode || !this.guide) return;
+    if (this.guideStepIdx >= this.guide.steps.length - 1) return;   // last step — nothing to advance to
+    const banner = document.getElementById('guide-autocontinue');
+    const countEl = document.getElementById('guide-ac-count');
+    const stayBtn = document.getElementById('guide-ac-stay');
+    // Offer "Watch the rest" only when _guideWatchRest would actually play
+    // something (same threshold it uses), so the button never shows as a no-op.
+    if (stayBtn) stayBtn.style.display = (this._guideSegmentEnd != null && this._guideSegmentEnd > (this.gameTime || 0) + 50) ? '' : 'none';
+    // Generation token: any tick whose captured gen no longer matches the live
+    // counter is stale (a newer countdown started, or we were cancelled / reset)
+    // and bails immediately — so a queued setTimeout can never crash on a nulled
+    // _guideCountdown or advance the wrong step.
+    const gen = ++this._guideCountdownGen;
+    let n = 3;
+    if (banner) banner.hidden = false;
+    if (countEl) countEl.textContent = String(n);
+    const tick = () => {
+      if (gen !== this._guideCountdownGen) return;   // superseded — drop this tick
+      n -= 1;
+      if (n <= 0) { this._cancelGuideAutoAdvance(); this.guideNext(); return; }
+      if (countEl) countEl.textContent = String(n);
+      this._guideCountdown = { timer: setTimeout(tick, 1000), gen };
+    };
+    this._guideCountdown = { timer: setTimeout(tick, 1000), gen };
+  }
+
+  _cancelGuideAutoAdvance () {
+    if (this._guideCountdown && this._guideCountdown.timer) clearTimeout(this._guideCountdown.timer);
+    this._guideCountdown = null;
+    this._guideCountdownGen = (this._guideCountdownGen || 0) + 1;   // invalidate any already-queued tick
+    const banner = document.getElementById('guide-autocontinue');
+    if (banner) banner.hidden = true;
+  }
+
+  // "Watch the rest": cancel the auto-advance and play the remainder of the
+  // segment, then auto-pause there (stay on this step). If there's nothing left
+  // to watch, just cancel (the step stays paused; Next still advances manually).
+  _guideWatchRest () {
+    this._cancelGuideAutoAdvance();
+    const end = this._guideSegmentEnd;
+    if (end != null && end > (this.gameTime || 0) + 50) {
+      this._guidePlayUntil = end;
+      this._guideParkMode = 'stay';
+      this.stopRenderLoop();
+      this.play();
+    }
+  }
+
   guideGoToStep (idx) {
     if (!this.guideMode || !this.guide) return;
+    this._cancelGuideAutoAdvance();   // changing steps cancels any running countdown
+    // Reset the park state every transition so intro / mobile / creep-tour steps
+    // (which don't set it) can never inherit a previous step's stop points.
+    this._guidePlayUntil = null;
+    this._guideSegmentEnd = null;
+    this._guideParkMode = null;
     const steps = this.guide.steps;
     idx = Math.max(-1, Math.min(idx, steps.length - 1));
     this.guideStepIdx = idx;
@@ -1567,15 +1647,25 @@ const Wc3vViewer = class {
       // the end (see the _guidePlayUntil check there).
       const evt = [].concat((step.eventTimes && step.eventTimes.followed) || [], (step.eventTimes && step.eventTimes.opp) || []).filter(Number.isFinite);
       const lo = Math.max(0, Math.min(step.gameTimeMs, evt.length ? Math.min(...evt) : step.gameTimeMs) - 1500);
-      let hi = evt.length ? (Math.max(...evt) + 6000) : (step.gameTimeMs + 12000);
-      hi = Math.min(hi, lo + 90000);   // cap a step's auto-play at ~90s of game time (≈30s at 3×)
-      if (this.matchEndTime) hi = Math.min(hi, this.matchEndTime);
-      hi = Math.max(hi, lo + 3000);
+      const lastEvt = evt.length ? Math.max(...evt) : step.gameTimeMs;
+      // Two stop points. `autoAdvanceAt` = the content end (just past the last
+      // event) — we DON'T sit through the long tail (e.g. all 6 ghouls trickling
+      // out); once here the countdown nudges on to the next step. `segmentEnd` =
+      // the full tail, what "Watch the rest" plays to before auto-pausing.
+      const clamp = (t) => {
+        t = Math.min(t, lo + 90000);          // cap a step's auto-play at ~90s of game time (≈30s at 3×)
+        if (this.matchEndTime) t = Math.min(t, this.matchEndTime);
+        return Math.max(t, lo + 3000);
+      };
+      const autoAdvanceAt = clamp(evt.length ? (lastEvt + 1500) : (step.gameTimeMs + 8000));
+      const segmentEnd = Math.max(autoAdvanceAt, clamp(evt.length ? (lastEvt + 8000) : (step.gameTimeMs + 14000)));
       this.seekToGameTime(lo);                // jump to just before the action (camera untouched — it's FREE / FOLLOW_HERO)
       this._guideApplyFocus(step.focus);      // …frame the relevant base / army / unit (or follow the hero, or set up the creep tour)
       // The creep tour seeks itself to camp 1 and manages its own stop point;
-      // every other step parks at the play-out window end.
-      this._guidePlayUntil = this._guideCreepTour ? null : hi;
+      // every other step parks at the content end and offers the auto-advance.
+      this._guidePlayUntil = this._guideCreepTour ? null : autoAdvanceAt;
+      this._guideSegmentEnd = this._guideCreepTour ? null : segmentEnd;
+      this._guideParkMode = 'auto';
       this.stopRenderLoop();                  // cancel any running loop so play()'s startRenderLoop doesn't double it
       this.play();                            // …and roll the tape
     }
@@ -1638,6 +1728,7 @@ const Wc3vViewer = class {
     if (this._guideCreepTour && f.kind !== 'creepTour') {
       this._guideCreepTour = null;
       if (this.viewOptions && this._guidePrevCreepRoute != null) this.viewOptions.displayCreepRoute = this._guidePrevCreepRoute;
+      if (this.viewOptions) this.viewOptions.suppressCreepRings = false;
       this._guidePrevCreepRoute = null;
     }
     const nonNeutral = (this.players || []).filter(p => p && !p.isNeutralPlayer);
@@ -1866,6 +1957,9 @@ const Wc3vViewer = class {
     camps.forEach(c => { if (c.wx - c.rWorld < mnX) mnX = c.wx - c.rWorld; if (c.wx + c.rWorld > mxX) mxX = c.wx + c.rWorld; if (c.wy - c.rWorld < mnY) mnY = c.wy - c.rWorld; if (c.wy + c.rWorld > mxY) mxY = c.wy + c.rWorld; });
     this._guideCreepTour = { camps, idx: 0, summaryShown: false, allRect: { minX: mnX, maxX: mxX, minY: mnY, maxY: mxY }, targetLevel: route.targetLevel, reachedLevel };
     if (this.viewOptions && this._guidePrevCreepRoute == null) this._guidePrevCreepRoute = !!this.viewOptions.displayCreepRoute;
+    // Hide the per-camp ground rings (both the 3D mesh ring and the 2D track/arc)
+    // for the duration of the tour — the gold focus halo marks the active camp.
+    if (this.viewOptions) this.viewOptions.suppressCreepRings = true;
 
     // jump to camp 1, frame + ring it, roll the tape
     const bc = this.broadcastCamera;
@@ -1874,7 +1968,7 @@ const Wc3vViewer = class {
     const c0 = camps[0];
     this.seekToGameTime(Math.max(0, c0.startMs - 800));   // start just before the hero engages camp 1
     this._guideZoomToRect(c0.boundsRect);
-    this._guideHighlight = { worldPoints: [{ wx: c0.wx, wy: c0.wy, rWorld: c0.rWorld }], color: (player && player.playerColor) || '#6fc18a' };
+    this._guideHighlight = { worldPoints: [{ wx: c0.wx, wy: c0.wy, rWorld: c0.rWorld }], color: (player && player.playerColor) || '#6fc18a', fade: true };
     const tNow = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     this._guideHighlightStartTime = tNow;
     this._guideCreepStepShownAt = tNow;
@@ -1907,7 +2001,7 @@ const Wc3vViewer = class {
     if (next) {
       this.seekToGameTime(Math.max(this.gameTime, next.startMs - 600));   // hop forward to the next camp — skip the walk
       this._guideZoomToRect(next.boundsRect);
-      this._guideHighlight = { worldPoints: [{ wx: next.wx, wy: next.wy, rWorld: next.rWorld }], color: (this.guideFollowedPlayer && this.guideFollowedPlayer.playerColor) || '#6fc18a' };
+      this._guideHighlight = { worldPoints: [{ wx: next.wx, wy: next.wy, rWorld: next.rWorld }], color: (this.guideFollowedPlayer && this.guideFollowedPlayer.playerColor) || '#6fc18a', fade: true };
       this._guideHighlightStartTime = nowMs;
       this._guideCreepStepShownAt = nowMs;
       this._updateGuideCreepList(tour.idx);
@@ -1919,6 +2013,7 @@ const Wc3vViewer = class {
       tour.summaryShown = true;
       this.pause();
       if (this.viewOptions) this.viewOptions.displayCreepRoute = true;
+      if (this.viewOptions) this.viewOptions.suppressCreepRings = false;  // reveal the full route (lines + rings) as the payoff
       this._guideHighlight = null;                            // the route badges + lines carry the summary
       this._guideZoomToRect(tour.allRect);
       this._updateGuideCreepList(tour.idx);                   // idx === camps.length → all done, none active
@@ -2020,147 +2115,82 @@ const Wc3vViewer = class {
     if (bc) bc._isProgrammatic = false;
   }
 
-  // "Look HERE" overlay for the current step's emphasised units/buildings.
-  // Deliberately loud — the focal point must be unmissable: a soft spotlight
-  // (dim the rest of the map, punch a bright hole at each ring) plus a thick
-  // glowing gold ring with a dark outline + white inner edge (reads on any
-  // terrain) and an expanding "ping" ripple. Targets whose rings would overlap
-  // (e.g. two adjacent buildings) are merged into ONE ring around the group, so
-  // it never reads as a tangle of overlapping circles. Drawn on the (top)
-  // utility canvas in screen space, using the same projectXY + middleX/middleY
-  // mapping the unit icons use so the rings sit on them. Called from render()
-  // while guideMode is active.
-  _renderGuideHighlights (ctx, transform) {
+  // "Look HERE" focus for the current walkthrough step — now an IN-SCENE 3D
+  // effect, not a 2D overlay. The old screen-space gold ring + spotlight dim was
+  // drawn on the top canvas and inevitably covered the very buildings/units (and
+  // the nameplates) it was pointing at. Instead we light the actual 3D objects:
+  //   • units  → emissive gold pulse on the model + a brightened ground ring
+  //               (UnitModelRenderer.setGuideHighlight),
+  //   • buildings / creep-camp areas → a soft additive gold ground-glow halo laid
+  //               flat on the terrain (ThreeMapRenderer.highlightGroundRings);
+  //               the object renders in front of it, so nothing is occluded.
+  // This runs every frame in guideMode but only RESOLVES targets when the step's
+  // highlight changes (the renderers animate the pulse themselves). Resolution is
+  // cheap to keep cheap — the per-building lookup is O(n) over playerBuildings.
+  _renderGuideHighlights () {
     const hl = this._guideHighlight;
-    if (!hl || !ctx || !this.gameScaler) return;
-    const gs = this.gameScaler;
-    const gt = this.gameTime || 0;
-    const k = (transform && transform.k) || 1;
+    const umr = this.unitModelRenderer, tmr = this.threeMapRenderer;
+    if (!hl) { this._clearGuideHighlight3D(); return; }
 
-    const targets = [];
-    (hl.units || []).forEach(u => { if (u) targets.push(u); });
+    // Resolve EVERY frame (cheap): a step's targets are dynamic — buildings of
+    // the highlighted type finish construction (and units spawn) DURING the
+    // step's playback, so they must light up as they appear, not only on a step
+    // change. The pulse stays anchored to _guideHighlightStartTime, so re-applying
+    // the same targets each frame doesn't restart the loud→calm grab.
+    const gt = this.gameTime || 0;
+    const COLOR = '#ffce3a';                 // one consistent "look here" gold
+    const unitUuids = new Set();
+    const ringSpecs = [];
+    const buildings = (tmr && tmr.playerBuildings) || [];
+
+    // Light a building's halo from ~the build-command moment. A building's
+    // readyTime is constructionStartTime, a couple seconds AFTER the command the
+    // step jumps to — so the old `readyTime > gt` gate dropped the building for
+    // the whole (paused) step. Gate buildings on readyTime minus a lead window
+    // instead; the lower bound still prevents glowing when scrubbed back before
+    // the building was placed. Non-buildings keep the strict spawn/train gate.
+    const HALO_LEAD_MS = 2000;  // small look-ahead so the flash overlaps the mesh appearing (guide plays at 2x); larger fronts the flash onto bare terrain
+    const consider = (u) => {
+      if (!u || !Number.isFinite(u.currentX) || !Number.isFinite(u.currentY)) return;
+      if (u.destroyedAt && u.destroyedAt <= gt) return;
+      if (u.isBuilding) {
+        if (((u.readyTime || u.spawnTime || 0) - HALO_LEAD_MS) > gt) return;
+        // Buildings are instanced (shared material) → glow a ground halo at the
+        // footprint, not the body. Prefer the baked record position; fall back
+        // to the unit's live position if no record matches. `key` is stable per
+        // building so the halo flashes once (when the building appears) and then
+        // fades — see ThreeMapRenderer._updateGuideRings.
+        let rec = null;
+        for (const b of buildings) { if (b.unit && b.unit.uuid === u.uuid && b.destroyedAt == null) { rec = b; break; } }
+        if (rec) ringSpecs.push({ key: u.uuid, wx: rec.wx, wy: rec.wy, itemId: rec.itemId, colorHex: COLOR });
+        else ringSpecs.push({ key: u.uuid, wx: u.currentX, wy: u.currentY, itemId: u.itemId, colorHex: COLOR });
+      } else {
+        if ((u.readyTime || u.spawnTime || u.trainedTime || 0) > gt) return;  // unit not in play yet
+        unitUuids.add(u.uuid);
+      }
+    };
+
+    (hl.units || []).forEach(consider);
     if (hl.typePlayer && hl.typeIds && hl.typeIds.length) {
       const ids = hl.typeIds;
-      (hl.typePlayer.units || []).forEach(u => {
-        if (!u || ids.indexOf(u.itemId) === -1) return;
-        if (!Number.isFinite(u.currentX) || !Number.isFinite(u.currentY)) return;
-        if ((u.readyTime || u.spawnTime || u.trainedTime || 0) > gt) return;
-        if (u.destroyedAt && u.destroyedAt <= gt) return;
-        targets.push(u);
-      });
+      (hl.typePlayer.units || []).forEach(u => { if (u && ids.indexOf(u.itemId) !== -1) consider(u); });
     }
-
-    const scale = Math.max(0.8, Math.min(2.4, k * 0.85));
-    const pts = [];
-    for (const u of targets) {
-      if (!Number.isFinite(u.currentX) || !Number.isFinite(u.currentY)) continue;
-      let p; try { p = gs.projectXY(u.currentX, u.currentY); } catch (e) { continue; }
-      if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) continue;
-      pts.push({ x: p.x + gs.middleX, y: p.y + gs.middleY, r: (u.isBuilding ? 36 : 22) * scale });
-    }
-    // World-space ring targets (creep camps): a {wx, wy, rWorld} → project the
-    // centre and a point rWorld away to get the screen radius at this zoom.
+    // Creep-camp areas have no single mesh — a ground halo scaled to the camp.
     (hl.worldPoints || []).forEach(wp => {
       if (!wp || !Number.isFinite(wp.wx) || !Number.isFinite(wp.wy)) return;
-      let p, pe; try { p = gs.projectXY(wp.wx, wp.wy); pe = gs.projectXY(wp.wx + (Number(wp.rWorld) || 300), wp.wy); } catch (e) { return; }
-      if (!p || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
-      const rPx = (pe && Number.isFinite(pe.x)) ? Math.hypot(pe.x - p.x, pe.y - p.y) : 70;
-      pts.push({ x: p.x + gs.middleX, y: p.y + gs.middleY, r: Math.max(44, Math.min(240, rPx)) });
+      ringSpecs.push({ key: 'wp' + Math.round(wp.wx) + '_' + Math.round(wp.wy), wx: wp.wx, wy: wp.wy, r: (Number(wp.rWorld) || 300) * 1.25, colorHex: COLOR });
     });
-    if (!pts.length) return;
 
-    // ── merge points whose rings overlap into clusters, then one bounding
-    //    circle per cluster (transitive union-find: A near B, B near C → all
-    //    one ring). A lone point stays its own ring.
-    const N = pts.length;
-    const parent = pts.map((_, i) => i);
-    const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
-    for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
-      if (Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) < (pts[i].r + pts[j].r) * 1.2) {
-        const a = find(i), b = find(j); if (a !== b) parent[a] = b;
-      }
-    }
-    const groups = new Map();
-    for (let i = 0; i < N; i++) { const r = find(i); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(pts[i]); }
-    const rings = [];
-    for (const members of groups.values()) {
-      if (members.length === 1) { rings.push({ x: members[0].x, y: members[0].y, r: members[0].r }); continue; }
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-      for (const m of members) { if (m.x < minX) minX = m.x; if (m.x > maxX) maxX = m.x; if (m.y < minY) minY = m.y; if (m.y > maxY) maxY = m.y; }
-      const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-      let r = 0; for (const m of members) r = Math.max(r, Math.hypot(m.x - cx, m.y - cy) + m.r);
-      rings.push({ x: cx, y: cy, r: r * 1.05 });   // hair of margin so it clears the buildings
-    }
+    if (umr) umr.setGuideHighlight(unitUuids, COLOR, this._guideHighlightStartTime);
+    if (tmr) tmr.highlightGroundRings(ringSpecs, this._guideHighlightStartTime);
+  }
 
-    const now    = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
-    const pulse  = 0.5 + 0.5 * Math.sin(now / 300);          // 0..1, gentle breathing (always on)
-    const ripple = (now % 1300) / 1300;                       // 0..1, loops
-    // `loud` 1 at step start → 0 after ~1.7s: an attention grab that fades down
-    // into a calm, unobtrusive highlight. Everything that should be loud-then-
-    // quiet scales by it (spotlight dim, glow, ring weight, ping); the ring
-    // itself + its outline/inner-edge stay constant so it never disappears.
-    const age = now - (this._guideHighlightStartTime || now);
-    const loud = Math.max(0, 1 - age / 1700);
-    const cw = ctx.canvas ? ctx.canvas.width : 0;
-    const ch = ctx.canvas ? ctx.canvas.height : 0;
-    const GOLD = '#ffce3a';
-
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-    // 1. Spotlight — dim the whole map, then punch a soft bright hole at each
-    //    ring (destination-out uses source alpha to "erase" the dim layer).
-    //    The dim is heavy at first and settles to a barely-there ~0.13.
-    const dimA = 0.13 + 0.31 * loud;
-    if (cw > 0 && ch > 0 && dimA > 0.02) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(5,7,12,' + dimA.toFixed(3) + ')';
-      ctx.fillRect(0, 0, cw, ch);
-      ctx.globalCompositeOperation = 'destination-out';
-      for (const ring of rings) {
-        const r0 = ring.r * 1.25, r1 = ring.r * 2.4;
-        const g = ctx.createRadialGradient(ring.x, ring.y, r0, ring.x, ring.y, r1);
-        g.addColorStop(0, 'rgba(0,0,0,1)');
-        g.addColorStop(0.55, 'rgba(0,0,0,0.85)');
-        g.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(ring.x, ring.y, r1, 0, Math.PI * 2); ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    // 2. The marker — drawn over everything (source-over) so it pops on any bg.
-    ctx.lineCap = 'round';
-    const lwBase = Math.max(3, 4.5 * scale);
-    for (const ring of rings) {
-      const r = ring.r + pulse * Math.min(ring.r * 0.13, 9);   // breathing, but a fixed cap so big group rings don't heave
-      const lw = lwBase * (1 + 0.35 * loud);
-      // dark outline so the gold reads even on snow/light terrain
-      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-      ctx.lineWidth = lw + 5;
-      ctx.beginPath(); ctx.arc(ring.x, ring.y, r, 0, Math.PI * 2); ctx.stroke();
-      // glowing gold ring — bright halo at first, settles to a soft one
-      ctx.save();
-      ctx.shadowColor = GOLD;
-      ctx.shadowBlur = (6 + 16 * loud) * (0.65 + 0.35 * pulse);
-      ctx.strokeStyle = GOLD;
-      ctx.lineWidth = lw;
-      ctx.globalAlpha = 0.78 + 0.22 * loud;
-      ctx.beginPath(); ctx.arc(ring.x, ring.y, r, 0, Math.PI * 2); ctx.stroke();
-      ctx.restore();
-      // crisp white inner edge
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth = Math.max(1.5, 1.8 * scale);
-      ctx.beginPath(); ctx.arc(ring.x, ring.y, r - lw * 0.5, 0, Math.PI * 2); ctx.stroke();
-      // expanding "ping" ripple — strong at first, a faint pulse afterward
-      ctx.globalAlpha = (0.16 + 0.4 * loud) * (1 - ripple);
-      ctx.strokeStyle = GOLD;
-      ctx.lineWidth = Math.max(2, 3 * scale);
-      ctx.beginPath(); ctx.arc(ring.x, ring.y, r + ripple * r * 1.6, 0, Math.PI * 2); ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
-
-    ctx.restore();
+  // Tear down the in-scene guide highlight (units + ground glows). Called when a
+  // step has no highlight, and on guide exit (render() stops calling the applier
+  // once guideMode is false, so the exit path must clear explicitly).
+  _clearGuideHighlight3D () {
+    if (this.unitModelRenderer) this.unitModelRenderer.setGuideHighlight(null);
+    if (this.threeMapRenderer) this.threeMapRenderer.highlightGroundRings(null);
   }
 
   // Build the colour-chipped speaker row used for the per-step "action" and
@@ -2648,11 +2678,11 @@ const Wc3vViewer = class {
     if (next) next.textContent = (i === n - 1) ? 'Finish' : 'Next →';
   }
 
-  _showGuidePlayerPick () {
+  _showGuidePlayerPick (autoStart) {
     const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
     if (players.length < 2) return;
     const opts = document.getElementById('guide-player-pick-opts');
-    if (!opts) { if (players[0]) this.enterGuideMode(players[0]); return; }
+    if (!opts) { if (players[0]) this.enterGuideMode(players[0], { autoStart }); return; }
     opts.innerHTML = '';
     players.forEach(p => {
       const btn = document.createElement('button');
@@ -2662,7 +2692,7 @@ const Wc3vViewer = class {
       btn.innerHTML = `<span class="gpp-name">${this._guideEsc(PlayerNames.canonical(p.displayName))}</span><span class="gpp-race">${this._guideEsc(this._raceLabel(p.race))}</span>`;
       btn.addEventListener('click', () => {
         const m = document.getElementById('guide-player-pick'); if (m) m.hidden = true;
-        this.enterGuideMode(p);
+        this.enterGuideMode(p, { autoStart });
       });
       opts.appendChild(btn);
     });
@@ -2751,6 +2781,10 @@ const Wc3vViewer = class {
   seekToGameTime (gameTime) {
     if (!this.gameLoaded) return;
 
+    // A user scrub during the auto-advance countdown cancels it (they've taken
+    // control). Guide-internal seeks happen only when no countdown is running.
+    if (this._guideCountdown) this._cancelGuideAutoAdvance();
+
     this.toggleMegaPlayButton(false);
     this.hideMatchCompleteBanner();
     this.gameTime = gameTime;
@@ -2764,6 +2798,13 @@ const Wc3vViewer = class {
 
     if (this.broadcastCamera && this.broadcastCamera.mode === CameraMode.SPLIT_SCREEN) {
       this.broadcastCamera.setMode(CameraMode.ACTION_FOCUS);
+    }
+
+    // After a jump, snap the auto time-scale to the new moment's target so it
+    // doesn't ramp from a stale speed left over from elsewhere in the match.
+    if (this.scrubber && this.scrubber.isAuto && this.autoDirector) {
+      this.autoDirector.update(gameTime, 0);
+      this.autoDirector.snap();
     }
 
     this.render();
@@ -3055,6 +3096,22 @@ const Wc3vViewer = class {
         this.scrubber.setTimeGuides(this.matchEndTime);
       }
 
+      // Auto time-scale (AUTO speed) — 1v1 only. Build the pacing index now that
+      // battles + chapters exist, expose AUTO in the speed picker, and make it
+      // the default for 1v1. Other game modes keep a fixed manual speed.
+      const autoPaceOk = !this.isNonOneVsOne();
+      if (this.scrubber && this.scrubber.setAutoAvailable) {
+        this.scrubber.setAutoAvailable(autoPaceOk);
+      }
+      if (this.autoDirector) {
+        if (autoPaceOk) {
+          this.autoDirector.build();
+          if (this.scrubber) this.scrubber.setSpeed('AUTO');
+        } else {
+          this.autoDirector.reset();
+        }
+      }
+
       this.timelineSpline.observeResize();
 
       this.unitsProductionPanel.setup(this.players);
@@ -3125,14 +3182,16 @@ const Wc3vViewer = class {
       displayBuildGrid: false,
       displayWaterGrid: false,
       displayCreepRoute: true,
+      suppressCreepRings: false,      // hide camp ground-rings during the guide creep tour (set by _setupGuideCreepTour); not a user toggle
       displayNeutralBuildings: true,
       displayBattles: true,           // BattleRenderer overlay (utility canvas)
       displayTeleports: true,         // TeleportFx cast/arrival cinematic
-      // autoSplitScreen default OFF: when on, BroadcastCamera fires SPLIT_SCREEN
-      // the first time hero distance crosses SPLIT_ENTER_DISTANCE with no
-      // engagement nearby (BroadcastCamera.js:208-215). User reported it as
-      // surprising — it now requires explicit opt-in via the view-options menu.
-      autoSplitScreen: false,
+      // autoSplitScreen default ON: split is now a smart, reversible sub-state
+      // of the AUTO camera — it slides into a diagonal split only when the 1v1
+      // players are clearly apart with no fight active/imminent, and slides back
+      // out the moment they converge or a battle starts. Toggle off to keep AUTO
+      // single-viewport at all times. (1v1 only; forced off for non-1v1.)
+      autoSplitScreen: true,
       display3DUnits: true            // 3D animated unit models are the default; toggle off for 2D icons
     };
 
@@ -3174,12 +3233,13 @@ const Wc3vViewer = class {
         { key: 'displayBaseLabels', label: 'Base Labels' },
         { key: 'decayEffects', label: 'Fade FX' },
         { key: 'displayTreeGrid', label: 'Tree Grid' },
-        { key: 'autoSplitScreen', label: 'Split Screen' }
+        { key: 'autoSplitScreen', label: 'Auto Split View' }
       ];
 
       settingsModalEl.innerHTML = '';
 
       const creepRouteLocked = this.isNonOneVsOne();
+      const autoSplitLocked = this.isNonOneVsOne();
 
       buttons.forEach(btn => {
         const el = document.createElement('div');
@@ -3187,10 +3247,13 @@ const Wc3vViewer = class {
         if (btn.featured) el.classList.add('vc-featured');
         el.id = `viewer-option-${btn.key}`;
 
-        const locked = btn.key === 'displayCreepRoute' && creepRouteLocked;
+        const locked = (btn.key === 'displayCreepRoute' && creepRouteLocked) ||
+                       (btn.key === 'autoSplitScreen' && autoSplitLocked);
         if (locked) {
           el.classList.add('vc-disabled');
-          el.title = 'Creep route detection is 1v1-only';
+          el.title = btn.key === 'autoSplitScreen'
+            ? 'Auto split view is 1v1-only'
+            : 'Creep route detection is 1v1-only';
         }
 
         el.textContent = btn.label;
@@ -3564,6 +3627,12 @@ const Wc3vViewer = class {
       this._setupCameraToolbar();
     }
 
+    // Auto time-scale director — dynamic playback speed for the AUTO speed
+    // mode (1v1 only). Built later in setup() once battles/chapters exist.
+    if (window.AutoDirector) {
+      this.autoDirector = new AutoDirector(this);
+    }
+
     // Minimap pip — camera viewport indicator
     if (window.MinimapPip) {
       this.minimapPip = new MinimapPip(this);
@@ -3730,14 +3799,35 @@ const Wc3vViewer = class {
     }
 
     const timeStep = this.scrubber.getTimeStep();
-    const { speed } = this.scrubber;
 
     if (this.lastFrameTimestamp === 0) {
       this.lastFrameTimestamp = timestamp;
     }
 
-    this.lastFrameDelta += timestamp - this.lastFrameTimestamp;
+    const realDelta = timestamp - this.lastFrameTimestamp;
+    this.lastFrameDelta += realDelta;
     this.lastFrameTimestamp = timestamp;
+
+    // Effective playback speed: AUTO mode (1v1) asks the director to dynamically
+    // pace the replay (fast through dead time, ~1× for fights/key moments);
+    // otherwise it's the fixed speed the user picked. The guided walkthrough
+    // plays short curated windows, so AUTO is pinned to a gentle fixed pace
+    // there rather than risk fast-forwarding past the content being taught.
+    let speed = this.scrubber.speed;
+    if (this.scrubber.isAuto && this.autoDirector) {
+      if (this.guideMode) {
+        speed = 2;
+      } else {
+        speed = this.autoDirector.update(this.gameTime, realDelta);
+        this.scrubber.speed = speed;
+        this.scrubber.updateAutoReadout(speed);
+      }
+    }
+
+    // Feed the current speed to the camera so it widens/calms when fast-forwarding.
+    if (this.broadcastCamera && this.broadcastCamera.setSpeedFactor) {
+      this.broadcastCamera.setSpeedFactor(this.state === ScrubStates.playing ? speed : 1);
+    }
 
     while (this.lastFrameDelta >= timeStep) {
         if (this.state === ScrubStates.playing) {
@@ -3753,18 +3843,20 @@ const Wc3vViewer = class {
     // (guideMode) so the emphasis rings keep pulsing.
     if (this.guideMode && this._guidePlayUntil != null && this.gameTime >= this._guidePlayUntil) {
       const t = this._guidePlayUntil;
+      const mode = this._guideParkMode;
       this._guidePlayUntil = null;
+      this._guideParkMode = null;
       this.pause();
       this.seekToGameTime(t);
+      // 'auto' parks (the step's content end) nudge on to the next step with a
+      // 3-2-1 countdown; 'stay' parks (the user chose "Watch the rest") just hold.
+      if (mode === 'auto') this._startGuideAutoAdvance();
     }
 
     // Broadcast camera: drive D3 zoom toward computed target each frame
     if (this.broadcastCamera && this.broadcastCamera.enabled) {
       this.broadcastCamera.update(this.gameTime, this.players);
     }
-
-    // Update SPLIT button availability based on hero distance
-    this._updateSplitButtonState();
 
     this._renderPending = false;  // mainLoop owns the render — cancel any queued requestRender
     this.render();
@@ -3904,21 +3996,21 @@ const Wc3vViewer = class {
   }
 
   /**
-   * Render in split-screen mode: two diagonal halves, each showing
-   * a different player's area at higher zoom.
+   * Render in split-screen mode: two horizontal halves (top + bottom), each
+   * showing a different player's area at higher zoom.
    *
    * Renders the full pipeline twice — once per camera position. The 3D
    * terrain is rendered to three-canvas normally, then copied to
-   * main-canvas (2D) via drawImage within a diagonal clip. Unit overlays
-   * on playerCtx/utilityCtx are drawn within their own diagonal clips.
+   * main-canvas (2D) via drawImage within a top/bottom rectangular clip. Unit
+   * overlays on playerCtx/utilityCtx are drawn within their own half clips.
    * three-canvas is hidden so only the composited main-canvas is visible.
    */
   renderSplitScreen () {
     const bc = this.broadcastCamera;
     if (!bc || !bc.splitTargets) return;
 
-    const { left, right } = bc.splitTargets;
-    if (!left || !right) { this.render(); return; }
+    const { top, bottom } = bc.splitTargets;
+    if (!top || !bottom) { this.render(); return; }
 
     const {
       ctx,
@@ -3936,22 +4028,17 @@ const Wc3vViewer = class {
     const cw = this.canvas.width;
     const ch = this.canvas.height;
 
-    // Targets already include the triangle-centroid corner shift and a
-    // clamp to gs.viewExtent (computed inside BroadcastCamera) so the
-    // visible camera rect stays within the playable area.
-    const transformL = this._worldToTransform(left.wx,  left.wy,  left.k);
-    const transformR = this._worldToTransform(right.wx, right.wy, right.k);
+    // Targets already bake in the half-viewport vertical offset and a clamp to
+    // gs.viewExtent (computed inside BroadcastCamera) so the visible camera rect
+    // for each half stays within the playable area.
+    const transformTop = this._worldToTransform(top.wx,    top.wy,    top.k);
+    const transformBot = this._worldToTransform(bottom.wx, bottom.wy, bottom.k);
 
-    // Transition animation: diagonal slides in (entry) or out (exit).
-    // splitEntryProgress: 0 = not started, 1 = fully split
-    // Smoothstep easing for cinematic feel
-    const rawP = bc.splitEntryProgress || 0;
-    const eased = rawP * rawP * (3 - 2 * rawP); // smoothstep
-    // At eased=0: diagonal is off-screen (no split visible)
-    // At eased=1: diagonal is at normal position (full split)
-    const offscreen = 1 - eased;
-    const diagTopX = cw + cw * offscreen;
-    const diagBotX = 0 - cw * offscreen;
+    // Horizontal split: a fixed divider at the vertical midline. The two halves
+    // cut in immediately (fast); only the divider line + name labels animate
+    // (see _drawSplitDivider) — the line wipes out from the centre, names fade
+    // in after it reaches the edges.
+    const dividerY = ch * 0.5;
 
     this.clearCanvas();
 
@@ -3966,32 +4053,25 @@ const Wc3vViewer = class {
     }
 
     const halves = [
-      { target: left,  transform: transformL, side: 'left' },
-      { target: right, transform: transformR, side: 'right' }
+      { target: top,    transform: transformTop, side: 'top' },
+      { target: bottom, transform: transformBot, side: 'bottom' }
     ];
 
     for (const half of halves) {
       const t = half.transform;
 
-      // --- Diagonal clip on all 2D canvases ---
+      // --- Top/bottom rectangular clip on all 2D canvases ---
       ctx.save();
       playerCtx.save();
       utilityCtx.save();
 
       for (const c of [ctx, playerCtx, utilityCtx]) {
         c.beginPath();
-        if (half.side === 'left') {
-          c.moveTo(0, 0);
-          c.lineTo(diagTopX, 0);
-          c.lineTo(diagBotX, ch);
-          c.lineTo(0, ch);
+        if (half.side === 'top') {
+          c.rect(0, 0, cw, dividerY);
         } else {
-          c.moveTo(diagTopX, 0);
-          c.lineTo(cw, 0);
-          c.lineTo(cw, ch);
-          c.lineTo(diagBotX, ch);
+          c.rect(0, dividerY, cw, ch - dividerY);
         }
-        c.closePath();
         c.clip();
       }
 
@@ -4051,10 +4131,7 @@ const Wc3vViewer = class {
       // applied inside the panel so each camp's icon lands on the side that
       // actually shows its ring.
       if (this.campPanel && !this.guideMode) {
-        this.campPanel.syncIcons({
-          side: half.side,
-          diagTopX, diagBotX, canvasH: ch
-        });
+        this.campPanel.syncIcons({ side: half.side });
       }
 
       // --- Units: projectXY uses the 3D camera just positioned ---
@@ -4102,8 +4179,8 @@ const Wc3vViewer = class {
       this.campPanel.update(gameTime);
     }
 
-    // --- Diagonal divider ---
-    this._drawSplitDivider(playerCtx, cw, ch, diagTopX, diagBotX, bc.splitTargets.players);
+    // --- Horizontal divider (animated line wipe + name labels) ---
+    this._drawSplitDivider(playerCtx, cw, ch, dividerY, bc.splitEntryProgress || 0, bc.splitTargets.players);
 
     // --- HUD (not split) ---
     if (this.hasBeenPlayedOnce) {
@@ -4145,89 +4222,83 @@ const Wc3vViewer = class {
   }
 
   /**
-   * Draw the diagonal split divider — glowing line with player name labels.
+   * Draw the horizontal split divider — a glowing line that wipes out from the
+   * centre of the screen, with player name labels (top player above the line,
+   * bottom player below) that fade in only AFTER the line reaches the edges.
+   *
+   * `progress` is the camera's splitEntryProgress (0 → 1 on entry, 1 → 0 on
+   * exit). The line owns the first 60% of the animation; the names the last 40%.
    */
-  _drawSplitDivider (ctx, cw, ch, topX, botX, splitPlayers) {
+  _drawSplitDivider (ctx, cw, ch, dividerY, progress, splitPlayers) {
+    const smooth = (x) => { const c = Math.max(0, Math.min(1, x)); return c * c * (3 - 2 * c); };
+
+    // Line wipes from centre outward over the first 60% of the transition.
+    const lineP = smooth(progress / 0.6);
+    // Names fade in over the final 40%, once the line has fully drawn.
+    const nameAlpha = smooth((progress - 0.6) / 0.4);
+
+    const halfW = (cw * 0.5) * lineP;
+    if (halfW <= 0.5) return;
+
     ctx.save();
 
-    // Diagonal line angle (for rotating labels to follow the line)
-    const angle = Math.atan2(ch, botX - topX);
-
-    // Main divider line — white with glow
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+    // Main divider line — bright white with a soft glow, drawn centre-out.
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
     ctx.lineWidth = 3;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-    ctx.shadowBlur = 8;
-
+    ctx.shadowColor = 'rgba(80, 180, 255, 0.55)';
+    ctx.shadowBlur = 10;
     ctx.beginPath();
-    ctx.moveTo(topX, 0);
-    ctx.lineTo(botX, ch);
+    ctx.moveTo(cw * 0.5 - halfW, dividerY);
+    ctx.lineTo(cw * 0.5 + halfW, dividerY);
     ctx.stroke();
+
+    // Bright leading caps at the growing ends while the line is still wiping.
+    if (lineP < 1) {
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = 'rgba(180, 225, 255, 0.95)';
+      for (const ex of [cw * 0.5 - halfW, cw * 0.5 + halfW]) {
+        ctx.beginPath();
+        ctx.arc(ex, dividerY, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
     ctx.shadowBlur = 0;
 
-    if (splitPlayers && splitPlayers.length >= 2) {
-      const p1Color = splitPlayers[0].teamColor || '#ff0000';
-      const p2Color = splitPlayers[1].teamColor || '#0000ff';
-      const p1Name = PlayerNames.canonical(splitPlayers[0].displayName) || 'Player 1';
-      const p2Name = PlayerNames.canonical(splitPlayers[1].displayName) || 'Player 2';
+    if (nameAlpha > 0.01 && splitPlayers && splitPlayers.length >= 2) {
+      const topColor = splitPlayers[0].teamColor || '#ff0000';
+      const botColor = splitPlayers[1].teamColor || '#0000ff';
+      const topName = PlayerNames.canonical(splitPlayers[0].displayName) || 'Player 1';
+      const botName = PlayerNames.canonical(splitPlayers[1].displayName) || 'Player 2';
 
-      // Color accent bars at each end of the diagonal
-      ctx.lineWidth = 4;
-      ctx.strokeStyle = p2Color;
-      ctx.beginPath();
-      ctx.moveTo(topX, 0);
-      ctx.lineTo(topX - 25, 18);
-      ctx.stroke();
-
-      ctx.strokeStyle = p1Color;
-      ctx.beginPath();
-      ctx.moveTo(botX, ch);
-      ctx.lineTo(botX + 25, ch - 18);
-      ctx.stroke();
-
-      // Player name labels along the diagonal line.
-      // The diagonal goes top-right → bottom-left. We want text to read
-      // left-to-right going DOWN the diagonal (bottom-left direction),
-      // so rotate by the line angle + π to flip it right-side up.
-      const labelAngle = angle + Math.PI;
-      const fontSize = Math.max(14, Math.round(cw * 0.028));
+      const fontSize = Math.max(14, Math.round(cw * 0.024));
       ctx.font = `600 ${fontSize}px Arial, sans-serif`;
       ctx.textBaseline = 'middle';
+      ctx.globalAlpha = nameAlpha;
 
-      const drawLabel = (t, name, color, perpOffset) => {
-        const lx = topX + (botX - topX) * t;
-        const ly = ch * t;
-        ctx.save();
-        ctx.translate(lx, ly);
-        ctx.rotate(labelAngle);
-        ctx.translate(0, perpOffset);
-
-        // Background pill
+      // Name pill hugging the divider — `above` puts it in the top half, else
+      // the bottom half. Slides a few px toward its half as it fades in.
+      const drawLabel = (name, color, above) => {
         const textW = ctx.measureText(name).width;
-        const padX = fontSize * 0.5;
-        const padY = fontSize * 0.35;
-        const pillW = textW + padX * 2 + 6; // +6 for color bar
+        const padX = fontSize * 0.55;
+        const padY = fontSize * 0.32;
+        const pillW = textW + padX * 2 + 6;
         const pillH = fontSize + padY * 2;
+        const gap = 10 + (1 - nameAlpha) * 8; // eases toward the line
+        const x = cw * 0.5 - pillW / 2;
+        const y = above ? (dividerY - gap - pillH) : (dividerY + gap);
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-        ctx.fillRect(-padX, -pillH / 2, pillW, pillH);
-
-        // Color accent bar on left edge
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(x, y, pillW, pillH);
         ctx.fillStyle = color;
-        ctx.fillRect(-padX, -pillH / 2, 4, pillH);
-
-        // Player name
+        ctx.fillRect(x, y, 4, pillH);     // race/team accent bar
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'left';
-        ctx.fillText(name, 2, 1);
-
-        ctx.restore();
+        ctx.fillText(name, x + 4 + padX, y + pillH / 2 + 1);
       };
 
-      // P1 label — 30% along diagonal, offset into left/top half
-      drawLabel(0.30, p1Name, p1Color, -(fontSize * 1.2));
-      // P2 label — 70% along diagonal, offset into right/bottom half
-      drawLabel(0.70, p2Name, p2Color, fontSize * 1.2);
+      drawLabel(topName, topColor, true);
+      drawLabel(botName, botColor, false);
     }
 
     ctx.restore();
@@ -4299,6 +4370,11 @@ const Wc3vViewer = class {
       if (this.pathTrailRenderer) {
         this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
       }
+      // Resolve/apply the guide highlight BEFORE the renderers' per-frame pulse
+      // hooks (UnitModelRenderer._updateGuideHighlight runs at the end of
+      // update(); ThreeMapRenderer._updateGuideRings runs inside render()), so
+      // the glow applies same-frame — no lost opening pulse, no 1-frame lag.
+      if (this.guideMode) this._renderGuideHighlights();
       if (this.unitModelRenderer) {
         this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
       }
@@ -4473,11 +4549,11 @@ const Wc3vViewer = class {
       this.eventFeed.renderPips(playerCtx, gameTime);
     }
 
-    // Guided walkthrough: pulse a ring on the step's emphasised units/buildings
-    // (utility canvas is the top layer, so the rings sit over the unit icons),
-    // and check off the build-sequence list rows as the replay reaches them.
+    // Guided walkthrough: the step's emphasised units/buildings are lit IN the
+    // 3D scene (emissive pulse + ground-glow halos) — applied earlier in this
+    // frame via _renderGuideHighlights(), before the 3D renderers run. Here we
+    // just advance the creep tour / check off the build-sequence list rows.
     if (this.guideMode) {
-      if (this._guideHighlight) this._renderGuideHighlights(utilityCtx, transform);
       if (this._guideCreepTour) this._advanceGuideCreepTour();   // hop camp→camp / land on the summary
       else this._updateGuideStepList(this.gameTime);
     }

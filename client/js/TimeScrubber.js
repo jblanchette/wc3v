@@ -17,6 +17,11 @@ const TimeScrubber = class {
     this.canvasId = canvasId;
     this.svgCache = {};
 
+    // AUTO (dynamic time-scale) is only offered in 1v1 — the viewer flips this
+    // on via setAutoAvailable() once the game mode is known (after parse).
+    this.autoAvailable = false;
+    this.isAuto = false;
+
     const startingSpeed = '3x';
     this.speedKey = startingSpeed;
     this.setSpeed(startingSpeed);
@@ -49,10 +54,7 @@ const TimeScrubber = class {
     // remove any placeholder content
     this.wrapperEl.innerHTML = '';
 
-    const scrubSpeeds = Object
-      .keys(ScrubSpeeds)
-      .map(speed => { return `<li onClick="wc3v.scrubber.setSpeed('${speed}');">${speed}</li>` })
-      .join("\n");
+    const scrubSpeeds = this._speedListHtml();
 
     this.domEl = document.createElement("div");
     this.domEl.setAttribute("id", `${wrapperId}-scrubber`);
@@ -127,9 +129,38 @@ const TimeScrubber = class {
     return (1000 / 60);
   }
 
+  // List of <li> options for the speed modal. AUTO is prepended only when the
+  // viewer has enabled it (1v1). Defined as a helper so setAutoAvailable() can
+  // rebuild the list after the game mode is known.
+  _speedListHtml () {
+    const keys = this.autoAvailable ? ['AUTO', ...Object.keys(ScrubSpeeds)] : Object.keys(ScrubSpeeds);
+    return keys
+      .map(speed => `<li onClick="wc3v.scrubber.setSpeed('${speed}');">${speed}</li>`)
+      .join("\n");
+  }
+
+  // Enable/disable the AUTO option (1v1 only). Rebuilds the dropdown and falls
+  // back to a fixed speed if AUTO is removed while selected.
+  setAutoAvailable (avail) {
+    this.autoAvailable = !!avail;
+    const ul = document.querySelector(`#${this.wrapperId}-speed-modal ul`);
+    if (ul) ul.innerHTML = this._speedListHtml();
+    if (!this.autoAvailable && this.isAuto) this.setSpeed('3x');
+  }
+
   setSpeed (speedKey) {
     this.speedKey = speedKey;
-    this.speed = ScrubSpeeds[speedKey];
+    this.isAuto = (speedKey === 'AUTO');
+    this._lastAutoLabel = null;
+
+    // In AUTO the AutoDirector overwrites .speed each frame; seed a sane
+    // baseline so anything reading .speed before the first director tick works.
+    this.speed = this.isAuto ? (this.speed || ScrubSpeeds['3x']) : ScrubSpeeds[speedKey];
+
+    // The AUTO readout ("AUTO 8×") is wider than a fixed speed — let the button
+    // grow for it via a class toggle (see .speed-button.is-auto in main.css).
+    const speedBtnEl = document.getElementById(`${this.wrapperId}-speed`);
+    if (speedBtnEl) speedBtnEl.classList.toggle('is-auto', this.isAuto);
 
     const speedKeyEl = document.getElementById(`${this.wrapperId}-speed-key`);
 
@@ -137,6 +168,18 @@ const TimeScrubber = class {
     if (speedKeyEl) {
       speedKeyEl.innerHTML = speedKey;
     }
+  }
+
+  // Live AUTO readout — the main loop calls this each frame with the director's
+  // current multiplier so the speed button shows e.g. "AUTO 8×".
+  updateAutoReadout (mult) {
+    if (!this.isAuto) return;
+    const n = (mult >= 9.95) ? '10' : (Math.round(mult * 10) / 10).toFixed(1);
+    const label = `AUTO ${n}×`;
+    if (label === this._lastAutoLabel) return;   // skip redundant DOM writes
+    this._lastAutoLabel = label;
+    const el = document.getElementById(`${this.wrapperId}-speed-key`);
+    if (el) el.innerHTML = label;
   }
 
   setupControls (domMap) {
