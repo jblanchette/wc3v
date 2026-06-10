@@ -5613,6 +5613,47 @@ body {
   transform: translateY(0);
 }
 
+/* ── Intrusion / harass tag ──────────────────────────────────────────────── */
+/* Shown while AUTO cuts to a base poke, so the shot reads as intentional.
+   Mutually exclusive with the split label (different camera modes). */
+#intrusion-tag {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 3001;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font: 700 0.85rem/1 Arial, sans-serif;
+  letter-spacing: 0.1em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+/* When map name is present, push the tag below it (matches split label). */
+#map-name-overlay:not(:empty) ~ #intrusion-tag {
+  top: 3rem;
+}
+
+#intrusion-tag.intrusion-tag-harass {
+  background: rgba(255, 209, 102, 0.18);   /* harass category yellow */
+  border-color: rgba(255, 209, 102, 0.45);
+  color: #ffd166;
+}
+
+#intrusion-tag.intrusion-tag-scout {
+  background: rgba(100, 200, 255, 0.16);
+  border-color: rgba(100, 200, 255, 0.4);
+  color: #8cd4ff;
+}
+
+#intrusion-tag.intrusion-tag-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Split-screen: full overlay container, cards positioned per-player */
 #up-panel.up-split-mode {
   top: 0;
@@ -16697,6 +16738,32 @@ button.mcb-summary {
   border-radius: 3px;
   cursor: pointer;
 }
+
+/* credit tab — settlement-clear banner. A building was placed in/around this
+   gold-mine camp, so the clear is confirmed (not estimated). Team-tinted via
+   the --sc custom property set inline. */
+.cdp-settled {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0 2px;
+  padding: 7px 9px;
+  border-radius: 6px;
+  border: 1.5px solid color-mix(in srgb, var(--sc, #cdb37a) 60%, #2a2f38);
+  background: color-mix(in srgb, var(--sc, #cdb37a) 12%, rgba(20, 24, 30, 0.85));
+}
+.cdp-settled-ico {
+  flex-shrink: 0;
+  color: var(--sc, #cdb37a);
+  font-size: 15px;
+  line-height: 1.3;
+}
+.cdp-settled-txt {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: #d8dee8;
+}
+.cdp-settled-txt b { color: #fff; }
 
 /* credit tab — camp-level uncertainty banner (echoes the dashed map ring).
    collapsible <details>: collapsed = a compact one-line chip. */

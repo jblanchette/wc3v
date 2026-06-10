@@ -688,6 +688,24 @@ const CampPanel = class {
         <button type="button" class="cdp-ov-clear">reset</button></div>`;
     }
 
+    // Settlement clear — a building was placed in/around this gold-mine camp,
+    // which is hard proof it was already cleared (creeps would attack it). This
+    // overrides the estimate, so it's the strongest verdict we can show.
+    if (g.settledClear && !ov) {
+      const sc = g.settledClear;
+      const tc = this.teamColorMap[sc.teamId] || '#cdb37a';
+      const what = sc.isExpansion
+        ? 'expanded onto this camp’s gold mine'
+        : 'built inside this camp';
+      const bld = sc.buildingName ? ` (${this._esc(sc.buildingName)})` : '';
+      head += `<div class="cdp-settled" style="--sc:${this._esc(tc)}">
+        <span class="cdp-settled-ico" aria-hidden="true">⚑</span>
+        <div class="cdp-settled-txt"><b>Confirmed cleared.</b>
+          ${this._playerName(sc.playerId)} ${what}${bld} at <b>${this._fmt(sc.gameTime)}</b> —
+          a building can’t go down until the creeps are dead.</div>
+      </div>`;
+    }
+
     // camp-level uncertainty banner — echoes the dashed ring on the map. A
     // manual override resolves the doubt, so it is suppressed when one is set.
     const campUncertain = !ov && pids.some(pid => pc[pid] && pc[pid].uncertain);

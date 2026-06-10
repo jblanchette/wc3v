@@ -8,24 +8,35 @@
  *
  * Pacing model (the slowest applicable cap wins, so any reason to slow down
  * takes precedence):
- *   battleCap   — 1× inside a detected battle; ramps in over a pre-roll window
- *                 (lead the fight) and eases back out over a short post-roll.
- *   eventCap    — eases toward ~1× around MAJOR chapter moments (hero deaths,
- *                 expansions, tier-ups, key teleports/town attacks).
- *   densityCap  — between those, base speed comes from macro-event density:
- *                 busy build/tech periods play a touch slower than idle ones.
- * Truly dead time (no battle, no major moment, no macro events) runs at the
- * fast ceiling. The output is smoothed with an asymmetric response: slow down
- * quickly (don't clip the start of a fight), speed back up gently.
+ *   battleCap    — 1× inside a detected battle; ramps in over a pre-roll window
+ *                  (lead the fight) and eases back out over a short post-roll.
+ *   eventCap     — eases toward ~1× around MAJOR chapter moments (hero deaths,
+ *                  expansions, tier-ups, key teleports/town attacks).
+ *   densityCap   — between those, base speed comes from macro-event density:
+ *                  busy build/tech periods play a touch slower than idle ones.
+ *   activityCap  — a LIVE signal fed in each frame (from the camera): when units
+ *                  are actually on screen doing things — armies maneuvering,
+ *                  harassing, creeping — we slow down even with no formal battle
+ *                  or macro event. This is what keeps the replay from skimming
+ *                  past everything that isn't a pitched fight.
+ * Truly dead time (no battle, no major moment, no macro events, nothing on
+ * screen) runs at the fast ceiling. The output is smoothed with an asymmetric
+ * response: slow down faster than we speed back up (don't clip the start of a
+ * fight), but both eased enough that the time-scale glides rather than snaps.
  *
  * Everything is precomputed from data already on the viewer (processedBattles,
  * chapterMarkers.chapters, players[].eventStream), so per-frame cost is O(1).
  */
 (function () {
   // --- Pacing envelope (the "Broadcast" profile) ---
+  // Deliberately compressed vs. the original 1–10× range: the old ceiling felt
+  // like a jump-cut and the gap between fast and slow was jarring. A lower top
+  // speed plus the live activityCap below means we sit near "watchable" far more
+  // of the time and only sprint through genuinely empty stretches.
   const MIN_SPEED      = 1.0;   // battles & key moments
-  const MAX_SPEED      = 10.0;  // truly dead time
-  const ACTIVE_SPEED   = 3.5;   // busy macro (lots of build/tech events)
+  const MAX_SPEED      = 6.0;   // truly dead time — nothing on screen, no events
+  const ACTIVE_SPEED   = 3.0;   // busy macro (lots of build/tech events)
+  const ACTIVITY_SPEED = 2.0;   // floor when the frame is full of active units
 
   // Battle windows
   const BATTLE_PRE_MS  = 4000;  // start easing toward 1× this long before a fight
@@ -44,9 +55,13 @@
   const DENSITY_WIN_MS = 2500;  // ± window used to smooth events/sec
   const DENSE_EPS      = 1.4;   // events/sec at/above which we're at ACTIVE_SPEED
 
-  // Smoothing (per-second exponential rates; asymmetric)
-  const SLOWDOWN_RATE  = 9.0;   // fast — converge down toward a slower target
-  const SPEEDUP_RATE   = 1.6;   // gentle — ramp back up after the moment passes
+  // Smoothing (per-second exponential rates; asymmetric but both eased so the
+  // readout glides). Slow-down stays quicker than speed-up — we never want to
+  // clip the start of a fight — but the old 9.0 slam read as an abrupt cut, so
+  // it's pulled way down. A per-second slew clamp (below) bounds the worst case.
+  const SLOWDOWN_RATE  = 4.0;   // converge down toward a slower target
+  const SPEEDUP_RATE   = 1.3;   // gentle — ramp back up after the moment passes
+  const MAX_SLEW_PER_S = 6.0;   // hard ceiling on |Δspeed|/s, so no single frame jumps far
 
   class AutoDirector {
     constructor (viewer) {
@@ -153,18 +168,28 @@
      * Compute and return the playback multiplier for this frame.
      * @param {number} gameTime    current game time (ms)
      * @param {number} realDeltaMs wall-clock ms since the previous frame
+     * @param {number} [activity]  live 0–1 measure of on-screen unit activity
+     *                             (from the camera). Higher → slower. Defaults
+     *                             to 0 (treat as dead time) for seek/snap calls.
      */
-    update (gameTime, realDeltaMs) {
+    update (gameTime, realDeltaMs, activity) {
       if (!this.built) return this.speed;
 
-      const target = this._targetFor(gameTime);
+      const target = this._targetFor(gameTime, activity);
       this.targetSpeed = target;
 
       // Asymmetric exponential smoothing toward the target.
       const dt = Math.max(0, Math.min(100, realDeltaMs || 16.7)) / 1000;
       const rate = (target < this.speed) ? SLOWDOWN_RATE : SPEEDUP_RATE;
       const k = 1 - Math.exp(-rate * dt);
-      this.speed += (target - this.speed) * k;
+      let next = this.speed + (target - this.speed) * k;
+
+      // Slew clamp: regardless of the exponential, never move the displayed
+      // speed more than MAX_SLEW_PER_S per real second — bounds the one-frame
+      // jump when a target appears/vanishes so the pacing always glides.
+      const maxStep = MAX_SLEW_PER_S * dt;
+      next = Math.max(this.speed - maxStep, Math.min(this.speed + maxStep, next));
+      this.speed = next;
 
       // Guard against tiny residuals so the readout reads cleanly.
       if (Math.abs(this.speed - target) < 0.02) this.speed = target;
@@ -172,7 +197,7 @@
     }
 
     // The instantaneous target speed at gameTime = slowest applicable cap.
-    _targetFor (gameTime) {
+    _targetFor (gameTime, activity) {
       let cap = MAX_SPEED;
 
       const b = this._battleCap(gameTime);
@@ -184,7 +209,19 @@
       const d = this._densityCap(gameTime);
       if (d < cap) cap = d;
 
+      const a = this._activityCap(activity);
+      if (a < cap) cap = a;
+
       return Math.max(MIN_SPEED, Math.min(MAX_SPEED, cap));
+    }
+
+    // Live on-screen activity → speed ceiling. activity is 0 (nothing happening
+    // in frame) → MAX_SPEED, easing down to ACTIVITY_SPEED when the frame is
+    // full of active units. Smoothstep so the cap itself doesn't ramp linearly.
+    _activityCap (activity) {
+      const a = Math.max(0, Math.min(1, activity || 0));
+      const s = a * a * (3 - 2 * a);
+      return MAX_SPEED + (ACTIVITY_SPEED - MAX_SPEED) * s;
     }
 
     // 1× inside a battle; ramps in over the pre-roll, eases out over post-roll.

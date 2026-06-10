@@ -646,6 +646,18 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
   }, {});
 
   calculateExperienceGains(world, wc3vPlayers);
+
+  // Building-placement ground truth: a building settled in/around a gold-mine
+  // creep camp proves the camp was cleared (creeps would attack it). Confirms
+  // the clear + credits the builder, overriding the weaker estimate. Runs after
+  // claims (needs clearedTime/playerCredit) and before order (uses clearedTime).
+  const SettlementClear = require('../lib/SettlementClear');
+  const settleStats = new SettlementClear(world, wc3vPlayers).run();
+  if (settleStats.settled) {
+    console.logger(`Settlement clear: ${settleStats.settled} gold-mine camp(s) ` +
+      `confirmed cleared by building placement (of ${settleStats.guardsGoldMine} guarded)`);
+  }
+
   assignCampOrder(world, wc3vPlayers);
 
   // remove neutral groups at player starting positions

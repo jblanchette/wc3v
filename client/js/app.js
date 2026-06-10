@@ -1108,6 +1108,38 @@ const Wc3vViewer = class {
     }
   }
 
+  // Per-frame: show a broadcast tag while the AUTO camera is framing a base
+  // intrusion (a scout / harass cut), so a deliberate "cut to the base poke"
+  // reads as intentional. Hidden whenever we're not framing one.
+  _updateIntrusionTag () {
+    const bc = this.broadcastCamera;
+    const kind = (bc && bc.enabled) ? bc.intrusionKind : null;
+    if (kind === this._intrusionTagKind) return;   // no change → no DOM churn
+    this._intrusionTagKind = kind;
+    this._setIntrusionTag(kind);
+  }
+
+  _setIntrusionTag (kind) {
+    let tag = document.getElementById('intrusion-tag');
+    if (kind && !tag) {
+      tag = document.createElement('div');
+      tag.id = 'intrusion-tag';
+      const mapName = document.getElementById('map-name-overlay');
+      if (mapName && mapName.parentNode) {
+        mapName.parentNode.insertBefore(tag, mapName.nextSibling);
+      } else {
+        return;
+      }
+    }
+    if (!tag) return;
+    if (kind) {
+      tag.textContent = kind === 'harass' ? '⚔ HARASS' : '👁 SCOUTING BASE';
+      tag.classList.toggle('intrusion-tag-harass', kind === 'harass');
+      tag.classList.toggle('intrusion-tag-scout', kind === 'scout');
+    }
+    tag.classList.toggle('intrusion-tag-visible', !!kind);
+  }
+
   showPlacementViewer (playerId) {
     const player = this.players.find(p => p.playerId === String(playerId));
     if (!player) {
@@ -3818,7 +3850,18 @@ const Wc3vViewer = class {
       if (this.guideMode) {
         speed = 2;
       } else {
-        speed = this.autoDirector.update(this.gameTime, realDelta);
+        // Feed the camera's live on-screen activity (computed last frame) to the
+        // director so the time-scale slows whenever units are doing things, not
+        // only during a formal battle.
+        const bc = this.broadcastCamera;
+        const activity = (bc && typeof bc.activityLevel === 'number') ? bc.activityLevel : 0;
+        speed = this.autoDirector.update(this.gameTime, realDelta, activity);
+        // Split view (parallel macro) and the scout/intrusion cut are both
+        // "showcase" moments — cap the time-scale so they're actually watchable
+        // instead of flying past at the dead-time fast-forward rate.
+        if (bc && (bc.isSplitActive || bc.isFramingIntrusion)) {
+          speed = Math.min(speed, 4);
+        }
         this.scrubber.speed = speed;
         this.scrubber.updateAutoReadout(speed);
       }
@@ -3857,6 +3900,10 @@ const Wc3vViewer = class {
     if (this.broadcastCamera && this.broadcastCamera.enabled) {
       this.broadcastCamera.update(this.gameTime, this.players);
     }
+
+    // Tag the single-view harass/scout cut so a deliberate intrusion shot reads
+    // as intentional rather than "why are we staring at a base?".
+    this._updateIntrusionTag();
 
     this._renderPending = false;  // mainLoop owns the render — cancel any queued requestRender
     this.render();
@@ -4223,8 +4270,9 @@ const Wc3vViewer = class {
 
   /**
    * Draw the horizontal split divider — a glowing line that wipes out from the
-   * centre of the screen, with player name labels (top player above the line,
-   * bottom player below) that fade in only AFTER the line reaches the edges.
+   * centre of the screen, with player name labels (top player above the line on
+   * the LEFT, bottom player below on the RIGHT) that fade in only AFTER the line
+   * reaches the edges.
    *
    * `progress` is the camera's splitEntryProgress (0 → 1 on entry, 1 → 0 on
    * exit). The line owns the first 60% of the animation; the names the last 40%.
@@ -4276,8 +4324,11 @@ const Wc3vViewer = class {
       ctx.textBaseline = 'middle';
       ctx.globalAlpha = nameAlpha;
 
-      // Name pill hugging the divider — `above` puts it in the top half, else
-      // the bottom half. Slides a few px toward its half as it fades in.
+      // Name pills hug the divider vertically (`above` = top half) but sit at the
+      // SIDES so they don't block the centre of the view: top player on the LEFT,
+      // bottom player on the RIGHT, inset ~12% from the canvas edge. Slides a few
+      // px toward its half as it fades in.
+      const edgePad = cw * 0.12;
       const drawLabel = (name, color, above) => {
         const textW = ctx.measureText(name).width;
         const padX = fontSize * 0.55;
@@ -4285,7 +4336,7 @@ const Wc3vViewer = class {
         const pillW = textW + padX * 2 + 6;
         const pillH = fontSize + padY * 2;
         const gap = 10 + (1 - nameAlpha) * 8; // eases toward the line
-        const x = cw * 0.5 - pillW / 2;
+        const x = above ? edgePad : (cw - edgePad - pillW);
         const y = above ? (dividerY - gap - pillH) : (dividerY + gap);
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';

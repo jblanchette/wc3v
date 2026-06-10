@@ -82,15 +82,51 @@
   const LOOKAHEAD_LEAD = 0.6;       // max fraction to pre-pan toward the fight
   const LOOKAHEAD_ZOOM_LEAD = 0.5;  // max fraction to pre-tighten zoom toward it
 
-  // Split-screen zoom: bbox-driven, clamped to playable viewExtent
-  const SPLIT_MIN_ZOOM = 2.5;
-  const SPLIT_MAX_ZOOM = 10.0;
-  const SPLIT_FILL = 0.88;       // fraction of the half-viewport the bbox occupies
+  // Split-screen zoom: bbox-driven, clamped to playable viewExtent. The half is
+  // short (ch/2) so the bbox height is what binds the zoom — keep the cluster
+  // bbox TIGHT (small symmetric padding below) so a typical army frames at a
+  // readable k≈3–5 instead of bottoming out at the floor with empty margins.
+  const SPLIT_MIN_ZOOM = 3.0;
+  const SPLIT_MAX_ZOOM = 8.0;
+  const SPLIT_FILL = 0.9;        // fraction of the half-viewport the bbox occupies
+  const SPLIT_PAD_FRAC = 0.18;   // breathing room around the force (fraction of extent)
+  const SPLIT_PAD_MIN = 240;     // … with this world-unit floor (SYMMETRIC — no tilt band)
   const SPLIT_FOG_INSET = 384;   // world units kept inside viewExtent edge so the
                                  // FogOfWar feather (256 units) never bleeds in.
-  const SPLIT_BBOX_MAX_FRAC = 0.45;  // soft cap on bbox extent vs viewExtent — far-
-                                     // out buildings/scouts pull camera but don't
-                                     // force zoom-out past ~half the playable map.
+  const SPLIT_BBOX_MAX_FRAC = 0.42;  // safety cap on bbox extent vs viewExtent — an
+                                     // unusually strung-out force is capped + pulled
+                                     // back toward its centroid rather than zooming out.
+  // Base/build-area framing (the opening: no mobile force yet → split on the two
+  // bases). Bound the ACTUAL buildings + nearby workers so all the structures show
+  // and the frame hugs them — a fixed box was far bigger than an early base's real
+  // footprint, so it framed mostly empty terrain on a big (~16k-unit) map.
+  const BASE_INCLUDE_RADIUS = 2200;  // include buildings/workers within this of the start (skip far expo/scout)
+  const SPLIT_BASE_MIN_EXTENT = 1500; // floor on the base bbox so a 1-building base doesn't over-zoom
+
+  // Intrusion / territory: when one player's unit reaches the ENEMY base region
+  // (scouting, a proxy, an early all-in), that interaction is the story — break
+  // the split and cut to it in single-view. Both-creep-own-camps stays split.
+  // IMPORTANT: an intrusion is a FALLBACK story, not an override. A lone harasser
+  // (a single skeleton poking the mining line) must NEVER steal the frame from a
+  // real fight or from a hero leading an army on the field — when such field
+  // action exists the intrusion is demoted (see _shouldShowIntrusion) and the
+  // normal camera shows the army. The actual skirmish, if it happens, is picked
+  // up by battle detection and framed/tagged as a battle in its own right.
+  const INTRUSION_RADIUS = 2800;   // a unit within this of an enemy base counts as "in their territory"
+  const INTRUSION_MIN_ZOOM = 3.2;  // single-view zoom floor when framing the intrusion
+  const INTRUSION_MAX_ZOOM = 6.5;
+  const INTRUSION_HARASS_WORKER_RADIUS = 750; // an intruder this close to an enemy worker = active harass (else a scout)
+  // A field force that demotes a (hero-less) intrusion: a player's main anchor
+  // with a hero AND at least this many units with it. Below this we treat the
+  // map as "no real field action" and a base intrusion can still take the cut.
+  const FIELD_ARMY_MIN_UNITS = 2;
+
+  // Live activity measure (feeds AutoDirector's activityCap). We count the mobile
+  // COMBAT units near the camera's current focus; more units on screen = more is
+  // happening = slow the time-scale down. Tuned so a small skirmish/scout reads
+  // as "some activity" and a full army clash saturates it.
+  const ACTIVITY_RADIUS = 2600;    // world units around the focus we sample
+  const ACTIVITY_FULL_UNITS = 9;   // this many mobile combat units near focus → activity 1.0
 
   // Padding (fraction of bounding box extent) — bumped up for a looser frame.
   const PAD_X_FRAC = 0.20;
@@ -105,6 +141,27 @@
   const SPLIT_ENTER_DISTANCE = 3200;  // players must be this far apart to enter split
   const SPLIT_EXIT_DISTANCE = 2400;   // once split, stay until they're this close
   const SPLIT_TRANSITION_FRAMES = 30;  // frames (~0.5s) for the quick line-wipe cut
+
+  // Split justification / stability (all in GAME time, ms). Together these stop
+  // the split from flickering in for a fraction of a second:
+  //   - DEBOUNCE: the want-condition must persist before we commit to a split.
+  //   - MIN_DWELL: once split, hold at least this long (unless a fight erupts).
+  //   - ENTER_LOOKAHEAD: don't open a split that a known-upcoming fight will cut
+  //     short — if combat starts within this window, stay single and lead in.
+  const SPLIT_ENTER_DEBOUNCE_MS = 800;
+  const SPLIT_MIN_DWELL_MS = 6000;
+  const SPLIT_ENTER_LOOKAHEAD_MS = 6000;
+
+  // Per-player "main fighting force" used for BOTH the split decision (separation)
+  // and the per-half framing. We cluster a player's mobile combat + hero units
+  // and frame the single highest-value cluster — so a lone scout/worker straying
+  // toward base or a fountain neither triggers a split nor steals the frame, and
+  // (per design) a player with no real force isn't split at all (no base shots).
+  const MAIN_FORCE_MERGE_DIST = 1300; // units within this of each other cluster together
+  const HERO_GROUP_WEIGHT = 4;        // a hero ≈ 4 combat units when scoring clusters — a hero
+                                      // WITH its army wins easily, but a lone idle hero loses to
+                                      // a real army out on the map (show the action, not the base)
+  const MIN_GROUP_UNITS = 2;          // a hero-less cluster needs ≥ this many to be "worth showing"
 
   class BroadcastCamera {
     constructor (viewer) {
@@ -132,9 +189,14 @@
       this._splitEntering = false;     // true during entry animation
       this._splitExiting = false;      // true during exit animation
       this._autoSplitEnabled = true;   // allow AUTO to enter split when appropriate
-      this._separation = Infinity;     // min cross-player distance (heroes, or starts)
+      this._separation = Infinity;     // min cross-player distance (main groups)
       this._lastGameTime = 0;          // for rewind detection
       this._speedFactor = 1;           // current playback speed (calm-when-fast)
+      this._splitWantSince = null;     // gameTime the split want-condition began (entry debounce)
+      this._splitEnteredAt = null;     // gameTime the split was committed (min-dwell)
+      this._intrusionTarget = null;    // single-view focus when a player is in enemy territory
+      this._intrusionKind = null;      // 'harass' | 'scout' — drives the on-screen tag
+      this._activityLevel = 0;         // 0–1 on-screen unit activity for the last frame (feeds the time-scale)
 
       // Multi-listener emitter for mode changes. Existing single-callback
       // `onModeChange` keeps working (still invoked by _emitModeChange) so
@@ -178,6 +240,11 @@
       this._separation = Infinity;
       this._lastGameTime = 0;
       this._speedFactor = 1;
+      this._splitWantSince = null;
+      this._splitEnteredAt = null;
+      this._intrusionTarget = null;
+      this._intrusionKind = null;
+      this._activityLevel = 0;
       this._emitModeChange();
     }
 
@@ -256,6 +323,26 @@
         (this._splitExiting && this._splitTransition > 0);
     }
 
+    /** Whether the single view is currently framing a scout/intrusion interaction. */
+    get isFramingIntrusion () {
+      return !!this._intrusionTarget && this.mode === CameraMode.ACTION_FOCUS;
+    }
+
+    /** 'harass' | 'scout' | null — what the current intrusion cut is, for tagging. */
+    get intrusionKind () {
+      return this.isFramingIntrusion ? this._intrusionKind : null;
+    }
+
+    /**
+     * Live 0–1 measure of on-screen unit activity for the last computed frame.
+     * Fed to AutoDirector so the time-scale slows whenever units are actually
+     * doing things in frame (army maneuvers, harass, creeping), not only during
+     * a formally-detected battle.
+     */
+    get activityLevel () {
+      return this._activityLevel;
+    }
+
     /**
      * Split entry progress: 0 = not started, 1 = fully entered.
      * Split exit uses the reverse: 1 = full split, sliding toward 0.
@@ -270,28 +357,85 @@
     update (gameTime, players) {
       if (!this._enabled || this.mode === CameraMode.FREE) return;
 
-      // Player separation drives auto-split. Uses hero positions when available,
-      // and falls back to starting positions for any player without a hero yet —
-      // so the opening phase (no units, bases far apart) reads as "split".
-      this._separation = this._computeSeparation(players);
+      // Seek/rewind detection: a big jump in gameTime means the user scrubbed,
+      // so reset the split entry-debounce / dwell timers — otherwise stale
+      // timestamps from elsewhere in the match would make the split snap open or
+      // refuse to close right after a jump. (Normal playback, even at 40x, never
+      // advances this much in one frame.)
+      if (this._lastGameTime != null && Math.abs(gameTime - this._lastGameTime) > 2500) {
+        this._splitWantSince = null;
+        this._splitEnteredAt = null;
+      }
+
+      // Per-player anchors: the main fighting force when one exists, else the
+      // base (opening). Drive BOTH the split decision (separation) and the
+      // per-half framing, so a lone scout/worker never triggers or steals a split.
+      const anchors = this._computeAnchors(players, gameTime);
+      this._separation = this._anchorSeparation(anchors);
       this._lastGameTime = gameTime;
 
       // ----- Auto-split decision (a sub-state of AUTO) -----
-      // Continuous + reversible: enter when the players are clearly apart with
-      // nothing happening, exit the instant a fight is active/imminent or they
-      // converge. Hysteresis (distinct enter/exit thresholds) prevents toggling.
-      const wantSplit = this._evaluateAutoSplit(players, gameTime, this._separation);
+      // Reversible, but stabilized: enter only when the players are clearly apart
+      // with a sustained lull (debounce + look-ahead so a split is actually worth
+      // it), then hold a minimum dwell so it doesn't flicker. A live or imminent
+      // fight always forces us out (and overrides the dwell) — show the action.
+      // Territory: a unit in the enemy's base region (scout / proxy / all-in) is
+      // the story — break the split and cut to it. Both-do-their-own-thing → no
+      // intrusion → stay split. Stored for the single-view target (_actionFocus).
+      // But an intrusion is a FALLBACK, not an override: _shouldShowIntrusion
+      // demotes a lone harasser when a real fight or a hero-led field army is
+      // happening (that action wins; the harass, if it matters, becomes a
+      // battle). Only a surviving intrusion sets _intrusionTarget / the tag.
+      const rawIntrusion = this._intrusionFocus(players, gameTime);
+      if (this._shouldShowIntrusion(rawIntrusion, players, gameTime, anchors)) {
+        this._intrusionTarget = rawIntrusion;
+        this._intrusionKind = rawIntrusion.kind;
+      } else {
+        this._intrusionTarget = null;
+        this._intrusionKind = null;
+      }
 
+      const wantSplit = !this._intrusionTarget &&
+        this._evaluateAutoSplit(players, gameTime, this._separation, anchors);
+      // What forces us out of a split even mid-dwell: a live/imminent fight, the
+      // two heroes clustering (a clash starting), or a player intruding on the
+      // enemy base (scout) — all override the dwell to cut to the interaction.
+      const fightNow = !!(this._activeBattleBbox() || this._imminentBattle(gameTime) ||
+        this._hasEngagedCluster(players) || this._intrusionTarget);
+
+      // Track how long the want-condition has held (entry debounce, game time).
       if (wantSplit) {
-        if (this.mode !== CameraMode.SPLIT_SCREEN) {
+        if (this._splitWantSince == null) this._splitWantSince = gameTime;
+      } else {
+        this._splitWantSince = null;
+      }
+
+      if (this.mode !== CameraMode.SPLIT_SCREEN) {
+        const heldLongEnough = this._splitWantSince != null &&
+          (gameTime - this._splitWantSince) >= SPLIT_ENTER_DEBOUNCE_MS;
+        if (wantSplit && heldLongEnough) {
           this.setMode(CameraMode.SPLIT_SCREEN);     // begins entry animation
-        } else if (this._splitExiting) {
+          this._splitEnteredAt = gameTime;
+          this._logSplitEvent(gameTime, 'ENTER split');
+        }
+      } else if (wantSplit) {
+        if (this._splitExiting) {
           this._splitExiting = false;                // reverse a partial exit
           this._splitEntering = true;
         }
-      } else if (this.mode === CameraMode.SPLIT_SCREEN && !this._splitExiting) {
-        this._splitExiting = true;                   // begin exit animation
-        this._splitEntering = false;
+      } else if (!this._splitExiting) {
+        // Want to leave. Honor the minimum dwell UNLESS a fight is pulling us out
+        // or the players have truly converged (both halves would frame the same
+        // spot — no point holding the split, and a clash is likely next).
+        const dwellSatisfied = this._splitEnteredAt == null ||
+          (gameTime - this._splitEnteredAt) >= SPLIT_MIN_DWELL_MS;
+        const converged = this._separation < SPLIT_EXIT_DISTANCE * 0.6;
+        if (fightNow || converged || dwellSatisfied) {
+          this._splitExiting = true;                 // begin exit animation
+          this._splitEntering = false;
+          this._logSplitEvent(gameTime,
+            'EXIT split — ' + (fightNow ? 'fight/intrusion' : converged ? 'converged' : 'dwell-done'));
+        }
       }
 
       // Animate split entry transition (divider line wipes out from centre)
@@ -313,6 +457,12 @@
           // Continue with action focus this frame
         }
       }
+
+      // Live activity for the time-scale: how busy the players' main forces are
+      // (anchor-based, so a wide two-army overview reads as active even though
+      // its centroid is empty midmap). Drives AutoDirector's activityCap so we
+      // slow down whenever units are doing things, not only during a battle.
+      this._activityLevel = this._forceActivityLevel(players, anchors);
 
       if (this.mode === CameraMode.SPLIT_SCREEN) {
         this._updateSplitScreen(players);
@@ -395,19 +545,23 @@
     // ---------------------------------------------------------------
 
     _updateSplitScreen (players) {
-      this.splitTargets = this._splitScreenTargets(players, this.viewer.gameTime);
+      // Keep the last valid framing if a side momentarily has no framable force
+      // (e.g. during the exit transition right after a wipe) so rendering never
+      // breaks on a null target mid-animation.
+      const t = this._splitScreenTargets(players, this.viewer.gameTime);
+      if (t) this.splitTargets = t;
       this._initialized = true;
     }
 
     /**
      * Per-side camera target for the horizontal top/bottom split.
      *
-     * For each player: build a content bbox (startingPosition + heroes +
-     * active scouts), pick a zoom that fits the bbox into the player's
-     * half-height viewport (cw × ch/2), then bake a vertical world offset so
-     * the content sits centered in that half (translateTo lands the target at
-     * canvas center; we want it at ch/4 / 3·ch/4). The content center is first
-     * clamped to gs.viewExtent so the dark fog mesh never bleeds into the half.
+     * For each player: bbox over its MAIN FIGHTING FORCE (the best cluster from
+     * _playerAnchor — hero + army), pad it with a small SYMMETRIC margin, fit it
+     * into the half-height viewport (cw × ch/2), then bake a vertical world offset
+     * so it sits centered in that half. The center is clamped to gs.viewExtent so
+     * fog never bleeds in. No base/opening framing, no scouts, no far buildings —
+     * just the force, framed tight enough to actually read.
      */
     _splitScreenTargets (players, gameTime) {
       const nonNeutral = players.filter(p => !p.isNeutralPlayer);
@@ -441,6 +595,9 @@
       const kAntiFog = Math.max(cw / sw, (ch * 0.5) / sh);
 
       const buildBox = (player) => {
+        const anchor = this._playerAnchor(player, gameTime);
+        if (!anchor) return null;
+
         let minX = Infinity, maxX = -Infinity;
         let minY = Infinity, maxY = -Infinity;
         const include = (x, y) => {
@@ -451,86 +608,73 @@
           if (y > maxY) maxY = y;
         };
 
-        if (player.startingPosition) {
-          include(player.startingPosition.x, player.startingPosition.y);
-        }
-        if (player.heroes) {
-          for (const hero of player.heroes) include(hero.currentX, hero.currentY);
-        }
-        if (player.units && gameTime != null) {
-          for (const unit of player.units) {
-            const built = unit.readyTime == null || gameTime >= unit.readyTime;
-            const dead  = unit.destroyedAt != null && gameTime >= unit.destroyedAt;
-
-            // Buildings: include all alive non-summon constructions so far-out
-            // builds (e.g. NE Ancient of War near a creep camp) pull the camera.
-            // Position is fixed at spawn (update() early-exits for buildings),
-            // so currentX/currentY is the construction location.
-            if (unit.isBuilding && !unit.isSummon && built && !dead &&
-                unit.currentX != null && !isNaN(unit.currentX)) {
-              include(unit.currentX, unit.currentY);
-            }
-
-            // Active scouts (server-flagged, same predicate as the SCOUT badge)
-            if (unit.scoutInfo && !unit._scoutEnded && gameTime >= unit.scoutInfo.gameTime) {
-              if (unit.currentX != null && !isNaN(unit.currentX)) {
-                include(unit.currentX, unit.currentY);
-              } else if (unit.scoutInfo.position) {
-                include(unit.scoutInfo.position.x, unit.scoutInfo.position.y);
-              }
-            }
+        let baseN = 0;   // diagnostics: how many buildings/workers the base box bounded
+        let chw = 0, chh = 0;   // real content half-extents (pre-floor/pad) for the centre-bias
+        if (anchor.isBase || !anchor.group || !anchor.group.length) {
+          // Opening / no force — bound the ACTUAL base: built buildings + nearby
+          // workers within BASE_INCLUDE_RADIUS of the start, so all the structures
+          // show and the frame hugs them (not a big empty fixed box). A far
+          // expansion/scout is skipped by the radius.
+          const sx = anchor.x, sy = anchor.y;
+          const r2 = BASE_INCLUDE_RADIUS * BASE_INCLUDE_RADIUS;
+          for (const u of (player.units || [])) {
+            if (!u || u.currentX == null || isNaN(u.currentX)) continue;
+            if (u.destroyedAt != null && gameTime != null && gameTime >= u.destroyedAt) continue;
+            if (u.readyTime != null && gameTime != null && gameTime < u.readyTime) continue;
+            if (u.isBuilding && u.isSummon) continue;
+            const dx = u.currentX - sx, dy = u.currentY - sy;
+            if (dx * dx + dy * dy > r2) continue;
+            include(u.currentX, u.currentY);
+            baseN++;
           }
-        }
+          include(sx, sy);   // always anchor on the start (covers t≈0, nothing built yet)
+          chw = (maxX - minX) / 2; chh = (maxY - minY) / 2;   // real building spread (pre-floor)
 
+          // Floor the extent so a 1–2 building base doesn't over-zoom.
+          const bcx = (minX + maxX) / 2, bcy = (minY + maxY) / 2;
+          if (maxX - minX < SPLIT_BASE_MIN_EXTENT) { minX = bcx - SPLIT_BASE_MIN_EXTENT / 2; maxX = bcx + SPLIT_BASE_MIN_EXTENT / 2; }
+          if (maxY - minY < SPLIT_BASE_MIN_EXTENT) { minY = bcy - SPLIT_BASE_MIN_EXTENT / 2; maxY = bcy + SPLIT_BASE_MIN_EXTENT / 2; }
+        } else {
+          for (const u of anchor.group) include(u.currentX, u.currentY);
+          chw = (maxX - minX) / 2; chh = (maxY - minY) / 2;
+        }
         if (minX === Infinity) return null;
 
-        const extentX = maxX - minX;
-        const extentY = maxY - minY;
-        const padX    = Math.max(extentX * PAD_X_FRAC,     PAD_X_MIN);
-        const padYTop = Math.max(extentY * PAD_Y_TOP_FRAC, PAD_Y_TOP_MIN);
-        const padYBot = Math.max(extentY * PAD_Y_BOT_FRAC, PAD_Y_BOT_MIN);
-        minX -= padX;
-        maxX += padX;
-        maxY += padYTop;  // WC3 Y: positive = north (top of screen)
-        minY -= padYBot;
+        // Small SYMMETRIC padding so the force fills the half with a little
+        // breathing room. (The old asymmetric south padding — for the main view's
+        // 3D tilt — is what produced the big empty band below the units.)
+        const padX = Math.max((maxX - minX) * SPLIT_PAD_FRAC, SPLIT_PAD_MIN);
+        const padY = Math.max((maxY - minY) * SPLIT_PAD_FRAC, SPLIT_PAD_MIN);
+        minX -= padX; maxX += padX;
+        minY -= padY; maxY += padY;
 
         let cx = (minX + maxX) / 2;
         let cy = (minY + maxY) / 2;
         let w  = maxX - minX;
         let h  = maxY - minY;
 
-        // Soft cap: when an outlier (creep-camp ancient, deep-map scout) blows
-        // the bbox out, don't zoom out to fit it. Cap extent at SPLIT_BBOX_MAX_FRAC
-        // of viewExtent and pull the center back toward the player's base, so
-        // the camera pans toward the outlier but stays meaningfully zoomed.
+        // Safety cap for an unusually strung-out force: cap the extent and pull
+        // the center back toward the force CENTROID (not the base) so we stay
+        // zoomed in on the bulk of it rather than zooming way out to fit a tail.
         const maxW = viewWorldW * SPLIT_BBOX_MAX_FRAC;
         const maxH = viewWorldH * SPLIT_BBOX_MAX_FRAC;
-        const baseX = player.startingPosition ? player.startingPosition.x : cx;
-        const baseY = player.startingPosition ? player.startingPosition.y : cy;
-        if (w > maxW) {
-          const t = maxW / w;          // shrinkage factor
-          cx = baseX + (cx - baseX) * t;
-          w = maxW;
-        }
-        if (h > maxH) {
-          const t = maxH / h;
-          cy = baseY + (cy - baseY) * t;
-          h = maxH;
-        }
+        if (w > maxW) { const t = maxW / w; cx = anchor.x + (cx - anchor.x) * t; w = maxW; }
+        if (h > maxH) { const t = maxH / h; cy = anchor.y + (cy - anchor.y) * t; h = maxH; }
 
-        return { cx, cy, w, h };
+        return { cx, cy, w, h, anchor, baseN, chw, chh };
       };
 
       const box0 = buildBox(nonNeutral[0]);
       const box1 = buildBox(nonNeutral[1]);
       if (!box0 || !box1) return null;
 
-      // Horizontal split: the more-northern base (higher WC3 Y) goes on TOP,
-      // the more-southern base on the BOTTOM — keeps the on-screen layout
-      // spatially intuitive (matches where each player actually sits on the map).
-      const baseY = (p, box) => (p.startingPosition && p.startingPosition.y != null)
+      // Which player goes on top: the more-northern STARTING position (higher WC3
+      // Y) takes the top half. Keyed off the start (not the live force centroid)
+      // so a player keeps a stable half as their army roams — only the layout
+      // slot is base-derived; the framing itself is force-based.
+      const slotY = (p, box) => (p.startingPosition && p.startingPosition.y != null)
         ? p.startingPosition.y : box.cy;
-      const topIdx = baseY(nonNeutral[0], box0) >= baseY(nonNeutral[1], box1) ? 0 : 1;
+      const topIdx = slotY(nonNeutral[0], box0) >= slotY(nonNeutral[1], box1) ? 0 : 1;
       const botIdx = 1 - topIdx;
       const boxes = [box0, box1];
 
@@ -538,6 +682,16 @@
       const vx1 = gs.viewExtent.x[1];
       const vyN = gs.viewExtent.y[0];  // north (high Y in WC3)
       const vyS = gs.viewExtent.y[1];  // south (low Y)
+
+      // Contested centre = midpoint of the two starts (≈ where the action heads).
+      // Each half biases its framing toward it, so we show the playable/approach
+      // side of the map instead of the dead corner behind the base. Falls back to
+      // the viewExtent centre if a start is missing.
+      const sp0 = nonNeutral[0].startingPosition, sp1 = nonNeutral[1].startingPosition;
+      const contestedCx = (sp0 && sp1 && sp0.x != null && sp1.x != null)
+        ? (sp0.x + sp1.x) / 2 : (vx0 + vx1) / 2;
+      const contestedCy = (sp0 && sp1 && sp0.y != null && sp1.y != null)
+        ? (sp0.y + sp1.y) / 2 : (vyN + vyS) / 2;
 
       const computeTarget = (box, side) => {
         // Fit the bbox into a half-height viewport (full width × ch/2) with a
@@ -560,6 +714,22 @@
 
         let cx = box.cx;
         let cy = box.cy;
+
+        // Centre-bias (base/opening framing only — a mobile force is its own
+        // focus and is usually out toward the centre already). Shift toward the
+        // contested centre by as much spare room as we have (keeping the actual
+        // content + a SPLIT_PAD_MIN margin in frame), capped so we never overshoot
+        // the centre. This pushes the base to its edge-side of the half and fills
+        // the rest with the playable/approach map — no more framing the dead
+        // corner behind the base.
+        if (box.anchor && box.anchor.isBase) {
+          const spareX = Math.max(0, halfVisW - box.chw - SPLIT_PAD_MIN);
+          const spareY = Math.max(0, halfVisH - box.chh - SPLIT_PAD_MIN);
+          const toCx = contestedCx - cx, toCy = contestedCy - cy;
+          cx += Math.sign(toCx) * Math.min(Math.abs(toCx), spareX);
+          cy += Math.sign(toCy) * Math.min(Math.abs(toCy), spareY);
+        }
+
         if (insetW * 2 >= viewWorldW) cx = (vx0 + vx1) / 2;
         else cx = Math.max(vx0 + insetW, Math.min(vx1 - insetW, cx));
         if (insetH * 2 >= viewWorldH) cy = (vyN + vyS) / 2;
@@ -576,47 +746,347 @@
         return { wx, wy, k };
       };
 
+      const topTarget = computeTarget(boxes[topIdx], 'top');
+      const botTarget = computeTarget(boxes[botIdx], 'bottom');
+
+      // Debug: throttled per-side framing decision so a bad split (e.g. zoomed
+      // onto a near-empty base) can be diagnosed from the console. Off unless
+      // WC3V_CONFIG.logging.splitCamera is set.
+      if (this._shouldLogSplit(gameTime)) {
+        this._logSplit(gameTime,
+          { side: 'TOP', player: nonNeutral[topIdx], box: boxes[topIdx], target: topTarget },
+          { side: 'BOT', player: nonNeutral[botIdx], box: boxes[botIdx], target: botTarget });
+      }
+
       return {
-        top:     computeTarget(boxes[topIdx], 'top'),
-        bottom:  computeTarget(boxes[botIdx], 'bottom'),
+        top:     topTarget,
+        bottom:  botTarget,
         players: [nonNeutral[topIdx], nonNeutral[botIdx]]
       };
     }
 
-    /**
-     * Min cross-player separation. One representative point per non-neutral
-     * player: its first valid hero if it has one, else its starting position.
-     * The starting-position fallback is what makes the OPENING split — before
-     * heroes exist the bases are (always, in 1v1) far apart.
-     */
-    _computeSeparation (players) {
-      const pts = [];
-      for (const player of players) {
-        if (!player || player.isNeutralPlayer) continue;
-        let pt = null;
-        for (const hero of (player.heroes || [])) {
-          if (hero.currentX != null && !isNaN(hero.currentX)) {
-            pt = { x: hero.currentX, y: hero.currentY };
-            break;
-          }
-        }
-        if (!pt && player.startingPosition &&
-            player.startingPosition.x != null && !isNaN(player.startingPosition.x)) {
-          pt = { x: player.startingPosition.x, y: player.startingPosition.y };
-        }
-        if (pt) { pt.playerId = player.playerId; pts.push(pt); }
-      }
+    // --- Split-screen debug logging (throttled by game time) ---
 
-      let minDist = Infinity;
+    _shouldLogSplit (gameTime) {
+      const cfg = (typeof window !== 'undefined') && window.WC3V_CONFIG;
+      if (!cfg || !cfg.logging || !cfg.logging.splitCamera) return false;
+      if (this._lastSplitLogGt == null || Math.abs((gameTime || 0) - this._lastSplitLogGt) >= 600) {
+        this._lastSplitLogGt = gameTime || 0;
+        return true;
+      }
+      return false;
+    }
+
+    _splitSideDesc (side, player, box, target) {
+      const a = box && box.anchor;
+      const name = (player && player.displayName) || '?';
+      let kind;
+      if (!a) kind = 'null';
+      else if (a.isBase) kind = `base(n=${box.baseN != null ? box.baseN : '?'})`;
+      else kind = `force(n=${a.group ? a.group.length : 0},hero=${a.hasHero ? 'Y' : 'N'})`;
+      const w = box ? Math.round(box.w) : 0;
+      const h = box ? Math.round(box.h) : 0;
+      const k = target ? target.k.toFixed(2) : '-';
+      const cx = box ? Math.round(box.cx) : 0;
+      const cy = box ? Math.round(box.cy) : 0;
+      return `${side} ${name} ${kind} box=${w}x${h} k=${k} c=(${cx},${cy})`;
+    }
+
+    _logSplit (gameTime, top, bot) {
+      const cfg = window.WC3V_CONFIG;
+      const t = (gameTime / 1000).toFixed(1);
+      const sep = isFinite(this._separation) ? Math.round(this._separation) : '∞';
+      cfg.log('splitCamera',
+        `[splitCam ${t}s] sep=${sep} | ${this._splitSideDesc(top.side, top.player, top.box, top.target)}` +
+        ` | ${this._splitSideDesc(bot.side, bot.player, bot.box, bot.target)}`);
+    }
+
+    _logSplitEvent (gameTime, event) {
+      const cfg = (typeof window !== 'undefined') && window.WC3V_CONFIG;
+      if (!cfg || !cfg.logging || !cfg.logging.splitCamera) return;
+      const sep = isFinite(this._separation) ? Math.round(this._separation) : '∞';
+      cfg.log('splitCamera', `[splitCam ${(gameTime / 1000).toFixed(1)}s] ${event} (sep=${sep})`);
+    }
+
+    /**
+     * Each non-neutral player's MAIN FIGHTING FORCE for this frame: cluster the
+     * player's mobile combat + hero units by proximity, score each cluster
+     * (heroes weighted heavily, plus combat count) and return the best one. This
+     * is what both the split decision (separation) and the per-half framing use.
+     *
+     * Generalized — frame what the player is actually doing:
+     *   - hero + army together  → one cluster, framed together
+     *   - hero idle at base while the army is out → the army cluster can win
+     *     (bigger score) so we follow the action, not the parked hero
+     *   - a lone scout/worker drifting off → its own tiny cluster, loses the
+     *     score, excluded from the frame
+     *   - NO real force yet (the opening: just workers building) → fall back to
+     *     the BASE/build area (isBase), so the early game splits on the two bases
+     */
+    _playerAnchor (player, gameTime) {
+      if (!player || player.isNeutralPlayer) return null;
+
+      const baseAnchor = () => {
+        const sp = player.startingPosition;
+        if (!sp || sp.x == null || isNaN(sp.x)) return null;
+        return {
+          x: sp.x, y: sp.y, playerId: player.playerId,
+          hasHero: false, group: null, isBase: true, score: 0, showable: true
+        };
+      };
+
+      // Mobile fighting units only — no workers, no buildings.
+      const pts = [];
+      const seen = new Set();
+      const consider = (u, forceHero) => {
+        if (!u || u.currentX == null || isNaN(u.currentX) || u.isBuilding) return;
+        if (u.destroyedAt != null && gameTime != null && gameTime >= u.destroyedAt) return;
+        if (u.readyTime != null && gameTime != null && gameTime < u.readyTime) return;
+        const hero = forceHero || !!(u.meta && u.meta.hero);
+        // Skip economy units — `meta.worker` (acolyte/peon/peasant/wisp) AND any
+        // unit assigned a gold/lumber harvest role. The latter is the LUMBER
+        // GHOUL: a fighting unit (meta.worker=false) doing economy at the tree
+        // line. Without this, a pair of harvesting ghouls reads as a "force" and
+        // the split zooms onto the trees (bug at ~1:10). Army ghouls have no
+        // harvest role → still counted. _isHarvester() covers both cases.
+        const isEconomy = (u.meta && u.meta.worker) ||
+          (typeof u._isHarvester === 'function' && u._isHarvester());
+        if (!hero && isEconomy) return;
+        if (seen.has(u)) return;
+        seen.add(u);
+        pts.push({ x: u.currentX, y: u.currentY, hero, u });
+      };
+      for (const u of (player.units || [])) consider(u, false);
+      for (const h of (player.heroes || [])) consider(h, true);  // heroes may live here too
+      if (!pts.length) return baseAnchor();   // no mobile force → frame the base (opening)
+
+      // Cluster by proximity (union-find; merge within MAIN_FORCE_MERGE_DIST).
+      const parent = pts.map((_, i) => i);
+      const find = (i) => { while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; } return i; };
+      const md2 = MAIN_FORCE_MERGE_DIST * MAIN_FORCE_MERGE_DIST;
       for (let i = 0; i < pts.length; i++) {
         for (let j = i + 1; j < pts.length; j++) {
-          if (pts[i].playerId === pts[j].playerId) continue;
-          const dx = pts[i].x - pts[j].x;
-          const dy = pts[i].y - pts[j].y;
+          const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+          if (dx * dx + dy * dy <= md2) parent[find(i)] = find(j);
+        }
+      }
+      const groups = {};
+      for (let i = 0; i < pts.length; i++) {
+        const r = find(i);
+        (groups[r] || (groups[r] = [])).push(pts[i]);
+      }
+
+      // Score each cluster (heroes weighted) and keep the best = the main force.
+      let best = null, bestScore = -1;
+      for (const k in groups) {
+        const g = groups[k];
+        let heroes = 0;
+        for (const p of g) if (p.hero) heroes++;
+        const score = heroes * HERO_GROUP_WEIGHT + (g.length - heroes);
+        if (score > bestScore) { bestScore = score; best = g; }
+      }
+      if (!best) return baseAnchor();
+
+      let cx = 0, cy = 0, heroes = 0;
+      for (const p of best) { cx += p.x; cy += p.y; if (p.hero) heroes++; }
+      cx /= best.length; cy /= best.length;
+      const combat = best.length - heroes;
+
+      // A real force (a hero, or a multi-unit army) → frame it. Just one lone
+      // straggler isn't worth framing as a "force" — show the base instead.
+      if (heroes === 0 && combat < MIN_GROUP_UNITS) return baseAnchor();
+
+      return {
+        x: cx, y: cy, playerId: player.playerId,
+        hasHero: heroes > 0, group: best.map(p => p.u), isBase: false,
+        score: bestScore, showable: true
+      };
+    }
+
+    _computeAnchors (players, gameTime) {
+      const out = [];
+      for (const player of players) {
+        const a = this._playerAnchor(player, gameTime);
+        if (a) out.push(a);
+      }
+      return out;
+    }
+
+    _anchorSeparation (anchors) {
+      let minDist = Infinity;
+      for (let i = 0; i < anchors.length; i++) {
+        for (let j = i + 1; j < anchors.length; j++) {
+          if (anchors[i].playerId === anchors[j].playerId) continue;
+          const dx = anchors[i].x - anchors[j].x;
+          const dy = anchors[i].y - anchors[j].y;
           minDist = Math.min(minDist, Math.sqrt(dx * dx + dy * dy));
         }
       }
       return minDist;
+    }
+
+    /**
+     * Territory check: when a player has a unit inside the ENEMY base region
+     * (a scout reaching the base, a proxy, an early all-in) that interaction is
+     * a candidate story. Returns a descriptor of the raw intrusion (focus box +
+     * makeup) or null when nobody is in enemy territory. This only DESCRIBES the
+     * intrusion — whether it actually takes the camera is decided separately by
+     * _shouldShowIntrusion (significance + demotion vs. real field action).
+     *
+     * Returned shape: { wx, wy, k, count, hasHero, hasNonSummon, kind } where
+     * kind is 'harass' (an intruder is in among the enemy's workers) or 'scout'.
+     * 1v1 — two players, two bases.
+     */
+    _intrusionFocus (players, gameTime) {
+      const gs = this.viewer.gameScaler;
+      if (!gs || !gs.viewExtent) return null;
+
+      const nonNeutral = players.filter(p => p && !p.isNeutralPlayer);
+      const bases = [];
+      for (const p of nonNeutral) {
+        const sp = p.startingPosition;
+        if (sp && sp.x != null && !isNaN(sp.x)) bases.push({ id: p.playerId, x: sp.x, y: sp.y, owner: p });
+      }
+      if (bases.length < 2) return null;
+
+      const R2 = INTRUSION_RADIUS * INTRUSION_RADIUS;
+      const HW2 = INTRUSION_HARASS_WORKER_RADIUS * INTRUSION_HARASS_WORKER_RADIUS;
+      const alive = (u) => u && u.currentX != null && !isNaN(u.currentX) && !u.isBuilding &&
+        !(u.destroyedAt != null && gameTime != null && gameTime >= u.destroyedAt) &&
+        !(u.readyTime != null && gameTime != null && gameTime < u.readyTime);
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      let count = 0, hasHero = false, hasNonSummon = false, harass = false;
+      const inc = (x, y) => {
+        if (x == null || isNaN(x)) return;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      };
+
+      for (const p of nonNeutral) {
+        const enemies = bases.filter(b => b.id !== p.playerId);
+        if (!enemies.length) continue;
+        const seen = new Set();
+        const scan = (u, forceHero) => {
+          if (!alive(u) || seen.has(u)) return;
+          // Nearest enemy base; counts as an intrusion if within the radius.
+          let near = null, nearD2 = Infinity;
+          for (const eb of enemies) {
+            const d2 = (u.currentX - eb.x) * (u.currentX - eb.x) + (u.currentY - eb.y) * (u.currentY - eb.y);
+            if (d2 < nearD2) { nearD2 = d2; near = eb; }
+          }
+          if (!near || nearD2 > R2) return;
+          seen.add(u);
+          inc(u.currentX, u.currentY);   // the intruder
+          inc(near.x, near.y);           // the base it's poking (for context)
+          count++;
+          if (forceHero || (u.meta && u.meta.hero)) hasHero = true;
+          if (!u.isSummon) hasNonSummon = true;
+          // Active harass = an enemy (the base owner's) worker right next to the
+          // intruder. Otherwise it's a scout just looking around the base region.
+          if (!harass && near.owner) {
+            for (const w of (near.owner.units || [])) {
+              if (!alive(w) || !(w.meta && w.meta.worker)) continue;
+              const dx = w.currentX - u.currentX, dy = w.currentY - u.currentY;
+              if (dx * dx + dy * dy <= HW2) { harass = true; break; }
+            }
+          }
+        };
+        for (const u of (p.units || [])) scan(u, false);
+        for (const h of (p.heroes || [])) scan(h, true);
+      }
+      if (!count) return null;
+
+      // Fit the intrusion bbox to the full canvas (single-view), with padding.
+      const padX = Math.max((maxX - minX) * 0.25, 500);
+      const padY = Math.max((maxY - minY) * 0.25, 500);
+      minX -= padX; maxX += padX; minY -= padY; maxY += padY;
+
+      const focusX = (minX + maxX) / 2;
+      const focusY = (minY + maxY) / 2;
+      const viewWorldW = gs.viewExtent.x[1] - gs.viewExtent.x[0];
+      const viewWorldH = Math.abs(gs.viewExtent.y[1] - gs.viewExtent.y[0]);
+      const kX = viewWorldW / Math.max(1, maxX - minX);
+      const kY = viewWorldH / Math.max(1, maxY - minY);
+      const k = Math.max(INTRUSION_MIN_ZOOM, Math.min(INTRUSION_MAX_ZOOM, Math.min(kX, kY)));
+
+      return { wx: focusX, wy: focusY, k, count, hasHero, hasNonSummon, kind: harass ? 'harass' : 'scout' };
+    }
+
+    /**
+     * Decide whether a raw intrusion should actually take the camera this frame.
+     * An intrusion is a fallback story, never an override:
+     *   - Significance: the ONE thing that doesn't earn a cut is a single
+     *     summoned unit just present in the base region (a lone skeleton). A real
+     *     unit (incl. an opening worker scout), a squad, an active harasser, or a
+     *     hero all qualify.
+     *   - Demotion: even a qualifying intrusion loses to a live/imminent fight
+     *     (which the battle path frames + tags) and to a hero leading an army on
+     *     the field (show the army; the harass, if it matters, becomes a battle).
+     *     A hero personally diving the base is itself the story and is exempt.
+     */
+    _shouldShowIntrusion (intr, players, gameTime, anchors) {
+      if (!intr) return false;
+      // Intrusion framing is a 1v1 story — team games / FFA use fit-all framing
+      // and never cut to it, so don't set the target (or the tag) there.
+      if (this.viewer.isNonOneVsOne && this.viewer.isNonOneVsOne()) return false;
+
+      const loneSummon = intr.count === 1 && !intr.hasNonSummon && intr.kind !== 'harass';
+      if (loneSummon) return false;
+
+      // A hero personally diving is the story (and usually a battle too).
+      if (intr.hasHero) return true;
+
+      // A live or imminent fight outranks a base poke — let the battle path own it.
+      if (this._activeBattleBbox() || this._imminentBattle(gameTime)) return false;
+
+      // Real field action — a hero leading an army anywhere on the map — outranks
+      // a lone harasser. Demote so the normal camera frames that army instead.
+      for (const an of (anchors || [])) {
+        if (an && !an.isBase && an.hasHero && an.group && an.group.length >= FIELD_ARMY_MIN_UNITS) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /**
+     * Live activity level (0–1) near a focus point: the count of mobile COMBAT
+     * units (heroes + army + summons, NOT workers/buildings) within
+     * ACTIVITY_RADIUS, normalized by ACTIVITY_FULL_UNITS. Fed to AutoDirector so
+     * the time-scale eases down whenever units are doing things on screen.
+     */
+    _activityNear (players, fx, fy) {
+      if (fx == null || isNaN(fx)) return 0;
+      const r2 = ACTIVITY_RADIUS * ACTIVITY_RADIUS;
+      const gt = this.viewer.gameTime;
+      const alive = (u) => u && u.currentX != null && !isNaN(u.currentX) && !u.isBuilding &&
+        !(u.destroyedAt != null && gt != null && gt >= u.destroyedAt) &&
+        !(u.readyTime != null && gt != null && gt < u.readyTime);
+      let count = 0;
+      const seen = new Set();
+      for (const p of players) {
+        if (!p || p.isNeutralPlayer) continue;
+        const scan = (u, isHero) => {
+          if (!alive(u) || seen.has(u)) return;
+          if (!isHero && u.meta && u.meta.worker) return;   // a mining line isn't "action"
+          const dx = u.currentX - fx, dy = u.currentY - fy;
+          if (dx * dx + dy * dy <= r2) { seen.add(u); count++; }
+        };
+        for (const u of (p.units || [])) scan(u, false);
+        for (const h of (p.heroes || [])) scan(h, true);
+      }
+      return Math.max(0, Math.min(1, count / ACTIVITY_FULL_UNITS));
+    }
+
+    /** Overall force activity: the busier of the players' main forces. */
+    _forceActivityLevel (players, anchors) {
+      let best = 0;
+      for (const a of (anchors || [])) {
+        if (!a) continue;
+        best = Math.max(best, this._activityNear(players, a.x, a.y));
+      }
+      return best;
     }
 
     _hasEngagedCluster (players) {
@@ -627,9 +1097,11 @@
     /**
      * Decide whether AUTO should be in its split sub-state this frame.
      * 1v1 only; never over a fight (active OR imminent); hysteresis band so it
-     * doesn't flip-flop when separation hovers near the threshold.
+     * doesn't flip-flop when separation hovers near the threshold. Entering
+     * additionally requires a sustained lull (no fight within the look-ahead) and
+     * both halves being worth showing (a hero or a real army, or the opening).
      */
-    _evaluateAutoSplit (players, gameTime, separation) {
+    _evaluateAutoSplit (players, gameTime, separation, anchors) {
       if (!this._autoSplitEnabled) return false;
       // Split only makes sense between two players — never in team games / FFA.
       if (this.viewer.isNonOneVsOne && this.viewer.isNonOneVsOne()) return false;
@@ -642,11 +1114,35 @@
       if (this._imminentBattle(gameTime)) return false;
       if (this._hasEngagedCluster(players)) return false;
 
+      const entering = this.mode !== CameraMode.SPLIT_SCREEN;
+
+      // BOTH players must have a real fighting force to show — otherwise there is
+      // nothing to put in one of the halves (no base/opening shots anymore). This
+      // is required to stay split too: if a side's force is wiped, we fall out.
+      const a = anchors || [];
+      if (a.length < 2 || !a[0].showable || !a[1].showable) return false;
+
+      // Look ahead on entry: don't open a split a known fight will cut short —
+      // lead in single-view instead. (Replay = the future is known.)
+      if (entering && this._battleStartsWithin(gameTime, SPLIT_ENTER_LOOKAHEAD_MS)) return false;
+
       // Hysteresis: harder to enter than to leave.
-      const threshold = (this.mode === CameraMode.SPLIT_SCREEN)
-        ? SPLIT_EXIT_DISTANCE
-        : SPLIT_ENTER_DISTANCE;
+      const threshold = entering ? SPLIT_ENTER_DISTANCE : SPLIT_EXIT_DISTANCE;
       return separation > threshold;
+    }
+
+    // True if any detected battle STARTS within windowMs of gameTime (not yet
+    // active). Generalizes _imminentBattle for the longer split-entry look-ahead.
+    _battleStartsWithin (gameTime, windowMs) {
+      const pb = this.viewer && this.viewer.processedBattles;
+      if (!pb || !pb.battles || gameTime == null) return false;
+      for (const b of pb.battles) {            // sorted ascending by startTime
+        const dt = b.startTime - gameTime;
+        if (dt <= 0) continue;
+        if (dt > windowMs) break;
+        return true;
+      }
+      return false;
     }
 
     /**
@@ -798,6 +1294,13 @@
       if (this.viewer.isNonOneVsOne && this.viewer.isNonOneVsOne()) {
         const all = this._fitAllNonNeutral(players);
         if (all) return all;
+      }
+
+      // Intrusion (a scout/proxy in the enemy base) is the single-view story
+      // when there's no live fight — it's also what just broke the split, so the
+      // camera glides onto the interaction instead of going blank in the opening.
+      if (this._intrusionTarget && !this._activeBattleBbox()) {
+        return this._intrusionTarget;
       }
 
       const clusters = this._clusterHeroes(players);

@@ -814,6 +814,68 @@ if (showAll || showSections.includes('scouts')) {
   console.log('');
 }
 
+// --- Camps (neutral creep camps + settlement-clear status) ---
+if (showAll || showSections.includes('camps')) {
+  console.log('=== CREEP CAMPS ===');
+  const groups = (data.world && data.world.neutralGroups) || {};
+  const keys = Object.keys(groups);
+  if (!keys.length) {
+    console.log('  (no neutral camp data — map cache may lack unit.json.gz)\n');
+  }
+
+  const CLAIM_STATE = { 0: 'untouched', 1: 'contested', 2: 'cleared', 3: 'partial' };
+  const playerName = (pid) => {
+    const meta = (data.replay && data.replay.players && data.replay.players[pid]) || {};
+    return meta.name || `Player ${pid}`;
+  };
+
+  // sort by clearedTime (uncleared last), so the camp order reads like the game
+  const sorted = keys.map(k => groups[k]).sort((a, b) => {
+    const at = a.clearedTime == null ? Infinity : a.clearedTime;
+    const bt = b.clearedTime == null ? Infinity : b.clearedTime;
+    return at - bt;
+  });
+
+  let settledCount = 0;
+  sorted.forEach(g => {
+    const b = g.unitBounds || g.bounds || {};
+    const cx = Math.round(((b.minX || 0) + (b.maxX || 0)) / 2);
+    const cy = Math.round(((b.minY || 0) + (b.maxY || 0)) / 2);
+    const cleared = g.clearedTime != null ? formatTime(g.clearedTime) : '—';
+    const state = CLAIM_STATE[g.claimState] || g.claimState;
+    const gm = g.guardsGoldMine ? ' [GOLD MINE]' : '';
+    const big = (g.units && g.units[0] && g.units[0].displayName) || 'Creep camp';
+
+    console.log(`\n  ${big} (lvl ${g.totalLevel}) @ (${cx},${cy})${gm}`);
+    console.log(`    state=${state} owner-team=${g.claimOwnerId != null ? g.claimOwnerId : '—'} cleared=${cleared}`);
+
+    if (g.settledClear) {
+      settledCount++;
+      const sc = g.settledClear;
+      console.log(`    *** SETTLED CLEAR: ${playerName(sc.playerId)} (team ${sc.teamId}) ` +
+        `built ${sc.buildingName} (${sc.buildingItemId})${sc.isExpansion ? ' [EXPANSION]' : ''} ` +
+        `@ ${formatTime(sc.gameTime)}`);
+      console.log(`        reason: ${sc.reason}`);
+    }
+
+    const pc = g.playerCredit || {};
+    Object.keys(pc).forEach(pid => {
+      const c = pc[pid];
+      const m = c.measured || {};
+      const tags = [
+        c.credited ? 'CREDITED' : 'not-credited',
+        c.uncertain ? 'UNCERTAIN' : null,
+        c.settled ? 'SETTLED' : null
+      ].filter(Boolean).join(' ');
+      console.log(`      - ${playerName(pid)}: ${tags} ` +
+        `share=${Math.round((m.contributionShare || 0) * 100)}% conf=${Math.round((c.confidence || 0) * 100)}%`);
+    });
+  });
+
+  console.log(`\n  camps=${keys.length} settled=${settledCount} ` +
+    `guarding-gold-mine=${sorted.filter(g => g.guardsGoldMine).length}\n`);
+}
+
 // --- Base Grid ---
 if (showAll || showSections.includes('basegrid')) {
   console.log('=== BASE GRID ===');

@@ -2,6 +2,9 @@ const w3gMappings = require("../node_modules/w3gjs/dist/lib/mappings");
 const unitBalanceMap = require("./UnitBalance.json").output;
 const researchMeta = require("./researchMeta.json");
 const spellOrderIds = require("./spellOrderIds.json");
+// Per-unit movement data (base move speed, turn rate, propulsion window) extracted
+// from the raw SLK tables by tools/extract-unit-movement.js. Keyed by itemId.
+const unitMovementMap = require("./unitMovement.json").units;
 
 const mapConfiguration = require("./mapConfiguration");
 
@@ -1922,6 +1925,20 @@ const getUnitInfo = (itemId) => {
     evolution: null,
     movespeed: 200 // default unknown ms
 	};
+
+  // Overlay real SLK movement data (move speed / turn rate / propulsion window)
+  // onto a CLONE of meta — never mutate the shared unitMetaData entry. Real `spd`
+  // wins over the hand-table/200 placeholder so Unit.effectiveMovespeed() and
+  // FacingInference get accurate per-unit values. turnRate is the raw SLK value
+  // (rad per WC3 frame); FacingInference converts it to rad/ms.
+  const movement = unitMovementMap[itemId];
+  if (movement) {
+    meta = Object.assign({}, meta);
+    if (movement.moveSpeed) meta.movespeed = movement.moveSpeed;
+    if (movement.turnRate != null) meta.turnRate = movement.turnRate;
+    if (movement.propWindow != null) meta.propWindow = movement.propWindow;
+    if (movement.moveType) meta.moveType = movement.moveType;
+  }
 
   const balanceInfo = unitBalanceMap[itemId] || {};
 

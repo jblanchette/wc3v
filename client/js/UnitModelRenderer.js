@@ -790,13 +790,13 @@
         ((realPos.x - back.x) * (realPos.x - back.x) + (realPos.y - back.y) * (realPos.y - back.y)) < MOVE_EPS2;
       if (!inst._loopA || parked) {
         inst._loopA = { x: realPos.x, y: realPos.y };
-        inst._loopB = this._nearestDropoff(player, realPos.x, realPos.y, unit.harvestKind());
+        inst._loopB = this._nearestDropoff(player, realPos.x, realPos.y, unit.harvestKind(), gameTime);
       }
       if (!inst._loopB) return null;
       return { a: inst._loopA, b: inst._loopB };
     }
 
-    _nearestDropoff (player, ax, ay, kind) {
+    _nearestDropoff (player, ax, ay, kind, gameTime) {
       const HALL = window.ClientPlayer && window.ClientPlayer.HALL_IDS;
       const lumber = kind && kind.indexOf('lumber') === 0;
       let best = null, bestD = Infinity;
@@ -804,6 +804,9 @@
         if (!u.isBuilding) continue;
         const ok = (HALL && HALL.has(u.itemId)) || (lumber && LUMBER_DROPOFF_IDS.has(u.itemId));
         if (!ok) continue;
+        // A worker can only RETURN resources to a finished building — a graveyard
+        // (or hall) that's still a construction site can't receive lumber/gold yet.
+        if (!this._dropoffReady(u, gameTime)) continue;
         const p = u.lastPosition || u.spawnPosition || (u.path && u.path[0]);
         if (!p || p.x == null) continue;
         const d = (p.x - ax) * (p.x - ax) + (p.y - ay) * (p.y - ay);
@@ -811,6 +814,20 @@
       }
       if (!best && player.startingPosition) best = { x: player.startingPosition.x, y: player.startingPosition.y };
       return best;
+    }
+
+    // True once a building has finished construction at `gameTime`. Pre-placed
+    // buildings (no observed constructionStartTime) are already standing; ones
+    // raised during the replay become valid drop-offs at start + buildTime
+    // (the same window BuildingProgressBar uses). Missing balance data → assume
+    // ready, so we never over-hide when buildTime is unknown.
+    _dropoffReady (u, gameTime) {
+      const start = u.constructionStartTime;
+      if (start == null) return true;
+      const bal = this.viewer && this.viewer.unitBalance && this.viewer.unitBalance[u.itemId];
+      const buildTime = bal && bal.buildTime;
+      if (!buildTime) return true;
+      return gameTime >= start + buildTime * 1000;
     }
 
     // Drive the representative worker along a deterministic (scrub-safe) loop:
