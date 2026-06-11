@@ -35,9 +35,7 @@
   const ILLUSION_OPACITY = 0.55;     // illusions render ghostly/translucent
   const HIDDEN_OPACITY = 0.4;        // shadowmeld / hidden units render faint
   const CREEP_RING = 0xb8893a;          // muted bronze ring for an untouched neutral camp
-  const CREEP_CLEARED_RING = 0x6c727b;  // slate-grey ring once a camp is credited/cleared
   const CREEP_DISTURBED_OPACITY = 0.7;  // an engaged (not-yet-cleared) camp dims slightly
-  const CREEP_CLEARED_OPACITY = 0.38;   // a credited/cleared camp fades to a faint "ghost"
   const CREEP_MOVE_EPS2 = 4;            // (wu over ~100ms)^2 to count a creep as walking
   const CREEP_AGGRO_RANGE = 500;        // a hero/combat unit within (camp radius + this) wakes the camp
   const CREEP_MARKER_SIZE = 72;         // world-unit size of the floating "?" uncertainty badge
@@ -74,7 +72,7 @@
       this._templates = {};          // model name -> Promise<parsed template> (parsed once, cloned per unit)
       this.instances = {};           // unit.uuid -> instance | 'pending' | 'failed'
       this.creepInstances = {};      // creep unit.uuid -> instance | 'pending' | 'failed'
-      this.campMarkers = {};         // campUuid -> { sprite, type } floating "?" badge
+      this.campMarkers = {};         // campUuid -> { sprite, type } floating badge ("?" / crossed-swords)
       this.rendered3DUuids = new Set();
       this.clock = new THREE.Clock();
       this.maxUnits = 400;           // generous cap; instancing shares geometry+textures
@@ -147,6 +145,7 @@
       if (mi && mi.bounds && mi.bounds.map) { const e = mi.bounds.map; cx = (e[0][0] + e[0][1]) / 2; cy = (e[1][0] + e[1][1]) / 2; }
 
       const battleSet = this._activeBattleUuids(gameTime);
+      const engagedCamps = this._engagedCampFootprints(gameTime); // camps with a live fight
       const alive = new Set();
       const campCreeps = [];   // neutral camp creeps — rendered only by _updateCreeps
       const attackers = [];    // live hero/combat positions — gate the camps' attack anim
@@ -182,6 +181,16 @@
           if (!player.isNeutralPlayer && !unit.isIllusion && !(unit.meta && unit.meta.worker)
               && (deathStart == null || gameTime < deathStart)) {
             attackers.push(pos);
+            // Standing inside an engaged (not-yet-cleared) creep camp counts as
+            // fighting it, so the unit plays its attack animation even when no
+            // formal PvP battle was detected (a lone hero pulling a small camp,
+            // militia grinding a gold-mine creep, etc.).
+            if (!battleSet.has(unit.uuid)) {
+              for (const f of engagedCamps) {
+                const fdx = pos.x - f.cx, fdy = pos.y - f.cy;
+                if (fdx * fdx + fdy * fdy <= f.r2) { battleSet.add(unit.uuid); break; }
+              }
+            }
           }
 
           let inst = this.instances[unit.uuid];
@@ -268,16 +277,8 @@
         if (!cs) {
           const geom = this._campGeom(camp);
 
-          // lifecycle phase — pure function of gameTime against the camp's own
-          // timestamps. 'cleared' needs a real clearedTime; a credited camp with
-          // no clear time stays 'disturbed' (honest: we know it was fought, not
-          // exactly when it emptied).
-          const engagedAt = camp.firstInteractionTime;
-          const clearedAt = camp.clearedTime;
-          let phase = 'pristine';
-          if (engagedAt != null && gameTime >= engagedAt) {
-            phase = (clearedAt != null && gameTime >= clearedAt) ? 'cleared' : 'disturbed';
-          }
+          // lifecycle phase — see _campPhase (pristine → disturbed → cleared).
+          const phase = this._campPhase(camp, gameTime);
 
           // nearest live attacker within the camp's aggro footprint (skip once
           // the camp is presumed cleared — those creeps are ghosts, not fighters)
@@ -294,16 +295,30 @@
           }
           cs = campState[campId] = { geom, phase, attacker };
 
-          // one floating "?" uncertainty badge per camp (not per creep)
-          const markerType = (phase === 'cleared') ? 'cleared' : (phase === 'disturbed' ? 'disturbed' : null);
-          this._setCampMarker(campId, markerType, geom, cx, cy);
+          // One floating badge per camp (not per creep):
+          //   • engaged (crossed swords) while an army is actively fighting here,
+          //   • "?" (amber) for a disturbed-but-quiet camp of unknown state,
+          //   • "?" (slate) for an inferred clear — but NOT a settlement-confirmed
+          //     clear, where the building itself is the marker and nothing is unsure.
+          let markerType = null;
+          if (phase === 'cleared') markerType = camp.settledClear ? null : 'cleared';
+          else if (phase === 'disturbed') markerType = attacker ? 'engaged' : 'disturbed';
+          this._setCampMarker(campId, markerType, geom, cx, cy, gameTime);
         }
 
         const key = unit.uuid;
         let inst = this.creepInstances[key];
         if (inst === undefined) { this._createCreep(key, unit, cs.geom); inst = this.creepInstances[key]; }
         if (!inst || !inst.root) continue;
-        this.rendered3DUuids.add(key); // we own this creep in 3D — suppress its 2D icon
+        this.rendered3DUuids.add(key); // we own this creep in 3D — suppress its 2D icon (cleared too)
+
+        // Cleared camp → the creeps are dead. Remove their models entirely (a
+        // building may now stand where they were); the camp badge marks the spot.
+        if (cs.phase === 'cleared') {
+          inst.root.visible = false;
+          if (inst.ring) inst.ring.visible = false;
+          continue;
+        }
 
         const pos = unit.getInterpolatedPosition(gameTime) ||
           (unit.spawnPosition ? { x: unit.spawnPosition.x, y: unit.spawnPosition.y } : { x: cs.geom.cx, y: cs.geom.cy });
@@ -327,17 +342,47 @@
         else if (fighting && inst.actions.attack) state = 'attack';
         else state = 'idle';
 
-        let opacity = 1, ringHex = CREEP_RING;
-        if (cs.phase === 'cleared') { opacity = CREEP_CLEARED_OPACITY; ringHex = CREEP_CLEARED_RING; }
-        else if (cs.phase === 'disturbed') { opacity = CREEP_DISTURBED_OPACITY; }
-
+        const opacity = (cs.phase === 'disturbed') ? CREEP_DISTURBED_OPACITY : 1;
         this._placeCreep(inst, pos.x, pos.y, facing, cx, cy);
-        this._setCreepRing(inst, ringHex);
+        this._setCreepRing(inst, CREEP_RING);
         this._animateCreepState(inst, dt, state);
         this._setOpacity(inst, opacity);
         inst.root.visible = true;
         if (inst.ring) inst.ring.visible = !this._suppressCreepRings;  // hidden during the guide creep tour
       }
+    }
+
+    // Camp lifecycle phase at a given time: 'pristine' (untouched) →
+    // 'disturbed' (engaged, creeps still up) → 'cleared' (creeps dead). A
+    // settlement-confirmed (or otherwise CLEARED) claim is authoritative even
+    // when the exact clear time wasn't measured — fall back to the settle/claim
+    // time so the creeps actually disappear instead of lingering as ghosts.
+    _campPhase (camp, gameTime) {
+      const engagedAt = camp.firstInteractionTime;
+      if (engagedAt == null || gameTime < engagedAt) return 'pristine';
+      let clearedAt = camp.clearedTime;
+      if (clearedAt == null && camp.claimState === CLAIM_CLEARED) {
+        clearedAt = (camp.settledClear && camp.settledClear.gameTime != null) ? camp.settledClear.gameTime
+          : (camp.claimTime != null ? camp.claimTime : engagedAt);
+      }
+      return (clearedAt != null && gameTime >= clearedAt) ? 'cleared' : 'disturbed';
+    }
+
+    // Footprints of camps currently being fought in (disturbed phase). A combat
+    // unit standing inside one is treated as engaging the creeps so it plays its
+    // attack animation even without a formally detected player-vs-player battle.
+    _engagedCampFootprints (gameTime) {
+      const ng = this.viewer && this.viewer.mapData && this.viewer.mapData.world && this.viewer.mapData.world.neutralGroups;
+      const out = [];
+      if (!ng) return out;
+      for (const id in ng) {
+        const camp = ng[id];
+        if (!camp || this._campPhase(camp, gameTime) !== 'disturbed') continue;
+        const geom = this._campGeom(camp);
+        const r = geom.radius + CREEP_AGGRO_RANGE;
+        out.push({ cx: geom.cx, cy: geom.cy, r2: r * r });
+      }
+      return out;
     }
 
     // Camp centre + a radius covering its footprint (cached — creeps are static).
@@ -397,17 +442,17 @@
       inst.mixer.update(dt);
     }
 
-    // A floating "?" badge above a camp centre, signalling "this camp's exact
-    // state is unknown" — shown once a camp is engaged ('disturbed', amber) and
-    // again once it's credited/cleared ('cleared', slate). One per camp, billboard.
-    _setCampMarker (campId, type, geom, cx, cy) {
+    // A floating billboard badge above a camp centre. One per camp:
+    //   'engaged'   — crossed swords, pulsing: an army is fighting here right now.
+    //   'disturbed' — amber "?": engaged-but-quiet, exact state unknown.
+    //   'cleared'   — slate "?": an inferred clear (suppressed for settled clears).
+    _setCampMarker (campId, type, geom, cx, cy, gameTime) {
       let m = this.campMarkers[campId];
       if (!type) { if (m && m.sprite) m.sprite.visible = false; return; }
       if (!m) {
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
           map: this._markerTexture(type), transparent: true, depthTest: false, depthWrite: false
         }));
-        sprite.scale.set(CREEP_MARKER_SIZE, CREEP_MARKER_SIZE, 1);
         sprite.renderOrder = 6;
         this.scene.add(sprite);
         m = this.campMarkers[campId] = { sprite, type };
@@ -416,6 +461,12 @@
         m.sprite.material.needsUpdate = true;
         m.type = type;
       }
+      // The "engaged" (crossed-swords) badge is bigger and gently pulses so it
+      // reads as a live fight; the static "?" badges sit at the base size.
+      const size = (type === 'engaged')
+        ? CREEP_MARKER_SIZE * (1.18 + 0.12 * Math.sin((gameTime || 0) / 150))
+        : CREEP_MARKER_SIZE;
+      m.sprite.scale.set(size, size, 1);
       const groundY = this.renderer.sampleHeight ? this.renderer.sampleHeight(geom.cx, geom.cy) : 0;
       m.sprite.position.set(geom.cx - cx, groundY + CREEP_MARKER_Y, -(geom.cy - cy));
       m.sprite.visible = true;
@@ -425,11 +476,36 @@
     _markerTexture (type) {
       if (!this._markerTex) this._markerTex = {};
       if (this._markerTex[type]) return this._markerTex[type];
-      const cleared = (type === 'cleared');
       const S = 128;
       const c = document.createElement('canvas');
       c.width = c.height = S;
       const g = c.getContext('2d');
+
+      if (type === 'engaged') {
+        // crossed-swords combat badge — signals a live creep fight at this camp
+        g.beginPath(); g.arc(S / 2, S / 2, 52, 0, Math.PI * 2);
+        g.fillStyle = 'rgba(58,30,16,0.86)'; g.fill();
+        g.lineWidth = 7; g.strokeStyle = '#f0883a'; g.stroke();
+        g.lineCap = 'round'; g.lineJoin = 'round';
+        const sword = (x0, y0, x1, y1) => {
+          const dx = x1 - x0, dy = y1 - y0, len = Math.hypot(dx, dy) || 1;
+          const px = -dy / len, py = dx / len;             // unit perpendicular
+          const gx = x0 + dx * 0.20, gy = y0 + dy * 0.20;  // crossguard above the hilt
+          g.strokeStyle = '#ffe6b0'; g.lineWidth = 10;     // blade
+          g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+          g.strokeStyle = '#f0883a'; g.lineWidth = 9;      // crossguard
+          g.beginPath(); g.moveTo(gx - px * 14, gy - py * 14); g.lineTo(gx + px * 14, gy + py * 14); g.stroke();
+          g.fillStyle = '#f0883a'; g.beginPath(); g.arc(x0, y0, 6, 0, Math.PI * 2); g.fill(); // pommel
+        };
+        sword(S * 0.30, S * 0.86, S * 0.70, S * 0.20);
+        sword(S * 0.70, S * 0.86, S * 0.30, S * 0.20);
+        const tex = new THREE.CanvasTexture(c);
+        if ('colorSpace' in tex && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+        this._markerTex[type] = tex;
+        return tex;
+      }
+
+      const cleared = (type === 'cleared');
       g.beginPath(); g.arc(S / 2, S / 2, 50, 0, Math.PI * 2);
       g.fillStyle = cleared ? 'rgba(38,42,50,0.82)' : 'rgba(58,44,16,0.82)';
       g.fill();

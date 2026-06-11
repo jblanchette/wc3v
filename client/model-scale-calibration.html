@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Model Scale Calibration</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="/js/GLBLoader.js?v=skin1"></script>
+  <style>
+    html, body { margin: 0; height: 100%; background: #14181c; color: #e7ecf1;
+      font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+    #top { position: absolute; top: 0; left: 0; right: 320px; z-index: 10; display: flex; gap: 8px;
+      align-items: center; flex-wrap: wrap; padding: 10px 14px; background: rgba(10,12,15,0.82); }
+    #top button, #top input { font-size: 14px; padding: 5px 10px; background: #222a31; color: #cfe;
+      border: 1px solid #3a4651; border-radius: 5px; cursor: pointer; }
+    #top button.active { border-color: #5ec26b; color: #b7f0bd; background: #1c2a20; }
+    #top .sep { width: 1px; height: 22px; background: #3a4651; margin: 0 4px; }
+    #panel { position: absolute; top: 0; right: 0; bottom: 0; width: 320px; z-index: 10;
+      background: rgba(12,15,19,0.94); border-left: 1px solid #2b343d; overflow-y: auto; padding: 8px 10px; }
+    #panel h3 { margin: 6px 2px 10px; font-size: 14px; color: #9fb0bf; letter-spacing: .04em; }
+    .row { display: grid; grid-template-columns: 1fr 64px; gap: 6px; align-items: center;
+      padding: 4px 4px; border-bottom: 1px solid #1d242b; }
+    .row.changed { background: #1b2a1d; }
+    .row label { font-size: 12.5px; line-height: 1.25; cursor: pointer; }
+    .row label b { color: #fff; } .row label span { color: #7e8b97; }
+    .row input { width: 60px; font-size: 13px; padding: 3px 5px; background: #1a2128; color: #dfe;
+      border: 1px solid #364049; border-radius: 4px; text-align: right; }
+    #log { position: absolute; bottom: 10px; left: 14px; font-size: 12px; z-index: 10; color: #8a9;
+      white-space: pre; background: rgba(0,0,0,0.55); padding: 6px 10px; border-radius: 4px; max-width: 60vw; }
+    #export { position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.7); z-index: 50; }
+    #export textarea { width: 60vw; height: 50vh; background: #0d1116; color: #cfe; border: 1px solid #364049;
+      border-radius: 6px; padding: 12px; font-family: monospace; font-size: 13px; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+  <div id="top">
+    <strong style="color:#9fb0bf;font-size:13px;">Scale&nbsp;Calibration</strong>
+    <span class="sep"></span>
+    <button data-race="H" class="active">Human</button>
+    <button data-race="O">Orc</button>
+    <button data-race="U">Undead</button>
+    <button data-race="E">Night Elf</button>
+    <button data-race="N">Neutral</button>
+    <span class="sep"></span>
+    <input id="search" placeholder="filter id/model…" style="width:140px;cursor:text;" />
+    <button id="btn-export">Export changed →</button>
+    <span id="count" style="color:#7e8b97;font-size:12.5px;"></span>
+  </div>
+  <div id="panel"><h3>Loading…</h3></div>
+  <div id="log">Ready</div>
+  <div id="export"><div style="text-align:center">
+    <div style="margin-bottom:8px;color:#9fb0bf">Paste these into TURN_OVERRIDES… er, SCALE_OVERRIDES in tools/patch-model-scale.js</div>
+    <textarea id="export-text" readonly></textarea>
+    <div style="margin-top:8px"><button id="btn-export-close" style="font-size:14px;padding:6px 14px;">Close</button></div>
+  </div></div>
+
+  <script>
+    // Calibration grid: render every model of a race at its CURRENT manifest scale,
+    // 1:1 in world units (exactly as UnitModelRenderer does), against a reference
+    // footman, a 128-unit tile floor, and a translucent plane at footman height —
+    // so you can judge each unit's size 1:1 with WC3. Adjust a unit's scale live
+    // with the number input; "Export changed" dumps {itemId: scale} for the
+    // override table.
+    const logEl = document.getElementById('log');
+    const log = (m) => { logEl.textContent = m; };
+
+    const FOOTMAN_ID = 'hfoo';
+    const TILE = 128;                 // one WC3 build tile (world units) — absolute ruler
+    const CELL = 260;                 // grid spacing between units (world units)
+    let footmanHeight = 102;          // refined once the footman GLB loads
+
+    // race of an itemId: heroes are Capitalized (Hxxx/Oxxx/Uxxx/Exxx/Nxxx); units lower.
+    function raceOf (id) {
+      const c = id[0];
+      const u = c.toUpperCase();
+      if (u === 'H') return 'H';
+      if (u === 'O') return 'O';
+      if (u === 'U') return 'U';
+      if (u === 'E') return 'E';
+      return 'N';                     // n*, plus anything else, = neutral/other
+    }
+
+    // ---- Three.js scene (lighting mirrors ThreeMapRenderer / test-unit.html) ----
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x222a30);
+    const VW = () => innerWidth - 320;
+    const camera = new THREE.PerspectiveCamera(45, VW() / innerHeight, 1, 60000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(VW(), innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+    addEventListener('resize', () => { camera.aspect = VW() / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(VW(), innerHeight); });
+
+    scene.add(new THREE.AmbientLight(0xe8ebe3, 1.25));
+    const sun = new THREE.DirectionalLight(0xfff1c4, 1.5); sun.position.set(-1200, 3000, -1200); scene.add(sun);
+    scene.add(new THREE.HemisphereLight(0xbfd8ec, 0x6b5a3a, 0.4));
+
+    const loader = new GLBLoader();
+    const templates = {};             // model -> Promise<skinnedResult prototype>
+    let instances = [];               // { itemId, root, wrapper, baseScale, label }
+    let manifest = {};
+    let curRace = 'H';
+    let footmanRef = null;            // the reference footman group (kept at origin)
+
+    // Floor + reference plane (rebuilt per race view to span the grid).
+    let floorGroup = new THREE.Group(); scene.add(floorGroup);
+
+    function clearScene () {
+      for (const inst of instances) { scene.remove(inst.root); if (inst.label) scene.remove(inst.label); }
+      instances = [];
+      if (footmanRef) { scene.remove(footmanRef.root); if (footmanRef.label) scene.remove(footmanRef.label); footmanRef = null; }
+      while (floorGroup.children.length) floorGroup.remove(floorGroup.children[0]);
+    }
+
+    function labelSprite (text, sub) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 80;
+      const g = c.getContext('2d');
+      g.fillStyle = 'rgba(8,11,14,0.72)'; g.fillRect(0, 0, 256, 80);
+      g.textAlign = 'center'; g.fillStyle = '#ffffff'; g.font = 'bold 30px sans-serif';
+      g.fillText(text, 128, 34);
+      g.fillStyle = '#7fd58a'; g.font = '24px monospace'; g.fillText(sub, 128, 66);
+      const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+      sp.scale.set(150, 47, 1); sp.renderOrder = 10;
+      return sp;
+    }
+
+    function getTemplate (model) {
+      if (!templates[model]) {
+        templates[model] = new Promise((resolve) => {
+          loader.load('/assets/models/units/' + model + '.glb?v=cal', (res) => resolve(res && res.isSkinnedResult ? res : null), undefined, () => resolve(null));
+        });
+      }
+      return templates[model];
+    }
+
+    // Inlined skinned clone (mirrors UnitModelRenderer._cloneSkinned) so we share
+    // geometry+textures but get an independent placement node per instance.
+    function cloneSkinned (tpl) {
+      const root = tpl.root.clone(true);
+      const boneByName = {}; root.traverse(o => { if (o.isBone) boneByName[o.name] = o; });
+      const bones = tpl.skeleton.bones.map(b => boneByName[b.name]);
+      const inv = tpl.skeleton.boneInverses.map(m => m.clone());
+      const skel = new THREE.Skeleton(bones, inv);
+      root.traverse(o => { if (o.isSkinnedMesh) { o.bind(skel, new THREE.Matrix4()); o.frustumCulled = false; } });
+      let wrapper = null; const wn = tpl.placementNode && tpl.placementNode.name;
+      root.traverse(o => { if (!wrapper && o.name === wn) wrapper = o; });
+      return { root, wrapper: wrapper || root };
+    }
+
+    async function placeUnit (itemId, spec, x, z, isRef) {
+      const tpl = await getTemplate(spec.model);
+      if (!tpl) { log('failed: ' + spec.model); return null; }
+      const c = cloneSkinned(tpl);
+      c.wrapper.position.set(x, 0, z);
+      c.wrapper.scale.setScalar(spec.scale || 1);
+      scene.add(c.root);
+      const label = labelSprite(isRef ? 'FOOTMAN (ref)' : itemId, isRef ? 'scale=1.00' : ('scale=' + (spec.scale || 1)));
+      // model height for label placement (approx; rest pose bounds)
+      const box = new THREE.Box3().setFromObject(c.root);
+      const h = (box.max.y - box.min.y) || 120;
+      label.position.set(x, h + 40, z);
+      scene.add(label);
+      return { itemId, root: c.root, wrapper: c.wrapper, baseScale: spec.scale || 1, label, height: h };
+    }
+
+    function buildFloor (cols, rows) {
+      const w = (cols + 2) * CELL, d = (rows + 2) * CELL;
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshLambertMaterial({ color: 0x33402f }));
+      ground.rotation.x = -Math.PI / 2; ground.position.set(w / 2 - CELL, -0.5, d / 2 - CELL); floorGroup.add(ground);
+      // 128-unit tile grid (absolute world-unit ruler)
+      const gx = Math.ceil(w / TILE), gz = Math.ceil(d / TILE);
+      const grid = new THREE.GridHelper(Math.max(w, d), Math.max(gx, gz), 0x2c3a44, 0x202a31);
+      grid.position.set(w / 2 - CELL, 0, d / 2 - CELL); floorGroup.add(grid);
+      // translucent plane at footman height — anything poking through is taller than a footman
+      const fhp = new THREE.Mesh(new THREE.PlaneGeometry(w, d),
+        new THREE.MeshBasicMaterial({ color: 0x5ec26b, transparent: true, opacity: 0.06, side: THREE.DoubleSide, depthWrite: false }));
+      fhp.rotation.x = -Math.PI / 2; fhp.position.set(w / 2 - CELL, footmanHeight, d / 2 - CELL); floorGroup.add(fhp);
+    }
+
+    async function loadRace (race) {
+      curRace = race;
+      clearScene();
+      document.querySelectorAll('#top button[data-race]').forEach(b => b.classList.toggle('active', b.dataset.race === race));
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const ids = Object.keys(manifest).filter(id => raceOf(id) === race && manifest[id].model)
+        .filter(id => !q || id.toLowerCase().includes(q) || manifest[id].model.toLowerCase().includes(q))
+        .sort((a, b) => (manifest[a].model).localeCompare(manifest[b].model));
+      document.getElementById('count').textContent = ids.length + ' units';
+      log('Loading ' + ids.length + ' ' + race + ' models…');
+
+      const cols = Math.ceil(Math.sqrt(ids.length)) || 1;
+      const rows = Math.ceil(ids.length / cols);
+      buildFloor(cols, rows);
+
+      // reference footman at origin, slightly apart
+      if (manifest[FOOTMAN_ID]) {
+        footmanRef = await placeUnit(FOOTMAN_ID, manifest[FOOTMAN_ID], -CELL, -CELL, true);
+        if (footmanRef) { footmanHeight = footmanRef.height; }
+      }
+
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const col = i % cols, row = Math.floor(i / cols);
+        const inst = await placeUnit(id, manifest[id], col * CELL, row * CELL, false);
+        if (inst) instances.push(inst);
+      }
+      // frame the camera on the grid
+      const cx = (cols - 1) * CELL / 2, cz = (rows - 1) * CELL / 2;
+      target.set(cx, 60, cz); dist = Math.max(cols, rows) * CELL * 1.1 + 600;
+      buildPanel(ids);
+      log(instances.length + ' loaded — drag to orbit, wheel to zoom. Green plane = footman height.');
+    }
+
+    function buildPanel (ids) {
+      const panel = document.getElementById('panel');
+      panel.innerHTML = '<h3>' + ids.length + ' models — edit scale (live)</h3>';
+      for (const id of ids) {
+        const spec = manifest[id];
+        const row = document.createElement('div'); row.className = 'row'; row.dataset.id = id;
+        const lab = document.createElement('label');
+        lab.innerHTML = '<b>' + id + '</b> <span>' + spec.model + '</span>';
+        lab.onclick = () => focusUnit(id);
+        const inp = document.createElement('input'); inp.type = 'number'; inp.step = '0.05'; inp.min = '0.1';
+        inp.value = spec.scale != null ? spec.scale : 1;
+        inp.oninput = () => {
+          const v = parseFloat(inp.value); if (!isFinite(v) || v <= 0) return;
+          const inst = instances.find(x => x.itemId === id); if (inst) inst.wrapper.scale.setScalar(v);
+          changed[id] = v; row.classList.add('changed');
+          if (inst && inst.label) inst.label.material.map = labelSprite(id, 'scale=' + v).material.map, inst.label.material.needsUpdate = true;
+        };
+        row.appendChild(lab); row.appendChild(inp); panel.appendChild(row);
+      }
+    }
+
+    function focusUnit (id) {
+      const inst = instances.find(x => x.itemId === id); if (!inst) return;
+      target.set(inst.wrapper.position.x, inst.height / 2, inst.wrapper.position.z); dist = 420;
+    }
+
+    const changed = {};
+    document.getElementById('btn-export').onclick = () => {
+      const out = {}; Object.keys(changed).sort().forEach(k => out[k] = +changed[k].toFixed(3));
+      const lines = Object.entries(out).map(([k, v]) => `  ${k}: ${v},`).join('\n');
+      document.getElementById('export-text').value = '{\n' + lines + '\n}';
+      document.getElementById('export').style.display = 'flex';
+    };
+    document.getElementById('btn-export-close').onclick = () => { document.getElementById('export').style.display = 'none'; };
+    document.getElementById('search').oninput = () => loadRace(curRace);
+    document.querySelectorAll('#top button[data-race]').forEach(b => b.onclick = () => loadRace(b.dataset.race));
+
+    // ---- orbit camera ----
+    let angle = 0.6, pitch = 0.5, dist = 1600, dragging = false, lastX = 0, lastY = 0;
+    let target = new THREE.Vector3(0, 60, 0);
+    renderer.domElement.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+    renderer.domElement.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      if (e.shiftKey) { // pan
+        const r = (VW()) ; target.x -= (e.clientX - lastX) * dist / r; target.z -= (e.clientY - lastY) * dist / r;
+      } else { angle += (e.clientX - lastX) * 0.006; pitch = Math.max(0.08, Math.min(1.45, pitch + (e.clientY - lastY) * 0.004)); }
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    addEventListener('mouseup', () => dragging = false);
+    renderer.domElement.addEventListener('wheel', e => { dist = Math.max(120, dist + e.deltaY * 1.0); e.preventDefault(); }, { passive: false });
+
+    function animate () {
+      requestAnimationFrame(animate);
+      camera.position.x = target.x + Math.sin(angle) * dist * Math.cos(pitch);
+      camera.position.z = target.z + Math.cos(angle) * dist * Math.cos(pitch);
+      camera.position.y = target.y + dist * Math.sin(pitch);
+      camera.lookAt(target);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    fetch('/assets/models/units/unit-models.json').then(r => r.json()).then(m => {
+      manifest = m || {}; loadRace('H');
+    }).catch(e => log('manifest load failed: ' + e));
+  </script>
+</body>
+</html>

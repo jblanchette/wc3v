@@ -15,6 +15,8 @@
  *                          paths      - unit movement paths with groupId data
  *                          footprints - per-hero pre-baked footprint stamp counts (trail render)
  *                          positions  - position-stream health (density, gaps, integrity)
+ *                          kinematics - KinematicResim validation: move-speed cap + facing coverage
+ *                          pathdump   - full per-node coord+facing trace (with --search)
  *                          workers    - worker snapshots from events
  *                          tiers      - tier transition data
  *                          validation - validator severity/confidence + warnings
@@ -322,8 +324,9 @@ if (showSections.includes('pathdump')) {
       const bw = (u.buildWindows || []).map(w => `${formatTime(w.start)}-${w.end==null?'open':formatTime(w.end)}`).join(',');
       console.log(`    -- ${u.displayName} (${u.itemId}) uuid=${(u.uuid||'').slice(0,8)} role=${u.primaryRole||'-'} conf=${u.harvestConfident?'Y':'n'} nodes=${u.path.length}${bw?` build=[${bw}]`:''} --`);
       u.path.forEach(p => {
+        const facing = (p.facing != null) ? ` ${Math.round(p.facing * 180 / Math.PI)}°` : '';
         const tags = [p.isJump && 'JUMP', p.wasSnapped && 'snap', p.groupId && `g${p.groupId}`].filter(Boolean).join(' ');
-        console.log(`        [${formatTime(p.gameTime)}] (${Math.round(p.x)},${Math.round(p.y)})${tags ? ' ' + tags : ''}`);
+        console.log(`        [${formatTime(p.gameTime)}] (${Math.round(p.x)},${Math.round(p.y)})${facing}${tags ? ' ' + tags : ''}`);
       });
     });
   }
@@ -403,6 +406,68 @@ if (showAll || showSections.includes('positions')) {
         `maxGap=${(maxGap / 1000).toFixed(2)}s jumps=${jumps}` +
         (flags.length ? `  !! ${flags.join(' ')}` : '')
       );
+    });
+  }
+  console.log('');
+}
+
+// --- Kinematics audit (KinematicResim output validation) ---
+// Proves the re-simulated path obeys the engine: between consecutive in-run
+// samples the IMPLIED SPEED must never exceed the unit's base move speed (the
+// guarantee that removes "jumps"). Reports per-player violation counts + the
+// worst offenders, and confirms facing is baked. Idle gaps (>10s) and explicit
+// JUMP samples (blink/teleport/revive) are legitimately exempt.
+if (showAll || showSections.includes('kinematics')) {
+  console.log('=== KINEMATICS (move-speed cap + facing) ===');
+  const SPEED_TOL = 1.08;          // allow 8% over base (sample rounding / diagonal A*)
+  // Same gap rule as client ClientUnit.isPathGap / lib/KinematicResim: a gap is a
+  // genuine discontinuity (teleport / long idle / impossible recorded hop) that
+  // both the resim and the client snap across — exclude it from the speed check.
+  const isGap = (a, b) => {
+    if (b.isJump) return true;
+    const dt = b.gameTime - a.gameTime;
+    if (dt > 10000) return true;
+    const dist = Math.hypot(b.x - a.x, b.y - a.y);
+    if (dist > 1500 && dt < 5000) return true;
+    if (dist > 500 && dt > 300000) return true;
+    return false;
+  };
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    let units = (pdata.units || []).filter(u => !u.isBuilding && u.path && u.path.length > 1);
+    if (searchText) units = units.filter(u => (u.displayName || '').toLowerCase().includes(searchText));
+
+    let totViol = 0, totPairs = 0, noFacing = 0, worst = [];
+    units.forEach(u => {
+      const p = u.path;
+      const baseSpeed = (u.meta && u.meta.movespeed > 0) ? u.meta.movespeed : 250;
+      const cap = baseSpeed * SPEED_TOL;
+      let viol = 0, maxSpeed = 0, hasFacing = false;
+      for (let i = 1; i < p.length; i++) {
+        if (p[i].facing != null) hasFacing = true;
+        if (isGap(p[i - 1], p[i])) continue;                   // skip genuine discontinuities
+        const dt = (p[i].gameTime - p[i - 1].gameTime) / 1000;
+        if (dt <= 0) continue;
+        const dist = Math.hypot(p[i].x - p[i - 1].x, p[i].y - p[i - 1].y);
+        const speed = dist / dt;
+        totPairs++;
+        if (speed > maxSpeed) maxSpeed = speed;
+        if (speed > cap) { viol++; totViol++; }
+      }
+      if (!hasFacing) noFacing++;
+      if (viol > 0) worst.push({ name: u.displayName, itemId: u.itemId, viol, maxSpeed, baseSpeed });
+    });
+
+    worst.sort((a, b) => b.viol - a.viol);
+    console.log(`    units=${units.length} pairs=${totPairs} speedViolations=${totViol} unitsWithoutFacing=${noFacing}`);
+    worst.slice(0, limit).forEach(w => {
+      console.log(`      !! ${(w.name || '').padEnd(14)}(${w.itemId}) violations=${w.viol} ` +
+        `maxSpeed=${Math.round(w.maxSpeed)} base=${w.baseSpeed}`);
     });
   }
   console.log('');

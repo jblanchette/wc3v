@@ -1503,7 +1503,15 @@
       if (gt == null) return null;
       const active = pb.activeAt(gt);
       if (!active || !active.length) return null;
-      const battle = active.reduce((a, b) => (b.startTime > a.startTime ? b : a));
+      // A player grinding neutral creeps is NOT a broadcast clash — don't let a
+      // creep fight (or an unidentified single-team scuffle) yank the camera off
+      // the hero/army action onto the camp + whatever building the creeps
+      // happened to hit. The hero-cluster framing already keeps the creeping
+      // hero on screen. A real PvP battle that *absorbed* a creep fight
+      // (creepJack) is a genuine clash and is kept.
+      const real = active.filter(b => b.category !== 'creep-fight' && b.category !== 'unknown-combat');
+      if (!real.length) return null;
+      const battle = real.reduce((a, b) => (b.startTime > a.startTime ? b : a));
       return pb.trackerBoxAt(battle, gt);
     }
 

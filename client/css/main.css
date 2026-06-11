@@ -13657,6 +13657,17 @@ svg.about-feat-icon {
   border-radius: 12px;
   background: rgba(255,255,255,0.02);
   transition: border-color 0.12s, background 0.12s;
+  cursor: pointer;
+}
+/* Click-to-upload affordance: lift on hover/focus, same green as dragover. */
+.site-mine-empty:hover,
+.site-mine-empty:focus-visible {
+  border-color: rgba(140, 200, 120, 0.45);
+  background: rgba(140, 200, 120, 0.05);
+}
+.site-mine-empty:focus-visible {
+  outline: 2px solid rgba(140, 200, 120, 0.7);
+  outline-offset: 2px;
 }
 .site-mine-empty-dragover {
   border-color: rgba(140, 200, 120, 0.65);

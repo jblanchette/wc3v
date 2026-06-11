@@ -19,7 +19,11 @@ const config = {
 	// resolved slots, unit roles/ranges, enemy count, focus point, stop-vs-range
 	// error) into player.formationTrace for tools/formation-check.js. Opt-in via
 	// `--formation-trace`; not exported in normal runs.
-	debugFormation: false
+	debugFormation: false,
+	// Kinematic re-simulation of unit paths (move speed + turn rate + propulsion
+	// window) — lib/KinematicResim.js. Default ON. Set false to fall back to the
+	// legacy facing-only bake (lib/FacingInference.js) for A/B debugging.
+	kinematicResim: true
 };
 
 module.exports = config;

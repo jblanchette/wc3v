@@ -617,6 +617,22 @@
       if (heroCard) heroCard.addEventListener('click', () => triggerUpload('hero'));
       if (panelBtn) panelBtn.addEventListener('click', () => triggerUpload('panel'));
 
+      // The empty-state panel doubles as a click target (it's also a drop
+      // zone — see wireDropZone below). Clicking anywhere in it, or pressing
+      // Enter/Space while it's focused, opens the same file picker.
+      const emptyPanel = document.getElementById('my-replays-empty');
+      if (emptyPanel) {
+        emptyPanel.addEventListener('mouseenter', warmParser, { once: true });
+        emptyPanel.addEventListener('focus', warmParser, { once: true });
+        emptyPanel.addEventListener('click', () => triggerUpload('panel'));
+        emptyPanel.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            triggerUpload('panel');
+          }
+        });
+      }
+
       // "Where are my replays?" help modal.
       const findBtn = document.getElementById('hero-find-replays-btn');
       const findModal = document.getElementById('find-replays-modal');
@@ -944,13 +960,15 @@
         <a id="my-replays-view-all" class="mine-view-all-link" href="/replays.html" hidden>View all (<span id="mine-view-all-count">0</span>) →</a>
         <div id="my-replays-status" class="site-mine-status" aria-live="polite"></div>
 
-        <!-- Empty state: shown by JS when the list is empty. -->
-        <div id="my-replays-empty" class="site-mine-empty" hidden>
+        <!-- Empty state: shown by JS when the list is empty. The whole panel
+             is both a drop zone (wireDropZone) and a click target (opens the
+             file picker) — see the click wiring near triggerUpload. -->
+        <div id="my-replays-empty" class="site-mine-empty" hidden role="button" tabindex="0" aria-label="Add a replay — drop a file here or click to choose one">
           <div class="site-mine-empty-icon" aria-hidden="true">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
-          <div class="site-mine-empty-title">Drop a .w3g to add a replay</div>
-          <div class="site-mine-empty-sub">Upload one of your own games to grade against pros — or upload a pro replay you want to compare your play against.</div>
+          <div class="site-mine-empty-title">Drop or click to add a replay</div>
+          <div class="site-mine-empty-sub">Battle.net, FLO and W3Champions replays all work. Upload one of your own games to grade against pros — or a pro replay you want to compare your play against.</div>
         </div>
       </section>
 

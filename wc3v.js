@@ -82,6 +82,7 @@ const ReplayValidator = require("./lib/ReplayValidator");
 const BattleDetector  = require("./lib/BattleDetector");
 const DeathInference  = require("./lib/DeathInference");
 const FacingInference = require("./lib/FacingInference");
+const KinematicResim  = require("./lib/KinematicResim");
 const HideInference   = require("./lib/HideInference");
 const BattleSummary   = require("./lib/BattleSummary");
 const ResourceSeries  = require("./lib/ResourceSeries");
@@ -583,11 +584,6 @@ const doParsing = async (input, options = {}) => {
     `active=${deathStats.active}, idle=${deathStats.idle}, ` +
     `possiblyLost=${deathStats.possiblyLost}, lost=${deathStats.lost}`);
 
-  // Facing inference — bake a turn-rate-integrated facing angle onto every unit's
-  // path so the 3D viewer can face/rotate units the way they moved (seek-safe).
-  const facingStats = new FacingInference(playerManager).run();
-  console.log(`FACING INFERENCE: ${facingStats.units} units, ${facingStats.samples} path samples`);
-
   // Shadowmeld heuristic — flags NE units that went idle during night with
   // no enemies nearby. Writes `hiddenStream[]` per unit.
   emitProgress('postprocess', 99, { detail: 'hide' });
@@ -597,6 +593,23 @@ const doParsing = async (input, options = {}) => {
   console.log('----------------------------------');
   console.log(`NE units: ${hideStats.neUnits}, hide windows: ${hideStats.windowsDetected}, ` +
     `total hidden: ${(hideStats.totalHideTimeMs / 1000).toFixed(1)}s`);
+
+  // Kinematic re-simulation — rewrite each unit's path into a physically-valid
+  // position + facing stream (move speed + turn rate + propulsion window), so the
+  // 3D viewer shows WC3-accurate turning and no engine-impossible "jumps". Runs
+  // LAST among the path-consuming passes (Death/Hide above read the raw recorded
+  // path). Set config.kinematicResim=false to fall back to facing-only baking.
+  if (config.kinematicResim === false) {
+    const facingStats = new FacingInference(playerManager).run();
+    console.log(`FACING INFERENCE (fallback): ${facingStats.units} units, ${facingStats.samples} path samples`);
+  } else {
+    const kStats = new KinematicResim(playerManager).run();
+    console.log('----------------------------------');
+    console.log('KINEMATIC RESIM (movement + facing)');
+    console.log('----------------------------------');
+    console.log(`units=${kStats.units} runs=${kStats.runs} ` +
+      `samples ${kStats.inSamples}->${kStats.outSamples} jumps preserved=${kStats.jumpsPreserved}`);
+  }
 
   // Battle summary — aggregates per-battle losses by player + confidence so
   // the client can render transient banners and a persistent battle log.
