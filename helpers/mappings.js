@@ -1854,7 +1854,15 @@ const getUnitInfo = (itemId) => {
   const inSpecialBuildingList = !!(specialBuildingList[itemId]);
 	const inUnitList = !!(units[itemId]);
 	const inHeroList = !!(heroes[itemId]);
-  const inItemList = !!(items[itemId]);
+  // `items` is the bundled w3gjs map — it predates newer purchasables like
+  // ritd (Ritual Dagger), Engraved Scale, Warsong Drums, etc. dropTablesData.items
+  // is our CASC-extracted superset (verified: 0 collisions with units/buildings).
+  // Without folding it in here, those ~45 items classify as Unknown and the
+  // shop-buy dispatch (Building.js / Player.js, both gated on unitInfo.isItem)
+  // silently drops the purchase. dropTablesData is assigned later in this module
+  // but always defined by call time (same pattern as the displayName fallback below).
+  const inItemList = !!(items[itemId]) ||
+    !!(dropTablesData && dropTablesData.items && dropTablesData.items[itemId]);
   const inCritterList = !!(critters[itemId]);
   const inFountainList = !!(fountains[itemId]);
 
