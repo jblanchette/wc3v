@@ -802,7 +802,7 @@ const BuildOrderRenderer = class {
         ? ` data-bo-switch-player title="${_attr(raceInfo.label + ' \u2014 click to switch player')}"`
         : ` title="${_attr(raceInfo.label)}"`;
       const raceIconHtml = raceIconId
-        ? `<img class="${raceIconCls}" src="/assets/wc3icons/${raceIconId}.jpg" alt="${_attr(raceInfo.label)}" style="border-color:${_attr(raceAccent)}"${raceIconExtras} onerror="this.style.display='none'" />`
+        ? `<img loading="lazy" class="${raceIconCls}" src="/assets/wc3icons/${raceIconId}.jpg" alt="${_attr(raceInfo.label)}" style="border-color:${_attr(raceAccent)}"${raceIconExtras} onerror="this.style.display='none'" />`
         : '';
 
       const meTag = isMe ? `<span class="bo-hdr-me-tag" title="You're learning from this player's game">ME</span>` : '';
@@ -1033,7 +1033,7 @@ const BuildOrderRenderer = class {
       costHtml = `<span class="bo-icon-cost">${gSpan}${sep}${lSpan}</span>`;
     }
     const safeSrc = this._safeIconSrc(iconSrc);
-    const imgHtml = safeSrc ? `<img class="bo-row-icon" src="${safeSrc}"${errAttr} />` : '';
+    const imgHtml = safeSrc ? `<img loading="lazy" class="bo-row-icon" src="${safeSrc}"${errAttr} />` : '';
     return `<div class="bo-icon-wrap">${imgHtml}${costHtml}</div>`;
   }
 
@@ -1082,7 +1082,7 @@ const BuildOrderRenderer = class {
 
     card.innerHTML = `
       <div class="bo-tier-complete-header">
-        <img class="bo-tier-complete-icon" src="/assets/wc3icons/${_icon(event.itemId)}.jpg" />
+        <img loading="lazy" class="bo-tier-complete-icon" src="/assets/wc3icons/${_icon(event.itemId)}.jpg" />
         <span class="bo-tier-complete-label">TIER ${tierTarget} COMPLETE</span>
         <span class="bo-tier-complete-time">${_esc(timeStr)}</span>
       </div>`;
@@ -1133,7 +1133,7 @@ const BuildOrderRenderer = class {
     bar.classList.add('bo-expansion-bar');
     const costStr = this.buildInlineCost(event);
     bar.innerHTML = `
-      <img class="bo-expansion-icon" src="/assets/wc3icons/${_icon(event.itemId)}.jpg" />
+      <img loading="lazy" class="bo-expansion-icon" src="/assets/wc3icons/${_icon(event.itemId)}.jpg" />
       <span class="bo-expansion-label">EXPANSION MADE</span>
       ${costStr ? `<span class="bo-expansion-cost">${costStr}</span>` : ''}`;
     return bar;
@@ -1147,7 +1147,7 @@ const BuildOrderRenderer = class {
     const iconSrc = safeId ? `/assets/wc3icons/${safeId}.jpg` : '';
     const label = _esc(String(event.displayName == null ? '' : event.displayName).toUpperCase());
     bar.innerHTML = `
-      ${iconSrc ? `<img class="bo-expansion-icon" src="${iconSrc}" onerror="this.style.display='none'" />` : ''}
+      ${iconSrc ? `<img loading="lazy" class="bo-expansion-icon" src="${iconSrc}" onerror="this.style.display='none'" />` : ''}
       <span class="bo-scout-label">${label}</span>`;
     return bar;
   }
@@ -1237,9 +1237,9 @@ const BuildOrderRenderer = class {
     const isUnknown = !event.itemId;
     if (event.confidence === 'low' || isUnknown) bar.classList.add('bo-item-uncertain');
 
-    const iconSrc = event.itemId
-      ? `/assets/wc3icons/${_icon(event.itemId)}.jpg`
-      : '/assets/wc3icons/PASBTNHelpDisabled.jpg';
+    // No itemId → emit no icon (empty src; _safeIconSrc drops it). The old
+    // PASBTNHelpDisabled.jpg placeholder isn't shipped, so it 404'd on R2.
+    const iconSrc = event.itemId ? `/assets/wc3icons/${_icon(event.itemId)}.jpg` : '';
     const iconHtml = this.buildIconWithCost(iconSrc, 0, 0, true);
     const label = 'USE';
 
@@ -1259,9 +1259,9 @@ const BuildOrderRenderer = class {
     bar.classList.add('bo-item-pickup');
     if (event.confidence === 'low' || event.isRandomDrop) bar.classList.add('bo-item-uncertain');
 
-    const iconSrc = event.itemId
-      ? `/assets/wc3icons/${_icon(event.itemId)}.jpg`
-      : '/assets/wc3icons/PASBTNHelpDisabled.jpg';
+    // No itemId → emit no icon (see renderItemUseCard); avoids a 404 for the
+    // unshipped PASBTNHelpDisabled.jpg placeholder.
+    const iconSrc = event.itemId ? `/assets/wc3icons/${_icon(event.itemId)}.jpg` : '';
     const iconHtml = this.buildIconWithCost(iconSrc, 0, 0, true);
     const label = event.campUuid ? 'LOOT' : 'PICKUP';
 
@@ -1353,7 +1353,7 @@ const BuildOrderRenderer = class {
         const levelHidden = level === 0 ? ' hidden' : '';
 
         skillsHtml += `<span class="${classes.join(' ')}" title="${_attr(name)}">
-          <img class="bo-skill-icon ${dimClass}" src="/assets/wc3icons/${sid}.jpg" />
+          <img loading="lazy" class="bo-skill-icon ${dimClass}" src="/assets/wc3icons/${sid}.jpg" />
           <span class="bo-skill-level${levelHidden}">${level || ''}</span>
         </span>`;
       });
@@ -1362,7 +1362,7 @@ const BuildOrderRenderer = class {
       const skillName = event.firstSkill ? (event.firstSkill.displayName || '') : '';
       skillsHtml = `<div class="bo-training-skills">
         <span class="bo-skill bo-skill-lg active" title="${_attr(skillName)}">
-          <img class="bo-skill-icon" src="/assets/wc3icons/${_icon(event.firstSkillItemId)}.jpg" />
+          <img loading="lazy" class="bo-skill-icon" src="/assets/wc3icons/${_icon(event.firstSkillItemId)}.jpg" />
           <span class="bo-skill-level">1</span>
         </span>
       </div>`;
@@ -1370,7 +1370,7 @@ const BuildOrderRenderer = class {
 
     card.innerHTML = `
       <div class="bo-hero-portrait-col">
-        <img class="bo-hero-portrait" src="/assets/wc3icons/${_icon(event.itemId)}.jpg"
+        <img loading="lazy" class="bo-hero-portrait" src="/assets/wc3icons/${_icon(event.itemId)}.jpg"
           style="border-color:${_attr(playerColor)}" />
         <span class="bo-hero-card-badge ${badgeClass}" ${badgeBg}>${badgeText}</span>
       </div>
@@ -1411,7 +1411,7 @@ const BuildOrderRenderer = class {
         const levelHidden = level === 0 ? ' hidden' : '';
 
         skillsHtml += `<span class="${classes.join(' ')}" title="${_attr(name)}">
-          <img class="bo-skill-icon ${dimClass}" src="/assets/wc3icons/${sid}.jpg" />
+          <img loading="lazy" class="bo-skill-icon ${dimClass}" src="/assets/wc3icons/${sid}.jpg" />
           <span class="bo-skill-level${levelHidden}">${level || ''}</span>
         </span>`;
       });
@@ -1426,7 +1426,7 @@ const BuildOrderRenderer = class {
 
     const heroLevel = Number(event.level) || 0;
     card.innerHTML = `
-      <img class="bo-level-portrait" src="/assets/wc3icons/${_icon(event.itemId)}.jpg" />
+      <img loading="lazy" class="bo-level-portrait" src="/assets/wc3icons/${_icon(event.itemId)}.jpg" />
       <div class="bo-level-info">
         <span class="bo-level-title">${_esc(event.displayName)} -> Lv ${heroLevel}</span>
         <div class="bo-level-skills">${skillsHtml}</div>
@@ -1520,8 +1520,8 @@ const BuildOrderRenderer = class {
         // icon paths come from ATTACK_TYPES/ARMOR_TYPES (Constants.js) — trusted,
         // so use them raw. Routing them through _attr() would truncate at 32
         // chars + "…" and break the longer ones (e.g. def-unarmored.jpg → 404).
-        if (atkInfo) typeIcons += `<img class="bo-row-type-icon" src="${this._safeIconSrc(atkInfo.icon)}" title="${_attr(atkInfo.label)} attack" />`;
-        if (defInfo) typeIcons += `<img class="bo-row-type-icon" src="${this._safeIconSrc(defInfo.icon)}" title="${_attr(defInfo.label)} armor" />`;
+        if (atkInfo) typeIcons += `<img loading="lazy" class="bo-row-type-icon" src="${this._safeIconSrc(atkInfo.icon)}" title="${_attr(atkInfo.label)} attack" />`;
+        if (defInfo) typeIcons += `<img loading="lazy" class="bo-row-type-icon" src="${this._safeIconSrc(defInfo.icon)}" title="${_attr(defInfo.label)} armor" />`;
       }
       descText = `${countPrefix}${_esc(verb)} ${safeName}${typeIcons}`;
     }
@@ -1530,7 +1530,7 @@ const BuildOrderRenderer = class {
     const safeItemId = _icon(itemId);
     const iconHtml = showCost
       ? this.buildIconWithCost(`/assets/wc3icons/${safeItemId}.jpg`, gold, lumber)
-      : `<img class="bo-row-icon" src="/assets/wc3icons/${safeItemId}.jpg" />`;
+      : `<img loading="lazy" class="bo-row-icon" src="/assets/wc3icons/${safeItemId}.jpg" />`;
     row.innerHTML = `
       <div class="bo-row-desc">
         ${iconHtml}
@@ -1561,7 +1561,7 @@ const BuildOrderRenderer = class {
           ? 'Training...'
           : `Lv${lvl}`;
         heroItems += `<span class="bo-summary-hero ${statusClass}">
-          <img class="bo-summary-icon hero" src="/assets/wc3icons/${_icon(h.itemId)}.jpg" title="${_attr(h.displayName)}" />
+          <img loading="lazy" class="bo-summary-icon hero" src="/assets/wc3icons/${_icon(h.itemId)}.jpg" title="${_attr(h.displayName)}" />
           <span class="bo-summary-hero-label">${itemLabel}</span>
         </span>`;
       });
@@ -1579,7 +1579,7 @@ const BuildOrderRenderer = class {
         const c = Number(unit.count) || 0;
         const countStr = c > 1 ? `<span class="bo-army-count">x${c}</span>` : '';
         armyItems += `<span class="bo-summary-unit">
-          <img class="bo-summary-icon" src="/assets/wc3icons/${_icon(unit.itemId)}.jpg" title="${_attr(unit.displayName)}" />${countStr}
+          <img loading="lazy" class="bo-summary-icon" src="/assets/wc3icons/${_icon(unit.itemId)}.jpg" title="${_attr(unit.displayName)}" />${countStr}
         </span>`;
       });
 
@@ -1601,13 +1601,13 @@ const BuildOrderRenderer = class {
         const iconId = _icon(upg.icon);
         const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
         const upgLvl = Number(upg.level) || 0;
-        upgradeItems += `<span class="bo-summary-upgrade atk"><img class="bo-summary-icon" src="${iconSrc}" title="${_attr(upg.displayName)} ${upgLvl}" onerror="this.style.display='none'" /><span class="bo-upgrade-badge atk">${upgLvl}</span></span>`;
+        upgradeItems += `<span class="bo-summary-upgrade atk"><img loading="lazy" class="bo-summary-icon" src="${iconSrc}" title="${_attr(upg.displayName)} ${upgLvl}" onerror="this.style.display='none'" /><span class="bo-upgrade-badge atk">${upgLvl}</span></span>`;
       });
       Object.values(upgrades.defense).forEach(upg => {
         const iconId = _icon(upg.icon);
         const iconSrc = iconId ? `/assets/wc3icons/${iconId}.jpg` : '';
         const upgLvl = Number(upg.level) || 0;
-        upgradeItems += `<span class="bo-summary-upgrade def"><img class="bo-summary-icon" src="${iconSrc}" title="${_attr(upg.displayName)} ${upgLvl}" onerror="this.style.display='none'" /><span class="bo-upgrade-badge def">${upgLvl}</span></span>`;
+        upgradeItems += `<span class="bo-summary-upgrade def"><img loading="lazy" class="bo-summary-icon" src="${iconSrc}" title="${_attr(upg.displayName)} ${upgLvl}" onerror="this.style.display='none'" /><span class="bo-upgrade-badge def">${upgLvl}</span></span>`;
       });
       upgrades.researched.forEach(r => {
         const iconId = _icon(r.icon || r.itemId);
@@ -1615,7 +1615,7 @@ const BuildOrderRenderer = class {
         const rLvl = Number(r.level) || 0;
         const lvl = rLvl > 1 ? ` ${rLvl}` : '';
         upgradeItems += `<span class="bo-summary-upgrade ability">
-          <img class="bo-summary-icon" src="${iconSrc}" title="${_attr(r.displayName)}" onerror="this.style.display='none'" /><span class="bo-upgrade-name">${_esc(r.displayName)}${lvl}</span>
+          <img loading="lazy" class="bo-summary-icon" src="${iconSrc}" title="${_attr(r.displayName)}" onerror="this.style.display='none'" /><span class="bo-upgrade-name">${_esc(r.displayName)}${lvl}</span>
         </span>`;
       });
       upgradesHtml = `<div class="bo-summary-section">
