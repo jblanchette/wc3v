@@ -1,0 +1,1218 @@
+/* ============================================================
+   redesign.css: production token layer + shared components for
+   the WC3V homepage redesign. Shipped from client/proto/proto.css
+   (DESIGN-SYSTEM.md §2-§7, §10, §12) with the prototype-only
+   .proto-banner styles dropped. Self-contained: does NOT depend on
+   main.css.
+
+   Headline rule (§1): the chrome accent is --accent (#5B8DEF) and
+   is DISTINCT from Human race blue (--race-H #4488FF). The four race
+   colors are DATA ONLY, never the app's button/focus/link/selected
+   color. Page CSS composes/positions; it does not re-skin (§10).
+   ============================================================ */
+
+:root {
+  /* ── §2.1 Surfaces & elevation (dark, lighter = higher) ─────── */
+  --bg-deep:   #12131f;
+  --bg:        #1a1d2e;
+  --surface:   #212538;
+  --surface-2: #2a2f45;
+  --surface-3: #323750;
+  --surface-4: #3b4060;
+
+  /* ── §2.2 Borders & dividers ───────────────────────────────── */
+  --border:    rgba(255,255,255,0.10);
+  --border-2:  rgba(255,255,255,0.18);
+  --border-3:  rgba(255,255,255,0.26);
+  --wash:      rgba(255,255,255,0.05);  /* faint translucent-white surface wash */
+
+  /* ── §2.3 Text ─────────────────────────────────────────────── */
+  --text:           #e8eaf0;
+  --text-muted:     #9ca3b8;
+  --text-dim:       #6b7290;
+  --text-on-accent: #ffffff;
+  --text-on-gold:   #2a2107;
+
+  /* ── §2.4 Chrome accent (the app's own color, NOT Human) ──── */
+  --accent:        #5B8DEF;
+  --accent-strong: #6E9CF5;
+  --accent-deep:   #3F6FD0;
+  --accent-soft:   rgba(91,141,239,0.14);
+  --accent-ring:   rgba(91,141,239,0.55);
+
+  /* ── §2.5 Gold (achievement / "your build" / premium) ──────── */
+  --gold:      #FFD24D;
+  --gold-deep: #E0A800;
+  --gold-ink:  #2a2107;
+  --gold-soft: rgba(240,178,50,0.12);
+  --gold-edge: rgba(240,178,50,0.45);
+
+  /* ── §2.6 Resource accents (data only) ─────────────────────── */
+  --lumber:   #44DD88;
+  --gold-res: var(--gold);
+
+  /* ── §2.7 Race-as-data palette (base values) ───────────────── */
+  --race-H: #4488FF;  /* Human, kept exactly as in-game blue (now != chrome) */
+  --race-O: #FF4444;  /* Orc       */
+  --race-E: #44DD88;  /* Night Elf */
+  --race-U: #AA66FF;  /* Undead    */
+  /* Undead-derived edge/wash, available at :root for the welcome-gate's
+     "analyzer" wayfinding path (§6.4) where no [data-race] is set. */
+  --race-U-edge: #7848a8;
+  --race-soft-u: rgba(170,102,255,0.16);
+
+  /* ── §2.8 Grade scale (letter + color; gradeColor() lockstep) ─ */
+  --grade-a:    #6EE7A8;
+  --grade-b:    #8FD0FF;
+  --grade-c:    #F0C674;
+  --grade-d:    #F0A86A;
+  --grade-f:    #F08A8A;
+  --grade-none: #9ca3b8;
+
+  /* ── §2.9 Tier scale (matches the real app) ────────────────── */
+  --tier-1: #FFFFFF;
+  --tier-2: #21A5E3;
+  --tier-3: #FFFF33;
+
+  /* ── §2.10 Semantic states (outcome / validity) ────────────── */
+  --ok:    #6EE7A8;  --ok-soft:   rgba(60,200,140,0.12);  --ok-edge:   rgba(80,200,140,0.40);
+  --warn:  #F0C674;  --warn-soft: rgba(240,178,50,0.12);  --warn-edge: rgba(240,178,50,0.40);
+  --bad:   #F08A8A;  --bad-soft:  rgba(220,80,80,0.12);    --bad-edge:  rgba(220,80,80,0.40);
+  --info:  var(--accent);
+  --privacy: #7FE0A8;
+  --privacy-soft: rgba(60,200,140,0.08);
+  --privacy-edge: rgba(80,200,140,0.35);
+  --privacy-hi:   #9af0c0;
+
+  /* ── §3 Typography ─────────────────────────────────────────── */
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --mono: 'Consolas', 'Cascadia Mono', monospace;
+
+  --fs-display: 2.1rem;   /* gate logo / hero number */
+  --fs-h1:      1.8rem;   /* page lead headline */
+  --fs-h2:      1.4rem;   /* section / card-title / best-fit title */
+  --fs-h3:      1.15rem;  /* drawer title, step title */
+  --fs-lg:      1.05rem;  /* emphasized body, large button */
+  --fs-base:    1.0rem;   /* body */
+  --fs-sm:      0.92rem;  /* secondary body, card body copy */
+  --fs-label:   0.85rem;  /* chips, small buttons, meta labels */
+  --fs-min:     0.8rem;   /* HARD FLOOR: abbrs, counts, eyebrows, mono tags */
+
+  /* ── §4.1 Spacing scale (4px base) ─────────────────────────── */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 22px; --sp-6: 30px; --sp-7: 40px; --sp-8: 56px;
+
+  /* ── §4.2 Radius ───────────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius:      8px;
+  --radius-lg:   14px;
+  --radius-xl:   22px;
+  --radius-pill: 999px;
+
+  /* ── §4.3 Minimum interactive / icon sizes (≥36px) ─────────── */
+  --ico-sm:  36px;
+  --ico-md:  44px;
+  --ico-lg:  56px;
+  --ico-xl:  64px;
+  --hit-min: 44px;
+
+  /* ── §5.1 Shadow ───────────────────────────────────────────── */
+  --shadow-1: 0 4px 14px rgba(0,0,0,0.30);
+  --shadow-2: 0 8px 26px rgba(0,0,0,0.40);
+  --shadow-3: 0 10px 40px rgba(0,0,0,0.45);
+  --shadow-drawer: -12px 0 40px rgba(0,0,0,0.50);
+
+  /* ── §5.2 Motion ───────────────────────────────────────────── */
+  --dur-fast: 0.12s;
+  --dur:      0.18s;
+  --ease:     cubic-bezier(0.2, 0.6, 0.2, 1);
+
+  /* ── §12.1 Build Order palette (faithful to the viewer's main.css --bo-*) ──
+     The BO surface is its own near-black navy - darker than --bg-deep - so a
+     BO panel reads as "a viewer instrument embedded in the page". */
+  --bo-bg:          #0F1923;  /* BO panel backdrop - deliberately darker than --bg-deep        */
+  --bo-card-bg:     #1A2332;  /* hero card / summary card / upgrade-bar base                   */
+  --bo-row-hover:   #1C2836;  /* action-row hover                                              */
+  --bo-header-bg:   #141D29;  /* column header / sticky ACTION·SUPPLY bar                       */
+  --bo-border:      rgba(48,54,61,0.4);  /* row divider (hairline, full-width - never an edge stripe) */
+  --bo-border-solid:#21262D;  /* icon tile border                                             */
+  --bo-supply-bg:   rgba(0,0,0,0.55);    /* supply pill / cost-strip fill                       */
+
+  --bo-gold:        #FFD700;  /* gold cost / "GOLD" worker tag  (data only)                   */
+  --bo-lumber:      #44DD88;  /* lumber cost / "LUMBER" worker tag (data only; == --lumber)    */
+  --bo-food:        #58A6FF;  /* food / supply-building accent                                 */
+  --bo-tavern:      #9B6DFF;  /* shop / tavern frame                                          */
+  --bo-accent:      #F0B232;  /* hero/level highlight, group-count, parchment-gold BO accent   */
+
+  --bo-text:        #C9D1D9;  /* BO body text                                                 */
+  --bo-text-muted:  #8B949E;  /* BO secondary                                                 */
+  --bo-text-dim:    #6E7681;  /* BO labels / counts                                           */
+
+  --bo-tier1:       #FFFFFF;  /* T1 white  (== --tier-1)                                       */
+  --bo-tier2:       #21A5E3;  /* T2 cyan   (== --tier-2)                                       */
+  --bo-tier3:       #FFFF33;  /* T3 yellow (== --tier-3)                                       */
+
+  /* completion / upkeep semantics (kept inside the BO so they match the app exactly) */
+  --bo-supply-ok:   #E8F0FF;  /* upkeep none (≤50 food)   */
+  --bo-supply-low:  #FF8C00;  /* low upkeep  (51-80)      */
+  --bo-supply-high: #FF4444;  /* high upkeep (>80)        */
+  --bo-complete:    #4ECDC4;  /* "+N supply" / building-complete teal */
+
+  --bo-mono:        var(--mono);  /* costs, supply, counts - same mono as the rest of the proto */
+}
+
+/* ── §2.7 Per-race resolved groups (selected via [data-race]) ──── */
+[data-race="H"]{ --race:#4488FF; --race-ink:#A8C8FF; --race-bg:#1e2848; --race-head:#283c6a;
+                 --race-bd:#3860b0; --race-bd-hi:#5888dd; --race-glow:rgba(80,130,220,0.22);
+                 --race-soft:rgba(68,136,255,0.14); }
+[data-race="O"]{ --race:#FF4444; --race-ink:#FF9A8A; --race-bg:#2c1e18; --race-head:#5a2820;
+                 --race-bd:#904030; --race-bd-hi:#bb5540; --race-glow:rgba(200,80,40,0.22);
+                 --race-soft:rgba(255,68,68,0.14); }
+[data-race="E"]{ --race:#44DD88; --race-ink:#8DEEB6; --race-bg:#162820; --race-head:#1e4830;
+                 --race-bd:#286848; --race-bd-hi:#389068; --race-glow:rgba(60,200,140,0.22);
+                 --race-soft:rgba(68,221,136,0.14); }
+[data-race="U"]{ --race:#AA66FF; --race-ink:#CDA6FF; --race-bg:#221a38; --race-head:#382858;
+                 --race-bd:#583880; --race-bd-hi:#7848a8; --race-glow:rgba(160,80,240,0.22);
+                 --race-soft:rgba(170,102,255,0.14); }
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+img { display: block; }
+
+/* ── §6.1 Buttons ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--hit-min);
+  padding: 12px 22px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-2);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast);
+  font-family: inherit;
+}
+.btn:hover { background: var(--surface-3); border-color: var(--border-2); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent-deep));
+  border-color: var(--accent);
+  color: var(--text-on-accent);
+  box-shadow: var(--shadow-1);
+}
+.btn-primary:hover { background: linear-gradient(180deg, var(--accent-strong), var(--accent)); }
+.btn-gold {
+  background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+  border-color: var(--gold);
+  color: var(--gold-ink);
+  box-shadow: var(--shadow-1);
+}
+.btn-gold:hover { background: linear-gradient(180deg, var(--gold), var(--gold)); }
+.btn-ghost { background: transparent; border-color: var(--border-2); color: var(--text-muted); }
+.btn-ghost:hover { background: var(--surface); color: var(--text); }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+.btn-lg { padding: 15px 30px; font-size: var(--fs-lg); }
+
+/* ── §6.5 Icon tiles & frames ───────────────────────────────────── */
+.ico {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+  object-fit: cover;
+}
+.ico-frame {
+  position: relative;
+  display: inline-flex;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid var(--race-bd, var(--border-2));
+  background: var(--bg-deep);
+}
+
+/* ── §6.3 Pills (static labels) ─────────────────────────────────── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-min);
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+.pill-race { background: var(--race-soft); color: var(--race-ink); border-color: color-mix(in srgb, var(--race) 40%, transparent); }
+.pill-good { color: var(--ok);   border-color: var(--ok-edge);   background: var(--ok-soft); }
+.pill-warn { color: var(--warn); border-color: var(--warn-edge); background: var(--warn-soft); }
+.pill-bad  { color: var(--bad);  border-color: var(--bad-edge);  background: var(--bad-soft); }
+.pill-dim  { color: var(--text-dim); }
+
+.diff-easy   { color: var(--ok); }
+.diff-medium { color: var(--warn); }
+.diff-hard   { color: var(--bad); }
+
+/* ── §8 Header bar shared by learn / experienced ────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 26px;
+  background: linear-gradient(180deg, var(--surface-4), var(--surface));
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.topbar-logo { font-weight: 800; letter-spacing: 0.06em; font-size: 1.25rem; color: var(--text); }
+.topbar-logo span { color: var(--accent); }
+.topbar-sub { color: var(--text-muted); font-size: var(--fs-sm); }
+.topbar-spacer { flex: 1; }
+
+/* ── §6.2 Segmented control (band switcher) ─────────────────────── */
+.seg {
+  display: inline-flex;
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  gap: 2px;
+}
+.seg button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.seg button.on { background: var(--accent); color: var(--text-on-accent); }
+
+.mode-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius-pill);
+  padding: 7px 14px;
+}
+.mode-link:hover { color: var(--text); border-color: var(--accent); text-decoration: none; }
+
+/* browser-only privacy badge */
+.priv {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--mono);
+  font-size: var(--fs-min);
+  line-height: 1.15;
+  color: var(--privacy);
+  border: 1px solid var(--privacy-edge);
+  background: var(--privacy-soft);
+  padding: 6px 11px;
+  border-radius: var(--radius);
+}
+.priv b { display:block; letter-spacing: 0.08em; color: var(--privacy-hi); }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 26px; }
+
+.section-title { font-size: var(--fs-h2); font-weight: 800; margin: 0 0 var(--sp-1); }
+.section-sub { color: var(--text-muted); margin: 0 0 18px; }
+
+.muted { color: var(--text-muted); }
+.dim { color: var(--text-dim); }
+
+/* ── §9 a11y + motion (shared) ──────────────────────────────────── */
+:where(a, button, [tabindex], input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* ── topbar responsive ──────────────────────────────────────────── */
+@media (max-width: 760px) {
+  .topbar { flex-wrap: wrap; gap: 10px 12px; padding: 12px 16px; }
+  .topbar .topbar-spacer { flex-basis: 100%; height: 0; }
+  .topbar .priv { display: none; }
+}
+
+/* compact upload control for the topbar action cluster */
+.topbar-upload { padding: 9px 16px; gap: var(--sp-2); }
+.topbar-upload .tu-ico { font-size: 1rem; }
+
+/* ================================================================
+   §12 BUILD ORDER - the one canonical look (sacred)
+   Ported from the viewer's BuildOrderRenderer + main.css --bo-* so the
+   proto and the app never drift. ONE build-order look across every
+   surface (pro card / drawer / best-fit). All classes bo-*-prefixed.
+   §10/§12.4: NO single-edge color stripes - worker/upgrade edges are
+   re-expressed as tag pills + gradient fills + badges. The only
+   sanctioned sub-floor element is the 28px action-row icon + 9px cost
+   strip (§12.2.1).
+   ================================================================ */
+
+/* ── §12.0 BO panel surface (the near-black navy instrument) ─────── */
+.bo-panel {
+  background: var(--bo-bg);
+  border: 1px solid var(--bo-border-solid);
+  border-radius: var(--radius);
+  color: var(--bo-text);
+  padding: var(--sp-1) 0;
+}
+.bo-col-header {
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 7px var(--sp-3);
+  background: var(--bo-header-bg);
+  border-bottom: 1px solid var(--bo-border);
+  position: sticky; top: 0; z-index: 2;
+}
+.bo-col-h-desc, .bo-col-h-supply {
+  font-family: var(--bo-mono); font-size: var(--fs-min); font-weight: 700;
+  letter-spacing: 0.06em; color: var(--bo-text-dim);
+}
+.bo-col-h-supply { text-align: right; }
+
+/* ── §12.2.1 BO action row - .bo-row (the atom) ─────────────────── */
+.bo-row {
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 30px;
+  padding: 4px var(--sp-3);
+  border-bottom: 1px solid var(--bo-border);
+}
+.bo-row:hover { background: var(--bo-row-hover); }
+.bo-row-desc { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.bo-row-text { font-size: 13px; color: var(--bo-text); overflow-wrap: break-word; line-height: 1.25; }
+
+/* icon + welded cost strip (the ONE sanctioned sub-floor element) */
+.bo-icon-wrap { position: relative; width: 32px; flex: 0 0 auto; display: flex; justify-content: center; }
+.bo-row-icon {
+  width: 28px; height: 28px; border-radius: var(--radius-sm);
+  border: 2px solid var(--bo-border-solid); background: var(--bo-bg); object-fit: cover;
+}
+.bo-icon-wrap.has-cost .bo-row-icon { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.bo-icon-cost {
+  position: absolute; left: 50%; bottom: -1px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 2px;
+  padding: 0 3px; min-width: 28px; justify-content: center;
+  background: var(--bo-supply-bg); border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-family: var(--bo-mono); font-size: 9px; line-height: 11px; white-space: nowrap;
+}
+.bo-cost-gold   { color: var(--bo-gold); }
+.bo-cost-lumber { color: var(--bo-lumber); }
+.bo-icon-cost-sep { color: var(--bo-text-dim); }
+
+/* group count + first-appearance type icons */
+.bo-unit-count { color: var(--bo-accent); font-weight: 800; }
+.bo-row-type-icon { width: 18px; height: 18px; border-radius: 3px; margin-left: 4px; vertical-align: middle; }
+
+/* supply pill (right cell) - only when supply changed */
+.bo-row-supply {
+  justify-self: end; display: flex; flex-direction: column; align-items: center;
+  padding: 2px 5px; min-width: 40px;
+  background: var(--bo-supply-bg); border: 1px solid var(--bo-border);
+  border-radius: var(--radius-sm); font-family: var(--bo-mono); line-height: 1.1;
+}
+.bo-supply-nums { font-size: var(--fs-min); font-weight: 700; }
+.bo-supply-sep { color: var(--bo-text-dim); }
+.bo-supply-upkeep { font-size: 8px; letter-spacing: 0.04em; text-transform: uppercase; }
+.bo-upkeep-none .bo-supply-nums { color: var(--bo-supply-ok); }
+.bo-upkeep-low  .bo-supply-nums, .bo-upkeep-low  .bo-supply-upkeep { color: var(--bo-supply-low); }
+.bo-upkeep-high .bo-supply-nums, .bo-upkeep-high .bo-supply-upkeep { color: var(--bo-supply-high); }
+
+/* ── §12.2.2 Worker / resource tag - .bo-assign-tag (pill, NOT a stripe) ── */
+.bo-assign-tag {
+  display: inline-flex; align-items: center;
+  margin-left: 6px; padding: 1px 6px; border-radius: var(--radius-pill);
+  font-size: 10px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.bo-assign-tag.tag-gold   { color: var(--bo-gold);   background: rgba(255,215,0,0.13);  border: 1px solid rgba(255,215,0,0.4); }
+.bo-assign-tag.tag-lumber { color: var(--bo-lumber); background: rgba(68,221,136,0.13); border: 1px solid rgba(68,221,136,0.4); }
+.bo-assign-tag.tag-build  { color: var(--bo-food);   background: rgba(88,166,255,0.13); border: 1px solid rgba(88,166,255,0.4); }
+
+/* ── §12.2.3 Completion badge - .bo-supply-badge ────────────────── */
+.bo-row.supply-complete-row { background: rgba(78,205,196,0.06); }
+.bo-supply-badge {
+  display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 7px;
+  border-radius: var(--radius-pill); font-family: var(--bo-mono); font-size: 10px; font-weight: 800;
+  color: var(--bo-complete); background: rgba(78,205,196,0.13); border: 1px solid rgba(78,205,196,0.4);
+}
+.bo-hero-complete-badge {
+  display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 7px;
+  border-radius: var(--radius-pill); font-family: var(--bo-mono); font-size: 10px; font-weight: 800;
+  color: var(--bo-accent); background: rgba(240,178,50,0.13); border: 1px solid rgba(240,178,50,0.4);
+}
+
+/* ── §12.2.4 Hero row card - .bo-hero-card / level-up card ───────── */
+.bo-hero-card {
+  display: flex; align-items: center; gap: 11px; min-height: 56px;
+  margin: 6px var(--sp-2); padding: 8px 10px;
+  background: var(--bo-card-bg); border: 1px solid var(--bo-border); border-radius: var(--radius-sm);
+}
+.bo-hero-portrait {
+  width: 46px; height: 46px; flex: 0 0 auto; border-radius: var(--radius-sm); object-fit: cover;
+  border: 2px solid var(--player-color, var(--bo-accent));
+}
+.bo-hero-card-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.bo-hero-card-name { font-size: 13px; font-weight: 700; color: var(--bo-text); overflow-wrap: break-word; }
+.bo-hero-badge {
+  display: inline-flex; align-self: flex-start; align-items: center; padding: 1px 8px;
+  border-radius: var(--radius-pill); font-family: var(--bo-mono); font-size: 10px; font-weight: 800;
+  color: #1a1208; background: var(--player-color, var(--bo-accent));
+}
+.bo-hero-badge.tavern { color: #fff; background: var(--bo-tavern); }
+
+.bo-hero-level-card {
+  display: flex; align-items: center; gap: 9px; min-height: 42px;
+  margin: 5px var(--sp-2); padding: 6px 10px;
+  background: var(--bo-card-bg); border: 1px solid var(--bo-border); border-radius: var(--radius-sm);
+}
+.bo-level-portrait {
+  width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--player-color, var(--bo-accent));
+}
+.bo-level-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.bo-level-title { font-size: 13px; font-weight: 700; color: var(--bo-text); overflow-wrap: break-word; }
+
+/* skill strip + skill icons (shared with the summary card §12.2.8) */
+.bo-skill-strip, .bo-level-skills { display: flex; gap: 5px; flex-wrap: wrap; }
+.bo-skill { position: relative; display: inline-flex; }
+.bo-skill-icon {
+  width: 22px; height: 22px; border-radius: var(--radius-sm); object-fit: cover;
+  border: 2px solid var(--bo-border-solid); background: var(--bo-bg);
+}
+.bo-skill.bo-skill-lg .bo-skill-icon { width: 28px; height: 28px; }
+.bo-skill-icon.dimmed, .bo-skill.dimmed .bo-skill-icon { opacity: 0.55; }
+.bo-skill.learned .bo-skill-icon { border-color: rgba(255,255,255,0.7); }
+.bo-skill.active  .bo-skill-icon { border-color: var(--bo-accent); }
+.bo-skill-ult .bo-skill-icon { border-color: #c8893c; }
+.bo-skill-level {
+  position: absolute; right: -3px; bottom: -3px; min-width: 13px; height: 13px; padding: 0 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--bo-mono); font-size: 9px; font-weight: 800; line-height: 1;
+  color: var(--bo-text); background: var(--bo-supply-bg); border-radius: var(--radius-pill);
+}
+.bo-skill.active .bo-skill-level { color: var(--bo-accent); }
+.bo-skill-level.hidden { display: none; }
+
+/* ── §12.2.5 Tier-complete divider - .bo-tier-complete-card ──────── */
+.bo-tier-complete-card { margin: var(--sp-2) var(--sp-2) var(--sp-3); }
+.bo-tier-complete-header {
+  display: flex; align-items: center; gap: var(--sp-2); padding: 7px 11px;
+  background: var(--bo-card-bg); border: 1px solid var(--bo-border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.bo-tier-complete-card.tier-2 .bo-tier-complete-header { background: linear-gradient(90deg, rgba(33,165,227,0.18), var(--bo-card-bg)); }
+.bo-tier-complete-card.tier-3 .bo-tier-complete-header { background: linear-gradient(90deg, rgba(255,255,51,0.16), var(--bo-card-bg)); }
+.bo-tier-complete-icon { width: 24px; height: 24px; border-radius: var(--radius-sm); border: 1px solid var(--bo-border-solid); }
+.bo-tier-complete-label {
+  flex: 1; font-family: var(--bo-mono); font-size: var(--fs-min); font-weight: 800; letter-spacing: 0.05em;
+}
+.bo-tier-complete-card.tier-2 .bo-tier-complete-label { color: var(--bo-tier2); }
+.bo-tier-complete-card.tier-3 .bo-tier-complete-label { color: var(--bo-tier3); }
+.bo-tier-complete-time { font-family: var(--bo-mono); font-size: var(--fs-min); color: var(--bo-text-muted); }
+
+/* ── §12.2.6 Tier summary block - .bo-army-summary ──────────────── */
+.bo-army-summary {
+  max-width: 380px; margin: 0 var(--sp-2) var(--sp-2);
+  background: var(--bo-card-bg); border: 1px solid var(--bo-border); border-radius: var(--radius-sm);
+  padding: 9px 11px; display: flex; flex-direction: column; gap: 8px;
+}
+.bo-tier-complete-card .bo-army-summary { margin: 0; border-radius: 0 0 var(--radius-sm) var(--radius-sm); border-top: 0; }
+.bo-summary-header { font-family: var(--bo-mono); font-size: var(--fs-min); font-weight: 800; letter-spacing: 0.06em; color: var(--bo-accent); }
+.bo-summary-section { display: grid; grid-template-columns: 68px 1fr; align-items: start; gap: var(--sp-2); }
+.bo-summary-label { font-family: var(--bo-mono); font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.05em; color: var(--bo-text-dim); padding-top: 4px; }
+.bo-summary-items { display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start; }
+
+.bo-summary-hero { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.bo-summary-icon {
+  width: 36px; height: 36px; border-radius: var(--radius-sm); object-fit: cover;
+  border: 2px solid var(--bo-border-solid); background: var(--bo-bg);
+}
+.bo-summary-icon.hero { border-radius: 50%; border-color: var(--bo-accent); }
+.bo-summary-hero-label { font-family: var(--bo-mono); font-size: var(--fs-min); color: var(--bo-accent); }
+.bo-summary-hero.training .bo-summary-hero-label { color: var(--bo-text-muted); }
+
+.bo-summary-unit { position: relative; display: inline-flex; }
+.bo-army-count {
+  position: absolute; right: -4px; bottom: -4px; padding: 0 4px; height: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--bo-mono); font-size: 9px; font-weight: 800; color: var(--bo-text);
+  background: var(--bo-supply-bg); border-radius: var(--radius-pill);
+}
+
+.bo-summary-upgrade { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.bo-upgrade-badge {
+  position: absolute; right: -4px; bottom: -4px; min-width: 14px; height: 14px; padding: 0 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--bo-mono); font-size: 9px; font-weight: 800; color: #1a1208; border-radius: var(--radius-pill);
+}
+.bo-upgrade-badge.atk { background: #f08080; }
+.bo-upgrade-badge.def { background: #7ab8f5; }
+.bo-upgrade-name { font-size: 13px; color: var(--bo-tavern); }
+
+/* ── §12.2.7 Upgrade / research bar - .bo-research-bar (gradient, NO stripe) ── */
+.bo-research-bar {
+  display: flex; align-items: center; min-height: 32px;
+  margin: 4px var(--sp-2); padding: 5px 9px; border-radius: var(--radius-sm);
+  border: 1px solid var(--bo-border);
+}
+.bo-research-bar .bo-row-desc { gap: var(--sp-2); flex: 1; min-width: 0; }
+.bo-attack-upgrade  { background: linear-gradient(90deg, rgba(220,80,80,0.26), rgba(220,80,80,0.05)); }
+.bo-defense-upgrade { background: linear-gradient(90deg, rgba(90,150,235,0.26), rgba(90,150,235,0.05)); }
+.bo-ability-research{ background: linear-gradient(90deg, rgba(150,90,235,0.26), rgba(150,90,235,0.05)); }
+.bo-research-badge {
+  flex: 0 0 auto; padding: 1px 7px; border-radius: var(--radius-sm);
+  font-family: var(--bo-mono); font-size: 10px; font-weight: 800; letter-spacing: 0.03em;
+}
+.bo-research-badge.atk { color: #f08080; background: rgba(220,80,80,0.18); border: 1px solid rgba(220,80,80,0.45); }
+.bo-research-badge.def { color: #7ab8f5; background: rgba(90,150,235,0.18); border: 1px solid rgba(90,150,235,0.45); }
+.bo-research-label {
+  flex: 0 0 auto; padding: 1px 7px; border-radius: var(--radius-sm);
+  font-family: var(--bo-mono); font-size: 10px; font-weight: 800; letter-spacing: 0.03em;
+  color: var(--bo-tavern); background: rgba(150,90,235,0.18); border: 1px solid rgba(150,90,235,0.45);
+}
+.bo-research-name { font-size: 13px; color: var(--bo-text); overflow-wrap: break-word; }
+
+/* ── §12.2.8 Build summary card - .bo-summary-card (the compact pro card) ── */
+.bo-summary-card {
+  display: flex; flex-direction: column; min-width: 0;
+  background: var(--bo-card-bg); border: 1px solid var(--bo-border-solid);
+  border-radius: var(--radius-lg); overflow: hidden; color: var(--bo-text);
+}
+/* race watermark via a faint diagonal wash keyed to --race (data, not a stripe) */
+.bo-sc-head {
+  display: flex; align-items: center; gap: 11px; padding: 12px 14px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--race, var(--bo-accent)) 16%, transparent), transparent 70%),
+    var(--bo-header-bg);
+  border-bottom: 1px solid var(--bo-border);
+  cursor: pointer; font-family: inherit; color: var(--bo-text); text-align: left; width: 100%;
+  border-left: 0; border-right: 0; border-top: 0;
+}
+.bo-sc-head:hover { background:
+    linear-gradient(135deg, color-mix(in srgb, var(--race, var(--bo-accent)) 24%, transparent), transparent 70%),
+    var(--bo-header-bg); }
+.bo-sc-hero-ico {
+  width: 44px; height: 44px; flex: 0 0 auto; border-radius: var(--radius); object-fit: cover;
+  border: 2px solid color-mix(in srgb, var(--race, var(--bo-accent)) 60%, var(--bo-border-solid));
+}
+.bo-sc-htxt { min-width: 0; flex: 1; }
+.bo-sc-title { font-size: var(--fs-base); font-weight: 800; overflow-wrap: break-word; color: var(--text); }
+.bo-sc-matchups { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+/* opponent-race-tinted matchup pill - --opp-color set inline from raceColor(opp) */
+.bo-sc-matchup {
+  font-family: var(--bo-mono); font-size: var(--fs-min); font-weight: 700; padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  color: var(--opp-color, var(--bo-text-muted));
+  background: color-mix(in srgb, var(--opp-color, var(--bo-text-muted)) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--opp-color, var(--bo-text-muted)) 45%, transparent);
+}
+.bo-sc-chev { flex: 0 0 auto; color: var(--bo-text-dim); font-size: 1.1rem; }
+
+.bo-sc-body { padding: 11px 14px; display: flex; flex-direction: column; gap: 11px; min-width: 0; }
+.bo-sc-block { display: flex; flex-direction: column; gap: 7px; }
+.bo-sc-block + .bo-sc-block { padding-top: 11px; border-top: 1px solid var(--bo-border); }
+.bo-sc-block-label { font-family: var(--bo-mono); font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; color: var(--bo-text-dim); }
+
+/* heroes: portrait + ordinal + 2-col skill grid */
+.bo-sc-heroes { display: flex; gap: 14px; flex-wrap: wrap; }
+.bo-sc-hero { display: flex; gap: 9px; align-items: flex-start; min-width: 0; }
+.bo-sc-hero-port { position: relative; flex: 0 0 auto; }
+.bo-sc-hero-port img {
+  width: 44px; height: 44px; border-radius: var(--radius); object-fit: cover;
+  border: 2px solid var(--bo-accent);
+}
+.bo-sc-hero-ord {
+  position: absolute; left: -5px; top: -5px; width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--bo-mono); font-size: 9px; font-weight: 800; color: #1a1208;
+  background: var(--bo-accent); border-radius: 50%; border: 1px solid var(--bo-bg);
+}
+.bo-sc-hero-2nd .bo-sc-hero-ord { background: var(--bo-text-muted); color: var(--bo-bg); }
+.bo-sc-skills { display: grid; grid-template-columns: repeat(2, auto); gap: 5px; }
+
+/* key units */
+.bo-sc-units { display: flex; gap: 10px; flex-wrap: wrap; }
+.bo-sc-key-unit { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 78px; }
+.bo-sc-key-unit img {
+  width: 40px; height: 40px; border-radius: var(--radius-sm); object-fit: cover;
+  border: 2px solid var(--bo-border-solid); background: var(--bo-bg);
+}
+.bo-sc-key-unit span { font-size: var(--fs-min); color: var(--bo-text-muted); text-align: center; overflow-wrap: break-word; line-height: 1.15; }
+
+/* expo marker */
+.bo-expo-marker {
+  display: inline-flex; align-self: flex-start; align-items: center; gap: 5px; padding: 2px 9px;
+  border-radius: var(--radius-pill); font-size: var(--fs-min); font-weight: 700;
+}
+.bo-expo-marker.expanded { color: var(--ok); background: var(--ok-soft); border: 1px solid var(--ok-edge); }
+.bo-expo-marker.no-expo  { color: var(--bo-text-dim); background: rgba(110,118,129,0.12); border: 1px solid var(--bo-border); }
+
+/* ATK / DEF / RES upgrade rows */
+.bo-sc-upgrades { display: flex; flex-direction: column; gap: 5px; }
+.bo-sc-upgrade { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.bo-sc-upgrade img {
+  width: 28px; height: 28px; flex: 0 0 auto; border-radius: var(--radius-sm); object-fit: cover;
+  border: 2px solid var(--bo-border-solid); background: var(--bo-bg);
+}
+.bo-sc-upg-badge {
+  flex: 0 0 auto; min-width: 38px; text-align: center; padding: 1px 6px; border-radius: var(--radius-sm);
+  font-family: var(--bo-mono); font-size: 10px; font-weight: 800;
+}
+.bo-sc-upgrade.atk .bo-sc-upg-badge { color: #f08080; background: rgba(220,80,80,0.16); border: 1px solid rgba(220,80,80,0.4); }
+.bo-sc-upgrade.def .bo-sc-upg-badge { color: #7ab8f5; background: rgba(90,150,235,0.16); border: 1px solid rgba(90,150,235,0.4); }
+.bo-sc-upgrade.res .bo-sc-upg-badge { color: var(--bo-tavern); background: rgba(150,90,235,0.16); border: 1px solid rgba(150,90,235,0.4); }
+.bo-sc-upg-name { font-size: 13px; color: var(--bo-text); overflow-wrap: break-word; }
+
+/* the vertical action-row stream container (drawer surface) */
+.bo-stream { background: var(--bo-bg); border: 1px solid var(--bo-border-solid); border-radius: var(--radius); overflow: hidden; }
+
+/* ── Build Finder (learn.html) composition helpers ──────────────────
+   Small layout-only classes so BuildFinder.js renders without inline
+   CSS-custom-property writes for the non-data cases. The race/opponent
+   color custom properties (data, §1) are still set inline. */
+.bf-skill-panel { padding: 11px 13px; margin-bottom: var(--sp-4); }
+.bf-skill-panel-label { margin-bottom: 8px; }
+.bf-tech-panel { background: transparent; border: 0; padding: 0; }
+.bf-branches { margin-top: var(--sp-2); }
+.bf-branch-list { margin: 6px 0 0; padding-left: 18px; font-size: var(--fs-sm); color: var(--bo-text-muted); }
+.bf-goal-text { white-space: normal; }
+.bf-foot-units { display: flex; gap: 6px; font-size: var(--fs-label); }
+
+/* ── Build Finder page layout (learn.html) ──────────────────────────
+   Page-level composition/positioning for the new-player Build Finder
+   (DESIGN-SYSTEM.md §6.4 race cards, §6.8 steps). Lays out the system
+   components; does not re-skin them (§10). */
+.bf-lead {
+  text-align: center;
+  padding: var(--sp-6) 24px var(--sp-1);
+  background: radial-gradient(900px 400px at 50% -40%, var(--accent-soft), transparent 70%);
+}
+.bf-lead h1 { font-size: var(--fs-h1); font-weight: 800; margin: 0 0 var(--sp-1); }
+.bf-lead p  { color: var(--text-muted); margin: 0; font-size: var(--fs-lg); }
+
+/* keep scrollIntoView targets clear of the ~72px sticky .topbar */
+.step, .results, .close-head, #step-hero, #results { scroll-margin-top: 88px; }
+
+.step { margin: var(--sp-6) 0; }
+.step[hidden] { display: none; }
+.step-head { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.step-num {
+  width: 30px; height: 30px; flex: 0 0 auto;
+  border-radius: 50%; background: var(--surface-2); border: 1px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: var(--fs-sm); color: var(--text);
+}
+.step.done .step-num { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); }
+.step-title { font-size: var(--fs-h3); font-weight: 800; }
+.step-hint { color: var(--text-dim); font-size: var(--fs-sm); }
+
+/* race cards (§6.4 race-themed) */
+.race-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4); }
+.race-card {
+  text-align: left; cursor: pointer; font-family: inherit;
+  background: var(--race-bg); border: 2px solid var(--race-bd); border-radius: var(--radius-lg);
+  padding: 18px; transition: transform var(--dur-fast), border-color var(--dur-fast), box-shadow var(--dur-fast); color: var(--text);
+}
+.race-card:hover { transform: translateY(-3px); border-color: var(--race-bd-hi); box-shadow: var(--shadow-2), 0 8px 26px var(--race-glow); }
+.race-card.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset, var(--shadow-2); }
+.race-card-top { display: flex; align-items: center; gap: 13px; margin-bottom: 11px; }
+.race-card-top img { width: var(--ico-xl); height: var(--ico-xl); border-radius: var(--radius); border: 2px solid var(--race-bd-hi); }
+.race-name { font-size: var(--fs-h3); font-weight: 800; color: var(--race-ink); }
+.race-abbr { font-size: var(--fs-min); color: var(--text-dim); font-family: var(--mono); }
+.race-tag { font-size: var(--fs-sm); color: var(--text); margin: 0 0 var(--sp-1); }
+.race-vibe { font-size: var(--fs-label); color: var(--text-muted); margin: 0; }
+
+/* hero cards (§6.5 race-data via icon-frame border) */
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--sp-3); }
+.pick {
+  display: flex; gap: 13px; align-items: flex-start; text-align: left; cursor: pointer; font-family: inherit;
+  background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 13px; transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-fast); color: var(--text);
+}
+.pick:hover { border-color: var(--race-bd-hi, var(--border-2)); background: var(--surface-2); transform: translateY(-2px); }
+.pick.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: var(--surface-2); }
+.pick img.portrait { width: var(--ico-lg); height: var(--ico-lg); border-radius: var(--radius); border: 2px solid var(--race-bd, var(--border-2)); flex: 0 0 auto; }
+.pick-name { font-weight: 700; font-size: var(--fs-base); }
+.pick-short { font-family: var(--mono); font-size: var(--fs-min); color: var(--text-dim); margin-left: var(--sp-1); }
+.pick-blurb { font-size: var(--fs-label); color: var(--text-muted); margin: 3px 0 0; }
+.pick-check { margin-left: auto; color: var(--accent); font-weight: 800; opacity: 0; }
+.pick.sel .pick-check { opacity: 1; }
+
+/* unit cards (multi-pick) */
+.unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--sp-3); }
+.unit-card {
+  text-align: left; cursor: pointer; font-family: inherit;
+  background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 13px; transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-fast); color: var(--text);
+}
+.unit-card:hover { border-color: var(--race-bd-hi, var(--border-2)); background: var(--surface-2); transform: translateY(-2px); }
+.unit-card.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; background: var(--surface-2); }
+.unit-top { display: flex; align-items: center; gap: 11px; }
+.unit-top img.uico { width: var(--ico-md); height: var(--ico-md); border-radius: var(--radius); border: 2px solid var(--race-bd, var(--border-2)); flex: 0 0 auto; }
+.unit-name { font-weight: 700; font-size: var(--fs-sm); }
+.unit-role { font-size: var(--fs-min); color: var(--text-muted); margin: 2px 0 0; }
+.unit-types { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: 11px; padding-top: 10px; border-top: 1px solid var(--border); }
+.utype { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.utype img { width: var(--ico-sm); height: var(--ico-sm); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.utype-cap { font-size: var(--fs-min); line-height: 1.15; }
+.utype-cap b { display: block; color: var(--text); font-weight: 700; }
+.utype-cap span { color: var(--text-dim); }
+.unit-pick-flag { float: right; color: var(--accent); font-weight: 800; opacity: 0; }
+.unit-card.sel .unit-pick-flag { opacity: 1; }
+
+/* CTA bar */
+.cta-bar { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; margin: var(--sp-5) 0 var(--sp-2); padding: 18px 22px;
+           background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.cta-summary { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; }
+.cta-spacer { flex: 1; }
+
+/* results */
+.results { margin: var(--sp-6) 0 var(--sp-8); }
+.results[hidden] { display: none; }
+
+/* best-fit card: race-themed surface (§6.4) */
+.best {
+  background: linear-gradient(180deg, var(--race-bg), var(--bg));
+  border: 2px solid var(--race-bd-hi); border-radius: var(--radius-lg);
+  overflow: hidden; box-shadow: var(--shadow-3), 0 10px 36px var(--race-glow);
+}
+.best-head { display: flex; align-items: center; gap: var(--sp-4); padding: 20px 24px; background: var(--race-head); border-bottom: 1px solid var(--race-bd-hi); }
+.best-badge { font-family: var(--mono); font-size: var(--fs-min); letter-spacing: 0.1em; color: var(--gold); border:1px solid var(--gold-edge); background: var(--gold-soft); padding: 4px 9px; border-radius: var(--radius-sm); }
+.best-title { font-size: var(--fs-h2); font-weight: 800; margin: 0; }
+.best-meta { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-1); }
+.best-body { padding: 22px 24px; display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; }
+@media (max-width: 820px) { .best-body { grid-template-columns: 1fr; } }
+
+.fit-chips { display: flex; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+.notes { counter-reset: n; list-style: none; padding: 0; margin: 0; }
+.notes li { counter-increment: n; position: relative; padding: 9px 0 9px 38px; border-bottom: 1px solid var(--border); font-size: var(--fs-sm); }
+.notes li:last-child { border-bottom: 0; }
+.notes li::before {
+  content: counter(n); position: absolute; left: 0; top: 8px;
+  width: 26px; height: 26px; border-radius: 50%; background: var(--race-head); border: 1px solid var(--race-bd-hi);
+  color: var(--race-ink); font-weight: 800; font-size: var(--fs-min); display: flex; align-items: center; justify-content: center;
+}
+
+/* tech-path container; the tier blocks inside are the canonical BO
+   tier-complete + army-summary components (§12), not ad-hoc rows. */
+.tech { background: var(--bo-bg); border: 1px solid var(--bo-border-solid); border-radius: var(--radius); padding: var(--sp-3) var(--sp-3) var(--sp-1); }
+.tech h4 { margin: 0 0 var(--sp-3); font-size: var(--fs-min); letter-spacing: 0.08em; text-transform: uppercase; color: var(--bo-text-dim); }
+
+.best-actions { grid-column: 1 / -1; display: flex; gap: var(--sp-3); flex-wrap: wrap; padding-top: var(--sp-3); border-top: 1px solid var(--border); margin-top: var(--sp-1); }
+.replay-note { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--text-muted); font-size: var(--fs-sm); padding: var(--sp-2) var(--sp-3); }
+
+/* pro replay list inside the best-fit card */
+.best-reps { grid-column: 1 / -1; background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-1) var(--sp-1) var(--sp-2); }
+.best-reps-h { margin: 10px 12px 6px; font-size: var(--fs-min); letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-dim); }
+.brep { display: flex; align-items: center; gap: 11px; padding: var(--sp-2) var(--sp-3); }
+.brep + .brep { border-top: 1px solid var(--border); }
+.brep-play { display:flex; align-items:center; justify-content:center; width:var(--ico-sm); height:var(--ico-sm); flex:0 0 auto; border-radius: var(--radius-sm);
+             background: var(--surface-2); border:1px solid var(--border); color: var(--text); cursor:pointer; font-family: inherit; text-decoration: none; }
+.brep-play:hover { border-color: var(--accent); text-decoration: none; }
+.brep-info { min-width:0; flex:1; }
+.brep-vs { font-size:var(--fs-label); font-weight:600; overflow-wrap: break-word; }
+.brep-meta { font-size:var(--fs-min); color: var(--text-dim); overflow-wrap: break-word; }
+.brep-more { padding: 9px 12px 4px; font-size:var(--fs-min); color: var(--accent); }
+
+.close-head { font-size: var(--fs-lg); font-weight: 800; margin: var(--sp-6) 0 var(--sp-3); color: var(--text); }
+.close-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: var(--sp-3); }
+.close-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--sp-4); transition: border-color var(--dur-fast), box-shadow var(--dur-fast); }
+.close-card:hover { border-color: var(--accent); box-shadow: var(--shadow-2); }
+.close-top { display: flex; align-items: center; gap: 11px; }
+.close-name { font-weight: 700; font-size: var(--fs-base); }
+.close-diff { display: flex; gap: var(--sp-2); align-items: flex-start; margin: 11px 0; padding: 9px 11px; background: var(--bg-deep); border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: var(--fs-label); color: var(--text); }
+.close-diff .ar { color: var(--race-ink, var(--accent)); font-weight: 800; }
+.close-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-1); }
+
+/* overflow guards */
+.race-grid > *, .hero-grid > *, .unit-grid > *, .close-grid > *, .best-body > div { min-width: 0; }
+.close-top > div, .best-head > div, .pick > div, .race-card-top > div, .unit-top > div { min-width: 0; }
+.pick-name, .unit-name, .best-title, .close-name, .race-name { overflow-wrap: break-word; }
+@media (max-width: 860px) { .race-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .race-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   Homepage (index.html) re-skin
+   ------------------------------------------------------------
+   Stage 3 of the production switch-over. Re-themes the live
+   homepage existing site-* / pfb-* / mh-* / bo-summary-look
+   classes onto this design system WITHOUT touching index.html
+   JS or DOM. This stylesheet loads AFTER main.css so the rules
+   below win.
+
+   Core fix (DESIGN-SYSTEM.md s1): the chrome accent is unified
+   to --accent (#5B8DEF, the app own cool blue), NOT the Human
+   race blue #4488FF. Human #4488FF survives ONLY where it
+   identifies the Human race (race-themed cards / matchup-vs-HU).
+   House rules enforced: no single-edge color stripes, no ellipsis
+   truncation, >=0.8rem text / >=36px meaningful icons (the dense
+   BO skill/action mini-icons are the one sanctioned exception).
+   ============================================================ */
+
+/* Token remap: site-* tokens -> design-system tokens. The surfaces
+   already matched; the ONE material change is the accent moving off
+   Human blue. Remapping here keeps every main.css selector that reads
+   var(--site-accent) in lockstep (focus rings, CTA, footer hover, the
+   skill-band default, the grid-header underline, the filter wash). */
+.site-page {
+  --site-bg:         var(--bg);
+  --site-surface:    var(--surface);
+  --site-surface-2:  var(--surface-2);
+  --site-border:     var(--border);
+  --site-text:       var(--text);
+  --site-text-muted: var(--text-muted);
+  --site-accent:     var(--accent);
+  --site-radius:     var(--radius);
+  --site-radius-lg:  var(--radius-lg);
+}
+
+/* Calmer page backdrop: a single soft chrome-accent wash at the top,
+   no competing tints. Race color never washes the whole page. */
+.site-page {
+  background:
+    radial-gradient(ellipse 80% 46% at 50% -6%, var(--accent-soft), transparent 62%),
+    var(--bg);
+}
+
+/* Chrome #4488FF overrides that do NOT flow through --site-accent
+   (hard-coded literals in main.css). These are pure chrome: focus
+   rings, link/button accents. */
+.site-page :focus-visible,
+.site-page .site-build-card:focus-visible,
+.site-page .site-nav-link:focus-visible,
+.site-page .site-race-pick:focus-visible,
+.site-page .site-matchup-btn:focus-visible,
+.site-page .site-axis-btn:focus-visible,
+.skill-band-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Hero bar: quiet chrome, full-width hairline (no edge stripe). */
+.site-hero-bar {
+  background: linear-gradient(180deg, var(--surface), var(--bg));
+  border-bottom: 1px solid var(--border);
+}
+.site-hero-bar .hero-bar-tagline { color: var(--text-muted); }
+.site-hero-bar .hero-bar-tagline em { color: var(--accent-strong); font-style: normal; font-weight: 700; }
+
+/* Drop zone + upload action: chrome-accent dashed target, not green. */
+.hero-bar-dropzone {
+  border: 1.5px dashed var(--border-2);
+  border-radius: var(--radius);
+  background: var(--bg-deep);
+}
+.hero-bar-dropzone.hero-tile-dragover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.hero-bar-upload {
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+}
+.hero-bar-upload:hover { background: var(--surface-3); border-color: var(--accent); }
+.hero-bar-upload-icon { color: var(--accent); }
+.hero-bar-upload-label { color: var(--text); font-weight: 600; }
+.hero-bar-findreplays { color: var(--text-muted); }
+.hero-bar-findreplays:hover { color: var(--text); }
+
+/* Privacy badge keeps its trust-green (semantic --privacy, not race). */
+.hero-bar-private {
+  background: var(--privacy-soft);
+  border: 1px solid var(--privacy-edge);
+  border-radius: var(--radius);
+  color: var(--privacy);
+}
+.hero-bar-private-shield { color: var(--privacy); }
+.hero-bar-private-line1 { color: var(--privacy-hi); font-family: var(--mono); }
+.hero-bar-private-line2 { color: var(--text-dim); }
+
+/* Skill-band switch: the active band pill is chrome --accent (a
+   "selected" state), NOT a race color. Per-band leading icons stay;
+   the selected fill is the app accent. */
+.skill-band--hero { background: transparent; }
+.skill-band-hint { color: var(--text-muted); font-size: var(--fs-sm); }
+.skill-band-card {
+  --band-accent: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+}
+.skill-band-card:hover { border-color: var(--border-2); background: var(--surface-2); }
+.skill-band-card[aria-pressed="true"],
+.skill-band-card.is-active {
+  --band-accent: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.skill-band-label { color: var(--text); font-weight: 700; }
+.skill-band-desc { color: var(--text-muted); }
+
+/* "Your replays" rail: neutral surface, chrome upload affordance. */
+.site-mine { background: transparent; }
+.site-mine-title { color: var(--text); font-weight: 800; }
+.site-mine-upload-btn {
+  color: var(--accent);
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+}
+.site-mine-upload-btn:hover { border-color: var(--accent); background: var(--surface-3); }
+.mine-toolbar-label, .mine-toolbar-count { color: var(--text-dim); }
+.mine-sort-select {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+.mine-filter-chip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+}
+.mine-filter-chip-active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.site-mine-status { color: var(--text-muted); }
+.mine-view-all-link { color: var(--accent); }
+
+/* Rail empty-state: chrome dashed drop target. */
+.site-mine-empty {
+  background: var(--bg-deep);
+  border: 1.5px dashed var(--border-2);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+}
+.site-mine-empty.site-mine-empty-dragover { border-color: var(--accent); background: var(--accent-soft); }
+.site-mine-empty-icon { color: var(--text-dim); }
+.site-mine-empty-title { color: var(--text); font-weight: 700; }
+.site-mine-empty-sub { color: var(--text-muted); }
+
+/* Pro builds section header + filter bar (pfb-*). */
+.site-pros-title { color: var(--text); font-weight: 800; }
+.band-intro { color: var(--text-muted); font-size: var(--fs-sm); }
+.pfb-label, .pfb-pop-label { color: var(--text-dim); font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.pfb-count { color: var(--text-dim); font-size: var(--fs-label); }
+
+/* "More filters" + "Advanced search" buttons: chrome, not amber. */
+.pfb-more-btn,
+.pfb-advanced-btn {
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+}
+.pfb-more-btn:hover,
+.pfb-advanced-btn:hover { color: var(--text); border-color: var(--accent); }
+.pfb-more-btn[aria-expanded="true"] { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+.pfb-more-pop {
+  background: var(--bg-deep);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+}
+
+/* Non-race filter chips (opener / game plan / army / tournament /
+   matchup): active = chrome --accent tinted fill. Race chips keep their
+   own race color (legit race-as-data) and are intentionally NOT
+   remapped here. */
+.matchup-tag.active,
+.axis-tag.active,
+.opener-tag.active,
+.gameplan-tag.active,
+.army-tag.active,
+.tournament-tag.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* Build cards -> the BO summary-card look. The card is already a
+   race-themed near-black-navy surface (legit race-data, full borders).
+   Re-tone toward the BO palette: tighter radius, hairline dividers, BO
+   body text. The race tints (--card-*) are kept as race-data and are
+   NOT overridden. */
+.site-build-card {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+.site-build-card:hover { box-shadow: var(--shadow-2); }
+.site-card-section-label {
+  color: var(--bo-text-dim);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.mh-build-label { color: var(--text); font-weight: 800; }
+
+/* Hero ordinal badge: BO parchment-gold accent (matches the viewer
+   bo-sc-hero-ord), not a race color and not chrome. */
+.site-card-hero-ord {
+  background: var(--bo-supply-bg);
+  color: var(--bo-accent);
+  border: 1px solid var(--bo-border-solid);
+  font-family: var(--mono);
+  font-weight: 800;
+}
+
+/* Skill strip: learned = white ring, ult = bronze/gold ring, untaken =
+   dimmed (faithful to bo-skill states). The level number is a dark mono
+   chip. These mini-icons are the sanctioned BO dense-data exception. */
+.site-skill-icon { border: 1px solid var(--bo-border-solid); border-radius: var(--radius-sm); }
+.site-skill-icon:not(.site-skill-dim) { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.55); }
+.site-skill-ult:not(.site-skill-dim) { box-shadow: inset 0 0 0 1px var(--bo-accent); }
+.site-skill-dim { opacity: 0.5; }
+.site-skill-lvl {
+  background: var(--bo-supply-bg);
+  color: var(--bo-text);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+/* Key-unit labels in BO body text. */
+.site-card-key-label { color: var(--bo-text-muted); }
+
+/* Expansion marker: ok-green "Expo" / dim "No Expo" (bo-expo-marker),
+   no edge stripe. */
+.mh-expansion-marker { background: transparent; border: 1px solid transparent; font-weight: 700; }
+.mh-expanded { color: var(--ok); }
+.mh-no-expo { color: var(--text-dim); }
+
+/* Difficulty / band pill on the card: neutral chip; the difficulty WORD
+   is always present so color is only the accelerator. */
+.site-card-band {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+}
+.site-card-band.diff-easy   { color: var(--ok); }
+.site-card-band.diff-medium { color: var(--warn); }
+.site-card-band.diff-hard   { color: var(--bad); }
+
+/* Matchup pills: tinted by the OPPONENT race color (--opp-color from
+   JS). This is race-as-data and always carries "vs {ABBR}" text. */
+.site-card-matchup {
+  background: color-mix(in srgb, var(--opp-color, var(--text-dim)) 16%, transparent);
+  border: 1px solid color-mix(in srgb, var(--opp-color, var(--text-dim)) 45%, transparent);
+  color: var(--text);
+  border-radius: var(--radius-pill);
+  font-family: var(--mono);
+  font-weight: 700;
+}
+
+/* "Added by you" attribution + edit affordance: sparing gold mono micro-label. */
+.site-card-added-pill {
+  color: var(--gold);
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-pill);
+  font-family: var(--mono);
+  font-size: var(--fs-min);
+}
+.site-card-edit-btn { color: var(--text-muted); }
+.site-card-edit-btn:hover { color: var(--accent); }
+
+/* User-build notes: BO body tone. */
+.site-card-user-desc { color: var(--bo-text); }
+.site-card-user-points li { color: var(--bo-text-muted); }
+.site-card-user-tag {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--text-muted);
+  font-size: var(--fs-min);
+}
+
+/* Replay strip: BO-toned list inside the card. */
+.site-replay-section { background: var(--bo-bg); border-top: 1px solid var(--bo-border); }
+.site-replay-item-players { color: var(--bo-text); font-weight: 600; }
+.site-replay-vs, .site-replay-item-map { color: var(--bo-text-dim); }
+.site-replay-tournament, .site-replay-stage { color: var(--bo-text-muted); }
+.site-replay-none { color: var(--bo-text-dim); }
+.site-replay-toggle { color: var(--accent); background: transparent; border: 0; }
+.site-replay-toggle:hover { text-decoration: underline; }
+
+/* Guide / Watch buttons: Guide is ghost chrome, Watch is the primary
+   accent gradient (the marquee action), neither takes a race color. */
+.site-replay-guide-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--border-2);
+  color: var(--text);
+  border-radius: var(--radius);
+}
+.site-replay-guide-btn:hover { border-color: var(--accent); background: var(--surface-3); }
+.site-replay-view-btn {
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent-deep));
+  border: 1px solid var(--accent);
+  color: var(--text-on-accent);
+  border-radius: var(--radius);
+  font-weight: 700;
+}
+.site-replay-view-btn:hover { background: linear-gradient(180deg, var(--accent-strong), var(--accent)); }
+
+/* Compare drawer: design-system sheet (chrome; the race theme is carried
+   by the drawer header content, not by the chrome). */
+.compare-drawer {
+  background: var(--bg);
+  border-left: 1px solid var(--border-2);
+  box-shadow: var(--shadow-drawer);
+}
+.compare-drawer-close { color: var(--text-muted); }
+.compare-drawer-close:hover { color: var(--text); }
+.compare-drawer-backdrop { background: rgba(8,10,18,0.6); }
+
+/* Footer */
+.site-footer { background: var(--bg-deep); border-top: 1px solid var(--border); }
+.site-footer-brand { color: var(--text); font-weight: 800; }
+.site-footer-about p { color: var(--text-muted); }
+.site-footer-links a { color: var(--text-muted); }
+.site-footer-links a:hover { color: var(--accent); }
+.site-footer-legal { color: var(--text-dim); }

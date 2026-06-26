@@ -16,23 +16,23 @@ window.BandSwitcher = (function () {
     'new': {
       order: 0, icon: 'phea',
       seg: 'New to WC3', shortLabel: 'New player',
-      desc: 'Your first builds — the few things that matter',
+      desc: 'Your first builds: the few things that matter',
       h2: 'Builds for new players',
-      intro: 'Your first builds — forgiving timings and the few things that actually matter.'
+      intro: 'Your first builds: forgiving timings and the few things that actually matter.'
     },
     'improving': {
       order: 1, icon: 'tkno',
       seg: 'Ladder', shortLabel: 'Ladder',
       desc: 'Solid tournament play you can copy',
       h2: 'Ladder builds',
-      intro: 'Solid, copyable builds from real tournament play — the middle rung between your first builds and the pro meta.'
+      intro: 'Solid, copyable builds from real tournament play. The middle rung between your first builds and the pro meta.'
     },
     'pro': {
       order: 2, icon: 'ckng',
       seg: 'Pro meta', shortLabel: 'Pro',
       desc: 'Top-level builds, tight execution',
       h2: 'Pro builds',
-      intro: 'Current top-level builds from major tournaments — tight execution, the latest strategies.'
+      intro: 'Current top-level builds from major tournaments. Tight execution, the latest strategies.'
     }
   };
   const BAND_KEYS = Object.keys(BANDS).sort((a, b) => BANDS[a].order - BANDS[b].order);

@@ -55,9 +55,9 @@ const SiteNav = {
     const bandIco = (id) => `<img class="skill-band-ico" src="${root}/assets/wc3icons/${id}.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />`;
     const skillBandHtml = `
       <div class="skill-band skill-band--compact" id="skill-band-nav" role="group" aria-label="Skill level">
-        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="New to WC3 — your first builds, the few that matter">${bandIco('phea')}<span class="skill-band-label">New to WC3</span></button>
-        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Ladder — solid tournament play you can copy">${bandIco('tkno')}<span class="skill-band-label">Ladder</span></button>
-        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="Pro meta — top-level builds, tight execution">${bandIco('ckng')}<span class="skill-band-label">Pro meta</span></button>
+        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="New to WC3: your first builds, the few that matter">${bandIco('phea')}<span class="skill-band-label">New to WC3</span></button>
+        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Ladder: solid tournament play you can copy">${bandIco('tkno')}<span class="skill-band-label">Ladder</span></button>
+        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="Pro meta: top-level builds, tight execution">${bandIco('ckng')}<span class="skill-band-label">Pro meta</span></button>
       </div>`;
 
     let leftHtml = '';

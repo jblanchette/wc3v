@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to WC3V — Warcraft III Build Orders &amp; Replay Analysis</title>
+  <meta name="description" content="New to Warcraft III or a seasoned player? Pick your path: a guided Build Finder that matches you to a starter build and replay, or the pro analyzer to grade your .w3g against the pros.">
+  <link rel="canonical" href="https://wc3v.com/welcome">
+  <meta name="robots" content="noindex, follow">
+  <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
+  <link rel="stylesheet" href="css/redesign.css?v=2">
+  <style>
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .gate-stage {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--sp-7) 24px var(--sp-8);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, var(--accent-soft), transparent 60%),
+        radial-gradient(1000px 600px at 90% 110%, var(--race-soft-u), transparent 60%),
+        var(--bg-deep);
+      text-align: center;
+    }
+    .gate-logo { font-weight: 900; font-size: var(--fs-display); letter-spacing: 0.08em; color: var(--text); }
+    .gate-logo span { color: var(--accent); }
+    .gate-q { font-size: var(--fs-h1); font-weight: 800; margin: var(--sp-5) 0 var(--sp-1); }
+    .gate-lead { color: var(--text-muted); max-width: 540px; margin: 0 auto var(--sp-7); font-size: var(--fs-lg); }
+
+    .gate-cards { display: flex; gap: 26px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 880px; }
+    .gate-card {
+      flex: 1 1 360px;
+      max-width: 410px;
+      text-align: left;
+      background: linear-gradient(180deg, var(--surface), var(--bg));
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-6) var(--sp-6) var(--sp-5);
+      cursor: pointer;
+      transition: transform var(--dur), border-color var(--dur), box-shadow var(--dur);
+      position: relative;
+      overflow: hidden;
+      font-family: inherit;
+      color: var(--text);
+    }
+    .gate-card::after {
+      content: ""; position: absolute; inset: 0; border-radius: inherit;
+      box-shadow: inset 0 0 0 0 var(--glow); transition: box-shadow var(--dur); pointer-events: none;
+    }
+    .gate-card:hover { transform: translateY(-4px); border-color: var(--edge); box-shadow: var(--shadow-3); }
+    .gate-card:hover::after { box-shadow: inset 0 0 70px 0 var(--glow); }
+
+    /* Wayfinding path identity (DESIGN-SYSTEM §6.4), NOT race data: chrome
+       accent for the "new" path, the Undead-derived edge for the analyzer. */
+    .gate-card.is-new        { --edge: var(--accent-strong); --glow: var(--accent-soft); }
+    .gate-card.is-experienced{ --edge: var(--race-U-edge); --glow: var(--race-soft-u); }
+
+    .gate-emoji {
+      width: var(--ico-xl); height: var(--ico-xl); border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px; margin-bottom: var(--sp-4);
+      background: var(--wash); border: 1px solid var(--border);
+    }
+    .gate-card h2 { margin: 0 0 var(--sp-2); font-size: var(--fs-h2); }
+    .gate-card p  { margin: 0 0 18px; color: var(--text-muted); font-size: var(--fs-sm); min-height: 70px; }
+    .gate-feat { list-style: none; padding: 0; margin: 0 0 var(--sp-5); }
+    .gate-feat li { display: flex; gap: 9px; align-items: center; padding: 5px 0; font-size: var(--fs-sm); color: var(--text); }
+    .gate-feat li .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--edge); flex: 0 0 auto; }
+    .gate-go { display: inline-flex; align-items: center; gap: var(--sp-2); font-weight: 700; color: var(--edge); font-size: var(--fs-base); }
+
+    .gate-foot { margin-top: var(--sp-6); color: var(--text-dim); font-size: var(--fs-label); }
+    .gate-foot a { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="gate-stage">
+    <div class="gate-logo">WC<span>3</span>V</div>
+    <h1 class="gate-q">How well do you know Warcraft III?</h1>
+    <p class="gate-lead">This sets which homepage you land on. You can switch anytime from the top of either page; nothing is locked in.</p>
+
+    <div class="gate-cards" role="group" aria-label="Choose your experience">
+      <button class="gate-card is-new" type="button" onclick="pick('new')">
+        <div class="gate-emoji" aria-hidden="true">🌱</div>
+        <h2>I'm new to WC3</h2>
+        <p>Help me pick a race and learn one solid build I can actually execute, with a replay to watch and follow along.</p>
+        <ul class="gate-feat">
+          <li><span class="dot"></span> Guided: pick race → hero → army</li>
+          <li><span class="dot"></span> A matched build + replay + walkthrough</li>
+          <li><span class="dot"></span> No replay files needed</li>
+        </ul>
+        <span class="gate-go">Find me a build →</span>
+      </button>
+
+      <button class="gate-card is-experienced" type="button" onclick="pick('pro')">
+        <div class="gate-emoji" aria-hidden="true">⚔️</div>
+        <h2>I know what I'm doing</h2>
+        <p>Drop my replay to analyze and grade it against a pro's, or browse the pro build library by race and matchup.</p>
+        <ul class="gate-feat">
+          <li><span class="dot"></span> Upload a .w3g, graded vs pros</li>
+          <li><span class="dot"></span> Full pro build library + filters</li>
+          <li><span class="dot"></span> Ladder / Pro meta toggle</li>
+        </ul>
+        <span class="gate-go">Take me to the analyzer →</span>
+      </button>
+    </div>
+
+    <p class="gate-foot">Not sure? Start as new. You can flip to the experienced view in one click.</p>
+  </div>
+
+  <script>
+    // First-visit fork. Persist the chosen band to the real BandSwitcher key
+    // so the homepages remember it (and so the homepage's first-visit redirect
+    // back here does not fire again). 'new' opens the guided Build Finder;
+    // 'pro' opens the pro analyzer home.
+    function pick(band) {
+      try { localStorage.setItem('wc3v.level', band); } catch (e) {}
+      location.href = band === 'new' ? '/learn' : '/';
+    }
+  </script>
+</body>
+</html>

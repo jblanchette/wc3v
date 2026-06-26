@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>WC3V Build Finder, Starter Warcraft III Builds for New Players</title>
+  <meta name="description" content="New to Warcraft III? Pick your race, a hero and the units you like, and the Build Finder matches you to a beginner-friendly build, a clean replay to learn from, and a step-by-step walkthrough. The few things that matter, and the mistakes to avoid.">
+
+  <link rel="canonical" href="https://wc3v.com/learn">
+
+  <meta name="robots" content="index, follow">
+  <meta name="keywords" content="Warcraft 3, WC3, beginner build orders, new player, learn Warcraft 3, first build, Human, Orc, Night Elf, Undead, build finder">
+  <meta name="author" content="WC3V">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="WC3V Build Finder, Starter Warcraft III Builds for New Players">
+  <meta property="og:description" content="Pick your race, a hero and your army, and get a beginner build you can actually execute, with a replay and a walkthrough.">
+  <meta property="og:url" content="https://wc3v.com/learn">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WC3V Build Finder, Starter Warcraft III Builds for New Players">
+  <meta name="twitter:description" content="Pick a race, a hero and your army, get a first build you can actually play, plus a replay and a guided walkthrough.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
+
+  <link rel="stylesheet" href="css/redesign.css?v=2">
+</head>
+<body>
+
+  <header class="topbar">
+    <span class="topbar-logo">WC<span>3</span>V</span>
+    <span class="topbar-sub">Learning Warcraft III</span>
+    <span class="topbar-spacer"></span>
+    <button class="btn btn-ghost" type="button" onclick="BuildFinder.resetAll()">&#8635; Start over</button>
+    <a class="mode-link" href="/" id="experienced-link">I'm experienced &#8594;</a>
+  </header>
+
+  <div class="bf-lead">
+    <h1>Let's find you a build you can actually play.</h1>
+    <p>Pick a race, a hero, and the units you like the look of. We'll match you to a build, a replay, and a walkthrough.</p>
+  </div>
+
+  <main class="wrap">
+
+    <section class="step" id="step-race">
+      <div class="step-head">
+        <span class="step-num">1</span>
+        <span class="step-title">Pick your race</span>
+        <span class="step-hint">the army and feel of your whole game</span>
+      </div>
+      <div class="race-grid" id="race-grid"></div>
+    </section>
+
+    <section class="step" id="step-hero" hidden>
+      <div class="step-head">
+        <span class="step-num">2</span>
+        <span class="step-title">Who do you want to lead with?</span>
+        <span class="step-hint">optional, pick the hero that sounds fun</span>
+      </div>
+      <div class="hero-grid" id="hero-grid"></div>
+    </section>
+
+    <section class="step" id="step-army" hidden>
+      <div class="step-head">
+        <span class="step-num">3</span>
+        <span class="step-title">What do you want your army to be?</span>
+        <span class="step-hint">optional, tap the units you like (pick a couple)</span>
+      </div>
+      <div class="unit-grid" id="unit-grid"></div>
+    </section>
+
+    <div class="cta-bar" id="cta-bar" hidden>
+      <div class="cta-summary" id="cta-summary"></div>
+      <span class="cta-spacer"></span>
+      <button class="btn btn-gold btn-lg" id="find-btn" type="button" onclick="BuildFinder.showMatches()">Show me my build &#8594;</button>
+    </div>
+
+    <section class="results" id="results" hidden></section>
+
+  </main>
+
+  <script src="js/clientConfig.js?v=2"></script>
+  <script src="js/BandSwitcher.js?v=2"></script>
+  <script src="js/SiteNav.js?v=2"></script>
+  <script src="js/Security.js?v=2"></script>
+  <script src="js/PlayerNames.js?v=2"></script>
+  <script src="js/Glossary.js?v=2"></script>
+  <script src="js/BuildFinder.js?v=2"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Chrome init order mirrors index.html: band before nav.
+      if (window.BandSwitcher && window.BandSwitcher.init) window.BandSwitcher.init();
+      if (window.SiteNav && window.SiteNav.render) window.SiteNav.render('home');
+
+      // "I'm experienced": flip the band to pro, then follow the link to /.
+      var exp = document.getElementById('experienced-link');
+      if (exp) exp.addEventListener('click', function () {
+        try { if (window.BandSwitcher && window.BandSwitcher.setBand) window.BandSwitcher.setBand('pro'); } catch (e) {}
+      });
+
+      // Build the Build Finder (fetches the real manifest, renders into the page).
+      if (window.BuildFinder && window.BuildFinder.init) window.BuildFinder.init();
+    });
+  </script>
+</body>
+</html>

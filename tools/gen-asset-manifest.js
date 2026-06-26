@@ -27,7 +27,8 @@ const HASH_DIRS = ['js', 'css'];
 const EXTRA_FILES = ['data/builds-manifest.json', 'data/builds-cards.json'];
 const HTML_FILES = [
   'index.html', 'viewer.html', 'replays.html',
-  'about.html', 'community.html', 'terms.html', 'privacy.html'
+  'about.html', 'community.html', 'terms.html', 'privacy.html',
+  'learn.html', 'welcome.html'
 ];
 
 function sha10 (buf) {

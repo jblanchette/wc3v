@@ -4,6 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- Skill-band routing at the site root. The "new" band is a separate
+       experience (the /learn Build Finder), so route to it; "improving"/"pro"
+       stay here on the pro homepage. No band at all means first visit, so show
+       the gate. Guarded to fire only at the root and never loop (the gate sets
+       wc3v.level; /learn and /welcome are not the root). -->
+  <script>
+  (function(){ try {
+    var p = new URLSearchParams(location.search);
+    var band = p.get('level') || localStorage.getItem('wc3v.level');
+    var path = location.pathname.replace(/\/index\.html$/,'/');
+    if (path === '/' || path === '') {
+      if (!band) { location.replace('/welcome'); }
+      else if (band === 'new') { location.replace('/learn'); }
+    }
+  } catch(e){} })();
+  </script>
+
   <title>WC3V — Pro Build Orders, In-Browser Replay Analysis &amp; Pro Comparison</title>
   <meta name="description" content="Free Warcraft III build order library and replay analyzer. Browse pro builds by race and matchup, drop a .w3g to analyze it locally in your browser (never uploaded), or compare your replay to a pro's with letter-graded macro, tech, expansion, and build-order feedback.">
 
@@ -87,6 +104,9 @@
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
   <link rel="stylesheet" href="css/main.css?v=2">
+  <!-- New design system (DESIGN-SYSTEM.md): tokens + bo-* components + the
+       homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
+  <link rel="stylesheet" href="css/redesign.css?v=2">
   <style>
     body { margin: 0; }
   </style>
@@ -125,6 +145,10 @@
       // BandSwitcher must init before SiteNav so the nav's compact band
       // renders with the correct active state on first paint.
       window.BandSwitcher.init();
+      // "New to WC3" is the separate /learn Build Finder experience, so a
+      // band switch to 'new' from anywhere on this page routes there;
+      // 'improving'/'pro' stay here and just refilter the pro grid.
+      window.BandSwitcher.onChange((band) => { if (band === 'new') location.href = '/learn'; });
       SiteNav.render('home');
       window.BugReport && window.BugReport.install();
 
@@ -751,8 +775,8 @@
       </div>
       <div class="missing-replay-title">We couldn't find this replay</div>
       <div class="missing-replay-body">
-        <p>WC3V replays are parsed and stored <strong>privately in your browser</strong> — they never get uploaded to a server. That means a link like this only works on the device that uploaded the file.</p>
-        <p class="missing-replay-tip">Did a friend send you this link? Ask them to share the original <code>.w3g</code> file instead — drop it on this page and you can watch and analyze it locally.</p>
+        <p>WC3V replays are parsed and stored <strong>privately in your browser</strong>. They never get uploaded to a server, so a link like this only works on the device that uploaded the file.</p>
+        <p class="missing-replay-tip">Did a friend send you this link? Ask them to share the original <code>.w3g</code> file instead. Drop it on this page and you can watch and analyze it locally.</p>
       </div>
       <div class="missing-replay-actions">
         <button class="missing-replay-btn missing-replay-btn-primary" type="button" onclick="document.getElementById('missing-replay-overlay').style.display='none'">Got it</button>
@@ -767,7 +791,7 @@
         <a class="hero-bar-logo" href="/" aria-label="WC3V">
           <img src="/assets/wc3v.svg" alt="WC3V" />
         </a>
-        <span class="hero-bar-tagline hero-bar-tagline-long">A Warcraft III replay simulator — built for <em>learning the game</em>.</span>
+        <span class="hero-bar-tagline hero-bar-tagline-long">A Warcraft III replay simulator, built for <em>learning the game</em>.</span>
 
         <!-- Right-hand action cluster. "Report a bug" is injected by
              BugReport.js into the start of this wrapper (before the privacy
@@ -778,7 +802,7 @@
           <!-- Stamped privacy badge — dramatic, persistent reassurance. Shield
                icon pulses gently; monospace tactical typography. Title carries
                the same message for accessibility / hover. -->
-          <div class="hero-bar-private" role="img" aria-label="Browser-only: your file is never uploaded" title="Browser-only — your file is never uploaded">
+          <div class="hero-bar-private" role="img" aria-label="Browser-only: your file is never uploaded" title="Browser-only: your file is never uploaded">
             <svg class="hero-bar-private-shield" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/>
               <path d="M9 12 L11 14 L15 10"/>
@@ -793,7 +817,7 @@
                upload action plus the "Where are my replays?" helper. The
                whole region is the drag-and-drop target (see wireDropZone). -->
           <div id="hero-dropzone" class="hero-bar-dropzone">
-            <button id="hero-upload-card" type="button" class="hero-bar-upload" title="Pick or drop a .w3g file — analyzed locally in your browser">
+            <button id="hero-upload-card" type="button" class="hero-bar-upload" title="Pick or drop a .w3g file, analyzed locally in your browser">
               <svg class="hero-bar-upload-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               <span class="hero-bar-upload-label">Drop or upload a replay</span>
               <span class="hero-bar-upload-sub" id="hero-upload-status" aria-live="polite"></span>
@@ -831,7 +855,7 @@
             <code class="help-path-code">Documents\Warcraft III\Replays\W3Champions</code>
           </div>
           <p class="help-modal-tip">
-            Drag any <code>.w3g</code> file onto the <strong>Drop or upload a replay</strong> zone — or click it to open a file picker. The replay is parsed entirely on this machine; nothing leaves your browser.
+            Drag any <code>.w3g</code> file onto the <strong>Drop or upload a replay</strong> zone, or click it to open a file picker. The replay is parsed entirely on this machine; nothing leaves your browser.
           </p>
         </div>
       </div>
@@ -877,7 +901,7 @@
          search input, and the "Your replays" + "Filters" disclosure toggles
          that keep the rest of the page collapsed by default. -->
     <div class="mobile-action-bar" id="mobile-action-bar">
-      <div class="mobile-tagline">A Warcraft III replay simulator — built for <em>learning the game</em>.</div>
+      <div class="mobile-tagline">A Warcraft III replay simulator, built for <em>learning the game</em>.</div>
       <input type="search" id="mobile-build-search" class="mobile-build-search"
              placeholder="Search builds, heroes, players, maps&hellip;"
              autocomplete="off" spellcheck="false" enterkeyhint="search" />
@@ -903,13 +927,13 @@
          icons are a rising-power item progression: Potion of Healing → Tome
          of Knowledge → Crown of Kings. -->
     <div class="skill-band skill-band--hero" id="skill-band-hero" role="group" aria-label="Skill level">
-      <p class="skill-band-hint">Pick where you're at — it sets which builds you see and what your own replays get graded against. Change anytime.</p>
+      <p class="skill-band-hint">Pick where you're at. It sets which builds you see and what your own replays get graded against. Change anytime.</p>
       <div class="skill-band-row">
         <button type="button" class="skill-band-card" data-band="new" aria-pressed="false">
           <img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
           <span class="skill-band-text">
             <span class="skill-band-label">New to WC3</span>
-            <span class="skill-band-desc">Your first builds — the few things that matter</span>
+            <span class="skill-band-desc">Your first builds: the few things that matter</span>
           </span>
         </button>
         <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false">
@@ -953,7 +977,7 @@
             <div class="mine-toolbar-filter" role="tablist" aria-label="Show">
               <button type="button" class="mine-filter-chip mine-filter-chip-active" data-filter="games" role="tab" aria-selected="true">My games</button>
             </div>
-            <span class="mine-toolbar-count" id="mine-count">—</span>
+            <span class="mine-toolbar-count" id="mine-count"></span>
           </div>
         </div>
         <div id="my-replays-list" class="site-mine-list"></div>
@@ -963,12 +987,12 @@
         <!-- Empty state: shown by JS when the list is empty. The whole panel
              is both a drop zone (wireDropZone) and a click target (opens the
              file picker) — see the click wiring near triggerUpload. -->
-        <div id="my-replays-empty" class="site-mine-empty" hidden role="button" tabindex="0" aria-label="Add a replay — drop a file here or click to choose one">
+        <div id="my-replays-empty" class="site-mine-empty" hidden role="button" tabindex="0" aria-label="Add a replay: drop a file here or click to choose one">
           <div class="site-mine-empty-icon" aria-hidden="true">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
           <div class="site-mine-empty-title">Drop or click to add a replay</div>
-          <div class="site-mine-empty-sub">Battle.net, FLO and W3Champions replays all work. Upload one of your own games to grade against pros — or a pro replay you want to compare your play against.</div>
+          <div class="site-mine-empty-sub">Battle.net, FLO and W3Champions replays all work. Upload one of your own games to grade against pros, or a pro replay you want to compare your play against.</div>
         </div>
       </section>
 
@@ -979,7 +1003,7 @@
       <section id="builds" class="site-pros" aria-labelledby="pros-title">
         <div class="site-pros-head">
           <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
-          <p class="band-intro" id="band-intro">Current top-level builds from major tournaments — tight execution, the latest strategies.</p>
+          <p class="band-intro" id="band-intro">Current top-level builds from major tournaments: tight execution, the latest strategies.</p>
           <div id="pro-filter-bar" class="pro-filter-bar" role="toolbar" aria-label="Filter pro builds">
             <!-- Race chips (always visible) -->
             <div class="pfb-group" id="race-filter-host">
@@ -1072,7 +1096,7 @@
           <input type="text" id="ub-tags" maxlength="80" placeholder="fast-expo, harass" />
         </label>
         <footer class="ub-editor-actions">
-          <button type="button" class="ub-editor-btn ub-editor-btn-unmark" data-action="ub-unmark" title="Remove this from pro builds — replay returns to your replays as a regular game">Move back to my replays</button>
+          <button type="button" class="ub-editor-btn ub-editor-btn-unmark" data-action="ub-unmark" title="Remove this from pro builds; the replay returns to your replays as a regular game">Move back to my replays</button>
           <button type="button" class="ub-editor-btn ub-editor-btn-delete" data-action="ub-delete" title="Permanently delete this replay from your library">Delete replay</button>
           <span class="ub-editor-actions-spacer"></span>
           <button type="button" class="ub-editor-btn ub-editor-btn-cancel" data-action="ub-cancel">Cancel</button>
@@ -1086,7 +1110,7 @@
     <div class="site-footer-inner">
       <div class="site-footer-about">
         <div class="site-footer-brand">WC3V</div>
-        <p>Free, open-source replay analysis for Warcraft III. Browse pro builds, drop a .w3g for a full breakdown — parses entirely in your browser — or compare your replay to a pro's for letter-graded feedback.</p>
+        <p>Free, open-source replay analysis for Warcraft III. Browse pro builds, drop a .w3g for a full breakdown that parses entirely in your browser, or compare your replay to a pro's for letter-graded feedback.</p>
       </div>
       <div class="site-footer-links">
         <a href="/">Home</a>
@@ -1098,7 +1122,7 @@
       </div>
     </div>
     <div class="site-footer-legal">
-      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool — not affiliated with or endorsed by Blizzard.
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool, not affiliated with or endorsed by Blizzard.
     </div>
   </footer>
 
