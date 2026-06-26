@@ -4,18 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Skill-band routing at the site root. The "new" band is a separate
-       experience (the /learn Build Finder), so route to it; "improving"/"pro"
-       stay here on the pro homepage. No band at all means first visit, so show
-       the gate. Guarded to fire only at the root and never loop (the gate sets
-       wc3v.level; /learn and /welcome are not the root). -->
+  <!-- Skill-band routing at the site root.
+       - Show the welcome gate ONCE to every visitor (new AND existing) until
+         they've seen it, tracked by the dedicated `wc3v.gateSeen` flag (NOT by
+         whether a band is stored — existing users already have a band, and we
+         still want them to see the new gate one time). The gate sets the flag.
+       - "new" is the separate /learn Build Finder experience, so route there;
+         "improving"/"pro" stay here on the pro homepage.
+       - A shared ?level= link bypasses the gate and is honoured.
+       Guarded to fire only at the root and never loop (/learn and /welcome are
+       not the root; the gate sets wc3v.gateSeen). -->
   <script>
   (function(){ try {
     var p = new URLSearchParams(location.search);
-    var band = p.get('level') || localStorage.getItem('wc3v.level');
+    var lvlParam = p.get('level');
+    var band = lvlParam || localStorage.getItem('wc3v.level');
+    var gateSeen = localStorage.getItem('wc3v.gateSeen');
     var path = location.pathname.replace(/\/index\.html$/,'/');
     if (path === '/' || path === '') {
-      if (!band) { location.replace('/welcome'); }
+      if (!gateSeen && !lvlParam) { location.replace('/welcome'); }
       else if (band === 'new') { location.replace('/learn'); }
     }
   } catch(e){} })();

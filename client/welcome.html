@@ -111,12 +111,20 @@
   </div>
 
   <script>
-    // First-visit fork. Persist the chosen band to the real BandSwitcher key
-    // so the homepages remember it (and so the homepage's first-visit redirect
-    // back here does not fire again). 'new' opens the guided Build Finder;
-    // 'pro' opens the pro analyzer home.
+    // Mark the gate as seen the moment it renders, so it is shown exactly once
+    // per visitor (even if they navigate away without choosing). The homepage
+    // root redirect reads this flag, not the band, so existing users who
+    // already have wc3v.level still see the gate this one time.
+    try { localStorage.setItem('wc3v.gateSeen', '1'); } catch (e) {}
+
+    // The fork. Persist the chosen band to the real BandSwitcher key so the
+    // homepages remember it. 'new' opens the guided Build Finder; 'pro' opens
+    // the pro analyzer home.
     function pick(band) {
-      try { localStorage.setItem('wc3v.level', band); } catch (e) {}
+      try {
+        localStorage.setItem('wc3v.level', band);
+        localStorage.setItem('wc3v.gateSeen', '1');
+      } catch (e) {}
       location.href = band === 'new' ? '/learn' : '/';
     }
   </script>
