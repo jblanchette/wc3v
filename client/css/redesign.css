@@ -1,9 +1,8 @@
 /* ============================================================
    redesign.css: production token layer + shared components for
-   the WC3V homepage redesign. Shipped from client/proto/proto.css
-   (DESIGN-SYSTEM.md §2-§7, §10, §12) with the prototype-only
-   .proto-banner styles dropped. Self-contained: does NOT depend on
-   main.css.
+   the WC3V homepage redesign. Implements the design system in
+   docs/DESIGN-SYSTEM.md (§2-§7, §10, §12). Self-contained: does NOT
+   depend on main.css.
 
    Headline rule (§1): the chrome accent is --accent (#5B8DEF) and
    is DISTINCT from Human race blue (--race-H #4488FF). The four race

@@ -5,11 +5,11 @@
    -> result flow on learn.html, driven by REAL data fetched from
    /data/builds-manifest.json (.builds).
 
-   Ported from client/proto/proto-data.js + the proto learn.html inline
-   script, with three production differences:
-     1. Data is real (manifest), not hand-authored.
+   Build order rendering follows docs/DESIGN-SYSTEM.md §12 (the one
+   canonical look, matching the viewer's BuildOrderRenderer). Notes:
+     1. Data is real (the manifest), not hand-authored.
      2. heroSkills in the manifest are keyed by LOWERCASE hero id; the
-        proto keyed them Capitalized. We normalize (skillsForHero()).
+        build-card skill strip normalizes via skillsForHero().
      3. All build copy is sanitized on render: em and en dashes, the ASCII
         hyphen pair, and the UTF-8-as-cp1252 mojibake are converted to clean
         punctuation, then HTML-escaped. Replay-derived names go through
