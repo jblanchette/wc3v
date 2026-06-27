@@ -2511,16 +2511,22 @@ const Wc3vViewer = class {
   }
 
   // Walk the build-sequence list (the .gh-sl-item rows in #guide-hud-body) as
-  // the replay plays: the row whose time the playhead has just passed is the
-  // "active" one (highlight box); earlier rows are "done" (a slow grey/✓
-  // fade — see the CSS transitions). Cheap — caches the rows and only touches
-  // the DOM when the active index changes.
+  // the replay plays. This is a follow-along guide, so "active" is the NEXT
+  // move to make — the first row whose command time the playhead hasn't reached
+  // yet (highlight box). Every row before it has already been issued and shows
+  // "done" (a slow grey/✓ fade — see the CSS transitions). Highlighting the
+  // last *passed* row instead lagged a step behind the map ring: by the time a
+  // building appears it's already going down, so the genuinely-next move is the
+  // useful highlight. Cheap — caches the rows and only touches the DOM when the
+  // active index changes.
   _updateGuideStepList (gameTime) {
     const els = this._guideStepListEls;
     if (!els || !els.length) return;
     const gt = Number(gameTime) || 0;
-    let activeIdx = -1;
-    els.forEach((el, i) => { if ((Number(el.dataset.guideTime) || 0) <= gt) activeIdx = i; });
+    let activeIdx = els.length;   // past the end → whole sequence done, none active
+    for (let i = 0; i < els.length; i++) {
+      if ((Number(els[i].dataset.guideTime) || 0) > gt) { activeIdx = i; break; }
+    }
     if (activeIdx === this._guideStepListIdx) return;
     this._guideStepListIdx = activeIdx;
     els.forEach((el, i) => {
