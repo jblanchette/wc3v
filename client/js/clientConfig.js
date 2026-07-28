@@ -21,6 +21,28 @@
     // the always-fresh behaviour so local asset edits show up without a bump.
     assetVersion: '1',
 
+    // Render-performance switches. Each one gates a single optimization so it
+    // can be flipped at runtime (`WC3V_CONFIG.perf.instancedRings = false`) to
+    // A/B a regression without a rebuild. Defaults are the FAST path — turning
+    // one off restores the older, slower behaviour.
+    perf: {
+      // Max fixed-timestep catch-up iterations per animation frame. Without a
+      // cap, a tab-switch or GC stall accumulates unbounded simulated time and
+      // drains it in one frame (spiral of death). Dropping the excess is the
+      // correct trade for a viewer: playback jumps, but the tab recovers.
+      maxCatchupIterations: 5,
+      // Draw unit selection rings + ground shadows as two InstancedMeshes
+      // instead of two Meshes per unit (~2 draw calls + 2 materials per unit).
+      instancedRings: true,
+      // Let Three cull off-screen skinned units, and skip their AnimationMixer
+      // ticks. Safe because animation state is a pure function of gameTime, so
+      // a unit re-entering the frustum poses correctly with no catch-up.
+      frustumCull: true,
+      // Run the economy / dominance chart cursor updates even when their
+      // bottom-panel tab is hidden. Off = skip the work nobody can see.
+      chartsWhenHidden: false
+    },
+
     // Per-area logging flags. Default off in production, on in dev.
     logging: {
       app:        isDev,

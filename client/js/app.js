@@ -284,6 +284,10 @@ const Wc3vViewer = class {
       ? new window.InsightsEventLog(this) : null;
     this.resourceCharts = (window.ResourceCharts)
       ? new window.ResourceCharts(this) : null;
+    this.dominanceBar = (window.DominanceBar)
+      ? new window.DominanceBar(this) : null;      // tug-of-war widget under the match header (1v1 only)
+    this.dominanceChart = (window.DominanceChart)
+      ? new window.DominanceChart(this) : null;    // Dominance insights tab (1v1 only)
     this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
     this.processedBattles = null;               // populated by setup() once mapData is available
     // Release the prior WebGL context + GPU resources before dropping the
@@ -309,20 +313,20 @@ const Wc3vViewer = class {
 
     this.setLoadingStatus(true);
 
-    this.loadFile(filename, (res) => {
-      if (res.target.status >= 300) {
+    this.loadFile(filename, (buf, fetchErr) => {
+      if (fetchErr || !buf) {
         self.showUploadContents("upload-error");
         return;
       }
 
-      // Offload the multi-MB JSON.parse to a worker so it doesn't freeze the
-      // main thread. The setup() chain (which IS main-thread / DOM) resumes
-      // on the worker's 'done' message — a later tick, exactly like the old
-      // synchronous-parse-in-XHR-callback path, so scrubber.init() (called
-      // synchronously below) still runs first.
-      const text = res.target.responseText;
+      // Offload both the UTF-8 decode and the multi-MB JSON.parse to a worker so
+      // neither freezes the main thread. The setup() chain (which IS main-thread
+      // / DOM) resumes on the worker's 'done' message — a later tick, exactly
+      // like the old synchronous-parse-in-XHR-callback path, so scrubber.init()
+      // (called synchronously below) still runs first.
+      const byteLength = buf.byteLength;
       const fail = (msg) => {
-        console.error(`Failed to load replay "${filename}" (response size: ${text ? text.length : 0} chars): ${msg}`);
+        console.error(`Failed to load replay "${filename}" (response size: ${byteLength} bytes): ${msg}`);
         console.error('If JSON is truncated, re-parse with: node wc3v.js --replay=NAME --debug');
       };
 
@@ -337,10 +341,10 @@ const Wc3vViewer = class {
         worker = new Worker('/js/replay-json-worker.js');
       } catch (e) {
         // Worker unavailable (very old browser / blocked) — fall back to a
-        // synchronous parse so the viewer still works.
+        // synchronous decode + parse so the viewer still works.
         try {
           self.replayId = filename;
-          self.mapData = JSON.parse(text);
+          self.mapData = JSON.parse(new TextDecoder('utf-8').decode(new Uint8Array(buf)));
           self.setup().then(() => { self.setLoadingStatus(false); });
         } catch (e2) {
           fail(e2.message);
@@ -382,7 +386,8 @@ const Wc3vViewer = class {
         fail((err && err.message) || 'worker error');
       };
 
-      worker.postMessage({ type: 'parse', text });
+      // Transfer (not copy) the buffer — ownership moves to the worker.
+      worker.postMessage({ type: 'parseBuffer', buffer: buf }, [buf]);
     });
 
     this.scrubber.init();
@@ -426,6 +431,11 @@ const Wc3vViewer = class {
     });
 
     try {
+      // MyReplays.js (56 KB) is only reachable from this ?local=ID path, so it's
+      // fetched here rather than on every viewer load.
+      if (!window.MyReplays && typeof window.wc3vLazy === 'function') {
+        await window.wc3vLazy('MyReplays');
+      }
       const my = new window.MyReplays();
       const record = await my.get(id);
       if (!record || !record.parsedJson) {
@@ -553,11 +563,12 @@ const Wc3vViewer = class {
     }
   }
 
+  // Fetch a .wc3v(.gz) as raw bytes. `cb` receives an ArrayBuffer, which the
+  // caller hands to replay-json-worker as a transferable — so the multi-MB
+  // payload is never materialized as a string on the main thread and is never
+  // structured-clone copied. (gzip is decoded transparently by the browser via
+  // Content-Encoding, same as with the old XHR.) `cb(null, err)` on failure.
   loadFile (filename, cb) {
-    const req = new XMLHttpRequest();
-
-    req.addEventListener("load", cb);
-
     // Use absolute URL for dev (with port), relative for production to avoid mixed-content issues.
     // Dev appends a cache-buster: replays are re-parsed constantly while developing, and the
     // browser otherwise serves a stale .wc3v.gz (e.g. missing newly-added fields like hero
@@ -566,8 +577,13 @@ const Wc3vViewer = class {
       ? `http://127.0.0.1:8080/replays/${filename}?t=${Date.now()}`
       : `/replays/${filename}`;
 
-    req.open("GET", url);
-    req.send();
+    fetch(url)
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.arrayBuffer();
+      })
+      .then(buf => cb(buf, null))
+      .catch(err => cb(null, err));
   }
 
   loadMapFile (mapType) {
@@ -685,23 +701,46 @@ const Wc3vViewer = class {
     }
   }
 
+  // Walkmaps run ~800 KB on the bigger maps, so the decode+parse goes to the
+  // same worker as the replay JSON rather than blocking the main thread during
+  // load. Always resolves — a missing/!unparseable walkmap is a soft failure.
   loadWalkmap () {
     const { name } = this.mapInfo;
     const filePath = `../maps/${name}/walkmap.json`;
 
     return new Promise((resolve) => {
-      this.loadFile(filePath, (res) => {
-        try {
-          if (res.target.status < 300) {
-            this._walkmap = JSON.parse(res.target.responseText);
-          } else {
-            this._walkmap = null;
-          }
-        } catch (e) {
-          this._walkmap = null;
-        }
-        resolve(true);
+      this.loadFile(filePath, (buf, err) => {
+        if (err || !buf) { this._walkmap = null; resolve(true); return; }
+        this._parseJsonInWorker(buf)
+          .then(obj => { this._walkmap = obj; })
+          .catch(() => { this._walkmap = null; })
+          .then(() => resolve(true));
       });
+    });
+  }
+
+  // Decode + JSON.parse an ArrayBuffer off the main thread. The buffer is
+  // TRANSFERRED, so the caller must not touch it afterwards. Falls back to a
+  // main-thread parse when Workers are unavailable.
+  _parseJsonInWorker (buf) {
+    return new Promise((resolve, reject) => {
+      let worker;
+      try {
+        worker = new Worker('/js/replay-json-worker.js');
+      } catch (e) {
+        try { resolve(JSON.parse(new TextDecoder('utf-8').decode(new Uint8Array(buf)))); }
+        catch (e2) { reject(e2); }
+        return;
+      }
+      const finish = () => { try { worker.terminate(); } catch (e) {} };
+      worker.onmessage = (ev) => {
+        const m = ev && ev.data;
+        finish();
+        if (m && m.type === 'done') resolve(m.result);
+        else reject(new Error((m && m.message) || 'parse failed'));
+      };
+      worker.onerror = (e) => { finish(); reject(e); };
+      worker.postMessage({ type: 'parseBuffer', buffer: buf }, [buf]);
     });
   }
 
@@ -1481,8 +1520,20 @@ const Wc3vViewer = class {
   // Open the guided walkthrough. `who` may be a ClientPlayer, a playerId, a
   // slot, or be omitted (then we show the "pick a player" gate when there's
   // more than one non-neutral player).
-  enterGuideMode (who, opts) {
+  // Async because ReplayGuide.js (58 KB) + HeroAbilityStats.js (137 KB) are
+  // fetched on demand — the walkthrough is user-triggered, so neither sits on
+  // the viewer's critical path. HeroAbilityStats must land FIRST: ReplayGuide
+  // resolves it via `typeof HeroAbilityStats` at build time, and would silently
+  // fall back to an empty table if it loaded second. Every call site is
+  // fire-and-forget, so returning a promise changes nothing for them.
+  async enterGuideMode (who, opts) {
     if (this._proFeaturesDisabled) return; // 1v1-only feature
+    if (typeof window.wc3vLazy === 'function') {
+      try {
+        await window.wc3vLazy('HeroAbilityStats');
+        await window.wc3vLazy('ReplayGuide');
+      } catch (e) { return; } // couldn't fetch the guide modules — stay put
+    }
     if (typeof ReplayGuide === 'undefined' || !ReplayGuide.buildGuide) return;
     const autoStart = !!(opts && opts.autoStart); // skip the intro/contents page, begin on step 0
     const players = (this.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer);
@@ -2908,6 +2959,10 @@ const Wc3vViewer = class {
     // Insights panel: tabbed container for Battle Report, Economy, Camp Key.
     if (this.bottomPanel) {
       this.bottomPanel.setup();
+      // Chart cursors are skipped while their tab is hidden, so opening a tab
+      // needs one frame to catch it up — and while paused the render loop has
+      // stopped, so nothing would drive it.
+      this.bottomPanel.onVisibilityChange = () => this.requestRender();
 
       // Battle Report tab.
       if (this.battleReportRenderer && this.mapData && Array.isArray(this.mapData.battles)) {
@@ -2958,6 +3013,33 @@ const Wc3vViewer = class {
           this.resourceCharts.setPlayers(playerInfos);
           this.resourceCharts.build();
           this.bottomPanel.addTab('economy', 'Economy', tabContent);
+        }
+      }
+
+      // Dominance tab — strict gate: 1v1 + parser-emitted availability flag.
+      // Degraded parses carry no dominanceSeries at all (see lib/DominanceSeries.js).
+      if (this.dominanceChart && this.mapData && this.mapData.players &&
+          this.mapData.dominance && this.mapData.dominance.available &&
+          this.getGameMode() === '1v1') {
+        const domInfos = [];
+        for (const [pid, p] of Object.entries(this.mapData.players)) {
+          if (p && p.dominanceSeries && p.dominanceSeries.samples &&
+              p.dominanceSeries.samples.length) {
+            const cp = this.players.find(cp => String(cp.playerId) === String(pid));
+            domInfos.push({
+              id: pid,
+              color: (cp && cp.playerColor) || '#888',
+              samples: p.dominanceSeries.samples,
+              events: p.dominanceSeries.events || []
+            });
+          }
+        }
+        if (domInfos.length === 2) {
+          const tabContent = document.createElement('div');
+          this.dominanceChart.setContainer(tabContent);
+          this.dominanceChart.setPlayers(domInfos);
+          this.dominanceChart.build();
+          this.bottomPanel.addTab('dominance', 'Dominance', tabContent);
         }
       }
 
@@ -3108,6 +3190,10 @@ const Wc3vViewer = class {
       this.placementViewer.setup();
       this.matchHeader.render();
       this._renderNon1v1Banner();
+
+      // Dominance bar — after matchHeader.render() so the card badges exist.
+      // Self-gates on 1v1 + dominance.available.
+      if (this.dominanceBar) this.dominanceBar.setup();
 
       this.chapterMarkers.detectChapters(this.players, this.matchEndTime);
       const cmTrack = document.getElementById('scrubber-bar-track');
@@ -3836,6 +3922,15 @@ const Wc3vViewer = class {
       return;
     }
 
+    // FIRST thing in the frame: take the one canvas-geometry read, while layout
+    // is still clean from the previous frame's paint. Everything after this
+    // point (the intrusion tag, camera transforms, overlay positioning) writes
+    // styles, and any layout read that lands after a write forces a synchronous
+    // reflow. One clean read up front serves every projectToCssPixels caller.
+    if (this.gameScaler && this.gameScaler.beginFrame && this.canvas) {
+      this.gameScaler.beginFrame(this.canvas);
+    }
+
     const timeStep = this.scrubber.getTimeStep();
 
     if (this.lastFrameTimestamp === 0) {
@@ -3878,12 +3973,22 @@ const Wc3vViewer = class {
       this.broadcastCamera.setSpeedFactor(this.state === ScrubStates.playing ? speed : 1);
     }
 
+    // Fixed-timestep catch-up, CLAMPED. lastFrameDelta accumulates real time,
+    // so after a tab-switch, a GC pause, or a long GLB parse it can hold several
+    // seconds — which uncapped would run hundreds of update() iterations in a
+    // single frame, each walking every unit of every player, making the stall
+    // worse than the thing that caused it. Past the cap we discard the backlog:
+    // playback skips a beat, but the tab recovers on the very next frame.
+    const maxIter = (window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+      window.WC3V_CONFIG.perf.maxCatchupIterations) || 5;
+    let iter = 0;
     while (this.lastFrameDelta >= timeStep) {
         if (this.state === ScrubStates.playing) {
           this.update(timeStep * speed);
         }
 
         this.lastFrameDelta -= timeStep;
+        if (++iter >= maxIter) { this.lastFrameDelta = 0; break; }
     }
 
     // Guided walkthrough: a step plays out from just before the action to the
@@ -3912,6 +4017,10 @@ const Wc3vViewer = class {
     this._updateIntrusionTag();
 
     this._renderPending = false;  // mainLoop owns the render — cancel any queued requestRender
+    // Same for the 3D renderer's independent rAF: model loads / building spawns
+    // call threeMapRenderer.requestRender() constantly during playback, and each
+    // honoured request is a redundant full scene render on top of this one.
+    if (this.threeMapRenderer) this.threeMapRenderer._pendingRender = false;
     this.render();
 
     if (this.gameTime >= this.matchEndTime) {
@@ -3926,6 +4035,11 @@ const Wc3vViewer = class {
         this.broadcastCamera && this.broadcastCamera.settled) {
       return;
     }
+
+    // Release the frame's cached canvas geometry. A resize or layout-mode change
+    // between frames must not be served stale metrics; the next frame takes a
+    // fresh clean read at the top of mainLoop.
+    if (this.gameScaler) this.gameScaler._frameMetrics = null;
 
     if (!this._boundMainLoop) this._boundMainLoop = this.mainLoop.bind(this);
     this.lastFrameId = requestAnimationFrame(this._boundMainLoop);
@@ -4369,6 +4483,12 @@ const Wc3vViewer = class {
     }
     if (!this.canvas) return;
 
+    // Normally mainLoop already primed this at the very top of the frame; this
+    // covers a standalone requestRender() that isn't driven by the loop.
+    if (this.gameScaler && this.gameScaler.beginFrame && !this.gameScaler._frameMetrics) {
+      this.gameScaler.beginFrame(this.canvas);
+    }
+
     // Split-screen mode: render two diagonal halves
     if (this.broadcastCamera && this.broadcastCamera.isSplitActive) {
       this.renderSplitScreen();
@@ -4508,9 +4628,20 @@ const Wc3vViewer = class {
     if (this.insightsEventLog) {
       this.insightsEventLog.sync(gameTime);
     }
-    // Resource Charts now-cursor.
-    if (this.resourceCharts) {
+    // Chart cursors. Both rebuild SVG polyline point strings and rescan every
+    // player's full sample array, so they're gated on their tab actually being
+    // on screen — otherwise a collapsed panel still paid for two chart updates
+    // every single frame. `perf.chartsWhenHidden` restores the old behaviour.
+    const bp = this.bottomPanel;
+    const chartsAlways = !!(window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+      window.WC3V_CONFIG.perf.chartsWhenHidden);
+    const tabShowing = (id) => chartsAlways || !bp || !bp.isTabShowing || bp.isTabShowing(id);
+    if (this.resourceCharts && tabShowing('economy')) {
       this.resourceCharts.setCursor(gameTime);
+    }
+    // Dominance chart now-cursor + progressive line reveal.
+    if (this.dominanceChart && tabShowing('dominance')) {
+      this.dominanceChart.setCursor(gameTime);
     }
 
     players.forEach(player => {
@@ -4547,6 +4678,18 @@ const Wc3vViewer = class {
         }
       });
       this._spawnBiasComputed = true;
+    }
+
+    // uuid -> unitDrawPositions entry, built ONCE per frame. drawResolvedUnits
+    // used to `unitDrawPositions.find(u => u.uuid === ...)` inside four separate
+    // per-unit loops, once per player — an O(players x units^2) scan every
+    // frame. Reused (never reallocated) so this costs no garbage.
+    if (!frameData.udpByUuid) frameData.udpByUuid = new Map();
+    const udpIndex = frameData.udpByUuid;
+    udpIndex.clear();
+    for (let i = 0; i < frameData.unitDrawPositions.length; i++) {
+      const u = frameData.unitDrawPositions[i];
+      udpIndex.set(u.uuid, u);
     }
 
     // skip bloom when gameTime hasn't changed (e.g. panning while paused)
@@ -4637,6 +4780,9 @@ const Wc3vViewer = class {
     }
 
     if (this.minimapPip) this.minimapPip.update();
+
+    // Dominance tug-of-war bar + match-header badges (self-throttled).
+    if (this.dominanceBar) this.dominanceBar.update(gameTime);
   }
 
 

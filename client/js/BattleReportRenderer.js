@@ -808,7 +808,15 @@
     // Highlight the row whose battle is currently active.
     syncPanel (gameTime) {
       if (!this._listEl) return;
-      if (Math.abs(gameTime - this._lastPanelGameTime) < 250) return;
+      if (gameTime === this._lastPanelGameTime) return;
+      // Wall-clock throttle. A game-time gate fires every frame once playback
+      // is fast enough that one frame advances past the threshold — and this
+      // path does a querySelectorAll plus a scrollIntoView, which forces
+      // layout. A scrub still syncs immediately.
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const seeked = Math.abs(gameTime - this._lastPanelGameTime) > 2000;
+      if (!seeked && (now - (this._lastPanelWall || 0)) < 250) return;
+      this._lastPanelWall = now;
       this._lastPanelGameTime = gameTime;
       let activeId = null;
       for (const b of this._battles) {

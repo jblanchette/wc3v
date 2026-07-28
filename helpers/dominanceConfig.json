@@ -1,0 +1,52 @@
+{
+  "version": 2,
+
+  "comment": "Dominance score formula constants. All values in gold+lumber-equivalent (GLE) unless noted. Bump `version` on ANY change — the score is a versioned deterministic formula and published numbers must stay reproducible.",
+
+  "lumberWeight": 1.0,
+  "seedStrength": 1500,
+  "contrastExponent": 1.8,
+  "earlyRampMs": 150000,
+
+  "weights": {
+    "army": 1.0,
+    "hero": 1.0,
+    "econ": 0.9,
+    "techResearch": 0.8,
+    "techBuildings": 0.5,
+    "exp": 1.0
+  },
+
+  "heroBaseValue": 500,
+  "heroLevelFactor": 0.35,
+
+  "workerEconValue": 150,
+  "ghoulEconFactor": 0.5,
+
+  "expansionBonus": 400,
+
+  "possiblyLostConfidenceMin": 70,
+
+  "sampleIntervalMs": 10000,
+  "eventSampleMergeMs": 250,
+
+  "momentum": {
+    "halfLifeMs": 60000,
+    "cutoffHalfLives": 4,
+    "heroDeathVictim": -600,
+    "heroDeathKiller": 300,
+    "heroReviveMatchWindowMs": 240000,
+    "expansion": 300,
+    "tierUp": 250,
+    "campPerLevel": 30,
+    "campCap": 250,
+    "campCreditConfidenceMin": 0.7,
+    "battleSwingMin": 300,
+    "battleSwingFactor": 0.5,
+    "battleSwingCap": 800
+  },
+
+  "availability": {
+    "validatorConfidenceMin": 0.7
+  }
+}

@@ -611,7 +611,15 @@ const ClientPlayer = class {
 
     const owningPlayerId = this.playerId;
 
-    const drawBoxes = unitDrawPositions.reduce((acc, item) => {
+    // NOTE: unitDrawPositions holds EVERY player's units, and this runs once per
+    // player — so the rejection test has to come before the destructure, not
+    // after. Destructuring 24 fields for units we're about to drop cost P×N
+    // field reads per frame (3 players × 150 units ≈ 10k reads) for nothing.
+    const drawBoxes = [];
+    for (let i = 0; i < unitDrawPositions.length; i++) {
+      const item = unitDrawPositions[i];
+      if (item.decayLevel < 0.45 || item.playerId != owningPlayerId) continue;  // eslint-disable-line eqeqeq
+
       const {
         uuid,
         x,
@@ -619,7 +627,6 @@ const ClientPlayer = class {
         icon,
         iconSize,
         halfIconSize,
-        fontSize,
         heroRank,
         spawnTime,
         isHero,
@@ -629,8 +636,6 @@ const ClientPlayer = class {
         itemId,
         playerId,
         playerColor,
-        count,
-        drawSlots,
         isWorker,
         isNeutralPlayer,
         isTransport,
@@ -639,10 +644,6 @@ const ClientPlayer = class {
         scoutLabel,
         isIllusion
       } = item;
-
-      if (decayLevel < 0.45 || playerId != owningPlayerId) {
-        return acc;
-      }
 
       const groupPad = halfIconSize * 0.4;
       const unitBox = {
@@ -677,9 +678,8 @@ const ClientPlayer = class {
         isHidden: item.isHidden || false
       };
 
-      acc.push(unitBox);
-      return acc;
-    }, []);
+      drawBoxes.push(unitBox);
+    }
 
     // non-heroes first (drawn behind), heroes last (drawn on top), main hero topmost
     const sortedDrawTree = drawBoxes.sort((a, b) => {
@@ -729,6 +729,13 @@ const ClientPlayer = class {
 
     const { unitDrawPositions } = frameData;
     const { representatives, collapsed, alwaysDrawSlots } = this._resolved;
+
+    // uuid -> entry index, built once per frame by Wc3vViewer.render(). Falls
+    // back to a linear scan only if a caller drives us outside the render path.
+    const udpByUuid = frameData.udpByUuid;
+    const findUdp = udpByUuid
+      ? (uuid) => udpByUuid.get(uuid)
+      : (uuid) => unitDrawPositions.find(u => u.uuid === uuid);
 
     // Units shown as 3D models this frame skip their 2D icon (UnitModelRenderer
     // publishes the set on viewOptions._rendered3D). Hybrid: others stay 2D.
@@ -781,7 +788,7 @@ const ClientPlayer = class {
         Drawing.drawCountBadge(ctx, unitBox.clusterCount, badgeX, badgeY, unitBox.playerColor);
       }
 
-      const udpEntry = unitDrawPositions.find(u => u.uuid === unitBox.uuid);
+      const udpEntry = findUdp(unitBox.uuid);
       if (udpEntry) {
         udpEntry.x = unitBox.drawX;
         udpEntry.y = unitBox.drawY;
@@ -791,7 +798,7 @@ const ClientPlayer = class {
 
     // hide collapsed units from nameplates
     collapsed.forEach(unitBox => {
-      const udpEntry = unitDrawPositions.find(u => u.uuid === unitBox.uuid);
+      const udpEntry = findUdp(unitBox.uuid);
       if (udpEntry) {
         udpEntry.hideNameplate = true;
       }
@@ -823,14 +830,14 @@ const ClientPlayer = class {
     neutralGroups.forEach(group => {
       const avgX = group.reduce((sum, u) => sum + u.drawX, 0) / group.length;
       const avgY = group.reduce((sum, u) => sum + u.drawY, 0) / group.length;
-      const repUdp = unitDrawPositions.find(u => u.uuid === group[0].uuid);
+      const repUdp = findUdp(group[0].uuid);
       if (repUdp) {
         repUdp.count = group.length;
         repUdp.x = avgX;
         repUdp.y = avgY;
       }
       for (let i = 1; i < group.length; i++) {
-        const udp = unitDrawPositions.find(u => u.uuid === group[i].uuid);
+        const udp = findUdp(group[i].uuid);
         if (udp) udp.hideNameplate = true;
       }
     });

@@ -146,13 +146,22 @@ const BattleData = class {
     const PREROLL_MS  = 500;
     const POSTROLL_MS = 4000;
 
+    // Memoized on gameTime: called 3-4x per frame (BattleRenderer, the viewer's
+    // active-participant refresh, BroadcastCamera._activeBattleBbox), and each
+    // call scanned from index 0 and allocated a fresh array. Same gameTime in
+    // the same frame now costs one Map-free comparison.
+    let _aaTime = NaN;
+    let _aaOut = [];
     const activeAt = (gameTime) => {
+      if (gameTime === _aaTime) return _aaOut;
       const out = [];
       for (const b of battles) {
         if (b.startTime - PREROLL_MS > gameTime) break;       // sorted by startTime
         if (b.endTime + POSTROLL_MS < gameTime) continue;     // ended too long ago
         out.push(b);
       }
+      _aaTime = gameTime;
+      _aaOut = out;
       return out;
     };
 

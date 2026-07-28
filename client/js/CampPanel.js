@@ -171,11 +171,11 @@ const CampPanel = class {
       && window.wc3v.isNonOneVsOne());
   }
 
-  // Independent rAF loop — runs every frame, but only invokes syncIcons
-  // when the viewer's d3 transform has actually changed since last tick
-  // (so no work in the steady state). This decouples icon updates from
-  // the main render loop, which has multiple early-exit paths (guideMode,
-  // paused+settled, layoutMode) that left icons stale.
+  // Independent rAF loop — a SAFETY NET only. The main render loop calls
+  // syncIcons every frame, but it has early-exit paths (guideMode, paused +
+  // camera settled, layoutMode) that used to leave icons stale. This loop
+  // covers those gaps and nothing else: if the main loop synced us recently it
+  // stands down, so the two no longer both run every frame during playback.
   _startOwnLoop () {
     if (this._ownLoopRunning) return;
     this._ownLoopRunning = true;
@@ -184,10 +184,14 @@ const CampPanel = class {
       try {
         const v = this.viewer;
         const t = v && v.transform;
-        if (t && this.neutralGroups) {
-          const sig = `${t.k}|${t.x}|${t.y}`;
-          if (sig !== this._lastTickSig) {
-            this._lastTickSig = sig;
+        const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        // Main loop is driving — it already synced us this frame.
+        const mainLoopActive = (now - (this._lastSyncAt || 0)) < 100;
+        if (t && this.neutralGroups && !mainLoopActive) {
+          // Numeric compare instead of building a template-literal signature
+          // string on every animation frame.
+          if (t.k !== this._sigK || t.x !== this._sigX || t.y !== this._sigY) {
+            this._sigK = t.k; this._sigX = t.x; this._sigY = t.y;
             // Split-screen path drives its own sideFilter calls per half —
             // skip the wholesale sync so we don't fight it.
             const bc = v && v.broadcastCamera;
@@ -243,12 +247,22 @@ const CampPanel = class {
   syncIcons (sideFilter) {
     if (!this.iconLayer) return;
     if (!this.neutralGroups) return;
-    const canvas = document.getElementById('main-canvas');
+    // Cached — this used to be a getElementById on every call (twice a frame).
+    let canvas = this._mainCanvas;
+    if (!canvas || !canvas.isConnected) canvas = this._mainCanvas = document.getElementById('main-canvas');
     if (!canvas || !canvas.width) return;
     const gs = this.viewer && this.viewer.gameScaler;
     if (!gs) return;
-    const cssW = canvas.clientWidth || canvas.width;
-    const cssH = canvas.clientHeight || canvas.height;
+    // ALL layout reads happen here, once. Every style write below is deferred
+    // into `writes` and flushed after the loop. Previously the loop read
+    // clientWidth/clientHeight 5x per camp (inside projectToCssPixels) and
+    // interleaved those reads with display/transform writes, forcing a
+    // synchronous reflow per camp per frame.
+    const metrics = gs.canvasMetrics ? gs.canvasMetrics(canvas) : null;
+    const cssW = metrics ? metrics.cssW : (canvas.clientWidth || canvas.width);
+    const cssH = metrics ? metrics.cssH : (canvas.clientHeight || canvas.height);
+    const writes = [];
+    const hide = (els) => { if (els) writes.push([els.wrap, null]); };
 
     const ICON_W = 24, ICON_H = 24;
     const ICON_GAP = 6;
@@ -277,18 +291,18 @@ const CampPanel = class {
       // 0.95]) is "on-canvas" but visually a meaningless dot — the old bug
       // where icons appeared everywhere in P1/P2 focus.
       const ex = this._iconEls[g.uuid];
-      const k1 = gs.projectToCssPixels(b.minX, b.minY, canvas);
-      const k2 = gs.projectToCssPixels(b.maxX, b.minY, canvas);
-      const k3 = gs.projectToCssPixels(b.minX, b.maxY, canvas);
-      const k4 = gs.projectToCssPixels(b.maxX, b.maxY, canvas);
+      const k1 = gs.projectToCssPixels(b.minX, b.minY, canvas, 0, metrics);
+      const k2 = gs.projectToCssPixels(b.maxX, b.minY, canvas, 0, metrics);
+      const k3 = gs.projectToCssPixels(b.minX, b.maxY, canvas, 0, metrics);
+      const k4 = gs.projectToCssPixels(b.maxX, b.maxY, canvas, 0, metrics);
       if (!k1.valid || !k2.valid || !k3.valid || !k4.valid) {
-        if (ex) ex.wrap.style.display = 'none';
+        hide(ex);
         return;
       }
 
-      const c = gs.projectToCssPixels(wCenterX, wCenterY, canvas);
+      const c = gs.projectToCssPixels(wCenterX, wCenterY, canvas, 0, metrics);
       if (!c.valid || !c.onScreen) {
-        if (ex) ex.wrap.style.display = 'none';
+        hide(ex);
         return;
       }
 
@@ -297,7 +311,7 @@ const CampPanel = class {
         const isTop = c.cssY <= cssH / 2;
         if ((sideFilter.side === 'top' && !isTop) ||
             (sideFilter.side === 'bottom' && isTop)) {
-          if (ex) ex.wrap.style.display = 'none';
+          hide(ex);
           return;
         }
       }
@@ -313,7 +327,7 @@ const CampPanel = class {
       // Skip degenerate camps — too small to be visually meaningful and the
       // icon would land in a misleading spot.
       if (ringR < 8) {
-        if (ex) ex.wrap.style.display = 'none';
+        hide(ex);
         return;
       }
 
@@ -323,7 +337,7 @@ const CampPanel = class {
         x = c.cssX - ringR - ICON_GAP - ICON_W;
       }
       if (x < 2 || x + ICON_W > cssW - 2 || y < 2 || y + ICON_H > cssH - 2) {
-        if (ex) ex.wrap.style.display = 'none';
+        hide(ex);
         return;
       }
 
@@ -333,15 +347,29 @@ const CampPanel = class {
         els = this._makeIconPair(g.uuid);
         this._iconEls[g.uuid] = els;
       }
-      els.wrap.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-      els.wrap.style.display = '';
+      writes.push([els.wrap, `translate(${Math.round(x)}px, ${Math.round(y)}px)`]);
     });
 
     if (!sideFilter) {
       Object.keys(this._iconEls).forEach(uuid => {
-        if (!seen[uuid]) this._iconEls[uuid].wrap.style.display = 'none';
+        if (!seen[uuid]) hide(this._iconEls[uuid]);
       });
     }
+
+    // Flush — all reads are done, so none of these can force a reflow.
+    // Each write is also compared against the last applied value: in the steady
+    // state (camera parked) that makes the whole pass free.
+    for (let i = 0; i < writes.length; i++) {
+      const wrap = writes[i][0];
+      const transform = writes[i][1];
+      if (transform === null) {
+        if (wrap._cpShown !== false) { wrap.style.display = 'none'; wrap._cpShown = false; }
+      } else {
+        if (wrap._cpShown !== true) { wrap.style.display = ''; wrap._cpShown = true; }
+        if (wrap._cpTransform !== transform) { wrap.style.transform = transform; wrap._cpTransform = transform; }
+      }
+    }
+    this._lastSyncAt = (typeof performance !== 'undefined' ? performance.now() : Date.now());
   }
 
   // Split-screen caller invokes syncIcons twice (once per half). After the

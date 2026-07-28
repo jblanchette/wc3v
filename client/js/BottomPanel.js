@@ -28,6 +28,15 @@
       // opened it in a prior session. Open state is intentional + cheap
       // to recover (one click), so we don't remember it.
       this._collapsed = true;
+      // Fired whenever the visible tab changes (switch, collapse, expand).
+      // Per-frame consumers skip work for hidden tabs, so when one becomes
+      // visible again the viewer needs a frame to bring it up to date — which
+      // won't happen on its own while paused with the render loop stopped.
+      this.onVisibilityChange = null;
+    }
+
+    _emitVisibilityChange () {
+      if (typeof this.onVisibilityChange === 'function') this.onVisibilityChange(this.activeId);
     }
 
     setup () {
@@ -46,6 +55,7 @@
     _toggleCollapsed () {
       this._collapsed = !this._collapsed;
       this._applyCollapsed();
+      this._emitVisibilityChange();
     }
 
     _applyCollapsed () {
@@ -127,6 +137,7 @@
         t.btn.classList.toggle('ip-tab-active', on);
         t.contentEl.hidden = !on;
       }
+      this._emitVisibilityChange();
       return true;
     }
 
@@ -145,6 +156,16 @@
           if (nextTab) this._setActiveTab(nextTab.id);
         }
       }
+    }
+
+    // Is this tab's content actually on screen right now? Per-frame subsystems
+    // (chart cursors, log sync) use this to skip work nobody can see — a hidden
+    // tab's content element is `hidden`, and a collapsed panel shows none of it.
+    isTabShowing (id) {
+      if (this._collapsed) return false;
+      if (this.activeId !== id) return false;
+      const tab = this.tabs.find(t => t.id === id);
+      return !!(tab && !tab.btn.hidden && !tab.contentEl.hidden);
     }
 
     setBadge (id, value) {

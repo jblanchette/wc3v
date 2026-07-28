@@ -235,7 +235,16 @@ const InsightsEventLog = class {
   // Highlight + reveal the row nearest the current playback time.
   sync (gameTime) {
     if (!this._built || !this.rows.length) return;
-    if (Math.abs(gameTime - this._lastSyncTime) < 250) return;
+    if (gameTime === this._lastSyncTime) return;
+    // Throttle on WALL time, not game time. A game-time-only gate inverts at
+    // speed: at 16x one frame advances ~267ms of game time, clearing a 250ms
+    // game-time threshold every single frame — so the throttle stopped
+    // throttling exactly when the frame budget was tightest. A big jump (scrub)
+    // still syncs immediately.
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    const seeked = Math.abs(gameTime - this._lastSyncTime) > 2000;
+    if (!seeked && (now - (this._lastSyncWall || 0)) < 250) return;
+    this._lastSyncWall = now;
     this._lastSyncTime = gameTime;
 
     // Last row at-or-before now.

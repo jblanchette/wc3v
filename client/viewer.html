@@ -13,10 +13,6 @@
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js"></script>
-    <script src="https://unpkg.com/rbush@2.0.1/rbush.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-
     <script>
       // Cache buster for the local /js/* files. In dev (localhost) we want a
       // fresh load every reload; in prod, tools/gen-asset-manifest.js (run as
@@ -25,7 +21,44 @@
       // Don't reformat the marker comments — the rewrite regex matches them.
       /* @asset-version-begin */ const _assetVersion = null; /* @asset-version-end */
       const _t = _assetVersion || Date.now();
+
+      // On-demand script loader for the heavy, conditionally-reachable modules
+      // that used to sit on the critical path (see _lazyScripts below). Returns
+      // a Promise that resolves once the module's global exists; repeat calls
+      // for the same name share one in-flight request.
+      const _lazyScripts = {
+        ReplayGuide:      '/js/ReplayGuide.js',
+        HeroAbilityStats: '/js/HeroAbilityStats.js',
+        MyReplays:        '/js/MyReplays.js'
+      };
+      const _lazyCache = {};
+      window.wc3vLazy = function (name) {
+        if (window[name]) return Promise.resolve(window[name]);
+        if (_lazyCache[name]) return _lazyCache[name];
+        const src = _lazyScripts[name];
+        if (!src) return Promise.reject(new Error('unknown lazy module: ' + name));
+        _lazyCache[name] = new Promise((resolve, reject) => {
+          const el = document.createElement('script');
+          el.src = src + '?t=' + _t;
+          el.onload = () => resolve(window[name]);
+          el.onerror = () => { delete _lazyCache[name]; reject(new Error('failed to load ' + src)); };
+          document.head.appendChild(el);
+        });
+        return _lazyCache[name];
+      };
+      // The viewer can always offer the walkthrough — the module backing it is
+      // fetched on demand. Kept as a flag so BuildOrderRenderer doesn't have to
+      // probe for a global that legitimately isn't loaded yet.
+      window.WC3V_GUIDE_AVAILABLE = true;
+
+      // The CDN libs lead the same ordered list as the local files. They MUST
+      // execute first: several modules touch their globals at module scope
+      // (UnitModelRenderer.js builds THREE.Vector3/Quaternion constants on load),
+      // so a race here is a hard ReferenceError, not a subtle bug.
       const _scripts = [
+        'https://cdnjs.cloudflare.com/ajax/libs/d3/5.9.7/d3.min.js',
+        'https://unpkg.com/rbush@2.0.1/rbush.min.js',
+        'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js',
         '/js/clientConfig.js',
         '/js/BandSwitcher.js',
         '/js/Helpers.js',
@@ -47,6 +80,8 @@
         '/js/BottomPanel.js',
         '/js/BattleReportRenderer.js',
         '/js/ResourceCharts.js',
+        '/js/DominanceBar.js',
+        '/js/DominanceChart.js',
         '/js/TeleportFx.js',
         '/js/FogOfWar.js',
         '/js/GLBLoader.js',
@@ -58,8 +93,9 @@
         '/js/TimelineSpline.js',
         '/js/BuildOrderRenderer.js',
         '/js/BaseNameplateRenderer.js',
-        '/js/HeroAbilityStats.js',
-        '/js/ReplayGuide.js',
+        // HeroAbilityStats.js (137 KB) + ReplayGuide.js (58 KB) are loaded on
+        // demand by enterGuideMode() via window.wc3vLazy — the walkthrough is
+        // user-triggered, so neither belongs on the critical path.
         '/js/CreepRoute.js',
         '/js/ChapterMarkers.js',
         '/js/EventModel.js',
@@ -76,23 +112,50 @@
         '/js/MinimapPip.js',
         '/js/MatchSummary.js',
         '/js/MatchHeader.js',
-        '/js/MyReplays.js',
-        // wc3v-parser.bundle.js (~1 MB) loads on demand: parsing runs in a
-        // Web Worker (parser-worker.js) that importScripts() the bundle itself;
-        // UploadManager.prefetchParser() warms the cache on first upload intent.
-        '/js/UploadManager.js',
+        // MyReplays.js (56 KB) is only reachable via the ?local=ID path —
+        // loaded on demand in loadLocal() via window.wc3vLazy.
+        // UploadManager.js is not used by the viewer at all (uploads happen on
+        // index.html / replays.html), so it isn't listed here.
         '/js/CampPanel.js',
         '/js/app.js',
         '/js/SiteNav.js',
         '/js/BugReport.js'
       ];
-      _scripts.forEach(src => {
-        document.write('<script src="' + src + '?t=' + _t + '"><\/script>');
+      // Replaces document.write, which forced the parser to stop and execute
+      // each script inline — serializing 50+ requests against HTML parsing and
+      // blocking first paint behind ~2 MB of JS (three.min.js alone is ~600 KB).
+      //
+      // `async = false` is the load-bearing line. Dynamically inserted scripts
+      // default to async:true (unordered); setting it false opts into "ordered
+      // async" — they download in parallel but execute strictly in insertion
+      // order, before DOMContentLoaded. `defer` has NO effect on dynamically
+      // inserted scripts, so it is not what we want here.
+      window.WC3V_SCRIPTS_READY = new Promise(resolve => {
+        let pending = _scripts.length;
+        const done = () => { if (--pending === 0) resolve(); };
+        _scripts.forEach(src => {
+          const el = document.createElement('script');
+          // Absolute CDN URLs are already version-pinned; only bust our own files.
+          el.src = /^https?:/.test(src) ? src : src + '?t=' + _t;
+          el.async = false;
+          el.onload = done;
+          el.onerror = done;   // a missing optional script must not deadlock boot
+          document.head.appendChild(el);
+        });
       });
     </script>
 
     <script>
-      document.addEventListener('DOMContentLoaded', (event) => {
+      // Wait for BOTH the DOM and the script list. Ordered-async scripts execute
+      // in order but — unlike parser-inserted `defer` — they do NOT delay
+      // DOMContentLoaded, so listening for DOM ready alone would race app.js.
+      Promise.all([
+        window.WC3V_SCRIPTS_READY,
+        new Promise(r => {
+          if (document.readyState !== 'loading') r();
+          else document.addEventListener('DOMContentLoaded', r, { once: true });
+        })
+      ]).then(() => {
         SiteNav.render(null);
         wc3v.bootstrap();
         window.BugReport && window.BugReport.mountInNav();

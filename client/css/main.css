@@ -17562,6 +17562,173 @@ button.mcb-summary {
 }
 
 /* ============================================================
+   Dominance — tug-of-war bar (#dominance-bar, under the match
+   header) + insights chart tab (.dmc-*). Score numbers are
+   colored by the WCL bracket tokens (--dom-*, tokens.css §2.9b);
+   bar segments use the players' colors (data color). 1v1 only.
+   ============================================================ */
+#dominance-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px 7px;
+  /* Continue the match-header surface downward so header + bar read as one
+     broadcast unit; its own hairline then seals it off from the map. */
+  background: linear-gradient(to bottom, #15222a, #101a22);
+  border-bottom: 1px solid #2a3a45;
+  flex-shrink: 0;
+}
+.dom-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim, rgba(255, 255, 255, 0.45));
+  cursor: default;
+}
+.dom-score {
+  font: 800 1rem var(--mono, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  min-width: 2.6ch;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.dom-track {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  border-radius: var(--radius-pill, 999px);
+  overflow: hidden;
+  display: flex;
+  /* Inset channel the two player segments fill. */
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+/* Glass sheen laid over both segments — the segments' inline background is
+   the raw player color (set in JS); this refines it without touching JS. */
+.dom-track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(to bottom,
+    rgba(255, 255, 255, 0.26) 0%,
+    rgba(255, 255, 255, 0.07) 40%,
+    rgba(0, 0, 0, 0.10) 60%,
+    rgba(0, 0, 0, 0.30) 100%);
+}
+.dom-seg {
+  height: 100%;
+  transition: width 180ms linear;
+}
+/* The front line — crisp seam + soft glow where the two players meet.
+   Neutral white (not a player color): it marks the contested edge itself. */
+.dom-seg-left {
+  position: relative;
+  z-index: 1;
+  box-shadow:
+    1px 0 0 rgba(255, 255, 255, 0.85),
+    4px 0 9px rgba(255, 255, 255, 0.28);
+}
+/* Etched 50 marker — the fixed "even" reference the seam fights across. */
+.dom-mid {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(6, 10, 16, 0.85);
+  z-index: 2;
+}
+/* No playback in BO-only layouts — the bar has no meaning there. */
+.layout-mode-static-bo #dominance-bar,
+.layout-mode-mobile-bo #dominance-bar { display: none; }
+
+/* Match-header card badge (populated live by DominanceBar). Framed as a
+   small stat chip: neutral chrome, "DOM" kicker; only the number carries
+   the WCL bracket color (inline style from JS). */
+.mh-dominance {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.30);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.40);
+  font: 800 1.05rem var(--mono, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: default;
+  flex-shrink: 0;
+}
+/* Kicker color is set here (beats inheritance) so the JS-inlined bracket
+   color styles only the number, never the label. */
+.mh-dominance::before {
+  content: 'DOM';
+  font: 700 0.8rem Verdana, sans-serif;
+  letter-spacing: 0.05em;
+  color: var(--text-dim, #6b7290);
+}
+/* display:inline-flex above would defeat the [hidden] UA rule — restore it
+   (the badge ships hidden until DominanceBar pushes the first score). */
+.mh-dominance[hidden] { display: none; }
+
+/* Dominance chart tab (inside #insights-panel). */
+.dmc-chart-wrap { padding: 8px 6px 6px; }
+.dmc-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 0 4px 5px;
+  font-size: 0.8rem;              /* fallback if title is plain text */
+  color: rgba(255, 255, 255, 0.6);
+}
+.dmc-title-label {
+  font: 700 0.8rem Verdana, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.78);
+}
+.dmc-title-hint {
+  font: 400 0.8rem Verdana, sans-serif;
+  color: var(--text-dim, rgba(255, 255, 255, 0.45));
+}
+.dmc-svg {
+  width: 100%;
+  height: 76px;
+  display: block;
+}
+/* preserveAspectRatio:none stretches the viewBox — pin every stroke to
+   screen pixels so lines stay crisp at any panel width. Colors that carry
+   data (player lines, gain/loss dot rings) stay on the SVG attributes set
+   in DominanceChart.js; only chrome styling lives here. */
+.dmc-svg .dmc-axis,
+.dmc-svg .dmc-mid50,
+.dmc-svg .dmc-line,
+.dmc-svg .dmc-cursor,
+.dmc-svg .dmc-dot { vector-effect: non-scaling-stroke; }
+.dmc-svg .dmc-axis { stroke: rgba(255, 255, 255, 0.14); stroke-width: 1; }
+.dmc-svg .dmc-mid50 {
+  stroke: rgba(255, 255, 255, 0.32);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.dmc-svg .dmc-line {
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.dmc-svg .dmc-cursor { stroke: var(--gold, #FFD43B); stroke-width: 1.25; }
+.dmc-svg .dmc-dot { stroke-width: 1; }
+
+/* ============================================================
    Unified Event System (ev-) — shared row component used by BOTH
    the right-edge action feed (#event-feed) and the insights
    "Events" tab (.ev-log). One look, two homes. The canvas-drawn

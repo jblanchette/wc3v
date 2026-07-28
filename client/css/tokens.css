@@ -79,6 +79,19 @@
   --tier-2: #21A5E3;
   --tier-3: #FFFF33;
 
+  /* ── §2.9b Dominance brackets (data only) ──────────────────────
+     Warcraft-Logs parse palette, applied to the 0-100 dominance score
+     (DominanceBar.bracketFor is the single lockstep mapping):
+     0-24 grey · 25-49 green · 50-74 blue · 75-94 purple ·
+     95-98 orange · 99 pink · 100 gold */
+  --dom-grey:   #9d9d9d;
+  --dom-green:  #1eff00;
+  --dom-blue:   #0070dd;
+  --dom-purple: #a335ee;
+  --dom-orange: #ff8000;
+  --dom-pink:   #e268a8;
+  --dom-gold:   #e5cc80;
+
   /* ── §2.10 Semantic states (outcome / validity) ────────────── */
   --ok:    #6EE7A8;  --ok-soft:   rgba(60,200,140,0.12);  --ok-edge:   rgba(80,200,140,0.40);
   --warn:  #F0C674;  --warn-soft: rgba(240,178,50,0.12);  --warn-edge: rgba(240,178,50,0.40);

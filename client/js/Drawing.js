@@ -34,7 +34,11 @@ const Drawing = class {
 
   static drawCampOrderBadge (ctx, order, centerX, centerY, teamColor, scale) {
     const radius = Math.max(15, 18 * scale);
-    const fontSize = Math.max(15, 18 * scale);
+    // Rounded on purpose: assigning ctx.font re-parses the font shorthand, and
+    // a fractional size made the string unique on nearly every frame (scale is
+    // continuous while zooming), so nothing could be cached. Integer px keeps
+    // the string stable across small zoom changes at no visual cost.
+    const fontSize = Math.round(Math.max(15, 18 * scale));
 
     // outer glow ring
     ctx.save();

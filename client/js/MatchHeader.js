@@ -42,6 +42,19 @@ const MatchHeader = class {
     nameEl.textContent = Security.sanitizeUserText(this.cleanMapName(raw), { maxLen: 64 });
   }
 
+  // Live dominance badge update — driven by DominanceBar.update() each time
+  // the displayed score changes. `color` is a CSS var token (bracket color).
+  setDominance (playerId, text, color) {
+    if (!this.el) return;
+    const pid = String(playerId == null ? '' : playerId).replace(/\D/g, '');
+    if (!pid) return;
+    const el = this.el.querySelector('.mh-dominance[data-player-id="' + pid + '"]');
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = color;
+    el.hidden = false;
+  }
+
   renderMatchup () {
     const { buildOrderPlayers } = this.viewer;
     if (!buildOrderPlayers || buildOrderPlayers.length < 2) return;
@@ -84,10 +97,16 @@ const MatchHeader = class {
     const buildNameHtml = `<div class="mh-build-name">${_mhEsc(buildLabel)}</div>`;
 
     const raceIconId = _mhIcon(BuildOrderData.CONFIG.raceStarterIcons[race] || '');
+    // Dominance badge — hidden until DominanceBar pushes live scores into it
+    // via setDominance() (1v1 + dominance.available only). playerId is
+    // numeric-ish from the parser; sanitize to digits for the attribute.
+    const domPid = String(player && player.playerId != null ? player.playerId : '').replace(/\D/g, '');
+    const domBadge = `<span class="mh-dominance" data-player-id="${domPid}" title="Dominance (50 = even)" hidden></span>`;
     let html = `<div class="mh-player-header">
       <div class="mh-player-header-text">
         <div class="mh-player-name"${nameTitleAttr} style="color:${_mhAttr(playerColor)}">${_mhEsc(displayName)}</div>${buildNameHtml}
       </div>
+      ${domBadge}
       <img class="mh-race-icon-lg" src="/assets/wc3icons/${raceIconId}.jpg" title="${_mhAttr(raceInfo.label)}" style="border-color:${_mhAttr(raceInfo.accent)}" />
     </div>`;
 

@@ -211,14 +211,45 @@ const GameScaler = class {
   // Callers typically gate visibility on onScreen but may still want valid
   // pixels (e.g. to measure a ring radius from an off-canvas edge point).
   // `canvas` is any of the four 2D canvases — they share a CSS box.
-  projectToCssPixels (wx, wy, canvas, inset = 0) {
-    const p = this.projectXY(wx, wy);
-    if (!p) return { cssX: 0, cssY: 0, valid: false, onScreen: false };
+  // Read a canvas's CSS box + device-pixel ratio ONCE. clientWidth/clientHeight
+  // are layout reads: interleaved with style writes (as an overlay-positioning
+  // loop inevitably does) each one forces a synchronous reflow. Callers that
+  // project many points per frame should hoist this out of their loop and pass
+  // the result to projectToCssPixels as `metrics`.
+  canvasMetrics (canvas) {
+    // Serve from the per-frame cache when possible. The read itself is cheap;
+    // what's expensive is WHERE it happens — a clientWidth read after any style
+    // write in the same frame forces a synchronous layout. beginFrame() takes
+    // the one read up front, before the frame writes anything, so every later
+    // caller gets it for free.
+    const c = this._frameMetrics;
+    if (c && c.canvas === canvas) return c;
+    return this._readCanvasMetrics(canvas);
+  }
+
+  _readCanvasMetrics (canvas) {
     const cssW = canvas.clientWidth  || canvas.width;
     const cssH = canvas.clientHeight || canvas.height;
     const sx = canvas.width  / cssW;
     const sy = canvas.height / cssH;
-    if (!sx || !sy || !isFinite(sx) || !isFinite(sy)) {
+    const ok = !!(sx && sy && isFinite(sx) && isFinite(sy));
+    return { canvas, cssW, cssH, sx, sy, ok };
+  }
+
+  // Call once at the top of the frame, BEFORE any style writes. Invalidated
+  // implicitly every frame (the viewer calls this each render) and explicitly
+  // by passing null on resize.
+  beginFrame (canvas) {
+    this._frameMetrics = canvas ? this._readCanvasMetrics(canvas) : null;
+    return this._frameMetrics;
+  }
+
+  projectToCssPixels (wx, wy, canvas, inset = 0, metrics = null) {
+    const p = this.projectXY(wx, wy);
+    if (!p) return { cssX: 0, cssY: 0, valid: false, onScreen: false };
+    const m = metrics || this.canvasMetrics(canvas);
+    const { cssW, cssH, sx, sy } = m;
+    if (!m.ok) {
       return { cssX: 0, cssY: 0, valid: false, onScreen: false };
     }
     const cssX = (p.x + this.middleX) / sx;

@@ -698,6 +698,20 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
     }
   }
 
+  // Dominance score — deterministic per-player strength/score time series.
+  // Must run this late: needs battle summaries (BattleSummary), camp credit +
+  // XP (calculateExperienceGains / SettlementClear above) and the spawn-camp
+  // pruning right above so phantom camps can't emit momentum. Runs here (not
+  // wc3v.js) so the browser parser bundle produces identical output.
+  const DominanceSeries = require('../lib/DominanceSeries');
+  const dominanceConfig = require('./dominanceConfig.json');
+  const dominance = new DominanceSeries(wc3vPlayers, world, dominanceConfig, validation);
+  const domStats = dominance.run();
+  console.logger(`Dominance series: available=${domStats.available}` +
+    (domStats.available
+      ? `, players=${domStats.players}, samples=${domStats.samplesTotal}`
+      : ` (${domStats.reason})`));
+
   const output = {
     players: Object.keys(wc3vPlayers).reduce((acc, playerId) => {
     	const player = wc3vPlayers[playerId];
@@ -761,6 +775,7 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
         ...(player._formApply ? { formApply: player._formApply } : {}),
         ...(player._mvStats ? { mvStats: player._mvStats } : {}),
         ...(player.resourceSeries ? { resourceSeries: player.resourceSeries } : {}),
+        ...(player.dominanceSeries ? { dominanceSeries: player.dominanceSeries } : {}),
         // Structured teleport events (TP Scroll, Mass Teleport, Blink, etc.).
         // See lib/Player.js _applyTeleport and helpers/teleportAbilities.js.
         // Clients render banner notifications + glow rings + arrival flashes
@@ -875,6 +890,9 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
     // battle signal arrays to keep .wc3v file size sane.
     battles: serializeBattles(world.battles),
     battleStats: world.battleStats || { totalBattles: 0, totalSignals: 0, byCategory: {}, byPlayer: {} },
+    // Dominance meta gate — clients must check `dominance.available` before
+    // rendering any dominance UI; when false NO player carries dominanceSeries.
+    dominance: dominance.meta,
     replay: (() => {
       // strip raw decompressed replay binary — client never uses it
       delete replay.metadata.gameData;

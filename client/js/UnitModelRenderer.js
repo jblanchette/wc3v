@@ -27,6 +27,10 @@
   // Z-up (MDX) -> Y-up wrapper rotation baked by the exporter (-90deg about +X).
   const ZUP_TO_YUP = new THREE.Quaternion(-0.70710678, 0, 0, 0.70710678);
   const CATS = ['idle', 'walk', 'attack', 'death'];
+  // Bind-pose bounding spheres are tight; an animated pose (a swing, a death
+  // sprawl) reaches outside them. Inflating before enabling frustum culling
+  // keeps units from popping out at the screen edge.
+  const SKINNED_BOUNDS_INFLATE = 2.5;
   // Cache-bust for unit GLBs + manifest. R2 serves assets/models immutable (1y),
   // so when a model's CONTENT changes (materials, geometry) the URL must change or
   // returning viewers keep the stale file. BUMP THIS whenever the roster is
@@ -172,19 +176,27 @@
       if (n < 2) return out;
 
       // Spatial hash so we only test nearby pairs (armies can be 60+ units).
+      //
+      // Built ONCE, with integer keys, and the Map is reused across frames.
+      // It used to be rebuilt on each of the 4 relaxation iterations using
+      // template-literal keys — 4 Map allocations plus 4N string allocations
+      // every frame. Building once is sound here: a relaxation push is a few
+      // world units, while the 3x3 cell scan already reaches 128 units past the
+      // unit's own cell, so a unit nudged over a boundary is still tested
+      // against everything that could possibly overlap it.
       const CELL = 128;
-      const key = (gx, gy) => gx + ',' + gy;
-      const build = () => {
-        const grid = new Map();
-        for (let i = 0; i < n; i++) {
-          const k = key(Math.floor(ex[i] / CELL), Math.floor(ey[i] / CELL));
-          let b = grid.get(k); if (!b) grid.set(k, b = []); b.push(i);
-        }
-        return grid;
-      };
+      // Integer key. Cell coords are small (map is ~16k units => ~128 cells),
+      // so a 16-bit-shifted pack is collision-free and stays a Smi.
+      const key = (gx, gy) => (gx + 32768) * 65536 + (gy + 32768);
+      if (!this._sepGrid) this._sepGrid = new Map();
+      const grid = this._sepGrid;
+      grid.clear();
+      for (let i = 0; i < n; i++) {
+        const k = key(Math.floor(ex[i] / CELL), Math.floor(ey[i] / CELL));
+        let b = grid.get(k); if (!b) grid.set(k, b = []); b.push(i);
+      }
       const ITER = 4;
       for (let it = 0; it < ITER; it++) {
-        const grid = build();
         for (let i = 0; i < n; i++) {
           const gx = Math.floor(ex[i] / CELL), gy = Math.floor(ey[i] / CELL);
           for (let ay = gy - 1; ay <= gy + 1; ay++) {
@@ -663,11 +675,31 @@
       const boneInverses = tpl.skeleton.boneInverses.map(m => m.clone());
       const skeleton = new THREE.Skeleton(bones, boneInverses);
       const skinnedMeshes = [];
+      const cullEnabled = !(window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+        window.WC3V_CONFIG.perf.frustumCull === false);
       root.traverse(o => {
         if (o.isSkinnedMesh) {
           o.material = o.material.clone();   // shares the texture map, own opacity
           o.bind(skeleton, new THREE.Matrix4());
-          o.frustumCulled = false;
+          // Frustum culling was off because a skinned mesh's bounding sphere is
+          // computed from the BIND POSE at the origin, so three culled units
+          // that were plainly on screen. Fixing the bound rather than disabling
+          // the test: compute it once on the shared template geometry and
+          // inflate it so any animated pose still falls inside. Measured on a
+          // mid-game frame this took draw calls from 373 to 104.
+          if (cullEnabled) {
+            const g = o.geometry;
+            if (g) {
+              if (!g.boundingSphere) g.computeBoundingSphere();
+              if (g.boundingSphere && !g.__wc3vInflated) {
+                g.boundingSphere.radius *= SKINNED_BOUNDS_INFLATE;
+                g.__wc3vInflated = true;     // geometry is shared — inflate once
+              }
+            }
+            o.frustumCulled = true;
+          } else {
+            o.frustumCulled = false;
+          }
           skinnedMeshes.push(o);
         }
       });

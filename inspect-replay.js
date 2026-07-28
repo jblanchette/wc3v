@@ -31,6 +31,7 @@
  *                          battles    - detected combat battles with category + tracker box bounds
  *                          battles-debug - one battle's full signal list + tracker samples (needs --battle=ID)
  *                          teleports  - structured teleport events (TP Scroll, Mass Teleport, Blink, Staff)
+ *                          dominance  - per-player dominance score series + momentum events
  *                          basegrid   - base pathing grid data (from WPM)
  *                          all        - everything
  *   --filter=KEY        Filter events by key (e.g. addUnit, addBuilding, HeroLevel)
@@ -1337,6 +1338,64 @@ if (showAll || showSections.includes('teleports')) {
     });
   }
   if (total === 0) console.log('  (no teleports detected)');
+  console.log('');
+}
+
+// === Dominance =============================================================
+// Per-player dominance score series (lib/DominanceSeries.js). Shows the meta
+// gate, score checkpoints, min/max, and the confident momentum events that
+// drove the swings.
+if (showAll || showSections.includes('dominance')) {
+  console.log(`\n=== Dominance ===`);
+  const meta = data.dominance;
+  if (!meta) {
+    console.log('  (no dominance block — replay parsed before the feature existed; re-run node wc3v.js)');
+  } else if (!meta.available) {
+    console.log(`  version=${meta.version} available=false`);
+    console.log(`  reason: ${meta.reason}`);
+  } else {
+    console.log(`  version=${meta.version} available=true components=` +
+      Object.keys(meta.componentsUsed || {}).filter(k => meta.componentsUsed[k]).join(','));
+
+    const pids = Object.keys(data.players || {}).sort((a, b) => Number(a) - Number(b));
+    for (const pid of pids) {
+      if (!shouldIncludePlayer(pid)) continue;
+      const p = data.players[pid];
+      if (p.isNeutralPlayer || !p.dominanceSeries) continue;
+      const { samples, events } = p.dominanceSeries;
+      if (!samples.length) continue;
+
+      const endT = samples[samples.length - 1].t;
+      const scoreAt = (ms) => {
+        let best = samples[0];
+        for (const s of samples) { if (s.t <= ms) best = s; else break; }
+        return best.score.toFixed(1);
+      };
+      let min = samples[0], max = samples[0];
+      for (const s of samples) {
+        if (s.score < min.score) min = s;
+        if (s.score > max.score) max = s;
+      }
+
+      console.log(`\n  Player ${pid}: ${samples.length} samples, ${events.length} momentum event(s)`);
+      const checkpoints = [0, 120000, 300000, 600000, endT]
+        .filter((t, i, arr) => t <= endT && arr.indexOf(t) === i);
+      console.log('    score @ ' + checkpoints
+        .map(t => `${formatTime(t)}=${scoreAt(t)}`).join('  '));
+      console.log(`    min=${min.score.toFixed(1)} @ ${formatTime(min.t)}   ` +
+                  `max=${max.score.toFixed(1)} @ ${formatTime(max.t)}`);
+
+      const shown = events.slice(0, limit);
+      shown.forEach(e => {
+        const sign = e.delta >= 0 ? '+' : '';
+        const battle = e.battleId != null ? ` battle=${e.battleId}` : '';
+        console.log(`    ${formatTime(e.t).padStart(6)}  ${e.kind.padEnd(12)} ${sign}${e.delta}${battle}`);
+      });
+      if (events.length > shown.length) {
+        console.log(`    ... ${events.length - shown.length} more (raise --limit)`);
+      }
+    }
+  }
   console.log('');
 }
 

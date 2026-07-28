@@ -303,13 +303,24 @@ const UnitsProductionPanel = class {
 
     const dt = gameTime - this._lastUpdateGameTime;
     const isSmallStep = dt >= 0 && dt < 200;
-    const needsFullRecompute = !isSmallStep;
+    let needsFullRecompute = !isSmallStep;
+
+    // The full recompute tears down and rebuilds this panel's grids with
+    // innerHTML, so it must not run every frame. The game-time test alone lets
+    // it: at 16x one frame advances ~267ms of game time, so `dt >= 200` is true
+    // on every frame. Add a wall-clock floor — a backward jump (scrub) still
+    // rebuilds immediately, since that's a real content change.
+    const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+    if (needsFullRecompute && dt >= 0 && (now - (this._lastUpdateWall || 0)) < 200) {
+      needsFullRecompute = false;
+    }
 
     // Always update production progress bars (cheap)
     this._updateProductionBars(gameTime);
 
     if (!needsFullRecompute) return;
 
+    this._lastUpdateWall = now;
     this._lastUpdateGameTime = gameTime;
 
     this._playerEls.forEach(pEl => {

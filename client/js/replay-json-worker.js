@@ -8,16 +8,29 @@
 // parser — that's parser-worker.js.)
 //
 // Protocol:
-//   main → worker:  { type: 'parse', text: string }
+//   main → worker:  { type: 'parse',       text: string }        (legacy)
+//   main → worker:  { type: 'parseBuffer', buffer: ArrayBuffer }  (preferred)
 //   worker → main:  { type: 'done', result: <parsed object> }
 //                   { type: 'error', message: string }
+//
+// Prefer 'parseBuffer': the main thread hands over the raw response bytes as a
+// TRANSFERABLE, so there is no multi-MB string on the main thread and no
+// structured-clone copy on the way in. UTF-8 decoding happens here too.
 
 self.onmessage = (e) => {
   const msg = e && e.data;
-  if (!msg || msg.type !== 'parse') return;
+  if (!msg) return;
 
   try {
-    const result = JSON.parse(msg.text);
+    let text;
+    if (msg.type === 'parseBuffer') {
+      text = new TextDecoder('utf-8').decode(new Uint8Array(msg.buffer));
+    } else if (msg.type === 'parse') {
+      text = msg.text;
+    } else {
+      return;
+    }
+    const result = JSON.parse(text);
     self.postMessage({ type: 'done', result });
   } catch (err) {
     self.postMessage({

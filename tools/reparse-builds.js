@@ -11,6 +11,10 @@
  *   node tools/reparse-builds.js --dry-run    — list replays without parsing
  *   node tools/reparse-builds.js --debug      — reparse with debug output (keeps uncompressed .wc3v)
  *   node tools/reparse-builds.js --all        — also include replays not in builds-manifest
+ *   node tools/reparse-builds.js --shard=2/6  — process only the 2nd of 6 round-robin
+ *                                               slices (run N instances in parallel;
+ *                                               each replay parse is an independent
+ *                                               process so file-level sharding is safe)
  *
  * Source: reads replay IDs from client/data/builds-manifest.json
  * Input:  replays/{id}.w3g (raw replay files)
@@ -78,6 +82,22 @@ for (const id of uniqueIds) {
   } else {
     missing.push(id);
   }
+}
+
+// --shard=K/N — keep only the K-th (1-based) round-robin slice of the
+// available list so N instances can run in parallel.
+const shardArg = (process.argv.find(a => a.startsWith('--shard=')) || '').replace('--shard=', '');
+if (shardArg) {
+  const m = /^(\d+)\/(\d+)$/.exec(shardArg);
+  if (!m || +m[1] < 1 || +m[1] > +m[2]) {
+    console.error(`Invalid --shard=${shardArg} (expected K/N with 1 <= K <= N)`);
+    process.exit(1);
+  }
+  const shardK = +m[1], shardN = +m[2];
+  const sliced = available.filter((_, i) => i % shardN === shardK - 1);
+  console.log(`Shard ${shardK}/${shardN}: ${sliced.length} of ${available.length} replay(s)`);
+  available.length = 0;
+  available.push(...sliced);
 }
 
 console.log(`Found ${uniqueIds.length} unique replay(s) across ${manifest.builds.length} builds`);

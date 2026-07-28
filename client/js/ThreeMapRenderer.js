@@ -1565,9 +1565,16 @@
     animateLevelPins () {
       if (!this._levelPins) return;
       const t = performance.now() / 1000;
-      for (const pin of Object.values(this._levelPins)) {
-        pin.rotation.y = t * 0.5; // slow spin
-        pin.position.y += Math.sin(t * 2) * 0.1; // subtle bob
+      // for..in over the object instead of Object.values(), which allocated a
+      // fresh array every frame. The bob also ASSIGNS from a remembered base
+      // height — it used to `+=` a sine, accumulating a random walk that
+      // drifted the pins upward over the course of a match.
+      for (const id in this._levelPins) {
+        const pin = this._levelPins[id];
+        if (!pin) continue;
+        if (pin._baseY === undefined) pin._baseY = pin.position.y;
+        pin.rotation.y = t * 0.5;                          // slow spin
+        pin.position.y = pin._baseY + Math.sin(t * 2) * 5; // subtle bob (~1/3 of the pin's 15u radius)
       }
     }
 
@@ -2804,11 +2811,20 @@
 
     // Request a single render frame (for use after async model loads when
     // the main render loop isn't running yet).
+    //
+    // Callers fire this whenever a building/splat/unit model appears or
+    // disappears — which during playback is constantly. The viewer's main loop
+    // already calls render() every frame, so honouring those requests too would
+    // schedule a SECOND full renderer.render(scene, camera) on the next frame.
+    // Wc3vViewer.mainLoop clears _pendingRender each frame (the same way it
+    // defuses its own requestRender), so this is a no-op while the loop drives
+    // us and still works when it doesn't.
     requestRender () {
       if (this._disposed || this._pendingRender) return;
       this._pendingRender = true;
       this._rafId = requestAnimationFrame(() => {
         this._rafId = null;
+        if (!this._pendingRender) return;   // main loop already rendered this frame
         this._pendingRender = false;
         if (this._disposed || !this.ready) return;
         this.render();

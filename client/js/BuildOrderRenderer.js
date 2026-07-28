@@ -206,7 +206,13 @@ const BuildOrderRenderer = class {
   // that disabled state and is called by app.js on enter/exit guide mode.
   _renderWalkthroughCta (ctaEl, mePlayer) {
     if (!ctaEl) return;
-    const ok = (typeof ReplayGuide !== 'undefined') && (this.viewer.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer).length >= 2;
+    // ReplayGuide.js is fetched on demand by enterGuideMode, so probing for the
+    // global here would hide the CTA until after the walkthrough had already
+    // been opened. WC3V_GUIDE_AVAILABLE (set in viewer.html) states the page's
+    // capability instead of the module's load state.
+    const guideAvailable = (typeof window !== 'undefined' && window.WC3V_GUIDE_AVAILABLE) ||
+      (typeof ReplayGuide !== 'undefined');
+    const ok = guideAvailable && (this.viewer.buildOrderPlayers || []).filter(p => p && !p.isNeutralPlayer).length >= 2;
     if (!ok) { ctaEl.innerHTML = ''; ctaEl.hidden = true; return; }
     const label = this.viewer._guideOpenedOnce ? '▶ Re-open the walkthrough' : '▶ Start the walkthrough';
     ctaEl.innerHTML = '<button type="button" class="bo-walkthrough-cta-btn" data-bo-start-walkthrough>' + label + '</button>';
