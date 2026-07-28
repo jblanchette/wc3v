@@ -12,6 +12,7 @@
  *                          events     - eventStream entries (addUnit, addBuilding, etc.)
  *                          expansions - only addBuilding events flagged as expansions
  *                          units      - exported unit list with flags
+ *                          combatdata - per-unit-type attack timing (cooldown/damage point/backswing/range)
  *                          paths      - unit movement paths with groupId data
  *                          footprints - per-hero pre-baked footprint stamp counts (trail render)
  *                          positions  - position-stream health (density, gaps, integrity)
@@ -248,6 +249,34 @@ if (showAll || showSections.includes('units')) {
     if (units.length > limit) {
       console.log(`    ... (${units.length - limit} more)`);
     }
+  }
+  console.log('');
+}
+
+// --- Combat / attack-timing data (SLK → meta.combat, see extract-unit-combat.js) ---
+if (showAll || showSections.includes('combatdata')) {
+  console.log('=== COMBAT DATA (attack timing) ===');
+  console.log('  (cd=cooldown  dmgpt=damage point  bsw=backswing  rng=range, all seconds/wu)');
+  for (const [pid, pdata] of Object.entries(data.players || {})) {
+    if (!shouldIncludePlayer(pid)) continue;
+    if (pdata.isNeutralPlayer) continue;
+
+    const meta = (data.replay && data.replay.players[pid]) || {};
+    console.log(`\n  Player ${pid}: ${meta.name || '??'} (${pdata.race})`);
+
+    let units = pdata.units || [];
+    if (searchText) units = units.filter(u => (u.displayName || '').toLowerCase().includes(searchText));
+
+    const seen = new Set();          // one line per unit TYPE (itemId), not per instance
+    units.forEach(u => {
+      if (seen.has(u.itemId)) return;
+      seen.add(u.itemId);
+      const c = u.meta && u.meta.combat;
+      if (!c) return;                // non-combatants (workers, most buildings)
+      const w2 = c.weapon2 ? `  +2nd(${c.weapon2.weaponType || '?'} rng=${c.weapon2.range})` : '';
+      console.log(`    ${u.displayName} (${u.itemId})  cd=${c.cooldown} dmgpt=${c.damagePoint} bsw=${c.backswing} rng=${c.range} ${c.weaponType || '?'}/${c.attackType || '?'} dmg=${c.minDamage}-${c.maxDamage}${w2}`);
+    });
+    if (seen.size === 0) console.log('    (no unit combat data — re-parse the replay to populate meta.combat)');
   }
   console.log('');
 }

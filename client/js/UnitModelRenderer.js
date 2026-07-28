@@ -62,6 +62,31 @@
   let BLOB_GEO = null;
   function blobGeo () { if (!BLOB_GEO) BLOB_GEO = new THREE.SphereGeometry(1, 14, 12); return BLOB_GEO; }
 
+  // Shared soft blob-shadow decal (unit-radius plane + radial-gradient alpha).
+  // WC3 grounds every unit with a soft dark shadow offset toward the sun's cast
+  // direction (see reference-shots/) — the viewer had none. Cheap: one shared
+  // gradient texture on a 1×1 plane, scaled + laid flat per instance.
+  let SHADOW_GEO = null;
+  function shadowGeo () { if (!SHADOW_GEO) SHADOW_GEO = new THREE.PlaneGeometry(1, 1); return SHADOW_GEO; }
+  let SHADOW_TEX = null;
+  function shadowTexture () {
+    if (SHADOW_TEX) return SHADOW_TEX;
+    const s = 64, cv = document.createElement('canvas'); cv.width = cv.height = s;
+    const ctx = cv.getContext('2d');
+    const g = ctx.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    g.addColorStop(0, 'rgba(0,0,0,0.55)');
+    g.addColorStop(0.6, 'rgba(0,0,0,0.35)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, s, s);
+    SHADOW_TEX = new THREE.CanvasTexture(cv);
+    SHADOW_TEX.needsUpdate = true;
+    return SHADOW_TEX;
+  }
+  // Ground-plane offset of the shadow from the unit's feet, toward where the sun
+  // casts it (matches WC3_LIGHT_DIR_YUP in GLBLoader: sun upper-left → shadow to
+  // +x / +z in scene space). Scaled by unit radius.
+  const SHADOW_OFFSET_X = 0.22, SHADOW_OFFSET_Z = 0.22;
+
   class UnitModelRenderer {
     constructor (threeMapRenderer, viewer) {
       this.renderer = threeMapRenderer;
@@ -111,6 +136,77 @@
       return set;
     }
 
+    // Render-time collision separation for 3D units. WC3 never lets two units
+    // occupy the same space; the server enforces that at recorded path samples,
+    // but between samples (~400 ms) two units interpolating across each other can
+    // visually overlap. This nudges overlapping ground units apart along their
+    // centre line — a pure function of gameTime (scrub-safe). Air units (fly /
+    // hover / float) live on a separate collision layer and are left alone, as are
+    // buildings, corpses, un-spawned units, and camp creeps. Returns a map
+    // uuid → {x,y} of adjusted positions (only for units that actually moved).
+    _separateUnits (players, gameTime) {
+      const out = {};
+      const ex = [], ey = [], er = [], eu = [], ox = [], oy = [];
+      for (const player of players) {
+        for (const unit of (player.units || [])) {
+          if (unit.isBuilding || unit.neutralGroupId != null) continue;
+          const mt = unit.meta && unit.meta.moveType;
+          if (mt === 'fly' || mt === 'hover' || mt === 'float') continue; // air layer
+          const r = unit.collisionSize || 0;
+          if (r <= 0) continue;
+          const ready = unit.readyTime != null ? unit.readyTime : unit.spawnTime;
+          if (ready != null && gameTime < ready) continue;
+          const d = this._deathStart(unit);
+          if (d != null && gameTime >= d) continue; // dead / corpse — don't shove
+          const p = unit.getInterpolatedPosition(gameTime);
+          if (!p) continue;
+          eu.push(unit.uuid); ex.push(p.x); ey.push(p.y); er.push(r); ox.push(p.x); oy.push(p.y);
+        }
+      }
+      const n = eu.length;
+      if (n < 2) return out;
+
+      // Spatial hash so we only test nearby pairs (armies can be 60+ units).
+      const CELL = 128;
+      const key = (gx, gy) => gx + ',' + gy;
+      const build = () => {
+        const grid = new Map();
+        for (let i = 0; i < n; i++) {
+          const k = key(Math.floor(ex[i] / CELL), Math.floor(ey[i] / CELL));
+          let b = grid.get(k); if (!b) grid.set(k, b = []); b.push(i);
+        }
+        return grid;
+      };
+      const ITER = 4;
+      for (let it = 0; it < ITER; it++) {
+        const grid = build();
+        for (let i = 0; i < n; i++) {
+          const gx = Math.floor(ex[i] / CELL), gy = Math.floor(ey[i] / CELL);
+          for (let ay = gy - 1; ay <= gy + 1; ay++) {
+            for (let ax = gx - 1; ax <= gx + 1; ax++) {
+              const b = grid.get(key(ax, ay)); if (!b) continue;
+              for (const j of b) {
+                if (j <= i) continue;
+                let dx = ex[j] - ex[i], dy = ey[j] - ey[i];
+                const min = er[i] + er[j];
+                let d2 = dx * dx + dy * dy;
+                if (d2 >= min * min) continue;
+                let dist = Math.sqrt(d2);
+                if (dist < 1e-4) { dx = (i % 2 ? 1 : -1); dy = 0; dist = 1; } // coincident → arbitrary axis
+                const push = (min - dist) * 0.5, nx = dx / dist, ny = dy / dist;
+                ex[i] -= nx * push; ey[i] -= ny * push;
+                ex[j] += nx * push; ey[j] += ny * push;
+              }
+            }
+          }
+        }
+      }
+      for (let i = 0; i < n; i++) {
+        if (ex[i] !== ox[i] || ey[i] !== oy[i]) out[eu[i]] = { x: ex[i], y: ey[i] };
+      }
+      return out;
+    }
+
     _deathStart (unit) {
       if (unit.destroyedAt != null) return unit.destroyedAt;
       if (unit.lostState && unit.lostState.state === 'lost') return unit.lostState.since;
@@ -134,8 +230,8 @@
         if (this._hlUuids) {
           for (const id of this._hlUuids) this._restoreHighlight(this.instances[id] || this.creepInstances[id]);
         }
-        for (const k in this.instances) { const inst = this.instances[k]; if (inst && inst.root) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; } }
-        for (const k in this.creepInstances) { const inst = this.creepInstances[k]; if (inst && inst.root) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; } }
+        for (const k in this.instances) { const inst = this.instances[k]; if (inst && inst.root) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; } }
+        for (const k in this.creepInstances) { const inst = this.creepInstances[k]; if (inst && inst.root) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; } }
         for (const k in this.campMarkers) { const m = this.campMarkers[k]; if (m && m.sprite) m.sprite.visible = false; }
         return;
       }
@@ -145,6 +241,7 @@
       if (mi && mi.bounds && mi.bounds.map) { const e = mi.bounds.map; cx = (e[0][0] + e[0][1]) / 2; cy = (e[1][0] + e[1][1]) / 2; }
 
       const battleSet = this._activeBattleUuids(gameTime);
+      const sepMap = this._separateUnits(players, gameTime); // no two ground units share space
       const engagedCamps = this._engagedCampFootprints(gameTime); // camps with a live fight
       const alive = new Set();
       const campCreeps = [];   // neutral camp creeps — rendered only by _updateCreeps
@@ -208,7 +305,7 @@
           // Drop the unit once the death clip + corpse fade has fully elapsed.
           if (deathStart != null) {
             const total = inst.deathDur * 1000 + CORPSE_FADE_MS;
-            if (gameTime >= deathStart + total) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; continue; }
+            if (gameTime >= deathStart + total) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; continue; }
           }
 
           // Worker declutter + ambient harvest loop (3D). Skipped while a unit is
@@ -222,6 +319,7 @@
             if (treat === 'hidden') {
               inst.root.visible = false;
               if (inst.ring) inst.ring.visible = false;
+              if (inst.shadow) inst.shadow.visible = false;
               continue;
             }
             if (treat === 'loop') loopAnchors = this._loopAnchors(inst, unit, pos, gameTime, player);
@@ -230,11 +328,15 @@
           if (loopAnchors) {
             this._placeLoop(inst, unit, loopAnchors, gameTime, dt, cx, cy);
           } else {
-            this._place(inst, unit, pos, gameTime, cx, cy);
+            // Place at the collision-separated position (units never share space in
+            // WC3); drive animation from the RAW path position so being nudged apart
+            // doesn't read as walking.
+            this._place(inst, unit, sepMap[unit.uuid] || pos, gameTime, cx, cy);
             this._animate(inst, unit, pos, gameTime, dt, deathStart, battleSet);
           }
           inst.root.visible = true;
           if (inst.ring) inst.ring.visible = inst.state !== 'death'; // no ring on corpses
+          if (inst.shadow) inst.shadow.visible = inst.state !== 'death';
           alive.add(unit.uuid);
           this.rendered3DUuids.add(unit.uuid);
         }
@@ -242,7 +344,7 @@
 
       for (const k in this.instances) {
         const inst = this.instances[k];
-        if (inst && inst.root && !alive.has(k)) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; }
+        if (inst && inst.root && !alive.has(k)) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; }
       }
 
       this._updateCreeps(gameTime, cx, cy, dt, campCreeps, attackers);
@@ -596,9 +698,46 @@
       inst.ringRadius = cs * (isHero ? 1.7 : 1.35);
       const ringColor = inst.isIllusion ? ILLUSION_RING : (isHero ? HERO_RING : (player.playerColor || '#ffffff'));
       this._addRing(inst, ringColor, 0.85);
+      this._applyTeamColor(inst, player.playerColor);
+      this._addShadow(inst, cs);
       inst.root.visible = false;
       this.scene.add(inst.root);
       return inst;
+    }
+
+    // Set the player's colour on team-tinted unit materials — composite geosets
+    // (e.g. the footman tabard: team colour shows through the texture) and flat
+    // team-colour/glow geosets. GLBLoader tags them via material.userData.wc3 and
+    // exposes a uTeamColor uniform. No-op for units with no team geoset.
+    _applyTeamColor (inst, playerColorHex) {
+      const col = new THREE.Color(playerColorHex || '#ffffff');
+      for (const m of inst.skinnedMeshes) {
+        const mat = m.material, wc3 = mat && mat.userData && mat.userData.wc3;
+        if (wc3 && (wc3.replaceableId || wc3.teamBlend) && mat.uniforms && mat.uniforms.uTeamColor) {
+          mat.uniforms.uTeamColor.value.copy(col);
+        }
+      }
+    }
+
+    // Soft ground shadow (scene-level decal, tracks ring visibility). Radius keyed
+    // to collision size; offset toward the sun's cast direction in _place.
+    _addShadow (inst, cs) {
+      inst.shadow = new THREE.Mesh(shadowGeo(), new THREE.MeshBasicMaterial({
+        map: shadowTexture(), transparent: true, depthWrite: false, opacity: 0.9, color: 0x000000
+      }));
+      inst.shadow.rotation.x = -Math.PI / 2;
+      inst.shadow.renderOrder = 1;   // under the selection ring (3), over terrain
+      inst.shadow.visible = false;
+      inst.shadowRadius = cs * 2.0;  // a touch wider than the model footprint
+      this.scene.add(inst.shadow);
+    }
+
+    // Position the ground shadow under a unit standing at (wx,wy,groundY).
+    _placeShadow (inst, wx, wy, groundY, cx, cy) {
+      if (!inst.shadow) return;
+      const r = inst.shadowRadius;
+      inst.shadow.position.set(wx - cx + r * SHADOW_OFFSET_X, groundY + 1, -(wy - cy) + r * SHADOW_OFFSET_Z);
+      inst.shadow.scale.set(r, r, r);
     }
 
     // Build the AnimationMixer + per-category actions; start idle (desynced).
@@ -686,6 +825,39 @@
       return (ageS > inst.deathDur) ? Math.max(0, 1 - (ageS - inst.deathDur) * 1000 / CORPSE_FADE_MS) : 1;
     }
 
+    // Synthesized attack cadence: while a unit is in an active battle it swings on
+    // its REAL cooldown (meta.combat.cooldown from unitweapons.slk), the attack
+    // clip playing once per swing with the hit landing at the clip's own damage
+    // frame (~damagePoint). Driven deterministically from gameTime (paused action +
+    // manual time, like _applyDeath) so it's identical on any scrub/seek. Replays
+    // don't record individual attack events, so a steady cadence during the battle
+    // window is the best faithful synthesis.
+    _applyAttack (inst, unit, gameTime) {
+      const a = inst.actions.attack;
+      if (!a) { this._setLoopState(inst, 'idle'); inst.mixer.update(0); return; }
+      const clipDur = (a.getClip() && a.getClip().duration) || 1;
+      const combat = unit.meta && unit.meta.combat;
+      // Swing every `cooldown` seconds; never faster than the animation itself.
+      let period = (combat && combat.cooldown > 0) ? combat.cooldown : clipDur;
+      if (period < clipDur) period = clipDur;
+      // Per-unit phase offset [0,period) so an army doesn't swing in lockstep.
+      // Reuses the shared uuid hash (_phaseOffset returns an int in [0,cycle)).
+      if (inst._atkPhase == null) inst._atkPhase = (this._phaseOffset(unit.uuid, 1000) / 1000) * period;
+      const phase = (((gameTime / 1000) + inst._atkPhase) % period + period) % period;
+
+      if (inst.state !== 'attack') {
+        for (const k of ['idle', 'walk']) { const x = inst.actions[k]; if (x) x.stop(); }
+        a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true;
+        a.enabled = true; a.setEffectiveWeight(1); a.setEffectiveTimeScale(1); a.play();
+        inst.state = 'attack';
+      }
+      a.paused = true;
+      // In-swing → play through the clip; in the cooldown gap → hold the recovery
+      // (last) frame so ranged units with long cooldowns don't loop unnaturally.
+      a.time = Math.min(phase, clipDur);
+      inst.mixer.update(0);   // apply the seeked pose without advancing
+    }
+
     _animate (inst, unit, pos, gameTime, dt, deathStart, battleSet) {
       if (!inst.mixer) return;
 
@@ -698,13 +870,29 @@
 
       // --- ALIVE: idle / walk / attack ---
       const back = unit.getInterpolatedPosition(gameTime - 100);
-      let moving = false;
-      if (back) { const dx = pos.x - back.x, dy = pos.y - back.y; moving = (dx * dx + dy * dy) > MOVE_EPS2; }
-      let target = 'idle';
-      if (moving) target = 'walk';
-      else if (inst.actions.attack && battleSet.has(unit.uuid)) target = 'attack';
-      this._setLoopState(inst, target);
-      inst.mixer.update(dt);
+      let moving = false, speed = 0;
+      if (back) {
+        const dx = pos.x - back.x, dy = pos.y - back.y, d2 = dx * dx + dy * dy;
+        moving = d2 > MOVE_EPS2;
+        speed = Math.sqrt(d2) / 0.1;   // world units / second (100 ms window)
+      }
+
+      if (moving) {
+        this._setLoopState(inst, 'walk');
+        // Stride-lock: play the walk cycle at (ground speed ÷ base move speed) so
+        // feet track the ground instead of skating. Clamped so slow drift / haste
+        // stays legible. The clip is authored for the unit's base speed → ~1.0×.
+        if (inst.actions.walk) {
+          const base = (unit.meta && unit.meta.movespeed) || 270;
+          inst.actions.walk.setEffectiveTimeScale(Math.max(0.45, Math.min(1.8, speed / base)));
+        }
+        inst.mixer.update(dt);
+      } else if (inst.actions.attack && battleSet.has(unit.uuid)) {
+        this._applyAttack(inst, unit, gameTime);   // scrub-safe cadence; drives the mixer itself
+      } else {
+        this._setLoopState(inst, 'idle');
+        inst.mixer.update(dt);
+      }
 
       // decay/stale fade for living units, plus illusion (ghostly) + hidden (faint).
       let op = unit.decayLevel != null ? unit.decayLevel : 1;
@@ -714,12 +902,21 @@
     }
 
     _setOpacity (inst, a) {
-      const transparent = a < 0.999;
+      const fading = a < 0.999;
       for (const sm of inst.skinnedMeshes) {
-        if (!sm.material) continue;
-        sm.material.transparent = transparent;
-        sm.material.opacity = a;
-        sm.material.depthWrite = !transparent;
+        const m = sm.material; if (!m) continue;
+        // WC3 skinned ShaderMaterial: fade via the uOpacity uniform, and while
+        // fading force alpha-blending (restoring each material's own base blend
+        // state when opaque again so team-glow/additive geosets keep their mode).
+        if (m.uniforms && m.uniforms.uOpacity) {
+          m.uniforms.uOpacity.value = a;
+          const baseT = m.userData.baseTransparent, baseD = m.userData.baseDepthWrite;
+          m.transparent = fading ? true : !!baseT;
+          m.depthWrite = fading ? false : (baseD !== false);
+        } else {
+          // Non-shader materials (placeholder blobs) — legacy opacity path.
+          m.transparent = fading; m.opacity = a; m.depthWrite = !fading;
+        }
       }
     }
 
@@ -735,6 +932,7 @@
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
       }
+      this._placeShadow(inst, wx, wy, groundY, cx, cy);
 
       // The placeholder blob is authored Y-up and rotationally symmetric — skip the
       // model facing rotation (it would tip the blob over via ZUP_TO_YUP).
@@ -765,6 +963,7 @@
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
       }
+      this._placeShadow(inst, wx, wy, groundY, cx, cy);
       if (inst.isPlaceholder) return;
       inst._wf = faceAng;
       w.quaternion.setFromAxisAngle(UP, faceAng + this._facingOffset).multiply(ZUP_TO_YUP);

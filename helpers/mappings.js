@@ -5,6 +5,7 @@ const spellOrderIds = require("./spellOrderIds.json");
 // Per-unit movement data (base move speed, turn rate, propulsion window) extracted
 // from the raw SLK tables by tools/extract-unit-movement.js. Keyed by itemId.
 const unitMovementMap = require("./unitMovement.json").units;
+const unitCombatMap = require("./unitCombat.json").units;
 
 const mapConfiguration = require("./mapConfiguration");
 
@@ -1946,6 +1947,17 @@ const getUnitInfo = (itemId) => {
     if (movement.turnRate != null) meta.turnRate = movement.turnRate;
     if (movement.propWindow != null) meta.propWindow = movement.propWindow;
     if (movement.moveType) meta.moveType = movement.moveType;
+  }
+
+  // Overlay real SLK combat/attack-timing data (cooldown, damage point,
+  // backswing, range, weapon/attack type) onto the meta clone. The client uses
+  // this to synthesize a physically correct attack cadence in the 3D viewer —
+  // a unit restarts its swing every `cooldown` with the hit landing at
+  // `damagePoint` into the attack clip. See tools/extract-unit-combat.js.
+  const combat = unitCombatMap[itemId];
+  if (combat) {
+    if (movement == null) meta = Object.assign({}, meta);
+    meta.combat = combat;
   }
 
   const balanceInfo = unitBalanceMap[itemId] || {};

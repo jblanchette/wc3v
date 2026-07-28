@@ -13,6 +13,125 @@
  *   });
  */
 (function () {
+  // WC3 light direction (Z-up in HiveWE: normalize(1,1,-3)); our converter maps
+  // Z-up (x,y,z) → Y-up (x,z,-y) so (1,1,-3) → (1,-3,-1). Shared with the static
+  // building shader so units, buildings and terrain agree on the sun.
+  const WC3_LIGHT_DIR_YUP = [1, -3, -1];
+
+  // Skinned WC3 unit shader. Reforged SD units read almost full-bright in game
+  // (see reference-shots/): the model's form shading is painted into the texture,
+  // so we apply only a gentle half-Lambert over a high ambient floor. Skinning is
+  // done via three's shader chunks — a ShaderMaterial (NOT RawShaderMaterial) on a
+  // SkinnedMesh gets `#define USE_SKINNING`, skinIndex/skinWeight attributes, and
+  // the bone-texture uniforms from three automatically; we just include the chunks.
+  const WC3_SKINNED_VERT = [
+    '#include <common>',
+    '#include <skinning_pars_vertex>',
+    'varying vec2 vUv;',
+    'varying vec3 vNormalW;',
+    'void main() {',
+    '  vUv = uv;',
+    '  vec3 objectNormal = normal;',
+    '  #include <skinbase_vertex>',
+    '  #include <skinnormal_vertex>',
+    '  vNormalW = normalize(mat3(modelMatrix) * objectNormal);',
+    '  vec3 transformed = position;',
+    '  #include <skinning_vertex>',
+    '  gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);',
+    '}'
+  ].join('\n');
+
+  const WC3_SKINNED_FRAG = [
+    'uniform sampler2D map;',
+    'uniform float uHasMap;',
+    'uniform vec3 uColor;',        // base tint (usually white)
+    'uniform vec3 uTeamColor;',    // player colour (set per instance by the renderer)
+    'uniform float uTeamBlend;',   // 1 = composite team geoset (colour under texture)
+    'uniform float uReplaceable;', // >0 = flat team colour/glow geoset (no texture)
+    'uniform float uUnshaded;',    // 1 = ignore lighting (full-bright)
+    'uniform float uAmbient;',     // ambient floor for the half-Lambert
+    'uniform float uAlphaTest;',   // hard cutoff (transparent filter mode)
+    'uniform float uOpacity;',     // instance fade (illusion / hidden / decay)
+    'uniform vec3 uLightDir;',
+    'varying vec2 vUv;',
+    'varying vec3 vNormalW;',
+    'void main() {',
+    '  vec4 texel = uHasMap > 0.5 ? texture2D(map, vUv) : vec4(1.0);',
+    '  vec3 rgb = texel.rgb;',
+    '  float alpha = texel.a;',
+    '  if (uReplaceable > 0.5 && uHasMap < 0.5) {',   // pure team colour/glow geoset
+    '    rgb = uTeamColor; alpha = 1.0;',
+    '  } else if (uTeamBlend > 0.5) {',               // team colour shows through texture alpha
+    '    rgb = mix(uTeamColor, texel.rgb, texel.a); alpha = 1.0;',
+    '  }',
+    '  rgb *= uColor;',
+    '  if (uAlphaTest > 0.0 && alpha < uAlphaTest) discard;',
+    '  if (alpha < 0.01) discard;',
+    '  float lighting = 1.0;',
+    '  if (uUnshaded < 0.5) {',
+    '    float halfLambert = (dot(normalize(vNormalW), -uLightDir) + 1.0) * 0.5;',
+    '    lighting = mix(uAmbient, 1.0, halfLambert);',
+    '  }',
+    '  gl_FragColor = vec4(rgb * lighting, alpha * uOpacity);',  // multiply in sRGB (no gamma) — matches WC3
+    '}'
+  ].join('\n');
+
+  // MDX FilterMode (+ team-glow replaceable) → three.js blend / depth / alpha-test
+  // state. Mirrors the converter's alphaMode choice but drives the exact blend mode
+  // three can't express in glTF (additive / modulate).
+  function wc3RenderState (filterMode, replaceableId) {
+    if (replaceableId === 2) return { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0 };
+    switch (filterMode) {
+      case 1:  return { transparent: false, blending: THREE.NormalBlending,   depthWrite: true,  alphaTest: 0.75 }; // Transparent (cutout)
+      case 2:  return { transparent: true,  blending: THREE.NormalBlending,   depthWrite: false, alphaTest: 0 };    // Blend
+      case 3:
+      case 4:  return { transparent: true,  blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0 };    // Additive / AddAlpha
+      case 5:
+      case 6:  return { transparent: true,  blending: THREE.MultiplyBlending, depthWrite: false, alphaTest: 0 };    // Modulate
+      default: return { transparent: false, blending: THREE.NormalBlending,   depthWrite: true,  alphaTest: 0 };    // None (opaque)
+    }
+  }
+
+  // Build a skinned WC3 unit material from an (optional) diffuse map + its wc3
+  // render semantics. Team colour starts white; the renderer sets uTeamColor per
+  // instance. `wc3` is stashed on userData so the renderer can find team geosets.
+  function buildWC3SkinnedMaterial (map, wc3) {
+    const info = wc3 || { filterMode: 0, unshaded: false, replaceableId: 0, teamBlend: false };
+    // A composite team geoset (team colour UNDER a unit texture) always outputs
+    // alpha=1.0 and fills its footprint, so it renders OPAQUE with depth writes —
+    // its diffuse layer's own blend mode (often Blend) would wrongly make it
+    // see-through and skip depth, glitching against the body.
+    const rs = info.teamBlend
+      ? { transparent: false, blending: THREE.NormalBlending, depthWrite: true, alphaTest: 0 }
+      : wc3RenderState(info.filterMode || 0, info.replaceableId || 0);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: {
+        map: { value: map || null },
+        uHasMap: { value: map ? 1.0 : 0.0 },
+        uColor: { value: new THREE.Color(1, 1, 1) },
+        uTeamColor: { value: new THREE.Color(1, 1, 1) },
+        uTeamBlend: { value: info.teamBlend ? 1.0 : 0.0 },
+        uReplaceable: { value: info.replaceableId ? 1.0 : 0.0 },
+        uUnshaded: { value: info.unshaded ? 1.0 : 0.0 },
+        uAmbient: { value: 0.78 },   // high floor → near full-bright SD look
+        uAlphaTest: { value: rs.alphaTest },
+        uOpacity: { value: 1.0 },
+        uLightDir: { value: new THREE.Vector3().fromArray(WC3_LIGHT_DIR_YUP).normalize() }
+      },
+      vertexShader: WC3_SKINNED_VERT,
+      fragmentShader: WC3_SKINNED_FRAG,
+      side: THREE.DoubleSide,
+      transparent: rs.transparent,
+      blending: rs.blending,
+      depthWrite: rs.depthWrite
+    });
+    mat.userData.wc3 = info;   // renderer checks wc3.replaceableId / wc3.teamBlend
+    // Base blend state, so the renderer's fade can force transparency then restore it.
+    mat.userData.baseTransparent = rs.transparent;
+    mat.userData.baseDepthWrite = rs.depthWrite;
+    return mat;
+  }
+
   class GLBLoader {
     load (url, onLoad, onProgress, onError) {
       fetch(url)
@@ -340,7 +459,11 @@
             const el = new Image();
             el.onload = () => {
               const tex = new THREE.Texture(el);
-              tex.colorSpace = THREE.SRGBColorSpace;
+              // LinearSRGBColorSpace = raw passthrough; the WC3 shader multiplies
+              // in sRGB space (no gamma), matching the static building shader and
+              // the game engine. (Was SRGBColorSpace — the cause of units reading
+              // differently from buildings.)
+              tex.colorSpace = THREE.LinearSRGBColorSpace;
               tex.flipY = false;
               tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
               tex.needsUpdate = true;
@@ -356,17 +479,19 @@
 
       const materialFor = (matIdx) => {
         let map = null;
+        let wc3 = null;
         if (matIdx !== undefined && gltf.materials && gltf.materials[matIdx]) {
-          const pbr = gltf.materials[matIdx].pbrMetallicRoughness || {};
+          const gMat = gltf.materials[matIdx];
+          const pbr = gMat.pbrMetallicRoughness || {};
           if (pbr.baseColorTexture) {
             const t = gltf.textures[pbr.baseColorTexture.index];
             if (t && loadedTextures[t.source]) map = loadedTextures[t.source];
           }
+          // WC3 render semantics emitted by tools/convert-mdx-to-gltf-skinned.js
+          // (filter mode / unshaded / team-colour replaceable / composite blend).
+          if (gMat.extras) wc3 = gMat.extras;
         }
-        return new THREE.MeshStandardMaterial({
-          map, color: map ? 0xffffff : 0x999999,
-          roughness: 1, metalness: 0, side: THREE.DoubleSide
-        });
+        return buildWC3SkinnedMaterial(map, wc3);
       };
 
       return Promise.all(imagePromises).then(() => {

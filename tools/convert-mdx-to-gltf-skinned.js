@@ -170,20 +170,82 @@ function isEffectTexture (image) {
   if (base === 'shadow' || base === 'shadowflyer') return true;
   return /^(clouds?|dust\d|smoke|flare|shockwave|lightning|glow|star\d|splat)/.test(base);
 }
-function resolveGeosetTexture (mdx, geoset) {
+// MDX FilterMode → glTF alpha mode + WC3 blend intent. None is opaque; Transparent
+// is a hard alpha cutout (WC3/HiveWE discard at 0.75); everything else blends. The
+// exact blend (straight alpha vs. additive vs. modulate) is preserved in the
+// material's `wc3.filterMode` extra so the client can pick the Three.js blend mode.
+//   0 None  1 Transparent  2 Blend  3 Additive  4 AddAlpha  5 Modulate  6 Modulate2x
+function alphaModeFor (filterMode) {
+  switch (filterMode) {
+    case 1:  return { mode: 'MASK', cutoff: 0.75 };
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:  return { mode: 'BLEND', cutoff: null };
+    default: return { mode: 'OPAQUE', cutoff: null };
+  }
+}
+
+// Resolve a geoset's material into the render semantics the exporter needs:
+//   baseName      — diffuse texture basename (ReplaceableId 0), or null
+//   replaceableId — 1 (team color) / 2 (team glow) → runtime player-tinted, no image
+//   filterMode    — MDX layer FilterMode (blend intent)
+//   unshaded      — layer is full-bright (ignores lighting) — common on SD units
+//   twoSided      — layer is double-sided
+//   skip          — geoset is a particle/shadow/effect plane → drop entirely
+// Unlike the old resolver, team-color/glow geosets are KEPT (not dropped as
+// "no diffuse") so units actually carry the player's colour like they do in game.
+function resolveGeosetMaterial (mdx, geoset) {
   const mat = mdx.Materials && mdx.Materials[geoset.MaterialID];
-  if (!mat || !mat.Layers) return { skip: false, baseName: null };
+  if (!mat || !mat.Layers) return { skip: false, baseName: null, replaceableId: 0, filterMode: 0 };
   let sawEffect = false;
+  let diffuse = null;   // { baseName, filterMode, unshaded, twoSided } — first rid0 layer
+  let team = 0;         // 1 (team color) / 2 (team glow), if any layer uses it
+  // A WC3 material can stack layers: the classic team-colour geoset draws a flat
+  // team-colour layer UNDER the unit texture (which is alpha-blended over it), so
+  // the player's colour shows through the texture's transparent areas. Collect
+  // both the diffuse texture AND the team replaceable so the client can composite
+  // `mix(teamColor, texRGB, texAlpha)` — flat-tinting a textured geoset would lose
+  // all the painted cloth/metal detail.
   for (const layer of mat.Layers) {
     const texId = layer.TextureID;
     if (typeof texId !== 'number') continue; // animated TextureID
     const tex = mdx.Textures && mdx.Textures[texId];
-    if (!tex || tex.ReplaceableId !== 0 || !tex.Image) continue; // team-color/empty
+    if (!tex) continue;
+    if (tex.ReplaceableId === 1) {           // team colour → runtime player tint
+      if (!team) team = 1;
+      continue;
+    }
+    if (tex.ReplaceableId === 2) {           // team glow → a radial-gradient sprite
+      // whose alpha we don't have (per-player replaceable texture). Flat-tinting
+      // the whole geoset yields a solid additive quad (a big colour rectangle),
+      // so drop it like an effect plane. A subtle glow isn't worth that artifact.
+      sawEffect = true;
+      continue;
+    }
+    if (tex.ReplaceableId !== 0 || !tex.Image) continue; // other replaceable / empty
     if (isEffectTexture(tex.Image)) { sawEffect = true; continue; }
-    return { skip: false, baseName: path.basename(tex.Image, path.extname(tex.Image)).toLowerCase() };
+    if (!diffuse) {
+      const shading = (typeof layer.Shading === 'number') ? layer.Shading : 0;
+      diffuse = {
+        baseName: path.basename(tex.Image, path.extname(tex.Image)).toLowerCase(),
+        filterMode: (typeof layer.FilterMode === 'number') ? layer.FilterMode : 0,
+        unshaded: (shading & 1) !== 0,   // LayerShading.Unshaded
+        twoSided: (shading & 16) !== 0   // LayerShading.TwoSided
+      };
+    }
   }
-  // No diffuse texture. If the geoset's real texture was an effect, drop the geoset.
-  return { skip: sawEffect, baseName: null };
+  if (diffuse) {
+    return { skip: false, baseName: diffuse.baseName, replaceableId: team,
+             filterMode: diffuse.filterMode, unshaded: diffuse.unshaded, twoSided: diffuse.twoSided };
+  }
+  if (team) {
+    // Pure team-colour/glow geoset (no diffuse) — a flat player-tinted overlay.
+    return { skip: false, baseName: null, replaceableId: team, filterMode: 0, unshaded: false, twoSided: true };
+  }
+  // No usable layer. If the geoset's real texture was an effect, drop the geoset.
+  return { skip: sawEffect, baseName: null, replaceableId: 0, filterMode: 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -253,19 +315,22 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
 
   // --- Mesh: one primitive per geoset, with skin attributes ---
   const mesh = doc.createMesh(mdx.Info && mdx.Info.Name || 'unit');
-  const texCache = {}; // baseName -> Material
-  let n4plus = 0, missingTex = 0, hidden = 0, hadHD = false;
+  const texCache = {}; // baseName -> Texture (shared across materials)
+  const matCache = {}; // material key -> Material (filter mode / team color aware)
+  let n4plus = 0, missingTex = 0, hidden = 0, hadHD = false, teamGeosets = 0;
 
   for (let gi = 0; gi < mdx.Geosets.length; gi++) {
     const g = mdx.Geosets[gi];
     const nv = g.Vertices.length / 3;
     if (nv === 0) continue;
     if (idle && !geosetVisibleDuringStand(mdx, gi, idleStart, idleEnd)) { hidden++; continue; }
-    // Skip geosets with no resolvable diffuse texture: particle/shadow/effect
-    // planes (texInfo.skip) and team-glow/color-only additive overlays
-    // (baseName null, e.g. archmage's rid2 glow geoset rendering as a gray plane).
-    const texInfo = resolveGeosetTexture(mdx, g);
-    if (texInfo.skip || !texInfo.baseName) { hidden++; continue; }
+    // Resolve WC3 material semantics. Drop only genuine effect planes
+    // (matInfo.skip). Team-color/glow geosets (replaceableId 1/2) are KEPT and
+    // rendered with a runtime player-tinted material; a geoset with neither a
+    // diffuse texture nor a team replaceable has nothing to draw.
+    const matInfo = resolveGeosetMaterial(mdx, g);
+    if (matInfo.skip) { hidden++; continue; }
+    if (!matInfo.baseName && !matInfo.replaceableId) { hidden++; continue; }
 
     const positions = new Float32Array(g.Vertices); // native Z-up
     const normals = new Float32Array(g.Normals);
@@ -320,20 +385,57 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
       .setIndices(doc.createAccessor().setType('SCALAR').setArray(idxArr).setBuffer(buffer));
     prim.setExtras({ geosetId: gi }); // source geoset (for tools/check-skinning.js)
 
-    // Material / texture
-    const base = texInfo.baseName;
-    if (base) {
-      if (!texCache[base]) {
+    // Material: build/reuse a glTF material carrying the WC3 render semantics
+    // (filter mode / unshaded / team-colour replaceable) as `extras.wc3` so the
+    // client honours alpha, blend mode, unlit shading, and player tint.
+    const team = matInfo.replaceableId || 0;
+    const base = matInfo.baseName;
+    const teamBlend = team && base;   // composite: team colour UNDER a unit texture
+    // A composite team geoset fills its footprint (team colour where the texture
+    // is transparent), so it renders OPAQUE and the client does the mix — the
+    // diffuse layer's own blend mode would wrongly make the whole geoset see-through.
+    const am = teamBlend ? { mode: 'OPAQUE', cutoff: null } : alphaModeFor(matInfo.filterMode || 0);
+    const wc3 = {
+      filterMode: matInfo.filterMode || 0,
+      unshaded: !!matInfo.unshaded,
+      replaceableId: team,
+      teamBlend: !!teamBlend
+    };
+    if (team) teamGeosets++;
+
+    let material;
+    if (team && !base) {
+      // Pure team colour/glow geoset: flat, no image; client sets player colour.
+      const key = 'team' + team;
+      if (matCache[key] === undefined) {
+        matCache[key] = doc.createMaterial(key)
+          .setBaseColorFactor([1, 1, 1, 1]).setMetallicFactor(0).setRoughnessFactor(1)
+          .setDoubleSided(true).setAlphaMode(am.mode).setExtras(wc3);
+      }
+      material = matCache[key];
+    } else {
+      // Textured (optionally team-tinted) geoset.
+      if (texCache[base] === undefined) {
         const ddsPath = ddsIndex[base];
         if (ddsPath) {
           const png = ddsToPngBuffer(ddsPath);
-          const tex = doc.createTexture(base).setImage(new Uint8Array(png)).setMimeType('image/png');
-          texCache[base] = doc.createMaterial(base)
-            .setBaseColorTexture(tex).setMetallicFactor(0).setRoughnessFactor(1).setDoubleSided(true);
+          texCache[base] = doc.createTexture(base).setImage(new Uint8Array(png)).setMimeType('image/png');
         } else { missingTex++; warnings.push('texture not found: ' + base); texCache[base] = null; }
       }
-      if (texCache[base]) prim.setMaterial(texCache[base]);
+      const tex = texCache[base];
+      if (tex) {
+        const key = base + ':' + wc3.filterMode + ':' + (wc3.unshaded ? 1 : 0) + ':t' + team;
+        if (matCache[key] === undefined) {
+          const m = doc.createMaterial(key)
+            .setBaseColorTexture(tex).setMetallicFactor(0).setRoughnessFactor(1)
+            .setDoubleSided(true).setAlphaMode(am.mode).setExtras(wc3);
+          if (am.cutoff != null) m.setAlphaCutoff(am.cutoff);
+          matCache[key] = m;
+        }
+        material = matCache[key];
+      }
     }
+    if (material) prim.setMaterial(material);
     mesh.addPrimitive(prim);
   }
 
@@ -388,6 +490,7 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
       geosets: mdx.Geosets.length,
       hiddenGeosets: hidden,
       exportedGeosets: exportedPrims,
+      teamGeosets,
       hd: hadHD,
       clips,
       stand: idle ? idle.Name : null,
