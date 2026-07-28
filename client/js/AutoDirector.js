@@ -299,6 +299,9 @@
             this._shotFromSpeed = this.speed;
             this._shotToSpeed = target;
             setHold(true);                       // freeze the camera while speed moves
+            // Re-arm the camera's target latch: this shot gets a fresh
+            // destination rather than inheriting the previous shot's.
+            if (bc && bc.armShotLatch) bc.armShotLatch();
             if (this.overlay) {
               const { icon, label } = this._shotLabel(gameTime, target < this._shotFromSpeed);
               this.overlay.beginTransition(label, icon, this._shotFromSpeed, target);

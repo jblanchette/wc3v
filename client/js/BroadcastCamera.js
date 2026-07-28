@@ -41,6 +41,13 @@
   const ZOOM_RATE_REF = 0.9;     // |Δk|/k at which zoom rate hits MAX
   const PAN_DEADZONE_PX = 3.5;   // ignore sub-pixel target jitter (anti-drift)
 
+  // Shot latching (see _latchTarget). A shot flies to a FIXED destination and
+  // then only corrects slowly, so "holding" actually looks held. Anything past
+  // these thresholds is treated as a new shot rather than as drift.
+  const LATCH_RECUT_PX = 420;          // target jumped this far => genuinely a new shot
+  const LATCH_RECUT_ZOOM_FRAC = 0.35;  // ...or the zoom target changed this much
+  const LATCH_FOLLOW_TC = 1.6;         // seconds to absorb a small target move once settled
+
   // Calm-when-fast: during fast-forward (auto time-scale or a high manual speed)
   // widen the frame and damp the pan so skimming dead time isn't disorienting.
   const CALM_SPEED_LO = 3.0;     // at/below this speed: normal framing
@@ -385,6 +392,48 @@
     setTransitionHold (on) { this._transitionHold = !!on; }
 
     /**
+     * Hold a shot's destination still, and allow only bounded correction once
+     * we've arrived. Returns the destination the lerp should actually chase.
+     *
+     * Without this the destination is recomputed every frame from a live bbox
+     * that breathes with every unit step, so the camera is permanently "almost
+     * there" and the framing visibly creeps even during a hold.
+     *
+     * Re-latches when the raw target escapes the correction budget — a real cut
+     * (new fight, new cluster) must not be mistaken for drift and swallowed.
+     */
+    _latchTarget (rawX, rawY, rawK) {
+      const L = this._latch;
+      if (!L || !this._shotLatchEnabled) {
+        this._latch = { x: rawX, y: rawY, k: rawK };
+        return this._latch;
+      }
+
+      const dx = rawX - L.x, dy = rawY - L.y;
+      const moved = Math.hypot(dx, dy);
+      const kFrac = Math.abs(rawK - L.k) / Math.max(0.0001, L.k);
+
+      // Big change => a genuinely different shot. Take it wholesale.
+      if (moved > LATCH_RECUT_PX || kFrac > LATCH_RECUT_ZOOM_FRAC) {
+        L.x = rawX; L.y = rawY; L.k = rawK;
+        return L;
+      }
+
+      // Small change => track it, but only within a budget, and only once the
+      // camera has actually arrived (never re-aim mid-flight).
+      if (this.settled) {
+        const ease = Math.min(1, this._frameDtSec() / LATCH_FOLLOW_TC);
+        L.x += dx * ease;
+        L.y += dy * ease;
+        L.k += (rawK - L.k) * ease;
+      }
+      return L;
+    }
+
+    /** Called by AutoDirector when a new shot begins, so the latch re-arms. */
+    armShotLatch () { this._latch = null; }
+
+    /**
      * Calm-when-fast amount, QUANTIZED into three sticky bands (0 / 0.5 / 1).
      *
      * This used to be a continuous ramp off the live playback speed — and
@@ -552,14 +601,33 @@
       if (!gs || !gs.xScale) return;
 
       const ds = this.viewer.displayScale || 1;
-      const cssPx = (gs.xScale(target.wx) + gs.middleX) * ds;
-      const cssPy = (gs.yScale(target.wy) + gs.middleY) * ds;
+      let cssPx = (gs.xScale(target.wx) + gs.middleX) * ds;
+      let cssPy = (gs.yScale(target.wy) + gs.middleY) * ds;
 
       // Calm-when-fast: only the single AUTO view widens/damps with speed —
       // a followed hero stays tight. fast ∈ [0,1] from the current playback speed.
       const fast = (this.mode === CameraMode.ACTION_FOCUS) ? this._calmBand() : 0;
       let targetK = Math.max(1.0, Math.min(16.0, target.k)); // outer safety clamp (per-mode MIN/MAX govern)
       if (fast > 0) targetK = Math.max(1.0, targetK * (1 - CALM_WIDEN_FRAC * fast));
+
+      // --- Shot latching -----------------------------------------------------
+      //
+      // The raw target is recomputed every frame from the live cluster bbox, so
+      // it breathes constantly as units move: measured zoom wander of k≈9.6
+      // (on a 1–16 scale) while the director believed the shot was HOLDING.
+      // A camera that never stops arriving cannot read as settled, no matter how
+      // correct the smoothing is.
+      //
+      // So a shot LATCHES its destination. While latched the camera flies to a
+      // fixed point, and once there it only makes bounded micro-corrections —
+      // enough to keep a moving army in frame, not enough to wander. A target
+      // that escapes the correction budget isn't drift, it's a new shot, and the
+      // latch re-arms for it.
+      // Latching is for the AUTO broadcast shot only. FOLLOW_HERO is a
+      // deliberately continuous follow — latching it would make it feel sticky.
+      this._shotLatchEnabled = (this.mode === CameraMode.ACTION_FOCUS);
+      const latched = this._latchTarget(cssPx, cssPy, targetK);
+      cssPx = latched.x; cssPy = latched.y; targetK = latched.k;
 
       // Store targets for settled check
       this._targetK = targetK;
