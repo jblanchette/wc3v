@@ -3755,6 +3755,15 @@ const Wc3vViewer = class {
     // mode (1v1 only). Built later in setup() once battles/chapters exist.
     if (window.AutoDirector) {
       this.autoDirector = new AutoDirector(this);
+      // The director sequences camera + speed and announces the result, so it
+      // needs a handle on both. Kept as explicit wiring (not lookups through the
+      // viewer) so the director's dependencies are visible at a glance.
+      this.autoDirector.camera = this.broadcastCamera || null;
+      if (window.DirectorOverlay) {
+        this.directorOverlay = new window.DirectorOverlay(this);
+        this.directorOverlay.setup();
+        this.autoDirector.overlay = this.directorOverlay;
+      }
     }
 
     // Minimap pip — camera viewport indicator
@@ -3956,13 +3965,18 @@ const Wc3vViewer = class {
         // only during a formal battle.
         const bc = this.broadcastCamera;
         const activity = (bc && typeof bc.activityLevel === 'number') ? bc.activityLevel : 0;
-        speed = this.autoDirector.update(this.gameTime, realDelta, activity);
         // Split view (parallel macro) and the scout/intrusion cut are both
         // "showcase" moments — cap the time-scale so they're actually watchable
         // instead of flying past at the dead-time fast-forward rate.
-        if (bc && (bc.isSplitActive || bc.isFramingIntrusion)) {
-          speed = Math.min(speed, 4);
-        }
+        //
+        // The cap is handed to the director as a CEILING rather than clamped on
+        // the way out. Clamping the smoothed output stepped the speed instantly
+        // (6.0 -> 4.0 -> 6.0 on entering/leaving a split), bypassing the
+        // director's own slew limit and its shot sequencing — the one thing that
+        // was guaranteed to look like a stutter.
+        const showcase = !!(bc && (bc.isSplitActive || bc.isFramingIntrusion));
+        this.autoDirector.speedCeiling = showcase ? 4 : null;
+        speed = this.autoDirector.update(this.gameTime, realDelta, activity);
         this.scrubber.speed = speed;
         this.scrubber.updateAutoReadout(speed);
       }

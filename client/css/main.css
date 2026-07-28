@@ -17957,3 +17957,75 @@ button.mcb-summary {
   border-radius: 2px;
   display: inline-block;
 }
+
+/* ── Director overlay (AUTO transitions) ─────────────────────────────────── */
+/* Makes an AUTO shot change read as deliberate direction rather than lag.
+   Bars are present only while the camera is actually moving; the card names
+   the shot and the speed change. Compositor-only (transform/opacity) so this
+   never costs layout on a frame that is already the tightest one we have. */
+.director-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3002;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.do-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 5%;
+  max-height: 44px;
+  background: rgba(8, 9, 16, 0.82);
+  transform: scaleY(0);
+  transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+.do-bar-top    { top: 0;    transform-origin: top;    }
+.do-bar-bottom { bottom: 0; transform-origin: bottom; }
+
+.director-overlay.do-active .do-bar { transform: scaleY(1); }
+
+/* Reduced motion: keep the information, drop the moving furniture. */
+.director-overlay.do-reduced .do-bar { display: none; }
+
+/* Bottom-left. The upper-right is the camera toolbar and the upper-left is the
+   map name, so the bottom edge is the free one — and it doubles as content for
+   the bottom letterbox bar, which is already dimmed. */
+.do-card {
+  position: absolute;
+  left: 1rem;
+  bottom: 3.5rem;   /* clears the MATCH INSIGHTS button at the canvas' bottom-left */
+  transform: translateY(6px);
+  opacity: 0;
+  transition: opacity 200ms ease, transform 200ms ease;
+  padding: 0.45rem 0.8rem;
+  background: rgba(8, 9, 16, 0.82);
+  border: 1px solid var(--border-2, rgba(255,255,255,0.18));
+  border-radius: 4px;
+  will-change: opacity, transform;
+}
+.director-overlay.do-card-visible .do-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.do-card-title {
+  font: 700 0.95rem/1.2 Arial, sans-serif;
+  letter-spacing: 0.09em;
+  color: var(--text, #e8eaf0);
+  white-space: nowrap;
+}
+
+.do-card-speed {
+  margin-top: 0.25rem;
+  font: 600 0.85rem/1.2 Arial, sans-serif;
+  letter-spacing: 0.06em;
+  color: var(--text-muted, #9ca3b8);
+  white-space: nowrap;
+}
+/* Slowing down = we're arriving at something worth watching. */
+.do-card-speed.do-slower { color: var(--gold, #FFD24D); }
+/* Speeding up = skimming forward. */
+.do-card-speed.do-faster { color: var(--accent-strong, #6E9CF5); }

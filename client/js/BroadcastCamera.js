@@ -54,8 +54,10 @@
   const ENGAGEMENT_BONUS = 100;
   const HERO_SCORE = 10;
 
-  // Hysteresis: require a new cluster to win for N frames before switching
-  const HYSTERESIS_FRAMES = 30;
+  // Hysteresis: a new cluster must keep winning for this long (REAL ms) before
+  // the camera commits to it. Was a frame count, which made the delay depend on
+  // frame rate — half a second at 60 fps, two seconds at 15.
+  const HYSTERESIS_MS = 500;
 
   // Zoom limits — tuned for 3D units (native model scale reads small, so the
   // broadcast camera sits much closer than it did for the old 2D icons).
@@ -179,7 +181,7 @@
       // Cluster hysteresis state
       this._currentClusterKey = null;
       this._pendingClusterKey = null;
-      this._switchCounter = 0;
+      this._switchElapsed = 0;
 
       // Split-screen state. Split is an automatic SUB-STATE of AUTO (ACTION_FOCUS),
       // not a user-selectable mode — it enters/exits continuously based on player
@@ -232,7 +234,7 @@
       this._initialized = false;
       this._currentClusterKey = null;
       this._pendingClusterKey = null;
-      this._switchCounter = 0;
+      this._switchElapsed = 0;
       this.splitTargets = null;
       this._splitTransition = 0;
       this._splitEntering = false;
@@ -354,8 +356,72 @@
       return 0;
     }
 
+    // Real seconds since the previous camera update, clamped. The clamp matters
+    // on both ends: a huge dt after a tab-switch would teleport the camera, and
+    // a zero dt (two updates in one frame, e.g. the split path) would freeze it.
+    // Called ONCE per update and cached in _dtSec — it advances _lastUpdateWall,
+    // so a second call in the same frame would read ~0.
+    _tickDt () {
+      const now = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+      const prev = this._lastUpdateWall;
+      this._lastUpdateWall = now;
+      this._dtSec = (prev == null)
+        ? 1 / 60
+        : Math.max(1 / 240, Math.min(0.1, (now - prev) / 1000));
+      return this._dtSec;
+    }
+
+    _frameDtSec () { return this._dtSec || 1 / 60; }
+
+    /**
+     * Freeze the camera in place without changing what it's aiming at.
+     *
+     * AutoDirector holds the camera while the playback speed resolves, so a
+     * shot change is "speed settles, THEN camera moves" instead of both at once.
+     * Targets keep being computed while held — only the lerp toward them is
+     * suspended — so releasing the hold picks up from the correct destination
+     * rather than replaying a stale one.
+     */
+    setTransitionHold (on) { this._transitionHold = !!on; }
+
+    /**
+     * Calm-when-fast amount, QUANTIZED into three sticky bands (0 / 0.5 / 1).
+     *
+     * This used to be a continuous ramp off the live playback speed — and
+     * AutoDirector ramps that speed over several seconds. The zoom TARGET is
+     * scaled by this value (CALM_WIDEN_FRAC), so a continuous input meant the
+     * target drifted for seconds after every fight while a ~370 ms-time-constant
+     * lerp chased it. The zoom never settled; it just followed a moving
+     * goalpost, which reads as the camera lazily creeping outward forever.
+     *
+     * Quantizing makes the target piecewise CONSTANT, so the lerp actually
+     * arrives and stops. Each band needs its threshold crossed by a margin
+     * (BAND_MARGIN) before it flips, so a speed hovering on a boundary can't
+     * oscillate the framing.
+     */
+    _calmBand () {
+      const raw = Math.max(0, Math.min(1,
+        (this._speedFactor - CALM_SPEED_LO) / (CALM_SPEED_HI - CALM_SPEED_LO)));
+      const BANDS = [0, 0.5, 1];
+      const BAND_MARGIN = 0.12;
+      let band = this._calmBandValue == null ? 0 : this._calmBandValue;
+      // Move up/down one band only when clearly past the midpoint between them.
+      const idx = BANDS.indexOf(band);
+      if (idx < BANDS.length - 1) {
+        const up = (BANDS[idx] + BANDS[idx + 1]) / 2 + BAND_MARGIN;
+        if (raw >= up) band = BANDS[idx + 1];
+      }
+      if (idx > 0) {
+        const down = (BANDS[idx - 1] + BANDS[idx]) / 2 - BAND_MARGIN;
+        if (raw <= down) band = BANDS[idx - 1];
+      }
+      this._calmBandValue = band;
+      return band;
+    }
+
     update (gameTime, players) {
       if (!this._enabled || this.mode === CameraMode.FREE) return;
+      this._tickDt();
 
       // Seek/rewind detection: a big jump in gameTime means the user scrubbed,
       // so reset the split entry-debounce / dwell timers — otherwise stale
@@ -438,9 +504,14 @@
         }
       }
 
+      // Animate split entry/exit. Stepped by REAL time, not by frames: a frame-
+      // counted wipe runs at whatever the frame rate happens to be, so the same
+      // transition took 0.5 s at 60 fps and 2 s at 15 fps.
+      const wipeStep = this._frameDtSec() / (SPLIT_TRANSITION_FRAMES / 60);
+
       // Animate split entry transition (divider line wipes out from centre)
       if (this._splitEntering) {
-        this._splitTransition = Math.min(1, this._splitTransition + (1 / SPLIT_TRANSITION_FRAMES));
+        this._splitTransition = Math.min(1, this._splitTransition + wipeStep);
         if (this._splitTransition >= 1) {
           this._splitEntering = false;
           this._splitTransition = 1;
@@ -449,7 +520,7 @@
 
       // Animate split exit transition (divider line retracts to centre)
       if (this._splitExiting) {
-        this._splitTransition = Math.max(0, this._splitTransition - (1 / SPLIT_TRANSITION_FRAMES));
+        this._splitTransition = Math.max(0, this._splitTransition - wipeStep);
         if (this._splitTransition <= 0) {
           this._splitExiting = false;
           this._splitTransition = 0;
@@ -486,9 +557,7 @@
 
       // Calm-when-fast: only the single AUTO view widens/damps with speed —
       // a followed hero stays tight. fast ∈ [0,1] from the current playback speed.
-      const fast = (this.mode === CameraMode.ACTION_FOCUS)
-        ? Math.max(0, Math.min(1, (this._speedFactor - CALM_SPEED_LO) / (CALM_SPEED_HI - CALM_SPEED_LO)))
-        : 0;
+      const fast = (this.mode === CameraMode.ACTION_FOCUS) ? this._calmBand() : 0;
       let targetK = Math.max(1.0, Math.min(16.0, target.k)); // outer safety clamp (per-mode MIN/MAX govern)
       if (fast > 0) targetK = Math.max(1.0, targetK * (1 - CALM_WIDEN_FRAC * fast));
 
@@ -516,15 +585,26 @@
       }
 
       // --- Distance-scaled pan smoothing (with anti-drift deadzone) ---
+      //
+      // FRAME-RATE INDEPENDENT. These rates used to be applied as a fraction per
+      // FRAME, which made the camera the only delta-time-incorrect thing in the
+      // system: at 15 fps it physically moved ~4x slower than at 60 while the
+      // game world kept its pace, so a heavy scene made the camera feel like it
+      // was dragging. `1 - exp(-rate*dt)` converts a per-frame fraction tuned at
+      // 60 fps into the equivalent per-second time constant.
+      const dtSec = this._frameDtSec();
+      const perSec = (frac60) => 1 - Math.pow(1 - frac60, dtSec * 60);
+
       const dPanX = cssPx - this._lerpCssX;
       const dPanY = cssPy - this._lerpCssY;
       const panDist = Math.hypot(dPanX, dPanY);
-      if (panDist >= PAN_DEADZONE_PX) {
+      if (panDist >= PAN_DEADZONE_PX && !this._transitionHold) {
         let panRate = PAN_RATE_MIN +
           (PAN_RATE_MAX - PAN_RATE_MIN) * Math.min(1, panDist / PAN_RATE_REF_PX);
         panRate *= (1 - CALM_PAN_DAMP * fast);   // calmer pan when fast-forwarding
-        this._lerpCssX += dPanX * panRate;
-        this._lerpCssY += dPanY * panRate;
+        const k = Math.min(1, perSec(panRate));
+        this._lerpCssX += dPanX * k;
+        this._lerpCssY += dPanY * k;
       }
 
       // --- Distance-scaled zoom smoothing (gentler than pan) ---
@@ -532,7 +612,7 @@
       const zoomFrac = Math.abs(dk) / Math.max(0.0001, this._lerpK);
       const zoomRate = ZOOM_RATE_MIN +
         (ZOOM_RATE_MAX - ZOOM_RATE_MIN) * Math.min(1, zoomFrac / ZOOM_RATE_REF);
-      this._lerpK += dk * zoomRate;
+      if (!this._transitionHold) this._lerpK += dk * Math.min(1, perSec(zoomRate));
 
       this._isProgrammatic = true;
       this.viewer.zoomContainer.call(this.viewer.zoom.scaleTo, this._lerpK);
@@ -1447,7 +1527,7 @@
       if (clusters.length === 1) {
         this._currentClusterKey = clusters[0].key;
         this._pendingClusterKey = null;
-        this._switchCounter = 0;
+        this._switchElapsed = 0;
         return clusters[0];
       }
 
@@ -1460,7 +1540,7 @@
       // If the best cluster is the current one, reset pending
       if (best.key === this._currentClusterKey) {
         this._pendingClusterKey = null;
-        this._switchCounter = 0;
+        this._switchElapsed = 0;
         return best;
       }
 
@@ -1470,24 +1550,41 @@
         return best;
       }
 
-      // Hysteresis: require the new best to win for N consecutive frames
+      // Hysteresis: require the new best to keep winning for HYSTERESIS_MS of
+      // REAL time. Accumulating dt instead of counting frames means the camera
+      // commits after the same wall-clock delay regardless of frame rate — a
+      // frame counter made the camera twitchier at 60 fps than at 15.
       if (best.key === this._pendingClusterKey) {
-        this._switchCounter++;
+        this._switchElapsed = (this._switchElapsed || 0) + this._frameDtSec() * 1000;
       } else {
         this._pendingClusterKey = best.key;
-        this._switchCounter = 1;
+        this._switchElapsed = 0;
       }
 
-      if (this._switchCounter >= HYSTERESIS_FRAMES) {
+      if (this._switchElapsed >= HYSTERESIS_MS) {
         this._currentClusterKey = best.key;
         this._pendingClusterKey = null;
-        this._switchCounter = 0;
+        this._switchElapsed = 0;
         return best;
       }
 
-      // Stay with current cluster until hysteresis triggers
+      // Stay with current cluster until hysteresis triggers.
+      //
+      // The cluster key is the sorted join of the cluster's hero objectIds, so
+      // when heroes merge or split the key CHANGES IDENTITY and this lookup
+      // misses — which used to fall straight through to `best`, bypassing the
+      // hysteresis entirely at exactly the moment it was needed. Falling back to
+      // the previous frame's resolved cluster keeps the shot stable through a
+      // merge/split instead of cutting across the map.
       const current = clusters.find(c => c.key === this._currentClusterKey);
-      return current || best;
+      if (current) { this._lastResolvedCluster = current; return current; }
+      if (this._lastResolvedCluster) {
+        const stillThere = clusters.find(c => c.key === this._lastResolvedCluster.key);
+        if (stillThere) return stillThere;
+      }
+      this._currentClusterKey = best.key;
+      this._lastResolvedCluster = best;
+      return best;
     }
 
     /**

@@ -60,8 +60,30 @@
   // clip the start of a fight — but the old 9.0 slam read as an abrupt cut, so
   // it's pulled way down. A per-second slew clamp (below) bounds the worst case.
   const SLOWDOWN_RATE  = 4.0;   // converge down toward a slower target
-  const SPEEDUP_RATE   = 1.3;   // gentle — ramp back up after the moment passes
+  // Raised from 1.3. With transitions now SEQUENCED and announced (see the
+  // shot state machine below), ramping back up is a deliberate, visible event
+  // lasting a fraction of a second — not something to hide by creeping. The old
+  // slow ramp was also what made the zoom target drift for seconds after every
+  // fight, because the camera's calm-widen factor keyed off this live value.
+  const SPEEDUP_RATE   = 3.0;
   const MAX_SLEW_PER_S = 6.0;   // hard ceiling on |Δspeed|/s, so no single frame jumps far
+
+  // --- Shot sequencing -----------------------------------------------------
+  // A shot change is an EVENT, not a continuous drift. When the pacing target
+  // moves enough to matter we run a strict sequence:
+  //
+  //   IDLE --(target moved)--> DECELERATING --(speed settled)--> MOVING
+  //        --(camera arrived)--> HOLDING --(dwell done)--> IDLE
+  //
+  // The camera and the time-scale never change at the same time. Playback speed
+  // resolves FIRST (fast), then the camera executes its move at a now-stable
+  // speed. That ordering is the fix for the reported symptom: the old code did
+  // both at once, so a slow zoom into a fight was accompanied by the time-scale
+  // sliding underneath it, and the combination read as the client lagging.
+  const SHOT_TRIGGER_DELTA = 0.9;   // |Δ target speed| that counts as a new shot
+  const DECEL_MS           = 250;   // speed resolves within this
+  const HOLD_MS            = 2500;  // minimum dwell before another shot can fire
+  const ARRIVE_EPS         = 0.05;  // |speed - target| considered "settled"
 
   class AutoDirector {
     constructor (viewer) {
@@ -75,6 +97,54 @@
 
       this.speed = ACTIVE_SPEED; // current smoothed multiplier
       this.targetSpeed = ACTIVE_SPEED;
+
+      // Shot sequencing state (see SHOT_* constants above).
+      this.shotState = 'idle';   // 'idle' | 'decelerating' | 'moving' | 'holding'
+      this._shotElapsed = 0;     // ms in the current state (real time)
+      this._shotFromSpeed = ACTIVE_SPEED;
+      this._shotToSpeed = ACTIVE_SPEED;
+      this.overlay = null;       // DirectorOverlay, assigned by the viewer
+      this.camera = null;        // BroadcastCamera, assigned by the viewer
+    }
+
+    // Human-readable name for the shot we're cutting to, taken from whatever the
+    // camera is actually framing. Used for the on-screen card.
+    //
+    // `slowing` matters: with no more specific reason, the honest label depends
+    // on which way the pacing is going. A shot that slows down is arriving at
+    // something; only a shot that speeds up is skipping.
+    _shotLabel (gameTime, slowing) {
+      const bc = this.camera;
+      if (bc) {
+        if (bc.isSplitActive) return { icon: '⛶', label: 'SPLIT · BOTH BASES' };
+        if (bc.isFramingIntrusion) {
+          return (bc._intrusionKind === 'harass')
+            ? { icon: '⚔', label: 'HARASS' }
+            : { icon: '👁', label: 'SCOUTING BASE' };
+        }
+      }
+      if (this._inBattleWindow(gameTime)) return { icon: '⚔', label: 'BATTLE' };
+      if (this._nearMajor(gameTime)) return { icon: '★', label: 'KEY MOMENT' };
+      return slowing
+        ? { icon: '◉', label: 'ACTION' }
+        : { icon: '▸', label: 'SKIPPING AHEAD' };
+    }
+
+    _inBattleWindow (gameTime) {
+      for (const w of this._battles) {
+        if (gameTime >= w.start && gameTime <= w.end) return true;
+        if (gameTime < w.start) break;
+      }
+      return false;
+    }
+
+    _nearMajor (gameTime) {
+      for (const t of this._majors) {
+        const dt = gameTime - t;
+        if (dt < -EVENT_PRE_MS) break;
+        if (dt <= EVENT_POST_MS) return true;
+      }
+      return false;
     }
 
     /**
@@ -153,6 +223,13 @@
     /** Snap the smoothed speed to its target — used after a seek/scrub. */
     snap () {
       this.speed = this.targetSpeed;
+      // A seek is not a shot. Abandon any in-flight transition so the camera
+      // isn't left held and the overlay isn't left announcing a move that the
+      // jump already invalidated.
+      this.shotState = 'idle';
+      this._shotElapsed = 0;
+      if (this.camera && this.camera.setTransitionHold) this.camera.setTransitionHold(false);
+      if (this.overlay) this.overlay.clear();
     }
 
     reset () {
@@ -176,6 +253,7 @@
       if (!this.built) return this.speed;
 
       const target = this._targetFor(gameTime, activity);
+      this._advanceShot(gameTime, target, realDeltaMs);
       this.targetSpeed = target;
 
       // Asymmetric exponential smoothing toward the target.
@@ -196,6 +274,70 @@
       return this.speed;
     }
 
+    /**
+     * Drive the shot state machine. Called once per frame BEFORE the speed is
+     * smoothed, so `this.speed` is still the pre-change value when a shot fires.
+     *
+     * The camera is told to hold still during DECELERATING (via
+     * `camera.setTransitionHold`), so the two changes never overlap: speed
+     * resolves, THEN the camera moves. That is the whole point.
+     */
+    _advanceShot (gameTime, target, realDeltaMs) {
+      const dtMs = Math.max(0, Math.min(100, realDeltaMs || 16.7));
+      this._shotElapsed += dtMs;
+
+      const bc = this.camera;
+      const setHold = (on) => { if (bc && bc.setTransitionHold) bc.setTransitionHold(on); };
+
+      switch (this.shotState) {
+        case 'idle': {
+          // A big enough change in pacing target means something worth
+          // announcing is starting or ending. Small drifts are not shots.
+          if (Math.abs(target - this.speed) >= SHOT_TRIGGER_DELTA) {
+            this.shotState = 'decelerating';
+            this._shotElapsed = 0;
+            this._shotFromSpeed = this.speed;
+            this._shotToSpeed = target;
+            setHold(true);                       // freeze the camera while speed moves
+            if (this.overlay) {
+              const { icon, label } = this._shotLabel(gameTime, target < this._shotFromSpeed);
+              this.overlay.beginTransition(label, icon, this._shotFromSpeed, target);
+            }
+          }
+          break;
+        }
+        case 'decelerating': {
+          // Speed has resolved (or we've waited long enough) — release the
+          // camera and let it execute the move.
+          const settled = Math.abs(this.speed - target) <= ARRIVE_EPS;
+          if (settled || this._shotElapsed >= DECEL_MS) {
+            this.shotState = 'moving';
+            this._shotElapsed = 0;
+            setHold(false);
+          }
+          break;
+        }
+        case 'moving': {
+          // The camera reports when it has arrived. Cap the wait so a target
+          // that keeps moving can't strand us in this state forever.
+          const arrived = !bc || bc.settled;
+          if (arrived || this._shotElapsed >= 1500) {
+            this.shotState = 'holding';
+            this._shotElapsed = 0;
+            if (this.overlay) this.overlay.endTransition();
+          }
+          break;
+        }
+        case 'holding': {
+          if (this._shotElapsed >= HOLD_MS) {
+            this.shotState = 'idle';
+            this._shotElapsed = 0;
+          }
+          break;
+        }
+      }
+    }
+
     // The instantaneous target speed at gameTime = slowest applicable cap.
     _targetFor (gameTime, activity) {
       let cap = MAX_SPEED;
@@ -211,6 +353,11 @@
 
       const a = this._activityCap(activity);
       if (a < cap) cap = a;
+
+      // External ceiling (split view / intrusion cut). Applied HERE, as part of
+      // the target, so it flows through the same smoothing + slew clamp + shot
+      // sequencing as every other cap instead of stepping the output.
+      if (this.speedCeiling != null && this.speedCeiling < cap) cap = this.speedCeiling;
 
       return Math.max(MIN_SPEED, Math.min(MAX_SPEED, cap));
     }
