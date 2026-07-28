@@ -3549,8 +3549,41 @@ const Wc3vViewer = class {
 
       slotCounter++;
 
+      player.teamId = teamId;
       this.players.push(player);
     });
+
+    this.buildBehaviorWorld();
+  }
+
+  /**
+   * Build the UnitBehavior world — the single authority for what each unit is
+   * DOING (idle / walk / attack, and at what). The renderer consumes its
+   * decisions instead of inferring animation state itself.
+   *
+   * Buildings are included as TARGET-ONLY actors: a footman hitting a Stronghold
+   * is a real attack, and leaving buildings out would make those units resolve
+   * no target and stand there.
+   */
+  buildBehaviorWorld () {
+    if (!window.UnitBehavior) return;
+    const units = [];
+    for (const p of this.players) {
+      const teamId = (p.teamId != null) ? p.teamId : (p.isNeutralPlayer ? 1046 : p.playerId);
+      for (const u of (p.units || [])) {
+        if (!u || !u.uuid) continue;
+        u._playerId = p.playerId;
+        u._teamId = teamId;
+        u._isNeutral = !!p.isNeutralPlayer;
+        units.push(u);
+      }
+    }
+    this.behaviorWorld = window.UnitBehavior.createWorld({
+      units,
+      battles: (this.mapData && this.mapData.battles) || [],
+      camps: (this.mapData && this.mapData.world && this.mapData.world.neutralGroups) || {}
+    });
+    if (this.unitModelRenderer) this.unitModelRenderer.behavior = this.behaviorWorld;
   }
 
   setupMap () {

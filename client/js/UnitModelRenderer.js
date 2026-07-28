@@ -37,6 +37,9 @@
   // re-exported (convert-mdx-to-gltf-skinned.js --all) and redeployed.
   const MODEL_ASSET_VERSION = '20260728b';
   const FADE = 0.22;                 // cross-fade seconds between looping states
+  // Only used by the worker harvest-loop "is it parked at its anchor" test.
+  // Animation state itself comes from UnitBehavior, which reads path-segment
+  // velocity instead of finite-differencing interpolated positions.
   const MOVE_EPS2 = 9;               // (wu over ~100ms)^2 to count as walking
   const CORPSE_FADE_MS = 1400;       // fade after the death clip finishes, then hide
   const HERO_RING = 0xffd24a;        // gold ring for heroes (else player color)
@@ -45,8 +48,9 @@
   const HIDDEN_OPACITY = 0.4;        // shadowmeld / hidden units render faint
   const CREEP_RING = 0xb8893a;          // muted bronze ring for an untouched neutral camp
   const CREEP_DISTURBED_OPACITY = 0.7;  // an engaged (not-yet-cleared) camp dims slightly
-  const CREEP_MOVE_EPS2 = 4;            // (wu over ~100ms)^2 to count a creep as walking
-  const CREEP_AGGRO_RANGE = 500;        // a hero/combat unit within (camp radius + this) wakes the camp
+  // (CREEP_MOVE_EPS2 / CREEP_AGGRO_RANGE removed: camp creeps have single-sample
+  // paths so they cannot move, and camp aggro is now decided per creep by
+  // UnitBehavior rather than by proximity to the camp centroid.)
   const CREEP_MARKER_SIZE = 72;         // world-unit size of the floating "?" uncertainty badge
   const CREEP_MARKER_Y = 170;           // world-unit height of the badge above the camp
   const CLAIM_CLEARED = 2;              // NeutralGroup ClaimStates.cleared
@@ -130,20 +134,6 @@
       return this._abCache[model];
     }
 
-    // uuids that are in an active detected battle at gameTime (for attack inference).
-    _activeBattleUuids (gameTime) {
-      const set = new Set();
-      const battles = this.viewer && this.viewer.mapData && this.viewer.mapData.battles;
-      if (!battles) return set;
-      for (const b of battles) {
-        if (gameTime < b.startTime || gameTime > b.endTime || !b.participants) continue;
-        for (const p of b.participants) {
-          const us = p.unitUuids || [];
-          for (let i = 0; i < us.length; i++) set.add(us[i]);
-        }
-      }
-      return set;
-    }
 
     // Render-time collision separation for 3D units. WC3 never lets two units
     // occupy the same space; the server enforces that at recorded path samples,
@@ -257,12 +247,15 @@
       const mi = this.renderer.mapInfo;
       if (mi && mi.bounds && mi.bounds.map) { const e = mi.bounds.map; cx = (e[0][0] + e[0][1]) / 2; cy = (e[1][0] + e[1][1]) / 2; }
 
-      const battleSet = this._activeBattleUuids(gameTime);
+      // Every animation decision for this frame, from the single authority.
+      // Memoized on gameTime, so the split-screen path's second call is free.
+      const bframe = this.behavior ? this.behavior.resolve(gameTime) : null;
+      // `inBattle` is still needed by the WORKER declutter rules (a worker near
+      // a fight stays visible); it is no longer what decides an attack.
+      const battleSet = bframe ? bframe.inBattle : new Set();
       const sepMap = this._separateUnits(players, gameTime); // no two ground units share space
-      const engagedCamps = this._engagedCampFootprints(gameTime); // camps with a live fight
       const alive = new Set();
       const campCreeps = [];   // neutral camp creeps — rendered only by _updateCreeps
-      const attackers = [];    // live hero/combat positions — gate the camps' attack anim
       let count = 0;
       for (const player of players) {
         const units = player.units || [];
@@ -288,24 +281,6 @@
 
           const pos = unit.getInterpolatedPosition(gameTime);
           if (!pos) continue;
-
-          // A living hero/combat unit physically present near a camp is what makes
-          // its creeps fight; collect them so _updateCreeps can stop the attack
-          // animation the moment the army leaves. (Pure function of gameTime.)
-          if (!player.isNeutralPlayer && !unit.isIllusion && !(unit.meta && unit.meta.worker)
-              && (deathStart == null || gameTime < deathStart)) {
-            attackers.push(pos);
-            // Standing inside an engaged (not-yet-cleared) creep camp counts as
-            // fighting it, so the unit plays its attack animation even when no
-            // formal PvP battle was detected (a lone hero pulling a small camp,
-            // militia grinding a gold-mine creep, etc.).
-            if (!battleSet.has(unit.uuid)) {
-              for (const f of engagedCamps) {
-                const fdx = pos.x - f.cx, fdy = pos.y - f.cy;
-                if (fdx * fdx + fdy * fdy <= f.r2) { battleSet.add(unit.uuid); break; }
-              }
-            }
-          }
 
           let inst = this.instances[unit.uuid];
           if (inst === undefined) {
@@ -348,8 +323,9 @@
             // Place at the collision-separated position (units never share space in
             // WC3); drive animation from the RAW path position so being nudged apart
             // doesn't read as walking.
-            this._place(inst, unit, sepMap[unit.uuid] || pos, gameTime, cx, cy);
-            this._animate(inst, unit, pos, gameTime, dt, deathStart, battleSet);
+            const d = bframe ? bframe.byUuid.get(unit.uuid) : null;
+            this._place(inst, unit, sepMap[unit.uuid] || pos, gameTime, cx, cy, d);
+            this._animate(inst, unit, gameTime, dt, deathStart, d);
           }
           inst.root.visible = true;
           if (inst.ring) inst.ring.visible = inst.state !== 'death'; // no ring on corpses
@@ -364,7 +340,7 @@
         if (inst && inst.root && !alive.has(k)) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; }
       }
 
-      this._updateCreeps(gameTime, cx, cy, dt, campCreeps, attackers);
+      this._updateCreeps(gameTime, cx, cy, dt, campCreeps, bframe);
 
       // Guide-mode focus glow (runs last so it wins over per-unit ring state).
       this._updateGuideHighlight();
@@ -381,7 +357,7 @@
     //     credited/cleared they fade to a faint "ghost" with a floating "?".
     // We deliberately DON'T play creep deaths/corpses: the replay can't know which
     // creep died when, so faking it would mislead. The "?" badge says exactly that.
-    _updateCreeps (gameTime, cx, cy, dt, campCreeps, attackers) {
+    _updateCreeps (gameTime, cx, cy, dt, campCreeps, bframe) {
       const ng = this.viewer && this.viewer.mapData && this.viewer.mapData.world && this.viewer.mapData.world.neutralGroups;
       if (!ng || !this.manifest || !campCreeps || !campCreeps.length) return;
 
@@ -399,20 +375,14 @@
           // lifecycle phase — see _campPhase (pristine → disturbed → cleared).
           const phase = this._campPhase(camp, gameTime);
 
-          // nearest live attacker within the camp's aggro footprint (skip once
-          // the camp is presumed cleared — those creeps are ghosts, not fighters)
-          let attacker = null;
-          if (phase !== 'cleared') {
-            const aggro = geom.radius + CREEP_AGGRO_RANGE;
-            const aggro2 = aggro * aggro;
-            let bestD2 = aggro2;
-            for (const a of attackers) {
-              const adx = a.x - geom.cx, ady = a.y - geom.cy;
-              const d2 = adx * adx + ady * ady;
-              if (d2 <= bestD2) { bestD2 = d2; attacker = a; }
-            }
-          }
-          cs = campState[campId] = { geom, phase, attacker };
+          // Whether the camp is FIGHTING is now derived from whether any of its
+          // creeps actually resolved a target, rather than from "some player
+          // unit is within 500 units of the camp centroid" — which made the
+          // whole camp swing in unison, including creeps far out of their own
+          // range, for as long as the camp stayed disturbed (measured at 10.7
+          // minutes; 10 of 101 camps never clear at all).
+          const engaged = !!(bframe && bframe.campsEngaged.has(campId));
+          cs = campState[campId] = { geom, phase, engaged };
 
           // One floating badge per camp (not per creep):
           //   • engaged (crossed swords) while an army is actively fighting here,
@@ -421,7 +391,7 @@
           //     clear, where the building itself is the marker and nothing is unsure.
           let markerType = null;
           if (phase === 'cleared') markerType = camp.settledClear ? null : 'cleared';
-          else if (phase === 'disturbed') markerType = attacker ? 'engaged' : 'disturbed';
+          else if (phase === 'disturbed') markerType = engaged ? 'engaged' : 'disturbed';
           this._setCampMarker(campId, markerType, geom, cx, cy, gameTime);
         }
 
@@ -439,27 +409,23 @@
           continue;
         }
 
-        const pos = unit.getInterpolatedPosition(gameTime) ||
-          (unit.spawnPosition ? { x: unit.spawnPosition.x, y: unit.spawnPosition.y } : { x: cs.geom.cx, y: cs.geom.cy });
-        const back = unit.getInterpolatedPosition(gameTime - 100);
-        let moving = false, mvFacing = inst.facing0 || 0;
-        if (back) {
-          const dx = pos.x - back.x, dy = pos.y - back.y;
-          moving = (dx * dx + dy * dy) > CREEP_MOVE_EPS2;
-          if (moving) mvFacing = Math.atan2(dy, dx);
-        }
+        // Per-creep decision. Each creep resolves its OWN target at its OWN
+        // range, so a Murloc at the back of a camp with a footman at the front
+        // simply has no target and stands there — which is the requirement.
+        //
+        // There is deliberately no 'walk' branch: camp creeps have single-sample
+        // paths (ClientUnit never advances the neutral player's path cursor), so
+        // they cannot move in this data model. The old walk branch was dead code
+        // and pretending otherwise would be a lie about what the replay knows.
+        const d = bframe ? bframe.byUuid.get(unit.uuid) : null;
+        const pos = (d && d.x != null) ? { x: d.x, y: d.y }
+          : (unit.spawnPosition ? { x: unit.spawnPosition.x, y: unit.spawnPosition.y }
+            : { x: cs.geom.cx, y: cs.geom.cy });
 
-        const fighting = !!cs.attacker; // already gated to non-cleared camps above
-
-        let facing;
-        if (moving) facing = mvFacing;                                              // along its own travel
-        else if (fighting) facing = Math.atan2(cs.attacker.y - pos.y, cs.attacker.x - pos.x); // turn to the attacker
-        else facing = inst.facing0 || 0;                                            // idle: guard outward
-
-        let state;
-        if (moving) state = 'walk';
-        else if (fighting && inst.actions.attack) state = 'attack';
-        else state = 'idle';
+        const state = (d && d.state === 'attack' && inst.actions.attack) ? 'attack' : 'idle';
+        // Facing: at its target while fighting, at a nearby threat while merely
+        // watching one, else outward from the camp centre ("guard" pose).
+        const facing = (d && d.facing != null) ? d.facing : (inst.facing0 || 0);
 
         const opacity = (cs.phase === 'disturbed') ? CREEP_DISTURBED_OPACITY : 1;
         this._placeCreep(inst, pos.x, pos.y, facing, cx, cy);
@@ -487,22 +453,6 @@
       return (clearedAt != null && gameTime >= clearedAt) ? 'cleared' : 'disturbed';
     }
 
-    // Footprints of camps currently being fought in (disturbed phase). A combat
-    // unit standing inside one is treated as engaging the creeps so it plays its
-    // attack animation even without a formally detected player-vs-player battle.
-    _engagedCampFootprints (gameTime) {
-      const ng = this.viewer && this.viewer.mapData && this.viewer.mapData.world && this.viewer.mapData.world.neutralGroups;
-      const out = [];
-      if (!ng) return out;
-      for (const id in ng) {
-        const camp = ng[id];
-        if (!camp || this._campPhase(camp, gameTime) !== 'disturbed') continue;
-        const geom = this._campGeom(camp);
-        const r = geom.radius + CREEP_AGGRO_RANGE;
-        out.push({ cx: geom.cx, cy: geom.cy, r2: r * r });
-      }
-      return out;
-    }
 
     // Camp centre + a radius covering its footprint (cached — creeps are static).
     _campGeom (camp) {
@@ -869,18 +819,15 @@
     // manual time, like _applyDeath) so it's identical on any scrub/seek. Replays
     // don't record individual attack events, so a steady cadence during the battle
     // window is the best faithful synthesis.
-    _applyAttack (inst, unit, gameTime) {
+    _applyAttack (inst, d) {
       const a = inst.actions.attack;
       if (!a) { this._setLoopState(inst, 'idle'); inst.mixer.update(0); return; }
       const clipDur = (a.getClip() && a.getClip().duration) || 1;
-      const combat = unit.meta && unit.meta.combat;
-      // Swing every `cooldown` seconds; never faster than the animation itself.
-      let period = (combat && combat.cooldown > 0) ? combat.cooldown : clipDur;
-      if (period < clipDur) period = clipDur;
-      // Per-unit phase offset [0,period) so an army doesn't swing in lockstep.
-      // Reuses the shared uuid hash (_phaseOffset returns an int in [0,cycle)).
-      if (inst._atkPhase == null) inst._atkPhase = (this._phaseOffset(unit.uuid, 1000) / 1000) * period;
-      const phase = (((gameTime / 1000) + inst._atkPhase) % period + period) % period;
+      // Cadence comes from UnitBehavior, anchored to when this unit actually
+      // ENGAGED rather than to absolute game time — so a unit starts its swing
+      // when it joins the fight instead of at an arbitrary point in a global
+      // cycle. Still a pure function of gameTime, so scrubbing is unchanged.
+      const phase = d.swingPhase;
 
       if (inst.state !== 'attack') {
         for (const k of ['idle', 'walk']) { const x = inst.actions[k]; if (x) x.stop(); }
@@ -891,11 +838,20 @@
       a.paused = true;
       // In-swing → play through the clip; in the cooldown gap → hold the recovery
       // (last) frame so ranged units with long cooldowns don't loop unnaturally.
-      a.time = Math.min(phase, clipDur);
+      // clipFill compresses the clip into the unit's real damagePoint+backswing,
+      // which is what makes a ranged unit read as "fire, hold, fire" against a
+      // melee unit's continuous swinging without rendering any projectile.
+      a.time = Math.min(d.clipFill * clipDur, clipDur);
       inst.mixer.update(0);   // apply the seeked pose without advancing
     }
 
-    _animate (inst, unit, pos, gameTime, dt, deathStart, battleSet) {
+    /**
+     * Draw the state UnitBehavior decided. This function no longer INFERS
+     * anything — it used to decide "attack" from mere membership in a battle's
+     * participant list, with no target and no range test, which is what had
+     * units swinging at empty air for whole battle windows.
+     */
+    _animate (inst, unit, gameTime, dt, deathStart, d) {
       if (!inst.mixer) return;
 
       // --- DEATH: one-shot, seek-safe via manual clip time ---
@@ -905,27 +861,18 @@
       }
       if (inst.state === 'death') inst.state = null; // scrubbed back before death
 
-      // --- ALIVE: idle / walk / attack ---
-      const back = unit.getInterpolatedPosition(gameTime - 100);
-      let moving = false, speed = 0;
-      if (back) {
-        const dx = pos.x - back.x, dy = pos.y - back.y, d2 = dx * dx + dy * dy;
-        moving = d2 > MOVE_EPS2;
-        speed = Math.sqrt(d2) / 0.1;   // world units / second (100 ms window)
-      }
+      const state = d ? d.state : 'idle';
 
-      if (moving) {
+      if (state === 'walk') {
         this._setLoopState(inst, 'walk');
         // Stride-lock: play the walk cycle at (ground speed ÷ base move speed) so
-        // feet track the ground instead of skating. Clamped so slow drift / haste
-        // stays legible. The clip is authored for the unit's base speed → ~1.0×.
-        if (inst.actions.walk) {
-          const base = (unit.meta && unit.meta.movespeed) || 270;
-          inst.actions.walk.setEffectiveTimeScale(Math.max(0.45, Math.min(1.8, speed / base)));
-        }
+        // feet track the ground instead of skating. The speed comes from the
+        // smoothed PATH SEGMENT velocity, not a finite difference of interpolated
+        // positions — the old estimate swung between 0 and 4x on the same walk.
+        if (inst.actions.walk) inst.actions.walk.setEffectiveTimeScale(d.strideScale);
         inst.mixer.update(dt);
-      } else if (inst.actions.attack && battleSet.has(unit.uuid)) {
-        this._applyAttack(inst, unit, gameTime);   // scrub-safe cadence; drives the mixer itself
+      } else if (state === 'attack' && inst.actions.attack) {
+        this._applyAttack(inst, d);   // scrub-safe cadence; drives the mixer itself
       } else {
         this._setLoopState(inst, 'idle');
         inst.mixer.update(dt);
@@ -957,7 +904,7 @@
       }
     }
 
-    _place (inst, unit, pos, gameTime, cx, cy) {
+    _place (inst, unit, pos, gameTime, cx, cy, d) {
       const wx = pos.x, wy = pos.y;
       const groundY = this.renderer.sampleHeight ? this.renderer.sampleHeight(wx, wy) : 0;
       const w = inst.wrapper;
@@ -975,10 +922,13 @@
       // model facing rotation (it would tip the blob over via ZUP_TO_YUP).
       if (inst.isPlaceholder) return;
 
-      // Facing: prefer the baked turn-rate facing (world space); fall back to a
-      // velocity estimate for replays parsed before facing existed. Scene yaw is
-      // +worldFacing (scene Z = -worldY).
-      let wf = unit.getInterpolatedFacing ? unit.getInterpolatedFacing(gameTime) : null;
+      // Facing: prefer UnitBehavior's, which is the baked turn-rate facing
+      // TURNED TOWARD the resolved target when there is one (rate-limited, and
+      // anchored to data rather than integrated per frame so it stays
+      // seek-safe). Without this an attacking unit swung in whatever direction
+      // it last walked, which is most of why valid attacks still looked wrong.
+      let wf = (d && d.facing != null) ? d.facing : null;
+      if (wf == null && unit.getInterpolatedFacing) wf = unit.getInterpolatedFacing(gameTime);
       if (wf == null) {
         const ahead = unit.getInterpolatedPosition(gameTime + 120);
         if (ahead) { const dx = ahead.x - wx, dy = ahead.y - wy; if (dx * dx + dy * dy > 1) inst._wf = Math.atan2(dy, dx); }
