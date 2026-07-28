@@ -3634,23 +3634,30 @@ const Wc3vViewer = class {
     const w3cPrefixMatch = this.mapName.match(/^\d+_w3c_\d+_\d+_(.+)$/);
     const strippedMapName = w3cPrefixMatch ? w3cPrefixMatch[1] : this.mapName;
 
-    // NOTE (investigated 2026-07-28, deliberately NOT "fixed" — it needs a data
-    // fix first). gameData's keys are the original mixed-case .w3x filenames
-    // while `this.mapName` is lowercased above, so this exact lookup can never
-    // hit a key containing a capital. Replays therefore fall through to the
-    // substring scan below, which returns the FIRST map whose name appears in
-    // the filename — i.e. the BASE map, not the versioned one. A replay
-    // recorded on "1v1_EchoIsles_v2.2_w3c_260125_1357_1051.w3x" (a key that
-    // exists verbatim in gameData) resolves to plain "EchoIsles".
+    // EXACT filename match, case-insensitively — the right answer whenever it
+    // hits, so it must be tried before the substring fallback.
     //
-    // Making the lookup case-insensitive is a two-line change and re-points 104
-    // of the 334 parsed replays to their exactly-named entry. DON'T, yet: those
-    // versioned entries have inconsistent geometry. EchoIsles_v2.2 declares
-    // bounds 16384x16384 (aspect 1.000, grid 128x128) while its own terrain art
-    // is 1728x1408 (aspect 1.227), so the map renders off-centre and clipped;
-    // several of those dirs are also missing walkmap.json / grid. Regenerate the
-    // versioned map data first, then flip this on and re-verify.
-    const foundMapName = maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
+    // gameData's keys are the original mixed-case .w3x filenames while
+    // `this.mapName` is lowercased above, so a plain `maps[this.mapName]`
+    // lookup can never hit a key containing a capital. Every such replay fell
+    // through to the substring scan below, which returns the FIRST map whose
+    // name appears anywhere in the filename — i.e. the BASE map. A replay
+    // recorded on "1v1_EchoIsles_v2.2_w3c_260125_1357_1051.w3x" (a key that
+    // exists verbatim) rendered against plain "EchoIsles", a genuinely
+    // different map: 128x96 with playable 116x84, vs 128x128 / 108x88.
+    //
+    // Measured over the 334 parsed replays: 104 resolve to their exactly-named
+    // entry, every one of them base -> correct version. (A "longest name wins"
+    // variant was rejected: it additionally mis-matched TwistedMeadows_v1.9 to
+    // a v1.1 entry and Battleground to Battleground_LV.)
+    if (!maps.__lcKeyIndex) {
+      const idx = {};
+      for (const k of Object.keys(maps)) idx[k.toLowerCase()] = k;
+      Object.defineProperty(maps, '__lcKeyIndex', { value: idx, enumerable: false });
+    }
+
+    const foundMapName = maps.__lcKeyIndex[this.mapName] ||
+      (maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
       const searchName = maps[mapItem].name.toLowerCase();
 
       if (this.mapName.indexOf(searchName) !== -1) {
@@ -3667,7 +3674,7 @@ const Wc3vViewer = class {
       if (baseSearchName.length > 3 && baseMapName === baseSearchName) {
         return mapItem;
       }
-    });
+    }));
 
     this.mapInfo = maps[foundMapName];
   }
@@ -3790,9 +3797,22 @@ const Wc3vViewer = class {
     let initialT;
     if (INITIAL_ZOOM > 1.0) {
       const ds = this.displayScale || 1;
+      // Viewport centre, in canvas pixels.
       const cx = (mapWidth * ds) / 2;
       const cy = (mapHeight * ds) / 2;
-      initialT = d3.zoomIdentity.translate(cx, cy).scale(INITIAL_ZOOM).translate(-cx, -cy);
+      // Centre on the PLAYABLE area, not the raw map extent. The two coincide
+      // on a symmetric map, but a map whose margins are lopsided (EchoIsles_v2.2
+      // is 128x128 with a 108x88 playable region) has its playable centre offset
+      // from the map centre — zooming about the map centre there pushes the
+      // actual play space off to one side.
+      let px = cx, py = cy;
+      const ve = _gs.viewExtent;
+      if (ve && _gs.xScale && _gs.yScale) {
+        px = (_gs.xScale((ve.x[0] + ve.x[1]) / 2) + _gs.middleX) * ds;
+        py = (_gs.yScale((ve.y[0] + ve.y[1]) / 2) + _gs.middleY) * ds;
+      }
+      // Standard "zoom about a point": put world point (px,py) at viewport centre.
+      initialT = d3.zoomIdentity.translate(cx, cy).scale(INITIAL_ZOOM).translate(-px, -py);
       this.zoomContainer.call(this.zoom.transform, initialT);
     } else {
       initialT = d3.zoomIdentity;
