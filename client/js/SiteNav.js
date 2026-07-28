@@ -62,12 +62,14 @@ const SiteNav = {
 
     let leftHtml = '';
     if (isHome) {
+      // Homepage: search only. The band switcher lives in the hero strip
+      // (#skill-band-hero) where it has room for full labels — rendering it
+      // here too would put two identical controls on screen.
       leftHtml = `
         <div class="site-nav-search-wrap">
           <input type="text" id="build-search" class="site-nav-search"
                  placeholder="Search builds" autocomplete="off" spellcheck="false" />
-        </div>
-        ${skillBandHtml}`;
+        </div>`;
     } else if (document.getElementById('app')) {
       // Viewer page: optional "← Builds" back link (when opened from a build
       // card) plus the same compact band.
@@ -87,11 +89,15 @@ const SiteNav = {
         <a class="site-nav-link" href="${root}/community.html">Community</a>
       </div>`;
 
-    // On the homepage the WC3V logo is rendered prominently in the hero
-    // bar, so the small nav-logo is suppressed to avoid duplication.
-    const logoHtml = isHome ? '' : `
-      <a class="site-nav-logo" href="${root}/">
-        <img src="${root}/assets/wc3v.svg" alt="WC3V" class="site-nav-logo-img" />
+    // The wordmark is a text lockup, not an image: it stays sharp at every
+    // size, takes its colour from the token layer, and matches the welcome
+    // gate's mark exactly. It renders on EVERY page including home — the
+    // app bar is the brand's permanent home. (/assets/wc3v.svg is retained
+    // as the favicon / social-card asset only; it carries a baked-in grey
+    // extrusion filter that reads as washed-out on a dark surface.)
+    const logoHtml = `
+      <a class="site-nav-logo" href="${root}/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
       </a>`;
 
     nav.innerHTML = `

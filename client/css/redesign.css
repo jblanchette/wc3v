@@ -1,178 +1,16 @@
 /* ============================================================
-   redesign.css: production token layer + shared components for
-   the WC3V homepage redesign. Implements the design system in
-   docs/DESIGN-SYSTEM.md (§2-§7, §10, §12). Self-contained: does NOT
-   depend on main.css.
+   redesign.css: shared components for the WC3V homepage redesign.
+   Implements docs/DESIGN-SYSTEM.md (§6-§7, §10, §12).
 
-   Headline rule (§1): the chrome accent is --accent (#5B8DEF) and
-   is DISTINCT from Human race blue (--race-H #4488FF). The four race
-   colors are DATA ONLY, never the app's button/focus/link/selected
+   TOKENS LIVE IN tokens.css and must be loaded FIRST. main.css also
+   consumes them, so tokens.css goes on EVERY page, not just this one.
+
+   Headline rule (§1): the chrome accent is --accent (#5B8DEF) and is
+   DISTINCT from Human race blue (--race-H #4488FF). The four race
+   colors are DATA ONLY, never the app button/focus/link/selected
    color. Page CSS composes/positions; it does not re-skin (§10).
    ============================================================ */
 
-:root {
-  /* ── §2.1 Surfaces & elevation (dark, lighter = higher) ─────── */
-  --bg-deep:   #12131f;
-  --bg:        #1a1d2e;
-  --surface:   #212538;
-  --surface-2: #2a2f45;
-  --surface-3: #323750;
-  --surface-4: #3b4060;
-
-  /* ── §2.2 Borders & dividers ───────────────────────────────── */
-  --border:    rgba(255,255,255,0.10);
-  --border-2:  rgba(255,255,255,0.18);
-  --border-3:  rgba(255,255,255,0.26);
-  --wash:      rgba(255,255,255,0.05);  /* faint translucent-white surface wash */
-
-  /* ── §2.3 Text ─────────────────────────────────────────────── */
-  --text:           #e8eaf0;
-  --text-muted:     #9ca3b8;
-  --text-dim:       #6b7290;
-  --text-on-accent: #ffffff;
-  --text-on-gold:   #2a2107;
-
-  /* ── §2.4 Chrome accent (the app's own color, NOT Human) ──── */
-  --accent:        #5B8DEF;
-  --accent-strong: #6E9CF5;
-  --accent-deep:   #3F6FD0;
-  --accent-soft:   rgba(91,141,239,0.14);
-  --accent-ring:   rgba(91,141,239,0.55);
-
-  /* ── §2.5 Gold (achievement / "your build" / premium) ──────── */
-  --gold:      #FFD24D;
-  --gold-deep: #E0A800;
-  --gold-ink:  #2a2107;
-  --gold-soft: rgba(240,178,50,0.12);
-  --gold-edge: rgba(240,178,50,0.45);
-
-  /* ── §2.6 Resource accents (data only) ─────────────────────── */
-  --lumber:   #44DD88;
-  --gold-res: var(--gold);
-
-  /* ── §2.7 Race-as-data palette (base values) ───────────────── */
-  --race-H: #4488FF;  /* Human, kept exactly as in-game blue (now != chrome) */
-  --race-O: #FF4444;  /* Orc       */
-  --race-E: #44DD88;  /* Night Elf */
-  --race-U: #AA66FF;  /* Undead    */
-  /* Undead-derived edge/wash, available at :root for the welcome-gate's
-     "analyzer" wayfinding path (§6.4) where no [data-race] is set. */
-  --race-U-edge: #7848a8;
-  --race-soft-u: rgba(170,102,255,0.16);
-
-  /* ── §2.8 Grade scale (letter + color; gradeColor() lockstep) ─ */
-  --grade-a:    #6EE7A8;
-  --grade-b:    #8FD0FF;
-  --grade-c:    #F0C674;
-  --grade-d:    #F0A86A;
-  --grade-f:    #F08A8A;
-  --grade-none: #9ca3b8;
-
-  /* ── §2.9 Tier scale (matches the real app) ────────────────── */
-  --tier-1: #FFFFFF;
-  --tier-2: #21A5E3;
-  --tier-3: #FFFF33;
-
-  /* ── §2.10 Semantic states (outcome / validity) ────────────── */
-  --ok:    #6EE7A8;  --ok-soft:   rgba(60,200,140,0.12);  --ok-edge:   rgba(80,200,140,0.40);
-  --warn:  #F0C674;  --warn-soft: rgba(240,178,50,0.12);  --warn-edge: rgba(240,178,50,0.40);
-  --bad:   #F08A8A;  --bad-soft:  rgba(220,80,80,0.12);    --bad-edge:  rgba(220,80,80,0.40);
-  --info:  var(--accent);
-  --privacy: #7FE0A8;
-  --privacy-soft: rgba(60,200,140,0.08);
-  --privacy-edge: rgba(80,200,140,0.35);
-  --privacy-hi:   #9af0c0;
-
-  /* ── §3 Typography ─────────────────────────────────────────── */
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --mono: 'Consolas', 'Cascadia Mono', monospace;
-
-  --fs-display: 2.1rem;   /* gate logo / hero number */
-  --fs-h1:      1.8rem;   /* page lead headline */
-  --fs-h2:      1.4rem;   /* section / card-title / best-fit title */
-  --fs-h3:      1.15rem;  /* drawer title, step title */
-  --fs-lg:      1.05rem;  /* emphasized body, large button */
-  --fs-base:    1.0rem;   /* body */
-  --fs-sm:      0.92rem;  /* secondary body, card body copy */
-  --fs-label:   0.85rem;  /* chips, small buttons, meta labels */
-  --fs-min:     0.8rem;   /* HARD FLOOR: abbrs, counts, eyebrows, mono tags */
-
-  /* ── §4.1 Spacing scale (4px base) ─────────────────────────── */
-  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
-  --sp-5: 22px; --sp-6: 30px; --sp-7: 40px; --sp-8: 56px;
-
-  /* ── §4.2 Radius ───────────────────────────────────────────── */
-  --radius-sm:   6px;
-  --radius:      8px;
-  --radius-lg:   14px;
-  --radius-xl:   22px;
-  --radius-pill: 999px;
-
-  /* ── §4.3 Minimum interactive / icon sizes (≥36px) ─────────── */
-  --ico-sm:  36px;
-  --ico-md:  44px;
-  --ico-lg:  56px;
-  --ico-xl:  64px;
-  --hit-min: 44px;
-
-  /* ── §5.1 Shadow ───────────────────────────────────────────── */
-  --shadow-1: 0 4px 14px rgba(0,0,0,0.30);
-  --shadow-2: 0 8px 26px rgba(0,0,0,0.40);
-  --shadow-3: 0 10px 40px rgba(0,0,0,0.45);
-  --shadow-drawer: -12px 0 40px rgba(0,0,0,0.50);
-
-  /* ── §5.2 Motion ───────────────────────────────────────────── */
-  --dur-fast: 0.12s;
-  --dur:      0.18s;
-  --ease:     cubic-bezier(0.2, 0.6, 0.2, 1);
-
-  /* ── §12.1 Build Order palette (faithful to the viewer's main.css --bo-*) ──
-     The BO surface is its own near-black navy - darker than --bg-deep - so a
-     BO panel reads as "a viewer instrument embedded in the page". */
-  --bo-bg:          #0F1923;  /* BO panel backdrop - deliberately darker than --bg-deep        */
-  --bo-card-bg:     #1A2332;  /* hero card / summary card / upgrade-bar base                   */
-  --bo-row-hover:   #1C2836;  /* action-row hover                                              */
-  --bo-header-bg:   #141D29;  /* column header / sticky ACTION·SUPPLY bar                       */
-  --bo-border:      rgba(48,54,61,0.4);  /* row divider (hairline, full-width - never an edge stripe) */
-  --bo-border-solid:#21262D;  /* icon tile border                                             */
-  --bo-supply-bg:   rgba(0,0,0,0.55);    /* supply pill / cost-strip fill                       */
-
-  --bo-gold:        #FFD700;  /* gold cost / "GOLD" worker tag  (data only)                   */
-  --bo-lumber:      #44DD88;  /* lumber cost / "LUMBER" worker tag (data only; == --lumber)    */
-  --bo-food:        #58A6FF;  /* food / supply-building accent                                 */
-  --bo-tavern:      #9B6DFF;  /* shop / tavern frame                                          */
-  --bo-accent:      #F0B232;  /* hero/level highlight, group-count, parchment-gold BO accent   */
-
-  --bo-text:        #C9D1D9;  /* BO body text                                                 */
-  --bo-text-muted:  #8B949E;  /* BO secondary                                                 */
-  --bo-text-dim:    #6E7681;  /* BO labels / counts                                           */
-
-  --bo-tier1:       #FFFFFF;  /* T1 white  (== --tier-1)                                       */
-  --bo-tier2:       #21A5E3;  /* T2 cyan   (== --tier-2)                                       */
-  --bo-tier3:       #FFFF33;  /* T3 yellow (== --tier-3)                                       */
-
-  /* completion / upkeep semantics (kept inside the BO so they match the app exactly) */
-  --bo-supply-ok:   #E8F0FF;  /* upkeep none (≤50 food)   */
-  --bo-supply-low:  #FF8C00;  /* low upkeep  (51-80)      */
-  --bo-supply-high: #FF4444;  /* high upkeep (>80)        */
-  --bo-complete:    #4ECDC4;  /* "+N supply" / building-complete teal */
-
-  --bo-mono:        var(--mono);  /* costs, supply, counts - same mono as the rest of the proto */
-}
-
-/* ── §2.7 Per-race resolved groups (selected via [data-race]) ──── */
-[data-race="H"]{ --race:#4488FF; --race-ink:#A8C8FF; --race-bg:#1e2848; --race-head:#283c6a;
-                 --race-bd:#3860b0; --race-bd-hi:#5888dd; --race-glow:rgba(80,130,220,0.22);
-                 --race-soft:rgba(68,136,255,0.14); }
-[data-race="O"]{ --race:#FF4444; --race-ink:#FF9A8A; --race-bg:#2c1e18; --race-head:#5a2820;
-                 --race-bd:#904030; --race-bd-hi:#bb5540; --race-glow:rgba(200,80,40,0.22);
-                 --race-soft:rgba(255,68,68,0.14); }
-[data-race="E"]{ --race:#44DD88; --race-ink:#8DEEB6; --race-bg:#162820; --race-head:#1e4830;
-                 --race-bd:#286848; --race-bd-hi:#389068; --race-glow:rgba(60,200,140,0.22);
-                 --race-soft:rgba(68,221,136,0.14); }
-[data-race="U"]{ --race:#AA66FF; --race-ink:#CDA6FF; --race-bg:#221a38; --race-head:#382858;
-                 --race-bd:#583880; --race-bd-hi:#7848a8; --race-glow:rgba(160,80,240,0.22);
-                 --race-soft:rgba(170,102,255,0.14); }
 
 * { box-sizing: border-box; }
 
@@ -926,69 +764,155 @@ img { display: block; }
   outline-offset: 2px;
 }
 
-/* Hero bar: quiet chrome, full-width hairline (no edge stripe). */
-.site-hero-bar {
+/* ══════════════════════════════════════════════════════════════
+   HOMEPAGE SHELL (.hp-*)
+   Structure AND skin live together here so the whole block stays
+   deletable in one cut. The `hp-` prefix is load-bearing: welcome.html
+   and learn.html pull in this stylesheet WITHOUT main.css, so an
+   unprefixed component name would leak onto them.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Hero strip ────────────────────────────────────────────────
+   One short band under the app bar: the page's proposition on the
+   left, the band switcher on the right. Full-bleed background with
+   the content capped to the shared page column, so the hairline runs
+   edge to edge while the text still lines up with the nav, the drop
+   bar, the grid and the footer. */
+.hp-hero {
   background: linear-gradient(180deg, var(--surface), var(--bg));
   border-bottom: 1px solid var(--border);
 }
-.site-hero-bar .hero-bar-tagline { color: var(--text-muted); }
-.site-hero-bar .hero-bar-tagline em { color: var(--accent-strong); font-style: normal; font-weight: 700; }
+.hp-hero-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--sp-2) var(--page-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  min-height: 52px;
+}
+.hp-hero-tagline {
+  margin: 0;
+  font-size: var(--fs-h3);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-muted);
+  /* No ellipsis: this wraps on narrow screens (house rule). */
+  overflow-wrap: anywhere;
+}
+.hp-hero-tagline em {
+  font-style: normal;
+  font-weight: 800;
+  color: var(--text);
+}
+.hp-hero .skill-band { flex-shrink: 0; }
 
-/* Drop zone + upload action: chrome-accent dashed target, not green. */
-.hero-bar-dropzone {
+/* ── Slim drop bar ─────────────────────────────────────────────
+   The single upload affordance for the whole page. One row, full
+   content width. The old design spent an entire 380px column and a
+   203px panel on this; here it costs ~56px of height and no width. */
+.hp-dropbar {
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-1);
   border: 1.5px dashed var(--border-2);
-  border-radius: var(--radius);
-  background: var(--bg-deep);
-}
-.hero-bar-dropzone.hero-tile-dragover {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-}
-.hero-bar-upload {
-  color: var(--text);
-  background: var(--surface-2);
-  border: 1px solid var(--border-2);
-  border-radius: var(--radius);
-}
-.hero-bar-upload:hover { background: var(--surface-3); border-color: var(--accent); }
-.hero-bar-upload-icon { color: var(--accent); }
-.hero-bar-upload-label { color: var(--text); font-weight: 600; }
-.hero-bar-findreplays { color: var(--text-muted); }
-.hero-bar-findreplays:hover { color: var(--text); }
-
-/* Privacy badge keeps its trust-green (semantic --privacy, not race). */
-.hero-bar-private {
-  background: var(--privacy-soft);
-  border: 1px solid var(--privacy-edge);
-  border-radius: var(--radius);
-  color: var(--privacy);
-}
-.hero-bar-private-shield { color: var(--privacy); }
-.hero-bar-private-line1 { color: var(--privacy-hi); font-family: var(--mono); }
-.hero-bar-private-line2 { color: var(--text-dim); }
-
-/* Skill-band switch: the active band pill is chrome --accent (a
-   "selected" state), NOT a race color. Per-band leading icons stay;
-   the selected fill is the app accent. */
-.skill-band--hero { background: transparent; }
-.skill-band-hint { color: var(--text-muted); font-size: var(--fs-sm); }
-.skill-band-card {
-  --band-accent: var(--accent);
-  background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  color: var(--text);
+  background: var(--bg-deep);
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-.skill-band-card:hover { border-color: var(--border-2); background: var(--surface-2); }
-.skill-band-card[aria-pressed="true"],
-.skill-band-card.is-active {
-  --band-accent: var(--accent);
+.hp-dropbar.hero-tile-dragover {
+  border-style: solid;
   border-color: var(--accent);
   background: var(--accent-soft);
-  box-shadow: inset 0 0 0 1px var(--accent);
 }
-.skill-band-label { color: var(--text); font-weight: 700; }
-.skill-band-desc { color: var(--text-muted); }
+
+.hp-dropbar-cta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--hit-min);
+  padding: var(--sp-1) var(--sp-3);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+.hp-dropbar-cta:hover { background: var(--wash); }
+.hp-dropbar-icon { color: var(--accent); flex-shrink: 0; }
+
+.hp-dropbar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hp-dropbar-label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+/* The demoted BROWSER-ONLY badge: same trust message and the same
+   semantic --privacy colour, but as a subline rather than a boxed,
+   pulsing 212px panel competing with the CTA it describes. */
+.hp-dropbar-sub {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-min);
+  font-weight: 600;
+  color: var(--privacy);
+  line-height: 1.2;
+}
+.hp-dropbar-shield { flex-shrink: 0; }
+.hp-dropbar-status {
+  margin-left: var(--sp-3);
+  font-size: var(--fs-min);
+  color: var(--text-dim);
+}
+.hp-dropbar-status:empty { display: none; }
+
+.hp-dropbar-help {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--hit-min);
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: var(--fs-label);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.hp-dropbar-help:hover { background: var(--wash); color: var(--text); }
+.hp-dropbar-help svg { flex-shrink: 0; opacity: 0.8; }
+
+@media (max-width: 720px) {
+  .hp-hero-inner { flex-direction: column; align-items: stretch; gap: var(--sp-2); }
+  .hp-hero-tagline { font-size: var(--fs-base); }
+  .hp-dropbar { flex-direction: column; gap: 0; }
+  .hp-dropbar-help { justify-content: center; }
+}
+/* Phone gutter: .site-content drops to --sp-3 below 640px, and the hero
+   strip must step with it or the tagline stops lining up with the cards. */
+@media (max-width: 640px) {
+  .hp-hero-inner { padding-inline: var(--sp-3); }
+}
 
 /* "Your replays" rail: neutral surface, chrome upload affordance. */
 .site-mine { background: transparent; }
@@ -1082,13 +1006,10 @@ img { display: block; }
   box-shadow: var(--shadow-1);
 }
 .site-build-card:hover { box-shadow: var(--shadow-2); }
-.site-card-section-label {
-  color: var(--bo-text-dim);
-  font-size: var(--fs-min);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
+/* .site-card-section-label is defined once, in main.css. It used to be
+   re-declared here at --bo-text-dim, which lands at 3.1-3.6:1 on the
+   race-tinted card bodies — under AA. Section headings are structure, not
+   the "non-essential metadata" --text-dim is scoped to (§9.4). */
 .mh-build-label { color: var(--text); font-weight: 800; }
 
 /* Hero ordinal badge: BO parchment-gold accent (matches the viewer
@@ -1122,7 +1043,7 @@ img { display: block; }
    no edge stripe. */
 .mh-expansion-marker { background: transparent; border: 1px solid transparent; font-weight: 700; }
 .mh-expanded { color: var(--ok); }
-.mh-no-expo { color: var(--text-dim); }
+.mh-no-expo { color: var(--text-muted); }   /* --text-dim fails AA on race-tinted cards */
 
 /* Difficulty / band pill on the card: neutral chip; the difficulty WORD
    is always present so color is only the accelerator. */
@@ -1173,8 +1094,10 @@ img { display: block; }
 /* Replay strip: BO-toned list inside the card. */
 .site-replay-section { background: var(--bo-bg); border-top: 1px solid var(--bo-border); }
 .site-replay-item-players { color: var(--bo-text); font-weight: 600; }
-.site-replay-vs, .site-replay-item-map { color: var(--bo-text-dim); }
-.site-replay-tournament, .site-replay-stage { color: var(--bo-text-muted); }
+.site-replay-vs, .site-replay-item-map { color: var(--bo-text-muted); }
+/* --bo-text-muted lands at 4.35:1 on the tournament chip's own tinted
+   fill — just under AA. --text-muted clears it. */
+.site-replay-tournament, .site-replay-stage { color: var(--text-muted); }
 .site-replay-none { color: var(--bo-text-dim); }
 .site-replay-toggle { color: var(--accent); background: transparent; border: 0; }
 .site-replay-toggle:hover { text-decoration: underline; }
@@ -1214,4 +1137,4 @@ img { display: block; }
 .site-footer-about p { color: var(--text-muted); }
 .site-footer-links a { color: var(--text-muted); }
 .site-footer-links a:hover { color: var(--accent); }
-.site-footer-legal { color: var(--text-dim); }
+.site-footer-legal { color: var(--text-muted); }   /* --text-dim is 3.89:1 on --bg-deep */

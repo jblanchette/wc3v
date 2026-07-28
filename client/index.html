@@ -28,6 +28,20 @@
   } catch(e){} })();
   </script>
 
+  <!-- Pre-paint layout hint. The "Your replays" rail only claims a column
+       when the visitor actually has replays, but MyReplays reads IndexedDB
+       asynchronously — so the truth arrives 1-2 frames after first paint.
+       Rather than flash a two-column layout and collapse it, we cache the
+       last known count and stamp html[data-mine] synchronously here.
+       refreshPanel() reconciles it against the real count on hydration. -->
+  <script>
+  (function(){ try {
+    if (+localStorage.getItem('wc3v.mineCount') > 0) {
+      document.documentElement.dataset.mine = 'has';
+    }
+  } catch(e){} })();
+  </script>
+
   <title>WC3V — Pro Build Orders, In-Browser Replay Analysis &amp; Pro Comparison</title>
   <meta name="description" content="Free Warcraft III build order library and replay analyzer. Browse pro builds by race and matchup, drop a .w3g to analyze it locally in your browser (never uploaded), or compare your replay to a pro's with letter-graded macro, tech, expansion, and build-order feedback.">
 
@@ -110,6 +124,7 @@
   <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
+  <link rel="stylesheet" href="css/tokens.css?v=2">
   <link rel="stylesheet" href="css/main.css?v=2">
   <!-- New design system (DESIGN-SYSTEM.md): tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
@@ -197,10 +212,14 @@
           sort,
           filter: railFilter
         });
-        // Keep the section visible even when empty so the column doesn't
-        // collapse and shove the pros grid into the narrow track.
         // MyReplays.renderPanel already toggles #my-replays-empty.
         myReplaysSection.classList.toggle('site-mine-is-empty', result.total === 0);
+        // Reconcile the pre-paint layout hint set in <head>. html[data-mine]
+        // is what gives the rail its column; without it the builds grid gets
+        // the full page width. Cache the count so the next load can stamp the
+        // right layout before IndexedDB has answered.
+        document.documentElement.dataset.mine = result.total > 0 ? 'has' : 'empty';
+        try { localStorage.setItem('wc3v.mineCount', String(result.total)); } catch (e) {}
         if (countEl) {
           if (result.total === 0) countEl.textContent = '';
           else if (result.total <= RAIL_LIMIT) countEl.textContent = `${result.total} ${result.total === 1 ? 'replay' : 'replays'}`;
@@ -792,51 +811,50 @@
     </div>
   </div>
 
-  <main class="site-content">
-    <header class="site-hero-bar" role="banner">
-      <div class="hero-bar-inner">
-        <a class="hero-bar-logo" href="/" aria-label="WC3V">
-          <img src="/assets/wc3v.svg" alt="WC3V" />
-        </a>
-        <span class="hero-bar-tagline hero-bar-tagline-long">A Warcraft III replay simulator, built for <em>learning the game</em>.</span>
-
-        <!-- Right-hand action cluster. "Report a bug" is injected by
-             BugReport.js into the start of this wrapper (before the privacy
-             badge). The BROWSER-ONLY badge and the replay drop zone follow —
-             and the "Where are my replays?" helper now lives *inside* the
-             drop zone, next to where you actually drop the file. -->
-        <div class="hero-bar-actions">
-          <!-- Stamped privacy badge — dramatic, persistent reassurance. Shield
-               icon pulses gently; monospace tactical typography. Title carries
-               the same message for accessibility / hover. -->
-          <div class="hero-bar-private" role="img" aria-label="Browser-only: your file is never uploaded" title="Browser-only: your file is never uploaded">
-            <svg class="hero-bar-private-shield" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/>
-              <path d="M9 12 L11 14 L15 10"/>
-            </svg>
-            <div class="hero-bar-private-text">
-              <span class="hero-bar-private-line1">BROWSER-ONLY</span>
-              <span class="hero-bar-private-line2">no upload · no server</span>
-            </div>
-          </div>
-
-          <!-- The drop zone: a dashed bordered region holding the prominent
-               upload action plus the "Where are my replays?" helper. The
-               whole region is the drag-and-drop target (see wireDropZone). -->
-          <div id="hero-dropzone" class="hero-bar-dropzone">
-            <button id="hero-upload-card" type="button" class="hero-bar-upload" title="Pick or drop a .w3g file, analyzed locally in your browser">
-              <svg class="hero-bar-upload-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <span class="hero-bar-upload-label">Drop or upload a replay</span>
-              <span class="hero-bar-upload-sub" id="hero-upload-status" aria-live="polite"></span>
-            </button>
-            <button id="hero-find-replays-btn" type="button" class="hero-bar-findreplays" title="Where are my replay files?">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              <span>Where are my replays?</span>
-            </button>
-          </div>
-        </div>
+  <!-- Hero strip. Deliberately NOT the old .site-hero-bar: that element
+       bundled the wordmark with four same-weight actions (a gold bug link,
+       a pulsing trust badge, the upload CTA and a help pill) so nothing read
+       as primary. The brand now lives permanently in the app bar; this strip
+       carries just the page's one-line proposition and the band switcher.
+       NOTE: the class .hero-bar-inner is intentionally absent. BugReport.js
+       keys its hero injection off that name, so dropping it is what moves
+       "Report a bug" cleanly down to the footer with no JS change. -->
+  <div class="hp-hero">
+    <div class="hp-hero-inner">
+      <h1 class="hp-hero-tagline">A Warcraft III replay simulator, built for <em>learning the game</em>.</h1>
+      <div class="skill-band skill-band--compact" id="skill-band-hero" role="group"
+           aria-label="Skill level — sets which builds you see and what your replays are graded against">
+        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="New to WC3: your first builds, the few that matter"><img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">New to WC3</span></button>
+        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Ladder: solid tournament play you can copy"><img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Ladder</span></button>
+        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="Pro meta: top-level builds, tight execution"><img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Pro meta</span></button>
       </div>
-    </header>
+    </div>
+  </div>
+
+  <main class="site-content">
+    <!-- Slim full-width drop bar. Replaces both the hero-bar drop zone and
+         the 380x203 empty-state panel that used to sit in the left rail.
+         The four IDs below are the entire JS contract (wireDropZone,
+         triggerUpload, setStatus, the find-replays modal) — keep them.
+         The BROWSER-ONLY trust badge is demoted to the subline here: same
+         message, no box, no pulse animation. -->
+    <div id="hero-dropzone" class="hp-dropbar">
+      <button id="hero-upload-card" type="button" class="hp-dropbar-cta" title="Pick or drop a .w3g file, analyzed locally in your browser">
+        <svg class="hp-dropbar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span class="hp-dropbar-text">
+          <span class="hp-dropbar-label">Drop a .w3g here, or click to upload</span>
+          <span class="hp-dropbar-sub">
+            <svg class="hp-dropbar-shield" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
+            Parsed in your browser — never uploaded, no server
+          </span>
+        </span>
+        <span class="hp-dropbar-status" id="hero-upload-status" aria-live="polite"></span>
+      </button>
+      <button id="hero-find-replays-btn" type="button" class="hp-dropbar-help" title="Where are my replay files?">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Where are my replays?</span>
+      </button>
+    </div>
 
     <!-- Help modal: standard replay-folder paths. Opened from the hero
          "Where are my replays?" button. -->
@@ -926,40 +944,6 @@
       </div>
     </div>
 
-    <!-- Hero variant of the site-wide skill-band switch. The compact form
-         lives in the top nav (SiteNav.js) on every page. Both share the same
-         `.skill-band-card[data-band]` JS hook handled by BandSwitcher.js.
-         `.skill-band-hint` is only visible when BandSwitcher sets
-         `data-first-visit` on the root (no stored band, no URL hint). Band
-         icons are a rising-power item progression: Potion of Healing → Tome
-         of Knowledge → Crown of Kings. -->
-    <div class="skill-band skill-band--hero" id="skill-band-hero" role="group" aria-label="Skill level">
-      <p class="skill-band-hint">Pick where you're at. It sets which builds you see and what your own replays get graded against. Change anytime.</p>
-      <div class="skill-band-row">
-        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false">
-          <img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
-          <span class="skill-band-text">
-            <span class="skill-band-label">New to WC3</span>
-            <span class="skill-band-desc">Your first builds: the few things that matter</span>
-          </span>
-        </button>
-        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false">
-          <img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
-          <span class="skill-band-text">
-            <span class="skill-band-label">Ladder</span>
-            <span class="skill-band-desc">Solid tournament play you can copy</span>
-          </span>
-        </button>
-        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false">
-          <img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
-          <span class="skill-band-text">
-            <span class="skill-band-label">Pro meta</span>
-            <span class="skill-band-desc">Top-level builds, tight execution</span>
-          </span>
-        </button>
-      </div>
-    </div>
-
     <div class="site-browse-layout">
 
       <!-- Left rail: your replays. Empty state shown when no replays in IDB. -->
@@ -1009,8 +993,19 @@
            don't claim a separate authority. -->
       <section id="builds" class="site-pros" aria-labelledby="pros-title">
         <div class="site-pros-head">
-          <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
-          <p class="band-intro" id="band-intro">Current top-level builds from major tournaments: tight execution, the latest strategies.</p>
+          <!-- Title and intro share one line so the filter row and the first
+               card sit as high as possible. applyBandChrome() rewrites the
+               textContent of both nodes on band change — the wrapper is
+               presentational only. -->
+          <div class="site-pros-headline">
+            <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
+            <p class="band-intro" id="band-intro">Current top-level builds from major tournaments: tight execution, the latest strategies.</p>
+            <!-- Live count. Sits on the headline row, not in the filter bar:
+                 as a flex item there it was the first thing to wrap once the
+                 race chips filled the row, costing a whole extra row above
+                 the fold. applyFilter() finds it by ID, so it can live here. -->
+            <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
+          </div>
           <div id="pro-filter-bar" class="pro-filter-bar" role="toolbar" aria-label="Filter pro builds">
             <!-- Race chips (always visible) -->
             <div class="pfb-group" id="race-filter-host">
@@ -1051,8 +1046,6 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.65" y2="16.65"/></svg>
               <span>Advanced search</span>
             </button>
-            <!-- Live count, right-aligned -->
-            <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
           </div>
         </div>
 
@@ -2064,7 +2057,7 @@
       const userClass = build._isUserBuild ? ' is-user-build' : '';
 
       return `
-        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}${currentBand === 'new' && learnerHtml ? ' is-learner' : ''}" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
+        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}${currentBand === 'new' && learnerHtml ? ' is-learner' : ''}" role="listitem" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
           ${headerHtml}
           ${heroesHtml}
           ${unitsHtml}

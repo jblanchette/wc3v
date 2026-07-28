@@ -3415,8 +3415,9 @@ body {
 
 /* Expansion marker */
 .mh-expansion-marker {
-  font: 700 0.65rem Verdana;
-  padding: 0 4px;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  padding: 0 var(--sp-1);
   border-radius: 3px;
   display: inline-block;
   white-space: nowrap;
@@ -5815,17 +5816,19 @@ body {
   background: rgba(22, 25, 40, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--site-border);
-  box-shadow: 0 1px 12px rgba(0,0,0,0.4), 0 0 24px rgba(68,136,255,0.03);
+  /* No coloured glow: #4488FF is the Human race colour and may never be
+     used as chrome (DESIGN-SYSTEM §1). Plain depth shadow only. */
+  box-shadow: 0 1px 12px rgba(0,0,0,0.4);
 }
 
 .site-nav-inner {
-  max-width: 1800px;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 0.15rem 1.5rem;
-  min-height: 32px;
+  padding: var(--sp-2) var(--page-gutter);
+  min-height: 44px;          /* --hit-min: the bar must clear its own targets */
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: var(--sp-4);
 }
 
 .site-nav-logo {
@@ -5833,53 +5836,63 @@ body {
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  min-height: var(--ico-sm);
 }
+
+/* ── WC3V wordmark ──────────────────────────────────────────────
+   The canonical brand mark: a text lockup with the "3" in the chrome
+   accent. Sharp at any size, themed by the token layer, and identical
+   to the welcome gate's .gate-logo (welcome.html loads redesign.css
+   only, so it declares the same mark locally at display size). */
+.site-wordmark {
+  font-size: var(--fs-h2);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--text);
+  white-space: nowrap;
+}
+.site-wordmark > span { color: var(--accent); }
 
 .site-nav-logo-img {
   height: 36px;
   width: auto;
   display: block;
-  filter: drop-shadow(0 0 6px rgba(68,136,255,0.15));
 }
 
 .site-nav-spacer {
   flex: 1;
 }
 
+/* No margin-left: the wrapper must sit flush at --page-gutter so the nav
+   lines up with the ToS strip, the content and the footer. The flex `gap`
+   on .site-nav-inner handles separation from its neighbours. */
 .site-nav-search-wrap {
   display: flex;
   align-items: center;
-  margin-left: 1rem;
 }
 
 .site-nav-search {
-  width: 220px;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 4px;
-  background: rgba(255,255,255,0.08);
-  color: var(--site-text);
-  font-size: 0.85rem;
+  width: 260px;
+  min-height: var(--ico-sm);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  background: var(--bg-deep);
+  color: var(--text);
+  font-size: var(--fs-label);
   font-family: inherit;
   outline: none;
-  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-  animation: search-glow-intro 1.6s ease-out 0.4s both;
-}
-
-@keyframes search-glow-intro {
-  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,0); border-color: rgba(255,255,255,0.3); }
-  35%  { box-shadow: 0 0 12px 2px rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.55); }
-  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); border-color: rgba(255,255,255,0.3); }
+  transition: border-color var(--dur), background var(--dur);
 }
 
 .site-nav-search::placeholder {
-  color: rgba(255,255,255,0.5);
+  color: var(--text-dim);
 }
 
 .site-nav-search:focus {
-  border-color: rgba(255,255,255,0.5);
-  background: rgba(255,255,255,0.12);
-  box-shadow: 0 0 8px 1px rgba(255,255,255,0.1);
+  border-color: var(--accent);
+  background: var(--surface);
 }
 
 .site-nav-links {
@@ -5928,23 +5941,28 @@ body {
   box-shadow: inset 0 -2px 0 var(--race-color);
 }
 
+/* min-height clears --ico-sm (36px). These used to compute to ~24px tall,
+   below both the icon and the touch-target floors (DESIGN-SYSTEM §9.2). */
 .site-nav-link {
-  padding: 0.35rem 0.9rem;
-  border-radius: 5px;
-  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  border-radius: var(--radius);
+  font-size: var(--fs-label);
   font-weight: 600;
   text-decoration: none;
-  color: var(--site-text);
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: color var(--dur), background var(--dur), border-color var(--dur);
 }
 
 .site-nav-link:hover,
 .site-nav-link.active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.13);
-  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text);
+  background: var(--wash);
+  border-color: var(--border-2);
 }
 
 /* Narrow viewports (≤ 767px): let the nav wrap and shrink the search input
@@ -5952,22 +5970,30 @@ body {
 @media (max-width: 767px) {
   .site-nav-inner {
     flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
-    padding: 0.3rem 0.75rem;
+    gap: var(--sp-2) var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
   }
-  .site-nav-search-wrap { margin-left: 0; flex: 1 1 100%; order: 3; }
+  .site-nav-search-wrap { flex: 1 1 100%; order: 3; }
   .site-nav-search { width: 100%; }
-  .site-nav-link { padding: 0.3rem 0.7rem; font-size: 0.78rem; }
+  /* Never below the 0.8rem floor, never below the 36px target floor. */
+  .site-nav-link { padding: 0 var(--sp-2); font-size: var(--fs-min); }
 }
 
 @media (max-width: 480px) {
   .site-nav-search { display: none; }
 }
 
+/* body is display:flex (see top of file — viewer.html's #app depends on it).
+   A cross-axis `auto` margin suppresses align-items:stretch, so without an
+   explicit width these become shrink-to-fit and stop lining up with the nav.
+   `width: 100%` restores the fill; max-width still clamps, margin still
+   centers. */
 .site-content {
-  max-width: 1800px;
+  width: 100%;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 1.25rem 1.5rem 4rem;
+  padding: var(--sp-4) var(--page-gutter) 4rem;
+  box-sizing: border-box;
 }
 
 /* Small phone (≤ 480px): tighter outer padding so text-heavy pages
@@ -6557,38 +6583,14 @@ body {
   line-height: 1.5;
 }
 
-.site-build-grid-header {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--site-text-muted);
-  margin-top: 1.5rem;
-  margin-bottom: 1.25rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--site-border);
-  position: relative;
-}
-
-.site-build-grid-header::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  width: 60px;
-  height: 2px;
-  background: var(--site-accent);
-  border-radius: 1px;
-}
-
+/* Fluid auto-fill: the column count follows the window at every width.
+   There is deliberately NO fixed-column override above 1700px — the old
+   repeat(4, …) rule capped wide screens at 4 columns and so *reduced*
+   density exactly where there was the most room. */
 .site-build-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 14px;
-}
-
-@media (min-width: 1700px) {
-  .site-build-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--sp-4);
 }
 
 .site-build-grid > * {
@@ -6735,13 +6737,16 @@ body {
 }
 
 /* ── Section labels ──────────────────────────────────────── */
+/* Eyebrow label (DESIGN-SYSTEM §3). Was 0.65rem at 45% white — below the
+   0.8rem floor and failing AA contrast on every race-tinted card body. */
 .site-card-section-label {
   display: block;
-  font: 600 0.65rem Verdana;
-  color: rgba(255,255,255,0.45);
-  letter-spacing: 0.05em;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: var(--sp-1);
 }
 
 .site-card-section-label + .site-card-section-label,
@@ -7904,21 +7909,43 @@ abbr.gloss:focus-visible {
 /* ── (finder styles removed — replaced by matchup columns) ── */
 
 /* ── Browse layout: sidebar + grid ───────────────────────── */
+/* Single column is the DEFAULT. The "Your replays" rail only claims a
+   column once the visitor actually has replays — see html[data-mine] below.
+   No horizontal padding: .site-content already supplies --page-gutter, and
+   adding it again here was double-guttering the build grid by 48px. */
 .site-browse-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
   align-items: start;
   max-width: none;
   margin: 0 auto;
-  padding: 12px 24px 24px;
+  padding: 0 0 var(--sp-6);
 }
+
+/* Two columns only when there is something to put in the rail, and only
+   above the 1024px collapse. The min-width wrapper matters: media queries
+   add no specificity, so an unwrapped html[data-mine] rule (0,2,0) would
+   beat the max-width:1024px collapse below (0,1,0). */
+@media (min-width: 1025px) {
+  html[data-mine="has"] .site-browse-layout {
+    grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  }
+}
+
+/* Rail hidden until it has content. Declared here — ahead of the <=640px
+   mobile block, which has its own equal-specificity rule — so source order
+   is deliberate rather than accidental. */
+html:not([data-mine="has"]) #my-replays-section { display: none; }
 
 @media (max-width: 1024px) {
   .site-browse-layout {
     grid-template-columns: 1fr;
-    padding: 10px 16px 20px;
-    gap: 18px;
+    /* No horizontal padding — .site-content already owns the gutter.
+       The 16px here was re-creating the double gutter this breakpoint
+       inherited from the old two-column layout. */
+    padding: 0 0 var(--sp-5);
+    gap: var(--sp-4);
   }
 }
 
@@ -8188,8 +8215,8 @@ abbr.gloss:focus-visible {
 
 .site-replay-item-map {
   flex: 0 1 auto;
-  color: #999;
-  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-size: var(--fs-min);
   overflow-wrap: anywhere;
 }
 
@@ -8240,7 +8267,7 @@ abbr.gloss:focus-visible {
   font-weight: 700;
 }
 .site-replay-vs {
-  color: #777;
+  color: var(--text-muted);
   font-weight: 500;
 }
 .site-replay-opponent {
@@ -8274,10 +8301,11 @@ abbr.gloss:focus-visible {
   display: inline-block;
   padding: 2px 7px;
   border-radius: 3px;
-  background: rgba(200, 168, 78, 0.16);
-  border: 1px solid rgba(200, 168, 78, 0.32);
-  color: #c8a84e;
-  font: 700 0.66rem Verdana;
+  background: var(--wash);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--fs-min);   /* was 0.66rem — under the 0.8rem floor */
+  font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
   flex-shrink: 0;
@@ -8998,9 +9026,11 @@ svg.about-feat-icon {
 
 /* ── Site footer ──────────────────────────────────────── */
 .site-footer {
-  max-width: 1800px;
+  width: 100%;               /* see .site-content — body is a flex column */
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 2rem 1.5rem 1.5rem;
+  padding: 2rem var(--page-gutter) 1.5rem;
+  box-sizing: border-box;
   border-top: 1px solid var(--site-border);
 }
 
@@ -9047,8 +9077,8 @@ svg.about-feat-icon {
 }
 
 .site-footer-legal {
-  font-size: 0.75rem;
-  color: #666;
+  font-size: var(--fs-min);   /* was 0.75rem — under the 0.8rem floor */
+  color: var(--text-muted);
   line-height: 1.5;
   border-top: 1px solid var(--site-border);
   padding-top: 1rem;
@@ -10958,21 +10988,20 @@ svg.about-feat-icon {
 /* ===== Single-row hero bar ===== */
 
 .site-hero-bar {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, var(--surface), var(--bg));
+  border-bottom: 1px solid var(--border);
 }
 
 .hero-bar-inner {
-  max-width: 1440px;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 8px 24px;
+  padding: var(--sp-2) var(--page-gutter);
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--sp-3);
   min-height: 56px;
 }
 
-/* Big WC3V wordmark — the page's primary visual anchor on the homepage. */
 .hero-bar-logo {
   display: flex;
   align-items: center;
@@ -10986,8 +11015,8 @@ svg.about-feat-icon {
 }
 
 .hero-bar-tagline {
-  font-size: 1.05rem;
-  color: #d0d0d0;
+  font-size: var(--fs-lg);
+  color: var(--text-muted);
   font-weight: 500;
   white-space: nowrap;
   /* Subtle vertical rule visually separates tagline from logo without
@@ -11002,67 +11031,47 @@ svg.about-feat-icon {
   top: 15%;
   bottom: 15%;
   width: 1px;
-  background: rgba(255,255,255,0.12);
+  background: var(--border-2);
 }
 .hero-bar-tagline em {
   font-style: normal;
-  color: #8cc878;
-  font-weight: 700;
+  color: var(--text);
+  font-weight: 800;
 }
 
 /* Single-line upload label. */
 .hero-bar-upload-label {
   display: inline-block;
-  font-size: 0.85rem;
+  font-size: var(--fs-label);
   font-weight: 600;
-  color: #b8e0a0;
+  color: var(--text);
   line-height: 1;
 }
-.hero-bar-upload-icon { color: #b8e0a0; flex-shrink: 0; }
+.hero-bar-upload-icon { color: var(--accent); flex-shrink: 0; }
 
-/* ── Stamped "BROWSER-ONLY" privacy badge ────────────────────────────
-   Lives in the hero-bar action cluster. Two-tone treatment: a darker
-   tactical-green inset that reads as a hardware status indicator rather
-   than a generic UI pill. The shield icon has an always-on slow pulse so
-   the badge feels "live" without the text needing to animate. */
+/* ── "BROWSER-ONLY" privacy badge ─────────────────────────────────────
+   A trust marker, not a call to action. It keeps the semantic --privacy
+   green (which is NOT a race colour), but the four-layer inset, the glow
+   filters and the always-on shield pulse are gone: they made a passive
+   reassurance shout louder than the upload button next to it. */
 .hero-bar-private {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 13px 0 11px;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
   margin-left: auto;
-  height: 42px;
+  min-height: var(--ico-sm);
   box-sizing: border-box;
-  background:
-    linear-gradient(180deg, rgba(64,150,86,0.24), rgba(40,90,55,0.30));
-  border: 1px solid rgba(120,200,140,0.55);
-  border-radius: 6px;
-  box-shadow:
-    inset 0 1px 0 rgba(180,224,160,0.22),
-    inset 0 -1px 0 rgba(0,0,0,0.28),
-    0 0 0 1px rgba(0,0,0,0.25),
-    0 1px 6px rgba(40,120,60,0.25);
+  background: var(--privacy-soft);
+  border: 1px solid var(--privacy-edge);
+  border-radius: var(--radius);
   flex-shrink: 0;
   user-select: none;
 }
-/* Inside the action cluster the wrapper already owns margin-left:auto. */
-.hero-bar-actions .hero-bar-private { margin-left: 0; }
 
 .hero-bar-private-shield {
-  color: #8cf09a;
-  filter: drop-shadow(0 0 4px rgba(140,240,154,0.55));
-  animation: hero-private-pulse 2.4s ease-in-out infinite;
+  color: var(--privacy);
   flex-shrink: 0;
-}
-@keyframes hero-private-pulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 3px rgba(140,240,154,0.4));
-    transform: scale(1);
-  }
-  50% {
-    filter: drop-shadow(0 0 8px rgba(140,240,154,0.85));
-    transform: scale(1.08);
-  }
 }
 
 .hero-bar-private-text {
@@ -11071,167 +11080,89 @@ svg.about-feat-icon {
   align-items: flex-start;
   line-height: 1.05;
   gap: 3px;
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--mono);
 }
 .hero-bar-private-line1 {
-  font-size: 0.85rem;
+  font-size: var(--fs-min);
   font-weight: 800;
-  letter-spacing: 1.4px;
-  color: #e2f7d6;
-  text-shadow: 0 0 6px rgba(140,240,154,0.45);
+  letter-spacing: 0.06em;
+  color: var(--privacy-hi);
 }
 .hero-bar-private-line2 {
-  font-size: 0.8rem;
+  font-size: var(--fs-min);
   font-weight: 600;
-  letter-spacing: 0.3px;
-  color: rgba(196,232,176,0.85);
+  letter-spacing: 0.03em;
+  color: var(--text-dim);
   text-transform: uppercase;
 }
 
-/* ── Right-hand action cluster (bug report · privacy badge · drop zone) ──
-   A single flex group pinned to the right edge. BugReport.js injects the
-   "Report a bug" button at the start of this wrapper. */
-.hero-bar-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
-/* "Where are my replays?" help pill — legacy standalone variant (still used
-   on /replays.html). On the homepage the helper lives inside the drop zone
-   and uses .hero-bar-findreplays instead. */
+/* "Where are my replays?" help pill — /replays.html only. The homepage's
+   equivalent lives in the drop bar (.hp-dropbar-help).
+   NOTE: there is deliberately no .hero-bar-actions wrapper any more. The
+   homepage's four-CTA cluster is gone, and BugReport.injectHeroBarPills
+   (BugReport.js:116) treats a missing .hero-bar-actions as "insert before
+   .hero-bar-private" — which is what /replays.html wants. */
 .hero-bar-help {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  min-height: var(--ico-sm);
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.15);
-  color: #c0c0c0;
-  border-radius: 6px;
+  border: 1px solid var(--border-2);
+  color: var(--text-muted);
+  border-radius: var(--radius);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: var(--fs-min);
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
 }
 .hero-bar-help:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.3);
-  color: #fff;
+  background: var(--wash);
+  border-color: var(--accent);
+  color: var(--text);
 }
 
-/* The upload button: standalone dashed pill on /replays.html, but inside
-   the homepage drop zone it becomes the borderless prominent green action. */
+/* The upload button on /replays.html: a dashed drop target. Chrome accent,
+   not green — green is reserved for the semantic --privacy / --ok channels
+   and for Night Elf as race data (DESIGN-SYSTEM §1). */
 .hero-bar-upload {
   margin-left: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 14px;
-  height: 36px;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4);
+  min-height: var(--ico-sm);
   box-sizing: border-box;
-  background: rgba(92,184,120,0.06);
-  border: 1px dashed rgba(92,184,120,0.45);
-  border-radius: 6px;
-  color: #b8e0a0;
+  background: var(--bg-deep);
+  border: 1px dashed var(--border-2);
+  border-radius: var(--radius);
+  color: var(--text);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-label);
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
   white-space: nowrap;
 }
-.hero-bar-upload:hover {
-  background: rgba(92,184,120,0.12);
-  border-color: #5cb878;
-  color: #fff;
+.hero-bar-upload:hover,
+.hero-bar-upload.hero-tile-dragover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
 }
 .hero-bar-upload svg { flex-shrink: 0; }
 .hero-bar-upload-label { white-space: nowrap; }
 .hero-bar-upload-sub {
-  font-size: 0.8rem;
+  font-size: var(--fs-min);
   font-weight: 500;
-  color: #ffd9a0;
-  margin-left: 4px;
+  color: var(--text-dim);
+  margin-left: var(--sp-1);
 }
 .hero-bar-upload-sub:empty { display: none; }
 
-/* ── Replay drop zone ────────────────────────────────────────────────
-   Dashed-bordered region that bundles the prominent upload action with
-   the "Where are my replays?" helper, so the help text sits where you
-   actually drop the file. */
-.hero-bar-dropzone {
-  display: inline-flex;
-  align-items: stretch;
-  height: 42px;
-  box-sizing: border-box;
-  border: 1.5px dashed rgba(92,184,120,0.55);
-  border-radius: 8px;
-  background: rgba(92,184,120,0.05);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-/* The dragover class lands on #hero-upload-card (the inner button); light
-   up the whole zone when it does. */
-.hero-bar-dropzone:has(.hero-tile-dragover),
-.hero-bar-dropzone.hero-tile-dragover {
-  border-color: #5cb878;
-  border-style: solid;
-  background: rgba(92,184,120,0.16);
-}
-.hero-bar-dropzone .hero-bar-upload {
-  height: 100%;
-  border: none;
-  border-radius: 0;
-  padding: 0 16px;
-  gap: 10px;
-  background: rgba(92,184,120,0.16);
-  color: #d8f5cc;
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-.hero-bar-dropzone .hero-bar-upload:hover {
-  background: rgba(92,184,120,0.30);
-  color: #fff;
-}
-
-/* "Where are my replays?" helper inside the drop zone — a quiet segment
-   divided from the upload action by a dashed hairline. */
-.hero-bar-findreplays {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 12px;
-  height: 100%;
-  box-sizing: border-box;
-  background: transparent;
-  border: none;
-  border-left: 1px dashed rgba(92,184,120,0.4);
-  color: #b9c4d8;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.12s, color 0.12s;
-}
-.hero-bar-findreplays:hover {
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-}
-.hero-bar-findreplays svg { flex-shrink: 0; opacity: 0.8; }
-
-/* Drag-over tint for the upload button itself (the :has() rule above
-   handles the surrounding zone's border). */
-.hero-tile-dragover {
-  background: rgba(92,184,120,0.2) !important;
-  border-color: #5cb878 !important;
-  border-style: solid !important;
-}
 
 @media (max-width: 900px) {
   /* Short hero taglines (e.g. /replays.html) drop here. */
@@ -11241,15 +11172,12 @@ svg.about-feat-icon {
   /* The homepage's longer tagline only fits comfortably on wide monitors;
      below that it's the logo + action cluster (still plenty of identity).
      The mobile action bar carries the tagline on phones. */
-  .hero-bar-tagline-long { display: none; }
 }
 @media (max-width: 1000px) {
   /* Tighten the right cluster: drop the badge's secondary line and let the
      bug button + drop-zone helper collapse to icons (titles still hover). */
   .hero-bar-private-line2 { display: none; }
   .hero-bar-private { padding: 0 11px 0 9px; }
-  .hero-bar-findreplays span { display: none; }
-  .hero-bar-findreplays { padding: 0 11px; }
 }
 @media (max-width: 760px) {
   /* Drop the badge text entirely; keep just the pulsing shield. */
@@ -11269,31 +11197,12 @@ svg.about-feat-icon {
 /* Small phone (≤ 480px): upload button takes its own row. */
 @media (max-width: 480px) {
   .hero-bar-inner { padding: 8px 12px; }
-  .hero-bar-actions { gap: 8px; }
   .hero-bar-upload {
     flex-basis: 100%;
     justify-content: center;
     margin-left: 0;
   }
   .hero-bar-private { margin-left: 0; }
-}
-
-/* My Replays header — extra layout when there are multiple actions */
-.site-my-replays-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.site-my-replays-link {
-  color: #8cc878;
-  text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-
-.site-my-replays-link:hover {
-  text-decoration: underline;
 }
 
 /* My Replays card actions: 3-button layout (Open / Compare / Remove) */
@@ -13581,15 +13490,6 @@ svg.about-feat-icon {
   color: #fff;
 }
 
-.site-my-replays-hint { font-size: 0.85rem; color: #888; }
-.site-my-replays-hint strong { color: #c8c8c8; font-weight: 600; }
-
-.hero-compact-actions-single {
-  grid-template-columns: 1fr;
-  max-width: 720px;
-  margin: 0 auto;
-}
-
 /* =============================================================
    HOMEPAGE REDESIGN: side-by-side broadcast layout
    ============================================================= */
@@ -13599,26 +13499,36 @@ svg.about-feat-icon {
 .site-mine {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
   min-width: 0;
+}
+
+/* The rail is always shorter than the build grid beside it. Sticking it
+   under the app bar keeps it usable while scrolling instead of leaving a
+   tall dead column. */
+@media (min-width: 1025px) {
+  .site-mine {
+    position: sticky;
+    top: calc(var(--appbar-h) + var(--sp-4));
+    max-height: calc(100vh - var(--appbar-h) - var(--sp-6));
+    overflow-y: auto;
+  }
 }
 
 .site-mine-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
 }
 
 .site-mine-title {
-  font-size: 1.05rem;
+  font-size: var(--fs-h3);
   margin: 0;
-  color: #d8d8d8;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  color: var(--text);
+  font-weight: 800;
 }
 
 .site-mine-upload-btn {
@@ -13640,12 +13550,12 @@ svg.about-feat-icon {
 .site-mine-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-3);
 }
 
 .site-mine-status {
-  font-size: 0.85rem;
-  color: #c4915b;
+  font-size: var(--fs-label);
+  color: var(--text-muted);
   min-height: 1em;
 }
 
@@ -13659,19 +13569,20 @@ svg.about-feat-icon {
   transition: border-color 0.12s, background 0.12s;
   cursor: pointer;
 }
-/* Click-to-upload affordance: lift on hover/focus, same green as dragover. */
+/* Click-to-upload affordance. Chrome --accent, not green: green is reserved
+   for the semantic --privacy / --ok channels and for Night Elf as race data. */
 .site-mine-empty:hover,
 .site-mine-empty:focus-visible {
-  border-color: rgba(140, 200, 120, 0.45);
-  background: rgba(140, 200, 120, 0.05);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 .site-mine-empty:focus-visible {
-  outline: 2px solid rgba(140, 200, 120, 0.7);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 .site-mine-empty-dragover {
-  border-color: rgba(140, 200, 120, 0.65);
-  background: rgba(140, 200, 120, 0.08);
+  border-color: var(--accent);
+  background: var(--accent-soft);
 }
 .site-mine-empty-icon {
   color: #5cb878;
@@ -13710,193 +13621,151 @@ svg.about-feat-icon {
 .site-pros-head {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+
+/* Heading, intro and build count share one baseline row. Stacking them cost
+   ~70px above the fold and read as three separate ideas; they are one. The
+   intro is the only flexible item — it wraps its own text rather than
+   letting anything else drop to a new row. */
+.site-pros-headline {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
 }
 
 .site-pros-title {
-  font-size: 1.05rem;
+  font-size: var(--fs-h2);
   margin: 0;
-  color: #d8d8d8;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+  color: var(--text);
+  font-weight: 800;
+  flex-shrink: 0;
 }
+
+/* The intro is the only grower, and it keeps a 260px basis so it drops to
+   its own line rather than being squeezed to one word per line. Its growth
+   is also what pushes the build count to the right edge — deliberately not
+   `margin-left: auto` on the count, which would absorb the free space
+   before the intro ever got any. */
+.site-pros-headline .band-intro { flex: 1 1 260px; }
 
 /* ── Skill band switch ────────────────────────────────────────────────────
-   One control rendered in two variants, both bound to BandSwitcher.js by the
-   `.skill-band-card[data-band]` hook:
-     • `.skill-band--hero` lives full-width on the homepage hero (below the
-       action bar). Cards show icon + label + description. The first-visit
-       hint (`.skill-band-hint`) appears only when BandSwitcher sets
-       `data-first-visit` on the root.
-     • `.skill-band--compact` lives in the top nav on every page (rendered
-       by SiteNav.render). Icon + label only; descriptions kept in `title=`.
-   Per-band accent (green/blue/gold) is driven by `[data-band]` on each card.
-   Flat surfaces, hairline dividers between cards, accent-color top edge on
-   the active card — explicitly NOT pill-rounded. */
+   ONE control, one variant (`.skill-band--compact`), bound to BandSwitcher.js
+   by the `.skill-band-card[data-band]` hook. It sits in the homepage hero
+   strip (#skill-band-hero) and in the top nav on every other page
+   (#skill-band-nav, rendered by SiteNav.render). Icon + label; the longer
+   description lives in `title=`.
 
-.skill-band {
-  --band-accent: var(--site-accent);
-  display: block;
-}
+   The old full-width `.skill-band--hero` onboarding variant is gone: it only
+   ever rendered for a visitor who opened /welcome, bounced without choosing,
+   and came back — welcome.html sets wc3v.gateSeen on page LOAD, so
+   data-first-visit was effectively unreachable. Its 3-line cards cost ~96px
+   above the fold for a state nobody saw.
 
-/* The hero variant is an onboarding control — it only appears on the
-   homepage on a first visit (BandSwitcher sets data-first-visit when no
-   band is stored). Once the visitor picks any band, the attribute is
-   removed and the hero hides; from then on the compact nav band is the
-   only switch on screen. */
-.skill-band--hero { display: none; margin: 12px 0 18px; }
-.skill-band--hero[data-first-visit] { display: block; }
+   Cards are separate rounded pills with a real gap — the old flush,
+   square-cornered, shared-border strip left a bright leftover border colour
+   on the first card wherever the collapse rule half-applied. */
 
-/* While the homepage hero is in first-visit mode, suppress the compact
-   nav band so the user sees one obvious onboarding control, not two.
-   Once a band is picked the hero hides, the :has() match fails, and the
-   compact nav band returns to view automatically (no JS coordination). */
-body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: none; }
-
-.skill-band-hint {
-  display: none;
-  margin: 0 0 8px;
-  font-size: 0.92rem;
-  line-height: 1.4;
-  color: var(--site-text-muted);
-}
-.skill-band--hero[data-first-visit] .skill-band-hint { display: block; }
-
+.skill-band,
 .skill-band-row {
   display: flex;
-  gap: 0;
   flex-wrap: nowrap;
+  gap: var(--sp-2);
 }
 
+/* A selected band is chrome --accent, never a race colour, and never a
+   single-edge stripe (DESIGN-SYSTEM §1, §10). This lives in main.css, not
+   redesign.css, because the band renders on every page and only index.html
+   loads redesign.css. */
 .skill-band-card {
-  --band-accent: var(--site-accent);
-  flex: 1 1 0;
+  flex: 0 1 auto;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 14px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--site-border);
-  border-top: 3px solid transparent;
-  border-radius: 0;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
   cursor: pointer;
-  color: var(--site-text);
   font-family: inherit;
   text-align: left;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
 }
-/* Hairline divider between adjacent cards — share borders, no double-line. */
-.skill-band-row .skill-band-card + .skill-band-card { border-left: 0; }
-
-.skill-band-card[data-band="new"]       { --band-accent: #4fb86b; }
-.skill-band-card[data-band="improving"] { --band-accent: #5ea8d4; }
-.skill-band-card[data-band="pro"]       { --band-accent: #c8a84e; }
-
 .skill-band-card:hover {
-  background: color-mix(in srgb, var(--band-accent) 10%, rgba(255,255,255,0.04));
-  border-color: color-mix(in srgb, var(--band-accent) 40%, var(--site-border));
+  background: var(--surface-2);
+  border-color: var(--border-2);
 }
-
 .skill-band-card[aria-pressed="true"],
 .skill-band-card.is-active {
-  background: color-mix(in srgb, var(--band-accent) 14%, transparent);
-  border-color: color-mix(in srgb, var(--band-accent) 55%, var(--site-border));
-  border-top-color: var(--band-accent);
-  color: #fff;
-}
-
-.skill-band-card:focus-visible {
-  outline: 2px solid var(--band-accent);
-  outline-offset: 1px;
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 
 .skill-band-ico {
-  width: 22px;
-  height: 22px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
   opacity: 0.55;
-  transition: opacity 0.12s;
+  transition: opacity var(--dur-fast);
 }
 .skill-band-card:hover .skill-band-ico,
 .skill-band-card[aria-pressed="true"] .skill-band-ico,
 .skill-band-card.is-active .skill-band-ico { opacity: 1; }
 
-.skill-band-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.skill-band-label { font-size: 0.92rem; font-weight: 700; line-height: 1.2; }
-.skill-band-desc {
-  font-size: 0.84rem;
-  line-height: 1.35;
-  color: var(--site-text-muted);
-}
+.skill-band-label { font-size: var(--fs-label); font-weight: 700; line-height: 1.2; }
 
-/* Hero variant: larger icon, descriptions always visible. */
-.skill-band--hero .skill-band-card { padding: 14px 16px; align-items: center; }
-.skill-band--hero .skill-band-ico {
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
-}
-
-/* Compact variant (nav): icon + label only, smaller padding, descriptions
-   live in title attributes. */
+/* Compact variant: icon + label on ONE line. The label must not wrap —
+   a wrapped "New to WC3" pushed the whole control (and the hero strip
+   around it) to two lines' height. */
 .skill-band--compact {
   display: inline-flex;
   flex-shrink: 0;
 }
-.skill-band--compact .skill-band-row { gap: 0; }
 .skill-band--compact .skill-band-card {
-  padding: 5px 11px;
+  padding: var(--sp-2) var(--sp-3);
   align-items: center;
-  gap: 7px;
-  font-size: 0.86rem;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  font-size: var(--fs-label);
 }
-.skill-band--compact .skill-band-label { font-size: 0.86rem; font-weight: 600; }
-.skill-band--compact .skill-band-desc { display: none; }
-.skill-band--compact .skill-band-hint { display: none; }
-.skill-band--compact .skill-band-ico { width: 20px; height: 20px; }
+.skill-band--compact .skill-band-label {
+  font-size: var(--fs-label);
+  font-weight: 600;
+  white-space: nowrap;
+}
 
-/* The compact variant is rendered as the .skill-band root directly (no
-   intermediate .skill-band-row), so apply card-adjacency border collapsing
-   on the .skill-band itself too. */
-.skill-band--compact .skill-band-card + .skill-band-card { border-left: 0; }
 
-/* Tiny screens: collapse compact-nav cards to icons. title attribute keeps
-   the accessible / hover description. */
+/* Tiny screens: keep the labels. Hiding them left a 24px icon inside a
+   ~30px button — below BOTH the 36px icon floor and the 44px target floor,
+   with colour as the only remaining signal (DESIGN-SYSTEM §9.2/§9.3). The
+   band instead spans the row and splits the width evenly. */
 @media (max-width: 560px) {
-  .skill-band--compact .skill-band-label { display: none; }
-  .skill-band--compact .skill-band-card { padding: 5px 8px; }
+  .skill-band--compact { display: flex; width: 100%; }
+  .skill-band--compact .skill-band-card {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: var(--sp-2) var(--sp-1);
+    gap: var(--sp-1);
+  }
+  .skill-band--compact .skill-band-label { font-size: var(--fs-min); }
+  .skill-band--compact .skill-band-ico { width: 20px; height: 20px; }
 }
 
-/* Hero variant on phones: stack the cards vertically so descriptions stay
-   readable instead of crushing into 3 columns. */
-@media (max-width: 720px) {
-  .skill-band--hero .skill-band-row { flex-direction: column; }
-  .skill-band--hero .skill-band-card + .skill-band-card {
-    border-left: 1px solid var(--site-border);
-    border-top: 3px solid transparent;
-  }
-  .skill-band--hero .skill-band-card[aria-pressed="true"] + .skill-band-card,
-  .skill-band--hero .skill-band-card.is-active + .skill-band-card {
-    border-top-color: transparent;
-  }
-}
 
 /* One-line band framing — sits just under the #builds section heading on
    the homepage. Independent of the band control; left as-is. */
 .band-intro {
-  margin: 2px 0 0;
-  font-size: 0.88rem;
+  margin: 0;
+  font-size: var(--fs-sm);
   line-height: 1.45;
-  color: var(--site-text-muted);
+  color: var(--text-muted);
+  min-width: 0;
 }
 
 /* ── Horizontal filter bar ── */
@@ -13905,7 +13774,7 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 14px;
+  gap: var(--sp-2) var(--sp-4);
   position: relative;
 }
 
@@ -13917,8 +13786,7 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
   .pfb-chips .site-race-pick,
   .pfb-chips .site-matchup-btn,
   .pfb-chips .site-axis-btn,
-  .pfb-chips .site-tournament-btn { padding: 3px 8px; font-size: 0.78rem; }
-  .pfb-label { font-size: 0.68rem; }
+  .pfb-chips .site-tournament-btn { padding: 3px 8px; font-size: var(--fs-min); }
 }
 
 .pfb-group {
@@ -13927,12 +13795,14 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
   gap: 6px;
 }
 
+/* Eyebrow label (DESIGN-SYSTEM §3): --fs-min / 700 / 0.06em. --fs-min is a
+   HARD floor — this used to be 0.72rem, and 0.68rem on small phones. */
 .pfb-label {
-  font-size: 0.72rem;
-  color: #888;
+  font-size: var(--fs-min);
+  color: var(--text-dim);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  font-weight: 600;
+  letter-spacing: 0.06em;
+  font-weight: 700;
   margin-right: 2px;
 }
 
@@ -14101,12 +13971,16 @@ body:has(.skill-band--hero[data-first-visit]) .skill-band--compact { display: no
   gap: 4px;
 }
 
+/* Lives on the headline row (see index.html). No margin-left:auto here —
+   the intro next to it is `flex: 1 1 auto`, and an auto margin would eat
+   all the free space first, collapsing the intro to one word per line.
+   The intro's own growth is what pushes the count to the right edge. */
 .pfb-count {
-  margin-left: auto;
-  font-size: 0.78rem;
-  color: #888;
+  font-size: var(--fs-label);
+  color: var(--text-dim);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ── Broadcast-style replay card (rep-card-*) ── */
@@ -14524,9 +14398,10 @@ body.compare-drawer-active {
 
 /* ── Mobile / responsive ── */
 
-@media (max-width: 1024px) {
-  .pfb-count { width: 100%; text-align: right; }
-}
+/* (The old `@media (max-width:1024px) .pfb-count { width: 100% }` is gone.
+   It existed because the count used to live in the filter bar and wrapped
+   to its own full-width row on tablets. It now sits on the headline row,
+   where a 100% width collapsed the intro beside it to one word per line.) */
 
 @media (max-width: 768px) {
   .compare-drawer {
@@ -15159,16 +15034,24 @@ body.help-modal-active {
    localStorage flag. Intentionally low-contrast — should read as a quiet
    notice, not a banner ad. */
 .tos-banner {
-  padding: 6px 24px;
+  /* Full-bleed background, but the TEXT lines up with the nav and the
+     page content. padding-inline resolves to --page-gutter until the
+     viewport exceeds --page-max, then absorbs the centering slack — a
+     capped content column without needing an inner wrapper. */
+  padding-block: var(--sp-1);
+  padding-inline: max(
+    var(--page-gutter),
+    calc((100% - var(--page-max)) / 2 + var(--page-gutter))
+  );
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.025);
-  border-bottom: 1px solid var(--site-border);
-  font-size: 0.78rem;
+  justify-content: flex-start;
+  gap: var(--sp-3);
+  background: var(--wash);
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-min);   /* 0.8rem hard floor */
   line-height: 1.4;
-  color: var(--site-text-muted);
+  color: var(--text-dim);
 }
 
 .tos-banner[hidden] { display: none; }
@@ -15178,9 +15061,9 @@ body.help-modal-active {
 }
 
 .tos-banner-text a {
-  color: var(--site-text);
+  color: var(--text-muted);
   text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.25);
+  text-decoration-color: var(--border-3);
   text-underline-offset: 2px;
 }
 .tos-banner-text a:hover {
@@ -15190,30 +15073,37 @@ body.help-modal-active {
 
 .tos-banner-dismiss {
   flex-shrink: 0;
+  margin-left: auto;
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: var(--site-text-muted);
-  border-radius: 4px;
-  padding: 2px 8px;
-  font-size: 0.75rem;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 2px var(--sp-2);
+  font-size: var(--fs-min);
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--dur), color var(--dur), border-color var(--dur);
 }
 .tos-banner-dismiss:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--site-text);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--wash);
+  color: var(--text);
+  border-color: var(--border-3);
 }
 
 @media (max-width: 700px) {
   .tos-banner {
-    padding: 6px 16px;
-    font-size: 0.74rem;
-    gap: 8px;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    padding-block: var(--sp-1);
+    padding-inline: var(--sp-3);   /* matches .site-content's phone gutter */
+    font-size: var(--fs-min);      /* never below the 0.8rem floor */
+    gap: var(--sp-2);
+    flex-wrap: nowrap;
+    align-items: flex-start;
   }
+  /* Three wrapped lines of legal boilerplate plus a full-width Dismiss row
+     cost ~180px at the very top of a phone. Clamp the notice to its first
+     idea and keep the dismiss button on the same row. */
+  .tos-banner-text { line-height: 1.35; }
+  .tos-banner-dismiss { align-self: center; }
 }
 
 /* ── ReplayTypePicker — your game vs reference modal ──
@@ -15927,10 +15817,10 @@ body.help-modal-active {
 /* Footer link inherits .site-footer-links a but takes a subtle warm
    tint so it reads as an action, not a static legal link. */
 .site-footer-bug {
-  color: #f0d68c;
+  color: var(--gold);
 }
 .site-footer-bug:hover {
-  color: #ffe8a3;
+  color: var(--gold-deep);
 }
 
 /* Hero-bar "Report a bug" button — self-contained styling (no longer
@@ -15940,27 +15830,27 @@ body.help-modal-active {
 .hero-bar-bug {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 14px;
-  height: 42px;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  min-height: var(--ico-sm);
   box-sizing: border-box;
   margin-left: 0;
   text-decoration: none;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: var(--fs-label);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
-  color: #f4dc94;
-  background: rgba(240,214,140,0.12);
-  border: 1px solid rgba(240,214,140,0.42);
-  border-radius: 6px;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  color: var(--gold);
+  background: var(--gold-soft);
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius);
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
 }
 .hero-bar-bug:hover {
-  color: #fff2c4;
-  border-color: rgba(240,214,140,0.7);
-  background: rgba(240,214,140,0.20);
+  color: var(--gold);
+  border-color: var(--gold);
+  background: var(--gold-soft);
 }
 .hero-bar-bug svg { flex-shrink: 0; }
 @media (max-width: 1000px) {
@@ -16290,31 +16180,31 @@ fieldset.ub-editor-field input[type="text"] {
   .hero-bar-logo img { height: 34px; }
   .hero-bar-help,
   .hero-bar-private,
-  .hero-bar-bug,
-  .hero-bar-findreplays { display: none; }
-  /* The drop zone collapses to just the upload button on phones. */
-  .hero-bar-dropzone {
+  .hero-bar-bug {
     height: auto;
     border: none;
     background: transparent;
     overflow: visible;
     margin-left: auto;
   }
-  .hero-bar-upload,
-  .hero-bar-dropzone .hero-bar-upload {
+  .hero-bar-upload {
     flex-basis: auto !important;
     height: auto;
     margin-left: auto !important;
-    padding: 6px 10px;
-    font-size: 12px;
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--fs-min);
     font-weight: 600;
-    border: 1px dashed rgba(92,184,120,0.45);
-    border-radius: 6px;
-    background: rgba(92,184,120,0.10);
-    color: #b8e0a0;
+    border: 1px dashed var(--border-2);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text);
   }
-  .hero-bar-upload-label { font-size: 12px; }
-  .hero-bar-upload-icon { width: 12px; height: 12px; }
+  .hero-bar-upload-label { font-size: var(--fs-min); }
+  .hero-bar-upload-icon { width: 14px; height: 14px; }
+
+  /* The hero strip already carries the tagline on every viewport, so the
+     mobile bar's copy of it would render the same sentence twice. */
+  .mobile-tagline { display: none; }
 
   /* ── Mobile-only condensed action bar ──────────────── */
   .mobile-action-bar {
@@ -16334,9 +16224,9 @@ fieldset.ub-editor-field input[type="text"] {
     margin: 0 0 2px;
   }
   .mobile-tagline em {
-    color: #f0d68c;
+    color: var(--text);
     font-style: normal;
-    font-weight: 600;
+    font-weight: 800;
   }
   .mobile-build-search {
     width: 100%;
@@ -16377,9 +16267,9 @@ fieldset.ub-editor-field input[type="text"] {
   }
   .mobile-action-btn[hidden] { display: none; }
   .mobile-action-btn[aria-expanded="true"] {
-    background: rgba(240,214,140,0.18);
-    border-color: rgba(240,214,140,0.5);
-    color: #fff;
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--text);
   }
   .mobile-action-btn[aria-expanded="true"] .mobile-action-caret {
     transform: rotate(90deg);
@@ -16394,11 +16284,11 @@ fieldset.ub-editor-field input[type="text"] {
     display: inline-block;
     min-width: 20px;
     padding: 1px 6px;
-    border-radius: 10px;
+    border-radius: var(--radius-pill);
     background: rgba(0,0,0,0.35);
-    font-size: 11px;
+    font-size: var(--fs-min);
     font-weight: 700;
-    color: #f0d68c;
+    color: var(--accent);   /* selection state = chrome, not achievement gold */
   }
   .mobile-action-count[hidden] { display: none; }
 
@@ -16406,10 +16296,12 @@ fieldset.ub-editor-field input[type="text"] {
   .site-nav-search-wrap { display: none !important; }
   /* Tighten up the nav itself */
   .site-nav-inner {
-    padding: 0.2rem 0.5rem;
-    gap: 0.4rem;
+    /* Same gutter as .site-content on phones, so the wordmark lines up
+       with the ToS text, the hero tagline and the cards. */
+    padding: var(--sp-1) var(--sp-3);
+    gap: var(--sp-2);
   }
-  .site-nav-link { padding: 0.25rem 0.5rem; font-size: 11px; }
+  .site-nav-link { padding: 0 var(--sp-2); font-size: var(--fs-min); }
 
   /* ── Collapse "Your replays" + "Filters" by default ─── */
   body:not(.mobile-mine-open) #my-replays-section { display: none; }
@@ -16434,11 +16326,15 @@ fieldset.ub-editor-field input[type="text"] {
     gap: 0 !important;
   }
   .site-pros-head {
-    padding: 8px 10px 0;
+    padding: var(--sp-2) 0 var(--sp-2);
   }
-  .site-pros-title { font-size: 16px; }
-  .skill-band--hero { padding: 0 10px; margin: 8px 0 12px; }
-  .site-content { padding: 0 0 2rem; }
+  .site-pros-title { font-size: var(--fs-h3); }
+  /* Keep a real gutter on phones — a half-gutter is enough, but zero made
+     the cards run edge-to-edge while the nav/ToS text stayed inset. The
+     footer steps with it: every top-level container shares one gutter at
+     every breakpoint, or the page visibly jogs in and out at each band. */
+  .site-content { padding: var(--sp-2) var(--sp-3) 2rem; }
+  .site-footer  { padding: var(--sp-6) var(--sp-3) var(--sp-4); }
 
   /* ── Compact pro build cards ───────────────────────── */
   .site-build-grid {
