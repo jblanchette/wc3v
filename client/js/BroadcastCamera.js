@@ -83,6 +83,13 @@
   const MIN_ZOOM_OVERVIEW = 1.8;  // multi-player overview, no fight — wide
   const MAX_ZOOM = 16.0;
   const FOLLOW_HERO_ZOOM = 6.0;
+  // Ceiling for anything the camera computes by FITTING a bounding box.
+  // MAX_ZOOM is the manual/scrubber limit (you can zoom right down onto a single
+  // model); an automatic fit reaching it means the bbox was degenerate, not that
+  // the shot wanted to be that tight. A real battle fits around k≈7 (its floor),
+  // so this leaves tight framing intact while making "zoomed into empty ground"
+  // unreachable.
+  const MAX_AUTO_FIT_ZOOM = 8.0;
 
   // Battle framing: expand the detected clash bbox before fitting so the fight
   // has breathing room (units pushed to the edge of the tracker box, incoming
@@ -1416,9 +1423,14 @@
         maxY = Math.max(maxY, bbox.maxY);
       }
 
-      const padX = (maxX - minX) * PAD_X_FRAC || PAD_X_MIN;
-      const padYTop = (maxY - minY) * PAD_Y_TOP_FRAC || PAD_Y_TOP_MIN;
-      const padYBot = (maxY - minY) * PAD_Y_BOT_FRAC || PAD_Y_BOT_MIN;
+      // Math.max, not `|| MIN`. `x || MIN` only falls back when x is EXACTLY
+      // zero, so a near-degenerate bbox (heroes clustered at one base at match
+      // start, two units 10 world-units apart) produced a pad of ~2 and a bbox
+      // a few units across -- which the fit below then "framed" at the hard
+      // maximum zoom.
+      const padX = Math.max((maxX - minX) * PAD_X_FRAC, PAD_X_MIN);
+      const padYTop = Math.max((maxY - minY) * PAD_Y_TOP_FRAC, PAD_Y_TOP_MIN);
+      const padYBot = Math.max((maxY - minY) * PAD_Y_BOT_FRAC, PAD_Y_BOT_MIN);
       minX -= padX; maxX += padX;
       maxY += padYTop; minY -= padYBot;
 
@@ -1434,7 +1446,7 @@
       const viewWorldH = Math.abs(gs.viewExtent.y[1] - gs.viewExtent.y[0]);
       const kX = viewWorldW / extentX;
       const kY = viewWorldH / extentY;
-      const k = Math.max(FIT_ALL_MIN_ZOOM, Math.min(MAX_ZOOM, Math.min(kX, kY)));
+      const k = Math.max(FIT_ALL_MIN_ZOOM, Math.min(MAX_AUTO_FIT_ZOOM, Math.min(kX, kY)));
 
       return { wx: focusX, wy: focusY, k };
     }
@@ -1725,9 +1737,14 @@
         minZoom = cluster.playerIds.size > 1 ? MIN_ZOOM_OVERVIEW : MIN_ZOOM_SINGLE;
       }
 
-      const padX = (maxX - minX) * PAD_X_FRAC || PAD_X_MIN;
-      const padYTop = (maxY - minY) * PAD_Y_TOP_FRAC || PAD_Y_TOP_MIN;
-      const padYBot = (maxY - minY) * PAD_Y_BOT_FRAC || PAD_Y_BOT_MIN;
+      // Math.max, not `|| MIN`. `x || MIN` only falls back when x is EXACTLY
+      // zero, so a near-degenerate bbox (heroes clustered at one base at match
+      // start, two units 10 world-units apart) produced a pad of ~2 and a bbox
+      // a few units across -- which the fit below then "framed" at the hard
+      // maximum zoom.
+      const padX = Math.max((maxX - minX) * PAD_X_FRAC, PAD_X_MIN);
+      const padYTop = Math.max((maxY - minY) * PAD_Y_TOP_FRAC, PAD_Y_TOP_MIN);
+      const padYBot = Math.max((maxY - minY) * PAD_Y_BOT_FRAC, PAD_Y_BOT_MIN);
       minX -= padX; maxX += padX;
       maxY += padYTop;  // WC3 Y: positive = north = top of screen
       minY -= padYBot;  // extra south padding for camera tilt
@@ -1744,7 +1761,7 @@
       const viewWorldH = Math.abs(gs.viewExtent.y[1] - gs.viewExtent.y[0]);
       const kX = viewWorldW / extentX;
       const kY = viewWorldH / extentY;
-      const k = Math.max(minZoom, Math.min(MAX_ZOOM, Math.min(kX, kY)));
+      const k = Math.max(minZoom, Math.min(MAX_AUTO_FIT_ZOOM, Math.min(kX, kY)));
 
       return { wx: focusX, wy: focusY, k };
     }
