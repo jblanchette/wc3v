@@ -226,11 +226,18 @@ function resolveGeosetMaterial (mdx, geoset) {
     }
     if (tex.ReplaceableId !== 0 || !tex.Image) continue; // other replaceable / empty
     if (isEffectTexture(tex.Image)) { sawEffect = true; continue; }
+    const fm = (typeof layer.FilterMode === 'number') ? layer.FilterMode : 0;
+    // Additive / AddAlpha / Modulate layers are glow/energy overlays (e.g. the
+    // Obsidian Statue's floating rune wisps). In-game their alpha is animated so
+    // they read as a subtle pulse; rendered static + full-bright they blow out to
+    // harsh solid-white beams. We can't reproduce the animation, so drop them like
+    // effect planes — only None/Transparent/Blend layers are real body geometry.
+    if (fm >= 3) { sawEffect = true; continue; }
     if (!diffuse) {
       const shading = (typeof layer.Shading === 'number') ? layer.Shading : 0;
       diffuse = {
         baseName: path.basename(tex.Image, path.extname(tex.Image)).toLowerCase(),
-        filterMode: (typeof layer.FilterMode === 'number') ? layer.FilterMode : 0,
+        filterMode: fm,
         unshaded: (shading & 1) !== 0,   // LayerShading.Unshaded
         twoSided: (shading & 16) !== 0   // LayerShading.TwoSided
       };

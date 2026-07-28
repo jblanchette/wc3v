@@ -27,6 +27,11 @@
   // Z-up (MDX) -> Y-up wrapper rotation baked by the exporter (-90deg about +X).
   const ZUP_TO_YUP = new THREE.Quaternion(-0.70710678, 0, 0, 0.70710678);
   const CATS = ['idle', 'walk', 'attack', 'death'];
+  // Cache-bust for unit GLBs + manifest. R2 serves assets/models immutable (1y),
+  // so when a model's CONTENT changes (materials, geometry) the URL must change or
+  // returning viewers keep the stale file. BUMP THIS whenever the roster is
+  // re-exported (convert-mdx-to-gltf-skinned.js --all) and redeployed.
+  const MODEL_ASSET_VERSION = '20260728b';
   const FADE = 0.22;                 // cross-fade seconds between looping states
   const MOVE_EPS2 = 9;               // (wu over ~100ms)^2 to count as walking
   const CORPSE_FADE_MS = 1400;       // fade after the death clip finishes, then hide
@@ -107,7 +112,7 @@
     }
 
     _loadManifest () {
-      fetch('/assets/models/units/unit-models.json')
+      fetch('/assets/models/units/unit-models.json?v=' + MODEL_ASSET_VERSION)
         .then(r => (r.ok ? r.json() : {}))
         .then(m => { this.manifest = m || {}; })
         .catch(() => { this.manifest = {}; });
@@ -115,7 +120,7 @@
 
     _fetchAB (model) {
       if (!this._abCache[model]) {
-        this._abCache[model] = fetch('/assets/models/units/' + model + '.glb')
+        this._abCache[model] = fetch('/assets/models/units/' + model + '.glb?v=' + MODEL_ASSET_VERSION)
           .then(r => { if (!r.ok) throw new Error('glb ' + r.status); return r.arrayBuffer(); });
       }
       return this._abCache[model];
