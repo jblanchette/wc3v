@@ -748,24 +748,47 @@ const Wc3vViewer = class {
   // auto-decompresses transparently. Local dev servers usually don't set
   // that header, so we sniff the gzip magic and decompress manually as
   // a fallback — keeps `npx http-server client` working.
+  //
+  // Falls back to the UNCOMPRESSED file when the .gz is missing, empty, or
+  // unparseable. Without that fallback a truncated .gz is a silent, total
+  // failure: a 0-byte .gz still serves as HTTP 200, so `r.ok` passes, the gzip
+  // magic check fails, JSON.parse('') throws, and the map loses a whole data
+  // layer while a perfectly good uncompressed copy sits next to it. (Observed:
+  // a 0-byte EchoIsles/doo.json.gz meant that map rendered no trees at all.)
   async _fetchMapJson (name, file) {
     const buster = this.isDev ? `?t=${Date.now()}` : '';
-    const url = `/maps/${encodeURIComponent(name)}/${file}.gz${buster}`;
-    try {
+    const base = `/maps/${encodeURIComponent(name)}/${file}`;
+
+    const attempt = async (url, allowGzip) => {
       const r = await fetch(url);
       if (!r.ok) return null;
       const ab = await r.arrayBuffer();
       const bytes = new Uint8Array(ab);
-      if (bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
+      if (bytes.length === 0) return null;                 // truncated/empty
+      if (allowGzip && bytes.length >= 2 && bytes[0] === 0x1f && bytes[1] === 0x8b) {
         if (typeof DecompressionStream !== 'function') return null;
         const stream = new Response(ab).body.pipeThrough(new DecompressionStream('gzip'));
-        const text = await new Response(stream).text();
-        return JSON.parse(text);
+        return JSON.parse(await new Response(stream).text());
       }
       return JSON.parse(new TextDecoder('utf-8').decode(bytes));
-    } catch (e) {
-      return null;
-    }
+    };
+
+    try {
+      const gz = await attempt(`${base}.gz${buster}`, true);
+      if (gz) return gz;
+    } catch (e) { /* fall through to the plain file */ }
+
+    try {
+      const plain = await attempt(`${base}${buster}`, false);
+      if (plain) {
+        if (window.WC3V_CONFIG) {
+          window.WC3V_CONFIG.log('map', `[map] ${file}.gz unusable for ${name} — used uncompressed fallback`);
+        }
+        return plain;
+      }
+    } catch (e) { /* both forms failed */ }
+
+    return null;
   }
 
   async loadDoodadFile () {
