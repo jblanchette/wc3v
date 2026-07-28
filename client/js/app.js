@@ -3634,6 +3634,22 @@ const Wc3vViewer = class {
     const w3cPrefixMatch = this.mapName.match(/^\d+_w3c_\d+_\d+_(.+)$/);
     const strippedMapName = w3cPrefixMatch ? w3cPrefixMatch[1] : this.mapName;
 
+    // NOTE (investigated 2026-07-28, deliberately NOT "fixed" — it needs a data
+    // fix first). gameData's keys are the original mixed-case .w3x filenames
+    // while `this.mapName` is lowercased above, so this exact lookup can never
+    // hit a key containing a capital. Replays therefore fall through to the
+    // substring scan below, which returns the FIRST map whose name appears in
+    // the filename — i.e. the BASE map, not the versioned one. A replay
+    // recorded on "1v1_EchoIsles_v2.2_w3c_260125_1357_1051.w3x" (a key that
+    // exists verbatim in gameData) resolves to plain "EchoIsles".
+    //
+    // Making the lookup case-insensitive is a two-line change and re-points 104
+    // of the 334 parsed replays to their exactly-named entry. DON'T, yet: those
+    // versioned entries have inconsistent geometry. EchoIsles_v2.2 declares
+    // bounds 16384x16384 (aspect 1.000, grid 128x128) while its own terrain art
+    // is 1728x1408 (aspect 1.227), so the map renders off-centre and clipped;
+    // several of those dirs are also missing walkmap.json / grid. Regenerate the
+    // versioned map data first, then flip this on and re-verify.
     const foundMapName = maps[this.mapName] ? this.mapName : Object.keys(maps).find(mapItem => {
       const searchName = maps[mapItem].name.toLowerCase();
 
@@ -3832,9 +3848,20 @@ const Wc3vViewer = class {
     // when canvas dimensions change, causing pan to escape bounds
     const resetZoomOnResize = () => {
       if (!self.gameLoaded) return;
-      self.transform = { x: 0, y: 0, k: 1.0 };
-      self.zoomContainer.call(self.zoom.transform, d3.zoomIdentity);
-      self.scrubber.updateZoomDisplay(1.0);
+      // Re-seat d3.zoom (its internal state goes stale when the canvas box
+      // changes, which lets pan escape bounds) — but re-seat it to the REPLAY'S
+      // OWN framing, not to bare identity.
+      //
+      // Identity is not a neutral choice here: it means "whole map extent,
+      // dead-centre", which is never what the viewer should show. And this
+      // fires more than once per load, because #gameplay-area keeps growing as
+      // panels settle (measured 866 -> 867 -> 893 -> 934 -> 936px on a normal
+      // load). Every one of those legitimately-changed sizes used to throw away
+      // the playable-area fit computed in setupDrawing.
+      const base = self._initialZoomTransform || d3.zoomIdentity;
+      self.transform = { x: base.x, y: base.y, k: base.k };
+      self.zoomContainer.call(self.zoom.transform, base);
+      self.scrubber.updateZoomDisplay(base.k);
       // Re-engage broadcast camera after resize
       if (self.broadcastCamera && self.broadcastCamera.enabled) {
         self.broadcastCamera._initialized = false;
@@ -3858,12 +3885,36 @@ const Wc3vViewer = class {
       window.addEventListener('resize', resetZoomOnResize);
 
       // ResizeObserver — watch gameplay-area (its size only changes from window/layout, not canvas)
+      //
+      // A ResizeObserver ALWAYS delivers one callback as soon as you observe(),
+      // reporting the element's current size. That first delivery is not a
+      // resize — nothing changed — but it was being treated as one, and
+      // resetZoomOnResize slams the transform to identity. Since observe()
+      // happens at the END of setupDrawing, well after `gameLoaded = true` and
+      // after the initial zoom is applied, the `if (!gameLoaded) return` guard
+      // never won that race: every first load computed INITIAL_ZOOM (a
+      // playable-area fit, ~1.24 on Echo Isles), applied it, and then threw it
+      // away one frame later — leaving the map parked dead-centre at k=1.
+      //
+      // So: swallow the initial delivery, and ignore any callback where the box
+      // did not actually change size.
       const resizeTarget = document.getElementById('gameplay-area');
       if (resizeTarget && typeof ResizeObserver !== 'undefined') {
-        new ResizeObserver(() => {
+        let primed = false, lastW = 0, lastH = 0;
+        new ResizeObserver((entries) => {
+          const rect = entries && entries[0] && entries[0].contentRect;
+          const w = rect ? Math.round(rect.width) : 0;
+          const h = rect ? Math.round(rect.height) : 0;
+
+          // Layout work is idempotent and safe on the first delivery.
           if (self.layoutMode === LayoutMode.liveBuildOrder) {
             self.scaleLiveModeCanvas();
           }
+
+          if (!primed) { primed = true; lastW = w; lastH = h; return; }
+          if (w === lastW && h === lastH) return;   // spurious / sub-pixel churn
+          lastW = w; lastH = h;
+
           resetZoomOnResize();
         }).observe(resizeTarget);
       }
