@@ -878,7 +878,11 @@
         inst.mixer.update(dt);
       }
 
-      // decay/stale fade for living units, plus illusion (ghostly) + hidden (faint).
+      this._applyLivingOpacity(inst, unit);
+    }
+
+    // decay/stale fade for living units, plus illusion (ghostly) + hidden (faint).
+    _applyLivingOpacity (inst, unit) {
       let op = unit.decayLevel != null ? unit.decayLevel : 1;
       if (inst.isIllusion) op *= ILLUSION_OPACITY;
       if (unit._isHiddenNow) op *= HIDDEN_OPACITY;

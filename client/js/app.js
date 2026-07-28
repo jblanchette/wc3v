@@ -4271,6 +4271,24 @@ const Wc3vViewer = class {
       { target: bottom, transform: transformBot, side: 'bottom' }
     ];
 
+    // View-INDEPENDENT world updates, hoisted out of the per-half loop.
+    // These place things in world space and don't care where either camera is
+    // looking, but they used to run once per half — so split-screen paid twice
+    // for the unit-model update (including its collision-separation pass and,
+    // now, the whole behavior resolve) on the single most expensive frame the
+    // app has. Only the 3D render itself is genuinely per-view.
+    if (this.threeMapRenderer) {
+      this.threeMapRenderer.updatePlayerBuildings(gameTime);
+      if (this.buildingProgressBar) this.buildingProgressBar.update(gameTime);
+      if (this.buildingSplats) this.buildingSplats.updateVisibility(gameTime);
+      if (this.pathTrailRenderer) {
+        this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
+      }
+      if (this.unitModelRenderer) {
+        this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
+      }
+    }
+
     for (const half of halves) {
       const t = half.transform;
 
@@ -4294,17 +4312,8 @@ const Wc3vViewer = class {
       this.transform = t;
 
       // --- 3D terrain: render, then copy to main-canvas within the clip ---
+      // (World updates were hoisted above — this half only re-aims the camera.)
       if (this.threeMapRenderer) {
-        this.threeMapRenderer.updatePlayerBuildings(gameTime);
-        if (this.buildingProgressBar) this.buildingProgressBar.update(gameTime);
-        if (this.buildingSplats) this.buildingSplats.updateVisibility(gameTime);
-        if (this.pathTrailRenderer) {
-          this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
-        }
-        if (this.unitModelRenderer) {
-          this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
-        }
-
         // Force camera resync and render
         this.threeMapRenderer._lastSyncK = null;
         this.threeMapRenderer._lastSyncX = null;

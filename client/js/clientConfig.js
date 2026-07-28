@@ -42,6 +42,14 @@
       // bottom-panel tab is hidden. Off = skip the work nobody can see.
       chartsWhenHidden: false
     },
+    // NOTE on an optimization that was TRIED AND REMOVED: capping how many units
+    // tick an AnimationMixer per frame ("animated unit budget"). Measured, it
+    // made things WORSE -- 39.5fps unbudgeted vs 38.8 at 28 units vs 35.7 at 12.
+    // The reason is structural: three calls skeleton.update() at RENDER time for
+    // every VISIBLE skinned mesh, whether or not its mixer advanced, so skipping
+    // mixer.update saves almost nothing while the budget bookkeeping costs real
+    // time. Cutting skinned-unit cost further means drawing fewer skinned
+    // meshes (static baked pose / imposter), not animating fewer of them.
 
     // Per-area logging flags. Default off in production, on in dev.
     logging: {

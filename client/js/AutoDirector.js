@@ -80,10 +80,14 @@
   // speed. That ordering is the fix for the reported symptom: the old code did
   // both at once, so a slow zoom into a fight was accompanied by the time-scale
   // sliding underneath it, and the combination read as the client lagging.
-  const SHOT_TRIGGER_DELTA = 0.9;   // |Δ target speed| that counts as a new shot
-  const DECEL_MS           = 250;   // speed resolves within this
-  const HOLD_MS            = 2500;  // minimum dwell before another shot can fire
-  const ARRIVE_EPS         = 0.05;  // |speed - target| considered "settled"
+  // Runtime-tunable (client/js/directorConfig.js); the literals are the
+  // fallback when that file hasn't loaded. Read lazily so console edits to
+  // WC3V_DIRECTOR take effect without a reload.
+  const DCFG = () => (typeof window !== 'undefined' && window.WC3V_DIRECTOR) || null;
+  const shotCfg = (key, dflt) => { const c = DCFG(); return (c && c.shot && c.shot[key] != null) ? c.shot[key] : dflt; };
+  const paceCfg = (key, dflt) => { const c = DCFG(); return (c && c.pacing && c.pacing[key] != null) ? c.pacing[key] : dflt; };
+
+  const ARRIVE_EPS = 0.05;  // |speed - target| considered "settled"
 
   class AutoDirector {
     constructor (viewer) {
@@ -258,14 +262,14 @@
 
       // Asymmetric exponential smoothing toward the target.
       const dt = Math.max(0, Math.min(100, realDeltaMs || 16.7)) / 1000;
-      const rate = (target < this.speed) ? SLOWDOWN_RATE : SPEEDUP_RATE;
+      const rate = (target < this.speed) ? paceCfg('slowdownRate', SLOWDOWN_RATE) : paceCfg('speedupRate', SPEEDUP_RATE);
       const k = 1 - Math.exp(-rate * dt);
       let next = this.speed + (target - this.speed) * k;
 
       // Slew clamp: regardless of the exponential, never move the displayed
       // speed more than MAX_SLEW_PER_S per real second — bounds the one-frame
       // jump when a target appears/vanishes so the pacing always glides.
-      const maxStep = MAX_SLEW_PER_S * dt;
+      const maxStep = paceCfg('maxSlewPerS', MAX_SLEW_PER_S) * dt;
       next = Math.max(this.speed - maxStep, Math.min(this.speed + maxStep, next));
       this.speed = next;
 
@@ -293,7 +297,7 @@
         case 'idle': {
           // A big enough change in pacing target means something worth
           // announcing is starting or ending. Small drifts are not shots.
-          if (Math.abs(target - this.speed) >= SHOT_TRIGGER_DELTA) {
+          if (Math.abs(target - this.speed) >= shotCfg('triggerDelta', 0.9)) {
             this.shotState = 'decelerating';
             this._shotElapsed = 0;
             this._shotFromSpeed = this.speed;
@@ -313,7 +317,7 @@
           // Speed has resolved (or we've waited long enough) — release the
           // camera and let it execute the move.
           const settled = Math.abs(this.speed - target) <= ARRIVE_EPS;
-          if (settled || this._shotElapsed >= DECEL_MS) {
+          if (settled || this._shotElapsed >= shotCfg('decelMs', 250)) {
             this.shotState = 'moving';
             this._shotElapsed = 0;
             setHold(false);
@@ -324,7 +328,7 @@
           // The camera reports when it has arrived. Cap the wait so a target
           // that keeps moving can't strand us in this state forever.
           const arrived = !bc || bc.settled;
-          if (arrived || this._shotElapsed >= 1500) {
+          if (arrived || this._shotElapsed >= shotCfg('moveTimeoutMs', 1500)) {
             this.shotState = 'holding';
             this._shotElapsed = 0;
             if (this.overlay) this.overlay.endTransition();
@@ -332,7 +336,7 @@
           break;
         }
         case 'holding': {
-          if (this._shotElapsed >= HOLD_MS) {
+          if (this._shotElapsed >= shotCfg('holdMs', 2500)) {
             this.shotState = 'idle';
             this._shotElapsed = 0;
           }

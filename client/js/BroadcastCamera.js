@@ -44,9 +44,14 @@
   // Shot latching (see _latchTarget). A shot flies to a FIXED destination and
   // then only corrects slowly, so "holding" actually looks held. Anything past
   // these thresholds is treated as a new shot rather than as drift.
-  const LATCH_RECUT_PX = 420;          // target jumped this far => genuinely a new shot
-  const LATCH_RECUT_ZOOM_FRAC = 0.35;  // ...or the zoom target changed this much
-  const LATCH_FOLLOW_TC = 1.6;         // seconds to absorb a small target move once settled
+  // Runtime-tunable via client/js/directorConfig.js; literals are the fallback.
+  const CCFG = (group, key, dflt) => {
+    const c = (typeof window !== 'undefined' && window.WC3V_DIRECTOR) || null;
+    return (c && c[group] && c[group][key] != null) ? c[group][key] : dflt;
+  };
+  const LATCH_RECUT_PX = () => CCFG('latch', 'recutPx', 420);
+  const LATCH_RECUT_ZOOM_FRAC = () => CCFG('latch', 'recutZoomFrac', 0.35);
+  const LATCH_FOLLOW_TC = () => CCFG('latch', 'followTc', 1.6);
 
   // Calm-when-fast: during fast-forward (auto time-scale or a high manual speed)
   // widen the frame and damp the pan so skimming dead time isn't disorienting.
@@ -414,7 +419,7 @@
       const kFrac = Math.abs(rawK - L.k) / Math.max(0.0001, L.k);
 
       // Big change => a genuinely different shot. Take it wholesale.
-      if (moved > LATCH_RECUT_PX || kFrac > LATCH_RECUT_ZOOM_FRAC) {
+      if (moved > LATCH_RECUT_PX() || kFrac > LATCH_RECUT_ZOOM_FRAC()) {
         L.x = rawX; L.y = rawY; L.k = rawK;
         return L;
       }
@@ -422,7 +427,7 @@
       // Small change => track it, but only within a budget, and only once the
       // camera has actually arrived (never re-aim mid-flight).
       if (this.settled) {
-        const ease = Math.min(1, this._frameDtSec() / LATCH_FOLLOW_TC);
+        const ease = Math.min(1, this._frameDtSec() / LATCH_FOLLOW_TC());
         L.x += dx * ease;
         L.y += dy * ease;
         L.k += (rawK - L.k) * ease;
@@ -1629,7 +1634,7 @@
         this._switchElapsed = 0;
       }
 
-      if (this._switchElapsed >= HYSTERESIS_MS) {
+      if (this._switchElapsed >= CCFG('camera', 'hysteresisMs', HYSTERESIS_MS)) {
         this._currentClusterKey = best.key;
         this._pendingClusterKey = null;
         this._switchElapsed = 0;
