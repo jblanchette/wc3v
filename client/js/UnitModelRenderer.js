@@ -249,7 +249,12 @@
 
       // Every animation decision for this frame, from the single authority.
       // Memoized on gameTime, so the split-screen path's second call is free.
-      const bframe = this.behavior ? this.behavior.resolve(gameTime) : null;
+      // Read the world off the viewer rather than caching it here: this renderer
+      // is constructed in the async terrain chain, long after buildBehaviorWorld()
+      // runs, so anything pushed at construction time would arrive as undefined
+      // and silently drop every unit to idle.
+      const behavior = this.viewer && this.viewer.behaviorWorld;
+      const bframe = behavior ? behavior.resolve(gameTime) : null;
       // `inBattle` is still needed by the WORKER declutter rules (a worker near
       // a fight stays visible); it is no longer what decides an attack.
       const battleSet = bframe ? bframe.inBattle : new Set();

@@ -3606,7 +3606,6 @@ const Wc3vViewer = class {
       battles: (this.mapData && this.mapData.battles) || [],
       camps: (this.mapData && this.mapData.world && this.mapData.world.neutralGroups) || {}
     });
-    if (this.unitModelRenderer) this.unitModelRenderer.behavior = this.behaviorWorld;
   }
 
   setupMap () {
