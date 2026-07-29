@@ -555,6 +555,53 @@ const computeGameMode = (playersMap) => {
   return 'custom';
 };
 
+// Match winner from LeaveGameBlocks (0x17) captured in wc3v.js doParsing.
+// Port of w3gjs W3GReplay.determineWinningTeam (dist/lib/W3GReplay.js:96-116),
+// 1v1 only: walk leave events in order skipping observers; an explicit
+// result '09000000' or reason '0c000000' marks that player's team the winner;
+// otherwise the LAST leaver's team wins (in 1v1 the loser leaves first, the
+// winner's leave closes the file). Returns null when unresolvable — absence
+// of a winner means UNKNOWN, never a loss.
+const computeWinner = (replay, outputPlayers) => {
+  const leaveEvents = replay.leaveEvents || [];
+  if (!leaveEvents.length) return null;
+
+  const slotRecords = (replay.metadata && replay.metadata.slotRecords) || [];
+  const version = (replay.subheader && replay.subheader.version) || 0;
+  const observerTeam = version >= 29 ? 24 : 12;
+
+  const teamOf = {};
+  slotRecords.forEach(slot => { teamOf[slot.playerId] = slot.teamId; });
+
+  let winningTeamId = null;
+  let method = null;
+  let lastLeaverTeam = null;
+
+  for (const ev of leaveEvents) {
+    const teamId = teamOf[ev.playerId];
+    if (teamId == null || teamId === observerTeam) continue;
+    lastLeaverTeam = teamId;
+    if (ev.result === '09000000') { winningTeamId = teamId; method = 'result09'; break; }
+    if (ev.reason === '0c000000') { winningTeamId = teamId; method = 'reason0c'; break; }
+  }
+  if (winningTeamId == null && lastLeaverTeam != null) {
+    winningTeamId = lastLeaverTeam;
+    method = 'lastLeaver';
+  }
+  if (winningTeamId == null) return null;
+
+  const winnerPid = Object.keys(outputPlayers).find(pid =>
+    outputPlayers[pid] && outputPlayers[pid].teamId === winningTeamId);
+  if (winnerPid == null) return null;
+
+  return {
+    teamId: winningTeamId,
+    playerId: +winnerPid,
+    method,
+    confidence: method === 'lastLeaver' ? 'medium' : 'high'
+  };
+};
+
 // Battle export helper — strips intermediate underscored fields and caps the
 // signal array to keep .wc3v size reasonable. Tail signals (attached during
 // cooldown) are pruned first; primary signals are preserved.
@@ -920,6 +967,14 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
   // Categorize the game from the players actually emitted (unit-less players
   // already dropped above — matches what the viewer renders).
   output.gameMode = computeGameMode(output.players);
+
+  // Match outcome from leave records — 1v1 only (the heuristic's home turf).
+  // Raw evidence ships as output.replay.leaveEvents (survives automatically);
+  // this is the verdict. Missing on legacy parses = unknown, never a loss.
+  if (output.gameMode === '1v1') {
+    const winner = computeWinner(replay, output.players);
+    if (winner) output.winner = winner;
+  }
 
   return output;
 };

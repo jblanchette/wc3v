@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
 
   "comment": "Dominance score formula constants. All values in gold+lumber-equivalent (GLE) unless noted. Bump `version` on ANY change — the score is a versioned deterministic formula and published numbers must stay reproducible.",
 
@@ -27,6 +27,21 @@
 
   "possiblyLostConfidenceMin": 70,
 
+  "endgame": {
+    "windowMs": 60000,
+    "confidenceWeights": { "high": 0.9, "medium": 0.7, "low": 0.45 }
+  },
+
+  "staleLoss": {
+    "minSilenceMs": 90000,
+    "fullSilenceMs": 240000,
+    "maxWeight": 0.85
+  },
+
+  "raze": {
+    "confidenceMin": "medium"
+  },
+
   "sampleIntervalMs": 10000,
   "eventSampleMergeMs": 250,
 
@@ -43,7 +58,9 @@
     "campCreditConfidenceMin": 0.7,
     "battleSwingMin": 300,
     "battleSwingFactor": 0.5,
-    "battleSwingCap": 800
+    "battleSwingCap": 800,
+    "baseRazeFactor": 0.5,
+    "baseRazeCap": 600
   },
 
   "availability": {

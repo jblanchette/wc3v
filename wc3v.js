@@ -106,6 +106,10 @@ const path = require('path');
 const doParsing = async (input, options = {}) => {
   let actionCount = 0;
   let globalTime = 0;
+  // LeaveGameBlocks (0x17) — the only match-outcome evidence in a replay.
+  // w3gjs parses them but our command-stream loop used to drop them silently.
+  // utils.computeWinner turns these into the exported `winner` verdict.
+  const leaveEvents = [];
 
   // enable worker tracer if configured
   if (config.debugWorkers) {
@@ -142,6 +146,16 @@ const doParsing = async (input, options = {}) => {
   });
 
   parser.on("gamedatablock", (block) => {
+    if (block.id === 0x17) {
+      leaveEvents.push({
+        playerId: block.playerId,
+        reason: block.reason,
+        result: block.result,
+        gameTimeMs: globalTime
+      });
+      return;
+    }
+
     const commandBlocks = block.commandBlocks || [];
 
     if (block.timeIncrement) {
@@ -191,6 +205,10 @@ const doParsing = async (input, options = {}) => {
       throw e;
     }
   }
+
+  // Attach captured leave records (covers both the normal and the
+  // partial-parse fallback path above).
+  replay.leaveEvents = leaveEvents;
 
   emitProgress('postprocess', 86, { detail: 'workers' });
 
@@ -571,6 +589,18 @@ const doParsing = async (input, options = {}) => {
   playerManager.world.battles = battleResult.battles;
   playerManager.world.battleStats = battleResult.stats;
   console.logger(`Battle detection: ${battleResult.battles.length} battle(s) from ${battleResult.stats.totalSignals} signals`);
+
+  // Razed-building inference — conservative detection of buildings destroyed
+  // by enemy attack (sustained targeting + owner-quiet + terminality). Needs
+  // battle signals/engagedBuildings; runs before DeathInference/BattleSummary.
+  emitProgress('postprocess', 97, { detail: 'razes' });
+  const RazedBuildingInference = require('./lib/RazedBuildingInference');
+  const razeStats = new RazedBuildingInference(playerManager).run();
+  console.log('----------------------------------');
+  console.log('RAZED BUILDING INFERENCE');
+  console.log('----------------------------------');
+  console.log(`buildings scanned: ${razeStats.buildingsScanned}, ` +
+    `razed: high=${razeStats.razedHigh}, medium=${razeStats.razedMedium}`);
 
   // Death inference — consume battle outcomes + path silence to backfill
   // a `lostState` on every Unit. Client uses this to render the 4-state

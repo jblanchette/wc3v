@@ -131,6 +131,11 @@ if (showAll || showSections.includes('players')) {
   players.forEach(p => {
     console.log(`  [${p.id}] ${p.name} (${p.race}) team=${p.teamId} neutral=${p.isNeutral} events=${p.eventCount} units=${p.unitCount}`);
   });
+  if (data.winner) {
+    console.log(`  Winner: player ${data.winner.playerId} (team ${data.winner.teamId}) via ${data.winner.method} [${data.winner.confidence}]`);
+  } else {
+    console.log('  Winner: unknown (no leave records — replay parsed before winner capture)');
+  }
   console.log('');
 }
 
