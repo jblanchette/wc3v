@@ -17563,9 +17563,14 @@ button.mcb-summary {
 
 /* ============================================================
    Dominance — tug-of-war bar (#dominance-bar, under the match
-   header) + insights chart tab (.dmc-*). Score numbers are
-   colored by the WCL bracket tokens (--dom-*, tokens.css §2.9b);
-   bar segments use the players' colors (data color). 1v1 only.
+   header) + insights chart tab (.dmc-*). Identity lives at the
+   END CAPS (player color, data); the fill + numbers carry the
+   WCL bracket tokens (--dom-*, tokens.css §2.9b) — performance
+   is the color. Impact FX (.dom-ghost / .dom-shockwave /
+   .dom-shake / .dom-glyph) are one-shot classes fired by
+   DominanceBar's FX cursor; the global prefers-reduced-motion
+   kill-switch neuters them and the JS gate skips them entirely.
+   1v1 only.
    ============================================================ */
 #dominance-bar {
   display: flex;
@@ -17595,20 +17600,57 @@ button.mcb-summary {
   text-align: center;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
-.dom-track {
+/* Identity end caps — the ONLY place player colors appear on the bar. */
+.dom-cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill, 999px);
+  background: rgba(0, 0, 0, 0.30);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+  cursor: default;
+}
+.dom-cap-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+.dom-cap-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+.dom-cap-right { flex-direction: row-reverse; }
+
+/* FX stage: shock rings + glyphs render here so the pill's overflow:hidden
+   can't clip them. */
+.dom-track-wrap {
   position: relative;
   flex: 1;
+}
+.dom-track {
+  position: relative;
+  width: 100%;
   height: 12px;
   border-radius: var(--radius-pill, 999px);
   overflow: hidden;
   display: flex;
-  /* Inset channel the two player segments fill. */
+  /* Inset channel the two bracket-colored segments fill. */
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
 }
 /* Glass sheen laid over both segments — the segments' inline background is
-   the raw player color (set in JS); this refines it without touching JS. */
+   the raw bracket token (set in JS); this refines it without touching JS. */
 .dom-track::after {
   content: '';
   position: absolute;
@@ -17624,7 +17666,8 @@ button.mcb-summary {
 }
 .dom-seg {
   height: 100%;
-  transition: width 180ms linear;
+  /* Width glides with the score; background cross-fades on bracket flips. */
+  transition: width 180ms linear, background-color 300ms ease;
 }
 /* The front line — crisp seam + soft glow where the two players meet.
    Neutral white (not a player color): it marks the contested edge itself. */
@@ -17646,6 +17689,102 @@ button.mcb-summary {
   background: rgba(6, 10, 16, 0.85);
   z-index: 2;
 }
+/* --- Impact FX (one-shot classes fired by DominanceBar._fxTick) --------- */
+
+/* Damage ghost: afterimage of the harmed side's pre-hit width. The live
+   segment has already snapped to the new width beneath it, so the visible
+   sliver IS the chunk that was knocked off. Sits under the sheen (z3),
+   over the segments (z1). */
+.dom-ghost {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  filter: brightness(1.9) saturate(1.3);
+}
+.dom-ghost-left  { left: 0; }
+.dom-ghost-right { right: 0; }
+.dom-ghost-hit { animation: dom-ghost-fade 600ms ease-out; }
+@keyframes dom-ghost-fade {
+  0%   { opacity: 0.9; }
+  35%  { opacity: 0.65; }
+  100% { opacity: 0; }
+}
+
+/* Seam shockwave — expanding impact ring at the contested edge. */
+.dom-shockwave {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  animation: dom-shockwave 450ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  opacity: 0;
+}
+.dom-shockwave-hero { border-color: rgba(255, 212, 59, 0.95); }
+@keyframes dom-shockwave {
+  0%   { transform: scale(0.4); opacity: 1;   box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+  60%  { transform: scale(2.2); opacity: 0.8; box-shadow: 0 0 14px 5px rgba(255, 255, 255, 0.25); }
+  100% { transform: scale(3.2); opacity: 0;   box-shadow: 0 0 18px 8px rgba(255, 255, 255, 0); }
+}
+
+/* Bar-local shake — transform only, never moves document flow. */
+.dom-shake { animation: dom-shake 250ms linear; }
+@keyframes dom-shake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-2px, -1px); }
+  80% { transform: translate(2px, 1px); }
+}
+
+/* Score punch — the gaining number lands the hit. */
+.dom-score-punch { animation: dom-score-punch 300ms cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+@keyframes dom-score-punch {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* Event glyph — pops at the seam, rises and fades. Decorative FX mark
+   (loss = red tint, gain = white). */
+.dom-glyph {
+  position: absolute;
+  top: -6px;
+  width: 26px;
+  height: 26px;
+  margin-left: -13px;
+  pointer-events: none;
+  z-index: 6;
+  color: rgba(255, 255, 255, 0.95);
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
+  animation: dom-glyph-pop 900ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  opacity: 0;
+}
+.dom-glyph svg { width: 100%; height: 100%; display: block; }
+.dom-glyph-loss { color: #ff6a5e; }
+@keyframes dom-glyph-pop {
+  0%   { transform: translateY(4px) scale(0.4);  opacity: 0; }
+  18%  { transform: translateY(-8px) scale(1.25); opacity: 1; }
+  45%  { transform: translateY(-14px) scale(1);   opacity: 1; }
+  100% { transform: translateY(-26px) scale(0.9); opacity: 0; }
+}
+
+/* Minor-event seam flare — brief brightening of the contested edge. */
+.dom-seam-flare { animation: dom-seam-flare 400ms ease-out; }
+@keyframes dom-seam-flare {
+  0%   { box-shadow: 1px 0 0 rgba(255, 255, 255, 0.85), 4px 0 9px rgba(255, 255, 255, 0.28); }
+  35%  { box-shadow: 1px 0 0 rgba(255, 255, 255, 1),    6px 0 16px rgba(255, 255, 255, 0.65); }
+  100% { box-shadow: 1px 0 0 rgba(255, 255, 255, 0.85), 4px 0 9px rgba(255, 255, 255, 0.28); }
+}
+
 /* No playback in BO-only layouts — the bar has no meaning there. */
 .layout-mode-static-bo #dominance-bar,
 .layout-mode-mobile-bo #dominance-bar { display: none; }
