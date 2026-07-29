@@ -31,7 +31,15 @@
   });
 })();
 
-importScripts('/js/vendor/wc3v-parser.bundle.js');
+// Forward the deploy hash UploadManager put on our own URL onto the bundle
+// import. Both files are served `immutable, max-age=1y` and neither can carry
+// a version any other way (importScripts can't see the page's asset manifest),
+// so without this a browser that has parsed once is pinned to the OLD parser
+// bundle for up to a year — new replay-format fixes would never reach it.
+(function () {
+  var v = /[?&]v=([\w.]+)/.exec(self.location && self.location.search || '');
+  importScripts('/js/vendor/wc3v-parser.bundle.js' + (v ? '?v=' + v[1] : ''));
+})();
 
 self.onmessage = async (e) => {
   const msg = e && e.data;

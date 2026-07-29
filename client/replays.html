@@ -14,6 +14,16 @@
   <link rel="stylesheet" href="css/tokens.css">
   <link rel="stylesheet" href="css/main.css">
   <style>body { margin: 0; }</style>
+  <script>
+    // Pinned to the deploy content-hash by tools/gen-asset-manifest.js so
+    // UploadManager can cache-bust the parser worker + its bundle. Both are
+    // loaded from JS/importScripts, out of reach of the HTML ?v= rewrite, so
+    // the worker chain is otherwise the only thing on the site with no version
+    // in its URL. Dev keeps null (no ?v=). Must stay ABOVE the script tags
+    // below so it's set before UploadManager.js runs.
+    // Don't reformat the marker comments — the rewrite regex matches them.
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = null; /* @wc3v-asset-version-end */
+  </script>
 </head>
 <body class="site-page">
   <script src="js/clientConfig.js"></script>

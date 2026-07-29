@@ -22,6 +22,13 @@
       /* @asset-version-begin */ const _assetVersion = null; /* @asset-version-end */
       const _t = _assetVersion || Date.now();
 
+      // Same value on `window` so the .js files can reach it (`_assetVersion`
+      // is a lexical const, not a window property). app.js needs it to version
+      // the replay-json Worker URL — Workers are created from JS, so the HTML
+      // ?v= rewrite can't reach them and they'd otherwise be the only assets
+      // served with no version at all. Matches index.html/replays.html.
+      window.__WC3V_ASSET_VERSION__ = _assetVersion;
+
       // On-demand script loader for the heavy, conditionally-reachable modules
       // that used to sit on the critical path (see _lazyScripts below). Returns
       // a Promise that resolves once the module's global exists; repeat calls

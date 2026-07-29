@@ -1,3 +1,14 @@
+// Worker URLs are built in JS, so gen-asset-manifest's HTML `?v=` rewrite
+// can't reach them — and /js/*.js is served `immutable, max-age=1y`. Without
+// a version query a browser keeps the worker it first downloaded, so a fix
+// shipped inside it would never reach returning users. viewer.html pins
+// __WC3V_ASSET_VERSION__ to the deploy hash (null in dev, where we don't
+// want or need a buster).
+const _workerUrl = (path) => {
+  const v = (typeof window !== 'undefined' && window.__WC3V_ASSET_VERSION__) || null;
+  return v ? `${path}?v=${v}` : path;
+};
+
 const Wc3vViewer = class {
   constructor () {
     this.reset();
@@ -338,7 +349,7 @@ const Wc3vViewer = class {
       };
 
       try {
-        worker = new Worker('/js/replay-json-worker.js');
+        worker = new Worker(_workerUrl('/js/replay-json-worker.js'));
       } catch (e) {
         // Worker unavailable (very old browser / blocked) — fall back to a
         // synchronous decode + parse so the viewer still works.
@@ -726,7 +737,7 @@ const Wc3vViewer = class {
     return new Promise((resolve, reject) => {
       let worker;
       try {
-        worker = new Worker('/js/replay-json-worker.js');
+        worker = new Worker(_workerUrl('/js/replay-json-worker.js'));
       } catch (e) {
         try { resolve(JSON.parse(new TextDecoder('utf-8').decode(new Uint8Array(buf)))); }
         catch (e2) { reject(e2); }

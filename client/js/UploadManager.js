@@ -48,10 +48,24 @@ const UploadManager = class {
     // parser logging is on we pass it through as a URL param the worker
     // checks before silencing the bundle's console output.
     let workerPath = options.workerPath || '/js/parser-worker.js';
+    // Cache-bust the worker on every deploy. The worker and its ~1.5 MB bundle
+    // are the only assets with no version in their URL (a Worker/importScripts
+    // URL can't be rewritten by gen-asset-manifest's HTML pass), and both are
+    // served `immutable, max-age=1y` in production — so without this a browser
+    // that has parsed once keeps the OLD parser for up to a year. The worker
+    // forwards this `v` to its importScripts of the bundle (parser-worker.js).
+    const av = UploadManager.assetVersion();
+    if (av) workerPath += (workerPath.indexOf('?') === -1 ? '?' : '&') + 'v=' + av;
     if (_parserLogEnabled() && workerPath.indexOf('log=1') === -1) {
       workerPath += (workerPath.indexOf('?') === -1 ? '?' : '&') + 'log=1';
     }
     this.workerPath = workerPath;
+  }
+
+  // The deploy content-hash, pinned into the page by tools/gen-asset-manifest.js.
+  // Null in dev (no ?v=), which is what we want there — dev serves fresh anyway.
+  static assetVersion () {
+    return (typeof window !== 'undefined' && window.__WC3V_ASSET_VERSION__) || null;
   }
 
   // Warm the HTTP cache for the parser worker + its ~1 MB bundle so the
@@ -61,7 +75,11 @@ const UploadManager = class {
   static prefetchParser () {
     if (UploadManager._parserPrefetched) return;
     UploadManager._parserPrefetched = true;
-    ['/js/parser-worker.js', '/js/vendor/wc3v-parser.bundle.js'].forEach((href) => {
+    // Must carry the SAME ?v= the worker will request, or the prefetch warms a
+    // different cache entry than the parse actually uses and buys nothing.
+    const av = UploadManager.assetVersion();
+    const q = av ? '?v=' + av : '';
+    ['/js/parser-worker.js' + q, '/js/vendor/wc3v-parser.bundle.js' + q].forEach((href) => {
       try {
         const link = document.createElement('link');
         link.rel = 'prefetch';
