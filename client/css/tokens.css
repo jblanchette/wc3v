@@ -80,17 +80,27 @@
   --tier-3: #FFFF33;
 
   /* ── §2.9b Dominance brackets (data only) ──────────────────────
-     Warcraft-Logs parse palette, applied to the 0-100 dominance score
-     (DominanceBar.bracketFor is the single lockstep mapping):
+     Escalating 0-100 scale for the dominance score (DominanceBar.bracketFor
+     is the single lockstep mapping):
      0-24 grey · 25-49 green · 50-74 blue · 75-94 purple ·
-     95-98 orange · 99 pink · 100 gold */
-  --dom-grey:   #9d9d9d;
-  --dom-green:  #1eff00;
-  --dom-blue:   #0070dd;
-  --dom-purple: #a335ee;
-  --dom-orange: #ff8000;
-  --dom-pink:   #e268a8;
-  --dom-gold:   #e5cc80;
+     95-98 orange · 99 pink · 100 gold
+
+     Ordering is borrowed from the Warcraft-Logs parse scale, but NOT its
+     values: those are WoW item-rarity colors (#1eff00, #a335ee, #ff8000) —
+     saturated primaries that read as arcade plastic.
+
+     Repainted for Warcraft III's own art direction: earthy, muted, heraldic
+     — ash and moss and lapis and tarnished bronze, the colors of painted
+     banners and carved stone rather than backlit LEDs. Everything sits at
+     low saturation so it can carry a hard black outline the way in-game art
+     does. Nothing here should ever glow. */
+  --dom-grey:   #736E66;  /* ash / tarnished iron */
+  --dom-green:  #6F9350;  /* moss   */
+  --dom-blue:   #4C7396;  /* lapis  */
+  --dom-purple: #7B5E9E;  /* royal  */
+  --dom-orange: #B87A33;  /* bronze */
+  --dom-pink:   #A5486B;  /* wine   */
+  --dom-gold:   #C9A227;  /* old gold */
 
   /* ── §2.10 Semantic states (outcome / validity) ────────────── */
   --ok:    #6EE7A8;  --ok-soft:   rgba(60,200,140,0.12);  --ok-edge:   rgba(80,200,140,0.40);
@@ -130,6 +140,32 @@
   --page-max:    1800px;
   --page-gutter: 24px;
   --appbar-h:    52px;   /* sticky #site-nav height — sticky offsets key off this */
+
+  /* ── Viewer chrome, warm register ───────────────────────────
+     The viewer's top (match header) and bottom (scrubber) rails used to be
+     blue-grey (#1a2830 / #15222a, hairline #2a3a45, control edge #3a4a55,
+     well #0a1218). Pulled warm so they sit in the same family as the
+     dominance gauge's cast-bronze frame and the whole strip reads as one
+     Warcraft-ish fixture rather than app chrome wrapped around a game prop.
+     Same lightness as the values they replace — this is a hue shift, not a
+     contrast change, so nothing that sat on these surfaces loses legibility. */
+  --vc-rail:      #1e1b16;
+  --vc-rail-2:    #17150f;
+  --vc-hairline:  #2f2819;
+  --vc-edge:      #453a25;
+  --vc-well:      #0b0805;
+
+  /* ── Dominance gauge chassis (viewer) ───────────────────────
+     The bar is a flex-shrink:0 sibling in #gameplay-area's column,
+     so --dom-bar-h comes straight out of the map. Tokenized because
+     that trade is a judgment call — client/dominance-lab.html dials
+     these live against a stand-in map. */
+  --dom-bar-h:      58px;
+  --dom-chamfer:     9px;  /* angled end cut on the frame + well */
+  --dom-channel-h:  24px;  /* forged frame height */
+  --dom-well-h:     14px;  /* cut channel; the frame lip is the difference / 2 */
+  --dom-ident-size: 44px;  /* identity tile; 36px of it is visible icon (the floor) */
+  --dom-score-size: 1.5rem;
 
   /* ── §4.2 Radius ───────────────────────────────────────────── */
   --radius-sm:   6px;

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Dominance Gauge Lab — wc3v</title>
+
+<!-- Standalone dev lab (unlinked, like test-unit.html / test-building.html).
+     Drives the REAL DominanceBar class via mount(spec) — it owns zero gauge
+     code. If this ever needs a 5th script, the mount seam has leaked. -->
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/main.css">
+<script src="/js/PlayerNames.js"></script>
+<script src="/js/DominanceBar.js"></script>
+
+<style>
+  /* Explicit positioning rather than flex: main.css owns `body` and `#app`,
+     and fighting that cascade from a page <style> is exactly what the design
+     system forbids. Fixed panel + inset stage sidesteps it entirely. */
+  html, body { margin: 0; height: 100%; background: #0b0f14; color: var(--text); font-family: var(--font); overflow: hidden; }
+
+  /* ── Left: a faithful copy of the viewer's chrome sandwich, so the height
+        budget is validated against a real #gameplay-area flex column. ────── */
+  #stage { position: fixed; inset: 0 var(--lab-panel-w) 0 0; }
+  #app { position: absolute; inset: 0; }
+  #content { position: absolute; inset: 0; }
+
+  .lab-mh { padding: 0.6rem 0.75rem; }
+  .lab-mh-row { display: flex; gap: 0.5rem; }
+  .lab-mh-card {
+    flex: 1; padding: 0.4rem 0.6rem; background: rgba(255,255,255,0.03);
+    border-radius: 6px; border-left: 3px solid #3a4a55;
+    display: flex; align-items: center; gap: 10px; min-height: 46px;
+  }
+  .lab-mh-name { font: 700 1rem Verdana, sans-serif; flex: 1; }
+
+  /* Fake map — coarse checker + a bright reference line, so downward FX
+     overshoot is legible against something. */
+  .lab-map {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(to bottom, rgba(255,80,80,0.5) 0 2px, transparent 2px) 0 24px / 100% 100% no-repeat,
+      repeating-conic-gradient(#1b2530 0% 25%, #141c25 0% 50%) 0 0 / 56px 56px;
+  }
+  .lab-map-note {
+    position: absolute; left: 12px; top: 34px;
+    font: 700 var(--fs-min) var(--font); letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.35); text-transform: uppercase;
+  }
+
+  /* ── Right: control panel ───────────────────────────────────────────── */
+  :root { --lab-panel-w: 340px; }
+  #lab-panel {
+    position: fixed; top: 0; right: 0; bottom: 0;
+    width: var(--lab-panel-w); overflow-y: auto; z-index: 100;
+    background: var(--bg); border-left: 1px solid var(--border);
+    padding: 12px 14px 40px; box-sizing: border-box;
+  }
+  #lab-panel h1 {
+    font: 800 1.05rem var(--font); margin: 0 0 2px;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  #lab-panel .sub { font-size: var(--fs-min); color: var(--text-dim); margin: 0 0 14px; }
+  fieldset {
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    margin: 0 0 12px; padding: 8px 10px 10px; background: var(--surface);
+  }
+  legend {
+    font: 700 var(--fs-min) var(--font); text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted); padding: 0 5px;
+  }
+  .row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 6px; }
+  .row:last-child { margin-bottom: 0; }
+  button, select {
+    font: 700 var(--fs-min) var(--font); color: var(--text);
+    background: var(--surface-2); border: 1px solid var(--border-2);
+    border-radius: var(--radius-sm); padding: 6px 9px; cursor: pointer;
+  }
+  button:hover { background: var(--surface-3); }
+  button.on { background: var(--accent-deep); border-color: var(--accent); }
+  select { width: 100%; }
+  label.dial { display: block; font-size: var(--fs-min); color: var(--text-muted); margin-bottom: 7px; }
+  label.dial span { color: var(--text); font-family: var(--mono); float: right; }
+  label.dial input[type=range] { width: 100%; margin-top: 2px; }
+  label.chk { display: flex; align-items: center; gap: 7px; font-size: var(--fs-min); cursor: pointer; }
+  #clock { font: 800 1.1rem var(--mono); color: var(--gold); }
+  #fxlog {
+    height: 150px; overflow-y: auto; font: 400 var(--fs-min) var(--mono);
+    background: var(--bg-deep); border-radius: var(--radius-sm);
+    padding: 6px 8px; color: var(--text-muted); line-height: 1.55;
+  }
+  #fxlog b { color: var(--text); }
+  #fxlog .ko { color: var(--bad); }
+  #fxlog .mj { color: var(--warn); }
+  .hint { font-size: var(--fs-min); color: var(--text-dim); line-height: 1.5; margin: 6px 0 0; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="app" class="layout-mode-live-bo">
+    <div id="content">
+      <div id="gameplay-area">
+
+        <div id="match-header" class="lab-mh">
+          <div class="lab-mh-row">
+            <div class="lab-mh-card">
+              <span class="lab-mh-name" id="lab-name-0"></span>
+              <span class="mh-dominance" data-player-id="1" hidden></span>
+            </div>
+            <div class="lab-mh-card">
+              <span class="lab-mh-name" id="lab-name-1"></span>
+              <span class="mh-dominance" data-player-id="2" hidden></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- DominanceBar mounts HERE, as #match-header's nextSibling -->
+
+        <div id="gameplay-row">
+          <div id="map-container">
+            <div class="lab-map"></div>
+            <div class="lab-map-note">fake map — every px the bar grows comes out of here</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<aside id="lab-panel">
+  <h1>Dominance Lab</h1>
+  <p class="sub">Drives the real <code>DominanceBar</code> via <code>mount()</code>.</p>
+
+  <fieldset>
+    <legend>Data</legend>
+    <div class="row"><select id="src"></select></div>
+    <div class="row"><button id="reload">Reload</button><span id="srcinfo" class="hint"></span></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Transport</legend>
+    <div class="row">
+      <button id="play">Play</button>
+      <button id="restart">Restart</button>
+      <span id="clock">0:00</span>
+    </div>
+    <div class="row" id="speeds"></div>
+    <div class="row"><input type="range" id="scrub" min="0" max="1000" value="0" style="width:100%"></div>
+    <div class="row">
+      <button data-jump="-30000">&#8592; back 30s</button>
+      <button data-jump="60000">fwd 60s &#8594;</button>
+    </div>
+    <p class="hint">Back-30s must silently clear FX (scrub guard = 2500ms).</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Fire event</legend>
+    <div class="row" id="kinds"></div>
+    <div class="row">
+      <button id="side" data-side="0">Side: LEFT</button>
+      <button id="sign" data-sign="-1">Sign: &#8722;</button>
+    </div>
+    <label class="dial">delta magnitude <span id="dv">600</span>
+      <input type="range" id="delta" min="50" max="800" step="10" value="600"></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Stress</legend>
+    <div class="row">
+      <button data-burst="5">burst &times;5 / 400ms</button>
+      <button data-burst="ko">burst &times;3 KO</button>
+    </div>
+    <p class="hint">Cooldowns should downgrade, not silence.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>Chassis</legend>
+    <div id="dials"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Motion</legend>
+    <label class="chk"><input type="checkbox" id="rm"> simulate prefers-reduced-motion</label>
+    <p class="hint">Fast iteration only — verify for real with DevTools &ldquo;Emulate CSS media feature&rdquo;.</p>
+  </fieldset>
+
+  <fieldset>
+    <legend>FX log</legend>
+    <div id="fxlog"></div>
+  </fieldset>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+
+  const KINDS = ['heroDeath', 'heroKill', 'baseRaze', 'battleSwing', 'tierUp', 'expansion', 'campClear'];
+  const SPEEDS = [0.25, 1, 2, 4, 10];
+  const DIALS = [
+    ['--dom-bar-h',      44,  80, 1,   58, 'px'],
+    ['--dom-chamfer',     0,  16, 1,    9, 'px'],
+    ['--dom-channel-h',  14,  30, 1,   24, 'px'],
+    ['--dom-well-h',      6,  24, 1,   14, 'px'],
+    ['--dom-ident-size', 36,  52, 1,   44, 'px'],
+    ['--dom-score-size', 1.0, 2.0, 0.05, 1.5, 'rem']
+  ];
+
+  const $ = (id) => document.getElementById(id);
+  const fmt = (ms) => {
+    const s = Math.max(0, Math.floor(ms / 1000));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  };
+
+  let bar = null, endT = 0, t = 0, playing = false, speed = 1;
+  let side = 0, sign = -1, kind = 'heroDeath';
+
+  // ── FX log ───────────────────────────────────────────────────────────
+  function log (msg, cls) {
+    const el = $('fxlog');
+    const line = document.createElement('div');
+    if (cls) line.className = cls;
+    line.innerHTML = '<b>' + fmt(t) + '</b> ' + msg;
+    el.appendChild(line);
+    while (el.childNodes.length > 200) el.removeChild(el.firstChild);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  // ── Synthetic series ─────────────────────────────────────────────────
+  // Deterministic (no Math.random). Emits a 10s sample grid plus the server's
+  // pre/post (t-1, t) pairs around each injected event, mirroring
+  // lib/DominanceSeries.js so the client lerp sees real discontinuities.
+  function synth () {
+    const END = 20 * 60 * 1000;
+    const EVENTS = [
+      { t:  95000, kind: 'campClear',   delta:  250, side: 0 },
+      { t: 138000, kind: 'tierUp',      delta:  250, side: 1 },
+      { t: 205000, kind: 'campClear',   delta:  150, side: 0 },
+      { t: 320000, kind: 'expansion',   delta:  300, side: 0 },
+      { t: 441000, kind: 'battleSwing', delta: -185, side: 0 },
+      { t: 600000, kind: 'battleSwing', delta:  520, side: 1 },
+      { t: 730000, kind: 'heroDeath',   delta: -600, side: 0 },
+      { t: 828000, kind: 'baseRaze',    delta:  420, side: 1 },
+      { t: 934000, kind: 'battleSwing', delta: -795, side: 1 },
+      { t: 1010000, kind: 'heroKill',   delta:  300, side: 0 },
+      { t: 1100000, kind: 'baseRaze',   delta:  600, side: 0 }
+    ];
+
+    // Score walk: a smooth base plus a step at each event.
+    const stepAt = [0, 0];
+    const marks = [];
+    for (let g = 0; g <= END; g += 10000) marks.push(g);
+    for (const e of EVENTS) { marks.push(e.t - 1); marks.push(e.t); }
+    marks.sort((a, b) => a - b);
+
+    const series = [[], []];
+    let applied = 0;
+    for (const m of marks) {
+      while (applied < EVENTS.length && EVENTS[applied].t <= m) {
+        const e = EVENTS[applied++];
+        const shift = (e.delta / 800) * 9;   // cap-relative, ±9 points max
+        stepAt[e.side] += shift;
+        stepAt[1 - e.side] -= shift;
+      }
+      // Slow structural drift so the bar is never dead still.
+      const drift = Math.sin(m / 190000) * 3.5;
+      const raw0 = 50 + drift + stepAt[0];
+      const s0 = Math.max(2, Math.min(98, raw0));
+      series[0].push({ t: m, score: s0 });
+      series[1].push({ t: m, score: 100 - s0 });
+    }
+
+    return {
+      endT: END,
+      label: 'synthetic · 20:00 · 11 events',
+      players: [
+        { id: 1, color: '#0042FF', name: 'ALPHA', race: 'H', iconId: 'htow',
+          samples: series[0], events: EVENTS.filter(e => e.side === 0) },
+        { id: 2, color: '#FF0303', name: 'BRAVO', race: 'U', iconId: 'unpl',
+          samples: series[1], events: EVENTS.filter(e => e.side === 1) }
+      ]
+    };
+  }
+
+  // ── Real replay ──────────────────────────────────────────────────────
+  const COLORS = ['#FF0303','#0042FF','#1CE6B9','#540081','#FFFC01','#fEBA0E',
+                  '#20C000','#E55BB0','#959697','#7EBFF1','#106246','#4E2A04'];
+  const STARTER = { O: 'ogre', H: 'htow', E: 'etol', U: 'unpl' };
+
+  async function loadReplay (name) {
+    const res = await fetch('/replays/' + name + '.wc3v.gz');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const ab = await res.arrayBuffer();
+    const head = new Uint8Array(ab.slice(0, 2));
+    let text;
+    if (head[0] === 0x1f && head[1] === 0x8b) {
+      // Static host may or may not have already decoded Content-Encoding.
+      const ds = new DecompressionStream('gzip');
+      text = await new Response(new Response(ab).body.pipeThrough(ds)).text();
+    } else {
+      text = new TextDecoder().decode(ab);
+    }
+    const data = JSON.parse(text);
+
+    const ids = Object.keys(data.players || {})
+      .filter(pid => data.players[pid] && data.players[pid].dominanceSeries)
+      .slice(0, 2);
+    if (ids.length < 2) throw new Error('no dominanceSeries (re-parse needed)');
+
+    // Identity lives in replay.players; the analysis payload in players.
+    const meta = (data.replay && data.replay.players) || {};
+    const players = ids.map((pid, i) => {
+      const p = data.players[pid] || {};
+      const m = meta[pid] || {};
+      const raw = m.name || ('P' + pid);
+      const nm = (window.PlayerNames && PlayerNames.canonical)
+        ? PlayerNames.canonical(raw) : String(raw).replace(/#.*$/, '');
+      const race = m.raceDetected || p.race || '';
+      return {
+        id: Number(pid), color: COLORS[i], name: String(nm).replace(/#.*$/, ''),
+        race: race, iconId: STARTER[race] || '',
+        samples: p.dominanceSeries.samples,
+        events: p.dominanceSeries.events || []
+      };
+    });
+
+    const last = players[0].samples[players[0].samples.length - 1];
+    return { endT: last.t, label: name + ' · ' + fmt(last.t), players: players };
+  }
+
+  // ── Mount ────────────────────────────────────────────────────────────
+  function mount (spec) {
+    if (bar) bar.destroy();
+    endT = spec.endT;
+    t = 0;
+    $('scrub').max = String(endT);
+    $('srcinfo').textContent = spec.label;
+    $('lab-name-0').textContent = spec.players[0].name;
+    $('lab-name-0').style.color = spec.players[0].color;
+    $('lab-name-1').textContent = spec.players[1].name;
+    $('lab-name-1').style.color = spec.players[1].color;
+
+    const header = document.getElementById('match-header');
+    bar = new DominanceBar(null);
+    bar._reduceMotion = $('rm').checked;
+    bar.mount({
+      players: spec.players,
+      container: header.parentNode,
+      anchor: header.nextSibling,
+      id: 'dominance-bar',
+      onScore: (pid, text, token) => {
+        const el = document.querySelector('.mh-dominance[data-player-id="' + pid + '"]');
+        if (!el) return;
+        el.textContent = text;
+        el.style.color = token;
+        el.hidden = false;
+      }
+    });
+    log('mounted &mdash; ' + spec.label);
+  }
+
+  async function load () {
+    const v = $('src').value;
+    try {
+      mount(v === 'synthetic' ? synth() : await loadReplay(v));
+    } catch (e) {
+      log('LOAD FAILED: ' + e.message, 'ko');
+      if (v !== 'synthetic') { $('src').value = 'synthetic'; mount(synth()); }
+    }
+  }
+
+  // ── Driver loop — mirrors app.js's render-loop call site ─────────────
+  let last = performance.now();
+  function frame (now) {
+    requestAnimationFrame(frame);
+    const wall = now - last;
+    last = now;
+    if (playing && bar) {
+      t = Math.min(endT, t + wall * speed);
+      if (t >= endT) { playing = false; $('play').textContent = 'Play'; $('play').classList.remove('on'); }
+      $('scrub').value = String(t);
+    }
+    if (bar) bar.update(t);
+    $('clock').textContent = fmt(t);
+  }
+  requestAnimationFrame(frame);
+
+  // ── Controls ─────────────────────────────────────────────────────────
+  const src = $('src');
+  ['synthetic',
+   '1341468428_FoCuS_Moon_EchoIsles22',
+   '1499624326_Ugly_TH000_Hammerfall',
+   '1057610942_Moon_Soin_AutumnLeaves20'].forEach(v => {
+    const o = document.createElement('option');
+    o.value = v;
+    o.textContent = v === 'synthetic' ? 'Synthetic (all event kinds)' : v;
+    src.appendChild(o);
+  });
+  src.onchange = load;
+  $('reload').onclick = load;
+
+  $('play').onclick = function () {
+    playing = !playing;
+    this.textContent = playing ? 'Pause' : 'Play';
+    this.classList.toggle('on', playing);
+  };
+  $('restart').onclick = () => { t = 0; $('scrub').value = '0'; };
+
+  SPEEDS.forEach(s => {
+    const b = document.createElement('button');
+    b.textContent = s + '×';
+    b.classList.toggle('on', s === 1);
+    b.onclick = () => {
+      speed = s;
+      $('speeds').querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+    };
+    $('speeds').appendChild(b);
+  });
+
+  $('scrub').oninput = function () { t = Number(this.value); };
+  document.querySelectorAll('[data-jump]').forEach(b => {
+    b.onclick = () => {
+      t = Math.max(0, Math.min(endT, t + Number(b.dataset.jump)));
+      $('scrub').value = String(t);
+      log('jump ' + (Number(b.dataset.jump) / 1000) + 's');
+    };
+  });
+
+  KINDS.forEach(k => {
+    const b = document.createElement('button');
+    b.textContent = k;
+    b.classList.toggle('on', k === kind);
+    b.onclick = () => {
+      kind = k;
+      $('kinds').querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      fire();
+    };
+    $('kinds').appendChild(b);
+  });
+
+  $('side').onclick = function () {
+    side = side ? 0 : 1;
+    this.textContent = 'Side: ' + (side ? 'RIGHT' : 'LEFT');
+  };
+  $('sign').onclick = function () {
+    sign = -sign;
+    this.textContent = 'Sign: ' + (sign < 0 ? '−' : '+');
+  };
+  $('delta').oninput = function () { $('dv').textContent = this.value; };
+
+  function fire (k, d, s) {
+    if (!bar) return;
+    k = k || kind;
+    d = (d === undefined) ? sign * Number($('delta').value) : d;
+    s = (s === undefined) ? side : s;
+    bar.fireImpact(k, d, s);
+    const tier = (k === 'heroDeath' || k === 'heroKill') ? 'KO'
+      : (k === 'baseRaze' || (k === 'battleSwing' && Math.abs(d) >= 500)) ? 'MAJOR' : 'minor';
+    log(k + ' ' + (d > 0 ? '+' : '') + d + ' side=' + (s ? 'R' : 'L') + ' &rarr; ' + tier,
+        tier === 'KO' ? 'ko' : tier === 'MAJOR' ? 'mj' : '');
+  }
+
+  document.querySelectorAll('[data-burst]').forEach(b => {
+    b.onclick = () => {
+      const mode = b.dataset.burst;
+      if (mode === 'ko') {
+        [0, 300, 700].forEach((d, i) => setTimeout(() => fire('heroDeath', -600, i % 2), d));
+      } else {
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => fire('battleSwing', (i % 2 ? 1 : -1) * 620, i % 2), i * 80);
+        }
+      }
+    };
+  });
+
+  DIALS.forEach(([name, min, max, step, def, unit]) => {
+    const wrap = document.createElement('label');
+    wrap.className = 'dial';
+    wrap.innerHTML = name.replace('--dom-', '') + ' <span>' + def + unit + '</span>';
+    const inp = document.createElement('input');
+    inp.type = 'range';
+    inp.min = min; inp.max = max; inp.step = step; inp.value = def;
+    inp.oninput = () => {
+      document.documentElement.style.setProperty(name, inp.value + unit);
+      wrap.querySelector('span').textContent = inp.value + unit;
+    };
+    wrap.appendChild(inp);
+    $('dials').appendChild(wrap);
+  });
+
+  // prefers-reduced-motion can't be forced from page JS: gate the JS side
+  // directly and mirror the CSS kill-switch under html.rm-sim.
+  const rmStyle = document.createElement('style');
+  rmStyle.textContent =
+    'html.rm-sim *, html.rm-sim *::before, html.rm-sim *::after {' +
+    ' animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;' +
+    ' transition-duration: 0.001ms !important; }';
+  document.head.appendChild(rmStyle);
+  $('rm').onchange = function () {
+    document.documentElement.classList.toggle('rm-sim', this.checked);
+    if (bar) bar._reduceMotion = this.checked;
+    log('reduced-motion ' + (this.checked ? 'ON' : 'off'));
+  };
+
+  load();
+})();
+</script>
+</body>
+</html>

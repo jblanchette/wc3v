@@ -3162,8 +3162,8 @@ body {
   flex-direction: column;
   gap: 0.5rem;
   padding: 0.6rem 0.75rem;
-  background: linear-gradient(to bottom, #1a2830, #15222a);
-  border-bottom: 1px solid #2a3a45;
+  background: linear-gradient(to bottom, var(--vc-rail, #1e1b16), var(--vc-rail-2, #17150f));
+  border-bottom: 1px solid var(--vc-hairline, #2f2819);
   flex-shrink: 0;
 }
 
@@ -3216,9 +3216,9 @@ body {
   flex: 1;
   min-width: 365px;
   padding: 0.4rem 0.6rem;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 240, 214, 0.035);
   border-radius: 6px;
-  border-left: 3px solid #3a4a55;
+  border-left: 3px solid var(--vc-edge, #453a25);
   flex-shrink: 1;
   display: flex;
   flex-direction: column;
@@ -5081,8 +5081,8 @@ body {
   position: relative;
   top: 0rem;
   height: 2.85rem;
-  border-top: 1px solid #2a3a45;
-  background-color: #1a2830;
+  border-top: 1px solid var(--vc-hairline, #2f2819);
+  background-color: var(--vc-rail, #1e1b16);
   cursor: pointer;
 }
 
@@ -5113,8 +5113,8 @@ body {
   bottom: calc(100% + 0.35rem);
   width: 3.25rem;
   padding: 0.25rem 0;
-  background-color: #1a2830;
-  border: 1px solid #3a4a55;
+  background-color: var(--vc-rail, #1e1b16);
+  border: 1px solid var(--vc-edge, #453a25);
   border-radius: 0.5rem;
   font-size: 13px;
   color: #ccc;
@@ -5177,8 +5177,8 @@ body {
   overflow: visible;
   height: 0.75rem;
   width: calc(100% - 23rem);
-  background-color: #0a1218;
-  border: 1px solid #3a4a55;
+  background-color: var(--vc-well, #0b0805);
+  border: 1px solid var(--vc-edge, #453a25);
   border-radius: 2rem;
   opacity: 1;
   margin-right: 0.65rem;
@@ -17562,121 +17562,260 @@ button.mcb-summary {
 }
 
 /* ============================================================
-   Dominance — tug-of-war bar (#dominance-bar, under the match
-   header) + insights chart tab (.dmc-*). Identity lives at the
-   END CAPS (player color, data); the fill + numbers carry the
-   WCL bracket tokens (--dom-*, tokens.css §2.9b) — performance
-   is the color. Impact FX (.dom-ghost / .dom-shockwave /
-   .dom-shake / .dom-glyph) are one-shot classes fired by
-   DominanceBar's FX cursor; the global prefers-reduced-motion
-   kill-switch neuters them and the JS gate skips them entirely.
-   1v1 only.
+   Dominance — forged tug-of-war gauge (.dom-bar, under the match
+   header) + insights chart tab (.dmc-*).
+
+   Identity lives at the END CAPS (player color on a full-perimeter
+   icon border + the name; race is encoded twice, icon AND label,
+   never by color alone). The fill and the numbers carry the WCL
+   bracket tokens (--dom-*, tokens.css §2.9b) — performance is the
+   color.
+
+   Chassis: a chamfered brushed-metal .dom-frame with an inset
+   .dom-track well clipped 1px tighter, so the frame reads as a
+   real lip. clip-path destroys borders and outer shadows on the
+   clipped element (inset shadows survive), which is exactly why
+   the frame and the well are two stacked elements rather than one.
+   Geometry is tokenized (--dom-bar-h etc.) because the height
+   comes straight out of the map — dial it in client/dominance-lab.html.
+
+   Impact FX escalate MINOR -> MAJOR -> KO (KO reserved for hero
+   deaths), with --fx-i carrying magnitude within a tier. They are
+   one-shot classes fired by DominanceBar's FX cursor; the global
+   prefers-reduced-motion kill-switch neuters them, the explicit
+   block below hides the spawned nodes, and the JS gate skips them
+   entirely. 1v1 only.
    ============================================================ */
-#dominance-bar {
+.dom-bar {
+  box-sizing: border-box;
+  height: var(--dom-bar-h, 58px);
+  padding: 5px 14px 6px;
+  position: relative;
+  /* #main-wrapper is position:absolute z-index:2 and would otherwise paint
+     over the shadow this casts down onto the map. */
+  z-index: 3;
+  flex-shrink: 0;
+  /* Darkest band of the chrome sandwich: match header above, map below.
+     Pulled warm and neutral (away from the header's blue-grey) so the bar
+     reads as a separate carved fixture rather than more app chrome — the
+     bronze frame inside it then has something to belong to. */
+  /* Stone grain: two off-angle hairline hatches over the base gradient. Cheap
+     (no data-URI raster, no extra layer to composite) and enough to break up
+     a 1500px flat field the way a cut surface would. */
+  background:
+    repeating-linear-gradient(114deg,
+      rgba(214, 190, 140, 0.014) 0 2px, rgba(0, 0, 0, 0.022) 2px 4px),
+    repeating-linear-gradient(23deg,
+      rgba(214, 190, 140, 0.010) 0 3px, rgba(0, 0, 0, 0.016) 3px 6px),
+    linear-gradient(to bottom, #1a1815 0%, #131210 62%, #0e0d0b 100%);
+  border-top: 1px solid #0a0908;
+  border-bottom: 1px solid #2a2419;
+  box-shadow:
+    inset 0 1px 0 rgba(157, 132, 82, 0.16),   /* bronze rim light along the top */
+    0 3px 7px -4px rgba(0, 0, 0, 0.9);        /* the bar casts onto the map */
+}
+/* The shake target. Shaking .dom-bar itself would translate the chassis
+   background and open a visible gap against the header and the map. */
+.dom-bar-inner {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 6px 14px 7px;
-  /* Continue the match-header surface downward so header + bar read as one
-     broadcast unit; its own hairline then seals it off from the map. */
-  background: linear-gradient(to bottom, #15222a, #101a22);
-  border-bottom: 1px solid #2a3a45;
-  flex-shrink: 0;
+  height: 100%;
 }
-.dom-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-dim, rgba(255, 255, 255, 0.45));
-  cursor: default;
-}
-.dom-score {
-  font: 800 1rem var(--mono, Consolas, monospace);
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  min-width: 2.6ch;
-  text-align: center;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-}
-/* Identity end caps — the ONLY place player colors appear on the bar. */
+
+/* ── Identity caps — the ONLY place player color appears ─────────────── */
 .dom-cap {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill, 999px);
-  background: rgba(0, 0, 0, 0.30);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 9px;
   flex-shrink: 0;
   cursor: default;
-}
-.dom-cap-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.6);
-  flex-shrink: 0;
-}
-.dom-cap-name {
-  font-size: 0.8rem;
-  font-weight: 700;
-  line-height: 1;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
-  white-space: nowrap;
 }
 .dom-cap-right { flex-direction: row-reverse; }
+.dom-cap-right .dom-cap-text { text-align: right; }
 
-/* FX stage: shock rings + glyphs render here so the pill's overflow:hidden
-   can't clip them. */
+/* Forged bezel. 44px outer - 2px pad - 2px border each side = 36px of
+   visible icon, exactly the house floor. */
+.dom-ident {
+  box-sizing: border-box;
+  width: var(--dom-ident-size, 44px);
+  height: var(--dom-ident-size, 44px);
+  padding: 2px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #6d5a35 0%, #453820 45%, #241d12 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(230, 205, 150, 0.30),
+    0 0 0 1px #0a0806,
+    0 1px 3px rgba(0, 0, 0, 0.75);
+}
+.dom-ident-img {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: block;
+  border-radius: 3px;
+  object-fit: cover;
+  /* Full perimeter — single-edge accent stripes are forbidden (§10). */
+  border: 2px solid;
+}
+.dom-ident-blank {
+  border: 2px solid;
+  background: #0f1920;
+}
+.dom-cap-name {
+  display: block;
+  font: 800 0.95rem var(--font);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  white-space: nowrap;         /* wraps or is dropped — never ellipsis (§10) */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+.dom-cap-sub {
+  display: block;
+  margin-top: 4px;
+  font: 700 var(--fs-min, 0.8rem) var(--font);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  color: var(--text-dim, #6b7290);
+  white-space: nowrap;
+}
+
+/* ── Score readouts ──────────────────────────────────────────────────── */
+.dom-score {
+  font: 900 var(--dom-score-size, 1.5rem) var(--mono, Consolas, monospace);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  min-width: 3.1ch;
+  padding: 0 12px;
+  text-align: center;
+  flex-shrink: 0;
+  transform-origin: center center;
+  /* Hard black shadow only — the way in-game numerals are set. No bloom. */
+  text-shadow: 1px 1px 0 #000, -1px 0 0 rgba(0, 0, 0, 0.8), 0 2px 3px rgba(0, 0, 0, 0.9);
+}
+
+/* FX stage: rings, glyphs and the KO plate render here so the well's
+   overflow can't clip them. */
 .dom-track-wrap {
   position: relative;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
 }
+
+/* Engraved wordmark stamped into the top rail. Light BELOW the glyphs is
+   what makes it read as cut into the metal rather than raised off it. */
+.dom-label {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  /* Serif, deliberately: Warcraft's UI sets its plate lettering in a serif
+     face, and a wide-tracked serif reads as stamped-in-metal where the app's
+     sans reads as a web label. No webfont — this is the system serif stack. */
+  font: 700 var(--fs-min, 0.8rem) Georgia, 'Times New Roman', serif;
+  line-height: 13px;
+  letter-spacing: 0.34em;
+  text-indent: 0.34em;      /* re-center against the trailing letter-space */
+  white-space: nowrap;
+  text-transform: uppercase;
+  color: #6d5f42;
+  text-shadow: 0 1px 0 rgba(200, 175, 120, 0.10);   /* light BELOW = engraved */
+  cursor: default;
+}
+
+/* Cast-bronze frame — chamfered ends, warm and tarnished, lit from above.
+   Warcraft's UI is carved stone and old metal, not brushed steel: the
+   gradient runs bronze -> dark umber, never blue, and there is no bloom
+   anywhere on it. The 1px top line is a struck highlight, not a glow. */
+.dom-frame {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 13px;
+  height: var(--dom-channel-h, 24px);
+  clip-path: polygon(
+    0 50%, var(--dom-chamfer, 9px) 0,
+    calc(100% - var(--dom-chamfer, 9px)) 0, 100% 50%,
+    calc(100% - var(--dom-chamfer, 9px)) 100%, var(--dom-chamfer, 9px) 100%);
+  background:
+    repeating-linear-gradient(180deg,
+      rgba(255, 235, 190, 0.028) 0 1px, rgba(0, 0, 0, 0.045) 1px 2px),
+    linear-gradient(to bottom,
+      #7a6640 0, #7a6640 1px,          /* struck highlight — kept dim, the fill must stay brightest */
+      #56472b 1px, #42361f 26%, #2e2617 56%, #1d1810 84%, #100d09 100%);
+}
+/* Mounting studs at each end of the rail. Placed inside the chamfer so the
+   frame's clip-path (which cuts pseudo-elements too) can't shave them. */
+.dom-frame::before,
+.dom-frame::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -2.5px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 40% 32%, #b39a63 0%, #7a6640 42%, #3a2f1c 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.75), 0 1px 0 rgba(196, 170, 110, 0.22);
+}
+.dom-frame::before { left: calc(var(--dom-chamfer, 9px) + 4px); }
+.dom-frame::after  { right: calc(var(--dom-chamfer, 9px) + 4px); }
+
+/* Inset well. Deliberately much shorter than the frame (5px of lip above and
+   below) — at only 2px the housing vanished behind the fill and the whole
+   thing read as a flat painted slab instead of metal with a channel cut in
+   it. Inset shadows survive clip-path; outer ones do not. */
 .dom-track {
-  position: relative;
-  width: 100%;
-  height: 12px;
-  border-radius: var(--radius-pill, 999px);
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: calc(13px + (var(--dom-channel-h, 24px) - var(--dom-well-h, 14px)) / 2);
+  height: var(--dom-well-h, 14px);
   overflow: hidden;
   display: flex;
-  /* Inset channel the two bracket-colored segments fill. */
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55);
+  clip-path: polygon(
+    0 50%, calc(var(--dom-chamfer, 9px) - 4px) 0,
+    calc(100% - var(--dom-chamfer, 9px) + 4px) 0, 100% 50%,
+    calc(100% - var(--dom-chamfer, 9px) + 4px) 100%, calc(var(--dom-chamfer, 9px) - 4px) 100%);
+  background: #0b0805;                        /* near-black, warm — a cut into the bronze */
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.95),
+    inset 0 -1px 0 rgba(157, 132, 82, 0.30);  /* bronze lip catching light from below */
 }
-/* Glass sheen laid over both segments — the segments' inline background is
-   the raw bracket token (set in JS); this refines it without touching JS. */
+/* Glass over the whole channel. Kept light — .dom-seg carries most of the
+   material shading now, and stacking two strong gradients just muddies the
+   fill. This is the top gloss line and the shadow the lip casts inward. */
 .dom-track::after {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: inherit;
   pointer-events: none;
   z-index: 3;
   background: linear-gradient(to bottom,
-    rgba(255, 255, 255, 0.26) 0%,
-    rgba(255, 255, 255, 0.07) 40%,
-    rgba(0, 0, 0, 0.10) 60%,
-    rgba(0, 0, 0, 0.30) 100%);
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.02) 26%,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(0, 0, 0, 0.22) 100%);
 }
 .dom-seg {
-  height: 100%;
-  /* Width glides with the score; background cross-fades on bracket flips. */
-  transition: width 180ms linear, background-color 300ms ease;
-}
-/* The front line — crisp seam + soft glow where the two players meet.
-   Neutral white (not a player color): it marks the contested edge itself. */
-.dom-seg-left {
   position: relative;
   z-index: 1;
-  box-shadow:
-    1px 0 0 rgba(255, 255, 255, 0.85),
-    4px 0 9px rgba(255, 255, 255, 0.28);
+  height: 100%;
+  /* JS sets background-COLOR (the bracket token); the material shading lives
+     here. A flat saturated slab this wide reads as paint no matter how good
+     the hue is — the top light and the deep bottom shade are what make it
+     look like something poured into the channel. */
+  background-image: linear-gradient(to bottom,
+    rgba(255, 240, 210, 0.26) 0%,
+    rgba(255, 240, 210, 0.05) 30%,
+    rgba(0, 0, 0, 0.14) 62%,
+    rgba(0, 0, 0, 0.42) 100%);
+  /* Width glides with the score; fill cross-fades on bracket flips. */
+  transition: width 90ms linear, background-color 300ms ease;
 }
 /* Etched 50 marker — the fixed "even" reference the seam fights across. */
 .dom-mid {
@@ -17686,15 +17825,70 @@ button.mcb-summary {
   bottom: 0;
   width: 2px;
   margin-left: -1px;
-  background: rgba(6, 10, 16, 0.85);
   z-index: 2;
+  background: rgba(4, 8, 12, 0.90);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, 0.10), -1px 0 0 rgba(0, 0, 0, 0.55);
 }
-/* --- Impact FX (one-shot classes fired by DominanceBar._fxTick) --------- */
 
-/* Damage ghost: afterimage of the harmed side's pre-hit width. The live
-   segment has already snapped to the new width beneath it, so the visible
-   sliver IS the chunk that was knocked off. Sits under the sheen (z3),
-   over the segments (z1). */
+/* The contested edge. Its own element (was a box-shadow on the left segment)
+   so FX transforms can't distort the fill. Bone, not a player color: it
+   marks the front line itself. Hard-edged — a struck bone rivet flanked by
+   black, the way in-game art separates two fields. No bloom. */
+.dom-seam {
+  position: absolute;
+  top: 13px;
+  height: var(--dom-channel-h, 24px);
+  left: 50%;
+  width: 3px;
+  margin-left: -1.5px;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(to bottom, #e8dcc0, #b9a883 55%, #7c6f52);
+  box-shadow:
+    1px 0 0 rgba(0, 0, 0, 0.85),
+    -1px 0 0 rgba(0, 0, 0, 0.85);
+}
+
+/* Engraved bracket teeth: dark groove + a lit lip on one side. */
+.dom-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38px;
+  height: 6px;
+  pointer-events: none;
+}
+.dom-tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 4px;
+  margin-left: -1px;
+  background: rgba(0, 0, 0, 0.85);
+  box-shadow: 1px 0 0 rgba(157, 132, 82, 0.28);
+}
+/* The "even" mark gets a bronze lozenge instead of a longer groove — a
+   struck maker's mark under the middle of the rail. */
+.dom-tick-mid {
+  width: 7px;
+  height: 7px;
+  top: -1px;
+  margin-left: -3.5px;
+  background: linear-gradient(to bottom, #9d8452, #4a3c22);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.85);
+  transform: rotate(45deg);
+}
+/* --- Impact FX (one-shot classes fired by DominanceBar._fire) -----------
+   --fx-i (0.35..1) is set on .dom-bar before the class lands and scales
+   every amplitude, so magnitude escalates WITHIN a tier. will-change lives
+   inside the one-shot classes, never permanently: a standing compositor
+   layer over the whole bar makes the subpixel text blurry. */
+
+/* Chunk shear: the ghost holds the harmed side's pre-hit width while the
+   live segment snaps to the new one beneath it, so the visible sliver IS
+   the chunk that was knocked off. The dead hold at 0-14% is the hit-stop
+   rendered as motion — it's what makes this read as a hit and not a slide.
+   Sits under the sheen (z3), over the segments (z1). */
 .dom-ghost {
   position: absolute;
   top: 0;
@@ -17703,86 +17897,238 @@ button.mcb-summary {
   opacity: 0;
   pointer-events: none;
   z-index: 2;
-  filter: brightness(1.9) saturate(1.3);
+  filter: brightness(2.0) saturate(1.25);
 }
-.dom-ghost-left  { left: 0; }
-.dom-ghost-right { right: 0; }
-.dom-ghost-hit { animation: dom-ghost-fade 600ms ease-out; }
-@keyframes dom-ghost-fade {
-  0%   { opacity: 0.9; }
-  35%  { opacity: 0.65; }
-  100% { opacity: 0; }
+.dom-ghost-left  { left: 0;  transform-origin: right center; }
+.dom-ghost-right { right: 0; transform-origin: left center; }
+.dom-ghost-left.dom-ghost-shear {
+  animation: dom-shear-l var(--fx-shear, 520ms) cubic-bezier(0.15, 0.85, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+.dom-ghost-right.dom-ghost-shear {
+  animation: dom-shear-r var(--fx-shear, 520ms) cubic-bezier(0.15, 0.85, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+.dom-ghost-shear.dom-ghost-ko { --fx-shear: 720ms; }
+@keyframes dom-shear-l {
+  0%   { opacity: 0.95; transform: translate3d(0, 0, 0) skewX(0deg); }
+  14%  { opacity: 1;    transform: translate3d(0, 0, 0) skewX(0deg); }
+  100% { opacity: 0;
+         transform: translate3d(calc(-16px * var(--fx-i, 1)), calc(3px * var(--fx-i, 1)), 0)
+                    skewX(calc(-10deg * var(--fx-i, 1))); }
+}
+@keyframes dom-shear-r {
+  0%   { opacity: 0.95; transform: translate3d(0, 0, 0) skewX(0deg); }
+  14%  { opacity: 1;    transform: translate3d(0, 0, 0) skewX(0deg); }
+  100% { opacity: 0;
+         transform: translate3d(calc(16px * var(--fx-i, 1)), calc(3px * var(--fx-i, 1)), 0)
+                    skewX(calc(10deg * var(--fx-i, 1))); }
 }
 
-/* Seam shockwave — expanding impact ring at the contested edge. */
+/* Shockwave — anisotropic so the ring stays inside the channel band and
+   shocks ALONG the gauge axis instead of ballooning out of it. */
 .dom-shockwave {
   position: absolute;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
+  top: 13px;
+  margin-top: calc(var(--dom-channel-h, 24px) / 2);
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 5;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  animation: dom-shockwave 450ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  border: 2px solid #d8c9a4;   /* bone ring, flat — no halo */
   opacity: 0;
+  will-change: transform, opacity;
+  animation: dom-shock 420ms cubic-bezier(0.15, 0.75, 0.25, 1) both;
 }
-.dom-shockwave-hero { border-color: rgba(255, 212, 59, 0.95); }
-@keyframes dom-shockwave {
-  0%   { transform: scale(0.4); opacity: 1;   box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-  60%  { transform: scale(2.2); opacity: 0.8; box-shadow: 0 0 14px 5px rgba(255, 255, 255, 0.25); }
-  100% { transform: scale(3.2); opacity: 0;   box-shadow: 0 0 18px 8px rgba(255, 255, 255, 0); }
+/* Second, staggered inner ring — a MAJOR hit rings twice. */
+.dom-shockwave-major::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(216, 201, 164, 0.55);
+  animation: dom-shock 420ms cubic-bezier(0.15, 0.75, 0.25, 1) 70ms both;
+}
+.dom-shockwave-ko {
+  border-color: #b8402f;       /* dried blood */
+  animation-duration: 640ms;
+}
+@keyframes dom-shock {
+  0%   { transform: scale(0.35); opacity: 1; }
+  55%  { transform: scaleX(calc(3.6 * var(--fx-i, 1))) scaleY(calc(2.0 * var(--fx-i, 1))); opacity: 0.72; }
+  100% { transform: scaleX(calc(6.0 * var(--fx-i, 1))) scaleY(calc(2.7 * var(--fx-i, 1))); opacity: 0; }
 }
 
-/* Bar-local shake — transform only, never moves document flow. */
-.dom-shake { animation: dom-shake 250ms linear; }
-@keyframes dom-shake {
-  0%, 100% { transform: translate(0, 0); }
-  20% { transform: translate(-2px, 1px); }
-  40% { transform: translate(2px, -1px); }
-  60% { transform: translate(-2px, -1px); }
-  80% { transform: translate(2px, 1px); }
+/* Shake — on .dom-bar-inner, so the chassis stays welded to the header and
+   the map. Transform only, never moves document flow. */
+.dom-shake-major {
+  animation: dom-shake-m 240ms linear;
+  will-change: transform;
+}
+@keyframes dom-shake-m {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  15% { transform: translate3d(calc(-3.5px * var(--fx-i, 1)),  1px, 0); }
+  32% { transform: translate3d(calc( 3.5px * var(--fx-i, 1)), -1px, 0); }
+  52% { transform: translate3d(calc(-2px   * var(--fx-i, 1)), -1px, 0); }
+  74% { transform: translate3d(calc( 2px   * var(--fx-i, 1)),  1px, 0); }
+}
+.dom-shake-ko {
+  animation: dom-shake-k 560ms cubic-bezier(0.25, 0.9, 0.3, 1);
+  will-change: transform;
+}
+@keyframes dom-shake-k {
+  0%   { transform: translate3d(0, 0, 0); }
+  6%   { transform: translate3d(0, 0, 0) scale(1.010); }
+  14%  { transform: translate3d(-6px,  2px, 0) scale(1.008); }
+  26%  { transform: translate3d( 5px, -2px, 0) scale(1.006); }
+  38%  { transform: translate3d(-4px, -1px, 0) scale(1.004); }
+  52%  { transform: translate3d( 3px,  1px, 0) scale(1.002); }
+  68%  { transform: translate3d(-2px, 0, 0); }
+  84%  { transform: translate3d( 1px, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
 }
 
-/* Score punch — the gaining number lands the hit. */
-.dom-score-punch { animation: dom-score-punch 300ms cubic-bezier(0.2, 0.9, 0.3, 1.2); }
-@keyframes dom-score-punch {
-  0%   { transform: scale(1); }
-  40%  { transform: scale(1.35); }
+/* Score slam on the gainer, sag on the loser. Transform + opacity only —
+   never letter-spacing, which would be a layout animation. */
+.dom-score-slam { animation: dom-slam 320ms cubic-bezier(0.2, 0.9, 0.25, 1.1); }
+@keyframes dom-slam {
+  0%   { transform: scale(calc(1 + 0.9 * var(--fx-i, 1))); opacity: 0.35; }
+  22%  { transform: scale(0.94); opacity: 1; }
+  42%  { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+.dom-score-slam-ko { animation: dom-slam-ko 520ms cubic-bezier(0.18, 0.9, 0.25, 1.05); }
+@keyframes dom-slam-ko {
+  0%   { transform: scale(2.4) translateY(-3px); opacity: 0; }
+  10%  { transform: scale(2.4) translateY(-3px); opacity: 1; }  /* hangs through the freeze */
+  38%  { transform: scale(0.90) translateY(0);   opacity: 1; }
+  56%  { transform: scale(1.14); }
+  100% { transform: scale(1); }
+}
+.dom-score-drop { animation: dom-drop 420ms cubic-bezier(0.3, 0, 0.4, 1); }
+@keyframes dom-drop {
+  0%   { transform: translateY(0) scale(1); }
+  30%  { transform: translateY(3px) scale(0.90); }
+  100% { transform: translateY(0) scale(1); }
+}
 
-/* Event glyph — pops at the seam, rises and fades. Decorative FX mark
-   (loss = red tint, gain = white). */
+/* Event glyph — pops at the seam, rises and fades. Decorative mark
+   (loss = red, gain = white); 36px is the icon floor. */
 .dom-glyph {
   position: absolute;
-  top: -6px;
-  width: 26px;
-  height: 26px;
-  margin-left: -13px;
+  top: 4px;
+  width: var(--dom-glyph-size, 36px);
+  height: var(--dom-glyph-size, 36px);
+  margin-left: calc(var(--dom-glyph-size, 36px) / -2);
   pointer-events: none;
   z-index: 6;
-  color: rgba(255, 255, 255, 0.95);
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
-  animation: dom-glyph-pop 900ms cubic-bezier(0.2, 0.9, 0.3, 1);
   opacity: 0;
+  color: rgba(255, 255, 255, 0.96);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+  will-change: transform, opacity;
+  animation: dom-glyph-pop 820ms cubic-bezier(0.18, 0.9, 0.28, 1) both;
 }
 .dom-glyph svg { width: 100%; height: 100%; display: block; }
-.dom-glyph-loss { color: #ff6a5e; }
+.dom-glyph-loss { color: #b8402f; }   /* dried blood, not signal red */
+.dom-glyph-ko   { color: #b8402f; animation-duration: 1150ms; }
 @keyframes dom-glyph-pop {
-  0%   { transform: translateY(4px) scale(0.4);  opacity: 0; }
-  18%  { transform: translateY(-8px) scale(1.25); opacity: 1; }
-  45%  { transform: translateY(-14px) scale(1);   opacity: 1; }
-  100% { transform: translateY(-26px) scale(0.9); opacity: 0; }
+  0%   { transform: translate3d(0,   6px, 0) scale(0.35) rotate(-8deg); opacity: 0; }
+  14%  { transform: translate3d(0,  -6px, 0) scale(1.30) rotate( 2deg); opacity: 1; }
+  26%  { transform: translate3d(0,  -8px, 0) scale(1.02) rotate( 0deg); opacity: 1; }
+  60%  { transform: translate3d(0, -16px, 0) scale(1.00); opacity: 1; }
+  100% { transform: translate3d(0, -32px, 0) scale(0.92); opacity: 0; }
 }
 
-/* Minor-event seam flare — brief brightening of the contested edge. */
+/* Minor-event seam flare — the contested edge catches the light briefly.
+   Kept low: at high brightness the bone seam blows out to white and reads
+   as a glow, which this art direction does not do. */
 .dom-seam-flare { animation: dom-seam-flare 400ms ease-out; }
 @keyframes dom-seam-flare {
-  0%   { box-shadow: 1px 0 0 rgba(255, 255, 255, 0.85), 4px 0 9px rgba(255, 255, 255, 0.28); }
-  35%  { box-shadow: 1px 0 0 rgba(255, 255, 255, 1),    6px 0 16px rgba(255, 255, 255, 0.65); }
-  100% { box-shadow: 1px 0 0 rgba(255, 255, 255, 0.85), 4px 0 9px rgba(255, 255, 255, 0.28); }
+  0%, 100% { filter: brightness(1); }
+  35%      { filter: brightness(1.45); }
+}
+
+/* --- KO treatment: hero deaths ONLY -------------------------------------
+   Colour is --bad, not gold: gold is reserved for achievement / best-fit /
+   premium (§2.5, §10), and red on a death is more legible anyway. */
+.dom-ko-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: #8f2a1e;
+  opacity: 0;
+  animation: dom-ko-flash 180ms ease-out both;
+}
+@keyframes dom-ko-flash {
+  0%   { opacity: 0; }
+  30%  { opacity: 0.42; }
+  100% { opacity: 0; }
+}
+
+/* Lance — a blade thrown out along the channel from the impact. Solid bone,
+   no halo: it should read as a struck edge, not a light source. */
+.dom-lance {
+  position: absolute;
+  top: 13px;
+  height: var(--dom-channel-h, 24px);
+  width: 3px;
+  margin-left: -1.5px;
+  z-index: 5;
+  pointer-events: none;
+  background: #efe6cf;
+  transform-origin: center center;
+  animation: dom-lance 260ms cubic-bezier(0.1, 0.8, 0.2, 1) both;
+}
+@keyframes dom-lance {
+  0%   { transform: scaleX(1);  opacity: 1; }
+  100% { transform: scaleX(90); opacity: 0; }
+}
+
+/* The reserved moment. Slams in oversized and hangs through the hit-stop. */
+.dom-ko-plate {
+  position: absolute;
+  top: -20px;
+  /* Its own property, not transform — the keyframes own transform, and the
+     two compose. A fixed margin-left can't center text of varying width. */
+  translate: -50% 0;
+  z-index: 7;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 4px 11px;
+  font: 900 0.85rem var(--font);
+  letter-spacing: 0.13em;
+  color: #f0e4c8;
+  text-shadow: 1px 1px 0 #000;
+  /* A bronze-bound stone plaque, not a neon sign. */
+  background: linear-gradient(to bottom, #4a3a22, #2a2013 60%, #17110a);
+  border: 1px solid #9d8452;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 1px 0 rgba(230, 205, 150, 0.35),
+    0 3px 10px rgba(0, 0, 0, 0.9);
+  transform-origin: center center;
+  animation: dom-ko-plate 1150ms cubic-bezier(0.15, 0.9, 0.25, 1) both;
+}
+@keyframes dom-ko-plate {
+  0%   { transform: scale(2.6) translateY(-6px); opacity: 0; }
+  9%   { transform: scale(2.6) translateY(-6px); opacity: 1; }
+  26%  { transform: scale(0.94); opacity: 1; }
+  36%  { transform: scale(1.05); }
+  44%  { transform: scale(1); }
+  76%  { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1) translateY(-10px); opacity: 0; }
+}
+
+/* Belt-and-braces alongside the global kill-switch and the JS gate: the
+   spawned FX nodes must not linger as static artifacts when the global rule
+   collapses their durations to ~0. */
+@media (prefers-reduced-motion: reduce) {
+  .dom-shockwave, .dom-glyph, .dom-ko-flash, .dom-ko-plate, .dom-lance { display: none !important; }
+  .dom-ghost { opacity: 0 !important; }
+  .dom-seg { transition: none !important; }
 }
 
 /* No playback in BO-only layouts — the bar has no meaning there. */

@@ -28,6 +28,12 @@ Stacked back → front by CSS z-index inside `#canvas-group`:
 a deliberate **player action moment** (TP, ult cast, ping, level-up at a
 glance) belongs here, not below the nameplates.
 
+## `#gameplay-area` column siblings (above `#map-container`)
+
+| z-index | Element         | Purpose                                                                 |
+| ------- | --------------- | ----------------------------------------------------------------------- |
+| 3       | `.dom-bar`      | Dominance gauge, between `#match-header` and `#gameplay-row`. Needs an explicit z-index so its downward drop-shadow paints over `#main-wrapper` (`position:absolute; z-index:1`) rather than being covered by it. Its KO plate/glyphs escape the bar's box upward at local z 5-7. |
+
 ## DOM siblings over the canvases (inside `#map-container`)
 
 | z-index | Element                  | Purpose                                                          |
