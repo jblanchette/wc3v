@@ -80,6 +80,11 @@
 
   const FAST_DT_MS = 60;   // smoothed game-ms/frame above this ≈ 3.6x+ playback
 
+  // Displayed-point gap at or below which the two sides are treated as level
+  // and share one color (see DominanceBar.evenAdjust).
+  const EVEN_BAND = 2;
+  const EVEN_SCORE = 50;
+
   // Minimal inline SVG glyphs (decorative, currentColor).
   const GLYPHS = {
     heroDeath:  '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a8 8 0 0 0-8 8c0 3 1.6 5.4 4 6.8V20a1 1 0 0 0 1 1h1v-2h2v2h2v-2h2v2h1a1 1 0 0 0 1-1v-3.2c2.4-1.4 4-3.8 4-6.8a8 8 0 0 0-8-8zM8.5 12A1.75 1.75 0 1 1 8.5 8.5 1.75 1.75 0 0 1 8.5 12zm7 0a1.75 1.75 0 1 1 0-3.5 1.75 1.75 0 0 1 0 3.5z"/></svg>',
@@ -137,6 +142,20 @@
         if (s >= b.min) return b;
       }
       return BRACKETS[BRACKETS.length - 1];
+    }
+
+    // The score is a zero-sum SHARE (the two sides sum to 100) and a bracket
+    // boundary sits exactly at 50 — so the moment the game is anything but
+    // perfectly level, one side lands above 50 and the other below, and a
+    // dead-even match reads as two completely different colors. 49 vs 51 is
+    // a rounding error, not a lead.
+    //
+    // Inside EVEN_BAND both sides are treated as level, so the gauge starts
+    // (and stays) one color until somebody is genuinely ahead. Pass the two
+    // DISPLAYED (rounded) values — deriving the bracket from the raw float
+    // instead let 50.4/49.6 print "50 / 50" in blue and green.
+    static evenAdjust (mine, theirs) {
+      return Math.abs(mine - theirs) <= EVEN_BAND ? EVEN_SCORE : mine;
     }
 
     // Call after matchHeader.render(). No-ops (and stays hidden) unless the
@@ -400,12 +419,21 @@
       return a.score + (b.score - a.score) * f;
     }
 
+    // `score` is the raw interpolated value; `bracket` matches what the bar
+    // actually paints (rounded + even-band), so a caller can't derive a
+    // different color from the same instant than the gauge is showing.
     getScoresAt (gameTime) {
+      const raw = this._players.map(p => this._scoreAt(p.samples, gameTime));
+      const shown = raw.map(Math.round);
       const out = {};
-      for (const p of this._players) {
-        const score = this._scoreAt(p.samples, gameTime);
-        out[p.id] = { score, bracket: DominanceBar.bracketFor(score) };
-      }
+      this._players.forEach((p, i) => {
+        const other = shown[1 - i];
+        out[p.id] = {
+          score: raw[i],
+          bracket: DominanceBar.bracketFor(
+            other == null ? shown[i] : DominanceBar.evenAdjust(shown[i], other))
+        };
+      });
       return out;
     }
 
@@ -440,8 +468,10 @@
       this._lastScores[0] = v0;
       this._lastScores[1] = v1;
 
-      const b0 = DominanceBar.bracketFor(v0);
-      const b1 = DominanceBar.bracketFor(v1);
+      const d0 = Math.round(v0);
+      const d1 = Math.round(v1);
+      const b0 = DominanceBar.bracketFor(DominanceBar.evenAdjust(d0, d1));
+      const b1 = DominanceBar.bracketFor(DominanceBar.evenAdjust(d1, d0));
 
       // Geometry: smooth, so it must survive a hit-stop glide.
       const total = Math.max(1e-6, v0 + v1);
@@ -462,8 +492,6 @@
       }
 
       // Text: ~1 Hz, so it dedupes separately and skips the badge mirror too.
-      const d0 = Math.round(v0);
-      const d1 = Math.round(v1);
       const key = d0 + '|' + d1 + '|' + b0.name + '|' + b1.name;
       if (key === this._lastKey) return;
       this._lastKey = key;
