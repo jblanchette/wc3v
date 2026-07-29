@@ -969,6 +969,32 @@
     }
 
     /**
+     * Is this unit actually on the map at `gameTime`?
+     *
+     * THE trap in this file. ClientUnit seeds currentX/currentY from its
+     * spawnPosition at CONSTRUCTION (ClientUnit.js:352), so every unit of the
+     * whole match already reports a position at gameTime 0 — heroes included.
+     * Tavern heroes are the worst case: both players' tavern picks share the
+     * SAME neutral building near the map centre, so an ungated position read
+     * saw a permanent cross-player hero brawl in the middle of the map from
+     * second zero. That framed a phantom fight, and _hasEngagedCluster (via
+     * _evaluateAutoSplit) refused to ever open the opening split.
+     *
+     * `readyTime` is the same existence gate ClientUnit.update() and the render
+     * path use (ClientUnit.js:142, :635), so the camera frames what is drawn.
+     * Falls back to the viewer clock so callers that don't thread gameTime
+     * through (the cluster path) still gate correctly.
+     */
+    _isLive (u, gameTime) {
+      if (!u || u.currentX == null || isNaN(u.currentX)) return false;
+      const gt = (gameTime != null) ? gameTime : this.viewer.gameTime;
+      if (gt == null) return true;
+      if (u.readyTime != null && gt < u.readyTime) return false;
+      if (u.destroyedAt != null && gt >= u.destroyedAt) return false;
+      return true;
+    }
+
+    /**
      * Each non-neutral player's MAIN FIGHTING FORCE for this frame: cluster the
      * player's mobile combat + hero units by proximity, score each cluster
      * (heroes weighted heavily, plus combat count) and return the best one. This
@@ -999,9 +1025,7 @@
       const pts = [];
       const seen = new Set();
       const consider = (u, forceHero) => {
-        if (!u || u.currentX == null || isNaN(u.currentX) || u.isBuilding) return;
-        if (u.destroyedAt != null && gameTime != null && gameTime >= u.destroyedAt) return;
-        if (u.readyTime != null && gameTime != null && gameTime < u.readyTime) return;
+        if (!this._isLive(u, gameTime) || u.isBuilding) return;
         const hero = forceHero || !!(u.meta && u.meta.hero);
         // Skip economy units — `meta.worker` (acolyte/peon/peasant/wisp) AND any
         // unit assigned a gold/lumber harvest role. The latter is the LUMBER
@@ -1111,9 +1135,7 @@
 
       const R2 = INTRUSION_RADIUS * INTRUSION_RADIUS;
       const HW2 = INTRUSION_HARASS_WORKER_RADIUS * INTRUSION_HARASS_WORKER_RADIUS;
-      const alive = (u) => u && u.currentX != null && !isNaN(u.currentX) && !u.isBuilding &&
-        !(u.destroyedAt != null && gameTime != null && gameTime >= u.destroyedAt) &&
-        !(u.readyTime != null && gameTime != null && gameTime < u.readyTime);
+      const alive = (u) => this._isLive(u, gameTime) && !u.isBuilding;
 
       let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
       let count = 0, hasHero = false, hasNonSummon = false, harass = false;
@@ -1220,9 +1242,7 @@
       if (fx == null || isNaN(fx)) return 0;
       const r2 = ACTIVITY_RADIUS * ACTIVITY_RADIUS;
       const gt = this.viewer.gameTime;
-      const alive = (u) => u && u.currentX != null && !isNaN(u.currentX) && !u.isBuilding &&
-        !(u.destroyedAt != null && gt != null && gt >= u.destroyedAt) &&
-        !(u.readyTime != null && gt != null && gt < u.readyTime);
+      const alive = (u) => this._isLive(u, gt) && !u.isBuilding;
       let count = 0;
       const seen = new Set();
       for (const p of players) {
@@ -1396,13 +1416,13 @@
       for (const player of players) {
         if (!player || player.isNeutralPlayer) continue;
         for (const hero of (player.heroes || [])) {
-          if (hero.currentX == null || isNaN(hero.currentX)) continue;
+          if (!this._isLive(hero)) continue;
           minX = Math.min(minX, hero.currentX); maxX = Math.max(maxX, hero.currentX);
           minY = Math.min(minY, hero.currentY); maxY = Math.max(maxY, hero.currentY);
           any = true;
         }
         for (const unit of (player.units || [])) {
-          if (unit.currentX == null || unit.isBuilding) continue;
+          if (!this._isLive(unit) || unit.isBuilding) continue;
           minX = Math.min(minX, unit.currentX); maxX = Math.max(maxX, unit.currentX);
           minY = Math.min(minY, unit.currentY); maxY = Math.max(maxY, unit.currentY);
           any = true;
@@ -1469,7 +1489,7 @@
       }
 
       const clusters = this._clusterHeroes(players);
-      if (clusters.length === 0) return null;
+      if (clusters.length === 0) return this._openingFocus(players);
 
       // If any cluster has cross-player engagement, focus on that cluster.
       // Otherwise, frame ALL heroes together (wide overview).
@@ -1499,6 +1519,36 @@
     }
 
     /**
+     * Opening shot — no hero is on the map yet (the first one is a minute or
+     * two away) so there is no cluster to frame.
+     *
+     * AUTO normally covers the opening with its split sub-state, but the split
+     * can be switched off, unavailable, or mid-exit. Returning null there left
+     * update() with nothing to drive, so the camera just sat on whatever the
+     * initial whole-map fit happened to be — the empty middle of the map. Frame
+     * the players' anchors instead (their bases in the opening); that's the same
+     * content each split half shows, merged into one viewport.
+     */
+    _openingFocus (players) {
+      const anchors = this._computeAnchors(players, this.viewer.gameTime);
+      if (!anchors.length) return null;
+
+      // Reuse the cluster framing (padding, unit union, zoom floor + fit) by
+      // handing it the anchors as a pseudo-cluster — an anchor entry only needs
+      // x/y, and playerIds picks MIN_ZOOM_OVERVIEW when both players are in it.
+      const pseudo = {
+        heroes: anchors.map(a => ({ x: a.x, y: a.y })),
+        playerIds: new Set(anchors.map(a => a.playerId)),
+        key: 'opening'
+      };
+      pseudo.centroid = {
+        x: anchors.reduce((s, a) => s + a.x, 0) / anchors.length,
+        y: anchors.reduce((s, a) => s + a.y, 0) / anchors.length
+      };
+      return this._computeClusterBounds(pseudo, players);
+    }
+
+    /**
      * Group heroes into clusters by proximity.
      * Two heroes within CLUSTER_MERGE_DISTANCE are merged into one cluster.
      */
@@ -1507,7 +1557,7 @@
       for (const player of players) {
         if (!player.heroes || player.isNeutralPlayer) continue;
         for (const hero of player.heroes) {
-          if (hero.currentX == null || isNaN(hero.currentX)) continue;
+          if (!this._isLive(hero)) continue;   // not bought/trained yet, or dead
           heroEntries.push({
             x: hero.currentX,
             y: hero.currentY,
@@ -1592,7 +1642,7 @@
       for (const player of players) {
         if (!player.units || player.isNeutralPlayer) continue;
         for (const unit of player.units) {
-          if (unit.currentX == null || unit.meta.hero || unit.isBuilding) continue;
+          if (!this._isLive(unit) || unit.meta.hero || unit.isBuilding) continue;
           const dx = unit.currentX - cx;
           const dy = unit.currentY - cy;
           if (Math.sqrt(dx * dx + dy * dy) < CLUSTER_UNIT_RANGE) {
@@ -1725,7 +1775,7 @@
         for (const player of players) {
           if (!player.units || player.isNeutralPlayer) continue;
           for (const unit of player.units) {
-            if (unit.currentX == null || unit.meta.hero || unit.isBuilding) continue;
+            if (!this._isLive(unit) || unit.meta.hero || unit.isBuilding) continue;
             const dx = unit.currentX - cx, dy = unit.currentY - cy;
             if (Math.sqrt(dx * dx + dy * dy) < CLUSTER_UNIT_RANGE) {
               minX = Math.min(minX, unit.currentX); maxX = Math.max(maxX, unit.currentX);
