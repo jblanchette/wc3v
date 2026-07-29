@@ -166,6 +166,7 @@
   --dom-well-h:     14px;  /* cut channel; the frame lip is the difference / 2 */
   --dom-ident-size: 44px;  /* identity tile; 36px of it is visible icon (the floor) */
   --dom-score-size: 1.5rem;
+  --dom-label-lift:  4px;  /* gap between the DOMINANCE wordmark and the rail */
 
   /* ── §4.2 Radius ───────────────────────────────────────────── */
   --radius-sm:   6px;

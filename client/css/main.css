@@ -17589,7 +17589,9 @@ button.mcb-summary {
 .dom-bar {
   box-sizing: border-box;
   height: var(--dom-bar-h, 58px);
-  padding: 5px 14px 6px;
+  /* 7 top / 4 bottom (was 5/6) — same 11px total, so bar height is unchanged;
+     the extra top padding is what the lifted .dom-label rises into. */
+  padding: 7px 14px 4px;
   position: relative;
   /* #main-wrapper is position:absolute z-index:2 and would otherwise paint
      over the shadow this casts down onto the map. */
@@ -17710,7 +17712,10 @@ button.mcb-summary {
 .dom-label {
   position: absolute;
   left: 50%;
-  top: 0;
+  /* Lifted clear of the rail: at top:0 its 13px line box ended exactly where
+     the frame begins, so the wordmark sat welded to the metal. The bar's
+     top padding is padded out to match, keeping total height unchanged. */
+  top: calc(-1 * var(--dom-label-lift, 4px));
   transform: translateX(-50%);
   /* Serif, deliberately: Warcraft's UI sets its plate lettering in a serif
      face, and a wide-tracked serif reads as stamped-in-metal where the app's
