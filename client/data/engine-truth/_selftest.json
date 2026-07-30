@@ -1,0 +1,57 @@
+{
+  "replayId": "happy-vs-grubby",
+  "meta": {
+    "_circular": true,
+    "_README": "HARNESS SELFTEST ONLY. These observations are derived FROM parser output, so they prove the resolution/comparator/sampling machinery works end-to-end — they prove NOTHING about fidelity, and fidelity-report skips _circular fixtures. Real fixtures must come from watching WC3 play the replay (docs/ENGINE_TRUTH_CAPTURE.md) and must never copy parser values.",
+    "capturedOn": "2026-07-30",
+    "author": "selftest"
+  },
+  "observations": [
+    {
+      "type": "unitPosition",
+      "t": "2:08",
+      "who": { "player": 1, "unitType": "Blademaster" },
+      "pos": { "x": -1160, "y": -3450 },
+      "tolerance": 320,
+      "note": "unique hero — must resolve unambiguously"
+    },
+    {
+      "type": "unitPosition",
+      "t": "1:00",
+      "who": { "player": 2, "unitType": "Acolyte" },
+      "pos": { "x": 2740, "y": 4720 },
+      "tolerance": 320,
+      "note": "gold-mine acolytes cluster — exercises the ambiguity report"
+    },
+    {
+      "type": "death",
+      "t": "4:30..5:20",
+      "who": { "player": 1, "unitType": "Grunt", "count": ">=1" },
+      "near": { "x": -820, "y": 2280, "r": 800 },
+      "note": "grunt lost in the 4:53 battle"
+    },
+    {
+      "type": "engagement",
+      "from": "4:40",
+      "to": "5:10",
+      "area": { "x": -820, "y": 2280, "r": 900 },
+      "attacking": [ { "player": 1, "count": ">=1" } ],
+      "note": "the ~4:53 battle where a grunt dies (battle-corroborated). NB: a solo creep-camp clear does NOT work here — clearing units show no attack state (the R1/R3 corroboration gap, found by this very harness)"
+    },
+    {
+      "type": "noCombat",
+      "from": "0:30",
+      "to": "1:30",
+      "who": { "player": 2 },
+      "area": { "x": 2176, "y": 4224, "r": 900 },
+      "note": "Happy's base pre-creeping — any attack frame here is phantom combat"
+    },
+    {
+      "type": "campClear",
+      "match": { "totalLevel": 10, "units": ["Forest Troll Trapper"] },
+      "clearedAt": "2:50..3:20",
+      "by": 2,
+      "note": "±10s reparse jitter absorbed by the 30s window"
+    }
+  ]
+}
