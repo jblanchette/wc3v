@@ -277,6 +277,17 @@
           if (ready != null && gameTime < ready) continue;
           if (unit._isLoadedAt && unit._isLoadedAt(gameTime)) continue;
 
+          // Retired: ClientUnit.update sets _destroyed once a unit's lost/stale
+          // fade has run all the way to zero, and the 2D path stops drawing it
+          // (ClientUnit.preRender bails on the same flag). 3D didn't check it,
+          // so it kept the instance "alive": the body faded to alpha 0 via
+          // decayLevel while the ring, shadow and nameplate stayed at FULL
+          // opacity, and the uuid still landed in rendered3D — suppressing the
+          // 2D icon as well. The result on screen was a bare selection circle
+          // with no unit inside it. Falling through to the sweep below hides
+          // the root, ring and shadow together.
+          if (unit._destroyed) continue;
+
           // Death lifecycle: render through the death clip + corpse fade, then drop.
           const deathStart = this._deathStart(unit);
 
@@ -600,6 +611,7 @@
       const w = inst.wrapper;
       w.position.set(wx - cx, groundY, -(wy - cy));
       if (inst.scale !== 1) w.scale.setScalar(inst.scale);
+      this._updateCullBounds(inst, w.position.x, groundY, w.position.z);
       if (inst.ring) {
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
@@ -636,23 +648,14 @@
         if (o.isSkinnedMesh) {
           o.material = o.material.clone();   // shares the texture map, own opacity
           o.bind(skeleton, new THREE.Matrix4());
-          // Frustum culling was off because a skinned mesh's bounding sphere is
-          // computed from the BIND POSE at the origin, so three culled units
-          // that were plainly on screen. Fixing the bound rather than disabling
-          // the test: compute it once on the shared template geometry and
-          // inflate it so any animated pose still falls inside. Measured on a
-          // mid-game frame this took draw calls from 373 to 104.
-          if (cullEnabled) {
-            const g = o.geometry;
-            if (g) {
-              if (!g.boundingSphere) g.computeBoundingSphere();
-              if (g.boundingSphere && !g.__wc3vInflated) {
-                g.boundingSphere.radius *= SKINNED_BOUNDS_INFLATE;
-                g.__wc3vInflated = true;     // geometry is shared — inflate once
-              }
-            }
+          // Frustum culling for a SKINNED mesh needs its own bounding sphere,
+          // maintained by us — see _updateCullBounds for why the previous
+          // geometry-sphere approach silently made units disappear.
+          if (cullEnabled && this._isUntransformed(o, root)) {
+            o.boundingSphere = new THREE.Sphere(new THREE.Vector3(), this._cullRadius(o.geometry));
             o.frustumCulled = true;
           } else {
+            o.boundingSphere = null;
             o.frustumCulled = false;
           }
           skinnedMeshes.push(o);
@@ -662,6 +665,76 @@
       const wname = tpl.placementNode && tpl.placementNode.name;
       root.traverse(o => { if (!placementNode && o.name === wname) placementNode = o; });
       return { isSkinnedResult: true, root, placementNode, skinnedMeshes, animations: tpl.animations, skeleton };
+    }
+
+    // True when nothing between a skinned mesh and the instance root carries a
+    // transform — the invariant GLBLoader.parseSkinned exports (the mesh node is
+    // identity; the unit's placement lives on the SIBLING wrapper). We maintain
+    // the cull sphere in scene coordinates and three multiplies it by the mesh's
+    // matrixWorld, so any transform here would displace it. Rather than assume
+    // every model in the roster honours the invariant, one that doesn't simply
+    // opts out of culling — the same behaviour as WC3V_CONFIG.perf.frustumCull.
+    _isUntransformed (mesh, root) {
+      for (let n = mesh; n && n !== root; n = n.parent) {
+        if (n.position.lengthSq() > 1e-8) return false;
+        if (n.scale.x !== 1 || n.scale.y !== 1 || n.scale.z !== 1) return false;
+        const q = n.quaternion;
+        if (Math.abs(q.x) + Math.abs(q.y) + Math.abs(q.z) + Math.abs(1 - Math.abs(q.w)) > 1e-6) return false;
+      }
+      return true;
+    }
+
+    // Cull radius for one skinned geometry, measured from the model's PIVOT
+    // (the wrapper's position) rather than from the bind-pose sphere centre —
+    // the sphere we maintain is always centred on the unit's feet. Folding the
+    // centre offset in keeps a tall model (meat wagon, frost wyrm) inside its
+    // own sphere. Inflated so an animated pose — a swing, a death sprawl —
+    // still falls inside. Cached on the shared template geometry.
+    _cullRadius (geometry) {
+      if (!geometry) return 256;
+      if (geometry.__wc3vCullRadius != null) return geometry.__wc3vCullRadius;
+      if (!geometry.boundingSphere) geometry.computeBoundingSphere();
+      const bs = geometry.boundingSphere;
+      const base = bs ? (bs.radius + bs.center.length()) : 128;
+      geometry.__wc3vCullRadius = base * SKINNED_BOUNDS_INFLATE;
+      return geometry.__wc3vCullRadius;
+    }
+
+    /**
+     * Re-centre each skinned mesh's cull sphere on where the unit actually is.
+     * Called from every placement path, so the sphere never goes stale.
+     *
+     * Three's Frustum.intersectsObject PREFERS `object.boundingSphere` when the
+     * object defines one — SkinnedMesh does — and only falls back to the
+     * geometry sphere when it doesn't. Left null, three computes it ONCE
+     * (lazily, on the first frame the unit is drawn) from the live bone
+     * matrices, then caches it forever. And because the exporter keeps the
+     * skinned-mesh node at identity and puts the unit's transform on the
+     * SIBLING wrapper / bone root (see GLBLoader.parseSkinned), that cached
+     * sphere is a WORLD-space sphere frozen at wherever the unit first
+     * appeared. Every unit that then walked further than its own radius
+     * (~55 wu) got culled while plainly on screen: the body vanished but its
+     * selection ring, shadow and nameplate kept drawing, and the 2D icon was
+     * suppressed too, so the unit was simply gone. Inflating
+     * geometry.boundingSphere (what this used to do) never had any effect —
+     * three never reads it for a skinned mesh.
+     *
+     * Scene coords, because the mesh node's matrixWorld is identity.
+     */
+    _updateCullBounds (inst, sx, sy, sz) {
+      const meshes = inst.skinnedMeshes;
+      if (!meshes) return;
+      // Read the live wrapper scale rather than inst.scale: the exporter may
+      // already bake a scale into the wrapper node, and _place only overrides it
+      // when inst.scale !== 1. The wrapper scales the bones, hence the model.
+      const w = inst.wrapper;
+      const scale = w ? Math.max(w.scale.x, w.scale.y, w.scale.z) : (inst.scale || 1);
+      for (let i = 0; i < meshes.length; i++) {
+        const bs = meshes[i].boundingSphere;
+        if (!bs) continue;   // placeholder blob, or culling disabled
+        bs.center.set(sx, sy, sz);
+        bs.radius = this._cullRadius(meshes[i].geometry) * scale;
+      }
     }
 
     _create (unit, spec, player) {
@@ -720,6 +793,7 @@
       inst.shadow.rotation.x = -Math.PI / 2;
       inst.shadow.renderOrder = 1;   // under the selection ring (3), over terrain
       inst.shadow.visible = false;
+      inst.shadowOpacity = 0.9;      // baseline the instance fade scales
       inst.shadowRadius = cs * 2.0;  // a touch wider than the model footprint
       this.scene.add(inst.shadow);
     }
@@ -751,6 +825,7 @@
       inst.ring.rotation.x = -Math.PI / 2;
       inst.ring.renderOrder = 3;
       inst.ring.visible = false;
+      inst.ringOpacity = opacity;   // baseline the instance fade scales
       this.scene.add(inst.ring);
     }
 
@@ -896,6 +971,12 @@
 
     _setOpacity (inst, a) {
       const fading = a < 0.999;
+      // The ground ring and blob shadow are separate scene meshes, so they used
+      // to hold full opacity while the body faded — a bright, crisp selection
+      // circle around a unit that was barely there (and, at decayLevel 0, around
+      // nothing at all). Fade the whole presentation together.
+      if (inst.ring) inst.ring.material.opacity = (inst.ringOpacity != null ? inst.ringOpacity : 0.85) * a;
+      if (inst.shadow) inst.shadow.material.opacity = (inst.shadowOpacity != null ? inst.shadowOpacity : 0.9) * a;
       for (const sm of inst.skinnedMeshes) {
         const m = sm.material; if (!m) continue;
         // WC3 skinned ShaderMaterial: fade via the uOpacity uniform, and while
@@ -919,6 +1000,7 @@
       const w = inst.wrapper;
       w.position.set(wx - cx, groundY, -(wy - cy));
       if (inst.scale !== 1) w.scale.setScalar(inst.scale);
+      this._updateCullBounds(inst, w.position.x, groundY, w.position.z);
 
       // Ground selection ring (flat, does not rotate with facing).
       if (inst.ring) {
@@ -955,6 +1037,7 @@
       const w = inst.wrapper;
       w.position.set(wx - cx, groundY, -(wy - cy));
       if (inst.scale !== 1) w.scale.setScalar(inst.scale);
+      this._updateCullBounds(inst, w.position.x, groundY, w.position.z);
       if (inst.ring) {
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
