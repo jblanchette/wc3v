@@ -58,6 +58,27 @@
       // probe for a global that legitimately isn't loaded yet.
       window.WC3V_GUIDE_AVAILABLE = true;
 
+      // Early replay fetch: start downloading the multi-MB .wc3v NOW, before
+      // the ~2 MB of scripts below even begin, so the two overlap instead of
+      // serializing. app.js loadFile() consumes this promise when the
+      // filename matches and falls back to a fresh fetch on any error.
+      // URL construction must stay byte-consistent with bootstrap()/loadFile.
+      (function () {
+        try {
+          const q = new URLSearchParams(location.search);
+          if (q.get('local')) return;               // IndexedDB path: nothing to prefetch
+          const m = /replay\/(.*)/i.exec(location.href);
+          const name = m ? encodeURI(m[1]) : (q.get('r') ? encodeURI(q.get('r')) : null);
+          if (!name) return;
+          const file = name + '.wc3v';
+          const isDev = location.hostname === '127.0.0.1';
+          const url = isDev
+            ? ('http://127.0.0.1:8080/replays/' + file + '?t=' + Date.now())
+            : ('/replays/' + file);
+          window.WC3V_EARLY_REPLAY = { file: file, promise: fetch(url) };
+        } catch (e) { /* prefetch is best-effort — never block boot */ }
+      })();
+
       // The CDN libs lead the same ordered list as the local files. They MUST
       // execute first: several modules touch their globals at module scope
       // (UnitModelRenderer.js builds THREE.Vector3/Quaternion constants on load),

@@ -617,28 +617,42 @@ const Wc3vViewer = class {
       ? `http://127.0.0.1:8080/replays/${filename}?t=${Date.now()}`
       : `/replays/${filename}`;
 
-    fetch(url)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        if (!onProgress || !r.body || !r.body.getReader) return r.arrayBuffer();
-        const total = parseInt(r.headers.get('Content-Length'), 10) || 0;
-        const reader = r.body.getReader();
-        const chunks = [];
-        let loaded = 0;
-        const pump = () => reader.read().then(({ done, value }) => {
-          if (done) {
-            const out = new Uint8Array(loaded);
-            let offset = 0;
-            for (const c of chunks) { out.set(c, offset); offset += c.byteLength; }
-            return out.buffer;
-          }
-          chunks.push(value);
-          loaded += value.byteLength;
-          onProgress(loaded, total);
-          return pump();
-        });
+    const consume = (r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (!onProgress || !r.body || !r.body.getReader) return r.arrayBuffer();
+      const total = parseInt(r.headers.get('Content-Length'), 10) || 0;
+      const reader = r.body.getReader();
+      const chunks = [];
+      let loaded = 0;
+      const pump = () => reader.read().then(({ done, value }) => {
+        if (done) {
+          const out = new Uint8Array(loaded);
+          let offset = 0;
+          for (const c of chunks) { out.set(c, offset); offset += c.byteLength; }
+          return out.buffer;
+        }
+        chunks.push(value);
+        loaded += value.byteLength;
+        onProgress(loaded, total);
         return pump();
-      })
+      });
+      return pump();
+    };
+
+    // viewer.html starts this fetch before the ~2 MB script download begins,
+    // so replay bytes stream while the engine loads. Consumed at most once
+    // (match on filename, not URL — the dev cache-buster differs); any early
+    // failure falls back to a fresh fetch, which also owns error reporting.
+    const early = window.WC3V_EARLY_REPLAY;
+    let attempt;
+    if (early && early.file === filename && early.promise) {
+      window.WC3V_EARLY_REPLAY = null;
+      attempt = early.promise.then(consume).catch(() => fetch(url).then(consume));
+    } else {
+      attempt = fetch(url).then(consume);
+    }
+
+    attempt
       .then(buf => cb(buf, null))
       .catch(err => cb(null, err));
   }
