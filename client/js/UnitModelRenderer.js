@@ -120,10 +120,39 @@
     }
 
     _loadManifest () {
-      fetch('/assets/models/units/unit-models.json?v=' + MODEL_ASSET_VERSION)
+      this._manifestReady = fetch('/assets/models/units/unit-models.json?v=' + MODEL_ASSET_VERSION)
         .then(r => (r.ok ? r.json() : {}))
         .then(m => { this.manifest = m || {}; })
         .catch(() => { this.manifest = {}; });
+    }
+
+    // Prefetch + parse the model templates this replay is known to need
+    // (unit itemIds are all known before playback starts). Fire-and-forget
+    // and throttled — runs behind the tail of the loading overlay and into
+    // early playback, so first appearances stop stuttering on model pop-in.
+    // Units keep their 2D-icon fallback while a template is still warming,
+    // exactly as with on-demand loading.
+    warm (itemIds) {
+      const start = () => {
+        const models = new Set();
+        for (const raw of itemIds || []) {
+          const id = String(raw || '');
+          const spec = this.manifest[id.toLowerCase()] || this.manifest[id];
+          if (spec && spec.model && !this._templates[spec.model]) models.add(spec.model);
+        }
+        const queue = [...models];
+        let idx = 0;
+        const next = () => {
+          if (idx >= queue.length) return;
+          const model = queue[idx++];
+          // _getTemplate memoizes into _templates and never rejects.
+          this._getTemplate(model).then(() => next());
+        };
+        const CONCURRENCY = 4;
+        for (let i = 0; i < CONCURRENCY && i < queue.length; i++) next();
+      };
+      if (this.manifest) start();
+      else if (this._manifestReady) this._manifestReady.then(start);
     }
 
     _fetchAB (model) {

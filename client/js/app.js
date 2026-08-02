@@ -3480,6 +3480,17 @@ const Wc3vViewer = class {
 
       if (this.loading) this.loading.endStep('ui');
       this.render();
+
+      // Warm the 3D unit-model pipeline for this replay's known unit types —
+      // fire-and-forget, throttled inside warm(). Buildings are excluded
+      // (they render via ThreeMapRenderer's instanced meshes, not here).
+      if (this.unitModelRenderer && this.unitModelRenderer.warm) {
+        const warmIds = new Set();
+        this.players.forEach(p => p.units.forEach(u => {
+          if (u.itemId && !u.isBuilding) warmIds.add(u.itemId);
+        }));
+        this.unitModelRenderer.warm([...warmIds]);
+      }
     });
   }
 
