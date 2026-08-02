@@ -95,12 +95,17 @@ function main () {
     const before = html;
 
     // a) <script src="js/...js"> / <link href="[/]css/...css"> — with or
-    //    without an existing ?v=… — normalise to ?v=<bundleVersion>. Handles
+    //    without an existing ?v=… — normalise to ?v=<per-file hash>. Handles
     //    both index.html's "css/main.css" and viewer.html's "/css/main.css"
     //    (the leading-slash <link> that replaced viewer's old @import).
+    //    Per-file (not bundleVersion): a one-line change to one JS file used
+    //    to bust every JS/CSS URL for every repeat visitor; now only the
+    //    changed file gets a new URL. bundleVersion is the fallback for
+    //    anything referenced but not hashed.
+    const verFor = (file) => perFile['/' + file.replace(/^\.{0,2}\//, '')] || bundleVersion;
     html = html.replace(
       /((?:src|href)=")((?:\.{0,2}\/)?(?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[\w.]+)?(")/g,
-      (_m, pre, file, post) => `${pre}${file}?v=${bundleVersion}${post}`
+      (_m, pre, file, post) => `${pre}${file}?v=${verFor(file)}${post}`
     );
 
     // b) viewer.html dev cache buster — between the marker comments. The
@@ -118,6 +123,19 @@ function main () {
     html = html.replace(
       /(\/\* @wc3v-asset-version-begin \*\/)[\s\S]*?(\/\* @wc3v-asset-version-end \*\/)/,
       (_m, begin, end) => `${begin} window.__WC3V_ASSET_VERSION__ = '${bundleVersion}'; ${end}`
+    );
+
+    // d) viewer.html: the 50+ /js/* files are appended from JS (the ordered-
+    //    async loader), so rewrite (a) can't reach their URLs. Emit the
+    //    per-file hash map between the markers; the committed source keeps
+    //    `_assetHashes = null` so dev falls back to the Date.now() buster.
+    const jsCssHashes = {};
+    for (const [url, h] of Object.entries(perFile)) {
+      if (url.startsWith('/js/') || url.startsWith('/css/')) jsCssHashes[url] = h;
+    }
+    html = html.replace(
+      /(\/\* @asset-hashes-begin \*\/)[\s\S]*?(\/\* @asset-hashes-end \*\/)/,
+      (_m, begin, end) => `${begin} const _assetHashes = ${JSON.stringify(jsCssHashes)}; ${end}`
     );
 
     if (html !== before) {

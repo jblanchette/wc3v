@@ -51,6 +51,15 @@ services:
       - path: /data/summaries/*
         name: Cache-Control
         value: public, max-age=300, must-revalidate
+      # Fetched unversioned on every viewer load (build badges / replay
+      # switcher) — previously had NO rule, so caching was heuristic.
+      - path: /data/builds-manifest.json
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
+      # Static game-balance lookup; changes only with a data regen.
+      - path: /data/unit-balance-lite.json
+        name: Cache-Control
+        value: public, max-age=86400, must-revalidate
       # The parser worker + its bundle are loaded by importScripts()/new Worker()
       # WITHOUT a ?v= query (can't self-reference the hash), so they must keep a
       # revalidating TTL rather than being immutable. They change rarely.

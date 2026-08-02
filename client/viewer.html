@@ -22,6 +22,15 @@
       /* @asset-version-begin */ const _assetVersion = null; /* @asset-version-end */
       const _t = _assetVersion || Date.now();
 
+      // Per-file content hashes for the JS-driven script loader below —
+      // gen-asset-manifest.js fills this at deploy time so each file's ?v=
+      // only changes when THAT file changes (one edit no longer re-downloads
+      // all ~55 scripts). null in dev → the loaders fall back to `_t`.
+      /* @asset-hashes-begin */ const _assetHashes = null; /* @asset-hashes-end */
+      const _ver = (src) => (_assetHashes && _assetHashes[src])
+        ? (src + '?v=' + _assetHashes[src])
+        : (src + '?t=' + _t);
+
       // Same value on `window` so the .js files can reach it (`_assetVersion`
       // is a lexical const, not a window property). app.js needs it to version
       // the replay-json Worker URL — Workers are created from JS, so the HTML
@@ -46,7 +55,7 @@
         if (!src) return Promise.reject(new Error('unknown lazy module: ' + name));
         _lazyCache[name] = new Promise((resolve, reject) => {
           const el = document.createElement('script');
-          el.src = src + '?t=' + _t;
+          el.src = _ver(src);
           el.onload = () => resolve(window[name]);
           el.onerror = () => { delete _lazyCache[name]; reject(new Error('failed to load ' + src)); };
           document.head.appendChild(el);
@@ -182,7 +191,7 @@
         _scripts.forEach(src => {
           const el = document.createElement('script');
           // Absolute CDN URLs are already version-pinned; only bust our own files.
-          el.src = /^https?:/.test(src) ? src : src + '?t=' + _t;
+          el.src = /^https?:/.test(src) ? src : _ver(src);
           el.async = false;
           el.onload = () => { _bootTick(); done(); };
           el.onerror = () => { _bootTick(); done(); };   // a missing optional script must not deadlock boot
