@@ -111,6 +111,13 @@ const doParsing = async (input, options = {}) => {
   // utils.computeWinner turns these into the exported `winner` verdict.
   const leaveEvents = [];
 
+  // Restart the uuid sequence so this parse is reproducible regardless of how
+  // many replays this process has already handled. Unit / EventTimer /
+  // NeutralGroup / SubGroup ids come from here, and several places sort by
+  // uuid to get a stable order — so the sequence has to begin the same way
+  // every time or the output is not comparable run to run.
+  utils.resetUuidSequence();
+
   // enable worker tracer if configured
   if (config.debugWorkers) {
     logManager.getTracer().enable();

@@ -266,13 +266,39 @@ const getRandomInt = (max) => {
 };
 
 ////
-// uuid gen - from https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-////
+// uuid gen — DETERMINISTIC, per parse.
+//
+// These uuids identify Units, EventTimer events, NeutralGroups and SubGroups.
+// They are internal handles: nothing outside a single parse resolves them, so
+// they do not need to be globally unique — only unique within one replay.
+//
+// They used to be Math.random()-based (uuidv4 from the well-known
+// stackoverflow snippet). That made uuidv4 the ONLY source of randomness in
+// the parser, and it leaked into behaviour rather than staying cosmetic:
+// several places sort by uuid to get a "stable" order (see BattleDetector),
+// so a random id meant a random order, which changed battle grouping, unit
+// path sampling and every figure derived from them. Parsing one replay twice
+// could differ by hundreds of thousands of values.
+//
+// A monotonic counter keeps the uuid shape (8-4-4-4-12 hex, version nibble 4,
+// correct variant bits) and the uniqueness the code actually relies on, while
+// making the whole parse reproducible. Sorting by uuid now means sorting by
+// creation order, which is exactly the stable order those call sites wanted.
+//
+// resetUuidSequence() MUST be called at the start of every parse, or a process
+// that parses several replays (the desktop app, the batch tools) would produce
+// different ids for the same replay depending on how many came before it.
+let _uuidCounter = 0;
+
+const resetUuidSequence = () => {
+  _uuidCounter = 0;
+};
+
 const uuidv4 = () => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
+  const n = ++_uuidCounter;
+  const lo = (n >>> 0).toString(16).padStart(8, '0');
+  const hi = Math.floor(n / 0x100000000).toString(16).padStart(12, '0');
+  return `${lo}-0000-4000-8000-${hi}`;
 };
 
 
@@ -1133,6 +1159,7 @@ module.exports = {
 	closestToPoint,
 	getRandomInt,
 	uuidv4,
+	resetUuidSequence,
 	getManifestReplayIds,
 	readCliArgs,
 	writeOutput,
