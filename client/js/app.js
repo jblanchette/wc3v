@@ -83,7 +83,9 @@ const Wc3vViewer = class {
     const replay    = urlParams.get('r');
     const localId   = urlParams.get('local');
     const buildId   = urlParams.get('buildId');
-    this.renderBuildContext(buildId);
+    // builds-manifest.json (~133 KB) powers build badges for server replays;
+    // local (IndexedDB) replays are never referenced by it — skip the fetch.
+    if (!localId) this.renderBuildContext(buildId);
 
     const hrefPath = window.location.href;
     const re = new RegExp('replay/(.*)', 'i');
@@ -691,26 +693,21 @@ const Wc3vViewer = class {
     // replay-supplied map name for URL construction.
     const { name } = this.mapInfo;
 
-    if (mapType === "grid") {
-      return new Promise((resolve) => {
-        self.gridMapImage = new Image();
-        // Resolve (never reject) on error too: a missing/unshipped map image
-        // is a documented production case. Without this the Promise.all in
-        // setup() never settles and the loading overlay hangs forever. We keep
-        // the errored Image object (rather than nulling it) so downstream reads
-        // like gameScaler.mapImage.width return 0 instead of throwing.
-        self.gridMapImage.addEventListener('load', () => resolve(), false);
-        self.gridMapImage.addEventListener('error', () => resolve(), false);
-        // src set AFTER the listeners — a cached image can fire load synchronously.
-        self.gridMapImage.src = `/maps/${name}/gridmap.jpg`;
-      });
-    }
-
     return new Promise((resolve) => {
       self.mapImage = new Image();
+      // Resolve (never reject) on error too: a missing/unshipped map image
+      // is a documented production case. Without this the Promise.all in
+      // setup() never settles and the loading overlay hangs forever. We keep
+      // the errored Image object (rather than nulling it) so downstream reads
+      // like gameScaler.mapImage.width return 0 instead of throwing.
       self.mapImage.addEventListener('load', () => resolve(), false);
       self.mapImage.addEventListener('error', () => resolve(), false);
+      // src set AFTER the listeners — a cached image can fire load synchronously.
       self.mapImage.src = `/maps/${name}/map.jpg`;
+      // gridmap.jpg was byte-identical to map.jpg across all 201 shipped maps
+      // (MD5-verified) yet downloaded separately under its own URL. Reuse the
+      // one Image — MapRenderer just picks whichever of the two to draw.
+      self.gridMapImage = self.mapImage;
     });
   }
 
@@ -806,20 +803,45 @@ const Wc3vViewer = class {
 
   // Walkmaps run ~800 KB on the bigger maps, so the decode+parse goes to the
   // same worker as the replay JSON rather than blocking the main thread during
-  // load. Always resolves — a missing/!unparseable walkmap is a soft failure.
+  // load. Always resolves — a missing/unparseable walkmap is a soft failure.
+  //
+  // Fetches walkmap.json.gz (the only form deployed to R2 — the plain
+  // walkmap.json was never uploaded, so this fetch used to 404 in production
+  // and _terrainIndex silently lost all WPM blocked-cell data). In prod R2
+  // serves it with Content-Encoding: gzip (browser inflates); in dev the raw
+  // gzip bytes come back as-is, so sniff the magic and inflate here. Plain
+  // walkmap.json fallback is dev-only.
   loadWalkmap () {
     const { name } = this.mapInfo;
-    const filePath = `../maps/${name}/walkmap.json`;
+    const buster = this.isDev ? `?t=${Date.now()}` : '';
+    const base = `/maps/${encodeURIComponent(name)}/walkmap.json`;
 
-    return new Promise((resolve) => {
-      this.loadFile(filePath, (buf, err) => {
-        if (err || !buf) { this._walkmap = null; resolve(true); return; }
-        this._parseJsonInWorker(buf)
+    const fetchBytes = (url) => fetch(url)
+      .then(r => (r.ok ? r.arrayBuffer() : null))
+      .catch(() => null);
+
+    return fetchBytes(`${base}.gz${buster}`)
+      .then(buf => {
+        if (buf && buf.byteLength) return buf;
+        return this.isDev ? fetchBytes(`${base}${buster}`) : null;
+      })
+      .then(buf => {
+        if (!buf || !buf.byteLength) { this._walkmap = null; return null; }
+        const bytes = new Uint8Array(buf);
+        const isGzip = bytes.length > 2 && bytes[0] === 0x1f && bytes[1] === 0x8b;
+        if (isGzip && typeof DecompressionStream === 'function') {
+          return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')))
+            .arrayBuffer();
+        }
+        return buf;
+      })
+      .then(buf => {
+        if (!buf) return true;
+        return this._parseJsonInWorker(buf)
           .then(obj => { this._walkmap = obj; })
           .catch(() => { this._walkmap = null; })
-          .then(() => resolve(true));
+          .then(() => true);
       });
-    });
   }
 
   // Decode + JSON.parse an ArrayBuffer off the main thread. The buffer is
@@ -3262,7 +3284,6 @@ const Wc3vViewer = class {
     // balance lookup are needed to render build orders.
     const heavyMapLoads = this.mobileMode ? [] : [
       trackMap('Map image', this.loadMapFile()),
-      trackMap('Grid image', this.loadMapFile("grid")),
       trackMap('Doodad placements', this.loadDoodadFile()),
       trackMap('Walkmap', this.loadWalkmap()),
       trackMap('Neutral buildings', this.loadNeutralBuildings()),

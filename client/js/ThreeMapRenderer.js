@@ -324,18 +324,6 @@
     loadPaletteTextures (tilesetChar, paletteCodes, cliffPaletteCodes) {
       const loader = new THREE.TextureLoader();
       const anis = this.renderer.capabilities.getMaxAnisotropy();
-      const configureGroundTex = (tex) => {
-        tex.colorSpace = THREE.SRGBColorSpace;
-        // ClampToEdge: ground textures are atlases — per-tile UVs address
-        // a specific 64×64 sub-region, not tiled across the mesh.
-        tex.wrapS = THREE.ClampToEdgeWrapping;
-        tex.wrapT = THREE.ClampToEdgeWrapping;
-        tex.minFilter = THREE.LinearMipmapLinearFilter;
-        tex.magFilter = THREE.LinearFilter;
-        tex.generateMipmaps = true;
-        tex.anisotropy = anis;
-        tex.needsUpdate = true;
-      };
       const configureCliffTex = (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
         // RepeatWrapping: cliff textures are 256×256 single textures that
@@ -357,24 +345,22 @@
           resolve({ code, tex: null });
         });
       });
-      // Load ground palette textures — each code's first char is its tileset
-      // directory (e.g. Zdrt → Z/, Lgrd → L/, cLc1 → c/).
-      const groundLoads = paletteCodes.map(code =>
-        loadOne(code, `/assets/terrain/${code.charAt(0)}`, configureGroundTex)
-      );
-      // Load cliff palette textures from /assets/terrain/cliff/
+      // Only CLIFF palette textures are loaded. Ground palette PNGs became
+      // dead weight when terrain baking landed — the baked terrain.jpg is the
+      // ground, and the only paletteTextures reads left are cliff codes (the
+      // slot>0 materials in setupTerrain and setupCliffModels). `paletteCodes`
+      // stays in the signature because heights.bin still carries it.
       const cliffCodes = cliffPaletteCodes || [];
       const cliffLoads = cliffCodes.map(code =>
         loadOne(code, '/assets/terrain/cliff', configureCliffTex)
       );
-      return Promise.all([...groundLoads, ...cliffLoads]).then(results => {
+      return Promise.all(cliffLoads).then(results => {
         this.paletteTextures = new Map();
         for (const { code, tex } of results) {
           this.paletteTextures.set(code, tex);
         }
-        const nGround = results.slice(0, paletteCodes.length).filter(r => r.tex).length;
-        const nCliff = results.slice(paletteCodes.length).filter(r => r.tex).length;
-        _tlog(`[ThreeMapRenderer] loaded ${nGround}/${paletteCodes.length} ground + ${nCliff}/${cliffCodes.length} cliff textures for tileset ${tilesetChar}`);
+        const nCliff = results.filter(r => r.tex).length;
+        _tlog(`[ThreeMapRenderer] loaded ${nCliff}/${cliffCodes.length} cliff textures for tileset ${tilesetChar}`);
         return this.paletteTextures;
       });
     }
@@ -2113,11 +2099,9 @@
     // Building model rendering (neutral + player buildings)
     // -----------------------------------------------------------------------
 
-    // Load building manifests (model mapping + texture mapping).
-    // Call this once; then loadBuildingTexturesForModels() to fetch only needed textures.
+    // Load the building model manifest (itemId → model name mapping).
     loadBuildingManifests () {
       this._buildingTextures = new Map();
-      this._buildingTextureManifest = null;
       this._buildingModelManifest = null;
 
       const ls = this._loading();
@@ -2132,44 +2116,13 @@
         ? ('?v=' + Date.now())
         : ('?v=' + ((cfg && cfg.assetVersion) || '2'));
 
-      return Promise.all([
-        fetch('/assets/textures/buildings/building-textures.json' + this._buildingCacheBuster)
-          .then(r => r.ok ? r.json() : null)
-          .then(manifest => { this._buildingTextureManifest = manifest; })
-          .catch(() => {}),
-        fetch('/assets/models/buildings/building-models.json' + this._buildingCacheBuster)
-          .then(r => r.ok ? r.json() : null)
-          .then(manifest => { this._buildingModelManifest = manifest; })
-          .catch(() => {})
-      ]);
-    }
-
-    // Load only the textures needed for a specific set of model names.
-    // Much faster than loading all 160 textures when a map only uses ~10.
-    loadBuildingTexturesForModels (neededModels) {
-      if (!this._buildingTextureManifest || !neededModels.size) return Promise.resolve();
-      const loader = new THREE.TextureLoader();
-      const loads = [];
-      for (const modelName of neededModels) {
-        const pngBase = this._buildingTextureManifest[modelName];
-        if (!pngBase) continue;
-        if (this._buildingTextures.has(modelName)) continue;
-        const url = '/assets/textures/buildings/' + pngBase + '.png';
-        loads.push(new Promise(resolve => {
-          loader.load(url, tex => {
-            tex.colorSpace = THREE.SRGBColorSpace;
-            tex.flipY = false;
-            tex.magFilter = THREE.LinearFilter;
-            tex.minFilter = THREE.LinearMipmapLinearFilter;
-            tex.generateMipmaps = true;
-            this._buildingTextures.set(modelName, tex);
-            resolve();
-          }, undefined, () => resolve());
-        }));
-      }
-      _tlog('[ThreeMapRenderer] loading', loads.length, 'building textures (of',
-        Object.keys(this._buildingTextureManifest).length, 'available)');
-      return Promise.all(loads);
+      // Building textures are embedded in the GLBs — the old standalone
+      // building-textures.json (+ its 160 PNGs) had no live consumer and is
+      // no longer fetched.
+      return fetch('/assets/models/buildings/building-models.json' + this._buildingCacheBuster)
+        .then(r => r.ok ? r.json() : null)
+        .then(manifest => { this._buildingModelManifest = manifest; })
+        .catch(() => {});
     }
 
     // Place static neutral buildings as 3D models (gold mines, shops, fountains, etc.)
