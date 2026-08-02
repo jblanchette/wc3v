@@ -4097,42 +4097,6 @@ body {
   background: #4a8cb5;
 }
 
-#loading-overlay {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(11, 16, 20, 0.92);
-  z-index: 50;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  pointer-events: all;
-}
-#loading-overlay.active {
-  display: flex;
-}
-#loading-overlay img {
-  width: 80px;
-  height: 80px;
-  opacity: 0.8;
-}
-#loading-status {
-  color: #8a9ba8;
-  font-size: 0.85rem;
-  font-family: 'Segoe UI', Arial, sans-serif;
-  letter-spacing: 0.5px;
-}
-#loading-icon {
-  display: none;
-  position: absolute;
-  top: calc(50% - 100px);
-  left: calc(50% - 100px);
-}
-
 /* WebGL terrain canvas (Z=0) — sits behind the 2D overlay stack */
 #three-canvas {
   position: absolute;
@@ -8461,18 +8425,6 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   display: none !important;
 }
 
-/* The #loading-overlay normally sits inside #gameplay-area (display:none on
-   mobile). app.js hoists it to <body> in mobile mode; this rule pins it to
-   the full viewport so the user sees the loading state while the replay
-   JSON is fetched. */
-body.viewer-mobile-mode #loading-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 9999 !important;
-}
-
 .layout-mode-mobile-bo #build-area {
   display: block !important;
   grid-area: buildorder;
@@ -11439,6 +11391,150 @@ svg.about-feat-icon {
   font-weight: 600;
   color: #8cc878;
   font-variant-numeric: tabular-nums;
+}
+
+/* ===== LoadingScreen (ls-) =====
+   Viewer loading overlay: step checklist + weighted overall bar + detail
+   line. Built entirely by LoadingScreen.js — no markup in viewer.html.
+   Shares the parse-overlay visual language (scrim, carved card) but uses a
+   muted gold/olive accent per the WC3 art direction — no glow, no neon. */
+
+.ls-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(10, 12, 18, 0.88);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  opacity: 1;
+  transition: opacity 0.22s ease;
+  pointer-events: all;
+}
+
+.ls-overlay.ls-fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ls-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 28px 32px;
+  width: min(420px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ls-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  letter-spacing: 0.3px;
+  text-align: center;
+  min-height: 1.2em;
+  overflow-wrap: anywhere;
+}
+
+.ls-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ls-step {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 2px;
+  font-size: 0.85rem;
+  transition: color 0.2s ease;
+}
+
+.ls-step-icon {
+  width: 1.1em;
+  text-align: center;
+  flex: none;
+}
+
+.ls-step-label {
+  flex: 1;
+}
+
+.ls-step-count {
+  color: #7a8288;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+}
+
+.ls-step.is-pending { color: #7a8288; }
+.ls-step.is-active  { color: #e8e4d8; }
+.ls-step.is-done    { color: #a8a08a; }
+.ls-step.is-skipped { color: #6b7278; }
+.ls-step.is-warn    { color: #c9a35c; }
+.ls-step.is-error   { color: #c97b6a; }
+
+.ls-step.is-active .ls-step-icon {
+  color: #b8a468;
+  animation: ls-active-pulse 1.4s ease-in-out infinite;
+}
+
+.ls-step.is-done .ls-step-icon { color: #b8a468; }
+
+@keyframes ls-active-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+
+.ls-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ls-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ls-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #8f7f4f, #b8a468);
+  border-radius: 999px;
+  transition: width 0.18s ease;
+}
+
+.ls-percent {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b8a468;
+  font-variant-numeric: tabular-nums;
+  min-width: 3ch;
+  text-align: right;
+}
+
+.ls-detail {
+  font-size: 0.8rem;
+  color: #8a9ba8;
+  text-align: center;
+  min-height: 1.3em;
+  line-height: 1.3;
+}
+
+.ls-detail.is-error {
+  color: #c97b6a;
 }
 
 /* ===== Inline Compare panel (CompareInline) ===== */

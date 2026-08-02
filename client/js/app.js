@@ -67,13 +67,14 @@ const Wc3vViewer = class {
         appEl.classList.remove('layout-mode-gameplay', 'layout-mode-static-bo', 'layout-mode-live-bo');
         appEl.classList.add('layout-mode-mobile-bo');
       }
-      // The #loading-overlay lives inside #gameplay-area which is
-      // display:none in mobile mode — hoist it to body so the loading state
-      // remains visible while the replay JSON is fetched.
-      const overlay = document.getElementById('loading-overlay');
-      if (overlay && overlay.parentNode !== document.body) {
-        document.body.appendChild(overlay);
-      }
+    }
+
+    // LoadingScreen (created in reset()) adopts the inline #boot-loading
+    // block. If LoadingScreen.js itself failed to load (onerror resilience in
+    // the script loader), drop the block here so the page can't wedge behind it.
+    if (!window.LoadingScreen) {
+      const boot = document.getElementById('boot-loading');
+      if (boot) boot.remove();
     }
 
     this.setupControls();
@@ -96,10 +97,6 @@ const Wc3vViewer = class {
         window.location.href = '/builds';
         return;
       }
-      // Surface the overlay synchronously so the user sees feedback before
-      // the deferred loadLocal call kicks off the heavy setup work.
-      const overlay = document.getElementById('local-loading-overlay');
-      if (overlay) overlay.style.display = 'flex';
       setTimeout(() => { this.loadLocal(safeId); });
     } else if (match) {
       // Legacy path-based URL: /replay/name
@@ -300,6 +297,15 @@ const Wc3vViewer = class {
     this.dominanceChart = (window.DominanceChart)
       ? new window.DominanceChart(this) : null;    // Dominance insights tab (1v1 only)
     this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
+    // Staged loading overlay (step checklist + progress bar). Recreated per
+    // load; setup() adopts the inline #boot-loading block on first construction.
+    if (window.LoadingScreen) {
+      if (this.loading) this.loading.destroy();
+      this.loading = new window.LoadingScreen(this);
+      this.loading.setup();
+    } else {
+      this.loading = null;
+    }
     this.processedBattles = null;               // populated by setup() once mapData is available
     // Release the prior WebGL context + GPU resources before dropping the
     // reference; setup() builds a fresh renderer on every load and browsers
@@ -323,10 +329,18 @@ const Wc3vViewer = class {
     this.reset();
 
     this.setLoadingStatus(true);
+    this._defineLoadingPlan('server');
+    if (this.loading) {
+      this.loading.setTitle(this._loadingTitleFromFilename(filename));
+      this.loading.beginStep('replay');
+    }
 
     this.loadFile(filename, (buf, fetchErr) => {
       if (fetchErr || !buf) {
-        self.showUploadContents("upload-error");
+        // The old showUploadContents("upload-error") is a no-op on the viewer
+        // page (no #upload-wrapper) — the overlay used to spin forever here.
+        console.error(`Failed to fetch replay "${filename}":`, fetchErr);
+        if (self.loading) self.loading.fail('Could not download this replay');
         return;
       }
 
@@ -339,7 +353,13 @@ const Wc3vViewer = class {
       const fail = (msg) => {
         console.error(`Failed to load replay "${filename}" (response size: ${byteLength} bytes): ${msg}`);
         console.error('If JSON is truncated, re-parse with: node wc3v.js --replay=NAME --debug');
+        if (self.loading) self.loading.fail('Could not read this replay');
       };
+
+      if (self.loading) {
+        self.loading.beginStep('parse');
+        self.loading.setDetail('parse', `Decoding ${(byteLength / (1024 * 1024)).toFixed(1)} MB of replay data`);
+      }
 
       let worker, timer, done = false;
       const finish = () => {
@@ -379,6 +399,7 @@ const Wc3vViewer = class {
           try {
             self.replayId = filename;
             self.mapData = m.result;
+            if (self.loading) self.loading.endStep('parse');
             self.setup().then(() => {
               // removing loading status indicator only after full setup completes
               self.setLoadingStatus(false);
@@ -399,6 +420,8 @@ const Wc3vViewer = class {
 
       // Transfer (not copy) the buffer — ownership moves to the worker.
       worker.postMessage({ type: 'parseBuffer', buffer: buf }, [buf]);
+    }, (loaded, total) => {
+      if (self.loading) self.loading.stepBytes('replay', loaded, total);
     });
 
     this.scrubber.init();
@@ -426,11 +449,12 @@ const Wc3vViewer = class {
     this.pause();
     this.reset();
     this.setLoadingStatus(true);
-
-    // Show the loading overlay (in viewer.html) while we hydrate from IDB
-    // and finish setup. Hidden inside the try once setup() resolves.
-    const overlay = document.getElementById('local-loading-overlay');
-    if (overlay) overlay.style.display = 'flex';
+    this._defineLoadingPlan('local');
+    if (this.loading) {
+      this.loading.setTitle('Your replay');
+      this.loading.beginStep('library');
+      this.loading.setDetail('library', 'Hydrating from your local library');
+    }
 
     this.scrubber.init();
     this.scrubber.setupControls({
@@ -454,7 +478,6 @@ const Wc3vViewer = class {
         // recipient doesn't have the replay in their browser. Show a
         // friendly explanation instead of bouncing them to /builds.
         console.warn(`Local replay not found: ${id}`);
-        if (overlay) overlay.style.display = 'none';
         const missing = document.getElementById('missing-replay-overlay');
         if (missing) {
           missing.style.display = 'flex';
@@ -466,13 +489,12 @@ const Wc3vViewer = class {
       }
       this.replayId = `local-${id}`;
       this.mapData = record.parsedJson;
+      if (this.loading) this.loading.endStep('library');
       await this.setup();
       this.setLoadingStatus(false);
-      if (overlay) overlay.style.display = 'none';
     } catch (e) {
       console.error(`Failed to load local replay ${id}: ${e.message}`);
-      this.setLoadingStatus(false);
-      if (overlay) overlay.style.display = 'none';
+      if (this.loading) this.loading.fail('Could not load this replay from your library');
     }
   }
 
@@ -579,7 +601,12 @@ const Wc3vViewer = class {
   // payload is never materialized as a string on the main thread and is never
   // structured-clone copied. (gzip is decoded transparently by the browser via
   // Content-Encoding, same as with the old XHR.) `cb(null, err)` on failure.
-  loadFile (filename, cb) {
+  //
+  // Optional `onProgress(loaded, total)` streams byte counts while the body
+  // downloads. Caveat the LoadingScreen already handles: with Content-Encoding
+  // gzip the reader yields DECOMPRESSED bytes while Content-Length was the
+  // compressed size, so `loaded` can overrun `total`.
+  loadFile (filename, cb, onProgress) {
     // Use absolute URL for dev (with port), relative for production to avoid mixed-content issues.
     // Dev appends a cache-buster: replays are re-parsed constantly while developing, and the
     // browser otherwise serves a stale .wc3v.gz (e.g. missing newly-added fields like hero
@@ -591,10 +618,68 @@ const Wc3vViewer = class {
     fetch(url)
       .then(r => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.arrayBuffer();
+        if (!onProgress || !r.body || !r.body.getReader) return r.arrayBuffer();
+        const total = parseInt(r.headers.get('Content-Length'), 10) || 0;
+        const reader = r.body.getReader();
+        const chunks = [];
+        let loaded = 0;
+        const pump = () => reader.read().then(({ done, value }) => {
+          if (done) {
+            const out = new Uint8Array(loaded);
+            let offset = 0;
+            for (const c of chunks) { out.set(c, offset); offset += c.byteLength; }
+            return out.buffer;
+          }
+          chunks.push(value);
+          loaded += value.byteLength;
+          onProgress(loaded, total);
+          return pump();
+        });
+        return pump();
       })
       .then(buf => cb(buf, null))
       .catch(err => cb(null, err));
+  }
+
+  // Loading plan for the staged overlay. Weights are relative shares of the
+  // overall bar — dominated by terrain (the multi-MB baked texture). Mobile
+  // skips all heavy map / 3D loads, so those steps aren't shown at all.
+  _defineLoadingPlan (mode) {
+    if (!this.loading) return;
+    const steps = [{ id: 'scripts', label: 'Game engine', weight: 12 }];
+    if (mode === 'local') {
+      steps.push({ id: 'library', label: 'Your library', weight: 6 });
+    } else {
+      steps.push({ id: 'replay', label: 'Replay download', weight: 18 });
+      steps.push({ id: 'parse', label: 'Replay decode', weight: 4 });
+    }
+    steps.push({ id: 'mapData', label: 'Map data', weight: 8 });
+    steps.push({ id: 'icons', label: 'Unit icons', weight: 4 });
+    if (!this.mobileMode) {
+      steps.push({ id: 'terrain', label: 'Terrain', weight: 30 });
+      steps.push({ id: 'doodads', label: 'Trees & doodads', weight: 12 });
+      steps.push({ id: 'buildings', label: 'Buildings', weight: 8 });
+    }
+    steps.push({ id: 'ui', label: 'Interface', weight: 4 });
+    this.loading.definePlan(steps);
+
+    // Script loading is over by the time app.js runs — report the boot
+    // counter's final numbers as a completed step.
+    const boot = window.WC3V_BOOT;
+    this.loading.stepProgress('scripts', boot ? boot.loaded : 1, boot ? boot.total : 1);
+    this.loading.endStep('scripts');
+  }
+
+  // "1467978689_Eer0_FoCuS_EchoIsles22.w3g.wc3v" → "Eer0 vs FoCuS — EchoIsles22".
+  // Only the strict 1v1 shape (id_P1_P2_MapVer) is prettified; anything else
+  // (non-1v1, odd names) falls back to a generic title.
+  _loadingTitleFromFilename (filename) {
+    const base = String(filename || '').replace(/\.(w3g\.)?wc3v$/i, '');
+    const parts = base.split('_');
+    if (parts.length === 4 && /^\d+$/.test(parts[0])) {
+      return `${decodeURIComponent(parts[1])} vs ${decodeURIComponent(parts[2])} — ${parts[3]}`;
+    }
+    return 'Loading replay';
   }
 
   loadMapFile (mapType) {
@@ -650,14 +735,14 @@ const Wc3vViewer = class {
         // Load real WC3 cliff + tree mesh models (converted MDX → glTF)
         this.threeMapRenderer.setupCliffModels();
         // Load doodad textures before placing models so they render textured
-        this.updateLoadingStatus('Loading doodads...');
+        if (this.loading) this.loading.beginStep('doodads');
         return this.threeMapRenderer.loadDoodadTextures(tilesetChar).then(() => {
           if (this.doodadData) {
             this.threeMapRenderer.setupDoodadModels(this.doodadData);
           }
           // Load building model manifest, then place buildings
           // (textures are now embedded in the GLB files)
-          this.updateLoadingStatus('Loading buildings...');
+          if (this.loading) this.loading.beginStep('buildings');
           return this.threeMapRenderer.loadBuildingManifests().then(() => {
             const promises = [];
             if (this.neutralBuildings) {
@@ -674,6 +759,13 @@ const Wc3vViewer = class {
       });
     }).catch(err => {
       console.warn('3D terrain setup failed:', err);
+      // The viewer still works without 3D — mark the 3D steps as warnings so
+      // the overlay reflects the degraded state instead of wedging.
+      if (this.loading) {
+        this.loading.endStep('terrain', 'warn');
+        this.loading.endStep('doodads', 'warn');
+        this.loading.endStep('buildings', 'warn');
+      }
     });
   }
 
@@ -954,35 +1046,26 @@ const Wc3vViewer = class {
   ////
   // show / hide loading indicators
   ////
-  setLoadingStatus (isLoading, statusText) {
-    const loadingIcon = document.getElementById("loading-icon");
-    const loadingOverlay = document.getElementById("loading-overlay");
-    const loadingStatusEl = document.getElementById("loading-status");
-    const matchHeader = document.getElementById("match-header");
+  setLoadingStatus (isLoading) {
+    if (this.emptyGameWrapper) this.emptyGameWrapper.style.display = "none";
 
-    this.emptyGameWrapper.style.display = "none";
-
-    // Use new overlay when available, fall back to old icon
-    if (loadingOverlay) {
-      if (isLoading) {
-        loadingOverlay.classList.add('active');
-      } else {
-        loadingOverlay.classList.remove('active');
-      }
-      if (statusText && loadingStatusEl) {
-        loadingStatusEl.textContent = statusText;
-      }
+    // finish() force-completes every step, so a missed endStep upstream can
+    // never wedge the overlay — external completion drives it, same contract
+    // as the old #loading-overlay.
+    if (this.loading) {
+      if (isLoading) this.loading.show();
+      else this.loading.finish();
     }
-    loadingIcon.style.display = isLoading ? "block" : "none";
 
+    const matchHeader = document.getElementById("match-header");
     if (matchHeader) {
       matchHeader.style.display = isLoading ? "none" : "";
     }
   }
 
+  // Legacy shim — remaining callers feed the overlay's detail line.
   updateLoadingStatus (statusText) {
-    const el = document.getElementById("loading-status");
-    if (el) el.textContent = statusText;
+    if (this.loading) this.loading.setDetail(null, statusText);
   }
 
   togglePlay () {
@@ -3148,40 +3231,68 @@ const Wc3vViewer = class {
       this._psLastBucket = -1;
     }
 
+    // Unit icons load as hundreds of small <img>s — the total is known up
+    // front, so the "icons" step gets a real n/total counter.
+    const iconTotal = this.players.reduce((n, p) =>
+      n + p.units.reduce((m, u) => m + u.loaders.length, 0) + 1, 0);
+    let iconsDone = 0;
+    if (this.loading) this.loading.stepProgress('icons', 0, iconTotal);
     const playerLoadedPromiseList = this.players.map(player => {
-      return player.setup();
+      return player.setup(() => {
+        iconsDone++;
+        if (this.loading) this.loading.stepProgress('icons', iconsDone, iconTotal);
+      });
     });
 
     this.hideTutorial();
     if (!this.mobileMode) this.clearCanvas();
 
+    // Wrap each named map-data load with a settle tick for the overlay.
+    // Promise.resolve: loadGridFile() is synchronous and returns undefined.
+    const trackMap = (label, promise) => Promise.resolve(promise).then(v => {
+      if (this.loading) {
+        this.loading.stepTick('mapData');
+        this.loading.setDetail('mapData', label);
+      }
+      return v;
+    });
+
     // Mobile mode skips all map / terrain / doodad / walkmap / grid / neutral
     // building loads. Only the per-player BO data + the lightweight unit
     // balance lookup are needed to render build orders.
     const heavyMapLoads = this.mobileMode ? [] : [
-      this.loadMapFile(),
-      this.loadMapFile("grid"),
-      this.loadDoodadFile(),
-      this.loadWalkmap(),
-      this.loadNeutralBuildings(),
-      this.loadGridFile()
+      trackMap('Map image', this.loadMapFile()),
+      trackMap('Grid image', this.loadMapFile("grid")),
+      trackMap('Doodad placements', this.loadDoodadFile()),
+      trackMap('Walkmap', this.loadWalkmap()),
+      trackMap('Neutral buildings', this.loadNeutralBuildings()),
+      trackMap('Grid', this.loadGridFile())
     ];
 
     // finishes the setup promise — load independent data in parallel
-    this.updateLoadingStatus('Loading map data...');
+    if (this.loading) {
+      this.loading.beginStep('mapData');
+      this.loading.stepProgress('mapData', 0, heavyMapLoads.length + 1);
+    }
     return Promise.all([
       ...heavyMapLoads,
-      this.loadUnitBalance(),
+      trackMap('Unit balance', this.loadUnitBalance()),
       ...playerLoadedPromiseList
     ])
     .then(() => {
       if (this.mobileMode) return;
-      this.updateLoadingStatus('Building terrain...');
+      if (this.loading) {
+        this.loading.beginStep('terrain');
+        this.loading.setDetail('terrain', 'Building terrain');
+      }
       this.setupDrawing();
       return this.setup3DTerrain();
     })
     .then(() => {
-      this.updateLoadingStatus('Preparing UI...');
+      if (this.loading) {
+        this.loading.beginStep('ui');
+        this.loading.setDetail('ui', 'Preparing the interface');
+      }
 
       // Non-1v1 games are full-detail only: pro-analysis features (beginner
       // view, guided walkthrough, Compare) are 1v1-only and don't generalize.
@@ -3304,6 +3415,7 @@ const Wc3vViewer = class {
 
       this.applyLayoutMode();
 
+      if (this.loading) this.loading.endStep('ui');
       this.render();
     });
   }

@@ -236,7 +236,9 @@ const ClientPlayer = class {
     this.tab = StatusTabs[tab];
   }
 
-  setup () {
+  // `onTick` (optional) is called once per settled asset loader — the viewer's
+  // LoadingScreen turns these into a live "Unit icons n / total" counter.
+  setup (onTick) {
     const starterMap = {
       'O': 'ogre',
       'H': 'htow',
@@ -300,6 +302,13 @@ const ClientPlayer = class {
     });
 
     unitLoaders.push(iconPromise);
+
+    if (onTick) {
+      // Observe settles without altering the loaders the allSettled below
+      // consumes; icon loaders resolve(false) on error, but tick both sides
+      // anyway so a rejecting loader can't stall the counter.
+      unitLoaders.forEach(p => Promise.resolve(p).then(() => onTick(), () => onTick()));
+    }
 
     return Promise.allSettled(unitLoaders).then((e) => {
       this.assetsLoaded = true;

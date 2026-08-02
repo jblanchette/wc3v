@@ -70,6 +70,7 @@
         '/js/directorConfig.js',
         '/js/BandSwitcher.js',
         '/js/Helpers.js',
+        '/js/LoadingScreen.js',
         '/js/Drawing.js',
         '/js/Constants.js',
         '/js/Security.js',
@@ -140,6 +141,20 @@
       // async" — they download in parallel but execute strictly in insertion
       // order, before DOMContentLoaded. `defer` has NO effect on dynamically
       // inserted scripts, so it is not what we want here.
+      // Live counter for the inline #boot-loading block below — the only
+      // loading UI that exists during the ~2 MB script download window.
+      // LoadingScreen.js adopts (removes) the block once app.js boots and
+      // reports these numbers as its completed "Game engine" step.
+      window.WC3V_BOOT = { loaded: 0, total: _scripts.length };
+      const _bootTick = () => {
+        const b = window.WC3V_BOOT;
+        b.loaded++;
+        // Early script onloads can fire before <body> parses — guard, don't assume.
+        const fill = document.getElementById('boot-bar-fill');
+        const count = document.getElementById('boot-count');
+        if (fill) fill.style.width = Math.round((b.loaded / b.total) * 100) + '%';
+        if (count) count.textContent = 'Loading game engine… ' + b.loaded + ' / ' + b.total;
+      };
       window.WC3V_SCRIPTS_READY = new Promise(resolve => {
         let pending = _scripts.length;
         const done = () => { if (--pending === 0) resolve(); };
@@ -148,8 +163,8 @@
           // Absolute CDN URLs are already version-pinned; only bust our own files.
           el.src = /^https?:/.test(src) ? src : src + '?t=' + _t;
           el.async = false;
-          el.onload = done;
-          el.onerror = done;   // a missing optional script must not deadlock boot
+          el.onload = () => { _bootTick(); done(); };
+          el.onerror = () => { _bootTick(); done(); };   // a missing optional script must not deadlock boot
           document.head.appendChild(el);
         });
       });
@@ -185,14 +200,31 @@
   </head>
   <body style="overflow-y: hidden;">
 
-    <!-- Loading overlay shown when arriving at /viewer?local=ID, hidden by
-         loadLocal once setup() resolves. Plain CSS — no script dependency
-         on the rest of the bundle. -->
-    <div id="local-loading-overlay" class="parse-overlay" style="display:none" role="status" aria-live="polite">
-      <div class="parse-overlay-card">
-        <div class="parse-overlay-spinner" aria-hidden="true"></div>
-        <div class="parse-overlay-title">Loading your replay…</div>
-        <div class="parse-overlay-sub">Hydrating from your local library and rendering the map.</div>
+    <!-- Boot loading block: the ONLY UI during the script-download window
+         (~2 MB across ~56 files), which used to be a blank page. Fully
+         self-contained (inline style, hardcoded colors) — main.css and the
+         script bundle are still in flight when this renders. LoadingScreen.js
+         adopts + removes it (and its <style>) once app.js boots. -->
+    <style id="boot-loading-style">
+      #boot-loading { position: fixed; inset: 0; z-index: 9999; background: #0a0c12;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Segoe UI', Arial, sans-serif; }
+      #boot-loading .boot-card { display: flex; flex-direction: column; align-items: center;
+        gap: 14px; padding: 32px 36px; }
+      #boot-loading .boot-title { color: #f0f0f0; font-size: 1.1rem; font-weight: 700;
+        letter-spacing: 2px; }
+      #boot-loading .boot-bar { width: 240px; height: 6px; background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; overflow: hidden; }
+      #boot-loading .boot-bar-fill { height: 100%; width: 0%; border-radius: 999px;
+        background: linear-gradient(90deg, #8f7f4f, #b8a468); transition: width 0.15s ease; }
+      #boot-loading .boot-sub { color: #8a9ba8; font-size: 0.85rem;
+        font-variant-numeric: tabular-nums; }
+    </style>
+    <div id="boot-loading" role="status" aria-live="polite">
+      <div class="boot-card">
+        <div class="boot-title">WC3V</div>
+        <div class="boot-bar"><div class="boot-bar-fill" id="boot-bar-fill"></div></div>
+        <div class="boot-sub" id="boot-count">Loading game engine…</div>
       </div>
     </div>
 
@@ -288,12 +320,6 @@
                        Caster pips for these events draw on #player-canvas. -->
                   <div id="event-feed" aria-live="polite" aria-label="Recent actions"></div>
                 </div>
-
-                <div id="loading-overlay" role="status" aria-live="polite">
-                  <img src="/assets/loading-icon.svg" alt="" aria-hidden="true" />
-                  <div id="loading-status">Loading replay...</div>
-                </div>
-                <img id="loading-icon" src="/assets/loading-icon.svg" alt="" aria-hidden="true" />
 
                 <div id="building-info-tooltip"></div>
 
