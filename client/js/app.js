@@ -729,59 +729,78 @@ const Wc3vViewer = class {
     this.gridData = [];
   }
 
+  // The 3D load used to be a strict waterfall — heights, THEN terrain.jpg +
+  // palettes, THEN doodad textures, THEN tree models, THEN manifests, THEN
+  // buildings — five dependent network round-trips. The only real data
+  // dependencies are: palettes need heights (palette codes live in the
+  // heights header), the mesh needs [heights, terrain, palettes], and model
+  // PLACEMENT needs the mesh (`ready`) plus its own textures/manifest. So all
+  // fetches start immediately and only placement waits.
   setup3DTerrain () {
     if (!this.threeMapRenderer) return Promise.resolve();
+    const r = this.threeMapRenderer;
+    const ls = this.loading;
     const { name } = this.mapInfo;
-    return this.threeMapRenderer.loadHeights(name).then(heights => {
-      const tilesetChar = (this.mapInfo.tileset || 'L')[0];
-      // Load baked terrain texture + cliff palette textures in parallel
-      return Promise.all([
-        this.threeMapRenderer.loadTerrainTexture(name),
-        this.threeMapRenderer.loadPaletteTextures(tilesetChar, heights.paletteCodes, heights.cliffPaletteCodes)
-      ]).then(([terrainTex]) => {
-        this.threeMapRenderer.setupTerrain(heights, terrainTex, this.mapInfo, this.gameScaler);
-        if (this.gameScaler && this.gameScaler.setThreeRenderer) {
-          this.gameScaler.setThreeRenderer(this.threeMapRenderer);
-        }
-        // Load real WC3 cliff + tree mesh models (converted MDX → glTF)
-        this.threeMapRenderer.setupCliffModels();
-        // Load doodad textures before placing models so they render textured.
-        // Pass the map's actual doodad type codes (doo.json resolved in the
-        // Phase-3 Promise.all, strictly before this) so only referenced
-        // textures download.
-        if (this.loading) this.loading.beginStep('doodads');
-        const usedDoodadTypes = new Set(
-          (this.doodadData || []).map(d => (d.type || '').toLowerCase()).filter(t => t.length === 4)
+    const tilesetChar = (this.mapInfo.tileset || 'L')[0];
+
+    // The map's actual doodad type codes (doo.json resolved in the Phase-3
+    // Promise.all, strictly before this) — only referenced textures download.
+    const usedDoodadTypes = new Set(
+      (this.doodadData || []).map(d => (d.type || '').toLowerCase()).filter(t => t.length === 4)
+    );
+
+    // Every independent fetch starts NOW. loadDoodadTextures and
+    // loadBuildingManifests swallow their own errors; the extra catches keep
+    // a future refactor of either from sinking the whole 3D setup.
+    const pHeights = r.loadHeights(name);
+    const pTerrain = r.loadTerrainTexture(name);
+    const pPalettes = pHeights.then(h =>
+      r.loadPaletteTextures(tilesetChar, h.paletteCodes, h.cliffPaletteCodes));
+    const pDoodadTex = r.loadDoodadTextures(tilesetChar, usedDoodadTypes).catch(() => null);
+    const pManifests = r.loadBuildingManifests().catch(() => null);
+
+    const pMesh = Promise.all([pHeights, pTerrain, pPalettes]).then(([heights, terrainTex]) => {
+      r.setupTerrain(heights, terrainTex, this.mapInfo, this.gameScaler);
+      if (this.gameScaler && this.gameScaler.setThreeRenderer) {
+        this.gameScaler.setThreeRenderer(r);
+      }
+      // Real WC3 cliff meshes (converted MDX → glTF) — fire-and-forget,
+      // they pop in behind the overlay exactly as before.
+      r.setupCliffModels();
+      if (ls) ls.endStep('terrain');
+    });
+
+    // Placement: trees need mesh + doodad textures; buildings need mesh +
+    // manifest. Doodads and buildings place CONCURRENTLY — their overlay
+    // steps are ended explicitly here, not by phase-boundary sweeps.
+    return Promise.all([pMesh, pDoodadTex, pManifests]).then(() => {
+      const placements = [];
+
+      if (this.doodadData) {
+        placements.push(
+          Promise.resolve(r.setupDoodadModels(this.doodadData))
+            .then(() => { if (ls) ls.endStep('doodads'); })
         );
-        return this.threeMapRenderer.loadDoodadTextures(tilesetChar, usedDoodadTypes).then(() => {
-          if (this.doodadData) {
-            this.threeMapRenderer.setupDoodadModels(this.doodadData);
-          }
-          // Load building model manifest, then place buildings
-          // (textures are now embedded in the GLB files)
-          if (this.loading) this.loading.beginStep('buildings');
-          return this.threeMapRenderer.loadBuildingManifests().then(() => {
-            const promises = [];
-            if (this.neutralBuildings) {
-              promises.push(this.threeMapRenderer.setupNeutralBuildingModels(this.neutralBuildings));
-            }
-            if (this.players) {
-              promises.push(this.threeMapRenderer.setupPlayerBuildingModels(this.players));
-            }
-            return Promise.all(promises).then(() => {
-              this._setupBuildingSubsystems();
-            });
-          });
-        });
+      } else if (ls) {
+        ls.endStep('doodads', 'skipped');
+      }
+
+      const buildingJobs = [];
+      if (this.neutralBuildings) buildingJobs.push(r.setupNeutralBuildingModels(this.neutralBuildings));
+      if (this.players) buildingJobs.push(r.setupPlayerBuildingModels(this.players));
+      placements.push(Promise.all(buildingJobs).then(() => { if (ls) ls.endStep('buildings'); }));
+
+      return Promise.all(placements).then(() => {
+        this._setupBuildingSubsystems();
       });
     }).catch(err => {
       console.warn('3D terrain setup failed:', err);
       // The viewer still works without 3D — mark the 3D steps as warnings so
       // the overlay reflects the degraded state instead of wedging.
-      if (this.loading) {
-        this.loading.endStep('terrain', 'warn');
-        this.loading.endStep('doodads', 'warn');
-        this.loading.endStep('buildings', 'warn');
+      if (ls) {
+        ls.endStep('terrain', 'warn');
+        ls.endStep('doodads', 'warn');
+        ls.endStep('buildings', 'warn');
       }
     });
   }
