@@ -274,12 +274,12 @@
       this._renderStepCount(step);
     }
 
+    // Counters never complete a step — a full counter may grow again when a
+    // later loader registers more work on the same step (doodad textures fill
+    // to 93/93, then tree model groups add ~50 more). Steps end only via
+    // beginStep's sweep, an explicit endStep, or finish().
     _afterCounterChange (step) {
-      if (step.countTotal > 0 && step.countDone >= step.countTotal) {
-        this._setState(step, 'done');
-      } else {
-        this._renderStepCount(step);
-      }
+      this._renderStepCount(step);
       this._renderBar();
     }
 

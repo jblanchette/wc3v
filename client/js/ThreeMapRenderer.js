@@ -219,10 +219,18 @@
       this._rafId = null;
     }
 
+    // The viewer's LoadingScreen, when present. All progress calls below are
+    // no-ops without it (headless construction, tests, missing subsystem).
+    _loading () {
+      return (this.viewer && this.viewer.loading) || null;
+    }
+
     // Load binary heightmap from /maps/{name}/heights.bin.gz.
     // Returns a promise resolving to { cols, rows, minH, maxH, ground: Float32Array, water: Float32Array }.
     loadHeights (mapName) {
       const url = `/maps/${mapName}/heights.bin.gz`;
+      const ls = this._loading();
+      if (ls) ls.setDetail('terrain', 'Height data');
       return fetch(url).then(res => {
         if (!res.ok) throw new Error(`heights fetch ${res.status}`);
         return res.arrayBuffer();
@@ -372,20 +380,60 @@
     }
 
     // Load the baked terrain texture (multi-layer composited in regen-maps).
+    //
+    // This is the single largest download of a viewer session (2–110 MB
+    // depending on the map), so it streams via fetch + reader for real byte
+    // progress — THREE.TextureLoader goes through an <img> and cannot report
+    // progress at all. createImageBitmap also decodes the JPEG off the main
+    // thread. Falls back to the old TextureLoader path on any failure.
     loadTerrainTexture (mapName) {
-      return new Promise((resolve, reject) => {
+      const url = `/maps/${mapName}/terrain.jpg`;
+      const configure = (tex) => {
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.ClampToEdgeWrapping;
+        tex.wrapT = THREE.ClampToEdgeWrapping;
+        tex.minFilter = THREE.LinearMipmapLinearFilter;
+        tex.magFilter = THREE.LinearFilter;
+        tex.generateMipmaps = true;
+        tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
+        return tex;
+      };
+      const legacy = () => new Promise((resolve) => {
         const loader = new THREE.TextureLoader();
-        loader.load(`/maps/${mapName}/terrain.jpg`, tex => {
-          tex.colorSpace = THREE.SRGBColorSpace;
-          tex.wrapS = THREE.ClampToEdgeWrapping;
-          tex.wrapT = THREE.ClampToEdgeWrapping;
-          tex.minFilter = THREE.LinearMipmapLinearFilter;
-          tex.magFilter = THREE.LinearFilter;
-          tex.generateMipmaps = true;
-          tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy();
-          resolve(tex);
-        }, undefined, () => resolve(null));
+        loader.load(url, tex => resolve(configure(tex)), undefined, () => resolve(null));
       });
+      if (typeof createImageBitmap !== 'function') return legacy();
+
+      const ls = this._loading();
+      if (ls) ls.setDetail('terrain', 'Streaming terrain texture');
+      return fetch(url).then(res => {
+        if (!res.ok) throw new Error(`terrain fetch ${res.status}`);
+        if (!res.body || !res.body.getReader) return res.blob();
+        const total = parseInt(res.headers.get('Content-Length'), 10) || 0;
+        const reader = res.body.getReader();
+        const chunks = [];
+        let loaded = 0;
+        const pump = () => reader.read().then(({ done, value }) => {
+          if (done) return new Blob(chunks, { type: 'image/jpeg' });
+          chunks.push(value);
+          loaded += value.byteLength;
+          if (ls) ls.stepBytes('terrain', loaded, total);
+          return pump();
+        });
+        return pump();
+      })
+      // TextureLoader textures default to flipY=true (flipped at GPU upload).
+      // For ImageBitmap we pre-flip at decode and set flipY=false — same
+      // final orientation, verified recipe (see MDX→glTF memory notes).
+      .then(blob => createImageBitmap(blob, { imageOrientation: 'flipY' }))
+      .then(bitmap => {
+        const tex = new THREE.Texture(bitmap);
+        tex.flipY = false;
+        configure(tex);
+        tex.needsUpdate = true;
+        return tex;
+      })
+      .catch(() => legacy());
     }
 
     // Load the map diffuse texture (same map.jpg the 2D path used).
@@ -1828,6 +1876,12 @@
             }));
           }
 
+          const ls = this._loading();
+          if (ls && loads.length) {
+            ls.setDetail('doodads', 'Doodad textures');
+            ls.stepAddTotal('doodads', loads.length);
+            loads.forEach(p => p.then(() => ls.stepTick('doodads')));
+          }
           return Promise.all(loads);
         })
         .then(() => {
@@ -1861,15 +1915,17 @@
     // Load and place real WC3 doodad models (converted MDX → glTF).
     // Trees, rocks, plants, bushes — anything with a matching .glb file.
     // Doodads without a model get simple placeholder shapes.
+    // Returns a Promise resolving once every model group has loaded (or
+    // failed) — callers can await tree placement instead of racing it.
     setupDoodadModels (doodadData) {
-      if (!doodadData || !this.ready) return;
+      if (!doodadData || !this.ready) return Promise.resolve();
       if (!window.GLBLoader) {
         this.setupDoodads(doodadData);
         this.requestRender();
-        return;
+        return Promise.resolve();
       }
       const doodads = Array.isArray(doodadData) ? doodadData : doodadData.grid;
-      if (!doodads || !doodads.length) return;
+      if (!doodads || !doodads.length) return Promise.resolve();
 
       // Spatial index of all tree instances for dynamic clearing
       this._treeInstances = [];
@@ -1900,11 +1956,28 @@
       let loadedCount = 0, modelCount = 0, skipCount = 0;
       const totalGroups = Object.keys(groups).length;
       _tlog('[ThreeMapRenderer] loading doodad models:', doodads.length, 'doodads in', totalGroups, 'groups');
+      if (totalGroups === 0) return Promise.resolve();
+
+      const ls = this._loading();
+      if (ls) {
+        ls.setDetail('doodads', 'Tree & doodad models');
+        ls.stepAddTotal('doodads', totalGroups);
+      }
+      let resolveAll;
+      const allPlaced = new Promise(resolve => { resolveAll = resolve; });
+      // Single accounting point for every per-group outcome (placed, no
+      // geometry, missing .glb) — drives both the overlay tick and the
+      // completion promise.
+      const groupSettled = () => {
+        loadedCount++;
+        if (ls) ls.stepTick('doodads');
+        if (loadedCount === totalGroups) resolveAll();
+      };
 
       for (const [modelKey, group] of Object.entries(groups)) {
         const url = '/assets/models/trees/' + modelKey + '.glb';
         loader.load(url, (geo) => {
-          if (!geo || geo.isGroup) { loadedCount++; return; }
+          if (!geo || geo.isGroup) { groupSettled(); return; }
 
           const isTree = isTreeType(group.type);
           const baseType = group.type.toLowerCase();
@@ -1958,17 +2031,18 @@
           // matrixAutoUpdate, so freezing the mesh transform is safe.
           this._freezeMatrix(mesh);
           modelCount += instCount;
-          loadedCount++;
           this.requestRender();
+          groupSettled();
           if (loadedCount === totalGroups) {
             _tlog('[ThreeMapRenderer] doodad models:', modelCount, 'placed,', skipCount, 'skipped (no glb)');
           }
         }, undefined, (err) => {
           skipCount += group.instances.length;
-          loadedCount++;
+          groupSettled();
           if (loadedCount <= 3) _tlog('[ThreeMapRenderer] doodad glb not found:', modelKey);
         });
       }
+      return allPlaced;
     }
 
     // -----------------------------------------------------------------------
@@ -2046,6 +2120,9 @@
       this._buildingTextureManifest = null;
       this._buildingModelManifest = null;
 
+      const ls = this._loading();
+      if (ls) ls.setDetail('buildings', 'Building manifests');
+
       // Cache buster for GLB/JSON files. In dev, bust on every load so local
       // asset edits show up immediately; in production use the stable
       // WC3V_CONFIG.assetVersion so the browser + CDN can actually cache these
@@ -2119,6 +2196,12 @@
       _tlog('[ThreeMapRenderer] loading neutral buildings:', neutralBuildings.length,
         'in', totalGroups, 'model groups');
 
+      const ls = this._loading();
+      if (ls && totalGroups) {
+        ls.setDetail('buildings', 'Neutral buildings');
+        ls.stepAddTotal('buildings', totalGroups);
+      }
+
       const loadPromises = [];
       const cb = this._buildingCacheBuster || '';
       for (const [modelName, instances] of Object.entries(groups)) {
@@ -2156,6 +2239,7 @@
           }, undefined, () => { resolve(); });
         }));
       }
+      if (ls) loadPromises.forEach(p => p.then(() => ls.stepTick('buildings')));
       return Promise.all(loadPromises).then(() => {
         _tlog('[ThreeMapRenderer] neutral buildings placed');
       });
@@ -2213,6 +2297,12 @@
       const totalModels = Object.keys(byModel).length;
       _tlog('[ThreeMapRenderer] loading player buildings:', buildingEntries.length,
         'buildings,', totalModels, 'unique models');
+
+      const ls = this._loading();
+      if (ls && totalModels) {
+        ls.setDetail('buildings', 'Player buildings');
+        ls.stepAddTotal('buildings', totalModels);
+      }
 
       const loadPromises = [];
       const pcb = this._buildingCacheBuster || '';
@@ -2333,6 +2423,7 @@
           }, undefined, () => { resolve(); });
         }));
       }
+      if (ls) loadPromises.forEach(p => p.then(() => ls.stepTick('buildings')));
       return Promise.all(loadPromises).then(() => {
         _tlog('[ThreeMapRenderer] player buildings ready:', this._playerBuildings.length);
       });
