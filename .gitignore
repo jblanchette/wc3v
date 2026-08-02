@@ -51,3 +51,10 @@ reference-shots/
 
 # Engine-truth capture screenshots (fixtures are the committed artifact)
 debug/captures/
+
+# Desktop app build artifacts. desktop/dist is assembled by
+# tools/build-desktop-client.js from desktop/src-frontend + the committed
+# parser bundle; src-tauri/target is the Rust build dir.
+desktop/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/schemas/

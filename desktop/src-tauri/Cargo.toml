@@ -1,0 +1,39 @@
+[package]
+name = "wc3v-desktop"
+version = "0.1.0"
+description = "WC3V — local replay auto-parse and overlay"
+authors = ["Jeff Blanchette"]
+license = "GPL-3.0"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Filesystem watching for the replay folders. `notify` is the crate behind
+# tauri-plugin-fs's watch support; used directly so the watcher can own its
+# own debounce and hashing rather than round-tripping every raw event to JS.
+notify = "6"
+sha2 = "0.10"
+dirs = "5"
+
+[features]
+# Tauri's default CSP/devtools split. Nothing custom yet.
+default = []
+
+[profile.release]
+# Small binary is a product goal, not just tidiness — the whole pitch is an
+# installer that carries nothing it doesn't need.
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
