@@ -15,7 +15,7 @@
 //!    in the wild. Announcing per-path would double-count games; we announce
 //!    per unique content hash.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::sync::Mutex;
@@ -35,7 +35,7 @@ static STARTED: Mutex<bool> = Mutex::new(false);
 
 /// Begin watching `roots`. Returns how many roots are being watched.
 /// Idempotent — calling twice will not start a second watcher.
-pub fn start(app: AppHandle, roots: Vec<PathBuf>) -> Result<usize, String> {
+pub fn start(app: AppHandle, roots: Vec<PathBuf>, index_path: PathBuf) -> Result<usize, String> {
     {
         let mut started = STARTED.lock().unwrap();
         if *started {
@@ -64,14 +64,31 @@ pub fn start(app: AppHandle, roots: Vec<PathBuf>) -> Result<usize, String> {
             }
         }
 
-        // Seed the seen-set with what is already on disk, so starting the app
-        // does not replay the user's entire history as "new games".
-        let mut seen: HashSet<String> = HashSet::new();
+        // Seed from what is already on disk, so starting the app does not
+        // announce the user's entire history as "new games".
+        //
+        // The scan hashes only files whose SIZE collides with another file —
+        // two thirds of the corpus is never read. So we cannot seed a set of
+        // hashes and compare against it. Instead we keep size → paths, and
+        // only hash when a new file's size actually collides with something,
+        // which mirrors the scan's own rule and is almost always zero work.
+        let mut by_size: HashMap<u64, Vec<PathBuf>> = HashMap::new();
+        let mut hash_cache: HashMap<PathBuf, String> = HashMap::new();
         for root in &roots {
-            for rf in replays::scan_root(root) {
-                seen.insert(rf.sha256);
+            for rf in replays::scan_root(root, &index_path).replays {
+                let p = PathBuf::from(&rf.path);
+                by_size.entry(rf.size).or_default().push(p);
             }
         }
+
+        let hash_of = |path: &PathBuf, cache: &mut HashMap<PathBuf, String>| -> Option<String> {
+            if let Some(h) = cache.get(path) {
+                return Some(h.clone());
+            }
+            let h = replays::hash_file(path).ok()?;
+            cache.insert(path.clone(), h.clone());
+            Some(h)
+        };
 
         // path → (last observed size, when it was observed)
         let mut pending: HashMap<PathBuf, (u64, Instant)> = HashMap::new();
@@ -116,14 +133,31 @@ pub fn start(app: AppHandle, roots: Vec<PathBuf>) -> Result<usize, String> {
             for path in ready {
                 pending.remove(&path);
 
-                let Ok(sha) = replays::hash_file(&path) else {
-                    continue;
+                let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                let siblings = by_size.entry(size).or_default().clone();
+
+                // No other file of this size exists, so this cannot be a
+                // duplicate and nothing needs reading.
+                let is_dup = if siblings.iter().all(|p| p == &path) {
+                    false
+                } else {
+                    match hash_of(&path, &mut hash_cache) {
+                        None => false,
+                        Some(mine) => siblings.iter().any(|other| {
+                            other != &path
+                                && hash_of(other, &mut hash_cache).as_deref() == Some(mine.as_str())
+                        }),
+                    }
                 };
-                if !seen.insert(sha.clone()) {
+
+                let entry = by_size.entry(size).or_default();
+                if !entry.contains(&path) {
+                    entry.push(path.clone());
+                }
+                if is_dup {
                     continue; // same game, another path
                 }
-
-                let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                let sha = hash_cache.get(&path).cloned().unwrap_or_default();
                 // `path` is needed to read the file back and never rendered;
                 // the UI shows `fileName` only.
                 let _ = app.emit(

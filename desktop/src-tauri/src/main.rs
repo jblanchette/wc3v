@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use serde::Serialize;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 
 /// Roots the user has actually opted into. Every scoped read is checked
 /// against this list, so the set of readable paths is explicit and small.
@@ -42,6 +42,14 @@ fn map_cache_dir(app: &tauri::AppHandle) -> PathBuf {
         .app_data_dir()
         .unwrap_or_else(|_| PathBuf::from("."))
         .join("maps")
+}
+
+/// Persisted (path, size, mtime) → hash index, so repeat scans read no files.
+fn hash_index_path(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("hash-index.json")
 }
 
 /// Canonicalise `candidate` and require it to sit under one of `allowed`.
@@ -82,7 +90,10 @@ fn add_root(path: String, state: State<'_, AppState>) -> Result<replays::ReplayR
     if !p.is_dir() {
         return Err("not a directory".into());
     }
-    let count = replays::scan_root(&p).len();
+    // Cheap count only — the real scan happens when the folder is selected, so
+    // adding a folder never pays for a full dedupe pass.
+    let mut count = 0;
+    replays::count_replays(&p, &mut count);
     let mut roots = state.roots.lock().unwrap();
     if !roots.contains(&p) {
         roots.push(p.clone());
@@ -94,11 +105,45 @@ fn add_root(path: String, state: State<'_, AppState>) -> Result<replays::ReplayR
     })
 }
 
+/// Scan a root. `async` is load-bearing, not stylistic: Tauri runs synchronous
+/// commands on the MAIN thread, so the original blocking version stopped the
+/// window pumping messages and Windows painted it "Not Responding" for the
+/// whole scan. Async commands run on the async runtime, and the actual work is
+/// pushed to the blocking pool so it cannot stall the runtime either.
 #[tauri::command]
-fn scan_replays(root: String, state: State<'_, AppState>) -> Result<Vec<replays::ReplayFile>, String> {
-    let allowed = state.roots.lock().unwrap().clone();
+async fn scan_replays(
+    root: String,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<replays::ScanResult, String> {
+    // Take and release the lock before any await — a std MutexGuard held
+    // across an await point would make this future non-Send.
+    let allowed = { state.roots.lock().unwrap().clone() };
     let dir = ensure_within(Path::new(&root), &allowed)?;
-    Ok(replays::scan_root(&dir))
+    let index = hash_index_path(&app);
+
+    // Phase 1: walk + stat only (~230 ms, reads no file contents). This is
+    // everything the list needs, so it is what the caller gets back.
+    let meta = tauri::async_runtime::spawn_blocking(move || replays::scan_meta(&dir))
+        .await
+        .map_err(|e| format!("scan failed: {e}"))?;
+
+    // Phase 2: dedupe behind the rendered list, and emit the collapsed result
+    // when it lands. The first run has to read ~268 MB to resolve size
+    // collisions and is bound by disk speed; every run after that is index
+    // hits and finishes in ~160 ms. Either way the user is looking at their
+    // replays the whole time instead of a spinner.
+    let pending = meta.replays.clone();
+    let app_bg = app.clone();
+    tauri::async_runtime::spawn(async move {
+        let deduped =
+            tauri::async_runtime::spawn_blocking(move || replays::dedupe(pending, &index)).await;
+        if let Ok(result) = deduped {
+            let _ = app_bg.emit("scan-deduped", result);
+        }
+    });
+
+    Ok(meta)
 }
 
 /// Read a replay's bytes for the parser worker. Scoped to registered roots.
@@ -164,7 +209,8 @@ fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> InitPayload {
 #[tauri::command]
 fn start_watching(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<usize, String> {
     let roots = state.roots.lock().unwrap().clone();
-    watcher::start(app, roots)
+    let index = hash_index_path(&app);
+    watcher::start(app, roots, index)
 }
 
 fn main() {

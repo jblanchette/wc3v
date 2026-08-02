@@ -22,8 +22,15 @@ serde_json = "1"
 # tauri-plugin-fs's watch support; used directly so the watcher can own its
 # own debounce and hashing rather than round-tripping every raw event to JS.
 notify = "6"
-sha2 = "0.10"
 dirs = "5"
+
+# Dedupe hash. This is not a security boundary — it only answers "are these
+# two local files the same game", so a cryptographic hash is the wrong tool.
+# sha2 managed 114 MB/s in release and 15 MB/s in debug (it does not use the
+# CPU's SHA extensions by default), which made the first scan take seconds.
+# xxh3 runs at several GB/s, and it is combined with file size so a collision
+# would have to match both.
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
 
 [features]
 # Tauri's default CSP/devtools split. Nothing custom yet.

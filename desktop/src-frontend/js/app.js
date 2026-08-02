@@ -172,13 +172,23 @@ const scan = async (root) => {
   const label = labelFor(root);
   el('status').textContent = `scanning ${label}…`;
   const t0 = performance.now();
-  state.replays = await invoke('scan_replays', { root });
-  log(`scanned ${label} in ${Math.round(performance.now() - t0)} ms`);
-  const interesting = state.replays.filter(r => r.interesting).length;
-  el('status').textContent =
-    `${state.replays.length} unique replays (${interesting} playable, ` +
-    `${state.replays.length - interesting} aborted)`;
+  const { replays, stats } = await invoke('scan_replays', { root });
+  const wall = Math.round(performance.now() - t0);
+
+  // Phase 1 result: every file, duplicates not yet collapsed. Render it now —
+  // dedupe arrives on the `scan-deduped` event and quietly replaces the list.
+  state.replays = replays;
+  showCounts(replays, ' · deduping…');
+  log(`listed ${label} in ${wall} ms — ` +
+      `walk ${stats.walk_ms} / stat ${stats.stat_ms} ms, ${stats.files_seen} files`);
   renderReplays();
+};
+
+const showCounts = (list, suffix = '') => {
+  const interesting = list.filter(r => r.interesting).length;
+  el('status').textContent =
+    `${list.length} replays (${interesting} playable, ` +
+    `${list.length - interesting} aborted)${suffix}`;
 };
 
 const run = async (path) => {
@@ -264,6 +274,20 @@ const boot = async () => {
   });
 
   await listen('watcher-error', (event) => log(`watcher: ${event.payload}`, 'err'));
+
+  // Dedupe finished behind the rendered list.
+  await listen('scan-deduped', (event) => {
+    const { replays, stats } = event.payload;
+    state.replays = replays;
+    showCounts(replays);
+    // Surface the cost breakdown. Hashing is size-gated and index-cached, so a
+    // repeat scan should report 0 hashed and all index hits — if that ever
+    // stops being true it shows up here instead of just feeling slow.
+    log(`deduped in ${stats.total_ms} ms — ${stats.duplicates} duplicates removed · ` +
+        `hashed ${stats.hashed} (${(stats.bytes_hashed / 1048576).toFixed(0)} MB), ` +
+        `index hits ${stats.index_hits}`, 'ok');
+    renderReplays();
+  });
 
   // Scanning is the slow step (it hashes every file), and a failure here
   // should not take the rest of the app down with it.
