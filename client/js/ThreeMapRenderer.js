@@ -392,34 +392,42 @@
 
       const ls = this._loading();
       if (ls) ls.setDetail('terrain', 'Streaming terrain texture');
-      return fetch(url).then(res => {
-        if (!res.ok) throw new Error(`terrain fetch ${res.status}`);
-        if (!res.body || !res.body.getReader) return res.blob();
-        const total = parseInt(res.headers.get('Content-Length'), 10) || 0;
-        const reader = res.body.getReader();
-        const chunks = [];
-        let loaded = 0;
-        const pump = () => reader.read().then(({ done, value }) => {
-          if (done) return new Blob(chunks, { type: 'image/jpeg' });
-          chunks.push(value);
-          loaded += value.byteLength;
-          if (ls) ls.stepBytes('terrain', loaded, total);
+
+      const streamToTexture = (texUrl, mime) => fetch(texUrl)
+        .then(res => {
+          if (!res.ok) throw new Error(`terrain fetch ${res.status}`);
+          if (!res.body || !res.body.getReader) return res.blob();
+          const total = parseInt(res.headers.get('Content-Length'), 10) || 0;
+          const reader = res.body.getReader();
+          const chunks = [];
+          let loaded = 0;
+          const pump = () => reader.read().then(({ done, value }) => {
+            if (done) return new Blob(chunks, { type: mime });
+            chunks.push(value);
+            loaded += value.byteLength;
+            if (ls) ls.stepBytes('terrain', loaded, total);
+            return pump();
+          });
           return pump();
+        })
+        // TextureLoader textures default to flipY=true (flipped at GPU upload).
+        // For ImageBitmap we pre-flip at decode and set flipY=false — same
+        // final orientation, verified recipe (see MDX→glTF memory notes).
+        .then(blob => createImageBitmap(blob, { imageOrientation: 'flipY' }))
+        .then(bitmap => {
+          const tex = new THREE.Texture(bitmap);
+          tex.flipY = false;
+          configure(tex);
+          tex.needsUpdate = true;
+          return tex;
         });
-        return pump();
-      })
-      // TextureLoader textures default to flipY=true (flipped at GPU upload).
-      // For ImageBitmap we pre-flip at decode and set flipY=false — same
-      // final orientation, verified recipe (see MDX→glTF memory notes).
-      .then(blob => createImageBitmap(blob, { imageOrientation: 'flipY' }))
-      .then(bitmap => {
-        const tex = new THREE.Texture(bitmap);
-        tex.flipY = false;
-        configure(tex);
-        tex.needsUpdate = true;
-        return tex;
-      })
-      .catch(() => legacy());
+
+      // terrain.webp (tools/optimize-terrain.js output: capped edge + WebP,
+      // 3-10x smaller than the source jpg) is preferred; maps that haven't
+      // been optimized yet fall back to terrain.jpg, then to TextureLoader.
+      return streamToTexture(`/maps/${mapName}/terrain.webp`, 'image/webp')
+        .catch(() => streamToTexture(url, 'image/jpeg'))
+        .catch(() => legacy());
     }
 
     // Load the map diffuse texture (same map.jpg the 2D path used).

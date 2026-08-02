@@ -63,7 +63,10 @@ const GROUPS = [
   // Maps split by file kind so each gets the right Content-* headers.
   { name: 'maps-immutable',    localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/heights.bin.gz'],  cache: IMMUTABLE },
   { name: 'maps-mutable-json', localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.json.gz'],       cache: MUTABLE_1D, extraHeaders: ['Content-Encoding: gzip', 'Content-Type: application/json'] },
-  { name: 'maps-mutable-jpg',  localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.jpg'],           cache: MUTABLE_1D }
+  { name: 'maps-mutable-jpg',  localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.jpg'],           cache: MUTABLE_1D },
+  // terrain.webp from tools/optimize-terrain.js — the client's preferred
+  // terrain texture (falls back to terrain.jpg when absent).
+  { name: 'maps-mutable-webp', localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.webp'],          cache: MUTABLE_1D }
 ];
 
 function checkRclone () {
