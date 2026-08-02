@@ -316,6 +316,9 @@ const Wc3vViewer = class {
       try { this.threeMapRenderer.dispose(); } catch (e) { /* never block reset */ }
     }
     this.threeMapRenderer = null; // re-created in setup() once #three-canvas exists
+    // GLB byte cache is per-load: dev cache-busters change every load, so
+    // stale entries would only accumulate.
+    if (window.GLBLoader && window.GLBLoader.clearCache) window.GLBLoader.clearCache();
     this.displayScale = 1.0;
 
     this.isDev = (window.location.hostname === "127.0.0.1");

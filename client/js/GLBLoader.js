@@ -132,13 +132,50 @@
     return mat;
   }
 
+  // url → Promise<ArrayBuffer>. Neutral and player building setup construct
+  // separate GLBLoader instances and can request the same .glb concurrently;
+  // caching the fetched BYTES de-dupes that. Only bytes are cached — parsed
+  // results get material-wrapped and mutated by callers, so each caller
+  // re-parses (cheap) from the shared buffer. A failed fetch evicts itself
+  // so a later retry isn't poisoned. Cleared from app.js reset(): the dev
+  // cache-buster changes per load and would grow the map unboundedly.
+  const _bufferCache = new Map();
+
+  function _fetchGlbBuffer (url, onProgress) {
+    if (_bufferCache.has(url)) return _bufferCache.get(url);
+    const p = fetch(url).then(res => {
+      if (!res.ok) throw new Error('GLB fetch failed: ' + res.status);
+      if (!onProgress || !res.body || !res.body.getReader) return res.arrayBuffer();
+      const total = parseInt(res.headers.get('Content-Length'), 10) || 0;
+      const reader = res.body.getReader();
+      const chunks = [];
+      let loaded = 0;
+      const pump = () => reader.read().then(({ done, value }) => {
+        if (done) {
+          const out = new Uint8Array(loaded);
+          let offset = 0;
+          for (const c of chunks) { out.set(c, offset); offset += c.byteLength; }
+          return out.buffer;
+        }
+        chunks.push(value);
+        loaded += value.byteLength;
+        onProgress(loaded, total);
+        return pump();
+      });
+      return pump();
+    });
+    p.catch(() => { _bufferCache.delete(url); });
+    _bufferCache.set(url, p);
+    return p;
+  }
+
   class GLBLoader {
+    static clearCache () {
+      _bufferCache.clear();
+    }
+
     load (url, onLoad, onProgress, onError) {
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error('GLB fetch failed: ' + res.status);
-          return res.arrayBuffer();
-        })
+      _fetchGlbBuffer(url, onProgress)
         .then(ab => {
           const result = this.parse(ab);
           // parse returns a Promise for multi-primitive GLBs (async image loading)
