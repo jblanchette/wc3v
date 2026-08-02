@@ -103,6 +103,11 @@ const path = require('path');
 //     called repeatedly during parse. Throttled internally to ~10/sec so
 //     callers can drive a UI progress bar without taking over the loop.
 //     phase ∈ { 'metadata', 'parsing', 'postprocess', 'done' }
+//   - skipPathfinding: boolean — FAST PROFILE MODE. Replaces A* with straight
+//     lines. A* is ~60% of parse time, so this is several times faster, but
+//     unit routes ignore terrain and any output that will be VIEWED is wrong.
+//     Only for bulk stat extraction (build orders, timings, economy, matchup),
+//     never for a .wc3v that gets rendered. See PathFinder.findPath.
 const doParsing = async (input, options = {}) => {
   let actionCount = 0;
   let globalTime = 0;
@@ -123,7 +128,7 @@ const doParsing = async (input, options = {}) => {
     logManager.getTracer().enable();
   }
 
-  let playerManager = new PlayerManager();
+  let playerManager = new PlayerManager(options);
 
   const buffer = Buffer.isBuffer(input) ? input : fs.readFileSync(input);
   const parser = new ReplayParser();

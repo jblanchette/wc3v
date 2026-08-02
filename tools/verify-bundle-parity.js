@@ -132,7 +132,11 @@ const parseViaNode = async (buffer) => {
 
   const r = await wc3v.doParsing(buffer, {
     mapDataCache: { [mapDataName]: cache },
-    skipTerrainRead: true
+    skipTerrainRead: true,
+    // --fast exercises the profile-only path (straight lines instead of A*).
+    // Not used for parity runs; this harness doubles as the "parse once and
+    // dump JSON" tool for benchmarking and diffing.
+    skipPathfinding: !!args.fast
   });
   return utils.buildOutputObject(r.replay, r.players, r.world, r.validation);
 };
