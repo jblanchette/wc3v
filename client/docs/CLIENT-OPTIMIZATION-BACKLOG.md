@@ -145,3 +145,52 @@ with full smoke-testing, not bundled with anything else.
   copy-pasted (diagram shows slot `5`, map has `4`; slot `4` duplicates slot
   `2`'s x-offset). Needs the intended multi-hero layout confirmed before
   touching — it positions hero icons.
+
+---
+
+## D. Load-path network items — evaluated Aug 2026, deliberately deferred
+
+Context: the Aug 2026 loading pass shipped gzip replay transfers (-84%),
+dead-download removal (ground palettes / gridmap.jpg / building-textures /
+builds-manifest-on-local), walkmap.json.gz prod deploys, the early replay
+fetch, a flattened setup3DTerrain waterfall, GLBLoader fetch de-dupe,
+per-file `?v=` hashes, unit-model warmup, and 6144px WebP terrain
+(`tools/optimize-terrain.js`). The items below were considered for that pass
+and consciously skipped — with the reasoning, so they aren't re-litigated
+from scratch.
+
+### D1. Service worker precache/runtime-cache — SKIP (low marginal value)
+What it would buy: killing the `/assets/* → cdn.wc3v.com` 301 hop and HTTP
+revalidations. But browsers cache the 301s (first-request-per-URL cost only),
+and models/textures/terrain are already `immutable, 1y` — the HTTP cache
+delivers ~everything an SW would for repeat visits. Costs: SW lifecycle bugs
+(the repo has prior stale-content incident notes in render.yaml), unbounded
+Cache API growth with 5-11 MB terrain files (no built-in eviction — would
+need hand-rolled LRU), and a whole new class of "why is prod stale" reports
+on a trunk-deployed site. Revisit only if offline viewing becomes a goal.
+
+### D2. Direct-CDN base URL in prod (skip the 301s without an SW)
+Alternative to D1: a URL helper that prefixes heavy asset paths with
+`https://cdn.wc3v.com` in production (CORS already works — fetch() reads
+redirected R2 responses today). Cheaper than an SW but touches every heavy
+fetch site and risks dev/prod divergence; the 301s are first-request-only.
+Do this before ever doing D1, if cold-load RTTs actually show up in field
+data.
+
+### D3. Binary path encoding in .wc3v — DO WITH THE NEXT FLEET RE-PARSE
+Unit `path` arrays are ~53% of an uncompressed .wc3v as verbose JSON points.
+Pre-gzip that looked like the biggest lever; post-gzip (replays now ship
+Content-Encoding: gzip) repetitive JSON compresses so well that the remaining
+transfer win is modest. The real remaining wins are worker JSON.parse time
+(seconds on 10-15 MB replays) and the structured-clone cost of D4 (typed
+arrays could transfer zero-copy). But it's a format change: parser + client
+consumers (`getInterpolatedPosition` et al) + desktop app + bundle rebuild +
+determinism checks + full re-parse. Bundle it with the ~200-replay dominance
+re-parse that's already pending — never as a standalone tweak.
+
+### D4. replay-json-worker structured-clone reduction — SKIP FOR NOW
+The worker JSON.parses off-thread but `postMessage(result)` structured-clones
+the whole object graph back (~100-300 ms main-thread hitch on big replays).
+It lands behind the loading overlay, so it isn't user-visible today. The
+clean fix (transfer path data as typed arrays) is really D3's client half —
+same verdict: with the re-parse, not before.
