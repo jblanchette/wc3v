@@ -56,9 +56,11 @@ pub fn start(app: AppHandle, roots: Vec<PathBuf>) -> Result<usize, String> {
             }
         };
 
-        for root in &roots {
+        // Errors are reported by folder INDEX, never by path. Paths contain the
+        // user's account name and this window is aimed at streamers.
+        for (i, root) in roots.iter().enumerate() {
             if let Err(e) = watcher.watch(root, RecursiveMode::Recursive) {
-                let _ = app.emit("watcher-error", format!("{}: {e}", root.display()));
+                let _ = app.emit("watcher-error", format!("replay folder {}: {e}", i + 1));
             }
         }
 
@@ -122,6 +124,8 @@ pub fn start(app: AppHandle, roots: Vec<PathBuf>) -> Result<usize, String> {
                 }
 
                 let size = std::fs::metadata(&path).map(|m| m.len()).unwrap_or(0);
+                // `path` is needed to read the file back and never rendered;
+                // the UI shows `fileName` only.
                 let _ = app.emit(
                     "replay-detected",
                     serde_json::json!({

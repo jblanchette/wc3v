@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Minimum the app needs: receive events from the replay watcher, and let the user pick a replay folder by hand (required on Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may not guess).",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-open"
+  ]
+}
