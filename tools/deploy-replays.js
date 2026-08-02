@@ -8,18 +8,17 @@
  * no change until those files are uploaded to R2. This script is that step.
  *
  * IMPORTANT — what the CDN actually serves:
- *   The client fetches `/replays/<name>.wc3v` (UNCOMPRESSED — app.js loadFile),
- *   and the CDN serves the R2 object at that exact key. It does NOT decompress
- *   a .wc3v.gz on the fly. So the object that must be fresh in R2 is the
- *   uncompressed `<name>.wc3v`, not `<name>.wc3v.gz`.
+ *   The client fetches `/replays/<name>.wc3v` (app.js loadFile), and the CDN
+ *   serves the R2 object at that exact key. The object's BYTES are gzip
+ *   (the local `.wc3v.gz` renamed to `.wc3v`), uploaded with
+ *   `Content-Encoding: gzip` + `Content-Type: application/json` so browsers
+ *   decompress transparently — the client still sees plain JSON, but the
+ *   transfer is ~85% smaller (6–15 MB raw → 0.7–2.8 MB on the wire).
+ *   Mirrors the `maps-mutable-json` group in deploy-assets.js.
  *
- *   Local parser output is `<name>.wc3v.gz` (the uncompressed `.wc3v` is a
- *   debug-only artifact). So this script decompresses each .wc3v.gz into a
- *   temp staging dir and uploads the resulting `.wc3v` to R2.
- *
- *   (An earlier version of this script uploaded `.wc3v.gz` only — those
- *   objects exist in the bucket but are never read by the client. Harmless,
- *   but don't rely on them.)
+ *   (Earlier versions uploaded the raw uncompressed `.wc3v`, and before that
+ *   `.wc3v.gz` under its own key — stale objects with those shapes may exist
+ *   in the bucket but are harmless once overwritten/unreferenced.)
  *
  * Usage:
  *   node tools/deploy-replays.js              — sync all replays to R2
@@ -43,7 +42,6 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const zlib = require('zlib');
 const { spawnSync } = require('child_process');
 
 const REMOTE = 'r2:wc3v-cdn/replays';
@@ -134,17 +132,17 @@ function main () {
   console.log(`Remote: ${REMOTE}`);
   if (isDryRun) console.log('(dry run — no upload)');
 
-  // Decompress each .wc3v.gz into a temp staging dir as .wc3v — that uncompressed
-  // object is what the CDN serves. Staging is removed in the finally block.
+  // Stage each .wc3v.gz renamed to .wc3v — bytes stay gzip; the upload headers
+  // below tell browsers to decompress. Staging is removed in the finally block.
   const staging = fs.mkdtempSync(path.join(os.tmpdir(), 'wc3v-deploy-'));
   let exitCode = 0;
   try {
-    console.log(`\nDecompressing ${ids.length} file(s) to staging…`);
+    console.log(`\nStaging ${ids.length} gzip file(s) as .wc3v…`);
     let done = 0;
     for (const id of ids) {
       const gz = path.join(LOCAL_DIR, `${id}.wc3v.gz`);
       const out = path.join(staging, `${id}.wc3v`);
-      fs.writeFileSync(out, zlib.gunzipSync(fs.readFileSync(gz)));
+      fs.copyFileSync(gz, out);
       done++;
       if (done % 50 === 0 || done === ids.length) {
         console.log(`  ${done}/${ids.length}`);
@@ -157,6 +155,8 @@ function main () {
       REMOTE,
       '--include', '*.wc3v',
       '--header-upload', `Cache-Control: ${CACHE_CONTROL}`,
+      '--header-upload', 'Content-Encoding: gzip',
+      '--header-upload', 'Content-Type: application/json',
       '--progress',
       '--stats-one-line',
       '--stats=2s',
