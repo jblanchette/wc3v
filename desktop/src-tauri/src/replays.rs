@@ -249,6 +249,66 @@ mod tests {
         assert!(is_autosave_name("Replay_2020_02_15_1147.w3g"));
     }
 
+    /// Times a real scan against the machine's own replay folders.
+    /// Ignored by default (needs a WC3 install, and takes seconds).
+    ///
+    ///   cargo test -- --ignored --nocapture            # debug
+    ///   cargo test --release -- --ignored --nocapture  # release
+    ///
+    /// The two numbers matter: sha2 without optimisations is far slower than
+    /// the same code compiled in release, so a scan that feels broken in
+    /// `tauri dev` may be fine in a shipped build. Measure before optimising.
+    #[test]
+    #[ignore]
+    fn bench_scan() {
+        let roots = discover_roots();
+        if roots.is_empty() {
+            eprintln!("no replay folders on this machine; skipping");
+            return;
+        }
+        for r in &roots {
+            let path = std::path::PathBuf::from(&r.path);
+
+            let t = std::time::Instant::now();
+            let mut paths = Vec::new();
+            walk(&path, &mut |p| paths.push(p));
+            let walk_ms = t.elapsed().as_millis();
+
+            let t = std::time::Instant::now();
+            let bytes: u64 = paths
+                .iter()
+                .filter_map(|p| fs::metadata(p).ok())
+                .map(|m| m.len())
+                .sum();
+            let stat_ms = t.elapsed().as_millis();
+
+            let t = std::time::Instant::now();
+            let mut hashed = 0u32;
+            for p in &paths {
+                if hash_file(p).is_ok() {
+                    hashed += 1;
+                }
+            }
+            let hash_ms = t.elapsed().as_millis();
+
+            eprintln!(
+                "account {:>10}  files {:>5}  {:>5} MB | walk {:>5} ms  stat {:>5} ms  hash {:>6} ms  ({:.0} MB/s)",
+                r.account_id,
+                paths.len(),
+                bytes / 1_048_576,
+                walk_ms,
+                stat_ms,
+                hash_ms,
+                if hash_ms > 0 {
+                    (bytes as f64 / 1_048_576.0) / (hash_ms as f64 / 1000.0)
+                } else {
+                    0.0
+                }
+            );
+            assert_eq!(hashed as usize, paths.len(), "some files failed to hash");
+        }
+    }
+
     #[test]
     fn rejects_other_names() {
         assert!(!is_autosave_name("LastReplay.w3g"));
