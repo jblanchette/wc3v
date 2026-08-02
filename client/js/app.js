@@ -745,9 +745,15 @@ const Wc3vViewer = class {
         }
         // Load real WC3 cliff + tree mesh models (converted MDX → glTF)
         this.threeMapRenderer.setupCliffModels();
-        // Load doodad textures before placing models so they render textured
+        // Load doodad textures before placing models so they render textured.
+        // Pass the map's actual doodad type codes (doo.json resolved in the
+        // Phase-3 Promise.all, strictly before this) so only referenced
+        // textures download.
         if (this.loading) this.loading.beginStep('doodads');
-        return this.threeMapRenderer.loadDoodadTextures(tilesetChar).then(() => {
+        const usedDoodadTypes = new Set(
+          (this.doodadData || []).map(d => (d.type || '').toLowerCase()).filter(t => t.length === 4)
+        );
+        return this.threeMapRenderer.loadDoodadTextures(tilesetChar, usedDoodadTypes).then(() => {
           if (this.doodadData) {
             this.threeMapRenderer.setupDoodadModels(this.doodadData);
           }

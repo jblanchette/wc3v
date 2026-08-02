@@ -1817,7 +1817,11 @@
 
     // Load the doodad texture manifest and preload textures for the current
     // tileset. Returns a promise that resolves when textures are ready.
-    loadDoodadTextures (tilesetChar) {
+    // `usedTypeCodes` (optional Set of lowercase 4-char doodad type codes,
+    // from the map's doo.json) narrows the preload to textures the map can
+    // actually reference — the manifest lists ~93 textures (~6.7 MB) but a
+    // typical map uses a fraction. Null/empty loads everything (safety).
+    loadDoodadTextures (tilesetChar, usedTypeCodes) {
       this._doodadTextureManifest = null;
       this._doodadTextures = new Map();
       return fetch('/assets/textures/doodad-textures.json')
@@ -1828,8 +1832,24 @@
           const loader = new THREE.TextureLoader();
           const loads = [];
 
+          // Resolve which replaceable IDs / direct images the used type codes
+          // reference. A missed entry degrades to the flat-color fallback.
+          let neededReplaceable = null;
+          let neededDirect = null;
+          if (usedTypeCodes && usedTypeCodes.size && manifest.modelTextures) {
+            neededReplaceable = new Set();
+            neededDirect = new Set();
+            for (const code of usedTypeCodes) {
+              const info = manifest.modelTextures[code];
+              if (!info) continue;
+              if (info.replaceableId > 0) neededReplaceable.add(String(info.replaceableId));
+              else if (info.image) neededDirect.add(info.image.toLowerCase());
+            }
+          }
+
           // Preload the tree texture for this tileset from each replaceable ID
           for (const [id, tilesets] of Object.entries(manifest.replaceable)) {
+            if (neededReplaceable && !neededReplaceable.has(String(id))) continue;
             const pngPath = tilesets[tilesetChar] || tilesets.default;
             if (!pngPath) continue;
             const url = '/assets/textures/' + pngPath;
@@ -1848,6 +1868,7 @@
 
           // Preload direct textures
           for (const [blpPath, pngPath] of Object.entries(manifest.direct)) {
+            if (neededDirect && !neededDirect.has(blpPath.toLowerCase())) continue;
             const url = '/assets/textures/' + pngPath;
             loads.push(new Promise(resolve => {
               loader.load(url, tex => {
