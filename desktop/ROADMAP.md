@@ -35,6 +35,8 @@ still the diagnostic spike — §5 is untouched.
 | Parse persistence | summaries stored per content key, re-opened games load from store instead of re-parsing |
 | Profile aggregation | `node tools/test-profile-aggregate.js` — records from both seats, matchup buckets, timing splits, statement min-n guards |
 | Overlay server | `overlay::tests` — token required on every route, GET-only, SSE delivers published state to an already-connected client |
+| Overlay in a real browser | connected Chrome tab updated to the correct verdict and build order with no refresh, via EventSource auto-reconnect, after the app restarted under it |
+| Identity detection | `node tools/detect-identity.js` on the reference 3,598-replay folder — owner in 100% of 40 sampled, runner-up 68% |
 | Parser determinism | `tools/check-determinism.js` — 0 differing leaves over N runs |
 | Bundle matches source | `tools/verify-bundle-parity.js` — 0 shapes unique to the bundle |
 | Parser speedups are safe | `tools/diff-wc3v.js --events` — no build-order/tier/economy event changed |
@@ -179,6 +181,25 @@ Built on SummaryExtract summaries, as required — no new extractor.
       made at all). Rendered as text in the result panel — §5 owns design.
 - [x] Manual opponent lookup: type a name (autocomplete over every name in
       the corpus) → their profile from local history. No APIs, no scraping.
+- [x] **Identity detection** — which player is "you", which every verdict
+      depends on. Nothing in the .w3g format marks the saving seat, but the
+      owner is in *every* replay in their own folder while opponents appear
+      once or twice. `Wc3vParser.peekPlayers()` reads names from the replay
+      HEADER only (~50 ms, no game parse), and the app samples 40 autosaved
+      replays spread across the whole history. Measured on the reference
+      folder: owner 100% of 40, second place 68%.
+      - Autosaved only — the Replays root also holds downloaded games the
+        user was never in.
+      - Auto-detection is provisional; an explicit pick is confirmed and is
+        never overridden. The picker lists real candidate names as buttons
+        and is always visible, so a wrong guess is one click to fix.
+      - `node tools/detect-identity.js --dir=<Replays>` runs the same
+        algorithm standalone to check a folder without launching the app.
+      - **This got shipped wrong once**: detection ran over the parsed store
+        (one game on a fresh install) and a prefilled text box then committed
+        the arbitrary first name, so the app decided the user was their
+        opponent and reported a loss as "Victory". Frequency over the corpus
+        is the signal; a single game cannot distinguish the seats at all.
 - Summary schema additions for this: `playedAt` (replay file mtime — when the
   game was PLAYED; `savedAt` is when the backfill reached it) and
   `patchVersion`. Results exist only for 1v1 (`winner` is 1v1-only);
@@ -311,7 +332,9 @@ Run any of these with no args for usage.
 
 | Tool | Purpose |
 |---|---|
-| `tools/verify-bundle-parity.js` | Node source vs committed browser bundle. Catches stale bundles and dynamic-require breakage. |
+| `tools/detect-identity.js` | Who owns a replay folder, from headers only. `--dir=<Replays>`. Same algorithm the app uses, runnable without launching it. |
+| `tools/test-profile-aggregate.js` | Profile/coach assertions over a synthetic corpus, including the identity tie-refusal guards. |
+| `tools/verify-bundle-parity.js` | Node source vs committed browser bundle. Catches stale bundles and dynamic-require breakage. `--fast` also proves `skipPathfinding` is forwarded. |
 | `tools/check-determinism.js` | Parses N times in clean processes; must report 0 differing leaves. |
 | `tools/diff-wc3v.js` | Structural diff of two parses. `--events` compares build orders as multisets — **use this to judge any parser change**, not the raw leaf count. |
 | `tools/path-quality.js` | Unit-path geometry compare. Answers "did paths get worse" when a big diff is expected. |
