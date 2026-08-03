@@ -39,7 +39,10 @@ const state = {
   jobId: 0,
   jobs: new Map(),
   // Keys (`<size>-<xxh3>`) of games whose summary is already stored on disk.
-  stored: new Set()
+  stored: new Set(),
+  // All stored summaries, loaded lazily for the profile layer.
+  corpus: null,
+  corpusLoading: null
 };
 
 // The platform's gzip, shared by the map cache reads and the parse store.
@@ -197,7 +200,7 @@ const parseReplay = (path) => parseReplayWith(ensureWorker(), path);
 // Mirror of CompareInline.buildUserSummary(), with the slot-skip rules from
 // scripts/generate-summary.js. mapInfo needs the map-folder manifest the site
 // fetches at runtime; the desktop app has no consumer for it yet, so null.
-const buildSummary = (out, key) => {
+const buildSummary = (out, key, playedAt) => {
   const SE = window.SummaryExtract;
   const rawMap = out.replay?.metadata?.map?.mapName || '';
   const durationMs = out.replay?.subheader?.replayLengthMS || 0;
@@ -205,6 +208,10 @@ const buildSummary = (out, key) => {
   const summary = {
     key,
     savedAt: Date.now(),
+    // When the game was PLAYED (replay file mtime) — what the profile layer
+    // buckets by. savedAt is merely when the backfill reached it.
+    playedAt: playedAt || null,
+    patchVersion: out.replay?.subheader?.version ?? null,
     map: rawMap.split(/[\\/]/).pop(),
     mapRaw: rawMap,
     gameMode: out.gameMode || null,
@@ -226,14 +233,43 @@ const buildSummary = (out, key) => {
   return summary;
 };
 
-const persistSummary = async (out, key) => {
-  const bytes = await gzipText(JSON.stringify(buildSummary(out, key)));
+const persistSummary = async (out, key, playedAt) => {
+  const summary = buildSummary(out, key, playedAt);
+  const bytes = await gzipText(JSON.stringify(summary));
   await invoke('save_parse', { key, bytes: Array.from(bytes) });
   state.stored.add(key);
+  if (state.corpus) state.corpus.push(summary);
+  return summary;
 };
 
 const loadStoredSummary = async (key) =>
   gunzipJson(new Uint8Array(await invoke('read_parse', { key })));
+
+// The whole store, loaded once per session and appended to as new games
+// persist. This is what the profile layer and overlay seeding aggregate over.
+const loadCorpus = async () => {
+  if (state.corpus) return state.corpus;
+  if (state.corpusLoading) return state.corpusLoading;
+  state.corpusLoading = (async () => {
+    const keys = await invoke('list_parses');
+    const out = [];
+    let i = 0;
+    let done = 0;
+    const reader = async () => {
+      while (i < keys.length) {
+        const k = keys[i++];
+        try {
+          out.push(await loadStoredSummary(k));
+        } catch (e) { /* one corrupt entry must not sink the corpus */ }
+        if (++done % 500 === 0) log(`profile corpus: ${done}/${keys.length} loaded`);
+      }
+    };
+    await Promise.all(Array.from({ length: 8 }, reader));
+    state.corpus = out;
+    return out;
+  })();
+  return state.corpusLoading;
+};
 
 // ── UI ──────────────────────────────────────────────────────────────────────
 
@@ -299,7 +335,10 @@ const showCounts = (list, suffix = '') => {
     `${list.length - interesting} aborted)${suffix}`;
 };
 
-const run = async (path) => {
+// opts.live marks a watcher-detected game: it enters the overlay session.
+// Clicking through history never does — a streamer browsing old replays must
+// not scramble their on-stream score.
+const run = async (path, opts = {}) => {
   el('result').textContent = '';
   el('status').textContent = 'reading...';
   const fileName = path.split(/[\\/]/).pop();
@@ -307,29 +346,32 @@ const run = async (path) => {
   try {
     // Canonical identity first — a game already summarised is shown from the
     // store instead of being re-parsed. The key is content-based, so the same
-    // game under another path (LastReplay.w3g, a copied file) also hits.
-    const key = await invoke('replay_key', { path });
+    // game under another path (a copied file) also hits.
+    const { key, modifiedMs } = await invoke('replay_key', { path });
+    let summary = null;
+
     if (state.stored.has(key)) {
-      const summary = await loadStoredSummary(key);
+      summary = await loadStoredSummary(key);
       el('status').textContent = 'loaded from store';
       showSummary(summary);
       log(`${fileName} already parsed — loaded stored summary`, 'ok');
-      return;
+    } else {
+      const out = await parseReplay(path);
+      const ms = Math.round(performance.now() - started);
+      el('status').textContent = `parsed in ${ms} ms`;
+      showResult(out, ms);
+      log(`parsed ${fileName} in ${ms} ms`, 'ok');
+
+      // Persistence failing should never take the shown result down with it.
+      try {
+        summary = await persistSummary(out, key, modifiedMs);
+        log(`summary saved (${state.stored.size} games in store)`, 'ok');
+      } catch (e) {
+        log(`summary save failed: ${errText(e)}`, 'warn');
+      }
     }
 
-    const out = await parseReplay(path);
-    const ms = Math.round(performance.now() - started);
-    el('status').textContent = `parsed in ${ms} ms`;
-    showResult(out, ms);
-    log(`parsed ${fileName} in ${ms} ms`, 'ok');
-
-    // Persistence failing should never take the shown result down with it.
-    try {
-      await persistSummary(out, key);
-      log(`summary saved (${state.stored.size} games in store)`, 'ok');
-    } catch (e) {
-      log(`summary save failed: ${errText(e)}`, 'warn');
-    }
+    if (opts.live && summary) overlayState.recordGame(summary);
   } catch (err) {
     el('status').textContent = 'failed';
     if (err.code === 'missing_map' || err.code === 'missing_map_cache') {
@@ -409,6 +451,58 @@ const showSummary = (sum) => {
   ].join('\n');
 };
 
+// ── Profile (ROADMAP §3) ────────────────────────────────────────────────────
+
+const fmtMonth = (ms) => (ms ? new Date(ms).toISOString().slice(0, 7) : '?');
+const escAttr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
+// Text render into the result panel — the spike aesthetic; §5 owns design.
+const renderProfile = (p) => {
+  const lines = [];
+  const pad = (s, n) => String(s).padEnd(n);
+  lines.push(`PROFILE — ${p.name}`);
+  lines.push(
+    `${p.games} games · ${fmtMonth(p.firstPlayedAt)} → ${fmtMonth(p.lastPlayedAt)}` +
+    (p.decided ? ` · ${p.wins}–${p.losses} (${p.winRate}%)` : '') +
+    (p.unknownResults ? ` · ${p.unknownResults} without result` : ''));
+  if (p.races.length) {
+    lines.push('races:   ' + p.races.map(r => `${RACE[r.race] || r.race} ${r.games}`).join(' · '));
+  }
+
+  if (p.statements.length) {
+    lines.push('', 'COACH');
+    for (const s of p.statements) lines.push(`• ${s.text}`);
+  }
+
+  if (p.matchups.length) {
+    lines.push('', 'MATCHUPS');
+    for (const m of p.matchups.slice(0, 6)) {
+      lines.push(`  ${pad(m.matchup, 6)} ${pad(m.games + ' games', 11)}` +
+        (m.wins + m.losses ? ` ${m.wins}–${m.losses} (${m.winRate}%)` : ''));
+    }
+  }
+
+  if (p.maps.length) {
+    lines.push('', 'MAPS');
+    for (const m of p.maps.slice(0, 8)) {
+      lines.push(`  ${pad(m.map, 24)} ${pad(m.games + ' games', 11)}` +
+        (m.wins + m.losses ? ` ${m.winRate}%` : ''));
+    }
+  }
+
+  // Opponent buckets are fed with the PROFILE player's result, so this reads
+  // "their record against that opponent".
+  if (p.opponents.length) {
+    lines.push('', 'MOST FACED');
+    for (const o of p.opponents.slice(0, 10)) {
+      lines.push(`  ${pad(o.name, 20)} ${pad(o.games + ' games', 11)}` +
+        (o.wins + o.losses ? ` ${o.wins}–${o.losses} (${o.winRate}%)` : ''));
+    }
+  }
+
+  el('result').textContent = lines.join('\n');
+};
+
 // ── Boot ────────────────────────────────────────────────────────────────────
 
 const boot = async () => {
@@ -439,7 +533,7 @@ const boot = async () => {
   await listen('replay-detected', (event) => {
     const r = event.payload;
     log(`new game: ${r.fileName} (${fmtSize(r.size)})`, 'ok');
-    if (r.interesting) run(r.path);
+    if (r.interesting) run(r.path, { live: true });
   });
 
   await listen('watcher-error', (event) => log(`watcher: ${event.payload}`, 'err'));
@@ -467,6 +561,25 @@ const boot = async () => {
       log(`scan failed in ${labelFor(first)}: ${errText(e)}`, 'err');
     });
   }
+
+  // Overlay: publish the empty session immediately so an OBS source that is
+  // already connected shows the waiting card rather than nothing.
+  overlayState.publish();
+
+  // Background: load the summary corpus, then seed the overlay's last game,
+  // the default profile identity, and the name autocomplete.
+  loadCorpus().then((corpus) => {
+    if (!corpus.length) return;
+    const PA = window.ProfileAggregate;
+    const primary = PA.detectPrimaryName(corpus);
+    if (primary && !overlayState.userName) overlayState.setUserName(primary.name);
+    if (!el('profile-name').value) el('profile-name').value = overlayState.userName || '';
+    const latest = [...corpus].sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0))[0];
+    overlayState.seedLastGame(latest);
+    el('known-names').innerHTML = PA.knownNames(corpus).slice(0, 60)
+      .map(n => `<option value="${escAttr(n.name)}">`).join('');
+    log(`profile corpus ready: ${corpus.length} game(s)`, 'ok');
+  }).catch(e => log(`corpus load failed: ${errText(e)}`, 'warn'));
 };
 
 // Tauri command rejections arrive as plain strings, not Errors, so `e.message`
@@ -503,6 +616,51 @@ const syncRetryButton = () => {
 
 el('backfill-toggle').addEventListener('click', () => backfill.toggle());
 el('backfill-retry').addEventListener('click', () => backfill.retryFailed());
+
+// ── Overlay + profile wiring ────────────────────────────────────────────────
+
+const overlayState = window.createOverlayState({ invoke, log });
+
+el('profile-view').addEventListener('click', async () => {
+  const corpus = await loadCorpus();
+  if (!corpus.length) {
+    log('no parsed games in store yet — run the backfill first', 'warn');
+    return;
+  }
+  const PA = window.ProfileAggregate;
+  const name = el('profile-name').value.trim() || (PA.detectPrimaryName(corpus) || {}).name;
+  if (!name) return;
+  const profile = PA.buildProfile(corpus, name);
+  if (!profile.games) {
+    el('result').textContent = `No games with "${name}" in the local history.`;
+    return;
+  }
+  renderProfile(profile);
+  el('status').textContent = `profile: ${profile.name} — ${profile.games} games`;
+});
+
+el('profile-setme').addEventListener('click', () => {
+  const name = el('profile-name').value.trim();
+  if (!name) return;
+  overlayState.setUserName(name);
+  log(`overlay identity set — games are scored from ${name}'s seat`, 'ok');
+});
+
+el('copy-obs-url').addEventListener('click', async () => {
+  try {
+    const info = await invoke('overlay_info');
+    await navigator.clipboard.writeText(info.url);
+    // The URL stays out of the log on purpose: it carries the access token
+    // and this window may be on stream.
+    log('OBS URL copied — add a Browser Source, suggested 460×640. ' +
+        'Keep the URL off stream; it contains your access token.', 'ok');
+  } catch (e) {
+    log(`overlay URL unavailable: ${errText(e)}`, 'err');
+  }
+});
+
+el('open-player-view').addEventListener('click', () =>
+  invoke('open_player_view').catch(e => log(`player view failed: ${errText(e)}`, 'err')));
 
 el('pick-folder').addEventListener('click', async () => {
   const dir = await window.__TAURI__.dialog.open({ directory: true });

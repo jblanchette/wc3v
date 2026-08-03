@@ -30,10 +30,11 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'desktop', 'src-frontend');
 const DIST = path.join(ROOT, 'desktop', 'dist');
 const BUNDLE = path.join(ROOT, 'client', 'js', 'vendor', 'wc3v-parser.bundle.js');
-// Dual-runtime (no DOM, no fs) per-player summary extractor. The desktop app
-// persists one summary per parsed game; shipping the client's copy keeps it a
-// single source of truth, same as the parser bundle.
+// Dual-runtime (no DOM, no fs) shared modules. The desktop app persists one
+// summary per parsed game and aggregates them into profiles; shipping the
+// client's copies keeps a single source of truth, same as the parser bundle.
 const SUMMARY_EXTRACT = path.join(ROOT, 'client', 'js', 'SummaryExtract.js');
+const PROFILE_AGGREGATE = path.join(ROOT, 'client', 'js', 'ProfileAggregate.js');
 const MAPS = path.join(ROOT, 'client', 'maps');
 
 // Only these are needed to PARSE a replay. terrain.jpg / heights.bin.gz /
@@ -120,6 +121,7 @@ const main = () => {
   fs.mkdirSync(vendorDir, { recursive: true });
   fs.copyFileSync(BUNDLE, path.join(vendorDir, 'wc3v-parser.bundle.js'));
   fs.copyFileSync(SUMMARY_EXTRACT, path.join(vendorDir, 'SummaryExtract.js'));
+  fs.copyFileSync(PROFILE_AGGREGATE, path.join(vendorDir, 'ProfileAggregate.js'));
 
   const size = fs.statSync(path.join(vendorDir, 'wc3v-parser.bundle.js')).size;
   console.log(`dist:      ${path.relative(ROOT, DIST)}`);

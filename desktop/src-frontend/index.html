@@ -22,6 +22,20 @@
       <div id="backfill-status" class="hint">idle</div>
       <button id="backfill-toggle">Parse all replays</button>
       <button id="backfill-retry" hidden>Retry failed</button>
+
+      <h2>Profile</h2>
+      <input id="profile-name" list="known-names" placeholder="player name" autocomplete="off">
+      <datalist id="known-names"></datalist>
+      <div>
+        <button id="profile-view">View profile</button>
+        <button id="profile-setme">This is me</button>
+      </div>
+
+      <h2>Stream overlay</h2>
+      <p class="hint">Loopback only. The URL carries an access token — copy it,
+        never show it on stream.</p>
+      <button id="copy-obs-url">Copy OBS URL</button>
+      <button id="open-player-view">Open player view</button>
     </section>
 
     <section class="col wide">
@@ -37,10 +51,12 @@
     </section>
   </main>
 
-  <!-- Shared summary extractor — the committed client copy, placed into
-       js/vendor by tools/build-desktop-client.js. Must load before app.js. -->
+  <!-- Shared client modules — committed client copies, placed into js/vendor
+       by tools/build-desktop-client.js. Must load before app.js. -->
   <script src="./js/vendor/SummaryExtract.js"></script>
+  <script src="./js/vendor/ProfileAggregate.js"></script>
   <script src="./js/backfill.js"></script>
+  <script src="./js/overlay-state.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

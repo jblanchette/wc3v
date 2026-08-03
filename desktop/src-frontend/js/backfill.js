@@ -83,8 +83,11 @@
           // Canonical content key. The scan's lazy `<size>-u` keys are not
           // stable, so identity is always re-derived here.
           let key = null;
+          let playedAt = 0;
           try {
-            key = await deps.invoke('replay_key', { path: item.path });
+            const rk = await deps.invoke('replay_key', { path: item.path });
+            key = rk.key;
+            playedAt = rk.modifiedMs;
           } catch (e) {
             st.counts.unreadable++; // locked/moved — not marked, retries next run
             update();
@@ -101,7 +104,7 @@
           const t0 = performance.now();
           try {
             const out = await deps.parseOn(w, item.path);
-            await deps.persistSummary(out, key);
+            await deps.persistSummary(out, key, playedAt);
             st.counts.parsed++;
             st.durations.push(performance.now() - t0);
             if (st.durations.length > 20) st.durations.shift();

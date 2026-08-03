@@ -24,6 +24,8 @@ shown to a streamer, and nothing has ever reacted to a real game.
 | Watcher mechanics | 7 tests in `watcher.rs` drive the real loop against simulated progressive writes: debounce, content dedupe, stale-cache invalidation, all three `LastReplay.w3g` orderings |
 | `LastReplay.w3g` ≠ its autosave | checked against the real corpus: no autosave even *shares its size*, so content-hash dedupe can never collapse it (the watcher holds it for a 30 s grace window instead) |
 | Parse persistence | summaries stored per content key, re-opened games load from store instead of re-parsing |
+| Profile aggregation | `node tools/test-profile-aggregate.js` — records from both seats, matchup buckets, timing splits, statement min-n guards |
+| Overlay server | `overlay::tests` — token required on every route, GET-only, SSE delivers published state to an already-connected client |
 | Parser determinism | `tools/check-determinism.js` — 0 differing leaves over N runs |
 | Bundle matches source | `tools/verify-bundle-parity.js` — 0 shapes unique to the bundle |
 | Parser speedups are safe | `tools/diff-wc3v.js --events` — no build-order/tier/economy event changed |
@@ -38,6 +40,8 @@ shown to a streamer, and nothing has ever reacted to a real game.
 - Anything on Linux or SteamOS. Never compiled or run there. WebKitGTK is a
   different engine from WebView2 and is the single biggest portability unknown.
 - Any behaviour over a long session, across sleep/wake, or with the game running.
+- **The overlay inside a real OBS.** The server and SSE flow are tested over
+  raw sockets, but no OBS Browser Source has ever rendered the page.
 
 ---
 
@@ -122,17 +126,56 @@ button in the left column.
       machine. The completion log line prints the measured s/replay
       end-to-end figure; quote nothing until it has printed once.
 
-### 3. Profile / coaching layer — the actual product
-Build on `client/js/SummaryExtract.js` (dual-runtime, no DOM, no fs — already
-produces per-player summaries). Do not write a new extractor.
+### 3. Profile / coaching layer — BUILT (spike render)
+Built on SummaryExtract summaries, as required — no new extractor.
 
-- [ ] `client/js/ProfileAggregate.js` — pure data, no DOM. Bucket by race,
-      matchup, map, opponent, patch window.
-- [ ] Derived insights: openings by matchup, timing distributions vs your own
-      wins, map win rates, worker/supply habits.
-- [ ] Coach panel turning the aggregate into plain statements.
-- [ ] Manual opponent lookup (type a name → their profile from your local
-      history). No APIs, no scraping — user decision.
+- [x] `client/js/ProfileAggregate.js` — pure data, dual-runtime. One function
+      is the whole model: `buildProfile(games, name)` — a profile is just a
+      name, so "my profile" and opponent lookup are the same code path.
+      Buckets: race, matchup, map, opponent, patch (subheader version), plus
+      playedAt-ordered recent form. Tested: `node tools/test-profile-aggregate.js`
+      (synthetic corpus, asserts records from both seats + statement guards).
+- [x] Derived insights: openings by matchup with win rates, T2 timing
+      distribution in wins vs losses (overall and per matchup), map win
+      rates, expansion habit + expand/no-expand records, workers-at-5:00
+      split from economyTrack.
+- [x] Coach panel: `statements()` emits plain sentences, every one carrying
+      its n, with hard minimum-sample guards (a claim below minimum n is not
+      made at all). Rendered as text in the result panel — §5 owns design.
+- [x] Manual opponent lookup: type a name (autocomplete over every name in
+      the corpus) → their profile from local history. No APIs, no scraping.
+- Summary schema additions for this: `playedAt` (replay file mtime — when the
+  game was PLAYED; `savedAt` is when the backfill reached it) and
+  `patchVersion`. Results exist only for 1v1 (`winner` is 1v1-only);
+  team games count toward games/maps but carry no result.
+- [ ] Corpus load reads every summary through IPC one at a time (raw-bytes
+      responses now, so it is bytes-cheap, but still ~3k invokes). Fine at
+      current scale; revisit if profile open ever feels slow.
+
+### 4. Overlay + OBS — BUILT, never shown in a real OBS
+- [x] `overlay.html` — transparent background (opaque in `?view=panel`),
+      read-only, SSE-driven, self-contained (no external requests). Themes
+      `?theme=carved|slate`, `?scale=N`. Served embedded from the binary.
+- [x] Loopback server (`overlay.rs`): hand-rolled on std::net — ~200
+      auditable lines, no HTTP dependency. 127.0.0.1 only, per-install token
+      on every route, GET only, three routes (`/overlay`, `/events` SSE,
+      `/state`), no CORS, no write path. Port persists across restarts so
+      the OBS URL survives; token persists per install. Tested over real
+      sockets (`overlay::tests`), including an SSE-registration race the
+      test caught: greeting and registration now happen under the clients
+      lock so a concurrent publish cannot be missed.
+- [x] "Copy OBS Browser Source URL" button (clipboard only — the URL carries
+      the token and this window may be on camera; it is never rendered or
+      logged). Suggested source size logged with it.
+- [x] Panels: last-game verdict, build order (first 12), key timings
+      (opener/T2/expand/tower), session W/L, streak. Session counts ONLY
+      watcher-detected live games — clicking through history never touches
+      the on-stream score. Verdicts are scored from the profile name's seat
+      ("This is me" button sets it; auto-detected from the corpus otherwise).
+- [x] Player-facing variant: "Open player view" opens `?view=panel` in the
+      default browser (second monitor).
+- [ ] Point a real OBS Browser Source at it. Transparency, reconnect
+      behaviour and text sizes on stream are unverified until then.
 
 ### 4. Overlay + OBS — the streamer feature
 Nothing exists yet. This is the #1 target audience and is entirely unbuilt.

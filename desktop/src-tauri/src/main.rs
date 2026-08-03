@@ -14,6 +14,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod overlay;
 mod replays;
 mod watcher;
 
@@ -183,9 +184,14 @@ async fn scan_replays(
 }
 
 /// Read a replay's bytes for the parser worker. Scoped to registered roots.
+/// Returns a raw IPC response (ArrayBuffer on the JS side) — a 500 KB replay
+/// as a JSON array of numbers is ~4x the bytes and all of it parsed twice.
 #[tauri::command]
-fn read_replay(path: String, state: State<'_, AppState>) -> Result<Vec<u8>, String> {
-    let allowed = state.roots.lock().unwrap().clone();
+async fn read_replay(
+    path: String,
+    state: State<'_, AppState>,
+) -> Result<tauri::ipc::Response, String> {
+    let allowed = { state.roots.lock().unwrap().clone() };
     let file = ensure_within(Path::new(&path), &allowed)?;
     if file
         .extension()
@@ -194,7 +200,13 @@ fn read_replay(path: String, state: State<'_, AppState>) -> Result<Vec<u8>, Stri
     {
         return Err("not a .w3g file".into());
     }
-    std::fs::read(&file).map_err(|e| e.to_string())
+    tauri::async_runtime::spawn_blocking(move || {
+        std::fs::read(&file)
+            .map(tauri::ipc::Response::new)
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("read failed: {e}"))?
 }
 
 /// Read a cached map-data file (`wpm.json.gz` etc). Scoped to the map cache.
@@ -204,7 +216,7 @@ fn read_map_file(
     map: String,
     file: String,
     app: tauri::AppHandle,
-) -> Result<Vec<u8>, String> {
+) -> Result<tauri::ipc::Response, String> {
     // Map and file names come from parsed replay metadata, so constrain them
     // to a conservative character set before they ever touch a path.
     let ok = |s: &str| {
@@ -223,7 +235,9 @@ fn read_map_file(
         return Err(format!("not cached: {map}/{file}"));
     }
     let real = ensure_within(&candidate, std::slice::from_ref(&base))?;
-    std::fs::read(&real).map_err(|e| e.to_string())
+    std::fs::read(&real)
+        .map(tauri::ipc::Response::new)
+        .map_err(|e| e.to_string())
 }
 
 /// Canonical identity of a replay file: `<size>-<xxh3>`, the same shape the
@@ -231,14 +245,27 @@ fn read_map_file(
 /// `<size>-u` keys are NOT stable — they change the first time another file
 /// collides on that size — so persistence always hashes. The parse that
 /// follows reads the whole file anyway; one extra streamed read is noise.
+///
+/// Also returns the file's mtime: that is when the game was PLAYED, which the
+/// profile layer buckets by. (`savedAt` in the summary is merely when the
+/// backfill got around to parsing it.)
 #[tauri::command]
-async fn replay_key(path: String, state: State<'_, AppState>) -> Result<String, String> {
+async fn replay_key(path: String, state: State<'_, AppState>) -> Result<serde_json::Value, String> {
     let allowed = { state.roots.lock().unwrap().clone() };
     let file = ensure_within(Path::new(&path), &allowed)?;
     tauri::async_runtime::spawn_blocking(move || {
-        let size = std::fs::metadata(&file).map_err(|e| e.to_string())?.len();
+        let meta = std::fs::metadata(&file).map_err(|e| e.to_string())?;
         let hash = replays::hash_file(&file).map_err(|e| e.to_string())?;
-        Ok(format!("{size}-{hash}"))
+        let modified_ms = meta
+            .modified()
+            .ok()
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0);
+        Ok(serde_json::json!({
+            "key": format!("{}-{hash}", meta.len()),
+            "modifiedMs": modified_ms
+        }))
     })
     .await
     .map_err(|e| format!("hash failed: {e}"))?
@@ -356,14 +383,62 @@ async fn scan_all(
 
 /// Read one stored summary back (gzipped JSON, as written by `save_parse`).
 #[tauri::command]
-async fn read_parse(key: String, app: tauri::AppHandle) -> Result<Vec<u8>, String> {
+async fn read_parse(key: String, app: tauri::AppHandle) -> Result<tauri::ipc::Response, String> {
     if !valid_store_key(&key) {
         return Err("invalid store key".into());
     }
     let file = parse_store_dir(&app).join(format!("{key}{SUMMARY_EXT}"));
-    tauri::async_runtime::spawn_blocking(move || std::fs::read(&file).map_err(|e| e.to_string()))
-        .await
-        .map_err(|e| format!("read failed: {e}"))?
+    tauri::async_runtime::spawn_blocking(move || {
+        std::fs::read(&file)
+            .map(tauri::ipc::Response::new)
+            .map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("read failed: {e}"))?
+}
+
+// ── Overlay (ROADMAP §4) ────────────────────────────────────────────────────
+
+/// The webview pushes fresh overlay state here; the loopback server relays it
+/// to OBS over SSE. Size-capped so a bug cannot balloon every broadcast.
+#[tauri::command]
+fn publish_overlay_state(
+    state_json: String,
+    overlay: State<'_, std::sync::Arc<overlay::Overlay>>,
+) -> Result<(), String> {
+    if state_json.len() > 256 * 1024 {
+        return Err("overlay state too large".into());
+    }
+    overlay.publish(state_json);
+    Ok(())
+}
+
+/// The OBS URL (with token) for the clipboard. Never render it — it would
+/// end up on stream.
+#[tauri::command]
+fn overlay_info(
+    overlay: State<'_, std::sync::Arc<overlay::Overlay>>,
+) -> Result<serde_json::Value, String> {
+    if overlay.port == 0 {
+        return Err("overlay server failed to start".into());
+    }
+    Ok(serde_json::json!({ "url": overlay.url(), "port": overlay.port }))
+}
+
+/// Player-facing variant in the default browser (second-monitor view).
+/// Opened from Rust so the webview needs no opener capability grant.
+#[tauri::command]
+fn open_player_view(
+    app: tauri::AppHandle,
+    overlay: State<'_, std::sync::Arc<overlay::Overlay>>,
+) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    if overlay.port == 0 {
+        return Err("overlay server failed to start".into());
+    }
+    app.opener()
+        .open_url(format!("{}&view=panel", overlay.url()), None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -394,6 +469,16 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(AppState::default())
+        .setup(|app| {
+            // The loopback overlay server is the one socket this binary opens
+            // — listener only, 127.0.0.1 only. See overlay.rs for the rules.
+            let data_dir = app
+                .path()
+                .app_data_dir()
+                .unwrap_or_else(|_| PathBuf::from("."));
+            app.manage(overlay::start(data_dir));
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             init,
             discover_roots,
@@ -409,6 +494,9 @@ fn main() {
             list_parse_failures,
             clear_parse_failures,
             scan_all,
+            publish_overlay_state,
+            overlay_info,
+            open_player_view,
             start_watching
         ])
         .run(tauri::generate_context!())

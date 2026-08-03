@@ -3,8 +3,11 @@
 Watches your Warcraft III replay folders, parses each game locally the moment it
 finishes, and (eventually) drives an OBS-ready overlay.
 
-**Status: Phase 0 spike.** Discovery, scanning, watching and local parsing work.
-The overlay, profile aggregation and coaching layers are not built yet.
+**Status: functional, pre-design.** Discovery, scanning, watching, local
+parsing, summary persistence, the backfill engine, the profile/coach layer and
+the OBS overlay are all built. Nothing has been verified against a live game
+or a real OBS instance yet, and the UI is still the diagnostic spike —
+see `ROADMAP.md`.
 
 ## Design invariants
 
@@ -15,8 +18,12 @@ be mistaken for a cheat and stays trivially auditable.
   no memory reading, no packet inspection, no input automation.
 - **No live in-game state.** WC3 writes the replay at match end; that is the only
   data source that exists.
-- **No outbound network calls at runtime.** Nothing in the Rust binary opens a
-  socket. (Map data is fetched only when the user explicitly asks.)
+- **No outbound network calls at runtime.** Nothing dials out. The one socket
+  in the binary is the overlay's loopback **listener** — 127.0.0.1 only,
+  token-gated, GET-only, three read-only routes (`overlay.rs` enforces all
+  four properties). OBS Browser Source is a separate Chromium process; this is
+  the only offline, read-only bridge to it. (Map data is fetched only when the
+  user explicitly asks.)
 - **No overlay drawn over the game.** Output is an OBS Browser Source and an
   ordinary window. Nothing is composited onto the game.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
@@ -34,13 +41,16 @@ inside the Tauri webview — one parser, one behaviour, verified by
 `tools/verify-bundle-parity.js`.
 
 ```
-Rust  ── discovery / watching / scoped file reads / hashing / parse store
+Rust  ── discovery / watching / scoped reads / hashing / parse store / overlay server
   │
   ├─ Tauri IPC ──► webview ── parser Web Worker ──► .wc3v
-  │                   ▲                │
-  │                   └── map data ────┘   (worker can't reach IPC, so the
+  │                   ▲  │             │
+  │                   │  └ summaries ──┴──► profile / coach (ProfileAggregate)
+  │                   └── map data ◄───┘   (worker can't reach IPC, so the
   │                                         injectable mapDataLoader bounces
   │                                         the request to the main thread)
+  └─ 127.0.0.1 SSE ──► OBS Browser Source / player view (overlay.html)
+        (webview publishes state; the server only relays it)
 ```
 
 Each parsed game persists as one gzipped `SummaryExtract` summary under

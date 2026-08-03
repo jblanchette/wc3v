@@ -86,6 +86,17 @@ button {
 
 button:hover { border-color: #4a3f31; }
 
+input {
+  margin-top: .5rem;
+  padding: .45rem .6rem;
+  width: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: .875rem;
+}
+
 .result {
   background: var(--panel);
   border: 1px solid var(--line);

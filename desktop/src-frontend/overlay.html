@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WC3V overlay</title>
+<!--
+  Served by the Rust loopback server (embedded via include_str!), rendered by
+  OBS Browser Source or a normal browser tab (player view). Entirely
+  self-contained: no external fonts, scripts or requests — the only network
+  activity is the same-origin EventSource this page opens.
+
+  URL params: token (required) · view=obs|panel · theme=carved|slate · scale=N
+-->
+<style>
+  /* Art direction: earthy, carved, muted. No neon, no saturated primaries. */
+  :root {
+    --panel: rgba(24, 20, 15, 0.92);
+    --panel-edge: #3a3226;
+    --ink: #e8e0d2;
+    --dim: #9a8f7d;
+    --win: #86a96b;
+    --loss: #b5563f;
+    --gold: #c9a227;
+  }
+  [data-theme="slate"] {
+    --panel: rgba(21, 24, 28, 0.92);
+    --panel-edge: #2e3640;
+    --ink: #dde4ea;
+    --dim: #8a97a3;
+    --gold: #a3b8c9;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  html { font-size: 16px; }
+  body {
+    background: transparent;
+    color: var(--ink);
+    font: 0.875rem/1.45 "Segoe UI", system-ui, sans-serif;
+    padding: 0.5rem;
+  }
+  body[data-view="panel"] { background: #0f0d0a; min-height: 100vh; }
+
+  .card {
+    max-width: 27rem;
+    background: var(--panel);
+    border: 1px solid var(--panel-edge);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .session {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    border-bottom: 1px solid var(--panel-edge);
+    font-variant: small-caps;
+    letter-spacing: 0.04em;
+  }
+  .session .label { color: var(--dim); }
+  .session .score { font-size: 1.05rem; font-weight: 600; }
+  .session .score .w { color: var(--win); }
+  .session .score .l { color: var(--loss); }
+  .session .streak { margin-left: auto; color: var(--gold); font-weight: 600; }
+
+  .verdict {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem 0.15rem;
+  }
+  .verdict .word { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.06em; }
+  .verdict .word.win { color: var(--win); }
+  .verdict .word.loss { color: var(--loss); }
+  .verdict .word.unknown { color: var(--dim); font-size: 1.1rem; }
+  .verdict .vs { color: var(--dim); }
+  .verdict .vs b { color: var(--ink); font-weight: 600; }
+
+  .meta { padding: 0 0.9rem 0.6rem; color: var(--dim); }
+
+  .timings {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--panel-edge);
+  }
+  .timings .cell { padding: 0.5rem 0.35rem; text-align: center; }
+  .timings .cell + .cell { border-left: 1px solid var(--panel-edge); }
+  .timings .k { font-size: 0.8rem; color: var(--dim); font-variant: small-caps; }
+  .timings .v { font-size: 1.05rem; font-weight: 600; }
+
+  .build { border-top: 1px solid var(--panel-edge); padding: 0.55rem 0.9rem 0.7rem; }
+  .build h2 {
+    font-size: 0.8rem;
+    color: var(--dim);
+    font-variant: small-caps;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.3rem;
+    font-weight: 600;
+  }
+  .build ol { list-style: none; columns: 2; column-gap: 1.2rem; }
+  .build li { display: flex; gap: 0.5rem; break-inside: avoid; padding: 0.08rem 0; }
+  .build .t { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 2.6rem; }
+  .build li.hero .n { color: var(--gold); }
+  .build li.expansion .n { color: var(--win); }
+
+  .waiting { padding: 1.1rem 0.9rem; color: var(--dim); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="session">
+      <span class="label">session</span>
+      <span class="score"><span class="w" id="s-wins">0</span>–<span class="l" id="s-losses">0</span></span>
+      <span class="streak" id="s-streak"></span>
+    </div>
+
+    <div id="waiting" class="waiting">Waiting for a game — finish one and it appears here.</div>
+
+    <div id="game" class="hidden">
+      <div class="verdict">
+        <span class="word" id="g-verdict"></span>
+        <span class="vs" id="g-vs"></span>
+      </div>
+      <div class="meta" id="g-meta"></div>
+      <div class="timings">
+        <div class="cell"><div class="k">opener</div><div class="v" id="t-opener">—</div></div>
+        <div class="cell"><div class="k">tier 2</div><div class="v" id="t-t2">—</div></div>
+        <div class="cell"><div class="k">expand</div><div class="v" id="t-exp">—</div></div>
+        <div class="cell"><div class="k">tower</div><div class="v" id="t-tower">—</div></div>
+      </div>
+      <div class="build">
+        <h2>build order</h2>
+        <ol id="g-build"></ol>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(location.search);
+  var token = params.get('token') || '';
+  document.body.dataset.view = params.get('view') === 'panel' ? 'panel' : 'obs';
+  if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
+  var scale = parseFloat(params.get('scale'));
+  if (scale > 0.4 && scale < 4) document.documentElement.style.fontSize = (16 * scale) + 'px';
+
+  var el = function (id) { return document.getElementById(id); };
+  var RACE = { O: 'Orc', H: 'Human', U: 'Undead', E: 'Night Elf', R: 'Random', N: 'Neutral' };
+
+  function fmtDur (ms) {
+    var m = Math.round((ms || 0) / 60000);
+    return m ? '~' + m + ' min' : '';
+  }
+
+  function render (s) {
+    var sess = s.session || { wins: 0, losses: 0 };
+    el('s-wins').textContent = sess.wins || 0;
+    el('s-losses').textContent = sess.losses || 0;
+    var st = sess.streak;
+    el('s-streak').textContent = (st && st.count >= 2)
+      ? (st.kind === 'win' ? 'W' : 'L') + st.count + ' streak'
+      : '';
+
+    var g = s.game;
+    el('waiting').classList.toggle('hidden', !!g);
+    el('game').classList.toggle('hidden', !g);
+    if (!g) return;
+
+    var verdict = el('g-verdict');
+    verdict.className = 'word ' + (g.verdict || 'unknown');
+    verdict.textContent = g.verdict === 'win' ? 'Victory'
+      : g.verdict === 'loss' ? 'Defeat' : 'Game over';
+
+    el('g-vs').innerHTML = g.opponent
+      ? 'vs <b></b> (' + (RACE[g.opponent.race] || g.opponent.race || '?') + ')'
+      : '';
+    if (g.opponent) el('g-vs').querySelector('b').textContent = g.opponent.name || '?';
+
+    var bits = [g.map, g.mode, fmtDur(g.durationMs)].filter(Boolean);
+    el('g-meta').textContent = bits.join(' · ');
+
+    var t = g.timings || {};
+    el('t-opener').textContent = g.heroOpener || '—';
+    el('t-t2').textContent = t.t2 || '—';
+    el('t-exp').textContent = t.expansion || '—';
+    el('t-tower').textContent = t.firstTower || '—';
+
+    var list = el('g-build');
+    list.innerHTML = '';
+    (g.build || []).forEach(function (b) {
+      var li = document.createElement('li');
+      li.className = b.type || '';
+      var time = document.createElement('span');
+      time.className = 't';
+      time.textContent = b.time || '';
+      var name = document.createElement('span');
+      name.className = 'n';
+      name.textContent = b.name || '';
+      li.appendChild(time);
+      li.appendChild(name);
+      list.appendChild(li);
+    });
+  }
+
+  var es = new EventSource('/events?token=' + encodeURIComponent(token));
+  es.onmessage = function (e) {
+    try { render(JSON.parse(e.data)); } catch (err) { /* partial state — wait for next */ }
+  };
+})();
+</script>
+</body>
+</html>
