@@ -150,10 +150,14 @@ impl HashIndex {
     }
 
     /// Drop entries for files that no longer exist, so the index cannot grow
-    /// without bound as replays are moved or deleted.
+    /// without bound as replays are moved or deleted. Entries outside `seen`
+    /// (files under a root this scan didn't cover) are kept while the file is
+    /// still on disk — without that, scanning root A would evict root B's
+    /// hashes and alternating scans would re-read hundreds of MB each time.
     fn retain_seen(&mut self, seen: &[String]) {
         let set: std::collections::HashSet<&str> = seen.iter().map(|s| s.as_str()).collect();
-        self.entries.retain(|k, _| set.contains(k.as_str()));
+        self.entries
+            .retain(|k, _| set.contains(k.as_str()) || Path::new(k).exists());
     }
 }
 

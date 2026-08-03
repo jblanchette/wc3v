@@ -17,6 +17,11 @@
       <div id="roots"></div>
       <button id="pick-folder">Add folder…</button>
       <p class="hint">Map cache: <code id="cache-dir">—</code></p>
+
+      <h2>Backfill</h2>
+      <div id="backfill-status" class="hint">idle</div>
+      <button id="backfill-toggle">Parse all replays</button>
+      <button id="backfill-retry" hidden>Retry failed</button>
     </section>
 
     <section class="col wide">
@@ -35,6 +40,7 @@
   <!-- Shared summary extractor — the committed client copy, placed into
        js/vendor by tools/build-desktop-client.js. Must load before app.js. -->
   <script src="./js/vendor/SummaryExtract.js"></script>
+  <script src="./js/backfill.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

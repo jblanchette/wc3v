@@ -129,6 +129,10 @@ const Wc3vParser = {
     const result = await wc3v.doParsing(buffer, {
       mapDataCache: { [mapDataName]: cache },
       skipTerrainRead: true,
+      // FAST PROFILE MODE passthrough (see wc3v.js doParsing). Bulk stat
+      // extraction only — unit routes become straight lines, so output that
+      // will ever be rendered must not set this.
+      skipPathfinding: !!options.skipPathfinding,
       // doParsing emits its own 'metadata'/'parsing'/'postprocess'/'done'
       // events. Forward them; they overwrite the percent we set above.
       onProgress: (evt) => {

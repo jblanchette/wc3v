@@ -62,19 +62,20 @@ const log = (msg, kind = '') => {
   el('log').prepend(line);
 };
 
-// ── Parser worker ───────────────────────────────────────────────────────────
+// ── Parser workers ──────────────────────────────────────────────────────────
+//
+// One shared wiring for every parser worker — the interactive one and the
+// backfill pool. Job ids come from a single counter, so all workers can share
+// the one jobs map.
 
-const ensureWorker = () => {
-  if (state.worker) return state.worker;
-  const w = new Worker('./js/parser-worker.js');
-
+const wireWorker = (w) => {
   w.onmessage = async (e) => {
     const msg = e.data;
 
     // The worker cannot reach Tauri IPC, so it asks us for map data.
     if (msg.type === 'need-map') {
       try {
-        const cache = await loadMapCache(msg.mapDataName);
+        const cache = await loadMapCacheCached(msg.mapDataName);
         w.postMessage({ type: 'map-data', reqId: msg.reqId, cache });
       } catch (err) {
         w.postMessage({ type: 'map-data', reqId: msg.reqId, error: err.message });
@@ -86,6 +87,9 @@ const ensureWorker = () => {
     if (!job) return;
 
     if (msg.type === 'progress') {
+      // Backfill jobs are quiet — the status line belongs to the user's own
+      // interactive parse, not to whichever background game is mid-flight.
+      if (job.quiet) return;
       const p = msg.evt || {};
       el('status').textContent = `${p.phase || 'parsing'} ${Math.round(p.percent || 0)}% ${p.detail || ''}`;
       return;
@@ -103,9 +107,28 @@ const ensureWorker = () => {
     }
   };
 
-  w.onerror = (ev) => log(`worker crashed: ${ev.message}`, 'err');
-  state.worker = w;
+  // A crashed worker never answers again; fail its outstanding jobs so
+  // callers (the backfill loop especially) can respawn and move on instead
+  // of hanging forever on a promise nobody will settle.
+  w.onerror = (ev) => {
+    log(`worker crashed: ${ev.message}`, 'err');
+    w._dead = true;
+    for (const [id, job] of [...state.jobs]) {
+      if (job.worker === w) {
+        state.jobs.delete(id);
+        job.reject(new Error(`worker crashed: ${ev.message}`));
+      }
+    }
+  };
   return w;
+};
+
+const makeWorker = () => wireWorker(new Worker('./js/parser-worker.js'));
+
+const ensureWorker = () => {
+  if (state.worker && !state.worker._dead) return state.worker;
+  state.worker = makeWorker();
+  return state.worker;
 };
 
 // Map data lives on local disk under the app data dir. Files are gzipped
@@ -124,17 +147,44 @@ const loadMapCache = async (mapDataName) => {
   return { wpm, doo, unit };
 };
 
-const parseReplay = async (path) => {
-  const w = ensureWorker();
+// Backfill parses hundreds of games on the same handful of ladder maps; a
+// small LRU stops the same wpm/doo/unit files being re-read and re-gunzipped
+// for every game. Values are promises, so two workers asking for the same map
+// at once share a single load. Deliberately small — entries are multi-MB JSON.
+const mapCacheLru = new Map();
+const MAP_CACHE_MAX = 6;
+const loadMapCacheCached = (mapDataName) => {
+  if (mapCacheLru.has(mapDataName)) {
+    const hit = mapCacheLru.get(mapDataName);
+    mapCacheLru.delete(mapDataName);
+    mapCacheLru.set(mapDataName, hit); // refresh recency
+    return hit;
+  }
+  const p = loadMapCache(mapDataName);
+  // A failed load must not stay cached, or one transient error poisons the map.
+  p.catch(() => mapCacheLru.delete(mapDataName));
+  mapCacheLru.set(mapDataName, p);
+  while (mapCacheLru.size > MAP_CACHE_MAX) {
+    mapCacheLru.delete(mapCacheLru.keys().next().value);
+  }
+  return p;
+};
+
+const parseReplayWith = async (worker, path, opts = {}) => {
   const bytes = await invoke('read_replay', { path });
   const buffer = new Uint8Array(bytes).buffer;
   const id = ++state.jobId;
 
   return new Promise((resolve, reject) => {
-    state.jobs.set(id, { resolve, reject });
-    w.postMessage({ type: 'parse', id, buffer }, [buffer]);
+    state.jobs.set(id, { resolve, reject, worker, quiet: !!opts.quiet });
+    worker.postMessage(
+      { type: 'parse', id, buffer, options: opts.parserOptions || null },
+      [buffer]
+    );
   });
 };
+
+const parseReplay = (path) => parseReplayWith(ensureWorker(), path);
 
 // ── Parse store ─────────────────────────────────────────────────────────────
 //
@@ -376,6 +426,12 @@ const boot = async () => {
   } catch (e) {
     log(`parse store unavailable: ${errText(e)}`, 'warn');
   }
+  await backfill.init();
+  syncRetryButton();
+  if (state.stored.size) {
+    el('backfill-status').textContent =
+      `idle — ${state.stored.size.toLocaleString()} game(s) already parsed`;
+  }
 
   const watched = await invoke('start_watching');
   log(`watching ${watched} replay folder(s)`, 'ok');
@@ -417,6 +473,36 @@ const boot = async () => {
 // is undefined for exactly the failures we most need to read.
 const errText = (e) =>
   (e && e.message) || (typeof e === 'string' ? e : JSON.stringify(e));
+
+// ── Backfill wiring ─────────────────────────────────────────────────────────
+
+const backfill = window.createBackfill({
+  invoke,
+  log,
+  makeWorker,
+  // Fast profile mode: summaries are never rendered, the one case where
+  // skipPathfinding is allowed. Quiet keeps the status line for the user's
+  // own interactive parse.
+  parseOn: (worker, path) =>
+    parseReplayWith(worker, path, { quiet: true, parserOptions: { skipPathfinding: true } }),
+  persistSummary,
+  isStored: (key) => state.stored.has(key),
+  status: (text) => { el('backfill-status').textContent = text; },
+  onIdleChange: (running) => {
+    el('backfill-toggle').textContent = running ? 'Pause' : 'Parse all replays';
+    syncRetryButton();
+  }
+});
+
+const syncRetryButton = () => {
+  const btn = el('backfill-retry');
+  const n = backfill.failedCount;
+  btn.hidden = backfill.running || n === 0;
+  if (n) btn.textContent = `Retry ${n} failed`;
+};
+
+el('backfill-toggle').addEventListener('click', () => backfill.toggle());
+el('backfill-retry').addEventListener('click', () => backfill.retryFailed());
 
 el('pick-folder').addEventListener('click', async () => {
   const dir = await window.__TAURI__.dialog.open({ directory: true });

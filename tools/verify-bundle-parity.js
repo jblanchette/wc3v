@@ -185,7 +185,14 @@ const parseViaBundle = async (buffer) => {
   if (!parser || typeof parser.parseToWc3v !== 'function') {
     throw new Error('Bundle did not expose parseToWc3v');
   }
-  return parser.parseToWc3v(buffer, { mapDataLoader: diskMapDataLoader });
+  return parser.parseToWc3v(buffer, {
+    mapDataLoader: diskMapDataLoader,
+    // Mirror the Node side: with --fast BOTH parsers run profile mode, so a
+    // fast-parity run proves the bundle actually forwards skipPathfinding
+    // (it used to drop unknown options silently — a fast node vs a slow
+    // bundle would light up every unit path).
+    skipPathfinding: !!args.fast
+  });
 };
 
 // ── Structural diff ─────────────────────────────────────────────────────────

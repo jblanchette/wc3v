@@ -94,21 +94,33 @@ Everything below is wasted effort if the watcher does not fire.
   clicked manually. The profile layer should dedupe by the summary
   fingerprint (map + duration + sorted names), like the site does.
 
-### 2. Backfill engine
+### 2. Backfill engine — BUILT, unmeasured
 3,072 playable replays exist locally, going back to Feb 2020. User decision on
 record: **parse everything, in the background, resumable.**
+Engine lives in `desktop/src-frontend/js/backfill.js`; "Parse all replays"
+button in the left column.
 
-- [ ] Queue with persisted progress so it survives restarts.
-- [ ] **2 low-priority workers.** User decision: do NOT detect whether WC3 is
-      running. No process enumeration. Just stay light enough that it never
-      matters.
-- [ ] Use `skipPathfinding: true` (see `wc3v.js` doParsing options) — ~2.8x
-      faster and verified not to change build orders. Do NOT use it for any
-      replay that will be rendered.
-- [ ] Progress UI that is honest about remaining time.
-- [ ] Measure the real end-to-end rate before quoting one. Extrapolations in
-      this project have been wrong three times; the estimate is ~30-40 min for
-      the full corpus but that is unverified.
+- [x] Queue with persisted progress so it survives restarts. **The store IS
+      the progress**: queue = cross-root deduped scan (`scan_all`) minus
+      stored summary keys minus `.failed.json` markers. No queue file to
+      drift or corrupt; pause/restart resumes by construction. Failure
+      markers stop known-bad replays retrying every run; "Retry N failed"
+      clears them (the recovery path after seeding more maps).
+- [x] **2 low-priority workers.** No WC3-process detection, per the decision.
+      Newest-first order so recent games power the profile immediately.
+      `LastReplay.w3g` is excluded — it is a second encoding of a game whose
+      autosave is already queued, and would double-count in the profile.
+- [x] `skipPathfinding: true`. **Found and fixed en route: the bundle entry
+      (`parserEntry.js`) silently dropped unknown options, so the fast mode
+      never reached `doParsing` from the browser/desktop path at all.**
+      Now forwarded, and `verify-bundle-parity.js --fast` runs BOTH parsers
+      in profile mode — parity holds, which proves the passthrough end to
+      end. Bundle rebuilt.
+- [x] Progress UI honest about remaining time: no ETA until ≥5 parses have
+      actually been measured, then a median-based estimate labelled "(rough)".
+- [ ] Measure the real end-to-end rate — needs a real run on the real
+      machine. The completion log line prints the measured s/replay
+      end-to-end figure; quote nothing until it has printed once.
 
 ### 3. Profile / coaching layer — the actual product
 Build on `client/js/SummaryExtract.js` (dual-runtime, no DOM, no fs — already

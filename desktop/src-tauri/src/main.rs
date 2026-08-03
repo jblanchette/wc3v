@@ -62,11 +62,30 @@ fn parse_store_dir(app: &tauri::AppHandle) -> PathBuf {
 }
 
 const SUMMARY_EXT: &str = ".summary.json.gz";
+/// A parse that failed (corrupt replay, missing map data). Persisted so the
+/// backfill never retries a known-bad replay on every restart; cleared
+/// explicitly via `clear_parse_failures` (e.g. after seeding more maps).
+const FAILED_EXT: &str = ".failed.json";
 
 /// Store keys are `<size>-<xxh3 hex>` — decimal digits, hex digits and a
 /// dash. Nothing else may ever reach a filename.
 fn valid_store_key(key: &str) -> bool {
     !key.is_empty() && key.len() <= 40 && key.chars().all(|c| c.is_ascii_hexdigit() || c == '-')
+}
+
+/// Keys of every store file with the given suffix.
+fn store_keys_with_ext(dir: &Path, ext: &str) -> Vec<String> {
+    let mut keys = Vec::new();
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for e in entries.flatten() {
+            if let Some(name) = e.file_name().to_str() {
+                if let Some(k) = name.strip_suffix(ext) {
+                    keys.push(k.to_string());
+                }
+            }
+        }
+    }
+    keys
 }
 
 /// Canonicalise `candidate` and require it to sit under one of `allowed`.
@@ -251,21 +270,88 @@ async fn save_parse(key: String, bytes: Vec<u8>, app: tauri::AppHandle) -> Resul
 #[tauri::command]
 async fn list_parses(app: tauri::AppHandle) -> Result<Vec<String>, String> {
     let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || Ok(store_keys_with_ext(&dir, SUMMARY_EXT)))
+        .await
+        .map_err(|e| format!("list failed: {e}"))?
+}
+
+/// Record a failed parse so the backfill can skip it next time round.
+#[tauri::command]
+async fn save_parse_failure(
+    key: String,
+    code: String,
+    message: String,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    if !valid_store_key(&key) {
+        return Err("invalid store key".into());
+    }
+    let dir = parse_store_dir(&app);
     tauri::async_runtime::spawn_blocking(move || {
-        let mut keys = Vec::new();
-        if let Ok(entries) = std::fs::read_dir(&dir) {
-            for e in entries.flatten() {
-                if let Some(name) = e.file_name().to_str() {
-                    if let Some(k) = name.strip_suffix(SUMMARY_EXT) {
-                        keys.push(k.to_string());
-                    }
-                }
-            }
-        }
-        Ok(keys)
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        let body = serde_json::json!({ "code": code, "message": message }).to_string();
+        let tmp = dir.join(format!("{key}.failed.tmp"));
+        let done = dir.join(format!("{key}{FAILED_EXT}"));
+        std::fs::write(&tmp, body).map_err(|e| e.to_string())?;
+        std::fs::rename(&tmp, &done).map_err(|e| e.to_string())
     })
     .await
-    .map_err(|e| format!("list failed: {e}"))?
+    .map_err(|e| format!("save failed: {e}"))?
+}
+
+#[tauri::command]
+async fn list_parse_failures(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || Ok(store_keys_with_ext(&dir, FAILED_EXT)))
+        .await
+        .map_err(|e| format!("list failed: {e}"))?
+}
+
+/// Forget every recorded failure so those replays get retried — the recovery
+/// path after seeding more map data. Returns how many were cleared.
+#[tauri::command]
+async fn clear_parse_failures(app: tauri::AppHandle) -> Result<usize, String> {
+    let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut n = 0;
+        for key in store_keys_with_ext(&dir, FAILED_EXT) {
+            if std::fs::remove_file(dir.join(format!("{key}{FAILED_EXT}"))).is_ok() {
+                n += 1;
+            }
+        }
+        Ok(n)
+    })
+    .await
+    .map_err(|e| format!("clear failed: {e}"))?
+}
+
+/// Scan every registered root and dedupe across ALL of them in one pass, so
+/// a game copied between accounts collapses too. This is the backfill queue
+/// source; the interactive per-root scan stays `scan_replays`.
+#[tauri::command]
+async fn scan_all(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+) -> Result<replays::ScanResult, String> {
+    let roots = { state.roots.lock().unwrap().clone() };
+    let index = hash_index_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut all: Vec<replays::ReplayFile> = Vec::new();
+        let mut walk_ms = 0;
+        let mut stat_ms = 0;
+        for root in &roots {
+            let meta = replays::scan_meta(root);
+            walk_ms += meta.stats.walk_ms;
+            stat_ms += meta.stats.stat_ms;
+            all.extend(meta.replays);
+        }
+        let mut res = replays::dedupe(all, &index);
+        res.stats.walk_ms = walk_ms;
+        res.stats.stat_ms = stat_ms;
+        Ok(res)
+    })
+    .await
+    .map_err(|e| format!("scan failed: {e}"))?
 }
 
 /// Read one stored summary back (gzipped JSON, as written by `save_parse`).
@@ -319,6 +405,10 @@ fn main() {
             save_parse,
             list_parses,
             read_parse,
+            save_parse_failure,
+            list_parse_failures,
+            clear_parse_failures,
+            scan_all,
             start_watching
         ])
         .run(tauri::generate_context!())

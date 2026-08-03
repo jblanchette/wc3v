@@ -13,7 +13,7 @@
 // main thread over postMessage.
 //
 // Protocol
-//   main → worker  { type: 'parse', buffer, id }
+//   main → worker  { type: 'parse', buffer, id, options? }
 //                  { type: 'map-data', reqId, cache | error }
 //   worker → main  { type: 'need-map', reqId, mapDataName }
 //                  { type: 'progress', evt }
@@ -82,10 +82,13 @@ self.onmessage = async (e) => {
   }
 
   try {
-    const result = await parser.parseToWc3v(msg.buffer, {
+    // msg.options carries parser options (backfill sets skipPathfinding).
+    // Spread first so it can never override the loader or progress plumbing.
+    const opts = Object.assign({}, msg.options || {}, {
       mapDataLoader: desktopMapLoader,
       onProgress: (evt) => self.postMessage({ type: 'progress', id: msg.id, evt: evt })
     });
+    const result = await parser.parseToWc3v(msg.buffer, opts);
     self.postMessage({ type: 'done', id: msg.id, result: result });
   } catch (err) {
     self.postMessage({

@@ -152,11 +152,15 @@ fn watch_loop(
     // which mirrors the scan's own rule and is almost always zero work.
     let mut by_size: HashMap<u64, Vec<PathBuf>> = HashMap::new();
     let mut hash_cache: HashMap<PathBuf, String> = HashMap::new();
+    // One dedupe pass over ALL roots, not one per root — dedupe saves the
+    // hash index when it finishes, so per-root passes would write it N times.
+    let mut metas: Vec<replays::ReplayFile> = Vec::new();
     for root in &roots {
-        for rf in replays::scan_root(root, &index_path).replays {
-            let p = PathBuf::from(&rf.path);
-            by_size.entry(rf.size).or_default().push(p);
-        }
+        metas.extend(replays::scan_meta(root).replays);
+    }
+    for rf in replays::dedupe(metas, &index_path).replays {
+        let p = PathBuf::from(&rf.path);
+        by_size.entry(rf.size).or_default().push(p);
     }
 
     let hash_of = |path: &PathBuf, cache: &mut HashMap<PathBuf, String>| -> Option<String> {
