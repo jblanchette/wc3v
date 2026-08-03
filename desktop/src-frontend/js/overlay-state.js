@@ -74,11 +74,20 @@
       };
     };
 
+    // Human players in a summary — the candidates for "which one is you".
+    const candidatesIn = (summary) => Object.keys(summary && summary.players || {})
+      .map(k => summary.players[k].name)
+      .filter(Boolean);
+
     const publish = async () => {
       const views = st.session.map(viewFor).filter(Boolean);
       const payload = {
         updatedAt: Date.now(),
         user: st.userName,
+        // Without an identity no verdict can be attributed to a seat, so the
+        // overlay says so instead of showing a bare "Game over" forever.
+        needsIdentity: !st.userName,
+        candidates: st.userName ? [] : candidatesIn(st.lastGame),
         session: {
           wins: views.filter(v => v.result === 'win').length,
           losses: views.filter(v => v.result === 'loss').length,
@@ -113,7 +122,9 @@
         if (st.userName) localStorage.setItem('wc3v-user-name', st.userName);
         publish();
       },
-      get userName () { return st.userName; }
+      get userName () { return st.userName; },
+      // Names in the most recent game, for the "which one are you" prompt.
+      get lastGameCandidates () { return candidatesIn(st.lastGame); }
     };
   };
 })();

@@ -371,7 +371,10 @@ const run = async (path, opts = {}) => {
       }
     }
 
-    if (opts.live && summary) overlayState.recordGame(summary);
+    if (opts.live && summary) {
+      overlayState.recordGame(summary);
+      resolveIdentity();
+    }
   } catch (err) {
     el('status').textContent = 'failed';
     if (err.code === 'missing_map' || err.code === 'missing_map_cache') {
@@ -576,14 +579,13 @@ const boot = async () => {
   loadCorpus().then((corpus) => {
     if (!corpus.length) return;
     const PA = window.ProfileAggregate;
-    const primary = PA.detectPrimaryName(corpus);
-    if (primary && !overlayState.userName) overlayState.setUserName(primary.name);
-    if (!el('profile-name').value) el('profile-name').value = overlayState.userName || '';
     const latest = [...corpus].sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0))[0];
     overlayState.seedLastGame(latest);
     el('known-names').innerHTML = PA.knownNames(corpus).slice(0, 60)
       .map(n => `<option value="${escAttr(n.name)}">`).join('');
     log(`profile corpus ready: ${corpus.length} game(s)`, 'ok');
+    resolveIdentity();
+    if (!el('profile-name').value) el('profile-name').value = overlayState.userName || '';
   }).catch(e => log(`corpus load failed: ${errText(e)}`, 'warn'));
 };
 
@@ -611,6 +613,39 @@ const backfill = window.createBackfill({
     syncRetryButton();
   }
 });
+
+// Work out which player is "you", or ask.
+//
+// Nothing in the .w3g format marks which seat saved the replay, so identity
+// comes from frequency: across a real history the account owner is in every
+// game and nobody else is close. That needs more than one game — with a
+// single replay both players are tied at one appearance and guessing would be
+// a coin flip that silently mislabels every Victory as a Defeat. So when the
+// signal is absent, ask instead of guessing.
+const resolveIdentity = () => {
+  if (overlayState.userName) return;
+
+  const corpus = state.corpus;
+  if (corpus && corpus.length) {
+    const primary = window.ProfileAggregate.detectPrimaryName(corpus);
+    if (primary) {
+      overlayState.setUserName(primary.name);
+      el('profile-name').value = primary.name;
+      log(`identified you as ${primary.name} (in ${primary.games} of ${corpus.length} games)`, 'ok');
+      return;
+    }
+  }
+
+  const names = overlayState.lastGameCandidates;
+  if (!names.length) return;
+  // Prefill with the first candidate so "This is me" is one click away, and
+  // put both in the datalist so the other is one keystroke away.
+  el('profile-name').value = el('profile-name').value || names[0];
+  el('known-names').innerHTML = names.map(n => `<option value="${escAttr(n)}">`).join('');
+  log(`Which player are you — ${names.join(' or ')}? ` +
+      `Pick one in the Profile box and click "This is me" so wins and losses ` +
+      `can be scored. (Parsing more of your history sorts this out on its own.)`, 'warn');
+};
 
 const syncRetryButton = () => {
   const btn = el('backfill-retry');

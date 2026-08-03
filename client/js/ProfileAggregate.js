@@ -125,9 +125,16 @@
 
   // The account owner appears in nearly every replay they saved; nobody else
   // comes close. That signal is the auto-detected default profile.
+  //
+  // Returns null when the signal is absent rather than guessing. With a single
+  // game every player is tied at one appearance, and nothing in the replay
+  // format identifies which seat saved it — so there is genuinely no way to
+  // tell the account owner from their opponent. Callers must ask instead.
   function detectPrimaryName (games) {
     const names = knownNames(games);
-    return names.length ? names[0] : null;
+    if (!names.length) return null;
+    if (names.length > 1 && names[0].games === names[1].games) return null;
+    return names[0];
   }
 
   // ── Profile aggregation ────────────────────────────────────────────────────

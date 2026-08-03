@@ -170,8 +170,13 @@
 
     var verdict = el('g-verdict');
     verdict.className = 'word ' + (g.verdict || 'unknown');
+    // A verdict cannot be attributed to a seat until the app knows which
+    // player is the user. Say that, rather than implying the result was
+    // unreadable — the two have completely different fixes.
     verdict.textContent = g.verdict === 'win' ? 'Victory'
-      : g.verdict === 'loss' ? 'Defeat' : 'Game over';
+      : g.verdict === 'loss' ? 'Defeat'
+      : s.needsIdentity ? 'Set your player name in WC3V'
+      : 'Result unclear';
 
     el('g-vs').innerHTML = g.opponent
       ? 'vs <b></b> (' + (RACE[g.opponent.race] || g.opponent.race || '?') + ')'

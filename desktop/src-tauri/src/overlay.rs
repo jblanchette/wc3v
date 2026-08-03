@@ -200,6 +200,13 @@ fn handle(mut stream: TcpStream, ov: Arc<Overlay>) {
         Some((p, q)) => (p, q),
         None => (target, ""),
     };
+
+    // Browsers request this unprompted and it carries no token. Answering
+    // "no content" keeps a red 403 out of the OBS/browser console, where it
+    // reads as a broken overlay.
+    if path == "/favicon.ico" {
+        return respond(&mut stream, "204 No Content", "image/x-icon", "");
+    }
     let token = query
         .split('&')
         .find_map(|kv| kv.strip_prefix("token="))

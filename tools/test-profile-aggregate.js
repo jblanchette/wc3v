@@ -53,6 +53,23 @@ const primary = PA.detectPrimaryName(games);
 assert.strictEqual(primary.name, 'Me');
 assert.strictEqual(primary.games, 30);
 
+// A single game gives every player one appearance, and nothing in the .w3g
+// format says which seat saved it — so detection must REFUSE rather than
+// coin-flip. Guessing here silently reports every Victory as a Defeat half
+// the time, which is exactly what shipped before this guard.
+assert.strictEqual(PA.detectPrimaryName(games.slice(0, 1)), null,
+  'detectPrimaryName guessed an identity from a single game');
+assert.strictEqual(PA.detectPrimaryName([]), null);
+
+// Two games against the SAME opponent is still a tie — refuse.
+const sameOpp = [mkGame(0, { win: true }), mkGame(5, { win: false })];
+assert.strictEqual(PA.detectPrimaryName(sameOpp), null,
+  'detectPrimaryName guessed when user and opponent were tied');
+
+// Three games against two different opponents breaks the tie.
+const varied = [mkGame(0, { win: true }), mkGame(1, { win: true }), mkGame(2, { win: false })];
+assert.strictEqual(PA.detectPrimaryName(varied).name, 'Me');
+
 // Single-game view orients correctly and is case-insensitive.
 const v = PA.gameView(games[1], PA.normName('ME'));
 assert.strictEqual(v.result, 'win');
