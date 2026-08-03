@@ -424,7 +424,10 @@ pub fn dedupe(mut replays: Vec<ReplayFile>, index_path: &Path) -> ScanResult {
 }
 
 /// Convenience for callers that want the finished list and do not care about
-/// showing anything in between (the watcher, benchmarks).
+/// showing anything in between. Only the benchmark uses it now — the watcher
+/// and `scan_all` both dedupe across every root in one pass instead, so they
+/// write the hash index once rather than once per root.
+#[cfg(test)]
 pub fn scan_root(root: &Path, index_path: &Path) -> ScanResult {
     let meta = scan_meta(root);
     let mut res = dedupe(meta.replays, index_path);

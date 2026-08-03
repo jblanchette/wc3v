@@ -522,6 +522,11 @@ const boot = async () => {
   }
   await backfill.init();
   syncRetryButton();
+
+  // Reflect the real OS setting rather than assuming a default.
+  invoke('get_autostart')
+    .then(on => { el('autostart-toggle').checked = on; })
+    .catch(() => { el('autostart-toggle').disabled = true; });
   if (state.stored.size) {
     el('backfill-status').textContent =
       `idle — ${state.stored.size.toLocaleString()} game(s) already parsed`;
@@ -661,6 +666,51 @@ el('copy-obs-url').addEventListener('click', async () => {
 
 el('open-player-view').addEventListener('click', () =>
   invoke('open_player_view').catch(e => log(`player view failed: ${errText(e)}`, 'err')));
+
+// ── Shell: autostart + updates ──────────────────────────────────────────────
+
+el('autostart-toggle').addEventListener('change', async (e) => {
+  const wanted = e.target.checked;
+  try {
+    // Trust the OS, not the click: re-read the real state afterwards, so a
+    // silently-refused registry write cannot leave the box lying.
+    const actual = await invoke('set_autostart', { enabled: wanted });
+    e.target.checked = actual;
+    log(actual ? 'WC3V will start with Windows' : 'startup entry removed', 'ok');
+  } catch (err) {
+    e.target.checked = !wanted;
+    log(`could not change startup setting: ${errText(err)}`, 'err');
+  }
+});
+
+const runUpdateCheck = async (install) => {
+  const out = el('update-status');
+  out.textContent = 'checking…';
+  try {
+    const r = await invoke('check_for_update', { install });
+    if (r.status === 'current') {
+      out.textContent = 'up to date';
+    } else if (r.status === 'unconfigured') {
+      // A dev build, or one shipped without an update endpoint. Say so
+      // rather than implying the app is current.
+      out.textContent = 'updates not configured for this build';
+    } else if (r.status === 'available') {
+      out.textContent = `version ${r.version} available`;
+      log(`update ${r.version} available — click again to install`, 'ok');
+      el('check-update').textContent = `Install ${r.version}`;
+      el('check-update').dataset.install = '1';
+    } else if (r.status === 'installed') {
+      out.textContent = `installed ${r.version} — restart to apply`;
+      log(`update ${r.version} installed; restart WC3V to apply it`, 'ok');
+    }
+  } catch (err) {
+    out.textContent = 'update check failed';
+    log(`update check failed: ${errText(err)}`, 'err');
+  }
+};
+
+el('check-update').addEventListener('click', (e) =>
+  runUpdateCheck(e.currentTarget.dataset.install === '1'));
 
 el('pick-folder').addEventListener('click', async () => {
   const dir = await window.__TAURI__.dialog.open({ directory: true });

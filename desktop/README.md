@@ -79,26 +79,28 @@ auto-saves every game as `Replay_YYYY_MM_DD_HHMM.w3g`, so nothing is lost by
 default. Dedupe is by **content hash**, because a nested duplicate folder tree
 exists in the wild and `LastReplay.w3g` is not byte-identical to its autosave.
 
-## Building
+## Running it
 
-Needs Rust (MSVC toolchain on Windows) and the Tauri CLI:
-
-```sh
-cargo install tauri-cli --version "^2.0" --locked
-```
-
-Then, from the repo root:
+**Users** double-click an installer and never see a terminal. **You**, from
+the repo root:
 
 ```sh
-npm run build:parser                       # only if lib/ or helpers/ changed
-node tools/build-desktop-client.js --seed-maps=all
-cd desktop/src-tauri && cargo tauri dev
+npm run desktop         # run it
+npm run desktop:build   # produce the installer
+npm run desktop:test    # profile assertions + Rust suite
 ```
 
-`build-desktop-client.js` assembles `desktop/dist` from `desktop/src-frontend`
-plus the committed parser bundle. `--seed-maps` copies per-map parse data
-(`wpm/doo/unit.json.gz` only — never the multi-megabyte `terrain.jpg`) into the
-app's local map cache so parsing works offline. All 202 maps is 318.8 MB;
-a single map is ~1.7 MB.
+One-time: Rust (MSVC toolchain on Windows) and `cargo install tauri-cli
+--version "^2.0" --locked`. If a fresh terminal cannot find `cargo`, it is in
+`%USERPROFILE%\.cargo\bin`.
 
-To build an installer: `cargo tauri build`.
+Run `npm run build:parser` first if you changed `lib/` or `helpers/` —
+otherwise the app silently uses the old parser.
+
+Both desktop scripts assemble `desktop/dist` (frontend + committed parser
+bundle) and stage the ladder map pool into the installer, so a fresh install
+parses ladder games offline with no extra steps. Cutting and shipping a
+release, including how updates are signed and served: **`RELEASING.md`**.
+
+Once installed, the app lives in the tray: closing the window keeps it
+watching for replays, and it can start with the OS.

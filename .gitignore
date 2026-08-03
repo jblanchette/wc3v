@@ -58,3 +58,11 @@ debug/captures/
 desktop/dist/
 desktop/src-tauri/target/
 desktop/src-tauri/gen/schemas/
+# Map parse-data staged into the installer by --bundle-maps. Generated from
+# client/maps; ~25 MB for the ladder set and no reason to version it twice.
+desktop/src-tauri/resources/
+
+# Update-signing private keys. The PUBLIC key belongs in tauri.conf.json;
+# a private key must never enter the repo. Real key lives in ~/.tauri/.
+*.key
+!**/public.key

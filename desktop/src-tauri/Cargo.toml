@@ -11,9 +11,18 @@ rust-version = "1.77"
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
+# Run-on-startup. Writes a registry Run key on Windows / a .desktop entry on
+# Linux — the app never installs a service or elevates.
+tauri-plugin-autostart = "2"
+
+# Signed delta-free updates pulled from a static manifest (see RELEASING.md).
+# The ONLY component that makes an outbound request, and only when the user
+# asks or on the once-per-launch check.
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

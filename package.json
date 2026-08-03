@@ -6,7 +6,10 @@
 		"build:parser": "node tools/build-parser-bundle.js",
 		"gen-builds-cards": "node tools/gen-builds-cards.js",
 		"gen-manifest": "node tools/gen-asset-manifest.js",
-		"check-manifest": "node tools/gen-asset-manifest.js --check"
+		"check-manifest": "node tools/gen-asset-manifest.js --check",
+		"desktop": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri dev",
+		"desktop:build": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
+		"desktop:test": "node tools/test-profile-aggregate.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release"
 	},
 	"devDependencies": {
 		"@gltf-transform/core": "^4.4.0",

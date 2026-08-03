@@ -11,15 +11,20 @@
  *
  * Usage:
  *   node tools/build-desktop-client.js
+ *   node tools/build-desktop-client.js --bundle-maps=ladder
  *   node tools/build-desktop-client.js --seed-maps=EchoIsles22,TurtleRock20
- *   node tools/build-desktop-client.js --seed-maps=all
  *
  * Options:
- *   --seed-maps=LIST  Copy per-map parse data into the local map cache so the
- *                     app works offline. Comma-separated map folder names as
- *                     found in client/maps/, or `all`. Only the three files
- *                     the parser needs are copied (wpm/doo/unit), never the
- *                     multi-megabyte terrain.jpg used by the 3D renderer.
+ *   --bundle-maps=SET  Stage per-map parse data into desktop/src-tauri/resources
+ *                      so the INSTALLER carries it and a freshly installed app
+ *                      parses those maps with no extra steps. `ladder` (the
+ *                      competitive 1v1 pool, ~25 MB), `all` (318 MB — too big
+ *                      for a real installer), or a comma-separated list.
+ *   --seed-maps=LIST   Dev convenience: copy straight into THIS machine's app
+ *                      data cache instead. Same value forms as above.
+ *
+ * Only the three files the parser needs are copied (wpm/doo/unit), never the
+ * multi-megabyte terrain.jpg used by the 3D renderer.
  */
 
 const fs = require('fs');
@@ -40,6 +45,36 @@ const MAPS = path.join(ROOT, 'client', 'maps');
 // Only these are needed to PARSE a replay. terrain.jpg / heights.bin.gz /
 // gridmap.jpg belong to the 3D renderer, which the desktop app does not ship.
 const PARSE_FILES = ['wpm.json.gz', 'doo.json.gz', 'unit.json.gz'];
+
+// Staged into the installer by --bundle-maps. Tauri copies this whole tree as
+// a bundled resource; the app seeds its map cache from it on first run.
+const RESOURCE_MAPS = path.join(ROOT, 'desktop', 'src-tauri', 'resources', 'maps');
+
+// The competitive 1v1 pool, as BASE names — matched by prefix so every
+// version and season variant a folder ships under (AutumnLeaves,
+// AutumnLeaves_v2.0, AutumnLeaves_S2_v2.0…) is picked up automatically. A
+// replay can be on any of them, so they all have to be present.
+//
+// All 202 maps is 318 MB, which is not an installer. This set covers the
+// games a ladder player actually produces; anything outside it still parses,
+// it just needs the map fetched first (ROADMAP §7).
+const LADDER_MAP_PREFIXES = [
+  'Amazonia', 'AutumnLeaves', 'ConcealedHill', 'EchoIsles', 'Hammerfall',
+  'LastRefuge', 'NorthernIsles', 'SecretValley', 'ShatteredExile',
+  'Springtime', 'TerenasStand', 'Tidehunters', 'TurtleRock', 'TwistedMeadows'
+];
+
+// Folder naming is inconsistent across the corpus (dashes, dots, spaces,
+// case), so compare on a squashed form rather than the raw name.
+const normFolder = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const resolveLadderSet = (available) => {
+  const prefixes = LADDER_MAP_PREFIXES.map(normFolder);
+  return available.filter(name => {
+    const n = normFolder(name);
+    return prefixes.some(p => n.startsWith(p));
+  });
+};
 
 const args = {};
 process.argv.slice(2).forEach(raw => {
@@ -71,22 +106,23 @@ const appMapCacheDir = () => {
   return path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), id, 'maps');
 };
 
-const seedMaps = (list) => {
+// Copy the parse-data files for a set of maps into `target`. Returns stats.
+const copyMapSet = (list, target, label) => {
   if (!fs.existsSync(MAPS)) {
-    console.log('client/maps not present — skipping map seed');
-    return;
+    console.log('client/maps not present — skipping map copy');
+    return null;
   }
   const available = fs.readdirSync(MAPS).filter(n =>
     fs.statSync(path.join(MAPS, n)).isDirectory());
 
-  const wanted = list === 'all' || list === true
-    ? available
+  const wanted = (list === 'all' || list === true) ? available
+    : list === 'ladder' ? resolveLadderSet(available)
     : String(list).split(',').map(s => s.trim()).filter(Boolean);
 
-  const target = appMapCacheDir();
   fs.mkdirSync(target, { recursive: true });
 
-  let copied = 0, bytes = 0, missing = [];
+  let copied = 0, bytes = 0;
+  const missing = [];
   for (const name of wanted) {
     const from = path.join(MAPS, name);
     if (!available.includes(name)) { missing.push(name); continue; }
@@ -101,10 +137,22 @@ const seedMaps = (list) => {
     copied++;
   }
 
-  console.log(`map cache: ${copied} maps → ${target}`);
-  console.log(`           ${(bytes / 1024 / 1024).toFixed(1)} MB (parse data only)`);
-  if (missing.length) {
-    console.log(`           not found in client/maps: ${missing.join(', ')}`);
+  console.log(`${label}: ${copied} maps, ${(bytes / 1024 / 1024).toFixed(1)} MB (parse data only)`);
+  // `ladder` lists naming variants that not every checkout has; only surface
+  // misses for an explicit user-supplied list, where a typo matters.
+  if (missing.length && list !== 'ladder' && list !== 'all' && list !== true) {
+    console.log(`${' '.repeat(label.length)}  not found in client/maps: ${missing.join(', ')}`);
+  }
+  return { copied, bytes };
+};
+
+// Stage into the installer payload. Cleared first so a shrinking set never
+// leaves stale maps inflating every future installer.
+const bundleMaps = (list) => {
+  fs.rmSync(RESOURCE_MAPS, { recursive: true, force: true });
+  const r = copyMapSet(list, RESOURCE_MAPS, 'installer maps');
+  if (r && r.bytes > 120 * 1024 * 1024) {
+    console.log('           WARNING: that is a very large installer payload.');
   }
 };
 
@@ -128,8 +176,11 @@ const main = () => {
   console.log(`parser:    ${(size / 1024).toFixed(0)} KB`);
   console.log(`summary:   SummaryExtract.js (${(fs.statSync(SUMMARY_EXTRACT).size / 1024).toFixed(0)} KB)`);
 
-  if (args['seed-maps']) seedMaps(args['seed-maps']);
-  else console.log('map cache: not seeded (pass --seed-maps=all or a comma list)');
+  if (args['bundle-maps']) bundleMaps(args['bundle-maps']);
+  if (args['seed-maps']) copyMapSet(args['seed-maps'], appMapCacheDir(), 'map cache');
+  if (!args['bundle-maps'] && !args['seed-maps']) {
+    console.log('maps:      none staged (--bundle-maps=ladder for an installer)');
+  }
 };
 
 main();

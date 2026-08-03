@@ -36,7 +36,15 @@
       "icons/128x128.png",
       "icons/icon.ico"
     ],
+    "resources": ["resources/maps/**/*"],
+    "createUpdaterArtifacts": true,
     "shortDescription": "Local WC3 replay auto-parse and overlay",
     "longDescription": "Watches your Warcraft III replay folders, parses each game locally the moment it finishes, and drives an OBS-ready overlay. No accounts, no telemetry, no game injection."
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://wc3v.net/desktop/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI5N0E3RDEzMUQzNzQwOUQKUldTZFFEY2RFMzE2S1NTNnM2QUFOcitLSW81UXJQeUx3VjBWRCtEalUrenFtSG5yT3Z2dGV1aVMK"
+    }
   }
 }

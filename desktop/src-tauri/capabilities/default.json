@@ -1,10 +1,14 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Minimum the app needs: receive events from the replay watcher, and let the user pick a replay folder by hand (required on Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may not guess).",
+  "description": "Minimum the app needs: receive events from the replay watcher, let the user pick a replay folder by hand (required on Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may not guess), toggle run-on-startup, and check for signed updates.",
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "updater:default"
   ]
 }

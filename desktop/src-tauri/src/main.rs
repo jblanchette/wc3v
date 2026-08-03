@@ -441,6 +441,109 @@ fn open_player_view(
         .map_err(|e| e.to_string())
 }
 
+// ── Shell: first-run, autostart, updates (ROADMAP §6) ───────────────────────
+
+/// Seed the map cache from maps bundled into the installer. Runs once per
+/// install: a fresh install can parse ladder games with no extra steps and no
+/// network. Existing files are never overwritten, so a map the user fetched
+/// themselves always wins.
+fn seed_maps_from_resources(app: &tauri::AppHandle) -> usize {
+    let Ok(resource_dir) = app.path().resource_dir() else {
+        return 0;
+    };
+    let src = resource_dir.join("resources").join("maps");
+    if !src.is_dir() {
+        return 0;
+    }
+    let dest = map_cache_dir(app);
+    let Ok(entries) = std::fs::read_dir(&src) else {
+        return 0;
+    };
+    let mut seeded = 0;
+    for entry in entries.flatten() {
+        if !entry.path().is_dir() {
+            continue;
+        }
+        let target = dest.join(entry.file_name());
+        if std::fs::create_dir_all(&target).is_err() {
+            continue;
+        }
+        let Ok(files) = std::fs::read_dir(entry.path()) else {
+            continue;
+        };
+        let mut wrote = false;
+        for f in files.flatten() {
+            let to = target.join(f.file_name());
+            if to.exists() {
+                continue;
+            }
+            if std::fs::copy(f.path(), &to).is_ok() {
+                wrote = true;
+            }
+        }
+        if wrote {
+            seeded += 1;
+        }
+    }
+    seeded
+}
+
+#[tauri::command]
+fn get_autostart(app: tauri::AppHandle) -> Result<bool, String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_autostart(enabled: bool, app: tauri::AppHandle) -> Result<bool, String> {
+    use tauri_plugin_autostart::ManagerExt;
+    let mgr = app.autolaunch();
+    if enabled {
+        mgr.enable().map_err(|e| e.to_string())?;
+    } else {
+        mgr.disable().map_err(|e| e.to_string())?;
+    }
+    mgr.is_enabled().map_err(|e| e.to_string())
+}
+
+/// Check for an update and install it if the user consents. Returns a
+/// description of what happened so the UI can report honestly — including
+/// "updates aren't configured for this build", which is the state of any
+/// build made without an updater endpoint (see RELEASING.md).
+#[tauri::command]
+async fn check_for_update(app: tauri::AppHandle, install: bool) -> Result<serde_json::Value, String> {
+    use tauri_plugin_updater::UpdaterExt;
+
+    let updater = match app.updater() {
+        Ok(u) => u,
+        Err(e) => {
+            return Ok(serde_json::json!({
+                "status": "unconfigured",
+                "detail": e.to_string()
+            }))
+        }
+    };
+
+    let found = updater.check().await.map_err(|e| e.to_string())?;
+    let Some(update) = found else {
+        return Ok(serde_json::json!({ "status": "current" }));
+    };
+
+    if !install {
+        return Ok(serde_json::json!({
+            "status": "available",
+            "version": update.version,
+            "notes": update.body
+        }));
+    }
+
+    update
+        .download_and_install(|_, _| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({ "status": "installed", "version": update.version }))
+}
+
 #[tauri::command]
 fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> InitPayload {
     let roots = discover_roots(state);
@@ -464,10 +567,61 @@ fn start_watching(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<u
     watcher::start(app, roots, index)
 }
 
+/// Show and focus the main window, restoring it from the tray.
+fn show_main_window(app: &tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+        let _ = win.unminimize();
+        let _ = win.set_focus();
+    }
+}
+
+/// Tray icon: the app's whole point is running in the background while you
+/// play, so closing the window hides it rather than quitting. "Quit" on this
+/// menu is the only thing that actually exits.
+fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
+    use tauri::menu::{Menu, MenuItem};
+    use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+
+    let open = MenuItem::with_id(app, "open", "Open WC3V", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&open, &quit])?;
+
+    TrayIconBuilder::with_id("main")
+        .icon(app.default_window_icon().unwrap().clone())
+        .tooltip("WC3V — watching for replays")
+        .menu(&menu)
+        .show_menu_on_left_click(false)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "open" => show_main_window(app),
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
+                show_main_window(tray.app_handle());
+            }
+        })
+        .build(app)?;
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            // Started by the OS at login: go straight to the tray rather than
+            // throwing a window in the user's face every boot.
+            Some(vec!["--autostart"]),
+        ))
         .manage(AppState::default())
         .setup(|app| {
             // The loopback overlay server is the one socket this binary opens
@@ -477,7 +631,28 @@ fn main() {
                 .app_data_dir()
                 .unwrap_or_else(|_| PathBuf::from("."));
             app.manage(overlay::start(data_dir));
+
+            let handle = app.handle();
+            let seeded = seed_maps_from_resources(handle);
+            if seeded > 0 {
+                println!("seeded {seeded} bundled map(s) into the local cache");
+            }
+            build_tray(handle)?;
+
+            // Launched by the OS at login — stay in the tray.
+            if std::env::args().any(|a| a == "--autostart") {
+                if let Some(win) = app.get_webview_window("main") {
+                    let _ = win.hide();
+                }
+            }
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            // Close = hide to tray. Quitting is deliberate, via the tray menu.
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             init,
@@ -497,6 +672,9 @@ fn main() {
             publish_overlay_state,
             overlay_info,
             open_player_view,
+            get_autostart,
+            set_autostart,
+            check_for_update,
             start_watching
         ])
         .run(tauri::generate_context!())

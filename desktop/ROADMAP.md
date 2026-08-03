@@ -4,14 +4,20 @@ Handoff document. Written Aug 2026, after Phase 0.
 
 **Read `desktop/README.md` first** for the design invariants and architecture.
 They are not optional — several are the whole reason the project is viable.
+`desktop/RELEASING.md` covers building, shipping and updating.
+
+Run it with `npm run desktop`. Build an installer with `npm run desktop:build`.
 
 ---
 
 ## Honest status
 
-The parse pipeline is proven. **The product is not built.** A replay can be
-found, deduped, and parsed locally — that is all. Nothing is saved, nothing is
-shown to a streamer, and nothing has ever reacted to a real game.
+**The product is built; almost none of it has met reality.** Every section
+below is implemented and unit-tested, and the app installs and runs like a
+normal desktop application. But no game has been played with it open, no OBS
+has rendered the overlay, and no upgrade has ever been taken. Those three
+gaps are the difference between "works" and "shipped", and only a human at a
+real machine can close them.
 
 ### What is verified, and how
 
@@ -46,6 +52,17 @@ shown to a streamer, and nothing has ever reacted to a real game.
 ---
 
 ## Checklist
+
+### The three things only a human can do
+Ranked. Everything else in this document is downstream of these.
+
+1. **Play one real game with the app open** (§0). The premise — "finish a
+   game, it just appears" — has never happened.
+2. **Point a real OBS Browser Source at the overlay** (§4). Transparency and
+   reconnect behaviour are unverified.
+3. **Take one real upgrade** (§6). Install N-1, publish N, confirm it lands.
+
+---
 
 ### 0. Verify the premise — DO THIS FIRST
 Everything below is wasted effort if the watcher does not fire.
@@ -206,24 +223,51 @@ It was built to prove the pipeline, not to be seen.
 - [ ] Consider sharing CSS tokens with the web client rather than a second
       design system.
 
-### 6. Shell polish
-- [ ] Tray icon (the `tray-icon` feature is already enabled in `Cargo.toml`
-      but nothing uses it).
-- [ ] Run on startup, minimise to tray, background parsing with no window.
-- [ ] First-run flow: pick folders, seed the map cache.
-- [ ] Auto-update.
+### 6. Shell polish — BUILT
+The app is now something a person installs and runs, not a dev loop.
+Entry points are `npm run desktop` / `npm run desktop:build`; the release and
+update process is documented in `desktop/RELEASING.md`.
+
+- [x] Tray icon: left-click or "Open WC3V" restores the window, "Quit" is the
+      only thing that exits.
+- [x] Minimise to tray + background parsing with no window. Closing the
+      window hides it — the whole point is to keep watching while you play.
+- [x] Run on startup (`tauri-plugin-autostart`), toggled in-app. Launching
+      via the OS passes `--autostart` and opens straight to the tray. The UI
+      re-reads the real OS state after every toggle rather than trusting the
+      click.
+- [x] First-run flow: the ladder map pool (48 folders, ~50 MB) is bundled
+      into the installer and seeded into the map cache on first launch, so a
+      fresh install parses ladder games offline immediately. Existing cache
+      files are never overwritten. Folder discovery already ran at boot; the
+      manual picker covers anything it misses.
+- [x] Auto-update (`tauri-plugin-updater`): signed packages, public key
+      compiled into the binary, private key at `~/.tauri/wc3v-updater.key`
+      (gitignored by pattern — **back it up; losing it ends updates for
+      every existing install**). Builds made without an endpoint report
+      "updates not configured" rather than implying they are current.
+- [ ] Point `plugins.updater.endpoints` at a real URL and walk one upgrade
+      end to end (install N-1, take the update). Currently
+      `https://wc3v.net/desktop/latest.json`, which does not exist yet.
 
 ### 7. Map data
 Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
 ~1.7 MB median each (an earlier figure of 137 MB in the plan was wrong — bad
 `xargs`/`du` measurement).
 
-- [ ] Lazy per-map download on first parse of that map, cached locally.
-- [ ] "Download the current ladder pool" button to pre-warm.
-- [ ] Handle the missing-map case gracefully in the UI (the error already
-      carries `mapDataName` / `rawMapName`).
-- [ ] Today the cache is seeded manually:
-      `node tools/build-desktop-client.js --seed-maps=all`
+- [x] Ladder pool ships in the installer and seeds on first run (§6) — 48
+      folders, 49.8 MB, covering every version variant of the competitive 1v1
+      maps. This removes the manual seeding step for normal use.
+- [x] Missing-map case is already handled in the UI: the error carries
+      `mapDataName` / `rawMapName` and is reported as a named missing map,
+      not a mystery failure. The backfill records it as a failure marker and
+      "Retry failed" re-runs those after more maps arrive.
+- [ ] **Blocked on a hosting decision.** Lazy per-map download needs a public
+      URL for map parse data; today it is only served from the web client's
+      own origin (`/maps/<name>/…` via the Vercel rewrite), and the desktop
+      app makes no outbound requests at all. Decide where map data lives
+      before building the fetch path.
+- [ ] "Download the current ladder pool" button to pre-warm (same blocker).
 
 ### 8. Linux / SteamOS
 - [ ] Build and run there at all.

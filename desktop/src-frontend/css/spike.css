@@ -97,6 +97,21 @@ input {
   font-size: .875rem;
 }
 
+.check {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .6rem;
+  font-size: .875rem;
+  cursor: pointer;
+}
+
+.check input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--ok);
+}
+
 .result {
   background: var(--panel);
   border: 1px solid var(--line);
