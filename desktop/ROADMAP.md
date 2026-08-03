@@ -12,12 +12,15 @@ Run it with `npm run desktop`. Build an installer with `npm run desktop:build`.
 
 ## Honest status
 
-**The product is built; almost none of it has met reality.** Every section
-below is implemented and unit-tested, and the app installs and runs like a
-normal desktop application. But no game has been played with it open, no OBS
-has rendered the overlay, and no upgrade has ever been taken. Those three
-gaps are the difference between "works" and "shipped", and only a human at a
-real machine can close them.
+**The core premise is proven.** On 3 Aug 2026 a real 1v1 was played with the
+app open: it was detected, parsed, stored and pushed to the overlay without
+anyone touching anything, and a real browser rendered the verdict live. That
+was the one thing this whole project rested on.
+
+Still unmet by reality: no OBS has rendered the overlay (transparency in
+CEF specifically), no upgrade has been taken, and the backfill has never run
+to completion so the real parse rate is still unmeasured. The UI is also
+still the diagnostic spike — §5 is untouched.
 
 ### What is verified, and how
 
@@ -53,24 +56,39 @@ real machine can close them.
 
 ## Checklist
 
-### The three things only a human can do
-Ranked. Everything else in this document is downstream of these.
+### The things only a human can do
 
-1. **Play one real game with the app open** (§0). The premise — "finish a
-   game, it just appears" — has never happened.
-2. **Point a real OBS Browser Source at the overlay** (§4). Transparency and
-   reconnect behaviour are unverified.
+1. ~~Play one real game with the app open~~ — **DONE 3 Aug 2026, it worked.**
+   See §0.
+2. **Point a real OBS Browser Source at the overlay** (§4). The page and the
+   live-update path are now verified in real Chrome (connected tab updated to
+   "Victory" with no refresh, via EventSource auto-reconnect), but OBS runs
+   its own CEF build and *transparency* specifically is still unverified.
 3. **Take one real upgrade** (§6). Install N-1, publish N, confirm it lands.
+   Needs the endpoint to exist first.
+4. **Run the backfill once** (§2) for the real end-to-end rate — and it also
+   settles profile identity permanently as a side effect.
 
 ---
 
 ### 0. Verify the premise — DO THIS FIRST
 Everything below is wasted effort if the watcher does not fire.
 
-- [ ] Launch the app, play one real game, confirm `replay-detected` fires and
-      the replay auto-parses. Nothing in this project has been proven end to end
-      until this passes. **This is the one item on this list only a human with
-      the game installed can do.**
+- [x] **PASSED, 3 Aug 2026.** A real 1v1 was played with the app open:
+      `Replay_2026_08_03_1400.w3g` (137 KB) was detected, auto-parsed, its
+      summary persisted (`137081-a68ebbf238065ebf`) and published to the
+      overlay ~34 s after the game wrote. Both the autosave and
+      `LastReplay.w3g` were written and collapsed to a single detection.
+      The premise holds.
+      - Note: for THIS game the two files were byte-identical, so content
+        dedupe caught it and the grace window was not exercised in anger.
+        The earlier corpus finding (differing sizes) came from a stale
+        `LastReplay.w3g` left over from an older game. Both paths are
+        covered by tests; only the identical case has been seen live.
+      - Bug this surfaced: the overlay showed "Game over" instead of
+        "Victory". The winner WAS parsed (`reason0c`, high confidence) — the
+        app had simply never worked out which seat was the user, because it
+        only tried at boot when the store was empty. Fixed in `7ed0ef7`.
 - [x] Confirm the debounce is right. *Mechanism verified*: `watcher.rs` tests
       write progressively with gaps shorter than the settle window and assert
       exactly one announcement carrying the final size. Whether the 1.5 s
