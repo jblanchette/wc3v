@@ -21,7 +21,9 @@ be mistaken for a cheat and stays trivially auditable.
   ordinary window. Nothing is composited onto the game.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
   `read_map_file` canonicalise their argument and refuse anything outside a
-  registered replay root or the local map cache.
+  registered replay root or the local map cache. The parse store commands
+  (`save_parse` / `read_parse`) accept only a `<size>-<hash>` key — digits,
+  hex and a dash — so no path fragment can ever reach them.
 - No accounts, no telemetry, no paywall. GPLv3, same as the parser.
 
 ## Architecture
@@ -32,7 +34,7 @@ inside the Tauri webview — one parser, one behaviour, verified by
 `tools/verify-bundle-parity.js`.
 
 ```
-Rust  ── discovery / watching / scoped file reads / hashing
+Rust  ── discovery / watching / scoped file reads / hashing / parse store
   │
   ├─ Tauri IPC ──► webview ── parser Web Worker ──► .wc3v
   │                   ▲                │
@@ -40,6 +42,12 @@ Rust  ── discovery / watching / scoped file reads / hashing
   │                                         injectable mapDataLoader bounces
   │                                         the request to the main thread)
 ```
+
+Each parsed game persists as one gzipped `SummaryExtract` summary under
+`<app_data>/replays/<size>-<xxh3>.summary.json.gz` — a few KB per game, keyed
+by content so the same game re-opened (or found under a second path) loads
+from the store instead of re-parsing. Full parses are deliberately not stored;
+the raw `.w3g` is the source of truth and full viewing re-parses on demand.
 
 ## Replay folder layout
 

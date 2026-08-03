@@ -21,15 +21,20 @@ shown to a streamer, and nothing has ever reacted to a real game.
 | Replay discovery | found 4,875 files across 2 Battle.net account folders |
 | Dedupe | 4,875 → 4,127 unique; the 748 were the nested duplicate tree + `LastReplay.w3g` |
 | Scan performance | 230 ms to list on screen, 162 ms warm repeat (`cargo test --release -- --ignored --nocapture`) |
+| Watcher mechanics | 7 tests in `watcher.rs` drive the real loop against simulated progressive writes: debounce, content dedupe, stale-cache invalidation, all three `LastReplay.w3g` orderings |
+| `LastReplay.w3g` ≠ its autosave | checked against the real corpus: no autosave even *shares its size*, so content-hash dedupe can never collapse it (the watcher holds it for a 30 s grace window instead) |
+| Parse persistence | summaries stored per content key, re-opened games load from store instead of re-parsing |
 | Parser determinism | `tools/check-determinism.js` — 0 differing leaves over N runs |
 | Bundle matches source | `tools/verify-bundle-parity.js` — 0 shapes unique to the bundle |
 | Parser speedups are safe | `tools/diff-wc3v.js --events` — no build-order/tier/economy event changed |
 
 ### What has NEVER been tested
 
-- **The watcher firing on a real game.** It starts and reports "watching 2
-  replay folders", but no game has been played with the app open. The whole
-  premise ("finish a game, it just appears") is unverified.
+- **The watcher firing on a real game.** Its mechanics are now under test with
+  simulated writes (see checklist 0), but no game has been played with the app
+  open. The whole premise ("finish a game, it just appears") is unverified
+  until that happens — in particular whether 1.5 s `SETTLE` and the 30 s
+  `LAST_REPLAY_GRACE` match how the real game writes.
 - Anything on Linux or SteamOS. Never compiled or run there. WebKitGTK is a
   different engine from WebView2 and is the single biggest portability unknown.
 - Any behaviour over a long session, across sleep/wake, or with the game running.
@@ -43,24 +48,51 @@ Everything below is wasted effort if the watcher does not fire.
 
 - [ ] Launch the app, play one real game, confirm `replay-detected` fires and
       the replay auto-parses. Nothing in this project has been proven end to end
-      until this passes.
-- [ ] Confirm the debounce is right. The game writes progressively; the watcher
-      waits for file size to hold steady for 1.5 s (`SETTLE` in `watcher.rs`).
-      If it parses a truncated file, raise it.
-- [ ] Confirm `LastReplay.w3g` and the `Autosaved\Multiplayer\Replay_*.w3g`
+      until this passes. **This is the one item on this list only a human with
+      the game installed can do.**
+- [x] Confirm the debounce is right. *Mechanism verified*: `watcher.rs` tests
+      write progressively with gaps shorter than the settle window and assert
+      exactly one announcement carrying the final size. Whether the 1.5 s
+      `SETTLE` value matches the real game's write cadence still needs the
+      real-game pass above.
+- [x] Confirm `LastReplay.w3g` and the `Autosaved\Multiplayer\Replay_*.w3g`
       copy of the SAME game produce exactly one `replay-detected`.
-- [ ] Check behaviour when the game is mid-write and the app starts.
+      **Finding (real corpus): the two are NOT byte-identical — no autosave
+      even shares LastReplay's size — so hash dedupe could never collapse them
+      and every game would have announced twice.** Fixed: a settled
+      `LastReplay.w3g` is held for `LAST_REPLAY_GRACE` (30 s); any other
+      announcement inside the window cancels it, and a lone one (autosaving
+      off) announces when the window expires. All three orderings tested.
+- [x] Check behaviour when the game is mid-write and the app starts.
+      *Simulated*: a file partially written before watcher start announces
+      once, with the final size, after writes stop. Also fixed along the way:
+      overwriting a watched file (which `LastReplay.w3g` does every game) now
+      invalidates its cached hash and size entry — the stale cache both
+      double-announced new games and could swallow one whose content matched
+      a stale hash.
 
-### 1. Persist parses — nothing is saved today
-`run()` in `desktop/src-frontend/js/app.js` parses and then discards the result.
+### 1. Persist parses — DONE (summaries, not full parses)
 
-- [ ] Write parsed output to `<app_data>/replays/<key>.wc3v` (gzipped). `key`
-      is already the dedupe key from `ReplayFile`.
-- [ ] Skip re-parsing anything already stored.
-- [ ] Add a Rust command to read stored parses back.
-- [ ] Decide the retention story — 3,072 parsed replays is a lot of JSON.
-      Consider storing only the extracted profile summary plus the raw `.w3g`
-      path, and re-parsing on demand for full viewing.
+- [x] Retention decision: the full `.wc3v` is **not** persisted — 3,072 of
+      them is gigabytes. What survives is one gzipped `SummaryExtract` summary
+      per unique game (`<app_data>/replays/<key>.summary.json.gz`, a few KB),
+      the same per-player shape the site's compare modal and pro summaries
+      use, which is exactly what the profile layer (§3) aggregates. The raw
+      `.w3g` stays the source of truth; full viewing re-parses on demand.
+- [x] Keys are `<size>-<xxh3>`, computed by the `replay_key` command at parse
+      time. The scan's lazy `<size>-u` keys are NOT used — they mutate the
+      first time another file collides on size, and a store key must never
+      change. Hashing at parse time is noise next to the parse itself.
+- [x] Skip re-parsing anything already stored — `run()` checks the key first
+      and renders from the store (`showSummary`). Content-keyed, so the same
+      game under a second path also hits.
+- [x] Rust commands: `save_parse` (atomic temp+rename, strict key charset),
+      `read_parse`, `list_parses`. All async — Defender scans new files on
+      write, and a sync command would hold Tauri's main thread.
+- Note for §3/§2: two *different encodings* of the same game (LastReplay vs
+  its autosave) have different keys, so the store can hold both if one is
+  clicked manually. The profile layer should dedupe by the summary
+  fingerprint (map + duration + sorted names), like the site does.
 
 ### 2. Backfill engine
 3,072 playable replays exist locally, going back to Feb 2020. User decision on

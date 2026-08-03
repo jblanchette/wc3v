@@ -52,6 +52,23 @@ fn hash_index_path(app: &tauri::AppHandle) -> PathBuf {
         .join("hash-index.json")
 }
 
+/// Where parsed-game summaries live. One gzipped JSON file per unique game,
+/// named `<key>.summary.json.gz`.
+fn parse_store_dir(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("replays")
+}
+
+const SUMMARY_EXT: &str = ".summary.json.gz";
+
+/// Store keys are `<size>-<xxh3 hex>` — decimal digits, hex digits and a
+/// dash. Nothing else may ever reach a filename.
+fn valid_store_key(key: &str) -> bool {
+    !key.is_empty() && key.len() <= 40 && key.chars().all(|c| c.is_ascii_hexdigit() || c == '-')
+}
+
 /// Canonicalise `candidate` and require it to sit under one of `allowed`.
 /// Canonicalising both sides is what makes `..` traversal and symlink escapes
 /// fail closed rather than resolving somewhere unexpected.
@@ -190,6 +207,79 @@ fn read_map_file(
     std::fs::read(&real).map_err(|e| e.to_string())
 }
 
+/// Canonical identity of a replay file: `<size>-<xxh3>`, the same shape the
+/// scan produces once it has actually hashed a file. The scan's lazy
+/// `<size>-u` keys are NOT stable — they change the first time another file
+/// collides on that size — so persistence always hashes. The parse that
+/// follows reads the whole file anyway; one extra streamed read is noise.
+#[tauri::command]
+async fn replay_key(path: String, state: State<'_, AppState>) -> Result<String, String> {
+    let allowed = { state.roots.lock().unwrap().clone() };
+    let file = ensure_within(Path::new(&path), &allowed)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let size = std::fs::metadata(&file).map_err(|e| e.to_string())?.len();
+        let hash = replays::hash_file(&file).map_err(|e| e.to_string())?;
+        Ok(format!("{size}-{hash}"))
+    })
+    .await
+    .map_err(|e| format!("hash failed: {e}"))?
+}
+
+/// Persist a parsed game's summary. `bytes` is gzipped JSON built by the
+/// frontend. Written to a temp name and renamed so a crash mid-write cannot
+/// leave a truncated file that later reads as corrupt. Async because Windows
+/// Defender scans new files on write and a sync command would block the main
+/// thread for the duration.
+#[tauri::command]
+async fn save_parse(key: String, bytes: Vec<u8>, app: tauri::AppHandle) -> Result<(), String> {
+    if !valid_store_key(&key) {
+        return Err("invalid store key".into());
+    }
+    let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+        let tmp = dir.join(format!("{key}.tmp"));
+        let done = dir.join(format!("{key}{SUMMARY_EXT}"));
+        std::fs::write(&tmp, &bytes).map_err(|e| e.to_string())?;
+        std::fs::rename(&tmp, &done).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("save failed: {e}"))?
+}
+
+/// Keys of every stored summary, so the frontend can skip re-parsing.
+#[tauri::command]
+async fn list_parses(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let dir = parse_store_dir(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut keys = Vec::new();
+        if let Ok(entries) = std::fs::read_dir(&dir) {
+            for e in entries.flatten() {
+                if let Some(name) = e.file_name().to_str() {
+                    if let Some(k) = name.strip_suffix(SUMMARY_EXT) {
+                        keys.push(k.to_string());
+                    }
+                }
+            }
+        }
+        Ok(keys)
+    })
+    .await
+    .map_err(|e| format!("list failed: {e}"))?
+}
+
+/// Read one stored summary back (gzipped JSON, as written by `save_parse`).
+#[tauri::command]
+async fn read_parse(key: String, app: tauri::AppHandle) -> Result<Vec<u8>, String> {
+    if !valid_store_key(&key) {
+        return Err("invalid store key".into());
+    }
+    let file = parse_store_dir(&app).join(format!("{key}{SUMMARY_EXT}"));
+    tauri::async_runtime::spawn_blocking(move || std::fs::read(&file).map_err(|e| e.to_string()))
+        .await
+        .map_err(|e| format!("read failed: {e}"))?
+}
+
 #[tauri::command]
 fn init(app: tauri::AppHandle, state: State<'_, AppState>) -> InitPayload {
     let roots = discover_roots(state);
@@ -225,6 +315,10 @@ fn main() {
             scan_replays,
             read_replay,
             read_map_file,
+            replay_key,
+            save_parse,
+            list_parses,
+            read_parse,
             start_watching
         ])
         .run(tauri::generate_context!())

@@ -37,7 +37,22 @@ const state = {
   shown: [],
   worker: null,
   jobId: 0,
-  jobs: new Map()
+  jobs: new Map(),
+  // Keys (`<size>-<xxh3>`) of games whose summary is already stored on disk.
+  stored: new Set()
+};
+
+// The platform's gzip, shared by the map cache reads and the parse store.
+// Same reasoning as loadMapCache had: don't ship a second copy of pako.
+const gunzipJson = async (bytes) => {
+  const ds = new DecompressionStream('gzip');
+  const stream = new Blob([bytes]).stream().pipeThrough(ds);
+  return JSON.parse(await new Response(stream).text());
+};
+const gzipText = async (text) => {
+  const cs = new CompressionStream('gzip');
+  const stream = new Blob([text]).stream().pipeThrough(cs);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
 };
 
 const log = (msg, kind = '') => {
@@ -94,17 +109,11 @@ const ensureWorker = () => {
 };
 
 // Map data lives on local disk under the app data dir. Files are gzipped
-// JSON, exactly as the site serves them, so we inflate with the same DecompressionStream
-// the platform provides rather than shipping a second copy of pako.
+// JSON, exactly as the site serves them.
 const loadMapCache = async (mapDataName) => {
   const read = async (file) => {
     const bytes = await invoke('read_map_file', { map: mapDataName, file });
     return new Uint8Array(bytes);
-  };
-  const gunzipJson = async (bytes) => {
-    const ds = new DecompressionStream('gzip');
-    const stream = new Blob([bytes]).stream().pipeThrough(ds);
-    return JSON.parse(await new Response(stream).text());
   };
 
   const [wpm, doo, unit] = await Promise.all([
@@ -126,6 +135,55 @@ const parseReplay = async (path) => {
     w.postMessage({ type: 'parse', id, buffer }, [buffer]);
   });
 };
+
+// ── Parse store ─────────────────────────────────────────────────────────────
+//
+// Retention decision (ROADMAP §1): the full parse is NOT persisted — 3,072
+// replays of .wc3v JSON is gigabytes. What survives is one gzipped summary per
+// unique game: the same per-player shape the site's compare modal builds via
+// SummaryExtract, a few KB each. The raw .w3g on disk stays the source of
+// truth, and a full parse is redone on demand when a game needs full viewing.
+
+// Mirror of CompareInline.buildUserSummary(), with the slot-skip rules from
+// scripts/generate-summary.js. mapInfo needs the map-folder manifest the site
+// fetches at runtime; the desktop app has no consumer for it yet, so null.
+const buildSummary = (out, key) => {
+  const SE = window.SummaryExtract;
+  const rawMap = out.replay?.metadata?.map?.mapName || '';
+  const durationMs = out.replay?.subheader?.replayLengthMS || 0;
+  const worldNeutralGroups = out.world?.neutralGroups || null;
+  const summary = {
+    key,
+    savedAt: Date.now(),
+    map: rawMap.split(/[\\/]/).pop(),
+    mapRaw: rawMap,
+    gameMode: out.gameMode || null,
+    winner: out.winner || null,
+    durationMs,
+    neutralCamps: SE.extractNeutralCamps(worldNeutralGroups),
+    players: {}
+  };
+  for (const slot of Object.keys(out.players || {})) {
+    const pd = out.players[slot];
+    const rpd = out.replay?.players?.[slot];
+    if (!pd || !rpd || pd.isNeutralPlayer) continue;
+    if (rpd.teamId >= 1000) continue; // AI / neutral teams
+    summary.players[slot] = SE.extractPlayerSummary(pd, rpd, durationMs, worldNeutralGroups);
+    // teamId is not part of the shared summary shape (the compare modal never
+    // groups by team); the stored-result view does, so carry it alongside.
+    summary.players[slot].teamId = rpd.teamId;
+  }
+  return summary;
+};
+
+const persistSummary = async (out, key) => {
+  const bytes = await gzipText(JSON.stringify(buildSummary(out, key)));
+  await invoke('save_parse', { key, bytes: Array.from(bytes) });
+  state.stored.add(key);
+};
+
+const loadStoredSummary = async (key) =>
+  gunzipJson(new Uint8Array(await invoke('read_parse', { key })));
 
 // ── UI ──────────────────────────────────────────────────────────────────────
 
@@ -194,13 +252,34 @@ const showCounts = (list, suffix = '') => {
 const run = async (path) => {
   el('result').textContent = '';
   el('status').textContent = 'reading...';
+  const fileName = path.split(/[\\/]/).pop();
   const started = performance.now();
   try {
+    // Canonical identity first — a game already summarised is shown from the
+    // store instead of being re-parsed. The key is content-based, so the same
+    // game under another path (LastReplay.w3g, a copied file) also hits.
+    const key = await invoke('replay_key', { path });
+    if (state.stored.has(key)) {
+      const summary = await loadStoredSummary(key);
+      el('status').textContent = 'loaded from store';
+      showSummary(summary);
+      log(`${fileName} already parsed — loaded stored summary`, 'ok');
+      return;
+    }
+
     const out = await parseReplay(path);
     const ms = Math.round(performance.now() - started);
     el('status').textContent = `parsed in ${ms} ms`;
     showResult(out, ms);
-    log(`parsed ${path.split(/[\\/]/).pop()} in ${ms} ms`, 'ok');
+    log(`parsed ${fileName} in ${ms} ms`, 'ok');
+
+    // Persistence failing should never take the shown result down with it.
+    try {
+      await persistSummary(out, key);
+      log(`summary saved (${state.stored.size} games in store)`, 'ok');
+    } catch (e) {
+      log(`summary save failed: ${errText(e)}`, 'warn');
+    }
   } catch (err) {
     el('status').textContent = 'failed';
     if (err.code === 'missing_map' || err.code === 'missing_map_cache') {
@@ -254,6 +333,32 @@ const showResult = (out, ms) => {
   ].join('\n');
 };
 
+// A stored summary has no eventStream, so length comes from durationMs and
+// the roster from the summary players (name/race/teamId carried per slot).
+const showSummary = (sum) => {
+  const byTeam = new Map();
+  for (const p of Object.values(sum.players || {})) {
+    const team = p.teamId ?? 0;
+    if (!byTeam.has(team)) byTeam.set(team, []);
+    const opener = p.heroOpener?.name ? ` — ${p.heroOpener.name} @ ${p.heroOpener.gameTimeFormatted}` : '';
+    byTeam.get(team).push(`    ${p.name}  (${RACE[p.race] || p.race})${opener}`);
+  }
+
+  const teams = [...byTeam.entries()]
+    .map(([tid, rows]) => `  team ${tid}\n${rows.join('\n')}`)
+    .join('\n');
+
+  el('result').textContent = [
+    `map:      ${sum.map || '?'}`,
+    `mode:     ${sum.gameMode || '?'}`,
+    `length:   ~${Math.round((sum.durationMs || 0) / 60000)} min`,
+    `winner:   ${sum.winner ? JSON.stringify(sum.winner) : (sum.gameMode === '1v1' ? 'unknown' : 'n/a (1v1 only)')}`,
+    `stored:   ${fmtDate(sum.savedAt)}`,
+    '',
+    teams
+  ].join('\n');
+};
+
 // ── Boot ────────────────────────────────────────────────────────────────────
 
 const boot = async () => {
@@ -263,6 +368,14 @@ const boot = async () => {
   // Path deliberately not rendered — see labelFor().
   el('cache-dir').textContent = 'local app data';
   renderRoots();
+
+  // An unreadable store just means everything re-parses; not fatal.
+  try {
+    state.stored = new Set(await invoke('list_parses'));
+    if (state.stored.size) log(`${state.stored.size} parsed game(s) in store`, 'ok');
+  } catch (e) {
+    log(`parse store unavailable: ${errText(e)}`, 'warn');
+  }
 
   const watched = await invoke('start_watching');
   log(`watching ${watched} replay folder(s)`, 'ok');

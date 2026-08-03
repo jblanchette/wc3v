@@ -30,6 +30,10 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'desktop', 'src-frontend');
 const DIST = path.join(ROOT, 'desktop', 'dist');
 const BUNDLE = path.join(ROOT, 'client', 'js', 'vendor', 'wc3v-parser.bundle.js');
+// Dual-runtime (no DOM, no fs) per-player summary extractor. The desktop app
+// persists one summary per parsed game; shipping the client's copy keeps it a
+// single source of truth, same as the parser bundle.
+const SUMMARY_EXTRACT = path.join(ROOT, 'client', 'js', 'SummaryExtract.js');
 const MAPS = path.join(ROOT, 'client', 'maps');
 
 // Only these are needed to PARSE a replay. terrain.jpg / heights.bin.gz /
@@ -115,10 +119,12 @@ const main = () => {
   const vendorDir = path.join(DIST, 'js', 'vendor');
   fs.mkdirSync(vendorDir, { recursive: true });
   fs.copyFileSync(BUNDLE, path.join(vendorDir, 'wc3v-parser.bundle.js'));
+  fs.copyFileSync(SUMMARY_EXTRACT, path.join(vendorDir, 'SummaryExtract.js'));
 
   const size = fs.statSync(path.join(vendorDir, 'wc3v-parser.bundle.js')).size;
   console.log(`dist:      ${path.relative(ROOT, DIST)}`);
   console.log(`parser:    ${(size / 1024).toFixed(0)} KB`);
+  console.log(`summary:   SummaryExtract.js (${(fs.statSync(SUMMARY_EXTRACT).size / 1024).toFixed(0)} KB)`);
 
   if (args['seed-maps']) seedMaps(args['seed-maps']);
   else console.log('map cache: not seeded (pass --seed-maps=all or a comma list)');
