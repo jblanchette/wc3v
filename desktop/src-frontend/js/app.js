@@ -189,6 +189,17 @@ const parseReplayWith = async (worker, path, opts = {}) => {
 
 const parseReplay = (path) => parseReplayWith(ensureWorker(), path);
 
+// Header-only read: player names, no game parse. ~50 ms per replay.
+const peekPlayers = async (worker, path) => {
+  const bytes = await invoke('read_replay', { path });
+  const buffer = new Uint8Array(bytes).buffer;
+  const id = ++state.jobId;
+  return new Promise((resolve, reject) => {
+    state.jobs.set(id, { resolve, reject, worker, quiet: true });
+    worker.postMessage({ type: 'peek', id, buffer }, [buffer]);
+  });
+};
+
 // ── Parse store ─────────────────────────────────────────────────────────────
 //
 // Retention decision (ROADMAP §1): the full parse is NOT persisted — 3,072
@@ -564,10 +575,14 @@ const boot = async () => {
   // should not take the rest of the app down with it.
   if (state.roots.length) {
     const first = state.roots[0].path;
-    scan(first).catch(e => {
-      el('status').textContent = 'scan failed';
-      log(`scan failed in ${labelFor(first)}: ${errText(e)}`, 'err');
-    });
+    scan(first)
+      // Identity detection reads replay headers, so it needs the scan's list
+      // first. Runs behind the rendered UI; nothing waits on it.
+      .then(() => resolveIdentity())
+      .catch(e => {
+        el('status').textContent = 'scan failed';
+        log(`scan failed in ${labelFor(first)}: ${errText(e)}`, 'err');
+      });
   }
 
   // Overlay: publish the empty session immediately so an OBS source that is
@@ -576,16 +591,18 @@ const boot = async () => {
 
   // Background: load the summary corpus, then seed the overlay's last game,
   // the default profile identity, and the name autocomplete.
+  renderIdentity();
+
   loadCorpus().then((corpus) => {
     if (!corpus.length) return;
     const PA = window.ProfileAggregate;
     const latest = [...corpus].sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0))[0];
     overlayState.seedLastGame(latest);
-    el('known-names').innerHTML = PA.knownNames(corpus).slice(0, 60)
+    // Lookup autocomplete covers every name ever seen; identity is a separate
+    //, explicit choice and does not come from this box.
+    el('known-names').innerHTML = PA.knownNames(corpus).slice(0, 200)
       .map(n => `<option value="${escAttr(n.name)}">`).join('');
     log(`profile corpus ready: ${corpus.length} game(s)`, 'ok');
-    resolveIdentity();
-    if (!el('profile-name').value) el('profile-name').value = overlayState.userName || '';
   }).catch(e => log(`corpus load failed: ${errText(e)}`, 'warn'));
 };
 
@@ -614,37 +631,135 @@ const backfill = window.createBackfill({
   }
 });
 
-// Work out which player is "you", or ask.
+// ── Identity ────────────────────────────────────────────────────────────────
 //
-// Nothing in the .w3g format marks which seat saved the replay, so identity
-// comes from frequency: across a real history the account owner is in every
-// game and nobody else is close. That needs more than one game — with a
-// single replay both players are tied at one appearance and guessing would be
-// a coin flip that silently mislabels every Victory as a Defeat. So when the
-// signal is absent, ask instead of guessing.
-const resolveIdentity = () => {
-  if (overlayState.userName) return;
+// Which player is "you". Every verdict depends on it, so getting it wrong
+// silently reports wins as losses.
+//
+// Nothing in the .w3g format marks which seat saved the replay. But the
+// account owner is in EVERY game they played, and opponents appear once or
+// twice — so across a sample of autosaved replays one name dominates
+// absolutely. That is the signal, and it is available from the replay
+// headers alone, without parsing a single game.
+//
+// Only autosaved replays are sampled: the Replays root also holds downloaded
+// and manually saved games the user was never in, which would poison the
+// count.
 
-  const corpus = state.corpus;
-  if (corpus && corpus.length) {
-    const primary = window.ProfileAggregate.detectPrimaryName(corpus);
-    if (primary) {
-      overlayState.setUserName(primary.name);
-      el('profile-name').value = primary.name;
-      log(`identified you as ${primary.name} (in ${primary.games} of ${corpus.length} games)`, 'ok');
+const IDENTITY_SAMPLE = 40;
+// The owner should be in essentially every sampled game. Anything less means
+// the sample is mixed (shared PC, downloaded replays) — ask rather than guess.
+const IDENTITY_MIN_SHARE = 0.6;
+
+const identityConfirmed = () => localStorage.getItem('wc3v-user-name-confirmed') === '1';
+
+const setIdentity = (name, { confirmed }) => {
+  overlayState.setUserName(name);
+  if (confirmed) localStorage.setItem('wc3v-user-name-confirmed', '1');
+  el('profile-name').value = name;
+  renderIdentity();
+};
+
+// Sample replay headers and count how often each name appears.
+const detectIdentityFromDisk = async () => {
+  const pool = state.replays.filter(r => r.autosaved && r.interesting);
+  if (pool.length < 3) return null;
+
+  // Spread the sample across the whole history rather than taking the newest
+  // N — a recent smurf run or a borrowed PC shouldn't decide this.
+  const step = Math.max(1, Math.floor(pool.length / IDENTITY_SAMPLE));
+  const sample = [];
+  for (let i = 0; i < pool.length && sample.length < IDENTITY_SAMPLE; i += step) {
+    sample.push(pool[i]);
+  }
+
+  const worker = makeWorker();
+  const counts = new Map();
+  let read = 0;
+  try {
+    for (const r of sample) {
+      try {
+        const { players } = await peekPlayers(worker, r.path);
+        for (const p of players) {
+          const key = p.name.toLowerCase().trim();
+          if (!key) continue;
+          const cur = counts.get(key) || { name: p.name, n: 0 };
+          cur.n++;
+          counts.set(key, cur);
+        }
+        read++;
+      } catch (e) { /* unreadable or odd header — skip, the sample absorbs it */ }
+    }
+  } finally {
+    worker.terminate();
+  }
+  if (!read) return null;
+
+  const ranked = [...counts.values()].sort((a, b) => b.n - a.n);
+  const top = ranked[0];
+  const share = top.n / read;
+  const clearOfSecond = !ranked[1] || top.n > ranked[1].n;
+  return {
+    name: top.name,
+    share,
+    read,
+    confident: share >= IDENTITY_MIN_SHARE && clearOfSecond,
+    ranked: ranked.slice(0, 6)
+  };
+};
+
+// Candidates for the picker: whoever the sample turned up, falling back to
+// the players in the most recent game.
+let identityCandidates = [];
+
+const renderIdentity = () => {
+  const known = overlayState.userName;
+  el('identity-current').textContent = known || 'not set';
+  el('identity-current').className = known ? 'ok-text' : 'warn-text';
+
+  // Always offer the picker — a wrong auto-detection has to be correctable,
+  // which is exactly what a prefilled text box failed to make obvious.
+  const choices = el('identity-choices');
+  choices.innerHTML = '';
+  for (const name of identityCandidates) {
+    const b = document.createElement('button');
+    b.className = 'identity-choice' + (name === known ? ' active' : '');
+    b.textContent = name;
+    b.addEventListener('click', () => {
+      setIdentity(name, { confirmed: true });
+      log(`you are ${name} — wins and losses are scored from that seat`, 'ok');
+    });
+    choices.appendChild(b);
+  }
+  el('identity-prompt').hidden = identityCandidates.length === 0;
+};
+
+let identityScanned = false;
+
+const resolveIdentity = async () => {
+  // An explicit choice is never overridden by a guess.
+  if (identityConfirmed()) { renderIdentity(); return; }
+  // Sampling reads 40 replay headers; once per session is plenty.
+  if (identityScanned) { renderIdentity(); return; }
+  identityScanned = true;
+
+  const det = await detectIdentityFromDisk().catch(() => null);
+  if (det) {
+    identityCandidates = det.ranked.map(r => r.name);
+    if (det.confident) {
+      setIdentity(det.name, { confirmed: false });
+      log(`you look like ${det.name} — in ${Math.round(det.share * 100)}% of ` +
+          `${det.read} sampled replays. Wrong? Pick the right name under Profile.`, 'ok');
       return;
     }
   }
 
-  const names = overlayState.lastGameCandidates;
-  if (!names.length) return;
-  // Prefill with the first candidate so "This is me" is one click away, and
-  // put both in the datalist so the other is one keystroke away.
-  el('profile-name').value = el('profile-name').value || names[0];
-  el('known-names').innerHTML = names.map(n => `<option value="${escAttr(n)}">`).join('');
-  log(`Which player are you — ${names.join(' or ')}? ` +
-      `Pick one in the Profile box and click "This is me" so wins and losses ` +
-      `can be scored. (Parsing more of your history sorts this out on its own.)`, 'warn');
+  if (!identityCandidates.length) identityCandidates = overlayState.lastGameCandidates;
+  renderIdentity();
+  if (identityCandidates.length) {
+    log(`Which player are you? Pick your name under Profile so wins and ` +
+        `losses can be scored.`, 'warn');
+  }
 };
 
 const syncRetryButton = () => {
@@ -682,8 +797,10 @@ el('profile-view').addEventListener('click', async () => {
 el('profile-setme').addEventListener('click', () => {
   const name = el('profile-name').value.trim();
   if (!name) return;
-  overlayState.setUserName(name);
-  log(`overlay identity set — games are scored from ${name}'s seat`, 'ok');
+  // Typed by hand, so it is an explicit choice and outranks any detection.
+  if (!identityCandidates.includes(name)) identityCandidates.unshift(name);
+  setIdentity(name, { confirmed: true });
+  log(`you are ${name} — wins and losses are scored from that seat`, 'ok');
 });
 
 el('copy-obs-url').addEventListener('click', async () => {

@@ -24,7 +24,12 @@
       <button id="backfill-retry" hidden>Retry failed</button>
 
       <h2>Profile</h2>
-      <input id="profile-name" list="known-names" placeholder="player name" autocomplete="off">
+      <p class="hint">You are: <span id="identity-current" class="warn-text">not set</span></p>
+      <div id="identity-prompt" hidden>
+        <p class="hint">Which of these is you?</p>
+        <div id="identity-choices" class="choices"></div>
+      </div>
+      <input id="profile-name" list="known-names" placeholder="look up any player" autocomplete="off">
       <datalist id="known-names"></datalist>
       <div>
         <button id="profile-view">View profile</button>

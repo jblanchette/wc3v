@@ -87,6 +87,43 @@ const peekMetadata = async (buffer) => {
 const Wc3vParser = {
   version: '0.2.0',
 
+  // Player names only, without parsing the game. Aborts as soon as the
+  // header is read (~50 ms), so hundreds of replays can be sampled in the
+  // time one full parse takes.
+  //
+  // Reforged carries the display name (with the #1234 tag) in
+  // reforgedPlayerMetadata and the legacy name in playerRecords; prefer the
+  // former and fall back, so both old and new replays yield something.
+  async peekPlayers (input) {
+    const info = await peekMetadata(Buffer.from(input));
+    if (!info || !info.metadata) return { players: [], mapName: null };
+
+    const byId = new Map();
+    for (const p of (info.metadata.playerRecords || [])) {
+      if (p && p.playerName) byId.set(p.playerId, p.playerName);
+    }
+    for (const p of (info.metadata.reforgedPlayerMetadata || [])) {
+      if (p && p.name) byId.set(p.playerId, p.name);
+    }
+
+    // Observers and empty slots are not players; slotStatus 2 is "occupied
+    // by a human", matching the rule buildOutputObject uses.
+    const humanIds = new Set(
+      (info.metadata.slotRecords || [])
+        .filter(s => s && s.slotStatus === 2 && s.computerFlag === 0 && s.teamId !== 24)
+        .map(s => s.playerId)
+    );
+
+    const players = [...byId.entries()]
+      .filter(([id]) => humanIds.size === 0 || humanIds.has(id))
+      .map(([playerId, name]) => ({ playerId, name }));
+
+    return {
+      players,
+      mapName: (info.metadata.map && info.metadata.map.mapName) || null
+    };
+  },
+
   // Parse a .w3g replay buffer in the browser. Returns the inner shape
   // { replay, players, world, validation } that buildOutputObject expects.
   //

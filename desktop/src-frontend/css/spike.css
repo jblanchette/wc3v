@@ -112,6 +112,24 @@ input {
   accent-color: var(--ok);
 }
 
+.ok-text { color: var(--ok); }
+.warn-text { color: var(--warn); }
+
+.choices { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+.identity-choice {
+  margin-top: 0;
+  padding: .4rem .7rem;
+  font-size: .875rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.identity-choice.active {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
 .result {
   background: var(--panel);
   border: 1px solid var(--line);

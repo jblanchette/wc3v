@@ -14,6 +14,7 @@
 //
 // Protocol
 //   main → worker  { type: 'parse', buffer, id, options? }
+//                  { type: 'peek',  buffer, id }   header-only player names
 //                  { type: 'map-data', reqId, cache | error }
 //   worker → main  { type: 'need-map', reqId, mapDataName }
 //                  { type: 'progress', evt }
@@ -66,6 +67,21 @@ self.onmessage = async (e) => {
     _mapPending.delete(msg.reqId);
     if (msg.error) pending.reject(new Error(msg.error));
     else pending.resolve(msg.cache);
+    return;
+  }
+
+  // Header-only read for identity detection — no map data, no game parse.
+  if (msg.type === 'peek') {
+    try {
+      const out = await self.Wc3vParser.peekPlayers(msg.buffer);
+      self.postMessage({ type: 'done', id: msg.id, result: out });
+    } catch (err) {
+      self.postMessage({
+        type: 'error',
+        id: msg.id,
+        message: (err && err.message) || String(err)
+      });
+    }
     return;
   }
 
