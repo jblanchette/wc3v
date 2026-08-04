@@ -38,6 +38,18 @@
       // ticks. Safe because animation state is a pure function of gameTime, so
       // a unit re-entering the frustum poses correctly with no catch-up.
       frustumCull: true,
+      // Swap VISIBLE-but-distant units to a baked idle-pose plain mesh, taking
+      // their bone subtree out of the scene graph (this is the "static baked
+      // pose" follow-up to the mixer-budget note below — the win comes from
+      // drawing fewer skinned meshes, not from animating fewer of them).
+      // Death and morph transitions always stay animated.
+      staticPoseLOD: true,
+      // The screen-height cutoff for staticPoseLOD: a nominal unit projecting
+      // under this many CSS pixels freezes. Raise for more perf, lower for
+      // more animation at distance. 24 keeps the P1/P2 follow camera (~30px
+      // units) animated while the zoomed-out overview — where the scene-graph
+      // cost actually lives — goes fully static.
+      staticPoseMinPx: 24,
       // Run the economy / dominance chart cursor updates even when their
       // bottom-panel tab is hidden. Off = skip the work nobody can see.
       chartsWhenHidden: false

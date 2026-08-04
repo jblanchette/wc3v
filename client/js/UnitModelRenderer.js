@@ -13,10 +13,17 @@
  * Animation states:
  *   death  — unit.destroyedAt or lostState 'lost' reached; play the death clip once
  *            (clamped, seek-safe via manual time), hold the corpse, then fade out.
+ *   morph  — inside a form-change window (Obsidian Statue ⇄ Destroyer): the GLB's
+ *            one-shot morph transition clip, seek-safe via manual time.
  *   walk   — interpolated position is moving.
  *   attack — unit is a participant in an active detected battle and stationary
  *            (inference; no per-unit attack timing exists in replays).
  *   idle   — otherwise.
+ *
+ * Static-pose LOD (perf.staticPoseLOD): visible units too small on screen to read
+ * animation swap to a plain mesh with the idle pose baked into shared geometry,
+ * removing their bones from the scene graph — the dominant frame cost culling
+ * can't touch. See _lodParams/_setStatic/_bakeStaticPose.
  *
  * Placement rule (see GLBLoader.parseSkinned): move the WRAPPER (bone root) only,
  * never the skinned-mesh node — that would double-transform. The wrapper carries
@@ -306,6 +313,7 @@
       const alive = new Set();
       // Built once per frame and shared with _updateCreeps below.
       const frustum = this._cullFrustum();
+      const lod = this._lodParams();   // static-pose distance thresholds (null = LOD off)
       const campCreeps = [];   // neutral camp creeps — rendered only by _updateCreeps
       let count = 0;
       for (const player of players) {
@@ -388,6 +396,11 @@
               ? spec.flyHeight
               : ((unit.meta && unit.meta.moveHeight) || 0);
           }
+          // Just after a morph event, play the transition clip (seek-safe)
+          // instead of snapping between forms, and ramp flight altitude across
+          // it so the Destroyer lifts off rather than teleporting up.
+          const morph = (spec && spec.form) ? this._morphWindow(inst, unit, spec, gameTime) : null;
+          if (morph) inst.flyHeight = morph.fromFly + (morph.toFly - morph.fromFly) * morph.frac;
 
           // Drop the unit once the death clip + corpse fade has fully elapsed.
           if (deathStart != null) {
@@ -412,6 +425,15 @@
             if (treat === 'loop') loopAnchors = this._loopAnchors(inst, unit, pos, gameTime, player);
           }
 
+          // Static-pose LOD: a unit too far away to read animation swaps to a
+          // baked idle-pose plain mesh, taking its bones out of the scene graph
+          // entirely (culling can't help here — these units are ON screen, and
+          // three walks every bone + updates every visible skeleton per frame).
+          // Death and morph windows force the animated path: the corpse pose
+          // and the transition are the two things a frozen pose would get wrong.
+          this._setStatic(inst, lod && !inDeath && !morph && inst._tpl && !inst.isPlaceholder &&
+            this._beyondLod(inst, pos, cx, cy, lod));
+
           if (loopAnchors) {
             this._placeLoop(inst, unit, loopAnchors, gameTime, dt, cx, cy);
           } else {
@@ -420,7 +442,8 @@
             // doesn't read as walking.
             const d = bframe ? bframe.byUuid.get(unit.uuid) : null;
             this._place(inst, unit, sepMap[unit.uuid] || pos, gameTime, cx, cy, d);
-            this._animate(inst, unit, gameTime, dt, deathStart, d);
+            if (inst._staticOn) this._applyLivingOpacity(inst, unit); // frozen pose still fades
+            else this._animate(inst, unit, gameTime, dt, deathStart, d, morph);
           }
           inst.root.visible = true;
           if (inst.ring) inst.ring.visible = this._showUnitRings && inst.state !== 'death'; // no ring on corpses; rings opt-in
@@ -435,7 +458,7 @@
         if (inst && inst.root && !alive.has(k)) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; }
       }
 
-      this._updateCreeps(gameTime, cx, cy, dt, campCreeps, bframe, frustum);
+      this._updateCreeps(gameTime, cx, cy, dt, campCreeps, bframe, frustum, lod);
 
       // Guide-mode focus glow (runs last so it wins over per-unit ring state).
       this._updateGuideHighlight();
@@ -452,7 +475,7 @@
     //     credited/cleared they fade to a faint "ghost" with a floating "?".
     // We deliberately DON'T play creep deaths/corpses: the replay can't know which
     // creep died when, so faking it would mislead. The "?" badge says exactly that.
-    _updateCreeps (gameTime, cx, cy, dt, campCreeps, bframe, frustum) {
+    _updateCreeps (gameTime, cx, cy, dt, campCreeps, bframe, frustum, lod) {
       const ng = this.viewer && this.viewer.mapData && this.viewer.mapData.world && this.viewer.mapData.world.neutralGroups;
       if (!ng || !this.manifest || !campCreeps || !campCreeps.length) return;
 
@@ -552,9 +575,13 @@
         const facing = (d && d.facing != null) ? d.facing : (inst.facing0 || 0);
 
         const opacity = (cs.phase === 'disturbed') ? CREEP_DISTURBED_OPACITY : 1;
+        // Distant guards freeze in their baked idle pose (camp bones dominate
+        // the scene graph on creep-heavy maps); a fighting creep stays animated.
+        this._setStatic(inst, lod && state !== 'attack' && inst._tpl &&
+          this._beyondLod(inst, pos, cx, cy, lod));
         this._placeCreep(inst, pos.x, pos.y, facing, cx, cy);
         this._setCreepRing(inst, CREEP_RING);
-        this._animateCreepState(inst, dt, state);
+        if (!inst._staticOn) this._animateCreepState(inst, dt, state);
         this._setOpacity(inst, opacity);
         inst.root.visible = true;
         if (inst.ring) inst.ring.visible = !this._suppressCreepRings;  // hidden during the guide creep tour
@@ -624,6 +651,204 @@
       }
     }
 
+    // ── Static-pose LOD ──────────────────────────────────────────────────────
+    // The remaining per-frame cost after culling is bones on VISIBLE units:
+    // three walks every bone in updateMatrixWorld and runs skeleton.update()
+    // for every visible skinned mesh, whether or not its mixer advanced (see
+    // the mixer-budget note in clientConfig.js). So a unit too small on screen
+    // to read animation is swapped to a plain Mesh with the idle pose baked
+    // into shared geometry, and its bone subtree + skinned meshes leave the
+    // scene graph. The static meshes share the instance's cloned materials, so
+    // team colour, decay fade and blend state carry over untouched.
+
+    // Per-frame LOD thresholds, or null when disabled. "Too small" is a screen
+    // height test: a nominal-height unit projecting under perf.staticPoseMinPx
+    // pixels goes static; re-animates at 85% of that distance (hysteresis so a
+    // unit near the boundary doesn't flap between modes every frame).
+    _lodParams () {
+      const cfg = window.WC3V_CONFIG && window.WC3V_CONFIG.perf;
+      if (!cfg || cfg.staticPoseLOD === false) return null;
+      const cam = this.renderer && this.renderer.camera;
+      if (!cam || !cam.isPerspectiveCamera) return null;
+      const el = this.renderer.canvas;
+      // CSS box height, not the drawing-buffer height — the buffer is sized to
+      // the map image (oversampled), and pixels-on-screen is what legibility is.
+      const px = (el && (el.clientHeight || el.height)) || 900;
+      const minPx = cfg.staticPoseMinPx || 24;
+      const NOMINAL_HEIGHT = 140;    // wu; a coarse everyman unit, not per-model
+      const dOn = (px * NOMINAL_HEIGHT) / (2 * Math.tan(cam.fov * Math.PI / 360) * minPx);
+      return { cam, on2: dOn * dOn, off2: (dOn * 0.85) * (dOn * 0.85) };
+    }
+
+    // True when the unit at world (pos.x, pos.y) is beyond the static-pose
+    // distance for its current mode. Vertical term uses the wrapper's
+    // last-placed height rather than resampling terrain (this runs before
+    // _place); one frame of staleness is nothing at these distances, and 0 on
+    // the first frame only errs toward keeping the unit animated-adjacent.
+    _beyondLod (inst, pos, cx, cy, lod) {
+      const p = lod.cam.position;
+      const dx = p.x - (pos.x - cx);
+      const dy = p.y - (inst.wrapper ? inst.wrapper.position.y : 0);
+      const dz = p.z - (-(pos.y - cy));
+      const d2 = dx * dx + dy * dy + dz * dz;
+      return d2 > (inst._staticOn ? lod.off2 : lod.on2);
+    }
+
+    // Swap an instance between animated (skeleton in graph) and static (baked
+    // pose) modes. Symmetric and cheap: add/remove a handful of children.
+    _setStatic (inst, on) {
+      on = !!on;
+      if (!inst || !inst.root || !inst.wrapper) return;
+      const cur = inst._staticOn || false;
+      if (on && cur) {
+        // Already static — but a two-form unit may have changed form without a
+        // morph clip forcing the animated path; re-bake for the new form.
+        if (inst._staticForm !== (inst.form || 'base')) this._ensureStaticMeshes(inst);
+        return;
+      }
+      if (on === cur) return;
+      if (on && !this._ensureStaticMeshes(inst)) return;  // no bake possible → stay animated
+      const w = inst.wrapper;
+      if (on) {
+        for (const b of inst._boneRoots) w.remove(b);
+        const holder = inst._meshHolder;
+        if (holder && holder.parent) { inst._meshHolderParent = holder.parent; holder.parent.remove(holder); }
+        w.add(inst.staticGroup);
+      } else {
+        if (inst.staticGroup && inst.staticGroup.parent) inst.staticGroup.parent.remove(inst.staticGroup);
+        for (const b of inst._boneRoots) w.add(b);
+        if (inst._meshHolder && inst._meshHolderParent && !inst._meshHolder.parent) {
+          inst._meshHolderParent.add(inst._meshHolder);
+        }
+      }
+      inst._staticOn = on;
+    }
+
+    // Build (or rebuild, on form change) the instance's static mesh set from
+    // the template's baked geometry. Geometry is shared across every instance
+    // of the model; materials are the instance's own (opacity / team colour).
+    _ensureStaticMeshes (inst) {
+      const form = inst.form || 'base';
+      if (inst.staticGroup && inst._staticForm === form) return true;
+      const tpl = inst._tpl;
+      if (!tpl || !inst.skinnedMeshes || !inst.skinnedMeshes.length) return false;
+      const baked = this._bakedGeosFor(tpl, form);
+      if (!baked || baked.length !== inst.skinnedMeshes.length) return false;
+      if (!inst._boneRoots) {
+        // Snapshot BEFORE the static group is ever added: at this point the
+        // wrapper's children are exactly the clone's root joints.
+        inst._boneRoots = inst.wrapper.children.slice();
+        inst._meshHolder = inst.skinnedMeshes[0].parent || null;
+      }
+      const wasAttached = !!(inst.staticGroup && inst.staticGroup.parent);
+      if (wasAttached) inst.staticGroup.parent.remove(inst.staticGroup);
+      const group = new THREE.Group();
+      inst.staticMeshes = [];
+      for (let i = 0; i < baked.length; i++) {
+        const src = inst.skinnedMeshes[i];
+        const m = new THREE.Mesh(baked[i], src.material);
+        m.userData.wc3Form = src.userData.wc3Form;
+        m.visible = src.visible;   // mirror the current form's visibility
+        inst.staticMeshes.push(m);
+        group.add(m);
+      }
+      inst.staticGroup = group;
+      inst._staticForm = form;
+      if (wasAttached) inst.wrapper.add(group);
+      return true;
+    }
+
+    // Baked static geometry for a template + form, computed once and cached on
+    // the template (shared by all instances). null = bake failed → LOD opts out.
+    _bakedGeosFor (tpl, form) {
+      if (!tpl._bakedGeos) tpl._bakedGeos = {};
+      if (tpl._bakedGeos[form] === undefined) {
+        try { tpl._bakedGeos[form] = this._bakeStaticPose(tpl, form); }
+        catch (e) { tpl._bakedGeos[form] = null; }
+      }
+      return tpl._bakedGeos[form];
+    }
+
+    // CPU-skin the template's idle pose (t=0) into plain BufferGeometries, one
+    // per skinned mesh (index-aligned). Baked with the wrapper at IDENTITY, so
+    // the result lives in raw Z-up model space — exactly what the bones would
+    // produce — and the client's per-frame wrapper transform (position, facing
+    // × ZUP_TO_YUP, scale) applies to it unchanged. The template is the clone
+    // source for future instances, so everything mutated here is restored.
+    _bakeStaticPose (tpl, form) {
+      const wrapper = tpl.placementNode;
+      const bones = tpl.skeleton.bones, inv = tpl.skeleton.boneInverses;
+      if (!bones.length || !tpl.skinnedMeshes || !tpl.skinnedMeshes.length) return null;
+
+      const savedW = wrapper ? {
+        p: wrapper.position.clone(), q: wrapper.quaternion.clone(), s: wrapper.scale.clone()
+      } : null;
+      const savedBones = bones.map(b => ({ p: b.position.clone(), q: b.quaternion.clone(), s: b.scale.clone() }));
+      if (wrapper) { wrapper.position.set(0, 0, 0); wrapper.quaternion.set(0, 0, 0, 1); wrapper.scale.set(1, 1, 1); }
+
+      // Pose at idle t=0 (the form's own idle for two-form models); a model
+      // with no clips bakes its rest pose, which for MDX is the authored stand.
+      let mixer = null;
+      const clips = tpl.animations || [];
+      const clip = (form === 'alternate' ? clips.find(c => c.name === 'idle_alt') : null) ||
+        clips.find(c => c.name === 'idle') || clips[0] || null;
+      if (clip) {
+        mixer = new THREE.AnimationMixer(tpl.root);
+        const a = mixer.clipAction(clip);
+        a.play(); a.paused = true; a.time = 0;
+        mixer.update(0);
+      }
+      tpl.root.updateMatrixWorld(true);
+
+      const bm = bones.map((b, i) => new THREE.Matrix4().multiplyMatrices(b.matrixWorld, inv[i]));
+      const nm = bm.map(m => new THREE.Matrix3().getNormalMatrix(m));
+
+      const out = [];
+      const vp = new THREE.Vector3(), vn = new THREE.Vector3();
+      const ap = new THREE.Vector3(), an = new THREE.Vector3(), t = new THREE.Vector3();
+      for (const sm of tpl.skinnedMeshes) {
+        const g = sm.geometry;
+        const pos = g.attributes.position, nor = g.attributes.normal;
+        const si = g.attributes.skinIndex, sw = g.attributes.skinWeight;
+        if (!pos || !si || !sw) return null;
+        const count = pos.count;
+        const oP = new Float32Array(count * 3), oN = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+          vp.fromBufferAttribute(pos, i);
+          if (nor) vn.fromBufferAttribute(nor, i); else vn.set(0, 0, 1);
+          ap.set(0, 0, 0); an.set(0, 0, 0);
+          let tw = 0;
+          for (let k = 0; k < 4; k++) {
+            const w = k === 0 ? sw.getX(i) : k === 1 ? sw.getY(i) : k === 2 ? sw.getZ(i) : sw.getW(i);
+            if (!w) continue;
+            const j = k === 0 ? si.getX(i) : k === 1 ? si.getY(i) : k === 2 ? si.getZ(i) : si.getW(i);
+            if (!bm[j]) continue;
+            tw += w;
+            t.copy(vp).applyMatrix4(bm[j]).multiplyScalar(w); ap.add(t);
+            t.copy(vn).applyMatrix3(nm[j]).multiplyScalar(w); an.add(t);
+          }
+          if (tw < 1e-6) { ap.copy(vp); an.copy(vn); }  // unweighted vertex → untransformed
+          if (an.lengthSq() > 1e-8) an.normalize(); else an.set(0, 0, 1);
+          oP[i * 3] = ap.x; oP[i * 3 + 1] = ap.y; oP[i * 3 + 2] = ap.z;
+          oN[i * 3] = an.x; oN[i * 3 + 1] = an.y; oN[i * 3 + 2] = an.z;
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(oP, 3));
+        geo.setAttribute('normal', new THREE.BufferAttribute(oN, 3));
+        if (g.attributes.uv) geo.setAttribute('uv', g.attributes.uv);   // shared with the template
+        if (g.index) geo.setIndex(g.index);
+        geo.computeBoundingSphere();
+        out.push(geo);
+      }
+
+      if (mixer) { mixer.stopAllAction(); mixer.uncacheRoot(tpl.root); }
+      bones.forEach((b, i) => {
+        b.position.copy(savedBones[i].p); b.quaternion.copy(savedBones[i].q); b.scale.copy(savedBones[i].s);
+      });
+      if (savedW) { wrapper.position.copy(savedW.p); wrapper.quaternion.copy(savedW.q); wrapper.scale.copy(savedW.s); }
+      return out;
+    }
+
     _campGeom (camp) {
       if (camp._geom) return camp._geom;
       const b = camp.unitBounds || camp.bounds || { minX: 0, maxX: 0, minY: 0, maxY: 0 };
@@ -657,6 +882,7 @@
             ? spec.flyHeight
             : ((unit.meta && unit.meta.moveHeight) || 0)
         };
+        inst._tpl = tpl;   // static-pose LOD bakes its geometry from the template
         this._setupMixer(inst, r.animations, spec.form);
         this._addRing(inst, CREEP_RING, 0.7);
         inst.ringHex = CREEP_RING;
@@ -900,7 +1126,9 @@
       this._getTemplate(spec.model).then(tpl => {
         if (this.instances[uuid] !== 'pending') return; // seeked/removed while loading
         if (!tpl) { this.instances[uuid] = 'failed'; return; }
-        this.instances[uuid] = this._buildInstance(this._cloneSkinned(tpl), unit, spec, player);
+        const inst = this._buildInstance(this._cloneSkinned(tpl), unit, spec, player);
+        inst._tpl = tpl;   // static-pose LOD bakes its geometry from the template
+        this.instances[uuid] = inst;
         if (this.viewer && this.viewer.requestRender) this.viewer.requestRender();
       }).catch(() => { this.instances[uuid] = 'failed'; });
     }
@@ -991,6 +1219,15 @@
         if (!tag || tag === 'both') continue;
         m.visible = (tag === form);
       }
+      // Static-pose LOD meshes mirror the same tags (kept in sync so a form
+      // change landing while the unit is frozen still shows the right form).
+      if (inst.staticMeshes) {
+        for (const m of inst.staticMeshes) {
+          const tag = m.userData && m.userData.wc3Form;
+          if (!tag || tag === 'both') continue;
+          m.visible = (tag === form);
+        }
+      }
     }
 
     // Bind the clip set for a form. The converter emits the alternate form's
@@ -1006,6 +1243,16 @@
       }
       const death = byName['death' + suffix] || byName.death;
       inst.deathDur = (death && death.duration) || 1;
+      // The transition INTO this form: "Morph" plays base → alternate, "Morph
+      // Alternate" plays alternate → base (see tools/lib/mdx-skin.js). Bound as
+      // a state alongside the loops so _setLoopState can cross-fade out of it.
+      const morphIn = (form === 'alternate') ? byName.morph : byName.morph_alt;
+      if (morphIn) {
+        inst.actions.morph = inst.mixer.clipAction(morphIn);
+        inst.morphDur = morphIn.duration || 1;
+      } else {
+        inst.morphDur = 0;
+      }
       inst.form = form;
     }
 
@@ -1025,11 +1272,14 @@
       this._bindFormActions(inst, form);
 
       // Carry the animation state across the swap so a walking Destroyer keeps
-      // walking instead of snapping to idle mid-stride.
-      const next = inst.actions[prevState] || inst.actions.idle;
+      // walking instead of snapping to idle mid-stride. 'morph' is never
+      // carried: the rebound morph action belongs to the OTHER direction, and
+      // _applyMorph must see a non-morph state to start it fresh.
+      const carry = (prevState && prevState !== 'morph') ? prevState : null;
+      const next = (carry && inst.actions[carry]) || inst.actions.idle;
       if (next) {
         next.play();
-        inst.state = inst.actions[prevState] ? prevState : 'idle';
+        inst.state = (carry && inst.actions[carry]) ? carry : 'idle';
       } else {
         inst.state = null;
       }
@@ -1082,6 +1332,53 @@
       };
     }
 
+    // Is `gameTime` inside a morph transition window for this unit? Returns
+    // { t, dur, frac, fromFly, toFly } while the morph-in clip of the CURRENT
+    // form should be playing, else null. Anchored to the recorded morph event
+    // in unit.morphHistory — a pure function of gameTime, so scrubbing across
+    // (or into the middle of) the window poses it correctly in both directions.
+    _morphWindow (inst, unit, spec, gameTime) {
+      const history = unit.morphHistory;
+      if (!history || !history.length || !inst.actions || !inst.actions.morph || !inst.morphDur) return null;
+      // Latest morph event at or before gameTime (the one that produced the
+      // current form). History is tiny (statue ⇄ Destroyer flips), linear is fine.
+      let idx = -1;
+      for (let i = 0; i < history.length; i++) {
+        if (history[i].gameTime > gameTime) break;
+        idx = i;
+      }
+      if (idx < 0) return null;
+      const ageS = (gameTime - history[idx].gameTime) / 1000;
+      if (ageS >= inst.morphDur) return null;
+      // Altitude ramp endpoints: the form we morphed FROM → the form we're in.
+      const fromId = (idx > 0 ? history[idx - 1].itemId : unit._formBaseItemId) || '';
+      const fromSpec = this.manifest[fromId.toLowerCase()] || this.manifest[fromId];
+      return {
+        t: ageS,
+        dur: inst.morphDur,
+        frac: Math.min(1, ageS / inst.morphDur),
+        fromFly: (fromSpec && fromSpec.flyHeight != null) ? fromSpec.flyHeight : 0,
+        toFly: (spec.flyHeight != null) ? spec.flyHeight : 0
+      };
+    }
+
+    // Pose the one-shot morph transition clip at its window-relative time —
+    // manual clip time + mixer.update(0), the same seek-safe pattern as
+    // _applyDeath, so pausing mid-morph or scrubbing holds the right frame.
+    _applyMorph (inst, morph) {
+      const a = inst.actions.morph;
+      if (!a) return;
+      if (inst.state !== 'morph') {
+        for (const k of ['idle', 'walk', 'attack']) { const x = inst.actions[k]; if (x) x.stop(); }
+        a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true;
+        a.enabled = true; a.setEffectiveWeight(1); a.setEffectiveTimeScale(1); a.play();
+        inst.state = 'morph';
+      }
+      a.paused = true;
+      a.time = Math.min(morph.t, morph.dur);
+      inst.mixer.update(0);   // apply the seeked pose without advancing
+    }
+
     // Cross-fade the looping state machine to `target` (idle/walk/attack).
     _setLoopState (inst, target) {
       if (inst.state === target) return;
@@ -1099,7 +1396,7 @@
       const d = inst.actions.death;
       if (d) {
         if (inst.state !== 'death') {
-          for (const k of ['idle', 'walk', 'attack']) { const a = inst.actions[k]; if (a) a.stop(); }
+          for (const k of ['idle', 'walk', 'attack', 'morph']) { const a = inst.actions[k]; if (a) a.stop(); }
           d.reset(); d.setLoop(THREE.LoopOnce, 1); d.clampWhenFinished = true; d.enabled = true; d.setEffectiveWeight(1); d.play();
           inst.state = 'death';
         }
@@ -1128,7 +1425,7 @@
       const phase = d.swingPhase;
 
       if (inst.state !== 'attack') {
-        for (const k of ['idle', 'walk']) { const x = inst.actions[k]; if (x) x.stop(); }
+        for (const k of ['idle', 'walk', 'morph']) { const x = inst.actions[k]; if (x) x.stop(); }
         a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished = true;
         a.enabled = true; a.setEffectiveWeight(1); a.setEffectiveTimeScale(1); a.play();
         inst.state = 'attack';
@@ -1149,7 +1446,7 @@
      * participant list, with no target and no range test, which is what had
      * units swinging at empty air for whole battle windows.
      */
-    _animate (inst, unit, gameTime, dt, deathStart, d) {
+    _animate (inst, unit, gameTime, dt, deathStart, d, morph) {
       if (!inst.mixer) return;
 
       // --- DEATH: one-shot, seek-safe via manual clip time ---
@@ -1158,6 +1455,13 @@
         return;
       }
       if (inst.state === 'death') inst.state = null; // scrubbed back before death
+
+      // --- MORPH transition: one-shot, wins over the looping states ---
+      if (morph) {
+        this._applyMorph(inst, morph);
+        this._applyLivingOpacity(inst, unit);
+        return;
+      }
 
       const state = d ? d.state : 'idle';
 
@@ -1420,8 +1724,10 @@
 
       if (dist < LOOP_MIN_DIST) {   // too close to bother — render parked at the resource
         this._placeAt(inst, a.x, a.y, inst._wf || 0, cx, cy);
-        this._setLoopState(inst, 'idle');
-        if (inst.mixer) inst.mixer.update(dt);
+        if (!inst._staticOn) {
+          this._setLoopState(inst, 'idle');
+          if (inst.mixer) inst.mixer.update(dt);
+        }
         this._setOpacity(inst, decay);
         return;
       }
@@ -1444,8 +1750,12 @@
       }
 
       this._placeAt(inst, fx, fy, faceAng, cx, cy);
-      this._setLoopState(inst, moving ? 'walk' : 'idle');
-      if (inst.mixer) inst.mixer.update(dt);
+      // A frozen (static-LOD) looper still marches the route — position comes
+      // from _placeAt above — it just doesn't tick its animation.
+      if (!inst._staticOn) {
+        this._setLoopState(inst, moving ? 'walk' : 'idle');
+        if (inst.mixer) inst.mixer.update(dt);
+      }
       this._setOpacity(inst, decay);
     }
 

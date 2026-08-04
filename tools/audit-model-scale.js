@@ -30,10 +30,16 @@ const SKIN_PATH    = path.join(__dirname, 'map-data', 'units', 'unitskin.txt');
 const args = {};
 process.argv.slice(2).forEach(r => { const [f, ...v] = r.replace(/^--/, '').split('='); args[f] = v.join('=') || true; });
 
-// ── GLB → model-space bounding box (union of all POSITION accessor min/max) ──
+// ── GLB → model-space bounding box (union of POSITION accessor min/max) ──
 // glTF stores per-accessor min/max for POSITION, so we never decode vertices.
 // Our GLBs are baked at scale 1 with only a Z-up→Y-up rotation on the wrapper
 // (no scale), so the accessor extents equal world extents (axes relabeled).
+//
+// Two-form GLBs (obsidianstatue: statue ⇄ Destroyer) carry BOTH forms' geometry
+// in one mesh, tagged per-primitive via extras.form ('base'/'alternate'/'both').
+// A blind union over-reports both forms — the statue's "height" would include
+// the Destroyer's wingspan. Bucket the bounds per form instead; callers pick the
+// bucket matching the manifest spec's `form` (untagged prims count for both).
 function glbBounds (file) {
   const buf = fs.readFileSync(file);
   if (buf.readUInt32LE(0) !== 0x46546c67) return null;           // 'glTF'
@@ -41,23 +47,37 @@ function glbBounds (file) {
   const jsonLen = buf.readUInt32LE(12);
   const json = JSON.parse(buf.toString('utf8', 20, 20 + jsonLen));
   const accs = json.accessors || [];
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  let found = false;
+  const mkBox = () => ({ min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity], found: false });
+  const boxes = { base: mkBox(), alternate: mkBox() };
+  let twoForm = false;
   for (const mesh of json.meshes || []) {
     for (const prim of mesh.primitives || []) {
       const ai = prim.attributes && prim.attributes.POSITION;
       if (ai == null) continue;
       const a = accs[ai];
       if (!a || !a.min || !a.max) continue;
-      found = true;
-      for (let k = 0; k < 3; k++) { if (a.min[k] < min[k]) min[k] = a.min[k]; if (a.max[k] > max[k]) max[k] = a.max[k]; }
+      const form = (prim.extras && prim.extras.form) || 'both';
+      if (form !== 'both') twoForm = true;
+      for (const key of (form === 'both' ? ['base', 'alternate'] : [form])) {
+        const box = boxes[key];
+        if (!box) continue;
+        box.found = true;
+        for (let k = 0; k < 3; k++) {
+          if (a.min[k] < box.min[k]) box.min[k] = a.min[k];
+          if (a.max[k] > box.max[k]) box.max[k] = a.max[k];
+        }
+      }
     }
   }
-  if (!found) return null;
-  // MDX is Z-up: vertical extent = Z; horizontal footprint = X/Y.
-  const ext = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
-  return { height: ext[2], footX: ext[0], footY: ext[1], radius: 0.5 * Math.hypot(ext[0], ext[1]) };
+  const finish = (box) => {
+    if (!box.found) return null;
+    // MDX is Z-up: vertical extent = Z; horizontal footprint = X/Y.
+    const ext = [box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]];
+    return { height: ext[2], footX: ext[0], footY: ext[1], radius: 0.5 * Math.hypot(ext[0], ext[1]) };
+  };
+  const base = finish(boxes.base);
+  if (!base) return null;
+  return { base, alternate: twoForm ? finish(boxes.alternate) : null, twoForm };
 }
 
 // ── unitskin.txt (INI) raw scale fields ──
@@ -75,14 +95,19 @@ function num (v, dflt) { const n = parseFloat(v); return Number.isFinite(n) ? n 
 const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf-8'));
 const skin = parseINI(SKIN_PATH);
 
-// Cache bounds per model file (many itemIds share a model).
+// Cache bounds per model file (many itemIds share a model). `form` selects the
+// two-form bucket the manifest spec renders ('alternate' for ubsp; base default).
 const boundsCache = {};
-function boundsFor (model) {
-  if (model in boundsCache) return boundsCache[model];
-  const file = path.join(MODELS_DIR, model + '.glb');
-  let b = null;
-  try { b = fs.existsSync(file) ? glbBounds(file) : null; } catch (e) { b = null; }
-  return (boundsCache[model] = b);
+function boundsFor (model, form) {
+  if (!(model in boundsCache)) {
+    const file = path.join(MODELS_DIR, model + '.glb');
+    let b = null;
+    try { b = fs.existsSync(file) ? glbBounds(file) : null; } catch (e) { b = null; }
+    boundsCache[model] = b;
+  }
+  const b = boundsCache[model];
+  if (!b) return null;
+  return (form === 'alternate' && b.alternate) ? b.alternate : b.base;
 }
 
 const wantIds = args.ids ? String(args.ids).split(',').map(s => s.trim()) : null;
@@ -91,13 +116,13 @@ const rows = [];
 for (const [id, spec] of Object.entries(manifest)) {
   if (wantIds && !wantIds.includes(id)) continue;
   if (!spec.model) continue;
-  const b = boundsFor(spec.model);
+  const b = boundsFor(spec.model, spec.form);
   if (!b) continue;
   const s = skin[id] || {};
   const sScale = num(s['scale:sd'], num(s.scale, num(s['scale:hd'], null)));  // SD Art-Scaling
   const sMs    = num(s['modelScale:sd'], num(s.modelScale, null));
   rows.push({
-    id, model: spec.model,
+    id, model: spec.model + (spec.form ? ':' + spec.form : ''),
     scale: spec.scale,                                            // current manifest scale
     mdxH: b.height, mdxR: b.radius,
     renderedH: b.height * spec.scale,

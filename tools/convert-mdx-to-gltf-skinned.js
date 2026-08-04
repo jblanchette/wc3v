@@ -458,7 +458,9 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
     }
     if (material) prim.setMaterial(material);
     // Only tagged on two-form models — single-form GLBs stay byte-identical.
-    if (geosetForm) prim.setExtras({ form: geosetForm });
+    // MERGE with the geosetId extra set above (setExtras replaces wholesale;
+    // this used to silently drop geosetId on every two-form primitive).
+    if (geosetForm) prim.setExtras({ geosetId: gi, form: geosetForm });
     mesh.addPrimitive(prim);
   }
 
