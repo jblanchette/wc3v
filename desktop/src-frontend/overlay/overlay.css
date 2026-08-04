@@ -21,6 +21,11 @@
   --ink: #dde4ea;
   --dim: #8a97a3;
   --gold: #a3b8c9;
+  /* Overridden too — leaving these on the carved defaults put moss and rust
+     on a cool grey panel, which is the one combination this theme exists to
+     avoid. Same readings, pulled toward the slate. */
+  --win: #6f9f7d;
+  --loss: #a8564f;
 }
 
 .wc3v-ov * { box-sizing: border-box; margin: 0; }
@@ -133,3 +138,20 @@
   letter-spacing: 0.08em;
   text-align: center;
 }
+
+/* The mark. Deliberately the quietest thing on the card — it is a credit, not
+   a banner, and it must never compete with the result a viewer is reading.
+   Same lockup as the app bar and the site: the "3" carries the accent. */
+.wc3v-ov .mark {
+  padding: 0.3rem 0.9rem 0.35rem;
+  border-top: 1px solid var(--panel-edge);
+  text-align: right;
+}
+.wc3v-ov .mark .wordmark {
+  color: var(--dim);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1;
+}
+.wc3v-ov .mark .wordmark > span { color: var(--gold); }

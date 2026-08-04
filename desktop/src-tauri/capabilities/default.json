@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Minimum the app needs: receive events from the replay watcher, let the user pick a replay folder by hand (required on Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may not guess), toggle run-on-startup, and check for signed updates.",
+  "description": "Minimum the app needs: receive events from the replay watcher, let the user pick a replay folder by hand (required on Linux/SteamOS, where the game lives inside a Wine/Proton prefix we may not guess), toggle run-on-startup, check for signed updates, and drive its own title bar (decorations are off — the app bar IS the title bar).",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -9,6 +9,13 @@
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
-    "updater:default"
+    "updater:default",
+    "notification:allow-notify",
+    "notification:allow-is-permission-granted",
+    "notification:allow-request-permission",
+    "core:window:allow-start-dragging",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close"
   ]
 }

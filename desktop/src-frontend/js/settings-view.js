@@ -81,6 +81,17 @@
       }
     });
 
+    // Local preference only — no OS state to reconcile, unlike autostart. The
+    // OS permission is asked for at the moment of the first real notification,
+    // not here: a prompt on a settings screen has no context to justify it.
+    el('notify-toggle').checked = deps.notifyEnabled();
+    el('notify-toggle').addEventListener('change', (e) => {
+      deps.setNotifyEnabled(e.target.checked);
+      deps.log(e.target.checked
+        ? 'WC3V will tell you when a game finishes'
+        : 'game notifications off', 'ok');
+    });
+
     const runUpdateCheck = async (install) => {
       const out = el('update-status');
       out.textContent = 'checking…';

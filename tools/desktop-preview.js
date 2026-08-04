@@ -29,6 +29,15 @@ const ROOT = path.resolve(__dirname, '..');
 const REPLAY_DIR = path.join(ROOT, 'client', 'replays');
 const DIST = path.join(ROOT, 'desktop', 'dist');
 
+// Written BESIDE dist, never into it. tauri.conf.json bundles the whole of
+// `frontendDist`, so a preview page living in dist is a 150 KB page of fake
+// games one stray `cargo tauri build` away from shipping to users.
+const PREVIEW_DIR = path.join(ROOT, 'desktop', 'preview');
+
+// The preview loads the real app's own files out of dist, so every `./` in the
+// markup it borrows has to become a path relative to PREVIEW_DIR.
+const rebase = (s) => s.replace(/(src|href)="\.\//g, '$1="../dist/');
+
 const args = {};
 process.argv.slice(2).forEach(raw => {
   const [flag, ...rest] = raw.replace(/^--/, '').split('=');
@@ -163,30 +172,44 @@ window.__TAURI__ = {
     }
   },
   event: { listen: async () => (() => {}) },
-  dialog: { open: async () => null }
+  dialog: { open: async () => null },
+  // The app drives its own title bar (decorations are off), so it asks for the
+  // window on load. A browser tab has no window to minimise — the controls are
+  // rendered so the chrome can be judged, and say so when clicked.
+  window: {
+    getCurrentWindow: () => ({
+      minimize: async () => console.log('preview: minimize (no window here)'),
+      toggleMaximize: async () => console.log('preview: maximize (no window here)'),
+      close: async () => console.log('preview: close-to-tray (no window here)')
+    })
+  }
 };
 // The app asks identity for a confirmed name; pre-answer it so the preview
 // opens with verdicts already oriented instead of the picker.
 localStorage.setItem('wc3v-user-name', ${JSON.stringify(me)});
 localStorage.setItem('wc3v-user-name-confirmed', '1');
 </script>
-${fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
+${rebase(fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
   .replace(/^[\s\S]*?<body>/, '')
-  .replace(/<\/body>[\s\S]*$/, '')}
+  .replace(/<\/body>[\s\S]*$/, ''))}
 ${
   // The preview page owns <head>, so the real page's stylesheet links are
   // re-emitted into the body (browsers accept this). Carried through by
   // reading them rather than listing them here — hardcoding the list is how
   // the preview ended up missing overlay.css and silently rendering the
   // Stream screen unstyled.
-  (fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
-    .match(/<link rel="stylesheet"[^>]*>/g) || []).join('\n')
+  rebase((fs.readFileSync(path.join(DIST, 'index.html'), 'utf8')
+    .match(/<link rel="stylesheet"[^>]*>/g) || []).join('\n'))
 }
 </body></html>
 `;
 
-fs.writeFileSync(path.join(DIST, 'preview.html'), html);
+fs.mkdirSync(PREVIEW_DIR, { recursive: true });
+const previewFile = path.join(PREVIEW_DIR, 'preview.html');
+fs.writeFileSync(previewFile, html);
+// Left behind by every run before this one, when the preview lived in dist.
+fs.rmSync(path.join(DIST, 'preview.html'), { force: true });
 console.log('');
-console.log(`preview:   ${path.relative(ROOT, path.join(DIST, 'preview.html'))}`);
+console.log(`preview:   ${path.relative(ROOT, previewFile)}`);
 console.log(`games:     ${Object.keys(store).length}`);
 console.log(`you:       ${me}`);

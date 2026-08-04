@@ -30,6 +30,19 @@
     return n;
   }
 
+  // The same wordmark the app and the site carry, at the smallest size that
+  // still reads on a stream. A viewer who wants to know where these numbers
+  // came from should be able to find out without the streamer saying so.
+  function markStrip () {
+    var strip = el('div', 'mark');
+    var w = el('span', 'wordmark');
+    w.appendChild(document.createTextNode('WC'));
+    w.appendChild(el('span', null, '3'));
+    w.appendChild(document.createTextNode('V'));
+    strip.appendChild(w);
+    return strip;
+  }
+
   function fmtDur (ms) {
     var m = Math.round((ms || 0) / 60000);
     return m ? '~' + m + ' min' : '';
@@ -152,6 +165,7 @@
     if (!g) {
       card.appendChild(el('div', 'mod waiting',
         'Waiting for a game — finish one and it appears here.'));
+      card.appendChild(markStrip());
       root.appendChild(card);
       return;
     }
@@ -160,6 +174,7 @@
     [want.h2h && h2hModule(g), want.moments && momentsModule(g), want.build && buildModule(g)]
       .forEach(function (mod) { if (mod) card.appendChild(mod); });
 
+    card.appendChild(markStrip());
     root.appendChild(card);
   }
 

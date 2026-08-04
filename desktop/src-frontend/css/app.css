@@ -5,11 +5,17 @@
    tools/build-desktop-client.js). This file adds only what the desktop
    needs on top; it is NOT a second design system.
 
-   REGISTER: the warm/carved one. tokens.css ships two families — the
-   site's navy chrome (--bg / --surface / --text) and the viewer's warm
-   carved fixtures (--vc-* rails, --dom-* cast-bronze). The desktop app
-   is a Warcraft fixture, not a dashboard, so it is built on --vc-* and
-   --dom-*. The navy surfaces are deliberately unused here.
+   REGISTER: the same sandwich wc3v.com already is. tokens.css ships two
+   families — the site's navy chrome (--bg / --surface / --text) and the
+   viewer's warm carved fixtures (--vc-* rails, --dom-* cast-bronze). On
+   the site, navy chrome wraps a warm viewer; this window does the same.
+
+     .appbar and its furniture  →  NAVY. It is the brand surface, and it
+                                   carries the same wordmark as the site.
+     everything inside <main>   →  WARM. Games are a Warcraft fixture.
+
+   That line is the rule. Do not creep navy below the app bar, and do not
+   put --accent or --gold on a warm surface — warm gold is --dom-gold.
 
    The one thing tokens.css does not carry is warm INK — its text ramp
    (#e8eaf0 → #6b7290) is tuned against navy and reads blue on #17150f.
@@ -46,6 +52,18 @@
   --verdict-win:  var(--dom-green);  /* moss    */
   --verdict-loss: #A65340;           /* rust — bronze family, desaturated */
   --verdict-none: var(--dom-grey);   /* ash     */
+
+  /* Race, in the carved paintbox. The HUE is the data — a WC3 player reads
+     blue/red/green/purple instantly, so it has to survive — but tokens.css's
+     --race-H/O/E/U are the in-game colours at full saturation and they glow
+     against warm brown, which this file forbids. Same hues, same order,
+     pulled down into the --dom-* family. */
+  --race-warm-H: #5D86B0;   /* human      */
+  --race-warm-O: #C05B44;   /* orc        */
+  --race-warm-E: #719B52;   /* night elf  */
+  --race-warm-U: #8E6DB0;   /* undead     */
+  --race-warm-R: #A2917A;   /* random     */
+  --race-warm-N: #7A756C;   /* neutral    */
 
   /* The carved vocabulary, as reusable values. */
   --cut:    inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -1px 0 rgba(0,0,0,0.45);
@@ -93,27 +111,65 @@ body {
 }
 .scroll::-webkit-scrollbar-thumb:hover { background: var(--app-edge); }
 
-/* ── App bar ─────────────────────────────────────────────────────────── */
+/* ── App bar — the navy half ──────────────────────────────────────────
+   This bar is also the window's title bar (decorations: false). It uses
+   the site's chrome tokens so that opening the app and opening wc3v.com
+   land in the same place. No backdrop-filter: nothing sits behind a
+   desktop window, so it would buy a blur of nothing and cost paint. */
 
 .appbar {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  padding: 0 var(--sp-4);
+  /* No right padding — the caption controls sit flush to the window edge,
+     the way every Windows title bar puts them. */
+  padding: 0 0 0 var(--page-gutter);
   height: 56px;
-  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
-  border-bottom: 1px solid var(--app-line);
-  box-shadow: var(--cut);
+  background: linear-gradient(180deg, var(--bg), var(--bg-deep));
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-1);
+  /* A title bar is dragged, not selected. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
-.brand {
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--gold-deep);
-  /* Struck, not glowing: one dark shoulder below the glyphs. */
-  text-shadow: 0 1px 0 #000;
+.appbar-spacer { flex: 1; align-self: stretch; }
+
+/* The canonical mark. Identical to .site-wordmark in client/css/main.css —
+   same size, weight, tracking and the "3" in --accent. */
+.wordmark {
+  font-size: var(--fs-h2);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--text);
+  white-space: nowrap;
+  /* Part of the drag region rather than a target. */
+  pointer-events: none;
 }
+.wordmark > span { color: var(--accent); }
+
+/* Caption controls. The glyphs are 10px because that is what a Windows
+   title bar draws; the 36px icon floor in this file governs content
+   iconography, not OS caption controls. The BUTTONS clear --hit-min. */
+.wincontrols { display: flex; align-self: stretch; margin-left: var(--sp-2); }
+
+.wctl {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  align-self: stretch;
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.wctl:hover { background: var(--surface-2); color: var(--text); }
+/* The one place a strong red is correct: it is the OS's close affordance,
+   not a semantic state colour. */
+.wctl-close:hover { background: #B23A2A; color: #fff; }
+.wctl svg { width: 10px; height: 10px; }
 
 .identity-wrap { position: relative; }
 
@@ -123,16 +179,16 @@ body {
   gap: var(--sp-2);
   min-height: var(--ico-sm);
   padding: var(--sp-1) var(--sp-3);
-  background: var(--app-well);
-  border: 1px solid var(--app-line);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-2);
   border-radius: var(--radius-sm);
-  box-shadow: var(--cut-in);
-  color: var(--ink);
+  color: var(--text);
   font: inherit;
   cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
 }
-.identity:hover { border-color: var(--app-edge); }
-.identity-label { color: var(--ink-faint); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.identity:hover { border-color: var(--border-3); background: var(--surface); }
+.identity-label { color: var(--text-dim); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
 .identity-name { font-weight: 600; }
 .identity[data-set="0"] .identity-name { color: var(--warn); }
 
@@ -155,19 +211,20 @@ body {
   align-items: baseline;
   gap: var(--sp-2);
   padding: var(--sp-1) var(--sp-3);
-  background: var(--app-well);
-  border: 1px solid var(--app-line);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-2);
   border-radius: var(--radius-sm);
-  box-shadow: var(--cut-in);
 }
-.session-label { color: var(--ink-faint); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.session-label { color: var(--text-dim); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
 .session-score { font-size: var(--fs-lg); font-weight: 700; font-variant-numeric: tabular-nums; }
 .session-score .w { color: var(--verdict-win); }
 .session-score .l { color: var(--verdict-loss); }
 .session-score i { color: var(--ink-faint); font-style: normal; padding: 0 2px; }
 .session-streak { color: var(--gold-deep); font-size: var(--fs-min); font-weight: 600; }
 
-.nav { display: flex; gap: var(--sp-1); margin-left: auto; }
+/* Left-anchored beside the wordmark, the way the site's nav links are —
+   not floated to the far right. */
+.nav { display: flex; gap: var(--sp-1); }
 
 .nav-item {
   min-height: var(--ico-sm);
@@ -175,16 +232,17 @@ body {
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  color: var(--ink-dim);
+  color: var(--text-muted);
   font: inherit;
   cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
 }
-.nav-item:hover { color: var(--ink); background: var(--app-well); }
+.nav-item:hover { color: var(--text); background: var(--surface); }
 .nav-item.is-active {
-  color: var(--ink);
-  background: var(--app-well);
-  border-color: var(--app-edge);
-  box-shadow: var(--cut-in);
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-2);
 }
 
 /* ── Views ───────────────────────────────────────────────────────────── */
@@ -202,11 +260,80 @@ main { min-height: 0; position: relative; }
 
 .feed-col {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   min-height: 0;
   background: var(--app-bg);
   border-right: 1px solid var(--app-line);
 }
+
+/* ── Feed filter ─────────────────────────────────────────────────────── */
+
+.feed-filter { padding: 0 var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-2); }
+
+.feed-filter input {
+  width: 100%;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+  transition: border-color var(--dur) var(--ease);
+}
+.feed-filter input::placeholder { color: var(--ink-faint); }
+.feed-filter input:focus { border-color: var(--app-edge); }
+/* The UA's search-clear glyph is a light circle that ignores every colour in
+   this file. Redrawn rather than hidden — deleting it would take away the
+   only pointer route back to an unfiltered feed. Masked so it inherits a
+   colour; the SVG is inline, so the page still makes no requests. */
+.feed-filter input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--ink-faint);
+  cursor: pointer;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 3l8 8M11 3l-8 8' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.feed-filter input::-webkit-search-cancel-button:hover { background: var(--ink); }
+
+.filter-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+/* Segmented control. One carved trough, buttons struck into it. */
+.seg {
+  display: flex;
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  overflow: hidden;
+}
+.seg-btn {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: 0;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--app-line); }
+.seg-btn:hover { color: var(--ink); background: var(--app-panel); }
+.seg-btn.is-on {
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  color: var(--ink);
+  box-shadow: var(--cut);
+}
+.seg-btn.is-on[data-race="H"] { color: var(--race-warm-H); }
+.seg-btn.is-on[data-race="O"] { color: var(--race-warm-O); }
+.seg-btn.is-on[data-race="U"] { color: var(--race-warm-U); }
+.seg-btn.is-on[data-race="E"] { color: var(--race-warm-E); }
+.seg-btn.is-on[data-result="win"]  { color: var(--verdict-win); }
+.seg-btn.is-on[data-result="loss"] { color: var(--verdict-loss); }
 
 .feed-head {
   display: flex;
@@ -318,11 +445,19 @@ main { min-height: 0; position: relative; }
   border: var(--outline);
   border-radius: 3px;
   background: var(--app-well);
-  color: var(--race, var(--ink-2));
+  color: var(--ink-2);
   font-size: var(--fs-min);
   font-weight: 700;
   letter-spacing: 0.04em;
 }
+/* Set here rather than leaning on tokens.css's [data-race] groups, which
+   resolve --race to the saturated in-game colour. */
+.race-mark[data-race="H"] { color: var(--race-warm-H); }
+.race-mark[data-race="O"] { color: var(--race-warm-O); }
+.race-mark[data-race="E"] { color: var(--race-warm-E); }
+.race-mark[data-race="U"] { color: var(--race-warm-U); }
+.race-mark[data-race="R"] { color: var(--race-warm-R); }
+.race-mark[data-race="N"] { color: var(--race-warm-N); }
 .matchup i { color: var(--ink-faint); font-style: normal; }
 
 /* ── Detail ──────────────────────────────────────────────────────────── */
@@ -470,12 +605,33 @@ main { min-height: 0; position: relative; }
 .build-list { list-style: none; margin: 0; padding: 0; }
 .build-list li {
   display: flex;
+  align-items: center;
   gap: var(--sp-3);
-  padding: 2px 0;
+  padding: 3px 0;
   font-size: var(--fs-min);
 }
 .build-list .t { color: var(--ink-faint); font-variant-numeric: tabular-nums; min-width: 3rem; }
-.build-list li[data-type="hero"] .n { color: var(--gold-deep); }
+
+/* The site's own icon art, fetched from the CDN (see games-view.js). --ico-sm
+   is the floor for anything pictorial in this app, and these carry the same
+   carved edge as every other fixture. */
+.build-icon {
+  flex: none;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  border: var(--outline);
+  border-radius: 3px;
+  box-shadow: var(--cut);
+  object-fit: cover;
+}
+/* No art, or no network. Holds the row's shape so a list does not reflow as
+   icons arrive, and reads as an empty slot rather than a failure. */
+.build-icon.is-blank {
+  display: inline-block;
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+}
+.build-list li[data-type="hero"] .n { color: var(--dom-gold); }
 .build-list li[data-type="expansion"] .n { color: var(--verdict-win); }
 .build-list .n { overflow-wrap: anywhere; }
 
@@ -501,8 +657,15 @@ main { min-height: 0; position: relative; }
    edge; the reading measure is imposed on the children instead. Capping the
    scroller itself parks the scrollbar mid-window, which reads as a broken
    panel. */
+/* The measure is imposed on the children, not the scroller, so the scrollbar
+   stays on the window edge. Centred rather than hugging the left: on a wide
+   window a 60rem column pinned to one side reads as a layout that ran out
+   rather than one that was set. */
 .profile-body, .stream-body, .settings-body { padding: var(--sp-5); }
-.profile-body > *, .stream-body > *, .settings-body > * { max-width: 60rem; }
+.profile-body > *, .stream-body > *, .settings-body > * {
+  max-width: 60rem;
+  margin-inline: auto;
+}
 .profile-head { margin-bottom: var(--sp-4); }
 .profile-name { margin: 0; font-size: var(--fs-h1); }
 .profile-sub { color: var(--ink-dim); }
@@ -573,7 +736,44 @@ main { min-height: 0; position: relative; }
   min-height: var(--hit-min);
   cursor: pointer;
 }
-.check input { width: 18px; height: 18px; accent-color: var(--dom-green); }
+/* Carved, not the UA's. accent-color only tints the CHECKED fill — the empty
+   box stayed the platform's near-white square, which on a dark panel is the
+   most conspicuous thing on the screen. The row already clears --hit-min, so
+   the control itself does not need to. */
+.check input {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: 3px;
+  box-shadow: var(--cut-in);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.check input:hover { border-color: var(--app-edge); }
+.check input:checked {
+  background: linear-gradient(180deg, #86ab68, var(--dom-green));
+  box-shadow: var(--cut);
+}
+/* The tick is drawn, not a glyph — a ✓ character sits differently in every
+   font the system might fall back to. */
+.check input::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid var(--app-well);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+.check input:checked::after { opacity: 1; }
 
 /* ── Controls ────────────────────────────────────────────────────────── */
 
@@ -601,10 +801,12 @@ main { min-height: 0; position: relative; }
 
 .btn-sm { min-height: var(--ico-sm); padding: 0 var(--sp-3); font-size: var(--fs-min); }
 
-/* Selected state for the segmented theme/size pickers. */
+/* Selected state for the segmented theme/size pickers. --dom-gold, not
+   --gold: this is a warm surface, and --gold is the navy half's achievement
+   yellow. */
 .btn.is-on {
   border-color: var(--dom-orange);
-  color: var(--gold);
+  color: var(--dom-gold);
   box-shadow: var(--cut-in);
 }
 
@@ -660,7 +862,7 @@ main { min-height: 0; position: relative; }
   color: var(--ink);
   font: inherit;
 }
-.field input:focus { outline: none; border-color: var(--app-edge); }
+.field input:focus { border-color: var(--app-edge); }
 
 .empty { color: var(--ink-faint); padding: var(--sp-4) var(--sp-2); }
 
@@ -717,8 +919,143 @@ main { min-height: 0; position: relative; }
   overflow-wrap: anywhere;
 }
 .log-line.ok   { color: var(--dom-green); }
-.log-line.warn { color: var(--gold-deep); }
+.log-line.warn { color: var(--dom-gold); }
 .log-line.err  { color: var(--verdict-loss); }
+
+/* ── Trend plots ─────────────────────────────────────────────────────────
+   Three small plots, one measure each. Never one plot with two y-axes: win
+   rate is a percentage and T2 is a duration, and sharing an axis would invent
+   a relationship out of the scaling. One series per plot, so no legend — the
+   heading is the label. Grid and axes are omitted rather than drawn faintly:
+   at this size the endpoints carry the reading and a grid would be noise. */
+
+.trend-plots { display: grid; gap: var(--sp-4); }
+.trend-plot h3 {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.spark {
+  display: block;
+  width: 100%;
+  height: 96px;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+/* Thin mark, recessive surface. vector-effect keeps the stroke 2px after the
+   non-uniform viewBox stretch. */
+.spark-line {
+  fill: none;
+  stroke: var(--dom-gold);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spark-dot {
+  fill: var(--dom-gold);
+  stroke: var(--app-well);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.trend-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-1);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+}
+.trend-end.is-now { color: var(--ink); font-weight: 600; }
+
+/* ── Focus ───────────────────────────────────────────────────────────────
+   There was no focus ring anywhere in this file, and the one UA ring the app
+   did get (on text inputs) was being removed. A window that can be driven
+   from the keyboard has to show where the keyboard is. :focus-visible, so a
+   mouse click never draws one. */
+
+:focus-visible {
+  outline: 2px solid var(--accent-ring, var(--accent));
+  outline-offset: 2px;
+}
+/* Inside the app bar the ring sits on navy and can use the accent as-is;
+   on the warm surfaces it needs the carved gold or it reads as a website
+   control that wandered in. */
+main :focus-visible,
+.activity :focus-visible {
+  outline-color: var(--dom-gold);
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────────
+   Everything animated in this file is a short state change on --dur/--ease.
+   None of it carries meaning, so all of it goes when asked. */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────
+   The feed and the detail column used to ship empty and stay empty until
+   the corpus resolved, which at 3,000 stored games is a blank window that
+   looks broken. A skeleton says "this is arriving" without claiming to know
+   what it is. */
+
+.skeleton { padding: 0 var(--sp-3); }
+.skeleton-row {
+  height: calc(var(--ico-sm) + var(--sp-4));
+  margin-bottom: var(--sp-1);
+  background: linear-gradient(90deg,
+    var(--app-panel) 0%, var(--app-panel-2) 50%, var(--app-panel) 100%);
+  background-size: 200% 100%;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  animation: skeleton-sweep 1.4s var(--ease) infinite;
+}
+/* Staggered so the column reads as several things loading, not one bar. */
+.skeleton-row:nth-child(2) { animation-delay: 0.12s; }
+.skeleton-row:nth-child(3) { animation-delay: 0.24s; }
+.skeleton-row:nth-child(4) { animation-delay: 0.36s; }
+.skeleton-row:nth-child(5) { animation-delay: 0.48s; }
+.skeleton-row:nth-child(6) { animation-delay: 0.60s; }
+
+@keyframes skeleton-sweep {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ── First run ───────────────────────────────────────────────────────────
+   Nothing parsed yet is not an error and must not read like one. */
+
+.first-run {
+  display: grid;
+  place-content: center;
+  gap: var(--sp-3);
+  height: 100%;
+  padding: var(--sp-7) var(--sp-5);
+  text-align: center;
+}
+.first-run h2 {
+  margin: 0;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--ink);
+}
+.first-run p {
+  margin: 0 auto;
+  max-width: 34rem;
+  color: var(--ink-dim);
+}
+.first-run .btn { justify-self: center; margin-top: var(--sp-2); }
 
 /* ── Narrow windows ──────────────────────────────────────────────────── */
 

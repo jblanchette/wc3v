@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <title>WC3V</title>
+  <link rel="icon" href="./favicon-32x32.png" sizes="32x32">
+  <link rel="icon" href="./favicon-16x16.png" sizes="16x16">
   <!-- tokens.css is the web client's design token layer, copied in by
        tools/build-desktop-client.js. app.css consumes it and defines only what
        the warm/carved desktop register needs on top. Load order matters. -->
@@ -14,8 +16,29 @@
 </head>
 <body>
   <div id="app">
-    <header class="appbar">
-      <div class="brand">WC3V</div>
+    <!-- This bar IS the window's title bar (decorations are off in
+         tauri.conf.json — with the native one left on, Windows drew a second
+         header directly above it). Only elements carrying
+         data-tauri-drag-region drag the window, so the controls inside it
+         still behave as controls. -->
+    <header class="appbar" data-tauri-drag-region>
+      <!-- The canonical brand mark, identical to the site's .site-wordmark
+           (client/js/SiteNav.js) — a text lockup with the "3" in the chrome
+           accent, not an image. -->
+      <div class="wordmark">WC<span>3</span>V</div>
+
+      <nav class="nav" role="tablist" aria-label="Screens">
+        <button class="nav-item is-active" data-view="games" type="button"
+                role="tab" aria-selected="true">Games</button>
+        <button class="nav-item" data-view="profile" type="button"
+                role="tab" aria-selected="false">Profile</button>
+        <button class="nav-item" data-view="stream" type="button"
+                role="tab" aria-selected="false">Stream</button>
+        <button class="nav-item" data-view="settings" type="button"
+                role="tab" aria-selected="false">Settings</button>
+      </nav>
+
+      <div class="appbar-spacer" data-tauri-drag-region></div>
 
       <div class="identity-wrap">
         <button id="identity-btn" class="identity" type="button" aria-expanded="false">
@@ -42,12 +65,22 @@
         <span class="session-streak" id="session-streak"></span>
       </div>
 
-      <nav class="nav">
-        <button class="nav-item is-active" data-view="games" type="button">Games</button>
-        <button class="nav-item" data-view="profile" type="button">Profile</button>
-        <button class="nav-item" data-view="stream" type="button">Stream</button>
-        <button class="nav-item" data-view="settings" type="button">Settings</button>
-      </nav>
+      <!-- Caption controls. Close hides to the tray via the window's normal
+           close event, so the behaviour lives in exactly one place
+           (main.rs on_window_event) rather than being reimplemented here. -->
+      <div class="wincontrols">
+        <button id="win-min" class="wctl" type="button" aria-label="Minimise">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5h10" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+        <button id="win-max" class="wctl" type="button" aria-label="Maximise or restore">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+        <button id="win-close" class="wctl wctl-close" type="button"
+                aria-label="Close to tray"
+                title="Keeps WC3V running in the tray so new games still get picked up">
+          <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+      </div>
     </header>
 
     <main>
@@ -61,6 +94,26 @@
           <div class="backfill-bar" id="backfill-bar" hidden>
             <div class="backfill-text" id="backfill-text">idle</div>
             <div class="backfill-track"><div class="backfill-fill" id="backfill-fill"></div></div>
+          </div>
+          <!-- A parsed history runs to thousands of games; without this the
+               feed is a wall you can only scroll. -->
+          <div class="feed-filter">
+            <input id="feed-search" type="search" autocomplete="off"
+                   placeholder="Search a player or map" aria-label="Search your games">
+            <div class="filter-row">
+              <div class="seg" id="feed-result" role="group" aria-label="Result">
+                <button class="seg-btn is-on" data-result="any" type="button">All</button>
+                <button class="seg-btn" data-result="win" type="button">Wins</button>
+                <button class="seg-btn" data-result="loss" type="button">Losses</button>
+              </div>
+              <div class="seg" id="feed-race" role="group" aria-label="Your race">
+                <button class="seg-btn is-on" data-race="any" type="button">Any</button>
+                <button class="seg-btn" data-race="H" type="button">HU</button>
+                <button class="seg-btn" data-race="O" type="button">OC</button>
+                <button class="seg-btn" data-race="U" type="button">UD</button>
+                <button class="seg-btn" data-race="E" type="button">NE</button>
+              </div>
+            </div>
           </div>
           <div class="feed scroll" id="feed"></div>
         </div>
@@ -91,7 +144,11 @@
           <section class="panel">
             <h2>Replay folders</h2>
             <p class="lead">WC3V reads the replays Warcraft III already saves.
-              Nothing is uploaded and nothing is sent anywhere.</p>
+              Your replays never leave this machine — parsing happens here, and
+              nothing about your games is uploaded anywhere.</p>
+            <p class="hint">The app does fetch two things from wc3v.com's CDN:
+              the icon art for build orders, and map data for a map it has not
+              seen before. Neither carries anything about you or your games.</p>
             <div id="roots" class="roots"></div>
             <button id="pick-folder" class="btn" type="button">Add a folder…</button>
           </section>
@@ -114,6 +171,14 @@
             <label class="check">
               <input type="checkbox" id="autostart-toggle">
               <span>Start with Windows (opens straight to the tray)</span>
+            </label>
+            <label class="check">
+              <input type="checkbox" id="notify-toggle" checked>
+              <span>
+                Tell me when a game finishes
+                <span class="hint">A notification with the result and the
+                  biggest moment, so you do not have to go and look.</span>
+              </span>
             </label>
             <p class="hint">Closing the window keeps WC3V running in the tray so
               new games still get picked up. Quit from the tray icon.</p>

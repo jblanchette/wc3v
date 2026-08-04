@@ -128,6 +128,57 @@
       return corpusLoading;
     };
 
+    // Filtering the corpus. Pure and here rather than in the renderer, because
+    // "which games" is a question about the store, and the feed should render
+    // whatever list it is handed.
+    //
+    // Free-text matching only. Seat identity uses ProfileAggregate.normName,
+    // which is the one definition of "same player" everything else shares —
+    // this looser fold is for TYPING: it strips accents so a search for "jaeh"
+    // finds "Jæhaerys", which normName deliberately does not do. The
+    // combining-diacritics range is written as \u escapes rather than literal
+    // characters: as raw bytes they are invisible in an editor, and one bad
+    // save would silently turn accent folding off with nothing to see.
+    const searchFold = (s) => String(s || '')
+      .normalize('NFKD').replace(new RegExp('[\u0300-\u036f]', 'g'), '').toLowerCase();
+
+    const filterCorpus = (games, f) => {
+      const PA = window.ProfileAggregate;
+      const q = searchFold(f && f.text);
+      const result = (f && f.result) || 'any';
+      const race = (f && f.race) || 'any';
+      const me = f && f.identityName ? PA.normName(f.identityName) : '';
+
+      return (games || []).filter((g) => {
+        const players = Object.values(g.players || {});
+
+        // The map is matched on the name the FEED SHOWS. Summaries carry
+        // `mapRaw`/`map` (a file name, often with a version suffix); searching
+        // the raw form would mean typing something that appears nowhere on
+        // screen.
+        if (q) {
+          const map = window.SummaryExtract.cleanMapName(g.mapRaw || g.map) || '';
+          if (!players.some(p => searchFold(p.name).includes(q)) &&
+              !searchFold(map).includes(q)) return false;
+        }
+
+        if (race !== 'any') {
+          // The user's OWN race when the seat is known; any seat otherwise, so
+          // the filter still does something before an identity is set.
+          const mine = me ? players.find(p => PA.normName(p.name) === me) : null;
+          if (mine ? mine.race !== race : !players.some(p => p.race === race)) return false;
+        }
+
+        if (result !== 'any') {
+          const v = me ? PA.gameView(g, me) : null;
+          const r = v && v.result ? v.result : 'none';
+          if (r !== result) return false;
+        }
+
+        return true;
+      });
+    };
+
     return {
       SCHEMA_VERSION,
       gunzipJson,
@@ -135,6 +186,7 @@
       persistSummary,
       read,
       loadCorpus,
+      filterCorpus,
       has: (key) => stored.has(key),
       get size () { return stored.size; },
       get corpus () { return corpus; },

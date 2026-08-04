@@ -107,3 +107,62 @@ assert.ok(!tiny.statements.some(s => s.topic === 'timing'),
   'timing statement fired below MIN_SPLIT');
 
 console.log('ProfileAggregate: all assertions passed');
+
+// ── Trend over time ─────────────────────────────────────────────────────────
+//
+// A drifting corpus: the player gets measurably better. 45 games — enough for
+// windows of 20 plus a short remainder, which is the normal case and the one
+// the window tiling has to get right.
+const drift = [];
+for (let i = 0; i < 45; i++) {
+  const late = i >= 25;
+  drift.push(mkGame(i, {
+    // Early: loses 2 in 3. Late: wins 2 in 3.
+    win: late ? (i % 3 !== 0) : (i % 3 === 0),
+    // Early T2 5:20, late T2 4:10 — a 70s improvement, well over the 15s floor.
+    t2: late ? 250000 : 320000
+  }));
+}
+const dp = PA.buildProfile(drift, 'me');
+
+// The newest window must be FULL. Tiling forwards would leave the remainder
+// here, and a 5-game recent window fails every sample guard — which would
+// silence the trend for any corpus whose size is not a multiple of the window.
+assert.ok(dp.trend.length >= 2, 'trend produced fewer than 2 windows');
+const newest = dp.trend[dp.trend.length - 1];
+assert.strictEqual(newest.games, 20, 'newest trend window is not full');
+assert.strictEqual(dp.trend[0].games, 5, 'the short window is not the oldest');
+assert.strictEqual(dp.trend.reduce((n, w) => n + w.games, 0), 45,
+  'trend windows do not account for every game');
+
+// The delta must skip the short leading window rather than compare 5 games
+// against 20.
+assert.strictEqual(dp.trendDelta.t2.fromN, 20, 'trendDelta used the short window');
+assert.ok(dp.trendDelta.t2.delta < 0, 'T2 improvement not detected');
+assert.ok(dp.trendDelta.winRate.delta > 0, 'win-rate improvement not detected');
+assert.ok(dp.statements.some(s => s.topic === 'trend'), 'trend statement missing');
+
+// ── The guard that matters: a thin END must refuse the claim ────────────────
+//
+// 22 games — a full 20-game window plus 2. Overall n is ample, but one end of
+// the comparison has 2 games, and "your T2 is a minute faster (n=2)" is worse
+// than saying nothing. This is the assertion that stops "enough games overall"
+// being mistaken for "enough games at each end".
+const thinEnd = [];
+for (let i = 0; i < 22; i++) {
+  thinEnd.push(mkGame(i, { win: i >= 20, t2: i >= 20 ? 250000 : 320000 }));
+}
+const tp = PA.buildProfile(thinEnd, 'me');
+assert.strictEqual(tp.trend.length, 2, 'expected a short window plus a full one');
+assert.strictEqual(tp.trend[0].games, 2);
+assert.ok(tp.trendDelta, 'trendDelta missing with two windows');
+assert.ok(tp.trendDelta.t2.fromN < 8, 'test corpus does not exercise the guard');
+assert.ok(!tp.statements.some(s => s.topic === 'trend'),
+  'trend statement fired with a below-minimum window at one end');
+
+// One window is not a trend.
+const oneWindow = PA.buildProfile(drift.slice(0, 12), 'me');
+assert.strictEqual(oneWindow.trendDelta, null,
+  'trendDelta claimed a change from a single window');
+
+console.log('ProfileAggregate: trend assertions passed');

@@ -23,6 +23,12 @@
   const MIN_OPENING = 5;
   const MIN_SPLIT = 5;   // per side of a win/loss comparison
   const MIN_MAP = 8;
+  // Trend windows. TREND_WINDOW games per point, and a change is only claimed
+  // when BOTH ends carry at least MIN_TREND decided games — "n overall" is not
+  // the same as "n at each end", and conflating them is how a two-game blip
+  // gets announced as improvement.
+  const TREND_WINDOW = 20;
+  const MIN_TREND = 8;
 
   // ── Small stats helpers ────────────────────────────────────────────────────
 
@@ -269,8 +275,10 @@
         },
         workersAt5m: timingSplit(timing.workersAt5m)
       },
-      recentForm: recentForm(views)
+      recentForm: recentForm(views),
+      trend: trend(views)
     };
+    profile.trendDelta = trendDelta(profile.trend);
 
     profile.statements = statements(profile);
     return profile;
@@ -283,6 +291,108 @@
       n: last.length,
       wins: last.filter(v => v.result === 'win').length,
       losses: last.filter(v => v.result === 'loss').length
+    };
+  }
+
+  // ── Trend over time ────────────────────────────────────────────────────────
+  //
+  // Everything above answers "what are you like". This answers "what are you
+  // like NOW, compared with then" — which is the question a lifetime average
+  // is structurally incapable of answering. A player who has fixed their
+  // opening still carries every game they played before they fixed it.
+  //
+  // Buckets are fixed-size windows of GAMES, not calendar weeks: someone who
+  // plays 40 games one week and 2 the next would otherwise get two points that
+  // look equally trustworthy. `views` arrives oldest-first.
+  //
+  // Tiled from the MOST RECENT game backwards, so the newest window is always
+  // full and any short one is the oldest. Tiling forwards instead leaves the
+  // remainder at the recent end, where a 3-game trailing window would fail the
+  // sample guard and silence the trend for every corpus whose size is not a
+  // multiple of the window.
+  function trend (views, windowSize) {
+    const size = windowSize || TREND_WINDOW;
+
+    // Boundaries walked back from the newest game, then flipped to
+    // oldest-first for the caller.
+    const bounds = [];
+    for (let end = views.length; end > 0; end -= size) {
+      bounds.unshift([Math.max(0, end - size), end]);
+    }
+
+    const out = [];
+    for (const [start, end] of bounds) {
+      const slice = views.slice(start, end);
+      const b = bucket();
+      const t2 = [];
+      const expansion = [];
+      const workers = [];
+      let from = null;
+      let to = null;
+      for (const v of slice) {
+        feed(b, v.result);
+        if (v.t2 !== null) t2.push(v.t2);
+        if (v.expansion !== null) expansion.push(v.expansion);
+        if (v.workersAt5m !== null) workers.push(v.workersAt5m);
+        if (v.playedAt) {
+          from = from === null ? v.playedAt : Math.min(from, v.playedAt);
+          to = to === null ? v.playedAt : Math.max(to, v.playedAt);
+        }
+      }
+      out.push({
+        games: b.games,
+        wins: b.wins,
+        losses: b.losses,
+        decided: b.wins + b.losses,
+        winRate: winRate(b),
+        t2Median: median(t2),
+        t2N: t2.length,
+        expansionMedian: median(expansion),
+        expansionN: expansion.length,
+        workersAt5mMedian: median(workers),
+        workersAt5mN: workers.length,
+        from,
+        to
+      });
+    }
+    return out;
+  }
+
+  // The change claim: first window vs last. Deliberately NOT "this window vs
+  // the lifetime average" — the lifetime average CONTAINS the window, so any
+  // such comparison is partly a number against itself.
+  //
+  // Every field carries the n of BOTH ends. A trend claim needs a real sample
+  // at each end; enough games overall is not the same thing and is exactly how
+  // a two-game "improvement" gets announced.
+  function trendDelta (windows) {
+    if (!windows || windows.length < 2) return null;
+    // Skip a short leading window when a full one follows: the oldest bucket
+    // is the remainder, and comparing "your first 3 games" against your last
+    // 20 is a comparison of nothing against something.
+    const start = (windows.length >= 3 && windows[0].games < windows[1].games) ? 1 : 0;
+    const first = windows[start];
+    const last = windows[windows.length - 1];
+    if (first === last) return null;
+    const pair = (key, nKey) => ({
+      from: first[key],
+      to: last[key],
+      fromN: first[nKey],
+      toN: last[nKey],
+      delta: (first[key] === null || last[key] === null) ? null : last[key] - first[key]
+    });
+    return {
+      windows: windows.length,
+      winRate: {
+        from: first.winRate,
+        to: last.winRate,
+        fromN: first.decided,
+        toN: last.decided,
+        delta: last.winRate - first.winRate
+      },
+      t2: pair('t2Median', 't2N'),
+      expansion: pair('expansionMedian', 'expansionN'),
+      workersAt5m: pair('workersAt5mMedian', 'workersAt5mN')
     };
   }
 
@@ -347,6 +457,37 @@
       say('economy',
         `Workers at 5:00 — median ${w5.winMedian} in wins vs ${w5.lossMedian} in losses ` +
         `(n=${w5.winN}/${w5.lossN}).`);
+    }
+
+    // Change over time. Guarded on BOTH ends independently — a player with 300
+    // lifetime games can still have a 3-game window, and "your T2 is 40s later
+    // than it used to be (n=3)" is worse than saying nothing.
+    const d = p.trendDelta;
+    if (d) {
+      if (d.winRate.fromN >= MIN_TREND && d.winRate.toN >= MIN_TREND &&
+          Math.abs(d.winRate.delta) >= 10) {
+        say('trend',
+          `Win rate has gone ${d.winRate.delta > 0 ? 'up' : 'down'} — ` +
+          `${d.winRate.from}% over your first ${d.winRate.fromN} decided games, ` +
+          `${d.winRate.to}% over your last ${d.winRate.toN}.`);
+      }
+
+      const t2 = d.t2;
+      if (t2.delta !== null && t2.fromN >= MIN_TREND && t2.toN >= MIN_TREND &&
+          Math.abs(t2.delta) >= 15000) {
+        say('trend',
+          `Your T2 has got ${t2.delta < 0 ? 'faster' : 'slower'} — ` +
+          `${fmtMs(t2.from)} early on (n=${t2.fromN}), ` +
+          `${fmtMs(t2.to)} lately (n=${t2.toN}).`);
+      }
+
+      const w5 = d.workersAt5m;
+      if (w5.delta !== null && w5.fromN >= MIN_TREND && w5.toN >= MIN_TREND &&
+          Math.abs(w5.delta) >= 2) {
+        say('trend',
+          `Workers at 5:00 have gone ${w5.delta > 0 ? 'up' : 'down'} — ` +
+          `median ${w5.from} early on (n=${w5.fromN}), ${w5.to} lately (n=${w5.toN}).`);
+      }
     }
 
     const bigMaps = p.maps.filter(m => m.games >= MIN_MAP && (m.wins + m.losses) >= MIN_MAP);

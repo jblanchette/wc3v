@@ -132,15 +132,35 @@ const ensureWorker = () => {
 
 // Map data lives on local disk under the app data dir. Files are gzipped JSON,
 // exactly as the site serves them.
+//
+// The installer bundles the ladder pool, so the common case never leaves the
+// machine. Anything else — a custom map, an older season, a map added after
+// this build was cut — is fetched once from the CDN and then cached like any
+// other. Before that path existed, those games simply failed.
 const loadMapCache = async (mapDataName) => {
   const read = async (file) => {
     const bytes = await invoke('read_map_file', { map: mapDataName, file });
     return new Uint8Array(bytes);
   };
-  const [wpm, doo, unit] = await Promise.all([
-    read('wpm.json.gz').then(store.gunzipJson),
-    read('doo.json.gz').then(store.gunzipJson),
-    read('unit.json.gz').then(store.gunzipJson).catch(() => ({ units: [] }))
+  const readOrFetch = async (file) => {
+    try {
+      return await read(file);
+    } catch (e) {
+      // Only a cache MISS is worth a download. A path or permission failure
+      // would fail again identically after one.
+      if (!String(errText(e)).startsWith('not cached')) throw e;
+      log(`downloading map data for "${mapDataName}"…`);
+      await invoke('fetch_map', { map: mapDataName });
+      return read(file);
+    }
+  };
+  // wpm first and alone: it is the file every map has, so one round trip
+  // settles whether this map exists at all, and fetch_map has by then pulled
+  // all three — leaving the other two as plain cache reads.
+  const wpm = await readOrFetch('wpm.json.gz').then(store.gunzipJson);
+  const [doo, unit] = await Promise.all([
+    readOrFetch('doo.json.gz').then(store.gunzipJson),
+    readOrFetch('unit.json.gz').then(store.gunzipJson).catch(() => ({ units: [] }))
   ]);
   return { wpm, doo, unit };
 };
@@ -225,7 +245,10 @@ const gamesView = window.createGamesView({
   store,
   identityName: () => identity.name,
   onWatch: (summary, moment) => watchMoment(summary, moment),
-  onReparse: (summary) => reparse(summary)
+  onReparse: (summary) => reparse(summary),
+  // The first-run card's only call to action — parsing your history lives on
+  // the Settings screen, so send the user there rather than duplicating it.
+  onGoToSettings: () => showView('settings')
 });
 
 const profileView = window.createProfileView({
@@ -263,6 +286,13 @@ const backfill = window.createBackfill({
   }
 });
 
+// Whether the app speaks up when a game finishes. Declared here rather than
+// beside notifyGameFinished() because settingsView reads it while it is being
+// constructed, and a `const` below that point would still be in its temporal
+// dead zone.
+const NOTIFY_KEY = 'wc3v-notify-games';
+const notifyEnabled = () => localStorage.getItem(NOTIFY_KEY) !== '0';
+
 const settingsView = window.createSettingsView({
   invoke,
   log,
@@ -270,7 +300,9 @@ const settingsView = window.createSettingsView({
   backfill: () => backfill,
   roots: () => state.roots,
   addRoot: (root) => state.roots.push(root),
-  onScan: (path) => scan(path)
+  onScan: (path) => scan(path),
+  notifyEnabled,
+  setNotifyEnabled: (on) => localStorage.setItem(NOTIFY_KEY, on ? '1' : '0')
 });
 
 // ── Views ───────────────────────────────────────────────────────────────────
@@ -285,7 +317,9 @@ const showView = (name) => {
     section.hidden = !active;
   }
   for (const btn of document.querySelectorAll('.nav-item')) {
-    btn.classList.toggle('is-active', btn.dataset.view === name);
+    const active = btn.dataset.view === name;
+    btn.classList.toggle('is-active', active);
+    btn.setAttribute('aria-selected', String(active));
   }
   if (name === 'profile') profileView.show(el('profile-name').value);
   if (name === 'stream') streamView.build();
@@ -294,6 +328,18 @@ const showView = (name) => {
 for (const btn of document.querySelectorAll('.nav-item')) {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 }
+
+// ── Caption controls ────────────────────────────────────────────────────────
+//
+// The window is undecorated (tauri.conf.json), so the app bar is the title bar
+// and these are its buttons. Close calls the window's ordinary close, which
+// main.rs intercepts and turns into hide-to-tray — the behaviour stays defined
+// in one place rather than being reimplemented here.
+
+const appWindow = window.__TAURI__.window.getCurrentWindow();
+el('win-min').addEventListener('click', () => appWindow.minimize());
+el('win-max').addEventListener('click', () => appWindow.toggleMaximize());
+el('win-close').addEventListener('click', () => appWindow.close());
 
 const openActivity = (open) => {
   el('log').hidden = !open;
@@ -313,6 +359,34 @@ const renderSession = () => {
     s.streak && s.streak.count >= 2
       ? `${s.streak.kind === 'win' ? 'W' : 'L'}${s.streak.count} streak`
       : '';
+};
+
+// ── Post-game notification ──────────────────────────────────────────────────
+//
+// The whole premise is that you finish a game and do not have to go looking.
+// Most of the time the window is behind Warcraft, so the app has to be the one
+// that speaks. Only ever for a WATCHER-DETECTED game: firing this from the
+// backfill would mean one toast per replay, thousands of them.
+//
+// Wording comes from overlayState so the toast, the app and the broadcast can
+// never describe the same game differently.
+
+const notifyGameFinished = async (summary) => {
+  if (!notifyEnabled()) return;
+  try {
+    const n = window.__TAURI__.notification;
+    let granted = await n.isPermissionGranted();
+    if (!granted) granted = (await n.requestPermission()) === 'granted';
+    if (!granted) return;
+
+    const toast = overlayState.toastFor(summary);
+    if (!toast) return;
+    await n.sendNotification({ title: toast.title, body: toast.body });
+  } catch (e) {
+    // A notification that cannot be shown is not worth interrupting anything
+    // over — the game is already on screen behind it.
+    log(`could not show a notification: ${errText(e)}`, 'warn');
+  }
 };
 
 // ── Parsing a game ──────────────────────────────────────────────────────────
@@ -358,6 +432,7 @@ const run = async (path, opts = {}) => {
         renderSession();
         if (currentView === 'stream') streamView.renderPreview();
         identity.resolve();
+        notifyGameFinished(summary);
       }
       gamesView.render(store.corpus || [summary]);
       gamesView.select(key);
@@ -509,7 +584,10 @@ const boot = async () => {
   renderSession();
 
   // Background: load the stored games, then paint the feed, seed the overlay's
-  // last game and fill the name autocomplete.
+  // last game and fill the name autocomplete. Placeholders go up first —
+  // loadCorpus reads every stored summary over IPC one at a time, so at a few
+  // thousand games there is a real wait behind this.
+  gamesView.showLoading();
   store.loadCorpus().then((corpus) => {
     gamesView.render(corpus);
     if (!corpus.length) return;

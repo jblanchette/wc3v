@@ -51,6 +51,13 @@ const SHARED_JS = [
 // tokens as the web client rather than growing a second design system —
 // desktop/src-frontend/css/app.css consumes these and defines nothing itself.
 const TOKENS_CSS = path.join(ROOT, 'client', 'css', 'tokens.css');
+
+// The site's favicons, so the window and the tab it came from carry the same
+// mark. Deliberately NOT client/assets/wc3icons/ — that is 7.5 MB of jpgs that
+// LZMA cannot compress, and the app fetches those from the CDN instead.
+const BRAND_FILES = ['favicon-16x16.png', 'favicon-32x32.png']
+  .map(f => path.join(ROOT, 'client', f));
+
 const MAPS = path.join(ROOT, 'client', 'maps');
 
 // Only these are needed to PARSE a replay. terrain.jpg / heights.bin.gz /
@@ -191,10 +198,18 @@ const main = () => {
   fs.mkdirSync(cssVendorDir, { recursive: true });
   fs.copyFileSync(TOKENS_CSS, path.join(cssVendorDir, 'tokens.css'));
 
+  for (const src of BRAND_FILES) {
+    if (!fs.existsSync(src)) {
+      console.error(`Brand asset missing: ${path.relative(ROOT, src)}`);
+      process.exit(1);
+    }
+    fs.copyFileSync(src, path.join(DIST, path.basename(src)));
+  }
+
   const size = fs.statSync(path.join(vendorDir, 'wc3v-parser.bundle.js')).size;
   console.log(`dist:      ${path.relative(ROOT, DIST)}`);
   console.log(`parser:    ${(size / 1024).toFixed(0)} KB`);
-  console.log(`shared:    ${SHARED_JS.map(f => path.basename(f)).join(', ')} + tokens.css`);
+  console.log(`shared:    ${SHARED_JS.map(f => path.basename(f)).join(', ')} + tokens.css + favicons`);
 
   if (args['bundle-maps']) bundleMaps(args['bundle-maps']);
   if (args['seed-maps']) copyMapSet(args['seed-maps'], appMapCacheDir(), 'map cache');

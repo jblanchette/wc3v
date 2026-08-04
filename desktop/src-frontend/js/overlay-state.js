@@ -148,6 +148,52 @@
       };
     };
 
+    // The one-sentence version of a game, for the desktop notification.
+    //
+    // It lives here, next to the overlay's phrasing, for the same reason the
+    // moments do: the toast, the app and the broadcast must never word the
+    // same game differently. Returns null when there is nothing worth
+    // interrupting someone for — an unreadable seat says nothing useful.
+    const toastFor = (summary) => {
+      const v = viewFor(summary);
+      if (!v) return null;
+
+      const opp = v.opponent && v.opponent.name;
+      const title = v.result === 'win' ? (opp ? `Victory vs ${opp}` : 'Victory')
+        : v.result === 'loss' ? (opp ? `Defeat vs ${opp}` : 'Defeat')
+          : 'Game finished';
+
+      const map = window.SummaryExtract.cleanMapName(summary.mapRaw || v.map) || v.map;
+      const line = [map, PA.fmtMs(v.durationMs)].filter(Boolean).join(' · ');
+
+      const h2h = h2hFor(summary, v);
+      const record = h2h ? `all time ${h2h.wins}–${h2h.losses}` : '';
+
+      // The single biggest beat, phrased from the user's seat. Taken straight
+      // off the ranked list rather than from momentsFor(), which re-sorts its
+      // top five into TIME order for the overlay — reading [0] off that would
+      // give the earliest of the five, not the most important.
+      const ranked = ((summary && summary.moments) || [])
+        .slice()
+        .sort((a, b) => b.importance - a.importance);
+      let beat = null;
+      if (ranked.length && window.MomentsExtract) {
+        const nameFor = (slot) =>
+          (summary.players[slot] && summary.players[slot].name) || 'They';
+        const seat = v.mine ? v.slot : null;
+        beat = {
+          time: ranked[0].tf,
+          text: window.MomentsExtract.phrase(ranked[0], seat, nameFor)
+        };
+      }
+
+      return {
+        title,
+        body: [line, record].filter(Boolean).join(' · ') +
+          (beat ? `\n${beat.time} ${beat.text}` : '')
+      };
+    };
+
     // Human players in a summary — the candidates for "which one is you".
     const candidatesIn = (summary) => Object.keys(summary && summary.players || {})
       .map(k => summary.players[k].name)
@@ -223,6 +269,7 @@
     return {
       publish,
       sessionSummary,
+      toastFor,
       // What the OBS source is showing right now, for the in-window preview.
       previewState: () => (st.demo ? DEMO : buildPayload()),
       async publishDemo () {

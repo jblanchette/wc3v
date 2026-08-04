@@ -56,6 +56,9 @@ debug/captures/
 # tools/build-desktop-client.js from desktop/src-frontend + the committed
 # parser bundle; src-tauri/target is the Rust build dir.
 desktop/dist/
+# tools/desktop-preview.js output. Deliberately outside dist so it can never be
+# bundled into the installer by frontendDist.
+desktop/preview/
 desktop/src-tauri/target/
 desktop/src-tauri/gen/schemas/
 # Map parse-data staged into the installer by --bundle-maps. Generated from

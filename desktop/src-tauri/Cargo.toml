@@ -1,6 +1,6 @@
 [package]
 name = "wc3v-desktop"
-version = "0.1.0"
+version = "0.3.0"
 description = "WC3V — local replay auto-parse and overlay"
 authors = ["Jeff Blanchette"]
 license = "GPL-3.0"
@@ -17,6 +17,10 @@ tauri-plugin-opener = "2"
 # Run-on-startup. Writes a registry Run key on Windows / a .desktop entry on
 # Linux — the app never installs a service or elevates.
 tauri-plugin-autostart = "2"
+
+# Post-game toast. Fires ONLY for a game the watcher detected — a backfill
+# would otherwise produce one notification per replay, thousands of them.
+tauri-plugin-notification = "2"
 
 # Signed delta-free updates pulled from a static manifest (see RELEASING.md).
 # The ONLY component that makes an outbound request, and only when the user
@@ -40,6 +44,17 @@ dirs = "5"
 # xxh3 runs at several GB/s, and it is combined with file size so a collision
 # would have to match both.
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# Fetching map parse data for a map the installer did not bundle. Already in
+# the tree via tauri-plugin-updater, so this costs nothing new.
+#
+# The `gzip` feature is deliberately NOT enabled, and must never be: the CDN
+# stores `.json.gz` WITH `Content-Encoding: gzip` (tools/deploy-assets.js), so
+# a client that transparently decompresses would hand back plain JSON, which
+# the map cache would then store under a `.gz` name and the parser would fail
+# to inflate. The raw bytes off the wire ARE the file we want on disk.
+# (Same reasoning rules out `deflate`, `brotli` and `zstd`.)
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
 
 [features]
 # Tauri's default CSP/devtools split. Nothing custom yet.

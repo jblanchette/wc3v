@@ -24,6 +24,8 @@ ever leaks into their experience, that is the bug.
 # Rust, MSVC toolchain on Windows: https://rustup.rs
 cargo install tauri-cli --version "^2.0" --locked
 npm install
+# Publishing only: rclone with an `r2:` remote (same one deploy-assets.js uses)
+rclone config
 ```
 
 On Windows, `cargo` lands in `%USERPROFILE%\.cargo\bin`. If a fresh terminal
@@ -91,31 +93,35 @@ than the 50 MB staged on disk).
 
 ### 3. Publish
 
-Upload both files somewhere stable, then write the manifest the app polls —
-the URL in `tauri.conf.json` under `plugins.updater.endpoints`, currently
-`https://wc3v.net/desktop/latest.json`:
-
-```json
-{
-  "version": "0.2.0",
-  "notes": "What changed, in one or two plain sentences.",
-  "pub_date": "2026-08-03T00:00:00Z",
-  "platforms": {
-    "windows-x86_64": {
-      "signature": "<paste the ENTIRE contents of the .sig file>",
-      "url": "https://wc3v.net/desktop/WC3V_0.2.0_x64-setup.exe"
-    }
-  }
-}
+```sh
+node tools/deploy-desktop.js --notes="What changed, in one or two plain sentences."
 ```
 
-`signature` is the file's contents, not its path. `url` must be reachable
-without auth.
+That is the whole step. The script reads the version from `tauri.conf.json`,
+refuses to publish if the `.sig` is missing (an unsigned build is not servable
+as an update, and nothing else in the pipeline checks), refuses a version that
+is not newer than what is already published, writes `latest.json` with the
+signature inlined, uploads the installer *before* the manifest — so clients are
+never pointed at a URL that 404s — and then fetches both back to confirm they
+are live.
+
+Add `--dry-run` to see exactly what it would upload.
+
+Everything lands in the Cloudflare R2 bucket that already serves maps, replays
+and assets (`r2:wc3v-cdn/desktop/`, public at `https://cdn.wc3v.com/desktop/`),
+which is the URL in `tauri.conf.json` under `plugins.updater.endpoints`. The
+installer is deliberately **not** committed — 15 MB of binary does not belong in
+an open-source git history, and this script is the only path from a local build
+to users.
+
+Requires `rclone` with an `r2:` remote configured, the same one
+`tools/deploy-assets.js` uses.
 
 ### 4. Verify before announcing
 
-Install the *previous* version, launch it, and confirm it offers the update
-and applies it. An update path is only real once it has been walked.
+The script proves the manifest and installer are reachable. It cannot prove the
+upgrade works. Install the *previous* version, launch it, and confirm it offers
+the update and applies it. An update path is only real once it has been walked.
 
 ---
 

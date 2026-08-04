@@ -25,18 +25,23 @@
   touches are its own origin and the window it opens.
 -->
 <style>
-  /* Same carved register as the app: earthy, muted, no glow. */
+  /* The site's navy chrome, NOT the app's warm body — deliberately.
+     This page is one of three the user sees back to back: this, then
+     wc3v.com/handoff, then the viewer. The other two are navy, and a warm
+     carved card in the middle of that run reads as a different product.
+     Values are copied rather than imported because the page has to stay
+     self-contained (it is served from the loopback binary). They mirror
+     client/css/tokens.css. */
   :root {
-    --well: #0b0805;
-    --panel: #17150f;
-    --panel-2: #1e1b16;
-    --line: #2f2819;
-    --edge: #453a25;
-    --ink: #E8E0D2;
-    --ink-dim: #9A8F7D;
-    --ink-faint: #6E6555;
-    --gold: #E0A800;
-    --bad: #A65340;
+    --well: #12131f;
+    --panel: #1a1d2e;
+    --panel-2: #212538;
+    --edge: rgba(255,255,255,0.14);
+    --ink: #e8eaf0;
+    --ink-dim: #9ca3b8;
+    --ink-faint: #6b7290;
+    --accent: #5B8DEF;
+    --bad: #E2725B;
   }
   * { box-sizing: border-box; margin: 0; }
   body {
@@ -58,30 +63,32 @@
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 10px 40px rgba(0,0,0,0.45);
     text-align: center;
   }
+  /* The canonical lockup, same as the app bar and client/handoff.html. */
   .brand {
-    font-size: 1.05rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    color: var(--gold);
-    text-shadow: 0 1px 0 #000;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    color: var(--ink);
     margin-bottom: 1.25rem;
   }
+  .brand > span { color: var(--accent); }
   h1 { font-size: 1.4rem; margin-bottom: 0.6rem; }
   p { color: var(--ink-dim); margin-bottom: 1.25rem; overflow-wrap: anywhere; }
   .at { color: var(--ink); font-weight: 600; }
   button {
     min-height: 44px;
     padding: 0 1.6rem;
-    background: linear-gradient(180deg, #7a5a24, #5c4319);
-    border: 1px solid #8a6a2c;
+    background: var(--accent);
+    border: 1px solid var(--accent);
     border-radius: 6px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.055);
-    color: #f4ead5;
+    color: #0d1220;
     font: inherit;
     font-weight: 600;
     cursor: pointer;
   }
-  button:hover { background: linear-gradient(180deg, #8a6729, #6a4d1d); }
+  button:hover { background: #7BA5F3; border-color: #7BA5F3; }
+  button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   button[disabled] { opacity: 0.5; cursor: default; }
   .note { color: var(--ink-faint); font-size: 0.85rem; margin: 1.25rem 0 0; }
   .err { color: var(--bad); }
@@ -90,7 +97,7 @@
 </head>
 <body>
   <div class="card">
-    <div class="brand">WC3V</div>
+    <div class="brand">WC<span>3</span>V</div>
     <h1 id="head">Opening the viewer…</h1>
     <p id="lead">Handing this replay to wc3v.com. It never leaves your machine
       by any other route — there is no upload and no account.</p>

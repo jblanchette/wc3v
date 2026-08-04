@@ -69,6 +69,31 @@
     return n;
   };
 
+  // The site's own unit/building icons, so a build order reads the same in
+  // both products. They come from the CDN rather than the installer: the full
+  // set is 7.5 MB of jpgs that LZMA cannot compress, and shipping a subset
+  // means guessing which ids a stranger's replay will contain.
+  //
+  // The id is whitelisted the same way client/js/BuildOrderRenderer.js does it
+  // — it comes out of a replay a stranger made, and it is being pasted into a
+  // URL. Anything else renders as no icon at all.
+  const ICON_BASE = 'https://cdn.wc3v.com/assets/wc3icons/';
+  const SAFE_ICON_ID = /^[A-Za-z0-9_-]+$/;
+
+  const buildIcon = (itemId) => {
+    const id = String(itemId || '');
+    if (!SAFE_ICON_ID.test(id)) return node('span', 'build-icon is-blank');
+    const img = document.createElement('img');
+    img.className = 'build-icon';
+    img.loading = 'lazy';
+    img.alt = '';
+    img.src = ICON_BASE + id + '.jpg';
+    // Offline, or an id the site has no art for. An empty box in the row is
+    // better than a broken-image glyph.
+    img.addEventListener('error', () => { img.classList.add('is-blank'); img.removeAttribute('src'); });
+    return img;
+  };
+
   const raceMark = (race) => {
     const n = node('span', 'race-mark', RACE_SHORT[race] || '??');
     if (race) n.dataset.race = race;
@@ -77,7 +102,12 @@
   };
 
   window.createGamesView = (deps) => {
-    // deps: log, store, identityName(), onWatch(summary, moment), onReparse(summary)
+    // deps: log, store, identityName(), onWatch(summary, moment),
+    //       onReparse(summary), onGoToSettings()
+    //
+    // allGames is the whole stored history; games is what the filter bar has
+    // left of it and is the only thing the feed ever renders.
+    let allGames = [];
     let games = [];
     let activeKey = null;
 
@@ -115,28 +145,18 @@
 
     // ── Feed ────────────────────────────────────────────────────────────────
 
-    const render = (corpus) => {
-      games = corpus || [];
+    // A fully backfilled corpus is thousands of games, and each row is ~10
+    // nodes. Rows are appended a page at a time as the feed is scrolled, so
+    // the first paint costs the same whether the history is 40 games or 4,000.
+    const PAGE = 120;
+    let shown = 0;
+    let lastDay = null;
+
+    const appendPage = () => {
       const feed = el('feed');
-      feed.innerHTML = '';
-
-      el('feed-count').textContent = games.length
-        ? `${games.length.toLocaleString()} parsed`
-        : '';
-
-      if (!games.length) {
-        const empty = node('div', 'empty');
-        empty.appendChild(node('p', null,
-          'No games parsed yet. Finish a match and it appears here on its own.'));
-        empty.appendChild(node('p', null,
-          'To bring in the games already on disk, open Settings and parse your history.'));
-        feed.appendChild(empty);
-        renderDetail(null);
-        return;
-      }
-
-      let lastDay = null;
-      for (const summary of games) {
+      const end = Math.min(shown + PAGE, games.length);
+      for (; shown < end; shown++) {
+        const summary = games[shown];
         const label = dayLabel(summary.playedAt);
         if (label !== lastDay) {
           lastDay = label;
@@ -144,11 +164,119 @@
         }
         feed.appendChild(feedRow(summary));
       }
+    };
+
+    const render = (corpus) => {
+      games = corpus || [];
+      const feed = el('feed');
+      feed.innerHTML = '';
+      feed.scrollTop = 0;
+      shown = 0;
+      lastDay = null;
+
+      if (!allGames.length) {
+        // Nothing parsed yet is the normal state of a fresh install, not a
+        // failure — so it gets the detail column (where the eye already is)
+        // and a way forward, rather than a grey line in the rail.
+        el('feed-count').textContent = '';
+        feed.appendChild(node('div', 'empty',
+          'Nothing here yet. Finish a match and it appears on its own.'));
+        renderFirstRun();
+        return;
+      }
+
+      // Games exist, but none match the filter — a different situation from an
+      // empty history, and it must not read like one.
+      el('feed-count').textContent = games.length === allGames.length
+        ? `${games.length.toLocaleString()} parsed`
+        : `${games.length.toLocaleString()} of ${allGames.length.toLocaleString()}`;
+
+      if (!games.length) {
+        feed.appendChild(node('div', 'empty',
+          'No games match. Try a different name, or clear the filters.'));
+        return;
+      }
+
+      appendPage();
 
       // Keep the current selection if it is still in the list; otherwise open
       // the newest game, which is what somebody who just finished one wants.
       const keep = activeKey && games.some(g => g.key === activeKey);
       select(keep ? activeKey : games[0].key);
+    };
+
+    // ── Filtering ───────────────────────────────────────────────────────────
+
+    const filters = { text: '', result: 'any', race: 'any' };
+
+    const applyFilters = () => {
+      render(deps.store.filterCorpus(allGames, {
+        ...filters,
+        identityName: deps.identityName()
+      }));
+    };
+
+    // Held so a fast typist does not re-filter thousands of games per
+    // keystroke; short enough that the list still feels live.
+    let filterTimer = null;
+    const scheduleFilter = () => {
+      clearTimeout(filterTimer);
+      filterTimer = setTimeout(applyFilters, 140);
+    };
+
+    const wireFilters = () => {
+      el('feed-search').addEventListener('input', (e) => {
+        filters.text = e.target.value;
+        scheduleFilter();
+      });
+      for (const group of ['feed-result', 'feed-race']) {
+        el(group).addEventListener('click', (e) => {
+          const btn = e.target.closest('.seg-btn');
+          if (!btn) return;
+          for (const b of el(group).querySelectorAll('.seg-btn')) {
+            b.classList.toggle('is-on', b === btn);
+          }
+          filters[group === 'feed-result' ? 'result' : 'race'] =
+            btn.dataset.result || btn.dataset.race;
+          applyFilters();
+        });
+      }
+      el('feed').addEventListener('scroll', (e) => {
+        const f = e.target;
+        if (shown < games.length && f.scrollTop + f.clientHeight > f.scrollHeight - 400) {
+          appendPage();
+        }
+      });
+    };
+
+    // Placeholder rows while the stored corpus loads. The feed used to ship
+    // empty and stay empty until every summary had come back over IPC, which
+    // at a few thousand games is a blank window that reads as broken.
+    const showLoading = () => {
+      const feed = el('feed');
+      feed.innerHTML = '';
+      const skel = node('div', 'skeleton');
+      for (let i = 0; i < 6; i++) skel.appendChild(node('div', 'skeleton-row'));
+      feed.appendChild(skel);
+    };
+
+    const renderFirstRun = () => {
+      activeKey = null;
+      const detail = el('detail');
+      detail.innerHTML = '';
+      const box = node('div', 'first-run');
+      box.appendChild(node('h2', null, 'No games yet'));
+      box.appendChild(node('p', null,
+        'WC3V is watching your replay folders. Finish a match and it shows up ' +
+        'here on its own — the verdict, how the game went, and both build orders.'));
+      box.appendChild(node('p', null,
+        'Every game you have already played is on disk too. Parsing that history ' +
+        'is what makes the profile, the coaching and head-to-head records real.'));
+      const go = node('button', 'btn btn-primary', 'Parse my history');
+      go.type = 'button';
+      go.addEventListener('click', () => deps.onGoToSettings && deps.onGoToSettings());
+      box.appendChild(go);
+      detail.appendChild(box);
     };
 
     const feedRow = (summary) => {
@@ -451,6 +579,7 @@
           const li = node('li');
           li.dataset.type = b.type || '';
           li.appendChild(node('span', 't', b.gameTimeFormatted || ''));
+          li.appendChild(buildIcon(b.itemId));
           li.appendChild(node('span', 'n', b.name || ''));
           list.appendChild(li);
         }
@@ -462,14 +591,22 @@
       return panel;
     };
 
+    wireFilters();
+
     return {
-      render,
+      // The corpus changed. Everything else goes through the filter.
+      render (corpus) {
+        allGames = corpus || [];
+        applyFilters();
+      },
       select,
+      showLoading,
       // A live game just landed: pull it to the top and open it, because the
       // person who just alt-tabbed wants exactly that game.
       showLatest (key) {
         activeKey = key;
-        render(deps.store.corpus || games);
+        allGames = deps.store.corpus || allGames;
+        applyFilters();
       },
       get activeKey () { return activeKey; }
     };

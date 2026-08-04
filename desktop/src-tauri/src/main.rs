@@ -240,6 +240,93 @@ fn read_map_file(
         .map_err(|e| e.to_string())
 }
 
+/// The three files a parse needs for one map. Must stay in step with
+/// PARSE_FILES in tools/build-desktop-client.js, which stages the same set
+/// into the installer.
+const MAP_PARSE_FILES: [&str; 3] = ["wpm.json.gz", "doo.json.gz", "unit.json.gz"];
+
+/// Where map parse data is published. The web client reaches the same objects
+/// through a redirect in render.yaml (`/maps/*` → cdn.wc3v.com); the desktop
+/// app has no origin of its own, so it addresses the CDN directly.
+const MAP_CDN: &str = "https://cdn.wc3v.com/maps";
+
+/// Fetch one map's parse data into the local cache.
+///
+/// The installer bundles the ladder pool, so this is the path for everything
+/// else — custom maps, older ladder seasons, a map added after the installed
+/// build was cut. Before it existed, those games failed with a named missing
+/// map and the only fix was a developer running a tool.
+///
+/// Existing files are never overwritten: a bundled or already-downloaded map
+/// is authoritative, and re-fetching one would be pure waste.
+#[tauri::command]
+async fn fetch_map(map: String, app: tauri::AppHandle) -> Result<u32, String> {
+    // Same conservative charset as read_map_file — this name comes out of a
+    // replay a stranger made, and it is about to become a path AND a URL.
+    if map.is_empty()
+        || map.len() >= 128
+        || map.contains("..")
+        || !map
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.' | ' '))
+    {
+        return Err("invalid map name".into());
+    }
+
+    let dir = map_cache_dir(&app).join(&map);
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let mut written = 0u32;
+    for file in MAP_PARSE_FILES {
+        let dest = dir.join(file);
+        if dest.exists() {
+            continue;
+        }
+        let url = format!("{MAP_CDN}/{}/{}", urlencoding(&map), file);
+        let res = client
+            .get(&url)
+            .send()
+            .await
+            .map_err(|e| format!("could not reach the map server: {e}"))?;
+        if res.status() == reqwest::StatusCode::NOT_FOUND {
+            return Err(format!("no map data published for \"{map}\""));
+        }
+        if !res.status().is_success() {
+            return Err(format!("map server returned {} for {file}", res.status()));
+        }
+        // NOT decompressed — see the reqwest note in Cargo.toml. These bytes
+        // are the .gz file itself.
+        let bytes = res.bytes().await.map_err(|e| e.to_string())?;
+        if bytes.is_empty() {
+            return Err(format!("map server returned an empty {file}"));
+        }
+
+        // Temp + rename, so a half-written file can never be read as cached.
+        let dir2 = dir.clone();
+        let dest2 = dest.clone();
+        tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
+            std::fs::create_dir_all(&dir2).map_err(|e| e.to_string())?;
+            let tmp = dest2.with_extension("part");
+            std::fs::write(&tmp, &bytes).map_err(|e| e.to_string())?;
+            std::fs::rename(&tmp, &dest2).map_err(|e| e.to_string())
+        })
+        .await
+        .map_err(|e| e.to_string())??;
+        written += 1;
+    }
+    Ok(written)
+}
+
+/// Percent-encode the few characters a map folder is allowed to contain that
+/// are not safe in a path segment. The charset check above has already ruled
+/// out everything else.
+fn urlencoding(s: &str) -> String {
+    s.replace(' ', "%20")
+}
+
 /// Canonical identity of a replay file: `<size>-<xxh3>`, the same shape the
 /// scan produces once it has actually hashed a file. The scan's lazy
 /// `<size>-u` keys are NOT stable — they change the first time another file
@@ -661,6 +748,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -707,6 +795,7 @@ fn main() {
             scan_replays,
             read_replay,
             read_map_file,
+            fetch_map,
             replay_key,
             save_parse,
             list_parses,

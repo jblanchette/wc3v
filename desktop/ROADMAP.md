@@ -21,6 +21,13 @@ Still unmet by reality: no OBS has rendered the overlay (transparency in
 CEF specifically), no upgrade has been taken, and the backfill has never run
 to completion so the real parse rate is still unmeasured.
 
+**An update can now actually be published.** 0.2.0 is live at
+`https://cdn.wc3v.com/desktop/latest.json` and the endpoint no longer points at
+`wc3v.net`, which — worse than this document previously recorded — does not
+resolve at all, so every update check was a DNS failure. 0.3.0 is the first
+build that can be taken as an upgrade by an install in the field, which is what
+finally makes checklist item 3 walkable.
+
 **The UI is no longer the spike.** §5 is built: the window is a feed of your
 games with a detail card per game (verdict, timings, key moments, head-to-head,
 both build orders), and folders/backfill/log have moved to Settings and a
@@ -54,6 +61,12 @@ modules, CSS and renderers unmodified.
 | **Browsers block wc3v.com → 127.0.0.1** | measured against the live loopback server from an `https://wc3v.com` tab: `fetch` hangs pending and never settles, an iframe ends `net::ERR_ABORTED`. This is why the handoff starts on the loopback origin (§10) |
 | Overlay stays self-contained after the split | `overlay::tests::overlay_page_has_its_css_and_renderer_inlined` — placeholders replaced, no external `<script src>` or `<link>` |
 | Handoff routes are safe | `overlay::tests` — token required, bytes served verbatim, unknown ids 404, pending replays capped |
+| The site half of the handoff is deployed | `https://wc3v.com/handoff` returns 200 and serves the launcher page (shipped in `1f9c308`) |
+| Map data is publicly reachable | `https://cdn.wc3v.com/maps/EchoIsles/wpm.json.gz` returns 200 — which is what unblocked §7 |
+| Feed filters | driven in the preview against 12 real games: text → 2/12, Orc → 9/12, Wins → 4/12 with every tile reading `win` |
+| Trend guards refuse thin windows | `tools/test-profile-aggregate.js` — a 22-game corpus (ample overall, 2 games at one end) produces no trend statement |
+| Toast wording | `overlayState.toastFor` run over real stored summaries: "Victory vs orange#14823 / Springtime · 17:20 · all time 2–0 / 16:07 You killed 2 heroes" |
+| An update can actually be published | `tools/deploy-desktop.js` uploaded 0.2.0 to R2 and fetched the manifest and installer back |
 
 ### What has NEVER been tested
 
@@ -69,8 +82,16 @@ modules, CSS and renderers unmodified.
   raw sockets, but no OBS Browser Source has ever rendered the page.
 - **The rebuilt UI inside the real app window.** Every screen has been driven in
   a browser against real replay summaries, but not once through Tauri itself.
+- **The undecorated window.** `decorations: false` is the one part of the brand
+  pass a browser preview cannot check at all. What needs looking at is Aero
+  Snap, the resize border and drag from the app bar. If any of those are broken,
+  the fallback is to put `decorations` back and drop the app's own bar instead —
+  decide by testing, not by argument.
+- **The post-game toast against a real game.** The wording was checked against
+  real stored summaries; no Windows notification has actually been raised.
 - **The viewer handoff end to end** (§10). Both halves exist and each was
   checked alone; the joined-up path needs the site deployed and the app rebuilt.
+  The site half is now live and returns 200 at `https://wc3v.com/handoff`.
 
 ---
 
@@ -84,8 +105,10 @@ modules, CSS and renderers unmodified.
    live-update path are now verified in real Chrome (connected tab updated to
    "Victory" with no refresh, via EventSource auto-reconnect), but OBS runs
    its own CEF build and *transparency* specifically is still unverified.
-3. **Take one real upgrade** (§6). Install N-1, publish N, confirm it lands.
-   Needs the endpoint to exist first.
+3. **Take one real upgrade** (§6). The endpoint now exists and 0.2.0 is
+   published, so this is finally doable: install 0.2.0, publish 0.3.0 with
+   `node tools/deploy-desktop.js --notes="…"`, and confirm the installed app
+   offers and applies it.
 4. **Run the backfill once** (§2) for the real end-to-end rate — and it also
    settles profile identity permanently as a side effect.
 
@@ -233,6 +256,32 @@ Built on SummaryExtract summaries, as required — no new extractor.
   game was PLAYED; `savedAt` is when the backfill reached it) and
   `patchVersion`. Results exist only for 1v1 (`winner` is 1v1-only);
   team games count toward games/maps but carry no result.
+- [x] **Trend over time.** Everything above answers "what are you like"; this
+      answers "what are you like NOW", which a lifetime average is
+      structurally incapable of doing — a habit fixed months ago still carries
+      every game played before it was fixed. `trend()` buckets into windows of
+      20 GAMES (not calendar weeks: 40 games one week and 2 the next would
+      otherwise plot as two equally trustworthy points), and `trendDelta()`
+      compares first against last.
+      - Tiled from the MOST RECENT game backwards, so the newest window is
+        always full. Tiling forwards leaves the remainder at the recent end,
+        where a 3-game window fails every sample guard — which would silence
+        the trend for any corpus whose size is not a multiple of 20.
+      - The guard is per-END, not overall: a player with 300 lifetime games
+        can still have a 3-game window, and "your T2 is 40s faster (n=3)" is
+        worse than saying nothing. `tools/test-profile-aggregate.js` asserts
+        exactly this with a 22-game corpus — ample overall, thin at one end.
+      - Rendered as three separate small plots, never one with two y-axes: win
+        rate is a percentage and T2 is a duration, and sharing an axis invents
+        a relationship out of the scaling. Below three points there is no plot
+        at all, only a then/now readout carrying the n at each end — two points
+        joined by a line look like a trend while being two averages with a
+        slope drawn between them.
+- [x] Feed search and filters (text over player names and the map as SHOWN,
+      plus result and race), and the feed now appends a page at a time as it
+      is scrolled. Filtering lives in `store.filterCorpus` — "which games" is
+      a question about the store, and the feed renders what it is handed.
+      "No games match" is a distinct state from "no games yet".
 - [ ] Corpus load reads every summary through IPC one at a time (raw-bytes
       responses now, so it is bytes-cheap, but still ~3k invokes). Fine at
       current scale; revisit if profile open ever feels slow.
@@ -249,6 +298,21 @@ Built on SummaryExtract summaries, as required — no new extractor.
       sockets (`overlay::tests`), including an SSE-registration race the
       test caught: greeting and registration now happen under the clients
       lock so a concurrent publish cannot be missed.
+- [x] **Post-game notification.** The window is behind Warcraft while you
+      play, so the app has to be the one that speaks: a toast with the result,
+      the map, the all-time record against that opponent and the single
+      biggest moment. Fires ONLY for a watcher-detected game — wiring it to
+      the parse path generally would mean one toast per replay in a backfill,
+      thousands of them. Off via a Settings toggle; the OS permission is asked
+      for at the first real notification, not on the settings screen where a
+      prompt has no context to justify it.
+      - Wording comes from `overlay-state.js` (`toastFor`), where the seat is
+        already known, so the toast, the app and the broadcast can never
+        describe the same game differently.
+      - Its "biggest moment" is read off the importance-ranked list directly,
+        NOT off `momentsFor()` — that re-sorts its top five into TIME order
+        for the overlay, so `[0]` there is the earliest of the five rather
+        than the most important.
 - [x] "Copy OBS Browser Source URL" button (clipboard only — the URL carries
       the token and this window may be on camera; it is never rendered or
       logged). Suggested source size logged with it.
@@ -302,10 +366,42 @@ a log) instead of on the thing anyone installed it for.
       Settings screen owns folders, history parsing, startup and updates.
       The log is a collapsed Activity drawer.
 - [x] Shares `client/css/tokens.css` with the web client (copied in by
-      `tools/build-desktop-client.js`) — one design system, not two. The
-      desktop sits in the WARM half of it: `--vc-*` rails and `--dom-*`
-      carved accents, never the site's navy chrome. Only the warm ink ramp is
-      new, because tokens.css has no text colours tuned for brown.
+      `tools/build-desktop-client.js`) — one design system, not two. Only the
+      warm ink ramp is new, because tokens.css has no text colours tuned for
+      brown.
+- [x] **Brand pass (Aug 2026): navy chrome over warm content.** The app was
+      warm end to end and carried three unrelated brand expressions — an
+      indigo-V OS icon, a gold `WC3V` text bar, and no mark at all on the
+      overlay. It now reproduces the sandwich wc3v.com already is: the site's
+      navy chrome wrapping a warm carved body.
+      - The app bar is navy (`--bg`/`--border`/`--text`) and carries the
+        canonical wordmark — `WC<span>3</span>V`, weight 900, the "3" in
+        `--accent` — identical to `.site-wordmark` in `client/css/main.css`.
+        **The rule is written at the top of `app.css`: navy stops at `main`.**
+      - **The window is undecorated** and the app bar IS the title bar. With
+        the native one left on, Windows drew a second header directly above
+        it. Caption controls call the window's ordinary close, which
+        `main.rs` already turns into hide-to-tray, so that behaviour is still
+        defined in exactly one place.
+      - Build orders carry the site's real icon art, fetched from
+        `cdn.wc3v.com/assets/wc3icons/` (CSP widened to that one host, images
+        only). **The site's `.bo-*` instrument itself cannot be ported** — it
+        renders from the full event stream, and the desktop stores only
+        summaries. The summaries do carry `itemId`, which is what made the
+        icons possible.
+      - Race chips were tinted with tokens.css's saturated in-game
+        `--race-H/O/E/U`, in a stylesheet whose own header forbids saturated
+        colour. Same hues, pulled into the `--dom-*` family.
+      - Golds reconciled: `--accent`/`--gold` are navy-chrome only, every warm
+        surface uses `--dom-gold`.
+      - Checkboxes were the platform's near-white square on a carved panel —
+        `accent-color` only tints the CHECKED fill. Now drawn.
+      - Added what did not exist: `:focus-visible` rings (the one UA ring the
+        app had was being removed), `prefers-reduced-motion`, feed skeletons,
+        and a real first-run card instead of a grey line in the rail.
+      - The overlay gained the same wordmark, quietly, and its `slate` theme
+        now overrides `--win`/`--loss` — it was leaving carved moss and rust
+        on a cool grey panel, the one combination that theme exists to avoid.
 - [x] Art direction held: earthy, carved, muted. Depth comes from a hard dark
       outline, a 1px struck highlight and inset shadow. No glow anywhere.
 - [x] UI rules held: nothing below 0.8rem, no icon below 36px, no single-edge
@@ -388,7 +484,7 @@ update process is documented in `desktop/RELEASING.md`.
       end to end (install N-1, take the update). Currently
       `https://wc3v.net/desktop/latest.json`, which does not exist yet.
 
-### 7. Map data
+### 7. Map data — DONE (lazy download)
 Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
 ~1.7 MB median each (an earlier figure of 137 MB in the plan was wrong — bad
 `xargs`/`du` measurement).
@@ -400,12 +496,26 @@ Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
       `mapDataName` / `rawMapName` and is reported as a named missing map,
       not a mystery failure. The backfill records it as a failure marker and
       "Retry failed" re-runs those after more maps arrive.
-- [ ] **Blocked on a hosting decision.** Lazy per-map download needs a public
-      URL for map parse data; today it is only served from the web client's
-      own origin (`/maps/<name>/…` via the Vercel rewrite), and the desktop
-      app makes no outbound requests at all. Decide where map data lives
-      before building the fetch path.
-- [ ] "Download the current ladder pool" button to pre-warm (same blocker).
+- [x] **The "hosting decision" this was blocked on had already been made.**
+      `https://cdn.wc3v.com/maps/<Map>/wpm.json.gz` returns 200 today — the
+      R2 bucket `tools/deploy-assets.js` publishes to, which `render.yaml`
+      already redirects `/maps/*` at. Nothing needed deciding; the block was
+      stale. `fetch_map` (Rust) pulls the three parse files on a cache miss,
+      `loadMapCache()` retries once, and the bundled ladder pool still means
+      the common case never leaves the machine.
+      - **The one trap, and it decides the HTTP client:** those objects are
+        stored WITH `Content-Encoding: gzip`, so a client that transparently
+        decompresses hands back plain JSON that then gets written under a
+        `.gz` name and fails to inflate at parse time. `reqwest` is pulled in
+        with **no** `gzip`/`deflate`/`brotli`/`zstd` feature for exactly this
+        reason — the bytes off the wire ARE the file. It was already in the
+        tree via tauri-plugin-updater, so this cost no new dependency.
+      - This is the first outbound request the app makes for game data, so
+        the Settings copy no longer claims nothing is ever sent anywhere. It
+        now says what is true: replays never leave the machine; map data and
+        build-order icons come from the CDN.
+- [ ] "Download the current ladder pool" button to pre-warm. No longer
+      blocked — just unbuilt.
 
 ### 8. Linux / SteamOS
 - [ ] Build and run there at all.
@@ -415,11 +525,27 @@ Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
 - [ ] AppImage + Flatpak packaging.
 
 ### 9. Housekeeping
-- [ ] **The updater points at a domain the project does not use.**
-      `tauri.conf.json` and `RELEASING.md` say `wc3v.net`; the site and CDN are
-      `wc3v.com` (`render.yaml`). An update endpoint on a domain that serves
-      nothing is a silent no-op for every install, so decide which is intended
-      and make them agree before shipping an installer.
+- [x] **The updater pointed at a domain the project does not use.** It was
+      worse than recorded: `wc3v.net` does not resolve at all, so every
+      "Check for updates" was a DNS failure rather than a no-op. Now
+      `https://cdn.wc3v.com/desktop/latest.json`, published by the new
+      `tools/deploy-desktop.js` (rclone → R2, same remote as
+      `deploy-assets.js`). The installer is deliberately NOT committed —
+      15 MB of binary does not belong in an open-source git history.
+      - That script also enforces what `RELEASING.md` could only ask for: it
+        refuses to publish when the `.sig` is missing (an unsigned build looks
+        entirely successful and then cannot be served as an update), refuses a
+        version that is not newer than what is live, uploads the installer
+        BEFORE the manifest so clients are never pointed at a 404, and fetches
+        both back to confirm.
+      - Trap for the next person: `rclone copyto` probes for the bucket and
+        falls back to `CreateBucket`, which an R2 token scoped to object
+        read/write denies — the upload dies with a misleading
+        "AccessDenied: CreateBucket". `--s3-no-check-bucket` is not optional.
+- [x] `tools/desktop-preview.js` now writes `desktop/preview/preview.html`,
+      outside `dist`. It used to land inside `frontendDist`, one stray bare
+      `cargo tauri build` away from shipping a 150 KB page of fake games to
+      users.
 - [ ] Wire `tools/verify-bundle-parity.js` into CI. It is what caught the dead
       inference layer, and a stale bundle is otherwise invisible.
 - [ ] `tests/flo-replay.test.js` fails — missing fixture
@@ -438,7 +564,8 @@ Run any of these with no args for usage.
 |---|---|
 | `tools/detect-identity.js` | Who owns a replay folder, from headers only. `--dir=<Replays>`. Same algorithm the app uses, runnable without launching it. |
 | `tools/moments-report.js` | The ranked key moments of a parsed replay, phrased from a chosen seat. `--replay=NAME [--seat=ID] [--all]`. **This is how the ranking gets judged** — run it on a game you remember; if the fight you actually recall is missing, the ranking is wrong, not the UI. |
-| `tools/desktop-preview.js` | Writes `desktop/dist/preview.html`: the real desktop frontend, stubbed Tauri IPC, summaries built from real parsed replays. Iterate on the UI in a browser without building the app. Run `build-desktop-client.js` first. |
+| `tools/desktop-preview.js` | Writes `desktop/preview/preview.html`: the real desktop frontend, stubbed Tauri IPC, summaries built from real parsed replays. Iterate on the UI in a browser without building the app. Run `build-desktop-client.js` first. `--games=N` — use 40+ to exercise the trend windows. |
+| `tools/deploy-desktop.js` | Publishes a built installer + `latest.json` to R2. Refuses an unsigned or non-newer build, uploads the installer before the manifest, verifies both afterwards. `--notes="…"` required, `--dry-run` to preview. |
 | `tools/test-profile-aggregate.js` | Profile/coach assertions over a synthetic corpus, including the identity tie-refusal guards. |
 | `tools/verify-bundle-parity.js` | Node source vs committed browser bundle. Catches stale bundles and dynamic-require breakage. `--fast` also proves `skipPathfinding` is forwarded. |
 | `tools/check-determinism.js` | Parses N times in clean processes; must report 0 differing leaves. |
@@ -466,3 +593,18 @@ Run any of these with no args for usage.
   true, and core plugin commands need explicit capability grants.
 - **Rebuild the parser bundle** after any `lib/` or `helpers/` change
   (`npm run build:parser`) or uploads silently use the old parser.
+- **Never enable reqwest's `gzip` feature.** The CDN stores `.json.gz` WITH
+  `Content-Encoding: gzip`, so a transparently-decompressing client hands back
+  plain JSON, which then gets written under a `.gz` name and fails to inflate
+  at parse time — a corrupt map cache that looks like a parser bug. Same for
+  `deflate`, `brotli` and `zstd`. The bytes off the wire ARE the file.
+- **`rclone copyto` to R2 needs `--s3-no-check-bucket`.** Without it rclone
+  probes for the bucket and falls back to `CreateBucket`, which an
+  object-scoped R2 token denies — and the error it prints is
+  "AccessDenied: CreateBucket", which reads as a credentials problem.
+- **`momentsFor()` returns its top five in TIME order, not importance order.**
+  Reading `[0]` off it to get "the biggest moment" silently gives the earliest
+  of the five. Sort `summary.moments` by `importance` yourself.
+- **`accent-color` does not style an unchecked checkbox.** It tints the
+  checked fill only; the empty box stays the platform's near-white square,
+  which on a dark panel is the loudest thing on screen.
