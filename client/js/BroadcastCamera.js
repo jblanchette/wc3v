@@ -53,6 +53,21 @@
   const LATCH_RECUT_ZOOM_FRAC = () => CCFG('latch', 'recutZoomFrac', 0.35);
   const LATCH_FOLLOW_TC = () => CCFG('latch', 'followTc', 1.6);
 
+  // --- Broadcast sanity pass (post-processing on every computed target) ---
+  // A professional broadcast never yo-yos: once the camera commits to a shot it
+  // holds it, the zoom target moves in one direction at a bounded rate, and a
+  // split that just ended can't immediately re-open. All wall-clock time — this
+  // is about what the VIEWER perceives, independent of playback speed.
+  const MIN_SHOT_MS = () => CCFG('sanity', 'minShotMs', 2800);                 // a re-cut sooner than this is glided, not snapped
+  const SOFT_RECUT_TC = 0.7;                                                    // seconds — glide time-constant for a too-soon re-cut
+  const ZOOM_DIR_HOLD_MS = () => CCFG('sanity', 'zoomDirHoldMs', 2200);        // a small zoom reversal within this window is suppressed
+  const ZOOM_REVERSAL_FRAC = () => CCFG('sanity', 'zoomReversalFrac', 0.35);   // |Δk|/k below this counts as "small" (a real cut still cuts)
+  const ZOOM_SLEW_PER_S = () => CCFG('sanity', 'zoomSlewPerS', 1.6);           // target zoom moves ≤ this ratio per second…
+  const ZOOM_SLEW_URGENT_PER_S = () => CCFG('sanity', 'zoomSlewUrgentPerS', 2.8); // …unless a fight is on/imminent
+  const ZOOM_DEADBAND_FRAC = () => CCFG('sanity', 'zoomDeadbandFrac', 0.07);   // |Δk|/k below this = hold; lets the shot SETTLE
+  const SPLIT_REENTRY_COOLDOWN_MS = () => CCFG('sanity', 'splitReentryCooldownMs', 12000); // single-view holds this long after leaving split
+  const SPLIT_LERP_RATE = () => CCFG('sanity', 'splitLerpRate', 2.6);          // per-second chase rate for the per-half split targets
+
   // Calm-when-fast: during fast-forward (auto time-scale or a high manual speed)
   // widen the frame and damp the pan so skimming dead time isn't disorienting.
   const CALM_SPEED_LO = 3.0;     // at/below this speed: normal framing
@@ -114,15 +129,22 @@
   const SPLIT_PAD_MIN = 240;     // … with this world-unit floor (SYMMETRIC — no tilt band)
   const SPLIT_FOG_INSET = 384;   // world units kept inside viewExtent edge so the
                                  // FogOfWar feather (256 units) never bleeds in.
-  const SPLIT_BBOX_MAX_FRAC = 0.42;  // safety cap on bbox extent vs viewExtent — an
+  const SPLIT_BBOX_MAX_FRAC = 0.30;  // safety cap on bbox extent vs viewExtent — an
                                      // unusually strung-out force is capped + pulled
                                      // back toward its centroid rather than zooming out.
+                                     // (0.42 let a force grow far past what the k floor
+                                     // can show — half the army rendered off-screen.)
   // Base/build-area framing (the opening: no mobile force yet → split on the two
   // bases). Bound the ACTUAL buildings + nearby workers so all the structures show
   // and the frame hugs them — a fixed box was far bigger than an early base's real
   // footprint, so it framed mostly empty terrain on a big (~16k-unit) map.
   const BASE_INCLUDE_RADIUS = 2200;  // include buildings/workers within this of the start (skip far expo/scout)
   const SPLIT_BASE_MIN_EXTENT = 1500; // floor on the base bbox so a 1-building base doesn't over-zoom
+  // Same idea for a MOBILE force: without a floor a 2-unit group framed at the
+  // k=8 ceiling, filling the half-viewport with empty ground. Measured from the
+  // logged cases (box=678x684 k=8.00) — 2200 keeps a couple of units readable
+  // with enough terrain to see where they are.
+  const SPLIT_FORCE_MIN_EXTENT = 2200;
 
   // Intrusion / territory: when one player's unit reaches the ENEMY base region
   // (scouting, a proxy, an early all-in), that interaction is the story — break
@@ -169,7 +191,7 @@
   //   - MIN_DWELL: once split, hold at least this long (unless a fight erupts).
   //   - ENTER_LOOKAHEAD: don't open a split that a known-upcoming fight will cut
   //     short — if combat starts within this window, stay single and lead in.
-  const SPLIT_ENTER_DEBOUNCE_MS = 800;
+  const SPLIT_ENTER_DEBOUNCE_MS = 2000;
   const SPLIT_MIN_DWELL_MS = 6000;
   const SPLIT_ENTER_LOOKAHEAD_MS = 6000;
 
@@ -219,6 +241,14 @@
       this._intrusionKind = null;      // 'harass' | 'scout' — drives the on-screen tag
       this._activityLevel = 0;         // 0–1 on-screen unit activity for the last frame (feeds the time-scale)
 
+      // Sanity-pass state (see the "Broadcast sanity pass" constants).
+      this._splitExitedWall = null;    // wall time the last split exit COMPLETED (re-entry cooldown)
+      this._latchCutWall = null;       // wall time of the last wholesale shot re-cut (min shot duration)
+      this._steadyK = null;            // steadied zoom target (direction hysteresis + slew)
+      this._zoomDir = 0;               // +1 zooming in / -1 zooming out / 0 settled
+      this._zoomDirWall = 0;           // wall time the zoom direction last flipped
+      this._splitLerp = null;          // smoothed per-half split targets {top,bottom}
+
       // Multi-listener emitter for mode changes. Existing single-callback
       // `onModeChange` keeps working (still invoked by _emitModeChange) so
       // call sites that assign `bc.onModeChange = fn` don't need to migrate.
@@ -266,6 +296,13 @@
       this._intrusionTarget = null;
       this._intrusionKind = null;
       this._activityLevel = 0;
+      this._splitExitedWall = null;
+      this._latchCutWall = null;
+      this._steadyK = null;
+      this._zoomDir = 0;
+      this._zoomDirWall = 0;
+      this._splitLerp = null;
+      this._latch = null;
       this._emitModeChange();
     }
 
@@ -299,6 +336,7 @@
         this._splitTransition = 0;
         this._splitEntering = true;
         this._splitExiting = false;
+        this._splitLerp = null;     // fresh split → frame each half directly, then glide
       }
 
       if (prevMode === CameraMode.SPLIT_SCREEN && mode !== CameraMode.SPLIT_SCREEN) {
@@ -414,10 +452,12 @@
      * Re-latches when the raw target escapes the correction budget — a real cut
      * (new fight, new cluster) must not be mistaken for drift and swallowed.
      */
-    _latchTarget (rawX, rawY, rawK) {
+    _latchTarget (rawX, rawY, rawK, urgent) {
       const L = this._latch;
+      const now = this._lastUpdateWall || 0;
       if (!L || !this._shotLatchEnabled) {
         this._latch = { x: rawX, y: rawY, k: rawK };
+        this._latchCutWall = now;
         return this._latch;
       }
 
@@ -425,9 +465,22 @@
       const moved = Math.hypot(dx, dy);
       const kFrac = Math.abs(rawK - L.k) / Math.max(0.0001, L.k);
 
-      // Big change => a genuinely different shot. Take it wholesale.
+      // Big change => a genuinely different shot. Take it wholesale — but only
+      // if the current shot has been held a minimum broadcast-worthy duration
+      // (or something urgent — a fight — justifies the fast cut). A re-cut
+      // arriving too soon is GLIDED toward instead, so back-to-back target
+      // jumps read as one continuous camera move, not a nervous flurry of cuts.
       if (moved > LATCH_RECUT_PX() || kFrac > LATCH_RECUT_ZOOM_FRAC()) {
-        L.x = rawX; L.y = rawY; L.k = rawK;
+        const shotHeld = this._latchCutWall == null || (now - this._latchCutWall) >= MIN_SHOT_MS();
+        if (urgent || shotHeld) {
+          L.x = rawX; L.y = rawY; L.k = rawK;
+          this._latchCutWall = now;
+          return L;
+        }
+        const ease = Math.min(1, this._frameDtSec() / SOFT_RECUT_TC);
+        L.x += dx * ease;
+        L.y += dy * ease;
+        L.k += (rawK - L.k) * ease;
         return L;
       }
 
@@ -444,6 +497,50 @@
 
     /** Called by AutoDirector when a new shot begins, so the latch re-arms. */
     armShotLatch () { this._latch = null; }
+
+    /**
+     * Steady-cam pass on the FINAL zoom target — the last gate before the lerp.
+     *
+     * Two rules, both about what a human broadcast operator would do:
+     *   1. Direction hysteresis: a SMALL zoom reversal shortly after the zoom
+     *      started moving the other way is jitter, not intent — hold instead.
+     *      Big reversals (a real cut) and urgent ones (a fight) pass through.
+     *   2. Slew limit: the target may move at most a bounded RATIO per second,
+     *      so even a legitimate big change arrives as a controlled push-in /
+     *      pull-out, never an in-out yo-yo the smoothing lerp then amplifies.
+     */
+    _steadyZoomTarget (rawK, urgent) {
+      if (this._steadyK == null || !this._shotLatchEnabled) {
+        this._steadyK = rawK;
+        this._zoomDir = 0;
+        return rawK;
+      }
+      const now = this._lastUpdateWall || 0;
+      let k = rawK;
+      const frac = Math.abs(k - this._steadyK) / Math.max(0.0001, this._steadyK);
+
+      // DEADBAND. Reversal hysteresis and the slew limit below both bound HOW
+      // FAST the target moves; neither ever lets it STOP. A force bbox breathes
+      // by a few percent every frame as units step, so the target kept nudging
+      // and the smoothing lerp kept chasing — which is precisely the "camera
+      // slowly creeps around forever" read. Inside the deadband, hold.
+      if (!urgent && frac < ZOOM_DEADBAND_FRAC()) return this._steadyK;
+
+      const dir = k > this._steadyK ? 1 : (k < this._steadyK ? -1 : 0);
+      if (dir !== 0 && frac > 0.01) {
+        const reversal = this._zoomDir !== 0 && dir !== this._zoomDir;
+        if (reversal && !urgent && frac < ZOOM_REVERSAL_FRAC() &&
+            (now - this._zoomDirWall) < ZOOM_DIR_HOLD_MS()) {
+          return this._steadyK;   // suppress the yo-yo — hold the current target
+        }
+        if (this._zoomDir !== dir) { this._zoomDir = dir; this._zoomDirWall = now; }
+      }
+      const maxRatio = Math.pow(urgent ? ZOOM_SLEW_URGENT_PER_S() : ZOOM_SLEW_PER_S(),
+        this._frameDtSec());
+      k = Math.max(this._steadyK / maxRatio, Math.min(this._steadyK * maxRatio, k));
+      this._steadyK = k;
+      return k;
+    }
 
     /**
      * Calm-when-fast amount, QUANTIZED into three sticky bands (0 / 0.5 / 1).
@@ -492,6 +589,14 @@
       if (this._lastGameTime != null && Math.abs(gameTime - this._lastGameTime) > 2500) {
         this._splitWantSince = null;
         this._splitEnteredAt = null;
+        // A jump is a fresh context — the sanity pass must not glide from (or
+        // hold to) shots that belong to a different part of the match.
+        this._splitExitedWall = null;
+        this._latch = null;
+        this._latchCutWall = null;
+        this._steadyK = null;
+        this._zoomDir = 0;
+        this._splitLerp = null;
       }
 
       // Per-player anchors: the main fighting force when one exists, else the
@@ -540,17 +645,25 @@
       if (this.mode !== CameraMode.SPLIT_SCREEN) {
         const heldLongEnough = this._splitWantSince != null &&
           (gameTime - this._splitWantSince) >= SPLIT_ENTER_DEBOUNCE_MS;
-        if (wantSplit && heldLongEnough) {
+        // Re-entry cooldown (wall clock): a split that just closed must stay
+        // closed for a while — split→single→split inside a few seconds is the
+        // single most jarring thing this camera can do.
+        const cooledDown = this._splitExitedWall == null ||
+          ((this._lastUpdateWall || 0) - this._splitExitedWall) >= SPLIT_REENTRY_COOLDOWN_MS();
+        // Don't OPEN a split into a fight. `fightNow` (active or imminent
+        // battle) is an unconditional EXIT trigger below, so entering while it
+        // holds buys a split that gets torn down almost immediately — measured
+        // at 5.2s of game time between ENTER and "EXIT split — fight/intrusion".
+        // The fight is the story; stay single-view and let it play.
+        if (wantSplit && heldLongEnough && cooledDown && !fightNow) {
           this.setMode(CameraMode.SPLIT_SCREEN);     // begins entry animation
           this._splitEnteredAt = gameTime;
           this._logSplitEvent(gameTime, 'ENTER split');
         }
-      } else if (wantSplit) {
-        if (this._splitExiting) {
-          this._splitExiting = false;                // reverse a partial exit
-          this._splitEntering = true;
-        }
-      } else if (!this._splitExiting) {
+      } else if (!this._splitExiting && !wantSplit) {
+        // An exit, once started, is COMMITTED — never reversed mid-wipe (that
+        // read as flip-flopping). Re-opening goes through the entry path above,
+        // gated by the re-entry cooldown.
         // Want to leave. Honor the minimum dwell UNLESS a fight is pulling us out
         // or the players have truly converged (both halves would frame the same
         // spot — no point holding the split, and a clash is likely next).
@@ -585,6 +698,8 @@
         if (this._splitTransition <= 0) {
           this._splitExiting = false;
           this._splitTransition = 0;
+          this._splitExitedWall = this._lastUpdateWall || 0;  // start re-entry cooldown
+          this._splitLerp = null;
           this.setMode(CameraMode.ACTION_FOCUS);
           // Continue with action focus this frame
         }
@@ -638,8 +753,12 @@
       // Latching is for the AUTO broadcast shot only. FOLLOW_HERO is a
       // deliberately continuous follow — latching it would make it feel sticky.
       this._shotLatchEnabled = (this.mode === CameraMode.ACTION_FOCUS);
-      const latched = this._latchTarget(cssPx, cssPy, targetK);
-      cssPx = latched.x; cssPy = latched.y; targetK = latched.k;
+      // `fightNow` (live/imminent battle, engaged heroes, intrusion) marks the
+      // cuts that are allowed to move fast; everything else is bound by the
+      // sanity pass (min shot duration, zoom direction hold, zoom slew).
+      const latched = this._latchTarget(cssPx, cssPy, targetK, fightNow);
+      cssPx = latched.x; cssPy = latched.y;
+      targetK = this._steadyZoomTarget(latched.k, fightNow);
 
       // Store targets for settled check
       this._targetK = targetK;
@@ -709,8 +828,44 @@
       // (e.g. during the exit transition right after a wipe) so rendering never
       // breaks on a null target mid-animation.
       const t = this._splitScreenTargets(players, this.viewer.gameTime);
-      if (t) this.splitTargets = t;
+      if (t) this.splitTargets = this._smoothSplitTargets(t);
       this._initialized = true;
+    }
+
+    /**
+     * Per-half smoothing. The raw per-half targets are recomputed every frame
+     * from live force bboxes, and the renderer applies them DIRECTLY (there is
+     * no d3-zoom lerp on the split path) — unsmoothed they jump-cut each half
+     * every time a unit joins/leaves the cluster. Chase them with an eased lerp
+     * plus a small deadzone so each half glides and then genuinely holds still.
+     */
+    _smoothSplitTargets (t) {
+      let s = this._splitLerp;
+      if (!s) {
+        // First frame of a split (or right after a seek) — take it as-is.
+        s = this._splitLerp = {
+          top:    { wx: t.top.wx,    wy: t.top.wy,    k: t.top.k },
+          bottom: { wx: t.bottom.wx, wy: t.bottom.wy, k: t.bottom.k }
+        };
+      } else {
+        const ease = 1 - Math.exp(-SPLIT_LERP_RATE() * this._frameDtSec());
+        const chase = (cur, dst) => {
+          const still = Math.abs(dst.wx - cur.wx) < 24 &&
+                        Math.abs(dst.wy - cur.wy) < 24 &&
+                        Math.abs(dst.k - cur.k) < 0.02 * cur.k;
+          if (still) return;   // breathing-bbox jitter — hold the half steady
+          cur.wx += (dst.wx - cur.wx) * ease;
+          cur.wy += (dst.wy - cur.wy) * ease;
+          cur.k  += (dst.k  - cur.k)  * ease;
+        };
+        chase(s.top, t.top);
+        chase(s.bottom, t.bottom);
+      }
+      return {
+        top:     { wx: s.top.wx,    wy: s.top.wy,    k: s.top.k },
+        bottom:  { wx: s.bottom.wx, wy: s.bottom.wy, k: s.bottom.k },
+        players: t.players
+      };
     }
 
     /**
@@ -770,6 +925,7 @@
 
         let baseN = 0;   // diagnostics: how many buildings/workers the base box bounded
         let chw = 0, chh = 0;   // real content half-extents (pre-floor/pad) for the centre-bias
+        let coreX = null, coreY = null;   // hero-weighted force core (force anchors only)
         if (anchor.isBase || !anchor.group || !anchor.group.length) {
           // Opening / no force — bound the ACTUAL base: built buildings + nearby
           // workers within BASE_INCLUDE_RADIUS of the start, so all the structures
@@ -795,7 +951,16 @@
           if (maxX - minX < SPLIT_BASE_MIN_EXTENT) { minX = bcx - SPLIT_BASE_MIN_EXTENT / 2; maxX = bcx + SPLIT_BASE_MIN_EXTENT / 2; }
           if (maxY - minY < SPLIT_BASE_MIN_EXTENT) { minY = bcy - SPLIT_BASE_MIN_EXTENT / 2; maxY = bcy + SPLIT_BASE_MIN_EXTENT / 2; }
         } else {
-          for (const u of anchor.group) include(u.currentX, u.currentY);
+          // Hero-weighted core of the force: where the frame recenters when the
+          // whole bbox can't fit at the resolved zoom (crop stragglers, never
+          // the hero + main body).
+          let wsum = 0, wcx = 0, wcy = 0;
+          for (const u of anchor.group) {
+            include(u.currentX, u.currentY);
+            const w = (u.meta && u.meta.hero) ? HERO_GROUP_WEIGHT : 1;
+            wsum += w; wcx += u.currentX * w; wcy += u.currentY * w;
+          }
+          if (wsum > 0) { coreX = wcx / wsum; coreY = wcy / wsum; }
           chw = (maxX - minX) / 2; chh = (maxY - minY) / 2;
         }
         if (minX === Infinity) return null;
@@ -807,6 +972,20 @@
         const padY = Math.max((maxY - minY) * SPLIT_PAD_FRAC, SPLIT_PAD_MIN);
         minX -= padX; maxX += padX;
         minY -= padY; maxY += padY;
+
+        // Floor the framed extent. A one- or two-unit force has a tiny bbox, so
+        // the bbox-driven zoom pinned to SPLIT_MAX_ZOOM and the half-viewport
+        // showed a couple of units on bare ground — the "it centers in on
+        // nothing" read. Bases already had SPLIT_BASE_MIN_EXTENT; mobile forces
+        // had no floor at all. Keep enough terrain around them to place the
+        // action. (Larger forces are unaffected — this only ever grows a bbox.)
+        const fcx = (minX + maxX) / 2, fcy = (minY + maxY) / 2;
+        if (maxX - minX < SPLIT_FORCE_MIN_EXTENT) {
+          minX = fcx - SPLIT_FORCE_MIN_EXTENT / 2; maxX = fcx + SPLIT_FORCE_MIN_EXTENT / 2;
+        }
+        if (maxY - minY < SPLIT_FORCE_MIN_EXTENT) {
+          minY = fcy - SPLIT_FORCE_MIN_EXTENT / 2; maxY = fcy + SPLIT_FORCE_MIN_EXTENT / 2;
+        }
 
         let cx = (minX + maxX) / 2;
         let cy = (minY + maxY) / 2;
@@ -821,7 +1000,7 @@
         if (w > maxW) { const t = maxW / w; cx = anchor.x + (cx - anchor.x) * t; w = maxW; }
         if (h > maxH) { const t = maxH / h; cy = anchor.y + (cy - anchor.y) * t; h = maxH; }
 
-        return { cx, cy, w, h, anchor, baseN, chw, chh };
+        return { cx, cy, w, h, anchor, baseN, chw, chh, coreX, coreY };
       };
 
       const box0 = buildBox(nonNeutral[0]);
@@ -874,6 +1053,17 @@
 
         let cx = box.cx;
         let cy = box.cy;
+
+        // Containment sanity: when the content box can't fully fit at the
+        // resolved zoom (a k floor binds, or the bbox safety cap kicked in),
+        // center the frame on the force CORE (hero-weighted centroid) instead
+        // of the bbox midpoint. A far straggler then crops out of frame — the
+        // hero and the bulk of the army never do. This is the fix for split
+        // halves that showed half a group with the rest cut off screen.
+        if (box.coreX != null && (box.w > halfVisW * 2 || box.h > halfVisH * 2)) {
+          cx = box.coreX;
+          cy = box.coreY;
+        }
 
         // Centre-bias (base/opening framing only — a mobile force is its own
         // focus and is usually out toward the centre already). Shift toward the

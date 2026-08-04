@@ -60,6 +60,24 @@
       recutPx: 420,
       recutZoomFrac: 0.35,
       followTc: 1.6        // seconds to absorb a small target move once settled
+    },
+
+    // --- broadcast sanity pass (BroadcastCamera) -----------------------------
+    // Post-processing on every computed target: hold shots a minimum duration,
+    // suppress small zoom yo-yos, bound how fast the zoom target may move, and
+    // keep a just-closed split closed. All wall-clock (viewer-perceived) time.
+    sanity: {
+      minShotMs: 2800,             // a shot re-cut sooner than this glides instead of snapping
+      zoomDirHoldMs: 2200,         // a small zoom reversal inside this window is suppressed
+      zoomReversalFrac: 0.35,      // |Δk|/k below this counts as "small" (a real cut passes)
+      zoomSlewPerS: 1.6,           // zoom target moves ≤ this ratio per second…
+      zoomSlewUrgentPerS: 2.8,     // …unless a fight is live/imminent
+      zoomDeadbandFrac: 0.07,      // |Δk|/k below this holds — lets the shot actually SETTLE
+                                   // (hysteresis + slew only bound the RATE; without a
+                                   // deadband the target never stops moving and the camera
+                                   // reads as creeping around forever)
+      splitReentryCooldownMs: 12000, // after leaving split, single-view holds at least this long
+      splitLerpRate: 2.6           // per-second chase rate for the smoothed split halves
     }
   };
 

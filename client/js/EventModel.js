@@ -42,12 +42,19 @@ const EventModel = (function () {
   //   detail(e)  — secondary qualifier, or null
   //   tags(e)    — extra filter tags beyond category
   //   accept(e)  — optional gate; return false to drop the event entirely
+  //
+  // Obsidian Statue Replenish Life/Mana (Urlf/Urlm/Urep): the ability re-fires
+  // continuously while toggled on, flooding the feeds with identical casts.
+  // The meaningful signal is the on/off toggle, which arrives separately as
+  // 'autocastToggle' — so the raw casts are dropped from every feed.
+  const HIDDEN_AUTOCAST_CASTS = new Set(['Urlf', 'Urlm', 'Urep']);
   const TYPE_META = {
     'spellCast': {
       category: 'combat',
       onCanvas: true,
       priority: 50,
       color: '#88CCFF',
+      accept: (e) => !HIDDEN_AUTOCAST_CASTS.has(e.spellItemId),
       icon: (e) => e.icon || e.spellItemId || null,
       title: (e) => e.spellName || (e.unit ? e.unit.displayName : 'Spell'),
       actor: (e) => e.unit ? e.unit.displayName : null,

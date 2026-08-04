@@ -58,9 +58,12 @@
       buildOrder: isDev,
       map:        isDev,
       net:        isDev,
-      // Split-screen camera decisions (per-side anchor / bbox / zoom, throttled).
-      // On in dev — toggle at runtime with `WC3V_CONFIG.logging.splitCamera = false`.
-      splitCamera: isDev,
+      // Split-screen camera decisions (per-side anchor / bbox / zoom).
+      // OFF even in dev: this fires several times a second and each line is a
+      // formatted template string, which is a measurable frame cost with
+      // DevTools open — exactly when you'd be looking at it. Opt in for a
+      // session with `WC3V_CONFIG.logging.splitCamera = true`.
+      splitCamera: false,
       // Parser + upload pipeline. Also propagated into the parser Web
       // Worker via a `?log=1` URL param, since the worker runs in its own
       // global scope and can't read this object.

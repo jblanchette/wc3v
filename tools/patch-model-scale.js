@@ -92,7 +92,57 @@ function num (v, dflt) {
 const skin = parseINI(SKIN_PATH);
 const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf-8'));
 
-let changed = 0, missing = 0, overridden = 0;
+// ── GLB bounding box, so the compression below works on RENDERED height ──
+// Same read as tools/audit-model-scale.js: glTF stores POSITION min/max per
+// accessor, so no vertex decoding. MDX is Z-up, so height is the Z extent.
+function glbHeight (model) {
+  const file = path.join(__dirname, '..', 'client', 'assets', 'models', 'units', model + '.glb');
+  if (!fs.existsSync(file)) return null;
+  const buf = fs.readFileSync(file);
+  if (buf.readUInt32LE(0) !== 0x46546c67) return null;
+  const json = JSON.parse(buf.toString('utf8', 20, 20 + buf.readUInt32LE(12)));
+  const accs = json.accessors || [];
+  let lo = Infinity, hi = -Infinity;
+  for (const mesh of json.meshes || []) {
+    for (const prim of mesh.primitives || []) {
+      const ai = prim.attributes && prim.attributes.POSITION;
+      const a = ai == null ? null : accs[ai];
+      if (!a || !a.min || !a.max) continue;
+      if (a.min[2] < lo) lo = a.min[2];
+      if (a.max[2] > hi) hi = a.max[2];
+    }
+  }
+  return hi > lo ? hi - lo : null;
+}
+
+// Footman is the reference unit: its rendered height is 1.00x by definition.
+const FOOTMAN_H = glbHeight('footman') || 102;
+
+// ── Oversize compression ────────────────────────────────────────────────────
+// WC3's `scale x modelScale` reproduces SD literally, but a large chunk of the
+// roster then renders absurdly big in this viewer: measured 175 of 665 models
+// over 3x a footman and 53 over 5x, topping out at 11.7x (battleships) with
+// creeps like the Dragon Sea Turtle at 9.0x and even the Keeper of the Grove —
+// a playable hero — at 9.4x. The raised weapons / wings / mounts that inflate a
+// model's bbox are exactly what the formula does not account for.
+//
+// Rather than hand-tune hundreds of entries, compress the tail: anything above
+// SOFT keeps its ORDER (bigger things stay bigger) but is pulled asymptotically
+// toward HARD. A dragon still dwarfs a footman; it just no longer fills the map.
+//
+//   2.0x -> 2.00   3.0x -> 2.40   5.0x -> 2.84   9.0x -> 3.13   11.7x -> 3.17
+//
+// Explicit SCALE_OVERRIDES are never touched — those are visually tuned truth.
+const SOFT = 2.0;    // below this, left exactly as the formula computed
+const HARD = 3.2;    // asymptote: nothing renders taller than this
+const KNEE = 2.5;    // how fast the tail flattens
+function compress (vsFoot) {
+  if (!(vsFoot > SOFT)) return null;
+  return SOFT + (HARD - SOFT) * (1 - Math.exp(-(vsFoot - SOFT) / KNEE));
+}
+
+let changed = 0, missing = 0, overridden = 0, compressed = 0;
+const compressedRows = [];
 const samples = ['hfoo', 'okod', 'ewsp', 'hpea', 'Hpal', 'Hmkg', 'ogru', 'uabo', 'edot'];
 for (const [id, spec] of Object.entries(manifest)) {
   let finalScale;
@@ -110,6 +160,22 @@ for (const [id, spec] of Object.entries(manifest)) {
     // Prefer the SD model-scale tweak; fall back to the unsplit `modelScale`.
     const modelScale = num(s['modelScale:sd'], num(s.modelScale, 1));
     finalScale = +(baseScale * modelScale).toFixed(3);
+
+    // Pull the oversize tail in. Only for formula-derived scales — an explicit
+    // override is a decision someone made by looking at it.
+    const h = glbHeight(spec.model);
+    if (h) {
+      const vsFoot = (h * finalScale) / FOOTMAN_H;
+      const target = compress(vsFoot);
+      if (target != null) {
+        const next = +(finalScale * (target / vsFoot)).toFixed(3);
+        if (next !== finalScale) {
+          compressedRows.push({ id, model: spec.model, from: +vsFoot.toFixed(2), to: +target.toFixed(2) });
+          finalScale = next;
+          compressed++;
+        }
+      }
+    }
   }
   if (spec.scale !== finalScale) changed++;
   spec.scale = finalScale;
@@ -118,7 +184,15 @@ for (const [id, spec] of Object.entries(manifest)) {
 fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
 console.log('Patched ' + MANIFEST_PATH);
 console.log('  entries: ' + Object.keys(manifest).length + ', updated: ' + changed +
-  ', overrides applied: ' + overridden + ', no skin entry: ' + missing);
+  ', overrides applied: ' + overridden + ', no skin entry: ' + missing +
+  ', oversize compressed: ' + compressed);
+if (compressedRows.length) {
+  compressedRows.sort((a, b) => b.from - a.from);
+  console.log('\n  biggest reductions (vsFoot):');
+  for (const r of compressedRows.slice(0, 12)) {
+    console.log('    ' + r.id.padEnd(6) + r.model.padEnd(26) + r.from + 'x -> ' + r.to + 'x');
+  }
+}
 for (const id of samples) {
   if (manifest[id]) console.log('  ' + id + ' (' + manifest[id].model + '): scale=' + manifest[id].scale);
 }

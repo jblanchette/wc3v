@@ -35,7 +35,7 @@
   // so when a model's CONTENT changes (materials, geometry) the URL must change or
   // returning viewers keep the stale file. BUMP THIS whenever the roster is
   // re-exported (convert-mdx-to-gltf-skinned.js --all) and redeployed.
-  const MODEL_ASSET_VERSION = '20260804a';
+  const MODEL_ASSET_VERSION = '20260804b';
   const FADE = 0.22;                 // cross-fade seconds between looping states
   // Only used by the worker harvest-loop "is it parked at its anchor" test.
   // Animation state itself comes from UnitBehavior, which reads path-segment
@@ -53,6 +53,17 @@
   // UnitBehavior rather than by proximity to the camp centroid.)
   const CREEP_MARKER_SIZE = 72;         // world-unit size of the floating "?" uncertainty badge
   const CREEP_MARKER_Y = 170;           // world-unit height of the badge above the camp
+  // Camp cull bounds. Generous on purpose — a camp popping in at the screen
+  // edge is far worse than carrying a few extra skeletons, and the test is one
+  // sphere per camp either way. PAD covers creep spread beyond the bbox plus
+  // model height; Y lifts the sphere centre to mid-model.
+  const CAMP_CULL_PAD = 700;
+  const CAMP_CULL_Y = 250;
+  // Same idea for player units, which move — so the sphere is per-unit rather
+  // than per-camp. PAD covers the tallest model plus a frame of movement at max
+  // speed, so a unit never pops in at the screen edge.
+  const UNIT_CULL_PAD = 500;
+  const UNIT_CULL_Y = 200;
   const CLAIM_CLEARED = 2;              // NeutralGroup ClaimStates.cleared
 
   // Worker harvest declutter + ambient gather-loop. Mirrors the 2D worker
@@ -259,6 +270,10 @@
       // Stash for _updateCreeps (it doesn't receive viewOptions) — drop the
       // per-creep ground rings during the guide creep tour. Per-frame, scrub-safe.
       this._suppressCreepRings = !!(viewOptions && viewOptions.suppressCreepRings);
+      // Team-color ground rings under player units are opt-in (Settings → Unit
+      // Rings). Creep camp rings are camp-state UI and ignore this flag; the
+      // guide focus glow also still lights a ring on its highlighted units.
+      this._showUnitRings = !!(viewOptions && viewOptions.displayUnitRings);
       if (!on || !this.manifest) {
         // Undo any active guide glow so it can't stick when 3D models are
         // re-enabled (the unit then renders as a 2D icon meanwhile). Keep
@@ -289,6 +304,8 @@
       const battleSet = bframe ? bframe.inBattle : new Set();
       const sepMap = this._separateUnits(players, gameTime); // no two ground units share space
       const alive = new Set();
+      // Built once per frame and shared with _updateCreeps below.
+      const frustum = this._cullFrustum();
       const campCreeps = [];   // neutral camp creeps — rendered only by _updateCreeps
       let count = 0;
       for (const player of players) {
@@ -343,6 +360,20 @@
           count++;
           if (!inst || !inst.root) continue; // pending/failed → 2D meanwhile
 
+          // Off-camera → out of the scene graph, and skip the placement /
+          // animation / opacity work below. Same mechanism as the camp cull:
+          // three updates every bone's matrix regardless of `visible`, and a
+          // late-game army is several thousand bones. Purely a function of the
+          // camera this frame, so it re-attaches (correctly posed for gameTime)
+          // the instant the shot moves back — seek-safe by construction.
+          if (this._offScreen(frustum, pos.x, pos.y, cx, cy)) {
+            this._parkCreep(inst, true);
+            alive.add(unit.uuid);
+            this.rendered3DUuids.add(unit.uuid);
+            continue;
+          }
+          this._parkCreep(inst, false);
+
           // Keep a morphing unit's form in sync with the timeline. Both forms
           // share one GLB, so this is a visibility + clip-set swap, never a
           // rebuild. No-op for the vast majority of units (spec.form absent).
@@ -392,7 +423,7 @@
             this._animate(inst, unit, gameTime, dt, deathStart, d);
           }
           inst.root.visible = true;
-          if (inst.ring) inst.ring.visible = inst.state !== 'death'; // no ring on corpses
+          if (inst.ring) inst.ring.visible = this._showUnitRings && inst.state !== 'death'; // no ring on corpses; rings opt-in
           if (inst.shadow) inst.shadow.visible = inst.state !== 'death';
           alive.add(unit.uuid);
           this.rendered3DUuids.add(unit.uuid);
@@ -404,7 +435,7 @@
         if (inst && inst.root && !alive.has(k)) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; }
       }
 
-      this._updateCreeps(gameTime, cx, cy, dt, campCreeps, bframe);
+      this._updateCreeps(gameTime, cx, cy, dt, campCreeps, bframe, frustum);
 
       // Guide-mode focus glow (runs last so it wins over per-unit ring state).
       this._updateGuideHighlight();
@@ -421,11 +452,12 @@
     //     credited/cleared they fade to a faint "ghost" with a floating "?".
     // We deliberately DON'T play creep deaths/corpses: the replay can't know which
     // creep died when, so faking it would mislead. The "?" badge says exactly that.
-    _updateCreeps (gameTime, cx, cy, dt, campCreeps, bframe) {
+    _updateCreeps (gameTime, cx, cy, dt, campCreeps, bframe, frustum) {
       const ng = this.viewer && this.viewer.mapData && this.viewer.mapData.world && this.viewer.mapData.world.neutralGroups;
       if (!ng || !this.manifest || !campCreeps || !campCreeps.length) return;
 
       const campState = {}; // per-camp (computed once/frame): geometry, presence, phase
+      const sphere = this._campSphere || (this._campSphere = new THREE.Sphere());
 
       for (const unit of campCreeps) {
         const campId = unit.neutralGroupId;
@@ -446,7 +478,21 @@
           // range, for as long as the camp stayed disturbed (measured at 10.7
           // minutes; 10 of 101 camps never clear at all).
           const engaged = !!(bframe && bframe.campsEngaged.has(campId));
-          cs = campState[campId] = { geom, phase, engaged };
+
+          // Camp-level cull. Creeps are static guards standing in camps the
+          // camera is usually nowhere near, and they dominate the scene graph
+          // (~80 bones each, ~2/3 of all bones on a creep-heavy map). Testing
+          // ONE sphere per camp — not per creep — parks the whole group.
+          //
+          // An engaged camp is never parked: a fight there is exactly what the
+          // viewer might cut to, and it must be posed correctly when it does.
+          const gy = this.renderer.sampleHeight ? this.renderer.sampleHeight(geom.cx, geom.cy) : 0;
+          sphere.center.set(geom.cx - cx, gy + CAMP_CULL_Y, -(geom.cy - cy));
+          sphere.radius = geom.radius + CAMP_CULL_PAD;
+          const onScreen = !frustum || frustum.intersectsSphere(sphere);
+          const dormant = !engaged && !onScreen;
+
+          cs = campState[campId] = { geom, phase, engaged, dormant };
 
           // One floating badge per camp (not per creep):
           //   • engaged (crossed swords) while an army is actively fighting here,
@@ -465,13 +511,27 @@
         if (!inst || !inst.root) continue;
         this.rendered3DUuids.add(key); // we own this creep in 3D — suppress its 2D icon (cleared too)
 
-        // Cleared camp → the creeps are dead. Remove their models entirely (a
-        // building may now stand where they were); the camp badge marks the spot.
+        // Off-screen and not fighting → out of the scene graph entirely, and
+        // skip every per-creep update below. Re-attached the moment the camera
+        // comes back, re-posed from gameTime on that frame (nothing here is
+        // stateful across frames), so scrubbing and seeking stay correct.
+        // Cleared camp → the creeps are dead. Park them: they will never render
+        // again at this game time, and by late game most camps are cleared, so
+        // leaving their skeletons in the graph is pure waste. (Scrubbing back
+        // before the clear un-parks them on the next frame.)
         if (cs.phase === 'cleared') {
+          this._parkCreep(inst, true);
           inst.root.visible = false;
           if (inst.ring) inst.ring.visible = false;
           continue;
         }
+
+        // Off-screen and not fighting → out of the scene graph entirely, and
+        // skip every per-creep update below. Re-attached the moment the camera
+        // comes back, re-posed from gameTime on that frame (nothing here is
+        // stateful across frames), so scrubbing and seeking stay correct.
+        if (cs.dormant) { this._parkCreep(inst, true); continue; }
+        this._parkCreep(inst, false);
 
         // Per-creep decision. Each creep resolves its OWN target at its OWN
         // range, so a Murloc at the back of a camp with a footman at the front
@@ -519,6 +579,51 @@
 
 
     // Camp centre + a radius covering its footprint (cached — creeps are static).
+    // Camera frustum for camp culling, rebuilt once per frame. Uses the SAME
+    // camera that renders the scene, so anything this rejects is provably
+    // off-screen — the test can never hide something the viewer would see.
+    _cullFrustum () {
+      const r = this.renderer;
+      if (!r || !r.camera || !THREE.Frustum) return null;
+      if (!this._frustum) { this._frustum = new THREE.Frustum(); this._frustumMat = new THREE.Matrix4(); }
+      r.camera.updateMatrixWorld();
+      this._frustumMat.multiplyMatrices(r.camera.projectionMatrix, r.camera.matrixWorldInverse);
+      this._frustum.setFromProjectionMatrix(this._frustumMat);
+      return this._frustum;
+    }
+
+    // True when a unit-sized sphere at (wx, wy) is off-camera. `frustum` is the
+    // once-per-frame frustum from _cullFrustum; a null frustum means "keep
+    // everything", so a missing camera can never blank the scene.
+    _offScreen (frustum, wx, wy, cx, cy) {
+      if (!frustum) return false;
+      const sph = this._cullSphere || (this._cullSphere = new THREE.Sphere());
+      const gy = this.renderer.sampleHeight ? this.renderer.sampleHeight(wx, wy) : 0;
+      sph.center.set(wx - cx, gy + UNIT_CULL_Y, -(wy - cy));
+      sph.radius = UNIT_CULL_PAD;
+      return !frustum.intersectsSphere(sph);
+    }
+
+    // Park (or restore) an instance's whole subtree.
+    //
+    // `visible = false` is NOT enough: three walks the entire graph in
+    // updateMatrixWorld regardless of visibility, and a unit carries ~80-160
+    // bones. Detaching from the scene is what actually removes the per-frame
+    // matrix cost, and skipping the caller's per-instance work removes the rest.
+    _parkCreep (inst, parked) {
+      if (!inst || !inst.root || inst._parked === parked) return;
+      inst._parked = parked;
+      if (parked) {
+        if (inst.root.parent) inst.root.parent.remove(inst.root);
+        if (inst.ring && inst.ring.parent) inst.ring.parent.remove(inst.ring);
+        if (inst.shadow && inst.shadow.parent) inst.shadow.parent.remove(inst.shadow);
+      } else {
+        if (!inst.root.parent) this.scene.add(inst.root);
+        if (inst.ring && !inst.ring.parent) this.scene.add(inst.ring);
+        if (inst.shadow && !inst.shadow.parent) this.scene.add(inst.shadow);
+      }
+    }
+
     _campGeom (camp) {
       if (camp._geom) return camp._geom;
       const b = camp.unitBounds || camp.bounds || { minX: 0, maxX: 0, minY: 0, maxY: 0 };

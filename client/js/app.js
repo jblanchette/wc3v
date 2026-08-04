@@ -3592,7 +3592,10 @@ const Wc3vViewer = class {
       // out the moment they converge or a battle starts. Toggle off to keep AUTO
       // single-viewport at all times. (1v1 only; forced off for non-1v1.)
       autoSplitScreen: true,
-      display3DUnits: true            // 3D animated unit models are the default; toggle off for 2D icons
+      display3DUnits: true,           // 3D animated unit models are the default; toggle off for 2D icons
+      // Team-color ground rings under player units default OFF (visual clutter).
+      // Creep camp rings are camp-state UI (pristine/cleared) and are unaffected.
+      displayUnitRings: false
     };
 
     // Creep/spawn-camp route detection is keyed off 1v1 team heuristics and
@@ -3633,6 +3636,7 @@ const Wc3vViewer = class {
         { key: 'displayText', label: 'Unit Names' },
         { key: 'displayBaseLabels', label: 'Base Labels' },
         { key: 'decayEffects', label: 'Fade FX' },
+        { key: 'displayUnitRings', label: 'Unit Rings' },
         { key: 'displayTreeGrid', label: 'Tree Grid' },
         { key: 'autoSplitScreen', label: 'Auto Split View' }
       ];
