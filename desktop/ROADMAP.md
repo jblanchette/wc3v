@@ -19,8 +19,16 @@ was the one thing this whole project rested on.
 
 Still unmet by reality: no OBS has rendered the overlay (transparency in
 CEF specifically), no upgrade has been taken, and the backfill has never run
-to completion so the real parse rate is still unmeasured. The UI is also
-still the diagnostic spike — §5 is untouched.
+to completion so the real parse rate is still unmeasured.
+
+**The UI is no longer the spike.** §5 is built: the window is a feed of your
+games with a detail card per game (verdict, timings, key moments, head-to-head,
+both build orders), and folders/backfill/log have moved to Settings and a
+collapsible Activity drawer. §4 gained selectable panels, an in-window preview
+and a test game. What has NOT happened is a full pass through the real app —
+everything below was verified against real replay data in
+`tools/desktop-preview.js`, which stubs Tauri IPC but runs the app's own
+modules, CSS and renderers unmodified.
 
 ### What is verified, and how
 
@@ -40,6 +48,12 @@ still the diagnostic spike — §5 is untouched.
 | Parser determinism | `tools/check-determinism.js` — 0 differing leaves over N runs |
 | Bundle matches source | `tools/verify-bundle-parity.js` — 0 shapes unique to the bundle |
 | Parser speedups are safe | `tools/diff-wc3v.js --events` — no build-order/tier/economy event changed |
+| Key moments are real moments | `node tools/moments-report.js --replay=NAME` over several pro games — the ranked list matches the actual shape of each game (hero snipes, the wipe that ended it, the expansion) |
+| Moments fit the summary budget | 1.2–3.8 KB of raw JSON per game, well under a KB gzipped |
+| The UI renders against real data | `tools/desktop-preview.js` builds summaries from `client/replays/*.wc3v.gz` and runs the app's real modules in a browser; feed, detail, moments, profile, settings and the overlay preview all render with zero console errors |
+| **Browsers block wc3v.com → 127.0.0.1** | measured against the live loopback server from an `https://wc3v.com` tab: `fetch` hangs pending and never settles, an iframe ends `net::ERR_ABORTED`. This is why the handoff starts on the loopback origin (§10) |
+| Overlay stays self-contained after the split | `overlay::tests::overlay_page_has_its_css_and_renderer_inlined` — placeholders replaced, no external `<script src>` or `<link>` |
+| Handoff routes are safe | `overlay::tests` — token required, bytes served verbatim, unknown ids 404, pending replays capped |
 
 ### What has NEVER been tested
 
@@ -53,6 +67,10 @@ still the diagnostic spike — §5 is untouched.
 - Any behaviour over a long session, across sleep/wake, or with the game running.
 - **The overlay inside a real OBS.** The server and SSE flow are tested over
   raw sockets, but no OBS Browser Source has ever rendered the page.
+- **The rebuilt UI inside the real app window.** Every screen has been driven in
+  a browser against real replay summaries, but not once through Tauri itself.
+- **The viewer handoff end to end** (§10). Both halves exist and each was
+  checked alone; the joined-up path needs the site deployed and the app rebuilt.
 
 ---
 
@@ -130,6 +148,17 @@ Everything below is wasted effort if the watcher does not fire.
 - [x] Rust commands: `save_parse` (atomic temp+rename, strict key charset),
       `read_parse`, `list_parses`. All async — Defender scans new files on
       write, and a sync command would hold Tauri's main thread.
+- [x] **Schema v2 adds `moments`** — the ranked big beats of the game
+      (`client/js/MomentsExtract.js`). This is the one thing in the summary
+      that cannot be recovered later: fights live in `world.battles`, which
+      only exists in a full parse, and `SummaryExtract` never touched it. So it
+      is extracted at parse time, while the parse is still in hand. Measured
+      cost: 1.2–3.8 KB of raw JSON, under a KB gzipped.
+      - A game stored under v1 renders its timings and offers a **"Find
+        moments"** button that re-reads that single replay, rather than showing
+        an empty list that reads as "nothing happened".
+      - `store.persistSummary` REPLACES a corpus entry on re-parse instead of
+        appending — a duplicate would inflate every profile record it feeds.
 - Note for §3/§2: two *different encodings* of the same game (LastReplay vs
   its autosave) have different keys, so the store can hold both if one is
   clicked manually. The profile layer should dedupe by the summary
@@ -230,37 +259,107 @@ Built on SummaryExtract summaries, as required — no new extractor.
       ("This is me" button sets it; auto-detected from the corpus otherwise).
 - [x] Player-facing variant: "Open player view" opens `?view=panel` in the
       default browser (second monitor).
+- [x] **Split into three files** — `overlay/{shell.html,overlay.css,
+      overlay-render.js}`, stitched back into one self-contained document by
+      `overlay.rs` at request time. The point is that the Stream screen's
+      preview renders from the *same* css and renderer; a preview drawn by
+      separate code is a preview that can lie. A test asserts the seam.
+- [x] **Selectable panels**: `session,verdict,h2h,moments,build` via a
+      `modules=` param, so the OBS URL carries its own config and survives a
+      scene copy. Unknown names are dropped, not fatal — an older pasted URL
+      keeps working. The UI refuses to leave zero panels on.
+- [x] **Head to head**: "all time vs <opponent> 3–2", counted over the whole
+      stored history. Nothing else on a stream can show this, because it was
+      learned from the streamer's own games.
+- [x] **Key moments ticker**: the top 5 beats with timestamps, phrased in
+      `overlay-state.js` where the seat is known, so the app and the broadcast
+      never word the same fight differently.
+- [x] **Live preview + "Send a test game to OBS"** on the Stream screen. The
+      preview sits on a transparency checkerboard (a preview on a solid panel
+      hides exactly the mistake it exists to catch), and the fake game is
+      labelled *on the overlay itself* — an unlabelled fake result on a live
+      stream would be indefensible.
 - [ ] Point a real OBS Browser Source at it. Transparency, reconnect
       behaviour and text sizes on stream are unverified until then.
 
-### 4. Overlay + OBS — the streamer feature
-Nothing exists yet. This is the #1 target audience and is entirely unbuilt.
+### 5. UI and visual design — BUILT
+The window is **a feed of your games**, not a file browser. That reframing is
+the whole change: the app used to open on the machinery (folders, scan buttons,
+a log) instead of on the thing anyone installed it for.
 
-- [ ] `overlay.html` — transparent background, read-only, SSE-driven.
-- [ ] Loopback HTTP server on `127.0.0.1`: random port, per-install token in
-      the URL, read-only endpoints, no CORS, no write path. OBS Browser Source
-      is a separate Chromium process and cannot read the app's state any other
-      way.
-- [ ] "Copy OBS Browser Source URL" button, size presets, a few themes.
-- [ ] Panels: last-game verdict, build order, key timings, session W/L, streak.
-- [ ] Player-facing variant in a normal window for a second monitor.
+- [x] Games feed grouped by day, newest first, built from the stored summaries.
+      Each row: verdict plaque, opponent, matchup, map, duration.
+- [x] Game detail: verdict, **Open in viewer** as the primary action, timings
+      strip, **key moments** with per-moment Watch buttons, head-to-head
+      against that opponent from local history, both build orders.
+      - "Open in viewer" sits with the game header, not in the moments list.
+        It was in the list first, which put it behind two early returns (no
+        moments, or a pre-v2 summary) — and since every already-stored game is
+        v1, that meant no existing game could be opened in the viewer at all.
+        Watching the game is an action on the GAME; jumping to a moment is the
+        refinement.
+- [x] Profile screen rendered as panels and tables instead of a `<pre>`.
+      Settings screen owns folders, history parsing, startup and updates.
+      The log is a collapsed Activity drawer.
+- [x] Shares `client/css/tokens.css` with the web client (copied in by
+      `tools/build-desktop-client.js`) — one design system, not two. The
+      desktop sits in the WARM half of it: `--vc-*` rails and `--dom-*`
+      carved accents, never the site's navy chrome. Only the warm ink ramp is
+      new, because tokens.css has no text colours tuned for brown.
+- [x] Art direction held: earthy, carved, muted. Depth comes from a hard dark
+      outline, a 1px struck highlight and inset shadow. No glow anywhere.
+- [x] UI rules held: nothing below 0.8rem, no icon below 36px, no single-edge
+      accents (the verdict is a plaque, not a stripe), no ellipsis truncation.
+- [x] **No filesystem path is rendered, or in the DOM.** Folders are "Replay
+      folder 1/2", the map cache is "local app data", and the rows carry an
+      index that the click handler closes over.
+- [x] **Failures of a clicked action are visible where the user is looking.**
+      They used to go only to `log()`, i.e. into the Activity drawer, which is
+      collapsed by default — so a primary action that failed looked like a dead
+      button. `failed()` now puts the reason in the status bar in red AND opens
+      the drawer.
+- [ ] Drive it once through the real Tauri window rather than the preview.
+- Note: `node tools/desktop-preview.js` writes `desktop/dist/preview.html`,
+  which runs the real frontend against summaries built from real replays.
+  That is how the UI is iterated on without launching the app.
 
-### 5. UI and visual design — currently a diagnostic spike
-`desktop/src-frontend/` is deliberately plain: three columns, a log, no design.
-It was built to prove the pipeline, not to be seen.
+### 10. Open in the viewer — BUILT, not yet joined up
+Clicking a moment opens the game in the real 3D viewer on wc3v.com, seeked to
+that second. No upload, no account: the replay goes from this process to the
+browser over loopback.
 
-- [ ] Full visual pass. Use the `wc3v-design-architect` agent.
-- [ ] Follow the established art direction: **earthy, carved, muted. No neon
-      glow, no saturated primaries.** "Restrained modern" has been explicitly
-      rejected before — see the WC3 art-direction note in project memory.
-- [ ] Respect the existing UI rules: no font below 0.8rem, no icon below 36px,
-      no single-edge border accents, no ellipsis truncation.
-- [ ] **Never render filesystem paths.** Folders are "Replay folder 1/2" and
-      the map cache is "local app data". Paths contain the user's account name
-      and this window is aimed at streamers. Paths are kept out of the DOM too,
-      not just off screen — list rows carry an index.
-- [ ] Consider sharing CSS tokens with the web client rather than a second
-      design system.
+- [x] `?at=<ms|m:ss>` on the viewer (`client/js/app.js`, `_maybeSeekFromUrl`),
+      applied at the end of `setup()` where the scrubber, chapters and cameras
+      all exist. **The param is `at`, not `t`** — `?t=` is already the dev
+      cache-buster on script and replay fetches.
+- [x] Fixed en route: the scrubber's battle markers set `gameTime` directly
+      instead of calling `seekToGameTime`, so clicking one moved the scrubber
+      without resyncing unit state. Battle Report rows never had this bug.
+- [x] **The handoff mechanism was chosen by measurement, not by guessing.**
+      Three candidates; two are impossible. From an `https://wc3v.com` tab
+      against the live loopback server: a direct `fetch` hangs pending forever,
+      and an iframe ends in `net::ERR_ABORTED`. Chrome gates public → private
+      network access. So the browser must START on the loopback origin.
+- [x] `open_in_viewer` (Rust) reads the replay scoped to registered roots,
+      stages it in memory, and opens `http://127.0.0.1:PORT/open?...` in the
+      default browser. Staging happens in-process from a Tauri command — the
+      HTTP surface is still read-only.
+- [x] `desktop/src-frontend/handoff.html` — the launcher. Fetches the bytes
+      same-origin and pushes them to `https://wc3v.com/handoff` with
+      `postMessage` (private → public, allowed, and no CORS needed). One click,
+      because `window.open` without a user gesture is popup-blocked; it is
+      attempted automatically first and the button is the fallback.
+- [x] `client/handoff.html` — the landing pad. Receives the bytes, parses them
+      with the existing `UploadManager`, stores them in `MyReplays`, then
+      redirects to `/viewer?local=<id>&at=<ms>`. Remembers the desktop's content
+      key → local id in localStorage, so the second moment you click on the same
+      game skips the handoff and the re-parse entirely.
+- [x] Staged replays expire after 10 minutes and are capped at 4. Deliberately
+      NOT single-use: the launcher is a page a user can reload, and a dead link
+      on refresh buys nothing the token does not already.
+- [ ] Walk it end to end once the site is deployed and the app rebuilt.
+- [ ] `render.yaml` needs no route for `/handoff` (Render serves extensionless
+      HTML already, same as `/welcome`) — confirm on the first deploy.
 
 ### 6. Shell polish — BUILT
 The app is now something a person installs and runs, not a dev loop.
@@ -316,6 +415,11 @@ Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
 - [ ] AppImage + Flatpak packaging.
 
 ### 9. Housekeeping
+- [ ] **The updater points at a domain the project does not use.**
+      `tauri.conf.json` and `RELEASING.md` say `wc3v.net`; the site and CDN are
+      `wc3v.com` (`render.yaml`). An update endpoint on a domain that serves
+      nothing is a silent no-op for every install, so decide which is intended
+      and make them agree before shipping an installer.
 - [ ] Wire `tools/verify-bundle-parity.js` into CI. It is what caught the dead
       inference layer, and a stale bundle is otherwise invisible.
 - [ ] `tests/flo-replay.test.js` fails — missing fixture
@@ -333,6 +437,8 @@ Run any of these with no args for usage.
 | Tool | Purpose |
 |---|---|
 | `tools/detect-identity.js` | Who owns a replay folder, from headers only. `--dir=<Replays>`. Same algorithm the app uses, runnable without launching it. |
+| `tools/moments-report.js` | The ranked key moments of a parsed replay, phrased from a chosen seat. `--replay=NAME [--seat=ID] [--all]`. **This is how the ranking gets judged** — run it on a game you remember; if the fight you actually recall is missing, the ranking is wrong, not the UI. |
+| `tools/desktop-preview.js` | Writes `desktop/dist/preview.html`: the real desktop frontend, stubbed Tauri IPC, summaries built from real parsed replays. Iterate on the UI in a browser without building the app. Run `build-desktop-client.js` first. |
 | `tools/test-profile-aggregate.js` | Profile/coach assertions over a synthetic corpus, including the identity tie-refusal guards. |
 | `tools/verify-bundle-parity.js` | Node source vs committed browser bundle. Catches stale bundles and dynamic-require breakage. `--fast` also proves `skipPathfinding` is forwarded. |
 | `tools/check-determinism.js` | Parses N times in clean processes; must report 0 differing leaves. |

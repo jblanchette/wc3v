@@ -66,3 +66,7 @@ desktop/src-tauri/resources/
 # a private key must never enter the repo. Real key lives in ~/.tauri/.
 *.key
 !**/public.key
+
+# Per-run output of tools/reparse-all.js (batch status + morph counts).
+# Regenerated on every run; never meaningful to share.
+tools/.reparse-report.json

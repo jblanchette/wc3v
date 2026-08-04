@@ -48,6 +48,12 @@ const SCALE_OVERRIDES = {
   // —— Undead —— (user: "fiends very large", "death knight a bit bigger")
   ucry: 1.10, ucrm: 1.10,   // Crypt Fiend       2.37x → 1.57x
   uabo: 1.15,               // Abomination       3.14x → 1.92x
+  // Obsidian Statue / Destroyer share one two-form GLB, so audit-model-scale
+  // reports the COMBINED bbox for both (5.55x / 3.96x) — the real per-form
+  // heights are 230.5 and 205.3 world units, i.e. 4.03x and 2.57x a footman.
+  // These bring them into the same band as the other large Undead units above.
+  uobs: 0.88,               // Obsidian Statue   4.03x → 2.00x
+  ubsp: 1.05,               // Destroyer         2.57x → 2.11x
   Udea: 1.25,               // Death Knight      2.80x → 1.94x
   Udre: 1.15,               // Dread Lord        2.54x → 1.95x
   Ucrl: 1.40,               // Crypt Lord (big)  2.86x → 2.17x

@@ -79,8 +79,21 @@
     TURN_RAD_PER_FRAME_CAP: 0.2,  // mirrors KinematicResim
     WC3_FRAME_MS: 30,             // mirrors KinematicResim
 
-    MAX_TARGET_RADIUS: 176   // largest observed collisionSize; sizes the hash query
+    MAX_TARGET_RADIUS: 176,  // largest observed collisionSize; sizes the hash query
+
+    // --- support casters ----------------------------------------------------
+    // Replenish Life / Mana (Arpl / Arpm): 700 radius, 1s cooldown, targets
+    // friendly units. Straight from abilitydata.slk.
+    REPLENISH_RADIUS: 700,
+    REPLENISH_PERIOD_S: 1
   });
+
+  // Units that carry a real weapon in the SLK but do not auto-acquire in game.
+  // The Obsidian Statue is the melee-relevant one: with Replenish on autocast
+  // (its default) it stands and channels, and only swings when the player
+  // explicitly orders an attack. Treating its weapon like a grunt's made every
+  // statue near a fight look like a combatant.
+  const SUPPORT_CASTER_IDS = new Set(['uobs']);
 
   // --- path gap rule: identical to ClientUnit.isPathGap / KinematicResim -----
   const PATH_MIN_TIME_GAP = 5 * 1000;
@@ -354,7 +367,7 @@
 
       const byUuid = new Map();
       const campsEngaged = new Set();
-      const stats = { walk: 0, attack: 0, idle: 0, suppressedNoTarget: 0, bySource: { battle: 0, order: 0, camp: 0 } };
+      const stats = { walk: 0, attack: 0, idle: 0, replenish: 0, suppressedNoTarget: 0, bySource: { battle: 0, order: 0, camp: 0 } };
       const scratch = [];
 
       for (const a of live) {
@@ -420,6 +433,40 @@
           if (d < bestD || (d === bestD && best && c.uuid < best.uuid)) { best = c; bestD = d; }
         }
 
+        // --- SUPPORT CASTERS: an explicit order, or it's channelling ---------
+        // A statue in the middle of a fight is not fighting. It has a weapon,
+        // but in game it stands and pulses Replenish unless the player right-
+        // clicks an enemy, so 'battle'/'camp' corroboration is NOT enough here
+        // — only a real attack order is.
+        if (SUPPORT_CASTER_IDS.has(a.u.itemId) && src !== 'order') {
+          const ally = this._replenishTarget(a, live, query, scratch);
+          if (!ally) { emitIdle(src ? 'no-replenish-target' : 'no-corroboration', best); continue; }
+
+          // Replenish is an engine-driven autocast pulse — it is never recorded
+          // in the replay, so this is SYNTHESIZED, not observed: a statue with a
+          // friendly unit inside 700 is assumed to be channelling at it, which
+          // is what one is doing for nearly all of its life. The statue's attack
+          // and replenish share a single MDX clip ("Attack Spell"), so this
+          // reuses the swing cadence and simply aims at the ally instead.
+          const period = C.REPLENISH_PERIOD_S;
+          const phase = (((t - a.sampleTime) / 1000) % period + period) % period;
+          // State is 'cast', NOT 'attack'. They share a clip, but conflating
+          // them would defeat the attack invariants (target/reach/corroboration)
+          // that exist precisely to stop units animating at nothing.
+          byUuid.set(a.uuid, {
+            uuid: a.uuid, state: 'cast', x: a.x, y: a.y,
+            facing: this._facingFor(a, ally, t), bakedFacing: a.facing,
+            speed: 0, strideScale: 1, melee: false,
+            targetUuid: ally.uuid, targetX: ally.x, targetY: ally.y,
+            targetDist: Math.hypot(ally.x - a.x, ally.y - a.y),
+            swingPeriod: period, swingPhase: phase,
+            clipFill: Math.min(1, phase / period),
+            acqTime: a.sampleTime, isSupportCast: true, reason: 'replenish'
+          });
+          stats.replenish++;
+          continue;
+        }
+
         if (!src) {
           // No reason to believe a fight is happening — but still turn to watch
           // a nearby threat, which is what a unit on guard actually looks like.
@@ -461,6 +508,26 @@
       }
 
       return { gameTime: t, byUuid, live, inBattle, campsEngaged, stats };
+    }
+
+    /**
+     * Nearest FRIENDLY unit a support caster would be channelling at — the
+     * mirror of _nearestThreat. Buildings are skipped (Replenish targets units),
+     * as are neutrals, so a statue parked by a shop doesn't pretend to heal it.
+     */
+    _replenishTarget (a, live, query, scratch) {
+      const radius = C.REPLENISH_RADIUS;
+      let best = null, bestD = Infinity;
+      const idxs = query(a.x, a.y, radius, scratch);
+      for (let n = 0; n < idxs.length; n++) {
+        const c = live[idxs[n]];
+        if (c === a || c.targetOnly || c.isNeutral) continue;
+        if (c.teamId !== a.teamId) continue;
+        const d = Math.hypot(c.x - a.x, c.y - a.y);
+        if (d > radius) continue;
+        if (d < bestD || (d === bestD && best && c.uuid < best.uuid)) { best = c; bestD = d; }
+      }
+      return best;
     }
 
     _nearestThreat (a, live, query, scratch, radius) {

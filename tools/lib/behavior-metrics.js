@@ -88,7 +88,7 @@ function measure (data, opts) {
     attackWhileMoving: 0, attackNoCorroboration: 0, attackStale: 0,
     meleeShortDwell: 0, creepOutOfRange: 0, facingOverBudget: 0
   };
-  let frames = 0, walk = 0, attack = 0, idle = 0, suppressed = 0;
+  let frames = 0, walk = 0, attack = 0, cast = 0, idle = 0, suppressed = 0;
   const bySource = { battle: 0, order: 0, camp: 0 };
   let legacyAttackFrames = 0, legacyStationaryFrames = 0, airSwings = 0;
   const flips = new Map();   // uuid -> transitions
@@ -111,6 +111,10 @@ function measure (data, opts) {
       frames++;
       if (d.state === 'walk') walk++;
       else if (d.state === 'attack') attack++;
+      // 'cast' is a support channel (statue Replenish), deliberately NOT folded
+      // into `attack` — the attack invariants below must keep measuring real
+      // swings only, or a channelling statue would mask a genuine air swing.
+      else if (d.state === 'cast') cast++;
       else idle++;
 
       // cheap order-independent hash for the determinism check
@@ -187,7 +191,7 @@ function measure (data, opts) {
     actors: units.length,
     violations: V,
     mismatch,
-    frames, walk, attack, idle, suppressed,
+    frames, walk, attack, cast, idle, suppressed,
     bySource,
     legacyAttackFrames, legacyStationaryFrames, airSwings,
     totalFlips, unitCount, durMin,

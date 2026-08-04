@@ -1,0 +1,135 @@
+/* Overlay styling — rendered BOTH by the OBS Browser Source (inlined into
+   overlay.html by overlay.rs) and by the preview inside the WC3V window
+   (loaded as a normal stylesheet). One file, so the preview cannot lie about
+   what viewers will see.
+
+   Art direction: earthy, carved, muted. No neon, no saturated primaries, no
+   glow. Sized for a stream, where the viewer is metres from the screen. */
+
+:root {
+  --panel: rgba(24, 20, 15, 0.92);
+  --panel-edge: #3a3226;
+  --ink: #e8e0d2;
+  --dim: #9a8f7d;
+  --win: #86a96b;
+  --loss: #b5563f;
+  --gold: #c9a227;
+}
+[data-theme="slate"] {
+  --panel: rgba(21, 24, 28, 0.92);
+  --panel-edge: #2e3640;
+  --ink: #dde4ea;
+  --dim: #8a97a3;
+  --gold: #a3b8c9;
+}
+
+.wc3v-ov * { box-sizing: border-box; margin: 0; }
+
+.wc3v-ov {
+  color: var(--ink);
+  font: 0.875rem/1.45 "Segoe UI", system-ui, sans-serif;
+}
+
+.wc3v-ov .card {
+  max-width: 27rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.wc3v-ov .mod + .mod { border-top: 1px solid var(--panel-edge); }
+
+/* ── session ─────────────────────────────────────────────────────────── */
+.wc3v-ov .session {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.55rem 0.9rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+.wc3v-ov .session .label { color: var(--dim); }
+.wc3v-ov .session .score { font-size: 1.05rem; font-weight: 600; }
+.wc3v-ov .session .score .w { color: var(--win); }
+.wc3v-ov .session .score .l { color: var(--loss); }
+.wc3v-ov .session .streak { margin-left: auto; color: var(--gold); font-weight: 600; }
+
+/* ── verdict ─────────────────────────────────────────────────────────── */
+.wc3v-ov .verdict {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem 0.15rem;
+}
+.wc3v-ov .verdict .word { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.06em; }
+.wc3v-ov .verdict .word.win { color: var(--win); }
+.wc3v-ov .verdict .word.loss { color: var(--loss); }
+.wc3v-ov .verdict .word.unknown { color: var(--dim); font-size: 1.1rem; }
+.wc3v-ov .verdict .vs { color: var(--dim); }
+.wc3v-ov .verdict .vs b { color: var(--ink); font-weight: 600; }
+.wc3v-ov .meta { padding: 0 0.9rem 0.6rem; color: var(--dim); }
+
+/* ── head to head ────────────────────────────────────────────────────── */
+.wc3v-ov .h2h {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.55rem 0.9rem;
+}
+.wc3v-ov .h2h .label { color: var(--dim); font-variant: small-caps; letter-spacing: 0.04em; }
+.wc3v-ov .h2h .who { font-weight: 600; overflow-wrap: anywhere; }
+.wc3v-ov .h2h .rec { margin-left: auto; font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
+.wc3v-ov .h2h .rec .w { color: var(--win); }
+.wc3v-ov .h2h .rec .l { color: var(--loss); }
+
+/* ── timings ─────────────────────────────────────────────────────────── */
+.wc3v-ov .timings { display: grid; grid-template-columns: repeat(4, 1fr); }
+.wc3v-ov .timings .cell { padding: 0.5rem 0.35rem; text-align: center; }
+.wc3v-ov .timings .cell + .cell { border-left: 1px solid var(--panel-edge); }
+.wc3v-ov .timings .k { font-size: 0.8rem; color: var(--dim); font-variant: small-caps; }
+.wc3v-ov .timings .v { font-size: 1.05rem; font-weight: 600; }
+
+/* ── moments ─────────────────────────────────────────────────────────── */
+.wc3v-ov .moments { padding: 0.55rem 0.9rem 0.7rem; }
+.wc3v-ov .moments ol { list-style: none; }
+.wc3v-ov .moments li {
+  display: flex;
+  gap: 0.55rem;
+  padding: 0.12rem 0;
+  align-items: baseline;
+}
+.wc3v-ov .moments .t { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 2.8rem; }
+.wc3v-ov .moments .n { overflow-wrap: anywhere; }
+.wc3v-ov .moments li.hero .n { color: var(--gold); }
+
+/* ── build ───────────────────────────────────────────────────────────── */
+.wc3v-ov .build { padding: 0.55rem 0.9rem 0.7rem; }
+.wc3v-ov h2 {
+  font-size: 0.8rem;
+  color: var(--dim);
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+.wc3v-ov .build ol { list-style: none; columns: 2; column-gap: 1.2rem; }
+.wc3v-ov .build li { display: flex; gap: 0.5rem; break-inside: avoid; padding: 0.08rem 0; }
+.wc3v-ov .build .t { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 2.6rem; }
+.wc3v-ov .build li.hero .n { color: var(--gold); }
+.wc3v-ov .build li.expansion .n { color: var(--win); }
+
+.wc3v-ov .waiting { padding: 1.1rem 0.9rem; color: var(--dim); }
+
+/* A clearly-labelled fake game, so a streamer can size and place the source
+   before ever playing. It must be impossible to mistake for a real result. */
+.wc3v-ov .demo {
+  padding: 0.3rem 0.9rem;
+  background: rgba(201, 162, 39, 0.16);
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  text-align: center;
+}

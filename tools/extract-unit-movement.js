@@ -13,7 +13,8 @@
  *   {
  *     "version": 1,
  *     "units": {
- *       "<itemId>": { "moveSpeed": N, "turnRate": N, "propWindow": N, "moveType": "foot" }
+ *       "<itemId>": { "moveSpeed": N, "turnRate": N, "propWindow": N, "moveType": "foot",
+ *                     "moveHeight": N }   // flight altitude, omitted for ground units
  *     }
  *   }
  *
@@ -63,6 +64,10 @@ for (const row of balance.rows) {
   const propWindow = num(d.propWin);        // degrees
   const moveType   = (typeof d.movetp === 'string' && d.movetp !== '_' && d.movetp !== '-')
     ? d.movetp : null;
+  // Flight altitude in world units above the terrain. 240 for true flyers
+  // (gargoyle, frost wyrm, destroyer), 50 for hoverers (banshee), 0 for ground.
+  // Without it the 3D viewer draws every air unit standing on the ground.
+  const moveHeight = num(d.moveHeight);
 
   // Keep only things that actually move (or can turn). Skips buildings/items.
   if ((moveSpeed == null || moveSpeed <= 0) && (turnRate == null || turnRate <= 0)) {
@@ -75,6 +80,7 @@ for (const row of balance.rows) {
   if (turnRate != null && turnRate > 0)   entry.turnRate = +turnRate.toFixed(3);
   if (propWindow != null)                 entry.propWindow = +propWindow.toFixed(1);
   if (moveType)                           entry.moveType = moveType;
+  if (moveHeight != null && moveHeight > 0) entry.moveHeight = Math.round(moveHeight);
   units[id] = entry;
   kept++;
 }

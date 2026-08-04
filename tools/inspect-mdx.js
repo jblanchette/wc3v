@@ -40,6 +40,10 @@ function parseArgs () {
   for (const a of args) {
     if (a.startsWith('--file=')) out.file = a.slice(7);
     else if (a.startsWith('--unit=')) out.unit = a.slice(7);
+    // Probe geoset visibility against a sequence OTHER than Stand — needed for
+    // two-form models (e.g. Obsidian Statue, whose Destroyer form lives in the
+    // "Alternate" sequences and is hidden for the whole Stand interval).
+    else if (a.startsWith('--seq=')) out.seq = a.slice(6);
   }
   return out;
 }
@@ -153,7 +157,9 @@ function main () {
   console.log('');
 
   // --- GeosetAnims (visibility/alpha) ---
-  const stdSeq = pickStandSequence(mdx);
+  const stdSeq = opts.seq
+    ? (mdx.Sequences || []).find(s => s.Name.toLowerCase().includes(opts.seq.toLowerCase()))
+    : pickStandSequence(mdx);
   const sStart = stdSeq ? stdSeq.Interval[0] : 0, sEnd = stdSeq ? stdSeq.Interval[1] : 0;
   console.log('GEOSET ANIMS (' + (mdx.GeosetAnims || []).length + ')  [' + (stdSeq ? stdSeq.Name : 'no-stand') + ' ' + sStart + '..' + sEnd + ']:');
   for (const ga of (mdx.GeosetAnims || [])) {

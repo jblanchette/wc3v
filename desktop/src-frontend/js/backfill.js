@@ -22,7 +22,8 @@
 
   window.createBackfill = (deps) => {
     // deps: invoke, log, makeWorker, parseOn(worker, path), persistSummary(out, key),
-    //       isStored(key), status(text), onIdleChange(running)
+    //       isStored(key), status(text), onIdleChange(running),
+    //       progress(done, total) — optional
     const st = {
       running: false,
       queue: [],
@@ -70,6 +71,7 @@
         line += ' · measuring rate…';
       }
       deps.status(line);
+      if (deps.progress) deps.progress(processed(), c.total);
     };
 
     const workerLoop = async () => {

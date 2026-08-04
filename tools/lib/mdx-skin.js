@@ -37,17 +37,24 @@ const SEQ_BAD = {
   attack: ['lumber', 'gold', 'defend', 'spell', 'slam', 'throw'],
   death: ['decay', 'flesh', 'bone', 'spin', 'upper', 'explode']
 };
-function pickByPrefix (mdx, prefix, extraBad) {
+// Some units keep TWO forms in a single MDX: the second form's clips are
+// suffixed "Alternate" and its geosets are toggled on by GeosetAnim alpha
+// (Obsidian Statue ⇄ Destroyer). Passing { alternate: true } flips 'alternate'
+// from an exclusion into a requirement so the second form can be picked out.
+function pickByPrefix (mdx, prefix, extraBad, opts) {
   if (!mdx.Sequences || !mdx.Sequences.length) return null;
-  const bad = BAD_COMMON.concat(extraBad || []);
+  const wantAlt = !!(opts && opts.alternate);
+  const common = wantAlt ? ['morph'] : BAD_COMMON;
+  const nameOk = (n) => n.startsWith(prefix) && (!wantAlt || n.includes('alternate'));
+  const bad = common.concat(extraBad || []);
   let cands = mdx.Sequences.filter(s => {
     const n = s.Name.toLowerCase();
-    return n.startsWith(prefix) && !bad.some(b => n.includes(b));
+    return nameOk(n) && !bad.some(b => n.includes(b));
   });
   if (!cands.length) {
     cands = mdx.Sequences.filter(s => {
       const n = s.Name.toLowerCase();
-      return n.startsWith(prefix) && !BAD_COMMON.some(b => n.includes(b));
+      return nameOk(n) && !common.some(b => n.includes(b));
     });
   }
   if (!cands.length) return null;
@@ -65,15 +72,53 @@ function pickByPrefix (mdx, prefix, extraBad) {
 // The idle "Stand" sequence (back-compat; used by check-skinning + inspect-mdx).
 function pickStandSequence (mdx) { return pickByPrefix(mdx, 'stand', SEQ_BAD.stand); }
 
+// True when the MDX carries a second playable form in "Alternate" sequences.
+function hasAlternateForm (mdx) {
+  return (mdx.Sequences || []).some(s => s.Name.toLowerCase().includes('alternate'));
+}
+
 // Canonical clip set for the animation state machine. Categories whose sequence
 // is absent (e.g. statues have no Walk/Attack) come back null and are skipped.
+//
+// Two-form models additionally yield *_alt clips plus the two morph transitions:
+// "Morph" plays base → alternate, "Morph Alternate" plays alternate → base.
 function pickSequences (mdx) {
-  return {
+  const seqs = {
     idle: pickByPrefix(mdx, 'stand', SEQ_BAD.stand),
     walk: pickByPrefix(mdx, 'walk', SEQ_BAD.walk),
     attack: pickByPrefix(mdx, 'attack', SEQ_BAD.attack),
     death: pickByPrefix(mdx, 'death', SEQ_BAD.death)
   };
+  if (!hasAlternateForm(mdx)) return seqs;
+
+  const alt = { alternate: true };
+  seqs.idle_alt = pickByPrefix(mdx, 'stand', SEQ_BAD.stand, alt);
+  seqs.walk_alt = pickByPrefix(mdx, 'walk', SEQ_BAD.walk, alt);
+  seqs.attack_alt = pickByPrefix(mdx, 'attack', SEQ_BAD.attack, alt);
+  seqs.death_alt = pickByPrefix(mdx, 'death', SEQ_BAD.death, alt);
+
+  const byName = (pred) => (mdx.Sequences || []).find(s => pred(s.Name.toLowerCase())) || null;
+  seqs.morph = byName(n => n.startsWith('morph') && !n.includes('alternate'));
+  seqs.morph_alt = byName(n => n.startsWith('morph') && n.includes('alternate'));
+
+  return seqs;
+}
+
+// Which form a geoset belongs to, for two-form models. A geoset is kept when
+// it's visible during the idle of EITHER form; geosets hidden in both are gore
+// / effect planes and stay dropped exactly as before. Returns 'base',
+// 'alternate', 'both', or null (drop).
+function geosetFormVisibility (mdx, gi, baseIdle, altIdle) {
+  const inBase = baseIdle
+    ? geosetVisibleDuringStand(mdx, gi, baseIdle.Interval[0], baseIdle.Interval[1])
+    : true;
+  const inAlt = altIdle
+    ? geosetVisibleDuringStand(mdx, gi, altIdle.Interval[0], altIdle.Interval[1])
+    : false;
+  if (inBase && inAlt) return 'both';
+  if (inBase) return 'base';
+  if (inAlt) return 'alternate';
+  return null;
 }
 
 // Evaluate a scalar AnimVector at `frame` WITHIN sequence interval [from,to],
@@ -120,4 +165,7 @@ function geosetVisibleDuringStand (mdx, gi, start, end) {
   return maxA > 0.1;
 }
 
-module.exports = { stripMDXChunks, pickStandSequence, pickSequences, evalAnimScalarInSeq, geosetVisibleDuringStand };
+module.exports = {
+  stripMDXChunks, pickStandSequence, pickSequences, evalAnimScalarInSeq,
+  geosetVisibleDuringStand, geosetFormVisibility, hasAlternateForm
+};

@@ -1,0 +1,728 @@
+/* ============================================================
+   app.css — WC3V desktop.
+
+   Consumes client/css/tokens.css (copied to css/vendor/tokens.css by
+   tools/build-desktop-client.js). This file adds only what the desktop
+   needs on top; it is NOT a second design system.
+
+   REGISTER: the warm/carved one. tokens.css ships two families — the
+   site's navy chrome (--bg / --surface / --text) and the viewer's warm
+   carved fixtures (--vc-* rails, --dom-* cast-bronze). The desktop app
+   is a Warcraft fixture, not a dashboard, so it is built on --vc-* and
+   --dom-*. The navy surfaces are deliberately unused here.
+
+   The one thing tokens.css does not carry is warm INK — its text ramp
+   (#e8eaf0 → #6b7290) is tuned against navy and reads blue on #17150f.
+   The --ink-* tokens below are that gap, and nothing else new.
+
+   ART DIRECTION (enforced, not decorative):
+     • earthy, muted, heraldic — painted banners and carved stone
+     • NO glow: no shadow halos, no text-shadow bloom, no filter flares
+     • depth comes from a hard dark outline + a 1px struck highlight
+       + inset shadow. That is the whole vocabulary.
+     • no fully saturated colour anywhere
+   HOUSE RULES: no font below --fs-min (0.8rem), no icon below 36px,
+   no single-edge accent stripes, no ellipsis truncation.
+   ============================================================ */
+
+:root {
+  /* Warm surfaces, deepest → highest. All from the viewer chrome family. */
+  --app-well:    var(--vc-well);     /* #0b0805 — page bed, insets      */
+  --app-bg:      #131009;            /* between --vc-well and --vc-rail-2 */
+  --app-panel:   var(--vc-rail-2);   /* #17150f — cards                 */
+  --app-panel-2: var(--vc-rail);     /* #1e1b16 — raised / hover        */
+  --app-line:    var(--vc-hairline); /* #2f2819 — dividers              */
+  --app-edge:    var(--vc-edge);     /* #453a25 — lit edges, borders    */
+
+  /* Warm ink ramp — the gap in tokens.css described above. */
+  --ink:      #E8E0D2;
+  --ink-2:    #BFB49F;
+  --ink-dim:  #9A8F7D;
+  --ink-faint:#6E6555;
+
+  /* Outcome. Straight out of the carved --dom-* family so a verdict badge
+     sits in the same paintbox as the dominance gauge. Never --ok/--bad:
+     those are the site's mint/salmon, which glow against warm brown. */
+  --verdict-win:  var(--dom-green);  /* moss    */
+  --verdict-loss: #A65340;           /* rust — bronze family, desaturated */
+  --verdict-none: var(--dom-grey);   /* ash     */
+
+  /* The carved vocabulary, as reusable values. */
+  --cut:    inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -1px 0 rgba(0,0,0,0.45);
+  --cut-in: inset 0 2px 4px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,255,255,0.035);
+  --outline: 1px solid #0a0704;
+
+  --rail-w: 27rem;   /* games feed column */
+}
+
+* { box-sizing: border-box; }
+
+/* Several components below set `display` on their own class, which silently
+   beats the `hidden` attribute's UA rule. Everything in this app hides via
+   `hidden`, so it has to win. */
+[hidden] { display: none !important; }
+
+html { font-size: 16px; }
+
+body {
+  margin: 0;
+  background: var(--app-well);
+  color: var(--ink);
+  font: var(--fs-sm)/1.5 var(--font);
+  /* The window is a fixed frame; only the marked regions scroll. */
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  min-height: 0;
+}
+
+.scroll { overflow-y: auto; min-height: 0; }
+
+/* Scrollbars, carved rather than default-blue. */
+.scroll::-webkit-scrollbar { width: 10px; }
+.scroll::-webkit-scrollbar-track { background: var(--app-well); }
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--app-panel-2);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+}
+.scroll::-webkit-scrollbar-thumb:hover { background: var(--app-edge); }
+
+/* ── App bar ─────────────────────────────────────────────────────────── */
+
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-4);
+  height: 56px;
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border-bottom: 1px solid var(--app-line);
+  box-shadow: var(--cut);
+}
+
+.brand {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--gold-deep);
+  /* Struck, not glowing: one dark shoulder below the glyphs. */
+  text-shadow: 0 1px 0 #000;
+}
+
+.identity-wrap { position: relative; }
+
+.identity {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.identity:hover { border-color: var(--app-edge); }
+.identity-label { color: var(--ink-faint); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.identity-name { font-weight: 600; }
+.identity[data-set="0"] .identity-name { color: var(--warn); }
+
+.identity-pop {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  left: 0;
+  z-index: 20;
+  width: 22rem;
+  padding: var(--sp-4);
+  background: var(--app-panel);
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2), var(--cut);
+}
+.pop-lead { margin: 0 0 var(--sp-3); color: var(--ink-2); font-size: var(--fs-min); }
+
+.session {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.session-label { color: var(--ink-faint); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.session-score { font-size: var(--fs-lg); font-weight: 700; font-variant-numeric: tabular-nums; }
+.session-score .w { color: var(--verdict-win); }
+.session-score .l { color: var(--verdict-loss); }
+.session-score i { color: var(--ink-faint); font-style: normal; padding: 0 2px; }
+.session-streak { color: var(--gold-deep); font-size: var(--fs-min); font-weight: 600; }
+
+.nav { display: flex; gap: var(--sp-1); margin-left: auto; }
+
+.nav-item {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-4);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--ink-dim);
+  font: inherit;
+  cursor: pointer;
+}
+.nav-item:hover { color: var(--ink); background: var(--app-well); }
+.nav-item.is-active {
+  color: var(--ink);
+  background: var(--app-well);
+  border-color: var(--app-edge);
+  box-shadow: var(--cut-in);
+}
+
+/* ── Views ───────────────────────────────────────────────────────────── */
+
+main { min-height: 0; position: relative; }
+
+.view { display: none; height: 100%; min-height: 0; }
+.view.is-active { display: grid; }
+
+.view-games { grid-template-columns: var(--rail-w) 1fr; }
+.view-profile { grid-template-rows: auto 1fr; }
+.view-stream, .view-settings { grid-template-rows: 1fr; }
+
+/* ── Feed ────────────────────────────────────────────────────────────── */
+
+.feed-col {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  min-height: 0;
+  background: var(--app-bg);
+  border-right: 1px solid var(--app-line);
+}
+
+.feed-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-4) var(--sp-2);
+}
+.feed-head h2 {
+  margin: 0;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.feed-count { margin-left: auto; color: var(--ink-faint); font-size: var(--fs-min); }
+
+.backfill-bar { padding: 0 var(--sp-4) var(--sp-3); }
+.backfill-text { color: var(--ink-dim); font-size: var(--fs-min); margin-bottom: var(--sp-1); }
+.backfill-track {
+  height: 6px;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut-in);
+  overflow: hidden;
+}
+.backfill-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(180deg, var(--dom-orange), #8a5a26);
+  transition: width var(--dur) var(--ease);
+}
+
+.feed { padding: 0 var(--sp-3) var(--sp-4); }
+
+.feed-day {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--sp-3) var(--sp-2) var(--sp-1);
+  background: var(--app-bg);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game {
+  display: grid;
+  grid-template-columns: var(--ico-sm) 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  margin-bottom: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.game:hover { background: var(--app-panel-2); border-color: var(--app-edge); }
+.game.is-active {
+  background: var(--app-panel-2);
+  border-color: var(--app-edge);
+  box-shadow: var(--cut);
+}
+
+/* Verdict tile. A carved plaque, not an edge stripe (single-edge accents
+   are forbidden) — the letter is the signal and the colour reinforces it. */
+.verdict-tile {
+  display: grid;
+  place-items: center;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--app-well);
+}
+.verdict-tile[data-v="win"]  { background: linear-gradient(180deg, #86ab68, var(--verdict-win)); }
+.verdict-tile[data-v="loss"] { background: linear-gradient(180deg, #b96450, var(--verdict-loss)); }
+.verdict-tile[data-v="none"] { background: linear-gradient(180deg, #85807a, var(--verdict-none)); }
+
+.game-main { min-width: 0; }
+.game-vs { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.game-meta {
+  display: block;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+.game-when { color: var(--ink-faint); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+
+/* ── Race chip ───────────────────────────────────────────────────────── */
+
+.matchup { display: inline-flex; align-items: center; gap: 3px; }
+.race-mark {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.4rem;
+  padding: 0 4px;
+  border: var(--outline);
+  border-radius: 3px;
+  background: var(--app-well);
+  color: var(--race, var(--ink-2));
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.matchup i { color: var(--ink-faint); font-style: normal; }
+
+/* ── Detail ──────────────────────────────────────────────────────────── */
+
+.detail-col { padding: var(--sp-5) var(--sp-5) var(--sp-7); background: var(--app-well); }
+
+.detail-empty {
+  display: grid;
+  place-content: center;
+  gap: var(--sp-2);
+  height: 100%;
+  text-align: center;
+  color: var(--ink-faint);
+}
+
+.verdict-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.verdict-word {
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 #000;
+}
+.verdict-word[data-v="win"]  { color: var(--verdict-win); }
+.verdict-word[data-v="loss"] { color: var(--verdict-loss); }
+.verdict-word[data-v="none"] { color: var(--ink-dim); font-size: var(--fs-h2); }
+.verdict-vs { color: var(--ink-dim); font-size: var(--fs-lg); }
+.verdict-vs b { color: var(--ink); }
+.detail-meta { color: var(--ink-dim); margin: 0 0 var(--sp-4); overflow-wrap: anywhere; }
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.panel {
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-4);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius);
+  box-shadow: var(--cut);
+}
+.panel > h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.panel .lead { margin: 0 0 var(--sp-3); color: var(--ink-2); }
+
+/* Timing strip — four cut wells in one frame. */
+.timings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 1px;
+  background: var(--app-line);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.timing {
+  padding: var(--sp-3) var(--sp-2);
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+  text-align: center;
+}
+.timing-k {
+  display: block;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.timing-v { display: block; font-size: var(--fs-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.timing-v.is-none { color: var(--ink-faint); font-weight: 400; }
+
+/* ── Moments ─────────────────────────────────────────────────────────── */
+
+.moments { list-style: none; margin: 0; padding: 0; }
+
+.moment {
+  display: grid;
+  grid-template-columns: 3.2rem var(--ico-sm) 1fr auto auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--app-line);
+}
+.moment:last-child { border-bottom: 0; }
+
+.moment-time {
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--fs-min);
+}
+
+.moment-icon {
+  display: grid;
+  place-items: center;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-well));
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+  color: var(--ink-2);
+}
+.moment-icon svg { width: 20px; height: 20px; fill: currentColor; }
+.moment[data-kind="heroKill"] .moment-icon,
+.moment[data-kind="heroTrade"] .moment-icon,
+.moment[data-kind="heroLostToCreeps"] .moment-icon { color: var(--dom-orange); }
+.moment[data-kind="expansion"] .moment-icon { color: var(--dom-green); }
+.moment[data-kind="tier2"] .moment-icon,
+.moment[data-kind="tier3"] .moment-icon { color: var(--dom-blue); }
+
+.moment-text { overflow-wrap: anywhere; }
+.moment-text b { color: var(--ink); }
+
+.moment-swing {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ── Build order ─────────────────────────────────────────────────────── */
+
+.builds { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--sp-4); }
+.build-col h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.build-list { list-style: none; margin: 0; padding: 0; }
+.build-list li {
+  display: flex;
+  gap: var(--sp-3);
+  padding: 2px 0;
+  font-size: var(--fs-min);
+}
+.build-list .t { color: var(--ink-faint); font-variant-numeric: tabular-nums; min-width: 3rem; }
+.build-list li[data-type="hero"] .n { color: var(--gold-deep); }
+.build-list li[data-type="expansion"] .n { color: var(--verdict-win); }
+.build-list .n { overflow-wrap: anywhere; }
+
+/* ── Head to head ────────────────────────────────────────────────────── */
+
+.h2h-score { font-size: var(--fs-h2); font-weight: 700; font-variant-numeric: tabular-nums; }
+.h2h-score .w { color: var(--verdict-win); }
+.h2h-score .l { color: var(--verdict-loss); }
+.h2h-lines { list-style: none; margin: var(--sp-3) 0 0; padding: 0; }
+.h2h-lines li { padding: 3px 0; color: var(--ink-2); overflow-wrap: anywhere; }
+
+/* ── Profile ─────────────────────────────────────────────────────────── */
+
+.profile-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-bg);
+}
+/* The scrolling element stays full width so its scrollbar sits at the window
+   edge; the reading measure is imposed on the children instead. Capping the
+   scroller itself parks the scrollbar mid-window, which reads as a broken
+   panel. */
+.profile-body, .stream-body, .settings-body { padding: var(--sp-5); }
+.profile-body > *, .stream-body > *, .settings-body > * { max-width: 60rem; }
+.profile-head { margin-bottom: var(--sp-4); }
+.profile-name { margin: 0; font-size: var(--fs-h1); }
+.profile-sub { color: var(--ink-dim); }
+
+.stat-table { width: 100%; border-collapse: collapse; }
+.stat-table th {
+  text-align: left;
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--app-line);
+}
+.stat-table td {
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--app-line);
+  overflow-wrap: anywhere;
+}
+.stat-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat-table tr:last-child td { border-bottom: 0; }
+
+.coach { list-style: none; margin: 0; padding: 0; }
+.coach li {
+  padding: var(--sp-2) 0 var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--app-line);
+  color: var(--ink-2);
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.coach li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 1.05em;
+  width: 6px;
+  height: 6px;
+  background: var(--dom-orange);
+  border: var(--outline);
+  transform: rotate(45deg);
+}
+.coach li:last-child { border-bottom: 0; }
+
+/* ── Settings ────────────────────────────────────────────────────────── */
+
+.roots { display: grid; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.root-name { font-weight: 600; }
+.root-meta { margin-left: auto; color: var(--ink-dim); font-size: var(--fs-min); }
+
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+.hint { color: var(--ink-dim); font-size: var(--fs-min); margin: var(--sp-2) 0 0; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--hit-min);
+  cursor: pointer;
+}
+.check input { width: 18px; height: 18px; accent-color: var(--dom-green); }
+
+/* ── Controls ────────────────────────────────────────────────────────── */
+
+.btn {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-4);
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.btn:hover { background: linear-gradient(180deg, #262117, var(--app-panel-2)); }
+.btn:active { box-shadow: var(--cut-in); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+
+.btn-primary {
+  background: linear-gradient(180deg, #7a5a24, #5c4319);
+  border-color: #8a6a2c;
+  color: #f4ead5;
+}
+.btn-primary:hover { background: linear-gradient(180deg, #8a6729, #6a4d1d); }
+
+.btn-sm { min-height: var(--ico-sm); padding: 0 var(--sp-3); font-size: var(--fs-min); }
+
+/* Selected state for the segmented theme/size pickers. */
+.btn.is-on {
+  border-color: var(--dom-orange);
+  color: var(--gold);
+  box-shadow: var(--cut-in);
+}
+
+/* The overlay preview sits on a checkerboard, because the OBS overlay is
+   transparent and a preview on a solid panel hides exactly the mistake this
+   screen exists to catch. */
+.preview-stage {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  background-color: #17140f;
+  background-image:
+    linear-gradient(45deg, #0e0c08 25%, transparent 25%, transparent 75%, #0e0c08 75%),
+    linear-gradient(45deg, #0e0c08 25%, transparent 25%, transparent 75%, #0e0c08 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  margin-bottom: var(--sp-3);
+}
+
+/* The panel checkboxes carry a name and a one-line explanation. */
+.check > span { display: grid; gap: 2px; }
+.check .hint { margin: 0; }
+
+.choices { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.choice {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.choice:hover { border-color: var(--app-edge); }
+.choice.is-active { border-color: var(--dom-green); color: var(--verdict-win); }
+
+.field { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-3); }
+.field-inline { margin-bottom: 0; min-width: 18rem; }
+.field-label { color: var(--ink-faint); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.field input {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  width: 100%;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+}
+.field input:focus { outline: none; border-color: var(--app-edge); }
+
+.empty { color: var(--ink-faint); padding: var(--sp-4) var(--sp-2); }
+
+/* ── Activity ────────────────────────────────────────────────────────── */
+
+.activity {
+  background: var(--app-panel);
+  border-top: 1px solid var(--app-line);
+  display: grid;
+  grid-template-rows: auto auto;
+  min-height: 0;
+}
+
+.activity-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-4);
+  background: transparent;
+  border: 0;
+  color: var(--ink-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.activity-toggle:hover { color: var(--ink); }
+.status { overflow-wrap: anywhere; }
+/* A failed action has to be readable where the user already is, not only in
+   the drawer. */
+.status[data-kind="err"] { color: var(--verdict-loss); font-weight: 600; }
+.activity-label {
+  margin-left: auto;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.activity-label::after { content: ' ▲'; }
+.activity[data-open="1"] .activity-label::after { content: ' ▼'; }
+
+.activity-log {
+  max-height: 16rem;
+  padding: 0 var(--sp-4) var(--sp-3);
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+}
+.log-line {
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--app-line);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+.log-line.ok   { color: var(--dom-green); }
+.log-line.warn { color: var(--gold-deep); }
+.log-line.err  { color: var(--verdict-loss); }
+
+/* ── Narrow windows ──────────────────────────────────────────────────── */
+
+@media (max-width: 1040px) {
+  .view-games { grid-template-columns: 20rem 1fr; }
+  :root { --rail-w: 20rem; }
+}

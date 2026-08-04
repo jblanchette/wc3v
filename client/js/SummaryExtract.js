@@ -82,6 +82,29 @@
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   }
 
+  // Raw replay map names are unreadable — "12_w3c_251104_0950_TurtleRock_v2.0.w3x".
+  // This is the display form: "Turtle Rock". Lives here because it is needed by
+  // every runtime that renders a summary (the site's compare modal and the
+  // desktop app both do), and this module is already the shared one.
+  //
+  // tools/import-replays.js carries the same rules for the import pipeline;
+  // client/js/CompareInline.js delegates here rather than keeping a third copy.
+  function cleanMapName (raw) {
+    if (!raw) return '';
+    let n = String(raw).replace(/^.*[/\\]/, '');
+    n = n.replace(/\.(w3x|w3m)$/i, '');
+    n = n.replace(/^\(\d+\)\s*/, '');
+    n = n.replace(/^\d+_w3c_\d+_\d+_/, '');
+    n = n.replace(/^w3c_\d+_\d+_/, '');
+    n = n.replace(/^w3c_/, '');
+    n = n.replace(/_w3c_\d+_\d+(_\d+)?$/, '');
+    n = n.replace(/^\dv\d_/, '');
+    n = n.replace(/_v[\d.-]+$/, '');
+    n = n.replace(/([a-z])([A-Z])/g, '$1 $2');
+    n = n.replace(/[_]/g, ' ').replace(/\s+/g, ' ').trim();
+    return n;
+  }
+
   function heroRaceFromItemId (itemId) {
     if (!itemId) return null;
     const c = String(itemId).charAt(0);
@@ -717,6 +740,7 @@
     slimMapInfo,
     classifyArchetype,
     formatMs,
+    cleanMapName,
     // Constants exposed for callers that want to mirror the same filtering
     // (e.g., ReplayAnalyzer when classifying eventStream tail events).
     SUMMON_UNIT_IDS,

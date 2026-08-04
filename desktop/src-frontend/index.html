@@ -2,74 +2,152 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>WC3V — local</title>
-  <link rel="stylesheet" href="./css/spike.css">
+  <title>WC3V</title>
+  <!-- tokens.css is the web client's design token layer, copied in by
+       tools/build-desktop-client.js. app.css consumes it and defines only what
+       the warm/carved desktop register needs on top. Load order matters. -->
+  <link rel="stylesheet" href="./css/vendor/tokens.css">
+  <link rel="stylesheet" href="./css/app.css">
+  <!-- The overlay's own stylesheet, so the Stream screen's preview is drawn by
+       exactly what an OBS Browser Source loads. -->
+  <link rel="stylesheet" href="./overlay/overlay.css">
 </head>
 <body>
-  <header>
-    <h1>WC3V <span class="tag">local · phase 0</span></h1>
-    <div id="status" class="status">starting…</div>
-  </header>
+  <div id="app">
+    <header class="appbar">
+      <div class="brand">WC3V</div>
 
-  <main>
-    <section class="col">
-      <h2>Replay folders</h2>
-      <div id="roots"></div>
-      <button id="pick-folder">Add folder…</button>
-      <p class="hint">Map cache: <code id="cache-dir">—</code></p>
-
-      <h2>Backfill</h2>
-      <div id="backfill-status" class="hint">idle</div>
-      <button id="backfill-toggle">Parse all replays</button>
-      <button id="backfill-retry" hidden>Retry failed</button>
-
-      <h2>Profile</h2>
-      <p class="hint">You are: <span id="identity-current" class="warn-text">not set</span></p>
-      <div id="identity-prompt" hidden>
-        <p class="hint">Which of these is you?</p>
-        <div id="identity-choices" class="choices"></div>
-      </div>
-      <input id="profile-name" list="known-names" placeholder="look up any player" autocomplete="off">
-      <datalist id="known-names"></datalist>
-      <div>
-        <button id="profile-view">View profile</button>
-        <button id="profile-setme">This is me</button>
+      <div class="identity-wrap">
+        <button id="identity-btn" class="identity" type="button" aria-expanded="false">
+          <span class="identity-label">You</span>
+          <span class="identity-name" id="identity-name">not set</span>
+        </button>
+        <div class="identity-pop" id="identity-pop" hidden>
+          <p class="pop-lead">Which player are you? Wins and losses are scored
+            from that seat.</p>
+          <div id="identity-choices" class="choices"></div>
+          <label class="field">
+            <span class="field-label">Or type a name</span>
+            <input id="identity-input" list="known-names" autocomplete="off"
+                   placeholder="exact in-game name">
+          </label>
+          <datalist id="known-names"></datalist>
+          <button id="identity-save" class="btn btn-primary" type="button">That's me</button>
+        </div>
       </div>
 
-      <h2>Stream overlay</h2>
-      <p class="hint">Loopback only. The URL carries an access token — copy it,
-        never show it on stream.</p>
-      <button id="copy-obs-url">Copy OBS URL</button>
-      <button id="open-player-view">Open player view</button>
+      <div class="session" id="session" hidden>
+        <span class="session-label">Session</span>
+        <span class="session-score"><b class="w" id="session-w">0</b><i>–</i><b class="l" id="session-l">0</b></span>
+        <span class="session-streak" id="session-streak"></span>
+      </div>
 
-      <h2>App</h2>
-      <label class="check">
-        <input type="checkbox" id="autostart-toggle">
-        Start with Windows (opens to tray)
-      </label>
-      <p class="hint">Closing the window keeps WC3V running in the tray so new
-        games still get picked up. Quit from the tray icon.</p>
-      <button id="check-update">Check for updates</button>
-      <div id="update-status" class="hint"></div>
-    </section>
+      <nav class="nav">
+        <button class="nav-item is-active" data-view="games" type="button">Games</button>
+        <button class="nav-item" data-view="profile" type="button">Profile</button>
+        <button class="nav-item" data-view="stream" type="button">Stream</button>
+        <button class="nav-item" data-view="settings" type="button">Settings</button>
+      </nav>
+    </header>
 
-    <section class="col wide">
-      <h2>Replays <span class="hint">click to parse</span></h2>
-      <div id="replays" class="scroll"></div>
-    </section>
+    <main>
+      <!-- ── Games ────────────────────────────────────────────────────── -->
+      <section class="view view-games is-active" data-view="games">
+        <div class="feed-col">
+          <div class="feed-head">
+            <h2>Your games</h2>
+            <span class="feed-count" id="feed-count"></span>
+          </div>
+          <div class="backfill-bar" id="backfill-bar" hidden>
+            <div class="backfill-text" id="backfill-text">idle</div>
+            <div class="backfill-track"><div class="backfill-fill" id="backfill-fill"></div></div>
+          </div>
+          <div class="feed scroll" id="feed"></div>
+        </div>
+        <div class="detail-col scroll" id="detail"></div>
+      </section>
 
-    <section class="col">
-      <h2>Result</h2>
-      <pre id="result" class="result"></pre>
-      <h2>Log</h2>
-      <div id="log" class="scroll log"></div>
-    </section>
-  </main>
+      <!-- ── Profile ──────────────────────────────────────────────────── -->
+      <section class="view view-profile" data-view="profile" hidden>
+        <div class="profile-bar">
+          <label class="field field-inline">
+            <span class="field-label">Look up a player</span>
+            <input id="profile-name" list="known-names" autocomplete="off"
+                   placeholder="leave blank for your own profile">
+          </label>
+          <button id="profile-view" class="btn" type="button">View profile</button>
+        </div>
+        <div class="profile-body scroll" id="profile-body"></div>
+      </section>
+
+      <!-- ── Stream ───────────────────────────────────────────────────── -->
+      <section class="view view-stream" data-view="stream" hidden>
+        <div class="stream-body scroll" id="stream-body"></div>
+      </section>
+
+      <!-- ── Settings ─────────────────────────────────────────────────── -->
+      <section class="view view-settings" data-view="settings" hidden>
+        <div class="settings-body scroll">
+          <section class="panel">
+            <h2>Replay folders</h2>
+            <p class="lead">WC3V reads the replays Warcraft III already saves.
+              Nothing is uploaded and nothing is sent anywhere.</p>
+            <div id="roots" class="roots"></div>
+            <button id="pick-folder" class="btn" type="button">Add a folder…</button>
+          </section>
+
+          <section class="panel">
+            <h2>Parsing your history</h2>
+            <p class="lead">Every game is parsed once and kept as a small
+              summary. The more that are done, the sharper your profile and
+              opponent history get.</p>
+            <div class="row">
+              <button id="backfill-toggle" class="btn btn-primary" type="button">Parse all replays</button>
+              <button id="backfill-retry" class="btn" type="button" hidden>Retry failed</button>
+            </div>
+            <p class="hint" id="backfill-status">idle</p>
+            <p class="hint">Map data lives in local app data.</p>
+          </section>
+
+          <section class="panel">
+            <h2>App</h2>
+            <label class="check">
+              <input type="checkbox" id="autostart-toggle">
+              <span>Start with Windows (opens straight to the tray)</span>
+            </label>
+            <p class="hint">Closing the window keeps WC3V running in the tray so
+              new games still get picked up. Quit from the tray icon.</p>
+            <div class="row">
+              <button id="check-update" class="btn" type="button">Check for updates</button>
+              <span class="hint" id="update-status"></span>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="activity" id="activity">
+      <button class="activity-toggle" id="activity-toggle" type="button" aria-expanded="false">
+        <span class="status" id="status">starting…</span>
+        <span class="activity-label">Activity</span>
+      </button>
+      <div class="activity-log scroll" id="log" hidden></div>
+    </footer>
+  </div>
 
   <!-- Shared client modules — committed client copies, placed into js/vendor
-       by tools/build-desktop-client.js. Must load before app.js. -->
+       by tools/build-desktop-client.js. Must load before the app modules. -->
   <script src="./js/vendor/SummaryExtract.js"></script>
   <script src="./js/vendor/ProfileAggregate.js"></script>
+  <script src="./js/vendor/MomentsExtract.js"></script>
+  <script src="./overlay/overlay-render.js"></script>
+  <script src="./js/store.js"></script>
+  <script src="./js/replay-index.js"></script>
+  <script src="./js/identity.js"></script>
+  <script src="./js/games-view.js"></script>
+  <script src="./js/profile-view.js"></script>
+  <script src="./js/stream-view.js"></script>
+  <script src="./js/settings-view.js"></script>
   <script src="./js/backfill.js"></script>
   <script src="./js/overlay-state.js"></script>
   <script src="./js/app.js"></script>

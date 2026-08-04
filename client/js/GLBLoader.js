@@ -555,6 +555,10 @@
           if (prim.indices !== undefined) geo.setIndex(new THREE.BufferAttribute(readAcc(prim.indices), 1));
 
           const sm = new THREE.SkinnedMesh(geo, materialFor(prim.material));
+          // Two-form models (Obsidian Statue ⇄ Destroyer) ship both forms'
+          // geometry in one GLB; the converter tags each primitive 'base',
+          // 'alternate' or 'both'. Untagged = single-form, always visible.
+          sm.userData.wc3Form = (prim.extras && prim.extras.form) || null;
           sm.frustumCulled = false; // skinned bounds drift; avoid false culling
           sm.bind(skeleton, new THREE.Matrix4()); // identity bindMatrix (mesh node is identity)
           skinnedMeshes.push(sm);

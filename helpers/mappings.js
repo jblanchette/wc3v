@@ -305,6 +305,8 @@ const lookupSpellFromOrderId = (itemIdBytes) => {
     toggle,
     isUnitSpell,
     isFormToggle: !!(ability && ability.isFormToggle),
+    // Present only on form toggles that swap the unit's itemId (Destroyer Form).
+    morph: (ability && ability.morph) || null,
     icon: (ability && ability.icon) || null
   };
 };
@@ -1565,6 +1567,21 @@ const unitAbilities = {
   'Uabs': { displayName: 'Absorb Mana', icon: 'Aabs' },
   'Urlf': { displayName: 'Replenish Life', isAutocast: true, icon: 'Arpl' },
   'Urlm': { displayName: 'Replenish Mana', isAutocast: true, icon: 'Arpm' },
+  'Urep': { displayName: 'Replenish', isAutocast: true, icon: 'Arpl' },
+  // Destroyer Form — unlike Stone Form / Defend (which only change stats), this
+  // swaps the unit's itemId outright. `morph.on` is what the unit becomes when
+  // the ability fires, `morph.off` what it reverts to. Consumed by Player.js,
+  // which must re-run setUnitMeta() so displayName/combat/movement follow.
+  'Uavf': {
+    displayName: 'Destroyer Form',
+    isFormToggle: true,
+    icon: 'Aave',
+    // Destroyer Form must be RESEARCHED (Rusp, at the Slaughterhouse — which
+    // itself gates on T3) before the morph button does anything. The replay
+    // records the order either way, so an unresearched press is a click the
+    // game refused, not a morph.
+    morph: { on: 'ubsp', off: 'uobs', requiresResearch: 'Rusp' }
+  },
 
   // ── Neutral building abilities ──
   // Reveal (Goblin Laboratory) — ground-target paid scout reveal. Confirmed
@@ -1947,6 +1964,9 @@ const getUnitInfo = (itemId) => {
     if (movement.turnRate != null) meta.turnRate = movement.turnRate;
     if (movement.propWindow != null) meta.propWindow = movement.propWindow;
     if (movement.moveType) meta.moveType = movement.moveType;
+    // Flight altitude (world units above terrain) — the 3D viewer lifts air
+    // units by this; absent/0 for anything that walks.
+    if (movement.moveHeight != null) meta.moveHeight = movement.moveHeight;
   }
 
   // Overlay real SLK combat/attack-timing data (cooldown, damage point,

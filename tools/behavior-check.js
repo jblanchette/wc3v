@@ -67,7 +67,8 @@ function runReplay (name) {
   check('forward-vs-reverse decision mismatch (seek safety)', M.mismatch === 0, `${M.mismatch}/${M.times.count} ticks`);
 
   console.log(`\n  STATE MIX  (${M.frames} unit-frames)`);
-  console.log(`    walk ${pct(M.walk, M.frames)}   attack ${pct(M.attack, M.frames)}   idle ${pct(M.idle, M.frames)}`);
+  console.log(`    walk ${pct(M.walk, M.frames)}   attack ${pct(M.attack, M.frames)}` +
+    `   cast ${pct(M.cast, M.frames)}   idle ${pct(M.idle, M.frames)}`);
   console.log(`    legacy attack frames (stationary AND in a battle window): ${M.legacyAttackFrames}`);
   console.log(`    ...of which the new rule finds NO target  -> AIR SWINGS REMOVED: ${M.airSwings}` +
     ` (${pct(M.airSwings, M.legacyAttackFrames)} of all legacy swings)`);

@@ -3,11 +3,15 @@
 Watches your Warcraft III replay folders, parses each game locally the moment it
 finishes, and (eventually) drives an OBS-ready overlay.
 
-**Status: functional, pre-design.** Discovery, scanning, watching, local
-parsing, summary persistence, the backfill engine, the profile/coach layer and
-the OBS overlay are all built. Nothing has been verified against a live game
-or a real OBS instance yet, and the UI is still the diagnostic spike —
-see `ROADMAP.md`.
+**Status: functional.** Discovery, scanning, watching, local parsing, summary
+persistence, the backfill engine, the profile/coach layer, the OBS overlay, the
+games UI and the "open this moment in the viewer" handoff are all built. A real
+game has been detected and parsed end to end; a real OBS has not yet rendered
+the overlay. See `ROADMAP.md`.
+
+The window is **a feed of your games**. You finish a match, alt-tab, and the
+read is already done: did I win, what did they do, and where did the game turn.
+Clicking a moment opens it in the 3D viewer on wc3v.com at that second.
 
 ## Design invariants
 
@@ -20,10 +24,12 @@ be mistaken for a cheat and stays trivially auditable.
   data source that exists.
 - **No outbound network calls at runtime.** Nothing dials out. The one socket
   in the binary is the overlay's loopback **listener** — 127.0.0.1 only,
-  token-gated, GET-only, three read-only routes (`overlay.rs` enforces all
-  four properties). OBS Browser Source is a separate Chromium process; this is
-  the only offline, read-only bridge to it. (Map data is fetched only when the
-  user explicitly asks.)
+  token-gated, GET-only, read-only routes (`overlay.rs` enforces all four
+  properties). OBS Browser Source is a separate Chromium process; this is the
+  only offline, read-only bridge to it. "Open in the viewer" opens the user's
+  browser and hands the replay over on loopback — the app itself still makes
+  no outbound request, and nothing is uploaded to a server. (Map data is
+  fetched only when the user explicitly asks.)
 - **No overlay drawn over the game.** Output is an OBS Browser Source and an
   ordinary window. Nothing is composited onto the game.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
@@ -49,15 +55,59 @@ Rust  ── discovery / watching / scoped reads / hashing / parse store / overl
   │                   └── map data ◄───┘   (worker can't reach IPC, so the
   │                                         injectable mapDataLoader bounces
   │                                         the request to the main thread)
-  └─ 127.0.0.1 SSE ──► OBS Browser Source / player view (overlay.html)
-        (webview publishes state; the server only relays it)
+  ├─ 127.0.0.1 SSE ──► OBS Browser Source / player view (overlay/)
+  │     (webview publishes state; the server only relays it)
+  └─ 127.0.0.1 ────► default browser ──postMessage──► wc3v.com viewer
+        (handoff.html; see "Opening a moment" below)
 ```
 
-Each parsed game persists as one gzipped `SummaryExtract` summary under
-`<app_data>/replays/<size>-<xxh3>.summary.json.gz` — a few KB per game, keyed
-by content so the same game re-opened (or found under a second path) loads
-from the store instead of re-parsing. Full parses are deliberately not stored;
-the raw `.w3g` is the source of truth and full viewing re-parses on demand.
+The frontend is a coordinator (`js/app.js`) plus one module per concern:
+`store` (parse store + corpus), `identity`, `games-view` (feed + detail),
+`profile-view`, `stream-view`, `settings-view`, `replay-index` (content key →
+file), `backfill`, `overlay-state`.
+
+Each parsed game persists as one gzipped summary under
+`<app_data>/replays/<size>-<xxh3>.summary.json.gz` — single-digit KB per game,
+keyed by content so the same game re-opened (or found under a second path)
+loads from the store instead of re-parsing. Full parses are deliberately not
+stored; the raw `.w3g` is the source of truth and full viewing re-parses on
+demand. The summary is `SummaryExtract`'s per-player shape plus **`moments`**
+(`MomentsExtract`) — the ranked big beats of the game, which have to be
+extracted at parse time because fights live in `world.battles` and that exists
+only in a full parse.
+
+## Opening a moment in the viewer
+
+Clicking a moment opens the real 3D viewer on wc3v.com, seeked to that second
+(`?local=<id>&at=<ms>`). The route it takes is not the obvious one, and the
+obvious one is impossible:
+
+**Browsers block a public page from reaching 127.0.0.1.** Measured against the
+live loopback server from an `https://wc3v.com` tab: a `fetch` hangs pending
+and never settles, an iframe ends in `net::ERR_ABORTED`. So the site cannot
+pull the replay from the app, and the app cannot embed the site to push it.
+
+Instead the browser **starts** on the loopback origin, where reading the replay
+is same-origin and unremarkable, and pushes it out to the site:
+
+```
+app  ──open_in_viewer──►  127.0.0.1/open   ──postMessage(bytes)──►  wc3v.com/handoff
+     (stages bytes)       (handoff.html)    (private → public, no CORS needed)
+                                                       │
+                                       parses locally (UploadManager) → MyReplays
+                                                       ▼
+                                        wc3v.com/viewer?local=<id>&at=<ms>
+```
+
+It costs one click, because `window.open` without a user gesture is
+popup-blocked. The site remembers the mapping, so opening a second moment from
+the same game skips both the handoff and the re-parse.
+
+The overlay is authored as three files (`overlay/shell.html`, `overlay.css`,
+`overlay-render.js`) and stitched into one self-contained document by
+`overlay.rs`. That split exists so the Stream screen's live preview renders
+from the same css and renderer the Browser Source loads — a preview drawn by
+separate code is a preview that can lie.
 
 ## Replay folder layout
 

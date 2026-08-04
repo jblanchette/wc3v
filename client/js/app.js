@@ -1398,6 +1398,12 @@ const Wc3vViewer = class {
       if (el.tagName === 'BUTTON') el.setAttribute('aria-pressed', isOn ? 'true' : 'false');
     });
 
+    // Footprints are a sub-style of the trail renderer, not a separate layer —
+    // the boolean picks which PathTrailRenderer3D style the trails draw in.
+    if (optionKey === 'displayFootprints') {
+      this.viewOptions.pathTrailStyle = isOn ? 'combo' : 'rings';
+    }
+
     // Action feed (events): hide/show the right-edge DOM feed with the toggle.
     if (optionKey === 'displayFloatingText' && this.eventFeed) {
       this.eventFeed.setEnabled(isOn);
@@ -2989,6 +2995,46 @@ const Wc3vViewer = class {
     setTimeout(() => { try { this.enterGuideMode(who); } catch (e) {} }, 0);
   }
 
+  // ?at=<ms> in the URL → jump straight to that moment (optionally &play=1).
+  //
+  // This is what makes "I killed his hero at 8:42" a link. The WC3V desktop app
+  // builds these URLs from the moments it stores per game, but they are plain
+  // links — anything can produce one.
+  //
+  // NOTE the param is `at`, not `t`: `?t=` is already the dev cache-buster on
+  // script and replay fetches (see viewer.html and loadFile).
+  //
+  // Runs at the very end of setup(), once gameLoaded is true and the scrubber,
+  // chapters and cameras all exist — seekToGameTime drives every one of them.
+  _maybeSeekFromUrl () {
+    let params;
+    try { params = new URLSearchParams(window.location.search); } catch (e) { return; }
+    const raw = params.get('at');
+    if (raw == null || raw === '') return;
+
+    // Accept both raw milliseconds and "m:ss", because a human writing one of
+    // these links by hand will reach for the timestamp they can see.
+    let ms = null;
+    if (/^\d+$/.test(raw)) ms = parseInt(raw, 10);
+    else {
+      const clock = /^(\d+):([0-5]\d)$/.exec(raw);
+      if (clock) ms = (parseInt(clock[1], 10) * 60 + parseInt(clock[2], 10)) * 1000;
+    }
+    if (ms === null || !Number.isFinite(ms) || ms < 0) return;
+
+    // Past the end of the game is a broken link, not a request to sit on the
+    // final frame — clamp so it at least lands somewhere real.
+    const end = this.matchEndTime || 0;
+    if (end > 0) ms = Math.min(ms, end);
+
+    setTimeout(() => {
+      try {
+        this.seekToGameTime(ms);
+        if (params.get('play') === '1' && this.state !== ScrubStates.playing) this.play();
+      } catch (e) { /* a bad deep link must never break the load */ }
+    }, 0);
+  }
+
   scaleLiveModeCanvas () {
     if (this.mobileMode) return;
     if (!this.gameScaler) return;
@@ -3417,8 +3463,12 @@ const Wc3vViewer = class {
           this.processedBattles.battles,
           this.matchEndTime,
           (battle) => {
-            this.gameTime = Math.max(0, battle.startTime - 1000);  // small pre-roll
-            this.requestRender();
+            // Must go through seekToGameTime, not a bare gameTime assignment:
+            // that skips player.moveTracker(), so unit state stays where it was
+            // and the map shows the wrong army for the time on the scrubber.
+            // (The Battle Report rows have always seeked correctly; these
+            // markers did not.)
+            this.seekToGameTime(Math.max(0, battle.startTime - 1000));  // small pre-roll
           }
         );
       }
@@ -3491,6 +3541,9 @@ const Wc3vViewer = class {
         }));
         this.unitModelRenderer.warm([...warmIds]);
       }
+
+      // Last thing in setup: everything seekToGameTime touches now exists.
+      this._maybeSeekFromUrl();
     });
   }
 
@@ -3513,7 +3566,10 @@ const Wc3vViewer = class {
   setupViewOptions () {
     this.viewOptions = {
       displayPath: true,
-      pathTrailStyle: 'combo',
+      // Footstep stamps clutter a busy map, so trails default to sonar rings
+      // only. The "Footprints" toggle promotes the style to 'combo'.
+      displayFootprints: false,
+      pathTrailStyle: 'rings',
       displayLevelPins: true,
       displayFloatingText: true,
       decayEffects: true,
@@ -3571,6 +3627,7 @@ const Wc3vViewer = class {
       const buttons = [
         { key: 'displayCreepRoute', label: 'Creep Routes', featured: true },
         { key: 'displayPath', label: 'Unit Trails' },
+        { key: 'displayFootprints', label: 'Footprints' },
         { key: 'displayLevelPins', label: 'Level Pins' },
         { key: 'displayFloatingText', label: 'Action Feed' },
         { key: 'displayText', label: 'Unit Names' },

@@ -35,9 +35,12 @@ const UNIT_ABILITY_MAP = {
   'uban': ['Ucrs', 'Uams', 'Upos'],        // Banshee: Curse, Anti-magic Shell, Possession
   'ucry': ['Uweb'],                         // Crypt Fiend: Web
   'ugar': ['Ustn'],                         // Gargoyle: Stone Form
-  'ubsp': ['Urlf', 'Urlm'],                // Obsidian Statue: Replenish Life, Replenish Mana
-  'uobs': ['Urlf', 'Urlm'],                // Obsidian Statue (alt): Replenish Life, Replenish Mana
-  'udes': ['Udvm', 'Uabs'],                // Destroyer: Devour Magic, Absorb Mana
+  // uobs is the Obsidian Statue, ubsp the Destroyer it morphs into (verified
+  // against unitabilities.slk: uobs → Arpl/Arpm/Aave, ubsp → Advm/Aabs/ACmi).
+  // These two were previously swapped, with the Destroyer's abilities parked on
+  // 'udes' — which is the naval Undead Frigate and never appears in melee.
+  'uobs': ['Urlf', 'Urlm'],                // Obsidian Statue: Replenish Life, Replenish Mana
+  'ubsp': ['Udvm', 'Uabs'],                // Destroyer: Devour Magic, Absorb Mana
 };
 
 // Client-side reference to unitAbilities icon data

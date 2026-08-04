@@ -35,7 +35,7 @@
   // so when a model's CONTENT changes (materials, geometry) the URL must change or
   // returning viewers keep the stale file. BUMP THIS whenever the roster is
   // re-exported (convert-mdx-to-gltf-skinned.js --all) and redeployed.
-  const MODEL_ASSET_VERSION = '20260728b';
+  const MODEL_ASSET_VERSION = '20260804a';
   const FADE = 0.22;                 // cross-fade seconds between looping states
   // Only used by the worker harvest-loop "is it parked at its anchor" test.
   // Animation state itself comes from UnitBehavior, which reads path-segment
@@ -320,8 +320,12 @@
           // Death lifecycle: render through the death clip + corpse fade, then drop.
           const deathStart = this._deathStart(unit);
 
-          const itemId = (unit.itemId || '').toLowerCase();
-          const spec = this.manifest[itemId] || this.manifest[unit.itemId];
+          // Resolve the form the unit is in AT THIS game time, not its final
+          // one — a statue that becomes a Destroyer at 10:00 must render as a
+          // statue before then, and flip back when the user scrubs backwards.
+          const rawItemId = unit.itemIdAt ? unit.itemIdAt(gameTime) : unit.itemId;
+          const itemId = (rawItemId || '').toLowerCase();
+          const spec = this.manifest[itemId] || this.manifest[rawItemId];
           const hasModel = !!(spec && spec.model);
 
           const pos = unit.getInterpolatedPosition(gameTime);
@@ -338,6 +342,21 @@
           }
           count++;
           if (!inst || !inst.root) continue; // pending/failed → 2D meanwhile
+
+          // Keep a morphing unit's form in sync with the timeline. Both forms
+          // share one GLB, so this is a visibility + clip-set swap, never a
+          // rebuild. No-op for the vast majority of units (spec.form absent).
+          if (spec && spec.form && inst.form !== spec.form) {
+            this._setForm(inst, spec.form);
+            if (spec.scale && inst.scale !== spec.scale) {
+              inst.scale = spec.scale;
+              if (inst.wrapper) inst.wrapper.scale.setScalar(spec.scale);
+            }
+            // A statue walks; a Destroyer flies. Follow the form.
+            inst.flyHeight = (spec.flyHeight != null)
+              ? spec.flyHeight
+              : ((unit.meta && unit.meta.moveHeight) || 0);
+          }
 
           // Drop the unit once the death clip + corpse fade has fully elapsed.
           if (deathStart != null) {
@@ -528,9 +547,12 @@
         const inst = {
           root: r.root, wrapper: r.placementNode, skinnedMeshes: r.skinnedMeshes || [],
           mixer: null, actions: {}, state: null, deathDur: 1, scale: spec.scale || 1,
-          isCreep: true, facing0, ringRadius: cs * 1.35, ringHex: null
+          isCreep: true, facing0, ringRadius: cs * 1.35, ringHex: null,
+          flyHeight: (spec.flyHeight != null)
+            ? spec.flyHeight
+            : ((unit.meta && unit.meta.moveHeight) || 0)
         };
-        this._setupMixer(inst, r.animations);
+        this._setupMixer(inst, r.animations, spec.form);
         this._addRing(inst, CREEP_RING, 0.7);
         inst.ringHex = CREEP_RING;
         inst.root.visible = false;
@@ -637,10 +659,11 @@
     // Place a creep at a world position + facing.
     _placeCreep (inst, wx, wy, facing, cx, cy) {
       const groundY = this.renderer.sampleHeight ? this.renderer.sampleHeight(wx, wy) : 0;
+      const bodyY = groundY + (inst.flyHeight || 0);
       const w = inst.wrapper;
-      w.position.set(wx - cx, groundY, -(wy - cy));
+      w.position.set(wx - cx, bodyY, -(wy - cy));
       if (inst.scale !== 1) w.scale.setScalar(inst.scale);
-      this._updateCullBounds(inst, w.position.x, groundY, w.position.z);
+      this._updateCullBounds(inst, w.position.x, bodyY, w.position.z);
       if (inst.ring) {
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
@@ -780,9 +803,15 @@
     _buildInstance (r, unit, spec, player) {
       const inst = {
         root: r.root, wrapper: r.placementNode, skinnedMeshes: r.skinnedMeshes || [],
-        mixer: null, actions: {}, state: null, deathDur: 1, scale: spec.scale || 1
+        mixer: null, actions: {}, state: null, deathDur: 1, scale: spec.scale || 1,
+        // Flight altitude. `spec.flyHeight` wins for two-form units, where
+        // unit.meta only ever describes the FINAL form (a statue that becomes a
+        // Destroyer would otherwise hover from the moment it was built).
+        flyHeight: (spec.flyHeight != null)
+          ? spec.flyHeight
+          : ((unit.meta && unit.meta.moveHeight) || 0)
       };
-      this._setupMixer(inst, r.animations);
+      this._setupMixer(inst, r.animations, spec.form);
       // Team/hero ground selection ring (player color, gold for heroes; flat, does
       // not rotate with the unit; lives in the scene, not the facing wrapper).
       const isHero = !!(unit.meta && unit.meta.hero);
@@ -836,14 +865,69 @@
     }
 
     // Build the AnimationMixer + per-category actions; start idle (desynced).
-    _setupMixer (inst, animations) {
-      if (!animations || !animations.length) return;
+    _setupMixer (inst, animations, form) {
+      const f = form || 'base';
+      this._applyFormMeshes(inst, f);
+      if (!animations || !animations.length) { inst.form = f; return; }
       inst.mixer = new THREE.AnimationMixer(inst.root);
-      const byName = {}; for (const c of animations) byName[c.name] = c;
-      for (const cat of CATS) if (byName[cat]) inst.actions[cat] = inst.mixer.clipAction(byName[cat]);
-      inst.deathDur = (byName.death && byName.death.duration) || 1;
+      inst.animations = animations;
+      this._bindFormActions(inst, f);
       const start = inst.actions.idle || inst.actions.walk || inst.actions.attack;
       if (start) { start.play(); start.time = Math.random() * (start.getClip().duration || 1); inst.state = start === inst.actions.idle ? 'idle' : (start === inst.actions.walk ? 'walk' : 'attack'); }
+    }
+
+    // Show only the geometry belonging to `form`. Two-form GLBs (Obsidian
+    // Statue ⇄ Destroyer) carry both forms' meshes tagged 'base'/'alternate';
+    // meshes tagged 'both' — and every mesh in a single-form model, which has
+    // no tag at all — are left alone.
+    _applyFormMeshes (inst, form) {
+      for (const m of inst.skinnedMeshes) {
+        const tag = m.userData && m.userData.wc3Form;
+        if (!tag || tag === 'both') continue;
+        m.visible = (tag === form);
+      }
+    }
+
+    // Bind the clip set for a form. The converter emits the alternate form's
+    // clips under a `_alt` suffix (idle_alt, walk_alt, …), so the animation
+    // state machine keeps using the canonical category names either way.
+    _bindFormActions (inst, form) {
+      const byName = {}; for (const c of inst.animations) byName[c.name] = c;
+      const suffix = (form === 'alternate') ? '_alt' : '';
+      inst.actions = {};
+      for (const cat of CATS) {
+        const clip = byName[cat + suffix] || byName[cat];
+        if (clip) inst.actions[cat] = inst.mixer.clipAction(clip);
+      }
+      const death = byName['death' + suffix] || byName.death;
+      inst.deathDur = (death && death.duration) || 1;
+      inst.form = form;
+    }
+
+    // Switch a live instance between forms — driven by the unit's morph
+    // timeline, so scrubbing across the morph flips it both ways. Cheap enough
+    // to call every frame: it early-outs unless the form actually changed.
+    _setForm (inst, form) {
+      if (!form || inst.form === form) return;
+      this._applyFormMeshes(inst, form);
+      if (!inst.mixer || !inst.animations) { inst.form = form; return; }
+
+      const prevState = inst.state;
+      for (const key of Object.keys(inst.actions)) {
+        const a = inst.actions[key];
+        if (a) a.stop();
+      }
+      this._bindFormActions(inst, form);
+
+      // Carry the animation state across the swap so a walking Destroyer keeps
+      // walking instead of snapping to idle mid-stride.
+      const next = inst.actions[prevState] || inst.actions.idle;
+      if (next) {
+        next.play();
+        inst.state = inst.actions[prevState] ? prevState : 'idle';
+      } else {
+        inst.state = null;
+      }
     }
 
     // Flat ground ring added to the scene (not the facing wrapper).
@@ -980,7 +1064,10 @@
         // positions — the old estimate swung between 0 and 4x on the same walk.
         if (inst.actions.walk) inst.actions.walk.setEffectiveTimeScale(d.strideScale);
         inst.mixer.update(dt);
-      } else if (state === 'attack' && inst.actions.attack) {
+      } else if ((state === 'attack' || state === 'cast') && inst.actions.attack) {
+        // 'cast' is a support channel (statue Replenish). WC3 gives the statue
+        // one clip — "Attack Spell" — for both, so the same cadence drives it;
+        // only the aim differs (an ally instead of an enemy).
         this._applyAttack(inst, d);   // scrub-safe cadence; drives the mixer itself
       } else {
         this._setLoopState(inst, 'idle');
@@ -1026,10 +1113,15 @@
     _place (inst, unit, pos, gameTime, cx, cy, d) {
       const wx = pos.x, wy = pos.y;
       const groundY = this.renderer.sampleHeight ? this.renderer.sampleHeight(wx, wy) : 0;
+      // Air units (Destroyer, gargoyle, frost wyrm; hoverers like the banshee
+      // sit lower) fly at a fixed altitude above the terrain. Their selection
+      // ring and shadow stay on the GROUND — that's how WC3 renders them, and
+      // it's what makes the altitude readable.
+      const bodyY = groundY + (inst.flyHeight || 0);
       const w = inst.wrapper;
-      w.position.set(wx - cx, groundY, -(wy - cy));
+      w.position.set(wx - cx, bodyY, -(wy - cy));
       if (inst.scale !== 1) w.scale.setScalar(inst.scale);
-      this._updateCullBounds(inst, w.position.x, groundY, w.position.z);
+      this._updateCullBounds(inst, w.position.x, bodyY, w.position.z);
 
       // Ground selection ring (flat, does not rotate with facing).
       if (inst.ring) {

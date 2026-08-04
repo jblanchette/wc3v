@@ -38,8 +38,19 @@ const BUNDLE = path.join(ROOT, 'client', 'js', 'vendor', 'wc3v-parser.bundle.js'
 // Dual-runtime (no DOM, no fs) shared modules. The desktop app persists one
 // summary per parsed game and aggregates them into profiles; shipping the
 // client's copies keeps a single source of truth, same as the parser bundle.
-const SUMMARY_EXTRACT = path.join(ROOT, 'client', 'js', 'SummaryExtract.js');
-const PROFILE_AGGREGATE = path.join(ROOT, 'client', 'js', 'ProfileAggregate.js');
+// Load order matters in the browser (index.html loads them in this order) and
+// MomentsExtract is listed after SummaryExtract for readability only — it has
+// no dependency on it, deliberately, so neither can break the other.
+const SHARED_JS = [
+  'SummaryExtract.js',
+  'ProfileAggregate.js',
+  'MomentsExtract.js'
+].map(f => path.join(ROOT, 'client', 'js', f));
+
+// The site's design token layer. The desktop app is styled from the SAME
+// tokens as the web client rather than growing a second design system —
+// desktop/src-frontend/css/app.css consumes these and defines nothing itself.
+const TOKENS_CSS = path.join(ROOT, 'client', 'css', 'tokens.css');
 const MAPS = path.join(ROOT, 'client', 'maps');
 
 // Only these are needed to PARSE a replay. terrain.jpg / heights.bin.gz /
@@ -168,13 +179,22 @@ const main = () => {
   const vendorDir = path.join(DIST, 'js', 'vendor');
   fs.mkdirSync(vendorDir, { recursive: true });
   fs.copyFileSync(BUNDLE, path.join(vendorDir, 'wc3v-parser.bundle.js'));
-  fs.copyFileSync(SUMMARY_EXTRACT, path.join(vendorDir, 'SummaryExtract.js'));
-  fs.copyFileSync(PROFILE_AGGREGATE, path.join(vendorDir, 'ProfileAggregate.js'));
+  for (const src of SHARED_JS) {
+    if (!fs.existsSync(src)) {
+      console.error(`Shared module missing: ${path.relative(ROOT, src)}`);
+      process.exit(1);
+    }
+    fs.copyFileSync(src, path.join(vendorDir, path.basename(src)));
+  }
+
+  const cssVendorDir = path.join(DIST, 'css', 'vendor');
+  fs.mkdirSync(cssVendorDir, { recursive: true });
+  fs.copyFileSync(TOKENS_CSS, path.join(cssVendorDir, 'tokens.css'));
 
   const size = fs.statSync(path.join(vendorDir, 'wc3v-parser.bundle.js')).size;
   console.log(`dist:      ${path.relative(ROOT, DIST)}`);
   console.log(`parser:    ${(size / 1024).toFixed(0)} KB`);
-  console.log(`summary:   SummaryExtract.js (${(fs.statSync(SUMMARY_EXTRACT).size / 1024).toFixed(0)} KB)`);
+  console.log(`shared:    ${SHARED_JS.map(f => path.basename(f)).join(', ')} + tokens.css`);
 
   if (args['bundle-maps']) bundleMaps(args['bundle-maps']);
   if (args['seed-maps']) copyMapSet(args['seed-maps'], appMapCacheDir(), 'map cache');

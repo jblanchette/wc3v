@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opening your replay — WC3V</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="css/tokens.css?v=2">
+  <link rel="stylesheet" href="css/redesign.css?v=2">
+  <script>
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = null; /* @wc3v-asset-version-end */
+  </script>
+  <style>
+    body { min-height: 100vh; display: grid; place-items: center; background: var(--bg-deep); }
+    .ho { width: 100%; max-width: 34rem; padding: var(--sp-6); text-align: center; }
+    .ho-logo { font-weight: 900; font-size: var(--fs-h1); letter-spacing: 0.08em; color: var(--text); margin-bottom: var(--sp-5); }
+    .ho-logo span { color: var(--accent); }
+    .ho h1 { font-size: var(--fs-h2); margin: 0 0 var(--sp-2); }
+    .ho p { color: var(--text-muted); margin: 0 0 var(--sp-4); overflow-wrap: anywhere; }
+    .ho .bar {
+      height: 8px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-pill); overflow: hidden; margin-bottom: var(--sp-3);
+    }
+    .ho .fill { height: 100%; width: 0; background: var(--accent); transition: width var(--dur) var(--ease); }
+    .ho .note { color: var(--text-dim); font-size: var(--fs-label); }
+    .ho .bad { color: var(--bad); }
+    .ho [hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="ho">
+    <div class="ho-logo">WC<span>3</span>V</div>
+    <h1 id="ho-head">Receiving your replay…</h1>
+    <p id="ho-lead">WC3V on your machine is handing this game straight to the
+      viewer. Nothing is uploaded and no account is involved.</p>
+    <div class="bar" id="ho-bar"><div class="fill" id="ho-fill"></div></div>
+    <p class="note" id="ho-note">The first time you open a game it has to be
+      read in full, which takes a few seconds.</p>
+  </div>
+
+  <!-- MyReplays.js reads Security.* and PlayerNames.* at module scope, so both
+       have to be present before it loads — same order replays.html uses. -->
+  <script src="js/clientConfig.js?v=2"></script>
+  <script src="js/Security.js?v=2"></script>
+  <script src="js/PlayerNames.js?v=2"></script>
+  <script src="js/MyReplays.js?v=2"></script>
+  <script src="js/UploadManager.js?v=2"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    // Landing pad for the WC3V desktop app's "open this in the viewer".
+    //
+    // The desktop app cannot simply link here with the replay attached, and the
+    // page cannot fetch it from the app either: Chrome blocks a public origin
+    // from reaching 127.0.0.1 (measured — fetch hangs, iframes abort). So the
+    // app opens ITS OWN loopback page first, and that page opens this one and
+    // pushes the bytes across with postMessage. Private → public is allowed and
+    // a message channel needs no CORS.
+    //
+    // From here it is an ordinary local upload: same parser worker, same
+    // IndexedDB store, same /viewer?local=<id> the file picker produces.
+
+    var params = new URLSearchParams(location.search);
+    var at = params.get('at') || '';
+    var key = params.get('key') || '';
+
+    var el = function (id) { return document.getElementById(id); };
+    var LOOPBACK = /^http:\/\/127\.0\.0\.1:\d{1,5}$/;
+
+    var raw = params.get('o') || '';
+    var target = LOOPBACK.test(raw) ? raw : null;
+
+    // Remembering which local record a desktop game became means the second
+    // moment you click on the same game skips the whole handoff and the
+    // multi-second re-parse. Keyed by the desktop's content key, which is
+    // stable across re-parses and across file moves.
+    var MAP_PREFIX = 'wc3v.handoff.';
+
+    function progress (percent, label) {
+      el('ho-fill').style.width = Math.max(0, Math.min(100, percent)) + '%';
+      if (label) el('ho-note').textContent = label;
+    }
+
+    function fail (headline, detail) {
+      el('ho-head').textContent = headline;
+      el('ho-head').className = 'bad';
+      el('ho-lead').textContent = detail;
+      el('ho-bar').hidden = true;
+      el('ho-note').textContent = '';
+    }
+
+    function open (localId) {
+      var url = '/viewer?local=' + encodeURIComponent(localId);
+      if (at) url += '&at=' + encodeURIComponent(at) + '&play=1';
+      location.replace(url);
+    }
+
+    var myReplays = new window.MyReplays();
+
+    // Fast path: this game has already been through here in this browser, and
+    // the record is still in IndexedDB. No bytes needed at all.
+    function tryCached () {
+      if (!key) return Promise.resolve(false);
+      var known = null;
+      try { known = localStorage.getItem(MAP_PREFIX + key); } catch (e) {}
+      if (!known) return Promise.resolve(false);
+      return myReplays.get(known)
+        .then(function (rec) {
+          if (!rec) {
+            // Evicted by the store's FIFO cap; drop the stale mapping so we
+            // don't keep checking for it.
+            try { localStorage.removeItem(MAP_PREFIX + key); } catch (e) {}
+            return false;
+          }
+          open(known);
+          return true;
+        })
+        .catch(function () { return false; });
+    }
+
+    function receive (buffer) {
+      progress(10, 'Reading the replay…');
+      var uploader = new window.UploadManager({
+        onProgress: function (evt) {
+          var pct = evt && typeof evt.percent === 'number' ? evt.percent : 0;
+          // Parsing owns the middle of the bar; the ends are ours.
+          progress(10 + pct * 0.85,
+            evt && evt.phase === 'storing' ? 'Almost there…' : 'Reading the replay…');
+        }
+      });
+
+      var file = new File([buffer], 'wc3v-desktop.w3g', { type: 'application/octet-stream' });
+      uploader.parseFile(file)
+        .then(function (result) {
+          if (key) {
+            try { localStorage.setItem(MAP_PREFIX + key, result.id); } catch (e) {}
+          }
+          progress(100, 'Opening the viewer…');
+          open(result.id);
+        })
+        .catch(function (err) {
+          if (err && err.code === 'missing_map') {
+            fail('That map is not in the library',
+              'The viewer needs map data to draw a game, and it does not have ' +
+              (err.rawMapName || 'this one') + ' yet.');
+            return;
+          }
+          fail('That replay could not be read',
+            (err && err.message) || 'The parser did not finish.');
+        });
+    }
+
+    window.addEventListener('message', function (e) {
+      if (!LOOPBACK.test(e.origin)) return;         // only from WC3V on this machine
+      if (target && e.origin !== target) return;
+      if (!e.data || e.data.type !== 'wc3v-handoff') return;
+      if (!(e.data.buffer instanceof ArrayBuffer)) return;
+      if (at === '' && e.data.at) at = String(e.data.at);
+      if (key === '' && e.data.key) key = String(e.data.key);
+      receive(e.data.buffer);
+    });
+
+    tryCached().then(function (done) {
+      if (done) return;
+      if (!window.opener) {
+        fail('Nothing to open',
+          'This page is opened by the WC3V desktop app when you click Watch on ' +
+          'a moment. Open it from there.');
+        return;
+      }
+      progress(4);
+      // Announce readiness rather than waiting to be pushed at: the sender then
+      // knows exactly when to transfer, so there is no race and no polling.
+      window.opener.postMessage({ type: 'wc3v-handoff-ready' }, target || '*');
+    });
+  })();
+  </script>
+</body>
+</html>

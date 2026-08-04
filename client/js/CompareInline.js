@@ -2776,22 +2776,10 @@ const chooserDimensionStatus = (entry, userPlayer, userMu, userSummary, annotate
   return out;
 };
 
-// Browser mirror of tools/import-replays.js cleanMapName(). Keep in sync.
-const cleanMapName = (raw) => {
-  if (!raw) return '';
-  let n = String(raw).replace(/^.*[/\\]/, '');
-  n = n.replace(/\.(w3x|w3m)$/i, '');
-  n = n.replace(/^\(\d+\)\s*/, '');
-  n = n.replace(/^\d+_w3c_\d+_\d+_/, '');
-  n = n.replace(/^w3c_\d+_\d+_/, '');
-  n = n.replace(/^w3c_/, '');
-  n = n.replace(/_w3c_\d+_\d+(_\d+)?$/, '');
-  n = n.replace(/^\dv\d_/, '');
-  n = n.replace(/_v[\d.-]+$/, '');
-  n = n.replace(/([a-z])([A-Z])/g, '$1 $2');
-  n = n.replace(/[_]/g, ' ').replace(/\s+/g, ' ').trim();
-  return n;
-};
+// Lives in SummaryExtract now — the desktop app needs the same display name
+// and already loads that module, so keeping a second copy here would guarantee
+// the two drift. (tools/import-replays.js still carries the import-side copy.)
+const cleanMapName = (raw) => window.SummaryExtract.cleanMapName(raw);
 
 if (typeof window !== 'undefined') {
   window.CompareInline = CompareInline;

@@ -10,13 +10,18 @@
 (function () {
   'use strict';
 
+  // A stream ticker is glanceable or it is nothing. Five lines is already
+  // pushing it at broadcast distances.
+  const OVERLAY_MOMENTS = 5;
+
   window.createOverlayState = (deps) => {
-    // deps: invoke, log
+    // deps: invoke, log, corpus() — the stored game history, for head-to-head
     const PA = window.ProfileAggregate;
     const st = {
       userName: localStorage.getItem('wc3v-user-name') || null,
-      session: [],   // summaries of live games, in arrival order
-      lastGame: null // summary shown in the game panel (live only, or boot seed)
+      session: [],    // summaries of live games, in arrival order
+      lastGame: null, // summary shown in the game panel (live only, or boot seed)
+      demo: false     // showing the labelled stand-in game for OBS setup
     };
 
     // Orient a summary from the profile player's seat; if they are not in
@@ -26,12 +31,15 @@
       if (!summary) return null;
       if (st.userName) {
         const v = PA.gameView(summary, PA.normName(st.userName));
-        if (v) return v;
+        if (v) { v.mine = true; return v; }
       }
       const firstSlot = Object.keys(summary.players || {})[0];
       if (firstSlot === undefined) return null;
       const v = PA.gameView(summary, PA.normName(summary.players[firstSlot].name));
-      if (v) v.result = null;
+      // `mine` is what stops the fallback seat being read as the user's. Without
+      // it the overlay narrates a stranger's game in the first person — "you
+      // lost 2 heroes" under a card that cannot even name a winner.
+      if (v) { v.result = null; v.mine = false; }
       return v;
     };
 
@@ -48,13 +56,79 @@
       return kind ? { kind, count } : null;
     };
 
+    // The same numbers the overlay shows, for the app's own title bar. Derived
+    // rather than stored so the app bar and the broadcast can never drift.
+    const sessionSummary = () => {
+      const views = st.session.map(viewFor).filter(Boolean);
+      return {
+        games: views.length,
+        wins: views.filter(v => v.result === 'win').length,
+        losses: views.filter(v => v.result === 'loss').length,
+        streak: streakOf(views)
+      };
+    };
+
+    // Head-to-head against the player in the last game, from local history.
+    // This is the one thing on the overlay no website could tell a streamer,
+    // because it was learned from their own games.
+    //
+    // Counted over the whole corpus, not the session — "you're 3–2 against
+    // this guy all time" is the interesting number, and the session module
+    // already carries today's.
+    const h2hFor = (summary, v) => {
+      if (!v || !v.opponent || !st.userName) return null;
+      const corpus = deps.corpus && deps.corpus();
+      if (!corpus || !corpus.length) return null;
+
+      const meKey = PA.normName(st.userName);
+      const oppKey = PA.normName(v.opponent.name);
+      let wins = 0;
+      let losses = 0;
+      let games = 0;
+      for (const g of corpus) {
+        const names = Object.values(g.players || {}).map(p => PA.normName(p.name));
+        if (names.indexOf(meKey) === -1 || names.indexOf(oppKey) === -1) continue;
+        games++;
+        const mine = PA.gameView(g, meKey);
+        if (mine && mine.result === 'win') wins++;
+        else if (mine && mine.result === 'loss') losses++;
+      }
+      if (!games) return null;
+      return { name: v.opponent.name, games, wins, losses };
+    };
+
+    // Moments are phrased HERE, where the user's seat is known, so the overlay
+    // stays a pure consumer and the app and the broadcast word the same fight
+    // the same way.
+    const momentsFor = (summary, v) => {
+      const list = (summary && summary.moments) || [];
+      if (!list.length || !window.MomentsExtract) return [];
+      const nameFor = (slot) => (summary.players[slot] && summary.players[slot].name) || 'They';
+      const seat = v && v.mine ? v.slot : null;
+      return list
+        .slice()
+        .sort((a, b) => b.importance - a.importance)
+        .slice(0, OVERLAY_MOMENTS)
+        .sort((a, b) => a.t - b.t)
+        .map(m => ({
+          time: m.tf,
+          text: window.MomentsExtract.phrase(m, seat, nameFor),
+          hero: m.type === 'heroKill' || m.type === 'heroTrade' || m.type === 'heroLostToCreeps'
+        }));
+    };
+
     const gamePayload = () => {
       const v = viewFor(st.lastGame);
       if (!v) return null;
       const me = st.lastGame.players[v.slot] || {};
       return {
-        map: v.map,
+        // The display name, not the raw ladder filename — the stored `map` is
+        // "12_w3c_251104_0950_TurtleRock_v2.0.w3x", which is not something to
+        // put on a broadcast.
+        map: window.SummaryExtract.cleanMapName(st.lastGame.mapRaw || v.map) || v.map,
         mode: v.mode,
+        h2h: h2hFor(st.lastGame, v),
+        moments: momentsFor(st.lastGame, v),
         verdict: v.result || 'unknown',
         durationMs: v.durationMs,
         user: { name: v.name, race: v.race },
@@ -79,9 +153,9 @@
       .map(k => summary.players[k].name)
       .filter(Boolean);
 
-    const publish = async () => {
+    const buildPayload = () => {
       const views = st.session.map(viewFor).filter(Boolean);
-      const payload = {
+      return {
         updatedAt: Date.now(),
         user: st.userName,
         // Without an identity no verdict can be attributed to a seat, so the
@@ -96,6 +170,9 @@
         },
         game: gamePayload()
       };
+    };
+
+    const send = async (payload) => {
       try {
         await deps.invoke('publish_overlay_state', { stateJson: JSON.stringify(payload) });
       } catch (e) {
@@ -103,8 +180,56 @@
       }
     };
 
+    const publish = async () => {
+      st.demo = false;
+      await send(buildPayload());
+    };
+
+    // A stand-in game, so a streamer can size and position the Browser Source
+    // in OBS before ever playing one. Labelled on the overlay itself — an
+    // unlabelled fake result on a live stream would be indefensible.
+    const DEMO = {
+      updatedAt: 0,
+      user: 'You',
+      demo: true,
+      needsIdentity: false,
+      candidates: [],
+      session: { wins: 2, losses: 1, unknown: 0, streak: { kind: 'win', count: 2 } },
+      game: {
+        map: 'Echo Isles',
+        mode: '1v1',
+        verdict: 'win',
+        durationMs: 14 * 60 * 1000,
+        user: { name: 'You', race: 'H' },
+        opponent: { name: 'Opponent', race: 'O' },
+        heroOpener: 'Archmage',
+        timings: { t2: '5:40', t3: null, expansion: '9:41', firstTower: null },
+        h2h: { name: 'Opponent', games: 5, wins: 3, losses: 2 },
+        moments: [
+          { time: '6:12', text: 'You expanded', hero: false },
+          { time: '8:42', text: 'You killed Blademaster', hero: true },
+          { time: '11:58', text: 'Fight at the expansion — you came out ahead decisively', hero: false }
+        ],
+        build: [
+          { type: 'building', name: 'Altar of Kings', time: '0:12' },
+          { type: 'building', name: 'Barracks', time: '0:31' },
+          { type: 'hero', name: 'Archmage', time: '1:05' },
+          { type: 'unit', name: 'Footman', time: '1:22' },
+          { type: 'expansion', name: 'Town Hall', time: '6:12' }
+        ]
+      }
+    };
+
     return {
       publish,
+      sessionSummary,
+      // What the OBS source is showing right now, for the in-window preview.
+      previewState: () => (st.demo ? DEMO : buildPayload()),
+      async publishDemo () {
+        st.demo = true;
+        await send(DEMO);
+      },
+      get isDemo () { return !!st.demo; },
       recordGame (summary) {
         st.session.push(summary);
         st.lastGame = summary;

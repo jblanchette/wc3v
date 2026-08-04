@@ -122,7 +122,7 @@ const ClientUnit = class {
       "lostState", "hiddenStream", "combatOrderTimes", "primaryRole", "harvestConfident", "buildWindows",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
-      "constructionStartTime", "uprootStream"
+      "constructionStartTime", "uprootStream", "morphHistory"
     ];
 
     dataFields.forEach(field => {
@@ -143,6 +143,20 @@ const ClientUnit = class {
 
     // Build loaded-windows for units that get loaded into transports
     this._loadedWindows = this._buildLoadedWindows(unitData);
+
+    // `itemId` holds the unit's FINAL form. For a unit that morphed mid-game
+    // (Obsidian Statue → Destroyer) the starting form is the `from` of its
+    // first morph — without this the whole replay would render in the end state.
+    const firstMorph = (this.morphHistory && this.morphHistory.length)
+      ? this.morphHistory[0] : null;
+    this._formBaseItemId = firstMorph ? (firstMorph.from || this.itemId) : this.itemId;
+    this._formBaseDisplayName = firstMorph
+      ? (firstMorph.fromDisplayName || this.displayName)
+      : this.displayName;
+    // Tracks the form the cached `fullName` was built for, so update() can
+    // notice a morph and rebuild the label instead of showing the final form's
+    // name for the whole replay.
+    this._labelItemId = this._formBaseItemId;
 
     // guard for units that weren't fully resolved server-side
     if (!this.meta) {
@@ -250,8 +264,21 @@ const ClientUnit = class {
   }
 
   loadIcon () {
-    const imgSrc = `/assets/wc3icons/${this.itemId}.jpg`;
-    return [ this.loadAsset(imgSrc, 'icon') ];
+    const loads = [ this.loadAsset(`/assets/wc3icons/${this.itemId}.jpg`, 'icon') ];
+    // A unit that morphs needs BOTH forms' icons, because `itemId` is only the
+    // final one — otherwise a statue carries the Destroyer icon from the first
+    // frame. Two forms is all the current morphers have (statue ⇄ Destroyer).
+    if (this._formBaseItemId && this._formBaseItemId !== this.itemId) {
+      loads.push(this.loadAsset(`/assets/wc3icons/${this._formBaseItemId}.jpg`, 'iconBase'));
+    }
+    return loads;
+  }
+
+  // The icon matching the form at `gameTime`. Plain `this.icon` for everything
+  // that never morphs.
+  iconAt (gameTime) {
+    if (!this.iconBase) return this.icon;
+    return this.itemIdAt(gameTime) === this._formBaseItemId ? this.iconBase : this.icon;
   }
 
   loadSpellIcons () {
@@ -337,7 +364,8 @@ const ClientUnit = class {
     // Mirrors _deathFxStartTime != null for cheap reads in renderUnit().
     this._deathFxActive = false;
 
-    this.fullName = this.getFullName();
+    // Built for the form at game start; update() rebuilds it across morphs.
+    this.fullName = this.getFullName(0);
     this.itemIdHash = this.itemId1 ?
       Helpers.makeItemIdHash(this.itemId1, this.itemId2) : `unregistered`;
 
@@ -464,8 +492,12 @@ const ClientUnit = class {
     return false;     // no base info — default to hiding harvesters
   }
 
-  getFullName () {
-    const shortName = getShortName(this.itemId, this.displayName);
+  // gameTime is optional — pass it for units that morph so the label follows
+  // the form on screen; omitted callers get the unit's current/final identity.
+  getFullName (gameTime) {
+    const itemId = (gameTime != null) ? this.itemIdAt(gameTime) : this.itemId;
+    const displayName = (gameTime != null) ? this.displayNameAt(gameTime) : this.displayName;
+    const shortName = getShortName(itemId, displayName);
 
     if (!this.meta.hero) {
       return shortName;
@@ -505,6 +537,36 @@ const ClientUnit = class {
 
     // return back the new record
     return path[index];
+  }
+
+  // The unit's itemId as of `gameTime`. Identical to `itemId` for the ~99% of
+  // units that never change form; for morphers (Obsidian Statue ⇄ Destroyer)
+  // it walks the morph timeline so scrubbing back before the morph renders,
+  // names and stats the unit as its earlier form.
+  itemIdAt (gameTime) {
+    const history = this.morphHistory;
+    if (!history || !history.length) return this.itemId;
+
+    let itemId = this._formBaseItemId;
+    for (let i = 0; i < history.length; i++) {
+      if (history[i].gameTime > gameTime) break;
+      itemId = history[i].itemId;
+    }
+    return itemId;
+  }
+
+  // The unit's display name as of `gameTime` — the label counterpart to
+  // itemIdAt. A statue must read "Obsidian Statue" until the moment it morphs.
+  displayNameAt (gameTime) {
+    const history = this.morphHistory;
+    if (!history || !history.length) return this.displayName;
+
+    let name = this._formBaseDisplayName;
+    for (let i = 0; i < history.length; i++) {
+      if (history[i].gameTime > gameTime) break;
+      name = history[i].displayName || name;
+    }
+    return name;
   }
 
   // Smoothly interpolate the unit's world position at gameTime by lerping
@@ -619,7 +681,10 @@ const ClientUnit = class {
       path: -1
     };
 
-    this.fullName = this.getFullName();
+    // jump() is a seek reset — rebuild the label for the form at the seek
+    // target, not the unit's final form, then let update() track it from there.
+    this._labelItemId = this.itemIdAt(gameTime);
+    this.fullName = this.getFullName(gameTime);
   }
 
   resetDecay (index) {
@@ -638,6 +703,18 @@ const ClientUnit = class {
       this._deathFxActive = false;
       this._destroyed = false;
       return;
+    }
+
+    // Morphing units (statue ⇄ Destroyer) change identity mid-replay. Rebuild
+    // the cached label when the form at `gameTime` differs from the one it was
+    // built for — including scrubbing BACKWARDS across the morph. No-op (one
+    // reference compare) for every unit that never morphs.
+    if (this.morphHistory && this.morphHistory.length) {
+      const formItemId = this.itemIdAt(gameTime);
+      if (formItemId !== this._labelItemId) {
+        this._labelItemId = formItemId;
+        this.fullName = this.getFullName(gameTime);
+      }
     }
 
     // Definitive server-side death signals: summon expiry (destroyedAt) and
@@ -1098,11 +1175,15 @@ const ClientUnit = class {
 
     unitDrawPositions.push({
       uuid: this.uuid,
-      itemId: this.itemId,
+      // Form-resolved: a morphing unit must draw and label as the form it is
+      // at this instant, not the one it ends the game as.
+      itemId: this.morphHistory && this.morphHistory.length
+        ? this.itemIdAt(gameTime) : this.itemId,
       fullName: this.fullName,
       playerId: this.playerId,
       playerColor: this.playerColor,
-      icon: this.icon,
+      icon: this.morphHistory && this.morphHistory.length
+        ? this.iconAt(gameTime) : this.icon,
       iconSize: iconSize,
       halfIconSize: halfIconSize,
       visualRadius: visualRadius,

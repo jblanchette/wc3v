@@ -306,12 +306,23 @@ const ORDER_TO_ABILITY = {
   'absorb':             'Uabs',
 
   // ── Undead - Obsidian Statue ──
+  // 'replenish' is the COMBINED button (toggles life+mana together); the game
+  // also emits the two separate orders below depending on which the player hit.
+  'replenish':          'Urep',
+  'replenishon':        'Urep:on',
+  'replenishoff':       'Urep:off',
   'replenishlife':      'Urlf',
   'replenishlifeon':    'Urlf:on',
   'replenishlifeoff':   'Urlf:off',
   'replenishmana':      'Urlm',
   'replenishmanaon':    'Urlm:on',
   'replenishmanaoff':   'Urlm:off',
+  // Destroyer Form. The statue's internal name is "Obsidian Avenger" (see the
+  // obsidianavenger*.wav assets), hence the order string. This is the ONLY
+  // reliable signal that a statue morphed — the selection path catches it only
+  // when the player happens to re-select the unit afterwards.
+  'avengerform':        'Uavf',
+  'unavengerform':      'Uavf:off',
 };
 
 function parseOrdersFile () {

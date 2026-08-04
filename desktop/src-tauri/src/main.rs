@@ -426,6 +426,52 @@ fn overlay_info(
 }
 
 /// Player-facing variant in the default browser (second-monitor view).
+/// Open a replay in the wc3v.com viewer, optionally seeked to a moment.
+///
+/// The replay is read from disk (scoped to registered roots, same rule as
+/// `read_replay`), staged in memory on the loopback server, and the default
+/// browser is pointed at the launcher page that hands it over. Nothing is
+/// uploaded: the bytes travel from this process to the browser over loopback
+/// and then into the site through a same-machine postMessage.
+///
+/// Why the browser cannot simply fetch from here: Chrome blocks a public page
+/// from reaching 127.0.0.1 — measured, both `fetch` and an iframe fail — so
+/// the browser has to start on the loopback origin. See handoff.html.
+#[tauri::command]
+async fn open_in_viewer(
+    path: String,
+    at_ms: Option<u64>,
+    key: String,
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    overlay: State<'_, std::sync::Arc<overlay::Overlay>>,
+) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    if overlay.port == 0 {
+        return Err("the local server failed to start, so the viewer cannot be opened".into());
+    }
+    let allowed = { state.roots.lock().unwrap().clone() };
+    let file = ensure_within(Path::new(&path), &allowed)?;
+    if file
+        .extension()
+        .map(|e| !e.eq_ignore_ascii_case("w3g"))
+        .unwrap_or(true)
+    {
+        return Err("not a .w3g file".into());
+    }
+    let bytes = tauri::async_runtime::spawn_blocking(move || std::fs::read(&file))
+        .await
+        .map_err(|e| format!("read failed: {e}"))?
+        .map_err(|e| e.to_string())?;
+
+    let url = overlay
+        .stage_handoff(bytes, at_ms, &key)
+        .ok_or_else(|| "the local server is not listening".to_string())?;
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
+}
+
 /// Opened from Rust so the webview needs no opener capability grant.
 #[tauri::command]
 fn open_player_view(
@@ -672,6 +718,7 @@ fn main() {
             publish_overlay_state,
             overlay_info,
             open_player_view,
+            open_in_viewer,
             get_autostart,
             set_autostart,
             check_for_update,

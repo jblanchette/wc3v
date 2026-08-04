@@ -23,7 +23,9 @@ const path = require('path');
 const { parseMDX } = require('war3-model');
 const { Document, NodeIO } = require('@gltf-transform/core');
 const { createCanvas, ImageData } = require('canvas');
-const { stripMDXChunks, pickSequences, geosetVisibleDuringStand } = require('./lib/mdx-skin');
+const {
+  stripMDXChunks, pickSequences, geosetVisibleDuringStand, geosetFormVisibility
+} = require('./lib/mdx-skin');
 
 const UNITS_DIR = path.join(__dirname, 'map-data', 'units');
 const TEXTURES_DIR = path.join(__dirname, 'map-data', 'textures');
@@ -290,6 +292,9 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
   const idle = sequences.idle;
   const idleStart = idle ? idle.Interval[0] : 0;
   const idleEnd = idle ? idle.Interval[1] : 0;
+  // Two-form model (statue ⇄ destroyer): both forms' geometry ships in one GLB,
+  // tagged per-primitive, and the client shows one form at a time.
+  const altIdle = sequences.idle_alt || null;
 
   // Rest = bind pose: local TRS = translate(pivot − parentPivot), identity rot/scale
   // (telescopes to translate(pivot)). Every clip animates from here. Wire parents.
@@ -330,7 +335,16 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
     const g = mdx.Geosets[gi];
     const nv = g.Vertices.length / 3;
     if (nv === 0) continue;
-    if (idle && !geosetVisibleDuringStand(mdx, gi, idleStart, idleEnd)) { hidden++; continue; }
+    // Single-form: drop anything invisible during Stand (gore, blood, carry
+    // props). Two-form: keep whatever either form's idle shows, and record
+    // which form owns it so the client can toggle.
+    let geosetForm = null;
+    if (altIdle) {
+      geosetForm = geosetFormVisibility(mdx, gi, idle, altIdle);
+      if (!geosetForm) { hidden++; continue; }
+    } else if (idle && !geosetVisibleDuringStand(mdx, gi, idleStart, idleEnd)) {
+      hidden++; continue;
+    }
     // Resolve WC3 material semantics. Drop only genuine effect planes
     // (matInfo.skip). Team-color/glow geosets (replaceableId 1/2) are KEPT and
     // rendered with a runtime player-tinted material; a geoset with neither a
@@ -443,6 +457,8 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
       }
     }
     if (material) prim.setMaterial(material);
+    // Only tagged on two-form models — single-form GLBs stay byte-identical.
+    if (geosetForm) prim.setExtras({ form: geosetForm });
     mesh.addPrimitive(prim);
   }
 
@@ -458,7 +474,12 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
   // windows every node's tracks to that sequence's interval (war3-model
   // per-sequence semantics via windowTrack). The skeleton/skin/mesh are shared. ---
   const clips = {};
-  for (const cat of ['idle', 'walk', 'attack', 'death']) {
+  const CLIP_CATEGORIES = [
+    'idle', 'walk', 'attack', 'death',
+    // Two-form only; absent categories are skipped below.
+    'idle_alt', 'walk_alt', 'attack_alt', 'death_alt', 'morph', 'morph_alt'
+  ];
+  for (const cat of CLIP_CATEGORIES) {
     const seq = sequences[cat];
     if (!seq) continue;
     const s = seq.Interval[0], e = seq.Interval[1];

@@ -20,15 +20,48 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-/// The overlay page itself, embedded at compile time so the server has no
-/// filesystem dependency at runtime (and no path to traverse).
-const OVERLAY_HTML: &str = include_str!("../../src-frontend/overlay.html");
+/// The overlay page, embedded at compile time so the server has no filesystem
+/// dependency at runtime (and no path to traverse).
+///
+/// It is three files rather than one because the live preview inside the WC3V
+/// window renders from the SAME css and renderer — a preview drawn by separate
+/// code is a preview that can lie about what OBS will show. They are stitched
+/// back into one self-contained document here.
+const OVERLAY_SHELL: &str = include_str!("../../src-frontend/overlay/shell.html");
+const OVERLAY_CSS: &str = include_str!("../../src-frontend/overlay/overlay.css");
+const OVERLAY_RENDER_JS: &str = include_str!("../../src-frontend/overlay/overlay-render.js");
+
+fn overlay_html() -> String {
+    OVERLAY_SHELL
+        .replace("/*OVERLAY_CSS*/", OVERLAY_CSS)
+        .replace("/*OVERLAY_RENDER_JS*/", OVERLAY_RENDER_JS)
+}
+
+/// The "hand this replay to the viewer" launcher page. Same deal: embedded,
+/// served from loopback, no filesystem involvement.
+const HANDOFF_HTML: &str = include_str!("../../src-frontend/handoff.html");
 
 /// SSE clients get a comment ping so dead connections are noticed and
 /// reaped even when no games are being played.
 const KEEPALIVE: Duration = Duration::from_secs(20);
+
+/// How long a staged replay stays available to the launcher page, and how many
+/// can be pending at once. Bounded because these hold whole .w3g files in RAM.
+const HANDOFF_TTL: Duration = Duration::from_secs(600);
+const HANDOFF_MAX: usize = 4;
+
+/// A replay staged for the browser. Reads do NOT consume it: the launcher page
+/// is an ordinary web page a user can reload, and a single-use entry turns a
+/// reload into a dead link for no security gain — the token already gates the
+/// route, and anything holding the token can read /state and /overlay anyway.
+/// Bounded lifetime and count do the actual work here.
+struct Handoff {
+    id: String,
+    bytes: Vec<u8>,
+    staged_at: Instant,
+}
 
 pub struct Overlay {
     /// 0 when the server failed to bind — commands must report, not panic.
@@ -36,6 +69,10 @@ pub struct Overlay {
     token: String,
     latest: Mutex<String>,
     clients: Mutex<Vec<TcpStream>>,
+    handoffs: Mutex<Vec<Handoff>>,
+    /// Monotonic counter behind the handoff ids, so two stagings in the same
+    /// millisecond cannot collide.
+    handoff_seq: Mutex<u64>,
 }
 
 /// Token from OS entropy without a rand dependency: `RandomState` seeds from
@@ -97,6 +134,8 @@ pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
             token,
             latest: Mutex::new("{}".into()),
             clients: Mutex::new(Vec::new()),
+            handoffs: Mutex::new(Vec::new()),
+            handoff_seq: Mutex::new(0),
         });
     };
     let port = listener.local_addr().map(|a| a.port()).unwrap_or(0);
@@ -107,6 +146,8 @@ pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
         token,
         latest: Mutex::new("{}".into()),
         clients: Mutex::new(Vec::new()),
+        handoffs: Mutex::new(Vec::new()),
+        handoff_seq: Mutex::new(0),
     });
 
     let accept = Arc::clone(&overlay);
@@ -138,6 +179,57 @@ impl Overlay {
         self.broadcast(&format!("data: {state}\n\n"));
     }
 
+    /// Stage a replay for the browser and return the launcher URL.
+    ///
+    /// Chrome blocks a public page (wc3v.com) from reaching a loopback server
+    /// at all — both `fetch` and an iframe were measured hanging, then aborted
+    /// — so the browser has to START on this origin. The launcher page fetches
+    /// the bytes same-origin and hands them to the site through a cross-origin
+    /// postMessage, which needs no CORS and crosses private → public, the
+    /// direction browsers do allow.
+    ///
+    /// Staging happens here, in-process, from a Tauri command. The HTTP side
+    /// still only ever reads: no route mutates anything.
+    pub fn stage_handoff(&self, bytes: Vec<u8>, at_ms: Option<u64>, key: &str) -> Option<String> {
+        if self.port == 0 {
+            return None;
+        }
+        let id = {
+            let mut seq = self.handoff_seq.lock().unwrap();
+            *seq += 1;
+            format!("h{seq}")
+        };
+
+        {
+            let mut pending = self.handoffs.lock().unwrap();
+            pending.retain(|h| h.staged_at.elapsed() < HANDOFF_TTL);
+            while pending.len() >= HANDOFF_MAX {
+                pending.remove(0);
+            }
+            pending.push(Handoff { id: id.clone(), bytes, staged_at: Instant::now() });
+        }
+
+        let mut url = format!(
+            "http://127.0.0.1:{}/open?token={}&h={}&key={}",
+            self.port,
+            self.token,
+            id,
+            url_encode(key)
+        );
+        if let Some(at) = at_ms {
+            url.push_str(&format!("&at={at}"));
+        }
+        Some(url)
+    }
+
+    fn take_handoff(&self, id: &str) -> Option<Vec<u8>> {
+        let pending = self.handoffs.lock().unwrap();
+        pending
+            .iter()
+            .find(|h| h.id == id && h.staged_at.elapsed() < HANDOFF_TTL)
+            .map(|h| h.bytes.clone())
+    }
+
     /// Write to every SSE client, dropping the ones that are gone.
     fn broadcast(&self, msg: &str) {
         let mut clients = self.clients.lock().unwrap();
@@ -153,6 +245,32 @@ impl Overlay {
             return false;
         }
         a.iter().zip(b).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
+    }
+}
+
+/// Percent-encode everything outside the unreserved set. Store keys are only
+/// digits, hex and a dash today, but this is building a URL and a helper that
+/// assumes its input is safe is exactly how that stops being true.
+fn url_encode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char)
+            }
+            _ => out.push_str(&format!("%{b:02X}")),
+        }
+    }
+    out
+}
+
+fn respond_bytes(stream: &mut TcpStream, ctype: &str, body: &[u8]) {
+    let head = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    if stream.write_all(head.as_bytes()).is_ok() {
+        let _ = stream.write_all(body);
     }
 }
 
@@ -216,7 +334,22 @@ fn handle(mut stream: TcpStream, ov: Arc<Overlay>) {
     }
 
     match path {
-        "/overlay" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", OVERLAY_HTML),
+        "/overlay" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", &overlay_html()),
+        // The launcher page. Its query string (h / key / at) is read by the
+        // page itself in the browser; the server just serves the document.
+        "/open" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", HANDOFF_HTML),
+        "/handoff" => {
+            let id = query
+                .split('&')
+                .find_map(|kv| kv.strip_prefix("h="))
+                .unwrap_or("");
+            match ov.take_handoff(id) {
+                Some(bytes) => respond_bytes(&mut stream, "application/octet-stream", &bytes),
+                // Expired or never staged. The launcher page turns this into
+                // "click Watch again in WC3V" rather than a blank failure.
+                None => respond(&mut stream, "404 Not Found", "text/plain", "no such handoff"),
+            }
+        }
         "/state" => {
             let latest = ov.latest.lock().unwrap().clone();
             respond(&mut stream, "200 OK", "application/json", &latest);
@@ -291,6 +424,93 @@ mod tests {
 
         let resp = get(ov.port, &format!("/secrets?token={}", ov.token));
         assert!(resp.starts_with("HTTP/1.1 404"));
+    }
+
+    /// Raw GET returning the body bytes, so a binary route can be checked
+    /// byte-for-byte rather than through a lossy String conversion.
+    fn get_bytes(port: u16, target: &str) -> (String, Vec<u8>) {
+        let mut s = TcpStream::connect(("127.0.0.1", port)).unwrap();
+        s.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+        write!(s, "GET {target} HTTP/1.1\r\nHost: localhost\r\n\r\n").unwrap();
+        let mut buf = Vec::new();
+        let _ = s.read_to_end(&mut buf);
+        let split = buf
+            .windows(4)
+            .position(|w| w == b"\r\n\r\n")
+            .map(|i| i + 4)
+            .unwrap_or(buf.len());
+        let head = String::from_utf8_lossy(&buf[..split]).to_string();
+        (head, buf[split..].to_vec())
+    }
+
+    /// The overlay is three files stitched into one document. If a placeholder
+    /// is ever renamed on one side only, the page still serves 200 — it just
+    /// arrives with no styling or no renderer, which looks like a broken OBS
+    /// source rather than a broken build. Assert the seam.
+    #[test]
+    fn overlay_page_has_its_css_and_renderer_inlined() {
+        let html = overlay_html();
+        assert!(!html.contains("/*OVERLAY_CSS*/"), "css placeholder was not replaced");
+        assert!(!html.contains("/*OVERLAY_RENDER_JS*/"), "renderer placeholder was not replaced");
+        assert!(html.contains(".wc3v-ov .card"), "overlay css missing from the page");
+        assert!(html.contains("window.OverlayRender"), "renderer missing from the page");
+        // Self-contained is a hard requirement: OBS may have no network at all,
+        // and an overlay that phones out is not auditable.
+        assert!(!html.contains("<script src="), "overlay must not load external scripts");
+        assert!(!html.contains("<link rel=\"stylesheet\""), "overlay must not load external css");
+    }
+
+    #[test]
+    fn handoff_routes_require_the_token() {
+        let ov = served("handoff-token");
+        assert!(get(ov.port, "/open").starts_with("HTTP/1.1 403"));
+        assert!(get(ov.port, "/handoff?h=h1").starts_with("HTTP/1.1 403"));
+        assert!(get(ov.port, "/open?token=wrong").starts_with("HTTP/1.1 403"));
+    }
+
+    #[test]
+    fn staged_replay_is_served_verbatim_and_unknown_ids_404() {
+        let ov = served("handoff-serve");
+        let payload: Vec<u8> = (0u8..=255).cycle().take(5000).collect();
+        let url = ov.stage_handoff(payload.clone(), Some(522000), "137081-abc").unwrap();
+
+        // The launcher URL has to carry everything the browser needs, or the
+        // page opens with nothing to hand over.
+        assert!(url.contains("/open?token="));
+        assert!(url.contains("&at=522000"));
+        assert!(url.contains("&key=137081-abc"));
+
+        let id = url.split("&h=").nth(1).unwrap().split('&').next().unwrap().to_string();
+        let (head, body) = get_bytes(ov.port, &format!("/handoff?token={}&h={id}", ov.token));
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert_eq!(body, payload, "staged bytes must arrive unchanged");
+
+        // Reading does not consume: the launcher is a page a user can reload,
+        // and a dead link on refresh buys nothing the token does not already.
+        let (_, again) = get_bytes(ov.port, &format!("/handoff?token={}&h={id}", ov.token));
+        assert_eq!(again, payload);
+
+        assert!(get(ov.port, &format!("/handoff?token={}&h=nope", ov.token))
+            .starts_with("HTTP/1.1 404"));
+    }
+
+    #[test]
+    fn staged_replays_are_capped_so_memory_cannot_grow() {
+        let ov = served("handoff-cap");
+        let mut ids = Vec::new();
+        for i in 0..(HANDOFF_MAX + 2) {
+            let url = ov.stage_handoff(vec![i as u8; 16], None, "k").unwrap();
+            ids.push(url.split("&h=").nth(1).unwrap().split('&').next().unwrap().to_string());
+        }
+        assert_eq!(ov.handoffs.lock().unwrap().len(), HANDOFF_MAX);
+        // Oldest evicted, newest still there.
+        assert!(get(ov.port, &format!("/handoff?token={}&h={}", ov.token, ids[0]))
+            .starts_with("HTTP/1.1 404"));
+        let (head, _) = get_bytes(
+            ov.port,
+            &format!("/handoff?token={}&h={}", ov.token, ids[ids.len() - 1]),
+        );
+        assert!(head.starts_with("HTTP/1.1 200"));
     }
 
     #[test]

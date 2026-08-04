@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WC3V overlay</title>
+<!--
+  Served by the Rust loopback server, which inlines overlay.css and
+  overlay-render.js into this shell at request time (they are separate files so
+  the live preview inside the WC3V window can render from exactly the same
+  source — a preview drawn by different code is a preview that can lie).
+
+  Rendered by an OBS Browser Source or an ordinary browser tab (player view).
+  Entirely self-contained: no external fonts, scripts or requests — the only
+  network activity is the same-origin EventSource this page opens.
+
+  URL params:
+    token    required
+    view     obs | panel        (panel = opaque background, for a monitor)
+    theme    carved | slate
+    scale    number, 0.4–4
+    modules  comma list: session,verdict,h2h,moments,build
+-->
+<style>
+  html { font-size: 16px; }
+  body { background: transparent; padding: 0.5rem; margin: 0; }
+  body[data-view="panel"] { background: #0f0d0a; min-height: 100vh; }
+/*OVERLAY_CSS*/
+</style>
+</head>
+<body>
+  <div id="ov"></div>
+<script>
+/*OVERLAY_RENDER_JS*/
+</script>
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(location.search);
+  var token = params.get('token') || '';
+  document.body.dataset.view = params.get('view') === 'panel' ? 'panel' : 'obs';
+  if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
+  var scale = parseFloat(params.get('scale'));
+  if (scale > 0.4 && scale < 4) document.documentElement.style.fontSize = (16 * scale) + 'px';
+
+  // An unrecognised module name is dropped rather than failing the page: an
+  // older overlay URL pasted into OBS keeps working after a rename.
+  var mods = (params.get('modules') || '').split(',')
+    .map(function (s) { return s.trim(); })
+    .filter(function (s) { return window.OverlayRender.ALL_MODULES.indexOf(s) !== -1; });
+
+  var root = document.getElementById('ov');
+  var es = new EventSource('/events?token=' + encodeURIComponent(token));
+  es.onmessage = function (e) {
+    try {
+      window.OverlayRender.render(root, JSON.parse(e.data), mods);
+    } catch (err) { /* partial state — wait for the next one */ }
+  };
+})();
+</script>
+</body>
+</html>
