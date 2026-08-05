@@ -175,10 +175,17 @@ never been walked.
 32. Open a game and click **Open in viewer**.
     - Expect: your default browser opens a small WC3V card on `127.0.0.1`
       saying **Ready to open**, with one button.
+    - **Look at the address bar.** It should read
+      `http://127.0.0.1:<port>/open?h=<16 characters>` and nothing else. If you
+      see `token=`, `key=` or `at=` in there, you are running a build older
+      than 0.5.0 — that URL was writing the overlay's permanent token into
+      browser history on every use.
     - Click it. wc3v.com opens and loads the game in the 3D viewer.
     - **Expect NO pop-up warning of any kind.** The page opens nothing by
       itself; a blocked-pop-up indicator in the address bar means something
       auto-opened and is a bug.
+    - Leave that tab for ten minutes, then reload it. Expect the friendly
+      *"That replay is no longer staged"* card — not a bare `404`.
 33. Back in the app, click **Watch** on a key moment.
     - Expect: the viewer opens at that moment, not at the start.
     - Expect: the second time, it is **much faster** — the browser remembers the

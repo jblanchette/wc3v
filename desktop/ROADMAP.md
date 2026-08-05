@@ -469,7 +469,27 @@ browser over loopback.
       game skips the handoff and the re-parse entirely.
 - [x] Staged replays expire after 10 minutes and are capped at 4. Deliberately
       NOT single-use: the launcher is a page a user can reload, and a dead link
-      on refresh buys nothing the token does not already.
+      on refresh buys nothing the id does not already.
+- [x] **The launcher URL is one short opaque parameter**, `…/open?h=<16 hex>`.
+      It used to be
+      `…/open?token=<32 hex>&h=h1&key=<content key>&at=<ms>` — long enough to
+      look alarming in an address bar, which is what prompted the change. But
+      the length was the least of it:
+      - **It put the permanent overlay token into browser history**, on every
+        single "open in viewer", forever. That token also reads `/overlay`,
+        `/state` and `/events`. Nothing needed it there.
+      - **The handoff ids were a counter** — `h1`, `h2`, `h3`. Trivially
+        walkable, and safe only because the token happened to gate the route
+        too.
+      Now the staged id IS the credential: 64 unpredictable bits, dead after
+      ten minutes, unlocking exactly one replay and nothing else. `at` and
+      `key` come back as response headers on `/handoff` instead of riding in
+      the URL — the server already had both. **The token never enters the
+      browser at all.**
+      - `/open` is deliberately left ungated: it is a static document holding
+        no token, no replay and no state. Gating it would mean an expired link
+        returned a bare `404 no such handoff` instead of the page that explains
+        what happened, which was a regression caught while writing this.
 - [ ] Walk it end to end once the site is deployed and the app rebuilt.
 - [ ] `render.yaml` needs no route for `/handoff` (Render serves extensionless
       HTML already, same as `/welcome`) — confirm on the first deploy.

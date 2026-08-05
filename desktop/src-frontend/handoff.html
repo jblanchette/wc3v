@@ -110,11 +110,13 @@
 (function () {
   'use strict';
 
-  var params = new URLSearchParams(location.search);
-  var token = params.get('token') || '';
-  var handoffId = params.get('h') || '';
-  var at = params.get('at') || '';
-  var key = params.get('key') || '';
+  // The whole address is `…/open?h=<id>`. `at` and `key` used to be query
+  // parameters too, and the overlay token was in front of them — which made
+  // the visible URL three times longer AND wrote a permanent token into
+  // browser history on every use. They now come back with the bytes.
+  var handoffId = new URLSearchParams(location.search).get('h') || '';
+  var at = '';
+  var key = '';
 
   var SITE = 'https://wc3v.com';
   var el = function (id) { return document.getElementById(id); };
@@ -127,17 +129,17 @@
     el('note').textContent = '';
   }
 
-  var bytesPromise = fetch('/handoff?token=' + encodeURIComponent(token) +
-                           '&h=' + encodeURIComponent(handoffId))
+  var bytesPromise = fetch('/handoff?h=' + encodeURIComponent(handoffId))
     .then(function (r) {
       if (!r.ok) throw new Error('handoff ' + r.status);
+      at = r.headers.get('X-Wc3v-At') || '';
+      key = r.headers.get('X-Wc3v-Key') || '';
       return r.arrayBuffer();
     });
 
   // The child announces itself when it is ready to receive; we answer with the
   // bytes. Doing it this way round removes the race entirely — there is no
   // guessing how long the site takes to load.
-  var child = null;
   window.addEventListener('message', function (e) {
     if (e.origin !== SITE) return;
     if (!e.data || e.data.type !== 'wc3v-handoff-ready') return;
@@ -172,7 +174,7 @@
       (key ? '&key=' + encodeURIComponent(key) : '');
     // Named, so clicking a second time reuses the same tab instead of piling
     // viewers up.
-    child = window.open(url, 'wc3v-viewer');
+    window.open(url, 'wc3v-viewer');
     el('go').disabled = true;
     el('head').textContent = 'Opening…';
   }

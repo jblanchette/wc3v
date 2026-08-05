@@ -60,6 +60,11 @@ const HANDOFF_MAX: usize = 4;
 struct Handoff {
     id: String,
     bytes: Vec<u8>,
+    /// Carried here rather than in the launcher URL. They used to be query
+    /// parameters, which made the visible address three times longer for no
+    /// reason — the server already knows both.
+    at_ms: Option<u64>,
+    key: String,
     staged_at: Instant,
 }
 
@@ -80,21 +85,27 @@ pub struct Overlay {
 /// is "another local process guessing a URL", and 128 unpredictable bits is
 /// far beyond what that can brute-force over HTTP.
 fn random_token() -> String {
-    use std::collections::hash_map::RandomState;
-    use std::hash::{BuildHasher, Hasher};
     let mut out = String::with_capacity(32);
     for round in 0..2u64 {
-        let mut h = RandomState::new().build_hasher();
-        h.write_u64(round);
-        h.write_u128(
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_nanos(),
-        );
-        out.push_str(&format!("{:016x}", h.finish()));
+        out.push_str(&random_word(round));
     }
     out
+}
+
+/// 64 unpredictable bits as 16 hex characters. `seq` is mixed in so two
+/// stagings in the same nanosecond still differ.
+fn random_word(seq: u64) -> String {
+    use std::collections::hash_map::RandomState;
+    use std::hash::{BuildHasher, Hasher};
+    let mut h = RandomState::new().build_hasher();
+    h.write_u64(seq);
+    h.write_u128(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos(),
+    );
+    format!("{:016x}", h.finish())
 }
 
 fn load_or_create(path: &Path, create: impl FnOnce() -> String) -> String {
@@ -194,10 +205,16 @@ impl Overlay {
         if self.port == 0 {
             return None;
         }
+        // Unguessable, because this id is now the ONLY credential on the two
+        // handoff routes. It used to be a counter ("h1", "h2") and was safe
+        // only because the overlay token also had to be in the URL — which
+        // meant every "open in viewer" wrote that permanent token into the
+        // browser's history, where it stayed. This id expires in ten minutes
+        // and opens nothing else.
         let id = {
             let mut seq = self.handoff_seq.lock().unwrap();
             *seq += 1;
-            format!("h{seq}")
+            random_word(*seq)
         };
 
         {
@@ -206,28 +223,35 @@ impl Overlay {
             while pending.len() >= HANDOFF_MAX {
                 pending.remove(0);
             }
-            pending.push(Handoff { id: id.clone(), bytes, staged_at: Instant::now() });
+            pending.push(Handoff {
+                id: id.clone(),
+                bytes,
+                at_ms,
+                key: key.to_string(),
+                staged_at: Instant::now(),
+            });
         }
 
-        let mut url = format!(
-            "http://127.0.0.1:{}/open?token={}&h={}&key={}",
-            self.port,
-            self.token,
-            id,
-            url_encode(key)
-        );
-        if let Some(at) = at_ms {
-            url.push_str(&format!("&at={at}"));
-        }
-        Some(url)
+        // Everything else the launcher needs comes back with the bytes, so the
+        // address bar shows one short opaque parameter instead of a token, a
+        // content key and a timestamp.
+        Some(format!("http://127.0.0.1:{}/open?h={}", self.port, id))
     }
 
-    fn take_handoff(&self, id: &str) -> Option<Vec<u8>> {
+    fn take_handoff(&self, id: &str) -> Option<(Vec<u8>, Option<u64>, String)> {
         let pending = self.handoffs.lock().unwrap();
         pending
             .iter()
             .find(|h| h.id == id && h.staged_at.elapsed() < HANDOFF_TTL)
-            .map(|h| h.bytes.clone())
+            .map(|h| (h.bytes.clone(), h.at_ms, h.key.clone()))
+    }
+
+    /// Is this a live staged handoff? The gate on `/open` and `/handoff`.
+    fn handoff_exists(&self, id: &str) -> bool {
+        let pending = self.handoffs.lock().unwrap();
+        pending
+            .iter()
+            .any(|h| h.id == id && h.staged_at.elapsed() < HANDOFF_TTL)
     }
 
     /// Write to every SSE client, dropping the ones that are gone.
@@ -248,26 +272,25 @@ impl Overlay {
     }
 }
 
-/// Percent-encode everything outside the unreserved set. Store keys are only
-/// digits, hex and a dash today, but this is building a URL and a helper that
-/// assumes its input is safe is exactly how that stops being true.
-fn url_encode(s: &str) -> String {
-    let mut out = String::with_capacity(s.len());
-    for b in s.bytes() {
-        match b {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                out.push(b as char)
-            }
-            _ => out.push_str(&format!("%{b:02X}")),
-        }
-    }
-    out
-}
-
-fn respond_bytes(stream: &mut TcpStream, ctype: &str, body: &[u8]) {
+/// The staged replay, plus the two things the launcher needs to know about it.
+///
+/// Headers rather than query parameters, so the address the user actually sees
+/// stays `…/open?h=<id>` instead of also carrying a content key and a seek
+/// timestamp. Both values are our own — the key is a size-and-hash string and
+/// `at` is a number — but the key is sanitised anyway, because a header value
+/// containing CRLF is a response-splitting bug.
+fn respond_handoff(stream: &mut TcpStream, body: &[u8], at_ms: Option<u64>, key: &str) {
+    let safe_key: String = key
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.'))
+        .take(128)
+        .collect();
     let head = format!(
-        "HTTP/1.1 200 OK\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
-        body.len()
+        "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: {}\r\n\
+         X-Wc3v-Key: {}\r\nX-Wc3v-At: {}\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
+        body.len(),
+        safe_key,
+        at_ms.map(|v| v.to_string()).unwrap_or_default()
     );
     if stream.write_all(head.as_bytes()).is_ok() {
         let _ = stream.write_all(body);
@@ -325,28 +348,51 @@ fn handle(mut stream: TcpStream, ov: Arc<Overlay>) {
     if path == "/favicon.ico" {
         return respond(&mut stream, "204 No Content", "image/x-icon", "");
     }
-    let token = query
-        .split('&')
-        .find_map(|kv| kv.strip_prefix("token="))
-        .unwrap_or("");
-    if !ov.token_ok(token) {
+    let param = |name: &str| {
+        let prefix = format!("{name}=");
+        query
+            .split('&')
+            .find_map(|kv| kv.strip_prefix(&prefix))
+            .unwrap_or("")
+            .to_string()
+    };
+
+    // Three kinds of route, two credentials, and one that needs neither.
+    //
+    //   /open     — a static document. It carries no token, no replay and no
+    //               state of any kind; everything it needs it fetches. So it
+    //               is served to any loopback caller, which also means an
+    //               EXPIRED link still gets the page and its "click Watch
+    //               again in WC3V" message instead of a bare 404.
+    //   /handoff  — the replay itself. Gated by that staging's own id: 64
+    //               unpredictable bits, dead after ten minutes, unlocking
+    //               exactly one replay and nothing else.
+    //   the rest  — the per-install token, which is permanent and reads
+    //               everything on this server.
+    //
+    // The handoff id exists precisely so the token does not have to travel.
+    // This URL ends up in an address bar, in history, in a synced profile —
+    // and the token used to be in it, on every single "open in viewer".
+    if path == "/handoff" {
+        if !ov.handoff_exists(&param("h")) {
+            // 404 rather than 403: an expired id, a wrong id and a replay that
+            // was never staged are the same thing from out here.
+            return respond(&mut stream, "404 Not Found", "text/plain", "no such handoff");
+        }
+    } else if path != "/open" && !ov.token_ok(&param("token")) {
         return respond(&mut stream, "403 Forbidden", "text/plain", "bad token");
     }
 
     match path {
         "/overlay" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", &overlay_html()),
-        // The launcher page. Its query string (h / key / at) is read by the
-        // page itself in the browser; the server just serves the document.
+        // The launcher page. Its only query parameter is the staged id, which
+        // it reads back out of location.search to fetch the bytes.
         "/open" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", HANDOFF_HTML),
         "/handoff" => {
-            let id = query
-                .split('&')
-                .find_map(|kv| kv.strip_prefix("h="))
-                .unwrap_or("");
-            match ov.take_handoff(id) {
-                Some(bytes) => respond_bytes(&mut stream, "application/octet-stream", &bytes),
-                // Expired or never staged. The launcher page turns this into
-                // "click Watch again in WC3V" rather than a blank failure.
+            match ov.take_handoff(&param("h")) {
+                // `at` and `key` ride along as headers rather than as query
+                // parameters on a URL a human has to look at.
+                Some((bytes, at_ms, key)) => respond_handoff(&mut stream, &bytes, at_ms, &key),
                 None => respond(&mut stream, "404 Not Found", "text/plain", "no such handoff"),
             }
         }
@@ -405,11 +451,15 @@ mod tests {
     }
 
     #[test]
-    fn every_route_requires_the_token() {
+    fn every_overlay_route_requires_the_token() {
         let ov = served("token");
         assert!(get(ov.port, "/state").starts_with("HTTP/1.1 403"));
         assert!(get(ov.port, "/overlay?token=wrong").starts_with("HTTP/1.1 403"));
         assert!(get(ov.port, "/events?token=").starts_with("HTTP/1.1 403"));
+        // An unknown path is refused before anything else looks at it.
+        assert!(get(ov.port, "/whatever").starts_with("HTTP/1.1 403"));
+        // The replay is gated too, by a different credential — see
+        // the_replay_is_gated_by_its_staged_id_not_the_token.
     }
 
     #[test]
@@ -461,11 +511,45 @@ mod tests {
     }
 
     #[test]
-    fn handoff_routes_require_the_token() {
-        let ov = served("handoff-token");
-        assert!(get(ov.port, "/open").starts_with("HTTP/1.1 403"));
-        assert!(get(ov.port, "/handoff?h=h1").starts_with("HTTP/1.1 403"));
-        assert!(get(ov.port, "/open?token=wrong").starts_with("HTTP/1.1 403"));
+    fn the_replay_is_gated_by_its_staged_id_not_the_token() {
+        let ov = served("handoff-id");
+
+        // The REPLAY needs a live id. The old ids were a counter ("h1", "h2")
+        // and were safe only because the token also had to be present.
+        assert!(get(ov.port, "/handoff").starts_with("HTTP/1.1 404"));
+        assert!(get(ov.port, "/handoff?h=h1").starts_with("HTTP/1.1 404"));
+        assert!(get(ov.port, "/handoff?h=0000000000000000").starts_with("HTTP/1.1 404"));
+        // And the token does not substitute for it.
+        assert!(get(ov.port, &format!("/handoff?token={}", ov.token))
+            .starts_with("HTTP/1.1 404"));
+
+        // The launcher PAGE is a static document with nothing in it, so it is
+        // served regardless — which is what lets an expired link still explain
+        // itself instead of returning a bare 404.
+        assert!(get(ov.port, "/open").starts_with("HTTP/1.1 200"));
+        assert!(get(ov.port, "/open?h=expired").starts_with("HTTP/1.1 200"));
+        let page = get(ov.port, "/open");
+        assert!(!page.contains(&ov.token), "the launcher page must not carry the token");
+
+        let url = ov.stage_handoff(vec![1, 2, 3], None, "k").unwrap();
+        let id = url.split("?h=").nth(1).unwrap().to_string();
+        assert!(!url.contains("token"), "the launcher URL must not carry the token: {url}");
+        let (head, body) = get_bytes(ov.port, &format!("/handoff?h={id}"));
+        assert!(head.starts_with("HTTP/1.1 200"), "{head}");
+        assert_eq!(body, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn handoff_ids_are_unpredictable() {
+        let ov = served("handoff-entropy");
+        let mut seen = std::collections::HashSet::new();
+        for _ in 0..8 {
+            let url = ov.stage_handoff(vec![0], None, "k").unwrap();
+            let id = url.split("?h=").nth(1).unwrap().to_string();
+            assert_eq!(id.len(), 16, "id should be 64 bits of hex: {id}");
+            assert!(id.chars().all(|c| c.is_ascii_hexdigit()), "{id}");
+            assert!(seen.insert(id), "handoff ids repeated");
+        }
     }
 
     #[test]
@@ -474,24 +558,25 @@ mod tests {
         let payload: Vec<u8> = (0u8..=255).cycle().take(5000).collect();
         let url = ov.stage_handoff(payload.clone(), Some(522000), "137081-abc").unwrap();
 
-        // The launcher URL has to carry everything the browser needs, or the
-        // page opens with nothing to hand over.
-        assert!(url.contains("/open?token="));
-        assert!(url.contains("&at=522000"));
-        assert!(url.contains("&key=137081-abc"));
+        // The visible address is one short opaque parameter and nothing else.
+        // Everything the launcher needs comes back with the bytes instead.
+        assert!(url.contains("/open?h="), "{url}");
+        assert!(!url.contains("at="), "seek time must not be in the URL: {url}");
+        assert!(!url.contains("key="), "content key must not be in the URL: {url}");
 
-        let id = url.split("&h=").nth(1).unwrap().split('&').next().unwrap().to_string();
-        let (head, body) = get_bytes(ov.port, &format!("/handoff?token={}&h={id}", ov.token));
+        let id = url.split("?h=").nth(1).unwrap().to_string();
+        let (head, body) = get_bytes(ov.port, &format!("/handoff?h={id}"));
         assert!(head.starts_with("HTTP/1.1 200"), "{head}");
         assert_eq!(body, payload, "staged bytes must arrive unchanged");
+        assert!(head.contains("X-Wc3v-At: 522000"), "{head}");
+        assert!(head.contains("X-Wc3v-Key: 137081-abc"), "{head}");
 
         // Reading does not consume: the launcher is a page a user can reload,
-        // and a dead link on refresh buys nothing the token does not already.
-        let (_, again) = get_bytes(ov.port, &format!("/handoff?token={}&h={id}", ov.token));
+        // and a dead link on refresh buys nothing the id does not already.
+        let (_, again) = get_bytes(ov.port, &format!("/handoff?h={id}"));
         assert_eq!(again, payload);
 
-        assert!(get(ov.port, &format!("/handoff?token={}&h=nope", ov.token))
-            .starts_with("HTTP/1.1 404"));
+        assert!(get(ov.port, "/handoff?h=nope").starts_with("HTTP/1.1 404"));
     }
 
     #[test]
@@ -500,16 +585,12 @@ mod tests {
         let mut ids = Vec::new();
         for i in 0..(HANDOFF_MAX + 2) {
             let url = ov.stage_handoff(vec![i as u8; 16], None, "k").unwrap();
-            ids.push(url.split("&h=").nth(1).unwrap().split('&').next().unwrap().to_string());
+            ids.push(url.split("?h=").nth(1).unwrap().to_string());
         }
         assert_eq!(ov.handoffs.lock().unwrap().len(), HANDOFF_MAX);
         // Oldest evicted, newest still there.
-        assert!(get(ov.port, &format!("/handoff?token={}&h={}", ov.token, ids[0]))
-            .starts_with("HTTP/1.1 404"));
-        let (head, _) = get_bytes(
-            ov.port,
-            &format!("/handoff?token={}&h={}", ov.token, ids[ids.len() - 1]),
-        );
+        assert!(get(ov.port, &format!("/handoff?h={}", ids[0])).starts_with("HTTP/1.1 404"));
+        let (head, _) = get_bytes(ov.port, &format!("/handoff?h={}", ids[ids.len() - 1]));
         assert!(head.starts_with("HTTP/1.1 200"));
     }
 
