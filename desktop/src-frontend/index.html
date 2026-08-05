@@ -27,15 +27,18 @@
            accent, not an image. -->
       <div class="wordmark">WC<span>3</span>V</div>
 
+      <!-- Three tabs, one per question the app answers: what just happened
+           (Last game), am I getting better (Coach), and the broadcast
+           (Stream). Settings is maintenance, not a destination — it lives on
+           the gear beside the caption controls. The data-view values are
+           internal ids and deliberately unchanged. -->
       <nav class="nav" role="tablist" aria-label="Screens">
         <button class="nav-item is-active" data-view="games" type="button"
-                role="tab" aria-selected="true">Games</button>
+                role="tab" aria-selected="true">Last game</button>
         <button class="nav-item" data-view="profile" type="button"
-                role="tab" aria-selected="false">Profile</button>
+                role="tab" aria-selected="false">Coach</button>
         <button class="nav-item" data-view="stream" type="button"
                 role="tab" aria-selected="false">Stream</button>
-        <button class="nav-item" data-view="settings" type="button"
-                role="tab" aria-selected="false">Settings</button>
       </nav>
 
       <div class="appbar-spacer" data-tauri-drag-region></div>
@@ -71,6 +74,13 @@
         <span class="session-score"><b class="w" id="session-w">0</b><i>–</i><b class="l" id="session-l">0</b></span>
         <span class="session-streak" id="session-streak"></span>
       </div>
+
+      <!-- Settings. A view without a tab: it is reached from here and from
+           the update chip, and showView treats it like any other screen. -->
+      <button id="settings-btn" class="wctl wctl-gear" type="button"
+              aria-label="Settings" aria-pressed="false" title="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.8c.1.65.1 1.35 0 2l2 1.8-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6a7 7 0 0 1-1.7-.9l-2.5.9-1.7-2.9 2-1.8a6.6 6.6 0 0 1 0-2l-2-1.8 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg>
+      </button>
 
       <!-- Caption controls. Close hides to the tray via the window's normal
            close event, so the behaviour lives in exactly one place
@@ -113,41 +123,54 @@
                 <button class="seg-btn" data-result="win" type="button">Wins</button>
                 <button class="seg-btn" data-result="loss" type="button">Losses</button>
               </div>
+              <!-- Race glyphs are filled in from RaceIcons at boot
+                   (games-view.js wireFilters) — markup stays free of inline
+                   SVG so there is exactly one copy of each mark. -->
               <div class="seg" id="feed-race" role="group" aria-label="Your race">
                 <button class="seg-btn is-on" data-race="any" type="button">Any</button>
-                <button class="seg-btn" data-race="H" type="button">HU</button>
-                <button class="seg-btn" data-race="O" type="button">OC</button>
-                <button class="seg-btn" data-race="U" type="button">UD</button>
-                <button class="seg-btn" data-race="E" type="button">NE</button>
+                <button class="seg-btn seg-race" data-race="H" type="button"
+                        aria-label="Human" title="Human">HU</button>
+                <button class="seg-btn seg-race" data-race="O" type="button"
+                        aria-label="Orc" title="Orc">OC</button>
+                <button class="seg-btn seg-race" data-race="U" type="button"
+                        aria-label="Undead" title="Undead">UD</button>
+                <button class="seg-btn seg-race" data-race="E" type="button"
+                        aria-label="Night Elf" title="Night Elf">NE</button>
               </div>
             </div>
           </div>
           <div class="feed scroll" id="feed"></div>
         </div>
-        <div class="detail-col scroll" id="detail"></div>
+        <!-- NOT a scroller. The fold rule: the report's frame (verdict,
+             timings, tab strip) always fits the window; only the active tab's
+             body scrolls, and games-view.js marks that one .scroll itself. -->
+        <div class="detail-col" id="detail"></div>
       </section>
 
-      <!-- ── Profile ──────────────────────────────────────────────────── -->
+      <!-- ── Coach ────────────────────────────────────────────────────── -->
       <section class="view view-profile" data-view="profile" hidden>
-        <div class="profile-bar">
+        <div class="coach-head" id="coach-head">
+          <!-- Filled by profile-view.js: name, record, races, form chip. -->
+          <div class="coach-title" id="coach-title"></div>
           <label class="field field-inline">
             <span class="field-label">Look up a player</span>
             <input id="profile-name" list="known-names" autocomplete="off"
                    placeholder="leave blank for your own profile">
           </label>
-          <button id="profile-view" class="btn" type="button">View profile</button>
+          <button id="profile-view" class="btn" type="button">View</button>
         </div>
-        <div class="profile-body scroll" id="profile-body"></div>
+        <div class="coach-grid" id="profile-body"></div>
       </section>
 
       <!-- ── Stream ───────────────────────────────────────────────────── -->
       <section class="view view-stream" data-view="stream" hidden>
-        <div class="stream-body scroll" id="stream-body"></div>
+        <div class="stream-grid" id="stream-body"></div>
       </section>
 
       <!-- ── Settings ─────────────────────────────────────────────────── -->
       <section class="view view-settings" data-view="settings" hidden>
-        <div class="settings-body scroll">
+        <div class="settings-grid">
+          <div class="col scroll">
           <section class="panel">
             <h2>Replay folders</h2>
             <p class="lead">WC3V reads the replays Warcraft III already saves.
@@ -172,7 +195,9 @@
             <p class="hint" id="backfill-status">idle</p>
             <p class="hint">Map data lives in local app data.</p>
           </section>
+          </div>
 
+          <div class="col scroll">
           <section class="panel">
             <h2>App</h2>
             <label class="check">
@@ -208,6 +233,13 @@
             </div>
             <p class="hint update-notes" id="update-notes" hidden></p>
           </section>
+          </div>
+
+          <!-- Pinned, not scrolled past. The site carries this line in three
+               places; the desktop had none. -->
+          <p class="legal">Warcraft III and all related assets are trademarks
+            of Blizzard Entertainment, Inc. WC3V is a fan-made, non-commercial
+            tool not affiliated with or endorsed by Blizzard.</p>
         </div>
       </section>
     </main>
@@ -226,10 +258,12 @@
   <script src="./js/vendor/SummaryExtract.js"></script>
   <script src="./js/vendor/ProfileAggregate.js"></script>
   <script src="./js/vendor/MomentsExtract.js"></script>
+  <script src="./js/vendor/CompareCharts.js"></script>
   <script src="./overlay/overlay-render.js"></script>
   <script src="./js/store.js"></script>
   <script src="./js/replay-index.js"></script>
   <script src="./js/identity.js"></script>
+  <script src="./js/race-icons.js"></script>
   <script src="./js/games-view.js"></script>
   <script src="./js/profile-view.js"></script>
   <script src="./js/stream-view.js"></script>

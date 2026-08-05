@@ -376,10 +376,56 @@ Built on SummaryExtract summaries, as required — no new extractor.
 - [ ] Point a real OBS Browser Source at it. Transparency, reconnect
       behaviour and text sizes on stream are unverified until then.
 
-### 5. UI and visual design — BUILT
-The window is **a feed of your games**, not a file browser. That reframing is
-the whole change: the app used to open on the machinery (folders, scan buttons,
-a log) instead of on the thing anyone installed it for.
+### 5. UI and visual design — BUILT, then FOCUSED (Aug 2026)
+
+**What this app is for** — the sentence every screen answers to. WC3V watches
+the replays Warcraft III already saves and answers three questions, in order
+of how often they are asked:
+
+1. **What just happened?** — the instant post-game report (every game).
+2. **Am I getting better?** — coach, trends, records (weekly).
+3. **Who is this?** — the book on every opponent you have faced (whenever a
+   familiar name appears).
+
+…and puts it on stream for the people watching. Each tab is one of those
+questions; nothing else earns a tab. That is why the tabs are **Last game /
+Coach / Stream** and Settings is a gear beside the caption controls — it is
+maintenance, not a destination. (`data-view` ids stay `games`/`profile`;
+renaming internals buys nothing.)
+
+**The fold rule (absolute):** no view scrolls as a whole. The frame of every
+screen fits the window at the 900×600 minimum; anything long lives in a
+designated `.scroll` container. Verified by an automated audit (TESTING.md
+appendix): zero offending elements on every view and every report tab at both
+900×600 and 1280×820. Before this, the game detail stacked ~2,400px against a
+~700px viewport and Profile was a term paper.
+
+- The report is a fixed frame — verdict band (with the h2h record chip,
+  archetype and APM folded into the meta line), a single-row timings strip, a
+  tab strip — and one scrolling tab body. Tabs: **Story** (moments),
+  **Heroes**, **Economy**, **Builds**, **Head to head** (only at ≥2 shared
+  games). The active tab is remembered across game selections.
+- **Heroes and Economy existed in the data all along.** `heroBuilds` carries
+  skill order WITH ability icon ids and final items; `economyTrack` /
+  `combatUnitsTrack` are chart-shaped 30s series. The charts are drawn by the
+  site's own `CompareCharts` factory (now in SHARED_JS) with battle markers
+  from the stored moments; ≠2-player games chart the viewed seat alone
+  (`omitPro`) rather than inventing a duel.
+- **Coach is a dashboard**, not a column: fixed head band (name, record, form
+  chip, lookup), a 3-up trends band, then statements | seg-switched records,
+  each cell scrolling internally. Every player name in the app — report
+  header, h2h, builds titles, most-faced rows — is a `.name-link` that opens
+  that player in Coach.
+- **Race marks are original heraldic SVGs** (`race-icons.js`: keep / axe /
+  crescent / skull / die / ring), single-path, currentColor, tinted by the
+  `--race-warm-*` ramp. Deliberately NOT the game's art: the wc3icons set is
+  extracted Blizzard artwork, kept only where identity demands it (unit /
+  ability / item icons). The two-letter chips remain as the no-JS fallback.
+- The Blizzard trademark disclaimer the site carries in three places now
+  exists in the desktop too, pinned at the foot of Settings.
+
+The original reframing stands: the window is **a feed of your games**, not a
+file browser.
 
 - [x] Games feed grouped by day, newest first, built from the stored summaries.
       Each row: verdict plaque, opponent, matchup, map, duration.
@@ -444,8 +490,9 @@ a log) instead of on the thing anyone installed it for.
       collapsed by default — so a primary action that failed looked like a dead
       button. `failed()` now puts the reason in the status bar in red AND opens
       the drawer.
-- [ ] Drive it once through the real Tauri window rather than the preview.
-- Note: `node tools/desktop-preview.js` writes `desktop/dist/preview.html`,
+- [ ] Drive it once through the real Tauri window rather than the preview —
+      **re-opened by the Aug 2026 restructure**; every screen changed shape.
+- Note: `node tools/desktop-preview.js` writes `desktop/preview/preview.html`,
   which runs the real frontend against summaries built from real replays.
   That is how the UI is iterated on without launching the app.
 

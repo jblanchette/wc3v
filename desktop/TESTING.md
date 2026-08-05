@@ -58,8 +58,9 @@ preview cannot test any of this, which is why it is high on the list.
 
 5. **Look at the top of the window.**
    - Expect: ONE bar — dark navy, `WC3V` at the left with a blue **3**, then
-     Games / Profile / Stream / Settings, then your name and the minimise /
-     maximise / close buttons.
+     **Last game / Coach / Stream** (three tabs, no Settings tab), then your
+     name, a **gear** (that is Settings now — it should highlight while the
+     Settings view is open), and the minimise / maximise / close buttons.
    - Fail: a second, Windows-drawn title bar sitting above it. That means
      `decorations` did not take.
 6. **Drag the window** by an empty part of the bar. It should move.
@@ -82,32 +83,39 @@ preview cannot test any of this, which is why it is high on the list.
 
 ---
 
-## C. Your games
+## C. The game report ("Last game")
 
-12. **Games tab.** Expect a feed grouped by day, newest first, each row with a
-    verdict plaque (W / L / ·), the opponent, the matchup, map and duration.
-13. Click a game. The right column should show the verdict, **Open in viewer**,
-    a timings strip, key moments with Watch buttons, head-to-head if you have
-    played them before, and **both build orders with icons**.
-    - The icons come from `cdn.wc3v.com`. If they are empty carved squares,
-      either you are offline or the CSP is wrong — check the browser console
-      equivalent in the drawer, and say so.
-14. **Type an opponent's name** into the search box above the feed.
+12. **Last game tab.** Expect a feed grouped by day, newest first, each row
+    with a verdict plaque (W / L / ·), the opponent, race **glyphs** in the
+    matchup chip (keep / axe / crescent / skull — our own marks, not game
+    art), map and duration.
+13. Click a game. **The right column must not scroll as a whole** — that is
+    the fold rule. Expect a fixed frame: verdict + opponent (their name is a
+    link — click it, you should land in Coach on them), an all-time record
+    chip when you have ≥2 games against them, **Open in viewer** on the same
+    row, a meta line carrying the archetype and APM, a single-row timings
+    strip, then a tab strip: **Story / Heroes / Economy / Builds** (+ **Head
+    to head** when it exists). Only the tab body scrolls.
+14. **Heroes tab**: each hero with its portrait, final level, the skill order
+    and final items as real icon rows. Hover an icon — the tooltip names the
+    skill/item and when.
+    - Icons come from `cdn.wc3v.com`. Empty carved squares = offline or CSP —
+      say so.
+15. **Economy tab**: two charts (workers, army size), you in gold, opponent in
+    lapis, fights as dashed orange verticals. Under them, upgrades and mercs
+    as icon strips. In a non-1v1, expect ONE line per chart, not an invented
+    duel.
+16. **Type an opponent's name** into the search box above the feed.
     - Expect: the count above the feed changes from `N parsed` to `X of N`, and
       only their games remain.
     - Try a map name too — it matches the name **as shown**, so "Echo" works.
-15. Click **Wins**, then **Losses**.
-    - Expect: only that result. Every plaque should read the same letter.
-16. Click a race chip (**HU / OC / UD / NE**).
-    - Expect: only games where *you* played that race, once your name is set.
-17. Type nonsense into the search box.
+17. Click **Wins**, then **Losses**, then a race glyph.
+    - Expect: only that result / only games where *you* played that race.
+18. Type nonsense into the search box.
     - Expect: *"No games match. Try a different name, or clear the filters."*
-      — NOT the "nothing parsed yet" message. Those are different situations
-      and must not look the same.
-18. Clear the filters (the ✕ in the search box) and **scroll the feed to the
-    bottom**.
-    - Expect: more rows load as you approach the end. It renders 120 at a time,
-      so a big history should still open instantly.
+      — NOT the "nothing parsed yet" message.
+    - Then clear the filters and **scroll the feed to the bottom** — more
+      rows load as you approach the end (120 at a time).
 
 ---
 
@@ -212,22 +220,29 @@ New in 0.3.0. Before this, a game on a non-ladder map simply failed.
 
 ---
 
-## H. Profile and coaching
+## H. Coach
 
-37. **Profile tab** (leave the box blank for your own).
-38. Expect: your record, then **What the games say** — plain sentences, every
-    one carrying its n. If a claim looks wrong, it is worth more than any
-    layout bug; write down the sentence.
-39. Scroll to **Over time**.
-    - With **under ~40 games** you will see "then / now" numbers with the n at
-      each end and no chart. That is intentional — two points joined by a line
-      look like a trend while being two averages.
-    - With more, expect three small plots: win rate, Tier 2, workers at 5:00.
-      Hover any point for its dates and sample size.
+37. **Coach tab** (leave the box blank for your own). **Nothing on this
+    screen scrolls except the two lower cells** — head band, trends band and
+    both panels all fit the window. If the view itself scrolls, that is a
+    fold-rule bug.
+38. Expect: your name/record/form chip across the top, then **Over time** as
+    one band of three (win rate, Tier 2, workers at 5:00), then **What the
+    games say** beside a switchable records table (Matchups / Maps / Most
+    faced). Every claim carries its n — if one looks wrong, it is worth more
+    than any layout bug; write down the sentence.
+39. **Over time**, specifically:
+    - With **under ~40 games** you get "then / now" numbers with the n at
+      each end and no chart. Intentional — two points joined by a line look
+      like a trend while being two averages.
+    - With more, three small plots; hover a point for its dates and sample
+      size.
     - Sanity check: does the "now" number match how you have actually been
       playing? This is the claim most able to be confidently wrong.
-40. Type an **opponent's name** into the box → their profile, built from your
-    own games against them.
+40. In **Most faced**, click a player's name → Coach re-renders on them and
+    the lookup box mirrors the name. The same works from the report: the
+    opponent's name in the verdict line, the h2h heading and the build-order
+    column titles are all doors to their book.
 
 ---
 
@@ -280,6 +295,36 @@ working.
 **If nothing appears:** right-click the source → Interact. If the page is blank,
 the token or port is wrong — re-copy the URL from the app. If you see "Waiting
 for a game", it is connected and working; you just have no game yet.
+
+---
+
+## Appendix: the fold audit
+
+The fold rule — no view scrolls as a whole; only `.scroll` containers scroll —
+is checked mechanically, not by eye. Build the preview
+(`node tools/build-desktop-client.js && node tools/desktop-preview.js
+--games=40`), open `desktop/preview/preview.html`, size the viewport to
+**900×600** and then **1280×820**, and on every view (and every report tab,
+with a game selected and the drawer closed) run:
+
+```js
+(() => {
+  const bad = [];
+  for (const el of document.querySelectorAll('body, body *')) {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+    if (el.closest('.scroll')) continue;
+    if (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1) {
+      bad.push({ tag: el.tagName.toLowerCase(), cls: String(el.className).slice(0, 60) });
+    }
+  }
+  return bad;
+})()
+```
+
+Pass = `[]` everywhere. An element that clips via `overflow: hidden` reports
+too — deliberately: clipped content is a fold bug as much as a scrollbar is.
+Last clean run: 5 Aug 2026, both sizes, all four views, all five report tabs.
 
 ---
 

@@ -19,6 +19,13 @@
 
   // ── Generic dual-line chart ─────────────────────────────────────────────────
   // Series item: { gameTimeMs, userValue, proValue }
+  //
+  // opts.omitPro  — draw only the user line. For consumers whose "second
+  //                 side" does not exist (the desktop app charts an FFA seat
+  //                 alone rather than inventing a comparison).
+  // opts.markers  — [{ gameTimeMs, label? }] vertical event lines (the
+  //                 desktop marks battles on the economy chart). Ignored when
+  //                 absent, so every existing call site is unchanged.
   function dualLineChart (series, opts) {
     opts = opts || {};
     if (!series || !series.length) return '';
@@ -31,7 +38,7 @@
     let yMax = 1;
     for (const s of series) {
       if ((s.userValue || 0) > yMax) yMax = s.userValue;
-      if ((s.proValue || 0) > yMax) yMax = s.proValue;
+      if (!opts.omitPro && (s.proValue || 0) > yMax) yMax = s.proValue;
     }
     yMax = Math.ceil(yMax * 1.1);
     const xFor = (t) => PAD.l + (t / maxT) * innerW;
@@ -40,9 +47,11 @@
       const pts = series.map(s => `${xFor(s.gameTimeMs).toFixed(1)},${yFor(s[key]).toFixed(1)}`);
       return 'M' + pts.join(' L');
     };
-    // Time gridlines every 2 minutes.
+    // Time gridlines. Every 2 minutes, stretched to every 4 on long games —
+    // a 40-minute game at 2:00 steps is 21 labels shoulder to shoulder.
+    const stepMs = maxT > 20 * 60000 ? 240000 : 120000;
     const gridX = [];
-    for (let t = 0; t <= maxT; t += 120000) {
+    for (let t = 0; t <= maxT; t += stepMs) {
       const x = xFor(t);
       gridX.push(`<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${PAD.t + innerH}" class="ci-chart-grid"/>` +
                  `<text x="${x}" y="${PAD.t + innerH + 14}" text-anchor="middle" class="ci-chart-axis">${Math.floor(t/60000)}:00</text>`);
@@ -54,14 +63,22 @@
       gridY.push(`<line x1="${PAD.l}" y1="${y}" x2="${PAD.l + innerW}" y2="${y}" class="ci-chart-grid"/>` +
                  `<text x="${PAD.l - 6}" y="${y + 3}" text-anchor="end" class="ci-chart-axis">${Math.round(v)}</text>`);
     }
+    const markers = [];
+    for (const m of (opts.markers || [])) {
+      if (!m || m.gameTimeMs == null || m.gameTimeMs < 0 || m.gameTimeMs > maxT) continue;
+      const x = xFor(m.gameTimeMs);
+      markers.push(`<line x1="${x.toFixed(1)}" y1="${PAD.t}" x2="${x.toFixed(1)}" y2="${PAD.t + innerH}" class="ci-chart-marker"${m.label ? ` data-label="${escapeHtml(m.label)}"` : ''}><title>${escapeHtml(m.label || '')}</title></line>`);
+    }
     const title = opts.title ? `<text x="${PAD.l}" y="${PAD.t - 2}" class="ci-chart-title">${escapeHtml(opts.title)}</text>` : '';
+    const proPath = opts.omitPro ? '' : `<path d="${buildPath('proValue')}" class="ci-chart-line ci-chart-pro"/>`;
     return `
       <svg class="ci-chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${escapeHtml(opts.title || 'comparison chart')}">
         ${title}
         ${gridX.join('')}
         ${gridY.join('')}
+        ${markers.join('')}
         <path d="${buildPath('userValue')}" class="ci-chart-line ci-chart-you"/>
-        <path d="${buildPath('proValue')}" class="ci-chart-line ci-chart-pro"/>
+        ${proPath}
       </svg>
     `;
   }

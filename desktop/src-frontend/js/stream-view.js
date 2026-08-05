@@ -100,6 +100,14 @@
       const host = el('stream-body');
       host.innerHTML = '';
 
+      // Two columns, each its own scroller: the preview on the left at full
+      // width (it is the point of the screen), the controls stacked on the
+      // right. The view itself never scrolls — the fold rule.
+      const left = node('div', 'col scroll');
+      const right = node('div', 'col scroll');
+      host.appendChild(left);
+      host.appendChild(right);
+
       // ── What's on screen ────────────────────────────────────────────────
       const preview = node('section', 'panel');
       preview.appendChild(node('h2', null, 'What viewers will see'));
@@ -129,7 +137,7 @@
       preview.appendChild(node('p', 'hint',
         'Lets you place and size the source in OBS before you play. The overlay ' +
         'labels it, so it can never be mistaken for a real result.'));
-      host.appendChild(preview);
+      left.appendChild(preview);
 
       // ── Panels ──────────────────────────────────────────────────────────
       const mods = node('section', 'panel');
@@ -156,7 +164,7 @@
         label.appendChild(text);
         mods.appendChild(label);
       }
-      host.appendChild(mods);
+      right.appendChild(mods);
 
       // ── Look ────────────────────────────────────────────────────────────
       const look = node('section', 'panel');
@@ -169,7 +177,7 @@
       look.appendChild(segmented(SCALES, prefs.scale, (k) => {
         prefs.scale = k; savePrefs(); build();
       }));
-      host.appendChild(look);
+      right.appendChild(look);
 
       // ── Connect ─────────────────────────────────────────────────────────
       const setup = node('section', 'panel');
@@ -209,7 +217,7 @@
       setup.appendChild(node('p', 'hint',
         'Only games detected while WC3V is running count toward the session ' +
         'score — clicking through your history never changes what is on stream.'));
-      host.appendChild(setup);
+      right.appendChild(setup);
 
       renderPreview();
     };

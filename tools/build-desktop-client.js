@@ -44,7 +44,10 @@ const BUNDLE = path.join(ROOT, 'client', 'js', 'vendor', 'wc3v-parser.bundle.js'
 const SHARED_JS = [
   'SummaryExtract.js',
   'ProfileAggregate.js',
-  'MomentsExtract.js'
+  'MomentsExtract.js',
+  // Pure SVG-string chart factories (no DOM) — the desktop's economy/army
+  // charts are the same code the site's compare modal draws with.
+  'CompareCharts.js'
 ].map(f => path.join(ROOT, 'client', 'js', f));
 
 // The site's design token layer. The desktop app is styled from the SAME

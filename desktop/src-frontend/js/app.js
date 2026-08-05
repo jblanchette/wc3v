@@ -248,7 +248,13 @@ const gamesView = window.createGamesView({
   onReparse: (summary) => reparse(summary),
   // The first-run card's only call to action — parsing your history lives on
   // the Settings screen, so send the user there rather than duplicating it.
-  onGoToSettings: () => showView('settings')
+  onGoToSettings: () => showView('settings'),
+  // Any player name, anywhere, opens their book. This is the whole reason
+  // Coach accepts a name.
+  onOpenProfile: (name) => {
+    el('profile-name').value = name || '';
+    showView('profile');
+  }
 });
 
 const profileView = window.createProfileView({
@@ -347,6 +353,13 @@ const showView = (name) => {
     btn.classList.toggle('is-active', active);
     btn.setAttribute('aria-selected', String(active));
   }
+  // Settings has no tab — it is maintenance, reached from the gear (or the
+  // update chip). While it is open the tablist legitimately has nothing
+  // selected; the gear carries the pressed state instead.
+  const gear = el('settings-btn');
+  gear.classList.toggle('is-active', name === 'settings');
+  gear.setAttribute('aria-pressed', String(name === 'settings'));
+
   if (name === 'profile') profileView.show(el('profile-name').value);
   if (name === 'stream') streamView.build();
 };
@@ -354,6 +367,8 @@ const showView = (name) => {
 for (const btn of document.querySelectorAll('.nav-item')) {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 }
+
+el('settings-btn').addEventListener('click', () => showView('settings'));
 
 // ── Caption controls ────────────────────────────────────────────────────────
 //
