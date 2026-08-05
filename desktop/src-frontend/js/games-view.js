@@ -337,9 +337,12 @@
       main.appendChild(meta);
       row.appendChild(main);
 
-      row.appendChild(node('span', 'game-when', summary.playedAt
-        ? new Date(summary.playedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : ''));
+      // The clock time had a column of its own, which cost ~54px of a 264px
+      // row and wrapped the meta line onto two. The day header already says
+      // which day, so the exact minute rides the tooltip.
+      if (summary.playedAt) {
+        row.title = new Date(summary.playedAt).toLocaleString();
+      }
 
       row.addEventListener('click', () => select(summary.key));
       return row;
@@ -368,9 +371,203 @@
     // is the question and Story is the evidence behind the answer.
     let activeTab = 'review';
 
+    // ── Next game ───────────────────────────────────────────────────────────
+    //
+    // A live W3Champions match takes the whole report column and the column
+    // grows a mode switch. It used to be a band pinned above both columns,
+    // which pushed the report down by 77px and read as an announcement rather
+    // than a part of the app. Nothing here exists when no match is running,
+    // which is nearly always, so the fold budget is untouched in the normal
+    // case. That property is the reason the band was ever a band.
+
+    let live = null;      // { match, ladder, book }
+    let mode = 'last';    // 'last' | 'next'
+    let latchedId = null; // opens on Next once per match, then respects clicks
+
+    const modeSwitch = () => {
+      const strip = node('div', 'seg mode-seg');
+      const add = (key, label) => {
+        const b = node('button', 'seg-btn' + (mode === key ? ' is-on' : ''), label);
+        b.type = 'button';
+        b.setAttribute('aria-pressed', String(mode === key));
+        b.addEventListener('click', () => {
+          mode = key;
+          renderDetail(games.find(g => g.key === activeKey) || null);
+        });
+        strip.appendChild(b);
+      };
+      add('next', 'Next game');
+      add('last', 'Last game');
+      return strip;
+    };
+
+    const bar = (label, value, max, note) => {
+      const row = node('div', 'ng-bar');
+      row.appendChild(node('span', 'ng-bar-k', label));
+      const track = node('span', 'ng-bar-track');
+      const fill = node('i');
+      fill.style.width = `${Math.round((value / Math.max(max, 1)) * 100)}%`;
+      track.appendChild(fill);
+      row.appendChild(track);
+      row.appendChild(node('span', 'ng-bar-v', note));
+      return row;
+    };
+
+    const nextGamePanel = () => {
+      const host = el('detail');
+      const m = live.match;
+      const ladder = live.ladder;
+      const book = live.book;
+      const opp = m.opponents[0];
+
+      // Head: who, how strong, where.
+      const band = node('div', 'verdict-band');
+      const head = node('div', 'verdict-head');
+      head.appendChild(node('span', 'ng-live', 'Live'));
+      const vs = node('span', 'verdict-vs');
+      vs.appendChild(node('span', null, 'vs '));
+      vs.appendChild(nameLink(opp.name, () => deps.onOpenProfile(opp.tag)));
+      vs.appendChild(raceMark(opp.race));
+      if (m.opponents.length > 1) {
+        vs.appendChild(node('span', 'hint', `+${m.opponents.length - 1} more`));
+      }
+      head.appendChild(vs);
+
+      const bits = [];
+      const mmr = (ladder && ladder.mmr) || opp.mmr;
+      if (mmr) bits.push(`${Math.round(mmr)} MMR`);
+      if (ladder && ladder.rank) bits.push(`#${ladder.rank}`);
+      if (mmr && m.me.mmr) {
+        const d = Math.round(mmr - m.me.mmr);
+        bits.push(d >= 0 ? `+${d} on you` : `${d} on you`);
+      }
+      if (bits.length) head.appendChild(node('span', 'ng-ladder', bits.join(' · ')));
+      band.appendChild(head);
+
+      const meta = node('p', 'detail-meta');
+      const metaBits = [];
+      if (m.map) metaBits.push(m.map);
+      if (book && book.yourMap && book.yourMap.games >= 2) {
+        metaBits.push(`you are ${book.yourMap.wins}–${book.yourMap.losses} here`);
+      }
+      if (book && book.recentForm && book.recentForm.n >= 3) {
+        metaBits.push(`they are ${book.recentForm.wins}–${book.recentForm.losses} in their last ${book.recentForm.n}`);
+      }
+      meta.appendChild(node('span', null, metaBits.join(' · ')));
+      band.appendChild(meta);
+
+      if (book && book.h2h) {
+        const line = node('p', 'ng-h2h');
+        const chip = node('b', 'ng-h2h-score', `${book.h2h.wins}–${book.h2h.losses}`);
+        chip.dataset.v = book.h2h.wins > book.h2h.losses ? 'win'
+          : book.h2h.wins < book.h2h.losses ? 'loss' : 'even';
+        line.appendChild(chip);
+        line.appendChild(node('span', null, ` to you in ${book.h2h.games} game${book.h2h.games === 1 ? '' : 's'}`));
+        band.appendChild(line);
+      } else {
+        band.appendChild(node('p', 'ng-h2h', book
+          ? `${book.profileGames} games of theirs in your history, none against you`
+          : 'First time against them'));
+      }
+      host.appendChild(band);
+
+      // The book: three cells, all from games on this machine.
+      const cells = node('div', 'ng-book');
+
+      const openers = node('section', 'ng-cell');
+      openers.appendChild(node('h3', null, book && book.matchup
+        ? `Opener, ${book.matchup.key}` : 'Opener'));
+      if (book && book.openers.length) {
+        const top = book.openers[0].games;
+        for (const o of book.openers) {
+          openers.appendChild(bar(o.hero, o.games, top, `${o.games}`));
+        }
+      } else {
+        openers.appendChild(node('p', 'hint', 'Not enough games.'));
+      }
+      cells.appendChild(openers);
+
+      const t2 = node('section', 'ng-cell');
+      t2.appendChild(node('h3', null, 'Tier 2'));
+      if (book && book.t2Them !== null && book.t2Them !== undefined) {
+        const g = node('div', 'ng-pair');
+        g.appendChild(node('span', 'ng-pair-k', 'them'));
+        g.appendChild(node('b', null, PA().fmtMs(book.t2Them)));
+        t2.appendChild(g);
+        if (book.t2You !== null && book.t2You !== undefined) {
+          const y = node('div', 'ng-pair');
+          y.appendChild(node('span', 'ng-pair-k', 'you'));
+          y.appendChild(node('b', null, PA().fmtMs(book.t2You)));
+          t2.appendChild(y);
+        }
+        t2.appendChild(node('p', 'hint', `n=${book.t2ThemN}`));
+      } else {
+        t2.appendChild(node('p', 'hint', 'Not enough games.'));
+      }
+      cells.appendChild(t2);
+
+      const exp = node('section', 'ng-cell');
+      exp.appendChild(node('h3', null, 'Expansion'));
+      if (book && book.expansionRate !== null && book.expansionRate !== undefined) {
+        exp.appendChild(node('b', 'ng-big', `${book.expansionRate}%`));
+        exp.appendChild(node('p', 'hint', `of their ${book.profileGames} games`));
+      } else {
+        exp.appendChild(node('p', 'hint', 'Not enough games.'));
+      }
+      cells.appendChild(exp);
+      host.appendChild(cells);
+
+      // Every game the two of you have played. The one scroller on the screen.
+      const listHead = node('div', 'ng-list-head');
+      listHead.appendChild(node('h3', null, 'Your games against them'));
+      host.appendChild(listHead);
+
+      const list = node('div', 'ng-list scroll');
+      const shared = (book && book.shared) || [];
+      if (!shared.length) {
+        list.appendChild(node('p', 'hint', 'None yet.'));
+      } else {
+        for (const g of shared) {
+          const gv = viewOf(g);
+          const row = node('button', 'game');
+          row.type = 'button';
+          const verdict = gv && gv.result ? gv.result : 'none';
+          const tile = node('span', 'verdict-tile', verdict === 'win' ? 'W' : verdict === 'loss' ? 'L' : '·');
+          tile.dataset.v = verdict;
+          row.appendChild(tile);
+          const main = node('span', 'game-main');
+          main.appendChild(node('span', 'game-vs',
+            g.playedAt ? new Date(g.playedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : 'Undated'));
+          const mline = node('span', 'game-meta');
+          if (gv && gv.race && gv.opponent) {
+            const mu = node('span', 'matchup');
+            mu.appendChild(raceMark(gv.race));
+            mu.appendChild(node('i', null, 'v'));
+            mu.appendChild(raceMark(gv.opponent.race));
+            mline.appendChild(mu);
+          }
+          mline.appendChild(node('span', null, ` · ${mapName(g)} · ${fmtDur(g.durationMs)}`));
+          main.appendChild(mline);
+          row.appendChild(main);
+          // Opening one is a decision to look at the past, so the column
+          // switches back with it.
+          row.addEventListener('click', () => { mode = 'last'; select(g.key); });
+          list.appendChild(row);
+        }
+      }
+      host.appendChild(list);
+    };
+
     const renderDetail = (summary) => {
       const host = el('detail');
       host.innerHTML = '';
+      host.dataset.mode = live ? mode : 'last';
+
+      if (live) host.appendChild(modeSwitch());
+      if (live && mode === 'next') {
+        nextGamePanel();
+        return;
+      }
 
       if (!summary) {
         const e = node('div', 'detail-empty');
@@ -385,7 +582,14 @@
       const report = reportFor(summary, seat);
 
       host.appendChild(verdictHead(summary, v, seat, h2h, report));
-      host.appendChild(timingsPanel(v, seat));
+      host.appendChild(window.GameStrip.build(summary, seat, {
+        onWatch: deps.onWatch,
+        viewSlot: v && v.slot != null ? String(v.slot) : null
+      }));
+      // The five pillars are the only thing on this screen no website could
+      // produce, and they were small grey text inside a scroller you could see
+      // one row of. They go in the frame. The notes stay in Review.
+      if (report) host.appendChild(gradeRail(report));
 
       // A tab that would be empty is not offered at all. Review comes first
       // and is the default.
@@ -395,12 +599,13 @@
       }
       tabs.push(
         { key: 'story', label: 'Story', build: () => momentsPanel(summary, seat) },
-        { key: 'heroes', label: 'Heroes', build: () => heroesPanel(summary, seat) },
-        { key: 'economy', label: 'Economy', build: () => economyPanel(summary, v, seat) },
-        { key: 'builds', label: 'Builds', build: () => buildsPanel(summary, seat) }
+        { key: 'build', label: 'Build', build: () => buildPanel(summary, seat) },
+        { key: 'economy', label: 'Economy', build: () => economyPanel(summary, v, seat) }
       );
-      if (h2h) tabs.push({ key: 'h2h', label: 'Head to head', build: () => h2hPane(h2h, v) });
 
+      // A tab remembered from before the merge, or from a game that had a
+      // Head to head tab and this one does not.
+      if (activeTab === 'heroes' || activeTab === 'builds') activeTab = 'build';
       if (!tabs.some(t => t.key === activeTab)) activeTab = tabs[0].key;
 
       const strip = node('div', 'report-tabs seg');
@@ -460,11 +665,14 @@
 
         // The record chip. No website can show this number, because it came
         // out of your own games. Clicking it opens the full tab.
+        // The tab this used to open is gone. Three facts did not earn a tab
+        // that appears and disappears depending on the game, and the depth now
+        // lives in Coach, where it is read against their whole history.
         if (h2h) {
           const chip = node('button', 'h2h-chip', `${h2h.wins}–${h2h.losses} all time`);
           chip.type = 'button';
-          chip.title = `Your record against ${v.opponent.name}`;
-          chip.addEventListener('click', () => { activeTab = 'h2h'; renderDetail(summary); });
+          chip.title = `Your record against ${v.opponent.name}. Opens their book.`;
+          chip.addEventListener('click', () => deps.onOpenProfile(v.opponent.name));
           head.appendChild(chip);
         }
       }
@@ -478,16 +686,20 @@
       head.appendChild(open);
       wrap.appendChild(head);
 
+      // One line, and it has to stay one line at 612px. What used to be here
+      // and is not any more: `1v1`, which it always is; the full datetime,
+      // which the feed row's tooltip and the day header both carry; and APM,
+      // which moved into the Mechanics grade note where it means something.
+      // The opener and the 5:00 worker count arrived from the timings panel
+      // the game strip replaced.
       const meta = node('p', 'detail-meta');
       if (v && v.race) meta.appendChild(raceMark(v.race));
-      const bits = [mapName(summary), summary.gameMode || '?', fmtDur(summary.durationMs)];
       const me = v && v.slot != null ? summary.players[v.slot] : null;
+      const bits = [mapName(summary), fmtDur(summary.durationMs)];
+      if (summary.gameMode && summary.gameMode !== '1v1') bits.push(summary.gameMode);
+      if (v && v.heroOpener) bits.push(v.heroOpener);
       if (me && ARCHETYPE[me.archetype]) bits.push(ARCHETYPE[me.archetype]);
-      if (me && me.apm && me.apm.rawAverage) {
-        bits.push(`${Math.round(me.apm.rawAverage)} APM` +
-          (me.apm.effectiveAverage ? ` (${Math.round(me.apm.effectiveAverage)} eff)` : ''));
-      }
-      if (summary.playedAt) bits.push(new Date(summary.playedAt).toLocaleString());
+      if (v && v.workersAt5m != null) bits.push(`${v.workersAt5m} workers @5:00`);
       meta.appendChild(node('span', null, bits.join(' · ')));
       wrap.appendChild(meta);
 
@@ -501,30 +713,6 @@
         wrap.appendChild(line);
       }
       return wrap;
-    };
-
-    const timingsPanel = (v, seat) => {
-      const panel = node('section', 'panel');
-      panel.appendChild(node('h2', null, seat === null
-        ? `How ${(v && v.name) || 'they'} played it`
-        : 'How you played it'));
-      const grid = node('div', 'timings');
-      const cell = (k, val) => {
-        const c = node('div', 'timing');
-        c.appendChild(node('span', 'timing-k', k));
-        const value = node('span', 'timing-v', val == null ? 'never' : val);
-        if (val == null) value.classList.add('is-none');
-        c.appendChild(value);
-        grid.appendChild(c);
-      };
-      cell('opener', v && v.heroOpener ? v.heroOpener : null);
-      cell('tier 2', v && v.t2 != null ? PA().fmtMs(v.t2) : null);
-      cell('tier 3', v && v.t3 != null ? PA().fmtMs(v.t3) : null);
-      cell('expansion', v && v.expansion != null ? PA().fmtMs(v.expansion) : null);
-      cell('first tower', v && v.firstTower != null ? PA().fmtMs(v.firstTower) : null);
-      cell('workers @5:00', v && v.workersAt5m != null ? String(v.workersAt5m) : null);
-      panel.appendChild(grid);
-      return panel;
     };
 
     // ── Review: the narrated read of the game ────────────────────────────────
@@ -547,6 +735,21 @@
       return window.GameReport.grade(summary, seat, base);
     };
 
+    const gradeRail = (report) => {
+      const rail = node('div', 'grade-rail');
+      for (const g of report.grades) {
+        const cell = node('div', 'grade-cell');
+        cell.title = g.note || '';
+        cell.appendChild(node('span', 'grade-k', g.label));
+        const val = node('span', 'grade-v', g.score === null ? '—' : String(g.score));
+        if (g.score === null) val.classList.add('is-none');
+        else val.dataset.band = g.score >= 65 ? 'good' : g.score >= 40 ? 'mid' : 'poor';
+        cell.appendChild(val);
+        rail.appendChild(cell);
+      }
+      return rail;
+    };
+
     const reviewPanel = (summary, seat, report) => {
       const panel = node('section', 'report-pane');
 
@@ -557,23 +760,21 @@
         return panel;
       }
 
-      // The headline stays out of this pane. The verdict band already carries
-      // it above the fold, and repeating it burns a line of the one scroller.
-
-      // Grades: the value carries the colour, with the note beside it. There
-      // is no radar, because a polygon is unreadable at 900px.
-      const grid = node('div', 'grades');
+      // The headline and the five scores both stay out of this pane. The frame
+      // above carries them. What lives here is the reasoning: one line per
+      // pillar saying what the number was read off.
+      const notes = node('ul', 'grade-notes');
       for (const g of report.grades) {
-        const cell = node('div', 'grade');
-        cell.appendChild(node('span', 'grade-k', g.label));
-        const val = node('span', 'grade-v', g.score === null ? '—' : String(g.score));
+        const li = node('li');
+        li.appendChild(node('span', 'gn-k', g.label));
+        const val = node('span', 'gn-v', g.score === null ? '—' : String(g.score));
         if (g.score === null) val.classList.add('is-none');
         else val.dataset.band = g.score >= 65 ? 'good' : g.score >= 40 ? 'mid' : 'poor';
-        cell.appendChild(val);
-        cell.appendChild(node('span', 'grade-note', g.note));
-        grid.appendChild(cell);
+        li.appendChild(val);
+        li.appendChild(node('span', 'gn-note', g.note));
+        notes.appendChild(li);
       }
-      panel.appendChild(grid);
+      panel.appendChild(notes);
 
       // Benchmarks: this game against your own median. `dir` is null when
       // there is no baseline to claim against, and nothing gets coloured.
@@ -672,6 +873,16 @@
 
       const nameFor = (slot) => (summary.players[slot] && summary.players[slot].name) || 'They';
 
+      // Two columns when the game has coordinates, one when it does not. The
+      // map goes beside the list rather than above it: a square block on top
+      // of a 116px scroller would push every moment off the screen, which is
+      // the failure this whole layout exists to avoid.
+      const map = window.GameMap
+        ? window.GameMap.build(summary, seat, { caption: true })
+        : null;
+      const split = node('div', map ? 'story-split has-map' : 'story-split');
+      if (map) split.appendChild(map);
+
       const list = node('ul', 'moments');
       for (const m of moments) {
         const li = node('li', 'moment');
@@ -694,7 +905,8 @@
 
         list.appendChild(li);
       }
-      panel.appendChild(list);
+      split.appendChild(list);
+      panel.appendChild(split);
 
       if (stale) {
         const row = node('div', 'row');
@@ -742,41 +954,6 @@
       return { games: shared.length, wins, losses, openers, t2s, expanded, expandKnown };
     };
 
-    const h2hPane = (h2h, v) => {
-      const panel = node('section', 'report-pane');
-
-      const who = node('p', 'h2h-who');
-      who.appendChild(node('span', null, 'Against '));
-      who.appendChild(nameLink(v.opponent.name, deps.onOpenProfile));
-      panel.appendChild(who);
-
-      const score = node('p', 'h2h-score');
-      score.appendChild(node('b', 'w', String(h2h.wins)));
-      score.appendChild(node('span', null, '–'));
-      score.appendChild(node('b', 'l', String(h2h.losses)));
-      score.appendChild(node('span', null, `  in ${h2h.games} game${h2h.games === 1 ? '' : 's'}`));
-      panel.appendChild(score);
-
-      const lines = node('ul', 'h2h-lines');
-      const say = (text) => lines.appendChild(node('li', null, text));
-
-      const topOpener = [...h2h.openers.entries()].sort((a, b) => b[1] - a[1])[0];
-      if (topOpener && topOpener[1] >= 2) {
-        say(`Opens ${topOpener[0]} in ${topOpener[1]} of ${h2h.games} games against you.`);
-      }
-      if (h2h.t2s.length >= 3) {
-        const sorted = [...h2h.t2s].sort((a, b) => a - b);
-        say(`Usual tier 2: ${PA().fmtMs(sorted[Math.floor(sorted.length / 2)])} (n=${h2h.t2s.length}).`);
-      }
-      if (h2h.expandKnown >= 3) {
-        say(h2h.expanded === 0
-          ? `Never expands against you (n=${h2h.expandKnown}).`
-          : `Expands in ${h2h.expanded} of ${h2h.expandKnown} games against you.`);
-      }
-      if (lines.children.length) panel.appendChild(lines);
-      return panel;
-    };
-
     // Own seat first, everywhere a per-player grid renders. It is the column
     // being read.
     const slotsFor = (summary, seat) => {
@@ -793,13 +970,21 @@
       return title;
     };
 
-    const buildsPanel = (summary, seat) => {
+    // ── Build: what they made, and what their heroes became ────────────────
+    //
+    // Heroes and Builds were two tabs asking one question. Per player: the
+    // hero cards first, because a WC3 game is read off its heroes, then the
+    // opening build in order.
+
+    const buildPanel = (summary, seat) => {
       const panel = node('section', 'report-pane');
       const grid = node('div', 'builds');
       for (const slot of slotsFor(summary, seat)) {
         const p = summary.players[slot];
         const col = node('div', 'build-col');
         col.appendChild(playerTitle(p, slot === seat));
+
+        for (const h of (p.heroBuilds || [])) col.appendChild(heroCard(h));
 
         const list = node('ul', 'build-list');
         for (const b of (p.buildPreview || []).slice(0, 16)) {
@@ -812,6 +997,7 @@
         }
         if (!list.children.length) col.appendChild(node('p', 'hint', 'No build recorded.'));
         else col.appendChild(list);
+
         grid.appendChild(col);
       }
       panel.appendChild(grid);
@@ -863,29 +1049,6 @@
         }))));
       }
       return card;
-    };
-
-    const heroesPanel = (summary, seat) => {
-      const panel = node('section', 'report-pane');
-      const grid = node('div', 'heroes');
-      let any = false;
-      for (const slot of slotsFor(summary, seat)) {
-        const p = summary.players[slot];
-        const col = node('div', 'hero-col');
-        col.appendChild(playerTitle(p, slot === seat));
-        for (const h of (p.heroBuilds || [])) {
-          any = true;
-          col.appendChild(heroCard(h));
-        }
-        if (!(p.heroBuilds || []).length) col.appendChild(node('p', 'hint', 'No heroes.'));
-        grid.appendChild(col);
-      }
-      if (!any) {
-        panel.appendChild(node('p', 'lead', 'No heroes.'));
-        return panel;
-      }
-      panel.appendChild(grid);
-      return panel;
     };
 
     // ── Economy: the race behind the fights ─────────────────────────────────
@@ -995,6 +1158,21 @@
         activeKey = key;
         allGames = deps.store.corpus || allGames;
         applyFilters();
+      },
+      // A live match arrived, changed, or ended. Opening on Next game latches
+      // once per match id, the same rule the overlay's reveal uses, so a
+      // re-poll or a corpus reload cannot yank the column out from under
+      // somebody who chose to look at last night's game.
+      setLiveMatch (match, ladder, book) {
+        live = match ? { match, ladder, book } : null;
+        if (!live) {
+          mode = 'last';
+          latchedId = null;
+        } else if (match.id !== latchedId) {
+          latchedId = match.id;
+          mode = 'next';
+        }
+        renderDetail(games.find(g => g.key === activeKey) || null);
       },
       get activeKey () { return activeKey; }
     };

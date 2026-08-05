@@ -261,14 +261,15 @@ const identity = window.createIdentity({
 });
 
 // Who you are playing right now, from W3Champions, over your own record
-// against them. Idle until the feature is switched on in Settings.
+// against them. Idle until the feature is switched on in Settings, and it
+// renders nothing itself: the report column is the surface.
 const scout = window.createScout({
   w3c,
   store,
   log,
   identityName: () => identity.name,
   visible: windowVisible,
-  onOpenProfile: (name) => openProfile(name)
+  onMatch: (match, ladder, book) => gamesView.setLiveMatch(match, ladder, book)
 });
 
 const gamesView = window.createGamesView({
@@ -279,7 +280,7 @@ const gamesView = window.createGamesView({
   onReparse: (summary) => reparse(summary),
   // Parsing your history lives on the Settings screen, so the first-run card
   // sends you there instead of carrying a second copy of the button.
-  onGoToSettings: () => showView('settings'),
+  onGoToSettings: () => openSettings(),
   onOpenProfile: openProfile
 });
 
@@ -362,8 +363,10 @@ const showUpdateChip = (version) => {
 };
 
 el('update-chip').addEventListener('click', () => {
-  showView('settings');
-  el('check-update').scrollIntoView({ block: 'center' });
+  openSettings();
+  // Inside the sheet's own scroller now, so `nearest` keeps the head and the
+  // trademark line where they are instead of scrolling the whole grid.
+  el('check-update').scrollIntoView({ block: 'nearest' });
   el('check-update').focus();
 });
 
@@ -383,13 +386,6 @@ const showView = (name) => {
     btn.classList.toggle('is-active', active);
     btn.setAttribute('aria-selected', String(active));
   }
-  // Settings has no tab. It is maintenance, reached from the gear or the
-  // update chip. While it is open the tablist legitimately has nothing
-  // selected, so the gear carries the pressed state.
-  const gear = el('settings-btn');
-  gear.classList.toggle('is-active', name === 'settings');
-  gear.setAttribute('aria-pressed', String(name === 'settings'));
-
   if (name === 'profile') profileView.show(el('profile-name').value);
   if (name === 'stream') streamView.build();
 };
@@ -398,7 +394,36 @@ for (const btn of document.querySelectorAll('.nav-item')) {
   btn.addEventListener('click', () => showView(btn.dataset.view));
 }
 
-el('settings-btn').addEventListener('click', () => showView('settings'));
+// ── Settings sheet ──────────────────────────────────────────────────────────
+//
+// A sheet over the current screen rather than a fourth view. Settings is
+// maintenance, and taking the whole window away to change a checkbox loses
+// whatever the user was looking at.
+
+const settingsOpen = () => !el('settings-sheet').hidden;
+
+const openSettings = () => {
+  el('settings-sheet').hidden = false;
+  el('settings-btn').classList.add('is-active');
+  el('settings-btn').setAttribute('aria-expanded', 'true');
+  el('settings-close').focus();
+};
+
+const closeSettings = (returnFocus) => {
+  el('settings-sheet').hidden = true;
+  el('settings-btn').classList.remove('is-active');
+  el('settings-btn').setAttribute('aria-expanded', 'false');
+  if (returnFocus) el('settings-btn').focus();
+};
+
+el('settings-btn').addEventListener('click', () => {
+  if (settingsOpen()) closeSettings(true); else openSettings();
+});
+el('settings-close').addEventListener('click', () => closeSettings(true));
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && settingsOpen()) closeSettings(true);
+});
 
 // ── Caption controls ────────────────────────────────────────────────────────
 //

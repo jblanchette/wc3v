@@ -5,7 +5,7 @@ finishes, and drives an OBS-ready overlay.
 
 **Status: functional.** Discovery, scanning, watching, local parsing, summary
 persistence, the backfill engine, the profile and coach layer, the OBS overlay,
-the games UI, the W3Champions scout card and the "open this moment in the
+the games UI, the W3Champions Next game panel and the "open this moment in the
 viewer" handoff are all built. A real game has been detected and parsed end to
 end. No real OBS has rendered the overlay yet. See `ROADMAP.md`.
 
@@ -15,7 +15,8 @@ moment opens it in the 3D viewer on wc3v.com at that second.
 
 Every screen answers to one sentence. **Last game is the product. Coach is Last
 game aggregated over time. Stream is Last game rendered for viewers.** One data
-model, three renderers. The per-game read comes from one shared module
+model, three renderers. The tab is called Home, because the column also shows
+the game you are about to play when W3Champions says there is one. The per-game read comes from one shared module
 (`client/js/GameReport.js`), so the window, the post-game notification and the
 OBS overlay can never word the same game differently.
 
@@ -78,7 +79,8 @@ The frontend is a coordinator (`js/app.js`) plus one module per concern: `store`
 (parse store and corpus), `identity`, `games-view` (feed and report),
 `profile-view`, `stream-view`, `settings-view`, `replay-index` (content key to
 file), `backfill`, `overlay-state`, `w3c` (ladder client) and `scout` (the live
-match card).
+match poller). Two pure builders draw the report's graphics: `game-strip` and
+`game-map`.
 
 Each parsed game persists as one gzipped summary under
 `<app_data>/replays/<size>-<xxh3>.summary.json.gz`, single-digit KB per game,

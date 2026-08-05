@@ -71,7 +71,10 @@
   --cut-in: inset 0 2px 4px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,255,255,0.035);
   --outline: 1px solid #0a0704;
 
-  --rail-w: 27rem;   /* games feed column */
+  /* The feed rail. It was 27rem, a third of a 1280px window spent on 7.5 rows
+     of two-line text. The 5rem it gave up went to the report column, which is
+     where the graphics are. */
+  --rail-w: 22rem;
 }
 
 * { box-sizing: border-box; }
@@ -299,43 +302,19 @@ main { min-height: 0; position: relative; }
 .view { display: none; height: 100%; min-height: 0; }
 .view.is-active { display: grid; }
 
-/* Row 1 is the scout card and collapses to nothing while it is hidden, which
-   is nearly always. Row 2 is the pair of columns. */
-.view-games {
-  grid-template-columns: var(--rail-w) 1fr;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-.view-games > .feed-col,
-.view-games > .detail-col { grid-row: 2; }
+.view-games { grid-template-columns: var(--rail-w) 1fr; }
 .view-profile { grid-template-rows: auto minmax(0, 1fr); }
 .view-stream, .view-settings { grid-template-rows: minmax(0, 1fr); }
 
-/* ── Scout card ──────────────────────────────────────────────────────────
-   Who you are playing right now (W3Champions) over what your own games say
-   about them (local corpus). Spans both columns and wraps rather than
-   clipping, because the row is auto-height. */
+/* ── Next game ───────────────────────────────────────────────────────────
+   A live W3Champions match takes over the report column. It was a band above
+   both columns, which cost 77px of the fold budget whenever it was up and read
+   as an announcement rather than a section. Nothing here renders when no match
+   is running. */
 
-/* Height is the scarce thing here. This band sits on top of a report frame
-   that already fits the 900x600 minimum exactly, so it stays as short as two
-   readable lines allow and the fold audit is run with it on screen
-   (`desktop-preview.js --w3c`). */
-.scout {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: 0;
-  padding: var(--sp-2) var(--sp-5);
-  background: var(--app-panel);
-  border-bottom: 1px solid var(--app-line);
-  box-shadow: var(--cut);
-}
+.mode-seg { justify-self: start; }
 
-.scout-head {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
-}
-.scout-live {
+.ng-live {
   display: inline-flex;
   align-items: center;
   min-height: var(--ico-sm);
@@ -350,32 +329,141 @@ main { min-height: 0; position: relative; }
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.scout-vs {
-  display: inline-flex;
+.ng-ladder { margin-left: auto; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.ng-h2h { margin: var(--sp-2) 0 0; color: var(--ink-dim); }
+.ng-h2h-score { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.ng-h2h-score[data-v="win"]  { color: var(--verdict-win); }
+.ng-h2h-score[data-v="loss"] { color: var(--verdict-loss); }
+.ng-h2h-score[data-v="even"] { color: var(--dom-gold); }
+
+/* Three cells, all read out of games on this machine. */
+.ng-book {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1px;
+  background: var(--app-line);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.ng-cell {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+}
+.ng-cell h3 {
+  margin: 0 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ng-cell .hint { margin: 0; }
+.ng-big { font-size: var(--fs-h2); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ng-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4rem auto;
   align-items: center;
   gap: var(--sp-2);
-  color: var(--ink-dim);
-  font-size: var(--fs-lg);
+  margin-bottom: 2px;
 }
-.scout-more { color: var(--ink-faint); font-size: var(--fs-min); }
-.scout-ladder { color: var(--ink-2); font-variant-numeric: tabular-nums; }
-.scout-map { margin-left: auto; color: var(--ink-dim); }
+.ng-bar-k { color: var(--ink-2); font-size: var(--fs-min); overflow-wrap: anywhere; }
+.ng-bar-track {
+  height: 8px;
+  background: var(--app-panel);
+  border: var(--outline);
+  border-radius: 2px;
+  box-shadow: var(--cut-in);
+  overflow: hidden;
+}
+.ng-bar-track i { display: block; height: 100%; background: var(--dom-gold); }
+.ng-bar-v { color: var(--ink-faint); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
 
-.scout-book {
+.ng-pair { display: flex; align-items: baseline; gap: var(--sp-2); }
+.ng-pair-k { color: var(--ink-faint); font-size: var(--fs-min); }
+.ng-pair b { font-variant-numeric: tabular-nums; }
+
+.ng-list-head h3 {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.ng-list {
+  min-height: 0;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius);
+  box-shadow: var(--cut);
+}
+.ng-list .game { padding: var(--sp-1) var(--sp-3); }
+.ng-list .hint { margin: 0; padding: var(--sp-3); }
+
+/* ── Settings sheet ──────────────────────────────────────────────────────
+   Slides over whatever screen you are on. `main` is the positioning context
+   (position: relative), so the sheet never covers the app bar and the window
+   controls stay reachable while it is open. Three rows: a head that stays put,
+   one scrolling body, the trademark line pinned at the foot. */
+
+.sheet {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(30rem, 92vw);
+  padding: 0 var(--sp-4) var(--sp-3);
+  background: var(--app-bg);
+  border-left: 1px solid var(--app-edge);
+  /* A hard dark cast to the left, the same vocabulary as --cut. No glow. */
+  box-shadow: -16px 0 32px rgba(0, 0, 0, 0.55);
+}
+
+.sheet-head {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sp-1) var(--sp-3);
-  margin: 0;
-  color: var(--ink-dim);
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line);
 }
-.scout-h2h { font-weight: 700; font-variant-numeric: tabular-nums; }
-.scout-h2h[data-v="win"]  { color: var(--verdict-win); }
-.scout-h2h[data-v="loss"] { color: var(--verdict-loss); }
-.scout-h2h[data-v="even"] { color: var(--dom-gold); }
-.scout-first { color: var(--ink-faint); }
+.sheet-head h2 {
+  margin: 0;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.sheet-close {
+  display: grid;
+  place-items: center;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.sheet-close:hover { background: var(--app-panel-2); color: var(--ink); }
+.sheet-close svg { width: 12px; height: 12px; }
 
-/* ── Stream & Settings: two columns, each its own scroller ───────────────
+.sheet-body { padding-top: var(--sp-4); }
+.sheet .panel:last-child { margin-bottom: 0; }
+/* The body scrolls underneath, so the pinned line needs a rule to sit on. */
+.sheet .legal {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--app-line);
+}
+
+/* ── Stream: two columns, each its own scroller ──────────────────────────
    The view frame never scrolls; the columns do. */
 
 .stream-grid {
@@ -385,25 +473,13 @@ main { min-height: 0; position: relative; }
   min-height: 0;
   padding: var(--sp-4);
 }
-.stream-grid > .col,
-.settings-grid > .col { min-height: 0; }
-.stream-grid .panel:last-child,
-.settings-grid .panel:last-child { margin-bottom: 0; }
+.stream-grid > .col { min-height: 0; }
+.stream-grid .panel:last-child { margin-bottom: 0; }
 
-.settings-grid {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--sp-3) var(--sp-4);
-  min-height: 0;
-  padding: var(--sp-4);
-}
-
-/* Pinned under both columns, always visible. --fs-min is the floor and this
-   is the one line allowed to sit on it. */
+/* --fs-min is the floor and this is the one line allowed to sit on it. */
 .legal {
-  grid-column: 1 / -1;
   margin: 0;
+  padding-top: var(--sp-2);
   color: var(--ink-faint);
   font-size: var(--fs-min);
   text-align: center;
@@ -413,7 +489,7 @@ main { min-height: 0; position: relative; }
 
 .feed-col {
   display: grid;
-  grid-template-rows: auto auto auto 1fr;
+  grid-template-rows: auto auto 1fr;
   min-height: 0;
   background: var(--app-bg);
   border-right: 1px solid var(--app-line);
@@ -421,7 +497,14 @@ main { min-height: 0; position: relative; }
 
 /* ── Feed filter ─────────────────────────────────────────────────────── */
 
-.feed-filter { padding: 0 var(--sp-4) var(--sp-3); display: grid; gap: var(--sp-2); }
+.feed-filter { padding: var(--sp-2) var(--sp-3); display: grid; gap: var(--sp-2); }
+
+.filter-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--sp-2);
+  align-items: center;
+}
 
 .feed-filter input {
   width: 100%;
@@ -451,7 +534,7 @@ main { min-height: 0; position: relative; }
 }
 .feed-filter input::-webkit-search-cancel-button:hover { background: var(--ink); }
 
-.filter-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
 
 /* Segmented control. One carved trough, buttons struck into it. */
 .seg {
@@ -488,23 +571,14 @@ main { min-height: 0; position: relative; }
 .seg-btn.is-on[data-result="win"]  { color: var(--verdict-win); }
 .seg-btn.is-on[data-result="loss"] { color: var(--verdict-loss); }
 
-.feed-head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-4) var(--sp-2);
-}
-.feed-head h2 {
-  margin: 0;
-  font-size: var(--fs-min);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.feed-count {
   color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.feed-count { margin-left: auto; color: var(--ink-faint); font-size: var(--fs-min); }
 
-.backfill-bar { padding: 0 var(--sp-4) var(--sp-3); }
+.backfill-bar { padding: var(--sp-3) var(--sp-3) 0; }
 .backfill-text { color: var(--ink-dim); font-size: var(--fs-min); margin-bottom: var(--sp-1); }
 .backfill-track {
   height: 6px;
@@ -521,13 +595,13 @@ main { min-height: 0; position: relative; }
   transition: width var(--dur) var(--ease);
 }
 
-.feed { padding: 0 var(--sp-3) var(--sp-4); }
+.feed { padding: 0 0 var(--sp-3); }
 
 .feed-day {
   position: sticky;
   top: 0;
   z-index: 2;
-  padding: var(--sp-3) var(--sp-2) var(--sp-1);
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
   background: var(--app-bg);
   color: var(--ink-faint);
   font-size: var(--fs-min);
@@ -536,26 +610,28 @@ main { min-height: 0; position: relative; }
   text-transform: uppercase;
 }
 
+/* A scoreboard list rather than a stack of cards. Rows used to be bordered,
+   rounded and 4px apart, which cost 16px of pitch each and showed 3 games at
+   the 900x600 minimum. A plain 1px neutral divider is the house rule's
+   allowance; it is not an accent stripe. */
 .game {
   display: grid;
-  grid-template-columns: var(--ico-sm) 1fr auto;
+  grid-template-columns: var(--ico-sm) minmax(0, 1fr);
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  margin-bottom: var(--sp-1);
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--app-panel);
-  border: 1px solid var(--app-line);
-  border-radius: var(--radius-sm);
+  padding: var(--sp-1) var(--sp-3);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--app-line);
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
-.game:hover { background: var(--app-panel-2); border-color: var(--app-edge); }
+.game:hover { background: var(--app-panel); }
 .game.is-active {
   background: var(--app-panel-2);
-  border-color: var(--app-edge);
   box-shadow: var(--cut);
 }
 
@@ -585,7 +661,6 @@ main { min-height: 0; position: relative; }
   font-size: var(--fs-min);
   overflow-wrap: anywhere;
 }
-.game-when { color: var(--ink-faint); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
 
 /* ── Race chip ───────────────────────────────────────────────────────── */
 
@@ -632,12 +707,20 @@ main { min-height: 0; position: relative; }
    tab strip) is fixed rows that always fit; the active tab's body is the one
    scroller. The column as a whole must never scroll. */
 
+/* Verdict band, game strip, grade rail, tab strip, then the one scroller.
+   The frame was 427px of the 507px a 900x600 window gives. It is 325 now, and
+   the timings panel that ate 157 of it is drawn instead of listed. */
 .detail-col {
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
-  gap: var(--sp-3);
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+}
+/* With a live match the column grows a mode switch, so every band moves down
+   one row. Both modes end in exactly one scroller. */
+.detail-col[data-mode] { grid-template-rows: auto auto auto auto auto minmax(0, 1fr); }
+.detail-col {
+  gap: var(--sp-2);
   min-height: 0;
-  padding: var(--sp-4) var(--sp-5) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
   background: var(--app-well);
 }
 
@@ -660,15 +743,18 @@ main { min-height: 0; position: relative; }
   gap: var(--sp-3);
   margin-bottom: var(--sp-1);
 }
+/* --fs-h2 rather than --fs-h1. At 28.8px the head wrapped to two rows at the
+   612px report width a 900px window gives, which cost 44px of the fold budget
+   exactly when there was least of it. */
 .verdict-word {
-  font-size: var(--fs-h1);
+  font-size: var(--fs-h2);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-shadow: 0 1px 0 #000;
 }
 .verdict-word[data-v="win"]  { color: var(--verdict-win); }
 .verdict-word[data-v="loss"] { color: var(--verdict-loss); }
-.verdict-word[data-v="none"] { color: var(--ink-dim); font-size: var(--fs-h2); }
+.verdict-word[data-v="none"] { color: var(--ink-dim); font-size: var(--fs-lg); }
 .verdict-vs {
   display: inline-flex;
   align-items: center;
@@ -705,6 +791,173 @@ main { min-height: 0; position: relative; }
   color: var(--ink-dim);
   overflow-wrap: anywhere;
 }
+
+/* ── Game strip ──────────────────────────────────────────────────────────
+   Four rows: your lane, the fight axis, their lane, a time ruler. It replaced
+   a 157px timings panel and does the same job in 82px while also showing
+   where in the game each number happened.
+
+   Tracks are inset by half a hit box so a mark at 0:00 keeps its full 36px
+   target inside the strip. Without that the strip overflows and the fold
+   audit fails on scrollWidth. */
+
+.gs {
+  display: grid;
+  grid-template-rows: 28px 24px 28px 16px;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius);
+  box-shadow: var(--cut-in);
+}
+.gs-empty { margin: 0; color: var(--ink-faint); font-size: var(--fs-min); }
+
+.gs-track {
+  position: relative;
+  height: 100%;
+  margin: 0 18px;
+}
+
+.gs-lane { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--sp-2); }
+.gs-lane-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 11rem;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  white-space: nowrap;
+}
+.gs-lane-head b { color: var(--ink-2); font-weight: 600; overflow-wrap: anywhere; }
+.gs-lane-head .race-mark { width: 20px; height: 20px; }
+
+/* The workers area. Behind everything, and the same you-gold / them-lapis
+   pairing the Economy charts and the Coach trends already use. */
+.gs-area { position: absolute; inset: 0; width: 100%; height: 100%; }
+.gs-track[data-side="me"]   .gs-area path { fill: rgba(201, 162, 39, 0.30); }
+.gs-track[data-side="them"] .gs-area path { fill: rgba(93, 134, 176, 0.30); }
+
+.gs-axis { display: grid; align-items: center; }
+.gs-axis-track { display: flex; align-items: center; }
+.gs-rule {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  background: var(--app-edge);
+}
+
+/* One positioned target per mark. The visible dot is a chart mark under the
+   same exemption .spark-dot has.
+
+   The target is 36px wide and as tall as its lane, which at the 600px minimum
+   is 24px. That is under --hit-min, and it is why the Story tab keeps the
+   complete list with full-size Watch buttons: the strip is an index into the
+   game, not the only route to any of it. A 44px target here would have to
+   overlap the neighbouring lane, and an invisible button covering a different
+   player's row is worse than a small one. */
+.gs-mark {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: var(--ico-sm);
+  transform: translateX(-50%);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.gs-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: var(--outline);
+  border-radius: 50%;
+  background: var(--dom-gold);
+  transition: transform var(--dur) var(--ease);
+}
+.gs-mark:hover .gs-dot { transform: scale(1.35); }
+
+.gs-fight[data-side="win"]  .gs-dot { background: var(--verdict-win); }
+.gs-fight[data-side="loss"] .gs-dot { background: var(--verdict-loss); }
+.gs-fight[data-side="even"] .gs-dot { background: var(--dom-gold); }
+/* A hero died here. Squared off so it reads apart from a plain trade without
+   any change of colour. */
+.gs-fight[data-kind="heroKill"] .gs-dot,
+.gs-fight[data-kind="heroTrade"] .gs-dot,
+.gs-fight[data-kind="wipe"] .gs-dot { border-radius: 2px; }
+
+/* Lane ticks carry their own label, so the strip needs no legend. */
+.gs-tick { justify-items: center; gap: 0; }
+.gs-tick .gs-dot {
+  width: 3px;
+  height: 14px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--ink-faint);
+}
+/* Sibling of its mark, positioned on the track. It sits beside the tick and
+   flips to the other side past 70%, so a late tier 3 does not push its own
+   name off the end. */
+.gs-tick-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 7px;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.gs-tick-label.is-late { transform: translate(-100%, -50%); margin-left: -7px; }
+.gs-tick.is-t2 .gs-dot, .gs-tick.is-t3 .gs-dot { background: var(--dom-gold); }
+.gs-tick.is-exp .gs-dot { background: var(--dom-green); }
+.gs-tick.is-tower .gs-dot { background: var(--dom-blue); }
+
+/* line-height 1, because the body's 1.5 makes a 12.8px label 19.2px tall and
+   the ruler band is 14px at the 600px minimum. */
+.gs-ruler { color: var(--ink-faint); font-size: var(--fs-min); line-height: 1; }
+.gs-rule-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gs-rule-tick.is-first { transform: none; }
+.gs-rule-tick.is-last  { transform: translateX(-100%); }
+
+/* ── Story: the map beside the list ──────────────────────────────────────
+   The map is square and capped, and it sits to the LEFT of the moments rather
+   than above them. A block on top of the list would push every moment off a
+   116px scroller. It disappears entirely on a game with no coordinates. */
+
+.story-split { display: grid; gap: var(--sp-3); }
+.story-split.has-map { grid-template-columns: clamp(140px, 30%, 220px) minmax(0, 1fr); }
+
+.gm-wrap { position: sticky; top: 0; }
+.gm {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.gm-cap { margin: var(--sp-1) 0 0; text-align: center; }
+
+.gm-grid { stroke: var(--app-line); stroke-width: 0.4; }
+.gm-camp { fill: none; stroke: var(--ink-faint); stroke-width: 0.7; }
+.gm-camp.is-fountain { stroke: var(--dom-blue); }
+.gm-start { stroke: #0a0704; stroke-width: 0.6; }
+.gm-start[data-side="me"]   { fill: var(--dom-gold); }
+.gm-start[data-side="them"] { fill: var(--race-warm-H); }
+.gm-fight { stroke: #0a0704; stroke-width: 0.5; }
+.gm-fight[data-side="win"]  { fill: var(--verdict-win); }
+.gm-fight[data-side="loss"] { fill: var(--verdict-loss); }
+.gm-fight[data-side="even"] { fill: var(--dom-gold); }
 
 /* ── Report tabs ── */
 
@@ -768,34 +1021,6 @@ main { min-height: 0; position: relative; }
 }
 .panel .lead { margin: 0 0 var(--sp-3); color: var(--ink-2); }
 
-/* Timing strip: six cut wells in one frame. Fixed six-across, because auto-fit
-   wraps to two rows at narrow widths, and a second row is a band the fold
-   budget does not have. */
-.timings {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 1px;
-  background: var(--app-line);
-  border: 1px solid var(--app-line);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.timing {
-  padding: var(--sp-3) var(--sp-2);
-  background: var(--app-well);
-  box-shadow: var(--cut-in);
-  text-align: center;
-}
-.timing-k {
-  display: block;
-  color: var(--ink-faint);
-  font-size: var(--fs-min);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.timing-v { display: block; font-size: var(--fs-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
-.timing-v.is-none { color: var(--ink-faint); font-weight: 400; }
-
 /* ── Review ──────────────────────────────────────────────────────────── */
 
 /* The one-line read, under the verdict meta. A button because it goes to the
@@ -827,10 +1052,11 @@ main { min-height: 0; position: relative; }
   letter-spacing: 0.08em;
 }
 
-/* Five grades, same cut-well frame as the timings strip so the report reads
-   as one instrument. Deliberately not a radar: a value with its name beside
-   it is legible at 900px and in a screenshot; a polygon is neither. */
-.grades {
+/* The grade rail. Five cut wells in the fixed frame, above the tab strip.
+   Deliberately not a radar: a value with its name beside it is legible at
+   900px and in a screenshot, and a polygon is neither. The reasoning behind
+   each number lives in the Review body, one line per pillar. */
+.grade-rail {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
@@ -839,8 +1065,8 @@ main { min-height: 0; position: relative; }
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
-.grade {
-  padding: var(--sp-3) var(--sp-2);
+.grade-cell {
+  padding: var(--sp-1) var(--sp-2);
   background: var(--app-well);
   box-shadow: var(--cut-in);
   text-align: center;
@@ -856,6 +1082,7 @@ main { min-height: 0; position: relative; }
   display: block;
   font-size: var(--fs-h2);
   font-weight: 700;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
 }
 /* Colour carries the judgement. No bar, no pill, no stripe. */
@@ -863,13 +1090,30 @@ main { min-height: 0; position: relative; }
 .grade-v[data-band="mid"]  { color: var(--ink); }
 .grade-v[data-band="poor"] { color: var(--verdict-loss); }
 .grade-v.is-none { color: var(--ink-faint); font-weight: 400; }
-.grade-note {
-  display: block;
-  margin-top: var(--sp-1);
-  color: var(--ink-dim);
-  font-size: var(--fs-min);
-  overflow-wrap: anywhere;
+
+/* The reasoning, in the Review body. Score, pillar, then what it was read off. */
+.grade-notes { list-style: none; margin: 0 0 var(--sp-4); padding: 0; }
+.grade-notes li {
+  display: grid;
+  grid-template-columns: 7rem 2.5rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--app-line);
 }
+.grade-notes li:last-child { border-bottom: 0; }
+.gn-k {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.gn-v { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.gn-v[data-band="good"] { color: var(--verdict-win); }
+.gn-v[data-band="mid"]  { color: var(--ink); }
+.gn-v[data-band="poor"] { color: var(--verdict-loss); }
+.gn-v.is-none { color: var(--ink-faint); font-weight: 400; }
+.gn-note { color: var(--ink-dim); overflow-wrap: anywhere; }
 
 /* This game against your own median. The value is coloured and the median
    sits beside it in words. No delta column, no pills. */
@@ -1566,6 +1810,22 @@ main :focus-visible,
 /* ── Narrow windows ──────────────────────────────────────────────────── */
 
 @media (max-width: 1040px) {
-  .view-games { grid-template-columns: 20rem 1fr; }
-  :root { --rail-w: 20rem; }
+  .view-games { grid-template-columns: 18rem 1fr; }
+  :root { --rail-w: 18rem; }
+}
+
+/* ── Short windows ───────────────────────────────────────────────────────
+   At the 600px minimum the report frame and the one scroller are competing
+   for the same 507px. The frame gives up what it can spare: lane height,
+   ruler height, cell padding and the gaps between bands. Nothing is removed
+   and no type gets smaller. */
+
+@media (max-height: 700px) {
+  .detail-col { gap: var(--sp-1); }
+  .gs {
+    grid-template-rows: 24px 20px 24px 14px;
+    padding: var(--sp-1) var(--sp-3);
+  }
+  .grade-cell { padding: 2px var(--sp-2); }
+  .report-body { padding: var(--sp-3); }
 }

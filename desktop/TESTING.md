@@ -58,9 +58,9 @@ cannot test any of this, which is why it is high on the list.
 
 5. **Look at the top of the window.**
    - Expect one bar, dark navy, `WC3V` at the left with a blue **3**, then
-     **Last game / Coach / Stream** (three tabs, no Settings tab), then your
-     name, a **gear** for Settings which should highlight while the Settings view
-     is open, and the minimise / maximise / close buttons.
+     **Home / Coach / Stream** (three tabs, no Settings tab), then your name, a
+     **gear** for Settings which should highlight while the sheet is open, and
+     the minimise / maximise / close buttons.
    - Fail: a second, Windows-drawn title bar sitting above it. That means
      `decorations` did not take.
 6. **Drag the window** by an empty part of the bar. It should move.
@@ -83,27 +83,49 @@ cannot test any of this, which is why it is high on the list.
 
 ---
 
-## C. The game report ("Last game")
+## C. Home and the game report
 
-12. **Last game tab.** Expect a feed grouped by day, newest first, each row with
-    a verdict plaque (W / L / ·), the opponent, race **glyphs** in the matchup
-    chip (keep / axe / crescent / skull, our own marks rather than game art), map
-    and duration.
+12. **Home tab.** Expect a feed grouped by day, newest first, each row with a
+    verdict plaque (W / L / ·), the opponent, race **glyphs** in the matchup chip
+    (keep / axe / crescent / skull, our own marks rather than game art), map and
+    duration. Rows are 52px and the rail is 22rem, so expect about 11 games on
+    screen at 1280x820 and 7 at the 900x600 minimum. Hover a row for its exact
+    time; the column of clock times is gone.
 13. Click a game. **The right column must not scroll as a whole**, which is the
-    fold rule. Expect a fixed frame: verdict and opponent, whose name is a link
-    that lands you in Coach on them, an all-time record chip once you have ≥2
-    games against them, **Open in viewer** on the same row, a meta line carrying
-    the archetype and APM, **the one-line read under it**, a single-row timings
-    strip, then a tab strip of **Review / Story / Heroes / Economy / Builds**
-    plus **Head to head** when it exists. Only the tab body scrolls.
+    fold rule. Expect a fixed frame in this order: verdict and opponent, whose
+    name is a link into Coach, an all-time record chip once you have >=2 games
+    against them (clicking it opens their book), **Open in viewer** on the same
+    row; a meta line of map, duration, opener, archetype and workers at 5:00;
+    **the one-line read**; **the game strip**; **the grade rail**; then a tab
+    strip of **Review / Story / Build / Economy**. Only the tab body scrolls.
     - Click the one-line read. It should take you to the Review tab.
     - A game you were not in has no Review tab at all, and the verdict says
       "You were not in this game". That is correct.
-13a. **Review tab**, the default. Expect five grades (Economy, Army, Hero, Map
-    control, Mechanics), each a number with a short note under it, green for good
-    and rust for poor. Then a benchmark strip ("tier 2 · 2:41 · you usually
-    2:21"), then **What to fix** and, when there is one, **What went right**,
-    each line with a time and a **Watch** button.
+    - At 900x600 the tab body should be about 150px. It was 34px before the
+      redesign, and 3px with a live match up.
+13a. **The game strip**, between the read and the grades. Four rows: your lane,
+    a fight axis, their lane, a time ruler. Each lane has a workers area behind
+    it (gold for you, lapis for them) and ticks for T2, T3, expansion and first
+    tower. The axis carries one mark per fight, bigger for a bigger gold swing,
+    moss where you came out ahead and rust where you did not. Hero deaths are
+    squared off rather than round.
+    - **Click any mark.** The viewer should open at that second. This is the
+      main reason the strip exists.
+    - Hover a lane for the peak worker count.
+    - A game with no fights still draws both lanes, the ticks and the ruler.
+    - The marks are small on purpose and their targets are only as tall as a
+      lane. The Story tab is the full-size, keyboard-native version of the same
+      list, and that is deliberate.
+
+13b. **The grade rail**, five cells in the frame: Economy, Army, Hero, Map
+    control, Mechanics. Green for good, rust for poor, and hovering a cell gives
+    the note. They used to be inside the Review tab where you could see one of
+    them.
+
+13c. **Review tab**, the default. Expect one row per pillar carrying its score
+    and what the score was read off, then a benchmark strip ("tier 2 · 2:41 ·
+    you usually 2:21"), then **What to fix** and, when there is one, **What went
+    right**, each line with a time and a **Watch** button.
     - **The read has to survive a straight face.** Open three games you actually
       remember and read the headline and the mistakes aloud. If it blames economy
       in a game you lost to a hero snipe, the thresholds are wrong. Record it and
@@ -114,9 +136,20 @@ cannot test any of this, which is why it is high on the list.
       recent games in this matchup"). On a fresh install with no history it
       should say it is using general anchors instead. It must never claim a
       comparison that does not exist.
-14. **Heroes tab**: each hero with its portrait, final level, the skill order and
-    final items as real icon rows. Hover an icon and the tooltip names the skill
-    or item and when.
+13d. **Story tab**: a square map on the left and the moments list on the right.
+    The map draws creep camps as rings sized by level, both start positions as
+    squares, and every fight that carries a position, coloured the same way as
+    the strip. Hover anything for its name.
+    - **It draws no terrain and it never says who cleared a camp.** A stored
+      summary has neither, so both would be invented. Say so if it looks like it
+      is claiming otherwise.
+    - A game with fewer than three coordinates gets no map and the list takes
+      the full width. That is correct.
+
+14. **Build tab**: per player, the hero cards then the opening build. Each hero
+    has its portrait, final level, skill order and final items as real icon
+    rows. Hover an icon and the tooltip names the skill or item and when. This
+    was two tabs, Heroes and Builds, asking one question.
     - Icons come from `cdn.wc3v.com`. Empty carved squares mean offline or CSP,
       so say so.
 15. **Economy tab**: two charts (workers, army size), you in gold, opponent in
@@ -124,8 +157,8 @@ cannot test any of this, which is why it is high on the list.
     icon strips. In a non-1v1, expect one line per chart rather than an invented
     duel.
 16. **Type an opponent's name** into the search box above the feed.
-    - Expect: the count above the feed changes from `N parsed` to `X of N`, and
-      only their games remain.
+    - Expect: the count beside the search box changes from `N parsed` to
+      `X of N`, and only their games remain.
     - Try a map name too. It matches the name **as shown**, so "Echo" works.
 17. Click **Wins**, then **Losses**, then a race glyph.
     - Expect: only that result, then only games where *you* played that race.
@@ -135,9 +168,16 @@ cannot test any of this, which is why it is high on the list.
     - Then clear the filters and **scroll the feed to the bottom**. More rows load
       as you approach the end, 120 at a time.
 
+18a. **Settings is a sheet now, not a screen.** Click the gear.
+    - Expect: a panel slides over the right of the window, Home stays visible
+      behind it, and the gear lights up.
+    - `Escape` closes it and focus returns to the gear. So does clicking the
+      gear again, and the ✕ in the sheet.
+    - The trademark line stays pinned at the foot while the panels scroll.
+
 ---
 
-## C2. The scout card (W3Champions)
+## C2. Next game (W3Champions)
 
 New. Off until you switch it on, and it needs a ladder identity.
 
@@ -145,25 +185,32 @@ New. Off until you switch it on, and it needs a ladder identity.
     - If your name has no `#number`, the panel says so. That is the whole reason
       nothing else will happen, and it is not a bug.
     - Leave it off and confirm nothing appears at any point below.
-20. **Queue for a ladder game on W3Champions** and go back to Last game while the
+20. **Queue for a ladder game on W3Champions** and go back to Home while the
     loading screen is up.
-    - Expect within ~20 s: a band above the feed reading **LIVE · vs
-      &lt;opponent&gt;** with their race glyph, their MMR and rank, the map, and
-      underneath it your own record against them plus one or two habits ("Opens
-      Blademaster in 4 of 6").
-    - A player you have never faced reads **First time against them**. That is
-      correct, not a missing lookup.
+    - Expect within ~20 s: the report column grows a **Next game | Last game**
+      switch at the top and opens on **Next game**.
+    - Next game shows: **LIVE · vs &lt;opponent&gt;** with their race glyph,
+      their MMR, ladder rank and the MMR gap; the map, your own record on it and
+      their recent form; your head-to-head; then three cells reading their
+      opener in this exact matchup as bars, their tier 2 against yours, and how
+      often they expand. Under that, every game you have played against them.
+    - A player you have never faced reads **First time against them**, and the
+      three cells say "Not enough games." That is correct, not a missing lookup.
     - Click their name. It should open them in Coach.
-21. **Finish the game.** The card should disappear as the replay lands and the
-    report takes over.
-22. **Pull the network** (or turn the setting off mid-queue). The card should
+    - Click **Last game**. The column returns to the selected game and stays
+      there; it must not snap back to Next game on the next poll.
+    - Click one of the games in the list. It should switch to Last game and open
+      that game.
+21. **Finish the game.** The switch and the panel should disappear as the replay
+    lands, and the report takes over.
+22. **Pull the network** (or turn the setting off mid-queue). The panel should
     vanish and nothing should turn red. A W3Champions failure has to read as
     "no online data", never as a broken screen.
 23. Minimise to the tray for a few minutes with the setting on, then reopen.
-    Nothing should have polled while hidden, and the card should catch up on the
-    next tick.
+    Nothing should have polled while hidden, and it should catch up on the next
+    tick.
 
-*Record: how long from queue-pop to the card appearing, and whether the habits
+*Record: how long from queue-pop to the panel appearing, and whether the habits
 match the player you actually know.*
 
 **Without a real queue:** `node tools/desktop-preview.js --games=40 --w3c` fakes
@@ -230,7 +277,7 @@ Full walkthrough below in §OBS. The checks:
         WC3V before assuming the app is at fault.
     - the **overlay in OBS** updates to that result, no refresh.
     - the **session score** in the app bar becomes 1–0 or 0–1.
-    - the app **switches to Last game** and opens that game.
+    - the app **switches to Home** and opens that game.
 36. Check the verdict is the right way round. If it says Victory when you lost,
     the app has the wrong seat, so click your name in the app bar and fix it.
     This exact bug shipped once.
@@ -391,19 +438,26 @@ selected and the drawer closed, run:
 Pass = `[]` everywhere. An element that clips via `overflow: hidden` reports too,
 deliberately: clipped content is a fold bug as much as a scrollbar is.
 
-Pass `--w3c` so the scout card is on screen during the audit. It adds a row above
-both columns, and the fold budget has to hold with it there.
+Pass `--w3c` so the Next game mode is reachable during the audit. Run the audit
+in both modes.
 
-Last clean run: 5 Aug 2026, both sizes, all four views, all **six** report tabs
-(Review, Story, Heroes, Economy, Builds, Head to head), plus the rebuilt Stream
-and Settings panels and the scout card. Zero console errors.
+The report frame changes shape per game, so audit **every game**, not one. The
+snippet above is cheap enough to run in a loop over `#feed .game` with every tab
+clicked. Games differ in whether they have a Review tab, whether the strip has
+fights, and whether Story has a map.
 
-Known squeeze, and it passes deliberately: at exactly 900×600 with the scout card
-up, the report's scrolling tab body comes out around 34px. The frame still fits,
-which is what the rule says, and during a live match the card is the thing being
-read while the report below is last game's. Any window taller than the minimum
-gets the space back. If that trade stops feeling right, the timings panel is the
-155px to go after.
+Last clean run: 5 Aug 2026, after the Home redesign. Both sizes, all 40 preview
+games, every report tab on every game, both column modes, plus Coach, Stream and
+the Settings sheet. Zero offenders, zero console errors.
+
+Measured after the redesign, at 900×600 with a live match up:
+
+| | before | after |
+|---|---|---|
+| report tab body | 34px | 149px |
+| feed rows on screen | 3 | 7.5 |
+| report frame | 427px | 325px |
+| report tabs | 6 | 4 |
 
 Note when driving this yourself: the preview's auto-detected identity is
 whichever name appears most often in the sample, and the feed tiles show the
@@ -418,7 +472,7 @@ reads Victory or Defeat before auditing the report tabs.
 Straight into `desktop/ROADMAP.md`, in the register it already uses:
 
 - **§B**: snap, resize, drag, close-to-tray. The undecorated-window verdict.
-- **§C2 20**: whether the scout card fires on a real queue, and how fast.
+- **§C2 20**: whether Next game fires on a real queue, and how fast.
 - **§D 26**: transparency in a real OBS. Checklist item 2.
 - **§A 4**: exactly what the installer did to the running app. Whether the
   upgrade *works* is already answered: 0.2.0 → 0.3.0, 5 Aug 2026.

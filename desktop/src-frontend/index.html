@@ -28,7 +28,7 @@
            lives on the gear. The data-view ids are internal and unchanged. -->
       <nav class="nav" role="tablist" aria-label="Screens">
         <button class="nav-item is-active" data-view="games" type="button"
-                role="tab" aria-selected="true">Last game</button>
+                role="tab" aria-selected="true">Home</button>
         <button class="nav-item" data-view="profile" type="button"
                 role="tab" aria-selected="false">Coach</button>
         <button class="nav-item" data-view="stream" type="button"
@@ -68,10 +68,11 @@
         <span class="session-streak" id="session-streak"></span>
       </div>
 
-      <!-- Settings: a view with no tab, reached from here and from the update
-           chip. showView treats it like any other screen. -->
+      <!-- Opens the settings sheet over whatever screen you are on. The update
+           chip opens the same sheet. -->
       <button id="settings-btn" class="wctl wctl-gear" type="button"
-              aria-label="Settings" aria-pressed="false" title="Settings">
+              aria-label="Settings" aria-expanded="false" aria-controls="settings-sheet"
+              title="Settings">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.8c.1.65.1 1.35 0 2l2 1.8-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6a7 7 0 0 1-1.7-.9l-2.5.9-1.7-2.9 2-1.8a6.6 6.6 0 0 1 0-2l-2-1.8 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg>
       </button>
 
@@ -96,29 +97,30 @@
     <main>
       <!-- ── Games ────────────────────────────────────────────────────── -->
       <section class="view view-games is-active" data-view="games">
-        <!-- The scout card. Empty and hidden unless W3Champions says a match
-             is running right now; see scout.js. -->
-        <div class="scout" id="scout" hidden></div>
-
         <div class="feed-col">
-          <div class="feed-head">
-            <h2>Your games</h2>
-            <span class="feed-count" id="feed-count"></span>
-          </div>
           <div class="backfill-bar" id="backfill-bar" hidden>
             <div class="backfill-text" id="backfill-text">idle</div>
             <div class="backfill-track"><div class="backfill-fill" id="backfill-fill"></div></div>
           </div>
           <!-- A parsed history runs to thousands of games. -->
           <div class="feed-filter">
-            <input id="feed-search" type="search" autocomplete="off"
-                   placeholder="Search a player or map" aria-label="Search your games">
-            <div class="filter-row">
+            <div class="filter-search">
+              <input id="feed-search" type="search" autocomplete="off"
+                     placeholder="Search" aria-label="Search your games by player or map">
+              <!-- The count used to own a heading band above a column whose
+                   contents are self-evident. -->
+              <span class="feed-count" id="feed-count"></span>
+              <!-- Rides the search row too. Three short labels fit where "Wins"
+                   and "Losses" forced the segs onto a band of their own. -->
               <div class="seg" id="feed-result" role="group" aria-label="Result">
                 <button class="seg-btn is-on" data-result="any" type="button">All</button>
-                <button class="seg-btn" data-result="win" type="button">Wins</button>
-                <button class="seg-btn" data-result="loss" type="button">Losses</button>
+                <button class="seg-btn" data-result="win" type="button"
+                        aria-label="Wins" title="Wins">W</button>
+                <button class="seg-btn" data-result="loss" type="button"
+                        aria-label="Losses" title="Losses">L</button>
               </div>
+            </div>
+            <div class="filter-row">
               <!-- Glyphs are stamped in from RaceIcons at boot (games-view.js
                    wireFilters), so the markup holds no second copy of a mark. -->
               <div class="seg" id="feed-race" role="group" aria-label="Your race">
@@ -161,10 +163,20 @@
         <div class="stream-grid" id="stream-body"></div>
       </section>
 
-      <!-- ── Settings ─────────────────────────────────────────────────── -->
-      <section class="view view-settings" data-view="settings" hidden>
-        <div class="settings-grid">
-          <div class="col scroll">
+      <!-- ── Settings ─────────────────────────────────────────────────────
+           A sheet over whatever screen you are on, not a view of its own.
+           Inlining six panels onto Home would cost 300px of a 507px budget
+           permanently, for controls nobody reads twice. Every id below is the
+           one settings-view.js already binds to. -->
+      <aside class="sheet" id="settings-sheet" role="dialog" aria-modal="false"
+             aria-labelledby="settings-title" hidden>
+        <header class="sheet-head">
+          <h2 id="settings-title">Settings</h2>
+          <button id="settings-close" class="sheet-close" type="button" aria-label="Close settings">
+            <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1.4"/></svg>
+          </button>
+        </header>
+        <div class="sheet-body scroll">
           <section class="panel">
             <h2>Replay folders</h2>
             <p class="hint">Replays never leave this machine. Map data and
@@ -181,9 +193,7 @@
             </div>
             <p class="hint" id="backfill-status">idle</p>
           </section>
-          </div>
 
-          <div class="col scroll">
           <section class="panel">
             <h2>App</h2>
             <label class="check">
@@ -223,14 +233,13 @@
             </label>
             <p class="hint" id="w3c-status"></p>
           </section>
-          </div>
-
-          <!-- Pinned under both columns, never scrolled past. -->
-          <p class="legal">Warcraft III and all related assets are trademarks
-            of Blizzard Entertainment, Inc. WC3V is a fan-made, non-commercial
-            tool not affiliated with or endorsed by Blizzard.</p>
         </div>
-      </section>
+
+        <!-- Pinned at the foot of the sheet, never scrolled past. -->
+        <p class="legal">Warcraft III and all related assets are trademarks
+          of Blizzard Entertainment, Inc. WC3V is a fan-made, non-commercial
+          tool not affiliated with or endorsed by Blizzard.</p>
+      </aside>
     </main>
 
     <footer class="activity" id="activity">
@@ -254,6 +263,8 @@
   <script src="./js/replay-index.js"></script>
   <script src="./js/identity.js"></script>
   <script src="./js/race-icons.js"></script>
+  <script src="./js/game-strip.js"></script>
+  <script src="./js/game-map.js"></script>
   <script src="./js/w3c.js"></script>
   <script src="./js/scout.js"></script>
   <script src="./js/games-view.js"></script>

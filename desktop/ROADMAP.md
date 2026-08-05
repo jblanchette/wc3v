@@ -34,7 +34,7 @@ what finally makes checklist item 3 walkable.
 games with a report per game covering the verdict, timings, key moments,
 head-to-head and both build orders, and folders, backfill and the log have moved
 to Settings and a collapsible Activity drawer. §4 gained selectable panels, an
-in-window preview and a test game. §12 gained the scout card. What has not
+in-window preview and a test game. §12 gained Next game. What has not
 happened is a full pass through the real app. Everything below was verified
 against real replay data in `tools/desktop-preview.js`, which stubs Tauri IPC but
 runs the app's own modules, CSS and renderers unmodified.
@@ -70,7 +70,7 @@ runs the app's own modules, CSS and renderers unmodified.
 | Toast wording | `overlayState.toastFor` run over real stored summaries: "Victory vs orange#14823 / Springtime · 17:20 · all time 2–0 / 16:07 You killed 2 heroes" |
 | An update can actually be published | `tools/deploy-desktop.js` uploaded 0.2.0 to R2 and fetched the manifest and installer back |
 | W3Champions path allowlist | `w3c::tests`, 4 tests: scheme-relative paths, `..`, backslashes, control characters and absurd lengths are all refused before a socket opens |
-| Scout card renders and reads the local book | `tools/desktop-preview.js --w3c` fakes an ongoing match against a real opponent from the sample. The card drew "1877 MMR · #138 · +73 on you" beside "3–1 to you · Opens Death Knight in 5 of 5 · Tier 2 around 2:46" |
+| Next game renders and reads the local book | `tools/desktop-preview.js --w3c` fakes an ongoing match against a real opponent from the sample. The panel drew "1877 MMR · #138 · +73 on you", a 3–1 head-to-head, an opener bar chart, tier 2 at 2:46 against your own 2:42, and the full list of games against them |
 
 ### What has NEVER been tested
 
@@ -96,7 +96,7 @@ runs the app's own modules, CSS and renderers unmodified.
 - **The viewer handoff end to end** (§10). Both halves exist and each was checked
   alone. The joined-up path needs the site deployed and the app rebuilt. The site
   half is live and returns 200 at `https://wc3v.com/handoff`.
-- **The scout card against a real W3Champions queue** (§12). The card, the poll
+- **Next game against a real W3Champions queue** (§12). The panel, the poll
   loop and the local book have only run against a stubbed match. Nobody has
   confirmed that `ongoing/{battleTag}` populates early enough in a real queue to
   be worth looking at during the loading screen.
@@ -183,7 +183,7 @@ pruned with one command (`RELEASING.md` §3b) and that is unrelated to readiness
       working, or `decorations` put back.
 - [ ] A real game has driven the toast, the overlay and the viewer handoff end to
       end in one sitting.
-- [ ] The scout card has fired on a real W3Champions queue, early enough to read
+- [ ] Next game has fired on a real W3Champions queue, early enough to read
       before the loading screen ends.
 - [ ] Linux is either working (§8) or explicitly declared out of scope. Listing a
       target in a config file is not support.
@@ -220,7 +220,7 @@ version whose update path cannot be tested.
      re-parsing to get it. v3 is in as of Aug 2026. Check `SCHEMA_VERSION` in
      `store.js` before starting the run rather than after.
 5. **Queue one real ladder game with W3Champions lookups on** (§12) and watch
-   whether the scout card appears while the loading screen is still up. That is
+   whether Next game appears while the loading screen is still up. That is
    the only thing that tells you whether the feature is worth having.
 
 ---
@@ -562,27 +562,30 @@ often they are asked:
 1. **What just happened?** The instant post-game report, every game.
 2. **Am I getting better?** Coach, trends, records, weekly.
 3. **Who is this?** The book on every opponent you have faced, whenever a
-   familiar name appears. Also the scout card (§12), which answers it *before*
+   familiar name appears. Also Next game (§12), which answers it *before*
    the game rather than after.
 
 …and puts it on stream for the people watching. Each tab is one of those
-questions and nothing else earns a tab. That is why the tabs are **Last game /
-Coach / Stream** and Settings is a gear beside the caption controls, because it
-is maintenance rather than a destination. The `data-view` ids stay
-`games`/`profile`, since renaming internals buys nothing.
+questions and nothing else earns a tab. The tabs are **Home / Coach / Stream**,
+and Settings is a sheet behind the gear rather than a screen. The `data-view`
+ids stay `games`/`profile`, since renaming internals buys nothing.
+
+**The first tab was called "Last game" and that was wrong.** The label lied the
+moment you clicked a game from March, and it lies harder now that the column can
+show the *next* game. Home is the honest name for a screen that is a feed plus
+whichever game you are looking at.
 
 **The fold rule (absolute):** no view scrolls as a whole. The frame of every
 screen fits the window at the 900×600 minimum, and anything long lives in a
 designated `.scroll` container. Verified by an automated audit (TESTING.md
-appendix): zero offending elements on every view and every report tab at both
-900×600 and 1280×820. Before this, the game report stacked ~2,400px against a
-~700px viewport and Profile was a term paper.
+appendix) over every one of the 40 preview games, every report tab, both column
+modes and all four screens, at both 900×600 and 1280×820. Before any of this,
+the game report stacked ~2,400px against a ~700px viewport and Profile was a
+term paper.
 
-- The report is a fixed frame (verdict band with the h2h record chip, archetype
-  and APM folded into the meta line, a single-row timings strip, a tab strip) and
-  one scrolling tab body. Tabs: **Story** (moments), **Heroes**, **Economy**,
-  **Builds**, **Head to head** (only at ≥2 shared games). The active tab is
-  remembered across game selections.
+- The report is a fixed frame and one scrolling tab body: verdict band, game
+  strip, grade rail, tab strip. Tabs are **Review**, **Story**, **Build** and
+  **Economy**, and the active one is remembered across game selections.
 - **Heroes and Economy existed in the data all along.** `heroBuilds` carries skill
   order with ability icon ids and final items, and `economyTrack` /
   `combatUnitsTrack` are chart-shaped 30s series. The charts are drawn by the
@@ -592,14 +595,14 @@ appendix): zero offending elements on every view and every report tab at both
 - **Coach is a dashboard** rather than a column: fixed head band (name, record,
   form chip, lookup), a 3-up trends band, then statements beside a seg-switched
   records table, each cell scrolling internally. Every player name in the app,
-  across the report header, h2h, builds titles and most-faced rows, is a
-  `.name-link` that opens that player in Coach.
+  across the report header, the record chip, build titles and most-faced rows,
+  is a `.name-link` that opens that player in Coach.
 - **Race marks are original heraldic SVGs** (`race-icons.js`: keep, axe, crescent,
   skull, die, ring), single-path, currentColor, tinted by the `--race-warm-*`
   ramp. Deliberately not the game's art: the wc3icons set is extracted Blizzard
   artwork, kept only where identity demands it, on unit, ability and item icons.
   The two-letter chips remain as the no-JS fallback. `RaceIcons.mark()` is the one
-  builder, shared by the feed, the report and the scout card.
+  builder, shared by the feed, the report, the game strip and Next game.
 - The Blizzard trademark disclaimer the site carries in three places now exists in
   the desktop too, pinned at the foot of Settings.
 
@@ -670,6 +673,51 @@ a file browser.
       collapsed by default, so a primary action that failed looked like a dead
       button. `failed()` now puts the reason in the status bar in red and opens
       the drawer.
+- [x] **Home redesign (Aug 2026).** The report column was 56% furniture at
+      1280×820 and 74% at 900×600, where the verdict band and the timings panel
+      *grew* as the window shrank because both wrapped. The scrolling tab body
+      came out at 34px, or 3px with a live match on screen. Six tabs, and you
+      could see one row of one of them.
+      - **The timings panel is gone and the game strip replaced it**
+        (`js/game-strip.js`). Four rows in 82px: your lane, a fight axis, their
+        lane, a time ruler. Each lane carries a workers area from `economyTrack`
+        and ticks for T2, T3, expansion and first tower. The axis carries one
+        mark per fight, scaled by gold swing and coloured by who came out ahead.
+        Everything the 157px panel listed is here, positioned in time.
+      - **Every mark opens the viewer at that second**, through the existing
+        `onWatch` path. That handoff has existed for a while and was buried
+        behind per-row Watch buttons inside a scroller nobody could see.
+      - **The grade rail moved into the frame.** Five pillars, five cut wells,
+        above the tab strip. They are the one thing on the screen no website
+        could produce and they were small grey text inside the scroller. The
+        reasoning stayed in Review, one row per pillar.
+      - **The verdict word dropped to `--fs-h2`**, which is what stopped the head
+        wrapping to two rows at the 612px a 900px window gives. The meta line
+        lost `1v1`, the datetime and APM, and gained the opener and the 5:00
+        worker count from the dead timings panel.
+      - **Tabs went 6 to 4.** Heroes and Builds were one question asked twice and
+        merged into **Build**. Head to head was three facts behind a tab that
+        appeared and disappeared per game; the record chip keeps the number and
+        opens their book in Coach.
+      - **Story gained a map** (`js/game-map.js`): creep camps as rings sized by
+        level, both start positions, and every fight carrying coordinates. It
+        sits beside the moments rather than above them, and a game with fewer
+        than three coordinates gets no map at all.
+      - **The rail went 27rem to 22rem**, lost its heading band, and rows went
+        68px to 52px with a plain divider instead of a bordered card. Games on
+        screen at 900×600 went 3 to 7.5.
+      - **Settings became a sheet over the current screen.** Inlining six panels
+        onto Home would have cost 300px of a 507px budget permanently, for
+        controls nobody reads twice. Every id is unchanged, so
+        `settings-view.js` needed no edit.
+      - Measured after, at 900×600 with a live match up: frame 427px → 325px,
+        tab body 34px → 149px.
+      - **Two things the plan assumed that the data does not support.** A stored
+        summary has no per-player camp-clear record, so the map cannot say who
+        cleared what, and only 126 of 402 moments across the preview corpus
+        carry coordinates. The map draws camps as terrain and locates the fights
+        it can.
+
 - [x] **Copy pass (Aug 2026).** Every screen lost its explanatory paragraphs.
       Settings had four `lead` paragraphs and eight `hint` blocks describing what
       its own checkboxes did. Stream had roughly 300 words of instructions beside
@@ -685,7 +733,7 @@ a file browser.
 - Note: `node tools/desktop-preview.js` writes `desktop/preview/preview.html`,
   which runs the real frontend against summaries built from real replays. That is
   how the UI is iterated on without launching the app. `--w3c` adds a stubbed
-  live match so the scout card renders.
+  live match so Next game renders.
 
 ### 10. Open in the viewer: BUILT, not yet joined up
 Clicking a moment opens the game in the real 3D viewer on wc3v.com, seeked to
@@ -875,28 +923,39 @@ RESULTS), and `/api/players/{tag}/aka` (alt accounts).
       for a particular race id, which has moved before. A 404 on an ongoing match
       is the normal state, so it is silent. Anything else is logged once per
       session.
-- [x] **The scout card** (`js/scout.js`), at the top of Last game. It is question
-      3, "who is this", answered before the game rather than after, so it does not
-      belong on Stream.
-      - Shows opponent, race glyph, MMR, ladder rank, the MMR gap, and the map.
-        Under that, your own record against them and up to two habits pulled from
-        `ProfileAggregate.buildProfile`: their usual opener in this exact matchup,
-        their median tier 2, or their expansion habit. Somebody you have never
-        played reads "First time against them", which is itself the useful answer.
+- [x] **Next game** (`js/scout.js` polls, `games-view.js` draws). It is question
+      3, "who is this", answered before the game rather than after, so it does
+      not belong on Stream.
+      - **It shipped first as a band pinned above both columns and that was
+        wrong.** It cost 77px of the fold budget whenever it was up, squeezing
+        the report to 3px of scroller, and it read as an announcement floating
+        over the app rather than a part of it. Now a live match gives the report
+        column a `Next game | Last game` switch and takes the whole column. None
+        of it exists when no match is running, which is nearly always, so the
+        fold budget is untouched in the normal case. That property is the reason
+        it was ever a band.
+      - Shows opponent, race glyph, MMR, ladder rank and the MMR gap; the map,
+        your own record on it and their recent form; your head-to-head. Then
+        three cells from `ProfileAggregate.buildProfile`: their opener in this
+        exact matchup as bars, their median tier 2 against yours, how often they
+        expand. Then every game the two of you have played, which is the one
+        scroller on the screen.
+      - Opening on Next game latches once per `match.id`, the same rule the
+        overlay's reveal uses. A re-poll cannot yank the column away from
+        somebody who chose to look at last night's game.
+      - Somebody you have never played reads "First time against them" and the
+        three cells say "Not enough games", which is itself the useful answer.
       - The ladder is looked up by full battle tag. A stored summary carries
         whatever the replay wrote, so the book is looked up by tag first and by
         bare name second.
       - Polls every 20 s while idle, drops to 60 s once a match is up, and skips
-        entirely while the window is hidden to the tray. A watcher-detected replay
-        dismisses the card, because that game is over and the report underneath is
+        entirely while the window is hidden to the tray. A watcher-detected
+        replay clears it, because that game is over and the report underneath is
         the better thing to look at.
-      - An identity with no `#number` cannot be looked up at all. Settings says so
-        rather than leaving the card silently empty forever.
-      - The card is a grid row above both columns and collapses to nothing while
-        hidden, so the fold budget is untouched in the normal case. With it up at
-        exactly 900×600 the report's scrolling body comes out around 34px. The
-        frame holds, the audit passes, and any window above the minimum gets the
-        space back. See the note in TESTING.md.
+      - An identity with no `#number` cannot be looked up at all. Settings says
+        so rather than leaving the panel silently empty forever.
+      - `scout.js` renders nothing. It polls, reads the corpus and calls
+        `onMatch`, so there is one place that draws a live match.
 - [ ] Confirm on a real queue that `ongoing` populates early enough to read during
       the loading screen. Everything above has only run against a stub.
 - [ ] MMR/rank/quantile chip in the Coach head band. `w3c.stats()` already returns
@@ -956,7 +1015,7 @@ Run any of these with no args for usage.
 |---|---|
 | `tools/detect-identity.js` | Who owns a replay folder, from headers only. `--dir=<Replays>`. Same algorithm the app uses, runnable without launching it. |
 | `tools/moments-report.js` | The ranked key moments of a parsed replay, phrased from a chosen seat. `--replay=NAME [--seat=ID] [--all]`. **This is how the ranking gets judged.** Run it on a game you remember, and if the fight you actually recall is missing, the ranking is wrong rather than the UI. |
-| `tools/desktop-preview.js` | Writes `desktop/preview/preview.html`: the real desktop frontend, stubbed Tauri IPC, summaries built from real parsed replays. Iterate on the UI in a browser without building the app. Run `build-desktop-client.js` first. `--games=N`, and use 40+ to exercise the trend windows. `--w3c` fakes a live ladder match so the scout card renders. |
+| `tools/desktop-preview.js` | Writes `desktop/preview/preview.html`: the real desktop frontend, stubbed Tauri IPC, summaries built from real parsed replays. Iterate on the UI in a browser without building the app. Run `build-desktop-client.js` first. `--games=N`, and use 40+ to exercise the trend windows. `--w3c` fakes a live ladder match so Next game renders. |
 | `tools/deploy-desktop.js` | Publishes a built installer and `latest.json` to R2. Refuses an unsigned or non-newer build, uploads the installer before the manifest, verifies both afterwards. `--notes="…"` required, `--dry-run` to preview. |
 | `tools/test-profile-aggregate.js` | Profile and coach assertions over a synthetic corpus, including the identity tie-refusal guards. |
 | `tools/test-game-report.js` | Review-layer assertions: pillar ranges, mistake ranking and capping, benchmark direction, and graceful degradation with no baseline, no combat ledger, or a missing seat. Asserts the *shape*; only a corpus pass tells you the thresholds still mean anything (§11). |
@@ -1025,7 +1084,16 @@ Run any of these with no args for usage.
   history for the browser to make an exception for. Anything that must open a
   window there needs a real click, and an "attempt it and fall back to a button"
   design is just the button plus a pop-up warning.
-- **A W3Champions name without a `#number` is not a ladder identity.** The scout
-  card keys off `ongoing/{battleTag}`, and a replay saved outside W3Champions
-  carries a bare name that the API has nothing to say about. The feature looks
-  broken rather than inapplicable unless the UI says which one it is.
+- **A W3Champions name without a `#number` is not a ladder identity.** Next game
+  keys off `ongoing/{battleTag}`, and a replay saved outside W3Champions carries
+  a bare name that the API has nothing to say about. The feature looks broken
+  rather than inapplicable unless the UI says which one it is.
+- **A stored summary has no per-player camp-clear record.** `neutralCamps` is
+  terrain with bounds and a level, and nothing says who took which. Only 126 of
+  402 moments across the 40-game preview corpus carry coordinates at all. Any
+  map that colours camps by owner is inventing it.
+- **The report frame used to grow as the window shrank.** The verdict head and
+  the timings panel both wrapped at 612px, so the "fixed" frame took 74% of the
+  column at the minimum size and 56% at 1280. If a band in that frame can wrap,
+  it is not a fixed band, and the audit will not catch it because wrapping is
+  not overflow.

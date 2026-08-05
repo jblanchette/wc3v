@@ -1,23 +1,25 @@
-// The scout card: who you are playing right now, and what your own games say
-// about them.
+// Who you are playing right now, and what your own games say about them.
 //
 // A replay cannot answer this. It only exists after the match, and by then the
 // question has been settled. W3Champions publishes the ongoing match for a
 // battle tag, so the app can put the opponent on screen while the loading
 // screen is still up.
 //
-// The ladder half is the hook. The half nobody else has is underneath it: the
-// record and the habits come from games on this machine, so the card says
-// things no website could tell you about this particular opponent.
+// The ladder half is the hook. The half nobody else has is the book: the record
+// and the habits come from games on this machine, so the panel says things no
+// website could tell you about this particular opponent.
+//
+// This module renders nothing. It polls, reads the corpus, and hands the answer
+// to onMatch. games-view.js draws it as a mode of the report column, which is
+// what stops it reading as a band bolted onto the top of the screen.
 //
 // Polling stops the moment the feature is switched off, the identity has no
-// battle tag, or the window is hidden. A failed lookup clears the card and
+// battle tag, or the window is hidden. A failed lookup clears the panel and
 // says nothing.
 
 (function () {
   'use strict';
 
-  const el = (id) => document.getElementById(id);
   const PA = () => window.ProfileAggregate;
 
   // Between games. Queue times are minutes, so this is fast enough to catch a
@@ -27,15 +29,9 @@
   // without a replay landing, which happens on a disconnect.
   const LIVE_MS = 60000;
 
-  const node = (tag, className, text) => {
-    const n = document.createElement(tag);
-    if (className) n.className = className;
-    if (text != null) n.textContent = text;
-    return n;
-  };
-
   window.createScout = (deps) => {
-    // deps: w3c, store, identityName(), onOpenProfile(name), visible(), log
+    // deps: w3c, store, identityName(), visible(), log,
+    //       onMatch(match, ladder, book) with null for "no live match"
 
     let timer = null;
     let match = null;
@@ -51,12 +47,12 @@
     };
 
     // What this machine knows about them. Returns null when they have never
-    // been played, which the card says outright.
+    // been played, which the panel says outright.
     //
     // The ladder always has a full battle tag. A stored summary carries
     // whatever the replay wrote, which for a W3Champions game is the tag and
     // for anything else is the bare name, so both get tried.
-    const bookOn = (opp, myRace) => {
+    const bookOn = (opp, myRace, mapName) => {
       const corpus = deps.store.corpus;
       const me = deps.identityName();
       if (!corpus || !corpus.length || !me) return null;
@@ -65,94 +61,62 @@
       if (!p.games) p = PA().buildProfile(corpus, opp.name);
       if (!p.games) return null;
 
-      const oppRace = opp.race;
-
       const meKey = PA().normName(me);
+      const oppKey = PA().normName(p.name);
       const seen = p.opponents.find(o => PA().normName(o.name) === meKey);
       // Their record against me, read back from my side.
       const h2h = seen ? { games: seen.games, wins: seen.losses, losses: seen.wins } : null;
 
-      const facts = [];
-      const mu = oppRace && myRace
-        ? p.matchups.find(m => m.matchup === `${oppRace}v${myRace}`)
+      // Their habits in the exact matchup about to be played.
+      const mu = opp.race && myRace
+        ? p.matchups.find(m => m.matchup === `${opp.race}v${myRace}`)
         : null;
 
-      const opener = mu && mu.openings.length ? mu.openings[0] : null;
-      if (opener && opener.games >= 2) {
-        facts.push(`Opens ${opener.hero} in ${opener.games} of ${mu.games}`);
-      }
+      // Their tier 2 against my own, so the number has something to mean.
+      const medianOf = (t) => {
+        if (!t) return null;
+        const v = t.winMedian !== null && t.winMedian !== undefined ? t.winMedian : t.lossMedian;
+        return v === undefined ? null : v;
+      };
+      const mine = PA().buildProfile(corpus, me);
+      const myMu = myRace && opp.race
+        ? mine.matchups.find(m => m.matchup === `${myRace}v${opp.race}`)
+        : null;
 
-      const t2 = mu && mu.t2 ? (mu.t2.winMedian ?? mu.t2.lossMedian) : null;
-      const t2n = mu ? mu.t2.winN + mu.t2.lossN : 0;
-      if (t2 !== null && t2 !== undefined && t2n >= 3) {
-        facts.push(`Tier 2 around ${PA().fmtMs(t2)}`);
-      }
+      // Every game the two of us have played, newest first, for the list.
+      const shared = corpus.filter((g) => {
+        const names = Object.values(g.players || {}).map(x => PA().normName(x.name));
+        return names.indexOf(meKey) !== -1 && names.indexOf(oppKey) !== -1;
+      });
 
-      if (facts.length < 2 && p.games >= 4 && p.habits) {
-        const rate = p.habits.expansionRate;
-        if (rate === 0) facts.push('Never expands');
-        else if (rate >= 70) facts.push(`Expands in ${rate}% of games`);
-      }
-
-      return { profileGames: p.games, h2h, facts: facts.slice(0, 2) };
+      return {
+        name: p.name,
+        profileGames: p.games,
+        h2h,
+        recentForm: p.recentForm,
+        matchup: mu ? { key: mu.matchup, games: mu.games } : null,
+        // Capped at three. An unbounded list in a fixed band breaks the fold.
+        openers: mu ? mu.openings.slice(0, 3) : [],
+        t2Them: mu ? medianOf(mu.t2) : null,
+        t2ThemN: mu ? mu.t2.winN + mu.t2.lossN : 0,
+        t2You: myMu ? medianOf(myMu.t2) : null,
+        expansionRate: p.habits ? p.habits.expansionRate : null,
+        // Your own record on the map about to be played. Knowable without them.
+        yourMap: mapName && mine.maps
+          ? mine.maps.find(m => m.map === mapName) || null
+          : null,
+        shared
+      };
     };
 
+    // This module owns no DOM. It polls, it reads the local corpus, and it
+    // hands the answer to whoever asked. The report column renders it, so the
+    // live opponent reads as a section of the product rather than a band
+    // floating above one.
     const clear = () => {
+      const had = !!match;
       match = null;
-      const host = el('scout');
-      host.innerHTML = '';
-      host.hidden = true;
-    };
-
-    const render = (m, ladder, book) => {
-      const host = el('scout');
-      host.innerHTML = '';
-      host.hidden = false;
-
-      const opp = m.opponents[0];
-
-      const head = node('div', 'scout-head');
-      head.appendChild(node('span', 'scout-live', 'Live'));
-
-      const vs = node('span', 'scout-vs');
-      vs.appendChild(node('span', null, 'vs '));
-      const link = node('button', 'name-link', opp.name);
-      link.type = 'button';
-      link.addEventListener('click', () => deps.onOpenProfile(opp.tag));
-      vs.appendChild(link);
-      if (window.RaceIcons) vs.appendChild(window.RaceIcons.mark(opp.race));
-      if (m.opponents.length > 1) vs.appendChild(node('span', 'scout-more', `+${m.opponents.length - 1}`));
-      head.appendChild(vs);
-
-      const bits = [];
-      const mmr = (ladder && ladder.mmr) || opp.mmr;
-      if (mmr) bits.push(`${Math.round(mmr)} MMR`);
-      if (ladder && ladder.rank) bits.push(`#${ladder.rank}`);
-      if (mmr && m.me.mmr) {
-        const d = Math.round(mmr - m.me.mmr);
-        bits.push(d >= 0 ? `+${d} on you` : `${d} on you`);
-      }
-      if (bits.length) head.appendChild(node('span', 'scout-ladder', bits.join(' · ')));
-
-      if (m.map) head.appendChild(node('span', 'scout-map', m.map));
-      host.appendChild(head);
-
-      const line = node('p', 'scout-book');
-      if (!book) {
-        line.appendChild(node('span', 'scout-first', 'First time against them'));
-      } else {
-        if (book.h2h) {
-          const chip = node('span', 'scout-h2h', `${book.h2h.wins}–${book.h2h.losses} to you`);
-          chip.dataset.v = book.h2h.wins > book.h2h.losses ? 'win'
-            : book.h2h.wins < book.h2h.losses ? 'loss' : 'even';
-          line.appendChild(chip);
-        }
-        for (const f of book.facts) line.appendChild(node('span', 'scout-fact', f));
-        if (!book.h2h && !book.facts.length) {
-          line.appendChild(node('span', 'scout-fact', `${book.profileGames} games in your history`));
-        }
-      }
-      host.appendChild(line);
+      if (had) deps.onMatch(null);
     };
 
     const tick = async () => {
@@ -176,11 +140,11 @@
       const opp = found.opponents[0];
       const ladder = await statsFor(opp.tag);
       const book = found.opponents.length === 1
-        ? bookOn(opp, found.me.race)
+        ? bookOn(opp, found.me.race, found.map)
         : null;
       // A second tick may have cleared it while the stats call was in flight.
       if (!match || match.id !== found.id) return;
-      render(found, ladder, book);
+      deps.onMatch(found, ladder, book);
       deps.log(`live game against ${opp.name}`, 'ok');
     };
 
