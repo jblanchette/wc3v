@@ -27,6 +27,12 @@
  *   node tools/deploy-desktop.js --notes="What changed, in a sentence."
  *   node tools/deploy-desktop.js --notes="..." --dry-run   - preview, no upload
  *   node tools/deploy-desktop.js --notes="..." --skip-verify
+ *   node tools/deploy-desktop.js --prune [--keep=N]        - delete old builds
+ *
+ * Pruning is safe at any time, including with real installs in the field: an
+ * installed 0.2.0 does not need the 0.2.0 installer to update itself, only
+ * latest.json and the NEWEST one. Old installers matter solely to somebody
+ * deliberately installing an old version.
  *
  * Requires: rclone with an `r2:` remote, and a build produced by
  * `npm run desktop:build` WITH the signing variables set (see RELEASING.md).
@@ -212,7 +218,76 @@ function copyTo (localFile, remoteFile, headers) {
   if (res.status !== 0) die(`rclone exited with status ${res.status}`);
 }
 
+/**
+ * Delete published installers, keeping the live one.
+ *
+ * The version in latest.json is the authority for what "live" means — NOT
+ * tauri.conf.json, which may already have been bumped for the next build. If
+ * the manifest cannot be read, nothing is deleted: pruning blind is how you
+ * remove the installer every client is being pointed at.
+ */
+async function prune () {
+  checkRclone();
+
+  const keep = Math.max(1, parseInt(args.keep, 10) || 1);
+  const manifest = await get(`${PUBLIC}/latest.json`);
+  if (!manifest || manifest.status !== 200) {
+    die(`Could not read ${PUBLIC}/latest.json (got ` +
+        `${manifest ? manifest.status : 'no response'}). Refusing to delete anything ` +
+        'without knowing which version is live.');
+  }
+  let live;
+  try { live = JSON.parse(manifest.body).version; } catch (_) { /* below */ }
+  if (!live) die('latest.json is unreadable. Refusing to delete anything.');
+
+  const ls = spawnSync('rclone', ['lsf', REMOTE, '--s3-no-check-bucket'], { encoding: 'utf8' });
+  if (ls.status !== 0) die(`rclone lsf failed: ${ls.stderr || ls.status}`);
+
+  const versions = new Set();
+  for (const name of ls.stdout.split('\n')) {
+    const m = name.match(/^WC3V_(\d+\.\d+\.\d+)_x64-setup\.exe$/);
+    if (m) versions.add(m[1]);
+  }
+  if (!versions.has(live)) {
+    die(`latest.json publishes ${live}, but no installer for it is in the bucket.\n` +
+        'That is a broken channel, not a cleanup job. Fix it before pruning.');
+  }
+
+  // Newest first, then keep the top N — but the live version is kept no matter
+  // where it sorts, because deleting it breaks every client immediately.
+  const ordered = [...versions].sort((a, b) => cmpVersion(b, a));
+  const keeping = new Set([live, ...ordered.slice(0, keep)]);
+  const doomed = ordered.filter(v => !keeping.has(v));
+
+  console.log(`  live:      ${live}`);
+  console.log(`  published: ${ordered.join(', ')}`);
+  console.log(`  keeping:   ${[...keeping].sort((a, b) => cmpVersion(b, a)).join(', ')}`);
+  if (!doomed.length) {
+    console.log('\nNothing to prune.');
+    return;
+  }
+  console.log(`  deleting:  ${doomed.join(', ')}`);
+  if (isDryRun) {
+    console.log('\n(dry run — nothing deleted)');
+    return;
+  }
+
+  for (const v of doomed) {
+    for (const suffix of ['', '.sig']) {
+      const file = `WC3V_${v}_x64-setup.exe${suffix}`;
+      const res = spawnSync('rclone',
+        ['deletefile', `${REMOTE}/${file}`, '--s3-no-check-bucket'],
+        { stdio: 'inherit' });
+      if (res.status !== 0) die(`Failed to delete ${file}`);
+      console.log(`  deleted ${file}`);
+    }
+  }
+  console.log(`\nPruned ${doomed.length} version(s). ${live} is still live.`);
+}
+
 async function main () {
+  if (args.prune) return prune();
+
   // The notes reach users in the update dialog. An auto-generated placeholder
   // would be worse than no release at all, so this is required rather than
   // defaulted.

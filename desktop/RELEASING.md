@@ -65,6 +65,20 @@ of truth: the installer, the binary and the update manifest all read from it.
 Semver, and it must be strictly greater than the last release or clients will
 not take the update.
 
+**Bump on every build you publish, including throwaway ones.** There is no
+"dev version" that can be reused: an equal version means no client is ever
+offered the update, so the update path stops being exercised the moment you
+stop incrementing. `0.x` already means unstable under semver, so the numbers
+are cheap — spend them.
+
+**Before anyone but you installs this, split the channel.** Every build
+currently publishes to `desktop/latest.json`, which is *the* release channel.
+That is harmless while you are the only install, and becomes a problem the
+first time someone else has the app: a mid-work build silently becomes their
+update. A `desktop/dev/latest.json` with the app's endpoint pointed at it
+until 1.0 is the fix, and it is not worth building before there is a second
+install.
+
 ### 2. Build
 
 ```powershell
@@ -116,6 +130,28 @@ to users.
 
 Requires `rclone` with an `r2:` remote configured, the same one
 `tools/deploy-assets.js` uses.
+
+### 3b. Clearing out old builds
+
+```sh
+node tools/deploy-desktop.js --prune            # keep only what latest.json points at
+node tools/deploy-desktop.js --prune --keep=3   # keep the three newest
+node tools/deploy-desktop.js --prune --dry-run
+```
+
+**This is safe at any time, including with real installs in the field.** An
+installed 0.2.0 does not need the 0.2.0 installer in order to update — it needs
+`latest.json` and the *newest* installer. Old ones matter only to somebody
+deliberately installing an old version.
+
+The live version is read from `latest.json`, not from `tauri.conf.json` (which
+may already be bumped for the next build), and is never deleted. If the
+manifest cannot be read, nothing is deleted at all — pruning blind is how you
+remove the installer every client is being pointed at.
+
+Local build artifacts pile up too, at roughly 15 MB each in
+`desktop/src-tauri/target/release/bundle/nsis/`. That directory is gitignored
+and nothing reads it after a publish; delete it whenever.
 
 ### 4. Verify before announcing
 

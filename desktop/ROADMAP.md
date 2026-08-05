@@ -97,6 +97,30 @@ modules, CSS and renderers unmodified.
 
 ---
 
+## What 1.0 means
+
+Not a feeling, and not "when the version numbers look untidy" — old builds are
+pruned with one command (`RELEASING.md` §3b) and that is unrelated to
+readiness. 1.0 is when the things this document admits are unverified stop
+being unverified:
+
+- [ ] An OBS Browser Source has rendered the overlay, transparently, on a real
+      stream (checklist 2).
+- [ ] The backfill has run to completion and the measured seconds-per-replay
+      is written down (checklist 4).
+- [ ] The undecorated window has a verdict — snap, resize and drag confirmed
+      working, or `decorations` put back.
+- [ ] A real game has driven the toast, the overlay and the viewer handoff end
+      to end in one sitting.
+- [ ] Linux is either working (§8) or explicitly declared out of scope. Listing
+      a target in a config file is not support.
+- [ ] The channel is split, so a build made mid-work cannot become somebody
+      else's update (`RELEASING.md` §1).
+
+Until then `0.x` is honest: semver already reserves it for exactly this, so
+the numbers cost nothing. Spend them freely — a version that does not increase
+is a version whose update path cannot be tested.
+
 ## Checklist
 
 ### The things only a human can do
