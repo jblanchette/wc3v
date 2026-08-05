@@ -171,6 +171,44 @@ body {
 .wctl-close:hover { background: #B23A2A; color: #fff; }
 .wctl svg { width: 10px; height: 10px; }
 
+/* Update indicator. Information, not an alarm — so it wears the chrome accent
+   and not --warn or --bad. Nothing here is wrong; there is simply a newer
+   version, and the app is still perfectly usable if it is ignored forever. */
+.update-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--accent-soft, rgba(91,141,239,0.14));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.update-chip:hover { background: var(--accent); color: var(--text-on-accent, #0d1220); }
+.update-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  /* No pulse. A tray app that sits open for days must not have something
+     blinking in the corner of the screen the whole time. */
+}
+.update-chip:hover .update-dot { background: currentColor; }
+
+/* The release notes, straight from the manifest. pre-wrap because whoever
+   wrote them chose their own line breaks. */
+.update-notes {
+  max-width: 44rem;
+  white-space: pre-wrap;
+  color: var(--ink-2);
+}
+
 .identity-wrap { position: relative; }
 
 .identity {
@@ -729,11 +767,15 @@ main { min-height: 0; position: relative; }
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 .hint { color: var(--ink-dim); font-size: var(--fs-min); margin: var(--sp-2) 0 0; }
 
+/* Top-aligned, not centred: these labels carry a line of explanation under
+   them, and a centred box floats halfway down the paragraph pointing at
+   nothing. The offset lines it up with the first line's cap height. */
 .check {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--sp-3);
   min-height: var(--hit-min);
+  padding: var(--sp-1) 0;
   cursor: pointer;
 }
 /* Carved, not the UA's. accent-color only tints the CHECKED fill — the empty
@@ -748,7 +790,9 @@ main { min-height: 0; position: relative; }
   flex: none;
   width: 20px;
   height: 20px;
-  margin: 0;
+  /* Drops the box onto the first line's baseline block rather than the top of
+     the label's bounding box. */
+  margin: 2px 0 0;
   background: var(--app-well);
   border: var(--outline);
   border-radius: 3px;

@@ -107,10 +107,14 @@ modules, CSS and renderers unmodified.
    live-update path are now verified in real Chrome (connected tab updated to
    "Victory" with no refresh, via EventSource auto-reconnect), but OBS runs
    its own CEF build and *transparency* specifically is still unverified.
-3. **Take one real upgrade** (§6). The endpoint now exists and 0.2.0 is
-   published, so this is finally doable: install 0.2.0, publish 0.3.0 with
-   `node tools/deploy-desktop.js --notes="…"`, and confirm the installed app
-   offers and applies it.
+3. ~~Take one real upgrade~~ — **DONE 5 Aug 2026, it worked.** 0.2.0 was
+   installed from the NSIS installer, found 0.3.0 through
+   `https://cdn.wc3v.com/desktop/latest.json`, installed it, and afterwards
+   reported "up to date". The signing key, the manifest, the R2 hosting and
+   the version comparison are all now proven end to end rather than assumed.
+   - What this does NOT prove: that anyone would ever find the update. It sits
+     behind a button on the Settings screen and nothing checks on its own —
+     see §6.
 4. **Run the backfill once** (§2) for the real end-to-end rate — and it also
    settles profile identity permanently as a side effect.
 
@@ -444,9 +448,20 @@ browser over loopback.
       HTTP surface is still read-only.
 - [x] `desktop/src-frontend/handoff.html` — the launcher. Fetches the bytes
       same-origin and pushes them to `https://wc3v.com/handoff` with
-      `postMessage` (private → public, allowed, and no CORS needed). One click,
-      because `window.open` without a user gesture is popup-blocked; it is
-      attempted automatically first and the button is the fallback.
+      `postMessage` (private → public, allowed, and no CORS needed).
+      **One button, and nothing opens a window on its own.**
+      - This was got wrong first: the page tried `window.open` automatically on
+        load and kept the button as a fallback. On a freshly-opened loopback
+        origin the browser has no engagement history to make an exception for,
+        so the automatic attempt was blocked *every single time* — it never
+        once succeeded. All it did was raise Chrome's blocked-pop-up indicator
+        and leave the page explaining away a warning it had caused itself.
+        The fallback was doing 100% of the work.
+      - The click is not a confirmation step to be optimised away. It is the
+        only thing that makes `window.open` legal, so it is the mechanism.
+      - The staged bytes are checked BEFORE the button is enabled, so a expired
+        replay fails on this page rather than opening the site and stranding it
+        waiting for bytes that never arrive.
 - [x] `client/handoff.html` — the landing pad. Receives the bytes, parses them
       with the existing `UploadManager`, stores them in `MyReplays`, then
       redirects to `/viewer?local=<id>&at=<ms>`. Remembers the desktop's content
@@ -482,9 +497,28 @@ update process is documented in `desktop/RELEASING.md`.
       (gitignored by pattern — **back it up; losing it ends updates for
       every existing install**). Builds made without an endpoint report
       "updates not configured" rather than implying they are current.
-- [ ] Point `plugins.updater.endpoints` at a real URL and walk one upgrade
-      end to end (install N-1, take the update). Currently
-      `https://wc3v.net/desktop/latest.json`, which does not exist yet.
+- [x] Endpoint points at `https://cdn.wc3v.com/desktop/latest.json` and **one
+      upgrade has been walked end to end** (0.2.0 → 0.3.0, 5 Aug 2026).
+- [x] **The app checks on its own.** The upgrade worked, but it sat behind a
+      button on the Settings screen — nobody opens a settings screen to ask
+      whether their replay parser is current, so an update nobody hears about
+      is an update nobody takes. Now: a quiet check at launch and every six
+      hours (this process is meant to live in the tray for days, so "at
+      launch" alone would mean a machine that never reboots never hears
+      anything), a small accent chip in the app bar when there is one, the
+      release notes shown next to the Install button, and a Settings toggle.
+      - **It does not patch itself, deliberately.** The one thing this app must
+        never do is close the window, raise UAC and steal focus while a game is
+        being played — which is exactly what a background installer does, and
+        this app runs in the tray precisely so it is there during games.
+        Checking is automatic; applying is a decision.
+      - A failed quiet check is silent. A laptop that woke without a network
+        would otherwise force the Activity drawer open on a red line about
+        something the user never asked for.
+      - The chip is accent-coloured, not `--warn`/`--bad`, and does not pulse.
+        Nothing is wrong; there is simply a newer version, and something
+        blinking in the corner of a screen that stays open for days is an
+        imposition.
 
 ### 7. Map data — DONE (lazy download)
 Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
@@ -610,3 +644,17 @@ Run any of these with no args for usage.
 - **`accent-color` does not style an unchecked checkbox.** It tints the
   checked fill only; the empty box stays the platform's near-white square,
   which on a dark panel is the loudest thing on screen.
+- **Editing an `include_str!`'d file while a build runs ships the OLD one.**
+  `overlay.rs` compiles `handoff.html`, `shell.html`, `overlay.css` and
+  `overlay-render.js` into the binary. Edit one after the Rust compile has
+  run and NSIS still packages happily; the installer is newer than every
+  source file and silently contains the previous version of a page.
+  **A timestamp cannot detect this** — the installer's mtime is when it was
+  packaged, not when its strings were compiled. `tools/deploy-desktop.js`
+  now checks each embedded file is present byte-for-byte in the binary and
+  refuses to publish otherwise. It has already caught this once for real.
+- **`window.open` on a loopback page is blocked 100% of the time,** not
+  occasionally. A page opened seconds ago on `127.0.0.1:PORT` has no
+  engagement history for the browser to make an exception for. Anything that
+  must open a window there needs a real click; an "attempt it and fall back
+  to a button" design is just the button, plus a pop-up warning.

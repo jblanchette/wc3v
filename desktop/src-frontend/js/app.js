@@ -293,6 +293,16 @@ const backfill = window.createBackfill({
 const NOTIFY_KEY = 'wc3v-notify-games';
 const notifyEnabled = () => localStorage.getItem(NOTIFY_KEY) !== '0';
 
+// Update checking. Default on: nobody opens a Settings screen to ask whether
+// their replay parser is current, so an update behind a button is an update
+// nobody takes. Applying one stays a decision — see settings-view.js.
+const AUTOUPDATE_KEY = 'wc3v-autoupdate';
+const autoUpdateEnabled = () => localStorage.getItem(AUTOUPDATE_KEY) !== '0';
+// Six hours. Releases do not arrive faster than that, and this process may be
+// alive for a week — a tight interval would be a request to a CDN every few
+// minutes for the entire time, forever, for nothing.
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
 const settingsView = window.createSettingsView({
   invoke,
   log,
@@ -302,7 +312,23 @@ const settingsView = window.createSettingsView({
   addRoot: (root) => state.roots.push(root),
   onScan: (path) => scan(path),
   notifyEnabled,
-  setNotifyEnabled: (on) => localStorage.setItem(NOTIFY_KEY, on ? '1' : '0')
+  setNotifyEnabled: (on) => localStorage.setItem(NOTIFY_KEY, on ? '1' : '0'),
+  autoUpdateEnabled,
+  setAutoUpdateEnabled: (on) => localStorage.setItem(AUTOUPDATE_KEY, on ? '1' : '0'),
+  onUpdateAvailable: (version) => showUpdateChip(version)
+});
+
+// The app bar's update indicator. Settings owns the decision and the notes;
+// this is only how you find out there is one without going looking.
+const showUpdateChip = (version) => {
+  el('update-chip-text').textContent = `Update to ${version}`;
+  el('update-chip').hidden = false;
+};
+
+el('update-chip').addEventListener('click', () => {
+  showView('settings');
+  el('check-update').scrollIntoView({ block: 'center' });
+  el('check-update').focus();
 });
 
 // ── Views ───────────────────────────────────────────────────────────────────
@@ -575,6 +601,16 @@ const boot = async () => {
       .catch(e => {
         log(`could not read Replay folder 1: ${errText(e)}`, 'err');
       });
+  }
+
+  // Updates. On launch, then on a long interval — this app is meant to sit in
+  // the tray for days at a time, so "at launch" alone would mean a machine
+  // that never reboots never hears about anything. Quiet on failure.
+  if (autoUpdateEnabled()) {
+    settingsView.checkQuietly();
+    setInterval(() => {
+      if (autoUpdateEnabled()) settingsView.checkQuietly();
+    }, UPDATE_CHECK_INTERVAL_MS);
   }
 
   // Overlay: publish the empty session immediately so an OBS source that is

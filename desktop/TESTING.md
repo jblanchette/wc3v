@@ -18,30 +18,36 @@ Two things to have open: this document, and the app's **Activity drawer**
 
 ## A. The upgrade — do this first, it is destructive
 
-This is ROADMAP checklist item 3, and it is the only test that needs the *old*
-build. Do it before anything else, because everything after this assumes 0.3.0.
+ROADMAP checklist item 3, and the only test that needs an *older* build.
 
-1. Install `WC3V_0.2.0_x64-setup.exe`, launch it.
-2. **Settings → Check for updates.**
-   - Expect: `version 0.3.0 is available`, and the button relabels itself to
-     **Install 0.3.0**.
-   - If it says *"updates are not configured for this build"* — the endpoint is
-     missing from the binary. Wrong build.
-   - If it errors — read the reason in the drawer. A DNS or 404 failure means
-     the manifest is not reachable; check `https://cdn.wc3v.com/desktop/latest.json`
-     in a browser.
-3. Click **Install 0.3.0**.
+**The manual half is done: 0.2.0 → 0.3.0 was walked on 5 Aug 2026 and worked.**
+What is left is whether anyone would ever have found out there was an update,
+which is what 0.4.0 changes.
+
+1. Install the older installer, launch it.
+2. **Wait, and look at the app bar** — do not go to Settings.
+   - Expect (0.4.0 and later): within a few seconds of launch, a small blue
+     **Update to 0.x.y** chip appears to the left of your name.
+   - It should not blink, and it should not be red. Nothing is wrong.
+   - If it never appears: either the check failed (Activity drawer stays quiet
+     by design, so try Settings → Check for updates to see the reason) or
+     `Check for updates automatically` is off.
+3. **Click the chip.** It should jump to Settings with the Install button
+   focused, and the release notes for that version shown under it.
+4. Click **Install 0.x.y**.
    - Expect: the NSIS installer runs. There may be a UAC prompt and a brief
      progress window.
-   - **This step has never been walked and the app's own wording may be wrong.**
-     It says *"installed 0.3.0 — restart to apply"*, but the Windows installer
-     may close the app itself rather than waiting to be restarted. Record what
-     actually happens — whether the app exits on its own, whether it relaunches,
-     and whether the tray icon is left behind.
-4. Reopen the app. **Settings → Check for updates** should now say
-   **up to date**, and the window should look different (see §B).
+   - **The app's own wording here may be wrong.** It says *"installed — restart
+     to apply"*, but the Windows installer may close the app itself rather than
+     waiting. Record what actually happens: whether the app exits on its own,
+     whether it relaunches, and whether the tray icon is left behind.
+5. Reopen. The chip should be gone and **Check for updates** should say
+   **up to date**.
+6. Turn **Check for updates automatically** off, restart the app, and confirm
+   no chip appears and nothing is logged.
 
-*Record: did the update land, and what did the app do while it was landing.*
+*Record: whether the chip showed up on its own, and what the installer did to
+the running app.*
 
 ---
 
@@ -167,10 +173,12 @@ Both halves of this exist and each was checked alone. The joined-up path has
 never been walked.
 
 32. Open a game and click **Open in viewer**.
-    - Expect: your default browser opens `127.0.0.1`, shows a WC3V card, and
-      then opens wc3v.com and loads the game in the 3D viewer.
-    - You may have to allow a popup, or click the button on the loopback page.
-      That is by design — `window.open` without a click is blocked.
+    - Expect: your default browser opens a small WC3V card on `127.0.0.1`
+      saying **Ready to open**, with one button.
+    - Click it. wc3v.com opens and loads the game in the 3D viewer.
+    - **Expect NO pop-up warning of any kind.** The page opens nothing by
+      itself; a blocked-pop-up indicator in the address bar means something
+      auto-opened and is a bug.
 33. Back in the app, click **Watch** on a key moment.
     - Expect: the viewer opens at that moment, not at the start.
     - Expect: the second time, it is **much faster** — the browser remembers the
@@ -274,7 +282,8 @@ Straight into `desktop/ROADMAP.md`, in the register it already uses:
 
 - **§B** — snap, resize, drag, close-to-tray. The undecorated-window verdict.
 - **§D 21** — transparency in a real OBS. Checklist item 2.
-- **§A** — the upgrade, and exactly what it did to the running app.
+- **§A 4** — exactly what the installer did to the running app. (Whether the
+  upgrade *works* is answered: 0.2.0 → 0.3.0, 5 Aug 2026.)
 - **§E 28** — seconds from the game ending to the overlay updating.
 - **§I 45** — the measured seconds per replay. Checklist item 4.
 

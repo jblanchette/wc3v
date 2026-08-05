@@ -92,6 +92,20 @@
         : 'game notifications off', 'ok');
     });
 
+    // An available update is shown, never applied on its own. This app lives in
+    // the tray while you play: a background installer would close the window,
+    // raise UAC and steal focus mid-game. Checking is automatic; patching is a
+    // decision.
+    const showAvailable = (version, notes) => {
+      el('check-update').textContent = `Install ${version}`;
+      el('check-update').dataset.install = '1';
+      el('update-status').textContent = `version ${version} is ready`;
+      const box = el('update-notes');
+      box.textContent = notes || '';
+      box.hidden = !notes;
+      deps.onUpdateAvailable(version);
+    };
+
     const runUpdateCheck = async (install) => {
       const out = el('update-status');
       out.textContent = 'checking…';
@@ -104,13 +118,12 @@
           // rather than implying the app is current.
           out.textContent = 'updates are not configured for this build';
         } else if (r.status === 'available') {
-          out.textContent = `version ${r.version} is available`;
+          showAvailable(r.version, r.notes);
           deps.log(`update ${r.version} available — click again to install`, 'ok');
-          el('check-update').textContent = `Install ${r.version}`;
-          el('check-update').dataset.install = '1';
         } else if (r.status === 'installed') {
           out.textContent = `installed ${r.version} — restart to apply`;
           deps.log(`update ${r.version} installed; restart WC3V to apply it`, 'ok');
+          el('update-notes').hidden = true;
         }
       } catch (err) {
         out.textContent = 'update check failed';
@@ -121,9 +134,26 @@
     el('check-update').addEventListener('click', (e) =>
       runUpdateCheck(e.currentTarget.dataset.install === '1'));
 
+    el('autoupdate-toggle').checked = deps.autoUpdateEnabled();
+    el('autoupdate-toggle').addEventListener('change', (e) => {
+      deps.setAutoUpdateEnabled(e.target.checked);
+      deps.log(e.target.checked
+        ? 'WC3V will check for updates on its own'
+        : 'automatic update checks off', 'ok');
+    });
+
     return {
       renderRoots,
       syncRetryButton,
+      // The silent boot/interval check. Its FAILURE is not news: a laptop that
+      // woke up without a network would otherwise open the Activity drawer on
+      // a red line about something the user never asked for.
+      async checkQuietly () {
+        try {
+          const r = await deps.invoke('check_for_update', { install: false });
+          if (r.status === 'available') showAvailable(r.version, r.notes);
+        } catch (e) { /* offline is normal; say nothing */ }
+      },
       async syncAutostart () {
         // Reflect the real OS setting rather than assuming a default.
         try {

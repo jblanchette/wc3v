@@ -20,6 +20,9 @@
  *     target; a long TTL would mean users sit on a stale version for hours
  *     after a release.
  *
+ * Refuses to publish an unsigned build, a version that is not newer than what
+ * is already live, or a binary older than the source it was built from.
+ *
  * Usage:
  *   node tools/deploy-desktop.js --notes="What changed, in a sentence."
  *   node tools/deploy-desktop.js --notes="..." --dry-run   - preview, no upload
@@ -54,6 +57,104 @@ const isDryRun = !!args['dry-run'];
 function die (msg) {
   console.error(`\n${msg}\n`);
   process.exit(1);
+}
+
+/**
+ * Everything that ends up INSIDE the binary. `desktop/dist` is excluded —
+ * it is generated from src-frontend by build-desktop-client.js, so checking it
+ * would just compare a copy against itself.
+ */
+const SOURCE_PATHS = [
+  'desktop/src-frontend',
+  'desktop/src-tauri/src',
+  'desktop/src-tauri/Cargo.toml',
+  'desktop/src-tauri/tauri.conf.json',
+  'desktop/src-tauri/capabilities'
+].map(p => path.join(ROOT, p));
+
+/** Newest mtime under a file or directory, recursively. */
+function newestMtime (target) {
+  let newest = 0;
+  const walk = (p) => {
+    let st;
+    try { st = fs.statSync(p); } catch (_) { return; }
+    if (st.isDirectory()) {
+      for (const name of fs.readdirSync(p)) walk(path.join(p, name));
+    } else if (st.mtimeMs > newest) {
+      newest = st.mtimeMs;
+      newestFile = p;
+    }
+  };
+  walk(target);
+  return newest;
+}
+let newestFile = null;
+
+/**
+ * Refuse to publish a build older than the source it claims to be built from.
+ *
+ * Catches "you edited something and forgot to rebuild at all". It does NOT
+ * catch an edit made *during* a build — see checkEmbeddedFiles below for why
+ * a timestamp cannot.
+ */
+function checkNotStale (exePath) {
+  const built = fs.statSync(exePath).mtimeMs;
+  let newest = 0;
+  newestFile = null;
+  let culprit = null;
+  for (const p of SOURCE_PATHS) {
+    const m = newestMtime(p);
+    if (m > newest) { newest = m; culprit = newestFile; }
+  }
+  if (newest > built) {
+    die('The installer is OLDER than the source it was built from.\n' +
+        `  installer: ${new Date(built).toISOString()}\n` +
+        `  source:    ${new Date(newest).toISOString()}  ${path.relative(ROOT, culprit)}\n\n` +
+        'Run `npm run desktop:build` again.');
+  }
+}
+
+/**
+ * Verify every file `overlay.rs` embeds with `include_str!` is in the binary
+ * VERBATIM, byte for byte.
+ *
+ * A timestamp cannot answer this. The installer's mtime is when NSIS packaged
+ * it; the Rust object that carries these strings was compiled minutes earlier.
+ * Edit an embedded file in between and you get an installer that is newer than
+ * every source file and still contains the previous version of a page.
+ *
+ * That is not hypothetical — it happened on 5 Aug 2026 with handoff.html, and
+ * the only thing that caught it was grepping the binary for a string that
+ * should have been there. This is that grep, done properly and every time.
+ *
+ * The list is read out of overlay.rs rather than hardcoded, so a new embed is
+ * covered the moment someone adds one.
+ */
+function checkEmbeddedFiles () {
+  const overlayRs = path.join(ROOT, 'desktop/src-tauri/src/overlay.rs');
+  const src = fs.readFileSync(overlayRs, 'utf8');
+  const embeds = [...src.matchAll(/include_str!\(\s*"([^"]+)"\s*\)/g)].map(m => m[1]);
+  if (!embeds.length) {
+    die(`No include_str! found in ${path.relative(ROOT, overlayRs)}. This check ` +
+        'reads the embed list from that file; if the embeds moved, update it.');
+  }
+
+  const exe = fs.readFileSync(path.join(ROOT, 'desktop/src-tauri/target/release/wc3v-desktop.exe'));
+  const stale = [];
+  for (const rel of embeds) {
+    // include_str! paths are relative to the file doing the including.
+    const file = path.resolve(path.dirname(overlayRs), rel);
+    if (!fs.existsSync(file)) die(`overlay.rs embeds a file that does not exist: ${rel}`);
+    if (!exe.includes(fs.readFileSync(file))) stale.push(path.relative(ROOT, file));
+  }
+  if (stale.length) {
+    die('The binary does not contain the current version of:\n' +
+        stale.map(f => `  ${f}`).join('\n') + '\n\n' +
+        'These are compiled in with include_str!, so editing one after the Rust\n' +
+        'compile has already run produces a build that looks entirely fine and\n' +
+        'silently ships the previous version. Run `npm run desktop:build` again.');
+  }
+  console.log(`  embedded:  ${embeds.length} file(s) verified byte-for-byte`);
 }
 
 function checkRclone () {
@@ -147,6 +248,9 @@ async function main () {
         'served as an update. Set the key (its CONTENTS, not its path) and\n' +
         'rebuild — see desktop/RELEASING.md.');
   }
+
+  checkNotStale(exePath);
+  checkEmbeddedFiles();
 
   // A manifest whose version is not strictly greater than what is already
   // published is a no-op at best and a downgrade prompt at worst.

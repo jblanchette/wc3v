@@ -40,6 +40,13 @@
 
       <div class="appbar-spacer" data-tauri-drag-region></div>
 
+      <!-- Only ever appears when there IS one. An update is news, not an
+           error, and it never applies itself — see settings-view.js. -->
+      <button id="update-chip" class="update-chip" type="button" hidden>
+        <span class="update-dot" aria-hidden="true"></span>
+        <span id="update-chip-text">Update ready</span>
+      </button>
+
       <div class="identity-wrap">
         <button id="identity-btn" class="identity" type="button" aria-expanded="false">
           <span class="identity-label">You</span>
@@ -170,7 +177,12 @@
             <h2>App</h2>
             <label class="check">
               <input type="checkbox" id="autostart-toggle">
-              <span>Start with Windows (opens straight to the tray)</span>
+              <span>
+                Start with Windows
+                <span class="hint">Opens straight to the tray. Closing the
+                  window keeps WC3V running there so new games still get
+                  picked up — quitting is done from the tray icon.</span>
+              </span>
             </label>
             <label class="check">
               <input type="checkbox" id="notify-toggle" checked>
@@ -180,12 +192,21 @@
                   biggest moment, so you do not have to go and look.</span>
               </span>
             </label>
-            <p class="hint">Closing the window keeps WC3V running in the tray so
-              new games still get picked up. Quit from the tray icon.</p>
+            <label class="check">
+              <input type="checkbox" id="autoupdate-toggle" checked>
+              <span>
+                Check for updates automatically
+                <span class="hint">On launch and every few hours. Nothing is
+                  ever installed without you clicking — a background installer
+                  would close the window and raise a UAC prompt, and it would
+                  do it mid-game.</span>
+              </span>
+            </label>
             <div class="row">
               <button id="check-update" class="btn" type="button">Check for updates</button>
               <span class="hint" id="update-status"></span>
             </div>
+            <p class="hint update-notes" id="update-notes" hidden></p>
           </section>
         </div>
       </section>

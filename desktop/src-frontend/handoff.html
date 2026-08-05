@@ -17,9 +17,10 @@
   across with postMessage — private → public, which browsers do allow, and a
   message channel needs no CORS at all.
 
-  The one click is not decoration: window.open without a user gesture is
-  popup-blocked. It is attempted automatically first, and the button is the
-  fallback for when that is refused.
+  The click is the mechanism, not a confirmation step. window.open without a
+  user gesture is pop-up blocked, and on a loopback origin the browser has no
+  engagement history to make an exception for — so it is blocked every time,
+  not occasionally. Nothing here opens a window on its own.
 
   Self-contained: no external fonts, scripts or requests. The only things it
   touches are its own origin and the window it opens.
@@ -98,11 +99,11 @@
 <body>
   <div class="card">
     <div class="brand">WC<span>3</span>V</div>
-    <h1 id="head">Opening the viewer…</h1>
-    <p id="lead">Handing this replay to wc3v.com. It never leaves your machine
-      by any other route — there is no upload and no account.</p>
-    <button id="go" class="hidden" type="button">Open the viewer</button>
-    <p class="note" id="note">You can close this tab once the viewer opens.</p>
+    <h1 id="head">Ready to open</h1>
+    <p id="lead">This game goes straight from WC3V on your machine into the
+      viewer. There is no upload and no account.</p>
+    <button id="go" type="button" disabled>Open in the viewer</button>
+    <p class="note" id="note">You can close this tab afterwards.</p>
   </div>
 
 <script>
@@ -154,6 +155,13 @@
     });
   });
 
+  // Opened ONLY from a real click. An earlier version tried this automatically
+  // on load and kept the button as a fallback — which meant the browser blocked
+  // it every single time (a freshly-opened loopback origin has no engagement
+  // history, so there is nothing for it to trust), raised its blocked-pop-up
+  // indicator, and left this page explaining away a prompt it had caused
+  // itself. The automatic attempt never once succeeded; it only ever produced
+  // the warning. A click is the whole mechanism now.
   function openViewer () {
     // `o` is this page's own origin, so the site can postMessage back to an
     // exact target instead of a wildcard. It cannot know the port otherwise —
@@ -162,24 +170,23 @@
       '&o=' + encodeURIComponent(location.origin) +
       (at ? '&at=' + encodeURIComponent(at) : '') +
       (key ? '&key=' + encodeURIComponent(key) : '');
+    // Named, so clicking a second time reuses the same tab instead of piling
+    // viewers up.
     child = window.open(url, 'wc3v-viewer');
-    if (!child) {
-      el('head').textContent = 'One more click';
-      el('lead').textContent = 'Your browser blocked the pop-up, which it does ' +
-        'for anything it did not see you click.';
-      el('go').classList.remove('hidden');
-      return false;
-    }
-    el('go').classList.add('hidden');
-    return true;
+    el('go').disabled = true;
+    el('head').textContent = 'Opening…';
   }
 
   el('go').addEventListener('click', openViewer);
 
-  // Fail early and clearly if the staged replay is already gone, rather than
-  // opening the site and stranding it waiting for bytes that never arrive.
+  // Check the staged replay is still there BEFORE offering the button, rather
+  // than opening the site and stranding it waiting for bytes that never come.
+  // This is a same-origin read from memory, so the wait is imperceptible.
   bytesPromise
-    .then(function () { openViewer(); })
+    .then(function () {
+      el('go').disabled = false;
+      el('go').focus();
+    })
     .catch(function () {
       fail('That replay is no longer staged',
         'Click Watch again in WC3V — staged replays are dropped after ten minutes.');
