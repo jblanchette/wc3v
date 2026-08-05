@@ -5,6 +5,8 @@ Handoff document. Written Aug 2026, after Phase 0.
 **Read `desktop/README.md` first** for the design invariants and architecture.
 They are not optional — several are the whole reason the project is viable.
 `desktop/RELEASING.md` covers building, shipping and updating.
+`desktop/TESTING.md` is the manual pass — every check only a human can do, in
+the order that wastes the least time. Its results belong back in this file.
 
 Run it with `npm run desktop`. Build an installer with `npm run desktop:build`.
 
