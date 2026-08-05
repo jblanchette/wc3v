@@ -4,7 +4,9 @@
  * Replaces the old FloatingText pills that floated over (and covered) the
  * units. Two coordinated pieces:
  *
- *   1. A DOM feed pinned to the RIGHT EDGE of the map (#event-feed). Newest
+ *   1. A DOM feed (#event-feed) in the right-side gutter beside the map,
+ *      under the camera toolbar (anchored to #main-wrapper, not the canvas
+ *      group, so it stays off the playfield). Newest
  *      high-signal event on top, older rows fade and drop off. It reuses the
  *      exact `ev-` row markup the insights log uses (EventModel.buildRowEl),
  *      so the feed and the panel are visually identical.
@@ -220,8 +222,11 @@ const EventFeed = class {
     const note = document.createElement('div');
     note.className = 'ev-feed-hidden';
     const fast = speed > this.HIGH_SPEED;
+    // AUTO mode feeds a raw float (e.g. 3.4285714) — show at most one decimal,
+    // and none when it's a whole number (6x, not 6.0x).
+    const n = (Math.round(speed * 10) % 10 === 0) ? String(Math.round(speed)) : speed.toFixed(1);
     note.textContent = fast
-      ? `+${this._hidden} events · ${speed}x — slow down for detail`
+      ? `+${this._hidden} events · ${n}x — slow down for detail`
       : `+${this._hidden} more this moment`;
     return note;
   }

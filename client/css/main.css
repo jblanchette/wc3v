@@ -18322,10 +18322,13 @@ button.mcb-summary {
    ============================================================ */
 
 /* --- Right-edge action feed -------------------------------- */
+/* Anchored to #main-wrapper (not #canvas-group), so it sits in the gutter
+   beside the map when the wrapper is wider than the canvas — same right
+   edge as the camera toolbar above it and the minimap below. */
 #event-feed {
   position: absolute;
-  top: 96px;              /* clear the top-right camera toolbar zone */
-  right: 8px;
+  top: 52px;              /* clear the camera toolbar (top 8px + ~32px tall) */
+  right: 12px;            /* align with .corner-stack-right / minimap */
   width: 272px;
   max-width: 46%;
   display: flex;
@@ -18397,7 +18400,7 @@ button.mcb-summary {
 .ev-line1 {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 2px 6px;   /* tight row-gap so a wrapped kicker/badge doesn't float */
   flex-wrap: wrap;
 }
 /* Kind kicker — the disambiguating verb (CAST / LEVEL UP / BUY ...). Tinted by
@@ -18431,13 +18434,15 @@ button.mcb-summary {
 }
 .ev-line2 {
   display: flex;
-  align-items: center;
+  align-items: baseline;  /* time aligns to the meta's FIRST line when it wraps */
   gap: 6px;
   margin-top: 1px;
 }
 .ev-meta {
   font-size: 11px;
+  line-height: 1.35;
   color: rgba(255, 255, 255, 0.62);
+  text-wrap: pretty;      /* no single-word orphan lines (Chromium 117+) */
 }
 .ev-time {
   margin-left: auto;

@@ -345,11 +345,14 @@
                   <!-- Project C: camp icons live inside canvas-group so they
                        share the canvases' exact box + any live-mode transform -->
                   <div id="camp-icon-layer"></div>
-                  <!-- Action feed: right-edge log of high-signal events. DOM
-                       (not canvas) so it shares the insights panel's ev- CSS.
-                       Caster pips for these events draw on #player-canvas. -->
-                  <div id="event-feed" aria-live="polite" aria-label="Recent actions"></div>
                 </div>
+
+                <!-- Action feed: log of high-signal events, anchored to the
+                     wrapper's right edge (the gutter beside the map, under the
+                     camera toolbar) — NOT inside #canvas-group, so it stays
+                     off the map and out of any live-mode canvas transform.
+                     Caster pips for these events draw on #player-canvas. -->
+                <div id="event-feed" aria-live="polite" aria-label="Recent actions"></div>
 
                 <div id="building-info-tooltip"></div>
 

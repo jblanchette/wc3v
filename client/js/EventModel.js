@@ -580,7 +580,13 @@ const EventModel = (function () {
     if (parts.length) {
       const meta = document.createElement('span');
       meta.className = 'ev-meta';
-      meta.textContent = parts.join(' · ');
+      // Strict wrap rules: the "·" separator binds to the word before it (a
+      // line never starts with "·"), and short parentheticals like "(rank 1)"
+      // are kept whole instead of splitting across lines. CAREFUL: the join
+      // string and the inner replacement contain a LITERAL non-breaking space
+      // (U+00A0) — it looks like a normal space in most editors.
+      meta.textContent = parts.join(' · ')
+        .replace(/\([^()]{1,16}\)/g, (m) => m.replace(/ /g, ' '));
       line2.appendChild(meta);
     }
     if (opts.showTime) {
