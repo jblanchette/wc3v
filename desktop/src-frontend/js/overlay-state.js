@@ -117,11 +117,33 @@
         }));
     };
 
+    // The one-line read of a game, from the SAME grader the Review tab uses.
+    // Only ever claimed for the user's own seat: "economy lagged" said about a
+    // stranger's game that the overlay is only showing as a fallback would be
+    // a judgement of somebody who is not there.
+    const readFor = (summary, v) => {
+      if (!summary || !v || !v.mine || !window.GameReport) return null;
+      const corpus = deps.corpus && deps.corpus();
+      const base = corpus && corpus.length
+        ? PA.baseline(corpus, st.userName, { matchup: v.matchup, excludeKey: summary.key })
+        : null;
+      const report = window.GameReport.grade(summary, v.slot, base);
+      return report ? report.headline : null;
+    };
+
     const gamePayload = () => {
       const v = viewFor(st.lastGame);
       if (!v) return null;
       const me = st.lastGame.players[v.slot] || {};
       return {
+        // Stable identity of the game being shown. The overlay's reveal mode
+        // needs to tell "a new game finished" from "the same game published
+        // again" (an identity change or a reconnect republishes everything),
+        // and a timestamp cannot: every publish has a new one.
+        gameId: st.lastGame.key || null,
+        // The same sentence the app's Review tab shows. One wording source,
+        // three renderers — window, toast and broadcast.
+        read: readFor(st.lastGame, v),
         // The display name, not the raw ladder filename — the stored `map` is
         // "12_w3c_251104_0950_TurtleRock_v2.0.w3x", which is not something to
         // put on a broadcast.
@@ -187,9 +209,14 @@
         };
       }
 
+      // The read goes on the toast too — "you won" is the headline, "economy
+      // lagged" is the reason to open the app.
+      const read = readFor(summary, v);
+
       return {
         title,
         body: [line, record].filter(Boolean).join(' · ') +
+          (read ? `\n${read}` : '') +
           (beat ? `\n${beat.time} ${beat.text}` : '')
       };
     };
@@ -242,9 +269,11 @@
       candidates: [],
       session: { wins: 2, losses: 1, unknown: 0, streak: { kind: 'win', count: 2 } },
       game: {
+        gameId: 'demo',
         map: 'Echo Isles',
         mode: '1v1',
         verdict: 'win',
+        read: 'Hero play led it; economy lagged.',
         durationMs: 14 * 60 * 1000,
         user: { name: 'You', race: 'H' },
         opponent: { name: 'Opponent', race: 'O' },

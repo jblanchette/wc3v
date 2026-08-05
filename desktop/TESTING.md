@@ -93,9 +93,28 @@ preview cannot test any of this, which is why it is high on the list.
     the fold rule. Expect a fixed frame: verdict + opponent (their name is a
     link — click it, you should land in Coach on them), an all-time record
     chip when you have ≥2 games against them, **Open in viewer** on the same
-    row, a meta line carrying the archetype and APM, a single-row timings
-    strip, then a tab strip: **Story / Heroes / Economy / Builds** (+ **Head
-    to head** when it exists). Only the tab body scrolls.
+    row, a meta line carrying the archetype and APM, **the one-line read
+    under it**, a single-row timings strip, then a tab strip: **Review /
+    Story / Heroes / Economy / Builds** (+ **Head to head** when it exists).
+    Only the tab body scrolls.
+    - Click the one-line read — it should take you to the Review tab.
+    - A game you were not in has no Review tab at all, and the verdict says
+      "You were not in this game". That is correct, not a bug.
+13a. **Review tab** (the default). Expect five grades — Economy, Army, Hero,
+    Map control, Mechanics — each a number with a short note under it, green
+    for good and rust for poor. Then a benchmark strip ("tier 2 · 2:41 · you
+    usually 2:21"), then **What to fix** and, when there is one, **What went
+    right**, each line with a time and a **Watch** button.
+    - **The read has to survive a straight face.** Open three games you
+      actually remember and read the headline and the mistakes aloud. If it
+      blames economy in a game you lost to a hero snipe, the thresholds are
+      wrong — record it and re-run the corpus pass (ROADMAP §11).
+    - Click a **Watch** button; the viewer should open at that second.
+    - A mistake line with no time carries no Watch button. Correct.
+    - Bottom line states what the grades are measured against ("your own
+      recent games in this matchup"). On a fresh install with no history it
+      should say it is using general anchors instead — never claim a
+      comparison that does not exist.
 14. **Heroes tab**: each hero with its portrait, final level, the skill order
     and final items as real icon rows. Hover an icon — the tooltip names the
     skill/item and when.
@@ -147,6 +166,22 @@ Full walkthrough below in §OBS. The checks:
 25. Click **Back to the real game** so the fake result is off the stream.
 26. Click **Open the player view** — an ordinary opaque window for a second
     monitor.
+27. **Per-panel sources.** Click **Copy URL** on the *Head to head* row and
+    paste it into a second Browser Source at the suggested size.
+    - Expect: only that one panel, correctly sized. The main composed source
+      must be unchanged — copying one panel never alters the other URL.
+28. **Post-game reveal.** Tick *Only after a game* under Look, pick 15s,
+    re-copy the main URL and re-paste it into OBS.
+    - Expect on load: the card appears (that is the deliberate
+      "position it without playing a match" behaviour), then slides out after
+      the hold.
+    - Then click **Send a test game to OBS** — it should slide back in, hold,
+      and leave again.
+    - **Now hit Refresh on the Browser Source mid-hold.** It must come back
+      and behave identically. A reveal that only works on a cold load is
+      broken, because OBS refreshes sources on scene activation.
+    - Check the animation itself on a real stream: it should read as calm at
+      broadcast distance. If it draws the eye away from the game, say so.
 
 ---
 
@@ -324,7 +359,15 @@ with a game selected and the drawer closed) run:
 
 Pass = `[]` everywhere. An element that clips via `overflow: hidden` reports
 too — deliberately: clipped content is a fold bug as much as a scrollbar is.
-Last clean run: 5 Aug 2026, both sizes, all four views, all five report tabs.
+Last clean run: 5 Aug 2026, both sizes, all four views, all **six** report
+tabs (Review, Story, Heroes, Economy, Builds, Head to head) — plus the
+rebuilt Stream and Settings panels. Zero console errors.
+
+Note when driving this yourself: the preview's auto-detected identity is
+whichever name appears most often in the sample, and the feed tiles show the
+OPPONENT, so clicking the first tile usually lands on a game that seat is not
+in — where the Review tab correctly does not exist. Click through until the
+verdict reads Victory or Defeat before auditing the report tabs.
 
 ---
 

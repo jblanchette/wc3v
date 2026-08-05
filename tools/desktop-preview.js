@@ -60,7 +60,7 @@ const buildSummary = (out, key, playedAt) => {
   const worldNeutralGroups = (out.world && out.world.neutralGroups) || null;
   const summary = {
     key,
-    schemaVersion: 2,
+    schemaVersion: 3,
     savedAt: Date.now(),
     playedAt,
     patchVersion: (out.replay && out.replay.subheader && out.replay.subheader.version) || null,
@@ -73,6 +73,7 @@ const buildSummary = (out, key, playedAt) => {
     moments: MomentsExtract.extractMoments(out),
     players: {}
   };
+  const combat = MomentsExtract.extractCombat(out);
   for (const slot of Object.keys(out.players || {})) {
     const pd = out.players[slot];
     const rpd = out.replay && out.replay.players && out.replay.players[slot];
@@ -80,6 +81,7 @@ const buildSummary = (out, key, playedAt) => {
     if (rpd.teamId >= 1000) continue;
     summary.players[slot] = SummaryExtract.extractPlayerSummary(pd, rpd, durationMs, worldNeutralGroups);
     summary.players[slot].teamId = rpd.teamId;
+    summary.players[slot].combat = combat[slot] || null;
   }
   return summary;
 };
@@ -167,6 +169,12 @@ window.__TAURI__ = {
         case 'publish_overlay_state': return null;
         case 'overlay_info': return { url: 'http://127.0.0.1:0/overlay?token=preview' };
         case 'check_for_update': return { status: 'unconfigured' };
+        // W3Champions lookups. The stub reports them OFF and refuses every
+        // request, which is the real default — a preview that answered them
+        // would make an opt-in feature look like it ships switched on.
+        case 'w3c_enabled': return false;
+        case 'set_w3c_enabled': return !!(args && args.enabled);
+        case 'w3c_lookup': throw 'online lookups are off';
         default: throw new Error('preview stub: no ' + cmd);
       }
     }

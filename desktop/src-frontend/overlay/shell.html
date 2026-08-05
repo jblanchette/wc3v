@@ -19,6 +19,7 @@
     theme    carved | slate
     scale    number, 0.4–4
     modules  comma list: session,verdict,h2h,moments,build
+    reveal   seconds to hold after a game before hiding again (absent = always on)
 -->
 <style>
   html { font-size: 16px; }
@@ -48,12 +49,55 @@
     .map(function (s) { return s.trim(); })
     .filter(function (s) { return window.OverlayRender.ALL_MODULES.indexOf(s) !== -1; });
 
+  // Reveal mode: stay out of the way, appear when a game lands, hold, hide.
+  // `hold` is in seconds; without the param the card is simply always on,
+  // which is what every existing pasted URL keeps meaning.
+  var hold = parseInt(params.get('reveal'), 10);
+  var reveals = hold > 0;
+  var lastGameId = null;
+  var hideTimer = null;
+
   var root = document.getElementById('ov');
+  if (reveals) document.body.dataset.reveal = 'on';
+
+  function showFor (seconds) {
+    document.body.dataset.shown = 'yes';
+    if (hideTimer) clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () {
+      document.body.dataset.shown = 'no';
+    }, seconds * 1000);
+  }
+
   var es = new EventSource('/events?token=' + encodeURIComponent(token));
   es.onmessage = function (e) {
+    var state;
     try {
-      window.OverlayRender.render(root, JSON.parse(e.data), mods);
-    } catch (err) { /* partial state — wait for the next one */ }
+      state = JSON.parse(e.data);
+    } catch (err) { return; }   // partial state — wait for the next one
+    try {
+      window.OverlayRender.render(root, state, mods);
+    } catch (err) { return; }
+
+    if (!reveals) return;
+    var id = state.game && state.game.gameId;
+    if (!id) {
+      // Nothing to show yet. Hiding an empty card is the whole point of the
+      // mode — "Waiting for a game" is a message for the app window.
+      document.body.dataset.shown = 'no';
+      return;
+    }
+    // A NEW game, not the same one republished. Identity changes and
+    // reconnects both resend everything, and a timestamp cannot tell them
+    // apart — every publish carries a fresh one.
+    //
+    // On a fresh load lastGameId is null, so the last game reveals once and
+    // then hides: that is deliberate, it is the only way to position the
+    // source in OBS without playing a match. It also makes the mode
+    // reload-safe — OBS's "refresh on scene activate" just replays this.
+    if (id !== lastGameId) {
+      lastGameId = id;
+      showFor(hold);
+    }
   };
 })();
 </script>

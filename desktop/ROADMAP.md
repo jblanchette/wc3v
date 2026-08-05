@@ -97,6 +97,71 @@ modules, CSS and renderers unmodified.
 
 ---
 
+## What this app is, in one sentence
+
+**Last game is the product. Coach is Last game aggregated over time. Stream is
+Last game rendered for viewers.** One data model, three renderers.
+
+This sentence exists because the app had three co-equal tabs serving three
+different audiences, which reads as three apps sharing a window. It is also
+the lesson every comparable tool teaches the hard way: Sc2gears' own
+postmortem lists "so many features that many users didn't understand" as a
+cause of death, and Blitz's 2026 reviews say expanding scope made the core
+feel deprioritised. **Anything that does not answer to that sentence does not
+go in.**
+
+The three questions (§5) still hold — they are what the sentence is made of.
+What changed is that they are no longer three independent products.
+
+### What the field does, and what we took from it (Aug 2026)
+
+Surveyed: W3Champions + W3Booster, Hearthstone Deck Tracker/HSReplay,
+Porofessor/Blitz/OP.GG/Mobalytics, Tracker.gg + Overwolf, CaptureAge, the AoE2
+and SC2 replay ecosystems (SC2ReplayStats, Spawning Tool, the dead Sc2gears),
+chess.com/Lichess Game Review, ballchasing.com, SCCT, LeagueBroadcast,
+AoE4World's overlay, FACEIT/Tapit widgets, and the WC3-specific tools
+(WC3AI, wc3stats, war3observer, WC3StreamerOverlay).
+
+**Adopted, and why:**
+
+- **The post-game report is a narrated review, not a dashboard** (chess.com).
+  A verdict, five named grades, and the two or three things to actually fix,
+  each seekable in the viewer. Built: `client/js/GameReport.js`.
+- **Benchmark against yourself first** (Blitz), and the bracket above you
+  later (SC2ReplayStats' Training Center is the single most-cited reason
+  people paid for it). Built: `ProfileAggregate.baseline()` — rolling last-20
+  same-matchup medians.
+- **Calibrate the labels against real data** (chess.com retuned "Blunder"
+  because a label that fires constantly stops meaning anything). Done: the
+  first thresholds fired "you lost the big fight" on 31% of seats over the
+  334-game corpus, which is near-tautological — somebody loses every decisive
+  fight. See "Calibrating the review" below.
+- **Many small single-purpose overlay panels, each with its own URL**
+  (SCCT ships 8, Tapit ships 10; streamers compose two or three). Built:
+  per-panel Copy URL with a suggested source size.
+- **The post-game reveal** (SC2ReplayStats), fixing its top complaint by
+  making the hold configurable, and **showing the last game on first load** so
+  the source can be positioned without playing a match (AoE4World).
+- **Say the OBS gotchas in the UI, not the docs.** "Shutdown source when not
+  visible" must be OFF or the live connection dies with the scene.
+- **Post-game is a feature, not a limitation.** LeagueBroadcast was killed by
+  Vanguard; war3observer's own advice is "restart both programs"; WC3Streamer-
+  Overlay needs a packet sniffer. We read a file the game already wrote — no
+  anti-cheat surface, and nothing on screen can help anyone snipe a live game.
+  That sentence is now in the Stream tab.
+
+**Deliberately not adopted:**
+
+- **Live in-game telemetry** (hero levels, items, resources of the running
+  game). That is W3Booster's lane, it needs memory reading, and it is the
+  exact fragility every dead tool in this survey died of.
+- **Nightbot `$(urlfetch)` commands.** Nightbot fetches server-side and cannot
+  reach 127.0.0.1. Site-side or nothing.
+- **Twitch predictions / Discord bot / Twitch extension.** All need OAuth or a
+  server. Not desktop work.
+- **LAN binding for two-PC streaming.** `overlay.rs` binds 127.0.0.1 only,
+  that property is tested, and it is load-bearing. Not worth trading.
+
 ## What 1.0 means
 
 Not a feeling, and not "when the version numbers look untidy" — old builds are
@@ -141,6 +206,11 @@ is a version whose update path cannot be tested.
      see §6.
 4. **Run the backfill once** (§2) for the real end-to-end rate — and it also
    settles profile identity permanently as a side effect.
+   - **Do this only on a build carrying schema v3** (§11). The `combat`
+     ledger comes out of the full parse and cannot be recovered from a stored
+     summary, so a backfill run on an older build means 3,000 games that each
+     need re-parsing to get it. v3 is in as of Aug 2026; check
+     `SCHEMA_VERSION` in `store.js` before starting the run, not after.
 
 ---
 
@@ -183,6 +253,74 @@ Everything below is wasted effort if the watcher does not fire.
       double-announced new games and could swallow one whose content matched
       a stale hash.
 
+### 11. The review layer — BUILT (Aug 2026)
+
+The narrated read of a game: what happened, how it compares with your own
+normal game, and what to fix. This is the flagship — see the identity
+sentence above.
+
+- [x] **Schema v3 — the `combat` block.** Per seat: every hero kill and death
+      (time, hero, level, `likely` when inferred, `toCreeps`), wipes for and
+      against, and the biggest single trade. Like `moments`, it comes out of
+      `world.battles`, which **exists only in a full parse**, so it is
+      extracted at parse time or never. `MomentsExtract.extractCombat()`,
+      called from `store.js buildSummary`.
+      - Moments is a capped, importance-ranked highlight reel (24 max); the
+        ledger is the COMPLETE count the grades are computed from. Deriving
+        one from the other would silently under-count every game with more
+        than 24 beats.
+      - **This is why v3 had to land before the backfill runs.** A summary
+        stored without it can only be fixed by re-parsing that replay.
+      - Pre-v3 games still show their moments and offer a quiet "Re-read"
+        underneath. Only a pre-v2 game (no moments at all) gets the old
+        full-panel upgrade prompt — hiding real moments behind an upgrade
+        notice helps nobody.
+- [x] **`client/js/GameReport.js`** — dual-runtime, no DOM, no fs, same
+      contract as SummaryExtract/ProfileAggregate (the site's upload flow can
+      reuse it). `grade(summary, slot, baseline)` returns a headline, five
+      pillar grades (Economy / Army / Hero / Map control / Mechanics), up to
+      three named mistakes, up to two highlights, and the benchmark strip.
+      - Each pillar is **a base score plus penalties, not a blend** of
+        sub-scores. Blending pulls every game toward whatever constant the
+        "nothing went wrong" term carries; the first version did that and
+        compressed Economy into a 54–62 band with no spread left to read.
+      - A pillar with no usable signal scores `null` and says why. Nothing is
+        invented.
+- [x] **`ProfileAggregate.baseline(games, name, opts)`** — rolling last-20
+      medians for the same matchup, falling back to all games below n=5 and
+      reporting which scope it used. `excludeKey` keeps the game under review
+      out of its own baseline.
+- [x] **The Review tab**, first and default in the report frame. Grades as
+      values with their note (**no radar** — a polygon is unreadable at 900px
+      and in a screenshot), the benchmark strip, then "What to fix" and "What
+      went right", every cue with a Watch button into the viewer at that
+      second. A cue with no time gets no button rather than a dead one.
+- [x] **One wording source, three renderers.** The headline is computed once
+      in `overlay-state.js` (`readFor`) and appears in the window, the
+      post-game toast and the OBS overlay. The overlay only ever grades the
+      user's own seat — judging a stranger's game it is merely displaying
+      would be indefensible.
+
+#### Calibrating the review
+
+Thresholds are calibrated against the real corpus, not guessed. The check is
+"how often does each label fire over `client/replays/*.wc3v.gz`" — a label
+that fires on most games means nothing, and one that never fires is dead
+weight. Findings from the first pass, all fixed:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `lostFight` fired on 31% of seats | 700g threshold; every game has one decisive trade and somebody loses it | 1200g |
+| Mechanics pinned at 100 for 20% of seats | absolute APM anchor topped out at 70 | 40–320 |
+| Map control pinned at 100 for 11% | camp anchor capped at 6 by 12:00 | 0–10 |
+| Hero blamed in 43% of headlines | expected-level curve reached ~7.75 by 25 min | shallower, capped at 6 |
+| Economy median 44, i.e. the typical game read as below its own average | every supply-cap sample penalised, and being at the cap briefly is just how WC3 is played | one sample of grace |
+
+After: no label above 17%, none at 0%, every pillar's median within a few
+points of 50 with real spread either side. **Re-run this after touching any
+constant** — `tools/test-game-report.js` asserts the shape, but only a corpus
+pass tells you whether the labels still mean anything.
+
 ### 1. Persist parses — DONE (summaries, not full parses)
 
 - [x] Retention decision: the full `.wc3v` is **not** persisted — 3,072 of
@@ -201,6 +339,9 @@ Everything below is wasted effort if the watcher does not fire.
 - [x] Rust commands: `save_parse` (atomic temp+rename, strict key charset),
       `read_parse`, `list_parses`. All async — Defender scans new files on
       write, and a sync command would hold Tauri's main thread.
+- [x] **Schema v3 adds per-player `combat`** — see §11. Same rule as
+      `moments` and the same reason: `world.battles` exists only in a full
+      parse. **Must be current before the backfill runs.**
 - [x] **Schema v2 adds `moments`** — the ranked big beats of the game
       (`client/js/MomentsExtract.js`). This is the one thing in the summary
       that cannot be recovered later: fights live in `world.battles`, which
@@ -373,8 +514,35 @@ Built on SummaryExtract summaries, as required — no new extractor.
       hides exactly the mistake it exists to catch), and the fake game is
       labelled *on the overlay itself* — an unlabelled fake result on a live
       stream would be indefensible.
+- [x] **Per-panel URLs.** Every panel is also a source in its own right, with
+      its own Copy URL button and a stated suggested size — streamers compose
+      two or three small placed sources far more often than they use one tall
+      card. No server work was needed: `?modules=session` was already a
+      single-panel URL, so this is a Stream-screen affordance plus compact
+      CSS. The composed URL is untouched by copying a single panel.
+- [x] **Post-game reveal** (`?reveal=<seconds>`): the card slides in when a
+      game lands, holds, and hides again; off by default, because an overlay
+      that vanishes unannounced is a bug report. Absent param = always on, so
+      every URL already pasted into OBS behaves exactly as before.
+      - "A new game" is detected by `game.gameId` (the content key), NOT by
+        the timestamp: every publish carries a fresh `updatedAt`, so a
+        reconnect or an identity change would otherwise re-trigger the reveal.
+      - On a fresh load the last game reveals once and then hides. That is
+        deliberate — it is the only way to position the source in OBS without
+        playing a match, and it makes the mode reload-safe, so OBS's "refresh
+        when scene becomes active" is a non-event.
+      - Hidden means transparent, not removed: the card keeps its layout so
+        the streamer's placement does not shift when it comes back.
+- [x] **The OBS gotchas are in the UI**, next to the URL, not in a document
+      nobody opens: "Shutdown source when not visible" must be OFF (it unloads
+      the page and drops the SSE connection whenever the scene is not live),
+      and refresh-on-activate is safe because the page bootstraps its whole
+      state on load.
+- [x] **Why this is safe on a stream** is stated on the Stream screen. Every
+      other WC3 overlay reads the game's memory or sniffs its packets; this
+      one reads a finished replay, so nothing on screen can help a sniper.
 - [ ] Point a real OBS Browser Source at it. Transparency, reconnect
-      behaviour and text sizes on stream are unverified until then.
+      behaviour, **and the reveal animation** are unverified until then.
 
 ### 5. UI and visual design — BUILT, then FOCUSED (Aug 2026)
 
@@ -644,6 +812,56 @@ Parsing needs per-map files. Measured: **318.8 MB** for all 202 maps,
 - [ ] "Download the current ladder pool" button to pre-warm. No longer
       blocked — just unbuilt.
 
+### 12. W3Champions lookups — SCAFFOLD BUILT, off by default
+
+The one thing this app can do that no purely-local tool can: W3Champions
+publishes a **public, unauthenticated** REST API, and
+`GET /api/matches/ongoing/{battleTag}` returns the match you are playing
+**right now** — opponent, race, MMR, rank, map. That is pre-game opponent
+scouting with no memory reading, no packet sniffing and no anti-cheat
+surface, which is the single biggest behavioural upgrade available to this
+app: it turns WC3V from a thing you look at afterwards into a thing that is
+open while you play.
+
+Also useful: `/api/players/{tag}/game-mode-stats` (MMR, rank, **quantile**),
+`mmr-rp-timeline`, `game-length-stats`, `/api/player-stats/{tag}/
+race-on-map-versus-race` and `hero-on-map-versus-race`, `/api/matches/search`
+(a full ladder history, i.e. a first-launch backfill of RESULTS), and
+`/api/players/{tag}/aka` (alt accounts).
+
+- [x] **`src-tauri/src/w3c.rs`.** Four properties enforced in the binary, not
+      documented in a README: fails closed unless the opt-in marker file
+      exists; one host, built here from an **allowlisted path** (the webview
+      passes a path, never a URL); GET only, redirects refused; a failure is
+      an error the UI renders as "no online data".
+      - The path check refuses `//evil.example/...`, `..`, backslashes,
+        control characters and absurd lengths — a scheme-relative path would
+        sail past a naive prefix check and reach another host entirely, which
+        would defeat the whole point of taking a path instead of a URL.
+        Four tests cover exactly this.
+      - **Chosen over a webview `fetch`** so the CSP in `tauri.conf.json`
+        stays as it is. Widening `connect-src` would put runtime network
+        access inside the webview permanently, for one feature.
+      - `reqwest` was already in the tree; **still no compression features**
+        (see the trap list — enabling gzip anywhere corrupts the map cache).
+- [x] Settings panel with the disclosure, and the folders panel's privacy
+      copy now names this as the only other thing that can leave the machine.
+      The checkbox re-reads the real state from Rust after every change
+      rather than trusting the click, same as autostart.
+- [ ] **The scout card** — poll `ongoing/{battleTag}` while enabled and the
+      watcher is running; show opponent, race, MMR, rank, map **plus your own
+      local book on them** (`h2hFor`, `buildProfile`). It belongs at the top
+      of Last game, not on Stream: it is question 3, "who is this".
+- [ ] MMR/rank/quantile chip in the Coach head band.
+- [ ] Results overlay from `/api/matches/search` for games whose winner the
+      parser could not read — **decorate in memory at corpus load, never
+      persist into a summary.** Summaries stay pure replay-derived facts.
+- [ ] Opponent tags (Porofessor-style short labels: "Fast expo", "never
+      T3", "on a 5-loss streak"), derived locally, with `aka` for smurfs.
+- **Rule for every consumer**: the API is undocumented and unversioned, so a
+  shape mismatch or a timeout must render exactly as "switched off". No
+  feature may have a W3C-only failure state.
+
 ### 8. Linux / SteamOS
 - [ ] Build and run there at all.
 - [ ] Verify the parser bundle works under WebKitGTK.
@@ -694,6 +912,7 @@ Run any of these with no args for usage.
 | `tools/desktop-preview.js` | Writes `desktop/preview/preview.html`: the real desktop frontend, stubbed Tauri IPC, summaries built from real parsed replays. Iterate on the UI in a browser without building the app. Run `build-desktop-client.js` first. `--games=N` — use 40+ to exercise the trend windows. |
 | `tools/deploy-desktop.js` | Publishes a built installer + `latest.json` to R2. Refuses an unsigned or non-newer build, uploads the installer before the manifest, verifies both afterwards. `--notes="…"` required, `--dry-run` to preview. |
 | `tools/test-profile-aggregate.js` | Profile/coach assertions over a synthetic corpus, including the identity tie-refusal guards. |
+| `tools/test-game-report.js` | Review-layer assertions: pillar ranges, mistake ranking and capping, benchmark direction, and graceful degradation with no baseline / no combat ledger / a missing seat. Asserts the *shape*; only a corpus pass tells you the thresholds still mean anything (§11). |
 | `tools/verify-bundle-parity.js` | Node source vs committed browser bundle. Catches stale bundles and dynamic-require breakage. `--fast` also proves `skipPathfinding` is forwarded. |
 | `tools/check-determinism.js` | Parses N times in clean processes; must report 0 differing leaves. |
 | `tools/diff-wc3v.js` | Structural diff of two parses. `--events` compares build orders as multisets — **use this to judge any parser change**, not the raw leaf count. |
@@ -729,6 +948,16 @@ Run any of these with no args for usage.
   probes for the bucket and falls back to `CreateBucket`, which an
   object-scoped R2 token denies — and the error it prints is
   "AccessDenied: CreateBucket", which reads as a credentials problem.
+- **A grading constant that has not been run over the corpus is a guess.**
+  Every first-pass threshold in `GameReport.js` was wrong in the same
+  direction: too eager. "You lost the big fight" fired on 31% of seats
+  because every game has a decisive trade and somebody loses it. Run the
+  corpus pass (§11) after touching any constant — the unit test asserts the
+  shape and will happily pass with meaningless labels.
+- **`moments` is capped at 24 by importance; the `combat` ledger is not.**
+  Deriving kill/death counts from `moments` silently under-counts any game
+  with more than 24 beats, and at most one moment is emitted per battle.
+  Read `players[slot].combat` for counts, `moments` for the highlight reel.
 - **`momentsFor()` returns its top five in TIME order, not importance order.**
   Reading `[0]` off it to get "the biggest moment" silently gives the earliest
   of the five. Sort `summary.moments` by `importance` yourself.

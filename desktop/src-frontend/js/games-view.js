@@ -372,9 +372,10 @@
     // recreate the 2,400px column this replaced.
 
     // Remembered across game selections: someone stepping through last
-    // night's games comparing economies should not be bounced back to Story
-    // on every click.
-    let activeTab = 'story';
+    // night's games comparing economies should not be bounced back to the
+    // default on every click. Review is where a game opens — "so what?" is
+    // the question, and Story is the evidence you go to next.
+    let activeTab = 'review';
 
     const renderDetail = (summary) => {
       const host = el('detail');
@@ -390,20 +391,27 @@
       const v = viewOf(summary);
       const seat = seatOf(summary);
       const h2h = h2hData(summary, v, seat);
+      const report = reportFor(summary, seat);
 
-      host.appendChild(verdictHead(summary, v, seat, h2h));
+      host.appendChild(verdictHead(summary, v, seat, h2h, report));
       host.appendChild(timingsPanel(v, seat));
 
-      // Tabs are conditional: one that would be empty is not offered.
-      const tabs = [
+      // Tabs are conditional: one that would be empty is not offered. Review
+      // is first and is the default — "what just happened" is the question the
+      // app exists to answer, and the story is the evidence behind the answer.
+      const tabs = [];
+      if (report) {
+        tabs.push({ key: 'review', label: 'Review', build: () => reviewPanel(summary, seat, report) });
+      }
+      tabs.push(
         { key: 'story', label: 'Story', build: () => momentsPanel(summary, seat) },
         { key: 'heroes', label: 'Heroes', build: () => heroesPanel(summary, seat) },
         { key: 'economy', label: 'Economy', build: () => economyPanel(summary, v, seat) },
         { key: 'builds', label: 'Builds', build: () => buildsPanel(summary, seat) }
-      ];
+      );
       if (h2h) tabs.push({ key: 'h2h', label: 'Head to head', build: () => h2hPane(h2h, v) });
 
-      if (!tabs.some(t => t.key === activeTab)) activeTab = 'story';
+      if (!tabs.some(t => t.key === activeTab)) activeTab = tabs[0].key;
 
       const strip = node('div', 'report-tabs seg');
       const body = node('div', 'report-body scroll');
@@ -434,7 +442,7 @@
       '1-base-t2': 'One-base tech'
     };
 
-    const verdictHead = (summary, v, seat, h2h) => {
+    const verdictHead = (summary, v, seat, h2h, report) => {
       const wrap = node('div', 'verdict-band');
       const head = node('div', 'verdict-head');
 
@@ -493,6 +501,16 @@
       if (summary.playedAt) bits.push(new Date(summary.playedAt).toLocaleString());
       meta.appendChild(node('span', null, bits.join(' · ')));
       wrap.appendChild(meta);
+
+      // The one-line read, above the fold. Clicking it goes to the tab that
+      // justifies it — a claim you cannot interrogate is just an assertion.
+      if (report) {
+        const line = node('button', 'verdict-read', report.headline);
+        line.type = 'button';
+        line.title = 'Open the full review';
+        line.addEventListener('click', () => { activeTab = 'review'; renderDetail(summary); });
+        wrap.appendChild(line);
+      }
       return wrap;
     };
 
@@ -520,30 +538,146 @@
       return panel;
     };
 
+    // ── Review — the narrated read of the game ───────────────────────────────
+    //
+    // The one tab that answers "so what?". Grades are relative to YOUR own
+    // rolling median for this matchup (GameReport + ProfileAggregate.baseline),
+    // never to an invented absolute, and every mistake carries the second it
+    // happened so it opens the viewer there.
+
+    const reportFor = (summary, seat) => {
+      if (seat === null || !window.GameReport) return null;
+      const corpus = deps.store.corpus;
+      const v = viewOf(summary);
+      // No corpus yet (first run, still loading) still grades — it just grades
+      // without benchmarks rather than showing nothing.
+      const base = corpus
+        ? PA().baseline(corpus, deps.identityName(),
+          { matchup: v && v.matchup, excludeKey: summary.key })
+        : null;
+      return window.GameReport.grade(summary, seat, base);
+    };
+
+    const reviewPanel = (summary, seat, report) => {
+      const panel = node('section', 'report-pane');
+
+      if (!report) {
+        panel.appendChild(node('p', 'lead', seat === null
+          ? 'Tell WC3V who you are and this game gets a read.'
+          : 'Not enough in this game to review.'));
+        return panel;
+      }
+
+      // The headline is NOT repeated here — the verdict band already carries
+      // it above the fold, and a pane that restates its own heading burns a
+      // line of the one scroller.
+
+      // Grades: the value carries the colour, with the note beside it. No
+      // radar — five numbers with words beat a shape nobody can read off.
+      const grid = node('div', 'grades');
+      for (const g of report.grades) {
+        const cell = node('div', 'grade');
+        cell.appendChild(node('span', 'grade-k', g.label));
+        const val = node('span', 'grade-v', g.score === null ? '—' : String(g.score));
+        if (g.score === null) val.classList.add('is-none');
+        else val.dataset.band = g.score >= 65 ? 'good' : g.score >= 40 ? 'mid' : 'poor';
+        cell.appendChild(val);
+        cell.appendChild(node('span', 'grade-note', g.note));
+        grid.appendChild(cell);
+      }
+      panel.appendChild(grid);
+
+      // Benchmarks — this game against your own median. `dir` is null when
+      // there is no baseline to claim against, and then nothing is coloured.
+      const benched = report.benchmarks.filter(b => b.valueText !== null);
+      if (benched.length) {
+        const bench = node('div', 'benchmarks');
+        for (const b of benched) {
+          const row = node('div', 'benchmark');
+          row.appendChild(node('span', 'benchmark-k', b.label));
+          const val = node('span', 'benchmark-v', b.valueText);
+          if (b.dir) val.dataset.dir = b.dir;
+          row.appendChild(val);
+          row.appendChild(node('span', 'benchmark-base',
+            b.baseText !== null ? `you usually ${b.baseText}` : 'no baseline yet'));
+          bench.appendChild(row);
+        }
+        panel.appendChild(bench);
+      }
+
+      const cueList = (items, className, emptyText) => {
+        const list = node('ul', className);
+        for (const c of items) {
+          const li = node('li', 'cue');
+          li.appendChild(node('span', 'cue-time', c.tf || '—'));
+          li.appendChild(node('span', 'cue-text', c.text));
+          // A cue without a time has nowhere to seek to; the button would be
+          // a lie, so it simply is not offered.
+          if (c.t !== null && c.t !== undefined) {
+            const watch = node('button', 'btn btn-sm', 'Watch');
+            watch.type = 'button';
+            watch.title = `Open the viewer at ${c.tf}`;
+            watch.addEventListener('click', () => deps.onWatch(summary, { t: c.t, tf: c.tf }));
+            li.appendChild(watch);
+          }
+          list.appendChild(li);
+        }
+        if (!items.length) list.appendChild(node('li', 'cue is-empty', emptyText));
+        return list;
+      };
+
+      panel.appendChild(node('h3', 'review-h', 'What to fix'));
+      panel.appendChild(cueList(report.mistakes, 'cues cues-bad',
+        'Nothing stood out as a mistake in this one.'));
+
+      if (report.highlights.length) {
+        panel.appendChild(node('h3', 'review-h', 'What went right'));
+        panel.appendChild(cueList(report.highlights, 'cues cues-good', ''));
+      }
+
+      // Say what the grades are measured against. A number with no stated
+      // reference is the thing this whole tab exists not to be.
+      panel.appendChild(node('p', 'hint', report.baselineScope === 'matchup'
+        ? 'Graded against your own recent games in this matchup.'
+        : report.baselineScope === 'all'
+          ? 'Graded against your own recent games (too few in this matchup yet).'
+          : 'Graded on general anchors — play more games and this compares you with yourself.'));
+
+      return panel;
+    };
+
     // Tab panes carry no headings of their own — the tab button IS the label,
     // and a pane that repeats it burns a line of the one scroller.
     const momentsPanel = (summary, seat) => {
       const panel = node('section', 'report-pane');
 
-      // A summary written before moments existed cannot have them derived —
-      // battles only exist in a full parse. Say so and offer the re-parse,
-      // rather than showing an empty list that reads as "nothing happened".
-      if (deps.store.isStale(summary)) {
-        panel.appendChild(node('p', 'lead',
-          'This game was parsed before moments were recorded. Re-reading it takes ' +
-          'a few seconds and finds the fights.'));
-        const btn = node('button', 'btn', 'Find moments');
+      // A summary written under an older schema is missing something only a
+      // full parse can supply — moments (pre-v2) or the combat ledger (pre-v3).
+      // When the moments themselves are missing, the re-parse IS the panel:
+      // an empty list would read as "nothing happened". When they exist, show
+      // them — hiding real moments behind an upgrade prompt helps nobody —
+      // and offer the re-read quietly underneath.
+      const stale = deps.store.isStale(summary);
+      const reparseBtn = (label) => {
+        const btn = node('button', 'btn', label);
         btn.type = 'button';
         btn.addEventListener('click', () => {
           btn.disabled = true;
           btn.textContent = 'Reading the replay…';
           deps.onReparse(summary);
         });
-        panel.appendChild(btn);
+        return btn;
+      };
+
+      const moments = summary.moments || [];
+      if (stale && !moments.length) {
+        panel.appendChild(node('p', 'lead',
+          'This game was parsed before moments were recorded. Re-reading it takes ' +
+          'a few seconds and finds the fights.'));
+        panel.appendChild(reparseBtn('Find moments'));
         return panel;
       }
 
-      const moments = summary.moments || [];
       if (!moments.length) {
         panel.appendChild(node('p', 'lead', 'Nothing stood out in this one.'));
         return panel;
@@ -574,6 +708,15 @@
         list.appendChild(li);
       }
       panel.appendChild(list);
+
+      if (stale) {
+        const row = node('div', 'row');
+        row.appendChild(node('p', 'hint',
+          'Parsed under an older format — re-read the replay to record its ' +
+          'full combat ledger.'));
+        row.appendChild(reparseBtn('Re-read'));
+        panel.appendChild(row);
+      }
       return panel;
     };
 

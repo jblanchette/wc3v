@@ -88,6 +88,11 @@
     var bits = [g.map, g.mode, fmtDur(g.durationMs)].filter(Boolean);
     box.appendChild(el('div', 'meta', bits.join(' · ')));
 
+    // The one-line read, decided upstream by the same grader the app's Review
+    // tab uses. Absent whenever the seat is not the user's — the overlay never
+    // grades a stranger.
+    if (g.read) box.appendChild(el('div', 'read', g.read));
+
     var t = g.timings || {};
     var grid = el('div', 'timings');
     [['opener', g.heroOpener], ['tier 2', t.t2], ['expand', t.expansion], ['tower', t.firstTower]]

@@ -15,8 +15,12 @@
   // Bump when a stored summary gains a field the UI cannot derive from an
   // older one. v1 → v2 added `moments`, which needs the full parse (battles
   // are not part of SummaryExtract), so a v1 game offers a re-parse instead of
-  // showing a silently empty moment list.
-  const SCHEMA_VERSION = 2;
+  // showing a silently empty moment list. v2 → v3 added per-player `combat`
+  // (the complete hero kill/death ledger, wipes, biggest swing) — same reason,
+  // same source: battles exist only in the full parse. v3 MUST be current
+  // before the history backfill runs, or thousands of games get stored without
+  // the one block a re-parse is the only way to recover.
+  const SCHEMA_VERSION = 3;
 
   window.createStore = (deps) => {
     // deps: invoke, log
@@ -62,12 +66,15 @@
         winner: out.winner || null,
         durationMs,
         neutralCamps: SE.extractNeutralCamps(worldNeutralGroups),
-        // The fights. This is the ONE thing here that cannot be recovered from
-        // a stored summary later — `out.battles` exists only in the full parse
-        // — so it is extracted now, while the parse is still in hand.
+        // The fights. Moments and combat are the two things here that cannot
+        // be recovered from a stored summary later — `out.battles` exists only
+        // in the full parse — so both are extracted now, while the parse is
+        // still in hand. Moments are the capped highlight reel; combat is the
+        // complete per-seat ledger the review layer grades from.
         moments: window.MomentsExtract.extractMoments(out),
         players: {}
       };
+      const combat = window.MomentsExtract.extractCombat(out);
       for (const slot of Object.keys(out.players || {})) {
         const pd = out.players[slot];
         const rpd = out.replay?.players?.[slot];
@@ -77,6 +84,7 @@
         // teamId is not part of the shared summary shape (the compare modal
         // never groups by team); the desktop views do, so carry it alongside.
         summary.players[slot].teamId = rpd.teamId;
+        summary.players[slot].combat = combat[slot] || null;
       }
       return summary;
     };
@@ -197,8 +205,9 @@
         for (const k of keys) stored.add(k);
         return stored.size;
       },
-      // A summary written before `moments` existed. The UI offers a re-parse
-      // rather than pretending the game had no moments.
+      // A summary written under an older schema — missing moments (pre-v2) or
+      // the combat ledger (pre-v3). The UI offers a re-parse rather than
+      // pretending the game had none of either.
       isStale: (summary) => !summary || (summary.schemaVersion || 1) < SCHEMA_VERSION
     };
   };

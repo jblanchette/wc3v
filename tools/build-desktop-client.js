@@ -45,6 +45,9 @@ const SHARED_JS = [
   'SummaryExtract.js',
   'ProfileAggregate.js',
   'MomentsExtract.js',
+  // The per-game review (pillar grades, named mistakes). Reads a stored
+  // summary and a ProfileAggregate baseline, so it loads after both.
+  'GameReport.js',
   // Pure SVG-string chart factories (no DOM) — the desktop's economy/army
   // charts are the same code the site's compare modal draws with.
   'CompareCharts.js'

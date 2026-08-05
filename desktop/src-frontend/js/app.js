@@ -570,6 +570,7 @@ const boot = async () => {
   state.roots = info.roots;
   settingsView.renderRoots();
   settingsView.syncAutostart();
+  settingsView.syncW3c();
 
   // An unreadable store just means everything re-parses; not fatal.
   try {

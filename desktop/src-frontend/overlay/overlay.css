@@ -43,6 +43,35 @@
   overflow: hidden;
 }
 
+/* ── Reveal mode ──────────────────────────────────────────────────────────
+   Only when the page was asked for it (?reveal=N). Without the attribute the
+   card is always on and none of this applies, so every URL pasted into OBS
+   before this existed behaves exactly as it did.
+
+   Slide from the left and fade — no scale, no bounce. This lands on a live
+   broadcast next to a game, and motion that draws the eye is motion that
+   competes with the thing the stream is about. */
+body[data-reveal="on"] .wc3v-ov .card {
+  transition: opacity 320ms ease, transform 320ms ease;
+}
+body[data-reveal="on"][data-shown="no"] .wc3v-ov .card,
+body[data-reveal="on"]:not([data-shown]) .wc3v-ov .card {
+  opacity: 0;
+  transform: translateX(-1.5rem);
+  /* Still laid out, so the source keeps its size in OBS and the streamer's
+     placement does not shift when it comes back. */
+  pointer-events: none;
+}
+body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-reveal="on"] .wc3v-ov .card { transition: opacity 320ms ease; }
+  body[data-reveal="on"][data-shown="no"] .wc3v-ov .card,
+  body[data-reveal="on"]:not([data-shown]) .wc3v-ov .card { transform: none; }
+}
+
 .wc3v-ov .mod + .mod { border-top: 1px solid var(--panel-edge); }
 
 /* ── session ─────────────────────────────────────────────────────────── */
@@ -75,6 +104,14 @@
 .wc3v-ov .verdict .vs { color: var(--dim); }
 .wc3v-ov .verdict .vs b { color: var(--ink); font-weight: 600; }
 .wc3v-ov .meta { padding: 0 0.9rem 0.6rem; color: var(--dim); }
+
+/* The one-line read of the game. Full ink, not --dim: it is the sentence a
+   viewer actually reads, and it sits under the greyed meta line. */
+.wc3v-ov .read {
+  padding: 0 0.9rem 0.6rem;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
 
 /* ── head to head ────────────────────────────────────────────────────── */
 .wc3v-ov .h2h {

@@ -142,9 +142,42 @@
         : 'automatic update checks off', 'ok');
     });
 
+    // W3Champions lookups. Like autostart and unlike the notification
+    // preference, the truth lives outside this window — the Rust side refuses
+    // every request unless its marker file exists — so the checkbox is
+    // re-read from there after every change rather than trusting the click.
+    const syncW3c = async () => {
+      const box = el('w3c-toggle');
+      const out = el('w3c-status');
+      try {
+        const on = await deps.invoke('w3c_enabled');
+        box.checked = !!on;
+        out.textContent = on
+          ? 'On — WC3V may ask W3Champions about battle tags.'
+          : 'Off — nothing is asked of any server about players.';
+      } catch (err) {
+        box.checked = false;
+        out.textContent = 'unavailable in this build';
+      }
+    };
+
+    el('w3c-toggle').addEventListener('change', async (e) => {
+      const want = e.target.checked;
+      try {
+        await deps.invoke('set_w3c_enabled', { enabled: want });
+        deps.log(want
+          ? 'W3Champions lookups on — replays still never leave this machine'
+          : 'W3Champions lookups off', 'ok');
+      } catch (err) {
+        deps.log(`could not change the W3Champions setting: ${deps.errText(err)}`, 'err');
+      }
+      await syncW3c();
+    });
+
     return {
       renderRoots,
       syncRetryButton,
+      syncW3c,
       // The silent boot/interval check. Its FAILURE is not news: a laptop that
       // woke up without a network would otherwise open the Activity drawer on
       // a red line about something the user never asked for.

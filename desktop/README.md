@@ -13,23 +13,36 @@ The window is **a feed of your games**. You finish a match, alt-tab, and the
 read is already done: did I win, what did they do, and where did the game turn.
 Clicking a moment opens it in the 3D viewer on wc3v.com at that second.
 
+One sentence frames every screen: **Last game is the product; Coach is Last
+game aggregated over time; Stream is Last game rendered for viewers.** One
+data model, three renderers. The per-game read itself comes from one shared
+module (`client/js/GameReport.js`), so the window, the post-game notification
+and the OBS overlay can never word the same game differently.
+
 ## Design invariants
 
 These are enforced in code, not just documented. They exist so the app can never
 be mistaken for a cheat and stays trivially auditable.
 
 - Only ever **reads `.w3g` files the game already wrote**. No process injection,
-  no memory reading, no packet inspection, no input automation.
+  no memory reading, no packet inspection, no input automation. This is also
+  why the OBS overlay is safe to have on a live stream: it cannot leak the
+  state of a game in progress, because it never sees one.
 - **No live in-game state.** WC3 writes the replay at match end; that is the only
   data source that exists.
-- **No outbound network calls at runtime.** Nothing dials out. The one socket
-  in the binary is the overlay's loopback **listener** — 127.0.0.1 only,
+- **Your replays never leave this machine.** No upload, no account, no
+  telemetry — not switchable, not configurable, simply absent.
+- **Nothing dials out unless you switch it on.** The one socket the binary
+  opens by itself is the overlay's loopback **listener** — 127.0.0.1 only,
   token-gated, GET-only, read-only routes (`overlay.rs` enforces all four
   properties). OBS Browser Source is a separate Chromium process; this is the
   only offline, read-only bridge to it. "Open in the viewer" opens the user's
-  browser and hands the replay over on loopback — the app itself still makes
-  no outbound request, and nothing is uploaded to a server. (Map data is
-  fetched only when the user explicitly asks.)
+  browser and hands the replay over on loopback — no upload, no server.
+  Three outbound exceptions, all disclosed in Settings: build-order icon art
+  and per-map parse data from `cdn.wc3v.com` (neither carries anything about
+  you), and **optional W3Champions ladder lookups, off by default**
+  (`w3c.rs` — refuses every request unless its opt-in marker file exists,
+  one allowlisted host, GET only, and nothing about your games is sent).
 - **No overlay drawn over the game.** Output is an OBS Browser Source and an
   ordinary window. Nothing is composited onto the game.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
@@ -71,10 +84,13 @@ Each parsed game persists as one gzipped summary under
 keyed by content so the same game re-opened (or found under a second path)
 loads from the store instead of re-parsing. Full parses are deliberately not
 stored; the raw `.w3g` is the source of truth and full viewing re-parses on
-demand. The summary is `SummaryExtract`'s per-player shape plus **`moments`**
-(`MomentsExtract`) — the ranked big beats of the game, which have to be
-extracted at parse time because fights live in `world.battles` and that exists
-only in a full parse.
+demand. The summary is `SummaryExtract`'s per-player shape plus two things
+that **have to be extracted at parse time** because fights live in
+`world.battles`, which exists only in a full parse: **`moments`** (the ranked
+big beats, capped at 24) and per-player **`combat`** (the complete hero
+kill/death ledger, wipes and biggest trade, schema v3). The review layer
+grades from `combat`; `moments` is the highlight reel. Deriving one from the
+other under-counts, so don't.
 
 ## Opening a moment in the viewer
 

@@ -16,6 +16,7 @@
 
 mod overlay;
 mod replays;
+mod w3c;
 mod watcher;
 
 use std::path::{Path, PathBuf};
@@ -811,7 +812,10 @@ fn main() {
             get_autostart,
             set_autostart,
             check_for_update,
-            start_watching
+            start_watching,
+            w3c::w3c_enabled,
+            w3c::set_w3c_enabled,
+            w3c::w3c_lookup
         ])
         .run(tauri::generate_context!())
         .expect("error while running WC3V");

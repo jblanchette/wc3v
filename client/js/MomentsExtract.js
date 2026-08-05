@@ -356,6 +356,101 @@
     return moments;
   }
 
+  // ── Combat ledger ───────────────────────────────────────────────────────────
+
+  // Who is human, and which team each seat is on. Shared by extractMoments and
+  // extractCombat so the two can never disagree about who was in the game.
+  function seatMap (out) {
+    const humanSlots = new Set();
+    const teams = {};
+    for (const slot of Object.keys(out.players || {})) {
+      const p = out.players[slot];
+      if (!p || p.isNeutralPlayer) continue;
+      humanSlots.add(String(slot));
+      teams[String(slot)] = p.teamId;
+    }
+    return { humanSlots, teamOf: (slot) => teams[String(slot)] };
+  }
+
+  /**
+   * Per-seat combat ledger — stored in every summary (schema v3). Like
+   * moments, it has to be extracted at parse time because fights exist only in
+   * the full parse; unlike moments (a capped highlight reel), this is the
+   * COMPLETE count the review layer grades from. Seat-agnostic, keyed by slot.
+   *
+   * @returns { [slot]: { heroKills: [{t, tf, itemId, name, level, likely?}],
+   *                      heroDeaths: [{…, toCreeps?}],
+   *                      wipesFor, wipesAgainst,
+   *                      biggestSwing: {t, tf, swing, won} | null } }
+   */
+  function extractCombat (out) {
+    if (!out) return {};
+    const { humanSlots, teamOf } = seatMap(out);
+    const combat = {};
+    for (const slot of humanSlots) {
+      combat[slot] = { heroKills: [], heroDeaths: [], wipesFor: 0, wipesAgainst: 0, biggestSwing: null };
+    }
+
+    for (const battle of (out.battles || [])) {
+      const summary = battle && battle.summary;
+      if (!summary || !summary.hasLosses) continue;
+      const t = battle.startTime || 0;
+
+      // Every hero death is charged to its owner; the kill is credited to the
+      // hostile humans in the same fight (mirrors fightMoments). No hostile
+      // present means the creeps did it.
+      for (const pid of Object.keys(summary.perPlayer || {})) {
+        const victim = String(pid);
+        if (!humanSlots.has(victim)) continue;
+        const deaths = summary.perPlayer[pid].heroDeaths || [];
+        if (!deaths.length) continue;
+        const victimTeam = teamOf(victim);
+        const killers = [...humanSlots].filter(s => teamOf(s) !== victimTeam &&
+          (battle.participants || []).some(p => String(p.playerId) === s));
+        for (const h of deaths) {
+          const rec = {
+            t,
+            tf: formatMs(t),
+            itemId: h.itemId || null,
+            name: h.displayName || 'Hero',
+            level: h.level || 1
+          };
+          if (h.confidence === 'estimated') rec.likely = true;
+          const death = Object.assign({}, rec);
+          if (!killers.length) death.toCreeps = true;
+          combat[victim].heroDeaths.push(death);
+          for (const k of killers) combat[k].heroKills.push(Object.assign({}, rec));
+        }
+      }
+
+      const verdict = verdictOf(sidesOf(battle, summary, humanSlots, teamOf));
+      if (!verdict) continue;
+      if (summary.engagementType === 'wipe') {
+        for (const s of verdict.winnerSlots) if (combat[s]) combat[s].wipesFor++;
+        for (const s of verdict.loserSlots) if (combat[s]) combat[s].wipesAgainst++;
+      }
+      // The one fight that mattered most to each seat, win or lose. 'even'
+      // trades are excluded for the same reason phrase() refuses to call them.
+      if (verdict.tier !== 'even' && verdict.margin > 0) {
+        const swing = Math.round(verdict.margin);
+        const note = (s, won) => {
+          const c = combat[s];
+          if (c && (!c.biggestSwing || swing > c.biggestSwing.swing)) {
+            c.biggestSwing = { t, tf: formatMs(t), swing, won };
+          }
+        };
+        for (const s of verdict.winnerSlots) note(s, true);
+        for (const s of verdict.loserSlots) note(s, false);
+      }
+    }
+
+    for (const slot of Object.keys(combat)) {
+      combat[slot].heroKills.sort((a, b) => a.t - b.t);
+      combat[slot].heroDeaths.sort((a, b) => a.t - b.t);
+    }
+    return combat;
+  }
+
   // ── Public ──────────────────────────────────────────────────────────────────
 
   /**
@@ -369,15 +464,7 @@
     if (!out) return [];
     const limit = (opts && opts.limit) || DEFAULT_LIMIT;
 
-    const humanSlots = new Set();
-    const teams = {};
-    for (const slot of Object.keys(out.players || {})) {
-      const p = out.players[slot];
-      if (!p || p.isNeutralPlayer) continue;
-      humanSlots.add(String(slot));
-      teams[String(slot)] = p.teamId;
-    }
-    const teamOf = (slot) => teams[String(slot)];
+    const { humanSlots, teamOf } = seatMap(out);
 
     const all = fightMoments(out, humanSlots, teamOf).concat(macroMoments(out));
 
@@ -460,7 +547,7 @@
     return false;
   }
 
-  const api = { extractMoments, phrase, formatMs, HERO_DEATH_VALUE, DEFAULT_LIMIT };
+  const api = { extractMoments, extractCombat, phrase, formatMs, HERO_DEATH_VALUE, DEFAULT_LIMIT };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

@@ -723,6 +723,128 @@ main { min-height: 0; position: relative; }
 .timing-v { display: block; font-size: var(--fs-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
 .timing-v.is-none { color: var(--ink-faint); font-weight: 400; }
 
+/* ── Review ──────────────────────────────────────────────────────────── */
+
+/* The one-line read, under the verdict meta. A button because it goes to the
+   tab that justifies it, but it must read as a sentence, not a control. */
+.verdict-read {
+  display: block;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-lg);
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), text-decoration-color var(--dur) var(--ease);
+}
+.verdict-read:hover { color: var(--ink); text-decoration-color: var(--app-edge); }
+
+.review-h {
+  margin: var(--sp-5) 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Five grades, same cut-well frame as the timings strip so the report reads
+   as one instrument. Deliberately not a radar: a value with its name beside
+   it is legible at 900px and in a screenshot; a polygon is neither. */
+.grades {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--app-line);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.grade {
+  padding: var(--sp-3) var(--sp-2);
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+  text-align: center;
+}
+.grade-k {
+  display: block;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.grade-v {
+  display: block;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+/* Colour carries the judgement — no bar, no pill, no stripe. */
+.grade-v[data-band="good"] { color: var(--verdict-win); }
+.grade-v[data-band="mid"]  { color: var(--ink); }
+.grade-v[data-band="poor"] { color: var(--verdict-loss); }
+.grade-v.is-none { color: var(--ink-faint); font-weight: 400; }
+.grade-note {
+  display: block;
+  margin-top: var(--sp-1);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+
+/* This game against your own median. The value is coloured and the median
+   sits beside it in words — no delta column, no pills. */
+.benchmarks { margin-top: var(--sp-4); }
+.benchmark {
+  display: grid;
+  grid-template-columns: 9rem 5rem 1fr;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--app-line);
+}
+.benchmark:last-child { border-bottom: 0; }
+.benchmark-k {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.benchmark-v {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.benchmark-v[data-dir="ahead"]  { color: var(--verdict-win); }
+.benchmark-v[data-dir="behind"] { color: var(--verdict-loss); }
+.benchmark-base { color: var(--ink-dim); font-size: var(--fs-min); }
+
+/* Mistakes and highlights share a row shape; only the time marker differs. */
+.cues { list-style: none; margin: 0; padding: 0; }
+.cue {
+  display: grid;
+  grid-template-columns: 3.2rem 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--app-line);
+}
+.cue:last-child { border-bottom: 0; }
+.cue-time {
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+}
+.cue-text { overflow-wrap: anywhere; }
+.cue.is-empty { color: var(--ink-dim); grid-template-columns: 1fr; }
+.cues-bad  .cue-time { color: var(--verdict-loss); }
+.cues-good .cue-time { color: var(--verdict-win); }
+
 /* ── Moments ─────────────────────────────────────────────────────────── */
 
 .moments { list-style: none; margin: 0; padding: 0; }
@@ -1125,6 +1247,37 @@ main { min-height: 0; position: relative; }
 /* The panel checkboxes carry a name and a one-line explanation. */
 .check > span { display: grid; gap: 2px; }
 .check .hint { margin: 0; }
+
+/* Each panel is also a source on its own, so its row carries a Copy URL
+   button. The checkbox takes the room and the button sits at the end. */
+.panel-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+.panel-row .check { flex: 1; min-width: 0; }
+.panel-row .btn-sm { flex: none; margin-top: var(--sp-1); }
+
+/* The two OBS source settings that decide whether any of this works. Stated
+   next to the URL, not in a document nobody opens. */
+.setup-h {
+  margin: var(--sp-4) 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.obs-checks { list-style: none; margin: 0; padding: 0; }
+.obs-checks li {
+  display: grid;
+  gap: 2px;
+  padding: var(--sp-2) 0;
+  border-bottom: 1px solid var(--app-line);
+}
+.obs-checks li:last-child { border-bottom: 0; }
+.obs-check-k { color: var(--ink); font-weight: 600; }
+.obs-checks .hint { margin: 0; }
 
 .choices { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
 .choice {

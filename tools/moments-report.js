@@ -101,3 +101,22 @@ if (args.all) {
   console.log(`CUT (${cut.length})`);
   for (const m of cut) console.log(row(m));
 }
+
+// The complete per-seat ledger (summary schema v3) — unlike the capped list
+// above, every hero kill/death counts here. Judge it the same way: if you
+// remember a hero dying and it is not in this table, the extraction is wrong.
+const combat = MomentsExtract.extractCombat(data);
+console.log('');
+console.log('COMBAT LEDGER (stored per player, schema v3)');
+for (const slot of Object.keys(combat)) {
+  const c = combat[slot];
+  const ev = (list) => list.map(h =>
+    `${h.name} L${h.level} @${h.tf}${h.likely ? '?' : ''}${h.toCreeps ? ' (creeps)' : ''}`).join(', ');
+  console.log(`  slot ${slot}  ${nameFor(slot)}`);
+  console.log(`    kills   ${c.heroKills.length ? ev(c.heroKills) : '—'}`);
+  console.log(`    deaths  ${c.heroDeaths.length ? ev(c.heroDeaths) : '—'}`);
+  console.log(`    wipes   for ${c.wipesFor}, against ${c.wipesAgainst}`);
+  console.log(`    biggest ${c.biggestSwing
+    ? `${c.biggestSwing.won ? 'won' : 'lost'} a ${c.biggestSwing.swing}g swing @${c.biggestSwing.tf}`
+    : '—'}`);
+}

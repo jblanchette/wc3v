@@ -396,6 +396,60 @@
     };
   }
 
+  // ── Per-game benchmark baseline ────────────────────────────────────────────
+  //
+  // "How does this game compare with what I normally do" — the rolling
+  // last-N same-matchup medians the game review grades against. Benchmarks
+  // against YOURSELF, deliberately: an absolute target belongs to whoever
+  // invented it, but "your median over the last 20 OvH games" is a fact.
+  //
+  // Falls back from the matchup scope to all games when the matchup is thin
+  // (below MIN_BASELINE) — a claim against 3 games is worse than a claim
+  // against all of them, and `scope` says which one was used. Pass
+  // `excludeKey` with the reviewed game's key: the game under review must
+  // never be inside its own baseline.
+  const MIN_BASELINE = 5;
+
+  function baseline (games, name, opts) {
+    const o = opts || {};
+    const nameLower = normName(name);
+    const windowSize = o.window || TREND_WINDOW;
+
+    const views = [];
+    for (const g of games || []) {
+      if (o.excludeKey && g.key === o.excludeKey) continue;
+      const v = gameView(g, nameLower);
+      if (v) views.push(v);
+    }
+    views.sort((a, b) => (a.playedAt || 0) - (b.playedAt || 0));
+
+    let scoped = o.matchup ? views.filter(v => v.matchup === o.matchup) : views;
+    let scope = o.matchup ? 'matchup' : 'all';
+    if (o.matchup && scoped.length < MIN_BASELINE) {
+      scoped = views;
+      scope = 'all';
+    }
+    const recent = scoped.slice(-windowSize);
+
+    const pick = (sel) => {
+      const xs = recent.map(sel).filter(x => x !== null && x !== undefined);
+      return { median: median(xs), n: xs.length };
+    };
+
+    return {
+      scope,
+      matchup: scope === 'matchup' ? o.matchup : null,
+      games: recent.length,
+      t2: pick(v => v.t2),
+      expansion: pick(v => v.expansion),
+      workersAt5m: pick(v => v.workersAt5m),
+      apmEffective: pick(v => v.apmEffective),
+      expansionRate: recent.length
+        ? pct(recent.filter(v => v.expansionMade).length, recent.length)
+        : 0
+    };
+  }
+
   // ── Coach statements ───────────────────────────────────────────────────────
   //
   // Plain sentences a human would actually say, every one carrying its n.
@@ -506,7 +560,7 @@
 
   // ── Module export (Node) + window export (browser) ─────────────────────────
 
-  const api = { gameView, buildProfile, knownNames, detectPrimaryName, normName, fmtMs };
+  const api = { gameView, buildProfile, baseline, knownNames, detectPrimaryName, normName, fmtMs };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

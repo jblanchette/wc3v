@@ -178,7 +178,9 @@
               nothing about your games is uploaded anywhere.</p>
             <p class="hint">The app does fetch two things from wc3v.com's CDN:
               the icon art for build orders, and map data for a map it has not
-              seen before. Neither carries anything about you or your games.</p>
+              seen before. Neither carries anything about you or your games.
+              The only other thing that ever leaves this machine is a
+              W3Champions ladder lookup, which is off until you switch it on.</p>
             <div id="roots" class="roots"></div>
             <button id="pick-folder" class="btn" type="button">Add a folder…</button>
           </section>
@@ -233,6 +235,30 @@
             </div>
             <p class="hint update-notes" id="update-notes" hidden></p>
           </section>
+
+          <!-- The one thing in this app that talks to a server about players.
+               Off by default, and the refusal is enforced in the binary
+               (src-tauri/src/w3c.rs), not just by this checkbox. -->
+          <section class="panel">
+            <h2>W3Champions</h2>
+            <p class="lead">W3Champions publishes ladder data that a replay
+              cannot contain — MMR, rank, and who you are playing right now.
+              WC3V can read it, but only if you say so.</p>
+            <label class="check">
+              <input type="checkbox" id="w3c-toggle">
+              <span>
+                Look up ladder data
+                <span class="hint">Off by default. When on, WC3V asks
+                  W3Champions about battle tags — yours and your opponents'.
+                  Nothing about your games is sent: no replays, no summaries,
+                  no statistics. It only ever reads.</span>
+              </span>
+            </label>
+            <p class="hint" id="w3c-status"></p>
+            <p class="hint">Turn it off and the app goes back to reading only
+              the files on this machine. Everything except MMR and the live
+              opponent card works either way.</p>
+          </section>
           </div>
 
           <!-- Pinned, not scrolled past. The site carries this line in three
@@ -258,6 +284,7 @@
   <script src="./js/vendor/SummaryExtract.js"></script>
   <script src="./js/vendor/ProfileAggregate.js"></script>
   <script src="./js/vendor/MomentsExtract.js"></script>
+  <script src="./js/vendor/GameReport.js"></script>
   <script src="./js/vendor/CompareCharts.js"></script>
   <script src="./overlay/overlay-render.js"></script>
   <script src="./js/store.js"></script>
