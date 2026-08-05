@@ -1,4 +1,4 @@
-/* Overlay styling — rendered BOTH by the OBS Browser Source (inlined into
+/* Overlay styling, rendered both by the OBS Browser Source (inlined into
    overlay.html by overlay.rs) and by the preview inside the WC3V window
    (loaded as a normal stylesheet). One file, so the preview cannot lie about
    what viewers will see.
@@ -21,7 +21,7 @@
   --ink: #dde4ea;
   --dim: #8a97a3;
   --gold: #a3b8c9;
-  /* Overridden too — leaving these on the carved defaults put moss and rust
+  /* Overridden too. Leaving these on the carved defaults put moss and rust
      on a cool grey panel, which is the one combination this theme exists to
      avoid. Same readings, pulled toward the slate. */
   --win: #6f9f7d;
@@ -48,7 +48,7 @@
    card is always on and none of this applies, so every URL pasted into OBS
    before this existed behaves exactly as it did.
 
-   Slide from the left and fade — no scale, no bounce. This lands on a live
+   Slide from the left and fade. No scale, no bounce. This lands on a live
    broadcast next to a game, and motion that draws the eye is motion that
    competes with the thing the stream is about. */
 body[data-reveal="on"] .wc3v-ov .card {
@@ -176,7 +176,7 @@ body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
   text-align: center;
 }
 
-/* The mark. Deliberately the quietest thing on the card — it is a credit, not
+/* The mark, kept as the quietest thing on the card. It is a credit rather than
    a banner, and it must never compete with the result a viewer is reading.
    Same lockup as the app bar and the site: the "3" carries the accent. */
 .wc3v-ov .mark {

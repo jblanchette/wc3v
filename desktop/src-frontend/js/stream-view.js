@@ -1,32 +1,32 @@
-// Stream screen — everything about getting WC3V onto a broadcast.
+// Stream screen: getting WC3V onto a broadcast.
 //
-// The overlay is served by a loopback HTTP server (127.0.0.1 only, token on
-// every route, GET only) because an OBS Browser Source is a separate Chromium
+// A loopback HTTP server serves the overlay (127.0.0.1 only, token on every
+// route, GET only), because an OBS Browser Source is a separate Chromium
 // process and cannot see this window's state any other way.
 //
 // Two rules this screen exists to satisfy:
 //
-//   1. Nobody should configure an overlay blind. The preview here renders from
-//      the SAME overlay.css and overlay-render.js the Browser Source loads, so
+//   1. Nobody configures an overlay blind. The preview here renders from the
+//      same overlay.css and overlay-render.js the Browser Source loads, so
 //      what is on this screen is what goes on stream.
 //   2. The overlay URL carries the access token, so it goes to the clipboard
-//      and NEVER to the DOM or the log — this window may be on camera.
+//      and never to the DOM or the log. This window may be on camera.
 
 (function () {
   'use strict';
 
   const el = (id) => document.getElementById(id);
 
-  // Each panel is also a source in its own right. Streamers compose two or
+  // Every panel is also a source in its own right. Streamers compose two or
   // three small sources they can place independently far more often than they
-  // use one tall card, so every panel carries its own URL and its own
-  // suggested size — the size is the thing nobody can guess from the UI.
+  // use one tall card, so each carries its own URL and suggested size. The
+  // size is the part nobody can guess from the UI.
   const MODULES = [
-    { key: 'session', label: 'Session score', hint: 'Wins, losses and streak for this sitting', size: '300 × 90' },
-    { key: 'verdict', label: 'Last game', hint: 'Result, opponent, the one-line read and key timings', size: '460 × 260' },
-    { key: 'h2h', label: 'Head to head', hint: 'Your all-time record against that opponent', size: '360 × 90' },
-    { key: 'moments', label: 'Key moments', hint: 'The biggest beats of the game, with timestamps', size: '460 × 260' },
-    { key: 'build', label: 'Build order', hint: 'Your opening, first twelve steps', size: '360 × 400' }
+    { key: 'session', label: 'Session score', size: '300 × 90' },
+    { key: 'verdict', label: 'Last game', size: '460 × 260' },
+    { key: 'h2h', label: 'Head to head', size: '360 × 90' },
+    { key: 'moments', label: 'Key moments', size: '460 × 260' },
+    { key: 'build', label: 'Build order', size: '360 × 400' }
   ];
 
   const THEMES = [
@@ -61,8 +61,8 @@
       theme: 'carved',
       scale: '1',
       // Post-game reveal: show up when a game lands, hold, then get out of the
-      // way. Off by default — an overlay that vanishes is a surprise, and a
-      // surprise on a live stream is a bug report.
+      // way. Off by default, because an overlay that vanishes is a surprise,
+      // and a surprise on a live stream is a bug report.
       reveal: false,
       hold: 20
     };
@@ -79,9 +79,9 @@
     const activeModules = () =>
       prefs.modules || window.OverlayRender.ALL_MODULES.slice();
 
-    // The query string the OBS URL needs. `modules` is only added when the
-    // user has actually narrowed it, so the default URL stays short and an
-    // older pasted URL keeps meaning "everything".
+    // The query string the OBS URL needs. `modules` only appears once the user
+    // has narrowed it, so the default URL stays short and an older pasted URL
+    // keeps meaning "everything".
     //
     // `only` overrides the panel selection for a single-panel source, so
     // copying one panel's URL never disturbs the composed one.
@@ -98,7 +98,7 @@
     };
 
     // The URL carries the access token, so it goes to the clipboard and never
-    // to the DOM, the log or a tooltip — this window may be on camera.
+    // to the DOM, the log or a tooltip. This window may be on camera.
     const copyUrl = async (btn, only, note) => {
       const was = btn.textContent;
       try {
@@ -135,20 +135,17 @@
       const host = el('stream-body');
       host.innerHTML = '';
 
-      // Two columns, each its own scroller: the preview on the left at full
-      // width (it is the point of the screen), the controls stacked on the
-      // right. The view itself never scrolls — the fold rule.
+      // Two columns, each its own scroller. The preview goes left at full
+      // width, since it is the point of the screen, and the controls stack on
+      // the right. The view itself never scrolls, per the fold rule.
       const left = node('div', 'col scroll');
       const right = node('div', 'col scroll');
       host.appendChild(left);
       host.appendChild(right);
 
-      // ── What's on screen ────────────────────────────────────────────────
+      // ── Preview ─────────────────────────────────────────────────────────
       const preview = node('section', 'panel');
-      preview.appendChild(node('h2', null, 'What viewers will see'));
-      preview.appendChild(node('p', 'lead',
-        'This is the real overlay, drawn by the same code the Browser Source ' +
-        'runs. Size and colour here are what OBS gets.'));
+      preview.appendChild(node('h2', null, 'What viewers see'));
       const stage = node('div', 'preview-stage');
       const root = node('div');
       root.id = 'overlay-preview';
@@ -163,23 +160,17 @@
         if (deps.overlayState.isDemo) await deps.overlayState.publish();
         else await deps.overlayState.publishDemo();
         deps.log(deps.overlayState.isDemo
-          ? 'test game pushed to OBS — it is labelled as a preview on the overlay'
+          ? 'test game pushed to OBS, labelled as a preview on the overlay'
           : 'overlay back to your real games', 'ok');
         build();
       });
       demoRow.appendChild(demo);
       preview.appendChild(demoRow);
-      preview.appendChild(node('p', 'hint',
-        'Lets you place and size the source in OBS before you play. The overlay ' +
-        'labels it, so it can never be mistaken for a real result.'));
       left.appendChild(preview);
 
       // ── Panels ──────────────────────────────────────────────────────────
       const mods = node('section', 'panel');
       mods.appendChild(node('h2', null, 'Panels'));
-      mods.appendChild(node('p', 'lead',
-        'Tick what belongs on the card above — or take any one panel on its ' +
-        'own URL and place it wherever you like in OBS.'));
       const on = activeModules();
       for (const m of MODULES) {
         const row = node('div', 'panel-row');
@@ -199,7 +190,7 @@
         label.appendChild(box);
         const text = node('span');
         text.appendChild(node('span', null, m.label));
-        text.appendChild(node('span', 'hint', m.hint));
+        text.appendChild(node('span', 'hint', m.size));
         label.appendChild(text);
         row.appendChild(label);
 
@@ -239,8 +230,6 @@
       revealLabel.appendChild(revealBox);
       const revealText = node('span');
       revealText.appendChild(node('span', null, 'Only after a game'));
-      revealText.appendChild(node('span', 'hint',
-        'Slides in when the replay lands, holds, then hides again'));
       revealLabel.appendChild(revealText);
       look.appendChild(revealLabel);
 
@@ -248,21 +237,12 @@
         look.appendChild(segmented(HOLDS, String(prefs.hold), (k) => {
           prefs.hold = parseInt(k, 10); savePrefs(); build();
         }));
-        look.appendChild(node('p', 'hint',
-          'While it is hidden the source is still connected — nothing to ' +
-          'refresh, and the next game brings it back on its own.'));
       }
       right.appendChild(look);
 
       // ── Connect ─────────────────────────────────────────────────────────
       const setup = node('section', 'panel');
       setup.appendChild(node('h2', null, 'Put it in OBS'));
-      setup.appendChild(node('p', 'lead',
-        'Add a Browser Source and paste the URL. It updates itself the moment a ' +
-        'game finishes — no refresh, no interaction.'));
-      setup.appendChild(node('p', 'lead',
-        'The URL contains your access token. Paste it straight into OBS and keep ' +
-        'it off stream; that is why it is never displayed here.'));
 
       const row = node('div', 'row');
       const copy = node('button', 'btn btn-primary', 'Copy OBS Browser Source URL');
@@ -279,42 +259,19 @@
           .catch(e => deps.log(`player view failed: ${deps.errText(e)}`, 'err')));
       row.appendChild(player);
       setup.appendChild(row);
-      setup.appendChild(node('p', 'hint', 'Suggested source size: 460 × 640.'));
 
-      // The two OBS settings that decide whether this works, stated where the
-      // URL is copied rather than in a document nobody opens. Both are real
-      // failures we would otherwise get bug reports for: a source that unloads
-      // between scenes drops the live connection, and a background left on the
-      // page shows a black box on the stream.
-      setup.appendChild(node('h3', 'setup-h', 'Two settings in the source'));
-      const checks = node('ul', 'obs-checks');
-      const check = (text, why) => {
-        const li = node('li');
-        li.appendChild(node('span', 'obs-check-k', text));
-        li.appendChild(node('span', 'hint', why));
-        checks.appendChild(li);
-      };
-      check('Leave “Shutdown source when not visible” OFF',
-        'It unloads the page whenever the scene is not live, which drops the ' +
-        'connection that keeps this updating.');
-      check('“Refresh browser when scene becomes active” is safe either way',
-        'The overlay reloads its whole state on load, so a refresh costs nothing.');
-      setup.appendChild(checks);
-
+      // The URL is a credential and the source setting is a real failure mode.
+      // Both stay, where the URL gets copied, rather than in a document nobody
+      // opens. Everything else that used to sit here was explanation.
       setup.appendChild(node('p', 'hint',
-        'Nothing else to configure — the page is transparent on its own, so ' +
-        'there is no custom CSS to paste.'));
+        'The URL contains your access token. Keep it off stream.'));
+      setup.appendChild(node('p', 'hint', 'Suggested size: 460 × 640.'));
       setup.appendChild(node('p', 'hint',
-        'Only games detected while WC3V is running count toward the session ' +
-        'score — clicking through your history never changes what is on stream.'));
-
-      // Why this is safe to have on a stream at all. Worth stating: every
-      // other WC3 overlay reads the game's memory or sniffs its packets, and
-      // viewers have learned to be suspicious of both.
+        'Turn off “Shutdown source when not visible” in the source, or the ' +
+        'overlay stops updating whenever the scene is not live.'));
       setup.appendChild(node('p', 'hint',
-        'Everything here is read from the replay Warcraft III already saved, ' +
-        'after the game has ended — nothing is read from the running game, so ' +
-        'nothing on screen can help anyone snipe you mid-match.'));
+        'Everything here comes from a replay the game already saved, after it ' +
+        'ended. Nothing on screen can help anyone snipe you.'));
       right.appendChild(setup);
 
       renderPreview();

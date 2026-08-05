@@ -1,11 +1,11 @@
-// Settings — folders, history parsing, startup, updates.
+// Settings: folders, history parsing, startup, updates, ladder lookups.
 //
-// This is where the machinery went. It used to be the front page, which meant
-// the app opened on a file browser and a log instead of on your games.
+// This is where the machinery went. It used to be the front page, so the app
+// opened on a file browser and a log.
 //
-// NEVER render a filesystem path. They contain the user's account name and this
-// window is aimed at streamers. Folders are "Replay folder 1/2" and the raw
-// path stays in state, out of the DOM as well as off screen.
+// NEVER render a filesystem path. Paths contain the user's account name and
+// this window is aimed at streamers. Folders are "Replay folder 1/2" and the
+// raw path stays in state, out of the DOM as well as off screen.
 
 (function () {
   'use strict';
@@ -20,19 +20,20 @@
   };
 
   window.createSettingsView = (deps) => {
-    // deps: invoke, log, backfill, onScan(path), roots(), addRoot(root), errText
+    // deps: invoke, log, backfill, onScan(path), roots(), addRoot(root),
+    //       errText, identityName(), onW3cChange(enabled)
 
     const renderRoots = () => {
       const host = el('roots');
       host.innerHTML = '';
       const roots = deps.roots();
       if (!roots.length) {
-        host.appendChild(node('div', 'empty', 'No Warcraft III replay folders found. Add one below.'));
+        host.appendChild(node('div', 'empty', 'No replay folders found.'));
         return;
       }
       roots.forEach((r, i) => {
-        // Index, not path — keeps the raw path out of the DOM as well as off
-        // screen. The click handler closes over the index instead.
+        // Index, not path. The click handler closes over the index, so the
+        // path stays out of the DOM.
         const row = node('div', 'root');
         row.appendChild(node('span', 'root-name', `Replay folder ${i + 1}`));
         row.appendChild(node('span', 'root-meta', `${r.replay_count.toLocaleString()} replays`));
@@ -70,7 +71,7 @@
     el('autostart-toggle').addEventListener('change', async (e) => {
       const wanted = e.target.checked;
       try {
-        // Trust the OS, not the click: re-read the real state afterwards, so a
+        // Trust the OS over the click: re-read the real state afterwards, so a
         // silently-refused registry write cannot leave the box lying.
         const actual = await deps.invoke('set_autostart', { enabled: wanted });
         e.target.checked = actual;
@@ -81,9 +82,9 @@
       }
     });
 
-    // Local preference only — no OS state to reconcile, unlike autostart. The
-    // OS permission is asked for at the moment of the first real notification,
-    // not here: a prompt on a settings screen has no context to justify it.
+    // A local preference with no OS state behind it, unlike autostart. The OS
+    // permission gets asked for at the first real notification. A prompt raised
+    // from a settings screen has no context to justify it.
     el('notify-toggle').checked = deps.notifyEnabled();
     el('notify-toggle').addEventListener('change', (e) => {
       deps.setNotifyEnabled(e.target.checked);
@@ -92,10 +93,9 @@
         : 'game notifications off', 'ok');
     });
 
-    // An available update is shown, never applied on its own. This app lives in
-    // the tray while you play: a background installer would close the window,
-    // raise UAC and steal focus mid-game. Checking is automatic; patching is a
-    // decision.
+    // An available update is shown and never applied on its own. This app sits
+    // in the tray while you play, and a background installer would close the
+    // window and raise UAC mid-game.
     const showAvailable = (version, notes) => {
       el('check-update').textContent = `Install ${version}`;
       el('check-update').dataset.install = '1';
@@ -119,9 +119,9 @@
           out.textContent = 'updates are not configured for this build';
         } else if (r.status === 'available') {
           showAvailable(r.version, r.notes);
-          deps.log(`update ${r.version} available — click again to install`, 'ok');
+          deps.log(`update ${r.version} available; click again to install`, 'ok');
         } else if (r.status === 'installed') {
-          out.textContent = `installed ${r.version} — restart to apply`;
+          out.textContent = `installed ${r.version}, restart to apply`;
           deps.log(`update ${r.version} installed; restart WC3V to apply it`, 'ok');
           el('update-notes').hidden = true;
         }
@@ -142,23 +142,29 @@
         : 'automatic update checks off', 'ok');
     });
 
-    // W3Champions lookups. Like autostart and unlike the notification
-    // preference, the truth lives outside this window — the Rust side refuses
-    // every request unless its marker file exists — so the checkbox is
-    // re-read from there after every change rather than trusting the click.
+    // W3Champions lookups. Like autostart, the truth lives outside this window:
+    // the Rust side refuses every request unless its marker file exists. So the
+    // checkbox is re-read from there after every change, and everything that
+    // polls hears the answer through onW3cChange.
     const syncW3c = async () => {
       const box = el('w3c-toggle');
       const out = el('w3c-status');
+      let on = false;
       try {
-        const on = await deps.invoke('w3c_enabled');
-        box.checked = !!on;
-        out.textContent = on
-          ? 'On — WC3V may ask W3Champions about battle tags.'
-          : 'Off — nothing is asked of any server about players.';
+        on = !!(await deps.invoke('w3c_enabled'));
+        box.checked = on;
+        out.textContent = '';
+        // The live-match lookup keys off a ladder identity. A name saved
+        // outside W3Champions has no tag, and nothing would ever appear.
+        const me = deps.identityName();
+        if (on && me && !/#\d+$/.test(me)) {
+          out.textContent = `Live matches need a battle tag. "${me}" has no #number.`;
+        }
       } catch (err) {
         box.checked = false;
         out.textContent = 'unavailable in this build';
       }
+      deps.onW3cChange(on);
     };
 
     el('w3c-toggle').addEventListener('change', async (e) => {
@@ -166,7 +172,7 @@
       try {
         await deps.invoke('set_w3c_enabled', { enabled: want });
         deps.log(want
-          ? 'W3Champions lookups on — replays still never leave this machine'
+          ? 'W3Champions lookups on; replays still never leave this machine'
           : 'W3Champions lookups off', 'ok');
       } catch (err) {
         deps.log(`could not change the W3Champions setting: ${deps.errText(err)}`, 'err');
@@ -178,9 +184,9 @@
       renderRoots,
       syncRetryButton,
       syncW3c,
-      // The silent boot/interval check. Its FAILURE is not news: a laptop that
-      // woke up without a network would otherwise open the Activity drawer on
-      // a red line about something the user never asked for.
+      // The silent boot and interval check. A failure here is not news: a
+      // laptop that woke without a network would otherwise force the Activity
+      // drawer open on a red line nobody asked for.
       async checkQuietly () {
         try {
           const r = await deps.invoke('check_for_update', { install: false });
@@ -188,7 +194,6 @@
         } catch (e) { /* offline is normal; say nothing */ }
       },
       async syncAutostart () {
-        // Reflect the real OS setting rather than assuming a default.
         try {
           el('autostart-toggle').checked = await deps.invoke('get_autostart');
         } catch (e) {

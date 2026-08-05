@@ -16,7 +16,7 @@
 //!
 //! 3. **`LastReplay.w3g` grace window.** Reforged writes each game to
 //!    `Autosaved\Multiplayer\Replay_<stamp>.w3g` *and* to `LastReplay.w3g`,
-//!    and the two are NOT byte-identical — verified against a real corpus,
+//!    and the two are not byte-identical. Verified against a real corpus,
 //!    where no autosave even shared LastReplay's size. The content hash can
 //!    therefore never collapse them, and without special handling every game
 //!    would be announced twice. A settled `LastReplay.w3g` is held back for a
@@ -53,7 +53,7 @@ pub struct Detected {
     pub path: String,
     pub file_name: String,
     pub size: u64,
-    /// Dedupe hash (xxh3, same as the scan) — empty when the size never
+    /// Dedupe hash (xxh3, same as the scan). Empty when the size never
     /// collided with another file and the content was never read.
     pub hash: String,
     pub interesting: bool,
@@ -67,7 +67,7 @@ pub enum Note {
 }
 
 /// Begin watching `roots`. Returns how many roots are being watched.
-/// Idempotent — calling twice will not start a second watcher.
+/// Idempotent. Calling twice will not start a second watcher.
 pub fn start(app: AppHandle, roots: Vec<PathBuf>, index_path: PathBuf) -> Result<usize, String> {
     {
         let mut started = STARTED.lock().unwrap();
@@ -145,14 +145,14 @@ fn watch_loop(
     // Seed from what is already on disk, so starting the app does not
     // announce the user's entire history as "new games".
     //
-    // The scan hashes only files whose SIZE collides with another file —
+    // The scan hashes only files whose size collides with another file, so
     // two thirds of the corpus is never read. So we cannot seed a set of
     // hashes and compare against it. Instead we keep size → paths, and
     // only hash when a new file's size actually collides with something,
     // which mirrors the scan's own rule and is almost always zero work.
     let mut by_size: HashMap<u64, Vec<PathBuf>> = HashMap::new();
     let mut hash_cache: HashMap<PathBuf, String> = HashMap::new();
-    // One dedupe pass over ALL roots, not one per root — dedupe saves the
+    // One dedupe pass over all roots rather than one per root, because dedupe
     // hash index when it finishes, so per-root passes would write it N times.
     let mut metas: Vec<replays::ReplayFile> = Vec::new();
     for root in &roots {
@@ -216,7 +216,7 @@ fn watch_loop(
             pending.remove(&path);
 
             // The file was just (re)written, so anything remembered about it
-            // is stale — LastReplay.w3g in particular is overwritten by every
+            // is stale. LastReplay.w3g in particular is overwritten by every
             // game. A stale cached hash would compare the OLD content: that
             // both double-announces the new game and could swallow a real one.
             hash_cache.remove(&path);
@@ -259,7 +259,7 @@ fn watch_loop(
             if is_last_replay(&path) {
                 // Different bytes from its autosave twin, so the hash above
                 // cannot have collapsed it. If the twin already announced,
-                // this is the same game — drop it. Otherwise hold it in case
+                // this is the same game, so drop it. Otherwise hold it in case
                 // the twin is still being written.
                 let twin_announced = last_regular_announce
                     .map(|t| now.duration_since(t) < last_replay_grace)
@@ -277,7 +277,7 @@ fn watch_loop(
         }
 
         // A held LastReplay whose grace expired had no autosave twin
-        // (autosaving can be turned off) — it is the only record of that
+        // (autosaving can be turned off), it is the only record of that
         // game, so announce it.
         let expired: Vec<PathBuf> = deferred
             .iter()
@@ -354,7 +354,7 @@ mod tests {
         let (root, index) = temp_root("debounce");
         let rx = start_test_watcher(&root, &index);
 
-        // Progressive write with gaps shorter than the settle window — the
+        // Progressive write with gaps shorter than the settle window. The
         // way the game writes. Announcing before the last chunk lands means
         // the debounce is broken and a truncated replay would be parsed.
         let file = auto(&root, "Replay_2026_08_03_1200.w3g");
@@ -446,7 +446,7 @@ mod tests {
             .expect("autosave never announced");
         assert_eq!(d.file_name, "Replay_2026_08_03_1500.w3g");
 
-        // The game also writes LastReplay.w3g — DIFFERENT bytes and size,
+        // The game also writes LastReplay.w3g with different bytes and size,
         // exactly as observed on a real corpus, so the hash cannot catch it.
         fs::write(root.join("LastReplay.w3g"), vec![0x55u8; 20 * 1024]).unwrap();
         assert!(

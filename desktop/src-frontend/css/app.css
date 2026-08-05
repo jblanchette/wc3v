@@ -1,28 +1,29 @@
 /* ============================================================
-   app.css — WC3V desktop.
+   app.css, WC3V desktop.
 
    Consumes client/css/tokens.css (copied to css/vendor/tokens.css by
    tools/build-desktop-client.js). This file adds only what the desktop
    needs on top; it is NOT a second design system.
 
    REGISTER: the same sandwich wc3v.com already is. tokens.css ships two
-   families — the site's navy chrome (--bg / --surface / --text) and the
-   viewer's warm carved fixtures (--vc-* rails, --dom-* cast-bronze). On
-   the site, navy chrome wraps a warm viewer; this window does the same.
+   families. One is the site's navy chrome (--bg / --surface / --text). The
+   other is the viewer's warm carved fixtures (--vc-* rails, --dom-* cast
+   bronze). On the site, navy chrome wraps a warm viewer, and this window does
+   the same.
 
      .appbar and its furniture  →  NAVY. It is the brand surface, and it
                                    carries the same wordmark as the site.
      everything inside <main>   →  WARM. Games are a Warcraft fixture.
 
-   That line is the rule. Do not creep navy below the app bar, and do not
-   put --accent or --gold on a warm surface — warm gold is --dom-gold.
+   That line is the rule. Keep navy above the app bar, and keep --accent and
+   --gold off warm surfaces. Warm gold is --dom-gold.
 
-   The one thing tokens.css does not carry is warm INK — its text ramp
-   (#e8eaf0 → #6b7290) is tuned against navy and reads blue on #17150f.
-   The --ink-* tokens below are that gap, and nothing else new.
+   tokens.css carries no warm ink. Its text ramp (#e8eaf0 to #6b7290) is tuned
+   against navy and reads blue on #17150f. The --ink-* tokens below fill that
+   gap, and nothing else here is new.
 
    ART DIRECTION (enforced, not decorative):
-     • earthy, muted, heraldic — painted banners and carved stone
+     • earthy, muted, heraldic. Painted banners and carved stone
      • NO glow: no shadow halos, no text-shadow bloom, no filter flares
      • depth comes from a hard dark outline + a 1px struck highlight
        + inset shadow. That is the whole vocabulary.
@@ -33,14 +34,14 @@
 
 :root {
   /* Warm surfaces, deepest → highest. All from the viewer chrome family. */
-  --app-well:    var(--vc-well);     /* #0b0805 — page bed, insets      */
+  --app-well:    var(--vc-well);     /* #0b0805  page bed, insets       */
   --app-bg:      #131009;            /* between --vc-well and --vc-rail-2 */
-  --app-panel:   var(--vc-rail-2);   /* #17150f — cards                 */
-  --app-panel-2: var(--vc-rail);     /* #1e1b16 — raised / hover        */
-  --app-line:    var(--vc-hairline); /* #2f2819 — dividers              */
-  --app-edge:    var(--vc-edge);     /* #453a25 — lit edges, borders    */
+  --app-panel:   var(--vc-rail-2);   /* #17150f  cards                  */
+  --app-panel-2: var(--vc-rail);     /* #1e1b16  raised / hover         */
+  --app-line:    var(--vc-hairline); /* #2f2819  dividers               */
+  --app-edge:    var(--vc-edge);     /* #453a25  lit edges, borders     */
 
-  /* Warm ink ramp — the gap in tokens.css described above. */
+  /* Warm ink ramp, the gap in tokens.css described above. */
   --ink:      #E8E0D2;
   --ink-2:    #BFB49F;
   --ink-dim:  #9A8F7D;
@@ -50,11 +51,11 @@
      sits in the same paintbox as the dominance gauge. Never --ok/--bad:
      those are the site's mint/salmon, which glow against warm brown. */
   --verdict-win:  var(--dom-green);  /* moss    */
-  --verdict-loss: #A65340;           /* rust — bronze family, desaturated */
+  --verdict-loss: #A65340;           /* rust, bronze family, desaturated */
   --verdict-none: var(--dom-grey);   /* ash     */
 
-  /* Race, in the carved paintbox. The HUE is the data — a WC3 player reads
-     blue/red/green/purple instantly, so it has to survive — but tokens.css's
+  /* Race, in the carved paintbox. The hue is the data, since a WC3 player
+     reads blue/red/green/purple instantly, so it has to survive. tokens.css's
      --race-H/O/E/U are the in-game colours at full saturation and they glow
      against warm brown, which this file forbids. Same hues, same order,
      pulled down into the --dom-* family. */
@@ -111,7 +112,7 @@ body {
 }
 .scroll::-webkit-scrollbar-thumb:hover { background: var(--app-edge); }
 
-/* ── App bar — the navy half ──────────────────────────────────────────
+/* ── App bar: the navy half ───────────────────────────────────────────
    This bar is also the window's title bar (decorations: false). It uses
    the site's chrome tokens so that opening the app and opening wc3v.com
    land in the same place. No backdrop-filter: nothing sits behind a
@@ -121,7 +122,7 @@ body {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  /* No right padding — the caption controls sit flush to the window edge,
+  /* No right padding. The caption controls sit flush to the window edge,
      the way every Windows title bar puts them. */
   padding: 0 0 0 var(--page-gutter);
   height: 56px;
@@ -135,13 +136,13 @@ body {
 
 .appbar-spacer { flex: 1; align-self: stretch; }
 
-/* The canonical mark. Identical to .site-wordmark in client/css/main.css —
+/* The canonical mark, identical to .site-wordmark in client/css/main.css.
    same size, weight, tracking and the "3" in --accent. */
 .wordmark {
   font-size: var(--fs-h2);
   font-weight: 900;
   letter-spacing: 0.08em;
-  /* 1.2, not 1 — at 1 the line box is shorter than the font's own ascent +
+  /* 1.2 rather than 1. At 1 the line box is shorter than the font's ascent +
      descent, which reads as a 4px overflow in the fold audit. The bar centres
      it either way. */
   line-height: 1.2;
@@ -174,12 +175,12 @@ body {
 .wctl-close:hover { background: #B23A2A; color: #fff; }
 .wctl svg { width: 10px; height: 10px; }
 
-/* The settings gear — same chrome family as the caption controls, but it is
+/* The settings gear. Same chrome family as the caption controls, though it is
    an app control, so it gets a fuller glyph and a pressed state. */
 .wctl-gear svg { width: 18px; height: 18px; }
 .wctl-gear.is-active { background: var(--surface-2); color: var(--text); }
 
-/* Update indicator. Information, not an alarm — so it wears the chrome accent
+/* Update indicator. Information rather than an alarm, so it wears the accent
    and not --warn or --bad. Nothing here is wrong; there is simply a newer
    version, and the app is still perfectly usable if it is ignored forever. */
 .update-chip {
@@ -268,7 +269,7 @@ body {
 .session-score i { color: var(--ink-faint); font-style: normal; padding: 0 2px; }
 .session-streak { color: var(--gold-deep); font-size: var(--fs-min); font-weight: 600; }
 
-/* Left-anchored beside the wordmark, the way the site's nav links are —
+/* Left-anchored beside the wordmark, the way the site's nav links are.
    not floated to the far right. */
 .nav { display: flex; gap: var(--sp-1); }
 
@@ -298,9 +299,81 @@ main { min-height: 0; position: relative; }
 .view { display: none; height: 100%; min-height: 0; }
 .view.is-active { display: grid; }
 
-.view-games { grid-template-columns: var(--rail-w) 1fr; }
+/* Row 1 is the scout card and collapses to nothing while it is hidden, which
+   is nearly always. Row 2 is the pair of columns. */
+.view-games {
+  grid-template-columns: var(--rail-w) 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.view-games > .feed-col,
+.view-games > .detail-col { grid-row: 2; }
 .view-profile { grid-template-rows: auto minmax(0, 1fr); }
 .view-stream, .view-settings { grid-template-rows: minmax(0, 1fr); }
+
+/* ── Scout card ──────────────────────────────────────────────────────────
+   Who you are playing right now (W3Champions) over what your own games say
+   about them (local corpus). Spans both columns and wraps rather than
+   clipping, because the row is auto-height. */
+
+/* Height is the scarce thing here. This band sits on top of a report frame
+   that already fits the 900x600 minimum exactly, so it stays as short as two
+   readable lines allow and the fold audit is run with it on screen
+   (`desktop-preview.js --w3c`). */
+.scout {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0;
+  padding: var(--sp-2) var(--sp-5);
+  background: var(--app-panel);
+  border-bottom: 1px solid var(--app-line);
+  box-shadow: var(--cut);
+}
+
+.scout-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.scout-live {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut-in);
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.scout-vs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-dim);
+  font-size: var(--fs-lg);
+}
+.scout-more { color: var(--ink-faint); font-size: var(--fs-min); }
+.scout-ladder { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.scout-map { margin-left: auto; color: var(--ink-dim); }
+
+.scout-book {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3);
+  margin: 0;
+  color: var(--ink-dim);
+}
+.scout-h2h { font-weight: 700; font-variant-numeric: tabular-nums; }
+.scout-h2h[data-v="win"]  { color: var(--verdict-win); }
+.scout-h2h[data-v="loss"] { color: var(--verdict-loss); }
+.scout-h2h[data-v="even"] { color: var(--dom-gold); }
+.scout-first { color: var(--ink-faint); }
 
 /* ── Stream & Settings: two columns, each its own scroller ───────────────
    The view frame never scrolls; the columns do. */
@@ -365,7 +438,7 @@ main { min-height: 0; position: relative; }
 .feed-filter input::placeholder { color: var(--ink-faint); }
 .feed-filter input:focus { border-color: var(--app-edge); }
 /* The UA's search-clear glyph is a light circle that ignores every colour in
-   this file. Redrawn rather than hidden — deleting it would take away the
+   this file. Redrawn rather than hidden, because deleting it takes away the
    only pointer route back to an unfiltered feed. Masked so it inherits a
    colour; the SVG is inline, so the page still makes no requests. */
 .feed-filter input::-webkit-search-cancel-button {
@@ -487,7 +560,7 @@ main { min-height: 0; position: relative; }
 }
 
 /* Verdict tile. A carved plaque, not an edge stripe (single-edge accents
-   are forbidden) — the letter is the signal and the colour reinforces it. */
+   are forbidden). The letter is the signal and the colour reinforces it. */
 .verdict-tile {
   display: grid;
   place-items: center;
@@ -519,7 +592,7 @@ main { min-height: 0; position: relative; }
 .matchup { display: inline-flex; align-items: center; gap: 3px; }
 
 /* Race marks. The glyphs are our own heraldic SVGs (race-icons.js), never
-   the game's art. Register: control iconography — a glyph riding inside a
+   the game's art. Register is control iconography, a glyph riding inside a
    chip, same exemption as the caption controls and the 20px moment glyphs.
    Standalone-as-content it wears the 36px .race-tile instead. */
 .race-mark {
@@ -606,7 +679,7 @@ main { min-height: 0; position: relative; }
 /* "Open in viewer" rides the verdict line, pushed to its far end. */
 .verdict-head > .btn-primary { margin-left: auto; }
 
-/* The all-time record against this opponent — carved chip, opens the tab. */
+/* The all-time record against this opponent. A carved chip, opens the tab. */
 .h2h-chip {
   min-height: var(--ico-sm);
   padding: 0 var(--sp-3);
@@ -646,11 +719,11 @@ main { min-height: 0; position: relative; }
   border-radius: var(--radius);
   box-shadow: var(--cut);
 }
-/* Panes carry no chrome of their own — the body is the panel. */
+/* Panes carry no chrome of their own. The body is the panel. */
 .report-pane .lead { margin: 0 0 var(--sp-3); color: var(--ink-2); }
 
 /* A player name that goes somewhere. Underlined like a reference, not
-   glowing like a web link — carved register. */
+   glowing like a web link. Carved register. */
 .name-link {
   padding: 0;
   background: none;
@@ -695,7 +768,7 @@ main { min-height: 0; position: relative; }
 }
 .panel .lead { margin: 0 0 var(--sp-3); color: var(--ink-2); }
 
-/* Timing strip — six cut wells in one frame. Fixed six-across: auto-fit
+/* Timing strip: six cut wells in one frame. Fixed six-across, because auto-fit
    wraps to two rows at narrow widths, and a second row is a band the fold
    budget does not have. */
 .timings {
@@ -785,7 +858,7 @@ main { min-height: 0; position: relative; }
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
-/* Colour carries the judgement — no bar, no pill, no stripe. */
+/* Colour carries the judgement. No bar, no pill, no stripe. */
 .grade-v[data-band="good"] { color: var(--verdict-win); }
 .grade-v[data-band="mid"]  { color: var(--ink); }
 .grade-v[data-band="poor"] { color: var(--verdict-loss); }
@@ -799,7 +872,7 @@ main { min-height: 0; position: relative; }
 }
 
 /* This game against your own median. The value is coloured and the median
-   sits beside it in words — no delta column, no pills. */
+   sits beside it in words. No delta column, no pills. */
 .benchmarks { margin-top: var(--sp-4); }
 .benchmark {
   display: grid;
@@ -939,7 +1012,7 @@ main { min-height: 0; position: relative; }
 .build-list .n { overflow-wrap: anywhere; }
 
 /* ── Heroes ──────────────────────────────────────────────────────────────
-   Portrait, level, skill order, final items — the summary has carried all of
+   Portrait, level, skill order, final items. The summary has carried all of
    it since day one. Identity icons (which hero, which skill, which item) are
    the game's own art from the CDN; everything else stays carved. */
 
@@ -976,10 +1049,10 @@ main { min-height: 0; position: relative; }
 
 /* ── Economy charts ──────────────────────────────────────────────────────
    Drawn by the shared CompareCharts factory (ci-chart-*). Warm styling here:
-   you are gold, the opponent lapis — the same pairing as the trend plots and
+   you are gold and the opponent lapis, the same pairing as the trend plots and
    the site's compare modal, so "which line am I" never has to be relearned.
    Axis text is authored at 12px in a 720-unit viewBox; at the narrowest
-   detail column (~548px inner) that renders ≈9px — small, but it is a
+   detail column (~548px inner) that renders ≈9px, small but still a
    gridline caption duplicated by the tooltip, not content. */
 
 .chart-block { margin-bottom: var(--sp-4); }
@@ -1151,7 +1224,7 @@ main { min-height: 0; position: relative; }
   padding: var(--sp-1) 0;
   cursor: pointer;
 }
-/* Carved, not the UA's. accent-color only tints the CHECKED fill — the empty
+/* Carved rather than the UA's. accent-color only tints the checked fill. The
    box stayed the platform's near-white square, which on a dark panel is the
    most conspicuous thing on the screen. The row already clears --hit-min, so
    the control itself does not need to. */
@@ -1178,7 +1251,7 @@ main { min-height: 0; position: relative; }
   background: linear-gradient(180deg, #86ab68, var(--dom-green));
   box-shadow: var(--cut);
 }
-/* The tick is drawn, not a glyph — a ✓ character sits differently in every
+/* The tick is drawn rather than a glyph, since a ✓ character sits differently
    font the system might fall back to. */
 .check input::after {
   content: '';
@@ -1257,27 +1330,6 @@ main { min-height: 0; position: relative; }
 }
 .panel-row .check { flex: 1; min-width: 0; }
 .panel-row .btn-sm { flex: none; margin-top: var(--sp-1); }
-
-/* The two OBS source settings that decide whether any of this works. Stated
-   next to the URL, not in a document nobody opens. */
-.setup-h {
-  margin: var(--sp-4) 0 var(--sp-2);
-  color: var(--ink-faint);
-  font-size: var(--fs-min);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.obs-checks { list-style: none; margin: 0; padding: 0; }
-.obs-checks li {
-  display: grid;
-  gap: 2px;
-  padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--app-line);
-}
-.obs-checks li:last-child { border-bottom: 0; }
-.obs-check-k { color: var(--ink); font-weight: 600; }
-.obs-checks .hint { margin: 0; }
 
 .choices { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
 .choice {
@@ -1373,11 +1425,11 @@ main { min-height: 0; position: relative; }
 /* ── Trend plots ─────────────────────────────────────────────────────────
    Three small plots, one measure each. Never one plot with two y-axes: win
    rate is a percentage and T2 is a duration, and sharing an axis would invent
-   a relationship out of the scaling. One series per plot, so no legend — the
+   a relationship out of the scaling. One series per plot, so no legend. The
    heading is the label. Grid and axes are omitted rather than drawn faintly:
    at this size the endpoints carry the reading and a grid would be noise. */
 
-/* Three sparks side by side — the trends band is one fixed-height row of the
+/* Three sparks side by side. The trends band is one fixed-height row of the
    Coach dashboard, not a column of plots. */
 .trend-plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
 .trend-plot h3 {

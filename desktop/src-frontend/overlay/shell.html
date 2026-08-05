@@ -7,10 +7,10 @@
   Served by the Rust loopback server, which inlines overlay.css and
   overlay-render.js into this shell at request time (they are separate files so
   the live preview inside the WC3V window can render from exactly the same
-  source — a preview drawn by different code is a preview that can lie).
+  source, because a preview drawn by different code is a preview that can lie).
 
   Rendered by an OBS Browser Source or an ordinary browser tab (player view).
-  Entirely self-contained: no external fonts, scripts or requests — the only
+  Entirely self-contained. No external fonts, scripts or requests, and the only
   network activity is the same-origin EventSource this page opens.
 
   URL params:
@@ -73,7 +73,7 @@
     var state;
     try {
       state = JSON.parse(e.data);
-    } catch (err) { return; }   // partial state — wait for the next one
+    } catch (err) { return; }   // partial state; wait for the next one
     try {
       window.OverlayRender.render(root, state, mods);
     } catch (err) { return; }
@@ -82,18 +82,18 @@
     var id = state.game && state.game.gameId;
     if (!id) {
       // Nothing to show yet. Hiding an empty card is the whole point of the
-      // mode — "Waiting for a game" is a message for the app window.
+      // mode. "Waiting for a game" is a message for the app window.
       document.body.dataset.shown = 'no';
       return;
     }
     // A NEW game, not the same one republished. Identity changes and
     // reconnects both resend everything, and a timestamp cannot tell them
-    // apart — every publish carries a fresh one.
+    // apart, because every publish carries a fresh one.
     //
     // On a fresh load lastGameId is null, so the last game reveals once and
     // then hides: that is deliberate, it is the only way to position the
     // source in OBS without playing a match. It also makes the mode
-    // reload-safe — OBS's "refresh on scene activate" just replays this.
+    // reload-safe, so OBS's "refresh on scene activate" replays this.
     if (id !== lastGameId) {
       lastGameId = id;
       showFor(hold);

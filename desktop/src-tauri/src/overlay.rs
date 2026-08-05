@@ -1,13 +1,13 @@
 //! Loopback overlay server for OBS.
 //!
-//! OBS Browser Source is a separate Chromium process — it cannot see the
+//! OBS Browser Source is a separate Chromium process and cannot see the
 //! webview's state. The only bridge that works offline and stays read-only is
 //! a local HTTP endpoint. Rules, enforced here rather than documented:
 //!
 //!   • Binds 127.0.0.1 ONLY. Never 0.0.0.0, never a real interface.
 //!   • Every route requires the per-install token. No token, no bytes.
 //!   • GET only. Three routes. No write path, no CORS headers (the page and
-//!     its EventSource are same-origin, so none are needed — and their
+//!     its EventSource are same-origin, so none are needed, and their
 //!     absence means a hostile website cannot read these endpoints either).
 //!   • State flows one way: webview → `publish` → SSE clients. The server
 //!     never computes anything; it relays the latest state blob.
@@ -26,7 +26,7 @@ use std::time::{Duration, Instant};
 /// dependency at runtime (and no path to traverse).
 ///
 /// It is three files rather than one because the live preview inside the WC3V
-/// window renders from the SAME css and renderer — a preview drawn by separate
+/// window renders from the same css and renderer. A preview drawn by separate
 /// code is a preview that can lie about what OBS will show. They are stitched
 /// back into one self-contained document here.
 const OVERLAY_SHELL: &str = include_str!("../../src-frontend/overlay/shell.html");
@@ -54,7 +54,7 @@ const HANDOFF_MAX: usize = 4;
 
 /// A replay staged for the browser. Reads do NOT consume it: the launcher page
 /// is an ordinary web page a user can reload, and a single-use entry turns a
-/// reload into a dead link for no security gain — the token already gates the
+/// reload into a dead link for no security gain, since the token already gates
 /// route, and anything holding the token can read /state and /overlay anyway.
 /// Bounded lifetime and count do the actual work here.
 struct Handoff {
@@ -62,14 +62,14 @@ struct Handoff {
     bytes: Vec<u8>,
     /// Carried here rather than in the launcher URL. They used to be query
     /// parameters, which made the visible address three times longer for no
-    /// reason — the server already knows both.
+    /// reason: the server already knows both.
     at_ms: Option<u64>,
     key: String,
     staged_at: Instant,
 }
 
 pub struct Overlay {
-    /// 0 when the server failed to bind — commands must report, not panic.
+    /// 0 when the server failed to bind. Commands report rather than panic.
     pub port: u16,
     token: String,
     latest: Mutex<String>,
@@ -124,7 +124,7 @@ fn load_or_create(path: &Path, create: impl FnOnce() -> String) -> String {
 }
 
 /// Start the server. The token persists per install so the OBS URL survives
-/// reinstalls of the scene; the port persists so it survives app restarts —
+/// reinstalls of the scene. The port persists so it survives app restarts,
 /// if another process took it meanwhile, a fresh ephemeral port is used and
 /// the user has to re-copy the URL (logged, not silent).
 pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
@@ -179,7 +179,7 @@ pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
 }
 
 impl Overlay {
-    /// The OBS Browser Source URL. Contains the token — hand it to the
+    /// The OBS Browser Source URL. Contains the token, so hand it to the
     /// clipboard, never to the DOM (it would end up on stream).
     pub fn url(&self) -> String {
         format!("http://127.0.0.1:{}/overlay?token={}", self.port, self.token)
@@ -193,8 +193,8 @@ impl Overlay {
     /// Stage a replay for the browser and return the launcher URL.
     ///
     /// Chrome blocks a public page (wc3v.com) from reaching a loopback server
-    /// at all — both `fetch` and an iframe were measured hanging, then aborted
-    /// — so the browser has to START on this origin. The launcher page fetches
+    /// at all. Both `fetch` and an iframe were measured hanging and then
+    /// aborting, so the browser has to start on this origin. The launcher fetches
     /// the bytes same-origin and hands them to the site through a cross-origin
     /// postMessage, which needs no CORS and crosses private → public, the
     /// direction browsers do allow.
@@ -207,7 +207,7 @@ impl Overlay {
         }
         // Unguessable, because this id is now the ONLY credential on the two
         // handoff routes. It used to be a counter ("h1", "h2") and was safe
-        // only because the overlay token also had to be in the URL — which
+        // only because the overlay token also had to be in the URL, which
         // meant every "open in viewer" wrote that permanent token into the
         // browser's history, where it stayed. This id expires in ten minutes
         // and opens nothing else.
@@ -260,7 +260,7 @@ impl Overlay {
         clients.retain_mut(|c| c.write_all(msg.as_bytes()).and_then(|_| c.flush()).is_ok());
     }
 
-    /// Timing-independent comparison — loopback timing attacks are mostly
+    /// Timing-independent comparison. Loopback timing attacks are mostly
     /// theoretical, but the constant-time fold costs nothing.
     fn token_ok(&self, presented: &str) -> bool {
         let a = self.token.as_bytes();
@@ -276,8 +276,8 @@ impl Overlay {
 ///
 /// Headers rather than query parameters, so the address the user actually sees
 /// stays `…/open?h=<id>` instead of also carrying a content key and a seek
-/// timestamp. Both values are our own — the key is a size-and-hash string and
-/// `at` is a number — but the key is sanitised anyway, because a header value
+/// timestamp. Both values are our own, since the key is a size-and-hash string
+/// and `at` is a number. The key is sanitised anyway, because a header value
 /// containing CRLF is a response-splitting bug.
 fn respond_handoff(stream: &mut TcpStream, body: &[u8], at_ms: Option<u64>, key: &str) {
     let safe_key: String = key
@@ -359,19 +359,19 @@ fn handle(mut stream: TcpStream, ov: Arc<Overlay>) {
 
     // Three kinds of route, two credentials, and one that needs neither.
     //
-    //   /open     — a static document. It carries no token, no replay and no
+    //   /open     is a static document. It carries no token, no replay and no
     //               state of any kind; everything it needs it fetches. So it
     //               is served to any loopback caller, which also means an
     //               EXPIRED link still gets the page and its "click Watch
     //               again in WC3V" message instead of a bare 404.
-    //   /handoff  — the replay itself. Gated by that staging's own id: 64
+    //   /handoff  is the replay itself, gated by that staging's own id: 64
     //               unpredictable bits, dead after ten minutes, unlocking
     //               exactly one replay and nothing else.
-    //   the rest  — the per-install token, which is permanent and reads
+    //   the rest  use the per-install token, which is permanent and reads
     //               everything on this server.
     //
     // The handoff id exists precisely so the token does not have to travel.
-    // This URL ends up in an address bar, in history, in a synced profile —
+    // This URL ends up in an address bar, in history, in a synced profile,
     // and the token used to be in it, on every single "open in viewer".
     if path == "/handoff" {
         if !ov.handoff_exists(&param("h")) {
@@ -458,7 +458,7 @@ mod tests {
         assert!(get(ov.port, "/events?token=").starts_with("HTTP/1.1 403"));
         // An unknown path is refused before anything else looks at it.
         assert!(get(ov.port, "/whatever").starts_with("HTTP/1.1 403"));
-        // The replay is gated too, by a different credential — see
+        // The replay is gated too, by a different credential. See
         // the_replay_is_gated_by_its_staged_id_not_the_token.
     }
 
@@ -494,7 +494,7 @@ mod tests {
     }
 
     /// The overlay is three files stitched into one document. If a placeholder
-    /// is ever renamed on one side only, the page still serves 200 — it just
+    /// is ever renamed on one side only, the page still serves 200. It just
     /// arrives with no styling or no renderer, which looks like a broken OBS
     /// source rather than a broken build. Assert the seam.
     #[test]
@@ -524,7 +524,7 @@ mod tests {
             .starts_with("HTTP/1.1 404"));
 
         // The launcher PAGE is a static document with nothing in it, so it is
-        // served regardless — which is what lets an expired link still explain
+        // served regardless, which is what lets an expired link still explain
         // itself instead of returning a bare 404.
         assert!(get(ov.port, "/open").starts_with("HTTP/1.1 200"));
         assert!(get(ov.port, "/open?h=expired").starts_with("HTTP/1.1 200"));

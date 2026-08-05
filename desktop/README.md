@@ -1,62 +1,62 @@
 # WC3V Desktop
 
 Watches your Warcraft III replay folders, parses each game locally the moment it
-finishes, and (eventually) drives an OBS-ready overlay.
+finishes, and drives an OBS-ready overlay.
 
 **Status: functional.** Discovery, scanning, watching, local parsing, summary
-persistence, the backfill engine, the profile/coach layer, the OBS overlay, the
-games UI and the "open this moment in the viewer" handoff are all built. A real
-game has been detected and parsed end to end; a real OBS has not yet rendered
-the overlay. See `ROADMAP.md`.
+persistence, the backfill engine, the profile and coach layer, the OBS overlay,
+the games UI, the W3Champions scout card and the "open this moment in the
+viewer" handoff are all built. A real game has been detected and parsed end to
+end. No real OBS has rendered the overlay yet. See `ROADMAP.md`.
 
-The window is **a feed of your games**. You finish a match, alt-tab, and the
-read is already done: did I win, what did they do, and where did the game turn.
-Clicking a moment opens it in the 3D viewer on wc3v.com at that second.
+The window is a feed of your games. You finish a match, alt-tab, and the read is
+already done: did I win, what did they do, where did the game turn. Clicking a
+moment opens it in the 3D viewer on wc3v.com at that second.
 
-One sentence frames every screen: **Last game is the product; Coach is Last
-game aggregated over time; Stream is Last game rendered for viewers.** One
-data model, three renderers. The per-game read itself comes from one shared
-module (`client/js/GameReport.js`), so the window, the post-game notification
-and the OBS overlay can never word the same game differently.
+Every screen answers to one sentence. **Last game is the product. Coach is Last
+game aggregated over time. Stream is Last game rendered for viewers.** One data
+model, three renderers. The per-game read comes from one shared module
+(`client/js/GameReport.js`), so the window, the post-game notification and the
+OBS overlay can never word the same game differently.
 
 ## Design invariants
 
-These are enforced in code, not just documented. They exist so the app can never
-be mistaken for a cheat and stays trivially auditable.
+Enforced in code rather than documented. They exist so the app can never be
+mistaken for a cheat and stays trivially auditable.
 
 - Only ever **reads `.w3g` files the game already wrote**. No process injection,
-  no memory reading, no packet inspection, no input automation. This is also
-  why the OBS overlay is safe to have on a live stream: it cannot leak the
-  state of a game in progress, because it never sees one.
-- **No live in-game state.** WC3 writes the replay at match end; that is the only
-  data source that exists.
-- **Your replays never leave this machine.** No upload, no account, no
-  telemetry — not switchable, not configurable, simply absent.
-- **Nothing dials out unless you switch it on.** The one socket the binary
-  opens by itself is the overlay's loopback **listener** — 127.0.0.1 only,
-  token-gated, GET-only, read-only routes (`overlay.rs` enforces all four
-  properties). OBS Browser Source is a separate Chromium process; this is the
-  only offline, read-only bridge to it. "Open in the viewer" opens the user's
-  browser and hands the replay over on loopback — no upload, no server.
-  Three outbound exceptions, all disclosed in Settings: build-order icon art
-  and per-map parse data from `cdn.wc3v.com` (neither carries anything about
-  you), and **optional W3Champions ladder lookups, off by default**
-  (`w3c.rs` — refuses every request unless its opt-in marker file exists,
-  one allowlisted host, GET only, and nothing about your games is sent).
+  no memory reading, no packet inspection, no input automation. That is also why
+  the OBS overlay is safe on a live stream: it cannot leak the state of a game in
+  progress, because it never sees one.
+- **No live in-game state.** WC3 writes the replay at match end, and that file is
+  the only data source that exists.
+- **Your replays never leave this machine.** No upload, no account, no telemetry.
+  Not switchable, not configurable, absent.
+- **Nothing dials out unless you switch it on.** The one socket the binary opens
+  by itself is the overlay's loopback listener, on 127.0.0.1 only, token-gated,
+  GET-only, with read-only routes. `overlay.rs` enforces all four properties. An
+  OBS Browser Source is a separate Chromium process, and this is the only
+  offline read-only bridge to it. "Open in the viewer" opens the user's browser
+  and hands the replay over on loopback, with no upload and no server. Three
+  outbound exceptions exist, all disclosed in Settings: build-order icon art and
+  per-map parse data from `cdn.wc3v.com`, neither of which carries anything about
+  you, and **optional W3Champions ladder lookups, off by default** (`w3c.rs`
+  refuses every request unless its opt-in marker file exists, allows one host,
+  sends GET only, and transmits nothing about your games).
 - **No overlay drawn over the game.** Output is an OBS Browser Source and an
   ordinary window. Nothing is composited onto the game.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
   `read_map_file` canonicalise their argument and refuse anything outside a
   registered replay root or the local map cache. The parse store commands
-  (`save_parse` / `read_parse`) accept only a `<size>-<hash>` key — digits,
-  hex and a dash — so no path fragment can ever reach them.
+  (`save_parse` and `read_parse`) accept only a `<size>-<hash>` key of digits,
+  hex and a dash, so no path fragment can reach them.
 - No accounts, no telemetry, no paywall. GPLv3, same as the parser.
 
 ## Architecture
 
 There is **no parser in this app**. The existing browser parser bundle
-(`client/js/vendor/wc3v-parser.bundle.js`) runs unmodified in a Web Worker
-inside the Tauri webview — one parser, one behaviour, verified by
+(`client/js/vendor/wc3v-parser.bundle.js`) runs unmodified in a Web Worker inside
+the Tauri webview, so there is one parser with one behaviour, verified by
 `tools/verify-bundle-parity.js`.
 
 ```
@@ -74,37 +74,38 @@ Rust  ── discovery / watching / scoped reads / hashing / parse store / overl
         (handoff.html; see "Opening a moment" below)
 ```
 
-The frontend is a coordinator (`js/app.js`) plus one module per concern:
-`store` (parse store + corpus), `identity`, `games-view` (feed + detail),
-`profile-view`, `stream-view`, `settings-view`, `replay-index` (content key →
-file), `backfill`, `overlay-state`.
+The frontend is a coordinator (`js/app.js`) plus one module per concern: `store`
+(parse store and corpus), `identity`, `games-view` (feed and report),
+`profile-view`, `stream-view`, `settings-view`, `replay-index` (content key to
+file), `backfill`, `overlay-state`, `w3c` (ladder client) and `scout` (the live
+match card).
 
 Each parsed game persists as one gzipped summary under
-`<app_data>/replays/<size>-<xxh3>.summary.json.gz` — single-digit KB per game,
-keyed by content so the same game re-opened (or found under a second path)
-loads from the store instead of re-parsing. Full parses are deliberately not
-stored; the raw `.w3g` is the source of truth and full viewing re-parses on
-demand. The summary is `SummaryExtract`'s per-player shape plus two things
-that **have to be extracted at parse time** because fights live in
-`world.battles`, which exists only in a full parse: **`moments`** (the ranked
-big beats, capped at 24) and per-player **`combat`** (the complete hero
-kill/death ledger, wipes and biggest trade, schema v3). The review layer
-grades from `combat`; `moments` is the highlight reel. Deriving one from the
-other under-counts, so don't.
+`<app_data>/replays/<size>-<xxh3>.summary.json.gz`, single-digit KB per game,
+keyed by content so the same game re-opened or found under a second path loads
+from the store instead of re-parsing. Full parses are deliberately not stored.
+The raw `.w3g` is the source of truth and full viewing re-parses on demand.
+
+The summary is `SummaryExtract`'s per-player shape plus two things that have to
+be extracted at parse time, because fights live in `world.battles` and that
+exists only in a full parse. **`moments`** is the ranked highlight reel, capped
+at 24. Per-player **`combat`** is the complete hero kill and death ledger, wipes
+and biggest trade, added in schema v3. The review layer grades from `combat`.
+Deriving one from the other under-counts, so don't.
 
 ## Opening a moment in the viewer
 
 Clicking a moment opens the real 3D viewer on wc3v.com, seeked to that second
-(`?local=<id>&at=<ms>`). The route it takes is not the obvious one, and the
-obvious one is impossible:
+(`?local=<id>&at=<ms>`). The route it takes is not the obvious one, because the
+obvious one is impossible.
 
 **Browsers block a public page from reaching 127.0.0.1.** Measured against the
-live loopback server from an `https://wc3v.com` tab: a `fetch` hangs pending
-and never settles, an iframe ends in `net::ERR_ABORTED`. So the site cannot
-pull the replay from the app, and the app cannot embed the site to push it.
+live loopback server from an `https://wc3v.com` tab: a `fetch` hangs pending and
+never settles, an iframe ends in `net::ERR_ABORTED`. The site cannot pull the
+replay from the app, and the app cannot embed the site to push it.
 
-Instead the browser **starts** on the loopback origin, where reading the replay
-is same-origin and unremarkable, and pushes it out to the site:
+Instead the browser starts on the loopback origin, where reading the replay is
+same-origin and unremarkable, and pushes it out to the site:
 
 ```
 app  ──open_in_viewer──►  127.0.0.1/open   ──postMessage(bytes)──►  wc3v.com/handoff
@@ -121,14 +122,14 @@ the same game skips both the handoff and the re-parse.
 
 The overlay is authored as three files (`overlay/shell.html`, `overlay.css`,
 `overlay-render.js`) and stitched into one self-contained document by
-`overlay.rs`. That split exists so the Stream screen's live preview renders
-from the same css and renderer the Browser Source loads — a preview drawn by
-separate code is a preview that can lie.
+`overlay.rs`. That split exists so the Stream screen's live preview renders from
+the same css and renderer the Browser Source loads. A preview drawn by separate
+code is a preview that can lie.
 
 ## Replay folder layout
 
-Verified against a real install — the obvious guess is wrong. There is **no**
-`Documents\Warcraft III\Replays`:
+Verified against a real install, because the obvious guess is wrong. There is
+**no** `Documents\Warcraft III\Replays`:
 
 ```
 Documents\Warcraft III\BattleNet\<accountId>\Replays\
@@ -139,16 +140,17 @@ Documents\Warcraft III\BattleNet\<accountId>\Replays\
       └── Multiplayer\       ladder + multiplayer  ← the bulk
 ```
 
-`<accountId>` is per Battle.net account and there is usually more than one (`0`
-holds offline/local games), so all of `BattleNet\*` is enumerated. Reforged
-auto-saves every game as `Replay_YYYY_MM_DD_HHMM.w3g`, so nothing is lost by
-default. Dedupe is by **content hash**, because a nested duplicate folder tree
-exists in the wild and `LastReplay.w3g` is not byte-identical to its autosave.
+`<accountId>` is per Battle.net account and there is usually more than one, with
+`0` holding offline and local games, so all of `BattleNet\*` gets enumerated.
+Reforged auto-saves every game as `Replay_YYYY_MM_DD_HHMM.w3g`, so nothing is
+lost by default. Dedupe is by content hash, because a nested duplicate folder
+tree exists in the wild and `LastReplay.w3g` is not byte-identical to its
+autosave.
 
 ## Running it
 
-**Users** double-click an installer and never see a terminal. **You**, from
-the repo root:
+Users double-click an installer and never see a terminal. You, from the repo
+root:
 
 ```sh
 npm run desktop         # run it
@@ -156,17 +158,17 @@ npm run desktop:build   # produce the installer
 npm run desktop:test    # profile assertions + Rust suite
 ```
 
-One-time: Rust (MSVC toolchain on Windows) and `cargo install tauri-cli
+One-time setup: Rust (MSVC toolchain on Windows) and `cargo install tauri-cli
 --version "^2.0" --locked`. If a fresh terminal cannot find `cargo`, it is in
 `%USERPROFILE%\.cargo\bin`.
 
-Run `npm run build:parser` first if you changed `lib/` or `helpers/` —
-otherwise the app silently uses the old parser.
+Run `npm run build:parser` first if you changed `lib/` or `helpers/`, or the app
+silently uses the old parser.
 
-Both desktop scripts assemble `desktop/dist` (frontend + committed parser
-bundle) and stage the ladder map pool into the installer, so a fresh install
-parses ladder games offline with no extra steps. Cutting and shipping a
-release, including how updates are signed and served: **`RELEASING.md`**.
+Both desktop scripts assemble `desktop/dist` from the frontend and the committed
+parser bundle, and stage the ladder map pool into the installer, so a fresh
+install parses ladder games offline with no extra steps. Cutting and shipping a
+release, including how updates are signed and served, is in **`RELEASING.md`**.
 
-Once installed, the app lives in the tray: closing the window keeps it
-watching for replays, and it can start with the OS.
+Once installed, the app lives in the tray. Closing the window keeps it watching
+for replays, and it can start with the OS.

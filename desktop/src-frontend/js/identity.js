@@ -1,25 +1,26 @@
 // Which player is "you".
 //
-// Every verdict in the app depends on this, so getting it wrong silently
-// reports wins as losses. It got shipped wrong once already: detection ran over
-// the parsed store (one game on a fresh install) and a prefilled text box then
-// committed the arbitrary first name, so the app decided the user was their
-// opponent and called a loss a victory.
+// Every verdict depends on this, so getting it wrong silently reports wins as
+// losses. It shipped wrong once: detection ran over the parsed store, which
+// held one game on a fresh install, and a prefilled text box committed the
+// arbitrary first name. The app decided the user was their opponent and called
+// a loss a victory.
 //
-// Nothing in the .w3g format marks which seat saved the replay. But the account
-// owner is in EVERY game they played and opponents appear once or twice, so
-// across a sample of autosaved replays one name dominates absolutely. That is
-// the signal, and it comes from the replay HEADERS alone — no game parse.
+// Nothing in the .w3g format marks which seat saved the replay. The account
+// owner is in every game they played and opponents appear once or twice, so
+// across a sample of autosaved replays one name dominates. That signal comes
+// out of the replay headers alone, with no game parse.
 //
-// Only autosaved replays are sampled: the Replays root also holds downloaded
+// Only autosaved replays get sampled. The Replays root also holds downloaded
 // and manually saved games the user was never in, which would poison the count.
 
 (function () {
   'use strict';
 
   const SAMPLE = 40;
-  // The owner should be in essentially every sampled game. Anything less means
-  // the sample is mixed (shared PC, downloaded replays) — ask rather than guess.
+  // The owner should be in nearly every sampled game. Less than that means the
+  // sample is mixed, from a shared PC or downloaded replays, so ask instead of
+  // guessing.
   const MIN_SHARE = 0.6;
 
   const el = (id) => document.getElementById(id);
@@ -44,7 +45,7 @@
       if (pool.length < 3) return null;
 
       // Spread the sample across the whole history rather than taking the
-      // newest N — a recent smurf run or a borrowed PC shouldn't decide this.
+      // newest N. A recent smurf run or a borrowed PC should not decide this.
       const step = Math.max(1, Math.floor(pool.length / SAMPLE));
       const sample = [];
       for (let i = 0; i < pool.length && sample.length < SAMPLE; i += step) {
@@ -66,7 +67,7 @@
               counts.set(key, cur);
             }
             read++;
-          } catch (e) { /* unreadable or odd header — the sample absorbs it */ }
+          } catch (e) { /* an odd header; the sample absorbs it */ }
         }
       } finally {
         worker.terminate();
@@ -91,9 +92,8 @@
       el('identity-name').textContent = known || 'not set';
       el('identity-btn').dataset.set = known ? '1' : '0';
 
-      // The picker is ALWAYS available — a wrong auto-detection has to be one
-      // click to fix, which is exactly what a prefilled text box failed to
-      // make obvious.
+      // The picker is always available. A wrong auto-detection has to be one
+      // click to fix, which a prefilled text box failed to make obvious.
       const choices = el('identity-choices');
       choices.innerHTML = '';
       for (const name of candidates) {
@@ -104,7 +104,7 @@
         b.addEventListener('click', () => {
           set(name, { confirmed: true });
           close();
-          deps.log(`you are ${name} — wins and losses are scored from that seat`, 'ok');
+          deps.log(`you are ${name}`, 'ok');
         });
         choices.appendChild(b);
       }
@@ -127,11 +127,11 @@
     el('identity-save').addEventListener('click', () => {
       const name = el('identity-input').value.trim();
       if (!name) return;
-      // Typed by hand, so it is an explicit choice and outranks any detection.
+      // Typed by hand, so it outranks any detection.
       if (candidates.indexOf(name) === -1) candidates.unshift(name);
       set(name, { confirmed: true });
       close();
-      deps.log(`you are ${name} — wins and losses are scored from that seat`, 'ok');
+      deps.log(`you are ${name}`, 'ok');
     });
     el('identity-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') el('identity-save').click();
@@ -147,9 +147,9 @@
       open,
       get name () { return deps.overlayState.userName; },
       async resolve () {
-        // An explicit choice is never overridden by a guess.
+        // A guess never overrides an explicit choice.
         if (confirmed()) { render(); return; }
-        // Sampling reads 40 replay headers; once per session is plenty.
+        // Sampling reads 40 replay headers. Once per session is plenty.
         if (scanned) { render(); return; }
         scanned = true;
 
@@ -158,8 +158,8 @@
           candidates = det.ranked.map(r => r.name);
           if (det.confident) {
             set(det.name, { confirmed: false });
-            deps.log(`you look like ${det.name} — in ${Math.round(det.share * 100)}% of ` +
-              `${det.read} sampled replays. Wrong? Click your name up top to change it.`, 'ok');
+            deps.log(`you look like ${det.name}, in ${Math.round(det.share * 100)}% of ` +
+              `${det.read} sampled replays. Click your name up top to change it.`, 'ok');
             return;
           }
         }
@@ -167,8 +167,7 @@
         if (!candidates.length) candidates = deps.overlayState.lastGameCandidates;
         render();
         if (candidates.length) {
-          deps.log('Which player are you? Click "You" up top and pick your name, ' +
-            'so wins and losses can be scored.', 'warn');
+          deps.log('Click "You" up top and pick your name, so games can be scored.', 'warn');
           open();
         }
       }

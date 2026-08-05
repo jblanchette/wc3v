@@ -1,10 +1,9 @@
-// The games feed and the game detail card — the two screens this app exists to
-// show. Everything else (folders, backfill, the log) is machinery that got out
-// of the way.
+// The games feed and the game report: the two screens this app exists to show.
+// Folders, backfill and the log are machinery that got out of the way.
 //
-// Reads stored summaries only; never parses. Orientation ("did I win") always
-// goes through ProfileAggregate.gameView so the feed, the detail card and the
-// OBS overlay can never disagree about a result.
+// Reads stored summaries and never parses. Orientation ("did I win") always
+// goes through ProfileAggregate.gameView, so the feed, the report and the OBS
+// overlay can never disagree about a result.
 
 (function () {
   'use strict';
@@ -16,8 +15,8 @@
   const RACE = { O: 'Orc', H: 'Human', U: 'Undead', E: 'Night Elf', R: 'Random', N: 'Neutral' };
   const RACE_SHORT = { O: 'OC', H: 'HU', U: 'UD', E: 'NE', R: 'RD', N: 'NT' };
 
-  // Inline SVG rather than an icon font or image files: the app ships no
-  // external assets and the carved look wants flat, hard-edged marks.
+  // Inline SVG rather than an icon font or image files. The app ships no
+  // external assets, and the carved look wants flat hard-edged marks.
   const ICONS = {
     heroKill: '<svg viewBox="0 0 24 24"><path d="M4 3l6.5 9L9 14.5 3.5 6 4 3zm16 0l-.5 3-5.5 8.5L12.5 12 20 3zM9.5 15.5l2 2-3.5 4-2.5-2.5 4-3.5zm5 0l4 3.5L16 21.5l-3.5-4 2-2z"/></svg>',
     fight:    '<svg viewBox="0 0 24 24"><path d="M6 2l4 6-2 2-5-6.5L6 2zm12 0l3 1.5L16 10l-2-2 4-6zM11 12l1 1 1-1 6 7-2 3-5-6-5 6-2-3 6-7z"/></svg>',
@@ -43,9 +42,9 @@
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
   };
 
-  // Raw map names are unreadable ladder filenames —
-  // "12_w3c_251104_0950_TurtleRock_v2.0.w3x" — and they are long enough to
-  // wrap a feed row onto three lines. SummaryExtract owns the display form.
+  // Raw map names are ladder filenames like
+  // "12_w3c_251104_0950_TurtleRock_v2.0.w3x", long enough to wrap a feed row
+  // onto three lines. SummaryExtract owns the display form.
   const mapName = (summary) =>
     window.SummaryExtract.cleanMapName(summary.mapRaw || summary.map) || 'Unknown map';
 
@@ -69,14 +68,14 @@
     return n;
   };
 
-  // The site's own unit/building icons, so a build order reads the same in
-  // both products. They come from the CDN rather than the installer: the full
-  // set is 7.5 MB of jpgs that LZMA cannot compress, and shipping a subset
-  // means guessing which ids a stranger's replay will contain.
+  // The site's own unit and building icons, so a build order reads the same in
+  // both products. They come from the CDN rather than the installer, because
+  // the full set is 7.5 MB of jpgs that LZMA cannot compress, and shipping a
+  // subset means guessing which ids a stranger's replay will contain.
   //
-  // The id is whitelisted the same way client/js/BuildOrderRenderer.js does it
-  // — it comes out of a replay a stranger made, and it is being pasted into a
-  // URL. Anything else renders as no icon at all.
+  // The id is whitelisted the same way client/js/BuildOrderRenderer.js does
+  // it. It came out of a replay a stranger made and it is going into a URL.
+  // Anything else renders as no icon.
   const ICON_BASE = 'https://cdn.wc3v.com/assets/wc3icons/';
   const SAFE_ICON_ID = /^[A-Za-z0-9_-]+$/;
 
@@ -94,24 +93,22 @@
     return img;
   };
 
-  // A race as a mark. The glyph is one of our own heraldic SVGs
-  // (race-icons.js), tinted by the chip's --race-warm-* rule; the race NAME
-  // rides on title/aria-label. Falls back to the old two-letter chip if the
-  // icon module ever fails to load — data must never vanish with a script.
+  // A race as a mark. race-icons.js owns the glyph and the fallback so the
+  // feed, the report and the scout card all draw the same chip. The two-letter
+  // version here covers the icon module failing to load, because data must
+  // never vanish with a script.
   const raceMark = (race, tile) => {
-    const glyph = window.RaceIcons && window.RaceIcons[race];
+    if (window.RaceIcons) return window.RaceIcons.mark(race, tile);
     const n = node('span', tile ? 'race-mark race-tile' : 'race-mark');
-    if (glyph) n.innerHTML = glyph;             // our own constant, never replay text
-    else n.textContent = RACE_SHORT[race] || '??';
+    n.textContent = RACE_SHORT[race] || '??';
     if (race) n.dataset.race = race;
     n.title = RACE[race] || 'Unknown race';
     n.setAttribute('aria-label', RACE[race] || 'Unknown race');
     return n;
   };
 
-  // A player name that opens their book. Everything the app knows about a
-  // name — record, habits, head-to-head — lives one click away, which is the
-  // whole reason the Coach view accepts a name.
+  // A player name that opens their book. Record, habits and head-to-head all
+  // live one click away, which is why the Coach view accepts a name.
   const nameLink = (name, onOpen) => {
     if (!name || !onOpen) return node('b', null, name || '');
     const b = node('button', 'name-link', name);
@@ -131,10 +128,11 @@
     let games = [];
     let activeKey = null;
 
-    // The user's OWN slot in a game, or null when they were not in it (a
-    // downloaded replay, an observed game, a smurf name, identity unset).
+    // The user's own slot, or null when they were not in the game at all. A
+    // downloaded replay, an observed game, a smurf name and an unset identity
+    // all land here.
     //
-    // Kept separate from viewOf on purpose: viewOf falls back to the first seat
+    // Kept apart from viewOf deliberately. viewOf falls back to the first seat
     // so the game still renders, and reading that fallback as "you" made the
     // moment list say "Your Tier 2" directly under a header reading "You were
     // not in this game".
@@ -154,8 +152,8 @@
         const v = PA().gameView(summary, PA().normName(me));
         if (v) return v;
       }
-      // Not our game: show it from the first seat so it still renders, but
-      // never claim a result for a seat we did not pick.
+      // Not our game. Show it from the first seat so it still renders, and
+      // claim no result for a seat nobody picked.
       const first = Object.keys(summary.players || {})[0];
       if (first === undefined) return null;
       const v = PA().gameView(summary, PA().normName(summary.players[first].name));
@@ -165,9 +163,9 @@
 
     // ── Feed ────────────────────────────────────────────────────────────────
 
-    // A fully backfilled corpus is thousands of games, and each row is ~10
-    // nodes. Rows are appended a page at a time as the feed is scrolled, so
-    // the first paint costs the same whether the history is 40 games or 4,000.
+    // A backfilled corpus is thousands of games at ~10 nodes a row. Pages get
+    // appended as the feed is scrolled, so the first paint costs the same
+    // whether the history is 40 games or 4,000.
     const PAGE = 120;
     let shown = 0;
     let lastDay = null;
@@ -195,31 +193,28 @@
       lastDay = null;
 
       if (!allGames.length) {
-        // Nothing parsed yet is the normal state of a fresh install, not a
-        // failure — so it gets the detail column (where the eye already is)
-        // and a way forward, rather than a grey line in the rail.
+        // A fresh install is the normal way to arrive here. It gets the detail
+        // column, where the eye already is, and a way forward.
         el('feed-count').textContent = '';
-        feed.appendChild(node('div', 'empty',
-          'Nothing here yet. Finish a match and it appears on its own.'));
+        feed.appendChild(node('div', 'empty', 'No games yet.'));
         renderFirstRun();
         return;
       }
 
-      // Games exist, but none match the filter — a different situation from an
-      // empty history, and it must not read like one.
+      // Games exist and the filter matched none of them. That must not read
+      // like an empty history.
       el('feed-count').textContent = games.length === allGames.length
         ? `${games.length.toLocaleString()} parsed`
         : `${games.length.toLocaleString()} of ${allGames.length.toLocaleString()}`;
 
       if (!games.length) {
-        feed.appendChild(node('div', 'empty',
-          'No games match. Try a different name, or clear the filters.'));
+        feed.appendChild(node('div', 'empty', 'No games match those filters.'));
         return;
       }
 
       appendPage();
 
-      // Keep the current selection if it is still in the list; otherwise open
+      // Keep the current selection when it survives the filter. Otherwise open
       // the newest game, which is what somebody who just finished one wants.
       const keep = activeKey && games.some(g => g.key === activeKey);
       select(keep ? activeKey : games[0].key);
@@ -237,7 +232,7 @@
     };
 
     // Held so a fast typist does not re-filter thousands of games per
-    // keystroke; short enough that the list still feels live.
+    // keystroke, and short enough that the list still feels live.
     let filterTimer = null;
     const scheduleFilter = () => {
       clearTimeout(filterTimer);
@@ -246,8 +241,8 @@
 
     const wireFilters = () => {
       // The race filter buttons ship as text (HU/OC/…) and get their glyphs
-      // here, so the markup carries no second copy of any mark. The letters
-      // stay when the icon module is missing.
+      // stamped in here, so the markup carries no second copy of a mark. The
+      // letters stay when the icon module is missing.
       if (window.RaceIcons) {
         for (const btn of document.querySelectorAll('#feed-race .seg-race')) {
           const glyph = window.RaceIcons[btn.dataset.race];
@@ -279,9 +274,9 @@
       });
     };
 
-    // Placeholder rows while the stored corpus loads. The feed used to ship
-    // empty and stay empty until every summary had come back over IPC, which
-    // at a few thousand games is a blank window that reads as broken.
+    // Placeholder rows while the stored corpus loads. The feed used to stay
+    // empty until every summary had come back over IPC, which at a few
+    // thousand games is a blank window that reads as broken.
     const showLoading = () => {
       const feed = el('feed');
       feed.innerHTML = '';
@@ -297,11 +292,7 @@
       const box = node('div', 'first-run');
       box.appendChild(node('h2', null, 'No games yet'));
       box.appendChild(node('p', null,
-        'WC3V is watching your replay folders. Finish a match and it shows up ' +
-        'here on its own — the verdict, how the game went, and both build orders.'));
-      box.appendChild(node('p', null,
-        'Every game you have already played is on disk too. Parsing that history ' +
-        'is what makes the profile, the coaching and head-to-head records real.'));
+        'Finish a match and it shows up here on its own.'));
       const go = node('button', 'btn btn-primary', 'Parse my history');
       go.type = 'button';
       go.addEventListener('click', () => deps.onGoToSettings && deps.onGoToSettings());
@@ -364,17 +355,17 @@
 
     // ── Detail: the game report ─────────────────────────────────────────────
     //
-    // The fold rule shapes everything here. The report's frame — verdict,
-    // timings, the tab strip — is fixed and always fits the window; the body
-    // of whichever tab is active is the ONE scroller. A grid of panels was
-    // tried on paper first: at the 580px detail width the narrow window
-    // allows, six panels become postage stamps, and collapsibles just
-    // recreate the 2,400px column this replaced.
+    // The fold rule shapes everything here. The report's frame (verdict,
+    // timings, tab strip) is fixed and always fits the window, and the body of
+    // whichever tab is active is the one scroller. A grid of panels was tried
+    // on paper first: at the 580px detail width a narrow window allows, six
+    // panels become postage stamps, and collapsibles recreate the 2,400px
+    // column this replaced.
 
-    // Remembered across game selections: someone stepping through last
-    // night's games comparing economies should not be bounced back to the
-    // default on every click. Review is where a game opens — "so what?" is
-    // the question, and Story is the evidence you go to next.
+    // Remembered across game selections. Somebody stepping through last
+    // night's games comparing economies should not get bounced back to the
+    // default on every click. Review is where a game opens, because "so what?"
+    // is the question and Story is the evidence behind the answer.
     let activeTab = 'review';
 
     const renderDetail = (summary) => {
@@ -383,7 +374,7 @@
 
       if (!summary) {
         const e = node('div', 'detail-empty');
-        e.appendChild(node('p', null, 'Pick a game to see how it went.'));
+        e.appendChild(node('p', null, 'Pick a game.'));
         host.appendChild(e);
         return;
       }
@@ -396,9 +387,8 @@
       host.appendChild(verdictHead(summary, v, seat, h2h, report));
       host.appendChild(timingsPanel(v, seat));
 
-      // Tabs are conditional: one that would be empty is not offered. Review
-      // is first and is the default — "what just happened" is the question the
-      // app exists to answer, and the story is the evidence behind the answer.
+      // A tab that would be empty is not offered at all. Review comes first
+      // and is the default.
       const tabs = [];
       if (report) {
         tabs.push({ key: 'review', label: 'Review', build: () => reviewPanel(summary, seat, report) });
@@ -446,9 +436,9 @@
       const wrap = node('div', 'verdict-band');
       const head = node('div', 'verdict-head');
 
-      // Four different reasons a game has no verdict, with four different
-      // fixes. Collapsing them into "Result unclear" sends people looking for
-      // a parser bug when the real answer is "you haven't told it who you are".
+      // Four reasons a game has no verdict, with four different fixes.
+      // Collapsing them into "Result unclear" sends people hunting a parser
+      // bug when the real answer is "you never said who you are".
       const result = v && v.result ? v.result : 'none';
       let unresolved;
       if (!deps.identityName()) unresolved = 'Tell WC3V who you are to score this';
@@ -468,8 +458,8 @@
         vs.appendChild(raceMark(v.opponent.race));
         head.appendChild(vs);
 
-        // The record chip: the one number no website can show, because it
-        // came out of your own games. Clicking it opens the full tab.
+        // The record chip. No website can show this number, because it came
+        // out of your own games. Clicking it opens the full tab.
         if (h2h) {
           const chip = node('button', 'h2h-chip', `${h2h.wins}–${h2h.losses} all time`);
           chip.type = 'button';
@@ -479,12 +469,11 @@
         }
       }
 
-      // Watching the game is a primary action on the GAME, so it lives on the
-      // header. It once sat at the bottom of the moments list, behind two
-      // early returns — a game with no moments could not be opened at all.
+      // Watching is an action on the game, so it lives on the header. It sat
+      // at the bottom of the moments list once, behind two early returns, and
+      // a game with no moments could not be opened at all.
       const open = node('button', 'btn btn-primary', 'Open in viewer');
       open.type = 'button';
-      open.title = 'Opens this game in the 3D viewer on wc3v.com';
       open.addEventListener('click', () => deps.onWatch(summary, null));
       head.appendChild(open);
       wrap.appendChild(head);
@@ -502,8 +491,8 @@
       meta.appendChild(node('span', null, bits.join(' · ')));
       wrap.appendChild(meta);
 
-      // The one-line read, above the fold. Clicking it goes to the tab that
-      // justifies it — a claim you cannot interrogate is just an assertion.
+      // The one-line read, above the fold. Clicking it opens the tab that
+      // justifies it, because a claim you cannot interrogate is an assertion.
       if (report) {
         const line = node('button', 'verdict-read', report.headline);
         line.type = 'button';
@@ -538,19 +527,19 @@
       return panel;
     };
 
-    // ── Review — the narrated read of the game ───────────────────────────────
+    // ── Review: the narrated read of the game ────────────────────────────────
     //
-    // The one tab that answers "so what?". Grades are relative to YOUR own
-    // rolling median for this matchup (GameReport + ProfileAggregate.baseline),
-    // never to an invented absolute, and every mistake carries the second it
-    // happened so it opens the viewer there.
+    // The tab that answers "so what?". Grades run against your own rolling
+    // median for this matchup (GameReport + ProfileAggregate.baseline) rather
+    // than an invented absolute. Every mistake carries the second it happened,
+    // so it can open the viewer there.
 
     const reportFor = (summary, seat) => {
       if (seat === null || !window.GameReport) return null;
       const corpus = deps.store.corpus;
       const v = viewOf(summary);
-      // No corpus yet (first run, still loading) still grades — it just grades
-      // without benchmarks rather than showing nothing.
+      // A first run with no corpus still grades. It grades without benchmarks
+      // rather than showing nothing.
       const base = corpus
         ? PA().baseline(corpus, deps.identityName(),
           { matchup: v && v.matchup, excludeKey: summary.key })
@@ -563,17 +552,16 @@
 
       if (!report) {
         panel.appendChild(node('p', 'lead', seat === null
-          ? 'Tell WC3V who you are and this game gets a read.'
+          ? 'Set your name up top to get a read on this game.'
           : 'Not enough in this game to review.'));
         return panel;
       }
 
-      // The headline is NOT repeated here — the verdict band already carries
-      // it above the fold, and a pane that restates its own heading burns a
-      // line of the one scroller.
+      // The headline stays out of this pane. The verdict band already carries
+      // it above the fold, and repeating it burns a line of the one scroller.
 
-      // Grades: the value carries the colour, with the note beside it. No
-      // radar — five numbers with words beat a shape nobody can read off.
+      // Grades: the value carries the colour, with the note beside it. There
+      // is no radar, because a polygon is unreadable at 900px.
       const grid = node('div', 'grades');
       for (const g of report.grades) {
         const cell = node('div', 'grade');
@@ -587,8 +575,8 @@
       }
       panel.appendChild(grid);
 
-      // Benchmarks — this game against your own median. `dir` is null when
-      // there is no baseline to claim against, and then nothing is coloured.
+      // Benchmarks: this game against your own median. `dir` is null when
+      // there is no baseline to claim against, and nothing gets coloured.
       const benched = report.benchmarks.filter(b => b.valueText !== null);
       if (benched.length) {
         const bench = node('div', 'benchmarks');
@@ -611,8 +599,8 @@
           const li = node('li', 'cue');
           li.appendChild(node('span', 'cue-time', c.tf || '—'));
           li.appendChild(node('span', 'cue-text', c.text));
-          // A cue without a time has nowhere to seek to; the button would be
-          // a lie, so it simply is not offered.
+          // A cue without a time has nowhere to seek to, so it gets no button
+          // rather than a dead one.
           if (c.t !== null && c.t !== undefined) {
             const watch = node('button', 'btn btn-sm', 'Watch');
             watch.type = 'button';
@@ -628,7 +616,7 @@
 
       panel.appendChild(node('h3', 'review-h', 'What to fix'));
       panel.appendChild(cueList(report.mistakes, 'cues cues-bad',
-        'Nothing stood out as a mistake in this one.'));
+        'Nothing stood out.'));
 
       if (report.highlights.length) {
         panel.appendChild(node('h3', 'review-h', 'What went right'));
@@ -636,27 +624,27 @@
       }
 
       // Say what the grades are measured against. A number with no stated
-      // reference is the thing this whole tab exists not to be.
+      // reference is what this tab exists not to be.
       panel.appendChild(node('p', 'hint', report.baselineScope === 'matchup'
         ? 'Graded against your own recent games in this matchup.'
         : report.baselineScope === 'all'
-          ? 'Graded against your own recent games (too few in this matchup yet).'
-          : 'Graded on general anchors — play more games and this compares you with yourself.'));
+          ? 'Graded against your own recent games.'
+          : 'Graded on general anchors until you have played more.'));
 
       return panel;
     };
 
-    // Tab panes carry no headings of their own — the tab button IS the label,
-    // and a pane that repeats it burns a line of the one scroller.
+    // Tab panes carry no headings. The tab button is the label, and a pane
+    // that repeats it burns a line of the one scroller.
     const momentsPanel = (summary, seat) => {
       const panel = node('section', 'report-pane');
 
       // A summary written under an older schema is missing something only a
-      // full parse can supply — moments (pre-v2) or the combat ledger (pre-v3).
-      // When the moments themselves are missing, the re-parse IS the panel:
-      // an empty list would read as "nothing happened". When they exist, show
-      // them — hiding real moments behind an upgrade prompt helps nobody —
-      // and offer the re-read quietly underneath.
+      // full parse can supply: moments before v2, the combat ledger before v3.
+      // With no moments at all the re-parse is the panel, because an empty
+      // list reads as "nothing happened". With moments present, show them and
+      // offer the re-read quietly underneath. Hiding real moments behind an
+      // upgrade prompt helps nobody.
       const stale = deps.store.isStale(summary);
       const reparseBtn = (label) => {
         const btn = node('button', 'btn', label);
@@ -672,14 +660,13 @@
       const moments = summary.moments || [];
       if (stale && !moments.length) {
         panel.appendChild(node('p', 'lead',
-          'This game was parsed before moments were recorded. Re-reading it takes ' +
-          'a few seconds and finds the fights.'));
+          'Parsed before moments were recorded.'));
         panel.appendChild(reparseBtn('Find moments'));
         return panel;
       }
 
       if (!moments.length) {
-        panel.appendChild(node('p', 'lead', 'Nothing stood out in this one.'));
+        panel.appendChild(node('p', 'lead', 'Nothing stood out.'));
         return panel;
       }
 
@@ -711,19 +698,16 @@
 
       if (stale) {
         const row = node('div', 'row');
-        row.appendChild(node('p', 'hint',
-          'Parsed under an older format — re-read the replay to record its ' +
-          'full combat ledger.'));
+        row.appendChild(node('p', 'hint', 'Parsed under an older format.'));
         row.appendChild(reparseBtn('Re-read'));
         panel.appendChild(row);
       }
       return panel;
     };
 
-    // Your history against the player you just faced — the thing no website
-    // can tell you, because it came out of your own games. Computed once per
-    // render; the verdict band's record chip and the Head-to-head tab both
-    // read from it.
+    // Your history against the player you just faced. No website can tell you
+    // this, because it came out of your own games. Computed once per render,
+    // and read by both the verdict band's chip and the Head-to-head tab.
     const h2hData = (summary, v, seat) => {
       if (!v || !v.opponent || seat === null) return null;
       const corpus = deps.store.corpus;
@@ -793,7 +777,7 @@
       return panel;
     };
 
-    // Own seat first, everywhere a per-player grid renders — it is the column
+    // Own seat first, everywhere a per-player grid renders. It is the column
     // being read.
     const slotsFor = (summary, seat) => {
       const slots = Object.keys(summary.players || {});
@@ -805,7 +789,7 @@
       const title = node('h3', 'player-title');
       title.appendChild(raceMark(p.race));
       title.appendChild(nameLink(p.name, deps.onOpenProfile));
-      if (isYou) title.appendChild(node('span', 'you-tag', '— you'));
+      if (isYou) title.appendChild(node('span', 'you-tag', 'you'));
       return title;
     };
 
@@ -836,10 +820,10 @@
 
     // ── Heroes: levels, skill order, final items ────────────────────────────
     //
-    // All of it has been in the stored summary since day one — heroBuilds
-    // carries the ability ids precisely so icons could be drawn — and none of
-    // it was shown. The icons are the game's own art from the CDN; identity
-    // (which skill, which item) genuinely needs it.
+    // All of it has sat in the stored summary since day one. heroBuilds carries
+    // the ability ids precisely so icons could be drawn, and none of it was
+    // shown. These icons are the game's own art from the CDN, because knowing
+    // which skill and which item is what the art is for.
 
     const iconStrip = (label, entries) => {
       const wrap = node('div', 'icon-strip');
@@ -869,7 +853,7 @@
       if ((h.skillOrder || []).length) {
         card.appendChild(iconStrip('Skills', h.skillOrder.map(s => ({
           itemId: s.abilityId,
-          title: `${s.skillName || 'Skill'}${s.skillLevel ? ` ${s.skillLevel}` : ''} — ${s.gameTimeFormatted || ''}`
+          title: `${s.skillName || 'Skill'}${s.skillLevel ? ` ${s.skillLevel}` : ''} · ${s.gameTimeFormatted || ''}`
         }))));
       }
       if ((h.items || []).length) {
@@ -897,7 +881,7 @@
         grid.appendChild(col);
       }
       if (!any) {
-        panel.appendChild(node('p', 'lead', 'No heroes were made in this game.'));
+        panel.appendChild(node('p', 'lead', 'No heroes.'));
         return panel;
       }
       panel.appendChild(grid);
@@ -906,9 +890,10 @@
 
     // ── Economy: the race behind the fights ─────────────────────────────────
     //
-    // Drawn by the same CompareCharts factory the site's compare modal uses —
-    // one chart source of truth. Fights land as vertical markers, so "my
-    // workers flatlined right after that battle" reads off the chart.
+    // Drawn by the same CompareCharts factory the site's compare modal uses,
+    // so there is one chart source of truth. Fights land as vertical markers,
+    // which is what makes "my workers flatlined right after that battle" read
+    // straight off the chart.
 
     const economyPanel = (summary, v, seat) => {
       const panel = node('section', 'report-pane');
@@ -916,21 +901,20 @@
       const slots = slotsFor(summary, seat);
       const meSlot = v && v.slot != null ? String(v.slot) : slots[0];
       const me = summary.players[meSlot];
-      // Two players → a duel chart. Anything else charts the viewed seat
-      // alone; inventing a "versus" line in an FFA would be a lie about who
-      // it was against.
+      // Two players get a duel chart. Anything else charts the viewed seat
+      // alone, because inventing a "versus" line in an FFA lies about who it
+      // was against.
       const oppSlot = slots.length === 2 ? slots.find(s => s !== meSlot) : null;
       const opp = oppSlot != null ? summary.players[oppSlot] : null;
 
       if (!CC || !me || !(me.economyTrack || []).length) {
-        panel.appendChild(node('p', 'lead',
-          'No economy samples were recorded for this game.'));
+        panel.appendChild(node('p', 'lead', 'No economy samples.'));
         return panel;
       }
 
       const markers = (summary.moments || [])
         .filter(m => m.type === 'heroKill' || m.type === 'heroTrade' || m.type === 'wipe')
-        .map(m => ({ gameTimeMs: m.t, label: `${m.tf} — ${m.label || 'fight'}` }));
+        .map(m => ({ gameTimeMs: m.t, label: `${m.tf} · ${m.label || 'fight'}` }));
 
       const legend = () => {
         const row = node('div', 'chart-legend');
@@ -969,19 +953,19 @@
         chart('army', single(me.combatUnitsTrack, 'count', 'Army size'));
       }
 
-      // Upgrades and mercenaries under the charts — the money that did not
-      // become units.
+      // Upgrades and mercenaries under the charts: the money that never
+      // became units.
       const strips = node('div', 'builds');
       let anyStrip = false;
       for (const slot of slots) {
         const p = summary.players[slot];
         const ups = (p.upgradeTimeline || []).map(u => ({
           itemId: u.itemId,
-          title: `${u.name || 'Upgrade'}${u.level ? ` L${u.level}` : ''} — ${u.gameTimeFormatted || ''}`
+          title: `${u.name || 'Upgrade'}${u.level ? ` L${u.level}` : ''} · ${u.gameTimeFormatted || ''}`
         }));
         const mercs = (p.mercenariesHired || []).map(m => ({
           itemId: m.itemId,
-          title: `${m.name || 'Mercenary'} — ${m.gameTimeFormatted || ''}${m.goldCost ? ` · ${m.goldCost}g` : ''}`
+          title: `${m.name || 'Mercenary'} · ${m.gameTimeFormatted || ''}${m.goldCost ? ` · ${m.goldCost}g` : ''}`
         }));
         if (!ups.length && !mercs.length) continue;
         anyStrip = true;
@@ -1005,7 +989,7 @@
       },
       select,
       showLoading,
-      // A live game just landed: pull it to the top and open it, because the
+      // A live game just landed. Pull it to the top and open it, because the
       // person who just alt-tabbed wants exactly that game.
       showLatest (key) {
         activeKey = key;

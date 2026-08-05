@@ -1,19 +1,18 @@
-// Backfill engine — parse every playable replay on disk, in the background,
+// Backfill engine: parse every playable replay on disk, in the background,
 // resumable. (ROADMAP §2)
 //
 // Decisions on record:
-//   • 2 workers, and NO detection of whether WC3 is running — no process
-//     enumeration, ever. The engine just stays light enough that it never
-//     matters.
-//   • skipPathfinding — fast profile mode, ~3x. The output is summaries only
-//     and is never rendered, which is the one case that mode is safe for.
-//   • Progress IS the parse store: a game is done when its content key has a
-//     summary (or a failure marker). There is no separate queue file to
-//     corrupt or drift — restarting the app and pressing the button again
-//     resumes exactly where it stopped, because everything stored is skipped.
+//   • 2 workers, and no detection of whether WC3 is running. No process
+//     enumeration, ever. The engine stays light enough that it never matters.
+//   • skipPathfinding, which is fast profile mode at roughly 3x. The output is
+//     summaries that never get rendered, the one case that mode is safe for.
+//   • Progress is the parse store. A game is done when its content key has a
+//     summary or a failure marker. No separate queue file exists to corrupt or
+//     drift, so restarting the app and pressing the button again resumes
+//     exactly where it stopped.
 //
-// Queue order is newest-first (the scan sorts by mtime), so recent games —
-// the ones the profile layer cares most about — gain value immediately.
+// Queue order is newest-first, since the scan sorts by mtime. Recent games are
+// the ones the profile layer cares most about.
 
 (function () {
   'use strict';
@@ -23,7 +22,7 @@
   window.createBackfill = (deps) => {
     // deps: invoke, log, makeWorker, parseOn(worker, path), persistSummary(out, key),
     //       isStored(key), status(text), onIdleChange(running),
-    //       progress(done, total) — optional
+    //       progress(done, total) [optional]
     const st = {
       running: false,
       queue: [],
@@ -52,9 +51,8 @@
       return c.parsed + c.skipped + c.failed + c.unreadable;
     };
 
-    // Honest about remaining time: no ETA until enough parses have actually
-    // been measured, and even then it is labelled rough. Extrapolations in
-    // this project have been wrong three times.
+    // No ETA until enough parses have been measured, and it says "rough" even
+    // then. Extrapolations in this project have been wrong three times.
     const update = () => {
       const c = st.counts;
       let line = `${processed().toLocaleString()} / ${c.total.toLocaleString()}`;
@@ -91,7 +89,7 @@
             key = rk.key;
             playedAt = rk.modifiedMs;
           } catch (e) {
-            st.counts.unreadable++; // locked/moved — not marked, retries next run
+            st.counts.unreadable++; // locked or moved; unmarked, retries next run
             update();
             continue;
           }
@@ -135,18 +133,18 @@
       const wall = performance.now() - st.startedAt;
       if (st.running && st.queue.length === 0) {
         st.running = false;
-        // The real, measured end-to-end rate — the number the roadmap wants
-        // before anyone quotes one.
+        // The measured end-to-end rate. The roadmap wants this number before
+        // anyone quotes one.
         deps.log(
           `backfill done: ${c.parsed.toLocaleString()} parsed, ` +
           `${c.skipped.toLocaleString()} already done, ${c.failed.toLocaleString()} failed ` +
           `in ${fmtDur(wall)}` +
-          (c.parsed ? ` — measured ${((wall / 1000) / c.parsed).toFixed(1)} s/replay end-to-end` : ''),
+          (c.parsed ? `, measured ${((wall / 1000) / c.parsed).toFixed(1)} s/replay end-to-end` : ''),
           'ok'
         );
-        deps.status(`done — ${c.parsed.toLocaleString()} parsed, ${c.failed.toLocaleString()} failed`);
+        deps.status(`done: ${c.parsed.toLocaleString()} parsed, ${c.failed.toLocaleString()} failed`);
       } else {
-        deps.status(`paused at ${processed().toLocaleString()} / ${c.total.toLocaleString()} — safe to close, resumes where it left off`);
+        deps.status(`paused at ${processed().toLocaleString()} / ${c.total.toLocaleString()}. Safe to close; it resumes here.`);
       }
       deps.onIdleChange(false);
     };
@@ -160,7 +158,7 @@
       const { replays } = await deps.invoke('scan_all');
       st.failedKeys = new Set(await deps.invoke('list_parse_failures'));
       // LastReplay.w3g is a second encoding of a game whose autosave is also
-      // in the queue — parsing it would double-count the game in the profile.
+      // in the queue. Parsing it would double-count that game in the profile.
       st.queue = replays.filter(r =>
         r.interesting && !/^lastreplay\.w3g$/i.test(r.file_name));
       st.claimed = new Set();
@@ -184,7 +182,7 @@
       if (st.running) return;
       const n = await deps.invoke('clear_parse_failures');
       st.failedKeys = new Set();
-      deps.log(`cleared ${n} failure marker(s) — those replays will be retried`, 'ok');
+      deps.log(`cleared ${n} failure marker(s); those replays get retried`, 'ok');
       start();
     };
 
@@ -193,7 +191,7 @@
       try {
         const failed = await deps.invoke('list_parse_failures');
         st.failedKeys = new Set(failed);
-      } catch (e) { /* store unavailable — counts just start blank */ }
+      } catch (e) { /* store unavailable; counts start blank */ }
       return { failedCount: st.failedKeys.size };
     };
 

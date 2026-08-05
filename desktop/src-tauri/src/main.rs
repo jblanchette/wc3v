@@ -1,8 +1,8 @@
-// WC3V desktop — local replay auto-parse.
+// WC3V desktop: local replay auto-parse.
 //
 // Design invariants, enforced here rather than merely documented:
 //   • The app only ever READS .w3g files the game already wrote. It never
-//     touches the running game — no injection, no memory reads, no input.
+//     touches the running game. No injection, no memory reads, no input.
 //   • No outbound network calls. Nothing in this binary opens a socket.
 //   • The webview gets no arbitrary-filesystem primitive. `read_replay` and
 //     `read_map_file` resolve and canonicalise their argument and refuse
@@ -69,8 +69,8 @@ const SUMMARY_EXT: &str = ".summary.json.gz";
 /// explicitly via `clear_parse_failures` (e.g. after seeding more maps).
 const FAILED_EXT: &str = ".failed.json";
 
-/// Store keys are `<size>-<xxh3 hex>` — decimal digits, hex digits and a
-/// dash. Nothing else may ever reach a filename.
+/// Store keys are `<size>-<xxh3 hex>`: decimal digits, hex digits and a dash.
+/// Nothing else may ever reach a filename.
 fn valid_store_key(key: &str) -> bool {
     !key.is_empty() && key.len() <= 40 && key.chars().all(|c| c.is_ascii_hexdigit() || c == '-')
 }
@@ -128,7 +128,7 @@ fn add_root(path: String, state: State<'_, AppState>) -> Result<replays::ReplayR
     if !p.is_dir() {
         return Err("not a directory".into());
     }
-    // Cheap count only — the real scan happens when the folder is selected, so
+    // A cheap count. The real scan happens when the folder is selected, so
     // adding a folder never pays for a full dedupe pass.
     let mut count = 0;
     replays::count_replays(&p, &mut count);
@@ -154,8 +154,8 @@ async fn scan_replays(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
 ) -> Result<replays::ScanResult, String> {
-    // Take and release the lock before any await — a std MutexGuard held
-    // across an await point would make this future non-Send.
+    // Take and release the lock before any await. A std MutexGuard held across
+    // an await point would make this future non-Send.
     let allowed = { state.roots.lock().unwrap().clone() };
     let dir = ensure_within(Path::new(&root), &allowed)?;
     let index = hash_index_path(&app);
@@ -185,7 +185,7 @@ async fn scan_replays(
 }
 
 /// Read a replay's bytes for the parser worker. Scoped to registered roots.
-/// Returns a raw IPC response (ArrayBuffer on the JS side) — a 500 KB replay
+/// Returns a raw IPC response, an ArrayBuffer on the JS side. A 500 KB replay
 /// as a JSON array of numbers is ~4x the bytes and all of it parsed twice.
 #[tauri::command]
 async fn read_replay(
@@ -254,7 +254,7 @@ const MAP_CDN: &str = "https://cdn.wc3v.com/maps";
 /// Fetch one map's parse data into the local cache.
 ///
 /// The installer bundles the ladder pool, so this is the path for everything
-/// else — custom maps, older ladder seasons, a map added after the installed
+/// else: custom maps, older ladder seasons, a map added after the installed
 /// build was cut. Before it existed, those games failed with a named missing
 /// map and the only fix was a developer running a tool.
 ///
@@ -262,8 +262,8 @@ const MAP_CDN: &str = "https://cdn.wc3v.com/maps";
 /// is authoritative, and re-fetching one would be pure waste.
 #[tauri::command]
 async fn fetch_map(map: String, app: tauri::AppHandle) -> Result<u32, String> {
-    // Same conservative charset as read_map_file — this name comes out of a
-    // replay a stranger made, and it is about to become a path AND a URL.
+    // Same conservative charset as read_map_file. This name came out of a
+    // replay a stranger made, and it is about to become a path and a URL.
     if map.is_empty()
         || map.len() >= 128
         || map.contains("..")
@@ -298,8 +298,8 @@ async fn fetch_map(map: String, app: tauri::AppHandle) -> Result<u32, String> {
         if !res.status().is_success() {
             return Err(format!("map server returned {} for {file}", res.status()));
         }
-        // NOT decompressed — see the reqwest note in Cargo.toml. These bytes
-        // are the .gz file itself.
+        // Not decompressed; see the reqwest note in Cargo.toml. These bytes are
+        // the .gz file itself.
         let bytes = res.bytes().await.map_err(|e| e.to_string())?;
         if bytes.is_empty() {
             return Err(format!("map server returned an empty {file}"));
@@ -330,8 +330,8 @@ fn urlencoding(s: &str) -> String {
 
 /// Canonical identity of a replay file: `<size>-<xxh3>`, the same shape the
 /// scan produces once it has actually hashed a file. The scan's lazy
-/// `<size>-u` keys are NOT stable — they change the first time another file
-/// collides on that size — so persistence always hashes. The parse that
+/// `<size>-u` keys are not stable, because they change the first time another
+/// file collides on that size, so persistence always hashes. The parse that
 /// follows reads the whole file anyway; one extra streamed read is noise.
 ///
 /// Also returns the file's mtime: that is when the game was PLAYED, which the
@@ -422,8 +422,8 @@ async fn list_parse_failures(app: tauri::AppHandle) -> Result<Vec<String>, Strin
         .map_err(|e| format!("list failed: {e}"))?
 }
 
-/// Forget every recorded failure so those replays get retried — the recovery
-/// path after seeding more map data. Returns how many were cleared.
+/// Forget every recorded failure so those replays get retried. This is the
+/// recovery path after seeding more map data. Returns how many were cleared.
 #[tauri::command]
 async fn clear_parse_failures(app: tauri::AppHandle) -> Result<usize, String> {
     let dir = parse_store_dir(&app);
@@ -501,7 +501,7 @@ fn publish_overlay_state(
     Ok(())
 }
 
-/// The OBS URL (with token) for the clipboard. Never render it — it would
+/// The OBS URL, token and all, for the clipboard. Never render it: it would
 /// end up on stream.
 #[tauri::command]
 fn overlay_info(
@@ -523,8 +523,8 @@ fn overlay_info(
 /// and then into the site through a same-machine postMessage.
 ///
 /// Why the browser cannot simply fetch from here: Chrome blocks a public page
-/// from reaching 127.0.0.1 — measured, both `fetch` and an iframe fail — so
-/// the browser has to start on the loopback origin. See handoff.html.
+/// from reaching 127.0.0.1. Both `fetch` and an iframe were measured failing,
+/// so the browser has to start on the loopback origin. See handoff.html.
 #[tauri::command]
 async fn open_in_viewer(
     path: String,
@@ -641,7 +641,7 @@ fn set_autostart(enabled: bool, app: tauri::AppHandle) -> Result<bool, String> {
 }
 
 /// Check for an update and install it if the user consents. Returns a
-/// description of what happened so the UI can report honestly — including
+/// description of what happened so the UI can report honestly, including
 /// "updates aren't configured for this build", which is the state of any
 /// build made without an updater endpoint (see RELEASING.md).
 #[tauri::command]
@@ -723,7 +723,7 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
 
     TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
-        .tooltip("WC3V — watching for replays")
+        .tooltip("WC3V, watching for replays")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
@@ -759,8 +759,8 @@ fn main() {
         ))
         .manage(AppState::default())
         .setup(|app| {
-            // The loopback overlay server is the one socket this binary opens
-            // — listener only, 127.0.0.1 only. See overlay.rs for the rules.
+            // The loopback overlay server is the one socket this binary opens.
+            // Listener only, 127.0.0.1 only. See overlay.rs for the rules.
             let data_dir = app
                 .path()
                 .app_data_dir()
@@ -774,7 +774,7 @@ fn main() {
             }
             build_tray(handle)?;
 
-            // Launched by the OS at login — stay in the tray.
+            // Launched by the OS at login, so stay in the tray.
             if std::env::args().any(|a| a == "--autostart") {
                 if let Some(win) = app.get_webview_window("main") {
                     let _ = win.hide();

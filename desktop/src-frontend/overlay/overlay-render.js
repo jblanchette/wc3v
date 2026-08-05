@@ -1,4 +1,4 @@
-// Overlay rendering — one implementation, two consumers.
+// Overlay rendering: one implementation, two consumers.
 //
 //   • the OBS Browser Source / player view (overlay.html, assembled by
 //     overlay.rs from this file + overlay.css + shell.html)
@@ -8,8 +8,8 @@
 // what viewers will see BEFORE putting the URL into OBS, and a preview drawn by
 // separate code is a preview that can lie.
 //
-// The overlay is a pure consumer. Every judgement — who won, whose seat, how a
-// moment is worded — is made upstream in overlay-state.js and arrives already
+// The overlay is a pure consumer. Who won, whose seat it was, how a moment is
+// worded: all of that gets decided upstream in overlay-state.js and arrives
 // decided. Nothing here interprets a replay.
 //
 // All replay-derived strings go in via textContent. The only markup this file
@@ -68,7 +68,7 @@
     var box = el('div', 'mod');
     var row = el('div', 'verdict');
     // A verdict cannot be attributed to a seat until the app knows which player
-    // is the user. Say that, rather than implying the result was unreadable —
+    // is the user. Say that rather than implying the result was unreadable,
     // the two have completely different fixes.
     var word = el('span', 'word ' + (g.verdict || 'unknown'),
       g.verdict === 'win' ? 'Victory'
@@ -89,7 +89,7 @@
     box.appendChild(el('div', 'meta', bits.join(' · ')));
 
     // The one-line read, decided upstream by the same grader the app's Review
-    // tab uses. Absent whenever the seat is not the user's — the overlay never
+    // tab uses. Absent whenever the seat is not the user's, since the overlay
     // grades a stranger.
     if (g.read) box.appendChild(el('div', 'read', g.read));
 
@@ -164,12 +164,12 @@
     root.innerHTML = '';
     var card = el('div', 'card');
 
-    if (s.demo) card.appendChild(el('div', 'demo', 'preview — not a real game'));
+    if (s.demo) card.appendChild(el('div', 'demo', 'preview, not a real game'));
     if (want.session) card.appendChild(sessionModule(s));
 
     if (!g) {
       card.appendChild(el('div', 'mod waiting',
-        'Waiting for a game — finish one and it appears here.'));
+        'Waiting for a game.'));
       card.appendChild(markStrip());
       root.appendChild(card);
       return;

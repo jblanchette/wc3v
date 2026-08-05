@@ -1,4 +1,4 @@
-// Desktop parser worker — hosts the wc3v parser bundle in an isolated Worker.
+// Desktop parser worker. Hosts the wc3v parser bundle in an isolated Worker.
 //
 // Same reasoning as the web client's client/js/parser-worker.js: the parser
 // handles untrusted binary data, so it runs off the main thread where a
@@ -22,7 +22,7 @@
 //                  { type: 'error', id, message, code?, rawMapName?, mapDataName? }
 
 (function () {
-  // The bundled parser and its vendored w3gjs log liberally while parsing —
+  // The bundled parser and its vendored w3gjs log liberally while parsing, so
   // noisy on every game, louder on malformed input, and never actionable for
   // an end user. Silence it before the bundle loads unless explicitly asked.
   if (!/[?&]log=1(?:&|$)/.test(self.location.search || '')) {
@@ -45,7 +45,7 @@ const requestMapData = (mapDataName) => new Promise((resolve, reject) => {
   self.postMessage({ type: 'need-map', reqId: reqId, mapDataName: mapDataName });
 });
 
-// Matches the shape of client/js/parser/browserMapLoader.js — returns null on
+// Matches the shape of client/js/parser/browserMapLoader.js. Returns null on
 // a miss so the parser raises its own clean "missing map cache" error.
 const desktopMapLoader = {
   async fetchCache (mapDataName) {
@@ -70,7 +70,7 @@ self.onmessage = async (e) => {
     return;
   }
 
-  // Header-only read for identity detection — no map data, no game parse.
+  // Header-only read for identity detection. No map data, no game parse.
   if (msg.type === 'peek') {
     try {
       const out = await self.Wc3vParser.peekPlayers(msg.buffer);

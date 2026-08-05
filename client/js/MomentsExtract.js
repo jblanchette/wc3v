@@ -503,10 +503,10 @@
       const mineLost = (m.heroes || []).filter(h => mine(h.slot));
       const theirs = (m.heroes || []).filter(h => !mine(h.slot));
       if (me === null || !mineLost.length) {
-        return `Hero trade — ${(m.heroes || []).map(h => h.name).join(', ')}`;
+        return `Hero trade: ${(m.heroes || []).map(h => h.name).join(', ')}`;
       }
       const side = (list) => list.length === 1 ? list[0].name : `${list.length} heroes`;
-      return `Hero trade — you lost ${side(mineLost)}, they lost ${side(theirs)}`;
+      return `Hero trade: you lost ${side(mineLost)}, they lost ${side(theirs)}`;
     }
     if (m.type === 'heroLostToCreeps') {
       const hero = m.heroes && m.heroes[0] ? m.heroes[0].name : 'A hero';
@@ -518,13 +518,13 @@
     // claiming somebody "came out ahead" off a 50-gold margin is a lie the
     // viewer's own battle report would not tell.
     if (m.winnerSlots && m.winnerSlots.length) {
-      if (m.tier === 'even') return `${m.label} — an even trade`;
+      if (m.tier === 'even') return `${m.label}: an even trade`;
       const how = m.tier === 'decisive' ? ' decisively' : '';
       if (me !== null) {
-        if (m.winnerSlots.some(mine)) return `${m.label} — you came out ahead${how}`;
-        if (humanKnown(m, me)) return `${m.label} — you came out behind${how}`;
+        if (m.winnerSlots.some(mine)) return `${m.label}: you came out ahead${how}`;
+        if (humanKnown(m, me)) return `${m.label}: you came out behind${how}`;
       }
-      return `${m.label} — ${name(m.winnerSlots[0])} came out ahead${how}`;
+      return `${m.label}: ${name(m.winnerSlots[0])} came out ahead${how}`;
     }
 
     // Macro beats belong to one player.
@@ -534,7 +534,7 @@
         if (m.type === 'expansion') return `You ${m.label.toLowerCase()}`;
         return `You: ${m.label}`;
       }
-      if (m.type === 'tier2' || m.type === 'tier3') return `${name(m.slot)} — ${m.label}`;
+      if (m.type === 'tier2' || m.type === 'tier3') return `${name(m.slot)}: ${m.label}`;
       return `${name(m.slot)}: ${m.label}`;
     }
     return m.label;

@@ -1,21 +1,21 @@
-// Overlay state — session W/L/streak plus the last finished game, published
-// to the Rust loopback server, which relays it to OBS over SSE. (ROADMAP §4)
+// Overlay state: session W/L/streak plus the last finished game, published to
+// the Rust loopback server, which relays it to OBS over SSE. (ROADMAP §4)
 //
-// Raw summaries are kept and views derived at publish time, so changing the
+// Raw summaries get kept and views derived at publish time, so changing the
 // profile name re-orients past session games instead of freezing verdicts
-// computed under the old name. Only LIVE games (watcher-detected while the
-// app runs) enter the session; clicking through history does not — a
-// streamer browsing old replays must not scramble their on-stream score.
+// computed under the old name. Only live games enter the session, meaning ones
+// the watcher caught while the app was running. A streamer browsing old
+// replays must never scramble their on-stream score.
 
 (function () {
   'use strict';
 
-  // A stream ticker is glanceable or it is nothing. Five lines is already
-  // pushing it at broadcast distances.
+  // A stream ticker has to be glanceable. Five lines is already pushing it at
+  // broadcast distance.
   const OVERLAY_MOMENTS = 5;
 
   window.createOverlayState = (deps) => {
-    // deps: invoke, log, corpus() — the stored game history, for head-to-head
+    // deps: invoke, log, corpus(), the stored history used for head-to-head
     const PA = window.ProfileAggregate;
     const st = {
       userName: localStorage.getItem('wc3v-user-name') || null,
@@ -24,9 +24,9 @@
       demo: false     // showing the labelled stand-in game for OBS setup
     };
 
-    // Orient a summary from the profile player's seat; if they are not in
-    // the game (observing, smurf name), fall back to the first seat so the
-    // overlay still shows the game — with an honest 'unknown' verdict.
+    // Orient a summary from the profile player's seat. When they are not in
+    // the game at all, from observing or a smurf name, fall back to the first
+    // seat so the overlay still shows it, with an 'unknown' verdict.
     const viewFor = (summary) => {
       if (!summary) return null;
       if (st.userName) {
@@ -36,9 +36,9 @@
       const firstSlot = Object.keys(summary.players || {})[0];
       if (firstSlot === undefined) return null;
       const v = PA.gameView(summary, PA.normName(summary.players[firstSlot].name));
-      // `mine` is what stops the fallback seat being read as the user's. Without
-      // it the overlay narrates a stranger's game in the first person — "you
-      // lost 2 heroes" under a card that cannot even name a winner.
+      // `mine` stops the fallback seat being read as the user's. Without it the
+      // overlay narrates a stranger's game in the first person: "you lost 2
+      // heroes" under a card that cannot name a winner.
       if (v) { v.result = null; v.mine = false; }
       return v;
     };
@@ -56,8 +56,8 @@
       return kind ? { kind, count } : null;
     };
 
-    // The same numbers the overlay shows, for the app's own title bar. Derived
-    // rather than stored so the app bar and the broadcast can never drift.
+    // The same numbers the overlay shows, for the app bar. Derived rather than
+    // stored, so the two can never drift.
     const sessionSummary = () => {
       const views = st.session.map(viewFor).filter(Boolean);
       return {
@@ -68,13 +68,12 @@
       };
     };
 
-    // Head-to-head against the player in the last game, from local history.
-    // This is the one thing on the overlay no website could tell a streamer,
-    // because it was learned from their own games.
+    // Head-to-head against the player in the last game, from local history. No
+    // website could tell a streamer this, because it was learned from their own
+    // games.
     //
-    // Counted over the whole corpus, not the session — "you're 3–2 against
-    // this guy all time" is the interesting number, and the session module
-    // already carries today's.
+    // Counted over the whole corpus. "You're 3–2 against this guy all time" is
+    // the interesting number, and the session module already carries today's.
     const h2hFor = (summary, v) => {
       if (!v || !v.opponent || !st.userName) return null;
       const corpus = deps.corpus && deps.corpus();
@@ -97,7 +96,7 @@
       return { name: v.opponent.name, games, wins, losses };
     };
 
-    // Moments are phrased HERE, where the user's seat is known, so the overlay
+    // Moments get phrased here, where the user's seat is known, so the overlay
     // stays a pure consumer and the app and the broadcast word the same fight
     // the same way.
     const momentsFor = (summary, v) => {
@@ -117,10 +116,10 @@
         }));
     };
 
-    // The one-line read of a game, from the SAME grader the Review tab uses.
-    // Only ever claimed for the user's own seat: "economy lagged" said about a
-    // stranger's game that the overlay is only showing as a fallback would be
-    // a judgement of somebody who is not there.
+    // The one-line read of a game, from the same grader the Review tab uses.
+    // Only ever claimed for the user's own seat. "Economy lagged" said about a
+    // stranger's game that the overlay is showing as a fallback would judge
+    // somebody who is not there.
     const readFor = (summary, v) => {
       if (!summary || !v || !v.mine || !window.GameReport) return null;
       const corpus = deps.corpus && deps.corpus();
@@ -141,12 +140,12 @@
         // again" (an identity change or a reconnect republishes everything),
         // and a timestamp cannot: every publish has a new one.
         gameId: st.lastGame.key || null,
-        // The same sentence the app's Review tab shows. One wording source,
-        // three renderers — window, toast and broadcast.
+        // The same sentence the app's Review tab shows. One wording source
+        // feeds the window, the toast and the broadcast.
         read: readFor(st.lastGame, v),
-        // The display name, not the raw ladder filename — the stored `map` is
-        // "12_w3c_251104_0950_TurtleRock_v2.0.w3x", which is not something to
-        // put on a broadcast.
+        // The display name. The stored `map` is
+        // "12_w3c_251104_0950_TurtleRock_v2.0.w3x", which nobody should put on
+        // a broadcast.
         map: window.SummaryExtract.cleanMapName(st.lastGame.mapRaw || v.map) || v.map,
         mode: v.mode,
         h2h: h2hFor(st.lastGame, v),
@@ -172,10 +171,10 @@
 
     // The one-sentence version of a game, for the desktop notification.
     //
-    // It lives here, next to the overlay's phrasing, for the same reason the
-    // moments do: the toast, the app and the broadcast must never word the
-    // same game differently. Returns null when there is nothing worth
-    // interrupting someone for — an unreadable seat says nothing useful.
+    // It lives here next to the overlay's phrasing for the same reason the
+    // moments do: the toast, the app and the broadcast must never word the same
+    // game differently. Returns null when there is nothing worth interrupting
+    // anyone for, since an unreadable seat says nothing useful.
     const toastFor = (summary) => {
       const v = viewFor(summary);
       if (!v) return null;
@@ -191,10 +190,10 @@
       const h2h = h2hFor(summary, v);
       const record = h2h ? `all time ${h2h.wins}–${h2h.losses}` : '';
 
-      // The single biggest beat, phrased from the user's seat. Taken straight
-      // off the ranked list rather than from momentsFor(), which re-sorts its
-      // top five into TIME order for the overlay — reading [0] off that would
-      // give the earliest of the five, not the most important.
+      // The single biggest beat, phrased from the user's seat. Taken off the
+      // ranked list rather than momentsFor(), which re-sorts its top five into
+      // time order for the overlay. Reading [0] off that gives the earliest of
+      // the five.
       const ranked = ((summary && summary.moments) || [])
         .slice()
         .sort((a, b) => b.importance - a.importance);
@@ -209,7 +208,7 @@
         };
       }
 
-      // The read goes on the toast too — "you won" is the headline, "economy
+      // The read goes on the toast too. "You won" is the headline. "Economy
       // lagged" is the reason to open the app.
       const read = readFor(summary, v);
 
@@ -221,7 +220,7 @@
       };
     };
 
-    // Human players in a summary — the candidates for "which one is you".
+    // Human players in a summary, the candidates for "which one is you".
     const candidatesIn = (summary) => Object.keys(summary && summary.players || {})
       .map(k => summary.players[k].name)
       .filter(Boolean);
@@ -259,8 +258,8 @@
     };
 
     // A stand-in game, so a streamer can size and position the Browser Source
-    // in OBS before ever playing one. Labelled on the overlay itself — an
-    // unlabelled fake result on a live stream would be indefensible.
+    // in OBS before ever playing one. It is labelled on the overlay itself,
+    // because an unlabelled fake result on a live stream is indefensible.
     const DEMO = {
       updatedAt: 0,
       user: 'You',
@@ -283,7 +282,7 @@
         moments: [
           { time: '6:12', text: 'You expanded', hero: false },
           { time: '8:42', text: 'You killed Blademaster', hero: true },
-          { time: '11:58', text: 'Fight at the expansion — you came out ahead decisively', hero: false }
+          { time: '11:58', text: 'Fight at the expansion, you came out ahead', hero: false }
         ],
         build: [
           { type: 'building', name: 'Altar of Kings', time: '0:12' },
@@ -311,7 +310,7 @@
         st.lastGame = summary;
         publish();
       },
-      // Boot seeding: show the most recent stored game instead of an empty
+      // Boot seeding. Show the most recent stored game instead of an empty
       // card, without letting it count toward the session score.
       seedLastGame (summary) {
         if (st.lastGame || !summary) return;

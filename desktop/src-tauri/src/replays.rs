@@ -1,6 +1,6 @@
 //! Replay discovery, scanning and dedupe.
 //!
-//! Layout notes, verified against a real install rather than assumed — the
+//! Layout notes, verified against a real install rather than assumed. The
 //! obvious guess (`Documents\Warcraft III\Replays`) does not exist:
 //!
 //! ```text
@@ -34,7 +34,7 @@
 //!
 //! 1. **Size-gate the hashing.** Two files cannot be identical if their sizes
 //!    differ. On the reference corpus only 32.6% of files share a size with
-//!    any other file, so 67% never need reading at all — 268 MB instead of
+//!    any other file, so 67% never need reading at all: 268 MB instead of
 //!    896 MB.
 //! 2. **Use a fast hash.** This is a dedupe key, not a security boundary.
 //! 3. **Persist the results.** A file whose (size, mtime) is unchanged since
@@ -152,7 +152,7 @@ impl HashIndex {
     /// Drop entries for files that no longer exist, so the index cannot grow
     /// without bound as replays are moved or deleted. Entries outside `seen`
     /// (files under a root this scan didn't cover) are kept while the file is
-    /// still on disk — without that, scanning root A would evict root B's
+    /// still on disk. Without that, scanning root A would evict root B's
     /// hashes and alternating scans would re-read hundreds of MB each time.
     fn retain_seen(&mut self, seen: &[String]) {
         let set: std::collections::HashSet<&str> = seen.iter().map(|s| s.as_str()).collect();
@@ -297,7 +297,7 @@ pub fn hash_file(path: &Path) -> std::io::Result<String> {
     Ok(format!("{:016x}", hasher.digest()))
 }
 
-/// Dedupe key for a file already known to be size-unique — no read required.
+/// Dedupe key for a file already known to be size-unique. No read required.
 fn unique_key(size: u64) -> String {
     format!("{size}-u")
 }
@@ -307,7 +307,7 @@ fn unique_key(size: u64) -> String {
 /// Phase 1: walk + stat only. ~230 ms for 4,875 files, reads no file contents.
 ///
 /// Everything the UI displays comes from here, so the list can render before
-/// dedupe has done anything. `key` is left empty — duplicates are still in the
+/// dedupe has done anything. `key` is left empty, because duplicates are in the
 /// list at this point.
 pub fn scan_meta(root: &Path) -> ScanResult {
     let t_all = std::time::Instant::now();
@@ -357,7 +357,7 @@ pub fn scan_meta(root: &Path) -> ScanResult {
 
 /// Phase 2: assign dedupe keys and collapse duplicates.
 ///
-/// Only files whose SIZE collides with another file are ever read — on the
+/// Only files whose size collides with another file are ever read. On the
 /// reference corpus that is 1,588 of 4,875 (268 MB of 896 MB). Results are
 /// cached in `index_path` keyed by (path, size, mtime), so a repeat run reads
 /// nothing at all and finishes in ~160 ms.
@@ -424,7 +424,7 @@ pub fn dedupe(mut replays: Vec<ReplayFile>, index_path: &Path) -> ScanResult {
 }
 
 /// Convenience for callers that want the finished list and do not care about
-/// showing anything in between. Only the benchmark uses it now — the watcher
+/// showing anything in between. Only the benchmark uses it now, since the
 /// and `scan_all` both dedupe across every root in one pass instead, so they
 /// write the hash index once rather than once per root.
 #[cfg(test)]

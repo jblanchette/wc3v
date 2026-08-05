@@ -1,16 +1,15 @@
 // Coordinator. Owns the parser workers, the map cache, the view switch and
-// boot; every screen and every piece of state lives in its own module and is
-// handed exactly the dependencies it needs.
+// boot. Every screen and every piece of state lives in its own module and gets
+// handed the dependencies it needs.
 //
-// What this app is for, in one line: your replays are already on disk, so
-// finishing a game should be all it takes to see how it went.
+// The premise: your replays are already on disk, so finishing a game should be
+// all it takes to see how it went.
 
-// Tauri v2 does NOT expose window.__TAURI__ unless `app.withGlobalTauri` is
-// true in tauri.conf.json — the default assumes you import @tauri-apps/api
-// through a bundler. This project has no bundler, so we rely on the global.
-// Reading it at module scope without checking means a config regression throws
-// here and takes the whole script with it, leaving a blank window and no clue
-// why; surface it instead.
+// Tauri v2 hides window.__TAURI__ unless `app.withGlobalTauri` is true in
+// tauri.conf.json, because the default assumes @tauri-apps/api through a
+// bundler. This project has no bundler. Reading the global without checking
+// means a config regression throws here and takes the whole script down,
+// leaving a blank window and no clue why.
 const el = (id) => document.getElementById(id);
 
 if (!window.__TAURI__) {
@@ -26,6 +25,17 @@ if (!window.__TAURI__) {
 
 const invoke = window.__TAURI__.core.invoke;
 const listen = window.__TAURI__.event.listen;
+const appWindow = window.__TAURI__.window.getCurrentWindow();
+
+// Hidden to the tray still counts as running, so anything on a timer has to
+// ask before it does work nobody can see.
+const windowVisible = async () => {
+  try {
+    return await appWindow.isVisible();
+  } catch (e) {
+    return !document.hidden;
+  }
+};
 
 const state = {
   roots: [],
@@ -35,8 +45,8 @@ const state = {
   jobs: new Map()
 };
 
-// Tauri command rejections arrive as plain strings, not Errors, so `e.message`
-// is undefined for exactly the failures we most need to read.
+// Tauri command rejections arrive as plain strings rather than Errors, so
+// `e.message` is undefined for exactly the failures worth reading.
 const errText = (e) =>
   (e && e.message) || (typeof e === 'string' ? e : JSON.stringify(e));
 
@@ -52,9 +62,9 @@ const log = (msg, kind = '') => {
   el('log').prepend(line);
 };
 
-// When something the user just CLICKED fails, say so where they are looking.
-// Sending it only to log() put the reason in the Activity drawer, which is
-// collapsed by default — so a failed primary action looked like a dead button.
+// When something the user just clicked fails, say so where they are looking.
+// Sending it only to log() buried the reason in the Activity drawer, which is
+// collapsed by default, so a failed primary action looked like a dead button.
 const failed = (msg) => {
   setStatus(msg, 'err');
   log(msg, 'err');
@@ -63,9 +73,8 @@ const failed = (msg) => {
 
 // ── Parser workers ──────────────────────────────────────────────────────────
 //
-// One shared wiring for every parser worker — the interactive one and the
-// backfill pool. Job ids come from a single counter, so all workers can share
-// the one jobs map.
+// One wiring covers the interactive worker and the backfill pool. Job ids come
+// from a single counter, so every worker shares the one jobs map.
 
 const wireWorker = (w) => {
   w.onmessage = async (e) => {
@@ -86,8 +95,8 @@ const wireWorker = (w) => {
     if (!job) return;
 
     if (msg.type === 'progress') {
-      // Backfill jobs are quiet — the status line belongs to the user's own
-      // interactive parse, not to whichever background game is mid-flight.
+      // The status line belongs to whatever the user just clicked. A backfill
+      // running behind it would overwrite that every few seconds.
       if (job.quiet) return;
       const p = msg.evt || {};
       setStatus(`${p.phase || 'reading the replay'} ${Math.round(p.percent || 0)}% ${p.detail || ''}`);
@@ -106,9 +115,9 @@ const wireWorker = (w) => {
     }
   };
 
-  // A crashed worker never answers again; fail its outstanding jobs so callers
-  // (the backfill loop especially) can respawn and move on instead of hanging
-  // forever on a promise nobody will settle.
+  // A crashed worker never answers again. Fail its outstanding jobs so callers
+  // can respawn and move on. The backfill loop would otherwise hang forever on
+  // a promise nobody will settle.
   w.onerror = (ev) => {
     log(`worker crashed: ${ev.message}`, 'err');
     w._dead = true;
@@ -130,13 +139,13 @@ const ensureWorker = () => {
   return state.worker;
 };
 
-// Map data lives on local disk under the app data dir. Files are gzipped JSON,
-// exactly as the site serves them.
+// Map data lives under the app data dir as gzipped JSON, byte for byte what
+// the site serves.
 //
 // The installer bundles the ladder pool, so the common case never leaves the
-// machine. Anything else — a custom map, an older season, a map added after
-// this build was cut — is fetched once from the CDN and then cached like any
-// other. Before that path existed, those games simply failed.
+// machine. A custom map, an older season, or a map added after this build was
+// cut gets fetched once from the CDN and cached like any other. Those games
+// used to fail outright.
 const loadMapCache = async (mapDataName) => {
   const read = async (file) => {
     const bytes = await invoke('read_map_file', { map: mapDataName, file });
@@ -146,17 +155,17 @@ const loadMapCache = async (mapDataName) => {
     try {
       return await read(file);
     } catch (e) {
-      // Only a cache MISS is worth a download. A path or permission failure
-      // would fail again identically after one.
+      // Only a cache miss is worth a download. A path or permission failure
+      // would fail again identically afterwards.
       if (!String(errText(e)).startsWith('not cached')) throw e;
       log(`downloading map data for "${mapDataName}"…`);
       await invoke('fetch_map', { map: mapDataName });
       return read(file);
     }
   };
-  // wpm first and alone: it is the file every map has, so one round trip
-  // settles whether this map exists at all, and fetch_map has by then pulled
-  // all three — leaving the other two as plain cache reads.
+  // wpm first and alone. Every map has it, so one round trip settles whether
+  // this map exists. By then fetch_map has pulled all three, leaving the other
+  // two as plain cache reads.
   const wpm = await readOrFetch('wpm.json.gz').then(store.gunzipJson);
   const [doo, unit] = await Promise.all([
     readOrFetch('doo.json.gz').then(store.gunzipJson),
@@ -165,10 +174,10 @@ const loadMapCache = async (mapDataName) => {
   return { wpm, doo, unit };
 };
 
-// Backfill parses hundreds of games on the same handful of ladder maps; a small
-// LRU stops the same wpm/doo/unit files being re-read and re-gunzipped for
-// every game. Values are promises, so two workers asking for the same map at
-// once share a single load. Deliberately small — entries are multi-MB JSON.
+// A backfill parses hundreds of games on the same handful of ladder maps. This
+// LRU stops the same wpm/doo/unit files being re-read and re-gunzipped every
+// time. Values are promises, so two workers asking for the same map share one
+// load. It stays small because entries are multi-MB JSON.
 const mapCacheLru = new Map();
 const MAP_CACHE_MAX = 6;
 const loadMapCacheCached = (mapDataName) => {
@@ -179,7 +188,7 @@ const loadMapCacheCached = (mapDataName) => {
     return hit;
   }
   const p = loadMapCache(mapDataName);
-  // A failed load must not stay cached, or one transient error poisons the map.
+  // A failed load must not stay cached, or one blip poisons the map for good.
   p.catch(() => mapCacheLru.delete(mapDataName));
   mapCacheLru.set(mapDataName, p);
   while (mapCacheLru.size > MAP_CACHE_MAX) {
@@ -214,15 +223,24 @@ const peekPlayers = async (worker, path) => {
 
 // ── Modules ─────────────────────────────────────────────────────────────────
 
+// Any player name anywhere in the app is a door to their book. This is the
+// whole reason Coach accepts a name.
+const openProfile = (name) => {
+  el('profile-name').value = name || '';
+  showView('profile');
+};
+
 const store = window.createStore({ invoke, log });
 const replayIndex = window.createReplayIndex({ invoke, log });
 const overlayState = window.createOverlayState({
   invoke,
   log,
-  // Head-to-head on the overlay is counted over the whole stored history, not
-  // just this session.
+  // Head-to-head on the overlay counts the whole stored history. The session
+  // module already carries today's numbers.
   corpus: () => store.corpus
 });
+
+const w3c = window.createW3c({ invoke, log });
 
 const identity = window.createIdentity({
   log,
@@ -231,13 +249,26 @@ const identity = window.createIdentity({
   overlayState,
   replays: () => state.replays,
   onChange: () => {
-    // Every verdict in the app is scored from this seat, so the feed, the open
-    // game and anything already on stream all have to be re-read when it
-    // changes.
+    // Every verdict is scored from this seat, so the feed, the open game and
+    // anything already on stream get re-read when it changes.
     renderSession();
     if (store.corpus) gamesView.render(store.corpus);
     if (currentView === 'stream') streamView.renderPreview();
+    // A different seat means a different battle tag to ask the ladder about,
+    // and a different answer to whether that tag can be asked about at all.
+    settingsView.syncW3c();
   }
+});
+
+// Who you are playing right now, from W3Champions, over your own record
+// against them. Idle until the feature is switched on in Settings.
+const scout = window.createScout({
+  w3c,
+  store,
+  log,
+  identityName: () => identity.name,
+  visible: windowVisible,
+  onOpenProfile: (name) => openProfile(name)
 });
 
 const gamesView = window.createGamesView({
@@ -246,15 +277,10 @@ const gamesView = window.createGamesView({
   identityName: () => identity.name,
   onWatch: (summary, moment) => watchMoment(summary, moment),
   onReparse: (summary) => reparse(summary),
-  // The first-run card's only call to action — parsing your history lives on
-  // the Settings screen, so send the user there rather than duplicating it.
+  // Parsing your history lives on the Settings screen, so the first-run card
+  // sends you there instead of carrying a second copy of the button.
   onGoToSettings: () => showView('settings'),
-  // Any player name, anywhere, opens their book. This is the whole reason
-  // Coach accepts a name.
-  onOpenProfile: (name) => {
-    el('profile-name').value = name || '';
-    showView('profile');
-  }
+  onOpenProfile: openProfile
 });
 
 const profileView = window.createProfileView({
@@ -269,9 +295,8 @@ const backfill = window.createBackfill({
   invoke,
   log,
   makeWorker,
-  // Fast profile mode: summaries are never rendered, the one case where
-  // skipPathfinding is allowed. Quiet keeps the status line for the user's own
-  // interactive parse.
+  // Fast profile mode. Nothing here gets rendered, which is the one case where
+  // skipPathfinding is allowed. Quiet leaves the status line alone.
   parseOn: (worker, path) =>
     parseReplayWith(worker, path, { quiet: true, parserOptions: { skipPathfinding: true } }),
   persistSummary: store.persistSummary,
@@ -292,21 +317,19 @@ const backfill = window.createBackfill({
   }
 });
 
-// Whether the app speaks up when a game finishes. Declared here rather than
-// beside notifyGameFinished() because settingsView reads it while it is being
-// constructed, and a `const` below that point would still be in its temporal
-// dead zone.
+// Whether the app speaks up when a game finishes. Declared up here because
+// settingsView reads it while being constructed, and a `const` below that
+// point would still be in its temporal dead zone.
 const NOTIFY_KEY = 'wc3v-notify-games';
 const notifyEnabled = () => localStorage.getItem(NOTIFY_KEY) !== '0';
 
-// Update checking. Default on: nobody opens a Settings screen to ask whether
-// their replay parser is current, so an update behind a button is an update
-// nobody takes. Applying one stays a decision — see settings-view.js.
+// Update checking, on by default. Nobody opens a settings screen to ask
+// whether their replay parser is current, so an update behind a button is an
+// update nobody takes. Applying one stays a decision (settings-view.js).
 const AUTOUPDATE_KEY = 'wc3v-autoupdate';
 const autoUpdateEnabled = () => localStorage.getItem(AUTOUPDATE_KEY) !== '0';
-// Six hours. Releases do not arrive faster than that, and this process may be
-// alive for a week — a tight interval would be a request to a CDN every few
-// minutes for the entire time, forever, for nothing.
+// Six hours. Releases do not arrive faster than that, and this process can be
+// alive for a week, so a tight interval would hammer a CDN for nothing.
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 const settingsView = window.createSettingsView({
@@ -317,15 +340,22 @@ const settingsView = window.createSettingsView({
   roots: () => state.roots,
   addRoot: (root) => state.roots.push(root),
   onScan: (path) => scan(path),
+  identityName: () => identity.name,
   notifyEnabled,
   setNotifyEnabled: (on) => localStorage.setItem(NOTIFY_KEY, on ? '1' : '0'),
   autoUpdateEnabled,
   setAutoUpdateEnabled: (on) => localStorage.setItem(AUTOUPDATE_KEY, on ? '1' : '0'),
-  onUpdateAvailable: (version) => showUpdateChip(version)
+  onUpdateAvailable: (version) => showUpdateChip(version),
+  // Rust owns the real setting. This fires with whatever it says, so the
+  // poller can never outlive a refusal.
+  onW3cChange: (on) => {
+    w3c.setEnabled(on);
+    if (on) scout.start(); else scout.stop();
+  }
 });
 
-// The app bar's update indicator. Settings owns the decision and the notes;
-// this is only how you find out there is one without going looking.
+// The app bar's update indicator. Settings owns the decision and the notes.
+// This is how you find out there is one without going looking.
 const showUpdateChip = (version) => {
   el('update-chip-text').textContent = `Update to ${version}`;
   el('update-chip').hidden = false;
@@ -353,9 +383,9 @@ const showView = (name) => {
     btn.classList.toggle('is-active', active);
     btn.setAttribute('aria-selected', String(active));
   }
-  // Settings has no tab — it is maintenance, reached from the gear (or the
-  // update chip). While it is open the tablist legitimately has nothing
-  // selected; the gear carries the pressed state instead.
+  // Settings has no tab. It is maintenance, reached from the gear or the
+  // update chip. While it is open the tablist legitimately has nothing
+  // selected, so the gear carries the pressed state.
   const gear = el('settings-btn');
   gear.classList.toggle('is-active', name === 'settings');
   gear.setAttribute('aria-pressed', String(name === 'settings'));
@@ -374,10 +404,9 @@ el('settings-btn').addEventListener('click', () => showView('settings'));
 //
 // The window is undecorated (tauri.conf.json), so the app bar is the title bar
 // and these are its buttons. Close calls the window's ordinary close, which
-// main.rs intercepts and turns into hide-to-tray — the behaviour stays defined
-// in one place rather than being reimplemented here.
+// main.rs intercepts and turns into hide-to-tray, keeping that behaviour
+// defined in one place.
 
-const appWindow = window.__TAURI__.window.getCurrentWindow();
 el('win-min').addEventListener('click', () => appWindow.minimize());
 el('win-max').addEventListener('click', () => appWindow.toggleMaximize());
 el('win-close').addEventListener('click', () => appWindow.close());
@@ -404,12 +433,13 @@ const renderSession = () => {
 
 // ── Post-game notification ──────────────────────────────────────────────────
 //
-// The whole premise is that you finish a game and do not have to go looking.
-// Most of the time the window is behind Warcraft, so the app has to be the one
-// that speaks. Only ever for a WATCHER-DETECTED game: firing this from the
-// backfill would mean one toast per replay, thousands of them.
+// You finish a game and do not have to go looking. The window is behind
+// Warcraft most of the time, so the app has to speak first.
 //
-// Wording comes from overlayState so the toast, the app and the broadcast can
+// Watcher-detected games only. Firing this from the backfill would mean one
+// toast per replay, thousands of them.
+//
+// Wording comes from overlayState, so the toast, the app and the broadcast can
 // never describe the same game differently.
 
 const notifyGameFinished = async (summary) => {
@@ -425,24 +455,24 @@ const notifyGameFinished = async (summary) => {
     await n.sendNotification({ title: toast.title, body: toast.body });
   } catch (e) {
     // A notification that cannot be shown is not worth interrupting anything
-    // over — the game is already on screen behind it.
+    // over. The game is already on screen behind it.
     log(`could not show a notification: ${errText(e)}`, 'warn');
   }
 };
 
 // ── Parsing a game ──────────────────────────────────────────────────────────
 
-// opts.live marks a watcher-detected game: it enters the overlay session.
-// Clicking through history never does — a streamer browsing old replays must
-// not scramble their on-stream score.
+// opts.live marks a watcher-detected game, which is the only kind that enters
+// the overlay session. A streamer browsing old replays must never scramble
+// their on-stream score.
 const run = async (path, opts = {}) => {
   setStatus('reading…');
   const fileName = path.split(/[\\/]/).pop();
   const started = performance.now();
   try {
-    // Canonical identity first — a game already summarised is shown from the
-    // store instead of being re-parsed. The key is content-based, so the same
-    // game under another path (a copied file) also hits.
+    // Canonical identity first. A game already summarised renders from the
+    // store instead of re-parsing. The key is content-based, so a copy of the
+    // same file under another path hits too.
     const { key, modifiedMs } = await invoke('replay_key', { path });
     replayIndex.remember(key, path);
     let summary = null;
@@ -469,6 +499,9 @@ const run = async (path, opts = {}) => {
         corpus.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
       }
       if (opts.live) {
+        // Whatever the scout card was showing has just ended, and the report
+        // underneath it is the better thing to look at.
+        scout.dismiss();
         overlayState.recordGame(summary);
         renderSession();
         if (currentView === 'stream') streamView.renderPreview();
@@ -477,17 +510,16 @@ const run = async (path, opts = {}) => {
       }
       gamesView.render(store.corpus || [summary]);
       gamesView.select(key);
-      // A game that finished while the user was reading something else should
-      // pull them to it — that is the whole promise. Browsing history and
-      // clicking a game does not (opts.live is false there).
+      // A game that finished while the user was reading something else pulls
+      // them to it. That is the promise. Clicking through history does not,
+      // because opts.live is false there.
       if (opts.live) showView('games');
     }
     return summary;
   } catch (err) {
     setStatus('could not read that replay');
     if (err.code === 'missing_map' || err.code === 'missing_map_cache') {
-      log(`no local map data for "${err.mapDataName || err.rawMapName}" — this game ` +
-          `is on a map WC3V has not seen yet`, 'warn');
+      log(`no local map data for "${err.mapDataName || err.rawMapName}"`, 'warn');
     } else {
       log(`could not read ${fileName}: ${errText(err)}`, 'err');
     }
@@ -496,24 +528,23 @@ const run = async (path, opts = {}) => {
 };
 
 // Re-read a game stored before the summary schema gained moments. The file has
-// to be found again first — summaries carry a content key, never a path.
+// to be found again first, because summaries carry a content key and no path.
 const reparse = async (summary) => {
   setStatus('finding the replay file…');
   const path = await replayIndex.pathFor(summary.key).catch(() => null);
   if (!path) {
-    failed('WC3V could not find that replay file any more — it may have been ' +
-           'moved or deleted since it was parsed');
+    failed('That replay file is gone. It was moved or deleted since parsing.');
     gamesView.select(summary.key);
     return;
   }
   await run(path, { force: true });
 };
 
-// Open a game — or one moment inside it — in the viewer on wc3v.com.
+// Open a game, or one moment inside it, in the viewer on wc3v.com.
 //
-// The replay leaves this process only over loopback, into the browser the user
-// already has. There is no upload and no account; the site parses it locally
-// exactly as it would a file the user dragged in.
+// The replay leaves this process over loopback and goes into the browser the
+// user already has. No upload, no account. The site parses it locally exactly
+// as it would a file dragged in.
 const watchMoment = async (summary, moment) => {
   setStatus('finding the replay file…');
   let path;
@@ -524,8 +555,7 @@ const watchMoment = async (summary, moment) => {
     return;
   }
   if (!path) {
-    failed('WC3V could not find that replay file any more — it may have been ' +
-           'moved or deleted since it was parsed');
+    failed('That replay file is gone. It was moved or deleted since parsing.');
     return;
   }
   setStatus('opening your browser…');
@@ -536,11 +566,9 @@ const watchMoment = async (summary, moment) => {
       key: summary.key
     });
     setStatus(moment
-      ? `opening the viewer at ${moment.tf} — finish in your browser`
-      : 'opening the viewer — finish in your browser');
-    log(moment
-      ? `opening the viewer at ${moment.tf}: your browser will show one button to confirm`
-      : 'opening this game in the viewer: your browser will show one button to confirm', 'ok');
+      ? `opening the viewer at ${moment.tf}. Finish in your browser.`
+      : 'opening the viewer. Finish in your browser.');
+    log('your browser will show one button to confirm', 'ok');
   } catch (e) {
     failed(`could not open the viewer: ${errText(e)}`);
   }
@@ -557,11 +585,11 @@ const scan = async (root) => {
   setStatus(idleStatus());
 };
 
-// What the status line says when nothing is happening. The app's whole promise
-// is "finish a game and it shows up", so the resting state should say that.
+// What the status line says at rest. The promise is "finish a game and it
+// shows up", so the resting state says that.
 const idleStatus = () => store.size
   ? 'Watching for new games'
-  : 'Watching — play a game, or parse your history in Settings';
+  : 'Watching. Play a game, or parse your history in Settings.';
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 
@@ -587,7 +615,7 @@ const boot = async () => {
   }
 
   const watched = await invoke('start_watching');
-  log(`watching ${watched} replay folder(s) — finish a game and it appears here`, 'ok');
+  log(`watching ${watched} replay folder(s)`, 'ok');
   setStatus(idleStatus());
 
   await listen('replay-detected', (event) => {
@@ -619,9 +647,9 @@ const boot = async () => {
       });
   }
 
-  // Updates. On launch, then on a long interval — this app is meant to sit in
-  // the tray for days at a time, so "at launch" alone would mean a machine
-  // that never reboots never hears about anything. Quiet on failure.
+  // Updates: on launch, then on a long interval. This app sits in the tray for
+  // days, so checking only at launch would mean a machine that never reboots
+  // never hears about anything. Quiet on failure.
   if (autoUpdateEnabled()) {
     settingsView.checkQuietly();
     setInterval(() => {
@@ -635,17 +663,20 @@ const boot = async () => {
   identity.render();
   renderSession();
 
-  // Background: load the stored games, then paint the feed, seed the overlay's
-  // last game and fill the name autocomplete. Placeholders go up first —
-  // loadCorpus reads every stored summary over IPC one at a time, so at a few
-  // thousand games there is a real wait behind this.
+  // Background: load the stored games, paint the feed, seed the overlay's last
+  // game, fill the name autocomplete. Placeholders go up first, because
+  // loadCorpus reads every stored summary over IPC one at a time and a few
+  // thousand games is a real wait.
   gamesView.showLoading();
   store.loadCorpus().then((corpus) => {
     gamesView.render(corpus);
+    // The scout card may already be up, drawn before there was any history to
+    // read the opponent's record out of.
+    scout.refresh();
     if (!corpus.length) return;
     overlayState.seedLastGame(corpus[0]);   // corpus is newest-first
-    // Autocomplete covers every name ever seen; identity is a separate,
-    // explicit choice and does not come from this box.
+    // Autocomplete covers every name ever seen. Identity is a separate and
+    // explicit choice that never comes out of this box.
     const names = window.ProfileAggregate.knownNames(corpus).slice(0, 200);
     el('known-names').innerHTML = '';
     for (const n of names) {

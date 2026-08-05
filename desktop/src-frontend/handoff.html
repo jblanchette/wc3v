@@ -2,31 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>WC3V — open in the viewer</title>
+<title>WC3V: open in the viewer</title>
 <!--
   The bridge between WC3V on your machine and the viewer on wc3v.com.
 
-  WHY THIS PAGE EXISTS. The obvious design — open wc3v.com and let it pull the
-  replay from the loopback server — does not work. Chrome blocks a public page
-  from reaching 127.0.0.1: measured against a live server, `fetch` hangs
-  pending forever and an iframe ends in net::ERR_ABORTED. Both directions of
-  that idea are dead.
+  WHY THIS PAGE EXISTS. The obvious design is to open wc3v.com and let it pull
+  the replay off the loopback server. That does not work. Chrome blocks a public
+  page from reaching 127.0.0.1, and measured against a live server, `fetch`
+  hangs pending forever while an iframe ends in net::ERR_ABORTED.
 
-  So the browser starts HERE, on the loopback origin, where reading the replay
+  So the browser starts here, on the loopback origin, where reading the replay
   is same-origin and unremarkable. Then it opens wc3v.com and pushes the bytes
-  across with postMessage — private → public, which browsers do allow, and a
-  message channel needs no CORS at all.
+  across with postMessage. That direction is private to public, which browsers
+  allow, and a message channel needs no CORS.
 
-  The click is the mechanism, not a confirmation step. window.open without a
-  user gesture is pop-up blocked, and on a loopback origin the browser has no
-  engagement history to make an exception for — so it is blocked every time,
-  not occasionally. Nothing here opens a window on its own.
+  The click is the mechanism. window.open without a user gesture is pop-up
+  blocked, and a loopback origin has no engagement history for the browser to
+  make an exception for, so it is blocked every time. Nothing here opens a
+  window on its own.
 
   Self-contained: no external fonts, scripts or requests. The only things it
   touches are its own origin and the window it opens.
 -->
 <style>
-  /* The site's navy chrome, NOT the app's warm body — deliberately.
+  /* The site's navy chrome rather than the app's warm body, on purpose.
      This page is one of three the user sees back to back: this, then
      wc3v.com/handoff, then the viewer. The other two are navy, and a warm
      carved card in the middle of that run reads as a different product.
@@ -111,9 +110,9 @@
   'use strict';
 
   // The whole address is `…/open?h=<id>`. `at` and `key` used to be query
-  // parameters too, and the overlay token was in front of them — which made
-  // the visible URL three times longer AND wrote a permanent token into
-  // browser history on every use. They now come back with the bytes.
+  // parameters too, with the overlay token in front of them. That made the
+  // visible URL three times longer and wrote a permanent token into browser
+  // history on every use. They come back with the bytes now.
   var handoffId = new URLSearchParams(location.search).get('h') || '';
   var at = '';
   var key = '';
@@ -138,14 +137,14 @@
     });
 
   // The child announces itself when it is ready to receive; we answer with the
-  // bytes. Doing it this way round removes the race entirely — there is no
-  // guessing how long the site takes to load.
+  // bytes. Doing it this way round removes the race, with no guessing about
+  // how long the site takes to load.
   window.addEventListener('message', function (e) {
     if (e.origin !== SITE) return;
     if (!e.data || e.data.type !== 'wc3v-handoff-ready') return;
     bytesPromise.then(function (buf) {
-      // Transferred, not copied — a replay is a few hundred KB and this is the
-      // whole point of the message channel.
+      // Transferred rather than copied. A replay is a few hundred KB, and this
+      // is the point of the message channel.
       e.source.postMessage({ type: 'wc3v-handoff', buffer: buf, at: at, key: key }, SITE, [buf]);
       el('head').textContent = 'Sent';
       el('lead').textContent = 'The viewer is reading the replay now. This can ' +
@@ -153,21 +152,20 @@
       el('go').classList.add('hidden');
     }).catch(function () {
       fail('That replay is no longer staged',
-        'Click Watch again in WC3V — staged replays are dropped after ten minutes.');
+        'Click Watch again in WC3V. Staged replays are dropped after ten minutes.');
     });
   });
 
-  // Opened ONLY from a real click. An earlier version tried this automatically
-  // on load and kept the button as a fallback — which meant the browser blocked
-  // it every single time (a freshly-opened loopback origin has no engagement
-  // history, so there is nothing for it to trust), raised its blocked-pop-up
-  // indicator, and left this page explaining away a prompt it had caused
-  // itself. The automatic attempt never once succeeded; it only ever produced
-  // the warning. A click is the whole mechanism now.
+  // Opened only from a real click. An earlier version tried this automatically
+  // on load and kept the button as a fallback. A freshly-opened loopback origin
+  // has no engagement history for the browser to trust, so the automatic
+  // attempt was blocked every single time. All it ever did was raise the
+  // blocked-pop-up indicator and leave this page explaining away a prompt it
+  // had caused. The click is the whole mechanism now.
   function openViewer () {
     // `o` is this page's own origin, so the site can postMessage back to an
-    // exact target instead of a wildcard. It cannot know the port otherwise —
-    // the overlay server binds whatever it can keep across restarts.
+    // exact target instead of a wildcard. It cannot know the port otherwise,
+    // since the overlay server binds whatever it can keep across restarts.
     var url = SITE + '/handoff?from=wc3v-desktop' +
       '&o=' + encodeURIComponent(location.origin) +
       (at ? '&at=' + encodeURIComponent(at) : '') +
@@ -191,7 +189,7 @@
     })
     .catch(function () {
       fail('That replay is no longer staged',
-        'Click Watch again in WC3V — staged replays are dropped after ten minutes.');
+        'Click Watch again in WC3V. Staged replays are dropped after ten minutes.');
     });
 })();
 </script>

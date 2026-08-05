@@ -188,7 +188,7 @@
       if (w5 !== null) {
         score = baseW5 !== null ? 50 + (w5 - baseW5) * 5 : scale(w5, 8, 26);
         note = baseW5 !== null
-          ? `${w5} workers at 5:00 — your median is ${baseW5}`
+          ? `${w5} workers at 5:00, your median is ${baseW5}`
           : `${w5} workers at 5:00`;
       } else {
         note = 'no worker count in this game’s data';
@@ -291,7 +291,7 @@
       if (eapm) {
         score = baseApm !== null ? 50 + (eapm - baseApm) / 3 : scale(eapm, 40, 320);
         note = baseApm !== null
-          ? `${Math.round(eapm)} effective APM — your median is ${Math.round(baseApm)}`
+          ? `${Math.round(eapm)} effective APM, your median is ${Math.round(baseApm)}`
           : `${Math.round(eapm)} effective APM`;
         // Spam ratio nudges, never decides: a player with fewer, better
         // actions is not mechanically worse than one who spams.
@@ -322,17 +322,17 @@
       if (combat.biggestSwing && !combat.biggestSwing.won &&
           combat.biggestSwing.swing >= BIG_LOST_SWING) {
         flag(75, combat.biggestSwing.t,
-          `Lost the big fight — down ${combat.biggestSwing.swing}g in one trade`, 'lostFight');
+          `Lost the big fight, down ${combat.biggestSwing.swing}g in one trade`, 'lostFight');
       }
     }
     if (baseT2 !== null && p.tier2Time !== null && p.tier2Time !== undefined &&
         p.tier2Time - baseT2 >= LATE_T2_MS) {
       flag(70, p.tier2Time,
-        `Tier 2 at ${formatMs(p.tier2Time)} — your median is ${formatMs(baseT2)}`, 'lateT2');
+        `Tier 2 at ${formatMs(p.tier2Time)}, your median is ${formatMs(baseT2)}`, 'lateT2');
     }
     if (baseW5 !== null && w5 !== null && baseW5 - w5 >= WORKER_DEFICIT) {
       flag(65, 5 * MS.min,
-        `${w5} workers at 5:00 — your median is ${baseW5}`, 'workerDeficit');
+        `${w5} workers at 5:00, your median is ${baseW5}`, 'workerDeficit');
     }
     if (blocks.length >= SUPPLY_BLOCK_MIN_SAMPLES) {
       flag(55, blocks[0],
@@ -350,7 +350,7 @@
         durationMs >= NO_EXPAND_GAME_MS &&
         expansionRate !== null && expansionRate >= 40) {
       flag(40, null,
-        `Never expanded in a ${formatMs(durationMs)} game — you usually do (${expansionRate}%)`, 'noExpand');
+        `Never expanded in a ${formatMs(durationMs)} game; you usually do (${expansionRate}%)`, 'noExpand');
     }
 
     candidates.sort((a, b) => b.weight - a.weight);
@@ -364,7 +364,7 @@
           combat.biggestSwing.swing >= BIG_LOST_SWING) {
         highs.push({
           t: combat.biggestSwing.t, tf: combat.biggestSwing.tf,
-          text: `Won the big fight — up ${combat.biggestSwing.swing}g in one trade`, kind: 'wonFight'
+          text: `Won the big fight, up ${combat.biggestSwing.swing}g in one trade`, kind: 'wonFight'
         });
       }
       const up = combat.heroKills.length - combat.heroDeaths.length;
@@ -377,13 +377,13 @@
         baseT2 - p.tier2Time >= LATE_T2_MS) {
       highs.push({
         t: p.tier2Time, tf: formatMs(p.tier2Time),
-        text: `Tier 2 at ${formatMs(p.tier2Time)} — well ahead of your ${formatMs(baseT2)} median`, kind: 'fastT2'
+        text: `Tier 2 at ${formatMs(p.tier2Time)}, well ahead of your ${formatMs(baseT2)} median`, kind: 'fastT2'
       });
     }
     if (baseW5 !== null && w5 !== null && w5 - baseW5 >= WORKER_DEFICIT) {
       highs.push({
         t: 5 * MS.min, tf: '5:00',
-        text: `${w5} workers at 5:00 — above your ${baseW5} median`, kind: 'workerLead'
+        text: `${w5} workers at 5:00, above your ${baseW5} median`, kind: 'workerLead'
       });
     }
     const highlights = highs.slice(0, 2);
@@ -431,11 +431,11 @@
       if (best.score - worst.score >= 20) {
         headline = `${best.label} led it; ${worst.label.toLowerCase()} lagged.`;
       } else if (worst.score >= 60) {
-        headline = 'A clean one — nothing lagged.';
+        headline = 'A clean one. Nothing lagged.';
       } else if (best.score <= 45) {
         headline = 'A rough one across the board.';
       } else {
-        headline = `An even game — ${best.label.toLowerCase()} the bright spot.`;
+        headline = `An even game, with ${best.label.toLowerCase()} the bright spot.`;
       }
     }
 

@@ -5,33 +5,27 @@
   <title>WC3V</title>
   <link rel="icon" href="./favicon-32x32.png" sizes="32x32">
   <link rel="icon" href="./favicon-16x16.png" sizes="16x16">
-  <!-- tokens.css is the web client's design token layer, copied in by
-       tools/build-desktop-client.js. app.css consumes it and defines only what
-       the warm/carved desktop register needs on top. Load order matters. -->
+  <!-- tokens.css is the web client's token layer, copied in by
+       tools/build-desktop-client.js. app.css consumes it and adds only what the
+       warm carved register needs. Load order matters. -->
   <link rel="stylesheet" href="./css/vendor/tokens.css">
   <link rel="stylesheet" href="./css/app.css">
-  <!-- The overlay's own stylesheet, so the Stream screen's preview is drawn by
-       exactly what an OBS Browser Source loads. -->
+  <!-- The overlay's own stylesheet, so the Stream preview is drawn by exactly
+       what an OBS Browser Source loads. -->
   <link rel="stylesheet" href="./overlay/overlay.css">
 </head>
 <body>
   <div id="app">
-    <!-- This bar IS the window's title bar (decorations are off in
-         tauri.conf.json — with the native one left on, Windows drew a second
-         header directly above it). Only elements carrying
-         data-tauri-drag-region drag the window, so the controls inside it
-         still behave as controls. -->
+    <!-- This bar IS the window's title bar. Decorations are off in
+         tauri.conf.json; with the native bar left on, Windows drew a second
+         header above this one. Only data-tauri-drag-region elements drag the
+         window, so the controls inside still behave as controls. -->
     <header class="appbar" data-tauri-drag-region>
-      <!-- The canonical brand mark, identical to the site's .site-wordmark
-           (client/js/SiteNav.js) — a text lockup with the "3" in the chrome
-           accent, not an image. -->
+      <!-- Same lockup as the site's .site-wordmark in client/js/SiteNav.js. -->
       <div class="wordmark">WC<span>3</span>V</div>
 
-      <!-- Three tabs, one per question the app answers: what just happened
-           (Last game), am I getting better (Coach), and the broadcast
-           (Stream). Settings is maintenance, not a destination — it lives on
-           the gear beside the caption controls. The data-view values are
-           internal ids and deliberately unchanged. -->
+      <!-- One tab per question the app answers. Settings is maintenance and
+           lives on the gear. The data-view ids are internal and unchanged. -->
       <nav class="nav" role="tablist" aria-label="Screens">
         <button class="nav-item is-active" data-view="games" type="button"
                 role="tab" aria-selected="true">Last game</button>
@@ -43,8 +37,8 @@
 
       <div class="appbar-spacer" data-tauri-drag-region></div>
 
-      <!-- Only ever appears when there IS one. An update is news, not an
-           error, and it never applies itself — see settings-view.js. -->
+      <!-- Only ever shown when there is one. Never installs itself; see
+           settings-view.js. -->
       <button id="update-chip" class="update-chip" type="button" hidden>
         <span class="update-dot" aria-hidden="true"></span>
         <span id="update-chip-text">Update ready</span>
@@ -56,8 +50,7 @@
           <span class="identity-name" id="identity-name">not set</span>
         </button>
         <div class="identity-pop" id="identity-pop" hidden>
-          <p class="pop-lead">Which player are you? Wins and losses are scored
-            from that seat.</p>
+          <p class="pop-lead">Wins and losses are scored from this seat.</p>
           <div id="identity-choices" class="choices"></div>
           <label class="field">
             <span class="field-label">Or type a name</span>
@@ -75,16 +68,16 @@
         <span class="session-streak" id="session-streak"></span>
       </div>
 
-      <!-- Settings. A view without a tab: it is reached from here and from
-           the update chip, and showView treats it like any other screen. -->
+      <!-- Settings: a view with no tab, reached from here and from the update
+           chip. showView treats it like any other screen. -->
       <button id="settings-btn" class="wctl wctl-gear" type="button"
               aria-label="Settings" aria-pressed="false" title="Settings">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M10.3 2h3.4l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.7 2.9-2 1.8c.1.65.1 1.35 0 2l2 1.8-1.7 2.9-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-3.4l-.5-2.6a7 7 0 0 1-1.7-.9l-2.5.9-1.7-2.9 2-1.8a6.6 6.6 0 0 1 0-2l-2-1.8 1.7-2.9 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z"/></svg>
       </button>
 
-      <!-- Caption controls. Close hides to the tray via the window's normal
-           close event, so the behaviour lives in exactly one place
-           (main.rs on_window_event) rather than being reimplemented here. -->
+      <!-- Caption controls. Close calls the window's ordinary close, which
+           main.rs turns into hide-to-tray, so that behaviour is defined in one
+           place. -->
       <div class="wincontrols">
         <button id="win-min" class="wctl" type="button" aria-label="Minimise">
           <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5h10" stroke="currentColor" stroke-width="1"/></svg>
@@ -94,7 +87,7 @@
         </button>
         <button id="win-close" class="wctl wctl-close" type="button"
                 aria-label="Close to tray"
-                title="Keeps WC3V running in the tray so new games still get picked up">
+                title="Keeps WC3V running in the tray">
           <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1"/></svg>
         </button>
       </div>
@@ -103,6 +96,10 @@
     <main>
       <!-- ── Games ────────────────────────────────────────────────────── -->
       <section class="view view-games is-active" data-view="games">
+        <!-- The scout card. Empty and hidden unless W3Champions says a match
+             is running right now; see scout.js. -->
+        <div class="scout" id="scout" hidden></div>
+
         <div class="feed-col">
           <div class="feed-head">
             <h2>Your games</h2>
@@ -112,8 +109,7 @@
             <div class="backfill-text" id="backfill-text">idle</div>
             <div class="backfill-track"><div class="backfill-fill" id="backfill-fill"></div></div>
           </div>
-          <!-- A parsed history runs to thousands of games; without this the
-               feed is a wall you can only scroll. -->
+          <!-- A parsed history runs to thousands of games. -->
           <div class="feed-filter">
             <input id="feed-search" type="search" autocomplete="off"
                    placeholder="Search a player or map" aria-label="Search your games">
@@ -123,9 +119,8 @@
                 <button class="seg-btn" data-result="win" type="button">Wins</button>
                 <button class="seg-btn" data-result="loss" type="button">Losses</button>
               </div>
-              <!-- Race glyphs are filled in from RaceIcons at boot
-                   (games-view.js wireFilters) — markup stays free of inline
-                   SVG so there is exactly one copy of each mark. -->
+              <!-- Glyphs are stamped in from RaceIcons at boot (games-view.js
+                   wireFilters), so the markup holds no second copy of a mark. -->
               <div class="seg" id="feed-race" role="group" aria-label="Your race">
                 <button class="seg-btn is-on" data-race="any" type="button">Any</button>
                 <button class="seg-btn seg-race" data-race="H" type="button"
@@ -141,9 +136,8 @@
           </div>
           <div class="feed scroll" id="feed"></div>
         </div>
-        <!-- NOT a scroller. The fold rule: the report's frame (verdict,
-             timings, tab strip) always fits the window; only the active tab's
-             body scrolls, and games-view.js marks that one .scroll itself. -->
+        <!-- NOT a scroller. The report frame always fits the window; only the
+             active tab's body scrolls, and games-view.js marks that .scroll. -->
         <div class="detail-col" id="detail"></div>
       </section>
 
@@ -155,7 +149,7 @@
           <label class="field field-inline">
             <span class="field-label">Look up a player</span>
             <input id="profile-name" list="known-names" autocomplete="off"
-                   placeholder="leave blank for your own profile">
+                   placeholder="blank for your own">
           </label>
           <button id="profile-view" class="btn" type="button">View</button>
         </div>
@@ -173,29 +167,19 @@
           <div class="col scroll">
           <section class="panel">
             <h2>Replay folders</h2>
-            <p class="lead">WC3V reads the replays Warcraft III already saves.
-              Your replays never leave this machine — parsing happens here, and
-              nothing about your games is uploaded anywhere.</p>
-            <p class="hint">The app does fetch two things from wc3v.com's CDN:
-              the icon art for build orders, and map data for a map it has not
-              seen before. Neither carries anything about you or your games.
-              The only other thing that ever leaves this machine is a
-              W3Champions ladder lookup, which is off until you switch it on.</p>
+            <p class="hint">Replays never leave this machine. Map data and
+              build-order icons come from wc3v.com's CDN.</p>
             <div id="roots" class="roots"></div>
             <button id="pick-folder" class="btn" type="button">Add a folder…</button>
           </section>
 
           <section class="panel">
-            <h2>Parsing your history</h2>
-            <p class="lead">Every game is parsed once and kept as a small
-              summary. The more that are done, the sharper your profile and
-              opponent history get.</p>
+            <h2>Your history</h2>
             <div class="row">
               <button id="backfill-toggle" class="btn btn-primary" type="button">Parse all replays</button>
               <button id="backfill-retry" class="btn" type="button" hidden>Retry failed</button>
             </div>
             <p class="hint" id="backfill-status">idle</p>
-            <p class="hint">Map data lives in local app data.</p>
           </section>
           </div>
 
@@ -204,29 +188,17 @@
             <h2>App</h2>
             <label class="check">
               <input type="checkbox" id="autostart-toggle">
-              <span>
-                Start with Windows
-                <span class="hint">Opens straight to the tray. Closing the
-                  window keeps WC3V running there so new games still get
-                  picked up — quitting is done from the tray icon.</span>
-              </span>
+              <span>Start with Windows</span>
             </label>
             <label class="check">
               <input type="checkbox" id="notify-toggle" checked>
-              <span>
-                Tell me when a game finishes
-                <span class="hint">A notification with the result and the
-                  biggest moment, so you do not have to go and look.</span>
-              </span>
+              <span>Tell me when a game finishes</span>
             </label>
             <label class="check">
               <input type="checkbox" id="autoupdate-toggle" checked>
               <span>
                 Check for updates automatically
-                <span class="hint">On launch and every few hours. Nothing is
-                  ever installed without you clicking — a background installer
-                  would close the window and raise a UAC prompt, and it would
-                  do it mid-game.</span>
+                <span class="hint">Nothing installs without you clicking.</span>
               </span>
             </label>
             <div class="row">
@@ -236,33 +208,24 @@
             <p class="hint update-notes" id="update-notes" hidden></p>
           </section>
 
-          <!-- The one thing in this app that talks to a server about players.
-               Off by default, and the refusal is enforced in the binary
-               (src-tauri/src/w3c.rs), not just by this checkbox. -->
+          <!-- The one thing here that talks to a server about players. Off by
+               default, and the refusal is enforced in src-tauri/src/w3c.rs
+               rather than by this checkbox. -->
           <section class="panel">
             <h2>W3Champions</h2>
-            <p class="lead">W3Champions publishes ladder data that a replay
-              cannot contain — MMR, rank, and who you are playing right now.
-              WC3V can read it, but only if you say so.</p>
             <label class="check">
               <input type="checkbox" id="w3c-toggle">
               <span>
                 Look up ladder data
-                <span class="hint">Off by default. When on, WC3V asks
-                  W3Champions about battle tags — yours and your opponents'.
-                  Nothing about your games is sent: no replays, no summaries,
-                  no statistics. It only ever reads.</span>
+                <span class="hint">Reads MMR, rank and your current match.
+                  Sends nothing about your games.</span>
               </span>
             </label>
             <p class="hint" id="w3c-status"></p>
-            <p class="hint">Turn it off and the app goes back to reading only
-              the files on this machine. Everything except MMR and the live
-              opponent card works either way.</p>
           </section>
           </div>
 
-          <!-- Pinned, not scrolled past. The site carries this line in three
-               places; the desktop had none. -->
+          <!-- Pinned under both columns, never scrolled past. -->
           <p class="legal">Warcraft III and all related assets are trademarks
             of Blizzard Entertainment, Inc. WC3V is a fan-made, non-commercial
             tool not affiliated with or endorsed by Blizzard.</p>
@@ -279,8 +242,8 @@
     </footer>
   </div>
 
-  <!-- Shared client modules — committed client copies, placed into js/vendor
-       by tools/build-desktop-client.js. Must load before the app modules. -->
+  <!-- Shared client modules, placed into js/vendor by
+       tools/build-desktop-client.js. Must load before the app modules. -->
   <script src="./js/vendor/SummaryExtract.js"></script>
   <script src="./js/vendor/ProfileAggregate.js"></script>
   <script src="./js/vendor/MomentsExtract.js"></script>
@@ -291,6 +254,8 @@
   <script src="./js/replay-index.js"></script>
   <script src="./js/identity.js"></script>
   <script src="./js/race-icons.js"></script>
+  <script src="./js/w3c.js"></script>
+  <script src="./js/scout.js"></script>
   <script src="./js/games-view.js"></script>
   <script src="./js/profile-view.js"></script>
   <script src="./js/stream-view.js"></script>

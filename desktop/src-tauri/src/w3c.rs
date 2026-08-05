@@ -1,18 +1,18 @@
-//! W3Champions lookups — the app's only optional outbound request.
+//! W3Champions lookups: the app's only optional outbound request.
 //!
 //! Everything else in WC3V reads files the game already wrote. This module
 //! asks a public, unauthenticated ladder API for things a replay simply does
-//! not contain: MMR, rank, league quantile, and — the reason it exists — who
-//! you are playing RIGHT NOW, which the replay cannot tell you until after
-//! the game is over.
+//! not contain: MMR, rank, league quantile, and who you are playing right now.
+//! That last one is the reason it exists. A replay cannot tell you until the
+//! game is over.
 //!
 //! Four properties, enforced here rather than documented elsewhere:
 //!
 //!   1. **Off unless switched on.** Every call fails closed unless the opt-in
 //!      marker file exists. The setting is not a UI convenience the frontend
 //!      could forget to check; it is checked in the binary, on every request.
-//!   2. **One host.** The URL is built here from an allowlisted path — the
-//!      webview passes a path, never a URL, so nothing it could be tricked
+//!   2. **One host.** The URL is built here from an allowlisted path. The
+//!      webview passes a path and never a URL, so nothing it could be tricked
 //!      into constructing can reach a different server.
 //!   3. **Read only, and nothing of yours goes out.** GET only. The only thing
 //!      that leaves this machine is a battle tag the user typed or that is
@@ -23,7 +23,7 @@
 //!      The API is undocumented and unversioned; it WILL change shape.
 //!
 //! Note on reqwest: the client here is built with no compression features for
-//! the same reason `fetch_map` is (see Cargo.toml) — the crate is shared, and
+//! the same reason `fetch_map` is (see Cargo.toml). The crate is shared, and
 //! enabling gzip anywhere would corrupt the map cache.
 
 use std::path::PathBuf;
@@ -102,9 +102,9 @@ fn allowed(path: &str) -> bool {
 }
 
 /// Perform one allowlisted GET against the W3Champions API and return the raw
-/// JSON text. The frontend parses and validates the shape — the API is
-/// undocumented, so every consumer must already be written to survive a
-/// response that is not what it expected.
+/// JSON text. The frontend parses and validates the shape. The API is
+/// undocumented, so every consumer has to be written to survive a response
+/// that is not what it expected.
 #[tauri::command]
 pub async fn w3c_lookup(path: String, app: tauri::AppHandle) -> Result<String, String> {
     if !w3c_enabled(app.clone()) {

@@ -1,9 +1,9 @@
-// Profile / coach screen.
+// Coach screen.
 //
 // A profile is just a name (ProfileAggregate.buildProfile), so "my profile" and
-// "look up the guy I just played" are the same code path over the same local
-// history. Nothing here calls out to anything — every claim comes from games on
-// this machine, and every claim carries the sample size it was drawn from.
+// "look up the guy I just played" run the same code over the same local
+// history. Nothing here calls out to anything. Every claim comes from games on
+// this machine and carries the sample size it was drawn from.
 
 (function () {
   'use strict';
@@ -21,9 +21,9 @@
 
   const month = (ms) => (ms ? new Date(ms).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '?');
 
-  // One table shape for matchups / maps / opponents — they are all
-  // "label, games, record". `nameClick` makes the label column a button:
-  // in the Most-faced table every row is a player, and a player is a door.
+  // One table shape covers matchups, maps and opponents, which are all
+  // "label, games, record". `nameClick` turns the label column into a button.
+  // In the Most-faced table every row is a player, and a player is a door.
   const recordTable = (heading, rows, labelKey, nameClick) => {
     const table = node('table', 'stat-table');
     const head = node('tr');
@@ -68,13 +68,12 @@
 
     // ── Trend over time ─────────────────────────────────────────────────────
     //
-    // Two measures on two separate plots, never one plot with two y-axes: win
-    // rate is a percentage and T2 is a duration, and putting them on shared
-    // paint invents a relationship out of the scaling.
+    // Each measure gets its own plot. Win rate is a percentage and T2 is a
+    // duration, and sharing a y-axis would invent a relationship out of the
+    // scaling.
     //
-    // One series each, so no legend — the heading names it. First and last
-    // points are labelled directly; the rest carry their numbers in a native
-    // tooltip rather than printing a value on every point.
+    // One series each, so the heading is the legend. First and last points are
+    // labelled directly and the rest carry their numbers in a native tooltip.
     const SVG_NS = 'http://www.w3.org/2000/svg';
     const svgEl = (tag, attrs) => {
       const n = document.createElementNS(SVG_NS, tag);
@@ -88,16 +87,16 @@
       const H = 96;
       const PAD_X = 8;
       const PAD_Y = 14;
-      // Three points minimum. Two points joined by a line LOOKS like a trend
-      // while being nothing more than two averages with a slope drawn between
-      // them; that case gets the then/now readout and no plot.
+      // Three points minimum. Two points joined by a line looks like a trend
+      // while being two averages with a slope drawn between them, so that case
+      // gets the then/now readout and no plot.
       const usable = points.filter(pt => pt.value !== null && pt.value !== undefined);
       if (usable.length < 3) return null;
 
       let lo = Math.min(...usable.map(pt => pt.value));
       let hi = Math.max(...usable.map(pt => pt.value));
-      // A flat series would divide by zero and, worse, draw a line through the
-      // middle that implies a range it does not have.
+      // A flat series divides by zero, and draws a line through the middle
+      // that implies a range it does not have.
       if (hi === lo) { hi = lo + 1; lo = lo - 1; }
 
       const x = (i) => PAD_X + (i / (points.length - 1)) * (W - PAD_X * 2);
@@ -123,7 +122,7 @@
           class: 'spark-dot', cx: x(i), cy: y(pt.value), r: 4
         });
         const t = svgEl('title', {});
-        t.textContent = `${pt.label} — ${opts.fmt(pt.value)} (n=${pt.n})`;
+        t.textContent = `${pt.label} · ${opts.fmt(pt.value)} (n=${pt.n})`;
         dot.appendChild(t);
         svg.appendChild(dot);
       });
@@ -139,13 +138,13 @@
       const box = node('div', 'trend-plot');
       box.appendChild(node('h3', null, title));
 
-      // Optional — see sparkline(). Below three points this panel is a
-      // comparison, not a chart.
+      // Optional; see sparkline(). Below three points this panel is a
+      // comparison rather than a chart.
       const chart = sparkline(points, { fmt, ariaLabel: title });
       if (chart) box.appendChild(chart);
 
-      // Both ends carry their n. A reader comparing two numbers is entitled to
-      // know how many games are behind each of them.
+      // Both ends carry their n. Anyone comparing two numbers is entitled to
+      // know how many games sit behind each of them.
       const ends = node('div', 'trend-ends');
       ends.appendChild(node('span', 'trend-end', `${fmt(first.value)} then (n=${first.n})`));
       ends.appendChild(node('span', 'trend-end is-now', `${fmt(last.value)} now (n=${last.n})`));
@@ -165,14 +164,12 @@
 
       const panel = node('section', 'panel trend-band');
       panel.appendChild(node('h2', null, 'Over time'));
-      // "up to", because the oldest window is the remainder and is usually
-      // short — claiming every point is the same size would be a lie about
-      // how much each one is worth. Compressed to a title: the dashboard
-      // band has no room for a paragraph, but the honesty stays reachable.
+      // "up to", because the oldest window is the remainder and usually runs
+      // short. Claiming every point is the same size would misstate what each
+      // one is worth. It lives on a title because the band has no room for a
+      // paragraph.
       panel.title =
-        `Blocks of up to ${windows[windows.length - 1].games} games, oldest first. ` +
-        'A lifetime average cannot show this: a habit you fixed months ago still ' +
-        'counts every game you played before you fixed it.';
+        `Blocks of up to ${windows[windows.length - 1].games} games, oldest first.`;
 
       const plots = node('div', 'trend-plots');
       const wr = trendPlot('Win rate',
@@ -191,10 +188,9 @@
       return panel;
     };
 
-    // The dashboard. The head band is fixed; below it, a grid whose two lower
-    // panels are the only scrollers — the whole view fits the window (the
-    // fold rule), because "am I improving" should be answerable at a glance,
-    // not by scrolling a term paper.
+    // The dashboard. The head band is fixed and the two lower panels of the
+    // grid below it are the only scrollers, so the whole view fits the window.
+    // "Am I improving" should be answerable at a glance.
     const render = (p) => {
       // Head band: who this is, in one line.
       const title = el('coach-title');
@@ -218,7 +214,7 @@
       const trend = trendPanel(p);
       if (trend) host.appendChild(trend);
 
-      // Statements panel — the coach's voice, every claim carrying its n.
+      // Statements panel: the coach's voice, every claim carrying its n.
       const say = node('section', 'panel coach-cell');
       say.appendChild(node('h2', null, 'What the games say'));
       const sayBody = node('div', 'cell-body scroll');
@@ -227,14 +223,13 @@
         for (const s of p.statements) list.appendChild(node('li', null, s.text));
         sayBody.appendChild(list);
       } else {
-        sayBody.appendChild(node('p', 'lead',
-          'Not enough decided games yet to say anything with a straight face.'));
+        sayBody.appendChild(node('p', 'lead', 'Not enough decided games yet.'));
       }
       say.appendChild(sayBody);
       host.appendChild(say);
 
-      // Records panel — one table at a time, switched, each capped and
-      // scrolling inside the cell.
+      // Records panel: one switched table at a time, each capped and scrolling
+      // inside the cell.
       const records = node('section', 'panel coach-cell');
       const tables = [
         p.matchups && p.matchups.length && {
@@ -277,25 +272,25 @@
       host.appendChild(records);
     };
 
-    // mirrorInput: a name arriving from a click (a most-faced row, a name
-    // link elsewhere) should land in the lookup box too, so what the screen
-    // shows and what the box says never disagree.
+    // mirrorInput: a name arriving from a click, whether a most-faced row or a
+    // name link elsewhere, lands in the lookup box too. What the screen shows
+    // and what the box says never disagree.
     const show = async (rawName, mirrorInput) => {
       const corpus = await deps.store.loadCorpus();
       if (!corpus.length) {
-        showMessage('No games parsed yet. Open Settings and parse your history first.');
+        showMessage('No games parsed yet. Parse your history in Settings.');
         return;
       }
       const name = (rawName || '').trim() || deps.identityName() ||
         ((PA().detectPrimaryName(corpus) || {}).name);
       if (!name) {
-        showMessage('Set your player name up top, or type a name to look up.');
+        showMessage('Set your name up top, or type one to look up.');
         return;
       }
       if (mirrorInput) el('profile-name').value = rawName || '';
       const profile = PA().buildProfile(corpus, name);
       if (!profile.games) {
-        showMessage(`No games with "${name}" in your local history.`);
+        showMessage(`No games with "${name}" in your history.`);
         return;
       }
       render(profile);

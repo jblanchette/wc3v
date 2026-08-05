@@ -1,7 +1,7 @@
 // Content key → the .w3g file it came from.
 //
 // The feed is built from stored SUMMARIES, which are keyed by content
-// (`<size>-<xxh3>`) and deliberately carry no filesystem path — this window is
+// (`<size>-<xxh3>`) and deliberately carry no filesystem path, because this
 // aimed at streamers and paths contain the user's account name. But two
 // features need the actual file back: re-parsing an old summary to upgrade its
 // schema, and handing the replay to the viewer.
@@ -10,7 +10,7 @@
 // the handful of files with that exact size, then confirm with `replay_key`
 // (one hash) until one matches. Usually there is exactly one candidate.
 //
-// The scan is loaded lazily and once — nothing pays for this until the user
+// The scan loads lazily and once, so nothing pays for it until the user
 // clicks something that needs a file.
 
 (function () {
@@ -42,7 +42,7 @@
     };
 
     // Returns a path, or null when the replay is no longer on disk. Callers
-    // must handle null — a user can move or delete replays at any time, and
+    // must handle null, because a user can move or delete replays at any time
     // the store outlives the files.
     const pathFor = async (key) => {
       if (resolved.has(key)) return resolved.get(key);
@@ -57,7 +57,7 @@
           const rk = await deps.invoke('replay_key', { path });
           resolved.set(rk.key, path);          // cache every hash we pay for
           if (rk.key === key) return path;
-        } catch (e) { /* locked or moved — try the next candidate */ }
+        } catch (e) { /* locked or moved; try the next candidate */ }
       }
       resolved.set(key, null);
       return null;
