@@ -103,7 +103,15 @@ const buildSummary = (out, key, playedAt) => {
 };
 
 const wanted = parseInt(args.games, 10) || 12;
-const files = fs.readdirSync(REPLAY_DIR).filter(f => f.endsWith('.wc3v.gz')).slice(0, wanted);
+// --match=<substring> pins the sample to particular replays. The corpus is
+// overwhelmingly 1v1 and sorted so the numeric ladder filenames come first, so
+// without this the team games and the custom-mode replays are unreachable
+// without asking for hundreds of games. `--match=gso` is a 3v3.
+const matcher = typeof args.match === 'string' ? args.match.toLowerCase() : null;
+const files = fs.readdirSync(REPLAY_DIR)
+  .filter(f => f.endsWith('.wc3v.gz'))
+  .filter(f => !matcher || f.toLowerCase().includes(matcher))
+  .slice(0, wanted);
 if (!files.length) {
   console.error(`No parsed replays in ${path.relative(ROOT, REPLAY_DIR)}`);
   process.exit(1);
@@ -211,6 +219,12 @@ const STORE = ${JSON.stringify(store)};
 const ONGOING = ${JSON.stringify(ongoing)};
 const b64 = (s) => { const bin = atob(s); const a = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
+
+// Tells app.js to publish its views on window.__WC3V_VIEWS__. The preview
+// cannot run a real parse (there are no .w3g files behind these summaries), so
+// anything driven BY a parse — the first-boot catch-up chips — has to be driven
+// by hand from the console or an automated check.
+window.__WC3V_PREVIEW__ = true;
 
 window.__TAURI__ = {
   core: {

@@ -102,6 +102,32 @@ cannot test any of this, which is why it is high on the list.
       the game you just asked for makes the click look like it did nothing.
     - The quick-nav chips follow the filter. Filter to losses and the chips
       should be losses.
+
+12a. **First boot: the catch-up.** With an EMPTY store (move or clear the app's
+    `replays/` folder under app data), launch the app with replays on disk.
+    - Expect: the quick-nav band fills with **placeholder chips**, one per
+      replay, up to ten. The two being read carry a turning gold arc; the rest
+      carry a still ring. Each chip is labelled with the replay's file name,
+      cleaned of `Replay_` and `.w3g`.
+    - As each parse lands, its chip is **replaced in place** by the real game
+      chip. The feed underneath fills a game at a time rather than all at once
+      at the end.
+    - **It must not touch Settings.** The "Parse all replays" button keeps its
+      label and its progress bar stays down; the catch-up is not that button
+      running. The Activity log gets one line: `caught up: N recent game(s)
+      parsed`.
+    - A replay that fails to read turns its chip's ring red and the run carries
+      on. The count of failures is in the log line.
+    - **Relaunch with the store populated and nothing should happen.** The
+      trigger is an empty corpus, which is what "first boot" means here, so a
+      second launch must not re-queue anything.
+    - The engine logic is covered by `node tools/test-backfill-catchup.js`
+      (limit, LastReplay filtering, dedupe against stored and known-bad keys,
+      progress reporting, one failure not stopping the run). The preview cannot
+      exercise it end to end because there are no `.w3g` files behind its
+      summaries; drive the chips there with
+      `__WC3V_VIEWS__.gamesView.setParseQueue([...])`.
+
 13. Click a game. **The right column must not scroll as a whole**, which is the
     fold rule. Expect a fixed frame in this order: a verdict band, then a tab
     strip of **Story / Build**. Only the tab body scrolls.
@@ -148,6 +174,12 @@ cannot test any of this, which is why it is high on the list.
       Grunts with the same hero already drawn at full level to its left.
     - Below 1040px the units drop and the heroes stay. That is the intended
       fallback, not a rendering failure.
+    - **Open a team game** (`node tools/desktop-preview.js --games=6 --match=gso`
+      is a 3v3 with six seats). Past two players the rows go into **two
+      columns**, own seat top-left, and each row shows fewer units so both
+      columns fit. Stacked in one column the band was 296px against a 103px
+      verdict, which is the "huge vertical gap" this fixes. Expect a band around
+      146px and a tab body around 450px.
 
 13c. **Story tab**, the default. A chart panel, the tiles, then the timeline.
     - **The chart panel has three chips: Dominance, Resources, Army.** Dominance
@@ -177,6 +209,13 @@ cannot test any of this, which is why it is high on the list.
       and a line under it saying the count is production rather than what was
       alive. It is cumulative and cannot go down; if the chart is ever labelled
       as army size, that is the bug this pass fixed.
+    - **A team game has no dominance at all**, and the chip says so: "Dominance
+      is a 1v1 read. Team games are not scored." That is deliberate.
+      `DominanceSeries` splits 100 points across everyone in the game, so in a
+      3v3 the six shares sit around 16 and nobody can reach the "50 = even" line
+      the chart is built around. It used to plot two of the six as near-flat
+      lines crushed against the bottom of the axis, which read as a broken
+      chart. Resources and Army still work and the panel opens on Resources.
     - A game whose summary predates schema v4 has no dominance and no resources,
       and each says **Parsed before … was recorded** with a **Re-read this game**
       button. A game under v4 whose dominance gate refused the replay says so

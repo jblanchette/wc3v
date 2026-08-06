@@ -69,8 +69,26 @@
           ? 'stale'
           : 'No dominance read for this game.';
       }
-      if (Object.keys(summary.dominance.players || {}).length < 2) {
+      const tracked = Object.keys(summary.dominance.players || {}).length;
+      if (tracked < 2) {
         return 'Dominance needs two players.';
+      }
+      // Dominance is a 1v1 instrument and refuses to pretend otherwise.
+      //
+      // DominanceSeries splits 100 points across everyone in the game, so in a
+      // 3v3 the six shares sit around 16 and nobody can ever reach the "50 =
+      // even" line the chart is built around. Picking two of the six to plot
+      // then draws two near-flat lines crushed against the bottom of the axis
+      // under a reference line neither can touch, which reads as a broken chart
+      // rather than as the meaningless question it actually is.
+      //
+      // A team version would have to score TEAMS, not seats, which is a change
+      // to lib/DominanceSeries.js and the stored series, not to this panel.
+      if (summary.gameMode && summary.gameMode !== '1v1') {
+        return 'Dominance is a 1v1 read. Team games are not scored.';
+      }
+      if (tracked > 2) {
+        return 'Dominance is a 1v1 read. This game had more players.';
       }
       return null;
     },

@@ -599,6 +599,50 @@ main { min-height: 0; position: relative; }
 .qn-v[data-v="loss"] { background: linear-gradient(180deg, #b96450, var(--verdict-loss)); color: var(--app-well); }
 .qn-v[data-v="none"] { background: linear-gradient(180deg, #85807a, var(--verdict-none)); color: var(--app-well); }
 
+/* ── Games being read ────────────────────────────────────────────────────
+   A fresh install parses its newest games at boot, and these are the chips
+   standing in for them. They sit where the finished games will land, so the
+   row fills in place instead of appearing all at once out of nowhere.
+
+   Not a button: there is nothing to click yet. */
+.qn-chip.is-parsing {
+  cursor: default;
+  color: var(--ink-faint);
+  background: var(--app-well);
+  border-color: var(--app-line);
+  box-shadow: var(--cut-in);
+}
+.qn-chip.is-parsing:hover { background: var(--app-well); color: var(--ink-faint); }
+
+/* A carved ring with one lit arc. Turning, not pulsing: a pulse in a row of
+   eight reads as an alarm. */
+.qn-spin {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid var(--app-line);
+  border-top-color: var(--dom-gold);
+  border-radius: 50%;
+  animation: qn-spin 900ms linear infinite;
+}
+@keyframes qn-spin { to { transform: rotate(360deg); } }
+
+/* Queued, not started. The ring is there but still, so eight spinners do not
+   claim eight parses are running when two workers exist. */
+.qn-chip[data-phase="queued"] .qn-spin {
+  animation: none;
+  border-top-color: var(--app-edge);
+}
+.qn-chip[data-phase="failed"] .qn-spin {
+  animation: none;
+  border-color: var(--verdict-loss);
+}
+
+/* Motion is decoration here; the chip's presence is the message. */
+@media (prefers-reduced-motion: reduce) {
+  .qn-spin { animation: none; }
+}
+
 /* ── The feed drawer ─────────────────────────────────────────────────────
    Same grid cell as .detail-col, painted on top of it. Opaque, because a
    translucent list over a report is two things at once and neither is
@@ -951,6 +995,14 @@ main { min-height: 0; position: relative; }
   display: grid;
   gap: var(--sp-1);
   align-content: start;
+}
+/* Past two players the rows go into two columns, filled down the first column
+   so the viewed seat stays top-left. `grid-auto-flow: column` plus an explicit
+   row count is what fills down rather than across; the row count is set inline
+   because it depends on how many people were in the game. */
+.vb-players[data-cols="2"] {
+  grid-auto-flow: column;
+  column-gap: var(--sp-2);
 }
 /* One row per player, and the row opens the Build tab: the icons are a
    preview, capped at three heroes and seven units, and the tab has all of it.

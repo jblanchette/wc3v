@@ -232,6 +232,21 @@
 
     const QUICK = 8;
 
+    // Games being parsed right now, keyed by file name, in queue order. On a
+    // fresh install the feed is empty for as long as the first parses take, and
+    // an empty window is indistinguishable from a broken one. These sit in the
+    // quick nav where the games themselves will land, so the row fills in place
+    // rather than appearing all at once out of nowhere.
+    let parsing = [];
+
+    // A replay file name as something worth putting on a chip. Autosaves are
+    // `Replay_2026_08_06_1423.w3g`; ladder files carry the players. The
+    // extension and the `Replay_` prefix are noise on every one of them.
+    const parseLabel = (file) => String(file || '')
+      .replace(/\.w3g$/i, '')
+      .replace(/^replay[_-]/i, '')
+      .replace(/_/g, ' ');
+
     // The edge fade says "the row continues". It has to come off when it does
     // not, or the last chip in a short list looks permanently half-lit.
     const syncQuickNavFade = () => {
@@ -244,7 +259,24 @@
       const bar = el('quicknav');
       bar.innerHTML = '';
       bar.scrollLeft = 0;
-      for (const summary of games.slice(0, QUICK)) {
+
+      // Pending first: they are the newest games, which is where they will sit
+      // once they resolve, so nothing jumps when they do.
+      for (const item of parsing) {
+        if (item.phase === 'done') continue;
+        const chip = node('span', 'qn-chip is-parsing');
+        chip.dataset.phase = item.phase;
+        const mark = node('span', 'qn-spin');
+        mark.setAttribute('aria-hidden', 'true');
+        chip.appendChild(mark);
+        chip.appendChild(node('span', 'qn-name', parseLabel(item.file)));
+        chip.title = item.phase === 'failed'
+          ? `${item.file} could not be read`
+          : `Reading ${item.file}`;
+        bar.appendChild(chip);
+      }
+      const room = Math.max(0, QUICK - bar.children.length);
+      for (const summary of games.slice(0, room)) {
         const v = viewOf(summary);
         const chip = node('button', 'qn-chip');
         chip.type = 'button';
@@ -835,17 +867,27 @@
     //
     // Capped at three heroes and seven units. Not truncation: the row is a
     // button that opens the Build tab, which has all of it.
+    //
+    // A 3v3 is six rows, and stacked they made the band 296px tall against a
+    // 103px verdict column: 193px of empty space beside the result, and the tab
+    // body squeezed to 300px. Past two players the rows go into two columns and
+    // the unit half gets a tighter cap so both columns still fit beside the
+    // verdict.
     const HERO_CAP = 3;
     const UNIT_CAP = 7;
+    const TEAM_UNIT_CAP = 4;
 
     const buildStrips = (summary, seat) => {
       if (!window.BuildCard || !window.BuildCard.heroesOf) return null;
 
+      const slots = slotsFor(summary, seat);
+      const unitCap = slots.length > 2 ? TEAM_UNIT_CAP : UNIT_CAP;
+
       const rows = [];
-      for (const slot of slotsFor(summary, seat)) {
+      for (const slot of slots) {
         const p = summary.players[slot];
         const heroes = window.BuildCard.heroesOf(p).slice(0, HERO_CAP);
-        const units = window.BuildCard.keyUnits(p).slice(0, UNIT_CAP);
+        const units = window.BuildCard.keyUnits(p).slice(0, unitCap);
         if (!heroes.length && !units.length) continue;
 
         const row = node('button', 'vb-row');
@@ -883,6 +925,13 @@
       if (!rows.length) return null;
 
       const wrap = node('div', 'vb-players');
+      // Two columns past two players, filled down each column so your own seat
+      // stays first. Six rows become three, which is the height of the verdict
+      // column beside it rather than three times it.
+      if (rows.length > 2) {
+        wrap.dataset.cols = '2';
+        wrap.style.gridTemplateRows = `repeat(${Math.ceil(rows.length / 2)}, auto)`;
+      }
       for (const r of rows) wrap.appendChild(r);
       return wrap;
     };
@@ -1580,6 +1629,28 @@
       },
       select,
       showLoading,
+
+      // ── First-boot catch-up ─────────────────────────────────────────────
+      //
+      // The backfill engine calls these while it reads the newest games. They
+      // only touch the quick nav, so the feed and the report underneath keep
+      // working normally throughout.
+      setParseQueue (files) {
+        parsing = (files || []).map(file => ({ file, phase: 'queued' }));
+        renderQuickNav();
+      },
+      setParseProgress (file, phase) {
+        const item = parsing.find(p => p.file === file);
+        if (item) item.phase = phase;
+        else parsing.push({ file, phase });
+        renderQuickNav();
+      },
+      clearParseQueue () {
+        if (!parsing.length) return;
+        parsing = [];
+        renderQuickNav();
+      },
+
       // A live game just landed. Pull it to the top and open it, because the
       // person who just alt-tabbed wants exactly that game.
       showLatest (key) {

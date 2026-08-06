@@ -309,14 +309,28 @@ const backfill = window.createBackfill({
   progress: (done, total) => {
     el('backfill-fill').style.width = total ? `${(done / total) * 100}%` : '0';
   },
-  onIdleChange: (running) => {
-    el('backfill-toggle').textContent = running ? 'Pause' : 'Parse all replays';
-    el('backfill-bar').hidden = !running;
+  onIdleChange: (running, limited) => {
+    // The first-boot catch-up is not the "Parse all replays" button running, so
+    // it must not relabel that button or raise its progress bar. It reports
+    // through the quick nav instead.
+    if (!limited) {
+      el('backfill-toggle').textContent = running ? 'Pause' : 'Parse all replays';
+      el('backfill-bar').hidden = !running;
+    }
     settingsView.syncRetryButton();
     // A finished run has usually added games; show them without a restart.
-    if (!running && store.corpus) gamesView.render(store.corpus);
+    if (!running && store.corpus) {
+      gamesView.render(store.corpus);
+      if (limited) gamesView.clearParseQueue();
+    }
   }
 });
+
+// Ten, on a fresh install only. Enough that the app is worth looking at the
+// first time it opens, and short enough that a first launch is not held hostage
+// to a three-thousand-game history. The full read stays a deliberate choice in
+// Settings.
+const CATCH_UP_LIMIT = 10;
 
 // Whether the app speaks up when a game finishes. Declared up here because
 // settingsView reads it while being constructed, and a `const` below that
@@ -618,6 +632,29 @@ const idleStatus = () => store.size
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 
+// The newest few games, read on a fresh install. Failures here are not fatal
+// and are not worth a red line in the log: the watcher is still running, the
+// Settings button still exists, and the next game the user plays still lands.
+const catchUpOnRecentGames = () => {
+  if (backfill.running) return;
+  backfill.catchUp(CATCH_UP_LIMIT, {
+    onQueue: (files) => gamesView.setParseQueue(files),
+    onProgress: (file, phase) => {
+      gamesView.setParseProgress(file, phase);
+      // Repaint the feed as each one lands, so the games appear one at a time
+      // instead of all together when the run finishes.
+      //
+      // `persistSummary` appends to the corpus but does not order it, and two
+      // workers finish out of order, so the sort belongs here. The feed and the
+      // overlay both read this list as newest-first.
+      if (phase === 'done' && store.corpus) {
+        store.corpus.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
+        gamesView.render(store.corpus);
+      }
+    }
+  }).catch(e => log(`could not read your recent games: ${errText(e)}`, 'warn'));
+};
+
 const boot = async () => {
   const info = await invoke('init');
   state.roots = info.roots;
@@ -698,7 +735,18 @@ const boot = async () => {
     // The scout card may already be up, drawn before there was any history to
     // read the opponent's record out of.
     scout.refresh();
-    if (!corpus.length) return;
+    if (!corpus.length) {
+      // Nothing parsed yet, which on a fresh install is every launch until the
+      // first game is read. Take the newest few so the window has something in
+      // it, rather than showing an empty feed that looks like a failure and
+      // waiting for the user to find a button in Settings.
+      //
+      // Gated on an empty corpus rather than a "first run" flag: that is what
+      // "first boot" actually means here, and it self-heals if somebody clears
+      // their store.
+      catchUpOnRecentGames();
+      return;
+    }
     overlayState.seedLastGame(corpus[0]);   // corpus is newest-first
     // Autocomplete covers every name ever seen. Identity is a separate and
     // explicit choice that never comes out of this box.
@@ -712,5 +760,14 @@ const boot = async () => {
     log(`${corpus.length.toLocaleString()} game(s) in your history`, 'ok');
   }).catch(e => log(`could not load your history: ${errText(e)}`, 'warn'));
 };
+
+// The preview harness (tools/desktop-preview.js) stubs the IPC bridge but
+// cannot run a real parse, because there are no .w3g files behind its
+// summaries. Anything normally driven by a parse has to be driven by hand
+// there, so the views it exists to exercise are reachable. Never set in a real
+// build: `__WC3V_PREVIEW__` only exists on the generated preview page.
+if (window.__WC3V_PREVIEW__) {
+  window.__WC3V_VIEWS__ = { gamesView, store, backfill, catchUpOnRecentGames };
+}
 
 boot().catch(e => log(`WC3V could not start: ${errText(e)}`, 'err'));

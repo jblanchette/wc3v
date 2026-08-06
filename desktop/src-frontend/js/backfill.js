@@ -13,6 +13,12 @@
 //
 // Queue order is newest-first, since the scan sorts by mtime. Recent games are
 // the ones the profile layer cares most about.
+//
+// The same engine runs the first-boot catch-up: `start({ limit: 10 })` takes
+// the ten newest and stops. A fresh install otherwise shows an empty feed until
+// the user finds the "Parse all replays" button in Settings, and an empty feed
+// is indistinguishable from a broken one. Ten is enough to make the app worth
+// looking at without holding a first launch hostage to a 3,000-game history.
 
 (function () {
   'use strict';
@@ -31,7 +37,17 @@
       counts: null,
       liveWorkers: 0,
       durations: [],        // recent parse wall-times, ms (rolling window)
-      startedAt: 0
+      startedAt: 0,
+      // Per-run, set by start(). The full backfill leaves them null: a progress
+      // chip per replay is right for ten games and absurd for three thousand.
+      onProgress: null,
+      limited: false
+    };
+
+    const report = (file, phase) => {
+      if (st.onProgress) {
+        try { st.onProgress(file, phase); } catch (e) { /* UI must not stop a parse */ }
+      }
     };
 
     const fmtDur = (ms) => {
@@ -90,17 +106,20 @@
             playedAt = rk.modifiedMs;
           } catch (e) {
             st.counts.unreadable++; // locked or moved; unmarked, retries next run
+            report(item.file_name, 'failed');
             update();
             continue;
           }
           if (deps.isStored(key) || st.failedKeys.has(key) || st.claimed.has(key)) {
             st.counts.skipped++;
+            report(item.file_name, 'done');
             update();
             continue;
           }
           st.claimed.add(key);
           if (w._dead) w = deps.makeWorker();
 
+          report(item.file_name, 'parsing');
           const t0 = performance.now();
           try {
             const out = await deps.parseOn(w, item.path);
@@ -108,9 +127,11 @@
             st.counts.parsed++;
             st.durations.push(performance.now() - t0);
             if (st.durations.length > 20) st.durations.shift();
+            report(item.file_name, 'done', key);
           } catch (err) {
             st.counts.failed++;
             st.failedKeys.add(key);
+            report(item.file_name, 'failed');
             try {
               await deps.invoke('save_parse_failure', {
                 key,
@@ -131,6 +152,21 @@
     const finish = () => {
       const c = st.counts;
       const wall = performance.now() - st.startedAt;
+      // A limited run is the first-boot catch-up. It reports as itself rather
+      // than claiming "backfill done", which would imply the whole history was
+      // read when ten games were.
+      if (st.limited) {
+        st.running = false;
+        st.onProgress = null;
+        st.limited = false;
+        deps.log(`caught up: ${c.parsed} recent game(s) parsed` +
+          (c.failed ? `, ${c.failed} failed` : ''), 'ok');
+        // The Settings status line is left alone. It reports the size of the
+        // whole store, and "done: 10 parsed" there would read as the history
+        // being fully read when it has not been touched.
+        deps.onIdleChange(false, true);
+        return;
+      }
       if (st.running && st.queue.length === 0) {
         st.running = false;
         // The measured end-to-end rate. The roadmap wants this number before
@@ -149,10 +185,17 @@
       deps.onIdleChange(false);
     };
 
-    const start = async () => {
+    // opts: { limit, onQueue(files), onProgress(file, phase, key) }
+    //
+    // `limit` takes the newest N and stops, which is the first-boot catch-up.
+    // Without it this is the full backfill and behaves exactly as before.
+    const start = async (opts) => {
       if (st.running) return;
+      const o = opts || {};
       st.running = true;
-      deps.onIdleChange(true);
+      st.limited = !!o.limit;
+      st.onProgress = o.onProgress || null;
+      deps.onIdleChange(true, st.limited);
       deps.status('scanning…');
 
       const { replays } = await deps.invoke('scan_all');
@@ -161,13 +204,21 @@
       // in the queue. Parsing it would double-count that game in the profile.
       st.queue = replays.filter(r =>
         r.interesting && !/^lastreplay\.w3g$/i.test(r.file_name));
+      // Newest first is already the scan's order, so a limit is a slice.
+      if (o.limit) st.queue = st.queue.slice(0, o.limit);
       st.claimed = new Set();
       st.counts = { total: st.queue.length, parsed: 0, skipped: 0, failed: 0, unreadable: 0 };
       st.durations = [];
       st.startedAt = performance.now();
 
-      deps.log(`backfill: ${st.counts.total.toLocaleString()} playable replays queued, ` +
-               `${st.failedKeys.size} known-bad skipped`, 'ok');
+      if (o.onQueue) {
+        try { o.onQueue(st.queue.map(r => r.file_name)); } catch (e) { /* UI only */ }
+      }
+
+      deps.log(st.limited
+        ? `catching up on your ${st.counts.total} most recent game(s)`
+        : `backfill: ${st.counts.total.toLocaleString()} playable replays queued, ` +
+          `${st.failedKeys.size} known-bad skipped`, 'ok');
       update();
       for (let i = 0; i < WORKERS; i++) workerLoop();
     };
@@ -198,6 +249,9 @@
     return {
       init,
       toggle: () => (st.running ? pause() : start()),
+      // First-boot catch-up. Same engine, same dedupe, same failure markers,
+      // just the newest N and a per-file callback for the quick-nav chips.
+      catchUp: (limit, hooks) => start({ limit, ...(hooks || {}) }),
       retryFailed,
       get running () { return st.running; },
       get failedCount () { return st.failedKeys.size; }
