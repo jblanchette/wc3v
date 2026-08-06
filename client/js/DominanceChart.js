@@ -30,6 +30,7 @@
       this._el = null;
       this._players = [];      // [{id, color, samples, events}]
       this._totalT = 0;
+      this._startT = 0;        // left edge of the x-axis; see setStart()
       this._chart = null;
     }
 
@@ -47,6 +48,38 @@
         if (last && last.t > end) end = last.t;
       }
       this._totalT = end;
+    }
+
+    // Left edge of the x-axis, in game ms. Default 0, so the viewer is
+    // unchanged unless it opts in.
+    //
+    // The score eases out from an even 50/50 over `earlyRampMs` (150s in
+    // helpers/dominanceConfig.json), because strength is growth since game
+    // start and the first minute is noise. That opening is real, but it is a
+    // flat line taking a fixed slice of every plot, and on a 17-minute game it
+    // is 15% of the width spent saying "nothing had happened yet".
+    //
+    // Call before build(). Clamped so a start past the end can never collapse
+    // the plot to a point.
+    setStart (startT) {
+      this._startT = Math.max(0, Math.min(startT || 0, Math.max(0, this._totalT - 1)));
+    }
+
+    // The first moment any player's score leaves the even line by more than
+    // `epsilon` points. Exposed so a consumer can trim to it without
+    // reimplementing the walk over samples this class owns.
+    firstMoveT (epsilon) {
+      const eps = epsilon == null ? 1 : epsilon;
+      let earliest = null;
+      for (const p of this._players) {
+        for (const s of p.samples) {
+          if (Math.abs((s.score || 50) - 50) > eps) {
+            if (earliest === null || s.t < earliest) earliest = s.t;
+            break;
+          }
+        }
+      }
+      return earliest === null ? 0 : earliest;
     }
 
     build () {
@@ -76,7 +109,9 @@
 
       const innerW = CHART_W - CHART_MARGIN.left - CHART_MARGIN.right;
       const innerH = CHART_H - CHART_MARGIN.top - CHART_MARGIN.bottom;
-      const xOf = (t) => CHART_MARGIN.left + (t / Math.max(1, this._totalT)) * innerW;
+      const startT = this._startT || 0;
+      const span = Math.max(1, this._totalT - startT);
+      const xOf = (t) => CHART_MARGIN.left + ((t - startT) / span) * innerW;
 
       // Y range: fixed for the whole playback (no rescale jumps) but fitted
       // to the series — real games live in the 40-60 band and a hard 0-100
@@ -232,7 +267,11 @@
     setCursor (gameTime) {
       const c = this._chart;
       if (!c) return;
-      const t = Math.max(0, Math.min(this._totalT, gameTime));
+      // Clamped to the DRAWN span, not to the game. With a trimmed start,
+      // clamping to 0 lets the cursor be dragged into territory the plot does
+      // not cover, where it renders left of the y axis.
+      const startT = this._startT || 0;
+      const t = Math.max(startT, Math.min(this._totalT, gameTime));
 
       const x = c.xOf(t);
       c.cursor.setAttribute('x1', x);
@@ -246,22 +285,27 @@
           if (end < 0) {
             pl.line.setAttribute('points', '');
           } else {
+            // Samples before the start are skipped rather than plotted at a
+            // negative x, and the one straddling it is kept so the line enters
+            // from the left edge instead of beginning in mid-air.
             const pts = [];
             for (let i = 0; i <= end; i++) {
-              pts.push(c.xOf(samples[i].t) + ',' + c.yOf(samples[i].score));
+              if (samples[i].t < startT && !(samples[i + 1] && samples[i + 1].t > startT)) continue;
+              pts.push(c.xOf(Math.max(samples[i].t, startT)) + ',' + c.yOf(samples[i].score));
             }
             pl.line.setAttribute('points', pts.join(' '));
           }
         }
 
-        // Reveal dots up to t (scrubbing back re-hides them).
+        // Reveal dots up to t (scrubbing back re-hides them). A dot before the
+        // trimmed start belongs to ground the plot does not draw.
         let visible = 0;
         for (const d of pl.dots) { if (d.data.t <= t) visible++; else break; }
         if (visible !== pl.lastDots) {
           pl.lastDots = visible;
           for (let i = 0; i < pl.dots.length; i++) {
             const d = pl.dots[i];
-            const show = i < visible;
+            const show = i < visible && d.data.t >= startT;
             d.el.setAttribute('visibility', show ? 'visible' : 'hidden');
             if (show && !d.positioned) {
               // Anchor dot to the score at its own timestamp (post-event sample).

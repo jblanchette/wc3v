@@ -1,13 +1,13 @@
 # WC3V web client
 
-The browser side of [WC3V](../README.md). A multi-page site (homepage, replay viewer, replay library, about, community) built without modules or a build step — scripts loaded directly via `<script>` tags, third-party libs from CDN, everything hangs off `window`.
+The browser side of [WC3V](../README.md). A multi-page site (homepage, replay simulator, replay library, about, community) built without modules or a build step — scripts loaded directly via `<script>` tags, third-party libs from CDN, everything hangs off `window`.
 
 ## Pages
 
 | Page | Purpose |
 |---|---|
 | [index.html](index.html) | Homepage — pro build library + your replay rail with inline compare-to-pro |
-| [viewer.html](viewer.html) | Interactive replay viewer (3D terrain, build order panel, scrubber) |
+| [viewer.html](viewer.html) | Interactive replay simulator (3D terrain, build order panel, scrubber) |
 | [replays.html](replays.html) | Full library of your locally-stored replays |
 | [about.html](about.html) | Marketing / feature overview |
 | [community.html](community.html) | Curated WC3 community links |

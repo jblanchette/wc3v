@@ -71,12 +71,23 @@
     //
     // Passed explicitly rather than omitted: `combatUnitsChart` supplies its
     // own default through `Object.assign`, so leaving the key out keeps it.
+    // Cumulative production is 0 until the first unit walks out, so the plot
+    // opens on a flat floor. Trim to where it starts moving; the axis labels
+    // its own left edge, so it cannot read as a game that began late.
+    const myTrack = (me.combatUnitsTrack || []).map(s =>
+      ({ gameTimeMs: s.gameTimeMs, userValue: s.count || 0 }));
+    const theirTrack = opp
+      ? (opp.combatUnitsTrack || []).map(s => ({ gameTimeMs: s.gameTimeMs, userValue: s.count || 0 }))
+      : [];
+    const startMs = Math.min(
+      CC.firstChangeMs(myTrack, 'userValue'),
+      theirTrack.length ? CC.firstChangeMs(theirTrack, 'userValue') : Infinity
+    );
+
     const svg = opp && (opp.combatUnitsTrack || []).length
       ? CC.combatUnitsChart(me.combatUnitsTrack || [], opp.combatUnitsTrack || [],
-        { markers, title: '', ...CHART_BOX })
-      : CC.dualLineChart(
-        (me.combatUnitsTrack || []).map(s => ({ gameTimeMs: s.gameTimeMs, userValue: s.count || 0 })),
-        { markers, title: '', omitPro: true, ...CHART_BOX });
+        { markers, title: '', startMs, ...CHART_BOX })
+      : CC.dualLineChart(myTrack, { markers, title: '', omitPro: true, startMs, ...CHART_BOX });
     if (!svg) return null;
 
     const block = node('div', 'chart-block');
@@ -162,6 +173,21 @@
         ? mode
         : (MODES.find(m => m.ok) || MODES[0]).key;
 
+      // Only the modes that would draw something get a chip.
+      //
+      // `DominanceSeries` splits 100 points across everyone in the game, so it
+      // refuses team games outright — and the panel was still offering a greyed
+      // Dominance chip on every 2v2 and 3v3, which is a control whose only
+      // outcome is a sentence explaining that there is no chart. A tab that
+      // cannot answer is worse than no tab: it reads as the default and as
+      // broken.
+      //
+      // The exception is a game where NOTHING can be drawn. There the chips are
+      // the only place the explanation (and the re-read offer on a pre-v4
+      // summary) can live, so they all stay.
+      const anyOk = MODES.some(m => m.ok);
+      const chips = anyOk ? MODES.filter(m => m.ok) : MODES;
+
       const built = new Map();   // key → { el, handle }
 
       // The one thing worth re-reading a replay for, offered once per panel and
@@ -217,7 +243,7 @@
         }
       };
 
-      for (const m of MODES) {
+      for (const m of chips) {
         const btn = node('button', 'seg-btn', m.label);
         btn.type = 'button';
         btn.dataset.mode = m.key;
@@ -225,6 +251,11 @@
         btn.addEventListener('click', () => show(m.key, true));
         seg.appendChild(btn);
       }
+
+      // One chip is a label, not a choice. The head goes with it: every mode
+      // names itself inside its own chart, so a segmented control around a
+      // single button is 38px spent on saying nothing.
+      if (chips.length < 2) head.hidden = true;
 
       show(active, false);
 

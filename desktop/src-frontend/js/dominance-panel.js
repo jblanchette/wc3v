@@ -138,6 +138,13 @@
       const chart = new window.DominanceChart(null);
       chart.setContainer(chartHost);
       chart.setPlayers(infos);
+      // Trim the flat opening. The score eases out from an even 50/50 over the
+      // engine's early ramp (150s), which is real but is a fixed slice of every
+      // plot spent drawing a straight line — about 15% of the width on a
+      // 17-minute game. The axis labels its own start, so a plot beginning at
+      // 2:30 never reads as a game that began late.
+      const startT = chart.firstMoveT(1);
+      chart.setStart(startT);
       chart.build();
 
       // ── The readout ──────────────────────────────────────────────────────
@@ -195,7 +202,10 @@
         if (r.width <= 0) return lastT;
         const f = (e.clientX - r.left) / r.width;
         const inner = Math.max(0, Math.min(1, (f - leftF) / innerF));
-        return Math.round(inner * endT);
+        // Across the DRAWN span. The plot no longer starts at 0:00, and
+        // treating the left edge as zero would put every scrub and every seek
+        // early by however much was trimmed.
+        return Math.round(startT + inner * (endT - startT));
       };
 
       chartHost.classList.add('is-scrubbable');
@@ -204,7 +214,7 @@
       chartHost.setAttribute('aria-label',
         'Dominance over time. Drag to scrub, press Enter to open the viewer here.');
       chartHost.setAttribute('aria-valuetext', 'end of game');
-      chartHost.setAttribute('aria-valuemin', '0');
+      chartHost.setAttribute('aria-valuemin', String(Math.round(startT / 1000)));
       chartHost.setAttribute('aria-valuemax', String(Math.round(endT / 1000)));
 
       const seekTo = (t) => {
@@ -250,8 +260,8 @@
       chartHost.addEventListener('keydown', (e) => {
         const step = e.shiftKey ? 60000 : 10000;
         if (e.key === 'ArrowRight') { seekTo(Math.min(endT, lastT + step)); e.preventDefault(); }
-        else if (e.key === 'ArrowLeft') { seekTo(Math.max(0, lastT - step)); e.preventDefault(); }
-        else if (e.key === 'Home') { seekTo(0); e.preventDefault(); }
+        else if (e.key === 'ArrowLeft') { seekTo(Math.max(startT, lastT - step)); e.preventDefault(); }
+        else if (e.key === 'Home') { seekTo(startT); e.preventDefault(); }
         else if (e.key === 'End') { seekTo(endT); e.preventDefault(); }
         else if ((e.key === 'Enter' || e.key === ' ') && o.onWatch) {
           o.onWatch(summary, { t: lastT, tf: window.CompareCharts.fmtMs(lastT) });

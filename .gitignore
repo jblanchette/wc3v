@@ -73,3 +73,7 @@ desktop/src-tauri/resources/
 # Per-run output of tools/reparse-all.js (batch status + morph counts).
 # Regenerated on every run; never meaningful to share.
 tools/.reparse-report.json
+
+# Scratch capture frames for tools/build-hero-webp.js. Only the assembled
+# client/assets/hero/*.webp outputs are committed.
+tools/hero-frames/

@@ -6650,9 +6650,12 @@ body {
   white-space: nowrap;
 }
 
+/* The hero IS the identity of a WC3 build ("DK Destroyer", "BM Wind Rider"),
+   so it outranks the unit icons below it. This used to be 46px against 54px
+   units, which read the hierarchy backwards. */
 .site-build-card .mh-hero-portrait {
-  width: 46px;
-  height: 46px;
+  width: 60px;
+  height: 60px;
   border-color: #444;
   transition: border-color 0.2s;
 }
@@ -6935,9 +6938,11 @@ abbr.gloss:focus-visible {
   display: inline-block;
 }
 
+/* Wins over .site-build-card .mh-hero-portrait above (same specificity, later
+   in the file), so the hero size is really set here. Keep the two in step. */
 .site-card-hero .mh-hero-portrait {
-  width: 43px;
-  height: 43px;
+  width: 60px;
+  height: 60px;
 }
 
 .site-card-hero-ord {
@@ -7020,8 +7025,8 @@ abbr.gloss:focus-visible {
 }
 
 .site-card-key-icon {
-  width: 54px;
-  height: 54px;
+  width: 48px;
+  height: 48px;
   border-radius: 4px;
   border: 1px solid #444;
   object-fit: cover;
@@ -7031,14 +7036,14 @@ abbr.gloss:focus-visible {
   border-color: var(--race-color);
 }
 
+/* Wraps rather than truncating: 0.6rem with an ellipsis was both under the
+   0.8rem floor and cutting names like "Destroyer" down to "Destro". */
 .site-card-key-label {
-  font: 600 0.6rem Verdana;
-  color: #6a7a85;
-  max-width: 64px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font: 600 0.8rem Verdana;
+  color: #8d9aa6;
+  max-width: 76px;
   text-align: center;
+  line-height: 1.25;
 }
 
 .site-card-expo-row {
@@ -7084,12 +7089,15 @@ abbr.gloss:focus-visible {
   margin-top: 4px;
 }
 
+/* Upgrades carry their name now. A 20px icon on its own asked the reader to
+   recognise ~90 different WC3 research icons from memory, and the name was
+   only ever in a title tooltip, which does not exist on touch. */
 .site-upgrade-badge {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px 4px;
-  border-radius: 3px;
+  gap: 5px;
+  padding: 3px 7px 3px 4px;
+  border-radius: 4px;
 }
 
 .site-upgrade-badge.atk {
@@ -7105,16 +7113,23 @@ abbr.gloss:focus-visible {
 }
 
 .site-upgrade-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
   border: 1px solid rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+.site-upgrade-name {
+  font: 600 0.8rem Verdana;
+  color: #d3dae1;
+  line-height: 1.2;
 }
 
 .site-upgrade-level {
-  font: 800 0.6rem Verdana;
-  color: #ccc;
-  min-width: 10px;
+  font: 800 0.8rem Verdana;
+  color: #fff;
+  min-width: 12px;
   text-align: center;
 }
 
@@ -7777,15 +7792,20 @@ abbr.gloss:focus-visible {
 .site-replay-outcome.win  { background: rgba(68,221,136,0.12); color: #44DD88; }
 .site-replay-outcome.loss { background: rgba(255,68,68,0.12);  color: #FF6666; }
 
+/* The card's primary action, so it is sized like one. It was 0.82rem in a
+   ~31px box, which put it under the 44px hit target and left it reading as
+   the same weight as the two small pills beside it. */
 .site-watch-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
-  padding: 0.55rem 1.1rem;
+  min-height: 40px;
+  padding: 0.6rem 1.4rem;
   border-radius: var(--site-radius);
   background: var(--race-color, var(--site-accent));
   color: #fff;
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 700;
   text-decoration: none;
   border: none;
@@ -8302,37 +8322,53 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   border-color: rgba(255,255,255,0.24);
 }
 
+/* "Watch" is the card's primary action, so it takes the .btn-primary accent
+   fill (DESIGN-SYSTEM §6.1). Not the race colour: "buttons never take a race
+   color", the race identity is carried by the card header. It used to be a
+   0.78rem race-tinted ghost in a 27px box, which put it under the 44px hit
+   target and gave it the same visual weight as the small pills beside it. */
 .site-replay-view-btn {
   flex-shrink: 0;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--race-color);
-  background: color-mix(in srgb, var(--race-color) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--race-color) 30%, transparent);
-  border-radius: 4px;
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-on-accent, #fff);
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent-deep));
+  border: 1px solid var(--accent);
+  border-radius: var(--site-radius);
+  padding: 0.5rem 1.25rem;
   text-decoration: none;
   white-space: nowrap;
+  box-shadow: var(--shadow-1);
   transition: background 0.15s, border-color 0.15s;
 }
 
 .site-replay-view-btn:hover {
-  background: color-mix(in srgb, var(--race-color) 22%, transparent);
-  border-color: color-mix(in srgb, var(--race-color) 50%, transparent);
+  background: linear-gradient(180deg, var(--accent-strong), var(--accent));
 }
 
 /* "Guide me" — opens the viewer's guided walkthrough. Green (the guide accent),
    sits just left of "Watch". Both are wrapped in .site-replay-actions-right
    which handles the right-alignment, so no margin-left here. */
+/* Secondary to Watch, but a real button: this opens the 12-step coached
+   walkthrough, which is the most useful thing on the card for a newer
+   player and used to be the smallest, dimmest control on it. */
 .site-replay-guide-btn {
   flex-shrink: 0;
-  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: #6fc18a;
-  background: rgba(79,184,107,0.12);
-  border: 1px solid rgba(79,184,107,0.30);
-  border-radius: 4px;
-  padding: 3px 9px;
+  color: #8ad9a3;
+  background: rgba(79,184,107,0.14);
+  border: 1px solid rgba(79,184,107,0.40);
+  border-radius: var(--site-radius);
+  padding: 0.5rem 0.9rem;
   text-decoration: none;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
@@ -13746,7 +13782,6 @@ svg.about-feat-icon {
    is also what pushes the build count to the right edge — deliberately not
    `margin-left: auto` on the count, which would absorb the free space
    before the intro ever got any. */
-.site-pros-headline .band-intro { flex: 1 1 260px; }
 
 /* ── Skill band switch ────────────────────────────────────────────────────
    ONE control, one variant (`.skill-band--compact`), bound to BandSwitcher.js
@@ -13853,16 +13888,6 @@ svg.about-feat-icon {
   .skill-band--compact .skill-band-ico { width: 20px; height: 20px; }
 }
 
-
-/* One-line band framing — sits just under the #builds section heading on
-   the homepage. Independent of the band control; left as-is. */
-.band-intro {
-  margin: 0;
-  font-size: var(--fs-sm);
-  line-height: 1.45;
-  color: var(--text-muted);
-  min-width: 0;
-}
 
 /* ── Horizontal filter bar ── */
 
@@ -16469,7 +16494,7 @@ fieldset.ub-editor-field input[type="text"] {
   .site-card-key-label { font-size: 11px; }
   .site-card-upgrade-row { gap: 4px; flex-wrap: wrap; }
   .site-upgrade-badge { padding: 2px 5px; font-size: 11px; }
-  .site-upgrade-icon { width: 14px !important; height: 14px !important; }
+  .site-upgrade-icon { width: 22px !important; height: 22px !important; }
   .site-card-replay { padding-top: 6px; margin-top: 4px; }
   .site-replay-meta-row { font-size: 11px; gap: 4px; flex-wrap: wrap; }
   .site-watch-btn {

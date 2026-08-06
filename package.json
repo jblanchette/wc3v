@@ -1,7 +1,7 @@
 {
 	"name": "w3gv",
 	"version": "0.1.0",
-	"description": "WC3 Replay Viewer",
+	"description": "WC3 Replay Simulator",
 	"scripts": {
 		"build:parser": "node tools/build-parser-bundle.js",
 		"gen-builds-cards": "node tools/gen-builds-cards.js",
@@ -9,7 +9,7 @@
 		"check-manifest": "node tools/gen-asset-manifest.js --check",
 		"desktop": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri dev",
 		"desktop:build": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
-		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-report.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release"
+		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-report.js && node tools/test-backfill-catchup.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release"
 	},
 	"devDependencies": {
 		"@gltf-transform/core": "^4.4.0",

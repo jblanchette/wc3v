@@ -772,6 +772,85 @@ img { display: block; }
    unprefixed component name would leak onto them.
    ══════════════════════════════════════════════════════════════ */
 
+/* ── Product-story strip (below the grid, above the footer) ────
+   Three picture tiles summarising what the site does. Sits AFTER the
+   content, not before it: the build grid and the drop bar are the
+   product, so this is a summary, not a gate.
+
+   Hue per tile comes from the muted --dom-* bracket palette (§2.9b),
+   not --gold/--accent — those are reserved (achievement; app chrome),
+   and using them as decoration here read as a primary-colours toy row.
+   Only the label takes the hue; the card stays a neutral surface. */
+.hp-pillars {
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+.hp-pillars-inner {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--sp-6) var(--page-gutter) var(--sp-7);
+}
+.hp-pillars-title {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--text);
+}
+.hp-pillars-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-4);
+}
+.hp-pillar {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast);
+}
+.hp-pillar:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
+.hp-pillar:hover .hp-pillar-label { text-decoration: underline; }
+.hp-pillar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hp-pillar picture { display: block; }
+.hp-pillar-media {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-bottom: 1px solid var(--border);
+}
+.hp-pillar-body {
+  display: block;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+.hp-pillar-label {
+  display: block;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  margin-bottom: var(--sp-1);
+}
+.hp-pillar-note {
+  display: block;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.hp-pillar-lib .hp-pillar-label { color: color-mix(in srgb, var(--dom-gold) 80%, white); }
+.hp-pillar-lib:hover  { border-color: color-mix(in srgb, var(--dom-gold) 55%, transparent); }
+.hp-pillar-sim .hp-pillar-label { color: color-mix(in srgb, var(--dom-blue) 80%, white); }
+.hp-pillar-sim:hover  { border-color: color-mix(in srgb, var(--dom-blue) 55%, transparent); }
+.hp-pillar-app .hp-pillar-label { color: color-mix(in srgb, var(--dom-purple) 80%, white); }
+.hp-pillar-app:hover  { border-color: color-mix(in srgb, var(--dom-purple) 55%, transparent); }
+
+@media (max-width: 860px) {
+  .hp-pillars-track { grid-template-columns: 1fr; }
+  .hp-pillars-inner { padding: var(--sp-5) var(--page-gutter) var(--sp-6); }
+}
+
 /* ── Hero strip ────────────────────────────────────────────────
    One short band under the app bar: the page's proposition on the
    left, the band switcher on the right. Full-bleed background with
@@ -874,6 +953,15 @@ img { display: block; }
   line-height: 1.2;
 }
 .hp-dropbar-shield { flex-shrink: 0; }
+/* The scope line is information, not a privacy guarantee, so it drops the
+   --privacy green and wraps instead of sitting on one line. */
+.hp-dropbar-scope {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-dim);
+  font-weight: 500;
+  line-height: 1.35;
+}
 .hp-dropbar-status {
   margin-left: var(--sp-3);
   font-size: var(--fs-min);
@@ -959,7 +1047,6 @@ img { display: block; }
 
 /* Pro builds section header + filter bar (pfb-*). */
 .site-pros-title { color: var(--text); font-weight: 800; }
-.band-intro { color: var(--text-muted); font-size: var(--fs-sm); }
 .pfb-label, .pfb-pop-label { color: var(--text-dim); font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .pfb-count { color: var(--text-dim); font-size: var(--fs-label); }
 

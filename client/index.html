@@ -5,25 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Skill-band routing at the site root.
-       - Show the welcome gate ONCE to every visitor (new AND existing) until
-         they've seen it, tracked by the dedicated `wc3v.gateSeen` flag (NOT by
-         whether a band is stored — existing users already have a band, and we
-         still want them to see the new gate one time). The gate sets the flag.
-       - "new" is the separate /learn Build Finder experience, so route there;
-         "improving"/"pro" stay here on the pro homepage.
-       - A shared ?level= link bypasses the gate and is honoured.
-       Guarded to fire only at the root and never loop (/learn and /welcome are
-       not the root; the gate sets wc3v.gateSeen). -->
+       "new" is the separate /learn Build Finder experience, so a stored band
+       of 'new' routes there; "improving"/"pro" stay here on the pro homepage.
+       A shared ?level= link is honoured over the stored band.
+
+       There is deliberately NO first-visit gate. A "are you new or
+       experienced?" splash used to sit in front of this page; user testing
+       put half the panel on the back button before they ever saw the
+       product, because it asked for a self-classification before showing
+       anything. Everyone now lands here, on real builds and a drop zone,
+       and the band switcher in the nav does the same routing without
+       blocking. Don't reintroduce an interstitial here.
+
+       Guarded to fire only at the root and never loop (/learn is not the
+       root, and it does not redirect back). -->
   <script>
   (function(){ try {
     var p = new URLSearchParams(location.search);
     var lvlParam = p.get('level');
     var band = lvlParam || localStorage.getItem('wc3v.level');
-    var gateSeen = localStorage.getItem('wc3v.gateSeen');
     var path = location.pathname.replace(/\/index\.html$/,'/');
-    if (path === '/' || path === '') {
-      if (!gateSeen && !lvlParam) { location.replace('/welcome'); }
-      else if (band === 'new') { location.replace('/learn'); }
+    if ((path === '/' || path === '') && band === 'new') {
+      location.replace('/learn');
     }
   } catch(e){} })();
   </script>
@@ -72,9 +75,9 @@
   (function () {
     var L = (new URLSearchParams(location.search).get('level') || '').toLowerCase();
     var M = {
-      'new':       { t: 'WC3V — Starter Build Orders for New Warcraft III Players', d: 'Beginner-friendly Warcraft III build orders: the few things that matter, common mistakes to avoid, and clean replays to learn from. Pick your race and get a first build you can actually execute.' },
-      'improving': { t: 'WC3V — Ladder Build Orders & Tournament Replays for Improving Players', d: 'Solid, copyable Warcraft III build orders from real tournament play, with replays you can study — the middle rung between your first builds and the pro meta.' },
-      'pro':       { t: 'WC3V — Pro Warcraft III Build Orders & Tournament Replay Analysis', d: 'Current top-level Warcraft III build orders from major tournaments, with full in-browser replay analysis and pro-comparison feedback.' }
+      'new':       { t: 'WC3V — Starter Build Orders for New Warcraft III Players', d: 'Warcraft III build orders that forgive a slow start. Pick your race and get one build to learn, with a pro replay you can watch it played in.' },
+      'improving': { t: 'WC3V — Ladder Build Orders & Tournament Replays for Improving Players', d: 'Warcraft III build orders taken from tournament games you can watch. Play one enough times and it holds up against most of the ladder.' },
+      'pro':       { t: 'WC3V — Pro Warcraft III Build Orders & Tournament Replay Analysis', d: 'The Warcraft III builds top players are running right now, pulled from recent tournaments. Drop your own replay to see where yours came apart.' }
     };
     var v = M[L]; if (!v) return;
     document.title = v.t;
@@ -460,7 +463,7 @@
         postprocess: 'analyzing data',
         assemble:    'building output',
         storing:     'saving to your library',
-        done:        'done — opening viewer'
+        done:        'done — opening simulator'
       };
 
       const fmtMs = (ms) => {
@@ -823,10 +826,10 @@
     <div class="hp-hero-inner">
       <h1 class="hp-hero-tagline">A Warcraft III replay simulator, built for <em>learning the game</em>.</h1>
       <div class="skill-band skill-band--compact" id="skill-band-hero" role="group"
-           aria-label="Skill level — sets which builds you see and what your replays are graded against">
-        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="New to WC3: your first builds, the few that matter"><img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">New to WC3</span></button>
-        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Ladder: solid tournament play you can copy"><img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Ladder</span></button>
-        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="Pro meta: top-level builds, tight execution"><img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Pro meta</span></button>
+           aria-label="Skill level, which sets the builds you see and what your replays are graded against">
+        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="Builds that forgive a slow start"><img class="skill-band-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">New to WC3</span></button>
+        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Tournament builds you can copy"><img class="skill-band-ico" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Ladder</span></button>
+        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="What top players are running now"><img class="skill-band-ico" src="/assets/wc3icons/ckng.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" /><span class="skill-band-label">Pro meta</span></button>
       </div>
     </div>
   </div>
@@ -846,6 +849,12 @@
           <span class="hp-dropbar-sub">
             <svg class="hp-dropbar-shield" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
             Parsed in your browser — never uploaded, no server
+          </span>
+          <!-- Scope, stated before the upload rather than after it. Team and
+               custom players used to find out their game could not be graded
+               only once they had picked a file and waited for the parse. -->
+          <span class="hp-dropbar-sub hp-dropbar-scope">
+            Recommended for 1v1. Supports every game format.
           </span>
         </span>
         <span class="hp-dropbar-status" id="hero-upload-status" aria-live="polite"></span>
@@ -999,7 +1008,6 @@
                presentational only. -->
           <div class="site-pros-headline">
             <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
-            <p class="band-intro" id="band-intro">Current top-level builds from major tournaments: tight execution, the latest strategies.</p>
             <!-- Live count. Sits on the headline row, not in the filter bar:
                  as a flex item there it was the first thing to wrap once the
                  race chips filled the row, costing a whole extra row above
@@ -1106,6 +1114,53 @@
     </div>
   </main>
 
+  <!-- Product-story strip. Deliberately BELOW the build grid: the grid and the
+       drop bar above already are the product, so this is the "what else is
+       here" summary rather than something that pushes content down. User
+       testing was blunt that a visitor must be shown a capability, not a
+       category, so each tile states what the thing DOES in one line. Every
+       tile is a real link — a tile that looks clickable and isn't was the
+       single worst finding in that testing, so don't add one here. -->
+  <section class="hp-pillars" aria-labelledby="hp-pillars-title">
+    <div class="hp-pillars-inner">
+      <h2 class="hp-pillars-title" id="hp-pillars-title">What WC3V does</h2>
+      <div class="hp-pillars-track">
+
+        <a class="hp-pillar hp-pillar-lib" href="#all-builds-grid">
+          <img class="hp-pillar-media" src="/assets/hero/library-preview.webp" alt="Two pro build cards showing heroes, key units and the tournament each came from" width="760" height="224" loading="lazy" decoding="async">
+          <span class="hp-pillar-body">
+            <span class="hp-pillar-label">Pro build library</span>
+            <span class="hp-pillar-note">Tournament builds by race and matchup, each with the pro replay behind it.</span>
+          </span>
+        </a>
+
+        <!-- Animated loop on desktop; the poster is swapped in for mobile and
+             for prefers-reduced-motion, and because those sources resolve to a
+             plain <img>, the animated file is never fetched on those paths. -->
+        <a class="hp-pillar hp-pillar-sim" href="/viewer?r=12016427_FoCuS_Happy_Springtime-13&amp;player=1">
+          <picture>
+            <source srcset="/assets/hero/simulator-poster.webp" media="(prefers-reduced-motion: reduce)">
+            <source srcset="/assets/hero/simulator-poster.webp" media="(max-width: 860px)">
+            <img class="hp-pillar-media" src="/assets/hero/simulator-loop.webp" alt="A replay playing in the simulator, build order rows beside the 3D map" width="760" height="224" loading="lazy" decoding="async">
+          </picture>
+          <span class="hp-pillar-body">
+            <span class="hp-pillar-label">Replay simulator</span>
+            <span class="hp-pillar-note">Warcraft III can't rewind a replay. This rebuilds the game from the file, so you can jump to any second.</span>
+          </span>
+        </a>
+
+        <a class="hp-pillar hp-pillar-app" href="/download.html">
+          <img class="hp-pillar-media" src="/assets/hero/desktop-preview.webp" alt="The WC3V desktop app showing a finished game, its verdict and a link into the simulator" width="760" height="224" loading="lazy" decoding="async">
+          <span class="hp-pillar-body">
+            <span class="hp-pillar-label">Desktop companion</span>
+            <span class="hp-pillar-note">Watches your replay folder and grades each game as you finish it.</span>
+          </span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
   <footer class="site-footer">
     <div class="site-footer-inner">
       <div class="site-footer-about">
@@ -1115,6 +1170,7 @@
       <div class="site-footer-links">
         <a href="/">Home</a>
         <a href="/about.html">About</a>
+        <a href="/download.html">Download</a>
         <a href="/terms.html">Terms</a>
         <a href="/privacy.html">Privacy</a>
         <a href="https://github.com/jblanchette/wc3v">GitHub</a>
@@ -1163,8 +1219,8 @@
     // ─── Skill bands ────────────────────────────────────────
     // Band metadata + state live in BandSwitcher.js (site-wide source of
     // truth). The local aliases below keep the existing card-rendering and
-    // filter code readable. `BANDS` exposes per-band labels / icon ids /
-    // intro copy used by the homepage chrome (#pros-title, #band-intro).
+    // filter code readable. `BANDS` exposes per-band labels and icon ids;
+    // the homepage chrome uses `h2` for #pros-title.
     const BANDS = window.BandSwitcher.BANDS;
     const BAND_KEYS = window.BandSwitcher.BAND_KEYS;
     const DEFAULT_BAND = window.BandSwitcher.DEFAULT_BAND;
@@ -1845,7 +1901,8 @@
             const maxLvl = meta ? meta.maxLevel : 1;
             const name = (meta && meta.name) || r.name;
             return `<span class="site-upgrade-badge ${catClass}" title="${name}${maxLvl > 1 ? ' ' + r.level : ''}">
-              <img class="site-upgrade-icon" src="${iconSrc}" alt="${name}${maxLvl > 1 ? ' level ' + r.level : ''}" loading="lazy" onerror="this.style.display='none'" />
+              <img class="site-upgrade-icon" src="${iconSrc}" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
+              <span class="site-upgrade-name">${name}</span>
               ${maxLvl > 1 ? `<span class="site-upgrade-level">${r.level}</span>` : ''}
             </span>`;
           }).join('');
@@ -1858,7 +1915,8 @@
             const icon = meta.icons[Math.max(0, iconIdx)];
             const catClass = meta.category === 'attack' ? 'atk' : meta.category === 'defense' ? 'def' : 'res';
             return `<span class="site-upgrade-badge ${catClass}" title="${meta.name}${meta.maxLevel > 1 ? ' ' + meta.maxLevel : ''}">
-              <img class="site-upgrade-icon" src="/assets/wc3icons/${icon}.jpg" alt="${meta.name}${meta.maxLevel > 1 ? ' level ' + meta.maxLevel : ''}" loading="lazy" onerror="this.style.display='none'" />
+              <img class="site-upgrade-icon" src="/assets/wc3icons/${icon}.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />
+              <span class="site-upgrade-name">${meta.name}</span>
               ${meta.maxLevel > 1 ? `<span class="site-upgrade-level">${meta.maxLevel}</span>` : ''}
             </span>`;
           }).join('');
@@ -2364,15 +2422,14 @@
     // ─── Skill band switch ──────────────────────────────────
     // State / persistence / URL sync / card click delegation all live in
     // BandSwitcher.js (site-wide). Here we just sync the homepage-specific
-    // chrome (#pros-title + #band-intro) and re-render the grid when the
-    // band changes. Card aria-pressed state on every .skill-band-card is
-    // handled generically by BandSwitcher.applyUI().
+    // chrome (#pros-title) and re-render the grid when the band changes.
+    // Card aria-pressed state on every .skill-band-card is handled
+    // generically by BandSwitcher.applyUI(). The heading stands alone: the
+    // blurb that used to sit beside it is gone.
     function applyBandChrome(band) {
       const meta = BANDS[band] || BANDS[DEFAULT_BAND];
       const title = document.getElementById('pros-title');
       if (title) title.textContent = meta.h2;
-      const intro = document.getElementById('band-intro');
-      if (intro) intro.textContent = meta.intro;
     }
     function setupBands() {
       // Initial chrome sync (BandSwitcher.init() already ran in the bootstrap
@@ -2460,6 +2517,57 @@
           mobileFiltersCount.hidden = true;
         }
       }
+    }
+
+    // Card click → load first replay (let replay buttons handle themselves).
+    function handleBuildGridClick(e) {
+      // Pencil icon on a user-uploaded card → open the editor (hosted
+      // by the bootstrap script and exposed on window).
+      const editBtn = e.target.closest('[data-action="edit-user-build"]');
+      if (editBtn) {
+        e.preventDefault();
+        const id = editBtn.dataset.localId;
+        if (id && typeof window.__wc3vOpenUserBuildEditor === 'function') {
+          window.__wc3vOpenUserBuildEditor(id);
+        }
+        return;
+      }
+      if (e.target.closest('.site-replay-view-btn')) return;
+      if (e.target.closest('.site-replay-guide-btn')) return;
+      // "+N more" → open the modal and lazily render its body (fetches that
+      // build's summaries on first open only). Keep stopPropagation so the
+      // card's data-href navigation doesn't also fire.
+      const toggle = e.target.closest('.site-replay-toggle');
+      if (toggle) {
+        e.stopPropagation();
+        const modalEl = toggle.dataset.modalId && document.getElementById(toggle.dataset.modalId);
+        if (modalEl) {
+          modalEl.classList.add('open');
+          const build = findBuildById(modalEl.dataset.buildId);
+          if (build) renderReplayModalBody(modalEl, build);
+        }
+        return;
+      }
+      if (e.target.closest('.site-replay-modal')) return;
+      // Learner block: a tab click switches panes within that card; any
+      // other click inside the block is swallowed (never navigates).
+      const learnTab = e.target.closest('.scl-tab');
+      if (learnTab) {
+        const wrap = learnTab.closest('.site-card-learn');
+        const key = learnTab.dataset.learnPane;
+        if (wrap && key) {
+          wrap.querySelectorAll('.scl-tab').forEach(t => {
+            const on = t.dataset.learnPane === key;
+            t.classList.toggle('active', on);
+            t.setAttribute('aria-selected', on ? 'true' : 'false');
+          });
+          wrap.querySelectorAll('.scl-pane').forEach(p => { p.hidden = p.dataset.learnPane !== key; });
+        }
+        return;
+      }
+      if (e.target.closest('.site-card-learn')) return;
+      const card = e.target.closest('.site-build-card[data-href]');
+      if (card) window.location.href = card.dataset.href;
     }
 
     // ─── Init ───────────────────────────────────────────────
@@ -2629,56 +2737,8 @@
         }
       });
 
-      // Card click → load first replay (let replay buttons handle themselves)
-      document.getElementById('all-builds-grid').addEventListener('click', function(e) {
-        // Pencil icon on a user-uploaded card → open the editor (hosted
-        // by the bootstrap script and exposed on window).
-        const editBtn = e.target.closest('[data-action="edit-user-build"]');
-        if (editBtn) {
-          e.preventDefault();
-          const id = editBtn.dataset.localId;
-          if (id && typeof window.__wc3vOpenUserBuildEditor === 'function') {
-            window.__wc3vOpenUserBuildEditor(id);
-          }
-          return;
-        }
-        if (e.target.closest('.site-replay-view-btn')) return;
-        if (e.target.closest('.site-replay-guide-btn')) return;
-        // "+N more" → open the modal and lazily render its body (fetches that
-        // build's summaries on first open only). Keep stopPropagation so the
-        // card's data-href navigation doesn't also fire.
-        const toggle = e.target.closest('.site-replay-toggle');
-        if (toggle) {
-          e.stopPropagation();
-          const modalEl = toggle.dataset.modalId && document.getElementById(toggle.dataset.modalId);
-          if (modalEl) {
-            modalEl.classList.add('open');
-            const build = findBuildById(modalEl.dataset.buildId);
-            if (build) renderReplayModalBody(modalEl, build);
-          }
-          return;
-        }
-        if (e.target.closest('.site-replay-modal')) return;
-        // Learner block: a tab click switches panes within that card; any
-        // other click inside the block is swallowed (never navigates).
-        const learnTab = e.target.closest('.scl-tab');
-        if (learnTab) {
-          const wrap = learnTab.closest('.site-card-learn');
-          const key = learnTab.dataset.learnPane;
-          if (wrap && key) {
-            wrap.querySelectorAll('.scl-tab').forEach(t => {
-              const on = t.dataset.learnPane === key;
-              t.classList.toggle('active', on);
-              t.setAttribute('aria-selected', on ? 'true' : 'false');
-            });
-            wrap.querySelectorAll('.scl-pane').forEach(p => { p.hidden = p.dataset.learnPane !== key; });
-          }
-          return;
-        }
-        if (e.target.closest('.site-card-learn')) return;
-        const card = e.target.closest('.site-build-card[data-href]');
-        if (card) window.location.href = card.dataset.href;
-      });
+      // Card click → load first replay (let replay buttons handle themselves).
+      document.getElementById('all-builds-grid').addEventListener('click', handleBuildGridClick);
     }
 
     init();

@@ -294,7 +294,6 @@
        js/dominance-panel.js and js/economy-panel.js, never from a viewer.
        DominanceBar is not shipped here — see build-desktop-client.js. -->
   <script src="./js/vendor/DominanceChart.js"></script>
-  <script src="./js/vendor/ResourceCharts.js"></script>
   <script src="./overlay/overlay-render.js"></script>
   <script src="./js/store.js"></script>
   <script src="./js/replay-index.js"></script>
@@ -303,6 +302,10 @@
   <script src="./js/dominance-panel.js"></script>
   <script src="./js/economy-panel.js"></script>
   <script src="./js/chart-panel.js"></script>
+  <!-- Which shop items are spent rather than kept. Generated from
+       helpers/mappings.js by tools/build-item-classes.js; the build card reads
+       it to split the Bought row, so it loads first. -->
+  <script src="./js/item-classes.js"></script>
   <script src="./js/build-card.js"></script>
   <script src="./js/w3c.js"></script>
   <script src="./js/scout.js"></script>

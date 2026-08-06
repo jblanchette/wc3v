@@ -32,7 +32,7 @@
     <div class="ho-logo">WC<span>3</span>V</div>
     <h1 id="ho-head">Receiving your replay…</h1>
     <p id="ho-lead">WC3V on your machine is handing this game straight to the
-      viewer. Nothing is uploaded and no account is involved.</p>
+      simulator. Nothing is uploaded and no account is involved.</p>
     <div class="bar" id="ho-bar"><div class="fill" id="ho-fill"></div></div>
     <p class="note" id="ho-note">The first time you open a game it has to be
       read in full, which takes a few seconds.</p>
@@ -136,13 +136,13 @@
           if (key) {
             try { localStorage.setItem(MAP_PREFIX + key, result.id); } catch (e) {}
           }
-          progress(100, 'Opening the viewer…');
+          progress(100, 'Opening the simulator…');
           open(result.id);
         })
         .catch(function (err) {
           if (err && err.code === 'missing_map') {
             fail('That map is not in the library',
-              'The viewer needs map data to draw a game, and it does not have ' +
+              'The simulator needs map data to draw a game, and it does not have ' +
               (err.rawMapName || 'this one') + ' yet.');
             return;
           }

@@ -116,21 +116,50 @@ current before the backfill runs.
 
 ## Charts
 
-The report draws the viewer's **own** chart widgets, not lookalikes.
-`DominanceChart` and `ResourceCharts` are the classes `client/viewer.html`
-mounts, copied into `js/vendor` by `tools/build-desktop-client.js` and styled by
-`client/css/dominance.css` — the same stylesheet the viewer loads, split out of
-`main.css` for exactly this reason. `js/dominance-panel.js` and
-`js/economy-panel.js` mount them from a stored summary and own no drawing code.
-If either starts drawing a line, the mount seam has leaked and the two products
-have begun telling different stories about the same game.
+The rule is **do not redraw a chart the viewer already has**. Dominance is the
+viewer's own `DominanceChart`, copied into `js/vendor` by
+`tools/build-desktop-client.js` and styled by `client/css/dominance.css` — the
+same stylesheet the viewer loads, split out of `main.css` for exactly this
+reason. `js/dominance-panel.js` mounts it from a stored summary and owns no
+drawing code. If it starts drawing a line, the mount seam has leaked.
 
-Both take data rather than a viewer: they take `setPlayers()` arrays and ignore
-their constructor argument, so the desktop passes null. What the desktop added
-to them is small and benefits both products: a published `GEOMETRY` so a pointer
+It takes data rather than a viewer: a `setPlayers()` array, ignoring the
+constructor argument, so the desktop passes null. What the desktop added to it
+is small and benefits both products: a published `GEOMETRY` so a pointer
 position can be mapped back to a game time, `scoresAt(t)` so the numbers can be
-shown beside the plot, and a compensating `scaleX` on the momentum dots so a
-full-width chart draws circles instead of lozenges.
+shown beside the plot, a compensating `scaleX` on the momentum dots so a
+full-width chart draws circles instead of lozenges, and `setStart()`.
+
+**Resources is NOT the viewer's `ResourceCharts`, deliberately.** That class
+stacks food, gold lost and lumber lost, one line per player each. Measured over
+80 games (`node tools/analyse-resource-series.js`):
+
+| series | flat head (median) | worst | the two lines differ by |
+|---|---|---|---|
+| food used | 1% | 4% | 9% |
+| gold lost | 27% | 77% | 39% |
+| lumber lost | 43% | 100% | 57% |
+
+So gold lost draws a flat floor for a quarter of the game, lumber lost for
+nearly half and sometimes for all of it, and food draws four lines (used and cap
+per player) of which the two that matter trace each other. A cumulative loss
+curve only ever climbs, and "who is winning the trades" is the gap between two
+of them — the one thing a reader has to do arithmetic to get.
+
+`js/economy-panel.js` draws the difference instead: **trade balance**, their
+cumulative losses minus yours, filled back to a zero midline, plus **food**
+against the cap as a band rather than a fourth line. Both come from
+`CompareCharts`, the shared pure-SVG factory, which is where a derivation with
+no viewer class to borrow belongs — the same reason Army has always been there.
+`ResourceCharts` is no longer shipped to the desktop.
+
+**Every mode trims its own flat lead-in** and labels the axis with the second it
+actually starts, so a plot beginning at 9:40 never reads as a game that began
+late. `CompareCharts.firstChangeMs()` finds it for the SVG factories;
+`DominanceChart.firstMoveT()` for dominance, where the score eases out of an
+even 50/50 over the engine's 150s early ramp. Anything mapping a pointer back to
+a time must go through the drawn span, not the element width — the plot no
+longer starts at 0:00 and it never started at the left edge.
 
 `js/chart-panel.js` is the third layer and owns no drawing either. It puts the
 two panels and a `CompareCharts` army plot behind one set of toggle chips, so
@@ -271,27 +300,48 @@ so it is checked mechanically rather than by eye, at **900x600** and
 (async () => {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const bad = [];
-  for (const row of document.querySelectorAll('#feed .game')) {
-    row.click(); await sleep(25);
-    const doc = document.documentElement;
-    const col = document.querySelector('.detail-col');
-    if (doc.scrollHeight > doc.clientHeight + 1) bad.push('page scrolls');
-    if (document.body.scrollHeight > document.body.clientHeight + 1) bad.push('body scrolls');
-    if (col.scrollHeight > col.clientHeight + 1) bad.push('detail-col scrolls');
+  for (const row of document.querySelectorAll('.qn-chip')) {
+    row.click(); await sleep(40);
+    for (const tab of document.querySelectorAll('.cp-seg .seg-btn')) {
+      tab.click(); await sleep(40);
+      const doc = document.documentElement;
+      const col = document.querySelector('.detail-col');
+      if (doc.scrollHeight > doc.clientHeight + 1) bad.push('page scrolls');
+      if (document.body.scrollHeight > document.body.clientHeight + 1) bad.push('body scrolls');
+      if (col.scrollHeight > col.clientHeight + 1) bad.push('detail-col scrolls');
+    }
   }
   return [...new Set(bad)];
 })()
 ```
 
-Pass is `[]`. Run it once per chart mode as well: Resources is the tallest of
-the three by roughly 150px. Also worth a second sweep for clipped or overflowing
-elements anywhere outside a `.scroll` container, since `overflow: hidden` hides a
-fold bug just as effectively as a scrollbar shows one.
+Pass is `[]`. The inner loop covers every chart mode, which matters: Resources is
+the tallest of the three by roughly 150px. Also worth a second sweep for clipped
+or overflowing elements anywhere outside a `.scroll` container, since
+`overflow: hidden` hides a fold bug just as effectively as a scrollbar shows one.
 
 Games differ in ways that change the report's shape, so audit **every** game
 rather than one: whether you were in it (no read line and no benchmark readout
 if not), which chart modes have data, and whether the compact team-game path
 fires.
+
+The corpus is overwhelmingly 1v1 and the preview harness samples it in filename
+order, so **the team-game path is not in the default sample**. Audit it
+explicitly — `node tools/desktop-preview.js --games=1 --match=gso` is the one
+3v3 in `client/replays`.
+
+To drive any of this from a script, Chrome needs a debug port the MCP tools can
+attach to, on its own profile so it does not fight a running browser:
+
+```powershell
+Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" -ArgumentList `
+  '--remote-debugging-port=9222', "--user-data-dir=$env:TEMP\wc3v-debug-profile", `
+  '--no-first-run', 'about:blank'
+```
+
+Set the viewport with the emulation override rather than by resizing the window
+— a window resize is clamped by the real display and silently gives you a
+different size than the one you audited at.
 
 ## Releasing
 
@@ -373,6 +423,12 @@ there is one install on it. The moment anyone else has the app, split it: a
   the real hero's own itemId, so a raw read draws four Blademasters. Always go
   through `BuildCard.heroesOf`. `t2Units`/`t3Units` likewise include a hero
   trained inside that tier, which is why `BuildCard.keyUnits` filters them.
+- **`itemPurchases` has no category and never will**, because adding one is a
+  schema bump plus a re-parse of every stored game. Whether an item is kept or
+  spent comes from `js/item-classes.js`, generated out of `helpers/mappings.js`
+  (`itemAbilityData.category`, with `dropTables.json` `class` as the fallback)
+  by `tools/build-item-classes.js`. Re-run it and commit the output after any
+  change to either source; an id it does not list counts as kept.
 - **A grading constant that has not been run over the corpus is a guess.** Every
   first-pass threshold in `GameReport.js` was too eager in the same direction.
   The unit test asserts shape and will pass with meaningless labels.

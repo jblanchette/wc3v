@@ -2,7 +2,7 @@
  * SiteNav.js — Shared navigation header for all site pages.
  *
  * Usage: call SiteNav.render(activeSection) after DOM ready.
- * activeSection: 'home' | 'about' | 'community' | null
+ * activeSection: 'home' | 'about' | 'community' | 'download' | null
  */
 
 const SiteNav = {
@@ -55,9 +55,9 @@ const SiteNav = {
     const bandIco = (id) => `<img class="skill-band-ico" src="${root}/assets/wc3icons/${id}.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />`;
     const skillBandHtml = `
       <div class="skill-band skill-band--compact" id="skill-band-nav" role="group" aria-label="Skill level">
-        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="New to WC3: your first builds, the few that matter">${bandIco('phea')}<span class="skill-band-label">New to WC3</span></button>
-        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Ladder: solid tournament play you can copy">${bandIco('tkno')}<span class="skill-band-label">Ladder</span></button>
-        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="Pro meta: top-level builds, tight execution">${bandIco('ckng')}<span class="skill-band-label">Pro meta</span></button>
+        <button type="button" class="skill-band-card" data-band="new" aria-pressed="false" title="Builds that forgive a slow start">${bandIco('phea')}<span class="skill-band-label">New to WC3</span></button>
+        <button type="button" class="skill-band-card" data-band="improving" aria-pressed="false" title="Tournament builds you can copy">${bandIco('tkno')}<span class="skill-band-label">Ladder</span></button>
+        <button type="button" class="skill-band-card" data-band="pro" aria-pressed="false" title="What top players are running now">${bandIco('ckng')}<span class="skill-band-label">Pro meta</span></button>
       </div>`;
 
     let leftHtml = '';
@@ -87,12 +87,14 @@ const SiteNav = {
         <a class="site-nav-link" href="${root}/">Home</a>
         <a class="site-nav-link" href="${root}/about.html">About</a>
         <a class="site-nav-link" href="${root}/community.html">Community</a>
+        <a class="site-nav-link" href="${root}/download.html">Download</a>
       </div>`;
 
     // The wordmark is a text lockup, not an image: it stays sharp at every
-    // size, takes its colour from the token layer, and matches the welcome
-    // gate's mark exactly. It renders on EVERY page including home — the
-    // app bar is the brand's permanent home. (/assets/wc3v.svg is retained
+    // size and takes its colour from the token layer. It renders on EVERY
+    // page including home — the app bar is the brand's permanent home, and
+    // since the first-visit splash was removed it is also the first mark a
+    // new visitor sees. (/assets/wc3v.svg is retained
     // as the favicon / social-card asset only; it carries a baked-in grey
     // extrusion filter that reads as washed-out on a dark surface.)
     const logoHtml = `

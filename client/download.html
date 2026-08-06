@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Download WC3V Desktop | WC3V</title>
+  <meta name="description" content="Download the WC3V desktop app for Windows. Check the version and checksum, read the disclosures, and get the installer straight from our CDN.">
+
+  <link rel="canonical" href="https://wc3v.com/download.html">
+  <meta name="robots" content="index, follow">
+
+  <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.wc3v.com">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/redesign.css">
+  <style>
+    body { margin: 0; }
+
+    .dl-page { max-width: 720px; margin: 0 auto; padding: var(--sp-6) var(--page-gutter) var(--sp-8); }
+
+    .dl-hero { margin-bottom: var(--sp-6); }
+    .dl-hero-title { font-size: var(--fs-h1); font-weight: 800; color: var(--text); margin: 0 0 var(--sp-2); letter-spacing: -0.01em; }
+    .dl-hero-sub { font-size: var(--fs-sm); color: var(--text-muted); margin: 0; line-height: 1.6; }
+
+    .dl-card {
+      background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
+      padding: var(--sp-5); margin-bottom: var(--sp-5);
+    }
+    .dl-eyebrow { display: block; font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: var(--sp-2); }
+    .dl-version-line { font-size: var(--fs-h2); font-weight: 800; color: var(--text); margin: 0; display: inline-block; }
+    .dl-date { display: block; font-size: var(--fs-label); color: var(--text-muted); margin-top: var(--sp-1); }
+    .dl-notes { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin: var(--sp-3) 0 0; }
+
+    .dl-file-row {
+      display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
+      margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border);
+      font-size: var(--fs-sm);
+    }
+    .dl-file-label { color: var(--text-muted); }
+    .dl-file-name { font-family: var(--mono); font-size: var(--fs-label); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 8px; }
+
+    .dl-sha-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); font-size: var(--fs-sm); }
+    .dl-sha-label { color: var(--text-muted); flex-shrink: 0; }
+    .dl-sha-code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px 8px; overflow-wrap: anywhere; }
+    .dl-sha-pending { font-size: var(--fs-label); color: var(--text-dim); margin: var(--sp-3) 0 0; }
+
+    .dl-fail { background: var(--warn-soft); border: 1px solid var(--warn-edge); border-radius: var(--radius-lg); padding: var(--sp-4); margin-bottom: var(--sp-5); }
+    .dl-fail p { margin: 0 0 var(--sp-3); color: var(--text); font-size: var(--fs-sm); }
+
+    .dl-section-title { font-size: var(--fs-h3); font-weight: 700; color: var(--text); margin: 0 0 var(--sp-3); }
+
+    /* No left-edge accent stripe. The bold lead-in is the structure; a dot
+       marks the row without decorating it. */
+    .dl-disclosure-list { list-style: none; padding: 0; margin: 0 0 var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
+    .dl-disclosure-list li { position: relative; font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; padding-left: var(--sp-4); }
+    .dl-disclosure-list li::before {
+      content: ""; position: absolute; left: 0; top: 0.62em;
+      width: 4px; height: 4px; border-radius: 50%; background: var(--text-dim);
+    }
+    .dl-disclosure-list strong { color: var(--text); }
+    .dl-disclosure-list a { color: var(--accent); }
+
+    .dl-download-btn { width: 100%; margin-bottom: var(--sp-6); }
+    .dl-download-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+
+    .dl-secondary-links { display: flex; gap: var(--sp-5); margin-top: var(--sp-5); font-size: var(--fs-sm); }
+    .dl-secondary-links a { color: var(--text-muted); }
+    .dl-secondary-links a:hover { color: var(--text); }
+  </style>
+</head>
+<body class="site-page">
+  <script src="js/clientConfig.js"></script>
+  <script src="js/BandSwitcher.js"></script>
+  <script src="js/SiteNav.js"></script>
+  <script src="js/BugReport.js"></script>
+  <script src="js/DownloadPage.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => {
+    window.BandSwitcher.init();
+    SiteNav.render('download');
+    window.BugReport && window.BugReport.install();
+    window.DownloadPage && window.DownloadPage.init();
+  });</script>
+
+  <main class="site-content">
+    <article class="dl-page">
+
+      <div class="dl-hero">
+        <h1 class="dl-hero-title">Download WC3V for Windows</h1>
+        <p class="dl-hero-sub">The desktop app watches your replays folder and shows the same build order and grade the site does, the moment a game ends.</p>
+      </div>
+
+      <section class="dl-card" id="dl-version-card" aria-labelledby="dl-version-heading">
+        <span class="dl-eyebrow">Latest release</span>
+        <h2 id="dl-version-heading" class="dl-version-line"><span id="dl-version">Loading…</span></h2>
+        <span class="dl-date" id="dl-date"></span>
+        <p class="dl-notes" id="dl-notes"></p>
+        <div class="dl-file-row">
+          <span class="dl-file-label">Windows 10/11, 64-bit</span>
+          <code class="dl-file-name" id="dl-filename"></code>
+        </div>
+        <div class="dl-sha-row" id="dl-sha-row" hidden>
+          <span class="dl-sha-label">SHA-256</span>
+          <code class="dl-sha-code" id="dl-sha-code"></code>
+          <button type="button" class="btn btn-ghost" id="dl-sha-copy" onclick="DownloadPage.copySha()">Copy</button>
+        </div>
+        <p class="dl-sha-pending" id="dl-sha-pending" hidden></p>
+      </section>
+
+      <div class="dl-fail" id="dl-fail" hidden>
+        <p>Couldn't reach the update server just now. You can still get the installer from GitHub Releases.</p>
+        <a class="btn btn-ghost" href="https://github.com/jblanchette/wc3v/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+      </div>
+
+      <section aria-labelledby="dl-details-heading">
+        <a id="dl-download-link" class="btn btn-primary btn-lg dl-download-btn" href="#" aria-disabled="true" tabindex="-1">Download for Windows</a>
+
+        <h2 id="dl-details-heading" class="dl-section-title">Details</h2>
+        <ul class="dl-disclosure-list">
+          <li><strong>Windows shows a warning on first run.</strong> SmartScreen says "Windows protected your PC" because the installer is not code-signed. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
+          <li><strong>Windows 10 and 11, 64-bit.</strong> No macOS or Linux build yet.</li>
+          <li><strong>Open source, GPLv3.</strong> <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">Read the source or build it yourself</a>.</li>
+          <li><strong>No warranty.</strong> See the <a href="/terms.html">Terms of Service</a>.</li>
+        </ul>
+      </section>
+
+      <div class="dl-secondary-links">
+        <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">View source on GitHub</a>
+        <a href="/">Back to WC3V</a>
+      </div>
+
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="/about.html">About</a>
+        <a href="/download.html">Download</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool not affiliated with or endorsed by Blizzard.
+    </div>
+  </footer>
+</body>
+</html>

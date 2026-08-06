@@ -1,6 +1,6 @@
 # WC3V
 
-**W**ar**c**raft **3** Replay **V**iewer — a visual replay analyzer, pro build library, and compare-to-pro coach for Warcraft III.
+WC3V — a visual replay simulator, pro build library, and compare-to-pro coach for Warcraft III.
 
 🌐 **Live: [wc3v.com](https://wc3v.com)** — drop a `.w3g`, parsed locally in your browser, never uploaded.
 
@@ -46,7 +46,7 @@ WC3V parses your replays **entirely in your browser** — the `.w3g` never leave
 - **Minimap pips, building tooltips, floating text, hero trails** — broadcast-quality overlays
 - **Scrubbable playback** — jump to any moment, rewind, variable speed
 
-![3D viewer with split-view map and side-by-side build orders](marketing/viewer-3d.png)
+![3D simulator with split-view map and side-by-side build orders](marketing/viewer-3d.png)
 
 ### Pro build library
 - **16 curated builds** across Human (4), Orc (3), Night Elf (4), Undead (5)
@@ -78,7 +78,7 @@ A site-wide switch in the top nav ([client/js/BandSwitcher.js](client/js/BandSwi
 - **Ladder** — _Solid, copyable builds from real tournament play._ Full build orders, no hand-holding.
 - **Pro meta** — _Current top-level builds from major tournaments — tight execution, the latest strategies._ The default for returning visitors.
 
-The band controls the homepage library, the viewer's default mode, and the language the guided walkthrough uses (`we`/`our` for the followed player; the opponent called by name).
+The band controls the homepage library, the simulator's default mode, and the language the guided walkthrough uses (`we`/`our` for the followed player; the opponent called by name).
 
 ### Guided walkthrough
 
@@ -94,7 +94,7 @@ Voice is grounded and factual — short "why it matters" lines from a small know
 
 ![Head-to-head scoreboard — hero XP race and food milestones in plain English](marketing/social-compare.png)
 
-In the New band, where the opponent's full build order normally lives the viewer renders a pure-data "you vs them" scoreboard instead (`_renderRaceComparison` in [client/js/BuildOrderRenderer.js](client/js/BuildOrderRenderer.js)):
+In the New band, where the opponent's full build order normally lives the simulator renders a pure-data "you vs them" scoreboard instead (`_renderRaceComparison` in [client/js/BuildOrderRenderer.js](client/js/BuildOrderRenderer.js)):
 
 - **XP race** (headline block) — hero on the field, reached level 3 / 5, with the faster side coloured.
 - **Economy** — milestones in plain English (`Early army` / `Standing army` / `Maxed army` for 20 / 30 / 50 food) plus worker counts at 5:00 and 10:00.
@@ -127,7 +127,7 @@ cd client && npx http-server
 
 If you don't have a `.w3g` handy, the parsed output of `happy-vs-grubby` is checked into `docs/` — see [Output format](#output-format-wc3v) below for a guided walkthrough.
 
-Note that the viewer needs WC3 game data (icons, unit balance, map files) to be set up before it can render anything — see [Data Setup](#data-setup) below. Without those, the parser still works but the viewer renders blank.
+Note that the simulator needs WC3 game data (icons, unit balance, map files) to be set up before it can render anything — see [Data Setup](#data-setup) below. Without those, the parser still works but the simulator renders blank.
 
 ### Debug mode
 
@@ -215,7 +215,7 @@ The parser produces `.wc3v` files — JSON documents containing the full simulat
 
 ## Data setup
 
-WC3V needs data extracted from a legally owned copy of Warcraft III to render anything visually. These files are not distributed in this repository — provide them yourself from your own game install. The repo is structured so every required path is gitignored; drop your files in and the parser/viewer will pick them up.
+WC3V needs data extracted from a legally owned copy of Warcraft III to render anything visually. These files are not distributed in this repository — provide them yourself from your own game install. The repo is structured so every required path is gitignored; drop your files in and the parser/simulator will pick them up.
 
 ### What you need
 

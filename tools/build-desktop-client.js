@@ -52,19 +52,29 @@ const SHARED_JS = [
   // charts are the same code the site's compare modal draws with.
   'CompareCharts.js',
   // Packs the dominance and resource time series into a stored summary, and
-  // unpacks them back into the shape the three viewer widgets below expect.
+  // unpacks them back into the shape the viewer widget below expects.
   'SeriesExtract.js',
-  // The viewer's OWN chart widgets, not lookalikes. Both are mounted from data
-  // rather than from a viewer: they take setPlayers() arrays and ignore the
-  // constructor argument, so the desktop passes null for the viewer.
+  // The viewer's OWN dominance chart, not a lookalike. Mounted from data rather
+  // than from a viewer: it takes a setPlayers() array and ignores the
+  // constructor argument, so the desktop passes null.
   //
-  // DominanceBar.js is deliberately NOT here. The tug-of-war gauge was in the
-  // report frame for one revision and was cut: 58px of chrome with its own
-  // chassis and impact-FX engine, designed for a game being watched live under
-  // a match header, where the only thing a finished-game report wanted from it
-  // was the pair of numbers. Those are a readout on the chart's title row now.
-  'DominanceChart.js',
-  'ResourceCharts.js'
+  // Two siblings are deliberately NOT here.
+  //
+  // `DominanceBar.js`: the tug-of-war gauge was in the report frame for one
+  // revision and was cut. 58px of chrome with its own chassis and impact-FX
+  // engine, designed for a game being watched live under a match header, where
+  // the only thing a finished-game report wanted was the pair of numbers. Those
+  // are a readout on the chart's title row now.
+  //
+  // `ResourceCharts.js`: it stacks food, gold lost and lumber lost, one line
+  // per player each. Measured over 80 games
+  // (`node tools/analyse-resource-series.js`), gold lost is flat for a median
+  // 27% of the x-axis and lumber lost for 43% — the entire game at worst — and
+  // the two food lines sit 9% apart, tracing each other. The desktop draws the
+  // difference of the loss curves and food against its cap instead, both from
+  // the shared CompareCharts factory. The rule was never "mount the viewer's
+  // class whatever it draws"; it is "do not redraw a chart the viewer has".
+  'DominanceChart.js'
 ].map(f => path.join(ROOT, 'client', 'js', f));
 
 // The site's design token layer. The desktop app is styled from the SAME

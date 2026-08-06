@@ -106,42 +106,42 @@
   // ── §RACES ─────────────────────────────────────────────────────
   var RACES = {
     H: { key:'H', name:'Human',     abbr:'HU',  color:'#4488FF', icon:'htow',
-         tagline:'Flexible and forgiving: strong towers, lots of options.',
-         vibe:'A good first race. It defends well and punishes mistakes slowly.' },
+         tagline:'Towers hold the front while you sort the rest out.',
+         vibe:'The easiest race to start on. A mistake here costs you slowly, so you get time to fix it.' },
     O: { key:'O', name:'Orc',       abbr:'ORC', color:'#FF4444', icon:'ogre',
-         tagline:'Aggressive melee with tough units and early pressure.',
-         vibe:'Beefy units and strong heroes. It rewards good fights.' },
+         tagline:'Big units that walk at the enemy early.',
+         vibe:'Grunts take a beating and your hero hits hard. You win by picking fights and winning them.' },
     E: { key:'E', name:'Night Elf', abbr:'NE',  color:'#44DD88', icon:'etol',
-         tagline:'Mobile and tricky: map control and hit-and-run.',
-         vibe:'Fast and slippery. A high skill ceiling, lots of micro.' },
+         tagline:'You move fast and fight where they are not.',
+         vibe:'Hardest of the four to play well. Everything depends on you controlling your units closely.' },
     U: { key:'U', name:'Undead',    abbr:'UD',  color:'#AA66FF', icon:'unpl',
-         tagline:'Methodical: creep relentlessly, snowball your hero.',
-         vibe:'Hero-centric. Strong creeping, scary if it gets ahead.' }
+         tagline:'Farm creeps, level your hero, then push.',
+         vibe:'Your hero carries the game. Get it ahead and Undead becomes very hard to stop.' }
   };
 
   // ── §HEROES (id = manifest heroItemId, Capitalized) ────────────
   var HEROES = {
-    Hamg:{ id:'Hamg', race:'H', name:'Archmage',             short:'AM',   blurb:'Water Elemental and Brilliance: safe and economic.' },
-    Hmkg:{ id:'Hmkg', race:'H', name:'Mountain King',        short:'MK',   blurb:'Storm Bolt burst that deletes enemy heroes.' },
-    Hpal:{ id:'Hpal', race:'H', name:'Paladin',              short:'Pal',  blurb:'Holy Light heals: durable and anti-Undead.' },
+    Hamg:{ id:'Hamg', race:'H', name:'Archmage',             short:'AM',   blurb:'Summons a water elemental and keeps your mana topped up.' },
+    Hmkg:{ id:'Hmkg', race:'H', name:'Mountain King',        short:'MK',   blurb:'Storm Bolt does enough burst to kill a hero outright.' },
+    Hpal:{ id:'Hpal', race:'H', name:'Paladin',              short:'Pal',  blurb:'Heals your army between fights, and Undead hate him.' },
 
-    Obla:{ id:'Obla', race:'O', name:'Blademaster',          short:'BM',   blurb:'Wind Walk harass for early kills, slippery.' },
-    Ofar:{ id:'Ofar', race:'O', name:'Far Seer',             short:'FS',   blurb:'Wolves and Chain Lightning: scouting and sustain.' },
-    Otch:{ id:'Otch', race:'O', name:'Tauren Chieftain',     short:'TC',   blurb:'War Stomp AoE on a frontline tank hero.' },
-    Oshd:{ id:'Oshd', race:'O', name:'Shadow Hunter',        short:'SH',   blurb:'Heal and Hex: support and lockdown.' },
+    Obla:{ id:'Obla', race:'O', name:'Blademaster',          short:'BM',   blurb:'Goes invisible and walks into their base to kill workers.' },
+    Ofar:{ id:'Ofar', race:'O', name:'Far Seer',             short:'FS',   blurb:'Wolves scout for you and Chain Lightning clears creeps fast.' },
+    Otch:{ id:'Otch', race:'O', name:'Tauren Chieftain',     short:'TC',   blurb:'Big tanky hero whose War Stomp stuns a whole army.' },
+    Oshd:{ id:'Oshd', race:'O', name:'Shadow Hunter',        short:'SH',   blurb:'Heals in fights, and Hex takes their hero out of one.' },
 
-    Ekee:{ id:'Ekee', race:'E', name:'Keeper of the Grove',  short:'KotG', blurb:'Entangle and Treants: tanky AoE roots.' },
-    Emoo:{ id:'Emoo', race:'E', name:'Priestess of the Moon',short:'PotM', blurb:'Searing Arrows and Aura for ranged damage.' },
-    Edem:{ id:'Edem', race:'E', name:'Demon Hunter',         short:'DH',   blurb:'Mana Burn and Immolation: a hero killer.' },
+    Ekee:{ id:'Ekee', race:'E', name:'Keeper of the Grove',  short:'KotG', blurb:'Roots their army in place while treants soak the damage.' },
+    Emoo:{ id:'Emoo', race:'E', name:'Priestess of the Moon',short:'PotM', blurb:'Every ranged unit you own hits harder while she is alive.' },
+    Edem:{ id:'Edem', race:'E', name:'Demon Hunter',         short:'DH',   blurb:'Burns a caster\'s mana away and wins most one on one fights.' },
 
-    Udea:{ id:'Udea', race:'U', name:'Death Knight',         short:'DK',   blurb:'Death Coil and Unholy Aura: sustain and speed.' },
-    Ulic:{ id:'Ulic', race:'U', name:'Lich',                 short:'Lich', blurb:'Frost Nova for burst damage on clumps.' },
-    Ucrl:{ id:'Ucrl', race:'U', name:'Crypt Lord',           short:'CL',   blurb:'Impale and Beetles for a tanky frontline.' },
-    Udre:{ id:'Udre', race:'U', name:'Dread Lord',           short:'DL',   blurb:'Sleep and Vampiric Aura for a lifesteal army.' },
+    Udea:{ id:'Udea', race:'U', name:'Death Knight',         short:'DK',   blurb:'Heals ghouls mid-fight and speeds the whole army up.' },
+    Ulic:{ id:'Ulic', race:'U', name:'Lich',                 short:'Lich', blurb:'Frost Nova lands a lot of damage on a clump at once.' },
+    Ucrl:{ id:'Ucrl', race:'U', name:'Crypt Lord',           short:'CL',   blurb:'Tanky front-liner who impales anything that walks into him.' },
+    Udre:{ id:'Udre', race:'U', name:'Dread Lord',           short:'DL',   blurb:'Puts a hero to sleep, and your army heals off what it deals.' },
 
     // Neutral tavern heroes used as second/third picks in some builds.
-    Nbrn:{ id:'Nbrn', race:'N', name:'Dark Ranger',          short:'DR',   blurb:'Silence and Black Arrow: a tavern support pick.' },
-    Nbst:{ id:'Nbst', race:'N', name:'Beastmaster',          short:'BM',   blurb:'Summons a Bear, Quilbeast and Hawk for free bodies.' }
+    Nbrn:{ id:'Nbrn', race:'N', name:'Dark Ranger',          short:'DR',   blurb:'Silences casters and raises their dead as your own.' },
+    Nbst:{ id:'Nbst', race:'N', name:'Beastmaster',          short:'BM',   blurb:'Three free summons to throw at things.' }
   };
 
   // ── §UNITS (id = manifest keyUnit, lowercase) ──────────────────
