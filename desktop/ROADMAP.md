@@ -932,6 +932,44 @@ a file browser.
         both sizes, every game. Audited clean at 900x600 and 1280x820 over the
         40-game preview, drawer open and closed, plus `--stale=4`.
 
+- [x] **One screen (Aug 2026), the end of the tab strip.** The report went four
+      tabs, then two, then none. Story and Build were a chart with a dashboard
+      bolted under it and the builds one click away, which is one game split
+      across two places for no reason a player would recognise.
+      - **The layout is now: verdict band, then one panel** holding the chart,
+        a build card per seat, and the per-player record. `.report-body` is the
+        only element on the screen allowed to scroll. The page, the body and
+        `.detail-col` must all stay put, which is the fold rule reduced to one
+        sentence.
+      - **The tile grid is gone.** Six bordered cells holding six different
+        kinds of number, measured different ways, read as a dashboard rather
+        than as a reading of a game. What survived is the comparative half:
+        tier 2, expansion, workers and APM against your own rolling median,
+        as **rows in the verdict band** where they sit beside the result they
+        explain. Rows, not boxes.
+      - **The timeline is gone**, three days after it was built. It was the
+        right answer to "Story doesn't tell a story" and the wrong thing to put
+        above the builds, because it is the whole record of the game and people
+        open this screen for the shape of it. Recoverable from git if it should
+        come back as something you opt into.
+      - **The frame's build strips are gone with it.** They were right when the
+        real builds were a tab away; with the build cards on the same screen
+        they were the same information twice, forty pixels apart.
+      - **Team games get an abbreviated form.** Past two players the cards go
+        compact (heroes with levels, units as bare icons, timing chips; no skill
+        grids, items, upgrades, mercs or purchases, dropped before they are
+        built rather than hidden), the grid narrows to 14rem columns, section
+        labels stack above their rows instead of beside them, and the
+        per-player record is not rendered at all. Six build-order lists is a
+        document, not a report.
+      - **One bug worth remembering:** the benchmark rows are `display:
+        contents` cells in a single three-column grid, and a row that emits only
+        two cells pulls the next row's label into its third column. The readout
+        sheared into nonsense on the first game with no baseline. The empty
+        delta cell is always emitted now.
+      - Measured at 1280x820: band 136px, report body 526px, against 166/470
+        before. At 900x600 the band is 87px and the readout hides below 1040px.
+
 - [x] **Copy pass (Aug 2026).** Every screen lost its explanatory paragraphs.
       Settings had four `lead` paragraphs and eight `hint` blocks describing what
       its own checkboxes did. Stream had roughly 300 words of instructions beside

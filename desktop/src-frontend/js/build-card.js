@@ -146,14 +146,21 @@
     heroesOf,
     keyUnits,
 
-    // p: a summary player. opts: { icon(itemId), title(node), isYou }
+    // p: a summary player. opts: { icon(itemId), title(node), isYou, compact }
+    //
+    // `compact` is the team-game form. Six full cards is a document rather than
+    // a report, and the per-player depth that makes a 1v1 readable is noise
+    // across six seats. It keeps the heroes with their levels, the units and
+    // the timing chips, and drops the skill grids, the carried items, the
+    // upgrades, the mercs and the purchases.
     //
     // `icon` is injected rather than imported so this file holds no second copy
     // of the CDN base and the id whitelist that games-view.js already owns.
     build (p, opts) {
       const o = opts || {};
       const icon = o.icon;
-      const card = node('article', 'bc');
+      const compact = !!o.compact;
+      const card = node('article', 'bc' + (compact ? ' bc-compact' : ''));
       if (o.title) card.appendChild(o.title);
 
       // ── Heroes ───────────────────────────────────────────────────────────
@@ -176,7 +183,7 @@
           portraitWrap.appendChild(node('span', 'bc-hero-ord', ORDINALS[i] || ''));
           cell.appendChild(portraitWrap);
 
-          const skills = skillLevels(h);
+          const skills = compact ? [] : skillLevels(h);
           if (skills.length) {
             const grid = node('div', 'bc-skills');
             for (const s of skills) {
@@ -191,7 +198,7 @@
             cell.appendChild(grid);
           }
 
-          const items = (h.items || []).filter(it => it.itemId);
+          const items = compact ? [] : (h.items || []).filter(it => it.itemId);
           if (items.length) {
             const bag = node('div', 'bc-items');
             for (const it of items) {
@@ -229,7 +236,7 @@
       }
 
       // ── Upgrades ─────────────────────────────────────────────────────────
-      const ups = upgrades(p);
+      const ups = compact ? [] : upgrades(p);
       if (ups.length) {
         const sec = node('div', 'bc-sec');
         sec.appendChild(node('span', 'bc-label', 'Upgrades'));
@@ -254,7 +261,7 @@
       // Shop purchases, in the order they were made and not deduped: two
       // potions are two decisions. The hero rows above carry the FINAL bag,
       // which is a different question — what was kept, not what was spent on.
-      const bought = (p.itemPurchases || []).filter(i => i.itemId);
+      const bought = compact ? [] : (p.itemPurchases || []).filter(i => i.itemId);
       if (bought.length) {
         const sec = node('div', 'bc-sec');
         sec.appendChild(node('span', 'bc-label', 'Bought'));
@@ -272,7 +279,7 @@
         card.appendChild(sec);
       }
 
-      const mercs = (p.mercenariesHired || []).filter(m => m.itemId);
+      const mercs = compact ? [] : (p.mercenariesHired || []).filter(m => m.itemId);
       if (mercs.length) {
         const sec = node('div', 'bc-sec');
         sec.appendChild(node('span', 'bc-label', 'Mercs'));

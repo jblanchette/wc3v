@@ -974,15 +974,17 @@ main { min-height: 0; position: relative; }
   overflow-wrap: anywhere;
 }
 
-/* ── The builds, beside the verdict ──────────────────────────────────────
+/* ── Against your own usual, beside the verdict ──────────────────────────
    The band used to be a headline, a meta line and one sentence across the full
    report width, which at 1280 is a Victory and a name in 1100px. The right
-   half is both players' builds now: race, heroes with their final levels, the
-   units.
+   half carried miniature builds for a while; with the real build cards on the
+   same screen that was the same information twice, so it carries the
+   comparison against your own recent games instead. Nothing else on the report
+   says it, and no website could.
 
    `minmax(0, 1fr)` on the left column, not `1fr`. A grid track's default
    minimum is its content, so a long opponent name would refuse to shrink and
-   push the strips off the edge instead of wrapping. */
+   push the readout off the edge instead of wrapping. */
 .vb-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -991,75 +993,49 @@ main { min-height: 0; position: relative; }
 }
 .vb-main { min-width: 0; }
 
-.vb-players {
+/* Rows, not boxes. The tile grid this replaces was six bordered cells holding
+   six different kinds of number, which reads as a dashboard rather than as a
+   reading of a game. These are three lines of the same kind of thing. */
+.vb-bench {
   display: grid;
-  gap: var(--sp-1);
-  align-content: start;
-}
-/* Past two players the rows go into two columns, filled down the first column
-   so the viewed seat stays top-left. `grid-auto-flow: column` plus an explicit
-   row count is what fills down rather than across; the row count is set inline
-   because it depends on how many people were in the game. */
-.vb-players[data-cols="2"] {
-  grid-auto-flow: column;
-  column-gap: var(--sp-2);
-}
-/* One row per player, and the row opens the Build tab: the icons are a
-   preview, capped at three heroes and seven units, and the tab has all of it.
-   A cap rather than a fade or an ellipsis, so nothing is ever half-drawn. */
-.vb-row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-1) var(--sp-2);
+  grid-template-columns: auto auto auto;
+  align-items: baseline;
+  gap: 2px var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
   background: var(--app-well);
   border: 1px solid var(--app-line);
   border-radius: var(--radius-sm);
   box-shadow: var(--cut-in);
-  cursor: pointer;
-  transition: border-color var(--dur) var(--ease);
 }
-.vb-row:hover { border-color: var(--app-edge); }
-.vb-row .race-mark { width: 20px; height: 20px; flex: none; }
-
-.vb-heroes,
-.vb-units {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-1);
-}
-.vb-hero { position: relative; display: inline-flex; }
-/* The level rides the portrait. A hero's face and its final level are one
-   fact, and a row of numbers under a row of icons is two rows. */
-/* Inside the portrait, not hanging off its corner the way the build card's
-   badge does. That card lives in a scroller and its 4px overhang is nobody's
-   problem; here it is a frame element, and the fold audit reports 2px of
-   scrollWidth exactly as loudly as it reports 200. */
-.vb-hero-lvl {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  min-width: 14px;
-  padding: 0 2px;
-  background: #17130d;
-  border: 1px solid var(--app-line);
-  border-radius: var(--radius-sm);
-  color: var(--dom-gold);
+.vb-bench-head {
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+  color: var(--ink-faint);
   font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+/* `display: contents` so each row's three cells join the parent grid and the
+   columns line up across rows. A nested grid per row would ragged them. */
+.vb-bench-row { display: contents; }
+.vb-bench-k { color: var(--ink-dim); font-size: var(--fs-min); }
+.vb-bench-v {
   font-weight: 700;
-  line-height: 1.3;
-  text-align: center;
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
-.vb-sep {
-  align-self: stretch;
-  width: 1px;
-  background: var(--app-line);
+.vb-bench-v[data-band="good"] { color: var(--verdict-win); }
+.vb-bench-v[data-band="poor"] { color: var(--verdict-loss); }
+.vb-bench-d {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-/* Under 1040px the report column cannot hold ten icons beside a verdict, and
-   the heroes are the half that identifies the game. */
+/* Under 1040px the report column cannot hold a readout beside a verdict, and
+   the result is what the band is for. */
 @media (max-width: 1040px) {
-  .vb-units, .vb-sep { display: none; }
+  .vb-bench { display: none; }
 }
 
 /* ── The chart panel ─────────────────────────────────────────────────────
@@ -1193,11 +1169,9 @@ main { min-height: 0; position: relative; }
 }
 .st-upgrade .hint { margin: 0; }
 
-/* ── Report tabs ── */
-
-.report-tabs { justify-self: start; }
-.report-tabs .seg-btn { min-height: var(--ico-sm); }
-
+/* The report is one panel and one scroller. There is no tab strip: `.report-body`
+   is the only element on this screen allowed to scroll, and the verdict band
+   above it is fixed. */
 .report-body {
   min-height: 0;
   padding: var(--sp-4);
@@ -1409,6 +1383,39 @@ main { min-height: 0; position: relative; }
   grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
   gap: var(--sp-3);
 }
+
+/* ── Team games: the abbreviated form ────────────────────────────────────
+   Six full cards is a document rather than a report. The compact card keeps
+   the heroes with their levels, the units and the timing chips, and
+   build-card.js drops the skill grids, carried items, upgrades, mercs and
+   purchases before they are ever built.
+
+   Narrower columns too: six cards at 19rem wrap to two rows of three at
+   1280px, which is the whole viewport. At 14rem a 3v3 is three across. */
+.bc-grid.is-compact {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--sp-2);
+}
+.bc-compact { padding: var(--sp-2); gap: var(--sp-2); }
+.bc-compact .player-title { font-size: var(--fs-sm); }
+/* The section label rides beside its row on the 1v1 card, where 5.6rem of
+   column is affordable. On a 14rem card it is 40% of the width, which is what
+   forced the hero portraits into a single stacked column. Compact stacks the
+   label above its row instead, where it costs one short line. */
+.bc-compact .bc-sec { display: block; }
+.bc-compact .bc-label { display: block; padding: 0 0 2px; }
+/* Hero portraits come down to the icon size the rest of the app uses, so three
+   heroes sit in one row inside a 14rem card instead of stacking down it. The
+   1v1 card keeps --ico-lg, where the portrait is the anchor of the whole card. */
+.bc-compact .bc-portrait-img { width: var(--ico-sm); height: var(--ico-sm); }
+.bc-compact .bc-hero-lvl { min-width: 14px; font-size: var(--fs-min); }
+.bc-compact .bc-hero-ord { display: none; }
+.bc-compact .bc-heroes-row { flex-wrap: wrap; gap: var(--sp-1); }
+/* The unit row is names beside icons in a 1v1. Across six seats the names are
+   most of the card, and the art already says which unit. */
+.bc-compact .bc-unit-name { display: none; }
+.bc-compact .bc-units { gap: var(--sp-1); }
+.bc-compact .bc-chip { font-size: var(--fs-min); }
 
 .bc {
   display: grid;
@@ -2251,7 +2258,7 @@ main :focus-visible,
   .btn-viewer { min-height: var(--ico-sm); }
   .verdict-read { margin-top: var(--sp-1); }
   .verdict-head { margin-bottom: 0; }
-  .vb-row { padding: 2px var(--sp-2); }
+  .vb-bench { padding: var(--sp-1) var(--sp-3); }
   .st-tile { padding: var(--sp-1) var(--sp-2); }
   .story-pane > .hint { margin: 0; }
   .cp { margin-bottom: var(--sp-1); }
