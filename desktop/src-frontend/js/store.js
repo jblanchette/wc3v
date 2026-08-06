@@ -17,9 +17,15 @@
   // are not part of SummaryExtract, so a v1 game offers a re-parse instead of
   // showing a silently empty list. v3 added per-player `combat`: the complete
   // hero kill and death ledger, wipes, biggest swing. Same source, same
-  // reason. v3 must be current before the history backfill runs, or thousands
-  // of games get stored without the one block only a re-parse can recover.
-  const SCHEMA_VERSION = 3;
+  // reason. v4 added `dominance` and `resources`, the two time series
+  // lib/DominanceSeries.js and lib/ResourceSeries.js produce inside
+  // buildOutputObject, which is what lets the desktop draw the viewer's own
+  // dominance bar, dominance chart and resource charts.
+  //
+  // Every one of these is extract-at-parse-time-or-never, and the version must
+  // be current before the history backfill runs, or thousands of games get
+  // stored without a block only a re-parse can recover.
+  const SCHEMA_VERSION = 4;
 
   window.createStore = (deps) => {
     // deps: invoke, log
@@ -71,6 +77,13 @@
         // the capped highlight reel. Combat is the complete per-seat ledger the
         // review layer grades from.
         moments: window.MomentsExtract.extractMoments(out),
+        // The two time series the viewer's own charts are drawn from. Same
+        // full-parse-only rule as moments and combat, and packed as parallel
+        // arrays by SeriesExtract because they are the largest thing in a
+        // summary. Null when the dominance gate refused the replay, which is a
+        // real answer and not a missing field.
+        dominance: window.SeriesExtract.extractDominance(out),
+        resources: window.SeriesExtract.extractResources(out),
         players: {}
       };
       const combat = window.MomentsExtract.extractCombat(out);

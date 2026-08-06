@@ -197,6 +197,7 @@
         // column, where the eye already is, and a way forward.
         el('feed-count').textContent = '';
         feed.appendChild(node('div', 'empty', 'No games yet.'));
+        renderQuickNav();
         renderFirstRun();
         return;
       }
@@ -209,15 +210,87 @@
 
       if (!games.length) {
         feed.appendChild(node('div', 'empty', 'No games match those filters.'));
+        renderQuickNav();
         return;
       }
 
       appendPage();
+      renderQuickNav();
 
       // Keep the current selection when it survives the filter. Otherwise open
       // the newest game, which is what somebody who just finished one wants.
       const keep = activeKey && games.some(g => g.key === activeKey);
       select(keep ? activeKey : games[0].key);
+    };
+
+    // ── Quick nav ───────────────────────────────────────────────────────────
+    //
+    // The last few games as chips in the top band, so the common move — step
+    // back through this session — never opens the drawer at all. Built from
+    // the FILTERED list, because a quick nav that ignores the filter you just
+    // set is a quick nav to somewhere you did not ask to go.
+
+    const QUICK = 8;
+
+    // The edge fade says "the row continues". It has to come off when it does
+    // not, or the last chip in a short list looks permanently half-lit.
+    const syncQuickNavFade = () => {
+      const bar = el('quicknav');
+      const atEnd = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 2;
+      bar.classList.toggle('is-end', atEnd);
+    };
+
+    const renderQuickNav = () => {
+      const bar = el('quicknav');
+      bar.innerHTML = '';
+      bar.scrollLeft = 0;
+      for (const summary of games.slice(0, QUICK)) {
+        const v = viewOf(summary);
+        const chip = node('button', 'qn-chip');
+        chip.type = 'button';
+        chip.dataset.key = summary.key;
+
+        const verdict = v && v.result ? v.result : 'none';
+        const tile = node('span', 'qn-v', verdict === 'win' ? 'W' : verdict === 'loss' ? 'L' : '·');
+        tile.dataset.v = verdict;
+        chip.appendChild(tile);
+
+        if (v && v.race) chip.appendChild(raceMark(v.race));
+        if (v && v.opponent) {
+          chip.appendChild(node('span', 'qn-name', v.opponent.name));
+          chip.appendChild(raceMark(v.opponent.race));
+        } else {
+          chip.appendChild(node('span', 'qn-name', mapName(summary)));
+        }
+
+        chip.title = `${mapName(summary)} · ${fmtDur(summary.durationMs)}${
+          summary.playedAt ? ` · ${new Date(summary.playedAt).toLocaleString()}` : ''}`;
+        chip.addEventListener('click', () => select(summary.key));
+        bar.appendChild(chip);
+      }
+      syncQuickNavFade();
+    };
+
+    // ── The drawer ──────────────────────────────────────────────────────────
+    //
+    // Opens down over the report rather than beside it. Deliberately not a
+    // modal: nothing behind it is disabled, the report keeps its scroll
+    // position, and closing it is the same click that opened it.
+
+    let drawerOpen = false;
+
+    const setDrawer = (open) => {
+      drawerOpen = open;
+      const drawer = el('games-drawer');
+      const toggle = el('games-toggle');
+      drawer.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.classList.toggle('is-open', open);
+      if (open) {
+        // The search box is why most people open this. Focus goes there rather
+        // than to the first row, which arrow keys can reach anyway.
+        el('feed-search').focus();
+      }
     };
 
     // ── Filtering ───────────────────────────────────────────────────────────
@@ -271,6 +344,30 @@
         if (shown < games.length && f.scrollTop + f.clientHeight > f.scrollHeight - 400) {
           appendPage();
         }
+      });
+
+      el('quicknav').addEventListener('scroll', syncQuickNavFade);
+      // A narrower window turns a list that fitted into one that does not.
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(syncQuickNavFade).observe(el('quicknav'));
+      }
+
+      el('games-toggle').addEventListener('click', () => setDrawer(!drawerOpen));
+
+      // Escape closes it from anywhere on the screen, including from inside
+      // the search box, where it would otherwise only clear the field.
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && drawerOpen) {
+          setDrawer(false);
+          el('games-toggle').focus();
+        }
+      });
+
+      // A click on the report underneath means "I am done with the list". The
+      // listener is on the column rather than the document so the toggle and
+      // the drawer itself are not fighting it.
+      el('detail').addEventListener('pointerdown', () => {
+        if (drawerOpen) setDrawer(false);
       });
     };
 
@@ -350,9 +447,13 @@
 
     const select = (key) => {
       activeKey = key;
-      for (const n of document.querySelectorAll('.game')) {
+      for (const n of document.querySelectorAll('.game, .qn-chip')) {
         n.classList.toggle('is-active', n.dataset.key === key);
       }
+      // Picking a game is the reason the drawer was open, so it closes. A
+      // drawer left up over the report you just asked to see would make the
+      // click look like it did nothing.
+      if (drawerOpen) setDrawer(false);
       renderDetail(games.find(g => g.key === key) || null);
     };
 
@@ -367,9 +468,25 @@
 
     // Remembered across game selections. Somebody stepping through last
     // night's games comparing economies should not get bounced back to the
-    // default on every click. Review is where a game opens, because "so what?"
-    // is the question and Story is the evidence behind the answer.
-    let activeTab = 'review';
+    // default on every click.
+    //
+    // Story is where a game opens. Review used to be, on the argument that
+    // "so what?" comes before the evidence — but the five grades that were
+    // Review's answer now live in the frame above every tab, so opening on
+    // Review meant opening on a restatement. What Story opens on instead is
+    // the dominance gauge: who was ahead, when that changed, and by how much.
+    let activeTab = 'story';
+
+    // DominanceChart registers a ResizeObserver, so the panel from the previous
+    // render is torn down before the column is emptied rather than orphaned
+    // holding an observer on a detached element.
+    let mountedDominance = null;
+    const dropDominance = () => {
+      if (mountedDominance) {
+        try { mountedDominance.destroy(); } catch (e) { /* already gone */ }
+        mountedDominance = null;
+      }
+    };
 
     // ── Next game ───────────────────────────────────────────────────────────
     //
@@ -560,6 +677,7 @@
 
     const renderDetail = (summary) => {
       const host = el('detail');
+      dropDominance();
       host.innerHTML = '';
       host.dataset.mode = live ? mode : 'last';
 
@@ -582,30 +700,46 @@
       const report = reportFor(summary, seat);
 
       host.appendChild(verdictHead(summary, v, seat, h2h, report));
-      host.appendChild(window.GameStrip.build(summary, seat, {
-        onWatch: deps.onWatch,
-        viewSlot: v && v.slot != null ? String(v.slot) : null
-      }));
+
+      // The frame is the verdict band, the grade rail and the tab strip, and
+      // nothing else. The game strip used to sit here (114px) and moved to Full
+      // details; the dominance gauge replaced it for one revision and was cut
+      // too. Both were chrome drawing a timeline above a screen whose default
+      // tab already draws one, and the frame is 166px now instead of 310.
+      //
+      // The dominance panel is still built here rather than inside storyPanel,
+      // because `mountedDominance` is what renderDetail tears down and the
+      // teardown has to be reachable whichever tab happens to be open.
+      let dom = null;
+      if (window.DominancePanel && !window.DominancePanel.unavailable(summary)) {
+        dom = window.DominancePanel.build(summary, seat, { onWatch: deps.onWatch });
+        if (dom) mountedDominance = dom;
+      }
+
       // The five pillars are the only thing on this screen no website could
       // produce, and they were small grey text inside a scroller you could see
-      // one row of. They go in the frame. The notes stay in Review.
+      // one row of. They go in the frame.
       if (report) host.appendChild(gradeRail(report));
 
-      // A tab that would be empty is not offered at all. Review comes first
-      // and is the default.
-      const tabs = [];
-      if (report) {
-        tabs.push({ key: 'review', label: 'Review', build: () => reviewPanel(summary, seat, report) });
-      }
-      tabs.push(
-        { key: 'story', label: 'Story', build: () => momentsPanel(summary, seat) },
+      // Four tabs, and Story is both first and the default.
+      //
+      // Review is gone. It was five grades with a sentence each, a benchmark
+      // strip and two lists of prose cues — and the grades have been in the
+      // frame since the Home redesign, so the tab was mostly restating what
+      // was already above it. The benchmarks were the part worth keeping, and
+      // they are numbers rather than paragraphs, so they moved into Story's
+      // tile grid where they read against the rest of the game's numbers.
+      const tabs = [
+        { key: 'story', label: 'Story', build: () => storyPanel(summary, v, seat, report, dom) },
         { key: 'build', label: 'Build', build: () => buildPanel(summary, seat) },
-        { key: 'economy', label: 'Economy', build: () => economyPanel(summary, v, seat) }
-      );
+        { key: 'economy', label: 'Economy', build: () => economyPanel(summary, v, seat) },
+        { key: 'details', label: 'Full details', build: () => detailsPanel(summary, seat) }
+      ];
 
-      // A tab remembered from before the merge, or from a game that had a
-      // Head to head tab and this one does not.
+      // A tab remembered from before the merge, from the deleted Review, or
+      // from a game that had a Head to head tab and this one does not.
       if (activeTab === 'heroes' || activeTab === 'builds') activeTab = 'build';
+      if (activeTab === 'review' || activeTab === 'moments') activeTab = 'story';
       if (!tabs.some(t => t.key === activeTab)) activeTab = tabs[0].key;
 
       const strip = node('div', 'report-tabs seg');
@@ -635,6 +769,51 @@
       'tower-rush': 'Tower rush',
       'fast-expand': 'Fast expand',
       '1-base-t2': 'One-base tech'
+    };
+
+    // ── Open in WC3V Viewer ─────────────────────────────────────────────────
+    //
+    // The one control in this app that leaves it. Everything else here reads a
+    // file on your machine; this hands a replay to the real 3D viewer over
+    // loopback (ROADMAP §10), and it is the single most important thing a
+    // report can offer, so it does not look like the other buttons.
+    //
+    // It carries the canonical wordmark — `WC<span>3</span>V`, the same lockup
+    // as the app bar and `.site-wordmark` on the site — because the button is
+    // a promise about where you are going, and the destination has a name. The
+    // mark is built as elements rather than as a string so `.btn-viewer`
+    // cannot be styled into looking like an ordinary primary button by
+    // accident: it is the only thing in the app allowed to wear this.
+    //
+    // The reserved treatment lives in app.css under `.btn-viewer`. Nothing
+    // else may use that class, and nothing else may use the wordmark inside a
+    // control.
+    const viewerButton = (summary, moment) => {
+      const b = node('button', 'btn-viewer');
+      b.type = 'button';
+      b.title = moment
+        ? `Open this game in the WC3V viewer at ${moment.tf}`
+        : 'Open this game in the WC3V viewer';
+
+      b.appendChild(node('span', 'btn-viewer-lead', 'Open in'));
+
+      const mark = node('span', 'btn-viewer-mark');
+      mark.appendChild(node('span', null, 'WC'));
+      mark.appendChild(node('span', 'btn-viewer-three', '3'));
+      mark.appendChild(node('span', null, 'V'));
+      mark.setAttribute('aria-hidden', 'true');
+      b.appendChild(mark);
+
+      b.appendChild(node('span', 'btn-viewer-tail', 'Viewer'));
+
+      // The mark is decorative to a screen reader, so the accessible name is
+      // spelled out rather than assembled from three spans.
+      b.setAttribute('aria-label', moment
+        ? `Open in WC3V Viewer at ${moment.tf}`
+        : 'Open in WC3V Viewer');
+
+      b.addEventListener('click', () => deps.onWatch(summary, moment || null));
+      return b;
     };
 
     const verdictHead = (summary, v, seat, h2h, report) => {
@@ -680,10 +859,7 @@
       // Watching is an action on the game, so it lives on the header. It sat
       // at the bottom of the moments list once, behind two early returns, and
       // a game with no moments could not be opened at all.
-      const open = node('button', 'btn btn-primary', 'Open in viewer');
-      open.type = 'button';
-      open.addEventListener('click', () => deps.onWatch(summary, null));
-      head.appendChild(open);
+      head.appendChild(viewerButton(summary));
       wrap.appendChild(head);
 
       // One line, and it has to stay one line at 612px. What used to be here
@@ -705,11 +881,12 @@
 
       // The one-line read, above the fold. Clicking it opens the tab that
       // justifies it, because a claim you cannot interrogate is an assertion.
+      // That used to be Review; Review's numbers are now Story's tile grid.
       if (report) {
         const line = node('button', 'verdict-read', report.headline);
         line.type = 'button';
-        line.title = 'Open the full review';
-        line.addEventListener('click', () => { activeTab = 'review'; renderDetail(summary); });
+        line.title = 'Open the numbers behind this';
+        line.addEventListener('click', () => { activeTab = 'story'; renderDetail(summary); });
         wrap.appendChild(line);
       }
       return wrap;
@@ -750,170 +927,226 @@
       return rail;
     };
 
-    const reviewPanel = (summary, seat, report) => {
-      const panel = node('section', 'report-pane');
-
-      if (!report) {
-        panel.appendChild(node('p', 'lead', seat === null
-          ? 'Set your name up top to get a read on this game.'
-          : 'Not enough in this game to review.'));
-        return panel;
-      }
-
-      // The headline and the five scores both stay out of this pane. The frame
-      // above carries them. What lives here is the reasoning: one line per
-      // pillar saying what the number was read off.
-      const notes = node('ul', 'grade-notes');
-      for (const g of report.grades) {
-        const li = node('li');
-        li.appendChild(node('span', 'gn-k', g.label));
-        const val = node('span', 'gn-v', g.score === null ? '—' : String(g.score));
-        if (g.score === null) val.classList.add('is-none');
-        else val.dataset.band = g.score >= 65 ? 'good' : g.score >= 40 ? 'mid' : 'poor';
-        li.appendChild(val);
-        li.appendChild(node('span', 'gn-note', g.note));
-        notes.appendChild(li);
-      }
-      panel.appendChild(notes);
-
-      // Benchmarks: this game against your own median. `dir` is null when
-      // there is no baseline to claim against, and nothing gets coloured.
-      const benched = report.benchmarks.filter(b => b.valueText !== null);
-      if (benched.length) {
-        const bench = node('div', 'benchmarks');
-        for (const b of benched) {
-          const row = node('div', 'benchmark');
-          row.appendChild(node('span', 'benchmark-k', b.label));
-          const val = node('span', 'benchmark-v', b.valueText);
-          if (b.dir) val.dataset.dir = b.dir;
-          row.appendChild(val);
-          row.appendChild(node('span', 'benchmark-base',
-            b.baseText !== null ? `you usually ${b.baseText}` : 'no baseline yet'));
-          bench.appendChild(row);
-        }
-        panel.appendChild(bench);
-      }
-
-      const cueList = (items, className, emptyText) => {
-        const list = node('ul', className);
-        for (const c of items) {
-          const li = node('li', 'cue');
-          li.appendChild(node('span', 'cue-time', c.tf || '—'));
-          li.appendChild(node('span', 'cue-text', c.text));
-          // A cue without a time has nowhere to seek to, so it gets no button
-          // rather than a dead one.
-          if (c.t !== null && c.t !== undefined) {
-            const watch = node('button', 'btn btn-sm', 'Watch');
-            watch.type = 'button';
-            watch.title = `Open the viewer at ${c.tf}`;
-            watch.addEventListener('click', () => deps.onWatch(summary, { t: c.t, tf: c.tf }));
-            li.appendChild(watch);
-          }
-          list.appendChild(li);
-        }
-        if (!items.length) list.appendChild(node('li', 'cue is-empty', emptyText));
-        return list;
-      };
-
-      panel.appendChild(node('h3', 'review-h', 'What to fix'));
-      panel.appendChild(cueList(report.mistakes, 'cues cues-bad',
-        'Nothing stood out.'));
-
-      if (report.highlights.length) {
-        panel.appendChild(node('h3', 'review-h', 'What went right'));
-        panel.appendChild(cueList(report.highlights, 'cues cues-good', ''));
-      }
-
-      // Say what the grades are measured against. A number with no stated
-      // reference is what this tab exists not to be.
-      panel.appendChild(node('p', 'hint', report.baselineScope === 'matchup'
-        ? 'Graded against your own recent games in this matchup.'
-        : report.baselineScope === 'all'
-          ? 'Graded against your own recent games.'
-          : 'Graded on general anchors until you have played more.'));
-
-      return panel;
+    // A summary written under an older schema is missing something only a full
+    // parse can supply: moments before v2, the combat ledger before v3, the
+    // dominance and resource series before v4. Story and Full details are both
+    // places you can notice the gap, so the offer to fix it is shared.
+    const reparseBtn = (summary, label) => {
+      const btn = node('button', 'btn', label);
+      btn.type = 'button';
+      btn.addEventListener('click', () => {
+        btn.disabled = true;
+        btn.textContent = 'Reading the replay…';
+        deps.onReparse(summary);
+      });
+      return btn;
     };
 
-    // Tab panes carry no headings. The tab button is the label, and a pane
-    // that repeats it burns a line of the one scroller.
-    const momentsPanel = (summary, seat) => {
-      const panel = node('section', 'report-pane');
+    // ── Story: the shape of the game, in numbers ────────────────────────────
+    //
+    // The default tab, and the reason to open this app after a game. Two
+    // things, in this order: the viewer's own dominance gauge and chart, then
+    // every number the game produced as a tile, each read against your own
+    // median where there is one.
+    //
+    // What is deliberately not here:
+    //
+    //   • Prose. The copy pass already took roughly 70% of this app's words
+    //     out. "3 / 5" under HERO K/D is read faster than a sentence saying
+    //     the same thing, and a number cannot be subtly wrong the way a
+    //     generated sentence can.
+    //   • The moments list. It is a timeline, it is long, and it is the one
+    //     thing on this screen that genuinely wants a table. It moved to Full
+    //     details whole, buttons included.
+    //   • The map. It drew camps as terrain and located the 126 of 402 moments
+    //     across the preview corpus that carry coordinates, which makes it a
+    //     picture of the map rather than a picture of the game.
+    //
+    // The benchmark tiles are what survived the deleted Review tab. Its grades
+    // were already in the frame; its benchmarks were numbers, and numbers
+    // belong in a grid of numbers.
 
-      // A summary written under an older schema is missing something only a
-      // full parse can supply: moments before v2, the combat ledger before v3.
-      // With no moments at all the re-parse is the panel, because an empty
-      // list reads as "nothing happened". With moments present, show them and
-      // offer the re-read quietly underneath. Hiding real moments behind an
-      // upgrade prompt helps nobody.
-      const stale = deps.store.isStale(summary);
-      const reparseBtn = (label) => {
-        const btn = node('button', 'btn', label);
-        btn.type = 'button';
-        btn.addEventListener('click', () => {
-          btn.disabled = true;
-          btn.textContent = 'Reading the replay…';
-          deps.onReparse(summary);
-        });
-        return btn;
-      };
+    const fmtSecs = (ms) => {
+      const total = Math.round(Math.abs(ms) / 1000);
+      return total >= 60
+        ? `${Math.floor(total / 60)}m${total % 60 ? ` ${total % 60}s` : ''}`
+        : `${total}s`;
+    };
 
-      const moments = summary.moments || [];
-      if (stale && !moments.length) {
-        panel.appendChild(node('p', 'lead',
-          'Parsed before moments were recorded.'));
-        panel.appendChild(reparseBtn('Find moments'));
-        return panel;
+    // One tile. `band` colours the value — 'good' | 'poor' | undefined — and
+    // is only ever set from a real comparison. Colouring a bare number by a
+    // guessed threshold is how a dashboard starts lying.
+    const tile = (label, value, sub, band) => {
+      const t = node('div', 'st-tile');
+      t.appendChild(node('span', 'st-k', label));
+      const v = node('span', 'st-v', value === null || value === undefined ? '—' : String(value));
+      if (value === null || value === undefined) v.classList.add('is-none');
+      else if (band) v.dataset.band = band;
+      t.appendChild(v);
+      // The sub-line holds its space whether or not it has text, so a grid of
+      // tiles keeps its rows level when only some carry a baseline.
+      t.appendChild(node('span', 'st-sub', sub || ''));
+      return t;
+    };
+
+    // GameReport's labels are written for a sentence ("effective APM",
+    // "workers @5:00") and this grid is eight columns wide at the 900px
+    // minimum, where a label that wraps to two lines drags every tile in the
+    // row down with it. Short forms here rather than in GameReport, because the
+    // overlay and the toast want the long ones.
+    // "Workers 5:00" was the one label in the set that wrapped at eight
+    // columns, and because grid stretches a row to its tallest cell, that one
+    // wrap added 19px to all seven tiles. The timing is not lost: the verdict
+    // band's meta line already reads "10 workers @5:00" two rows above, and the
+    // tile's own tooltip carries the full wording.
+    const BENCH_LABEL = {
+      t2: 'Tier 2',
+      expansion: 'Expo',
+      workersAt5m: 'Workers',
+      apmEffective: 'APM'
+    };
+
+    // A benchmark as a tile: the value, coloured by direction, and the gap to
+    // your own median as a bare signed token underneath.
+    //
+    // It used to read "14s later than usual", which is three wrapped lines in a
+    // 104px column and 100px-tall tiles. The words were carrying nothing the
+    // rest of the tile does not already say: the label names the metric, the
+    // colour says ahead or behind, and the line under the grid states what the
+    // comparison is against. `+14s` is the only part that was information.
+    const benchTile = (b) => {
+      if (!b || b.valueText === null) return null;
+      let sub = '';
+      if (b.base !== null && b.base !== undefined && b.value !== null) {
+        const d = b.value - b.base;
+        const sign = d > 0 ? '+' : '−';
+        sub = d === 0 ? 'your usual'
+          : (b.key === 't2' || b.key === 'expansion')
+            ? `${sign}${fmtSecs(d)}`
+            : `${sign}${Math.abs(d)}`;
       }
-
-      if (!moments.length) {
-        panel.appendChild(node('p', 'lead', 'Nothing stood out.'));
-        return panel;
+      const band = b.dir === 'ahead' ? 'good' : b.dir === 'behind' ? 'poor' : null;
+      const t = tile(BENCH_LABEL[b.key] || b.label, b.valueText, sub, band);
+      // The full wording survives on the tile itself, so nothing is lost to
+      // somebody who wants it.
+      if (b.baseText !== null && b.baseText !== undefined) {
+        t.title = `${b.label}: ${b.valueText}, and you usually ${b.baseText}`;
       }
+      return t;
+    };
 
-      const nameFor = (slot) => (summary.players[slot] && summary.players[slot].name) || 'They';
-
-      // Two columns when the game has coordinates, one when it does not. The
-      // map goes beside the list rather than above it: a square block on top
-      // of a 116px scroller would push every moment off the screen, which is
-      // the failure this whole layout exists to avoid.
-      const map = window.GameMap
-        ? window.GameMap.build(summary, seat, { caption: true })
-        : null;
-      const split = node('div', map ? 'story-split has-map' : 'story-split');
-      if (map) split.appendChild(map);
-
-      const list = node('ul', 'moments');
-      for (const m of moments) {
-        const li = node('li', 'moment');
-        li.dataset.kind = m.type;
-
-        li.appendChild(node('span', 'moment-time', m.tf));
-
-        const icon = node('span', 'moment-icon');
-        icon.innerHTML = iconFor(m.type);   // our own constant, never replay text
-        li.appendChild(icon);
-
-        li.appendChild(node('span', 'moment-text', ME().phrase(m, seat, nameFor)));
-        li.appendChild(node('span', 'moment-swing', m.swing ? `${m.swing}g swing` : ''));
-
-        const watch = node('button', 'btn btn-sm', 'Watch');
-        watch.type = 'button';
-        watch.title = `Open the viewer at ${m.tf}`;
-        watch.addEventListener('click', () => deps.onWatch(summary, m));
-        li.appendChild(watch);
-
-        list.appendChild(li);
+    const peakOf = (track, key) => {
+      let peak = null;
+      let at = null;
+      for (const s of (track || [])) {
+        const v = s[key];
+        if (typeof v !== 'number') continue;
+        if (peak === null || v > peak) { peak = v; at = s.gameTimeMs; }
       }
-      split.appendChild(list);
-      panel.appendChild(split);
+      return peak === null ? null : { peak, at };
+    };
 
-      if (stale) {
-        const row = node('div', 'row');
-        row.appendChild(node('p', 'hint', 'Parsed under an older format.'));
-        row.appendChild(reparseBtn('Re-read'));
+    const storyPanel = (summary, v, seat, report, dom) => {
+      const panel = node('section', 'report-pane story-pane');
+
+      // ── The chart ────────────────────────────────────────────────────────
+      //
+      // `dom` is the handle renderDetail built, so the teardown it registered
+      // stays reachable from there whichever tab is open.
+      const domReason = window.DominancePanel
+        ? window.DominancePanel.unavailable(summary)
+        : 'Dominance is unavailable in this build.';
+
+      if (!domReason) {
+        if (dom) panel.appendChild(dom.chart);
+      } else if (domReason === 'stale') {
+        // The one case where re-reading actually changes the answer. A game
+        // stored under v4 whose gate refused it will refuse it again, so that
+        // one gets a statement instead of a button.
+        const row = node('div', 'st-upgrade');
+        row.appendChild(node('p', 'hint', 'Parsed before dominance was recorded.'));
+        row.appendChild(reparseBtn(summary, 'Re-read this game'));
         panel.appendChild(row);
+      } else {
+        panel.appendChild(node('p', 'hint', domReason));
       }
+
+      // ── The numbers ──────────────────────────────────────────────────────
+      const me = v && v.slot != null ? summary.players[v.slot] : null;
+      const combat = me && me.combat;
+      const grid = node('div', 'st-grid');
+      const add = (t) => { if (t) grid.appendChild(t); };
+
+      // Every sub-line here is one short token. The label names the metric and
+      // the colour carries the judgement, so a sentence underneath is a third
+      // statement of the same thing — and at eight columns it wraps and takes
+      // the whole row's height with it. What a sub-line is FOR is the one fact
+      // the value cannot hold: when it happened, or the gap to your median.
+      if (combat) {
+        const kills = (combat.heroKills || []).length;
+        const deaths = (combat.heroDeaths || []).length;
+        // Not a ratio. A 3/5 game and a 6/10 game are different games, and a
+        // 0-death game divides by nothing.
+        add(tile('Hero K/D', `${kills} / ${deaths}`, 'kills / deaths',
+          deaths > kills ? 'poor' : kills > deaths ? 'good' : null));
+
+        add(tile('Wipes', `${combat.wipesFor || 0} / ${combat.wipesAgainst || 0}`,
+          'for / against',
+          (combat.wipesAgainst || 0) > (combat.wipesFor || 0) ? 'poor'
+            : (combat.wipesFor || 0) > (combat.wipesAgainst || 0) ? 'good' : null));
+
+        const swing = combat.biggestSwing;
+        const swingTile = tile('Swing',
+          swing ? `${swing.swing.toLocaleString()}g` : null,
+          swing ? swing.tf : '',
+          swing ? (swing.won ? 'good' : 'poor') : null);
+        if (swing) {
+          swingTile.title = `Biggest single trade: ${swing.swing.toLocaleString()} gold ` +
+            `${swing.won ? 'your way' : 'their way'} at ${swing.tf}`;
+        }
+        add(swingTile);
+      }
+
+      // The benchmark strip from the deleted Review tab: tier 2, expansion,
+      // workers at 5:00, effective APM.
+      if (report) {
+        for (const b of report.benchmarks) add(benchTile(b));
+      }
+
+      // Peak army is the last tile, and the tile budget stops here.
+      //
+      // Peak workers, tier 3 and first tower were tiles too, and they took the
+      // grid to a second row that did not fit at 900x600 — Story overflowed its
+      // scroller by 189px, which on the app's default tab is the whole point of
+      // the fold rule being missed. None of the three is lost: tier 3 and first
+      // tower are chips on the Build card, and all three are on the game strip
+      // in Full details, positioned in time, which is a better reading of them
+      // than a number anyway.
+      if (me) {
+        const army = peakOf(me.combatUnitsTrack, 'count');
+        add(tile('Peak army', army ? army.peak : null,
+          army && army.at ? `at ${fmtDur(army.at)}` : ''));
+      }
+
+      if (grid.children.length) {
+        panel.appendChild(grid);
+      } else {
+        panel.appendChild(node('p', 'lead', seat === null
+          ? 'Set your name up top to get a read on this game.'
+          : 'Not enough in this game to read.'));
+      }
+
+      // Graded against what. The grade rail in the frame is a set of numbers
+      // with no stated reference otherwise, and this is the one line of text
+      // on the tab because leaving it out would make the frame dishonest.
+      if (report) {
+        panel.appendChild(node('p', 'hint', report.baselineScope === 'matchup'
+          ? 'Graded against your own recent games in this matchup.'
+          : report.baselineScope === 'all'
+            ? 'Graded against your own recent games.'
+            : 'Graded on general anchors until you have played more.'));
+      }
+
       return panel;
     };
 
@@ -970,46 +1203,10 @@
       return title;
     };
 
-    // ── Build: what they made, and what their heroes became ────────────────
+    // ── Icon strips ─────────────────────────────────────────────────────────
     //
-    // Heroes and Builds were two tabs asking one question. Per player: the
-    // hero cards first, because a WC3 game is read off its heroes, then the
-    // opening build in order.
-
-    const buildPanel = (summary, seat) => {
-      const panel = node('section', 'report-pane');
-      const grid = node('div', 'builds');
-      for (const slot of slotsFor(summary, seat)) {
-        const p = summary.players[slot];
-        const col = node('div', 'build-col');
-        col.appendChild(playerTitle(p, slot === seat));
-
-        for (const h of (p.heroBuilds || [])) col.appendChild(heroCard(h));
-
-        const list = node('ul', 'build-list');
-        for (const b of (p.buildPreview || []).slice(0, 16)) {
-          const li = node('li');
-          li.dataset.type = b.type || '';
-          li.appendChild(node('span', 't', b.gameTimeFormatted || ''));
-          li.appendChild(buildIcon(b.itemId));
-          li.appendChild(node('span', 'n', b.name || ''));
-          list.appendChild(li);
-        }
-        if (!list.children.length) col.appendChild(node('p', 'hint', 'No build recorded.'));
-        else col.appendChild(list);
-
-        grid.appendChild(col);
-      }
-      panel.appendChild(grid);
-      return panel;
-    };
-
-    // ── Heroes: levels, skill order, final items ────────────────────────────
-    //
-    // All of it has sat in the stored summary since day one. heroBuilds carries
-    // the ability ids precisely so icons could be drawn, and none of it was
-    // shown. These icons are the game's own art from the CDN, because knowing
-    // which skill and which item is what the art is for.
+    // The game's own art from the CDN. Knowing which skill, which upgrade and
+    // which item is exactly what the art is for.
 
     const iconStrip = (label, entries) => {
       const wrap = node('div', 'icon-strip');
@@ -1024,43 +1221,45 @@
       return wrap;
     };
 
-    const heroCard = (h) => {
-      const card = node('div', 'hero-card');
-      const head = node('div', 'hero-head');
-      const portrait = buildIcon(h.itemId);
-      portrait.classList.add('hero-portrait');
-      head.appendChild(portrait);
-      const id = node('div', 'hero-id');
-      id.appendChild(node('b', null, h.name || 'Hero'));
-      id.appendChild(node('span', 'hint', `Level ${h.finalLevel || 1}`));
-      head.appendChild(id);
-      card.appendChild(head);
+    // ── Build: what they built ──────────────────────────────────────────────
+    //
+    // The site's own build-card shape (js/build-card.js), one card per seat.
+    // It used to be a hero-card stack followed by a 16-row chronological list
+    // per player, which is the same build stated twice, roughly two screens
+    // tall, inside a scroller ~150px high. The site packs the whole thing into
+    // a card ~280px wide and it is the better instrument.
+    //
+    // The chronological list was not the problem and is not deleted — it moved
+    // to Full details, which is the tab for "in exactly what order".
 
-      if ((h.skillOrder || []).length) {
-        card.appendChild(iconStrip('Skills', h.skillOrder.map(s => ({
-          itemId: s.abilityId,
-          title: `${s.skillName || 'Skill'}${s.skillLevel ? ` ${s.skillLevel}` : ''} · ${s.gameTimeFormatted || ''}`
-        }))));
+    const buildPanel = (summary, seat) => {
+      const panel = node('section', 'report-pane');
+      const grid = node('div', 'bc-grid');
+      for (const slot of slotsFor(summary, seat)) {
+        const p = summary.players[slot];
+        grid.appendChild(window.BuildCard.build(p, {
+          icon: buildIcon,
+          title: playerTitle(p, slot === seat)
+        }));
       }
-      if ((h.items || []).length) {
-        card.appendChild(iconStrip('Items', h.items.map(it => ({
-          itemId: it.itemId,
-          title: it.name || ''
-        }))));
-      }
-      return card;
+      panel.appendChild(grid);
+      return panel;
     };
 
-    // ── Economy: the race behind the fights ─────────────────────────────────
+    // ── Economy: the viewer's own resource charts ───────────────────────────
     //
-    // Drawn by the same CompareCharts factory the site's compare modal uses,
-    // so there is one chart source of truth. Fights land as vertical markers,
-    // which is what makes "my workers flatlined right after that battle" read
-    // straight off the chart.
+    // Food, gold lost and lumber lost, drawn by client/js/ResourceCharts.js —
+    // the class the viewer's insights panel mounts — from the resource series
+    // SeriesExtract packs into the summary at parse time. Then army size, on
+    // the CompareCharts factory the site's compare modal uses, because combat
+    // unit count is a summary-only derivation with no viewer chart.
+    //
+    // The standalone workers chart is gone. The game strip in the frame above
+    // already draws both players' worker curves as its lane backgrounds, so
+    // the tab was a second and larger copy of something already on screen.
 
     const economyPanel = (summary, v, seat) => {
-      const panel = node('section', 'report-pane');
-      const CC = window.CompareCharts;
+      const panel = node('section', 'report-pane economy-pane');
       const slots = slotsFor(summary, seat);
       const meSlot = v && v.slot != null ? String(v.slot) : slots[0];
       const me = summary.players[meSlot];
@@ -1070,75 +1269,254 @@
       const oppSlot = slots.length === 2 ? slots.find(s => s !== meSlot) : null;
       const opp = oppSlot != null ? summary.players[oppSlot] : null;
 
-      if (!CC || !me || !(me.economyTrack || []).length) {
-        panel.appendChild(node('p', 'lead', 'No economy samples.'));
-        return panel;
+      const rc = window.EconomyPanel.build(summary, seat, { onWatch: deps.onWatch });
+      if (rc) {
+        panel.appendChild(rc);
+      } else if ((summary.schemaVersion || 1) < 4) {
+        const row = node('div', 'st-upgrade');
+        row.appendChild(node('p', 'hint', 'Parsed before resources were recorded.'));
+        row.appendChild(reparseBtn(summary, 'Re-read this game'));
+        panel.appendChild(row);
       }
 
+      // Army size. Fights land as vertical markers, which is what makes "my
+      // army never recovered from that" read straight off the chart.
+      //
+      // The viewBox is authored wide on purpose. CompareCharts defaults to
+      // 720x200 with `preserveAspectRatio="xMidYMid meet"`, and the holder
+      // renders it at `width:100%; height:auto` — so in this column it drew
+      // **336px tall** at 1280 and scaled its 12px axis text to 20px along with
+      // it. A chart three times the height it needs, with oversized labels, for
+      // no reason but the default aspect. At 1200x200 the same plot is ~200px
+      // and the axis text lands at its authored size.
+      const CHART_BOX = { width: 1200, height: 200 };
+      const CC = window.CompareCharts;
       const markers = (summary.moments || [])
         .filter(m => m.type === 'heroKill' || m.type === 'heroTrade' || m.type === 'wipe')
         .map(m => ({ gameTimeMs: m.t, label: `${m.tf} · ${m.label || 'fight'}` }));
 
-      const legend = () => {
-        const row = node('div', 'chart-legend');
+      const armySvg = CC && me
+        ? (opp && (opp.combatUnitsTrack || []).length
+          ? CC.combatUnitsChart(me.combatUnitsTrack || [], opp.combatUnitsTrack || [],
+            { markers, title: 'Army size', ...CHART_BOX })
+          : CC.dualLineChart(
+            (me.combatUnitsTrack || []).map(s => ({ gameTimeMs: s.gameTimeMs, userValue: s.count || 0 })),
+            { title: 'Army size', markers, omitPro: true, ...CHART_BOX }))
+        : '';
+
+      if (armySvg) {
+        const block = node('div', 'chart-block');
+        const legend = node('div', 'chart-legend');
         const mine = node('span', 'legend-item legend-you');
         mine.appendChild(node('i', 'legend-swatch'));
         mine.appendChild(node('span', null, seat !== null ? 'You' : (me.name || 'Player')));
-        row.appendChild(mine);
+        legend.appendChild(mine);
         if (opp) {
           const theirs = node('span', 'legend-item legend-opp');
           theirs.appendChild(node('i', 'legend-swatch'));
           theirs.appendChild(nameLink(opp.name, deps.onOpenProfile));
-          row.appendChild(theirs);
+          legend.appendChild(theirs);
         }
-        return row;
-      };
-
-      const chart = (title, svgString) => {
-        if (!svgString) return;
-        const block = node('div', 'chart-block');
-        block.appendChild(legend());
+        block.appendChild(legend);
         const holder = node('div', 'chart-holder');
-        holder.innerHTML = svgString;   // our own factory output, never replay text
+        holder.innerHTML = armySvg;   // our own factory output, never replay text
         block.appendChild(holder);
         panel.appendChild(block);
-      };
-
-      const single = (track, key, title) => CC.dualLineChart(
-        (track || []).map(s => ({ gameTimeMs: s.gameTimeMs, userValue: s[key] || 0 })),
-        { title, markers, omitPro: true });
-
-      if (opp && (opp.economyTrack || []).length) {
-        chart('workers', CC.workersChart(me.economyTrack, opp.economyTrack, { markers, title: 'Workers' }));
-        chart('army', CC.combatUnitsChart(me.combatUnitsTrack || [], opp.combatUnitsTrack || [], { markers, title: 'Army size' }));
-      } else {
-        chart('workers', single(me.economyTrack, 'totalWorkers', 'Workers'));
-        chart('army', single(me.combatUnitsTrack, 'count', 'Army size'));
       }
 
-      // Upgrades and mercenaries under the charts: the money that never
-      // became units.
-      const strips = node('div', 'builds');
-      let anyStrip = false;
-      for (const slot of slots) {
+      if (!panel.children.length) {
+        panel.appendChild(node('p', 'lead', 'No economy samples.'));
+      }
+      return panel;
+    };
+
+    // ── Full details: everything, in order ──────────────────────────────────
+    //
+    // The tab for a question the other three deliberately refuse: what
+    // happened, exactly, and when. Story is a dashboard and Build is a card,
+    // and both of those are readings of the game. This is the record.
+    //
+    // Three sections, each its own table:
+    //   Events      — the ranked moments, with the Watch button on every row
+    //   Build order — the chronological build, per player, the list that used
+    //                 to be the bottom half of the Build tab
+    //   Upgrades    — the research timeline with its times, per player
+    //
+    // It is the one tab allowed to be long, because it is the one tab you
+    // arrive at already intending to scroll.
+
+    const detailsPanel = (summary, seat) => {
+      const panel = node('section', 'report-pane details-pane');
+      const nameFor = (slot) => (summary.players[slot] && summary.players[slot].name) || 'They';
+      const stale = deps.store.isStale(summary);
+
+      // ── The game strip ───────────────────────────────────────────────────
+      //
+      // Four rows that draw the shape of the game: your lane, a fight axis,
+      // their lane, a time ruler, with every mark opening the viewer at that
+      // second. It was in the report frame, where the dominance gauge now is,
+      // and it belongs here: it is the event list with a time axis, sitting
+      // directly above the event list without one.
+      panel.appendChild(node('h3', 'dt-h', 'Timeline'));
+      panel.appendChild(window.GameStrip.build(summary, seat, {
+        onWatch: deps.onWatch,
+        viewSlot: seat
+      }));
+
+      // ── Events ───────────────────────────────────────────────────────────
+      const moments = summary.moments || [];
+      panel.appendChild(node('h3', 'dt-h', 'Events'));
+
+      if (!moments.length) {
+        panel.appendChild(node('p', 'hint', stale
+          ? 'Parsed before moments were recorded.'
+          : 'Nothing stood out in this game.'));
+        if (stale) panel.appendChild(reparseBtn(summary, 'Find moments'));
+      } else {
+        const list = node('ul', 'moments');
+        for (const m of moments) {
+          const li = node('li', 'moment');
+          li.dataset.kind = m.type;
+          li.appendChild(node('span', 'moment-time', m.tf));
+          const icon = node('span', 'moment-icon');
+          icon.innerHTML = iconFor(m.type);   // our own constant, never replay text
+          li.appendChild(icon);
+          li.appendChild(node('span', 'moment-text', ME().phrase(m, seat, nameFor)));
+          li.appendChild(node('span', 'moment-swing', m.swing ? `${m.swing}g swing` : ''));
+          const watch = node('button', 'btn btn-sm', 'Watch');
+          watch.type = 'button';
+          watch.title = `Open the viewer at ${m.tf}`;
+          watch.addEventListener('click', () => deps.onWatch(summary, m));
+          li.appendChild(watch);
+          list.appendChild(li);
+        }
+        panel.appendChild(list);
+      }
+
+      // ── Build order ──────────────────────────────────────────────────────
+      panel.appendChild(node('h3', 'dt-h', 'Build order'));
+      const orders = node('div', 'builds');
+      for (const slot of slotsFor(summary, seat)) {
         const p = summary.players[slot];
-        const ups = (p.upgradeTimeline || []).map(u => ({
-          itemId: u.itemId,
-          title: `${u.name || 'Upgrade'}${u.level ? ` L${u.level}` : ''} · ${u.gameTimeFormatted || ''}`
-        }));
-        const mercs = (p.mercenariesHired || []).map(m => ({
-          itemId: m.itemId,
-          title: `${m.name || 'Mercenary'} · ${m.gameTimeFormatted || ''}${m.goldCost ? ` · ${m.goldCost}g` : ''}`
-        }));
-        if (!ups.length && !mercs.length) continue;
-        anyStrip = true;
         const col = node('div', 'build-col');
         col.appendChild(playerTitle(p, slot === seat));
-        if (ups.length) col.appendChild(iconStrip('Upgrades', ups));
-        if (mercs.length) col.appendChild(iconStrip('Mercs', mercs));
-        strips.appendChild(col);
+        const list = node('ul', 'build-list');
+        for (const b of (p.buildPreview || [])) {
+          const li = node('li');
+          li.dataset.type = b.type || '';
+          li.appendChild(node('span', 't', b.gameTimeFormatted || ''));
+          li.appendChild(buildIcon(b.itemId));
+          li.appendChild(node('span', 'n', b.name || ''));
+          list.appendChild(li);
+        }
+        if (!list.children.length) col.appendChild(node('p', 'hint', 'No build recorded.'));
+        else col.appendChild(list);
+        orders.appendChild(col);
       }
-      if (anyStrip) panel.appendChild(strips);
+      panel.appendChild(orders);
+
+      // ── Buildings by tier ────────────────────────────────────────────────
+      //
+      // What the tier upgrades actually bought. SummaryExtract records the
+      // distinct buildings and units that first appeared inside each tier,
+      // which no other tab shows.
+      const tierRows = [];
+      for (const slot of slotsFor(summary, seat)) {
+        const p = summary.players[slot];
+        if (!(p.t2Buildings || []).length && !(p.t3Buildings || []).length) continue;
+        const col = node('div', 'build-col');
+        col.appendChild(playerTitle(p, slot === seat));
+        const strip = (label, entries) => {
+          if (!entries.length) return;
+          col.appendChild(iconStrip(label, entries.map(e => ({
+            itemId: e.itemId, title: e.name || ''
+          }))));
+        };
+        strip('Tier 2', p.t2Buildings || []);
+        strip('Tier 3', p.t3Buildings || []);
+        tierRows.push(col);
+      }
+      if (tierRows.length) {
+        panel.appendChild(node('h3', 'dt-h', 'Buildings by tier'));
+        const grid = node('div', 'builds');
+        for (const c of tierRows) grid.appendChild(c);
+        panel.appendChild(grid);
+      }
+
+      // ── Upgrades and mercenaries ─────────────────────────────────────────
+      //
+      // The money that never became units. The Build card shows which; this
+      // shows when.
+      const upRows = [];
+      for (const slot of slotsFor(summary, seat)) {
+        const p = summary.players[slot];
+        const ups = (p.upgradeTimeline || []);
+        const mercs = (p.mercenariesHired || []);
+        if (!ups.length && !mercs.length) continue;
+        const col = node('div', 'build-col');
+        col.appendChild(playerTitle(p, slot === seat));
+        const list = node('ul', 'build-list');
+        const row = (t, itemId, text) => {
+          const li = node('li');
+          li.appendChild(node('span', 't', t || ''));
+          li.appendChild(buildIcon(itemId));
+          li.appendChild(node('span', 'n', text));
+          list.appendChild(li);
+        };
+        for (const u of ups) {
+          row(u.gameTimeFormatted, u.itemId,
+            `${u.name || 'Upgrade'}${u.level > 1 ? ` ${u.level}` : ''}`);
+        }
+        for (const m of mercs) {
+          row(m.gameTimeFormatted, m.itemId,
+            `${m.name || 'Mercenary'}${m.goldCost ? ` · ${m.goldCost}g` : ''}`);
+        }
+        col.appendChild(list);
+        upRows.push(col);
+      }
+      if (upRows.length) {
+        panel.appendChild(node('h3', 'dt-h', 'Upgrades and mercenaries'));
+        const grid = node('div', 'builds');
+        for (const c of upRows) grid.appendChild(c);
+        panel.appendChild(grid);
+      }
+
+      // ── Items ────────────────────────────────────────────────────────────
+      const itemRows = [];
+      for (const slot of slotsFor(summary, seat)) {
+        const p = summary.players[slot];
+        const bought = (p.itemPurchases || []);
+        const found = (p.itemPickups || []);
+        if (!bought.length && !found.length) continue;
+        const col = node('div', 'build-col');
+        col.appendChild(playerTitle(p, slot === seat));
+        if (bought.length) {
+          col.appendChild(iconStrip('Bought', bought.map(i => ({
+            itemId: i.itemId,
+            title: `${i.name || 'Item'} · ${i.gameTimeFormatted || ''}${i.goldCost ? ` · ${i.goldCost}g` : ''}`
+          }))));
+        }
+        if (found.length) {
+          col.appendChild(iconStrip('Found', found.map(i => ({
+            itemId: i.itemId,
+            title: `${i.name || 'Item'} · ${i.gameTimeFormatted || ''}`
+          }))));
+        }
+        itemRows.push(col);
+      }
+      if (itemRows.length) {
+        panel.appendChild(node('h3', 'dt-h', 'Items'));
+        const grid = node('div', 'builds');
+        for (const c of itemRows) grid.appendChild(c);
+        panel.appendChild(grid);
+      }
+
+      if (stale && moments.length) {
+        const row = node('div', 'row');
+        row.appendChild(node('p', 'hint', 'Parsed under an older format.'));
+        row.appendChild(reparseBtn(summary, 'Re-read'));
+        panel.appendChild(row);
+      }
       return panel;
     };
 

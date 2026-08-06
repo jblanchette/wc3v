@@ -79,8 +79,10 @@ The frontend is a coordinator (`js/app.js`) plus one module per concern: `store`
 (parse store and corpus), `identity`, `games-view` (feed and report),
 `profile-view`, `stream-view`, `settings-view`, `replay-index` (content key to
 file), `backfill`, `overlay-state`, `w3c` (ladder client) and `scout` (the live
-match poller). Two pure builders draw the report's graphics: `game-strip` and
-`game-map`.
+match poller). The report's graphics come from `game-strip` and `build-card`,
+which are pure builders, plus `dominance-panel` and `economy-panel`, which mount
+the viewer's OWN widgets (`DominanceBar`, `DominanceChart`, `ResourceCharts`)
+rather than redrawing them — see "Charts" below.
 
 Each parsed game persists as one gzipped summary under
 `<app_data>/replays/<size>-<xxh3>.summary.json.gz`, single-digit KB per game,
@@ -88,12 +90,53 @@ keyed by content so the same game re-opened or found under a second path loads
 from the store instead of re-parsing. Full parses are deliberately not stored.
 The raw `.w3g` is the source of truth and full viewing re-parses on demand.
 
-The summary is `SummaryExtract`'s per-player shape plus two things that have to
-be extracted at parse time, because fights live in `world.battles` and that
-exists only in a full parse. **`moments`** is the ranked highlight reel, capped
-at 24. Per-player **`combat`** is the complete hero kill and death ledger, wipes
-and biggest trade, added in schema v3. The review layer grades from `combat`.
-Deriving one from the other under-counts, so don't.
+The summary is `SummaryExtract`'s per-player shape plus four things that have to
+be extracted at parse time, because they exist only in a full parse.
+**`moments`** is the ranked highlight reel, capped at 24. Per-player
+**`combat`** is the complete hero kill and death ledger, wipes and biggest
+trade, added in schema v3 — the review layer grades from it, and deriving one
+from the other under-counts, so don't. Both come out of `world.battles`.
+**`dominance`** and **`resources`**, schema v4, are the time series
+`lib/DominanceSeries.js` and `lib/ResourceSeries.js` produce inside
+`utils.buildOutputObject`; `client/js/SeriesExtract.js` packs them as parallel
+arrays and unpacks them for rendering. Measured cost of v4:
+**+1.7 KB gzipped per game**, about 26 MB for the whole 3,072-replay history
+(`node tools/measure-summary-v4.js`).
+
+**All four are extract-at-parse-time-or-never.** Bump `SCHEMA_VERSION` in
+`store.js` before adding anything with that property, and make sure it is
+current before the backfill runs.
+
+## Charts
+
+The report draws the viewer's **own** chart widgets, not lookalikes.
+`DominanceChart` and `ResourceCharts` are the classes `client/viewer.html`
+mounts, copied into `js/vendor` by `tools/build-desktop-client.js` and styled by
+`client/css/dominance.css` — the same stylesheet the viewer loads, split out of
+`main.css` for exactly this reason. `js/dominance-panel.js` and
+`js/economy-panel.js` mount them from a stored summary and own no drawing code.
+If either starts drawing a line, the mount seam has leaked and the two products
+have begun telling different stories about the same game.
+
+Both take data rather than a viewer: they take `setPlayers()` arrays and ignore
+their constructor argument, so the desktop passes null. What the desktop added
+to them is small and benefits both products: a published `GEOMETRY` so a pointer
+position can be mapped back to a game time, `scoresAt(t)` so the numbers can be
+shown beside the plot, and a compensating `scaleX` on the momentum dots so a
+full-width chart draws circles instead of lozenges.
+
+**`DominanceBar`, the tug-of-war gauge, is deliberately not shipped here.** It
+sat in the report frame for one revision: 58px of chrome with its own chassis,
+its own identity caps and its own impact-FX engine, all designed for a game
+being watched live under a match header. In a finished-game report the only
+thing it added over the plot was the pair of numbers, and those are a readout on
+the chart's title row now, costing no height at all. The gauge's rules are still
+in `dominance.css`, because that file is the viewer's and the viewer still
+mounts it.
+
+There is no playback here, so the chart draws the whole game and is
+**scrubbable**: dragging it replays the momentum through the cursor and the
+readout, and a double-click opens the viewer at that second.
 
 ## Opening a moment in the viewer
 

@@ -9,6 +9,12 @@
        tools/build-desktop-client.js. app.css consumes it and adds only what the
        warm carved register needs. Load order matters. -->
   <link rel="stylesheet" href="./css/vendor/tokens.css">
+  <!-- The viewer's dominance chart and resource charts. The SAME stylesheet
+       client/viewer.html loads, copied in by tools/build-desktop-client.js.
+       Before app.css, so this app's own sizing overrides win. It also carries
+       the tug-of-war gauge's rules, which nothing here mounts — the file is the
+       viewer's and the viewer still uses them. -->
+  <link rel="stylesheet" href="./css/vendor/dominance.css">
   <link rel="stylesheet" href="./css/app.css">
   <!-- The overlay's own stylesheet, so the Stream preview is drawn by exactly
        what an OBS Browser Source loads. -->
@@ -97,21 +103,51 @@
     <main>
       <!-- ── Games ────────────────────────────────────────────────────── -->
       <section class="view view-games is-active" data-view="games">
-        <div class="feed-col">
-          <div class="backfill-bar" id="backfill-bar" hidden>
-            <div class="backfill-text" id="backfill-text">idle</div>
-            <div class="backfill-track"><div class="backfill-fill" id="backfill-fill"></div></div>
-          </div>
-          <!-- A parsed history runs to thousands of games. -->
+        <!-- The feed used to be a 22rem rail pinned open beside the report,
+             permanently. Nobody needs a list of every game they have ever
+             played on screen while reading one of them, and the report is the
+             product. So: a quick nav to the last few games, and everything
+             else behind a toggle that drops the full feed DOWN OVER the
+             report. Not a modal — the report is still there, underneath, and
+             the same Escape or a second click puts it back. -->
+        <header class="gamebar">
+          <button id="games-toggle" class="games-toggle" type="button"
+                  aria-expanded="false" aria-controls="games-drawer">
+            <svg viewBox="0 0 16 16" aria-hidden="true" class="games-toggle-ico">
+              <path fill="currentColor" d="M1 2.5h14v2H1zM1 7h14v2H1zM1 11.5h14v2H1z"/>
+            </svg>
+            <span>All games</span>
+            <span class="feed-count" id="feed-count"></span>
+            <svg viewBox="0 0 10 6" aria-hidden="true" class="games-toggle-caret">
+              <path fill="none" stroke="currentColor" stroke-width="1.4" d="M1 1l4 4 4-4"/>
+            </svg>
+          </button>
+          <!-- The last few games, always one click away. A horizontal scroller
+               by design: names are long and variable, wrapping would change the
+               band height, and this app does not truncate text. -->
+          <div class="quicknav scroll" id="quicknav" role="group"
+               aria-label="Recent games"></div>
+        </header>
+
+        <div class="backfill-bar" id="backfill-bar" hidden>
+          <div class="backfill-text" id="backfill-text">idle</div>
+          <div class="backfill-track"><div class="backfill-fill" id="backfill-fill"></div></div>
+        </div>
+
+        <!-- NOT a scroller. The report frame always fits the window; only the
+             active tab's body scrolls, and games-view.js marks that .scroll. -->
+        <div class="detail-col" id="detail"></div>
+
+        <!-- Same grid cell as .detail-col, so it covers it with no height
+             arithmetic and no absolute positioning. A parsed history runs to
+             thousands of games, which is exactly why it is not always up. -->
+        <div class="games-drawer" id="games-drawer" hidden>
           <div class="feed-filter">
             <div class="filter-search">
               <input id="feed-search" type="search" autocomplete="off"
                      placeholder="Search" aria-label="Search your games by player or map">
-              <!-- The count used to own a heading band above a column whose
-                   contents are self-evident. -->
-              <span class="feed-count" id="feed-count"></span>
-              <!-- Rides the search row too. Three short labels fit where "Wins"
-                   and "Losses" forced the segs onto a band of their own. -->
+              <!-- Three short labels fit where "Wins" and "Losses" forced the
+                   segs onto a band of their own. -->
               <div class="seg" id="feed-result" role="group" aria-label="Result">
                 <button class="seg-btn is-on" data-result="any" type="button">All</button>
                 <button class="seg-btn" data-result="win" type="button"
@@ -119,8 +155,6 @@
                 <button class="seg-btn" data-result="loss" type="button"
                         aria-label="Losses" title="Losses">L</button>
               </div>
-            </div>
-            <div class="filter-row">
               <!-- Glyphs are stamped in from RaceIcons at boot (games-view.js
                    wireFilters), so the markup holds no second copy of a mark. -->
               <div class="seg" id="feed-race" role="group" aria-label="Your race">
@@ -138,9 +172,6 @@
           </div>
           <div class="feed scroll" id="feed"></div>
         </div>
-        <!-- NOT a scroller. The report frame always fits the window; only the
-             active tab's body scrolls, and games-view.js marks that .scroll. -->
-        <div class="detail-col" id="detail"></div>
       </section>
 
       <!-- ── Coach ────────────────────────────────────────────────────── -->
@@ -258,13 +289,21 @@
   <script src="./js/vendor/MomentsExtract.js"></script>
   <script src="./js/vendor/GameReport.js"></script>
   <script src="./js/vendor/CompareCharts.js"></script>
+  <script src="./js/vendor/SeriesExtract.js"></script>
+  <!-- The viewer's own chart widgets. Mounted from data by
+       js/dominance-panel.js and js/economy-panel.js, never from a viewer.
+       DominanceBar is not shipped here — see build-desktop-client.js. -->
+  <script src="./js/vendor/DominanceChart.js"></script>
+  <script src="./js/vendor/ResourceCharts.js"></script>
   <script src="./overlay/overlay-render.js"></script>
   <script src="./js/store.js"></script>
   <script src="./js/replay-index.js"></script>
   <script src="./js/identity.js"></script>
   <script src="./js/race-icons.js"></script>
   <script src="./js/game-strip.js"></script>
-  <script src="./js/game-map.js"></script>
+  <script src="./js/dominance-panel.js"></script>
+  <script src="./js/economy-panel.js"></script>
+  <script src="./js/build-card.js"></script>
   <script src="./js/w3c.js"></script>
   <script src="./js/scout.js"></script>
   <script src="./js/games-view.js"></script>

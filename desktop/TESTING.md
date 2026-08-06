@@ -85,77 +85,105 @@ cannot test any of this, which is why it is high on the list.
 
 ## C. Home and the game report
 
-12. **Home tab.** Expect a feed grouped by day, newest first, each row with a
-    verdict plaque (W / L / ·), the opponent, race **glyphs** in the matchup chip
-    (keep / axe / crescent / skull, our own marks rather than game art), map and
-    duration. Rows are 52px and the rail is 22rem, so expect about 11 games on
-    screen at 1280x820 and 7 at the 900x600 minimum. Hover a row for its exact
-    time; the column of clock times is gone.
+12. **Home tab.** Expect a 63px band across the top: an **All games** toggle
+    carrying the count, then the last few games as chips (verdict plaque, race
+    glyphs, opponent). The report takes the whole width underneath. There is no
+    rail.
+    - **Click a chip.** It opens that game. This is the common move and it must
+      never need the drawer.
+    - **Click All games.** The full feed should drop **down over the report**,
+      not beside it and not as a modal — the report is still there underneath,
+      and nothing behind it is disabled. Expect a search box, W/L and race
+      filters on one row, then the feed grouped by day with a verdict plaque,
+      opponent, race glyphs, map and duration per row. Hover a row for its exact
+      time.
+    - **Close it three ways**: the toggle again, `Escape`, and a click on the
+      report underneath. Picking a game also closes it — a drawer left up over
+      the game you just asked for makes the click look like it did nothing.
+    - The quick-nav chips follow the filter. Filter to losses and the chips
+      should be losses.
 13. Click a game. **The right column must not scroll as a whole**, which is the
     fold rule. Expect a fixed frame in this order: verdict and opponent, whose
     name is a link into Coach, an all-time record chip once you have >=2 games
-    against them (clicking it opens their book), **Open in viewer** on the same
-    row; a meta line of map, duration, opener, archetype and workers at 5:00;
-    **the one-line read**; **the game strip**; **the grade rail**; then a tab
-    strip of **Review / Story / Build / Economy**. Only the tab body scrolls.
-    - Click the one-line read. It should take you to the Review tab.
-    - A game you were not in has no Review tab at all, and the verdict says
-      "You were not in this game". That is correct.
-    - At 900x600 the tab body should be about 150px. It was 34px before the
-      redesign, and 3px with a live match up.
-13a. **The game strip**, between the read and the grades. Four rows: your lane,
-    a fight axis, their lane, a time ruler. Each lane has a workers area behind
-    it (gold for you, lapis for them) and ticks for T2, T3, expansion and first
-    tower. The axis carries one mark per fight, bigger for a bigger gold swing,
-    moss where you came out ahead and rust where you did not. Hero deaths are
-    squared off rather than round.
-    - **Click any mark.** The viewer should open at that second. This is the
-      main reason the strip exists.
-    - Hover a lane for the peak worker count.
-    - A game with no fights still draws both lanes, the ticks and the ruler.
-    - The marks are small on purpose and their targets are only as tall as a
-      lane. The Story tab is the full-size, keyboard-native version of the same
-      list, and that is deliberate.
+    against them (clicking it opens their book), **Open in WC3V Viewer** on the
+    same row; a meta line of map, duration, opener, archetype and workers at
+    5:00; **the one-line read**; **the grade rail**; then a tab strip of
+    **Story / Build / Economy / Full details**. Only the tab body scrolls.
+    - **There is no timeline band in the frame.** The game strip is in Full
+      details and the dominance gauge was cut. If a chart appears above the
+      grade rail, something has been put back.
+    - Click the one-line read. It should take you to Story.
+    - A game you were not in has no grade rail and the verdict says "You were
+      not in this game". That is correct, and the frame must still not scroll
+      with a band missing.
+    - At 1280x820 the frame should be about 166px, 221px with a grade rail, and
+      the tab body about 470px. It was 310/252 before the charts pass.
+
+13a. **Open in WC3V Viewer.** It is the only navy control below the app bar and
+    the only one carrying the wordmark, with the "3" in accent blue. That is
+    deliberate and reserved: if anything else in the app looks like it, that is
+    a bug. Clicking it opens the game in the real viewer.
 
 13b. **The grade rail**, five cells in the frame: Economy, Army, Hero, Map
     control, Mechanics. Green for good, rust for poor, and hovering a cell gives
-    the note. They used to be inside the Review tab where you could see one of
-    them.
+    the note.
 
-13c. **Review tab**, the default. Expect one row per pillar carrying its score
-    and what the score was read off, then a benchmark strip ("tier 2 · 2:41 ·
-    you usually 2:21"), then **What to fix** and, when there is one, **What went
-    right**, each line with a time and a **Watch** button.
-    - **The read has to survive a straight face.** Open three games you actually
-      remember and read the headline and the mistakes aloud. If it blames economy
-      in a game you lost to a hero snipe, the thresholds are wrong. Record it and
-      re-run the corpus pass (ROADMAP §11).
-    - Click a **Watch** button. The viewer should open at that second.
-    - A mistake line with no time carries no Watch button. Correct.
-    - The bottom line states what the grades are measured against ("your own
-      recent games in this matchup"). On a fresh install with no history it
-      should say it is using general anchors instead. It must never claim a
-      comparison that does not exist.
-13d. **Story tab**: a square map on the left and the moments list on the right.
-    The map draws creep camps as rings sized by level, both start positions as
-    squares, and every fight that carries a position, coloured the same way as
-    the strip. Hover anything for its name.
-    - **It draws no terrain and it never says who cleared a camp.** A stored
-      summary has neither, so both would be invented. Say so if it looks like it
-      is claiming otherwise.
-    - A game with fewer than three coordinates gets no map and the list takes
-      the full width. That is correct.
+13c. **Story tab**, the default. The dominance chart, then a grid of tiles.
+    - The chart's title row reads `DOMINANCE · 50 = even` on the left and the
+      two scores on the right, each in its player's line colour, followed by
+      **final**. Own seat first, always.
+    - A game whose summary predates schema v4 has no chart, and Story offers a
+      **Re-read this game** button. A game under v4 whose dominance gate refused
+      the replay has no chart and says so with no button, because re-reading it
+      would refuse it again. Those two states must not be confused.
+    - **Drag across the chart.** The scores must change as you move and the
+      **final** should become a clock. Let go outside the chart and it returns
+      to the final score — a readout left at 14:20 is reporting the wrong result
+      for the game. Arrow keys step 10s, shift-arrow a minute, Home and End
+      jump.
+    - **Double-click the chart.** The viewer should open at that second.
+    - **The event dots must be round**, not lozenges. They are circles in a
+      stretched viewBox and a ResizeObserver compensates; if they are stretched,
+      `_fitDots` is not firing.
+    - Tiles: hero K/D, wipes, biggest swing, then the four benchmarks (tier 2,
+      expansion, workers @5:00, effective APM) each carrying the gap to your own
+      median, then peak army, peak workers, tier 3, first tower. A tile with no
+      data reads "—" and says why, and a tile with no baseline carries no
+      comparison rather than an invented one.
+    - **The benchmarks have to survive a straight face.** Open three games you
+      actually remember. If a game you lost to a hero snipe reads as an economy
+      problem, the grade thresholds are wrong; record it and re-run the corpus
+      pass (ROADMAP §11).
+    - There is no map here and no moments list. Both moved or went; see 15.
 
-14. **Build tab**: per player, the hero cards then the opening build. Each hero
-    has its portrait, final level, skill order and final items as real icon
-    rows. Hover an icon and the tooltip names the skill or item and when. This
-    was two tabs, Heroes and Builds, asking one question.
+14. **Build tab**: one card per player, the same shape as a build card on
+    wc3v.com. Heroes with their final level on the portrait and their skills as
+    icons carrying the level reached, then key units with names, then upgrades
+    with levels, then chips for T2, T3, tower and expansion.
+    - **Count the heroes.** You cannot have two of the same hero in Warcraft III,
+      so two identical portraits is a bug. `heroBuilds` carries Mirror Image
+      illusions as extra level-1 heroes and `build-card.js` dedupes them.
+    - Hover an icon and the tooltip names the skill, unit, upgrade or item.
     - Icons come from `cdn.wc3v.com`. Empty carved squares mean offline or CSP,
       so say so.
-15. **Economy tab**: two charts (workers, army size), you in gold, opponent in
-    lapis, fights as dashed orange verticals. Under them, upgrades and mercs as
-    icon strips. In a non-1v1, expect one line per chart rather than an invented
-    duel.
+
+15. **Economy tab**: the viewer's own three resource charts — food, gold lost,
+    lumber lost — each carrying its peak in the title, with a legend saying
+    which line is whose. Then army size with fights as dashed orange verticals.
+    - **There is no workers chart.** That is deliberate: the game strip in Full
+      details already draws both players' worker curves.
+    - Double-click a resource chart to open the viewer at that second.
+    - In a non-1v1, expect one line per chart rather than an invented duel.
+
+15a. **Full details tab**: the game strip first (your lane, a fight axis, their
+    lane, a time ruler, every mark opening the viewer at that second), then the
+    events list with a Watch on every row, then build order, buildings by tier,
+    upgrades and mercenaries, and items — each per player, own seat first.
+    - This is the one tab allowed to be long. You arrive here intending to
+      scroll.
+    - **Click a mark on the strip.** The viewer should open at that second.
+    - A game with no fights still draws both lanes, the ticks and the ruler.
+
 16. **Type an opponent's name** into the search box above the feed.
     - Expect: the count beside the search box changes from `N parsed` to
       `X of N`, and only their games remain.
@@ -438,32 +466,95 @@ selected and the drawer closed, run:
 Pass = `[]` everywhere. An element that clips via `overflow: hidden` reports too,
 deliberately: clipped content is a fold bug as much as a scrollbar is.
 
+### The second check: does the tab body actually scroll
+
+**The snippet above skips anything inside `.scroll`, so it passes a report whose
+default tab is scrolling.** It did, for a while: Story overflowed its scroller by
+189px at 900x600 and the audit was green. Run this as well, with the drawer open
+so `#feed .game` is there to loop over:
+
+```js
+(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const per = {};
+  for (const row of document.querySelectorAll('#feed .game')) {
+    row.click(); await sleep(25);
+    for (const tab of document.querySelectorAll('.report-tabs .seg-btn')) {
+      tab.click(); await sleep(25);
+      const b = document.querySelector('.report-body');
+      const over = b.scrollHeight - b.clientHeight;
+      const k = tab.textContent;
+      per[k] = per[k] || { n: 0, scrolls: 0, worst: 0 };
+      per[k].n++;
+      if (over > 1) { per[k].scrolls++; per[k].worst = Math.max(per[k].worst, over); }
+    }
+  }
+  return per;
+})()
+```
+
+What each tab is allowed to do, at **both** window sizes, with a live match up
+(the worst case — the mode switch costs another 38px):
+
+| tab | 900x600 | 1280x820 |
+|---|---|---|
+| **Story** | **0 scrolls. Never. Any number here is a bug.** | **0 scrolls** |
+| Economy | scrolls (four charts) | 0 scrolls |
+| Build | scrolls on content-heavy games | scrolls on ~half |
+| Full details | scrolls, by design | scrolls, by design |
+
+Story is the app's default tab and the whole dashboard has to be on screen at
+once, so it is held strictly. The others are content tabs and `.scroll` is doing
+its job. Full details is the one tab you arrive at intending to scroll.
+
 Pass `--w3c` so the Next game mode is reachable during the audit. Run the audit
 in both modes.
 
 The report frame changes shape per game, so audit **every game**, not one. The
 snippet above is cheap enough to run in a loop over `#feed .game` with every tab
-clicked. Games differ in whether they have a Review tab, whether the strip has
-fights, and whether Story has a map.
+clicked. Games differ in whether they have a grade rail (none when you were not
+in the game), whether Story has a dominance chart (none when the gate refused
+the replay or the summary predates schema v4), and whether the strip has fights.
 
-Last clean run: 5 Aug 2026, after the Home redesign. Both sizes, all 40 preview
-games, every report tab on every game, both column modes, plus Coach, Stream and
-the Settings sheet. Zero offenders, zero console errors.
+Open the feed drawer first, so `#feed .game` is on screen to loop over. Audit
+the drawer OPEN as well: it covers the report rather than replacing it, and both
+are laid out at once.
 
-Measured after the redesign, at 900×600 with a live match up:
+Last clean run: 5 Aug 2026, after the charts pass. Both sizes, all 40 preview
+games, every report tab on every game, both column modes, the feed drawer open,
+plus Coach, Stream and the Settings sheet. **160 checks per size, zero
+offenders, zero console errors — and Story 0/40 scrolls at both sizes.**
 
-| | before | after |
+Measured at 1280×820, after the charts pass:
+
+| | Home redesign | charts pass |
 |---|---|---|
-| report tab body | 34px | 149px |
-| feed rows on screen | 3 | 7.5 |
-| report frame | 427px | 325px |
-| report tabs | 6 | 4 |
+| report frame | 310px | 166px (221 with a grade rail) |
+| report tab body | 252px | 470px |
+| frame timeline band | 114px (game strip) | none — strip moved to Full details |
+| feed | 22rem rail, always up | 63px quick nav + drawer |
+
+Measured at 900×600 after the Home redesign, kept for reference: tab body
+34px → 149px, feed rows on screen 3 → 7.5, frame 427px → 325px.
+
+**Two things the audit caught that eyes did not**, both worth re-checking after
+any frame change:
+
+- Squeezing the dominance gauge to `--dom-bar-h: 46px` clipped its internals on
+  all 160 checks. That gauge has since been cut from the desktop entirely, but
+  the lesson stands for anything borrowed from the viewer: it was drawn against
+  the viewer's own geometry and type metrics, and `line-height: 1` alone reads
+  as overflow to this audit.
+- `.detail-col` was a five-row grid template ending in `1fr`. Any missing band
+  put the scroller in an `auto` row and the whole column grew. It is flex now,
+  keyed on `.scroll`, so it does not care how many bands a game has.
 
 Note when driving this yourself: the preview's auto-detected identity is
 whichever name appears most often in the sample, and the feed tiles show the
 opponent, so clicking the first tile usually lands on a game that seat is not in,
-where the Review tab correctly does not exist. Click through until the verdict
-reads Victory or Defeat before auditing the report tabs.
+where the grade rail and the benchmark tiles correctly do not exist. Search the
+feed for the identity name and click through until the verdict reads Victory or
+Defeat before auditing the report tabs.
 
 ---
 

@@ -71,10 +71,6 @@
   --cut-in: inset 0 2px 4px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,255,255,0.035);
   --outline: 1px solid #0a0704;
 
-  /* The feed rail. It was 27rem, a third of a 1280px window spent on 7.5 rows
-     of two-line text. The 5rem it gave up went to the report column, which is
-     where the graphics are. */
-  --rail-w: 22rem;
 }
 
 * { box-sizing: border-box; }
@@ -302,7 +298,10 @@ main { min-height: 0; position: relative; }
 .view { display: none; height: 100%; min-height: 0; }
 .view.is-active { display: grid; }
 
-.view-games { grid-template-columns: var(--rail-w) 1fr; }
+/* Gamebar, backfill bar (only when a backfill is running), report. The feed
+   drawer occupies the same cell as the report and covers it when open, so
+   there is no height arithmetic anywhere and no absolute positioning. */
+.view-games { grid-template-rows: auto auto minmax(0, 1fr); }
 .view-profile { grid-template-rows: auto minmax(0, 1fr); }
 .view-stream, .view-settings { grid-template-rows: minmax(0, 1fr); }
 
@@ -485,26 +484,155 @@ main { min-height: 0; position: relative; }
   text-align: center;
 }
 
-/* ── Feed ────────────────────────────────────────────────────────────── */
+/* ── Gamebar ─────────────────────────────────────────────────────────────
+   The band that replaced the 22rem rail. A toggle for the whole feed, then
+   the last few games as chips. Height is fixed by the --ico-sm floor its
+   controls sit on, so the report below it never moves. */
 
-.feed-col {
+.gamebar {
   display: grid;
-  grid-template-rows: auto auto 1fr;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.games-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.games-toggle:hover { color: var(--ink); }
+.games-toggle.is-open {
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  box-shadow: var(--cut);
+  color: var(--ink);
+}
+.games-toggle-ico { width: 14px; height: 14px; flex: none; }
+.games-toggle-caret {
+  width: 10px; height: 6px; flex: none;
+  transition: transform var(--dur) var(--ease);
+}
+.games-toggle.is-open .games-toggle-caret { transform: rotate(180deg); }
+
+/* Horizontal scroller by design — names are long and variable, and this band
+   must not change height. Marked .scroll so the fold audit reads it as the
+   designated container it is.
+
+   Snapping and the edge fade are not decoration. Without them the row ends on
+   whatever pixel the column happens to be wide, so the last chip is sliced
+   through the middle of a player's name and reads as a rendering bug rather
+   than as "there are more". Snap makes every rest position a chip boundary;
+   the fade says the row continues. */
+.quicknav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+}
+.quicknav::-webkit-scrollbar { height: 0; }
+/* No fade once there is nothing left to scroll to, or the last chip looks
+   permanently half-lit. */
+.quicknav.is-end {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.qn-chip { scroll-snap-align: start; }
+
+.qn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: var(--fs-min);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.qn-chip:hover { background: var(--app-well); color: var(--ink); }
+.qn-chip.is-active {
+  background: var(--app-well);
+  border-color: var(--app-edge);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+}
+.qn-name { font-weight: 600; }
+.qn-v {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  flex: none;
+  border-radius: 3px;
+  font-size: var(--fs-min);
+  font-weight: 800;
+}
+/* Same paint as .verdict-tile in the feed, at chip scale — the plaque and the
+   chip must read as the same mark, because they say the same thing. */
+.qn-v[data-v="win"]  { background: linear-gradient(180deg, #86ab68, var(--verdict-win)); color: var(--app-well); }
+.qn-v[data-v="loss"] { background: linear-gradient(180deg, #b96450, var(--verdict-loss)); color: var(--app-well); }
+.qn-v[data-v="none"] { background: linear-gradient(180deg, #85807a, var(--verdict-none)); color: var(--app-well); }
+
+/* ── The feed drawer ─────────────────────────────────────────────────────
+   Same grid cell as .detail-col, painted on top of it. Opaque, because a
+   translucent list over a report is two things at once and neither is
+   readable. */
+
+.games-drawer {
+  grid-row: 3;
+  grid-column: 1;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   background: var(--app-bg);
-  border-right: 1px solid var(--app-line);
+  border-bottom: 1px solid var(--app-line);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
 }
+/* [hidden] has to beat the display:grid above. */
+.games-drawer[hidden] { display: none; }
+
+.detail-col { grid-row: 3; grid-column: 1; }
 
 /* ── Feed filter ─────────────────────────────────────────────────────── */
 
 .feed-filter { padding: var(--sp-2) var(--sp-3); display: grid; gap: var(--sp-2); }
 
+/* One row now that the drawer is the full width of the window. It was three
+   stacked bands in a 22rem rail. */
 .filter-search {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: var(--sp-2);
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: var(--sp-2);
 }
+.filter-search input { flex: 1 1 12rem; }
 
 .feed-filter input {
   width: 100%;
@@ -707,22 +835,31 @@ main { min-height: 0; position: relative; }
    tab strip) is fixed rows that always fit; the active tab's body is the one
    scroller. The column as a whole must never scroll. */
 
-/* Verdict band, game strip, grade rail, tab strip, then the one scroller.
-   The frame was 427px of the 507px a 900x600 window gives. It is 325 now, and
-   the timings panel that ate 157 of it is drawn instead of listed. */
+/* Verdict band, dominance gauge, grade rail, tab strip, then the one scroller.
+   The frame was 427px of the 507px a 900x600 window gives, then 325 after the
+   game strip replaced the timings panel, and the gauge that replaced the strip
+   costs 46px where it cost 114.
+
+   Flex rather than a fixed row template. Every band here is optional — no
+   gauge on a game the dominance gate refused, no grade rail on a game you were
+   not in, a mode switch only with a live match — and a template of `auto`
+   tracks with `1fr` last puts the scroller in an `auto` row the moment one is
+   missing, which makes the whole column grow instead of the body scrolling.
+   That is a fold-rule break the audit reports as an overflowing .detail-col. */
 .detail-col {
-  display: grid;
-  grid-template-rows: auto auto auto auto minmax(0, 1fr);
-}
-/* With a live match the column grows a mode switch, so every band moves down
-   one row. Both modes end in exactly one scroller. */
-.detail-col[data-mode] { grid-template-rows: auto auto auto auto auto minmax(0, 1fr); }
-.detail-col {
+  display: flex;
+  flex-direction: column;
   gap: var(--sp-2);
   min-height: 0;
   padding: var(--sp-3) var(--sp-4);
   background: var(--app-well);
 }
+/* The one scroller, whatever came before it, and whichever panel built it —
+   `.report-body` for a game report, `.ng-list` for Next game. Keyed on `.scroll`
+   because that class already means "this is the designated scroller" everywhere
+   else in this app and in the fold audit. */
+.detail-col > .scroll { flex: 1 1 auto; min-height: 0; }
+.detail-col > :not(.scroll) { flex: 0 0 auto; }
 
 .detail-empty {
   display: grid;
@@ -928,36 +1065,120 @@ main { min-height: 0; position: relative; }
 .gs-rule-tick.is-first { transform: none; }
 .gs-rule-tick.is-last  { transform: translateX(-100%); }
 
-/* ── Story: the map beside the list ──────────────────────────────────────
-   The map is square and capped, and it sits to the LEFT of the moments rather
-   than above them. A block on top of the list would push every moment off a
-   116px scroller. It disappears entirely on a game with no coordinates. */
+/* ── Story: the dominance panel, then the numbers ────────────────────────
+   The default tab. The gauge and the chart are drawn by the viewer's own
+   stylesheet (css/vendor/dominance.css); everything here is the housing they
+   sit in and the tile grid underneath.
 
-.story-split { display: grid; gap: var(--sp-3); }
-.story-split.has-map { grid-template-columns: clamp(140px, 30%, 220px) minmax(0, 1fr); }
+   The map that used to live here is gone with its stylesheet. */
 
-.gm-wrap { position: sticky; top: 0; }
-.gm {
-  display: block;
-  width: 100%;
-  aspect-ratio: 1 / 1;
+/* The chart, in the Story pane. The tug-of-war gauge that briefly sat in the
+   report frame above it is gone, and `DominanceBar.js` is not shipped to the
+   desktop at all — see tools/build-desktop-client.js. Its rules still live in
+   css/vendor/dominance.css, because that stylesheet is the viewer's and the
+   viewer still mounts the gauge. */
+.dom-panel {
+  margin: 0 0 var(--sp-3);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.dom-panel-chart { background: var(--app-well); box-shadow: var(--cut-in); }
+/* The viewer draws this 76px tall inside a ~320px insights panel. Here it is
+   the centrepiece of the default tab across the whole report width. Clamped
+   rather than fixed: at 17vh it ate the entire tab body at 1280x820 and the
+   tiles under it were never once on screen.
+
+   vh rather than a fixed height because this is the one thing on the tab that
+   can give: at 600px the whole dashboard has to fit in ~170px and the chart
+   takes 64 of it; at 820px it takes 112 and the shape of the game is readable. */
+.dom-panel .dmc-svg { height: clamp(64px, 11vh, 112px); }
+/* The title row is the readout's home and it is otherwise dead space. */
+.dom-panel .dmc-chart-wrap { padding: var(--sp-1) var(--sp-2); }
+.dom-panel .dmc-title { padding: 0 0 var(--sp-1); }
+
+/* Dragging replays the game's momentum, so the cursor says so. */
+.dom-panel-chart.is-scrubbable { cursor: ew-resize; touch-action: none; }
+.dom-panel-chart:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* ── Story: the tiles ────────────────────────────────────────────────────
+   Every number the game produced, each against your own median where there is
+   one. auto-fit rather than a fixed column count: at 900px this is three
+   across and at 1280px it is five, and neither needs its own rule. */
+
+/* One row at 900px, where eight tiles at 6.5rem fit the column exactly. It was
+   9.5rem, which gave five columns and a second row, and Story overflowed its
+   scroller by 189px at the minimum window — on the app's DEFAULT tab.
+   `auto-fit` then widens them at 1280px rather than adding columns.
+
+   The grid paints no background. It used to be a 1px `--app-line` mesh with the
+   tiles on top, which draws the gaps as hairlines — and draws a solid dark
+   block wherever a ragged last row leaves the cells empty. Each tile carries
+   its own border instead, so a row of three tiles is a row of three tiles. */
+.st-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+}
+.st-tile {
+  display: grid;
+  align-content: start;
+  gap: 1px;
+  padding: var(--sp-2);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  min-width: 0;
+}
+.st-k {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+.st-v {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+/* Only ever set from a real comparison. A bare number coloured by a guessed
+   threshold is how a dashboard starts lying. */
+.st-v[data-band="good"] { color: var(--verdict-win); }
+.st-v[data-band="poor"] { color: var(--verdict-loss); }
+.st-v.is-none { color: var(--ink-faint); font-weight: 400; }
+/* Holds one line whether or not it has text, so a row stays level when only
+   some tiles carry a baseline. It is allowed to wrap to two — this app does not
+   truncate — and grid stretches the row to match. */
+.st-sub {
+  min-height: 1.2em;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* The offer to re-read a game stored before the block it is missing. */
+.st-upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3);
   background: var(--app-well);
   border: 1px solid var(--app-line);
   border-radius: var(--radius-sm);
   box-shadow: var(--cut-in);
 }
-.gm-cap { margin: var(--sp-1) 0 0; text-align: center; }
-
-.gm-grid { stroke: var(--app-line); stroke-width: 0.4; }
-.gm-camp { fill: none; stroke: var(--ink-faint); stroke-width: 0.7; }
-.gm-camp.is-fountain { stroke: var(--dom-blue); }
-.gm-start { stroke: #0a0704; stroke-width: 0.6; }
-.gm-start[data-side="me"]   { fill: var(--dom-gold); }
-.gm-start[data-side="them"] { fill: var(--race-warm-H); }
-.gm-fight { stroke: #0a0704; stroke-width: 0.5; }
-.gm-fight[data-side="win"]  { fill: var(--verdict-win); }
-.gm-fight[data-side="loss"] { fill: var(--verdict-loss); }
-.gm-fight[data-side="even"] { fill: var(--dom-gold); }
+.st-upgrade .hint { margin: 0; }
 
 /* ── Report tabs ── */
 
@@ -1043,7 +1264,8 @@ main { min-height: 0; position: relative; }
 }
 .verdict-read:hover { color: var(--ink); text-decoration-color: var(--app-edge); }
 
-.review-h {
+/* Section heads in Full details, the only tab with sections. */
+.dt-h {
   margin: var(--sp-5) 0 var(--sp-2);
   color: var(--ink-faint);
   font-size: var(--fs-min);
@@ -1051,11 +1273,13 @@ main { min-height: 0; position: relative; }
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+.dt-h:first-child { margin-top: 0; }
 
 /* The grade rail. Five cut wells in the fixed frame, above the tab strip.
    Deliberately not a radar: a value with its name beside it is legible at
    900px and in a screenshot, and a polygon is neither. The reasoning behind
-   each number lives in the Review body, one line per pillar. */
+   each number is the `title` on its cell — it was a list of five sentences in
+   the Review tab, and Review is gone. */
 .grade-rail {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -1091,76 +1315,6 @@ main { min-height: 0; position: relative; }
 .grade-v[data-band="poor"] { color: var(--verdict-loss); }
 .grade-v.is-none { color: var(--ink-faint); font-weight: 400; }
 
-/* The reasoning, in the Review body. Score, pillar, then what it was read off. */
-.grade-notes { list-style: none; margin: 0 0 var(--sp-4); padding: 0; }
-.grade-notes li {
-  display: grid;
-  grid-template-columns: 7rem 2.5rem minmax(0, 1fr);
-  align-items: baseline;
-  gap: var(--sp-2);
-  padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--app-line);
-}
-.grade-notes li:last-child { border-bottom: 0; }
-.gn-k {
-  color: var(--ink-faint);
-  font-size: var(--fs-min);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.gn-v { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
-.gn-v[data-band="good"] { color: var(--verdict-win); }
-.gn-v[data-band="mid"]  { color: var(--ink); }
-.gn-v[data-band="poor"] { color: var(--verdict-loss); }
-.gn-v.is-none { color: var(--ink-faint); font-weight: 400; }
-.gn-note { color: var(--ink-dim); overflow-wrap: anywhere; }
-
-/* This game against your own median. The value is coloured and the median
-   sits beside it in words. No delta column, no pills. */
-.benchmarks { margin-top: var(--sp-4); }
-.benchmark {
-  display: grid;
-  grid-template-columns: 9rem 5rem 1fr;
-  align-items: baseline;
-  gap: var(--sp-3);
-  padding: var(--sp-1) 0;
-  border-bottom: 1px solid var(--app-line);
-}
-.benchmark:last-child { border-bottom: 0; }
-.benchmark-k {
-  color: var(--ink-faint);
-  font-size: var(--fs-min);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.benchmark-v {
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.benchmark-v[data-dir="ahead"]  { color: var(--verdict-win); }
-.benchmark-v[data-dir="behind"] { color: var(--verdict-loss); }
-.benchmark-base { color: var(--ink-dim); font-size: var(--fs-min); }
-
-/* Mistakes and highlights share a row shape; only the time marker differs. */
-.cues { list-style: none; margin: 0; padding: 0; }
-.cue {
-  display: grid;
-  grid-template-columns: 3.2rem 1fr auto;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-1) 0;
-  border-bottom: 1px solid var(--app-line);
-}
-.cue:last-child { border-bottom: 0; }
-.cue-time {
-  color: var(--ink-dim);
-  font-size: var(--fs-min);
-  font-variant-numeric: tabular-nums;
-}
-.cue-text { overflow-wrap: anywhere; }
-.cue.is-empty { color: var(--ink-dim); grid-template-columns: 1fr; }
-.cues-bad  .cue-time { color: var(--verdict-loss); }
-.cues-good .cue-time { color: var(--verdict-win); }
 
 /* ── Moments ─────────────────────────────────────────────────────────── */
 
@@ -1255,28 +1409,195 @@ main { min-height: 0; position: relative; }
 .build-list li[data-type="expansion"] .n { color: var(--verdict-win); }
 .build-list .n { overflow-wrap: anywhere; }
 
-/* ── Heroes ──────────────────────────────────────────────────────────────
-   Portrait, level, skill order, final items. The summary has carried all of
-   it since day one. Identity icons (which hero, which skill, which item) are
-   the game's own art from the CDN; everything else stays carved. */
+/* ── The build card ──────────────────────────────────────────────────────
+   The site's `.site-build-card` shape, in the desktop's carved register. One
+   card per seat: heroes with their skill grid, key units, upgrades, and the
+   timings that define the build.
 
-.heroes { display: grid; grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr)); gap: var(--sp-4); }
+   This replaced a hero-card stack plus a 16-row chronological list per player
+   — about two screens of column for a build the site fits in a card. The list
+   moved to Full details rather than being deleted.
 
-.hero-card {
-  margin-bottom: var(--sp-3);
-  padding: var(--sp-3);
+   Identity icons (which hero, which skill, which unit, which upgrade) are the
+   game's own art from the CDN, because knowing which is exactly what the art
+   is for. Everything around them stays carved. */
+
+.bc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: var(--sp-3);
+}
+
+.bc {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
   background: var(--app-well);
   border: 1px solid var(--app-line);
   border-radius: var(--radius-sm);
   box-shadow: var(--cut-in);
 }
-.hero-card:last-child { margin-bottom: 0; }
+.bc .player-title { margin: 0; }
 
-.hero-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); }
-.hero-portrait { width: var(--ico-md); height: var(--ico-md); }
-.hero-id { display: grid; gap: 1px; }
-.hero-id b { font-size: var(--fs-sm); }
-.hero-id .hint { margin: 0; }
+/* Label on the LEFT, not above. Four sections with a heading row each cost
+   four rows of pure furniture — the card measured 587px against a 478px tab
+   body, and 60 of the excess was section labels. This is the same
+   label-beside-strip shape `.icon-strip` already uses elsewhere in the app. */
+/* 5.6rem, not 4.4: "UPGRADES" is the longest label in the set and at 4.4 it
+   broke mid-word across two lines as "UPGRADE / S". */
+.bc-sec {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-2);
+}
+.bc-label {
+  padding-top: 9px;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+/* Heroes wrap as whole cells. A hero split across two lines from its own
+   skills is unreadable. */
+/* Each hero is its own small panel. Without separation the skill icons of one
+   hero and the item icons of the next run together into a single strip and the
+   card reads as a pile of art — the ordinal badge alone is not enough once a
+   hero can carry six items.
+
+   A panel rather than a rule between cells: a third hero wraps to a second row
+   on a narrow card, and with `align-items: stretch` the divider on the last
+   hero of row one then ran the full height of BOTH rows, pointing at nothing.
+   A panel wraps correctly by construction. */
+.bc-heroes-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-2); }
+.bc-hero {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-1);
+  justify-items: start;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+}
+
+.bc-hero-portrait { position: relative; }
+.bc-portrait-img { width: var(--ico-lg); height: var(--ico-lg); }
+/* Level rides the portrait. A hero's face and its final level are one fact,
+   and a line of its own for "Level 5" costs a row per hero. */
+.bc-hero-lvl {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 20px;
+  padding: 0 3px;
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border: var(--outline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut);
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.bc-hero-ord {
+  position: absolute;
+  left: -2px;
+  top: -8px;
+  padding: 0 4px;
+  background: var(--app-bg);
+  border-radius: var(--radius-pill);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+}
+
+.bc-skills { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.bc-skill { position: relative; display: inline-flex; }
+.bc-skill-img { width: var(--ico-sm); height: var(--ico-sm); }
+.bc-skill-lvl {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 15px;
+  background: rgba(10, 7, 4, 0.86);
+  border-radius: 3px;
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-items { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.bc-item-img { width: var(--ico-sm); height: var(--ico-sm); }
+
+/* Units carry their name, because a strip of six portraits is unreadable to
+   anyone who does not already know every unit by its art.
+
+   The name sits BESIDE the icon, not under it. Under it, in a 4.4rem column,
+   "Troll Headhunter" is three wrapped lines — the units section measured 226px
+   of a 382px tab body, more than the heroes it is supposed to support. Beside
+   it, a unit is one 36px row and the section is 87px. The site card stacks
+   because it has a curated short-name table; a replay gives us the parser's
+   full display name and nothing shorter. */
+.bc-units { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.bc-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding-right: var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  color: var(--ink-2);
+  font-size: var(--fs-min);
+}
+.bc-unit-img { width: var(--ico-sm); height: var(--ico-sm); }
+.bc-unit-name { overflow-wrap: anywhere; }
+
+.bc-ups { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.bc-up { position: relative; display: inline-flex; }
+.bc-up-img { width: var(--ico-sm); height: var(--ico-sm); }
+/* Only where levels exist. Every upgrade showing "1" stops the ones that
+   reached 3 from standing out. */
+.bc-up-lvl {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 15px;
+  background: rgba(10, 7, 4, 0.86);
+  border-radius: 3px;
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.bc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bc-chip[data-kind="expo"]    { color: var(--verdict-win); }
+.bc-chip[data-kind="no-expo"] { color: var(--ink-faint); }
+.bc-chip[data-kind="tier"]    { color: var(--ink-2); }
 
 .icon-strip { display: flex; align-items: flex-start; gap: var(--sp-2); margin-top: var(--sp-2); }
 .strip-label {
@@ -1302,6 +1623,66 @@ main { min-height: 0; position: relative; }
 .chart-block { margin-bottom: var(--sp-4); }
 .chart-holder { min-width: 0; }
 .chart-holder svg { display: block; width: 100%; height: auto; }
+
+/* ── The viewer's resource charts ────────────────────────────────────────
+   Food, gold lost, lumber lost — client/js/ResourceCharts.js, drawn by
+   css/vendor/dominance.css, the same stylesheet the viewer loads. What is
+   here is the housing and the one thing the viewer does not need: a legend.
+   In the viewer the player colours are already established by the match header
+   above the panel; nothing establishes them here. */
+
+/* Four charts stacked is 710px of a 382px tab body. Side by side they are the
+   height of the taller column, which fits — and a resource plot does not need
+   1200px of width to be read, it needs enough to see the shape. Stacks again
+   below 1000px, where two columns would be 430px each and the axis labels start
+   colliding. */
+@media (min-width: 1000px) {
+  .economy-pane {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--sp-4);
+  }
+  .economy-pane > .builds { grid-column: 1 / -1; }
+}
+
+.rc-panel { margin-bottom: var(--sp-4); }
+.economy-pane .rc-panel,
+.economy-pane .chart-block { margin-bottom: 0; }
+.rc-host {
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+/* The viewer's chart titles are 10px, below this app's 0.8rem floor. Every
+   other rule in this file holds that floor and these are titles rather than
+   axis captions, so they come up to it. */
+.rc-host .rcp-chart-title { font-size: var(--fs-min); color: var(--ink-dim); }
+/* The chart's own title and hint, same reason. */
+.dom-panel .dmc-title-label,
+.dom-panel .dmc-title-hint { font-size: var(--fs-min); }
+
+/* ── The dominance readout ───────────────────────────────────────────────
+   The two numbers, riding the chart's existing title row so they cost no
+   height. This is the whole of what the deleted gauge carried that the plot
+   does not, and each number takes its player's line colour so the readout and
+   the plot read as one instrument. */
+.dom-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.dom-readout-v { font-size: var(--fs-lg); font-weight: 800; }
+.dom-readout-sep { color: var(--ink-faint); font-style: normal; }
+.dom-readout-t {
+  min-width: 3.4rem;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-align: right;
+}
 
 .ci-chart { background: var(--app-well); border: 1px solid var(--app-line); border-radius: var(--radius-sm); }
 .ci-chart-grid { stroke: var(--app-line); stroke-width: 1; }
@@ -1534,6 +1915,67 @@ main { min-height: 0; position: relative; }
 .btn-primary:hover { background: linear-gradient(180deg, #8a6729, #6a4d1d); }
 
 .btn-sm { min-height: var(--ico-sm); padding: 0 var(--sp-3); font-size: var(--fs-min); }
+
+/* ── Open in WC3V Viewer ─────────────────────────────────────────────────
+   RESERVED. One control, one class, one place: the game report header. It is
+   the only thing in this app that leaves it — everything else reads a file on
+   your machine, and this hands the replay to the real 3D viewer over loopback.
+   Nothing else may use `.btn-viewer`, and nothing else may put the wordmark
+   inside a control.
+
+   It is the one place the navy chrome is allowed below `main`. The rule at the
+   top of this file is that navy stops at `main`, and the exception is
+   deliberate rather than an oversight: this button is a piece of the site
+   wearing site colours, sitting inside the app, which is exactly what it does
+   when you press it. Everything around it stays warm, so it cannot be mistaken
+   for one more carved button — which is the entire point. */
+
+.btn-viewer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: var(--ico-md);
+  padding: 0 var(--sp-4);
+  /* The site's navy, lifted at the top edge the way its own chrome is. */
+  background: linear-gradient(180deg, #253048, #18202f);
+  border: 1px solid #3d4c6b;
+  border-radius: var(--radius-sm);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(0, 0, 0, 0.5);
+  color: #cdd6e6;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.btn-viewer:hover {
+  background: linear-gradient(180deg, #2c3a56, #1d2739);
+  border-color: var(--accent);
+  color: #e8eefb;
+}
+.btn-viewer:active { box-shadow: var(--cut-in); }
+
+.btn-viewer-lead, .btn-viewer-tail { color: inherit; }
+
+/* The canonical lockup: same construction as .wordmark in the app bar and
+   .site-wordmark on the site. Weight 900, tight, the 3 in --accent. Built from
+   elements rather than a string so it cannot be reproduced by accident. */
+.btn-viewer-mark {
+  font-weight: 900;
+  font-size: 1.06em;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+.btn-viewer-three { color: var(--accent); }
+
+/* No glow anywhere in this app, so the reserved look is carried by hue and
+   depth. The one motion it gets is the same as everything else. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-viewer { transition: none; }
+}
 
 /* Selected state for the segmented theme/size pickers. --dom-gold, not
    --gold: this is a warm surface, and --gold is the navy half's achievement
@@ -1810,8 +2252,10 @@ main :focus-visible,
 /* ── Narrow windows ──────────────────────────────────────────────────── */
 
 @media (max-width: 1040px) {
-  .view-games { grid-template-columns: 18rem 1fr; }
-  :root { --rail-w: 18rem; }
+  /* The report is full width at every size now, so there is no rail to
+     narrow. What a narrow window costs is quick-nav chips, and they scroll. */
+  .detail-col { padding: var(--sp-3); }
+  .bc-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ── Short windows ───────────────────────────────────────────────────────
@@ -1827,5 +2271,30 @@ main :focus-visible,
     padding: var(--sp-1) var(--sp-3);
   }
   .grade-cell { padding: 2px var(--sp-2); }
-  .report-body { padding: var(--sp-3); }
+  .report-body { padding: var(--sp-2); }
+
+  /* Story is the default tab and it must not scroll, so the frame above it
+     gives up what it can spare. Nothing is removed and no type gets smaller —
+     these are all leading, padding and control height.
+
+     The measured budget at 900x600 WITH a live match, which is the worst case
+     because the mode switch costs another 38px: main 507, gamebar 63,
+     detail-col 444, and after padding, gaps, the switch, the verdict band, the
+     grade rail and the tab strip the body is what is left. Every pixel below
+     is one Story gets back. */
+  .btn-viewer { min-height: var(--ico-sm); }
+  .verdict-read { margin-top: var(--sp-1); }
+  .verdict-head { margin-bottom: 0; }
+  .st-tile { padding: var(--sp-1) var(--sp-2); }
+  .story-pane > .hint { margin: 0; }
+  .dom-panel { margin-bottom: var(--sp-1); }
+  .st-grid { margin-bottom: var(--sp-1); }
+  .report-body { padding: var(--sp-2) var(--sp-2) var(--sp-1); }
+  /* 11vh is 66px here, and the dashboard is 10px short of fitting with it. The
+     plot is still legible at 56 and the alternative is the tile row going
+     under the fold on the app's default tab. */
+  .dom-panel .dmc-svg { height: 56px; }
+  /* The rail's five numbers are read at a glance, not compared digit by
+     digit, so they give up a size step before the tab body gives up a row. */
+  .grade-v { font-size: var(--fs-lg); }
 }

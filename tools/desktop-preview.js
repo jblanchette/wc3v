@@ -28,6 +28,7 @@ const zlib = require('zlib');
 
 const SummaryExtract = require('../client/js/SummaryExtract');
 const MomentsExtract = require('../client/js/MomentsExtract');
+const SeriesExtract = require('../client/js/SeriesExtract');
 
 const ROOT = path.resolve(__dirname, '..');
 const REPLAY_DIR = path.join(ROOT, 'client', 'replays');
@@ -64,7 +65,7 @@ const buildSummary = (out, key, playedAt) => {
   const worldNeutralGroups = (out.world && out.world.neutralGroups) || null;
   const summary = {
     key,
-    schemaVersion: 3,
+    schemaVersion: 4,
     savedAt: Date.now(),
     playedAt,
     patchVersion: (out.replay && out.replay.subheader && out.replay.subheader.version) || null,
@@ -75,6 +76,11 @@ const buildSummary = (out, key, playedAt) => {
     durationMs,
     neutralCamps: SummaryExtract.extractNeutralCamps(worldNeutralGroups),
     moments: MomentsExtract.extractMoments(out),
+    // Schema v4. Only replays re-parsed since the dominance engine landed
+    // carry a series, so a chunk of client/replays yields null here and
+    // exercises the desktop's "no dominance for this game" path for free.
+    dominance: SeriesExtract.extractDominance(out),
+    resources: SeriesExtract.extractResources(out),
     players: {}
   };
   const combat = MomentsExtract.extractCombat(out);

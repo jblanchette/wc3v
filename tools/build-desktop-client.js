@@ -50,13 +50,32 @@ const SHARED_JS = [
   'GameReport.js',
   // Pure SVG-string chart factories (no DOM) — the desktop's economy/army
   // charts are the same code the site's compare modal draws with.
-  'CompareCharts.js'
+  'CompareCharts.js',
+  // Packs the dominance and resource time series into a stored summary, and
+  // unpacks them back into the shape the three viewer widgets below expect.
+  'SeriesExtract.js',
+  // The viewer's OWN chart widgets, not lookalikes. Both are mounted from data
+  // rather than from a viewer: they take setPlayers() arrays and ignore the
+  // constructor argument, so the desktop passes null for the viewer.
+  //
+  // DominanceBar.js is deliberately NOT here. The tug-of-war gauge was in the
+  // report frame for one revision and was cut: 58px of chrome with its own
+  // chassis and impact-FX engine, designed for a game being watched live under
+  // a match header, where the only thing a finished-game report wanted from it
+  // was the pair of numbers. Those are a readout on the chart's title row now.
+  'DominanceChart.js',
+  'ResourceCharts.js'
 ].map(f => path.join(ROOT, 'client', 'js', f));
 
 // The site's design token layer. The desktop app is styled from the SAME
 // tokens as the web client rather than growing a second design system —
 // desktop/src-frontend/css/app.css consumes these and defines nothing itself.
 const TOKENS_CSS = path.join(ROOT, 'client', 'css', 'tokens.css');
+
+// The stylesheet for the three widgets above, split out of main.css for
+// exactly this reason. Copying the rules into app.css instead would be a
+// second copy of 674 lines of chrome, and it would drift.
+const DOMINANCE_CSS = path.join(ROOT, 'client', 'css', 'dominance.css');
 
 // The site's favicons, so the window and the tab it came from carry the same
 // mark. Deliberately NOT client/assets/wc3icons/ — that is 7.5 MB of jpgs that
@@ -203,6 +222,11 @@ const main = () => {
   const cssVendorDir = path.join(DIST, 'css', 'vendor');
   fs.mkdirSync(cssVendorDir, { recursive: true });
   fs.copyFileSync(TOKENS_CSS, path.join(cssVendorDir, 'tokens.css'));
+  if (!fs.existsSync(DOMINANCE_CSS)) {
+    console.error(`Shared stylesheet missing: ${path.relative(ROOT, DOMINANCE_CSS)}`);
+    process.exit(1);
+  }
+  fs.copyFileSync(DOMINANCE_CSS, path.join(cssVendorDir, 'dominance.css'));
 
   for (const src of BRAND_FILES) {
     if (!fs.existsSync(src)) {

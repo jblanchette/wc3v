@@ -153,8 +153,40 @@
       svg.appendChild(cursor);
 
       this._el.appendChild(wrapper);
-      this._chart = { svg, cursor, playerLines, xOf, yOf };
+      this._chart = { svg, cursor, playerLines, xOf, yOf, wrapper };
       this.setCursor(0);
+
+      // preserveAspectRatio="none" is what lets the plot fill any panel width,
+      // and it stretches the momentum dots with it. In the viewer's ~320px
+      // insights panel that is a 1.26x squash nobody notices; in the desktop
+      // app's full-width report it is nearly 4x, and the dots read as lozenges.
+      //
+      // Lines and strokes are already immune via non-scaling-stroke. The dots
+      // are shapes, so they get a compensating scaleX about their own centre,
+      // recomputed whenever the element resizes.
+      this._fitDots();
+      if (typeof ResizeObserver !== 'undefined') {
+        this._ro = new ResizeObserver(() => this._fitDots());
+        this._ro.observe(svg);
+      }
+    }
+
+    _fitDots () {
+      const c = this._chart;
+      if (!c) return;
+      const r = c.svg.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      // How much wider each viewBox unit renders horizontally than vertically.
+      const stretch = (r.width / CHART_W) / (r.height / CHART_H);
+      c.wrapper.style.setProperty('--dmc-dot-xc', (1 / stretch).toFixed(4));
+    }
+
+    // Callers that tear the chart down own this. Only the ResizeObserver
+    // outlives the DOM, and only because nothing else was holding it.
+    destroy () {
+      if (this._ro) { this._ro.disconnect(); this._ro = null; }
+      this._chart = null;
+      if (this._el) this._el.innerHTML = '';
     }
 
     _sampleIdxAt (samples, t) {
@@ -166,6 +198,35 @@
         else hi = mid - 1;
       }
       return lo;
+    }
+
+    // Interpolated score per player at t, in setPlayers order. Null for a
+    // player with no samples.
+    //
+    // Consumers that show the numbers beside the plot need them from whatever
+    // owns the series, and that is this class. The desktop app reads them for
+    // the readout on its chart title, where the tug-of-war gauge used to be the
+    // only thing carrying them.
+    //
+    // Event pairs (t-1, t) in the series make real discontinuities survive
+    // interpolation as steps rather than being smoothed into slopes — the same
+    // property DominanceBar's own lerp relies on.
+    scoresAt (gameTime) {
+      const t = Math.max(0, Math.min(this._totalT, gameTime));
+      return this._players.map((p) => {
+        const s = p.samples;
+        if (!s || !s.length) return null;
+        if (t <= s[0].t) return s[0].score;
+        const last = s[s.length - 1];
+        if (t >= last.t) return last.score;
+        const i = this._sampleIdxAt(s, t);
+        const a = s[i];
+        const b = s[i + 1];
+        if (!b) return a.score;
+        const span = b.t - a.t;
+        if (span <= 0) return b.score;
+        return a.score + (b.score - a.score) * ((t - a.t) / span);
+      });
     }
 
     setCursor (gameTime) {
@@ -214,6 +275,17 @@
       }
     }
   }
+
+  // The plot area as fractions of the rendered width. preserveAspectRatio is
+  // "none", so the viewBox stretches to the element and these fractions hold at
+  // any size. Published because a consumer that wants to turn a pointer
+  // position into a game time (the desktop app scrubs this chart) would
+  // otherwise have to hardcode the margins and drift when they change.
+  DominanceChart.GEOMETRY = {
+    width: CHART_W,
+    marginLeft: CHART_MARGIN.left,
+    marginRight: CHART_MARGIN.right
+  };
 
   window.DominanceChart = DominanceChart;
 })();

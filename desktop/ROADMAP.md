@@ -214,11 +214,12 @@ version whose update path cannot be tested.
      §6.
 4. **Run the backfill once** (§2) for the real end-to-end rate. It also settles
    profile identity permanently as a side effect.
-   - **Do this only on a build carrying schema v3** (§11). The `combat` ledger
-     comes out of the full parse and cannot be recovered from a stored summary,
-     so a backfill run on an older build means 3,000 games that each need
-     re-parsing to get it. v3 is in as of Aug 2026. Check `SCHEMA_VERSION` in
-     `store.js` before starting the run rather than after.
+   - **Do this only on a build carrying schema v4** (§11, §11a). Four blocks —
+     `moments`, per-player `combat`, `dominance` and `resources` — come out of
+     the full parse and cannot be recovered from a stored summary, so a backfill
+     run on an older build means 3,000 games that each need re-parsing to get
+     them. v4 is in as of Aug 2026 and costs 1.7 KB gzipped a game. Check
+     `SCHEMA_VERSION` in `store.js` before starting the run rather than after.
 5. **Queue one real ladder game with W3Champions lookups on** (§12) and watch
    whether Next game appears while the loading screen is still up. That is
    the only thing that tells you whether the feature is worth having.
@@ -330,6 +331,61 @@ of 50 with real spread either side. **Re-run this after touching any constant.**
 `tools/test-game-report.js` asserts the shape, and only a corpus pass tells you
 whether the labels still mean anything.
 
+### 11a. The charts layer: BUILT (Aug 2026)
+
+The report draws the **viewer's own** chart widgets rather than lookalikes. This
+is the same argument the overlay split settled: a second implementation of an
+instrument is a second thing that can disagree with the first about the same
+game.
+
+- [x] **`client/js/SeriesExtract.js`**, dual-runtime, same contract as
+      SummaryExtract / MomentsExtract / GameReport. Packs `dominanceSeries` and
+      `resourceSeries` into a stored summary as **parallel arrays** and unpacks
+      them back into the shape the widgets take.
+      - Arrays rather than arrays-of-objects because these are by far the
+        largest thing in a summary: `{"t":600000,"score":52.4}` is 26 bytes
+        where `600000,52.4` is 11. A 40-minute game is ~240 samples per player
+        per series.
+      - Dominance stores `t` explicitly — its samples are **not** on a fixed
+        grid, because DominanceSeries emits pre/post pairs around momentum
+        events so a hero death reads as a step rather than a slope. Resources
+        are on a 10s grid, verified rather than assumed: a ragged series falls
+        back to explicit timestamps instead of silently mis-timing every chart.
+      - Dropped on purpose: the dominance `str`/`mom`/`c{}` component
+        breakdown (nothing renders it) and `foodLost` (nothing charts it).
+- [x] **`client/css/dominance.css`**: the gauge, the dominance chart and the
+      resource charts, split out of `main.css` and loaded by `viewer.html`,
+      `dominance-lab.html` and the desktop app. Every other page that loads
+      `main.css` got 674 lines lighter, since none of them ever mounted these.
+- [x] **`js/dominance-panel.js` and `js/economy-panel.js`** mount the widgets
+      from a summary and own no drawing code. Both classes already took data
+      rather than a viewer; what they gained is small and helps both products:
+      - `GEOMETRY` published on `DominanceChart` and `ResourceCharts`, so a
+        consumer can map a pointer position back to a game time without
+        hardcoding the margins. Getting that wrong puts every seek a minute or
+        two early, which reads as the data being wrong.
+      - `DominanceChart.scoresAt(t)`, interpolated per player. The class owns
+        the samples, so a consumer showing the numbers beside the plot should
+        not carry its own copy of the lerp. This is what replaced the gauge.
+      - `spec.iconBase` on `DominanceBar.mount` also landed, with an error
+        fallback to the colour-only tile. The gauge was cut from the desktop
+        afterwards; the seam and the fallback are still an improvement to the
+        viewer, which is unchanged in behaviour.
+      - `DominanceChart._fitDots()`: `preserveAspectRatio="none"` is what lets
+        the plot fill any width, and it stretches the momentum dots with it. In
+        a 320px insights panel that is a 1.26x squash nobody notices; at full
+        report width it is nearly 4x and the dots read as lozenges. A
+        ResizeObserver writes a compensating `scaleX`.
+- [x] **Scrubbing.** There is no playback in a post-game report, so the chart
+      draws the whole game, opens at the end, and dragging it replays the
+      momentum through the cursor and the readout. Leaving without a drag puts
+      it back at the end, because a readout left at 14:20 because that is where
+      the pointer exited is reporting the wrong result for the game.
+      Double-click opens the real viewer at that second.
+      - Fixed while testing: `setPointerCapture` throws `NotFoundError` for a
+        pointer id the browser is not tracking, and with the capture call ahead
+        of the seek that throw took the whole click with it. Seek first.
+
 ### 1. Persist parses: DONE (summaries rather than full parses)
 
 - [x] Retention decision: the full `.wc3v` is **not** persisted, because 3,072 of
@@ -348,6 +404,13 @@ whether the labels still mean anything.
 - [x] Rust commands: `save_parse` (atomic temp+rename, strict key charset),
       `read_parse`, `list_parses`. All async, because Defender scans new files on
       write and a sync command would hold Tauri's main thread.
+- [x] **Schema v4 adds `dominance` and `resources`**, see §11a. Same rule again:
+      `lib/DominanceSeries.js` and `lib/ResourceSeries.js` run inside
+      `utils.buildOutputObject`, so their output exists only in a full parse.
+      Packed as parallel arrays by `client/js/SeriesExtract.js`. Measured
+      **+1.7 KB gzipped per game** (`node tools/measure-summary-v4.js`), which
+      is 26 MB across the whole 3,072-game history — well inside the retention
+      decision this design rests on.
 - [x] **Schema v3 adds per-player `combat`**, see §11. Same rule as `moments` and
       the same reason: `world.battles` exists only in a full parse. **Must be
       current before the backfill runs.**
@@ -717,6 +780,99 @@ a file browser.
         cleared what, and only 126 of 402 moments across the preview corpus
         carry coordinates. The map draws camps as terrain and locates the fights
         it can.
+
+- [x] **Charts pass (Aug 2026): the report draws the viewer's own instruments.**
+      Home carried one chart drawn specially for it (the game strip) and two
+      drawn by the compare-modal factory, while the viewer had a dominance
+      gauge, a dominance chart and three resource charts that the desktop could
+      not show at all — because the series behind them exist only in a full
+      parse and the store keeps summaries.
+      - **Schema v4** adds `dominance` and `resources` (§11a). Measured cost
+        **+1.7 KB gzipped per game**, 26 MB for the whole 3,072-game history,
+        against a v3 mean of 6.8 KB. `node tools/measure-summary-v4.js`.
+        Dominance was available on 60/60 of the sampled corpus.
+      - **`client/css/dominance.css`**, 674 lines split out of `main.css`, is
+        now loaded by `viewer.html`, `dominance-lab.html` and the desktop app.
+        Same reason overlay.css was split: a second copy is a copy that drifts.
+        Only those two pages ever mounted these widgets, so every other page
+        that loads `main.css` got 674 lines lighter.
+      - **The report frame lost its timeline band entirely.** The game strip
+        (114px) moved to **Full details**, whole, where its per-fight seek
+        buttons sit above the event list they belong to. The dominance gauge
+        took its place for one revision at 58px and was then cut as well: it is
+        chrome built for a game being watched live under a match header, and the
+        only thing it added over the plot in Story was the pair of numbers,
+        which now ride the chart's own title row. `DominanceBar.js` is not
+        shipped to the desktop. Frame: 310px → **166px** (221 with a grade
+        rail), tab body 252px → **470px**.
+      - **Tabs went 4 to 4, but different ones: Story / Build / Economy / Full
+        details.** Review is gone: its five grades had been in the frame since
+        the Home redesign, so the tab was restating what was above it. Its
+        benchmarks survived as tiles.
+      - **Story is the default and is a dashboard**, not a narrative. Dominance
+        chart, then every number the game produced as a tile — hero K/D, wipes,
+        biggest swing, the four benchmarks against your own median, peak army,
+        peak workers, T3, first tower. No prose, and no map: the map drew camps
+        as terrain and located 126 of 402 moments, which is a picture of the map
+        rather than of the game. `js/game-map.js` deleted.
+      - **Build is the site's `.site-build-card`** (`js/build-card.js`): heroes
+        with their skill grid and levels, key units, upgrades with levels, and
+        the timings that define the build. It was a hero-card stack plus a
+        16-row chronological list per player — about two screens of column for
+        something the site fits in a card. The list moved to Full details.
+      - **Economy is the viewer's `ResourceCharts`** (food, gold lost, lumber
+        lost) plus army size. The standalone workers chart is gone: the game
+        strip already drew both players' worker curves as its lane backgrounds.
+      - **The rail is gone.** A quick nav of the last 8 games in a 63px band,
+        and everything else behind a toggle that drops the full feed down over
+        the report. Not a modal — nothing is disabled, and the same click closes
+        it. The report is full width at every size.
+      - **`Open in WC3V Viewer` is a reserved control**: `.btn-viewer`, one
+        class, one place, carrying the canonical wordmark. It is the only navy
+        allowed below `main`, deliberately — it is a piece of the site sitting
+        inside the app, which is what it does when you press it.
+      - **Measured after**, at 1280x820: report frame 310px → 166px (221 with a
+        grade rail), tab body 252px → 478px. Fold audit clean: 40 games x 4
+        tabs x 2 window sizes, plus both column modes, the drawer open, Coach,
+        Stream and the Settings sheet. Zero offenders, zero console errors.
+      - **The fold audit was passing a report whose default tab scrolled.** It
+        skips anything inside `.scroll`, and `.report-body` is one, so Story
+        overflowing by 189px at 900x600 was invisible to it. TESTING.md now
+        carries a second snippet that measures the body directly, with a table
+        of what each tab is allowed to do. **Story is held to zero at both
+        sizes** — it is the default tab and the dashboard has to be on screen at
+        once. What it cost to get there:
+        - Peak workers, tier 3 and first tower dropped as tiles (they are Build
+          chips and game-strip ticks; the grid went to two rows without them).
+        - Tile columns 9.5rem → 6rem, so eight tiles are one row at 900px.
+        - Benchmark sub-lines went from "14s later than usual" to `+14s`. At
+          104px that sentence was three wrapped lines and grid row-stretch put
+          100px on every tile in the row. The full wording is on the tooltip.
+        - "Workers 5:00" → "Workers". It was the ONE label that wrapped, and
+          because grid stretches a row to its tallest cell it cost 19px on all
+          seven tiles.
+        - A `max-height: 700px` block that gives back leading, padding and
+          control height. Nothing removed, no type smaller.
+      - **Two more measured-not-guessed fixes in the same pass.** The army chart
+        was rendering **336px tall** at 1280 — CompareCharts defaults to a
+        720x200 viewBox and the holder scales it at `width:100%; height:auto`,
+        so a wide column blew up both the height and the 12px axis text (to
+        20px). Authored at 1200x200 it is ~200px with its type at the intended
+        size. And Economy's four charts went side by side above 1000px, which
+        took it from 40/40 scrolling to **0/40 at 1280x820**.
+      - Build still scrolls on content-heavy games (three heroes, eight units,
+        upgrades and mercs is genuinely a lot), but its section labels moved
+        beside their rows rather than above them, which was 60px of pure
+        furniture per card, and unit names moved beside their icons rather than
+        under them, which was another 139px.
+      - **Two real bugs this surfaced.** `.detail-col`'s "fixed frame" was a
+        five-row grid template ending in `1fr`; any missing band (no grade rail
+        on a game you were not in) put the scroller in an `auto` row and the
+        whole column grew. It is flex now, keyed on `.scroll`. And
+        `heroBuilds` carries a Blademaster's Mirror Image illusions as extra
+        level-1 heroes — the hero-card stack hid them down a scroller, and a
+        card put four Blademasters side by side. Deduped by itemId at render
+        (`build-card.js`), because every summary already stored has them.
 
 - [x] **Copy pass (Aug 2026).** Every screen lost its explanatory paragraphs.
       Settings had four `lead` paragraphs and eight `hint` blocks describing what

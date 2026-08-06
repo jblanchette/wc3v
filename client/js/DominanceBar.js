@@ -121,6 +121,7 @@
       this._anchor = null;
       this._mountId = null;
       this._onScore = null;
+      this._iconBase = '/assets/wc3icons/';
 
       // Impact-FX state. Wall-clock timing; game-time only for crossings.
       this._fx = { cursor: 0, lastGameTime: null, events: [], glyphs: [], rings: [], dtAvg: null, fast: false };
@@ -231,6 +232,10 @@
       this._anchor = spec.anchor || null;
       this._mountId = spec.id || null;
       this._onScore = spec.onScore || null;
+      // Where the identity-cap art is served from. The site has it at the site
+      // root; the desktop app ships no wc3icons and reads them off the CDN.
+      // Mount context, like the container — not viewer coupling.
+      this._iconBase = spec.iconBase || '/assets/wc3icons/';
 
       // Merged FX event list, chronological, tagged with side index.
       const merged = [];
@@ -295,16 +300,25 @@
 
         const tile = document.createElement('span');
         tile.className = 'dom-ident';
+        const blank = () => {
+          tile.textContent = '';
+          tile.classList.add('dom-ident-blank');
+          tile.style.borderColor = p.color;
+        };
         if (p.iconId) {
           const img = document.createElement('img');
           img.className = 'dom-ident-img';
-          img.src = '/assets/wc3icons/' + p.iconId + '.jpg';
+          img.src = this._iconBase + p.iconId + '.jpg';
           img.alt = '';
           img.style.borderColor = p.color;
+          // Offline, or an id the art set has no file for. The coloured blank
+          // tile still carries the identity; a broken-image glyph carries
+          // nothing. The desktop app loads this art off the CDN, so "offline"
+          // is a real state there rather than a theoretical one.
+          img.addEventListener('error', blank);
           tile.appendChild(img);
         } else {
-          tile.classList.add('dom-ident-blank');
-          tile.style.borderColor = p.color;
+          blank();
         }
         cap.appendChild(tile);
 

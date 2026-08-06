@@ -228,5 +228,15 @@
     }
   }
 
+  // The plot area as fractions of the rendered width — see the same block in
+  // DominanceChart.js. preserveAspectRatio is "none", so these hold at any
+  // element size, and a consumer mapping a pointer position back to a game time
+  // does not have to hardcode the margins.
+  ResourceCharts.GEOMETRY = {
+    width: CHART_W,
+    marginLeft: CHART_MARGIN.left,
+    marginRight: CHART_MARGIN.right
+  };
+
   window.ResourceCharts = ResourceCharts;
 })();
