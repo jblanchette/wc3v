@@ -983,6 +983,12 @@ update process is documented in `desktop/RELEASING.md`.
       implying they are current.
 - [x] Endpoint points at `https://cdn.wc3v.com/desktop/latest.json` and **one
       upgrade has been walked end to end**, 0.2.0 → 0.3.0 on 5 Aug 2026.
+- **0.7.0 published 6 Aug 2026** (the charts pass, §11a). Manifest and installer
+  verified live. Note for whoever takes it: this is the **schema v4** build, so
+  every game already in the store shows Story without a dominance chart and
+  offers "Re-read this game" until it is re-parsed. That is the on-demand
+  upgrade path working, not a fault. The tiles are all still there, because the
+  combat ledger they read from is v3.
 - [x] **The app checks on its own.** The upgrade worked, and it sat behind a
       button on the Settings screen. Nobody opens a settings screen to ask whether
       their replay parser is current, so an update nobody hears about is an update
