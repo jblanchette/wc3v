@@ -136,6 +136,13 @@ cannot test any of this, which is why it is high on the list.
       **Re-read this game** button. A game under v4 whose dominance gate refused
       the replay has no chart and says so with no button, because re-reading it
       would refuse it again. Those two states must not be confused.
+      - **Check this properly, because after a v4 build lands every game
+        already on disk is in one of these states and it is the first thing
+        anyone sees.** `node tools/desktop-preview.js --games=12 --stale=4`
+        makes the first four games alternate between them without needing an
+        old store. Both must keep their tiles: a pre-v4 game still has its
+        combat ledger, so hero K/D, wipes and swing are all still there. A
+        panel that goes blank is the bug.
     - **Drag across the chart.** The scores must change as you move and the
       **final** should become a clock. Let go outside the chart and it returns
       to the final score — a readout left at 14:20 is reporting the wrong result

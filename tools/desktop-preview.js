@@ -15,6 +15,12 @@
  *   node tools/build-desktop-client.js && node tools/desktop-preview.js
  *   node tools/desktop-preview.js --games=8 --me="SooooK#31962"
  *   node tools/desktop-preview.js --games=40 --w3c
+ *   node tools/desktop-preview.js --games=40 --stale=4
+ *
+ * --stale=N degrades the first N games so the schema-upgrade paths render. See
+ * the comment at the call site: they alternate between "stored before v4" and
+ * "stored under v4 but the dominance gate refused it", which need different
+ * words and only one of which is fixable by re-reading.
  *
  * --w3c tags every name and fakes a live W3Champions match, which is the only
  * way to see the scout card without queuing for a real game.
@@ -118,6 +124,9 @@ const tagged = (name) => {
   return `${name}#${1000 + h}`;
 };
 
+const staleCount = parseInt(args.stale, 10) || 0;
+let staled = 0;
+
 for (const file of files) {
   let out;
   try {
@@ -135,6 +144,31 @@ for (const file of files) {
   if (args.w3c) {
     for (const p of Object.values(summary.players)) p.name = tagged(p.name);
   }
+
+  // --stale=N degrades the first N games so the schema-upgrade paths are
+  // reachable without an old store. This matters more than it looks: after a
+  // v4 build lands, EVERY game already on a user's disk is in one of these
+  // states, and they are the first thing that person sees.
+  //
+  // Two states, two different answers, and confusing them is the bug:
+  //   pre-v4 (odd index) — the block never existed. Re-reading fixes it, so
+  //                        the panel offers the button.
+  //   gate refused (even) — stored under v4 with a null block, because
+  //                        DominanceSeries declined the replay. Re-reading it
+  //                        declines again, so it gets a statement and NO
+  //                        button.
+  if (staleCount > 0 && staled < staleCount) {
+    if (staled % 2 === 0) {
+      summary.dominance = null;
+      summary.resources = null;
+    } else {
+      summary.schemaVersion = 3;
+      delete summary.dominance;
+      delete summary.resources;
+    }
+    staled++;
+  }
+
   store[key] = zlib.gzipSync(JSON.stringify(summary)).toString('base64');
   for (const p of Object.values(summary.players)) {
     nameCounts.set(p.name, (nameCounts.get(p.name) || 0) + 1);
