@@ -2,7 +2,7 @@
 //
 // `lib/DominanceSeries.js` and `lib/ResourceSeries.js` run inside
 // `utils.buildOutputObject`, so their output exists ONLY in a full parse. The
-// desktop app keeps summaries rather than parses (ROADMAP §1), which means the
+// desktop app keeps summaries rather than parses, which means the
 // same rule `moments` and `combat` already live under applies here: extract at
 // parse time while the parse is in hand, or the data is gone until somebody
 // re-reads the replay.

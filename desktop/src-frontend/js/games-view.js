@@ -786,7 +786,7 @@
     //
     // The one control in this app that leaves it. Everything else here reads a
     // file on your machine; this hands a replay to the real 3D viewer over
-    // loopback (ROADMAP §10), and it is the single most important thing a
+    // loopback, and it is the single most important thing a
     // report can offer, so it does not look like the other buttons.
     //
     // It carries the canonical wordmark — `WC<span>3</span>V`, the same lockup

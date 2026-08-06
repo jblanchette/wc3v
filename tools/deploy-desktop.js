@@ -35,12 +35,13 @@
  * deliberately installing an old version.
  *
  * Requires: rclone with an `r2:` remote, and a build produced by
- * `npm run desktop:build` WITH the signing variables set (see RELEASING.md).
+ * `npm run desktop:build` WITH the signing variables set (see desktop/README.md).
  */
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
@@ -311,9 +312,9 @@ async function main () {
 
   if (!fs.existsSync(exePath)) {
     die(`No installer for ${version} at:\n  ${exePath}\n\n` +
-        'Run `npm run desktop:build` first (see desktop/RELEASING.md).');
+        'Run `npm run desktop:build` first (see desktop/README.md).');
   }
-  // RELEASING.md warns about this in prose and nothing has ever enforced it:
+  // The README warns about this in prose and nothing has ever enforced it:
   // an unsigned build looks completely successful and then cannot be served
   // as an update, because clients refuse a package whose signature does not
   // verify against the pubkey compiled into the binary they are running.
@@ -321,7 +322,7 @@ async function main () {
     die(`Installer exists but ${exeName}.sig does NOT:\n  ${sigPath}\n\n` +
         'That build was made without TAURI_SIGNING_PRIVATE_KEY and cannot be\n' +
         'served as an update. Set the key (its CONTENTS, not its path) and\n' +
-        'rebuild — see desktop/RELEASING.md.');
+        'rebuild — see desktop/README.md.');
   }
 
   checkNotStale(exePath);
@@ -348,6 +349,11 @@ async function main () {
   }
 
   const signature = fs.readFileSync(sigPath, 'utf8').trim();
+  // SHA-256 of the installer, published alongside the Tauri updater signature.
+  // The signature only lets the updater verify a package — it's not something
+  // a human can check by hand. sha256 is: something download.html can show
+  // and a user can verify with `certutil -hashfile` / `shasum` themselves.
+  const sha256 = crypto.createHash('sha256').update(fs.readFileSync(exePath)).digest('hex');
   const manifest = {
     version,
     notes,
@@ -355,6 +361,7 @@ async function main () {
     platforms: {
       'windows-x86_64': {
         signature,
+        sha256,
         url: `${PUBLIC}/${exeName}`
       }
     }
@@ -367,6 +374,7 @@ async function main () {
   const sizeMb = (fs.statSync(exePath).size / (1024 * 1024)).toFixed(1);
   console.log(`  installer: ${exeName} (${sizeMb} MB)`);
   console.log(`  signature: ${signature.slice(0, 24)}… (${signature.length} chars)`);
+  console.log(`  sha256:    ${sha256}`);
   if (isDryRun) console.log('\n(dry run — no upload)');
 
   // Installer first. If the manifest went up first and the upload of the exe

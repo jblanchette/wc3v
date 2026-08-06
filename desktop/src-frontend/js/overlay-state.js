@@ -1,5 +1,5 @@
 // Overlay state: session W/L/streak plus the last finished game, published to
-// the Rust loopback server, which relays it to OBS over SSE. (ROADMAP §4)
+// the Rust loopback server, which relays it to OBS over SSE.
 //
 // Raw summaries get kept and views derived at publish time, so changing the
 // profile name re-orients past session games instead of freezing verdicts

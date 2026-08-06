@@ -1,6 +1,6 @@
 // Parse store: the app's memory of every game it has ever parsed.
 //
-// Retention decision (ROADMAP §1). The full .wc3v parse is not persisted,
+// Retention decision. The full .wc3v parse is not persisted,
 // because thousands of them is gigabytes. What survives is one gzipped summary
 // per unique game, a few KB, keyed by content, under
 // <app_data>/replays/<size>-<xxh3>.summary.json.gz. The raw .w3g on disk stays

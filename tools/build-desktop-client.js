@@ -100,7 +100,7 @@ const RESOURCE_MAPS = path.join(ROOT, 'desktop', 'src-tauri', 'resources', 'maps
 //
 // All 202 maps is 318 MB, which is not an installer. This set covers the
 // games a ladder player actually produces; anything outside it still parses,
-// it just needs the map fetched first (ROADMAP §7).
+// it just needs the map fetched first.
 const LADDER_MAP_PREFIXES = [
   'Amazonia', 'AutumnLeaves', 'ConcealedHill', 'EchoIsles', 'Hammerfall',
   'LastRefuge', 'NorthernIsles', 'SecretValley', 'ShatteredExile',

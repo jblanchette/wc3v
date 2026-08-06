@@ -1,5 +1,5 @@
 // Backfill engine: parse every playable replay on disk, in the background,
-// resumable. (ROADMAP §2)
+// resumable.
 //
 // Decisions on record:
 //   • 2 workers, and no detection of whether WC3 is running. No process

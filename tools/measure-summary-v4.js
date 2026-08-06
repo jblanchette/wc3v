@@ -1,7 +1,7 @@
 /**
  * measure-summary-v4.js — what schema v4 costs a stored summary.
  *
- * The desktop keeps one gzipped summary per game and nothing else (ROADMAP
+ * The desktop keeps one gzipped summary per game and nothing else (see desktop/README.md
  * §1), so every field added to it is paid for thousands of times over. v4 adds
  * the dominance and resource time series, which are by far the largest things
  * in the file, and "a few KB" was the retention decision the whole design rests

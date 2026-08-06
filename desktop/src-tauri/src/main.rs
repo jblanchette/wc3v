@@ -485,7 +485,7 @@ async fn read_parse(key: String, app: tauri::AppHandle) -> Result<tauri::ipc::Re
     .map_err(|e| format!("read failed: {e}"))?
 }
 
-// ── Overlay (ROADMAP §4) ────────────────────────────────────────────────────
+// ── Overlay ────────────────────────────────────────────────────
 
 /// The webview pushes fresh overlay state here; the loopback server relays it
 /// to OBS over SSE. Size-capped so a bug cannot balloon every broadcast.
@@ -575,7 +575,7 @@ fn open_player_view(
         .map_err(|e| e.to_string())
 }
 
-// ── Shell: first-run, autostart, updates (ROADMAP §6) ───────────────────────
+// ── Shell: first-run, autostart, updates ───────────────────────
 
 /// Seed the map cache from maps bundled into the installer. Runs once per
 /// install: a fresh install can parse ladder games with no extra steps and no
@@ -643,7 +643,7 @@ fn set_autostart(enabled: bool, app: tauri::AppHandle) -> Result<bool, String> {
 /// Check for an update and install it if the user consents. Returns a
 /// description of what happened so the UI can report honestly, including
 /// "updates aren't configured for this build", which is the state of any
-/// build made without an updater endpoint (see RELEASING.md).
+/// build made without an updater endpoint (see desktop/README.md).
 #[tauri::command]
 async fn check_for_update(app: tauri::AppHandle, install: bool) -> Result<serde_json::Value, String> {
     use tauri_plugin_updater::UpdaterExt;
