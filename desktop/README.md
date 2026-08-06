@@ -79,10 +79,11 @@ The frontend is a coordinator (`js/app.js`) plus one module per concern: `store`
 (parse store and corpus), `identity`, `games-view` (feed and report),
 `profile-view`, `stream-view`, `settings-view`, `replay-index` (content key to
 file), `backfill`, `overlay-state`, `w3c` (ladder client) and `scout` (the live
-match poller). The report's graphics come from `game-strip` and `build-card`,
-which are pure builders, plus `dominance-panel` and `economy-panel`, which mount
-the viewer's OWN widgets (`DominanceBar`, `DominanceChart`, `ResourceCharts`)
-rather than redrawing them — see "Charts" below.
+match poller). The report's graphics come from `build-card`, a pure builder,
+plus `dominance-panel` and `economy-panel`, which mount the viewer's OWN widgets
+(`DominanceChart`, `ResourceCharts`) rather than redrawing them — see "Charts"
+below — and `chart-panel`, which wraps those two plus a `CompareCharts` army
+plot into one slot with three toggle chips.
 
 Each parsed game persists as one gzipped summary under
 `<app_data>/replays/<size>-<xxh3>.summary.json.gz`, single-digit KB per game,
@@ -124,6 +125,15 @@ to them is small and benefits both products: a published `GEOMETRY` so a pointer
 position can be mapped back to a game time, `scoresAt(t)` so the numbers can be
 shown beside the plot, and a compensating `scaleX` on the momentum dots so a
 full-width chart draws circles instead of lozenges.
+
+`js/chart-panel.js` is the third layer and owns no drawing either. It puts the
+two panels and a `CompareCharts` army plot behind one set of toggle chips, so
+the three readings of a game share a slot instead of a chart and a whole tab.
+Each mode is built on first use and kept — rebuilding `DominanceChart` on every
+chip click would churn its ResizeObserver — and the panel's `destroy()` releases
+every mode it built, including the ones parked behind another chip. Whoever
+mounts it calls that; in `games-view.js` it is `dropChart()` at the top of
+`renderDetail`.
 
 **`DominanceBar`, the tug-of-war gauge, is deliberately not shipped here.** It
 sat in the report frame for one revision: 58px of chrome with its own chassis,

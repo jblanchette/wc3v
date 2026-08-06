@@ -7,9 +7,13 @@
 // chronological list per player — the same facts down a column two screens
 // tall, in a scroller ~150px high.
 //
-// The chronological list is not deleted, it moved to Full details, which is
-// what that tab is for. This card answers "what was the build"; the list
-// answers "in what order, exactly".
+// The chronological list is not deleted, it sits under the cards on the same
+// tab. This card answers "what was the build"; the list answers "in what
+// order, exactly".
+//
+// `heroesOf` and `keyUnits` are exported as well as used here, because the
+// report frame draws the same two rows in miniature and the illusion dedupe
+// below is not optional.
 //
 // The site builds this with template strings from a curated manifest. Here it
 // is DOM built from a stored summary, because every string on the card came out
@@ -52,11 +56,23 @@
   // in the same row with the same art. Anything the card cannot tell apart is
   // one entry, because two identical chips read as a bug.
   const keyUnits = (p) => {
+    // `t2Units` and `t3Units` are "distinct units first seen inside this tier",
+    // and a hero trained at tier 2 is one of them — so the units row printed
+    // Shadow Hunter and Tauren Chieftain next to the Grunts, with the same
+    // heroes already drawn above it at full level with their skills.
+    // `buildPreview` does not have the problem: it types heroes separately.
+    const heroIds = new Set();
+    for (const h of (p.heroBuilds || [])) {
+      if (h && h.itemId) heroIds.add(h.itemId);
+      if (h && h.name) heroIds.add(String(h.name).toLowerCase());
+    }
+
     const seen = new Set();
     const out = [];
     const take = (id, name) => {
       const nameKey = String(name || '').toLowerCase();
       if (!id || seen.has(id) || (nameKey && seen.has(nameKey))) return;
+      if (heroIds.has(id) || (nameKey && heroIds.has(nameKey))) return;
       seen.add(id);
       if (nameKey) seen.add(nameKey);
       out.push({ itemId: id, name: name || '' });
@@ -123,6 +139,13 @@
   };
 
   window.BuildCard = {
+    // Both derivations are shared. The frame's per-player strips draw the same
+    // heroes and the same units in 36px, and re-deriving them there would mean
+    // a second copy of the Mirror Image dedupe that nobody would remember to
+    // keep in step.
+    heroesOf,
+    keyUnits,
+
     // p: a summary player. opts: { icon(itemId), title(node), isYou }
     //
     // `icon` is injected rather than imported so this file holds no second copy
@@ -220,6 +243,29 @@
           // makes the ones that reached 3 stop standing out.
           if (u.level > 1) chip.appendChild(node('span', 'bc-up-lvl', String(u.level)));
           chip.title = `${u.name || 'Upgrade'}${u.level > 1 ? ` ${u.level}` : ''}`;
+          row.appendChild(chip);
+        }
+        sec.appendChild(row);
+        card.appendChild(sec);
+      }
+
+      // ── Bought ───────────────────────────────────────────────────────────
+      //
+      // Shop purchases, in the order they were made and not deduped: two
+      // potions are two decisions. The hero rows above carry the FINAL bag,
+      // which is a different question — what was kept, not what was spent on.
+      const bought = (p.itemPurchases || []).filter(i => i.itemId);
+      if (bought.length) {
+        const sec = node('div', 'bc-sec');
+        sec.appendChild(node('span', 'bc-label', 'Bought'));
+        const row = node('div', 'bc-ups');
+        for (const it of bought) {
+          const chip = node('span', 'bc-up');
+          const bi = icon(it.itemId);
+          bi.classList.add('bc-up-img');
+          chip.appendChild(bi);
+          chip.title = `${it.name || 'Item'} · ${it.gameTimeFormatted || ''}` +
+            `${it.goldCost ? ` · ${it.goldCost}g` : ''}`;
           row.appendChild(chip);
         }
         sec.appendChild(row);

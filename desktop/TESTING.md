@@ -103,93 +103,141 @@ cannot test any of this, which is why it is high on the list.
     - The quick-nav chips follow the filter. Filter to losses and the chips
       should be losses.
 13. Click a game. **The right column must not scroll as a whole**, which is the
-    fold rule. Expect a fixed frame in this order: verdict and opponent, whose
-    name is a link into Coach, an all-time record chip once you have >=2 games
-    against them (clicking it opens their book), **Open in WC3V Viewer** on the
-    same row; a meta line of map, duration, opener, archetype and workers at
-    5:00; **the one-line read**; **the grade rail**; then a tab strip of
-    **Story / Build / Economy / Full details**. Only the tab body scrolls.
-    - **There is no timeline band in the frame.** The game strip is in Full
-      details and the dominance gauge was cut. If a chart appears above the
-      grade rail, something has been put back.
+    fold rule. Expect a fixed frame in this order: a verdict band, then a tab
+    strip of **Story / Build**. Only the tab body scrolls.
+    - The band is two columns. On the left: verdict and opponent, whose name is
+      a link into Coach, an all-time record chip once you have >=2 games against
+      them (clicking it opens their book), **Open in WC3V Viewer** pushed to the
+      far right of that row; a meta line of map, duration, opener, archetype and
+      workers at 5:00; then **the one-line read**.
+    - On the right: **one row per player carrying their build** — race mark, up
+      to three hero portraits with their final level on the corner, then up to
+      seven unit icons. Clicking a row opens the Build tab.
+    - **There is no grade rail.** Five scores headed Economy, Army, Hero, Map
+      control and Mechanics used to sit under the band. They are gone, not
+      moved: a 0-100 score against your own rolling median is not something a
+      bare integer can convey, and nobody could say what a 63 meant. The grading
+      still runs, and what it says out loud is the one-line read plus the
+      benchmark tiles in Story. If a row of numbered cells reappears in the
+      frame, something has been put back.
+    - **There is no timeline band in the frame either.** No game strip, no
+      dominance gauge.
     - Click the one-line read. It should take you to Story.
-    - A game you were not in has no grade rail and the verdict says "You were
-      not in this game". That is correct, and the frame must still not scroll
-      with a band missing.
-    - At 1280x820 the frame should be about 166px, 221px with a grade rail, and
-      the tab body about 470px. It was 310/252 before the charts pass.
+    - A game you were not in has no read line and the verdict says "You were not
+      in this game". The build strips are still there, because they are facts
+      about the game rather than about you. The frame must still not scroll with
+      a band missing.
+    - At 1280x820 the band should be about 96px and the tab body about 500px; at
+      900x600 the band is about 88px. It was 166/470 before this pass, and 221
+      with the rail up.
 
 13a. **Open in WC3V Viewer.** It is the only navy control below the app bar and
     the only one carrying the wordmark, with the "3" in accent blue. That is
     deliberate and reserved: if anything else in the app looks like it, that is
     a bug. Clicking it opens the game in the real viewer.
+    - It must sit hard against the right edge of the verdict row. It spent two
+      releases packed against the record chip instead, because the rule that
+      pushes it there named a class the button does not have.
 
-13b. **The grade rail**, five cells in the frame: Economy, Army, Hero, Map
-    control, Mechanics. Green for good, rust for poor, and hovering a cell gives
-    the note.
+13b. **The build strips.** Count the hero portraits: you cannot have two of the
+    same hero in Warcraft III, so two identical faces is a bug. `heroBuilds`
+    carries Mirror Image illusions as extra level-1 heroes, and both the strip
+    and the build card go through `BuildCard.heroesOf` to drop them.
+    - **No heroes in the unit half.** `t2Units` and `t3Units` include a hero
+      trained inside that tier, so a Shadow Hunter used to appear beside the
+      Grunts with the same hero already drawn at full level to its left.
+    - Below 1040px the units drop and the heroes stay. That is the intended
+      fallback, not a rendering failure.
 
-13c. **Story tab**, the default. The dominance chart, then a grid of tiles.
-    - The chart's title row reads `DOMINANCE · 50 = even` on the left and the
-      two scores on the right, each in its player's line colour, followed by
+13c. **Story tab**, the default. A chart panel, the tiles, then the timeline.
+    - **The chart panel has three chips: Dominance, Resources, Army.** Dominance
+      is the default. Clicking a chip swaps the chart in place, and the choice is
+      remembered as you step through games. There is no Economy tab any more —
+      this is where those charts went.
+    - A chip whose mode has nothing to draw is dimmed but still clickable, and
+      says why when you click it.
+    - **Dominance**: the title row reads `DOMINANCE · 50 = even` on the left and
+      the two scores on the right, each in its player's line colour, followed by
       **final**. Own seat first, always.
-    - A game whose summary predates schema v4 has no chart, and Story offers a
-      **Re-read this game** button. A game under v4 whose dominance gate refused
-      the replay has no chart and says so with no button, because re-reading it
-      would refuse it again. Those two states must not be confused.
-      - **Check this properly, because after a v4 build lands every game
-        already on disk is in one of these states and it is the first thing
-        anyone sees.** `node tools/desktop-preview.js --games=12 --stale=4`
-        makes the first four games alternate between them without needing an
-        old store. Both must keep their tiles: a pre-v4 game still has its
-        combat ledger, so hero K/D, wipes and swing are all still there. A
-        panel that goes blank is the bug.
-    - **Drag across the chart.** The scores must change as you move and the
-      **final** should become a clock. Let go outside the chart and it returns
-      to the final score — a readout left at 14:20 is reporting the wrong result
-      for the game. Arrow keys step 10s, shift-arrow a minute, Home and End
-      jump.
-    - **Double-click the chart.** The viewer should open at that second.
-    - **The event dots must be round**, not lozenges. They are circles in a
-      stretched viewBox and a ResizeObserver compensates; if they are stretched,
-      `_fitDots` is not firing.
-    - Tiles: hero K/D, wipes, biggest swing, then the four benchmarks (tier 2,
-      expansion, workers @5:00, effective APM) each carrying the gap to your own
-      median, then peak army, peak workers, tier 3, first tower. A tile with no
-      data reads "—" and says why, and a tile with no baseline carries no
-      comparison rather than an invented one.
+      - **Drag across the chart.** The scores must change as you move and the
+        **final** should become a clock. Let go outside the chart and it returns
+        to the final score. Arrow keys step 10s, shift-arrow a minute, Home and
+        End jump. **Double-click** opens the viewer at that second.
+      - **The event dots must be round**, not lozenges. They are circles in a
+        stretched viewBox and a ResizeObserver compensates; if they are
+        stretched, `_fitDots` is not firing.
+      - Switch modes, switch games repeatedly, then come back. Scrubbing must
+        still work: the chart is built once per game and kept behind the other
+        modes, and its ResizeObserver is released by the panel's own teardown.
+    - **Resources**: the viewer's three plots, food, gold lost and lumber lost,
+      each carrying its peak in the title, with a legend saying which line is
+      whose. Double-click opens the viewer at that second. In a non-1v1, expect
+      one line per plot rather than an invented duel.
+    - **Army**: units trained over the game, fights as dashed orange verticals,
+      and a line under it saying the count is production rather than what was
+      alive. It is cumulative and cannot go down; if the chart is ever labelled
+      as army size, that is the bug this pass fixed.
+    - A game whose summary predates schema v4 has no dominance and no resources,
+      and each says **Parsed before … was recorded** with a **Re-read this game**
+      button. A game under v4 whose dominance gate refused the replay says so
+      with no button, because re-reading it would refuse it again. Those two
+      states must not be confused, and Army must still draw in both.
+      - **Check this properly, because after a v4 build lands every game already
+        on disk is in one of these states and it is the first thing anyone
+        sees.** `node tools/desktop-preview.js --games=12 --stale=4` makes the
+        first four games alternate between them without needing an old store.
+        Both must keep their tiles and their timeline.
+    - Tiles: hero K/D, **biggest trade**, then tier 2, expansion and effective
+      APM each carrying the gap to your own median, then **peak supply**.
+      - "Swing" was renamed because it never said what swung. "Wipes" is gone —
+        those fights are named rows in the timeline at the second they happened.
+        "Workers" is gone because the meta line two rows above already reads
+        "10 workers @5:00".
+      - **Peak supply comes from the v4 resource series**, not from
+        `combatUnitsTrack`. A pre-v4 game falls back to that track and is
+        labelled **Units trained**, which is what it actually counts. A tile
+        reading "Peak army" off a number that can never go down is the bug.
+    - **The tiles must be fully on screen with the tab at scrollTop 0**, at both
+      900x600 and 1280x820, on every game. Story is allowed to scroll now — the
+      timeline is long by design — but nothing above the timeline may be under
+      the fold.
     - **The benchmarks have to survive a straight face.** Open three games you
       actually remember. If a game you lost to a hero snipe reads as an economy
       problem, the grade thresholds are wrong; record it and re-run the corpus
       pass (ROADMAP §11).
-    - There is no map here and no moments list. Both moved or went; see 15.
+
+13d. **The timeline, under "How it went".** This is the tab's name made good,
+    and what a Warcraft player actually wants: the game in order.
+    - Expect a merged track of both players: each hero as it appears, the first
+      of each unit type, every upgrade, tier 2 and tier 3, expansions, scouting,
+      mercenaries, hero level 6, and every fight with the gold it swung. Units,
+      upgrades and heroes carry the game's own art; fights and macro beats carry
+      the app's own glyphs. Every row has a **Watch**.
+    - **It must be in time order.** Moments are stored ranked by importance, so
+      a list that opens on the biggest fight has not been re-sorted.
+    - **Both sides must be worded the same way.** "Your Tier 2" against "Moon's
+      Tier 2", not "Moon: Tier 2". Verb beats read as verbs: "Moon scouted",
+      "You hired Naga Sea Witch".
+    - Battle-tag suffixes are stripped here. `orange#14823` reads as `orange`.
+    - A hero that hit 6 appears once, not twice. The synthesised row stands down
+      wherever the real `heroUlt` moment survived the 24-moment cap.
 
 14. **Build tab**: one card per player, the same shape as a build card on
     wc3v.com. Heroes with their final level on the portrait and their skills as
     icons carrying the level reached, then key units with names, then upgrades
-    with levels, then chips for T2, T3, tower and expansion.
-    - **Count the heroes.** You cannot have two of the same hero in Warcraft III,
-      so two identical portraits is a bug. `heroBuilds` carries Mirror Image
-      illusions as extra level-1 heroes and `build-card.js` dedupes them.
+    with levels, then the items bought, then chips for T2, T3, tower and
+    expansion.
+    - Under the cards: **build order**, **buildings by tier**, and **upgrades
+      and mercenaries**, each per player, own seat first. These came from the
+      deleted Full details tab.
+    - This is the tab allowed to be long. You arrive here intending to scroll.
     - Hover an icon and the tooltip names the skill, unit, upgrade or item.
     - Icons come from `cdn.wc3v.com`. Empty carved squares mean offline or CSP,
       so say so.
 
-15. **Economy tab**: the viewer's own three resource charts — food, gold lost,
-    lumber lost — each carrying its peak in the title, with a legend saying
-    which line is whose. Then army size with fights as dashed orange verticals.
-    - **There is no workers chart.** That is deliberate: the game strip in Full
-      details already draws both players' worker curves.
-    - Double-click a resource chart to open the viewer at that second.
-    - In a non-1v1, expect one line per chart rather than an invented duel.
-
-15a. **Full details tab**: the game strip first (your lane, a fight axis, their
-    lane, a time ruler, every mark opening the viewer at that second), then the
-    events list with a Watch on every row, then build order, buildings by tier,
-    upgrades and mercenaries, and items — each per player, own seat first.
-    - This is the one tab allowed to be long. You arrive here intending to
-      scroll.
-    - **Click a mark on the strip.** The viewer should open at that second.
-    - A game with no fights still draws both lanes, the ticks and the ruler.
+15. **The two tabs that are gone.** Economy and Full details were removed this
+    release. Nothing should offer them, and a store remembering one of them as
+    the active tab must land on Story or Build rather than on nothing.
 
 16. **Type an opponent's name** into the search box above the feed.
     - Expect: the count beside the search box changes from `N parsed` to
@@ -505,44 +553,79 @@ What each tab is allowed to do, at **both** window sizes, with a live match up
 
 | tab | 900x600 | 1280x820 |
 |---|---|---|
-| **Story** | **0 scrolls. Never. Any number here is a bug.** | **0 scrolls** |
-| Economy | scrolls (four charts) | 0 scrolls |
-| Build | scrolls on content-heavy games | scrolls on ~half |
-| Full details | scrolls, by design | scrolls, by design |
+| **Story** | scrolls (the timeline), **and the chart panel plus every tile must be on screen at scrollTop 0** | same |
+| Build | scrolls, by design | scrolls, by design |
 
-Story is the app's default tab and the whole dashboard has to be on screen at
-once, so it is held strictly. The others are content tabs and `.scroll` is doing
-its job. Full details is the one tab you arrive at intending to scroll.
+**The Story rule changed with the timeline.** It used to be "0 scrolls, never",
+because the tab was a chart and eight tiles and all of it was the dashboard. The
+tab now ends in the whole game in order, which is long on purpose, so the rule is
+about what sits ABOVE the scroll rather than about the scroll itself: the chart
+and the full tile grid must be visible without moving. A tile under the fold on
+the app's default tab is the same bug it always was.
+
+So the second snippet needs a third check, run with Story active and the body at
+the top:
+
+```js
+(async () => {
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const fails = [];
+  for (const row of document.querySelectorAll('#feed .game')) {
+    row.click(); await sleep(30);
+    [...document.querySelectorAll('.report-tabs .seg-btn')]
+      .find(b => b.textContent.trim() === 'Story').click();
+    await sleep(30);
+    const b = document.querySelector('.report-body');
+    b.scrollTop = 0;
+    const grid = b.querySelector('.st-grid');
+    if (!grid) continue;
+    const by = grid.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom;
+    if (by > 1) fails.push({ game: row.textContent.slice(0, 30), by: Math.round(by) });
+  }
+  return fails;
+})()
+```
+
+Pass = `[]` at both sizes. Run it in Dominance mode, which is the default and the
+mode the frame budget was measured against; Resources is ~150px taller and is a
+deliberate choice the reader makes.
 
 Pass `--w3c` so the Next game mode is reachable during the audit. Run the audit
 in both modes.
 
 The report frame changes shape per game, so audit **every game**, not one. The
 snippet above is cheap enough to run in a loop over `#feed .game` with every tab
-clicked. Games differ in whether they have a grade rail (none when you were not
-in the game), whether Story has a dominance chart (none when the gate refused
-the replay or the summary predates schema v4), and whether the strip has fights.
+clicked. Games differ in whether they have a read line (none when you were not in
+the game), which chart modes have anything to draw (none of the first two when
+the gate refused the replay or the summary predates schema v4), and how many
+heroes and units the build strips carry.
+
+The strips are the frame's new risk. They are the only part of the band whose
+height depends on the replay, and a level badge that hangs off its portrait the
+way the build card's does reports 2px of `scrollWidth` — which the first snippet
+flags as loudly as it flags 200.
 
 Open the feed drawer first, so `#feed .game` is on screen to loop over. Audit
 the drawer OPEN as well: it covers the report rather than replacing it, and both
 are laid out at once.
 
-Last clean run: 5 Aug 2026, after the charts pass. Both sizes, all 40 preview
-games, every report tab on every game, both column modes, the feed drawer open,
-plus Coach, Stream and the Settings sheet. **160 checks per size, zero
-offenders, zero console errors — and Story 0/40 scrolls at both sizes.**
+Last clean run: 6 Aug 2026, the report redesign (0.7.1). Both sizes, all 40
+preview games, both report tabs on every game, all three chart modes, the feed
+drawer open and closed, Next game mode, plus the `--stale=4` preview for the two
+re-read paths. **Zero offenders, zero tile failures, zero console errors.**
 
-Measured at 1280×820, after the charts pass:
+Measured at 1280×820:
 
-| | Home redesign | charts pass |
+| | charts pass | report redesign |
 |---|---|---|
-| report frame | 310px | 166px (221 with a grade rail) |
-| report tab body | 252px | 470px |
-| frame timeline band | 114px (game strip) | none — strip moved to Full details |
-| feed | 22rem rail, always up | 63px quick nav + drawer |
+| verdict band | 166px frame (221 with a grade rail) | 96px, and it carries both builds |
+| report tab body | 470px | ~500px |
+| tabs | Story / Build / Economy / Full details | Story / Build |
+| charts | one in Story, two on Economy | one panel, three chips |
 
-Measured at 900×600 after the Home redesign, kept for reference: tab body
-34px → 149px, feed rows on screen 3 → 7.5, frame 427px → 325px.
+Measured at 900×600: band 88px, tab body 254px. Kept for reference, after the
+Home redesign: tab body 34px → 149px, feed rows on screen 3 → 7.5, frame
+427px → 325px.
 
 **Two things the audit caught that eyes did not**, both worth re-checking after
 any frame change:
@@ -559,7 +642,7 @@ any frame change:
 Note when driving this yourself: the preview's auto-detected identity is
 whichever name appears most often in the sample, and the feed tiles show the
 opponent, so clicking the first tile usually lands on a game that seat is not in,
-where the grade rail and the benchmark tiles correctly do not exist. Search the
+where the read line and the benchmark tiles correctly do not exist. Search the
 feed for the identity name and click through until the verdict reads Victory or
 Defeat before auditing the report tabs.
 

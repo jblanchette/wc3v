@@ -527,15 +527,23 @@
       return `${m.label}: ${name(m.winnerSlots[0])} came out ahead${how}`;
     }
 
-    // Macro beats belong to one player.
+    // Macro beats belong to one player, and both sides are worded the same
+    // way. The opponent's used to read "Moon: Tier 2" against "Your Tier 2" for
+    // the same beat, which down a column of them looks like two different kinds
+    // of thing rather than the same thing on the other side.
+    //
+    // Which form depends on the label, not the type: some are nouns a player
+    // owns ("Tier 2", "Blademaster hit 6") and some are things a player did
+    // ("Scouted", "Hired Naga Sea Witch"). A possessive in front of a verb
+    // reads as broken English, so the two forms are kept apart.
     if (m.slot != null) {
-      if (mine(m.slot)) {
-        if (m.type === 'tier2' || m.type === 'tier3') return `Your ${m.label}`;
-        if (m.type === 'expansion') return `You ${m.label.toLowerCase()}`;
-        return `You: ${m.label}`;
+      const did = m.type === 'scout' || m.type === 'merc' ||
+        (m.type === 'expansion' && !/#/.test(m.label));
+      if (did) {
+        const verb = m.label.charAt(0).toLowerCase() + m.label.slice(1);
+        return mine(m.slot) ? `You ${verb}` : `${name(m.slot)} ${verb}`;
       }
-      if (m.type === 'tier2' || m.type === 'tier3') return `${name(m.slot)}: ${m.label}`;
-      return `${name(m.slot)}: ${m.label}`;
+      return mine(m.slot) ? `Your ${m.label}` : `${name(m.slot)}'s ${m.label}`;
     }
     return m.label;
   }

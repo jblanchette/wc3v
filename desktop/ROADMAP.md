@@ -646,9 +646,12 @@ modes and all four screens, at both 900×600 and 1280×820. Before any of this,
 the game report stacked ~2,400px against a ~700px viewport and Profile was a
 term paper.
 
-- The report is a fixed frame and one scrolling tab body: verdict band, game
-  strip, grade rail, tab strip. Tabs are **Review**, **Story**, **Build** and
-  **Economy**, and the active one is remembered across game selections.
+- The report is a fixed frame and one scrolling tab body. As shipped here that
+  frame was verdict band, game strip, grade rail, tab strip, with tabs
+  **Review**, **Story**, **Build** and **Economy**. Both the bands and the tab
+  set have changed twice since; the current shape is in the report redesign
+  entry below. What has held is the structure: fixed frame, one scroller, and
+  the active tab remembered across game selections.
 - **Heroes and Economy existed in the data all along.** `heroBuilds` carries skill
   order with ability icon ids and final items, and `economyTrack` /
   `combatUnitsTrack` are chart-shaped 30s series. The charts are drawn by the
@@ -665,7 +668,7 @@ term paper.
   ramp. Deliberately not the game's art: the wc3icons set is extracted Blizzard
   artwork, kept only where identity demands it, on unit, ability and item icons.
   The two-letter chips remain as the no-JS fallback. `RaceIcons.mark()` is the one
-  builder, shared by the feed, the report, the game strip and Next game.
+  builder, shared by the feed, the report, the build strips and Next game.
 - The Blizzard trademark disclaimer the site carries in three places now exists in
   the desktop too, pinned at the foot of Settings.
 
@@ -874,6 +877,61 @@ a file browser.
         card put four Blademasters side by side. Deduped by itemId at render
         (`build-card.js`), because every summary already stored has them.
 
+- [x] **Report redesign (Aug 2026, 0.7.1): two tabs, one chart slot, and Story
+      finally tells one.** The charts pass left four tabs and a frame that spent
+      its whole right half on a Victory and a name. Five complaints, five
+      answers:
+      - **The verdict band is two columns now.** Left: verdict, opponent, the
+        record chip, Open in WC3V Viewer, the meta line, the read. Right: **one
+        row per player carrying their build** — race, up to three hero portraits
+        with final levels, up to seven unit icons — which is the first thing
+        anybody asks about a game and was four tabs away. 166px of frame became
+        96px of band that says more.
+      - **The grade rail is deleted, not moved.** Economy / Army / Hero / Map
+        control / Mechanics as five bare integers, each a 0-100 comparison
+        against a rolling median of your own recent games in this matchup. That
+        is not something an integer conveys, and nobody could say what a 63
+        meant. `GameReport` still runs: its headline is the read line, its
+        benchmarks are Story tiles. Its five scores are no longer claimed.
+      - **`js/chart-panel.js`: one slot, three chips** (Dominance / Resources /
+        Army), and the **Economy tab is gone**. Same mount-seam rule as before —
+        the panel wraps `dominance-panel` and `economy-panel` unchanged and owns
+        no drawing code. Modes build on first use and are kept, so a chip click
+        does not churn `DominanceChart`'s ResizeObserver; `destroy()` releases
+        every mode built, including the parked ones.
+      - **Full details is gone and `js/game-strip.js` is deleted.** The strip was
+        two lanes of unlabelled worker curves that read as decoration, sitting
+        above a build order the Build tab already existed for. The build order,
+        the tier buildings and the upgrade timeline moved under the build cards.
+        The events list became Story's timeline.
+      - **Story is a story.** Moments alone are the fights plus four macro beats,
+        capped at 24 by importance — so in a busy game the ultimate is what gets
+        squeezed out. The track now merges, per player: each hero as it appears,
+        the first of each unit type, every upgrade, the tiers, expansions, the
+        scout, mercs, level 6, and every fight with its gold swing. Units,
+        upgrades and heroes carry the game's own art. **Re-sorted by time** —
+        moments are stored ranked, so anything reading them as a sequence must
+        sort first.
+      - Tiles: Swing became **Biggest trade**; Wipes and Workers went (the
+        fights are named rows in the timeline; the worker count is already on
+        the meta line); **Peak army became Peak supply**, off v4 `foodUsed`,
+        because `combatUnitsTrack` is cumulative production and a number that
+        cannot go down cannot describe an army that lost a fight. Pre-v4 falls
+        back to that track under the honest label **Units trained**.
+      - **Three bugs fixed on the way.** `.verdict-head > .btn-primary` had
+        pushed Open in WC3V Viewer to the right for two releases while the button
+        was `.btn-viewer`, so it never did. `keyUnits` drew heroes among the
+        units, because `t2Units`/`t3Units` include a hero trained in that tier —
+        a Shadow Hunter beside the Grunts with the same hero at full level to its
+        left. And `MomentsExtract.phrase` worded the same beat two ways,
+        "Your Tier 2" against "Moon: Tier 2"; both sides read the same now, with
+        verb beats kept as verbs ("Moon scouted").
+      - **The Story fold rule changed with it.** It was "0 scrolls, never".
+        The tab now ends in the whole game in order, so the rule is what sits
+        above the scroll: the chart panel and every tile visible at scrollTop 0,
+        both sizes, every game. Audited clean at 900x600 and 1280x820 over the
+        40-game preview, drawer open and closed, plus `--stale=4`.
+
 - [x] **Copy pass (Aug 2026).** Every screen lost its explanatory paragraphs.
       Settings had four `lead` paragraphs and eight `hint` blocks describing what
       its own checkboxes did. Stream had roughly 300 words of instructions beside
@@ -989,6 +1047,11 @@ update process is documented in `desktop/RELEASING.md`.
   offers "Re-read this game" until it is re-parsed. That is the on-demand
   upgrade path working, not a fault. The tiles are all still there, because the
   combat ledger they read from is v3.
+- **0.7.1 published 6 Aug 2026** (the report redesign). Two tabs, one chart slot
+  with three chips, both builds in the frame, the grade rail retired, and Story
+  carrying the whole game in order. Render-side only: **no schema change and no
+  re-parse**, so a 0.7.0 store upgrades with nothing to do. The pre-v4 games
+  still offer "Re-read this game", now on the Dominance and Resources chips.
 - [x] **The app checks on its own.** The upgrade worked, and it sat behind a
       button on the Settings screen. Nobody opens a settings screen to ask whether
       their replay parser is current, so an update nobody hears about is an update
