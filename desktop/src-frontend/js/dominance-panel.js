@@ -26,7 +26,7 @@
 //     draw is a no-spoilers rule for a game being watched; a finished game has
 //     nothing left to spoil.
 //   • Player colours are the warm race ramp rather than the in-game player
-//     colours. app.css forbids saturated colour on warm surfaces and the
+//     colours. the token layer forbids saturated colour on warm surfaces and the
 //     desktop has no player-colour field in a summary anyway.
 
 (function () {

@@ -19,9 +19,8 @@ const HighlightModes = {
 // NOTE: per CLAUDE.md "no icon below 36px on desktop" is intentionally
 // violated here for non-hero units. User opted in; will tune if needed.
 //
-// Battle banners, BO chips, scrubber popups, nameplate text are UI
-// elements and keep their hardcoded readability sizes (see BattleRenderer,
-// BuildOrderRenderer, TimeScrubber).
+// BO chips, scrubber popups and nameplate text are UI elements and keep
+// their hardcoded readability sizes (see BuildOrderRenderer, TimeScrubber).
 ////
 
 // Fallback collision radii (world units) for ancient replays that don't
@@ -119,7 +118,12 @@ const ClientUnit = class {
       "spawnPosition", "levelStream", "spellList",
       "neutralGroupId", "xpStream", "uuid",
       "collisionSize", "footprint", "isInferred", "destroyedAt", "isSummon",
-      "lostState", "hiddenStream", "combatOrderTimes", "primaryRole", "harvestConfident", "buildWindows",
+      "lostState", "hiddenStream", "combatOrderTimes", "repairOrderTimes",
+      // Combat-relevant order stream + summon provenance (parser schema v5).
+      // `orders` is the intent record UnitBehavior corroborates attacks with;
+      // `summonedBy`/`summonTime` let a summon inherit its caster's context.
+      "orders", "summonedBy", "summonTime", "summonDuration",
+      "primaryRole", "harvestConfident", "buildWindows",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
       "constructionStartTime", "uprootStream", "morphHistory"

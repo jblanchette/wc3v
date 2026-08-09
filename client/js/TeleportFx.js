@@ -31,7 +31,7 @@
  *
  *   6. TRAIL — faint dashed origin → destination line, fading over 3s post.
  *
- * Drawn on #utility-canvas (same layer as BattleRenderer + camp rings).
+ * Drawn on #utility-canvas (same layer as the camp rings).
  */
 const TeleportFx = class {
   constructor () {
@@ -150,8 +150,8 @@ const TeleportFx = class {
     return 'town-portal';
   }
 
-  // Project a game-space point to canvas pixels — same recipe MapRenderer +
-  // BattleRenderer use (projectXY samples 3D terrain height, then add middleX/Y).
+  // Project a game-space point to canvas pixels — same recipe MapRenderer uses
+  // (projectXY samples 3D terrain height, then add middleX/middleY).
   _proj (gameScaler, x, y) {
     const p = gameScaler.projectXY(x, y);
     if (!p) return null;  // outside the camera frustum

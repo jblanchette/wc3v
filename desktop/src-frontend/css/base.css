@@ -1,0 +1,60 @@
+/* ============================================================
+   base.css, WC3V desktop.
+
+   Reset, the window shell and the scrollers. Everything that is true of the
+   page rather than of any component.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+/* Several components below set `display` on their own class, which silently
+   beats the `hidden` attribute's UA rule. Everything in this app hides via
+   `hidden`, so it has to win. */
+[hidden] { display: none !important; }
+
+html { font-size: 16px; }
+
+body {
+  margin: 0;
+  background: var(--app-well);
+  color: var(--ink);
+  /* 1.35, not the web client's 1.5. Leading is the other half of the density
+     pass: it compounds over every text row in a fixed window, and the type
+     ramp itself is untouched (nothing here goes below --fs-min). */
+  font: var(--fs-sm)/1.35 var(--font);
+  /* The window is a fixed frame; only the marked regions scroll. */
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  display: grid;
+  /* appbar / migration strip / main / activity.
+     Rows are assigned EXPLICITLY below rather than left to source order,
+     because the migration strip is hidden almost always. With implicit
+     placement, hiding it would shift `main` up into an `auto` row and the whole
+     app would collapse to its content height. */
+  grid-template-rows: auto auto 1fr auto;
+  height: 100vh;
+  min-height: 0;
+}
+.appbar  { grid-row: 1; }
+.migrate { grid-row: 2; }
+main     { grid-row: 3; }
+.activity { grid-row: 4; }
+
+.scroll { overflow-y: auto; min-height: 0; }
+
+/* Scrollbars, carved rather than default-blue. */
+.scroll::-webkit-scrollbar { width: 10px; }
+.scroll::-webkit-scrollbar-track { background: var(--app-well); }
+.scroll::-webkit-scrollbar-thumb {
+  background: var(--app-panel-2);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+}
+.scroll::-webkit-scrollbar-thumb:hover { background: var(--app-edge); }

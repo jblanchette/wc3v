@@ -2,37 +2,33 @@
   PathTrailRenderer3D — renders 3D hero path trails inside the
   ThreeMapRenderer scene. Replaces the legacy 2D `ClientUnit.renderPath`.
 
-  Three switchable styles (set via viewOptions.pathTrailStyle):
-    - 'combo'      Footsteps + sonar rings together (default)
+  Two styles (set via viewOptions.pathTrailStyle):
     - 'footsteps'  Discrete footprint stamps along the path, alternating L/R
-    - 'rings'      Sonar-style expanding rings emitted at the hero's position
+    - 'none'       Nothing
+
+  The 'combo' and 'rings' styles are GONE — see the note on STYLES below.
 
   Performance notes:
     - Footsteps are rebuilt at most every REBUILD_INTERVAL_MS or when the
       hero's path index advances (whichever comes first).
-    - Rings update per-frame but only mutate a small fixed-size InstancedMesh
-      — no geometry recreation.
     - All shared materials use AdditiveBlending with alpha premultiplied into
       the color channels — no custom shaders needed for fading.
 */
 (function () {
   if (!window.THREE) return;
 
-  const STYLES = ['combo', 'footsteps', 'rings'];
+  // 'none' draws nothing. The expanding player-coloured "sonar ring" style was
+  // REMOVED (Aug 2026, user call): rings pulsed under every hero constantly, and
+  // because the Footprints toggle switched between 'combo' and 'rings' rather
+  // than on/off, there was no setting that turned them off. Do not reintroduce.
+  // 'none' is first so an unrecognised value falls back to drawing NOTHING.
+  const STYLES = ['none', 'footsteps'];
 
   // ---- shared ----
   const Y_OFFSET             = 6;
   const HERO_TTL_MS          = 2000;
   const RENDER_ORDER         = 2;
   const REBUILD_INTERVAL_MS  = 500;        // wall-clock throttle for static rebuilds
-
-  // ---- rings ----
-  const RING_LIFETIME_MS     = 1700;
-  const RING_SPAWN_DT_MS     = 1100;       // cadence — sparser pulses
-  const RING_MAX             = 8;          // pool per hero — only need a couple visible at once
-  const RING_INNER_R         = 22;         // initial radius
-  const RING_OUTER_R         = 145;        // final radius
-  const RING_HEAD_ALPHA      = 1.15;       // can exceed 1 with additive
 
   // ---- footsteps ----
   // Stamp position / yaw / side are normally pre-baked into hero.footprints by
@@ -119,7 +115,7 @@
   }
 
   // ---- procedural textures (lazy) ----
-  let _footTex = null, _ringTex = null;
+  let _footTex = null;
 
   function makeCanvas (w, h, draw) {
     const c = document.createElement('canvas');
@@ -151,31 +147,6 @@
     return _footTex;
   }
 
-  function getRingTex () {
-    if (_ringTex) return _ringTex;
-    _ringTex = makeCanvas(128, 128, (g, w, h) => {
-      const cx = 64, cy = 64;
-      // soft annulus: peak at r=48, falling off both ways. Bolder, wider band.
-      for (let r = 0; r < 64; r++) {
-        const peak = 48;
-        const dist = Math.abs(r - peak);
-        const a = Math.max(0, 1 - dist / 22);   // wider falloff
-        if (a <= 0) continue;
-        g.beginPath();
-        g.arc(cx, cy, r + 0.5, 0, Math.PI * 2);
-        g.strokeStyle = `rgba(255,255,255,${a})`;
-        g.lineWidth = 2.4;                       // thicker stroke
-        g.stroke();
-      }
-      // Bright core stripe at the peak radius
-      g.beginPath();
-      g.arc(cx, cy, 48, 0, Math.PI * 2);
-      g.strokeStyle = 'rgba(255,255,255,1)';
-      g.lineWidth = 4;
-      g.stroke();
-    });
-    return _ringTex;
-  }
 
   class PathTrailRenderer3D {
     constructor (threeMapRenderer) {
@@ -197,6 +168,9 @@
 
       const style = STYLES.includes(viewOptions && viewOptions.pathTrailStyle)
         ? viewOptions.pathTrailStyle : STYLES[0];
+
+      // Nothing to draw — don't allocate a per-hero group just to leave it empty.
+      if (style === 'none') { this._hideAll(); return; }
 
       const now = performance.now();
       const realDt = Math.min(100, now - this._lastTime);
@@ -244,8 +218,7 @@
 
     // ---- entry lifecycle --------------------------------------------------
 
-    _styleNeedsFoot (style) { return style === 'combo' || style === 'footsteps'; }
-    _styleNeedsRing (style) { return style === 'combo' || style === 'rings'; }
+    _styleNeedsFoot (style) { return style === 'footsteps'; }
 
     _updateHero (hero, gameTime, realNow, realDt, cx, cy, style) {
       let entry = this._pool.get(hero.uuid);
@@ -258,12 +231,6 @@
         if (!this._styleNeedsFoot(style) && entry.footMesh) {
           this._disposeMesh(entry, entry.footMesh);
           entry.footMesh = null;
-        }
-        if (!this._styleNeedsRing(style) && entry.ringMesh) {
-          this._disposeMesh(entry, entry.ringMesh);
-          entry.ringMesh = null;
-          entry.ringPool = null;
-          entry.ringSpawnAccum = 0;
         }
         entry.style = style;
         entry.lastBuildAt = -Infinity;
@@ -279,11 +246,7 @@
 
       // Hide unused sub-meshes (visibility-only; they were already torn down on style change above)
       if (!this._styleNeedsFoot(style) && entry.footMesh) entry.footMesh.visible = false;
-      if (!this._styleNeedsRing(style) && entry.ringMesh) entry.ringMesh.visible = false;
 
-      if (this._styleNeedsRing(style)) {
-        this._renderRings(entry, hero, gameTime, realNow, cx, cy, pr, pg, pb);
-      }
       if (this._styleNeedsFoot(style)) {
         this._renderFootsteps(entry, hero, gameTime, realNow, cx, cy, pr, pg, pb);
       }
@@ -299,7 +262,6 @@
         lastSeen: 0,
         lastBuildAt: -Infinity,
         lastBuildPathIdx: -1,
-        ringMesh: null, ringPool: null, ringSpawnAccum: 0,
         footMesh: null
       };
     }
@@ -312,7 +274,6 @@
     }
 
     _tearDownStyle (entry) {
-      this._disposeMesh(entry, entry.ringMesh); entry.ringMesh = null; entry.ringPool = null; entry.ringSpawnAccum = 0;
       this._disposeMesh(entry, entry.footMesh); entry.footMesh = null;
     }
 
@@ -361,91 +322,6 @@
     _markRebuilt (entry, hero, realNow) {
       entry.lastBuildAt = realNow;
       entry.lastBuildPathIdx = hero.recordIndexes.path;
-    }
-
-    // ---- STYLE: rings -----------------------------------------------------
-
-    _renderRings (entry, hero, gameTime, realNow, cx, cy, pr, pg, pb) {
-      this._ensureRingMesh(entry);
-      const inst = entry.ringMesh;
-      const pool = entry.ringPool;
-      const dummy = inst.userData._dummy;
-
-      // Spawn at hero's interpolated position.
-      const hp = hero.getInterpolatedPosition ? hero.getInterpolatedPosition(gameTime) : null;
-      if (hp && !isNaN(hp.x)) {
-        const dtMs = Math.min(100, realNow - (entry._ringLastTime || realNow));
-        entry._ringLastTime = realNow;
-        entry.ringSpawnAccum = (entry.ringSpawnAccum || 0) + dtMs;
-        while (entry.ringSpawnAccum >= RING_SPAWN_DT_MS) {
-          entry.ringSpawnAccum -= RING_SPAWN_DT_MS;
-          // overwrite oldest slot
-          let oldest = 0, oldestAge = -1;
-          for (let i = 0; i < RING_MAX; i++) {
-            const age = realNow - pool[i].spawnAt;
-            if (age > oldestAge) { oldestAge = age; oldest = i; }
-          }
-          // Cache terrain Y at spawn so per-frame ring updates skip sampleHeight.
-          pool[oldest].spawnAt = realNow;
-          pool[oldest].wx = hp.x;
-          pool[oldest].wy = hp.y;
-          pool[oldest].yWorld = this.three.sampleHeight(hp.x, hp.y) + Y_OFFSET;
-        }
-      } else {
-        entry._ringLastTime = realNow;
-      }
-
-      // Update per-ring instance matrix + color (no sampleHeight in this loop).
-      let live = 0;
-      for (let i = 0; i < RING_MAX; i++) {
-        const r = pool[i];
-        const age = realNow - r.spawnAt;
-        if (r.spawnAt < 0 || age > RING_LIFETIME_MS || isNaN(r.wx)) continue;
-
-        const t = age / RING_LIFETIME_MS;        // 0..1
-        const radius = RING_INNER_R + (RING_OUTER_R - RING_INNER_R) * t;
-        const alpha = RING_HEAD_ALPHA * (1 - t);
-        dummy.position.set(r.wx - cx, r.yWorld, -(r.wy - cy));
-        dummy.rotation.set(-Math.PI / 2, 0, 0);
-        dummy.scale.set(radius * 2, radius * 2, 1);
-        dummy.updateMatrix();
-        inst.setMatrixAt(live, dummy.matrix);
-        inst.instanceColor.setXYZ(live, pr * alpha, pg * alpha, pb * alpha);
-        live++;
-      }
-      inst.count = live;
-      inst.instanceMatrix.needsUpdate = true;
-      inst.instanceColor.needsUpdate = true;
-      inst.visible = live > 0;
-    }
-
-    _ensureRingMesh (entry) {
-      if (entry.ringMesh) return;
-      const geo = new THREE.PlaneGeometry(1, 1);
-      const mat = new THREE.MeshBasicMaterial({
-        map: getRingTex(),
-        transparent: true,
-        depthTest: false,           // draw on top — rings span heights so terrain
-        depthWrite: false,          // would otherwise clip the far side of the ring
-        blending: THREE.AdditiveBlending,
-        toneMapped: false,
-        side: THREE.DoubleSide
-      });
-      const inst = new THREE.InstancedMesh(geo, mat, RING_MAX);
-      inst.count = 0;
-      inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      const colorBuf = new Float32Array(RING_MAX * 3);
-      inst.instanceColor = new THREE.InstancedBufferAttribute(colorBuf, 3);
-      inst.instanceColor.setUsage(THREE.DynamicDrawUsage);
-      inst.renderOrder = RENDER_ORDER;
-      inst.frustumCulled = false;
-      inst.userData._dummy = new THREE.Object3D();
-      entry.group.add(inst);
-      entry.ringMesh = inst;
-      entry.ringPool = [];
-      for (let i = 0; i < RING_MAX; i++) {
-        entry.ringPool.push({ spawnAt: -1, wx: NaN, wy: NaN, yWorld: 0 });
-      }
     }
 
     // ---- STYLE: footsteps -------------------------------------------------

@@ -1,0 +1,408 @@
+/* ============================================================
+   feed.css, WC3V desktop.
+
+   The gamebar, the parse queue, the feed drawer, the filter and the race chip.
+   Choosing which game you are looking at.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Gamebar ─────────────────────────────────────────────────────────────
+   The band that replaced the 22rem rail. A toggle for the whole feed, then
+   the last few games as chips. Height is fixed by the --ico-sm floor its
+   controls sit on, so the report below it never moves. */
+
+.gamebar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.games-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.games-toggle:hover { color: var(--ink); }
+.games-toggle.is-open {
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  box-shadow: var(--cut);
+  color: var(--ink);
+}
+.games-toggle-ico { width: 14px; height: 14px; flex: none; }
+.games-toggle-caret {
+  width: 10px; height: 6px; flex: none;
+  transition: transform var(--dur) var(--ease);
+}
+.games-toggle.is-open .games-toggle-caret { transform: rotate(180deg); }
+
+/* Horizontal scroller by design — names are long and variable, and this band
+   must not change height. Marked .scroll so the fold audit reads it as the
+   designated container it is.
+
+   Snapping and the edge fade are not decoration. Without them the row ends on
+   whatever pixel the column happens to be wide, so the last chip is sliced
+   through the middle of a player's name and reads as a rendering bug rather
+   than as "there are more". Snap makes every rest position a chip boundary;
+   the fade says the row continues. */
+.quicknav {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 2rem), transparent);
+}
+.quicknav::-webkit-scrollbar { height: 0; }
+/* No fade once there is nothing left to scroll to, or the last chip looks
+   permanently half-lit. */
+.quicknav.is-end {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.qn-chip { scroll-snap-align: start; }
+
+.qn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: none;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: var(--fs-min);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.qn-chip:hover { background: var(--app-well); color: var(--ink); }
+.qn-chip.is-active {
+  background: var(--app-well);
+  border-color: var(--app-edge);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+}
+.qn-name { font-weight: 600; }
+.qn-v {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  flex: none;
+  border-radius: 3px;
+  font-size: var(--fs-min);
+  font-weight: 800;
+}
+/* Same paint as .verdict-tile in the feed, at chip scale — the plaque and the
+   chip must read as the same mark, because they say the same thing. */
+.qn-v[data-v="win"]  { background: linear-gradient(180deg, #86ab68, var(--verdict-win)); color: var(--app-well); }
+.qn-v[data-v="loss"] { background: linear-gradient(180deg, #b96450, var(--verdict-loss)); color: var(--app-well); }
+.qn-v[data-v="none"] { background: linear-gradient(180deg, #85807a, var(--verdict-none)); color: var(--app-well); }
+
+/* ── Games being read ────────────────────────────────────────────────────
+   A fresh install parses its newest games at boot, and these are the chips
+   standing in for them. They sit where the finished games will land, so the
+   row fills in place instead of appearing all at once out of nowhere.
+
+   Not a button: there is nothing to click yet. */
+.qn-chip.is-parsing {
+  cursor: default;
+  color: var(--ink-faint);
+  background: var(--app-well);
+  border-color: var(--app-line);
+  box-shadow: var(--cut-in);
+}
+.qn-chip.is-parsing:hover { background: var(--app-well); color: var(--ink-faint); }
+
+/* A carved ring with one lit arc. Turning, not pulsing: a pulse in a row of
+   eight reads as an alarm. */
+.qn-spin {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid var(--app-line);
+  border-top-color: var(--dom-gold);
+  border-radius: 50%;
+  animation: qn-spin 900ms linear infinite;
+}
+@keyframes qn-spin { to { transform: rotate(360deg); } }
+
+/* Queued, not started. The ring is there but still, so eight spinners do not
+   claim eight parses are running when two workers exist. */
+.qn-chip[data-phase="queued"] .qn-spin {
+  animation: none;
+  border-top-color: var(--app-edge);
+}
+.qn-chip[data-phase="failed"] .qn-spin {
+  animation: none;
+  border-color: var(--verdict-loss);
+}
+
+/* Motion is decoration here; the chip's presence is the message. */
+@media (prefers-reduced-motion: reduce) {
+  .qn-spin { animation: none; }
+}
+
+/* ── The feed drawer ─────────────────────────────────────────────────────
+   Same grid cell as .detail-col, painted on top of it. Opaque, because a
+   translucent list over a report is two things at once and neither is
+   readable. */
+
+/* Scoped to Home. These place a child in HOME's three-row grid, and while
+   `.detail-col` only ever existed on one screen an unscoped `grid-row: 3` was
+   harmless. The Library mounts a second `.detail-col` in a two-column grid of
+   its own, where row 3 does not exist, and the report landed under the list
+   instead of beside it. */
+.view-games .games-drawer {
+  grid-row: 3;
+  grid-column: 1;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-line);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+}
+/* [hidden] has to beat the display:grid above. */
+.games-drawer[hidden] { display: none; }
+
+.view-games > .detail-col { grid-row: 3; grid-column: 1; }
+
+/* ── Feed filter ─────────────────────────────────────────────────────── */
+
+.feed-filter { padding: var(--sp-2) var(--sp-3); display: grid; gap: var(--sp-2); }
+
+/* One row now that the drawer is the full width of the window. It was three
+   stacked bands in a 22rem rail. */
+.filter-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.filter-search input { flex: 1 1 12rem; }
+
+.feed-filter input {
+  width: 100%;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+  transition: border-color var(--dur) var(--ease);
+}
+.feed-filter input::placeholder { color: var(--ink-faint); }
+.feed-filter input:focus { border-color: var(--app-edge); }
+/* The UA's search-clear glyph is a light circle that ignores every colour in
+   this file. Redrawn rather than hidden, because deleting it takes away the
+   only pointer route back to an unfiltered feed. Masked so it inherits a
+   colour; the SVG is inline, so the page still makes no requests. */
+.feed-filter input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--ink-faint);
+  cursor: pointer;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3 3l8 8M11 3l-8 8' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.feed-filter input::-webkit-search-cancel-button:hover { background: var(--ink); }
+
+.filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+
+/* Segmented control. One carved trough, buttons struck into it. */
+.seg {
+  display: flex;
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  overflow: hidden;
+}
+.seg-btn {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: 0;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.seg-btn + .seg-btn { border-left: 1px solid var(--app-line); }
+.seg-btn:hover { color: var(--ink); background: var(--app-panel); }
+.seg-btn.is-on {
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  color: var(--ink);
+  box-shadow: var(--cut);
+}
+.seg-btn.is-on[data-race="H"] { color: var(--race-warm-H); }
+.seg-btn.is-on[data-race="O"] { color: var(--race-warm-O); }
+.seg-btn.is-on[data-race="U"] { color: var(--race-warm-U); }
+.seg-btn.is-on[data-race="E"] { color: var(--race-warm-E); }
+.seg-btn.is-on[data-result="win"]  { color: var(--verdict-win); }
+.seg-btn.is-on[data-result="loss"] { color: var(--verdict-loss); }
+
+.feed-count {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.backfill-bar { padding: var(--sp-3) var(--sp-3) 0; }
+.backfill-text { color: var(--ink-dim); font-size: var(--fs-min); margin-bottom: var(--sp-1); }
+.backfill-track {
+  height: 6px;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut-in);
+  overflow: hidden;
+}
+.backfill-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(180deg, var(--dom-orange), #8a5a26);
+  transition: width var(--dur) var(--ease);
+}
+
+.feed { padding: 0 0 var(--sp-3); }
+
+.feed-day {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--sp-2) var(--sp-3) var(--sp-1);
+  background: var(--app-bg);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* A scoreboard list rather than a stack of cards. Rows used to be bordered,
+   rounded and 4px apart, which cost 16px of pitch each and showed 3 games at
+   the 900x600 minimum. A plain 1px neutral divider is the house rule's
+   allowance; it is not an accent stripe. */
+.game {
+  display: grid;
+  grid-template-columns: var(--ico-sm) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-1) var(--sp-3);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--app-line);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.game:hover { background: var(--app-panel); }
+/* The active row takes the opponent's race material, so the feed and the report
+   agree about whose game is open without either of them saying so. Still not an
+   edge stripe: the rim is the full perimeter and the wash is the whole row. */
+.game.is-active {
+  background: linear-gradient(90deg, var(--rc-wash), transparent 60%), var(--app-panel-2);
+  box-shadow: inset 0 0 0 1px var(--rc-rim), var(--cut);
+}
+
+/* Verdict tile. A carved plaque, not an edge stripe (single-edge accents
+   are forbidden). The letter is the signal and the colour reinforces it. */
+.verdict-tile {
+  display: grid;
+  place-items: center;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--app-well);
+}
+.verdict-tile[data-v="win"]  { background: linear-gradient(180deg, #86ab68, var(--verdict-win)); }
+.verdict-tile[data-v="loss"] { background: linear-gradient(180deg, #b96450, var(--verdict-loss)); }
+.verdict-tile[data-v="none"] { background: linear-gradient(180deg, #85807a, var(--verdict-none)); }
+
+.game-main { min-width: 0; }
+.game-vs { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.game-meta {
+  display: block;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+
+/* ── Race chip ───────────────────────────────────────────────────────── */
+
+.matchup { display: inline-flex; align-items: center; gap: 3px; }
+
+/* Race marks. The glyphs are our own heraldic SVGs (race-icons.js), never
+   the game's art. Register is control iconography, a glyph riding inside a
+   chip, same exemption as the caption controls and the 20px moment glyphs.
+   Standalone-as-content it wears the 36px .race-tile instead. */
+.race-mark {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  min-height: 22px;
+  padding: 2px;
+  border: var(--outline);
+  border-radius: 3px;
+  background: var(--app-well);
+  color: var(--ink-2);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.race-mark svg { width: 16px; height: 16px; fill: currentColor; display: block; }
+
+.race-tile { min-width: var(--ico-sm); min-height: var(--ico-sm); }
+.race-tile svg { width: 22px; height: 22px; }
+
+/* Set here rather than leaning on tokens.css's [data-race] groups, which
+   resolve --race to the saturated in-game colour. */
+.race-mark[data-race="H"], .seg-race.is-on[data-race="H"] { color: var(--race-warm-H); }
+.race-mark[data-race="O"], .seg-race.is-on[data-race="O"] { color: var(--race-warm-O); }
+.race-mark[data-race="E"], .seg-race.is-on[data-race="E"] { color: var(--race-warm-E); }
+.race-mark[data-race="U"], .seg-race.is-on[data-race="U"] { color: var(--race-warm-U); }
+.race-mark[data-race="R"] { color: var(--race-warm-R); }
+.race-mark[data-race="N"] { color: var(--race-warm-N); }
+
+.seg-race svg { width: 16px; height: 16px; fill: currentColor; display: block; }
+
+.matchup i { color: var(--ink-faint); font-style: normal; }

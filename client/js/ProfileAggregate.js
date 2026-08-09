@@ -18,6 +18,13 @@
 (function () {
   'use strict';
 
+  // The scalar layer. Resolved per call rather than once at load: in the
+  // browser these are plain scripts and a wrong tag order would otherwise bake
+  // a null in here at parse time and fail silently everywhere downstream.
+  const gm = () =>
+    (typeof window !== 'undefined' && window.GameMetrics) ||
+    (typeof require === 'function' ? require('./GameMetrics.js') : null);
+
   // Minimum sample sizes before a statement is allowed to make a claim.
   const MIN_MATCHUP = 8;
   const MIN_OPENING = 5;
@@ -78,12 +85,10 @@
       result = summary.winner.playerId === +slot ? 'win' : 'loss';
     }
 
-    // Workers at the 5:00 economy sample (the closest one at or before it).
-    let workersAt5m = null;
-    for (const s of (me.economyTrack || [])) {
-      if (s.gameTimeMs > 5 * 60 * 1000) break;
-      workersAt5m = s.totalWorkers;
-    }
+    // Every scalar comes from GameMetrics. Workers at 5:00 was computed inline
+    // here, again in GameReport and again in the Story tiles, and the three
+    // implementations were free to drift.
+    const m = gm().forSeat(summary, slot) || {};
 
     return {
       key: summary.key,
@@ -102,13 +107,20 @@
         ? `${me.race}v${opponent.race}`
         : null,
       heroOpener: me.heroOpener ? me.heroOpener.name : null,
-      t2: me.tier2Time ?? null,
-      t3: me.tier3Time ?? null,
-      expansion: me.expansionTime ?? null,
-      firstTower: me.firstTowerTime ?? null,
-      expansionMade: me.expansionTime !== null && me.expansionTime !== undefined,
-      workersAt5m,
-      apmEffective: me.apm ? me.apm.effectiveAverage : null
+      t2: m.t2 ?? null,
+      t3: m.t3 ?? null,
+      expansion: m.expansion ?? null,
+      firstTower: m.firstTower ?? null,
+      expansionMade: !!m.expansionMade,
+      workersAt5m: m.workersAt5m ?? null,
+      apmEffective: m.apmEffective ?? null,
+      // The three the report compares. Dominance is 1v1-only and absent from
+      // any summary written before schema v4; the hero ledger arrived in v3.
+      // Both are null rather than zero on a summary that never carried them,
+      // so a stale corpus lowers a sample size instead of dragging a median.
+      dominanceAvg: m.dominanceAvg ?? null,
+      heroKills: m.heroKills ?? null,
+      heroDeaths: m.heroDeaths ?? null
     };
   }
 
@@ -327,6 +339,9 @@
       const t2 = [];
       const expansion = [];
       const workers = [];
+      const dominance = [];
+      const apm = [];
+      const heroKills = [];
       let from = null;
       let to = null;
       for (const v of slice) {
@@ -334,6 +349,9 @@
         if (v.t2 !== null) t2.push(v.t2);
         if (v.expansion !== null) expansion.push(v.expansion);
         if (v.workersAt5m !== null) workers.push(v.workersAt5m);
+        if (v.dominanceAvg !== null) dominance.push(v.dominanceAvg);
+        if (v.apmEffective !== null) apm.push(v.apmEffective);
+        if (v.heroKills !== null) heroKills.push(v.heroKills);
         if (v.playedAt) {
           from = from === null ? v.playedAt : Math.min(from, v.playedAt);
           to = to === null ? v.playedAt : Math.max(to, v.playedAt);
@@ -351,6 +369,16 @@
         expansionN: expansion.length,
         workersAt5mMedian: median(workers),
         workersAt5mN: workers.length,
+        // The comparison set, tracked over time as well as against a median.
+        // The report says where one game sits; these say which way the player
+        // is moving, and they have to be the same three numbers or the two
+        // screens are measuring different things.
+        dominanceAvgMedian: median(dominance),
+        dominanceAvgN: dominance.length,
+        apmMedian: median(apm),
+        apmN: apm.length,
+        heroKillsMedian: median(heroKills),
+        heroKillsN: heroKills.length,
         from,
         to
       });
@@ -392,7 +420,10 @@
       },
       t2: pair('t2Median', 't2N'),
       expansion: pair('expansionMedian', 'expansionN'),
-      workersAt5m: pair('workersAt5mMedian', 'workersAt5mN')
+      workersAt5m: pair('workersAt5mMedian', 'workersAt5mN'),
+      dominanceAvg: pair('dominanceAvgMedian', 'dominanceAvgN'),
+      apmEffective: pair('apmMedian', 'apmN'),
+      heroKills: pair('heroKillsMedian', 'heroKillsN')
     };
   }
 
@@ -444,9 +475,80 @@
       expansion: pick(v => v.expansion),
       workersAt5m: pick(v => v.workersAt5m),
       apmEffective: pick(v => v.apmEffective),
+      // The comparison set. Each carries its own n, because a corpus can be
+      // twenty games deep on APM and four deep on dominance at the same time:
+      // the series only exists on v4 summaries and only on 1v1s.
+      dominanceAvg: pick(v => v.dominanceAvg),
+      heroKills: pick(v => v.heroKills),
       expansionRate: recent.length
         ? pct(recent.filter(v => v.expansionMade).length, recent.length)
         : 0
+    };
+  }
+
+  // ── Per-race baseline: the players of this race you have actually faced ────
+  //
+  // Everything above reads one named player's seats. This reads EVERY OTHER
+  // seat in the corpus and keeps the ones playing the race asked for, so a
+  // Human game is measured against the other Humans in your history.
+  //
+  // Why other people's seats rather than a published race average, and why
+  // yours are excluded: both were measured over the repo's 334-replay corpus
+  // before this was built.
+  //
+  //   Dominance is a share of 100 split between two players, so ANY population
+  //   average of it lands on 50 by construction. Measured: 48 to 52 across all
+  //   four races. A delta against that says "did you beat your opponent", which
+  //   the result already says.
+  //
+  //   Effective APM is a property of the bracket, not the race. The repo's
+  //   corpus is professional games and medians 395 to 565; a ladder player at
+  //   74 would be told they are 490 behind Orc, which is a wall rather than a
+  //   comparison.
+  //
+  // Matchmaking is what fixes both: the people you play are near your own
+  // level, so their numbers are a comparison you can act on. Your own seats
+  // come out because they are already the other column, and leaving them in
+  // would pull the benchmark toward the thing being benchmarked.
+  //
+  // Returns null below MIN_RACE_N so the caller can fall back to the shipped
+  // sample rather than quote a median of four. Nothing leaves the machine.
+  const MIN_RACE_N = 12;
+
+  function raceBaseline (games, race, opts) {
+    if (!race) return null;
+    const o = opts || {};
+    const skip = o.excludeName ? normName(o.excludeName) : null;
+
+    const seats = [];
+    for (const g of games || []) {
+      if (o.excludeKey && g.key === o.excludeKey) continue;
+      // 1v1 only. Dominance is a share of 100 split across the whole game, so a
+      // team seat is not the same measurement and must not be averaged in with
+      // a duel's.
+      if (g.gameMode !== '1v1') continue;
+      for (const slot of Object.keys(g.players || {})) {
+        const p = g.players[slot];
+        if (p.race !== race) continue;
+        if (skip && normName(p.name) === skip) continue;
+        const m = gm().forSeat(g, slot);
+        if (m) seats.push(m);
+      }
+    }
+    if (seats.length < MIN_RACE_N) return null;
+
+    const pick = (sel) => {
+      const xs = seats.map(sel).filter(x => x !== null && x !== undefined);
+      return { median: median(xs), n: xs.length };
+    };
+
+    return {
+      source: 'local',
+      race,
+      seats: seats.length,
+      dominanceAvg: pick(m => m.dominanceAvg),
+      apmEffective: pick(m => m.apmEffective),
+      heroKills: pick(m => m.heroKills)
     };
   }
 
@@ -560,7 +662,11 @@
 
   // ── Module export (Node) + window export (browser) ─────────────────────────
 
-  const api = { gameView, buildProfile, baseline, knownNames, detectPrimaryName, normName, fmtMs };
+  const api = {
+    gameView, buildProfile, baseline, raceBaseline,
+    knownNames, detectPrimaryName, normName, fmtMs,
+    MIN_RACE_N
+  };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = api;

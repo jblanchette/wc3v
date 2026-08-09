@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FX Bench — projectiles, impacts, muzzles</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <!--
+    FX Bench — a replay-free rig for the effect layer.
+
+    WHY THIS EXISTS
+    ---------------
+    tools/projectile-check.js proves the MODEL is right: it walks a real replay
+    and asserts cadence, seek-safety and flight geometry. It cannot say whether
+    a single pixel reached the screen, because it never opens a browser. The gap
+    between those two — "the numbers are correct and the screen is empty" — is
+    exactly where the effect layer fails, and it was invisible to every tool we
+    had.
+
+    So this page mounts the REAL subsystems (ProjectileModel, ProjectileRenderer3D)
+    against a synthetic two-unit world and then reads the framebuffer back. The
+    decisive measurement is FX.probe().draw.changedPixels: render once with the
+    effect suppressed, once with it drawn, and diff. Non-zero means it
+    rasterized. Nothing else — not counts, not matrices, not "it's in the scene"
+    — actually proves that.
+
+    Nothing here reimplements viewer logic. The host objects below are the
+    minimum shape ProjectileRenderer3D already demands of ThreeMapRenderer and
+    Wc3vViewer; if that contract changes, this page breaks, which is the point.
+
+    DELIBERATE TRAPS, so the bench can fail the way the viewer fails:
+      - map bounds are OFF-CENTRE (cx=3072, cy=1024), so the world→scene
+        centring is genuinely exercised. Centred bounds would make cx=cy=0 and
+        hide a whole class of bug.
+      - terrain can be sloped, and sampleHeight() and the ground mesh are driven
+        by the SAME function, so a wrong ground-Z shows up as a bolt through the
+        dirt rather than quietly cancelling out.
+      - the camera mirrors ThreeMapRenderer's real framing (fov 35, 32° tilt).
+
+    Driven headlessly by tools/fx-bench.js. Everything it needs hangs off
+    window.FX; every control below is a thin wrapper over that same API, so the
+    manual page and the automated run can never diverge.
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="/js/GLBLoader.js"></script>
+  <script src="/js/UnitBehavior.js"></script>
+  <script src="/js/UnitProjectiles.js"></script>
+  <script src="/js/ProjectileModel.js"></script>
+  <script src="/js/ProjectileRenderer3D.js"></script>
+  <script src="/js/UnitModelRenderer.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin: 0; background: #0b1014; color: #cfc7b4; font: 13px/1.5 ui-monospace, Consolas, monospace; overflow: hidden; }
+    canvas { display: block; }
+    #panel {
+      position: absolute; top: 0; left: 0; z-index: 10; width: 320px; max-height: 100vh;
+      overflow-y: auto; padding: 12px; background: rgba(14,18,22,.92); border-right: 1px solid #2a3138;
+    }
+    #panel h1 { font-size: 14px; margin: 0 0 10px; color: #e8dfc8; letter-spacing: .04em; }
+    #panel label { display: block; margin: 9px 0 3px; color: #8b9299; font-size: 12px; }
+    #panel select, #panel input[type=range], #panel input[type=number] { width: 100%; }
+    #panel select, #panel input[type=number], #panel button {
+      background: #171d23; color: #cfc7b4; border: 1px solid #333c45; border-radius: 3px; padding: 5px 7px; font: inherit;
+    }
+    #panel button { cursor: pointer; margin: 3px 3px 0 0; }
+    #panel button.on { border-color: #6d8f4e; color: #cfe0b4; }
+    .row { display: flex; gap: 6px; }
+    .row > * { flex: 1; }
+    #readout { white-space: pre-wrap; margin-top: 12px; padding: 9px; background: #0e1216; border: 1px solid #242c33; border-radius: 3px; font-size: 12px; color: #9fb4c4; }
+    .verdict-ok { color: #a8d07a; }
+    .verdict-bad { color: #e08c7a; }
+    #hint { position: absolute; bottom: 10px; right: 12px; z-index: 10; color: #5d6a75; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <h1>FX BENCH</h1>
+
+    <label for="sel-shooter">Shooter</label>
+    <select id="sel-shooter"></select>
+
+    <label for="sel-target">Target</label>
+    <select id="sel-target"></select>
+
+    <label>Distance <span id="lbl-dist"></span></label>
+    <input type="range" id="rng-dist" min="100" max="1600" step="10" value="600">
+
+    <label>Time <span id="lbl-time"></span></label>
+    <input type="range" id="rng-time" min="0" max="8000" step="16" value="0">
+
+    <div class="row">
+      <button id="btn-play">Play</button>
+      <button id="btn-step">Step +50ms</button>
+    </div>
+
+    <label for="sel-terrain">Terrain</label>
+    <select id="sel-terrain">
+      <option value="flat">flat</option>
+      <option value="slope">slope</option>
+      <option value="hill">hills</option>
+    </select>
+
+    <label for="sel-cam">Camera</label>
+    <select id="sel-cam">
+      <option value="game">game (32° tilt, fov 35)</option>
+      <option value="close">close</option>
+      <option value="top">top-down</option>
+      <option value="low">low angle</option>
+    </select>
+
+    <label>Layers</label>
+    <div>
+      <button id="btn-art" class="on">Missile art</button>
+      <button id="btn-markers" class="on">Unit markers</button>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <button id="btn-probe">Probe frame</button>
+      <button id="btn-sweep">Sweep</button>
+    </div>
+
+    <div id="readout">loading…</div>
+  </div>
+  <div id="hint">drag to orbit · wheel to zoom</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ProjectileRenderer3D reads this the same way it does in the viewer; the
+  // bench needs it to exist so the perf kill-switch is testable here too.
+  window.WC3V_CONFIG = { perf: { projectiles: true } };
+
+  const PM = window.ProjectileModel;
+  const UB = window.UnitBehavior;
+
+  // ---------------------------------------------------------------------------
+  // World constants
+  //
+  // Bounds are deliberately NOT centred on the origin — see the header comment.
+  // cx/cy land on (3072, 1024), so any code that forgets to subtract the map
+  // centre puts its geometry 3000 units off and the bench sees it immediately.
+  // ---------------------------------------------------------------------------
+  const BOUNDS = [[-1024, 7168], [-3072, 5120]];
+  const CX = (BOUNDS[0][0] + BOUNDS[0][1]) / 2;    // 3072
+  const CY = (BOUNDS[1][0] + BOUNDS[1][1]) / 2;    // 1024
+  const CAMERA_TILT_DEG = 32;                      // mirrors ThreeMapRenderer
+  const GROUND_SPAN = 4096;
+  const PATH_STEP_MS = 250;    // dense enough that UnitBehavior.sampleAt never
+                               // hits its path-gap branch and freezes a unit
+
+  // ---- terrain -------------------------------------------------------------
+  // sampleHeight() and the visible ground mesh are BOTH driven by this, so a
+  // bolt drawn at the wrong height reads as a bolt underground, not as nothing.
+  let terrainMode = 'flat';
+  function heightAt (wx, wy) {
+    if (terrainMode === 'flat') return 0;
+    if (terrainMode === 'slope') return (wx - CX) * 0.12;
+    return Math.sin((wx - CX) / 260) * 70 + Math.cos((wy - CY) / 310) * 55;
+  }
+
+  // ---- three.js ------------------------------------------------------------
+  const canvas = document.createElement('canvas');
+  document.body.appendChild(canvas);
+  const renderer = new THREE.WebGLRenderer({
+    canvas, antialias: false,
+    // The whole point of this page is reading the framebuffer back. Without
+    // this the buffer is cleared before we can sample it.
+    preserveDrawingBuffer: true
+  });
+  renderer.setPixelRatio(1);          // 1:1 so pixel counts mean something
+  renderer.setClearColor(0x0b1014, 1);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1014);
+  const camera = new THREE.PerspectiveCamera(35, 1, 10, 50000);
+
+  scene.add(new THREE.AmbientLight(0xe8ebe3, 1.15));
+  const sun = new THREE.DirectionalLight(0xfff1c4, 1.5);
+  sun.position.set(-1200, 3000, -1200);
+  scene.add(sun);
+
+  let groundMesh = null;
+  function buildGround () {
+    if (groundMesh) { scene.remove(groundMesh); groundMesh.geometry.dispose(); groundMesh.material.dispose(); }
+    const SEG = 64;
+    const geo = new THREE.PlaneGeometry(GROUND_SPAN, GROUND_SPAN, SEG, SEG);
+    geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      // Plane local XZ maps to scene XZ; invert the scene→world mapping to ask
+      // heightAt() in the same coordinates sampleHeight() will be asked in.
+      const wx = pos.getX(i) + CX;
+      const wy = -pos.getZ(i) + CY;
+      pos.setY(i, heightAt(wx, wy));
+    }
+    geo.computeVertexNormals();
+    groundMesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: 0x46603a }));
+    scene.add(groundMesh);
+  }
+
+  // Stand-ins for the units. Not the real unit renderer — this bench is about
+  // the effect layer, and a cone is enough to see whether a bolt leaves the
+  // right body and lands on the other one.
+  const markerGroup = new THREE.Group();
+  scene.add(markerGroup);
+  function marker (color) {
+    const m = new THREE.Mesh(
+      new THREE.ConeGeometry(26, 96, 8),
+      new THREE.MeshLambertMaterial({ color })
+    );
+    markerGroup.add(m);
+    return m;
+  }
+  const shooterMarker = marker(0x9a7b4f);
+  const targetMarker = marker(0x7a5a5a);
+
+  // ---------------------------------------------------------------------------
+  // Host objects — the contract ProjectileRenderer3D already expects
+  // ---------------------------------------------------------------------------
+  const host = {                       // stands in for ThreeMapRenderer
+    scene, camera, renderer,
+    mapInfo: { bounds: { map: BOUNDS } },
+    sampleHeight: (wx, wy) => heightAt(wx, wy)
+  };
+
+  const unitsByUuid = new Map();
+  const viewer = {                     // stands in for Wc3vViewer
+    unitsByUuid,
+    viewOptions: { display3DUnits: true },
+    behaviorWorld: { resolve: (t) => buildFrame(t) },
+    requestRender: () => {}
+  };
+
+  // ---------------------------------------------------------------------------
+  // Synthetic units
+  // ---------------------------------------------------------------------------
+  let FXUNITS = null;                  // client/data/fx-units.json
+  let shooter = null, target = null;
+  let distance = 600;
+  let targetMoves = false;
+  const WINDOW_MS = 8000;
+
+  function makePath (x0, y0, x1, y1, facing) {
+    const path = [];
+    for (let t = 0; t <= WINDOW_MS + PATH_STEP_MS; t += PATH_STEP_MS) {
+      const f = Math.min(1, t / WINDOW_MS);
+      path.push({ gameTime: t, x: x0 + (x1 - x0) * f, y: y0 + (y1 - y0) * f, facing });
+    }
+    return path;
+  }
+
+  function buildUnits () {
+    unitsByUuid.clear();
+    const half = distance / 2;
+    const sx = CX - half, sy = CY;
+    const tx = CX + half, ty = CY;
+    // A moving target is the only way to exercise the homing re-aim, which is
+    // the one part of the flight that is not a pure function of launch time.
+    const tx2 = targetMoves ? tx + 400 : tx;
+    const ty2 = targetMoves ? ty + 500 : ty;
+
+    shooter = {
+      uuid: 'bench-shooter', itemId: shooterId,
+      meta: (FXUNITS.units[shooterId] || {}).meta || {},
+      path: makePath(sx, sy, sx, sy, 0),
+      spawnPosition: { x: sx, y: sy },
+      _playerId: 0, _teamId: 0
+    };
+    target = {
+      uuid: 'bench-target', itemId: targetId,
+      meta: (FXUNITS.units[targetId] || {}).meta || {},
+      path: makePath(tx, ty, tx2, ty2, Math.PI),
+      spawnPosition: { x: tx, y: ty },
+      _playerId: 1, _teamId: 1
+    };
+    unitsByUuid.set(shooter.uuid, shooter);
+    unitsByUuid.set(target.uuid, target);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Behaviour frame
+  //
+  // Hand-built, and field-for-field identical to what UnitBehavior emits for an
+  // attacking unit (UnitBehavior.js, the byUuid.set at the end of the attack
+  // branch). The bench forces the engagement on purpose: whether UnitBehavior
+  // DECIDES to attack is behaviour-check.js's job, not this page's. Here the
+  // question is only what the effect layer does once it has been told.
+  //
+  // Memoised on exactly one gameTime, mirroring the viewer's single-slot memo,
+  // so the renderer sees the same frame contract it sees in production.
+  // ---------------------------------------------------------------------------
+  let _memoT = null, _memoFrame = null;
+  function buildFrame (t) {
+    if (_memoT === t && _memoFrame) return _memoFrame;
+    const sp = UB.sampleAt(shooter.path, t) || shooter.spawnPosition;
+    const tp = UB.sampleAt(target.path, t) || target.spawnPosition;
+    const combat = (shooter.meta && shooter.meta.combat) || null;
+    const period = combat
+      ? (Math.max(combat.cooldown || 0, (combat.damagePoint || 0) + (combat.backswing || 0)) || 1) : 1;
+    const swingWindow = combat ? (((combat.damagePoint || 0) + (combat.backswing || 0)) || period) : period;
+    const phase = ((t / 1000) % period + period) % period;
+    const melee = !combat || (combat.weaponType || 'normal') === 'normal';
+    const dx = tp.x - sp.x, dy = tp.y - sp.y;
+
+    const byUuid = new Map();
+    byUuid.set(shooter.uuid, {
+      uuid: shooter.uuid, state: 'attack', x: sp.x, y: sp.y,
+      facing: Math.atan2(dy, dx), bakedFacing: sp.facing,
+      speed: 0, strideScale: 1, melee,
+      targetUuid: target.uuid, targetX: tp.x, targetY: tp.y,
+      targetDist: Math.hypot(dx, dy),
+      swingPeriod: period, swingPhase: phase,
+      clipFill: Math.min(1, phase / swingWindow),
+      acqTime: 0, reason: 'bench'
+    });
+    byUuid.set(target.uuid, {
+      uuid: target.uuid, state: 'idle', x: tp.x, y: tp.y,
+      facing: tp.facing, bakedFacing: tp.facing,
+      speed: 0, strideScale: 1, melee: true,
+      targetUuid: null, swingPeriod: 1, swingPhase: 0, clipFill: 0,
+      acqTime: null, reason: 'bench-target'
+    });
+
+    _memoT = t;
+    _memoFrame = { byUuid, gameTime: t, stats: {} };
+    return _memoFrame;
+  }
+
+  // ---------------------------------------------------------------------------
+  // The subject under test
+  // ---------------------------------------------------------------------------
+  const projectiles = new window.ProjectileRenderer3D(host, viewer);
+
+  // ---------------------------------------------------------------------------
+  // UNIT LAYER — real GLBs, real orientation maths
+  //
+  // Deliberately NOT UnitModelRenderer.update(): that walks ClientPlayers full of
+  // ClientUnits and reads playback-cursor state (recordIndexes, _destroyed,
+  // _isLoadedAt, death lifecycles). Reproducing all of it here would import a
+  // pile of coupling that tells us nothing about the question this layer exists
+  // to answer — which way does the MESH point.
+  //
+  // What it does share is the part under test: orientation goes through
+  // UnitModelRenderer.faceQuaternion, the same call the viewer's placement paths
+  // make. A bench that recomposed the quaternion itself would agree with its own
+  // copy of the maths however wrong both were.
+  // ---------------------------------------------------------------------------
+  const unitLayer = new THREE.Group();
+  scene.add(unitLayer);
+  const _modelCache = new Map();      // itemId -> Promise<template|null>
+  let _unitManifest = null;
+  let shooterModel = null, targetModel = null;
+  let unitsVisible = true;
+
+  function loadManifest () {
+    if (_unitManifest) return Promise.resolve(_unitManifest);
+    return fetch('/assets/models/units/unit-models.json')
+      .then(r => (r.ok ? r.json() : {}))
+      .then(m => { _unitManifest = m || {}; return _unitManifest; })
+      .catch(() => { _unitManifest = {}; return _unitManifest; });
+  }
+
+  /** The GLB name for an itemId, via the same manifest the viewer reads. */
+  function modelNameFor (itemId) {
+    const m = _unitManifest || {};
+    const e = m[itemId] || m[String(itemId).toLowerCase()];
+    if (!e) return null;
+    return typeof e === 'string' ? e : (e.model || e.name || e.file || null);
+  }
+
+  /**
+   * A FRESH GLB per call — never a clone.
+   *
+   * UnitModelRenderer clones from a template, but it does so through an inlined
+   * SkeletonUtils.clone that rebuilds the bone list and rebinds every
+   * SkinnedMesh (see its _cloneTemplate). A plain Object3D.clone(true) keeps the
+   * ORIGINAL skeleton's bone references, so every vertex is skinned against
+   * bones that belong to another object and the mesh renders as a flat sprawl.
+   * The bench only ever shows two units, so re-fetching is cheaper than owning
+   * a second copy of the cloning logic that could drift from the viewer's.
+   */
+  function loadModel (itemId) {
+    return loadManifest().then(() => {
+      const entry = (_unitManifest || {})[itemId] || {};
+      const name = modelNameFor(itemId);
+      if (!name) return null;
+      return new Promise(resolve => {
+        new window.GLBLoader().load(
+          '/assets/models/units/' + String(name).replace(/\.glb$/i, '') + '.glb',
+          res => resolve(res && res.isSkinnedResult ? { res, scale: entry.scale || 1, clips: entry.clips || {} } : null),
+          undefined,
+          () => resolve(null)
+        );
+      });
+    }).catch(() => null);
+  }
+
+  function disposeUnitModel (m) {
+    if (!m) return;
+    unitLayer.remove(m.root);
+  }
+
+  /**
+   * Place a loaded model at a world position with a world facing, using the
+   * viewer's own composition. `scale` mirrors UnitModelRenderer's per-unit scale
+   * closely enough for a silhouette test.
+   */
+  function placeModel (m, wx, wy, facing) {
+    if (!m) return;
+    m.root.position.set(wx - CX, heightAt(wx, wy), -(wy - CY));
+    if (m.scale && m.scale !== 1) m.root.scale.setScalar(m.scale);
+    window.UnitModelRenderer.faceQuaternion(facing, 0, m.wrapper.quaternion);
+  }
+
+  function wrap (loaded) {
+    if (!loaded) return null;
+    const r = loaded.res;
+    // inst.wrapper IS the GLB's placementNode in the viewer (UnitModelRenderer
+    // builds its instances as { root: r.root, wrapper: r.placementNode }), and
+    // _place overwrites that node's quaternion outright. Mirror it exactly.
+    const w = r.placementNode || r.root;
+    const m = {
+      root: r.root, wrapper: w, scale: loaded.scale,
+      mixer: r.animations && r.animations.length ? new THREE.AnimationMixer(r.root) : null,
+      animations: r.animations || [], clips: loaded.clips
+    };
+    unitLayer.add(r.root);
+    return m;
+  }
+
+  /** Play a named clip category ('idle' | 'walk' | 'attack' | 'death'). */
+  function playClip (m, category, timeSec) {
+    if (!m || !m.mixer) return;
+    const spec = m.clips && m.clips[category];
+    if (!spec) return;
+    const clip = m.animations.find(a => a.name === spec.name);
+    if (!clip) return;
+    if (m._action && m._clipName === spec.name) {
+      m._action.time = Math.min(timeSec, clip.duration);
+      m.mixer.update(0);
+      return;
+    }
+    if (m._action) m._action.stop();
+    m._action = m.mixer.clipAction(clip);
+    m._clipName = spec.name;
+    m._action.reset();
+    m._action.setLoop(spec.loop ? THREE.LoopRepeat : THREE.LoopOnce, spec.loop ? Infinity : 1);
+    m._action.clampWhenFinished = true;
+    m._action.play();
+    m._action.paused = true;
+    m._action.time = Math.min(timeSec, clip.duration);
+    m.mixer.update(0);
+  }
+
+  function setUnitModels () {
+    return Promise.all([loadModel(shooterId), loadModel(targetId)]).then(([a, b]) => {
+      disposeUnitModel(shooterModel); disposeUnitModel(targetModel);
+      shooterModel = wrap(a);
+      targetModel = wrap(b);
+      return { shooter: !!shooterModel, target: !!targetModel };
+    });
+  }
+
+  // ---- camera --------------------------------------------------------------
+  let camMode = 'game', camDist = 1800, camYaw = 0;
+  function placeCamera () {
+    const focusW = { x: CX, y: CY };
+    const fy = heightAt(focusW.x, focusW.y);
+    const focus = new THREE.Vector3(focusW.x - CX, fy, -(focusW.y - CY));
+    let tilt = CAMERA_TILT_DEG, d = camDist;
+    if (camMode === 'close') { d = 900; }
+    else if (camMode === 'top') { tilt = 2; d = 1600; }
+    else if (camMode === 'low') { tilt = 72; d = 1400; }
+    const tr = tilt * Math.PI / 180;
+    const h = Math.cos(tr) * d, off = Math.sin(tr) * d;
+    camera.near = 10;
+    camera.far = d * 6;
+    camera.position.set(
+      focus.x + Math.sin(camYaw) * off,
+      focus.y + h,
+      focus.z + Math.cos(camYaw) * off
+    );
+    camera.lookAt(focus);
+    camera.updateProjectionMatrix();
+    camera.updateMatrixWorld(true);
+  }
+
+  function resize (w, h) {
+    const width = w || (window.innerWidth - 320);
+    const height = h || window.innerHeight;
+    renderer.setSize(width, height, true);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    canvas.style.marginLeft = '320px';
+  }
+
+  // ---------------------------------------------------------------------------
+  // Frame
+  // ---------------------------------------------------------------------------
+  let gameTime = 0;
+  let shooterId = 'ohun', targetId = 'hfoo';
+
+  function placeMarkers () {
+    const sp = UB.sampleAt(shooter.path, gameTime) || shooter.spawnPosition;
+    const tp = UB.sampleAt(target.path, gameTime) || target.spawnPosition;
+    shooterMarker.position.set(sp.x - CX, heightAt(sp.x, sp.y) + 48, -(sp.y - CY));
+    targetMarker.position.set(tp.x - CX, heightAt(tp.x, tp.y) + 48, -(tp.y - CY));
+
+    // Models take the facing the viewer would give them: aimed at the target,
+    // derived from geometry exactly as ProjectileModel._emitSwing does.
+    if (shooterModel || targetModel) {
+      const face = Math.atan2(tp.y - sp.y, tp.x - sp.x);
+      placeModel(shooterModel, sp.x, sp.y, face);
+      placeModel(targetModel, tp.x, tp.y, face + Math.PI);
+      // Attack pose driven off the SAME clock the projectile launches from, so
+      // the swing and the bolt can't disagree here either.
+      const combat = shooter.meta && shooter.meta.combat;
+      if (combat && PM) {
+        const fill = PM.clipFillAt(shooter.uuid, gameTime, combat);
+        const spec = (shooterModel && shooterModel.clips && shooterModel.clips.attack) || null;
+        playClip(shooterModel, 'attack', fill * ((spec && spec.duration) || 1));
+      }
+      playClip(targetModel, 'idle', (gameTime / 1000) % 2);
+      unitLayer.visible = unitsVisible;
+    }
+  }
+
+  function updateFx () {
+    projectiles.update(gameTime, null, viewer.viewOptions);
+  }
+
+  function renderFrame () {
+    placeCamera();
+    placeMarkers();
+    updateFx();
+    renderer.render(scene, camera);
+  }
+
+  // ---- framebuffer readback ------------------------------------------------
+  function readPixels () {
+    const gl = renderer.getContext();
+    const w = canvas.width, h = canvas.height;
+    const buf = new Uint8Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    return buf;
+  }
+
+  /**
+   * Did the effect layer actually put ink on the screen this frame?
+   *
+   * Renders the identical frame twice — once with every projectile instance
+   * forced to count 0, once normally — and diffs. Everything else in the scene
+   * (terrain, markers, lighting) is bit-identical between the two passes, so
+   * any changed pixel is the effect layer and nothing else. This is the only
+   * assertion in the whole rig that can distinguish "drew nothing" from
+   * "computed the right numbers and drew nothing".
+   */
+  function drawDelta () {
+    placeCamera();
+    placeMarkers();
+
+    updateFx();
+    projectiles._hide();            // same frame, effect suppressed
+    renderer.render(scene, camera);
+    const before = readPixels();
+
+    updateFx();                     // recompute and draw for real
+    renderer.render(scene, camera);
+    const after = readPixels();
+
+    let changed = 0, energy = 0, maxD = 0;
+    let minX = 1e9, minY = 1e9, maxX = -1, maxY = -1;
+    const w = canvas.width;
+    for (let i = 0, px = 0; i < before.length; i += 4, px++) {
+      const d = Math.abs(before[i] - after[i]) +
+                Math.abs(before[i + 1] - after[i + 1]) +
+                Math.abs(before[i + 2] - after[i + 2]);
+      if (d > 8) {
+        changed++; energy += d;
+        if (d > maxD) maxD = d;
+        const x = px % w, y = (px / w) | 0;
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    }
+    return {
+      changedPixels: changed,
+      energy,
+      maxChannelDelta: maxD,
+      bbox: maxX < 0 ? null : [minX, minY, maxX, maxY]
+    };
+  }
+
+  // ---- instance introspection ---------------------------------------------
+  const _m4 = new THREE.Matrix4();
+  const _v3 = new THREE.Vector3();
+  const _sc = new THREE.Vector3();
+
+  function instanceDump () {
+    const out = [];
+    const meshes = [['generic', projectiles.boltMesh], ['puffs', projectiles.puffMesh]];
+    for (const [name, mesh] of projectiles._missileMeshes.entries()) {
+      if (mesh) meshes.push(['art:' + name, mesh]);
+      else meshes.push(['art:' + name + ' (NO MESH)', null]);
+    }
+    for (const [label, mesh] of meshes) {
+      if (!mesh || !mesh.count) continue;
+      for (let i = 0; i < mesh.count; i++) {
+        mesh.getMatrixAt(i, _m4);
+        _v3.setFromMatrixPosition(_m4);
+        _sc.setFromMatrixScale(_m4);
+        const ndc = _v3.clone().project(camera);
+        out.push({
+          mesh: label, slot: i,
+          scene: [_v3.x, _v3.y, _v3.z].map(v => +v.toFixed(1)),
+          groundY: +heightAt(_v3.x + CX, -_v3.z + CY).toFixed(1),
+          size: [_sc.x, _sc.y].map(v => +v.toFixed(1)),
+          ndc: [ndc.x, ndc.y, ndc.z].map(v => +v.toFixed(3)),
+          onScreen: Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z >= -1 && ndc.z <= 1,
+          color: mesh.instanceColor
+            ? [0, 1, 2].map(k => +mesh.instanceColor.array[i * 3 + k].toFixed(3)) : null,
+          material: {
+            blending: mesh.material.blending === THREE.AdditiveBlending ? 'additive' : 'normal',
+            alphaTest: mesh.material.alphaTest,
+            depthTest: mesh.material.depthTest,
+            vertexColors: mesh.material.vertexColors,
+            opacity: mesh.material.opacity,
+            texLoaded: !!(mesh.material.map && mesh.material.map.image)
+          }
+        });
+      }
+    }
+    return out;
+  }
+
+  function specDump () {
+    if (!PM || !shooter || !target) return null;
+    const s = PM.specFor(shooter, target);
+    if (!s) return { travels: false, note: 'no projectile (melee or unknown weapon)' };
+    return {
+      weaponType: (shooter.meta.combat || {}).weaponType,
+      attackType: s.attackType, travels: s.travels, instant: s.instant,
+      artillery: s.artillery, speed: s.speed, arc: s.arc, homing: s.homing,
+      launchZ: s.launchZ, impactZ: s.impactZ, artName: s.artName,
+      damagePoint: s.damagePoint,
+      periodMs: +(PM.attackPeriod(shooter.meta.combat) * 1000).toFixed(0)
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Public API — the driver in tools/fx-bench.js talks to this and nothing else
+  // ---------------------------------------------------------------------------
+  const FX = window.FX = {
+    ready: null,
+    get unitIds () { return Object.keys(FXUNITS.units); },
+    get rangedIds () {
+      return Object.keys(FXUNITS.units).filter(id => {
+        const u = FXUNITS.units[id];
+        return u.weaponType !== 'normal' && u.hasProjectile;
+      });
+    },
+    info: (id) => FXUNITS.units[id],
+
+    setCase (opts) {
+      opts = opts || {};
+      if (opts.shooter) shooterId = opts.shooter;
+      if (opts.target) targetId = opts.target;
+      if (opts.distance != null) distance = opts.distance;
+      if (opts.terrain) terrainMode = opts.terrain;
+      if (opts.camera) camMode = opts.camera;
+      if (opts.camDist != null) camDist = opts.camDist;
+      if (opts.targetMoves != null) targetMoves = !!opts.targetMoves;
+      if (opts.missileArt != null) FX.setMissileArt(!!opts.missileArt);
+      if (opts.size) resize(opts.size[0], opts.size[1]);
+      if (opts.terrain) buildGround();
+      buildUnits();
+      _memoT = null;
+      syncPanel();
+      return { shooter: shooterId, target: targetId, distance, terrain: terrainMode, camera: camMode };
+    },
+
+    setTime (t) { gameTime = t; _memoT = null; renderFrame(); return gameTime; },
+
+    /** Force every bolt onto the generic streak, bypassing the missile-art path. */
+    setMissileArt (on) {
+      if (!on) {
+        projectiles._missileMeshes.forEach(m => { if (m) projectiles.group.remove(m); });
+        projectiles._missileMeshes.clear();
+        projectiles._missileManifest = {};
+      } else if (projectiles._missileManifest && !Object.keys(projectiles._missileManifest).length) {
+        projectiles._missileMeshes.clear();
+        projectiles._loadMissileManifest();
+      }
+      return on;
+    },
+
+    render: renderFrame,
+
+    /** Load + show the real GLBs for the current shooter/target. */
+    loadUnits () { unitsVisible = true; return setUnitModels().then(r => { renderFrame(); return r; }); },
+    setUnitsVisible (on) { unitsVisible = !!on; unitLayer.visible = unitsVisible; renderFrame(); return unitsVisible; },
+
+    /**
+     * Contact sheet: each unit placed facing a target marker due EAST, drawn
+     * from the game camera. The question "does the mesh point at the thing it
+     * is attacking" is a question about pixels, and no transform-space check
+     * can answer it — a model authored facing -X reports a perfect 0° error and
+     * still renders backwards. So this produces the picture and lets a human
+     * (or the driver's caller) read it.
+     *
+     * Returns { dataUrl, tiles: [{itemId, loaded}] }.
+     */
+    facingSheet (ids, opts) {
+      opts = opts || {};
+      const tile = opts.tile || 260;
+      const cols = opts.cols || 4;
+      const rows = Math.ceil(ids.length / cols);
+      const sheet = document.createElement('canvas');
+      sheet.width = tile * cols;
+      sheet.height = tile * rows;
+      const sx = sheet.getContext('2d');
+      sx.fillStyle = '#0b1014';
+      sx.fillRect(0, 0, sheet.width, sheet.height);
+
+      const prevShooter = shooterId, prevTarget = targetId;
+      const prevCam = camMode, prevDist = camDist, prevSize = [canvas.width, canvas.height];
+      resize(tile, tile);
+      // Profile by default. A near-side-on camera makes "points left" vs
+      // "points right" unambiguous; the game's 32° overhead tilt foreshortens
+      // the facing axis so hard that a 180° error is genuinely hard to call.
+      camMode = opts.camera || 'low';
+      camDist = opts.camDist || 420;
+      unitsVisible = true;
+
+      const tiles = [];
+      let chain = Promise.resolve();
+      ids.forEach((id, i) => {
+        chain = chain.then(() => {
+          shooterId = id; targetId = 'hfoo';
+          distance = 260;
+          buildUnits();
+          _memoT = null;
+          gameTime = 1500;
+          return setUnitModels().then(res => {
+            renderFrame();
+            const cx0 = (i % cols) * tile, cy0 = Math.floor(i / cols) * tile;
+            sx.drawImage(canvas, cx0, cy0, tile, tile);
+            sx.fillStyle = res.shooter ? '#a8d07a' : '#e08c7a';
+            sx.font = '13px ui-monospace, monospace';
+            sx.fillText(id + (res.shooter ? '' : ' (no model)'), cx0 + 8, cy0 + 18);
+            // The target sits due EAST of the shooter, so a correctly oriented
+            // mesh faces RIGHT in every tile. That is the whole read.
+            sx.fillStyle = '#5d6a75';
+            sx.fillText('target →', cx0 + 8, cy0 + tile - 10);
+            sx.strokeStyle = '#242c33';
+            sx.strokeRect(cx0 + 0.5, cy0 + 0.5, tile - 1, tile - 1);
+            tiles.push({ itemId: id, loaded: !!res.shooter });
+          });
+        });
+      });
+
+      return chain.then(() => {
+        shooterId = prevShooter; targetId = prevTarget;
+        camMode = prevCam; camDist = prevDist;
+        resize(prevSize[0], prevSize[1]);
+        buildUnits(); _memoT = null;
+        return { dataUrl: sheet.toDataURL('image/png'), tiles };
+      });
+    },
+
+    probe () {
+      const draw = drawDelta();
+      const frame = buildFrame(gameTime);
+      const d = frame.byUuid.get(shooter.uuid);
+      return {
+        t: gameTime,
+        shooter: shooterId, target: targetId, distance,
+        terrain: terrainMode, camera: camMode,
+        state: d && d.state, melee: d && d.melee,
+        spec: specDump(),
+        counts: {
+          bolts: projectiles.collector.bolts.length,
+          impacts: projectiles.collector.impacts.length,
+          muzzles: projectiles.collector.muzzles.length,
+          drawnBolts: projectiles.lastCounts.bolts,
+          drawnPuffs: projectiles.lastCounts.puffs
+        },
+        instances: instanceDump(),
+        draw
+      };
+    },
+
+    /**
+     * Walk one engagement and report where the model and the screen disagree.
+     * airborneTicks vs inkTicks IS the bug signature: equal means the layer is
+     * healthy, airborne>0 with ink 0 means it computes and never draws.
+     */
+    sweep (opts) {
+      opts = opts || {};
+      const from = opts.from || 0;
+      const to = opts.to != null ? opts.to : 4000;
+      const step = opts.step || 50;
+      let airborne = 0, ink = 0, maxChanged = 0, firstInk = null, firstAirborne = null;
+      const meshes = new Set();
+      const blanks = [];
+      let spec = null;
+      for (let t = from; t <= to; t += step) {
+        FX.setTime(t);
+        const c = projectiles.collector;
+        const live = c.bolts.length + c.impacts.length + c.muzzles.length;
+        if (!spec) spec = specDump();
+        if (live) {
+          airborne++;
+          if (firstAirborne == null) firstAirborne = t;
+          const inst = instanceDump();
+          for (const i of inst) meshes.add(i.mesh);
+          const d = drawDelta();
+          if (d.changedPixels > 0) {
+            ink++;
+            if (firstInk == null) firstInk = t;
+            if (d.changedPixels > maxChanged) maxChanged = d.changedPixels;
+          } else {
+            // Airborne and drew nothing. Record enough to tell the two causes
+            // apart: an effect at the very end of its fade is SUPPOSED to be
+            // invisible, a full-brightness one that vanished is the bug. The
+            // brightest channel across every live instance separates them.
+            let lum = 0;
+            for (const i of inst) if (i.color) lum = Math.max(lum, ...i.color);
+            blanks.push({
+              t, bolts: c.bolts.length, impacts: c.impacts.length,
+              muzzles: c.muzzles.length, maxLum: +lum.toFixed(3),
+              onScreen: inst.some(i => i.onScreen)
+            });
+          }
+        }
+      }
+      // A blank tick is only forgivable when everything live on it had faded to
+      // nothing. One bright instance that drew zero pixels is a real failure.
+      const FADE_FLOOR = 0.06;
+      const unexplained = blanks.filter(b => b.maxLum > FADE_FLOOR);
+      return {
+        blankTicks: blanks,
+        unexplainedBlanks: unexplained.length,
+        shooter: shooterId, target: targetId, distance,
+        terrain: terrainMode, camera: camMode,
+        ticks: Math.floor((to - from) / step) + 1,
+        airborneTicks: airborne, inkTicks: ink,
+        maxChangedPixels: maxChanged,
+        firstAirborneMs: firstAirborne, firstInkMs: firstInk,
+        meshesUsed: [...meshes],
+        spec,
+        verdict: airborne === 0 ? 'NO-FX'
+          : ink === 0 ? 'INVISIBLE'
+          : unexplained.length ? 'PARTIAL'
+          : 'OK'
+      };
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // Panel wiring — thin wrappers over FX so manual and headless agree
+  // ---------------------------------------------------------------------------
+  const $ = (id) => document.getElementById(id);
+  const readout = $('readout');
+
+  function syncPanel () {
+    $('lbl-dist').textContent = distance + ' wu';
+    $('lbl-time').textContent = gameTime + ' ms';
+    if ($('sel-shooter').value !== shooterId) $('sel-shooter').value = shooterId;
+    if ($('sel-target').value !== targetId) $('sel-target').value = targetId;
+  }
+
+  function show (obj) {
+    const v = obj.verdict || (obj.draw && (obj.draw.changedPixels > 0 ? 'OK' : 'INVISIBLE'));
+    const cls = v === 'OK' ? 'verdict-ok' : 'verdict-bad';
+    readout.innerHTML = `<span class="${cls}">${v || ''}</span>\n` +
+      JSON.stringify(obj, null, 1);
+  }
+
+  function fillUnitSelect (sel, chosen) {
+    const ids = Object.keys(FXUNITS.units).sort((a, b) => {
+      const A = FXUNITS.units[a], B = FXUNITS.units[b];
+      if (A.hasProjectile !== B.hasProjectile) return A.hasProjectile ? -1 : 1;
+      return A.displayName.localeCompare(B.displayName);
+    });
+    sel.innerHTML = '';
+    for (const id of ids) {
+      const u = FXUNITS.units[id];
+      const o = document.createElement('option');
+      o.value = id;
+      o.textContent = `${u.displayName} (${id}) ${u.weaponType}`;
+      sel.appendChild(o);
+    }
+    sel.value = chosen;
+  }
+
+  let playing = false;
+  function tick () {
+    if (!playing) return;
+    gameTime = (gameTime + 16) % WINDOW_MS;
+    _memoT = null;
+    $('rng-time').value = gameTime;
+    syncPanel();
+    renderFrame();
+    requestAnimationFrame(tick);
+  }
+
+  function wirePanel () {
+    fillUnitSelect($('sel-shooter'), shooterId);
+    fillUnitSelect($('sel-target'), targetId);
+
+    $('sel-shooter').onchange = e => { FX.setCase({ shooter: e.target.value }); renderFrame(); show(FX.probe()); };
+    $('sel-target').onchange = e => { FX.setCase({ target: e.target.value }); renderFrame(); show(FX.probe()); };
+    $('rng-dist').oninput = e => { FX.setCase({ distance: +e.target.value }); renderFrame(); };
+    $('rng-time').oninput = e => { FX.setTime(+e.target.value); syncPanel(); };
+    $('sel-terrain').onchange = e => { FX.setCase({ terrain: e.target.value }); renderFrame(); };
+    $('sel-cam').onchange = e => { camMode = e.target.value; renderFrame(); };
+    $('btn-play').onclick = e => {
+      playing = !playing; e.target.classList.toggle('on', playing);
+      e.target.textContent = playing ? 'Pause' : 'Play';
+      if (playing) tick();
+    };
+    $('btn-step').onclick = () => { FX.setTime(gameTime + 50); syncPanel(); };
+    $('btn-art').onclick = e => {
+      const on = !e.target.classList.contains('on');
+      e.target.classList.toggle('on', on);
+      FX.setMissileArt(on); renderFrame();
+    };
+    $('btn-markers').onclick = e => {
+      const on = !e.target.classList.contains('on');
+      e.target.classList.toggle('on', on);
+      markerGroup.visible = on; renderFrame();
+    };
+    $('btn-probe').onclick = () => show(FX.probe());
+    $('btn-sweep').onclick = () => show(FX.sweep({ to: 4000, step: 50 }));
+
+    // Orbit, so a "you just can't see it from there" theory can be killed by hand.
+    let dragging = false, lastX = 0;
+    canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; });
+    addEventListener('mouseup', () => { dragging = false; });
+    addEventListener('mousemove', e => {
+      if (!dragging) return;
+      camYaw += (e.clientX - lastX) * 0.008; lastX = e.clientX; renderFrame();
+    });
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      camDist = Math.max(300, Math.min(6000, camDist * (e.deltaY > 0 ? 1.1 : 0.9)));
+      renderFrame();
+    }, { passive: false });
+    addEventListener('resize', () => { resize(); renderFrame(); });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Boot
+  // ---------------------------------------------------------------------------
+  FX.ready = fetch('/data/fx-units.json')
+    .then(r => {
+      if (!r.ok) throw new Error('fx-units.json ' + r.status + ' — run: node tools/gen-fx-units.js');
+      return r.json();
+    })
+    .then(j => {
+      FXUNITS = j;
+      resize();
+      buildGround();
+      buildUnits();
+      wirePanel();
+      renderFrame();
+      show(FX.probe());
+      window.FX_READY = true;
+      return true;
+    })
+    .catch(err => {
+      readout.textContent = 'BOOT FAILED: ' + err.message;
+      window.FX_ERROR = err.message;
+      throw err;
+    });
+})();
+</script>
+</body>
+</html>

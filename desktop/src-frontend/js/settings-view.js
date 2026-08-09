@@ -52,6 +52,29 @@
       if (n) btn.textContent = `Retry ${n} failed`;
     };
 
+    // Which build this is. The update panel only ever said what was AVAILABLE,
+    // so "did my change land" had no answer anywhere in the app. Comes from
+    // Tauri's package_info, which reads tauri.conf.json, because the Cargo
+    // manifest disagreed with it for three releases.
+    (async () => {
+      const out = el('app-version');
+      if (!out) return;
+      try {
+        const v = await deps.invoke('app_version');
+        out.textContent = `WC3V ${v}`;
+        // Copyable, because the first thing anybody is asked in a bug report is
+        // which version they are on.
+        out.addEventListener('click', () => {
+          navigator.clipboard.writeText(`WC3V ${v}`).then(
+            () => deps.log(`version ${v} copied`, 'ok'),
+            () => {}
+          );
+        });
+      } catch (e) {
+        out.textContent = 'WC3V (version unavailable)';
+      }
+    })();
+
     el('pick-folder').addEventListener('click', async () => {
       const dir = await window.__TAURI__.dialog.open({ directory: true });
       if (!dir) return;

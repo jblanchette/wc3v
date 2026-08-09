@@ -7,9 +7,13 @@
 		"gen-builds-cards": "node tools/gen-builds-cards.js",
 		"gen-manifest": "node tools/gen-asset-manifest.js",
 		"check-manifest": "node tools/gen-asset-manifest.js --check",
+		"fx-bench": "node tools/fx-bench.js",
+		"fx-bench:zoom": "node tools/fx-bench.js --zoom",
+		"fx-bench:viewer": "node tools/fx-bench.js --viewer",
+		"gen-fx-units": "node tools/gen-fx-units.js",
 		"desktop": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri dev",
 		"desktop:build": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
-		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-report.js && node tools/test-backfill-catchup.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release"
+		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release"
 	},
 	"devDependencies": {
 		"@gltf-transform/core": "^4.4.0",
@@ -24,6 +28,7 @@
 		"pako": "^1.0.11",
 		"path-browserify": "^1.0.1",
 		"process": "^0.11.10",
+		"puppeteer-core": "^25.5.0",
 		"sharp": "^0.35.3",
 		"stream-browserify": "^3.0.0",
 		"util": "^0.12.5"

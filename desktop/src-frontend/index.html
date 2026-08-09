@@ -6,19 +6,40 @@
   <link rel="icon" href="./favicon-32x32.png" sizes="32x32">
   <link rel="icon" href="./favicon-16x16.png" sizes="16x16">
   <!-- tokens.css is the web client's token layer, copied in by
-       tools/build-desktop-client.js. app.css consumes it and adds only what the
-       warm carved register needs. Load order matters. -->
+       tools/build-desktop-client.js. The desktop's own sheets consume it and
+       add only what the warm carved register needs. Load order matters. -->
   <link rel="stylesheet" href="./css/vendor/tokens.css">
   <!-- The viewer's dominance chart and resource charts. The SAME stylesheet
        client/viewer.html loads, copied in by tools/build-desktop-client.js.
-       Before app.css, so this app's own sizing overrides win. It also carries
-       the tug-of-war gauge's rules, which nothing here mounts — the file is the
-       viewer's and the viewer still uses them. -->
+       Before this app's sheets, so its own sizing overrides win. It also
+       carries the tug-of-war gauge's rules, which nothing here mounts: the file
+       is the viewer's and the viewer still uses them. -->
   <link rel="stylesheet" href="./css/vendor/dominance.css">
-  <link rel="stylesheet" href="./css/app.css">
+  <!-- The Match Summary screen's layout, shared with the viewer. Loaded before
+       the app's own sheets so css/report.css can override it for this app's
+       warm surfaces. -->
+  <link rel="stylesheet" href="./css/vendor/match-summary.css">
+
+  <!-- THIS ORDER IS THE CASCADE. It was one 2,567-line app.css; see the header
+       of tokens-desktop.css for what lives where. states.css is last because
+       its breakpoints override everything above them. -->
+  <link rel="stylesheet" href="./css/tokens-desktop.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/chrome.css">
+  <link rel="stylesheet" href="./css/feed.css">
+  <link rel="stylesheet" href="./css/report.css">
+  <link rel="stylesheet" href="./css/library.css">
+  <link rel="stylesheet" href="./css/charts.css">
+  <link rel="stylesheet" href="./css/coach.css">
+  <link rel="stylesheet" href="./css/settings.css">
+  <link rel="stylesheet" href="./css/controls.css">
+  <link rel="stylesheet" href="./css/states.css">
   <!-- The overlay's own stylesheet, so the Stream preview is drawn by exactly
        what an OBS Browser Source loads. -->
   <link rel="stylesheet" href="./overlay/overlay.css">
+  <!-- The casting overlay's own stylesheet, for its preview on the Stream
+       screen. Same file the /cast Browser Source is served. -->
+  <link rel="stylesheet" href="./overlay/cast.css">
 </head>
 <body>
   <div id="app">
@@ -37,6 +58,12 @@
                 role="tab" aria-selected="true">Home</button>
         <button class="nav-item" data-view="profile" type="button"
                 role="tab" aria-selected="false">Coach</button>
+        <!-- Everybody else's games. Watching and studying other people's
+             replays is most of how this game is consumed, and until this tab
+             existed one of them rendered as a broken version of your own
+             report. See the README's identity sentence. -->
+        <button class="nav-item" data-view="library" type="button"
+                role="tab" aria-selected="false">Library</button>
         <button class="nav-item" data-view="stream" type="button"
                 role="tab" aria-selected="false">Stream</button>
       </nav>
@@ -99,6 +126,20 @@
         </button>
       </div>
     </header>
+
+    <!-- Schema migration.
+         Shown only while the store is behind SCHEMA_VERSION. A stored summary
+         written under an older schema is missing blocks only a re-parse can
+         produce, and a report drawn from one is a report that quietly says
+         less. The app re-reads the history itself rather than leaving a
+         half-populated store behind a button somebody has to find; this strip
+         is the only thing that says so. See app.js `startMigration`. -->
+    <div class="migrate" id="migrate" hidden>
+      <span class="migrate-spin" aria-hidden="true"></span>
+      <span class="migrate-text" id="migrate-text">Updating your history…</span>
+      <div class="migrate-bar"><div class="migrate-fill" id="migrate-fill"></div></div>
+      <button class="btn migrate-btn" id="migrate-toggle" type="button">Pause</button>
+    </div>
 
     <main>
       <!-- ── Games ────────────────────────────────────────────────────── -->
@@ -189,10 +230,91 @@
         <div class="coach-grid" id="profile-body"></div>
       </section>
 
+      <!-- ── Library ──────────────────────────────────────────────────────
+           Games you were not in. Its own list and its own report column, so
+           nothing here has to pretend one of the seats is yours. The report is
+           the SAME renderer Home mounts (js/game-report-view.js), in its
+           symmetric presentation. -->
+      <section class="view view-library" data-view="library" hidden>
+        <div class="lib-head">
+          <label class="field field-inline">
+            <span class="field-label">Search</span>
+            <input id="lib-search" type="search" autocomplete="off"
+                   placeholder="player, map or tag">
+          </label>
+          <div class="seg" id="lib-race" role="group" aria-label="Race"></div>
+          <span class="lib-count" id="lib-count"></span>
+          <button id="lib-open" class="btn" type="button">Open a replay…</button>
+        </div>
+        <div class="lib-grid">
+          <div class="lib-list scroll" id="lib-list"></div>
+          <div class="detail-col" id="lib-detail"></div>
+        </div>
+      </section>
+
       <!-- ── Stream ───────────────────────────────────────────────────── -->
       <section class="view view-stream" data-view="stream" hidden>
         <div class="stream-grid" id="stream-body"></div>
       </section>
+
+      <!-- ── First run ────────────────────────────────────────────────────
+           Shown once, over everything, on a machine that has never been set
+           up. Four rows and a Start button; every row is skippable, because a
+           setup screen you cannot get past is a worse first impression than a
+           half-configured app.
+
+           The W3Champions row ships CHECKED. It is the one thing here that
+           leaves the machine, so it says exactly what it sends and where to
+           turn it off, in front of the person rather than buried in Settings.
+           The checkbox writes through the same `set_w3c_enabled` command
+           Settings uses, so the binary stays the authority: w3c.rs refuses
+           every request until its marker file exists, checkbox or no. -->
+      <aside class="sheet setup" id="setup-sheet" role="dialog" aria-modal="true"
+             aria-labelledby="setup-title" hidden>
+        <header class="sheet-head">
+          <h2 id="setup-title">Set up WC3V</h2>
+        </header>
+        <div class="sheet-body scroll">
+          <div class="setup-row">
+              <h3>Replay folder</h3>
+              <p class="hint" id="setup-roots">Looking for your replays…</p>
+              <button id="setup-folder" class="btn" type="button">Add a folder…</button>
+            </div>
+
+          <div class="setup-row">
+              <h3>Your player name</h3>
+              <p class="hint">Wins and losses are scored from this seat.</p>
+              <input id="setup-name" list="known-names" autocomplete="off"
+                     placeholder="Name#1234">
+            </div>
+
+          <div class="setup-row">
+              <h3>W3Champions</h3>
+              <label class="check">
+                <input type="checkbox" id="setup-w3c" checked>
+                <span>Look up ladder rank and live matches</span>
+              </label>
+              <p class="hint">
+                Sends your battle tag to W3Champions and nothing else. Your
+                replays never leave this machine. Turn it off any time in
+                Settings.
+              </p>
+            </div>
+
+          <div class="setup-row">
+              <h3>Your history</h3>
+              <label class="check">
+                <input type="checkbox" id="setup-backfill" checked>
+                <span>Read the replays already on disk</span>
+              </label>
+              <p class="hint">Runs in the background. You can play while it works.</p>
+            </div>
+        </div>
+        <footer class="sheet-foot">
+          <button id="setup-skip" class="btn" type="button">Skip</button>
+          <button id="setup-start" class="btn btn-primary" type="button">Start</button>
+        </footer>
+      </aside>
 
       <!-- ── Settings ─────────────────────────────────────────────────────
            A sheet over whatever screen you are on, not a view of its own.
@@ -266,8 +388,15 @@
           </section>
         </div>
 
-        <!-- Pinned at the foot of the sheet, never scrolled past. -->
-        <p class="legal">Warcraft III and all related assets are trademarks
+        <!-- Pinned at the foot of the sheet, never scrolled past.
+
+             The version sits here because "which build am I running" is a
+             question you ask while looking for a change you expected to see,
+             and until now the app answered it nowhere. The update panel above
+             only ever said what was AVAILABLE. -->
+        <p class="legal">
+          <span class="app-version" id="app-version" title="Click to copy"></span>
+          Warcraft III and all related assets are trademarks
           of Blizzard Entertainment, Inc. WC3V is a fan-made, non-commercial
           tool not affiliated with or endorsed by Blizzard.</p>
       </aside>
@@ -285,20 +414,42 @@
   <!-- Shared client modules, placed into js/vendor by
        tools/build-desktop-client.js. Must load before the app modules. -->
   <script src="./js/vendor/SummaryExtract.js"></script>
-  <script src="./js/vendor/ProfileAggregate.js"></script>
   <script src="./js/vendor/MomentsExtract.js"></script>
-  <script src="./js/vendor/GameReport.js"></script>
-  <script src="./js/vendor/CompareCharts.js"></script>
   <script src="./js/vendor/SeriesExtract.js"></script>
+  <!-- The viewer's own build-order derivation. SummaryBuild runs it at parse
+       time and stores the result, so this app and the viewer's Match Summary
+       screen read the same numbers out of the same class. -->
+  <script src="./js/vendor/BuildOrderData.js"></script>
+  <!-- The stored-summary shape and its version, calling the four above. -->
+  <script src="./js/vendor/SummaryBuild.js"></script>
+  <!-- One summary and one seat as scalars. ProfileAggregate reads it. -->
+  <script src="./js/vendor/GameMetrics.js"></script>
+  <script src="./js/vendor/ProfileAggregate.js"></script>
+  <script src="./js/vendor/CompareCharts.js"></script>
   <!-- The viewer's own chart widgets. Mounted from data by
        js/dominance-panel.js and js/economy-panel.js, never from a viewer.
        DominanceBar is not shipped here — see build-desktop-client.js. -->
   <script src="./js/vendor/DominanceChart.js"></script>
+  <!-- The Match Summary screen, shared with the viewer. CombatTables first:
+       MatchSummaryView reads it for the Unit Roster and the Damage Matchup. -->
+  <script src="./js/vendor/CombatTables.js"></script>
+  <script src="./js/vendor/MatchSummaryView.js"></script>
   <script src="./overlay/overlay-render.js"></script>
+  <script src="./overlay/cast-render.js"></script>
   <script src="./js/store.js"></script>
   <script src="./js/replay-index.js"></script>
   <script src="./js/identity.js"></script>
   <script src="./js/race-icons.js"></script>
+  <!-- Every mark in the app that is not a race and not game art. -->
+  <script src="./js/glyphs.js"></script>
+  <!-- node/buildIcon/raceMark/playerTitle and friends. Both the feed and the
+       Library build out of these, so they load before either. -->
+  <script src="./js/ui-bits.js"></script>
+  <!-- The "vs the Orcs you have played" column: your own corpus first, the
+       shipped ladder sample only until you have one. The table is generated by
+       tools/build-race-baselines.js and loads before the resolver. -->
+  <script src="./js/race-baseline-data.js"></script>
+  <script src="./js/race-baselines.js"></script>
   <script src="./js/dominance-panel.js"></script>
   <script src="./js/economy-panel.js"></script>
   <script src="./js/chart-panel.js"></script>
@@ -307,12 +458,21 @@
        it to split the Bought row, so it loads first. -->
   <script src="./js/item-classes.js"></script>
   <script src="./js/build-card.js"></script>
+  <!-- Free tags, in a sidecar a re-parse cannot eat. -->
+  <script src="./js/game-tags.js"></script>
+  <!-- A stored summary as the shared Match Summary model. Needs build-card.js
+       above it for the item stacking and the Mirror Image hero dedupe. -->
+  <script src="./js/summary-model.js"></script>
+  <!-- The report, as a renderer both Home and the Library mount. -->
+  <script src="./js/game-report-view.js"></script>
   <script src="./js/w3c.js"></script>
   <script src="./js/scout.js"></script>
   <script src="./js/games-view.js"></script>
+  <script src="./js/library-view.js"></script>
   <script src="./js/profile-view.js"></script>
   <script src="./js/stream-view.js"></script>
   <script src="./js/settings-view.js"></script>
+  <script src="./js/first-run.js"></script>
   <script src="./js/backfill.js"></script>
   <script src="./js/overlay-state.js"></script>
   <script src="./js/app.js"></script>

@@ -29,6 +29,13 @@ const {
 
 const UNITS_DIR = path.join(__dirname, 'map-data', 'units');
 const TEXTURES_DIR = path.join(__dirname, 'map-data', 'textures');
+// Some unit skins were extracted under their CASC path (ReplaceableTextures\<Unit>\)
+// rather than next to the model. The Mountain King is the case that exposed this:
+// his MDX asks for ReplaceableTextures\HeroMountainKing\heromountainking.blp, only
+// heromountainkingAvatar.dds sat beside the .mdx, and the base skin lived here — so
+// the diffuse never resolved, the exporter emitted no material at all, and he
+// rendered as an untextured white blob.
+const REPLACEABLE_DIR = path.join(__dirname, 'map-data', 'replaceabletextures');
 const OUTPUT_DIR = path.join(__dirname, '..', 'client', 'assets', 'models', 'units');
 
 // Z-up (MDX) -> Y-up (Three.js): -90 deg about +X. Lives on the wrapper root node.
@@ -39,97 +46,13 @@ const ZUP_TO_YUP_QUAT = [-0.70710678, 0, 0, 0.70710678];
 // (Kept local so the static tool's CLI main() doesn't run on require. Refactor
 // into a shared module in Phase 1 when both exporters are permanent.)
 // ---------------------------------------------------------------------------
-function rgb565to888 (c) {
-  const r = (c >> 11) & 0x1F, g = (c >> 5) & 0x3F, b = c & 0x1F;
-  return [(r << 3) | (r >> 2), (g << 2) | (g >> 4), (b << 3) | (b >> 2)];
-}
-function decodeDxt1Block (data, offset, out, width, height, px0, py0, dxt3or5) {
-  const c0 = data.readUInt16LE(offset), c1 = data.readUInt16LE(offset + 2);
-  const indices = data.readUInt32LE(offset + 4);
-  const col0 = rgb565to888(c0), col1 = rgb565to888(c1);
-  let col2, col3, alpha3 = 255;
-  if (c0 > c1 || dxt3or5) {
-    col2 = [Math.round((2 * col0[0] + col1[0]) / 3), Math.round((2 * col0[1] + col1[1]) / 3), Math.round((2 * col0[2] + col1[2]) / 3)];
-    col3 = [Math.round((col0[0] + 2 * col1[0]) / 3), Math.round((col0[1] + 2 * col1[1]) / 3), Math.round((col0[2] + 2 * col1[2]) / 3)];
-  } else {
-    col2 = [Math.round((col0[0] + col1[0]) / 2), Math.round((col0[1] + col1[1]) / 2), Math.round((col0[2] + col1[2]) / 2)];
-    col3 = [0, 0, 0]; alpha3 = 0;
-  }
-  const palette = [col0, col1, col2, col3];
-  for (let py = 0; py < 4; py++) {
-    const yy = py0 + py; if (yy >= height) continue;
-    for (let px = 0; px < 4; px++) {
-      const xx = px0 + px; if (xx >= width) continue;
-      const idx = (indices >>> ((py * 4 + px) * 2)) & 0x3, c = palette[idx], dst = (yy * width + xx) * 4;
-      out[dst] = c[0]; out[dst + 1] = c[1]; out[dst + 2] = c[2];
-      if (!dxt3or5) out[dst + 3] = (idx === 3) ? alpha3 : 255;
-    }
-  }
-}
-function decodeDxt5AlphaBlock (data, offset, out, width, height, px0, py0) {
-  const a0 = data[offset], a1 = data[offset + 1];
-  const pal = new Array(8); pal[0] = a0; pal[1] = a1;
-  if (a0 > a1) { for (let i = 1; i < 7; i++) pal[i + 1] = Math.round(((7 - i) * a0 + i * a1) / 7); }
-  else { for (let i = 1; i < 5; i++) pal[i + 1] = Math.round(((5 - i) * a0 + i * a1) / 5); pal[6] = 0; pal[7] = 255; }
-  const lo = data[offset + 2] | (data[offset + 3] << 8) | (data[offset + 4] << 16);
-  const hi = data[offset + 5] | (data[offset + 6] << 8) | (data[offset + 7] << 16);
-  for (let i = 0; i < 16; i++) {
-    const py = i >> 2, px = i & 3, yy = py0 + py, xx = px0 + px;
-    if (yy >= height || xx >= width) continue;
-    const idx = i < 8 ? (lo >> (i * 3)) & 7 : (hi >> ((i - 8) * 3)) & 7;
-    out[(yy * width + xx) * 4 + 3] = pal[idx];
-  }
-}
-function decodeDds (buf) {
-  if (buf.length < 128 || buf.toString('ascii', 0, 4) !== 'DDS ') throw new Error('bad DDS');
-  const width = buf.readUInt32LE(16), height = buf.readUInt32LE(12);
-  const fourcc = buf.toString('ascii', 84, 88), rgbBitCount = buf.readUInt32LE(88);
-  const out = new Uint8ClampedArray(width * height * 4);
-  const data = buf.slice(128);
-  if (fourcc === 'DXT1') {
-    let off = 0; for (let by = 0; by < height; by += 4) for (let bx = 0; bx < width; bx += 4) { decodeDxt1Block(data, off, out, width, height, bx, by, false); off += 8; }
-    return { width, height, rgba: out };
-  }
-  if (fourcc === 'DXT5') {
-    let off = 0; for (let by = 0; by < height; by += 4) for (let bx = 0; bx < width; bx += 4) { decodeDxt5AlphaBlock(data, off, out, width, height, bx, by); decodeDxt1Block(data, off + 8, out, width, height, bx, by, true); off += 16; }
-    return { width, height, rgba: out };
-  }
-  if (fourcc === 'DXT3') {
-    let off = 0; for (let by = 0; by < height; by += 4) for (let bx = 0; bx < width; bx += 4) {
-      for (let py = 0; py < 4; py++) { const yy = by + py; if (yy >= height) continue; const rowBytes = data.readUInt16LE(off + py * 2); for (let px = 0; px < 4; px++) { const xx = bx + px; if (xx >= width) continue; const a4 = (rowBytes >> (px * 4)) & 0xF; out[(yy * width + xx) * 4 + 3] = (a4 << 4) | a4; } }
-      decodeDxt1Block(data, off + 8, out, width, height, bx, by, true); off += 16;
-    }
-    return { width, height, rgba: out };
-  }
-  if (rgbBitCount === 32) {
-    for (let i = 0; i < width * height; i++) { const px = data.readUInt32LE(i * 4); out[i * 4] = (px >> 16) & 0xFF; out[i * 4 + 1] = (px >> 8) & 0xFF; out[i * 4 + 2] = px & 0xFF; out[i * 4 + 3] = (px >> 24) & 0xFF; }
-    return { width, height, rgba: out };
-  }
-  throw new Error('unsupported DDS: ' + fourcc);
-}
-function ddsToPngBuffer (ddsPath) {
-  const { width, height, rgba } = decodeDds(fs.readFileSync(ddsPath));
-  const canvas = createCanvas(width, height);
-  canvas.getContext('2d').putImageData(new ImageData(rgba, width, height), 0, 0);
-  return canvas.toBuffer('image/png');
-}
+const { decodeDds, ddsToPngBuffer, buildDdsIndex: buildDdsIndexIn } = require('./lib/dds');
 
-// Index every .dds under units/ and textures/ by lowercase basename.
+// Index every .dds under units/, textures/ and replaceabletextures/ by lowercase
+// basename. Order matters: the index is first-wins, so replaceabletextures/ goes
+// LAST and can only fill gaps, never shadow a name the other two already resolve.
 function buildDdsIndex () {
-  const index = {};
-  function walk (dir) {
-    if (!fs.existsSync(dir)) return;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory()) walk(path.join(dir, entry.name));
-      else if (entry.name.toLowerCase().endsWith('.dds')) {
-        const base = entry.name.slice(0, -4).toLowerCase();
-        if (!index[base]) index[base] = path.join(dir, entry.name);
-      }
-    }
-  }
-  walk(UNITS_DIR);
-  walk(TEXTURES_DIR);
-  return index;
+  return buildDdsIndexIn([UNITS_DIR, TEXTURES_DIR, REPLACEABLE_DIR]);
 }
 
 // ---------------------------------------------------------------------------
@@ -166,11 +89,21 @@ function windowTrack (track, comps, start, end) {
 // Match by directory + basename PREFIX (not loose substring) so unit names like
 // "HeroShadowHunter.blp" aren't mistaken for the generic "Shadow.blp" plane.
 function isEffectTexture (image) {
+  return isDecalTexture(image) || isParticleTexture(image);
+}
+// Ground/shadow decals and weather planes. These are NEVER part of a unit's body,
+// not even for a unit that IS an effect — a wisp has no shadow quad to revive.
+function isDecalTexture (image) {
   const p = image.toLowerCase().replace(/\\/g, '/');
   if (p.includes('replaceabletextures/weather') || p.includes('/splats/') || p.includes('ubersplat')) return true;
   const base = path.basename(p, path.extname(p));
-  if (base === 'shadow' || base === 'shadowflyer') return true;
-  return /^(clouds?|dust\d|smoke|flare|shockwave|lightning|glow|star\d|splat)/.test(base);
+  return base === 'shadow' || base === 'shadowflyer' || /^splat/.test(base);
+}
+// Particle sprites (sparks, glows, star flares). Dropped from a normal unit, but
+// for a unit whose whole model is particles — the Wisp — they ARE the unit.
+function isParticleTexture (image) {
+  const base = path.basename(image.toLowerCase().replace(/\\/g, '/'), path.extname(image));
+  return /^(clouds?|dust\d|smoke|flare|shockwave|lightning|glow|star\d)/.test(base);
 }
 // MDX FilterMode → glTF alpha mode + WC3 blend intent. None is opaque; Transparent
 // is a hard alpha cutout (WC3/HiveWE discard at 0.75); everything else blends. The
@@ -189,6 +122,40 @@ function alphaModeFor (filterMode) {
   }
 }
 
+// A layer's TextureID is usually a plain index, but it can also be an animation
+// TRACK — the WC3 texture flipbook. The Water Elemental's body cycles
+// Textures\Lords0000..0007 on a GlobalSequence; the Sea Elemental does the same.
+// Treating a track as "no texture" dropped 89% of the water elemental's vertices
+// and 65% of the sea elemental's, leaving only the team-coloured fists.
+//
+// We resolve the track to its FIRST key, which is the frame the model is authored
+// to rest on. The full frame list is emitted separately so the client can cycle it.
+function resolveLayerTextureId (layer) {
+  const texId = layer.TextureID;
+  if (typeof texId === 'number') return texId;
+  const keys = texId && texId.Keys;
+  if (!keys || !keys.length) return null;
+  const v = keys[0].Vector;
+  const first = Array.isArray(v) || ArrayBuffer.isView(v) ? v[0] : v;
+  return (typeof first === 'number') ? first : null;
+}
+
+// Every frame of an animated-TextureID layer, in key order. Used to emit the
+// flipbook into the material extras.
+function layerTextureFrames (layer) {
+  const texId = layer.TextureID;
+  if (typeof texId === 'number') return null;
+  const keys = texId && texId.Keys;
+  if (!keys || keys.length < 2) return null;
+  const out = [];
+  for (const k of keys) {
+    const v = k.Vector;
+    const id = Array.isArray(v) || ArrayBuffer.isView(v) ? v[0] : v;
+    if (typeof id === 'number') out.push(id);
+  }
+  return out.length > 1 ? out : null;
+}
+
 // Resolve a geoset's material into the render semantics the exporter needs:
 //   baseName      — diffuse texture basename (ReplaceableId 0), or null
 //   replaceableId — 1 (team color) / 2 (team glow) → runtime player-tinted, no image
@@ -196,6 +163,9 @@ function alphaModeFor (filterMode) {
 //   unshaded      — layer is full-bright (ignores lighting) — common on SD units
 //   twoSided      — layer is double-sided
 //   skip          — geoset is a particle/shadow/effect plane → drop entirely
+//   effectFallback— the best dropped layer, so a model whose ENTIRE body is
+//                   effect geometry (wisp, ghosts) can revive it instead of
+//                   exporting to nothing. See reviveEffectOnlyModel.
 // Unlike the old resolver, team-color/glow geosets are KEPT (not dropped as
 // "no diffuse") so units actually carry the player's colour like they do in game.
 function resolveGeosetMaterial (mdx, geoset) {
@@ -210,11 +180,22 @@ function resolveGeosetMaterial (mdx, geoset) {
   // both the diffuse texture AND the team replaceable so the client can composite
   // `mix(teamColor, texRGB, texAlpha)` — flat-tinting a textured geoset would lose
   // all the painted cloth/metal detail.
+  let effectFallback = null;   // best DROPPED layer, revivable if nothing survives
+  const noteFallback = (cand) => {
+    // Prefer a real textured layer over a bare team-glow quad; among textured
+    // ones, prefer the lowest filter mode (closest to a solid body).
+    if (!effectFallback) { effectFallback = cand; return; }
+    const better = (!!cand.baseName && !effectFallback.baseName) ||
+      (!!cand.baseName === !!effectFallback.baseName && cand.filterMode < effectFallback.filterMode);
+    if (better) effectFallback = cand;
+  };
   for (const layer of mat.Layers) {
-    const texId = layer.TextureID;
-    if (typeof texId !== 'number') continue; // animated TextureID
+    const texId = resolveLayerTextureId(layer);
+    if (texId == null) continue;
     const tex = mdx.Textures && mdx.Textures[texId];
     if (!tex) continue;
+    const fm = (typeof layer.FilterMode === 'number') ? layer.FilterMode : 0;
+    const shading = (typeof layer.Shading === 'number') ? layer.Shading : 0;
     if (tex.ReplaceableId === 1) {           // team colour → runtime player tint
       if (!team) team = 1;
       continue;
@@ -224,37 +205,81 @@ function resolveGeosetMaterial (mdx, geoset) {
       // the whole geoset yields a solid additive quad (a big colour rectangle),
       // so drop it like an effect plane. A subtle glow isn't worth that artifact.
       sawEffect = true;
+      noteFallback({ baseName: null, replaceableId: 2, filterMode: fm, unshaded: (shading & 1) !== 0, twoSided: true });
       continue;
     }
     if (tex.ReplaceableId !== 0 || !tex.Image) continue; // other replaceable / empty
-    if (isEffectTexture(tex.Image)) { sawEffect = true; continue; }
-    const fm = (typeof layer.FilterMode === 'number') ? layer.FilterMode : 0;
+    const baseName = path.basename(tex.Image, path.extname(tex.Image)).toLowerCase();
+    const cand = {
+      baseName,
+      replaceableId: 0,
+      filterMode: fm,
+      unshaded: (shading & 1) !== 0,   // LayerShading.Unshaded
+      twoSided: (shading & 16) !== 0,  // LayerShading.TwoSided
+      frames: layerTextureFrames(layer)
+    };
+    if (isDecalTexture(tex.Image)) { sawEffect = true; continue; }   // never revivable
+    if (isParticleTexture(tex.Image)) { sawEffect = true; noteFallback(cand); continue; }
     // Additive / AddAlpha / Modulate layers are glow/energy overlays (e.g. the
     // Obsidian Statue's floating rune wisps). In-game their alpha is animated so
     // they read as a subtle pulse; rendered static + full-bright they blow out to
     // harsh solid-white beams. We can't reproduce the animation, so drop them like
     // effect planes — only None/Transparent/Blend layers are real body geometry.
-    if (fm >= 3) { sawEffect = true; continue; }
-    if (!diffuse) {
-      const shading = (typeof layer.Shading === 'number') ? layer.Shading : 0;
-      diffuse = {
-        baseName: path.basename(tex.Image, path.extname(tex.Image)).toLowerCase(),
-        filterMode: fm,
-        unshaded: (shading & 1) !== 0,   // LayerShading.Unshaded
-        twoSided: (shading & 16) !== 0   // LayerShading.TwoSided
-      };
-    }
+    if (fm >= 3) { sawEffect = true; noteFallback(cand); continue; }
+    if (!diffuse) diffuse = cand;
   }
   if (diffuse) {
-    return { skip: false, baseName: diffuse.baseName, replaceableId: team,
-             filterMode: diffuse.filterMode, unshaded: diffuse.unshaded, twoSided: diffuse.twoSided };
+    return { skip: false, baseName: diffuse.baseName, replaceableId: team, team,
+             filterMode: diffuse.filterMode, unshaded: diffuse.unshaded,
+             twoSided: diffuse.twoSided, frames: diffuse.frames || null, effectFallback };
   }
   if (team) {
     // Pure team-colour/glow geoset (no diffuse) — a flat player-tinted overlay.
-    return { skip: false, baseName: null, replaceableId: team, filterMode: 0, unshaded: false, twoSided: true };
+    return { skip: false, baseName: null, replaceableId: team, team, filterMode: 0,
+             unshaded: false, twoSided: true, frames: null, effectFallback };
   }
   // No usable layer. If the geoset's real texture was an effect, drop the geoset.
-  return { skip: sawEffect, baseName: null, replaceableId: 0, filterMode: 0 };
+  return { skip: sawEffect, baseName: null, replaceableId: 0, team: 0, filterMode: 0, effectFallback };
+}
+
+// A handful of units ARE an effect: the Wisp is a glowing mote, Kel'Thuzad's and
+// the Keeper's ghosts are translucent shells. Every one of their geosets is
+// additive/modulate, so the effect-drop rule above deletes the whole model and the
+// GLB exports as a couple of untextured quads.
+//
+// If nothing survives, revive EVERY dropped geoset that still has a fallback,
+// with its AUTHORED filter mode — the client already maps filterMode 3/4 to
+// additive blending (GLBLoader.wc3RenderState), so it renders the way the model
+// was written. Shadow/splat decals are excluded upstream and never come back.
+//
+// Guarded on "nothing else survives", so a unit with a real body (the Obsidian
+// Statue and its blown-out rune beams) keeps losing its additive overlays.
+function reviveEffectOnlyModel (infos) {
+  // A survivor must be TEXTURED. A geoset that resolved to nothing but a flat
+  // team-colour quad is an overlay, not a body — Kel'Thuzad's ghost "survived"
+  // as 72 verts of team colour while its 500-vert AddAlpha body was dropped.
+  // This is the same condition `validate-glb --untextured` flags.
+  const survivors = infos.filter(e => e && !e.mat.skip && e.mat.baseName);
+  if (survivors.length) return null;
+  const back = [];
+  for (const e of infos) {
+    const fb = e && e.mat.effectFallback;
+    if (!fb) continue;
+    e.mat = {
+      skip: false,
+      baseName: fb.baseName,
+      // Keep the geoset's own team replaceable if it had one — the fallback layer
+      // is the rid0 texture, and dropping the team id would lose the player tint.
+      replaceableId: fb.replaceableId || e.mat.team || 0,
+      filterMode: fb.filterMode,
+      unshaded: fb.unshaded,
+      twoSided: fb.twoSided,
+      frames: fb.frames || null,
+      revived: true
+    };
+    back.push(e);
+  }
+  return back.length ? back : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -331,6 +356,11 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
   const matCache = {}; // material key -> Material (filter mode / team color aware)
   let n4plus = 0, missingTex = 0, hidden = 0, hadHD = false, teamGeosets = 0;
 
+  // --- Pass 1: visibility + material resolution for every geoset -------------
+  // Done up front so we can tell whether the model has ANY real body geometry
+  // left after the effect-drop rule. If it doesn't, reviveEffectOnlyModel puts
+  // the biggest dropped geoset back rather than shipping an empty unit.
+  const resolved = new Array(mdx.Geosets.length).fill(null);
   for (let gi = 0; gi < mdx.Geosets.length; gi++) {
     const g = mdx.Geosets[gi];
     const nv = g.Vertices.length / 3;
@@ -345,11 +375,25 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
     } else if (idle && !geosetVisibleDuringStand(mdx, gi, idleStart, idleEnd)) {
       hidden++; continue;
     }
-    // Resolve WC3 material semantics. Drop only genuine effect planes
-    // (matInfo.skip). Team-color/glow geosets (replaceableId 1/2) are KEPT and
-    // rendered with a runtime player-tinted material; a geoset with neither a
-    // diffuse texture nor a team replaceable has nothing to draw.
-    const matInfo = resolveGeosetMaterial(mdx, g);
+    resolved[gi] = { gi, verts: nv, form: geosetForm, mat: resolveGeosetMaterial(mdx, g) };
+  }
+  const revived = reviveEffectOnlyModel(resolved);
+  if (revived) {
+    warnings.push('effect-only model: revived geoset(s) ' +
+      revived.map(e => e.gi + '(' + e.verts + 'v,fm' + e.mat.filterMode + ')').join(' '));
+  }
+
+  for (let gi = 0; gi < mdx.Geosets.length; gi++) {
+    const entry = resolved[gi];
+    if (!entry) continue;
+    const g = mdx.Geosets[gi];
+    const nv = entry.verts;
+    const geosetForm = entry.form;
+    // Drop only genuine effect planes (matInfo.skip). Team-color/glow geosets
+    // (replaceableId 1/2) are KEPT and rendered with a runtime player-tinted
+    // material; a geoset with neither a diffuse texture nor a team replaceable
+    // has nothing to draw.
+    const matInfo = entry.mat;
     if (matInfo.skip) { hidden++; continue; }
     if (!matInfo.baseName && !matInfo.replaceableId) { hidden++; continue; }
 
@@ -422,6 +466,12 @@ function buildSkinnedDocument (mdx, ddsIndex, opts) {
       replaceableId: team,
       teamBlend: !!teamBlend
     };
+    // The diffuse came from an animated-TextureID flipbook (WC3 water/energy).
+    // We bake the first frame; recording the frame count marks the material as a
+    // candidate for runtime cycling and makes it visible to validate-glb.
+    if (matInfo.frames) wc3.flipbook = matInfo.frames.length;
+    // Revived because the effect-drop rule would have emptied the whole model.
+    if (matInfo.revived) wc3.revived = true;
     if (team) teamGeosets++;
 
     let material;
@@ -660,4 +710,8 @@ async function main () {
   for (const w of info.warnings) console.log('  WARN: ' + w);
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+// Exported so tools/audit-model-geometry.js grades the roster against the REAL
+// resolver rather than a second copy of these rules that can drift out of sync.
+module.exports = { getUnitMappings, resolveGeosetMaterial, reviveEffectOnlyModel, UNITS_DIR, OUTPUT_DIR };
+
+if (require.main === module) main().catch(err => { console.error(err); process.exit(1); });

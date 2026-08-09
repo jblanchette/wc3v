@@ -38,22 +38,47 @@ const BUNDLE = path.join(ROOT, 'client', 'js', 'vendor', 'wc3v-parser.bundle.js'
 // Dual-runtime (no DOM, no fs) shared modules. The desktop app persists one
 // summary per parsed game and aggregates them into profiles; shipping the
 // client's copies keeps a single source of truth, same as the parser bundle.
-// Load order matters in the browser (index.html loads them in this order) and
-// MomentsExtract is listed after SummaryExtract for readability only — it has
-// no dependency on it, deliberately, so neither can break the other.
+// Load order matters in the browser (index.html loads them in this order).
+// SummaryExtract and MomentsExtract have no dependency on each other, on
+// purpose, so neither can break the other. The two that DO have dependencies
+// resolve them lazily per call rather than at load, so a wrong tag order fails
+// loudly on first use instead of baking a null in at parse time.
 const SHARED_JS = [
   'SummaryExtract.js',
-  'ProfileAggregate.js',
   'MomentsExtract.js',
-  // The per-game review (pillar grades, named mistakes). Reads a stored
-  // summary and a ProfileAggregate baseline, so it loads after both.
-  'GameReport.js',
-  // Pure SVG-string chart factories (no DOM) — the desktop's economy/army
-  // charts are the same code the site's compare modal draws with.
-  'CompareCharts.js',
   // Packs the dominance and resource time series into a stored summary, and
   // unpacks them back into the shape the viewer widget below expects.
   'SeriesExtract.js',
+  // The viewer's own build-order derivation: production, per-tier production
+  // and the closing snapshot (supply, workers, gold and lumber spent, upgrades,
+  // every unit made with its count and its attack/armor types).
+  //
+  // Shipped as of schema v5 because the desktop's game report IS the viewer's
+  // Match Summary screen, and the alternative was a second extractor inside
+  // SummaryExtract reimplementing the grouping and the cost accumulation. That
+  // is two implementations of "what did this player build", and two answers the
+  // first time either one is edited. Same mount-seam rule as DominanceChart
+  // below, applied to data instead of to drawing.
+  //
+  // SummaryBuild calls it at parse time and stores the result; nothing in the
+  // desktop re-derives it. It reaches for three viewer globals (window.wc3v,
+  // PlayerNames, RaceLabels) and every one of them is guarded, so it runs
+  // headless here and in Node.
+  'BuildOrderData.js',
+  // The stored-summary shape and SCHEMA_VERSION, calling the extractors above.
+  // This was two hand-copied duplicates, one in the app's store.js and one in
+  // tools/desktop-preview.js, which is two schemas wearing one version number.
+  // Loads after all of them.
+  'SummaryBuild.js',
+  // One stored summary and one seat, as scalars: dominance, hero kills, APM and
+  // the timings. Everything that used to derive its own numbers at the point of
+  // use reads this instead, which is why "workers at 5:00" no longer has three
+  // implementations. ProfileAggregate depends on it, so it loads first.
+  'GameMetrics.js',
+  'ProfileAggregate.js',
+  // Pure SVG-string chart factories (no DOM) — the desktop's economy/army
+  // charts are the same code the site's compare modal draws with.
+  'CompareCharts.js',
   // The viewer's OWN dominance chart, not a lookalike. Mounted from data rather
   // than from a viewer: it takes a setPlayers() array and ignores the
   // constructor argument, so the desktop passes null.
@@ -74,18 +99,36 @@ const SHARED_JS = [
   // difference of the loss curves and food against its cap instead, both from
   // the shared CompareCharts factory. The rule was never "mount the viewer's
   // class whatever it draws"; it is "do not redraw a chart the viewer has".
-  'DominanceChart.js'
+  'DominanceChart.js',
+  // Attack types, armor types and the TFT damage matrix. Split out of
+  // Constants.js, which is the viewer's enum vocabulary (LayoutMode,
+  // ScrubStates, TeamColorList) and has no business in an app with no canvas.
+  'CombatTables.js',
+  // The Match Summary screen itself: six tab renderers, no app inside them.
+  // The viewer mounts it through client/js/MatchSummary.js and this app through
+  // js/game-report-view.js, each supplying its own adapter, icon resolver and
+  // colour function. Depends on CombatTables above.
+  //
+  // This is the same rule as DominanceChart, applied to a whole screen: if this
+  // app ever starts drawing its own version of a tab, the seam has leaked and
+  // the two products have begun telling different stories about one game.
+  'MatchSummaryView.js'
 ].map(f => path.join(ROOT, 'client', 'js', f));
 
 // The site's design token layer. The desktop app is styled from the SAME
 // tokens as the web client rather than growing a second design system —
-// desktop/src-frontend/css/app.css consumes these and defines nothing itself.
+// the desktop's own css/ sheets consume these and define nothing themselves.
 const TOKENS_CSS = path.join(ROOT, 'client', 'css', 'tokens.css');
 
 // The stylesheet for the three widgets above, split out of main.css for
 // exactly this reason. Copying the rules into app.css instead would be a
 // second copy of 674 lines of chrome, and it would drift.
 const DOMINANCE_CSS = path.join(ROOT, 'client', 'css', 'dominance.css');
+
+// The Match Summary screen's layout, split out of main.css for exactly the same
+// reason: this app renders that screen from MatchSummaryView.js, and a second
+// copy of ~970 lines of layout is a second copy that drifts.
+const MATCH_SUMMARY_CSS = path.join(ROOT, 'client', 'css', 'match-summary.css');
 
 // The site's favicons, so the window and the tab it came from carry the same
 // mark. Deliberately NOT client/assets/wc3icons/ — that is 7.5 MB of jpgs that
@@ -237,6 +280,11 @@ const main = () => {
     process.exit(1);
   }
   fs.copyFileSync(DOMINANCE_CSS, path.join(cssVendorDir, 'dominance.css'));
+  if (!fs.existsSync(MATCH_SUMMARY_CSS)) {
+    console.error(`Shared stylesheet missing: ${path.relative(ROOT, MATCH_SUMMARY_CSS)}`);
+    process.exit(1);
+  }
+  fs.copyFileSync(MATCH_SUMMARY_CSS, path.join(cssVendorDir, 'match-summary.css'));
 
   for (const src of BRAND_FILES) {
     if (!fs.existsSync(src)) {

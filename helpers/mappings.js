@@ -49,10 +49,33 @@ Object.keys(extraItems).forEach(key => {
     items[key] = extraItems[key];
 });
 
+// Order ids, little-endian bytes of the 0x000Dxxxx order constants. The full
+// canonical table lives in tools/ability-data/orders.c (350 entries) — it was
+// already in the repo but only ever mined for SPELL ids.
+//
+//   RightClick   0xD0003 "smart"        AttackCommand 0xD000F "attack"
+//   AttackGround 0xD0010 "attackground" AttackOnce    0xD0011 "attackonce"
+//   MoveCommand  0xD0012 "move"         Patrol        0xD0016 "patrol"
+//   HoldPosition 0xD0019 "holdposition" Stop          0xD0004 "stop"
+//
+// Everything below `MoveCommand` was previously UNMAPPED, so those actions fell
+// through to the spell lookup, missed, and either logged "unknown action" (with a
+// parse-confidence penalty) or silently did nothing. The practical damage: a Stop
+// or Hold order never cancelled an in-flight move, so the simulation kept walking
+// units to destinations the player had already cancelled.
+//
+// findItemIdForObject does a linear insertion-order scan with exact byte
+// equality, so new entries only shadow an existing one if the bytes are
+// identical (the known case is HeroItem1 vs TeleportScroll). None of these are.
 const abilityActions = {
   'RightClick': [ 3, 0, 13, 0 ],
   'AttackCommand': [ 15, 0, 13, 0 ],
+  'AttackGround': [ 16, 0, 13, 0 ],
+  'AttackOnce': [ 17, 0, 13, 0 ],
   'MoveCommand': [ 18, 0, 13, 0 ],
+  'Patrol': [ 22, 0, 13, 0 ],
+  'HoldPosition': [ 25, 0, 13, 0 ],
+  'StopCommand': [ 4, 0, 13, 0 ],
   'CastSkillObject': [ -105, 0, 13, 0 ],
   'CastSkillTarget': [ 154, 0, 13, 0 ],
   'CastSummonSkill': [ 158, 0, 13, 0 ],

@@ -25,18 +25,52 @@ use std::time::{Duration, Instant};
 /// The overlay page, embedded at compile time so the server has no filesystem
 /// dependency at runtime (and no path to traverse).
 ///
-/// It is three files rather than one because the live preview inside the WC3V
-/// window renders from the same css and renderer. A preview drawn by separate
-/// code is a preview that can lie about what OBS will show. They are stitched
-/// back into one self-contained document here.
+/// It is several files rather than one because the live preview inside the WC3V
+/// window renders from the same css, renderer and icon modules. A preview drawn
+/// by separate code is a preview that can lie about what OBS will show. They are
+/// stitched back into one self-contained document here.
 const OVERLAY_SHELL: &str = include_str!("../../src-frontend/overlay/shell.html");
 const OVERLAY_CSS: &str = include_str!("../../src-frontend/overlay/overlay.css");
 const OVERLAY_RENDER_JS: &str = include_str!("../../src-frontend/overlay/overlay-render.js");
 
+/// The two icon modules, stitched in rather than copied.
+///
+/// The card draws race crests and section marks, and both sets already exist as
+/// dependency-free `window.*` globals the app itself uses. Inlining the files
+/// keeps ONE copy of every path: a glyph redrawn in the app would otherwise stay
+/// stale on the broadcast, which is the one place a wrong mark is seen by
+/// thousands of people. They are our own SVG constants, so nothing here widens
+/// what the page can be made to render.
+const RACE_ICONS_JS: &str = include_str!("../../src-frontend/js/race-icons.js");
+const GLYPHS_JS: &str = include_str!("../../src-frontend/js/glyphs.js");
+
 fn overlay_html() -> String {
     OVERLAY_SHELL
         .replace("/*OVERLAY_CSS*/", OVERLAY_CSS)
+        .replace("/*RACE_ICONS_JS*/", RACE_ICONS_JS)
+        .replace("/*GLYPHS_JS*/", GLYPHS_JS)
         .replace("/*OVERLAY_RENDER_JS*/", OVERLAY_RENDER_JS)
+}
+
+/// The casting overlay: a SECOND page, not a mode of the first.
+///
+/// A caster's overlay and a player's overlay want opposite things. The player's
+/// is one person's session, framed as "you", and reveals itself after a game.
+/// The caster's is two strangers side by side, framed as neither, and stays up
+/// for a whole series. Bending one into the other would have meant a `mode`
+/// parameter threaded through every module in overlay-render.js, and every
+/// existing OBS source already pointed at that file.
+///
+/// So the personal overlay is untouched, and this is its own URL with its own
+/// renderer, stitched the same way and served from the same token-gated origin.
+const CAST_SHELL: &str = include_str!("../../src-frontend/overlay/cast.html");
+const CAST_CSS: &str = include_str!("../../src-frontend/overlay/cast.css");
+const CAST_RENDER_JS: &str = include_str!("../../src-frontend/overlay/cast-render.js");
+
+fn cast_html() -> String {
+    CAST_SHELL
+        .replace("/*CAST_CSS*/", CAST_CSS)
+        .replace("/*CAST_RENDER_JS*/", CAST_RENDER_JS)
 }
 
 /// The "hand this replay to the viewer" launcher page. Same deal: embedded,
@@ -385,6 +419,8 @@ fn handle(mut stream: TcpStream, ov: Arc<Overlay>) {
 
     match path {
         "/overlay" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", &overlay_html()),
+        // The casting layout. Same token gate, same SSE stream, its own page.
+        "/cast" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", &cast_html()),
         // The launcher page. Its only query parameter is the staged id, which
         // it reads back out of location.search to fetch the bytes.
         "/open" => respond(&mut stream, "200 OK", "text/html; charset=utf-8", HANDOFF_HTML),
@@ -456,6 +492,11 @@ mod tests {
         assert!(get(ov.port, "/state").starts_with("HTTP/1.1 403"));
         assert!(get(ov.port, "/overlay?token=wrong").starts_with("HTTP/1.1 403"));
         assert!(get(ov.port, "/events?token=").starts_with("HTTP/1.1 403"));
+        // The casting page is a second overlay, under the same gate. Asserted
+        // rather than assumed: this test passed for the whole of the release
+        // that added /cast without ever looking at it.
+        assert!(get(ov.port, "/cast").starts_with("HTTP/1.1 403"));
+        assert!(get(ov.port, "/cast?token=wrong").starts_with("HTTP/1.1 403"));
         // An unknown path is refused before anything else looks at it.
         assert!(get(ov.port, "/whatever").starts_with("HTTP/1.1 403"));
         // The replay is gated too, by a different credential. See
@@ -493,7 +534,7 @@ mod tests {
         (head, buf[split..].to_vec())
     }
 
-    /// The overlay is three files stitched into one document. If a placeholder
+    /// The overlay is five files stitched into one document. If a placeholder
     /// is ever renamed on one side only, the page still serves 200. It just
     /// arrives with no styling or no renderer, which looks like a broken OBS
     /// source rather than a broken build. Assert the seam.
@@ -502,12 +543,39 @@ mod tests {
         let html = overlay_html();
         assert!(!html.contains("/*OVERLAY_CSS*/"), "css placeholder was not replaced");
         assert!(!html.contains("/*OVERLAY_RENDER_JS*/"), "renderer placeholder was not replaced");
+        assert!(!html.contains("/*RACE_ICONS_JS*/"), "race icon placeholder was not replaced");
+        assert!(!html.contains("/*GLYPHS_JS*/"), "glyph placeholder was not replaced");
         assert!(html.contains(".wc3v-ov .card"), "overlay css missing from the page");
         assert!(html.contains("window.OverlayRender"), "renderer missing from the page");
+        // The card draws race crests and section marks. Without these globals
+        // it still renders, just as the text-only readout it used to be, which
+        // is exactly the kind of silent regression a seam test exists for.
+        assert!(html.contains("window.RaceIcons"), "race icons missing from the page");
+        assert!(html.contains("window.Glyphs"), "glyphs missing from the page");
         // Self-contained is a hard requirement: OBS may have no network at all,
-        // and an overlay that phones out is not auditable.
+        // and an overlay that phones out is not auditable. Hero portraits are
+        // the ONE exception, an <img> per card against cdn.wc3v.com that blanks
+        // itself offline. No scripts, no fonts, no stylesheets.
         assert!(!html.contains("<script src="), "overlay must not load external scripts");
         assert!(!html.contains("<link rel=\"stylesheet\""), "overlay must not load external css");
+    }
+
+    /// The casting page is stitched the same way and is under the same
+    /// self-contained requirement. Its own test, because it is its own page:
+    /// the assertions above would keep passing while this one served a blank
+    /// document.
+    #[test]
+    fn cast_page_has_its_css_and_renderer_inlined() {
+        let html = cast_html();
+        assert!(!html.contains("/*CAST_CSS*/"), "css placeholder was not replaced");
+        assert!(!html.contains("/*CAST_RENDER_JS*/"), "renderer placeholder was not replaced");
+        assert!(html.contains(".wc3v-cast .mod"), "cast css missing from the page");
+        assert!(html.contains("window.CastRender"), "renderer missing from the page");
+        assert!(!html.contains("<script src="), "cast page must not load external scripts");
+        assert!(
+            !html.contains("<link rel=\"stylesheet\""),
+            "cast page must not load external css"
+        );
     }
 
     #[test]

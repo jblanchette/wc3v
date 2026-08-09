@@ -12,7 +12,7 @@
 // of stored summary.
 //
 // Dual-runtime and DOM-free, the same contract as SummaryExtract,
-// ProfileAggregate, MomentsExtract and GameReport.
+// ProfileAggregate, MomentsExtract and GameMetrics.
 //
 // ── Storage shape ──────────────────────────────────────────────────────────
 //

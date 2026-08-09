@@ -25,9 +25,9 @@ const TeamColorList = [
   "#FFFC01"
 ];
 
-// Per-battle-category colors for the BattleRenderer overlay and scrubber
-// chevrons. Tuned for legibility on the 3D terrain — purposely brighter than
-// the team colors so battles read as "annotation" not as ownership.
+// Per-battle-category colors for the scrubber chevrons and the battle report.
+// Purposely brighter than the team colors so battles read as "annotation" not
+// as ownership.
 window.BattleCategoryColor = {
   'harass':           '#FFD166',   // soft yellow — opportunistic
   'skirmish':         '#06D6A0',   // green — small contact
@@ -112,37 +112,14 @@ const RaceTheme = {
   }
 };
 
-const ARMOR_TYPES = {
-  large:  { label: 'Heavy',     icon: '/assets/wc3icons/def-heavy.jpg' },
-  medium: { label: 'Medium',    icon: '/assets/wc3icons/def-medium.jpg' },
-  small:  { label: 'Light',     icon: '/assets/wc3icons/def-light.jpg' },
-  none:   { label: 'Unarmored', icon: '/assets/wc3icons/def-unarmored.jpg' },
-};
-
-const ATTACK_TYPES = {
-  normal: { label: 'Normal',  icon: '/assets/wc3icons/atk-normal.jpg' },
-  pierce: { label: 'Pierce',  icon: '/assets/wc3icons/atk-pierce.jpg' },
-  siege:  { label: 'Siege',   icon: '/assets/wc3icons/atk-siege.jpg' },
-  magic:  { label: 'Magic',   icon: '/assets/wc3icons/atk-magic.svg' },
-  chaos:  { label: 'Chaos',   icon: '/assets/wc3icons/atk-chaos.jpg' },
-};
-
-// WC3 TFT damage multiplier matrix: DAMAGE_MATRIX[attackType][armorType] = multiplier
-// Source: Warcraft III game data (w3a combat tables)
-const DAMAGE_MATRIX = {
-  normal: { light: 1.0,  medium: 1.5,  heavy: 1.0,  fortified: 0.7,  hero: 1.0,  unarmored: 1.0  },
-  pierce: { light: 2.0,  medium: 0.75, heavy: 1.0,  fortified: 0.35, hero: 0.5,  unarmored: 1.5  },
-  siege:  { light: 1.0,  medium: 0.5,  heavy: 1.0,  fortified: 1.5,  hero: 0.5,  unarmored: 1.5  },
-  magic:  { light: 1.25, medium: 0.75, heavy: 2.0,  fortified: 0.35, hero: 0.5,  unarmored: 1.5  },
-  chaos:  { light: 1.0,  medium: 1.0,  heavy: 1.0,  fortified: 1.0,  hero: 1.0,  unarmored: 1.0  },
-  hero:   { light: 1.0,  medium: 1.0,  heavy: 1.0,  fortified: 0.5,  hero: 1.0,  unarmored: 1.0  }
-};
-
-// Map internal armor type keys to DAMAGE_MATRIX keys
-const ARMOR_MATRIX_KEY = {
-  small: 'light', medium: 'medium', large: 'heavy',
-  none: 'unarmored', hero: 'hero', fort: 'fortified', divine: 'hero'
-};
+// ARMOR_TYPES, ATTACK_TYPES, DAMAGE_MATRIX and ARMOR_MATRIX_KEY used to live
+// here. They moved to CombatTables.js, which viewer.html loads immediately
+// before this file, so every consumer still reads them as bare globals.
+//
+// They left because the desktop app draws the Match Summary's Unit Roster and
+// Damage Matchup from them, and this file is the viewer's enum vocabulary —
+// LayoutMode, ScrubStates, TeamColorList, RaceTheme. Shipping all of that to
+// get four lookup tables was the wrong trade.
 
 const formatGameTime = (gameTime) => {
   const timerDate = new Date(Math.round(gameTime * 1000) / 1000);

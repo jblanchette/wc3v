@@ -140,13 +140,13 @@ const BattleData = class {
     }
 
     // Window during which a battle is considered "active" for overlay purposes.
-    // Slight pre-roll fades the box in just before the first signal; the post-
-    // roll lets the box linger briefly so a snap-disappear at endTime doesn't
-    // look abrupt. Matches BattleRenderer's envelope.
+    // Slight pre-roll opens the window just before the first signal; the
+    // post-roll lets it linger briefly so a battle doesn't snap out of
+    // existence at endTime. Read by the scrubber chevrons and the camera.
     const PREROLL_MS  = 500;
     const POSTROLL_MS = 4000;
 
-    // Memoized on gameTime: called 3-4x per frame (BattleRenderer, the viewer's
+    // Memoized on gameTime: called several times per frame (the viewer's
     // active-participant refresh, BroadcastCamera._activeBattleBbox), and each
     // call scanned from index 0 and allocated a fresh array. Same gameTime in
     // the same frame now costs one Map-free comparison.

@@ -1,0 +1,1064 @@
+/* ============================================================
+   match-summary.css — the Match Summary screen (.ms-*).
+
+   Split out of main.css (Aug 2026) because the DESKTOP APP renders this
+   exact screen from a stored summary, through the shared renderer in
+   client/js/MatchSummaryView.js. A second copy of ~970 lines of layout is
+   a second copy that drifts. Same reasoning that split dominance.css and
+   overlay.css: a screen drawn by separate code is a screen that can lie.
+
+   Loaded by client/viewer.html, and copied into the desktop's css/vendor
+   by tools/build-desktop-client.js.
+
+   Colours here are still literal, which is the honest state of this sheet:
+   it was written for one dark viewer. The desktop overrides what it needs
+   in its own css/report.css rather than this file naming tokens it does
+   not yet have. Moving these to tokens.css is worth doing and is not
+   what the split was for.
+
+   The dominance plot inside the Overview tab is NOT styled here — the
+   .dmc-* chrome lives in dominance.css, which both apps already load.
+   Only the .ms-dom-slot wrapper is below.
+   ============================================================ */
+
+/* ===== Match Summary Modal ===== */
+
+#ms-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 5000;
+}
+
+.ms-panel {
+  background-color: #111a22;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.5rem;
+  width: 92%;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+
+.ms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.2);
+}
+
+.ms-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ms-title {
+  font: 700 1.1rem Verdana, sans-serif;
+  color: #fff;
+}
+
+.ms-map-name {
+  font: 400 0.85rem Verdana, sans-serif;
+  color: #8a9aa5;
+}
+
+.ms-duration {
+  font: 600 0.85rem Verdana, sans-serif;
+  color: #5fa5cb;
+}
+
+.ms-close {
+  color: #666;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.ms-close:hover {
+  color: #fff;
+}
+
+/* Tab bar */
+.ms-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
+  overflow-x: auto;
+  background: rgba(0,0,0,0.15);
+}
+
+/* Works as a <div> (the viewer's modal) or a <button> (the desktop's report,
+   which needs a real control for the keyboard and for the tablist role).
+   A button brings UA chrome with it — grey fill, a full border, its own font —
+   and this rule used to set only the BOTTOM border, so on the desktop the strip
+   rendered as a row of default operating-system buttons. Everything below the
+   padding line is that reset. */
+.ms-tab {
+  padding: 0.6rem 1rem;
+  font: 600 0.8rem Verdana, sans-serif;
+  color: #8a9aa5;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  user-select: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ms-tab:focus-visible {
+  outline: 2px solid #00aaff;
+  outline-offset: -2px;
+}
+
+.ms-tab:hover {
+  color: #c8d0d8;
+}
+
+.ms-tab-active {
+  color: #fff;
+  border-bottom-color: #00aaff;
+}
+
+/* Scrollable body */
+.ms-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+/* Side-by-side player columns */
+.ms-players {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.ms-player-col {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Overview column ────────────────────────────────────────────────────
+   `.ms-ov-top { flex: 1 }` + `.ms-ov-bottom { margin-top: auto }` used to
+   pin Match Stats to the foot of the column. In the viewer's tall modal that
+   lined the two players' stats up; in the desktop's report body it pushed the
+   table to the bottom of a column taller than its content and left a hole in
+   the middle. Both are gone.
+
+   The sections pack into the column's WIDTH now. The modal was tall and
+   narrow, so stacking was free; the report body is the opposite shape (about
+   520px of height against a 600px-wide column) and the same stack needed
+   730px of it. */
+.ms-blocks {
+  display: grid;
+  /* Two per row at any usable column width, one when the window is narrow
+     enough that a half-column would start wrapping unit names. */
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0 0.9rem;
+  align-content: start;
+}
+
+/* The roster is the widest thing on the tab — five or six units with names —
+   so it takes the row rather than being squeezed into half and wrapping to
+   three lines, which costs more height than it saves. */
+.ms-block-wide { grid-column: 1 / -1; }
+
+/* A block owns its own label, so the label's default top margin would open a
+   gap above every block in the second row. */
+.ms-blocks .ms-section-label { margin-top: 0; }
+
+/* Player header */
+.ms-player-name {
+  font: 700 0.95rem Verdana, sans-serif;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ms-race-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 2px solid #555;
+}
+
+.ms-race-label {
+  font: 600 0.7rem Verdana, sans-serif;
+  opacity: 0.7;
+}
+
+/* Section labels */
+.ms-section-label {
+  font: 700 0.75rem Verdana, sans-serif;
+  color: #5fa5cb;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0.6rem 0 0.3rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.ms-section-label:first-child {
+  margin-top: 0;
+}
+
+.ms-subsection {
+  font: 600 0.75rem Verdana, sans-serif;
+  color: #8a9aa5;
+  margin: 0.3rem 0 0.2rem;
+}
+
+/* Tier labels */
+.ms-tier-label {
+  font: 700 0.75rem Verdana, sans-serif;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.ms-tier-label:first-child {
+  margin-top: 0;
+}
+
+.ms-tier-label.t1 { color: #fff; background: rgba(255,255,255,0.06); }
+.ms-tier-label.t2 { color: #21a5e3; background: rgba(33,165,227,0.1); }
+.ms-tier-label.t3 { color: #FFFF33; background: rgba(255,255,51,0.08); }
+
+/* Icon grid */
+.ms-icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ms-icon-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.ms-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.15);
+  display: block;
+}
+
+.ms-icon-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  font: 700 0.6rem Verdana, sans-serif;
+  padding: 0 3px;
+  border-radius: 2px;
+  min-width: 14px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Stat rows */
+.ms-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.2rem 0;
+  font: 400 0.82rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.7);
+}
+
+.ms-stat-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.ms-gold { color: #FFD700; }
+.ms-lumber { color: #7CFC00; }
+
+/* Stats table for aligned overview columns */
+/* Match stats: label/value pairs flowing across the width.
+
+   Was a two-column <table>, one fact per row. That is 180px of height in a
+   column that has none to spare, and it left half its grid row empty beside
+   it. Nothing here reads DOWN a column — it is a flat set of pairs — so a
+   table was the wrong element as well as the wrong shape. */
+.ms-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: 0.15rem 0.9rem;
+}
+
+.ms-stat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.ms-stat-k {
+  font: 400 0.8rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+
+.ms-stat-v {
+  font: 600 0.8rem Verdana, sans-serif;
+  color: #fff;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  white-space: nowrap;
+}
+
+.ms-tier-badge {
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.ms-tier-badge.t1 { background: rgba(255,255,255,0.1); }
+.ms-tier-badge.t2 { color: #21a5e3; background: rgba(33,165,227,0.15); }
+.ms-tier-badge.t3 { color: #FFFF33; background: rgba(255,255,51,0.12); }
+
+.ms-expo-yes { color: #44DD88; }
+.ms-expo-no { color: #888; }
+
+/* Heroes — inline row, portrait on top, spells below */
+.ms-heroes-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0.3rem;
+}
+
+.ms-hero-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ms-hero-portrait-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ms-hero-portrait {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  border: 2px solid rgba(255,255,255,0.2);
+  display: block;
+}
+
+.ms-hero-level {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  background: #111;
+  color: #FFD700;
+  font: 700 0.6rem Verdana, sans-serif;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #FFD700;
+}
+
+.ms-hero-spells-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px;
+}
+
+.ms-spell {
+  position: relative;
+  display: inline-block;
+}
+
+.ms-spell-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.1);
+  display: block;
+}
+
+.ms-spell-level {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(0,0,0,0.85);
+  color: #5fa5cb;
+  font: 700 0.5rem Verdana, sans-serif;
+  padding: 0 2px;
+  border-radius: 2px;
+  min-width: 9px;
+  text-align: center;
+}
+
+/* Resource icons for workers/economy */
+.ms-res-icon {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin: 0 2px 0 6px;
+}
+
+.ms-res-icon:first-child { margin-left: 0; }
+
+.ms-res-pip {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin: 0 2px 0 6px;
+  vertical-align: middle;
+}
+
+.ms-res-build { background: #58A6FF; }
+
+/* APM line chart */
+.ms-apm-chart {
+  width: 100%;
+  height: auto;
+  max-height: 65px;
+  display: block;
+}
+
+/* Upgrade rows */
+.ms-upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ms-upgrade-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 3px;
+  font: 400 0.8rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.85);
+}
+
+.ms-upgrade-row.ms-atk { border-left: 3px solid #e74c3c; }
+.ms-upgrade-row.ms-def { border-left: 3px solid #3498db; }
+.ms-upgrade-row.ms-res { border-left: 3px solid #9b59b6; }
+
+.ms-atk-label { color: #e74c3c; }
+.ms-def-label { color: #3498db; }
+.ms-res-label { color: #9b59b6; }
+
+.ms-upgrade-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.ms-upgrade-name {
+  flex: 1;
+}
+
+.ms-upgrade-level {
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Timeline mini (within upgrade tab) */
+.ms-timeline-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+  font: 400 0.78rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.7);
+}
+
+.ms-timeline-mini .ms-timeline-time {
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  color: #5fa5cb;
+  min-width: 3rem;
+  text-align: right;
+}
+
+.ms-timeline-mini .ms-timeline-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Creep route */
+.ms-creep-route {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 0.2rem;
+}
+
+.ms-creep-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2px 0;
+}
+
+.ms-creep-order {
+  font: 700 0.6rem Verdana, sans-serif;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid #FFD700;
+  color: #FFD700;
+  background: rgba(0,0,0,0.3);
+}
+
+.ms-creep-diff-label {
+  font: 700 0.7rem Verdana, sans-serif;
+  margin: 0.35rem 0 0.15rem;
+}
+
+.ms-creep-diff-label:first-child {
+  margin-top: 0;
+}
+
+.ms-creep-footer {
+  display: flex;
+  gap: 1rem;
+  padding: 0.4rem 0 0;
+  font: 400 0.72rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.4);
+}
+
+.ms-creep-footer-item::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.ms-creep-camp {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.ms-creep-icons {
+  display: flex;
+  gap: 3px;
+}
+
+.ms-creep-icon-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.ms-creep-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.1);
+  display: block;
+}
+
+.ms-creep-lvl {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  background: rgba(0,0,0,0.82);
+  color: #ccc;
+  font: 700 0.55rem Verdana, sans-serif;
+  padding: 0 3px;
+  border-radius: 2px;
+  line-height: 1.4;
+}
+
+.ms-creep-camp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ms-creep-meta {
+  font: 600 0.68rem 'Courier New', monospace;
+  color: #5fa5cb;
+  white-space: nowrap;
+}
+
+.ms-creep-xp {
+  font: 600 0.62rem Verdana, sans-serif;
+  color: #FFD700;
+}
+
+.ms-creep-partial {
+  font: 600 0.62rem Verdana, sans-serif;
+  color: #e0a030;
+}
+
+.ms-creep-step-partial {
+  opacity: 0.65;
+  border-left: 2px dashed #e0a030;
+  padding-left: 4px;
+}
+
+/* Creep score comparison */
+.ms-creep-score {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.ms-creep-score-side {
+  display: flex;
+  flex-direction: column;
+}
+
+.ms-creep-score-name {
+  font: 700 0.8rem Verdana, sans-serif;
+}
+
+.ms-creep-score-stat {
+  font: 400 0.7rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.5);
+}
+
+.ms-creep-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  gap: 2px;
+  margin-bottom: 0.6rem;
+}
+
+.ms-creep-bar-seg {
+  height: 100%;
+  border-radius: 3px;
+  opacity: 0.7;
+}
+
+/* Hero XP breakdown */
+.ms-hero-xp-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 2px 0;
+}
+
+.ms-hero-xp-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.12);
+  flex-shrink: 0;
+}
+
+.ms-hero-xp-name {
+  font: 600 0.72rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.7);
+  min-width: 60px;
+}
+
+.ms-hero-xp-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ms-hero-xp-bar {
+  height: 100%;
+  border-radius: 4px;
+  opacity: 0.6;
+}
+
+.ms-hero-xp-val {
+  font: 700 0.68rem Verdana, sans-serif;
+  color: #FFD700;
+  min-width: 35px;
+  text-align: right;
+}
+
+/* Charts */
+.ms-chart {
+  width: 100%;
+  height: auto;
+  max-height: 140px;
+  margin-bottom: 0.5rem;
+}
+
+.ms-chart-label {
+  fill: rgba(255,255,255,0.4);
+  font-size: 9px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Dominance slot (Overview tab).
+
+   The plot itself is DominanceChart, drawn by the .dmc-* rules in
+   dominance.css — the same instrument the Insights panel mounts and the
+   desktop app ships. Nothing here draws; only the slot is sized. */
+.ms-dom-slot {
+  margin-bottom: 0.5rem;
+}
+
+/* The wrap is padded for a 320px side panel. Inside the modal the section
+   label above already provides the offset. */
+.ms-dom-slot .dmc-chart-wrap { padding: 0; }
+
+/* Taller than the 76px insights version because this one runs the full width
+   of the modal, and preserveAspectRatio="none" stretches the viewBox to match:
+   at 76px a plot four times wider flattens every swing it is there to show. */
+.ms-dom-slot .dmc-svg { height: 120px; }
+
+/* The chart draws its own "Dominance · 50 = even" title row. The section label
+   above already says Dominance, so only the scale hint is kept. */
+.ms-dom-slot .dmc-title { padding-left: 0; }
+.ms-dom-slot .dmc-title-label { display: none; }
+
+/* Tier comparison bar */
+.ms-tier-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.ms-tier-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ms-tier-player {
+  font: 600 0.8rem Verdana, sans-serif;
+  min-width: 80px;
+  text-align: right;
+}
+
+.ms-tier-bar-track {
+  flex: 1;
+  height: 20px;
+  display: flex;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ms-tier-seg {
+  height: 100%;
+}
+
+.ms-tier-seg.t1 { background: rgba(255,255,255,0.12); }
+.ms-tier-seg.t2 { background: rgba(33,165,227,0.35); }
+.ms-tier-seg.t3 { background: rgba(255,255,51,0.3); }
+
+.ms-tier-times {
+  display: flex;
+  gap: 0.4rem;
+  min-width: 120px;
+}
+
+.ms-tier-time {
+  font: 600 0.7rem 'Courier New', monospace;
+}
+
+.ms-tier-time.t2 { color: #21a5e3; }
+.ms-tier-time.t3 { color: #FFFF33; }
+
+/* Category comparison bars */
+.ms-cat-compare {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.ms-cat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ms-cat-label {
+  font: 600 0.75rem Verdana, sans-serif;
+  color: #5fa5cb;
+  min-width: 55px;
+  text-align: right;
+}
+
+.ms-cat-bars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ms-cat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.ms-cat-bar {
+  height: 12px;
+  border-radius: 2px;
+  min-width: 2px;
+  transition: width 0.3s;
+}
+
+.ms-cat-val {
+  font: 400 0.65rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.5);
+  min-width: 30px;
+}
+
+/* Combat types — unit roster cards */
+.ms-ct-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ms-ct-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 4px 5px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 4px;
+}
+
+.ms-ct-name {
+  /* 0.8rem is the house floor for readable text. At 0.68rem in a 72px box this
+     read "Troll Hea…" / "Spell Bre…", which is not a unit name. */
+  font: 600 0.8rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.72);
+  max-width: 8rem;
+  /* Wraps, never truncates. An ellipsis here makes two different units look
+     like the same one ("Troll Hea…" is Headhunter and Trapper both), and the
+     name is the only thing in the cell that says which unit this is. */
+  overflow-wrap: anywhere;
+}
+
+/* One row of the roster, aligned on the portraits rather than on the text.
+   The names sit above the art and they are one or two lines depending on the
+   unit, so aligning the cells to their tops staggered every portrait. A
+   reserved two-line box fixed that and cost 19px on every roster in the app,
+   which is height this tab does not have. Bottom-aligning is free. */
+.ms-ct-unit { justify-content: flex-end; }
+
+.ms-ct-portrait-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.ms-ct-unit-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.15);
+  display: block;
+}
+
+.ms-ct-count {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  font: 700 0.6rem Verdana, sans-serif;
+  padding: 0 3px;
+  border-radius: 2px;
+  min-width: 14px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.ms-ct-type-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ms-ct-typed {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ms-ct-type-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+}
+
+.ms-ct-type-lbl {
+  font: 400 0.62rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.45);
+}
+
+/* Damage matchup matrix table */
+.ms-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.15rem;
+}
+
+.ms-matrix-corner {
+  width: 1px;
+}
+
+.ms-matrix-col-hdr,
+.ms-matrix-row-hdr {
+  padding: 3px 5px;
+  font: 600 0.68rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.7);
+  white-space: nowrap;
+}
+
+.ms-matrix-col-hdr {
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.ms-matrix-row-hdr {
+  text-align: right;
+  border-right: 1px solid rgba(255,255,255,0.08);
+}
+
+.ms-matrix-col-hdr span,
+.ms-matrix-row-hdr span {
+  vertical-align: middle;
+}
+
+.ms-matrix-hdr-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.12);
+  vertical-align: middle;
+  margin-left: 3px;
+}
+
+.ms-matrix-cell {
+  text-align: center;
+  padding: 3px 6px;
+  font: 700 0.72rem Verdana, sans-serif;
+}
+
+.ms-mx-strong { color: #44DD88; background: rgba(68,221,136,0.08); }
+.ms-mx-weak   { color: #FF6666; background: rgba(255,68,68,0.06); }
+.ms-mx-neutral { color: rgba(255,255,255,0.45); }
+
+
+/* Hero inventory label */
+.ms-hero-inv-label {
+  font: 600 0.78rem Verdana, sans-serif;
+  color: rgba(255,255,255,0.7);
+  margin: 0.4rem 0 0.2rem;
+}
+
+/* Empty state */
+.ms-empty {
+  font: 400 0.85rem Verdana, sans-serif;
+  color: #555;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Summary button in match-complete-banner */
+.mcb-summary {
+  padding: 6px 20px;
+  font: 600 13px Verdana, sans-serif;
+  color: #fff;
+  background: #2a6e3e;
+  border: 1px solid #44aa66;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.mcb-summary:hover {
+  background: #3a8e5e;
+}
+
+/* Persistent summary button in scrubber bar */
+.ms-trigger-btn {
+  padding: 3px 10px;
+  font: 600 11px Verdana, sans-serif;
+  color: #aaa;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ms-trigger-btn:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.4);
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+  .ms-players {
+    grid-template-columns: 1fr;
+  }
+
+  .ms-panel {
+    width: 98%;
+    max-height: 95vh;
+  }
+
+  .ms-tabs {
+    flex-wrap: wrap;
+  }
+}

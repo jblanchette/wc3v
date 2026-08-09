@@ -20,10 +20,6 @@ The `mainLoop` runs every animation frame; anything here multiplies by FPS.
 - **BroadcastCamera.js:762-772** — per-frame `O(units)` scans for cluster
   scoring + bounds, every frame. Cache per-tick; recompute only when the unit
   set / positions change.
-- **BattleRenderer.js:243-322** — ~20 `ctx.measureText()` calls per active
-  battle per frame. Measure once on banner content change, cache the widths.
-- **BattleRenderer.js:473-526** — `_raceForPlayerId` does a linear
-  `players.find()` per trip per frame. Build a `playerId → race` map once.
 - **ClientUnit.js:906-934** — per-unit object + array allocation in `renderUnit`
   every frame. Hoist scratch objects / reuse arrays.
 - **ClientPlayer.js:773-824** — `O(n²)` `unitDrawPositions.find()` inside

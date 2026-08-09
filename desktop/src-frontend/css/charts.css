@@ -1,0 +1,168 @@
+/* ============================================================
+   charts.css, WC3V desktop.
+
+   The economy, resource, diverging and cap plots, and the dominance readout.
+   Mounted from the viewer's own classes; this is only their housing.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Economy charts ──────────────────────────────────────────────────────
+   Drawn by the shared CompareCharts factory (ci-chart-*). Warm styling here:
+   you are gold and the opponent lapis, the same pairing as the trend plots and
+   the site's compare modal, so "which line am I" never has to be relearned.
+   Axis text is authored at 12px in a 720-unit viewBox; at the narrowest
+   detail column (~548px inner) that renders ≈9px, small but still a
+   gridline caption duplicated by the tooltip, not content. */
+
+.chart-block { margin-bottom: var(--sp-4); }
+.chart-holder { min-width: 0; }
+.chart-holder svg { display: block; width: 100%; height: auto; }
+
+/* ── The viewer's resource charts ────────────────────────────────────────
+   Food, gold lost, lumber lost — client/js/ResourceCharts.js, drawn by
+   css/vendor/dominance.css, the same stylesheet the viewer loads. What is
+   here is the housing and the one thing the viewer does not need: a legend.
+   In the viewer the player colours are already established by the match header
+   above the panel; nothing establishes them here. */
+
+.rc-panel { margin-bottom: var(--sp-4); }
+/* Inside the chart panel the mode IS the content, so the trailing margin that
+   separated stacked charts on the old Economy tab is dead space below. */
+.cp .rc-panel,
+.cp .chart-block { margin-bottom: 0; }
+
+/* Two plots, side by side on a landscape window. Stacked they ran 400px of a
+   ~470px body; across, each still gets a 600px-wide box at 1280, which is a
+   6:1 aspect a curve reads in. Below 900 they stack, because two 430px columns
+   put the y-axis labels of one under the title of the other. */
+.rc-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(24rem, 1fr));
+  align-items: start;
+  gap: var(--sp-3);
+}
+.rc-panel > .chart-legend { grid-column: 1 / -1; }
+
+/* Title, value and context on one row above each plot, so the number you came
+   for is readable without decoding the axis. */
+.rc-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding-bottom: 2px;
+}
+.rc-title {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.rc-v {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+.rc-v[data-band="good"] { color: var(--verdict-win); }
+.rc-v[data-band="poor"] { color: var(--verdict-loss); }
+.rc-sub {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+}
+.rc-panel .chart-holder {
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.rc-panel .hint { margin: var(--sp-1) 0 0; }
+
+/* ── The diverging plot ──────────────────────────────────────────────────
+   Trade balance: their losses minus yours, filled back to a zero midline. The
+   fill is what makes the sign legible at a glance — the line alone reads as an
+   ordinary plot that happens to cross a rule. Moss above, rust below, the same
+   pair the verdict plaque and the grade colours use, so "good" never changes
+   hue between two things on one screen. */
+.ci-dv-fill { stroke: none; }
+.ci-dv-up   { fill: var(--verdict-win);  fill-opacity: 0.20; }
+.ci-dv-down { fill: var(--verdict-loss); fill-opacity: 0.20; }
+.ci-dv-zero {
+  stroke: var(--ink-faint);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+/* Deliberately NOT the "you" gold. This line is the balance between two
+   players, not one of them, and the legend two rows above says gold is you —
+   drawing the balance in that same gold reads as your curve. The fill carries
+   the judgement; the line only has to be followable. */
+.ci-dv-line { stroke: var(--ink-2); }
+
+/* ── The cap band ────────────────────────────────────────────────────────
+   Food: supply used as a line, the cap it is pressing on as a filled step
+   behind it. The cap is not a series you compare against the other player, it
+   is the ceiling — drawing it as a fourth line put two dashed curves through
+   the two solid ones they belong to. */
+.ci-cap-band { stroke: none; }
+.ci-cap-you { fill: var(--dom-gold); fill-opacity: 0.10; }
+.ci-cap-pro { fill: var(--dom-blue); fill-opacity: 0.10; }
+
+/* SVG text scales with the viewBox. These two are authored at 560 wide and
+   render in a 420-594px column, so 12px would land at 9-13px — under this
+   app's 0.8rem floor at the small end. Authored bigger so it lands ON it.
+   The army plot keeps 12px because its viewBox is 1200 in a full-width column,
+   which is already about 1:1. */
+.ci-diverging .ci-chart-axis,
+.ci-capchart .ci-chart-axis { font-size: 16px; }
+
+/* The chart's own title and hint, same reason. */
+.dom-panel .dmc-title-label,
+.dom-panel .dmc-title-hint { font-size: var(--fs-min); }
+
+/* ── The dominance readout ───────────────────────────────────────────────
+   The two numbers, riding the chart's existing title row so they cost no
+   height. This is the whole of what the deleted gauge carried that the plot
+   does not, and each number takes its player's line colour so the readout and
+   the plot read as one instrument. */
+.dom-readout {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.dom-readout-v { font-size: var(--fs-lg); font-weight: 800; }
+.dom-readout-sep { color: var(--ink-faint); font-style: normal; }
+.dom-readout-t {
+  min-width: 3.4rem;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-align: right;
+}
+
+.ci-chart { background: var(--app-well); border: 1px solid var(--app-line); border-radius: var(--radius-sm); }
+.ci-chart-grid { stroke: var(--app-line); stroke-width: 1; }
+.ci-chart-axis { fill: var(--ink-faint); font-size: 12px; }
+.ci-chart-title { fill: var(--ink-dim); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ci-chart-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.ci-chart-you { stroke: var(--dom-gold); }
+.ci-chart-pro { stroke: var(--dom-blue); }
+.ci-chart-marker { stroke: var(--dom-orange); stroke-width: 1.5; stroke-dasharray: 2 3; opacity: 0.75; }
+
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-1);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+}
+.legend-item { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.legend-swatch { width: 14px; height: 3px; border-radius: 2px; }
+.legend-you .legend-swatch { background: var(--dom-gold); }
+.legend-opp .legend-swatch { background: var(--dom-blue); }

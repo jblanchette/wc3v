@@ -1088,11 +1088,11 @@ img { display: block; }
    Re-tone toward the BO palette: tighter radius, hairline dividers, BO
    body text. The race tints (--card-*) are kept as race-data and are
    NOT overridden. */
-.site-build-card {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
-}
-.site-build-card:hover { box-shadow: var(--shadow-2); }
+/* Radius only. The card's own carved shadow stack in main.css — race rim,
+   struck top highlight, inner foot shading — is the whole treatment, and
+   replacing it with the flat design-system shadow put the cards back to
+   plain rounded rectangles. */
+.site-build-card { border-radius: 8px; }
 /* .site-card-section-label is defined once, in main.css. It used to be
    re-declared here at --bo-text-dim, which lands at 3.1-3.6:1 on the
    race-tinted card bodies — under AA. Section headings are structure, not
@@ -1144,13 +1144,13 @@ img { display: block; }
 .site-card-band.diff-medium { color: var(--warn); }
 .site-card-band.diff-hard   { color: var(--bad); }
 
-/* Matchup pills: tinted by the OPPONENT race color (--opp-color from
-   JS). This is race-as-data and always carries "vs {ABBR}" text. */
+/* Matchup tokens: race-as-data, carried by the LETTERS.
+   These were pills filled and outlined in a wash of the opponent's race
+   colour, which put three or four pastel capsules on top of the card's
+   banner. The token is struck into the banner instead — see the well and
+   strike in main.css — and only the letterform takes the race hue. Mono
+   still, because they are codes. */
 .site-card-matchup {
-  background: color-mix(in srgb, var(--opp-color, var(--text-dim)) 16%, transparent);
-  border: 1px solid color-mix(in srgb, var(--opp-color, var(--text-dim)) 45%, transparent);
-  color: var(--text);
-  border-radius: var(--radius-pill);
   font-family: var(--mono);
   font-weight: 700;
 }
@@ -1178,31 +1178,36 @@ img { display: block; }
   font-size: var(--fs-min);
 }
 
-/* Replay strip: BO-toned list inside the card. */
-.site-replay-section { background: var(--bo-bg); border-top: 1px solid var(--bo-border); }
+/* Replay strip: BO-toned list inside the card.
+   No opaque --bo-bg fill: it painted the same neutral slab across the foot of
+   every card and cut the race surface off two thirds of the way down. A wash
+   keeps the strip readable as its own zone and lets the race through. */
+.site-replay-section { background: rgba(0,0,0,0.16); border-top: 1px solid var(--bo-border); }
 .site-replay-item-players { color: var(--bo-text); font-weight: 600; }
 .site-replay-vs, .site-replay-item-map { color: var(--bo-text-muted); }
 /* --bo-text-muted lands at 4.35:1 on the tournament chip's own tinted
    fill — just under AA. --text-muted clears it. */
 .site-replay-tournament, .site-replay-stage { color: var(--text-muted); }
 .site-replay-none { color: var(--bo-text-dim); }
-.site-replay-toggle { color: var(--accent); background: transparent; border: 0; }
-.site-replay-toggle:hover { text-decoration: underline; }
+/* The foot bar keeps its own chrome (main.css) — a transparent, borderless,
+   underline-on-hover link is exactly the "is that a tag or a button?" the
+   bar exists to fix. */
 
-/* Guide / Watch buttons: Guide is ghost chrome, Watch is the primary
-   accent gradient (the marquee action), neither takes a race color. */
+/* Guide / Watch buttons: two real buttons, side by side, filling the card's
+   width. Guide was ghost chrome — --surface-2 on a race-tinted card is a
+   near-invisible dark rectangle, and next to Watch's lit accent gradient it
+   read as the disabled one of the pair. Moss, struck, out of the --dom-green
+   family: equal weight, no second accent colour, no saturation. */
 .site-replay-guide-btn {
-  background: var(--surface-2);
-  border: 1px solid var(--border-2);
-  color: var(--text);
-  border-radius: var(--radius);
+  color: #d6ead9;
+  border-radius: 5px;
 }
-.site-replay-guide-btn:hover { border-color: var(--accent); background: var(--surface-3); }
+.site-replay-guide-btn:hover { color: #eaf6ec; }
 .site-replay-view-btn {
   background: linear-gradient(180deg, var(--accent-strong), var(--accent-deep));
   border: 1px solid var(--accent);
   color: var(--text-on-accent);
-  border-radius: var(--radius);
+  border-radius: 5px;
   font-weight: 700;
 }
 .site-replay-view-btn:hover { background: linear-gradient(180deg, var(--accent-strong), var(--accent)); }

@@ -923,8 +923,14 @@ function convertBuildings () {
   }
   console.log('Buildings: ' + ok + ' converted, ' + fail + ' skipped, ' + texConverted + ' textures embedded');
 
-  // Build the type-code → model-name manifest
-  // Maps each 4-char type code to the folder name of its GLB
+  // Build the type-code → { model, scale } manifest.
+  //
+  // `scale` is written as 1 here and filled in by tools/patch-model-scale.js from
+  // helpers/modelScale.json, exactly like the unit manifest. Buildings used to be
+  // a bare type-code → name string with no scale at all, which was accidentally
+  // right for 169 of 197 types and wrong for the rest — most visibly the Tree of
+  // Life / Ages / Eternity, which share one MDX and differ ONLY by modelScale
+  // (1.0 / 1.15 / 1.3), so all three rendered identically.
   const manifest = {};
   for (const [typeCode, { file }] of Object.entries(mappings)) {
     // file = 'buildings/other/goldmine/goldmine'
@@ -932,14 +938,15 @@ function convertBuildings () {
     const parts = file.split('/');
     const modelName = parts.length >= 3 ? parts[parts.length - 2] : parts[parts.length - 1];
     if (modelMap[modelName]) {
-      manifest[typeCode] = modelName;
+      manifest[typeCode] = { model: modelName, scale: 1 };
     }
   }
 
   const manifestPath = path.join(BUILDINGS_OUTPUT_DIR, 'building-models.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   console.log('Manifest: ' + Object.keys(manifest).length + ' type codes → ' +
-    new Set(Object.values(manifest)).size + ' unique models');
+    new Set(Object.values(manifest).map(v => v.model)).size + ' unique models');
+  console.log('  scale=1 placeholder — run: node tools/patch-model-scale.js');
   console.log('Wrote: ' + manifestPath);
 
   // Write texture report for the texture conversion step

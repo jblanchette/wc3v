@@ -9,7 +9,7 @@
 // path, no strokes, viewBox 0 0 24 24, fill inherited. Safe for innerHTML
 // because every string here is our own constant.
 //
-// Colour comes from whatever hosts the glyph (--race-warm-* in app.css).
+// Colour comes from whatever hosts the glyph (--race-warm-* in css/tokens-desktop.css).
 
 (function () {
   'use strict';

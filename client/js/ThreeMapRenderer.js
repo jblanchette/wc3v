@@ -1829,9 +1829,27 @@
     // from the map's doo.json) narrows the preload to textures the map can
     // actually reference — the manifest lists ~93 textures (~6.7 MB) but a
     // typical map uses a fraction. Null/empty loads everything (safety).
+    // Per-type doodad/destructable scale + pinned rotation, straight from the
+    // game's own skin files (tools/extract-model-scale.js). Only the types that
+    // differ from the defaults are in the file, so a miss means "defaults".
+    //
+    // war3map.doo carries a per-INSTANCE scale that the renderer already honours,
+    // but WC3 multiplies that by the TYPE's defScale, which nothing here read.
+    // 63 of 568 doodad types have a defScale other than 1 — the worst is 0.360,
+    // i.e. rendering roughly 2.8x too large.
+    loadDoodadScales () {
+      if (this._doodadScales) return Promise.resolve();
+      this._doodadScales = {};
+      return fetch('/assets/models/doodad-scales.json')
+        .then(r => (r.ok ? r.json() : null))
+        .then(d => { if (d) this._doodadScales = d; })
+        .catch(() => {});
+    }
+
     loadDoodadTextures (tilesetChar, usedTypeCodes) {
       this._doodadTextureManifest = null;
       this._doodadTextures = new Map();
+      this.loadDoodadScales();
       return fetch('/assets/textures/doodad-textures.json')
         .then(res => res.ok ? res.json() : null)
         .then(manifest => {
@@ -2018,15 +2036,21 @@
           const mesh = new THREE.InstancedMesh(geo, mat, instCount);
           const dummy = new THREE.Object3D();
 
+          // Type-level scale / pinned rotation. Multiplies the per-instance
+          // values the map author set — see loadDoodadScales.
+          const typeInfo = (this._doodadScales && this._doodadScales[baseType]) || null;
+          const typeScale = (typeInfo && typeInfo.s) || 1;
+          const pinnedRot = typeInfo && typeInfo.r != null ? typeInfo.r : null;
+
           for (let i = 0; i < instCount; i++) {
             const d = group.instances[i];
             const wx = parseFloat(d.position.x);
             const wy = parseFloat(d.position.y);
             const groundY = this.sampleHeight(wx, wy);
-            const s = (d.scale && d.scale[0]) || 1;
+            const s = ((d.scale && d.scale[0]) || 1) * typeScale;
 
             dummy.position.set(wx - mapCenterX, groundY, -(wy - mapCenterY));
-            dummy.rotation.set(0, d.angle || 0, 0);
+            dummy.rotation.set(0, pinnedRot != null ? pinnedRot : (d.angle || 0), 0);
             dummy.scale.set(s, s, s);
             dummy.updateMatrix();
             mesh.setMatrixAt(i, dummy.matrix);
@@ -2154,6 +2178,22 @@
         .catch(() => {});
     }
 
+    // itemId -> { model, scale }.
+    //
+    // `scale` is the game's Art Scaling Value (unitskin.txt `modelScale`), written
+    // into the manifest by tools/patch-model-scale.js. It is 1 for most buildings
+    // and is what separates Tree of Life / Ages / Eternity, which are one MDX.
+    //
+    // Older deployed manifests are `itemId -> "modelName"` strings; R2 serves these
+    // with a long cache, so tolerate both shapes rather than rendering nothing.
+    _buildingSpec (itemId) {
+      const m = this._buildingModelManifest;
+      const v = m && m[itemId];
+      if (!v) return null;
+      if (typeof v === 'string') return { model: v, scale: 1 };
+      return v.model ? { model: v.model, scale: v.scale || 1 } : null;
+    }
+
     // Place static neutral buildings as 3D models (gold mines, shops, fountains, etc.)
     // Returns a Promise that resolves when all building models are loaded and placed.
     setupNeutralBuildingModels (neutralBuildings) {
@@ -2168,10 +2208,11 @@
       // Group by resolved model name
       const groups = {};
       for (const nb of neutralBuildings) {
-        const modelName = this._buildingModelManifest[nb.type];
-        if (!modelName) continue;
-        if (!groups[modelName]) groups[modelName] = [];
-        groups[modelName].push(nb);
+        const spec = this._buildingSpec(nb.type);
+        if (!spec) continue;
+        if (!groups[spec.model]) groups[spec.model] = [];
+        groups[spec.model].push(nb);
+        nb._modelScale = spec.scale;
       }
 
       const totalGroups = Object.keys(groups).length;
@@ -2200,7 +2241,11 @@
               const wy = nb.y;
               // Lift buildings slightly above terrain to prevent ground clipping
               const groundY = this.sampleHeight(wx, wy) + 18;
-              const s = (nb.scale && nb.scale[0]) || 1;
+              // Two independent multipliers, both game data:
+              //   nb.scale     — the per-instance scale the map author set in
+              //                  war3mapUnits.doo (parsed by lib/parsers/UNITFile.js)
+              //   _modelScale  — the unit type's Art Scaling Value
+              const s = ((nb.scale && nb.scale[0]) || 1) * (nb._modelScale || 1);
 
               let obj;
               if (result.isGroup) {
@@ -2247,8 +2292,9 @@
         for (const unit of player.units) {
           if (!unit.isBuilding) continue;
           const itemId = (unit.itemId || '').toLowerCase();
-          const modelName = this._buildingModelManifest[itemId];
-          if (!modelName) continue;
+          const spec = this._buildingSpec(itemId);
+          if (!spec) continue;
+          const modelName = spec.model;
 
           const wx = unit.currentX || (unit.spawnPosition && unit.spawnPosition.x) || 0;
           const wy = unit.currentY || (unit.spawnPosition && unit.spawnPosition.y) || 0;
@@ -2256,6 +2302,7 @@
 
           buildingEntries.push({
             modelName,
+            modelScale: spec.scale,
             itemId,
             wx, wy,
             readyTime: unit.readyTime || unit.constructionStartTime || unit.spawnTime || 0,
@@ -2343,8 +2390,12 @@
                   itemId: e.itemId,
                   unit: e.unit,
                   _slots: [],
-                  _matrix: new THREE.Matrix4().makeTranslation(
-                    e.wx - mapCenterX, groundY, -(e.wy - mapCenterY)),
+                  // The type's Art Scaling Value. Buildings carried no scale at
+                  // all before, which was right only because 169 of the 197
+                  // mapped types happen to have modelScale 1.
+                  _scale: e.modelScale || 1,
+                  _matrix: ThreeMapRenderer._buildingMatrix(
+                    e.wx - mapCenterX, groundY, -(e.wy - mapCenterY), e.modelScale || 1),
                   _visible: false,
                   _treesCleared: false,
                   _lastRootedX: e.wx,
@@ -2411,6 +2462,29 @@
       });
     }
 
+    // WC3's default structure facing, 270 degrees (3π/2). Measured, not assumed:
+    // in every war3mapUnits.doo the preplaced structures AND the `sloc` start-
+    // location markers sit at exactly 4.7124 rad while the creeps carry
+    // randomised angles. A player's buildings go up on those start locations, so
+    // they face the same way.
+    //
+    // Player buildings have no facing in the replay — nothing records it, because
+    // in game it never varies. Neutral buildings do not use this: their real
+    // per-instance rotation now comes through the map export.
+    static get DEFAULT_BUILDING_FACING () { return Math.PI * 1.5; }
+
+    // Per-instance building matrix: translate to the world position, apply the
+    // default structure facing, then the type's model scale. Kept in one place so
+    // re-rooting an uprooted Ancient cannot silently drop either.
+    // Model forward is +X and scene yaw is +worldFacing — the same calibration
+    // UnitModelRenderer uses (both converters land geometry in Y-up the same way).
+    static _buildingMatrix (x, y, z, scale) {
+      const m = new THREE.Matrix4().makeTranslation(x, y, z);
+      m.multiply(new THREE.Matrix4().makeRotationY(ThreeMapRenderer.DEFAULT_BUILDING_FACING));
+      if (scale && scale !== 1) m.scale(new THREE.Vector3(scale, scale, scale));
+      return m;
+    }
+
     // Show/hide an instanced building by swapping its per-instance matrix
     // (zero-scale = hidden). Returns true if the state actually changed.
     _setBuildingVisible (b, visible) {
@@ -2432,7 +2506,8 @@
       const cx = (ext[0][0] + ext[0][1]) / 2;
       const cy = (ext[1][0] + ext[1][1]) / 2;
       const groundY = this.sampleHeight(wx, wy) + 18;
-      b._matrix.makeTranslation(wx - cx, groundY, -(wy - cy));
+      b._matrix.copy(ThreeMapRenderer._buildingMatrix(
+        wx - cx, groundY, -(wy - cy), b._scale || 1));
       if (b._visible) {
         for (const s of b._slots) {
           s.mesh.setMatrixAt(s.index, b._matrix);

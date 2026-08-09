@@ -1,0 +1,497 @@
+/* ============================================================
+   chrome.css, WC3V desktop.
+
+   The app bar, the views, Next game and the Settings sheet. The frame the
+   product sits inside.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── App bar: the navy half ───────────────────────────────────────────
+   This bar is also the window's title bar (decorations: false). It uses
+   the site's chrome tokens so that opening the app and opening wc3v.com
+   land in the same place. No backdrop-filter: nothing sits behind a
+   desktop window, so it would buy a blur of nothing and cost paint. */
+
+.appbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  /* No right padding. The caption controls sit flush to the window edge,
+     the way every Windows title bar puts them. */
+  padding: 0 0 0 var(--page-gutter);
+  /* 48, not 56. This bar is fixed chrome above the fold on every screen, so its
+     height comes straight off the report body. The caption controls and the
+     wordmark both still clear it. */
+  height: 48px;
+  background: linear-gradient(180deg, var(--bg), var(--bg-deep));
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-1);
+  /* A title bar is dragged, not selected. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.appbar-spacer { flex: 1; align-self: stretch; }
+
+/* The canonical mark, identical to .site-wordmark in client/css/main.css.
+   same size, weight, tracking and the "3" in --accent. */
+.wordmark {
+  font-size: var(--fs-h2);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  /* 1.2 rather than 1. At 1 the line box is shorter than the font's ascent +
+     descent, which reads as a 4px overflow in the fold audit. The bar centres
+     it either way. */
+  line-height: 1.2;
+  color: var(--text);
+  white-space: nowrap;
+  /* Part of the drag region rather than a target. */
+  pointer-events: none;
+}
+.wordmark > span { color: var(--accent); }
+
+/* Caption controls. The glyphs are 10px because that is what a Windows
+   title bar draws; the 36px icon floor in this file governs content
+   iconography, not OS caption controls. The BUTTONS clear --hit-min. */
+.wincontrols { display: flex; align-self: stretch; margin-left: var(--sp-2); }
+
+.wctl {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  align-self: stretch;
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.wctl:hover { background: var(--surface-2); color: var(--text); }
+/* The one place a strong red is correct: it is the OS's close affordance,
+   not a semantic state colour. */
+.wctl-close:hover { background: #B23A2A; color: #fff; }
+.wctl svg { width: 10px; height: 10px; }
+
+/* The settings gear. Same chrome family as the caption controls, though it is
+   an app control, so it gets a fuller glyph and a pressed state. */
+.wctl-gear svg { width: 18px; height: 18px; }
+.wctl-gear.is-active { background: var(--surface-2); color: var(--text); }
+
+/* Update indicator. Information rather than an alarm, so it wears the accent
+   and not --warn or --bad. Nothing here is wrong; there is simply a newer
+   version, and the app is still perfectly usable if it is ignored forever. */
+.update-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--accent-soft, rgba(91,141,239,0.14));
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease);
+}
+.update-chip:hover { background: var(--accent); color: var(--text-on-accent, #0d1220); }
+.update-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  /* No pulse. A tray app that sits open for days must not have something
+     blinking in the corner of the screen the whole time. */
+}
+.update-chip:hover .update-dot { background: currentColor; }
+
+/* The release notes, straight from the manifest. pre-wrap because whoever
+   wrote them chose their own line breaks. */
+.update-notes {
+  max-width: 44rem;
+  white-space: pre-wrap;
+  color: var(--ink-2);
+}
+
+.identity-wrap { position: relative; }
+
+.identity {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  min-height: var(--ico-sm);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.identity:hover { border-color: var(--border-3); background: var(--surface); }
+.identity-label { color: var(--text-dim); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.identity-name { font-weight: 600; }
+.identity[data-set="0"] .identity-name { color: var(--warn); }
+
+.identity-pop {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  left: 0;
+  z-index: 20;
+  width: 22rem;
+  padding: var(--sp-4);
+  background: var(--app-panel);
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2), var(--cut);
+}
+.pop-lead { margin: 0 0 var(--sp-3); color: var(--ink-2); font-size: var(--fs-min); }
+
+.session {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--bg-deep);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+}
+.session-label { color: var(--text-dim); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.session-score { font-size: var(--fs-lg); font-weight: 700; font-variant-numeric: tabular-nums; }
+.session-score .w { color: var(--verdict-win); }
+.session-score .l { color: var(--verdict-loss); }
+.session-score i { color: var(--ink-faint); font-style: normal; padding: 0 2px; }
+.session-streak { color: var(--gold-deep); font-size: var(--fs-min); font-weight: 600; }
+
+/* Left-anchored beside the wordmark, the way the site's nav links are.
+   not floated to the far right. */
+.nav { display: flex; gap: var(--sp-1); }
+
+.nav-item {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-4);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+.nav-item:hover { color: var(--text); background: var(--surface); }
+.nav-item.is-active {
+  color: var(--text);
+  background: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+/* ── Views ───────────────────────────────────────────────────────────── */
+
+main { min-height: 0; position: relative; }
+
+.view { display: none; height: 100%; min-height: 0; }
+.view.is-active { display: grid; }
+
+/* Gamebar, backfill bar (only when a backfill is running), report. The feed
+   drawer occupies the same cell as the report and covers it when open, so
+   there is no height arithmetic anywhere and no absolute positioning. */
+.view-games { grid-template-rows: auto auto minmax(0, 1fr); }
+.view-profile { grid-template-rows: auto minmax(0, 1fr); }
+.view-stream, .view-settings { grid-template-rows: minmax(0, 1fr); }
+
+/* ── Next game ───────────────────────────────────────────────────────────
+   A live W3Champions match takes over the report column. It was a band above
+   both columns, which cost 77px of the fold budget whenever it was up and read
+   as an announcement rather than a section. Nothing here renders when no match
+   is running. */
+
+.mode-seg { justify-self: start; }
+
+.ng-live {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut-in);
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.ng-ladder { margin-left: auto; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.ng-h2h { margin: var(--sp-2) 0 0; color: var(--ink-dim); }
+.ng-h2h-score { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.ng-h2h-score[data-v="win"]  { color: var(--verdict-win); }
+.ng-h2h-score[data-v="loss"] { color: var(--verdict-loss); }
+.ng-h2h-score[data-v="even"] { color: var(--dom-gold); }
+
+/* Three cells, all read out of games on this machine. */
+.ng-book {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1px;
+  background: var(--app-line);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.ng-cell {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+}
+.ng-cell h3 {
+  margin: 0 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ng-cell .hint { margin: 0; }
+.ng-big { font-size: var(--fs-h2); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ng-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4rem auto;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: 2px;
+}
+.ng-bar-k { color: var(--ink-2); font-size: var(--fs-min); overflow-wrap: anywhere; }
+.ng-bar-track {
+  height: 8px;
+  background: var(--app-panel);
+  border: var(--outline);
+  border-radius: 2px;
+  box-shadow: var(--cut-in);
+  overflow: hidden;
+}
+.ng-bar-track i { display: block; height: 100%; background: var(--dom-gold); }
+.ng-bar-v { color: var(--ink-faint); font-size: var(--fs-min); font-variant-numeric: tabular-nums; }
+
+.ng-pair { display: flex; align-items: baseline; gap: var(--sp-2); }
+.ng-pair-k { color: var(--ink-faint); font-size: var(--fs-min); }
+.ng-pair b { font-variant-numeric: tabular-nums; }
+
+.ng-list-head h3 {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.ng-list {
+  min-height: 0;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius);
+  box-shadow: var(--cut);
+}
+.ng-list .game { padding: var(--sp-1) var(--sp-3); }
+.ng-list .hint { margin: 0; padding: var(--sp-3); }
+
+/* ── Settings sheet ──────────────────────────────────────────────────────
+   Slides over whatever screen you are on. `main` is the positioning context
+   (position: relative), so the sheet never covers the app bar and the window
+   controls stay reachable while it is open. Three rows: a head that stays put,
+   one scrolling body, the trademark line pinned at the foot. */
+
+.sheet {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 20;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(30rem, 92vw);
+  padding: 0 var(--sp-4) var(--sp-3);
+  background: var(--app-bg);
+  border-left: 1px solid var(--app-edge);
+  /* A hard dark cast to the left, the same vocabulary as --cut. No glow. */
+  box-shadow: -16px 0 32px rgba(0, 0, 0, 0.55);
+}
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--app-line);
+}
+.sheet-head h2 {
+  margin: 0;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.sheet-close {
+  display: grid;
+  place-items: center;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  margin-left: auto;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.sheet-close:hover { background: var(--app-panel-2); color: var(--ink); }
+.sheet-close svg { width: 12px; height: 12px; }
+
+.sheet-body { padding-top: var(--sp-4); }
+.sheet .panel:last-child { margin-bottom: 0; }
+/* The body scrolls underneath, so the pinned line needs a rule to sit on. */
+.sheet .legal {
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--app-line);
+}
+
+/* ── Stream: two columns, each its own scroller ──────────────────────────
+   The view frame never scrolls; the columns do. */
+
+.stream-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
+  gap: var(--sp-4);
+  min-height: 0;
+  padding: var(--sp-4);
+}
+.stream-grid > .col { min-height: 0; }
+.stream-grid .panel:last-child { margin-bottom: 0; }
+
+/* --fs-min is the floor and this is the one line allowed to sit on it. */
+.legal {
+  margin: 0;
+  padding-top: var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-align: center;
+}
+
+/* ── Casting ──────────────────────────────────────────────────────────────
+   The caster's control surface. Two names with their races, an event line, a
+   badge and a score. Everything here publishes on change, because the point of
+   a caster's control is that the change is on screen before they let go of the
+   mouse. */
+
+.cast-stage { margin-bottom: var(--sp-3); }
+
+.cast-head {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+
+/* Names either side of a fixed centre, the same shape the scoreboard itself
+   has, so the control reads as the thing it controls. */
+.cast-sides {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.cast-side { display: grid; gap: var(--sp-2); min-width: 0; }
+.cast-v {
+  align-self: center;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.cast-score {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.cast-n {
+  min-width: 2ch;
+  color: var(--ink);
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* ── Schema migration strip ──────────────────────────────────────────────
+   Only on screen while the store is behind SCHEMA_VERSION. It reports work
+   the app started by itself, so it is an indicator first and a control
+   second: the text and the bar lead, Pause is the quiet thing on the end.
+
+   Deliberately NOT an alert colour. Nothing is wrong — the app is bringing
+   an old store up to date, and a red bar on every launch after an update
+   would teach people to ignore it. Bronze is the house "work in progress",
+   the same hue the parse chips use. */
+.migrate {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--page-gutter);
+  height: 34px;
+  background: linear-gradient(180deg, var(--bg-deep), var(--bg));
+  border-bottom: 1px solid var(--border);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+.migrate[hidden] { display: none; }
+
+.migrate-text { flex-shrink: 0; color: var(--text); }
+
+/* Fills the space between the label and the button, so the bar is the thing
+   that grows and the two ends stay put. */
+.migrate-bar {
+  flex: 1 1 auto;
+  min-width: 4rem;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+}
+.migrate-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent, #9d8452);
+  transition: width 240ms ease;
+}
+
+/* A turning mark, so a run that is between files still looks alive. The
+   global reduced-motion rule stops it; the bar still moves. */
+.migrate-spin {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  border: 2px solid rgba(157, 132, 82, 0.30);
+  border-top-color: var(--accent, #9d8452);
+  border-radius: 50%;
+  animation: migrate-spin 900ms linear infinite;
+}
+@keyframes migrate-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .migrate-spin { animation: none; }
+}
+
+.migrate-btn {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  font-size: var(--fs-sm);
+}

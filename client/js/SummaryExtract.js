@@ -378,9 +378,18 @@
     return out;
   }
 
-  // Top-level: every neutral group on the map (whether claimed or not) with
-  // just enough data for the Creeps tab to draw white outline rings — what
-  // the viewer does in MapRenderer.renderNeutralGroups for untouched camps.
+  // Top-level: every neutral group on the map, claimed or not.
+  //
+  // This began as just enough to draw white outline rings for untouched camps,
+  // mirroring MapRenderer.renderNeutralGroups. As of schema v5 it also carries
+  // what a creep ROUTE is made of — who cleared each camp, when, what was in it
+  // and which hero got the experience — because the desktop's Creeps tab is the
+  // viewer's, and none of that survives in a stored summary otherwise.
+  //
+  // Deliberately NOT stored: `claimers`. The viewer walks it only to work out
+  // which team a player is on, and a stored summary already knows that from
+  // `players[slot].teamId`. It is the largest thing on a group and the one
+  // thing here that is pure re-derivation.
   function extractNeutralCamps (worldNeutralGroups) {
     const out = [];
     if (!worldNeutralGroups) return out;
@@ -391,11 +400,40 @@
       if (!g) continue;
       const b = g.unitBounds || g.bounds || null;
       if (!b) continue;
+
+      // One entry per hero that drew experience here, which is what the "Hero
+      // XP from Creeps" bars are built from. Summed per hero: a camp records a
+      // claim per kill, not per hero.
+      const xpByHero = {};
+      for (const r of (g.heroClaimRecords || [])) {
+        if (!r || !r.uuid) continue;
+        if (!xpByHero[r.uuid]) xpByHero[r.uuid] = { uuid: r.uuid, name: r.displayName || '', xp: 0 };
+        xpByHero[r.uuid].xp += r.xpGained || 0;
+      }
+
+      const claimTime = typeof g.claimTime === 'number' ? g.claimTime : null;
       out.push({
         groupId: g.uuid,
         totalLevel: g.totalLevel || 0,
         bounds: { minX: b.minX, minY: b.minY, maxX: b.maxX, maxY: b.maxY },
-        hasFountain: !!g.hasFountain
+        hasFountain: !!g.hasFountain,
+        // 0 untouched, 1 contested, 2 cleared. The route only draws 1 and 2.
+        claimState: g.claimState || 0,
+        claimOwnerTeamId: (g.claimOwnerId === undefined || g.claimOwnerId === null)
+          ? null : g.claimOwnerId,
+        order: g.order || 0,
+        claimTimeMs: claimTime,
+        claimTimeFormatted: claimTime !== null ? formatMs(claimTime) : null,
+        firstInteractionTimeMs: typeof g.firstInteractionTime === 'number'
+          ? g.firstInteractionTime : null,
+        // What was actually standing there. The level rides each unit because
+        // the camp icons carry a level pip, and balanceInfo does not survive.
+        units: (g.units || []).map(u => ({
+          itemId: u.itemId || '',
+          name: u.displayName || '',
+          level: (u.balanceInfo && u.balanceInfo.level) || 0
+        })),
+        heroXp: Object.values(xpByHero)
       });
     }
     return out;

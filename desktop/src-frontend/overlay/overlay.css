@@ -4,7 +4,12 @@
    what viewers will see.
 
    Art direction: earthy, carved, muted. No neon, no saturated primaries, no
-   glow. Sized for a stream, where the viewer is metres from the screen. */
+   glow. Sized for a stream, where the viewer is metres from the screen.
+
+   The token set is literals rather than var()s off the app's token layer,
+   because this page cannot reach tokens-desktop.css: it is served by a Rust
+   server from a shell with everything inlined. The values ARE the app's, copied
+   deliberately, the same way cast.css copies the race hues. */
 
 :root {
   --panel: rgba(24, 20, 15, 0.92);
@@ -14,6 +19,25 @@
   --win: #86a96b;
   --loss: #b5563f;
   --gold: #c9a227;
+
+  /* The carved vocabulary: a struck highlight over a dark bed, on a near-black
+     outline. This is the whole depth system — no shadow halos, no text-shadow,
+     no filters. The readings are tokens-desktop.css's --cut / --outline.
+
+     The `ov-` prefix is not decoration. This file is a normal stylesheet in the
+     WC3V window, loaded AFTER the app's token layer, so a :root token named
+     --outline here would silently rebind it for every screen in the app — and
+     the app's is a border shorthand while this is a colour. */
+  --ov-cut: inset 0 1px 0 rgba(255, 255, 255, 0.055), inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  --ov-outline: #0a0704;
+
+  /* Race hues, --race-warm-* exactly as cast.css carries them. */
+  --race-H: #5D86B0;
+  --race-O: #C05B44;
+  --race-E: #719B52;
+  --race-U: #8E6DB0;
+  --race-R: #A2917A;
+  --race-N: #7A756C;
 }
 [data-theme="slate"] {
   --panel: rgba(21, 24, 28, 0.92);
@@ -28,18 +52,46 @@
   --loss: #a8564f;
 }
 
+/* Race material for the verdict banner: the --rc-head-a/b pairs from
+   tokens-desktop.css, as a gradient bed under the crest and the result. Set on
+   [data-race] so one rule set serves any element that carries a race.
+
+   Scoped inside .wc3v-ov on purpose. In the in-app preview the same attribute
+   is already claimed by the app's own token layer, and the overlay must render
+   from its own values there or the preview is lying. */
+.wc3v-ov [data-race="H"] { --rc-ink: var(--race-H); --rc-head-a: #1d2733; --rc-head-b: #161c25; }
+.wc3v-ov [data-race="O"] { --rc-ink: var(--race-O); --rc-head-a: #2c1c16; --rc-head-b: #221510; }
+.wc3v-ov [data-race="E"] { --rc-ink: var(--race-E); --rc-head-a: #1b2618; --rc-head-b: #151d13; }
+.wc3v-ov [data-race="U"] { --rc-ink: var(--race-U); --rc-head-a: #241d30; --rc-head-b: #1b1626; }
+.wc3v-ov [data-race="R"] { --rc-ink: var(--race-R); --rc-head-a: #232019; --rc-head-b: #1a1813; }
+.wc3v-ov [data-race="N"] { --rc-ink: var(--race-N); --rc-head-a: #201e1a; --rc-head-b: #181613; }
+
+/* Slate keeps the race hue and drops the warmth out of the bed. A rust-brown
+   gradient under a cool grey panel is the exact combination this theme exists
+   to avoid. */
+[data-theme="slate"] .wc3v-ov [data-race="H"] { --rc-head-a: #1c2530; --rc-head-b: #161d26; }
+[data-theme="slate"] .wc3v-ov [data-race="O"] { --rc-head-a: #2a201c; --rc-head-b: #201815; }
+[data-theme="slate"] .wc3v-ov [data-race="E"] { --rc-head-a: #1c2620; --rc-head-b: #151d18; }
+[data-theme="slate"] .wc3v-ov [data-race="U"] { --rc-head-a: #232030; --rc-head-b: #1a1826; }
+[data-theme="slate"] .wc3v-ov [data-race="R"] { --rc-head-a: #212429; --rc-head-b: #191c20; }
+[data-theme="slate"] .wc3v-ov [data-race="N"] { --rc-head-a: #1e2126; --rc-head-b: #171a1e; }
+
 .wc3v-ov * { box-sizing: border-box; margin: 0; }
 
 .wc3v-ov {
   color: var(--ink);
+  /* 0.875rem is the body floor. Nothing on this card goes below 0.8rem at
+     scale 1, which is the smallest a viewer metres from a 720p stream can
+     actually read. */
   font: 0.875rem/1.45 "Segoe UI", system-ui, sans-serif;
 }
 
 .wc3v-ov .card {
   max-width: 27rem;
   background: var(--panel);
-  border: 1px solid var(--panel-edge);
+  border: 1px solid var(--ov-outline);
   border-radius: 8px;
+  box-shadow: var(--ov-cut);
   overflow: hidden;
 }
 
@@ -72,46 +124,209 @@ body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
   body[data-reveal="on"]:not([data-shown]) .wc3v-ov .card { transform: none; }
 }
 
+/* ── Phase: the strip ─────────────────────────────────────────────────────
+   After the post-game hold the card does not vanish, it collapses to what is
+   still true: the scout strip and the session score. Everything about the last
+   game carries `.post` and goes.
+
+   Two selectors for one rule. In OBS the phase is on <body>; in the WC3V
+   window's preview it is on the host element, which is .wc3v-ov itself. */
+body[data-phase="idle"] .wc3v-ov .mod.post,
+.wc3v-ov[data-phase="idle"] .mod.post { display: none; }
+
+/* Visibly a different object, not the same card with holes in it: half the
+   padding and a smaller mark. */
+body[data-phase="idle"] .wc3v-ov .scout,
+body[data-phase="idle"] .wc3v-ov .session,
+.wc3v-ov[data-phase="idle"] .scout,
+.wc3v-ov[data-phase="idle"] .session { padding-top: 0.3rem; padding-bottom: 0.35rem; }
+body[data-phase="idle"] .wc3v-ov .mark,
+.wc3v-ov[data-phase="idle"] .mark { padding: 0.25rem 0.5rem 0; }
+body[data-phase="idle"] .wc3v-ov .mark .wordmark,
+.wc3v-ov[data-phase="idle"] .mark .wordmark { font-size: 0.9rem; padding: 0.1rem 0.5rem; }
+
 .wc3v-ov .mod + .mod { border-top: 1px solid var(--panel-edge); }
 
-/* ── session ─────────────────────────────────────────────────────────── */
-.wc3v-ov .session {
+/* ── Marks ───────────────────────────────────────────────────────────────
+   Race crests and section glyphs, both inline SVG stitched into the page. They
+   inherit colour, so a crest is tinted by its race and a section mark by the
+   ink around it. */
+.wc3v-ov .crest,
+.wc3v-ov .gly {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+.wc3v-ov .crest svg,
+.wc3v-ov .gly svg { width: 100%; height: 100%; fill: currentColor; display: block; }
+.wc3v-ov .crest[data-race] { color: var(--rc-ink, var(--dim)); }
+
+.wc3v-ov .crest.tile { width: 36px; height: 36px; }
+.wc3v-ov .crest.big { width: 44px; height: 44px; }
+.wc3v-ov .gly { width: 22px; height: 22px; color: var(--dim); }
+
+/* Hero art from the CDN. The one remote asset on the card, so it is built to
+   survive not arriving: `is-blank` is a tile of the same size with nothing in
+   it, and the row does not move. */
+.wc3v-ov .portrait {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: block;
+  border: 1px solid var(--ov-outline);
+  border-radius: 4px;
+  box-shadow: var(--ov-cut);
+  object-fit: cover;
+}
+.wc3v-ov .portrait.is-blank { background: rgba(0, 0, 0, 0.35); }
+
+/* Provenance. One line, permanently, under the heading of the one module that
+   is not a replay this machine parsed. */
+.wc3v-ov .src {
+  font-size: 0.8rem;
+  color: var(--dim);
+  letter-spacing: 0.03em;
+  margin: -0.15rem 0 0.35rem;
+}
+
+/* ── scouting (pre-game) ─────────────────────────────────────────────── */
+.wc3v-ov .scout { padding: 0.55rem 0.9rem 0.7rem; }
+.wc3v-ov .scout-vs { display: flex; align-items: center; gap: 0.6rem; }
+.wc3v-ov .scout-vs .who { min-width: 0; }
+.wc3v-ov .scout-vs b { font-size: 1.05rem; font-weight: 700; overflow-wrap: anywhere; }
+.wc3v-ov .scout-vs .meta { padding: 0; }
+.wc3v-ov .scout-h2h { font-size: 0.9rem; margin: 0.15rem 0 0.3rem; }
+.wc3v-ov .scout-h2h.dim { color: var(--dim); }
+.wc3v-ov .scout-h2h .rec { font-weight: 700; margin-left: 0.35rem; }
+.wc3v-ov .scout-h2h .rec .w { color: var(--win); }
+.wc3v-ov .scout-h2h .rec .l { color: var(--loss); }
+.wc3v-ov .scout .note { font-size: 0.85rem; padding: 0.08rem 0; overflow-wrap: anywhere; }
+
+/* Their usual openers, as the art rather than as a list of names. A viewer who
+   cannot read a hero name at this size knows the Death Knight on sight. */
+.wc3v-ov .openers {
   display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  padding: 0.55rem 0.9rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.55rem;
+  margin: 0.25rem 0 0.3rem;
+}
+.wc3v-ov .openers .lead {
+  color: var(--dim);
+  font-size: 0.8rem;
   font-variant: small-caps;
   letter-spacing: 0.04em;
 }
-.wc3v-ov .session .label { color: var(--dim); }
-.wc3v-ov .session .score { font-size: 1.05rem; font-weight: 600; }
-.wc3v-ov .session .score .w { color: var(--win); }
-.wc3v-ov .session .score .l { color: var(--loss); }
-.wc3v-ov .session .streak { margin-left: auto; color: var(--gold); font-weight: 600; }
+.wc3v-ov .openers .op { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; }
+.wc3v-ov .openers .op .portrait { width: 36px; height: 36px; }
 
-/* ── verdict ─────────────────────────────────────────────────────────── */
-.wc3v-ov .verdict {
+/* ── session (footer) ────────────────────────────────────────────────── */
+.wc3v-ov .session { padding: 0.55rem 0.9rem; }
+.wc3v-ov .sess-top {
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.7rem 0.9rem 0.15rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
 }
-.wc3v-ov .verdict .word { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.06em; }
+.wc3v-ov .sess-top .label { color: var(--dim); }
+.wc3v-ov .sess-top .score { font-size: 1.05rem; font-weight: 600; }
+.wc3v-ov .sess-top .score .w { color: var(--win); }
+.wc3v-ov .sess-top .score .l { color: var(--loss); }
+.wc3v-ov .sess-top .streak { margin-left: auto; color: var(--gold); font-weight: 600; }
+.wc3v-ov .sess-trend { margin-top: 0.25rem; font-size: 0.8rem; color: var(--dim); }
+
+/* ── verdict ─────────────────────────────────────────────────────────────
+   The story band. Race material under the opponent's crest, the result at the
+   size a glance can catch, and everything else folded into one meta line. The
+   five-cell timings grid that used to live here is gone. */
+.wc3v-ov .verdict .banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  background: linear-gradient(180deg, var(--rc-head-a, #241f18), var(--rc-head-b, #1b1712));
+  box-shadow: var(--ov-cut);
+  border-bottom: 1px solid var(--ov-outline);
+}
+.wc3v-ov .verdict .vcol { min-width: 0; flex: 1 1 auto; }
+.wc3v-ov .verdict .word {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
 .wc3v-ov .verdict .word.win { color: var(--win); }
 .wc3v-ov .verdict .word.loss { color: var(--loss); }
-.wc3v-ov .verdict .word.unknown { color: var(--dim); font-size: 1.1rem; }
-.wc3v-ov .verdict .vs { color: var(--dim); }
+.wc3v-ov .verdict .word.unknown { color: var(--dim); font-size: 1.05rem; }
+.wc3v-ov .verdict .vs { color: var(--dim); overflow-wrap: anywhere; }
 .wc3v-ov .verdict .vs b { color: var(--ink); font-weight: 600; }
-.wc3v-ov .meta { padding: 0 0.9rem 0.6rem; color: var(--dim); }
+.wc3v-ov .verdict .banner .portrait { margin-left: auto; }
+.wc3v-ov .meta { padding: 0.4rem 0.9rem 0.55rem; color: var(--dim); overflow-wrap: anywhere; }
 
-/* The one-line read of the game. Full ink, not --dim: it is the sentence a
-   viewer actually reads, and it sits under the greyed meta line. */
-.wc3v-ov .read {
-  padding: 0 0.9rem 0.6rem;
-  color: var(--ink);
-  font-size: 0.95rem;
+/* ── this game: the standouts ────────────────────────────────────────────
+   Was a four-column table of every metric against two baselines, which on a
+   stream is a spreadsheet. At most three callouts now, and only for rows that
+   were actually unusual. No pills and no borders: the value carries the band
+   and the delta is small dim text beside it. */
+.wc3v-ov .report { padding: 0.55rem 0.9rem 0.7rem; }
+.wc3v-ov .callouts { display: flex; flex-direction: column; gap: 0.35rem; }
+.wc3v-ov .co { display: flex; align-items: center; gap: 0.6rem; }
+.wc3v-ov .co-b { display: flex; align-items: baseline; gap: 0.6rem; flex: 1 1 auto; min-width: 0; }
+.wc3v-ov .co-k {
+  color: var(--dim);
+  font-size: 0.85rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
 }
+.wc3v-ov .co-v { margin-left: auto; display: flex; align-items: baseline; gap: 0.4rem; }
+.wc3v-ov .co-v > span {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.wc3v-ov .co-v .good { color: var(--win); }
+.wc3v-ov .co-v .poor { color: var(--loss); }
+.wc3v-ov .co-v .co-d {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--dim);
+  white-space: nowrap;
+}
+
+/* ── the game (dominance read) ───────────────────────────────────────── */
+.wc3v-ov .momentum { padding: 0.55rem 0.9rem 0.7rem; }
+.wc3v-ov .domstat { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
+.wc3v-ov .domstat .track {
+  flex: 1;
+  height: 0.65rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--ov-outline);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.wc3v-ov .domstat .fill { display: block; height: 100%; background: var(--gold); }
+/* Was 0.8rem in --dim, which made the only number on the row the faintest
+   thing on it. */
+.wc3v-ov .domstat .v {
+  flex: 0 0 auto;
+  font-size: 0.875rem;
+  color: var(--ink);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The curve. Stretched to the card width with preserveAspectRatio="none", so
+   what a viewer reads is the shape of the game and not a plot. */
+.wc3v-ov .sk { margin: 0.1rem 0 0.4rem; }
+.wc3v-ov .sk svg { display: block; width: 100%; height: 2.6rem; }
+.wc3v-ov .sk .sk-a { fill: rgba(201, 162, 39, 0.18); }
+.wc3v-ov .sk .sk-l { fill: none; stroke: var(--gold); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.wc3v-ov .sk .sk-m { stroke: var(--panel-edge); stroke-width: 1; vector-effect: non-scaling-stroke; }
+
+.wc3v-ov .momentum .note { font-size: 0.9rem; }
 
 /* ── head to head ────────────────────────────────────────────────────── */
 .wc3v-ov .h2h {
@@ -126,25 +341,20 @@ body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
 .wc3v-ov .h2h .rec .w { color: var(--win); }
 .wc3v-ov .h2h .rec .l { color: var(--loss); }
 
-/* ── timings ─────────────────────────────────────────────────────────── */
-.wc3v-ov .timings { display: grid; grid-template-columns: repeat(4, 1fr); }
-.wc3v-ov .timings .cell { padding: 0.5rem 0.35rem; text-align: center; }
-.wc3v-ov .timings .cell + .cell { border-left: 1px solid var(--panel-edge); }
-.wc3v-ov .timings .k { font-size: 0.8rem; color: var(--dim); font-variant: small-caps; }
-.wc3v-ov .timings .v { font-size: 1.05rem; font-weight: 600; }
-
 /* ── moments ─────────────────────────────────────────────────────────── */
 .wc3v-ov .moments { padding: 0.55rem 0.9rem 0.7rem; }
 .wc3v-ov .moments ol { list-style: none; }
 .wc3v-ov .moments li {
   display: flex;
-  gap: 0.55rem;
-  padding: 0.12rem 0;
-  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.15rem 0;
+  align-items: center;
 }
+.wc3v-ov .moments .gly { width: 20px; height: 20px; }
 .wc3v-ov .moments .t { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 2.8rem; }
 .wc3v-ov .moments .n { overflow-wrap: anywhere; }
 .wc3v-ov .moments li.hero .n { color: var(--gold); }
+.wc3v-ov .moments li.hero .gly { color: var(--gold); }
 
 /* ── build ───────────────────────────────────────────────────────────── */
 .wc3v-ov .build { padding: 0.55rem 0.9rem 0.7rem; }
@@ -156,11 +366,24 @@ body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
   margin-bottom: 0.3rem;
   font-weight: 600;
 }
-.wc3v-ov .build ol { list-style: none; columns: 2; column-gap: 1.2rem; }
-.wc3v-ov .build li { display: flex; gap: 0.5rem; break-inside: avoid; padding: 0.08rem 0; }
-.wc3v-ov .build .t { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 2.6rem; }
-.wc3v-ov .build li.hero .n { color: var(--gold); }
-.wc3v-ov .build li.expansion .n { color: var(--win); }
+/* Was 0.75rem. Nothing on this card goes below 0.8rem at scale 1. */
+.wc3v-ov .bd-label {
+  font-size: 0.8rem;
+  color: var(--dim);
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  margin: 0.4rem 0 0.2rem;
+}
+.wc3v-ov .bd-label:first-of-type { margin-top: 0; }
+.wc3v-ov .bd-row { display: flex; flex-wrap: wrap; gap: 0.3rem 0.4rem; }
+.wc3v-ov .bd-chip {
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--panel-edge);
+  border-radius: 4px;
+  padding: 0.08rem 0.4rem;
+  overflow-wrap: anywhere;
+}
 
 .wc3v-ov .waiting { padding: 1.1rem 0.9rem; color: var(--dim); }
 
@@ -176,19 +399,25 @@ body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
   text-align: center;
 }
 
-/* The mark, kept as the quietest thing on the card. It is a credit rather than
-   a banner, and it must never compete with the result a viewer is reading.
+/* The mark, as a corner badge rather than a footer credit: a viewer glancing
+   at the card should see whose numbers these are without hunting for it.
    Same lockup as the app bar and the site: the "3" carries the accent. */
 .wc3v-ov .mark {
-  padding: 0.3rem 0.9rem 0.35rem;
-  border-top: 1px solid var(--panel-edge);
-  text-align: right;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.5rem 0.7rem 0;
 }
 .wc3v-ov .mark .wordmark {
-  color: var(--dim);
-  font-size: 0.8rem;
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--ov-outline);
+  border-radius: 999px;
+  box-shadow: var(--ov-cut);
+  padding: 0.2rem 0.7rem;
+  color: var(--ink);
+  font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  line-height: 1;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
 }
 .wc3v-ov .mark .wordmark > span { color: var(--gold); }

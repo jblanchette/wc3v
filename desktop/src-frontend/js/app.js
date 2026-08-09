@@ -269,8 +269,14 @@ const scout = window.createScout({
   log,
   identityName: () => identity.name,
   visible: windowVisible,
-  onMatch: (match, ladder, book) => gamesView.setLiveMatch(match, ladder, book)
+  onMatch: (match, ladder, book) => {
+    gamesView.setLiveMatch(match, ladder, book);
+    overlayState.publishScout(match, ladder, book);
+  }
 });
+
+// Free tags on a game, in a sidecar the schema cannot eat. See js/game-tags.js.
+const gameTags = window.createGameTags({ invoke, log, errText });
 
 const gamesView = window.createGamesView({
   log,
@@ -281,13 +287,26 @@ const gamesView = window.createGamesView({
   // Parsing your history lives on the Settings screen, so the first-run card
   // sends you there instead of carrying a second copy of the button.
   onGoToSettings: () => openSettings(),
-  onOpenProfile: openProfile
+  onOpenProfile: openProfile,
+  tags: gameTags
 });
 
 const profileView = window.createProfileView({
   log,
   store,
   identityName: () => identity.name
+});
+
+// Everybody else's games. Same corpus, same report renderer, no "you".
+const libraryView = window.createLibraryView({
+  log,
+  store,
+  identityName: () => identity.name,
+  onWatch: (summary, moment) => watchMoment(summary, moment),
+  onReparse: (summary) => reparse(summary),
+  onOpenProfile: openProfile,
+  onOpenReplay: () => addReplayFolder(),
+  tags: gameTags
 });
 
 const streamView = window.createStreamView({ invoke, log, errText, overlayState });
@@ -301,7 +320,7 @@ const backfill = window.createBackfill({
   parseOn: (worker, path) =>
     parseReplayWith(worker, path, { quiet: true, parserOptions: { skipPathfinding: true } }),
   persistSummary: store.persistSummary,
-  isStored: (key) => store.has(key),
+  isCurrent: (key) => store.isCurrent(key),
   status: (text) => {
     el('backfill-status').textContent = text;
     el('backfill-text').textContent = text;
@@ -317,10 +336,15 @@ const backfill = window.createBackfill({
       el('backfill-toggle').textContent = running ? 'Pause' : 'Parse all replays';
       el('backfill-bar').hidden = !running;
     }
+    // The migration strip goes up and down with any run, because any run
+    // re-reads stale games: pressing "Parse all replays" while a migration is
+    // pending is the same work under a different button.
+    syncMigrateStrip(running);
     settingsView.syncRetryButton();
     // A finished run has usually added games; show them without a restart.
     if (!running && store.corpus) {
       gamesView.render(store.corpus);
+      if (currentView === 'library') libraryView.render(store.corpus);
       if (limited) gamesView.clearParseQueue();
     }
   }
@@ -369,6 +393,66 @@ const settingsView = window.createSettingsView({
   }
 });
 
+// Shown once, on a machine that has never been set up. Every control it offers
+// also lives in Settings, so nothing here is a decision anybody is stuck with.
+const firstRun = window.createFirstRun({
+  invoke,
+  log,
+  errText,
+  roots: () => state.roots,
+  addRoot: (root) => state.roots.push(root),
+  onScan: (path) => scan(path),
+  // Typing your own name is a confirmation, so auto-detection never overrides
+  // it afterwards.
+  setIdentity: (name) => identity.confirm(name),
+  startBackfill: () => backfill.toggle(),
+  onW3cChange: (on) => {
+    w3c.setEnabled(on);
+    if (on) scout.start(); else scout.stop();
+  },
+  onDone: () => identity.render()
+});
+
+// ── Bringing somebody else's replay in ──────────────────────────────────────
+//
+// The Library's "Open a replay…" button. It takes a FILE and registers the
+// folder that holds it, then scans that folder.
+//
+// Registering rather than reading directly is not a detail. `read_replay`
+// canonicalises its argument and refuses anything outside a registered replay
+// root, and that refusal is the reason the webview has no arbitrary-filesystem
+// primitive. A "just read this one path" command would hand it one. So the file
+// picker's job is to widen the registered set, in the open, through the same
+// `add_root` the Settings folder picker uses.
+const addReplayFolder = async () => {
+  let picked;
+  try {
+    picked = await window.__TAURI__.dialog.open({
+      multiple: false,
+      filters: [{ name: 'Warcraft III replay', extensions: ['w3g'] }]
+    });
+  } catch (e) {
+    log(`could not open the file picker: ${errText(e)}`, 'err');
+    return;
+  }
+  if (!picked) return;
+
+  const dir = String(picked).replace(/[\\/][^\\/]*$/, '');
+  if (!dir) { log('could not work out which folder that replay is in', 'err'); return; }
+
+  try {
+    const root = await invoke('add_root', { path: dir });
+    state.roots.push(root);
+    // Everything in that folder, not only the file that was clicked. Somebody
+    // pointing at one downloaded replay almost always has the rest beside it,
+    // and scanning the folder is already the path every other replay takes in.
+    log(`watching ${root.path}`, 'ok');
+    scan(root.path);
+  } catch (e) {
+    log(`could not add that folder: ${errText(e)}`, 'err');
+  }
+};
+
 // The app bar's update indicator. Settings owns the decision and the notes.
 // This is how you find out there is one without going looking.
 const showUpdateChip = (version) => {
@@ -402,6 +486,11 @@ const showView = (name) => {
   }
   if (name === 'profile') profileView.show(el('profile-name').value);
   if (name === 'stream') streamView.build();
+  if (name === 'library' && store.corpus) libraryView.render(store.corpus);
+  // Leaving the Library releases its chart. DominanceChart holds a
+  // ResizeObserver and chart-panel keeps parked modes alive, so a hidden view
+  // with a mounted chart is a live observer on a element nobody can see.
+  if (name !== 'library') libraryView.suspend();
 };
 
 for (const btn of document.querySelectorAll('.nav-item')) {
@@ -548,6 +637,7 @@ const run = async (path, opts = {}) => {
         notifyGameFinished(summary);
       }
       gamesView.render(store.corpus || [summary]);
+      if (currentView === 'library') libraryView.render(store.corpus || []);
       gamesView.select(key);
       // A game that finished while the user was reading something else pulls
       // them to it. That is the promise. Clicking through history does not,
@@ -650,10 +740,67 @@ const catchUpOnRecentGames = () => {
       if (phase === 'done' && store.corpus) {
         store.corpus.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
         gamesView.render(store.corpus);
+      if (currentView === 'library') libraryView.render(store.corpus);
       }
     }
   }).catch(e => log(`could not read your recent games: ${errText(e)}`, 'warn'));
 };
+
+// ── Schema migration ────────────────────────────────────────────────────────
+//
+// The full backfill, started by the app rather than by a person, with its own
+// indicator so it is not invisible work. The engine already does exactly the
+// right thing: it walks every replay newest-first and skips whatever
+// `store.isCurrent(key)` says is already current, so a run re-reads the stale
+// games and nothing else.
+//
+// It reports here rather than through the Settings progress bar, which belongs
+// to the "Parse all replays" button, and it stays out of the quick-nav parse
+// chips, which are for ten games and not for three thousand.
+const migrateEl = () => el('migrate');
+
+const syncMigrateStrip = (running) => {
+  const strip = migrateEl();
+  if (!strip) return;
+  const left = store.staleCount;
+  // Gone the moment there is nothing left behind, whether this run finished it
+  // or a re-read of the last one did.
+  strip.hidden = !left && !running;
+  el('migrate-toggle').textContent = running ? 'Pause' : 'Resume';
+};
+
+const startMigration = () => {
+  const total = store.staleCount;
+  log(`${total.toLocaleString()} game(s) were read under an older format. ` +
+    'Re-reading them now; newest first.', 'warn');
+  syncMigrateStrip(true);
+  el('migrate-text').textContent =
+    `Updating your history · ${total.toLocaleString()} to go`;
+  backfill.start({
+    onProgress: () => {
+      const left = store.staleCount;
+      const done = Math.max(0, total - left);
+      el('migrate-text').textContent = left
+        ? `Updating your history · ${done.toLocaleString()} of ${total.toLocaleString()}`
+        : 'History up to date';
+      el('migrate-fill').style.width = total ? `${(done / total) * 100}%` : '100%';
+      // Repaint as each one lands, so a game becomes readable the moment it is
+      // current rather than when the whole run ends.
+      if (store.corpus) {
+        gamesView.render(store.corpus);
+        if (currentView === 'library') libraryView.render(store.corpus);
+      }
+    }
+  }).catch(e => log(`could not update your history: ${errText(e)}`, 'warn'));
+};
+
+// Pause and resume. The work is resumable by construction — a game is done
+// when its summary is current, so a restart picks up exactly where it stopped
+// — which is what makes it safe to offer a pause at all.
+el('migrate-toggle').addEventListener('click', () => {
+  if (backfill.running) backfill.toggle();
+  else startMigration();
+});
 
 const boot = async () => {
   const info = await invoke('init');
@@ -730,6 +877,18 @@ const boot = async () => {
   // loadCorpus reads every stored summary over IPC one at a time and a few
   // thousand games is a real wait.
   gamesView.showLoading();
+
+  // Tags before the corpus. It is one small file against thousands of IPC
+  // reads, and the Library filters on tags, so loading it after would mean the
+  // first list drawn cannot match one.
+  gameTags.load();
+
+  // The first-run screen, on a machine that has never been set up. It goes up
+  // OVER the loading feed rather than instead of it, so discovery, scanning and
+  // the corpus read all carry on behind it and the app is ready by the time
+  // somebody clicks Start.
+  firstRun.maybeShow();
+
   store.loadCorpus().then((corpus) => {
     gamesView.render(corpus);
     // The scout card may already be up, drawn before there was any history to
@@ -747,6 +906,23 @@ const boot = async () => {
       catchUpOnRecentGames();
       return;
     }
+
+    // A store behind SCHEMA_VERSION is not a state to leave somebody in.
+    //
+    // The blocks a new schema adds come out of a full parse and nothing else,
+    // so a summary written under the old one cannot be upgraded in place — and
+    // a report drawn from it quietly says less than the same report about the
+    // game played after the update. That is worse than an empty screen: it is
+    // wrong in a way nobody can see.
+    //
+    // So the app re-reads the history itself, rather than leaving it behind a
+    // button in Settings that nobody has a reason to look for. Newest first
+    // (the scan sorts by mtime), so the games most likely to be opened come
+    // back first, and in the background, because holding the window hostage to
+    // three thousand replays to look at last night's game is its own bad
+    // trade.
+    if (store.staleCount) startMigration();
+
     overlayState.seedLastGame(corpus[0]);   // corpus is newest-first
     // Autocomplete covers every name ever seen. Identity is a separate and
     // explicit choice that never comes out of this box.

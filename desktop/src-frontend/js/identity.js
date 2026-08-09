@@ -146,6 +146,10 @@
       render,
       open,
       get name () { return deps.overlayState.userName; },
+      // Somebody typing their own name IS the confirmation, whether they typed
+      // it in the picker or on the first-run screen. Exposed so first-run.js
+      // does not reach into localStorage to say the same thing.
+      confirm (name) { set(name, { confirmed: true }); },
       async resolve () {
         // A guess never overrides an explicit choice.
         if (confirmed()) { render(); return; }

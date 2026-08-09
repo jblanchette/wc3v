@@ -1,0 +1,177 @@
+/* ============================================================
+   tokens-desktop.css, WC3V desktop. FIRST in the cascade.
+
+   Consumes client/css/tokens.css (copied to css/vendor/tokens.css by
+   tools/build-desktop-client.js). This file adds only what the desktop
+   needs on top; it is NOT a second design system.
+
+   ── The stylesheet is a directory now ─────────────────────────────────────
+   This was one 2,567-line app.css, which is most of why the report drifted
+   away from the feed: nothing made it obvious that two screens were supposed
+   to share a component. Load order IS the cascade and is fixed in index.html:
+
+     tokens-desktop.css   tokens, race material, the carved vocabulary
+     base.css             reset, window shell, scrollers
+     chrome.css           app bar, views, Next game, Settings sheet, Stream
+     feed.css             gamebar, parse queue, drawer, filter, race chip
+     report.css           verdict band, comparison block, build cards, orders
+     library.css          the Library's list and its report column
+     charts.css           the housing for the viewer's own plots
+     coach.css            head to head, Coach
+     settings.css         the Settings sheet's contents
+     controls.css         buttons, Open in viewer, activity footer
+     states.css           focus, motion, loading, first run, breakpoints
+
+   states.css is LAST because its breakpoints override everything above it.
+   Anything new goes in the file it belongs to, not in a new one.
+
+   REGISTER: the same sandwich wc3v.com already is. tokens.css ships two
+   families. One is the site's navy chrome (--bg / --surface / --text). The
+   other is the viewer's warm carved fixtures (--vc-* rails, --dom-* cast
+   bronze). On the site, navy chrome wraps a warm viewer, and this window does
+   the same.
+
+     .appbar and its furniture  →  NAVY. It is the brand surface, and it
+                                   carries the same wordmark as the site.
+     everything inside <main>   →  WARM. Games are a Warcraft fixture.
+
+   That line is the rule. Keep navy above the app bar, and keep --accent and
+   --gold off warm surfaces. Warm gold is --dom-gold.
+
+   tokens.css carries no warm ink. Its text ramp (#e8eaf0 to #6b7290) is tuned
+   against navy and reads blue on #17150f. The --ink-* tokens below fill that
+   gap, and nothing else here is new.
+
+   ART DIRECTION (enforced, not decorative):
+     • earthy, muted, heraldic. Painted banners and carved stone
+     • NO glow: no shadow halos, no text-shadow bloom, no filter flares
+     • depth comes from a hard dark outline + a 1px struck highlight
+       + inset shadow. That is the whole vocabulary.
+     • no fully saturated colour anywhere
+   HOUSE RULES: no font below --fs-min (0.8rem), no icon below 36px,
+   no single-edge accent stripes, no ellipsis truncation.
+   ============================================================ */
+
+:root {
+  /* Warm surfaces, deepest → highest. All from the viewer chrome family. */
+  --app-well:    var(--vc-well);     /* #0b0805  page bed, insets       */
+  --app-bg:      #131009;            /* between --vc-well and --vc-rail-2 */
+  --app-panel:   var(--vc-rail-2);   /* #17150f  cards                  */
+  --app-panel-2: var(--vc-rail);     /* #1e1b16  raised / hover         */
+  --app-line:    var(--vc-hairline); /* #2f2819  dividers               */
+  --app-edge:    var(--vc-edge);     /* #453a25  lit edges, borders     */
+
+  /* Warm ink ramp, the gap in tokens.css described above. */
+  --ink:      #E8E0D2;
+  --ink-2:    #BFB49F;
+  --ink-dim:  #9A8F7D;
+  --ink-faint:#6E6555;
+
+  /* Outcome. Straight out of the carved --dom-* family so a verdict badge
+     sits in the same paintbox as the dominance gauge. Never --ok/--bad:
+     those are the site's mint/salmon, which glow against warm brown. */
+  --verdict-win:  var(--dom-green);  /* moss    */
+  --verdict-loss: #A65340;           /* rust, bronze family, desaturated */
+  --verdict-none: var(--dom-grey);   /* ash     */
+
+  /* Race, in the carved paintbox. The hue is the data, since a WC3 player
+     reads blue/red/green/purple instantly, so it has to survive. tokens.css's
+     --race-H/O/E/U are the in-game colours at full saturation and they glow
+     against warm brown, which this file forbids. Same hues, same order,
+     pulled down into the --dom-* family. */
+  --race-warm-H: #5D86B0;   /* human      */
+  --race-warm-O: #C05B44;   /* orc        */
+  --race-warm-E: #719B52;   /* night elf  */
+  --race-warm-U: #8E6DB0;   /* undead     */
+  --race-warm-R: #A2917A;   /* random     */
+  --race-warm-N: #7A756C;   /* neutral    */
+
+  /* Neutral defaults for the material set below, so anything carrying
+     [data-race] with a race this file has never heard of still gets a card
+     rather than an unstyled box. */
+  --rc-ink:    var(--race-warm-N);
+  --rc-rim:    rgba(255, 255, 255, 0.07);
+  --rc-head-a: var(--app-panel-2);
+  --rc-head-b: var(--app-panel);
+  --rc-wash:   transparent;
+}
+
+/* ── Race as material ──────────────────────────────────────────────────────
+   The app had exactly one race treatment: `color:` on a 22px glyph. Everything
+   else was the same brown, so two players' cards were two identical boxes with
+   different words in them.
+
+   This is the site's `.site-build-card.race-*` idea (client/css/main.css) in
+   the carved register: no glow, nothing saturated, and the rim is a FULL
+   PERIMETER inset ring rather than an edge stripe, which is a house rule.
+
+   Set on any element as `[data-race]`, so one rule set serves the build cards,
+   the feed, Coach and Stream. Values are the --race-warm-* hues at the low
+   alphas the warm surfaces can carry: above about 0.30 on the rim the card
+   starts to read as a coloured panel rather than a carved one. */
+[data-race="H"] {
+  --rc-ink: var(--race-warm-H);
+  --rc-rim: rgba(93, 134, 176, 0.26);
+  --rc-head-a: #1d2733;
+  --rc-head-b: #161c25;
+  --rc-wash: rgba(93, 134, 176, 0.05);
+}
+[data-race="O"] {
+  --rc-ink: var(--race-warm-O);
+  --rc-rim: rgba(192, 91, 68, 0.26);
+  --rc-head-a: #2c1c16;
+  --rc-head-b: #221510;
+  --rc-wash: rgba(192, 91, 68, 0.05);
+}
+[data-race="E"] {
+  --rc-ink: var(--race-warm-E);
+  --rc-rim: rgba(113, 155, 82, 0.26);
+  --rc-head-a: #1b2618;
+  --rc-head-b: #151d13;
+  --rc-wash: rgba(113, 155, 82, 0.05);
+}
+[data-race="U"] {
+  --rc-ink: var(--race-warm-U);
+  --rc-rim: rgba(142, 109, 176, 0.26);
+  --rc-head-a: #241d30;
+  --rc-head-b: #1b1626;
+  --rc-wash: rgba(142, 109, 176, 0.05);
+}
+[data-race="R"] {
+  --rc-ink: var(--race-warm-R);
+  --rc-rim: rgba(162, 145, 122, 0.24);
+  --rc-head-a: #232019;
+  --rc-head-b: #1a1813;
+  --rc-wash: rgba(162, 145, 122, 0.05);
+}
+
+:root {
+
+  /* The carved vocabulary, as reusable values. */
+  --cut:    inset 0 1px 0 rgba(255,255,255,0.055), inset 0 -1px 0 rgba(0,0,0,0.45);
+  --cut-in: inset 0 2px 4px rgba(0,0,0,0.55), inset 0 -1px 0 rgba(255,255,255,0.035);
+  --outline: 1px solid #0a0704;
+
+  /* ── The spacing scale, tightened ──────────────────────────────────────
+     tokens.css sizes a WEB PAGE: a viewport that scrolls, where generous
+     padding is what stops a long document reading as a wall. This is a fixed
+     window with an absolute fold — .report-body is the only scroller in the
+     app — so every px of padding above it is a px of report somebody has to
+     scroll for. Same 4px-derived ratios, roughly three quarters the size.
+
+     Overridden HERE and not in tokens.css: that file is the web client's, and
+     wc3v.com is not a fixed frame. */
+  --sp-1:  3px;   /* 4  */
+  --sp-2:  6px;   /* 8  */
+  --sp-3:  9px;   /* 12 */
+  --sp-4: 12px;   /* 16 */
+  --sp-5: 16px;   /* 22 */
+  --sp-6: 22px;   /* 30 */
+  --sp-7: 30px;   /* 40 */
+  --page-gutter: 16px;   /* 24 */
+
+  /* Hero portraits only, and not a floor — --ico-sm stays 36px, which is the
+     house minimum for anything the reader has to identify by its art. */
+  --ico-lg: 48px; /* 56 */
+
+}

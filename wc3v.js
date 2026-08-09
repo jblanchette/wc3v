@@ -636,6 +636,24 @@ const doParsing = async (input, options = {}) => {
   console.log(`NE units: ${hideStats.neUnits}, hide windows: ${hideStats.windowsDetected}, ` +
     `total hidden: ${(hideStats.totalHideTimeMs / 1000).toFixed(1)}s`);
 
+  // Positional anchor correction — enemy clicks recorded in the replay prove
+  // where the clicked unit really was (docs/POSITIONAL_ANCHORS.md: 52% of
+  // those checks were >320wu off). Inserts anchor samples into raw paths so
+  // the resim below tracks them; consumes EVEN-parity anchors only — the odd
+  // half stays untouched for tools/anchor-audit.js --holdout grading. Runs
+  // after Death/Hide (they keep the raw-path contract) and before the resim.
+  if (config.anchorCorrection !== false) {
+    emitProgress('postprocess', 99, { detail: 'anchors' });
+    const AnchorCorrection = require('./lib/AnchorCorrection');
+    const aStats = new AnchorCorrection(playerManager).run();
+    console.log('----------------------------------');
+    console.log('ANCHOR CORRECTION (positional anchors)');
+    console.log('----------------------------------');
+    console.log(`anchors=${aStats.anchors} consumed=${aStats.consumed} heldOut=${aStats.heldOut} ` +
+      `applied=${aStats.applied} agreed=${aStats.agreed} jumps=${aStats.jumps} pruned=${aStats.pruned} ` +
+      `units=${aStats.unitsCorrected} maxShift=${aStats.maxShift}`);
+  }
+
   // Kinematic re-simulation — rewrite each unit's path into a physically-valid
   // position + facing stream (move speed + turn rate + propulsion window), so the
   // 3D viewer shows WC3-accurate turning and no engine-impossible "jumps". Runs

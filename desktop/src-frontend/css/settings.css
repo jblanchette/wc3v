@@ -1,0 +1,94 @@
+/* ============================================================
+   settings.css, WC3V desktop.
+
+   The Settings sheet's contents.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Settings ────────────────────────────────────────────────────────── */
+
+.roots { display: grid; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.root-name { font-weight: 600; }
+.root-meta { margin-left: auto; color: var(--ink-dim); font-size: var(--fs-min); }
+
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+.hint { color: var(--ink-dim); font-size: var(--fs-min); margin: var(--sp-2) 0 0; }
+
+/* Top-aligned, not centred: these labels carry a line of explanation under
+   them, and a centred box floats halfway down the paragraph pointing at
+   nothing. The offset lines it up with the first line's cap height. */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  min-height: var(--hit-min);
+  padding: var(--sp-1) 0;
+  cursor: pointer;
+}
+/* Carved rather than the UA's. accent-color only tints the checked fill. The
+   box stayed the platform's near-white square, which on a dark panel is the
+   most conspicuous thing on the screen. The row already clears --hit-min, so
+   the control itself does not need to. */
+.check input {
+  appearance: none;
+  -webkit-appearance: none;
+  display: grid;
+  place-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  /* Drops the box onto the first line's baseline block rather than the top of
+     the label's bounding box. */
+  margin: 2px 0 0;
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: 3px;
+  box-shadow: var(--cut-in);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.check input:hover { border-color: var(--app-edge); }
+.check input:checked {
+  background: linear-gradient(180deg, #86ab68, var(--dom-green));
+  box-shadow: var(--cut);
+}
+/* The tick is drawn rather than a glyph, since a ✓ character sits differently
+   font the system might fall back to. */
+.check input::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: solid var(--app-well);
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+.check input:checked::after { opacity: 1; }
+
+/* Which build this is, at the foot of the Settings sheet beside the trademark
+   line. It reads as a label rather than as prose, because it is the one thing
+   in that paragraph somebody goes looking for. */
+.app-version {
+  display: block;
+  margin-bottom: var(--sp-1);
+  color: var(--ink-dim);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+.app-version:hover { color: var(--ink); }

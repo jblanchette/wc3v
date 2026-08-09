@@ -508,6 +508,99 @@ if (showAll || showSections.includes('kinematics')) {
   console.log('');
 }
 
+// --- Behavior decisions (what the viewer thinks each unit is DOING) ---
+//
+// There was no way to ask this before. If a unit looked wrong in the viewer the
+// only recourse was reading UnitBehavior and reasoning about it — which is how
+// the summoned skeletons standing frozen through a 41-second battle went
+// unnoticed. This runs the SAME module the viewer loads (via
+// tools/lib/behavior-metrics) and prints its verdict.
+//
+//   --show=behavior --at=6:45              every actor at that moment
+//   --show=behavior --at=6:45 --search=skeleton   just those
+//   --show=behavior --search=skeleton      per-unit state timeline
+if (showAll || showSections.includes('behavior')) {
+  console.log('=== BEHAVIOR (UnitBehavior decisions) ===');
+  const bm = require('./tools/lib/behavior-metrics');
+
+  // "6:45" | "405" (seconds) | "405000" (ms). Returns ms.
+  const parseAt = (s) => {
+    if (!s) return null;
+    if (String(s).includes(':')) {
+      const [m, sec] = String(s).split(':').map(Number);
+      return (m * 60 + sec) * 1000;
+    }
+    const n = Number(s);
+    return n > 10000 ? n : n * 1000;
+  };
+  const atMs = parseAt(args.at);
+  const units = bm.buildUnits(data);
+  const world = bm.createWorld(data, units);
+  const fmt = (ms) => {
+    const t = Math.max(0, Math.round(ms / 1000));
+    return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+  };
+  const nameOf = (uuid) => {
+    const u = units.find(x => x.uuid === uuid);
+    return u ? u.displayName : uuid.slice(0, 8);
+  };
+  const matches = (u) => {
+    if (searchText && !(u.displayName || '').toLowerCase().includes(searchText)) return false;
+    if (filterPlayer != null && String(u._playerId) !== String(filterPlayer)) return false;
+    return true;
+  };
+
+  if (atMs != null) {
+    const frame = world.resolve(atMs);
+    console.log(`\n  at ${fmt(atMs)}  (${frame.byUuid.size} actors resolved, ${frame.live.length} live)`);
+    let shown = 0;
+    for (const [uuid, d] of frame.byUuid) {
+      const u = units.find(x => x.uuid === uuid);
+      if (!u || !matches(u)) continue;
+      if (shown++ >= limit) break;
+      const tgt = d.targetUuid ? ' -> ' + nameOf(d.targetUuid) +
+        ' @' + Math.round(d.targetDist) + 'wu' : '';
+      const aim = (!d.targetUuid && d.aimUuid) ? ' (watching ' + nameOf(d.aimUuid) + ')' : '';
+      console.log('    p' + u._playerId + ' ' + (u.displayName || '?').padEnd(22) +
+        d.state.padEnd(7) + 'reason=' + String(d.reason).padEnd(18) +
+        '(' + Math.round(d.x) + ',' + Math.round(d.y) + ')' + tgt + aim);
+    }
+    if (!shown) console.log('    (no actors matched)');
+  } else {
+    // Timeline mode: sample every 500ms and collapse runs of the same state, so
+    // "it is idle for the whole fight" is visible at a glance.
+    const STEP = 500;
+    const end = Math.min(15 * 60 * 1000, (data.replay && data.replay.duration) || 15 * 60 * 1000);
+    const picked = units.filter(matches).slice(0, limit);
+    if (!picked.length) console.log('\n  (no units matched — use --search=NAME)');
+    for (const u of picked) {
+      console.log('\n  p' + u._playerId + ' ' + (u.displayName || '?') + '  ' + u.uuid.slice(0, 8) +
+        (u.isSummon ? '  [SUMMON]' : '') +
+        (u.orders ? '  orders=' + u.orders.length : '  orders=0'));
+      let runState = null, runStart = 0, runReason = null, printed = 0;
+      const flush = (endT) => {
+        if (runState == null) return;
+        if (printed++ < 24) {
+          console.log('      ' + fmt(runStart) + '-' + fmt(endT) + '  ' +
+            runState.padEnd(7) + runReason);
+        }
+      };
+      for (let t = 0; t <= end; t += STEP) {
+        const d = world.resolve(t).byUuid.get(u.uuid);
+        const st = d ? d.state : '-';
+        const rs = d ? String(d.reason) : 'absent';
+        if (st !== runState || rs !== runReason) { flush(t); runState = st; runReason = rs; runStart = t; }
+      }
+      flush(end);
+      if (u.orders && u.orders.length) {
+        console.log('      orders: ' + u.orders.slice(0, 8)
+          .map(o => fmt(o.t) + ' ' + o.kind).join('  '));
+      }
+    }
+  }
+  console.log('');
+}
+
 // --- Lost-state / idle audit ---
 // Per-unit DeathInference verdict + last position + distance from the player's
 // start, so we can see which combat units linger as 'idle'/'possiblyLost' and

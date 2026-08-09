@@ -66,7 +66,9 @@ const harness = (opts = {}) => {
       return { fake: true };
     },
     persistSummary: async () => ({}),
-    isStored: (key) => stored.has(key),
+    // "Already done under the current schema". The harness has no schema to
+    // model, so presence is the whole answer here; see store.js isCurrent().
+    isCurrent: (key) => stored.has(key),
     status: () => {},
     onIdleChange: () => {}
   };

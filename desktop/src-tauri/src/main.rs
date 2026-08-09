@@ -440,6 +440,113 @@ async fn clear_parse_failures(app: tauri::AppHandle) -> Result<usize, String> {
     .map_err(|e| format!("clear failed: {e}"))?
 }
 
+/// User-written tags, keyed by the same content key a summary is stored under.
+///
+/// A SIDECAR rather than a field on the summary, which is deliberate: the
+/// summary is rebuilt from the replay on every re-parse, and a schema upgrade
+/// re-parses everything. Tags are the one thing in the store a person typed,
+/// and a format bump must never be able to eat them.
+///
+/// One file for all of them rather than one per game. Tags are a few bytes each
+/// and the Library filters on every game at once, so a thousand file reads to
+/// draw one list would be the wrong shape entirely.
+fn tags_path(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("labels.json")
+}
+
+/// Every tag, as `{ "<key>": ["tag", …] }`. Absent file means no tags, which is
+/// the normal state and not an error.
+#[tauri::command]
+async fn read_tags(app: tauri::AppHandle) -> Result<String, String> {
+    let path = tags_path(&app);
+    tauri::async_runtime::spawn_blocking(move || match std::fs::read_to_string(&path) {
+        Ok(s) => Ok(s),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok("{}".to_string()),
+        Err(e) => Err(e.to_string()),
+    })
+    .await
+    .map_err(|e| format!("read failed: {e}"))?
+}
+
+/// Replace the whole tag file. Written to a temp name and renamed, the same way
+/// a summary is, so a crash mid-write cannot leave a truncated file that reads
+/// as corrupt and silently loses every tag in it.
+///
+/// The frontend sends the whole map because it holds the whole map: it is a few
+/// KB at any realistic history size, and a read-modify-write here would need a
+/// lock this app has no other reason to own.
+#[tauri::command]
+async fn write_tags(json: String, app: tauri::AppHandle) -> Result<(), String> {
+    // Parse before writing. This command takes a string so the frontend does not
+    // have to model the shape twice, but nothing unparseable reaches the disk:
+    // a corrupt labels.json is silent data loss the next time it is read.
+    let parsed: serde_json::Value =
+        serde_json::from_str(&json).map_err(|e| format!("not valid JSON: {e}"))?;
+    let obj = parsed.as_object().ok_or("tags must be an object")?;
+    for (key, value) in obj {
+        if !valid_store_key(key) {
+            return Err(format!("invalid store key: {key}"));
+        }
+        if !value.is_array() {
+            return Err(format!("tags for {key} must be an array"));
+        }
+    }
+
+    let path = tags_path(&app);
+    tauri::async_runtime::spawn_blocking(move || {
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+        }
+        let tmp = path.with_extension("json.tmp");
+        std::fs::write(&tmp, json.as_bytes()).map_err(|e| e.to_string())?;
+        std::fs::rename(&tmp, &path).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| format!("write failed: {e}"))?
+}
+
+/// What build this is.
+///
+/// From `package_info()`, which Tauri fills from `tauri.conf.json`, NOT from
+/// `env!("CARGO_PKG_VERSION")`. Those two have disagreed since 0.7.0: the Cargo
+/// manifest said 0.6.0 while the config said 0.7.4, and the config is the one
+/// the installer and the updater use. A version display reading the macro would
+/// have confidently reported the wrong number.
+#[tauri::command]
+fn app_version(app: tauri::AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
+/// Whether the first-run screen has been through once.
+///
+/// A marker FILE rather than localStorage, for the same reason the W3Champions
+/// opt-in is one: clearing the webview's storage is a normal thing to do while
+/// debugging, and it should not put a setup screen back in front of somebody
+/// who has been using the app for months.
+fn setup_marker(app: &tauri::AppHandle) -> PathBuf {
+    app.path()
+        .app_data_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join("setup-done")
+}
+
+#[tauri::command]
+fn setup_done(app: tauri::AppHandle) -> bool {
+    setup_marker(&app).exists()
+}
+
+#[tauri::command]
+fn mark_setup_done(app: tauri::AppHandle) -> Result<(), String> {
+    let marker = setup_marker(&app);
+    if let Some(parent) = marker.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(&marker, b"1").map_err(|e| e.to_string())
+}
+
 /// Scan every registered root and dedupe across ALL of them in one pass, so
 /// a game copied between accounts collapses too. This is the backfill queue
 /// source; the interactive per-root scan stays `scan_replays`.
@@ -804,6 +911,11 @@ fn main() {
             save_parse_failure,
             list_parse_failures,
             clear_parse_failures,
+            read_tags,
+            write_tags,
+            setup_done,
+            mark_setup_done,
+            app_version,
             scan_all,
             publish_overlay_state,
             overlay_info,

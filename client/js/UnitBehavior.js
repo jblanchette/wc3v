@@ -71,15 +71,42 @@
     MELEE_CONTACT_MS: 400,   // contact must hold this long before a melee swing
     ORDER_WINDOW_MS: 6000,   // how long a combatOrderTime licenses an attack
 
+    // Distance quantum for choosing between candidate targets.
+    //
+    // Raw argmin over distance is a knife edge: two enemies at 412 and 418 units
+    // swap the "nearest" slot every time either one takes a step, and the actor
+    // re-aims at whichever won this frame. Measured as ~32% of all faster-than-
+    // engine rotation, and it is worst for RANGED units because a 500-range
+    // weapon has many candidates inside reach where a 100-range one has about
+    // one. Quantizing the comparison means a challenger must be a clear bucket
+    // closer to take the slot; inside a bucket the uuid tie-break is
+    // time-invariant, so the same unit wins on every frame. Still a pure
+    // function of the frame's geometry — no history, so still seek-safe.
+    TARGET_BUCKET_WU: 256,
+
     // --- facing / awareness -------------------------------------------------
     ACQ_TICK_MS: 125,        // absolute-grid backward scan step (frame-rate independent)
     ACQ_LOOKBACK_TICKS: 16,  // 2s lookback
-    AWARE_MULT: 1.6,         // "idle but watching" radius, approximating the missing `acquire`
+    // Fallback awareness radius, used ONLY when a unit's real `acquire` is
+    // missing (a pre-v2 unitCombat.json, or a unit with no weapon row). The
+    // engine's actual acquisition range now comes from unitweapons.slk via
+    // acquireRange() — footman 500, archer 800, mortar 1150 — rather than this
+    // one-size approximation.
+    AWARE_MULT: 1.6,
     AWARE_FLOOR: 500,
     TURN_RAD_PER_FRAME_CAP: 0.2,  // mirrors KinematicResim
     WC3_FRAME_MS: 30,             // mirrors KinematicResim
 
-    MAX_TARGET_RADIUS: 176,  // largest observed collisionSize; sizes the hash query
+    // Largest collisionSize in the game data; sizes the hash query so no valid
+    // target can fall outside the candidate set. 196, not the 176 this used to
+    // say — that was the largest radius seen back when buildings were being
+    // filtered out of the live set entirely, so the biggest structures were
+    // never sampled. Verified against helpers/UnitBalance.json (and the other
+    // generated tables, which agree): the true maximum is 196.
+    //
+    // Too small here is a SILENT failure: the target never enters the candidate
+    // set, so no reach check rejects it and no invariant notices it is gone.
+    MAX_TARGET_RADIUS: 196,
 
     // --- support casters ----------------------------------------------------
     // Replenish Life / Mana (Arpl / Arpm): 700 radius, 1s cooldown, targets
@@ -94,6 +121,24 @@
   // explicitly orders an attack. Treating its weapon like a grunt's made every
   // statue near a fight look like a combatant.
   const SUPPORT_CASTER_IDS = new Set(['uobs']);
+
+  // How long each order kind licenses an attack, in ms. Frozen alongside C so
+  // the harness asserts the same numbers the viewer runs.
+  //
+  // These are intent decay windows, not engine constants — the engine has no
+  // such thing, an order simply stands until countermanded. They exist because
+  // the replay does not record when an order ENDS, so a licence has to expire on
+  // its own or a single attack click would corroborate the rest of the game.
+  // Scaled by how specific the order is: clicking one enemy says more than
+  // walking toward a place where enemies happen to be.
+  const ORDER_WINDOWS = Object.freeze({
+    attack:       12000,   // clicked a specific enemy
+    attackonce:    8000,   // clicked one enemy, no pursuit after
+    smartunit:    12000,   // right-clicked an enemy — in WC3 that IS an attack
+    attackground: 10000,   // explicit a-move
+    patrol:       10000,   // walks and engages
+    smartground:   6000    // walked near enemies; also what a retreat looks like
+  });
 
   // --- path gap rule: identical to ClientUnit.isPathGap / KinematicResim -----
   const PATH_MIN_TIME_GAP = 5 * 1000;
@@ -215,6 +260,45 @@
     return wt === 'normal';
   }
 
+  /**
+   * The engine's real acquisition radius (unitweapons.slk `acquire`), i.e. how
+   * far a unit notices a hostile and starts attacking with no order at all.
+   * Footman 500, Archer 800, Rifleman 600, Mortar Team 1150.
+   *
+   * This replaces the invented `range * 1.6, floor 500` approximation that used
+   * to stand in for it. It is only used for AWARENESS (who a corroborated unit
+   * keeps facing when nothing is in weapon reach) — a unit still has to be in
+   * weapon reach to swing.
+   */
+  function acquireRange (meta) {
+    const c = meta && meta.combat;
+    if (c && c.acquire > 0) return c.acquire;
+    // Pre-v2 unitCombat.json (or a unit with no acquire row): fall back to the
+    // old approximation rather than dropping awareness entirely.
+    const r = (c && c.range) || 0;
+    return Math.max(r * C.AWARE_MULT, C.AWARE_FLOOR);
+  }
+
+  /**
+   * Can `attacker`'s weapon legally target `cand`? This is the engine's own
+   * answer (unitweapons.slk `targs1`), which the viewer previously had no access
+   * to — so a ground-only melee unit could resolve an attack against a flyer and
+   * animate swinging at something it cannot reach in game.
+   *
+   * Conservative on missing data: no targets list means "no opinion", not "no".
+   */
+  function canTarget (meta, cand) {
+    const t = meta && meta.combat && meta.combat.targets;
+    if (!t || !t.length) return true;
+    const air = cand.isAir;
+    if (cand.targetOnly) {
+      // Buildings. `structure` is the mask entry; a weapon without it (e.g. the
+      // ghoul's tree weapon) cannot hit one.
+      return t.indexOf('structure') !== -1;
+    }
+    return t.indexOf(air ? 'air' : 'ground') !== -1;
+  }
+
   function readyTimeOf (u) {
     return (u.readyTime != null) ? u.readyTime : u.spawnTime;
   }
@@ -237,6 +321,22 @@
     return from + Math.max(-budget, Math.min(budget, d));
   }
 
+  /**
+   * Should `cand` at distance `candD` displace the incumbent `best`?
+   *
+   * The comparison is bucketed rather than exact — see C.TARGET_BUCKET_WU for
+   * why. Inside a bucket the answer is the lowest uuid, which does not change
+   * as units move, so the choice holds still frame to frame instead of
+   * oscillating between two near-equidistant enemies.
+   */
+  function betterTarget (cand, candD, best, bestD) {
+    if (!best) return true;
+    const cb = Math.floor(candD / C.TARGET_BUCKET_WU);
+    const bb = Math.floor(bestD / C.TARGET_BUCKET_WU);
+    if (cb !== bb) return cb < bb;
+    return cand.uuid < best.uuid;
+  }
+
   // ---------------------------------------------------------------------------
 
   class World {
@@ -254,9 +354,17 @@
       this._memoTime = NaN;
       this._memoFrame = null;
       this._grid = new Map();
+      this._indexUnits();
     }
 
-    setUnits (units) { this.units = units || []; this._memoTime = NaN; }
+    setUnits (units) { this.units = units || []; this._memoTime = NaN; this._indexUnits(); }
+
+    // uuid -> unit, so a summon can find the hero that cast it. Built once per
+    // unit-set rather than per frame; the mapping is immutable for a replay.
+    _indexUnits () {
+      this._byUuid = new Map();
+      for (const u of this.units) if (u && u.uuid) this._byUuid.set(u.uuid, u);
+    }
 
     /** Memoized on the exact gameTime, so every consumer shares one frame. */
     resolve (gameTime) {
@@ -306,6 +414,76 @@
       return false;
     }
 
+    /**
+     * The order in force at `t`, from the exported per-unit order stream.
+     *
+     * Before this stream existed, `combatOrderTimes` was written for WORKERS
+     * ONLY, so the 'order' corroboration source was dead for every real combat
+     * unit — measured as `order 0` across an eight-replay sweep. An army told in
+     * plain terms to attack had no way to be seen as fighting unless the
+     * BattleDetector happened to cluster it into a battle.
+     *
+     * Windows differ by how much the order actually claims:
+     *   attack / attackonce  — the player clicked a specific enemy. Unambiguous.
+     *   attackground / patrol — attack-move. Still explicit combat intent.
+     *   smartunit             — right-clicked an enemy; in WC3 that attacks it.
+     *   smartground           — walked toward a place near enemies. Weakest; it
+     *                           is also how a retreat THROUGH a fight looks.
+     *   holdposition          — stationary but engaging; holds until countermanded.
+     *   stop                  — explicitly countermands. Not corroboration.
+     *
+     * Pure function of `t` — a binary search over an immutable array, no cursor.
+     */
+    _orderIndexAt (u, t) {
+      const orders = u.orders;
+      if (!orders || !orders.length) return -1;
+      let lo = 0, hi = orders.length - 1, best = -1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (orders[mid].t <= t) { best = mid; lo = mid + 1; } else hi = mid - 1;
+      }
+      return best;
+    }
+
+    _orderAt (u, t) {
+      const i = this._orderIndexAt(u, t);
+      if (i < 0) return null;
+      const o = u.orders[i];
+      // A stop cancels intent outright — no window, no attack license.
+      if (o.kind === 'stop') return null;
+      // Hold Position persists until something else is ordered, so it is licensed
+      // right up to the next order rather than for a fixed window.
+      if (o.kind === 'holdposition') return o;
+      const window = ORDER_WINDOWS[o.kind];
+      if (window == null) return null;
+      return (t - o.t) <= window ? o : null;
+    }
+
+    /**
+     * A summon inherits its caster's corroboration.
+     *
+     * WC3 summons spawn aggressive: they acquire and chase with no order. But a
+     * summon has no path and no orders until the player selects it, so the
+     * replay records nothing about it and the viewer animated it standing still
+     * through the fight it was summoned into. The Rod of Necromancy skeletons
+     * are the case that surfaced this — two of them appear mid-battle and just
+     * stand there.
+     *
+     * This is inference from record, not invention: the replay says a specific
+     * hero cast a summon at a specific time and place, and the engine guarantees
+     * what the summon then does. The licence is bounded by the summon's own
+     * lifetime so it cannot outlive the unit.
+     */
+    _summonCorroboration (u, t, inBattle) {
+      if (!u.summonedBy || u.summonTime == null) return false;
+      if (t < u.summonTime) return false;
+      if (u.summonDuration > 0 && (t - u.summonTime) > u.summonDuration * 1000) return false;
+      const caster = this._byUuid && this._byUuid.get(u.summonedBy);
+      if (!caster) return false;
+      if (inBattle.has(caster.uuid)) return true;
+      return this._hasRecentOrder(caster, t) || !!this._orderAt(caster, t);
+    }
+
     _build (t) {
       const live = [];
       const inBattle = this._battleSetAt(t);
@@ -318,21 +496,61 @@
         if (u._isLoadedAt && u._isLoadedAt(t)) continue;    // inside a transport
 
         const isCamp = u.neutralGroupId != null;
+        // Neutral units OUTSIDE a creep camp are passive map furniture — the
+        // tavern, merc/goblin shops, gold mines (invulnerable in WC3), and
+        // wandering critters. They are reified at parse time when a player
+        // interacts with them and may carry an UNSET (0,0) position, and the
+        // hostility test below would treat them as valid enemy targets (they
+        // share nobody's teamId). Measured failure: two Crypt Fiends + a Lich
+        // at 6:40 in the Storm Bolt replay resolving attack -> "Tavern @ 0,0",
+        // rendering as units shooting 180° away from their real fight at an
+        // invisible target.
+        //
+        // Camp members STAY targetable — including the building-flagged guards
+        // some maps use (brigand huts, battle golems): those are killable
+        // creeps. The one exception is fountains (nfoh/nmoo, per
+        // helpers/mappings.js `fountains`): guarded fountains live INSIDE
+        // camps but are invulnerable in the engine, so they are never a valid
+        // attack target.
+        if (u._isNeutral && !isCamp) continue;
+        if (u._isNeutral && (u.itemId === 'nfoh' || u.itemId === 'nmoo')) continue;
+        // Things that do not move, and are therefore never "abandoned" — see the
+        // staleness gate below.
+        const isStatic = isCamp || !!u.isBuilding;
         let x, y, sampleTime, ageMs, facing;
         const s = sampleAt(u.path, t);
         if (s) {
           x = s.x; y = s.y; sampleTime = s.sampleTime; ageMs = s.ageMs; facing = s.facing;
-        } else if (isCamp && u.spawnPosition) {
+        } else if (isStatic && (u.spawnPosition || u.lastPosition)) {
           // Camp creeps have single-sample paths by construction (ClientUnit
           // never advances neutral players' path cursor), so they legitimately
           // have no interpolated position. Their spawn point IS their position.
-          x = u.spawnPosition.x; y = u.spawnPosition.y;
+          //
+          // Most BUILDINGS have no path array at all — measured at 25311 of the
+          // 46876 standing-building ticks in one replay — so without this they
+          // were invisible to combat even after the staleness exemption below.
+          // `spawnPosition || lastPosition` is exactly the pair ClientUnit uses
+          // to place a building on the map, so the behavior authority and the
+          // renderer agree on where the thing is.
+          const p = u.spawnPosition || u.lastPosition;
+          x = p.x; y = p.y;
           sampleTime = 0; ageMs = 0; facing = null;
         } else continue;
 
-        // Staleness gate — the ghost filter. Camp creeps are exempt: they are
-        // static by design, not abandoned. This is the ONLY exemption.
-        if (!isCamp && ageMs > C.STALE_POSITION_MS) continue;
+        // Staleness gate — the ghost filter. It exists to catch units that are
+        // parked forever and only LOOK present (an unbought tavern hero standing
+        // at the tavern, showing up in battle participant sets at distance 0).
+        // Anything static is exempt, because "its last position sample is old"
+        // carries no information about it.
+        //
+        // Buildings used to fail this gate and it was why nothing ever animated
+        // while attacking one. A building emits one path sample, at spawn, and
+        // then never moves — so 45 seconds after it finishes it dropped out of
+        // the live set entirely and stopped being a target. Measured at 96.8% of
+        // all standing-building ticks in a 15-minute replay: a whole army could
+        // be razing a town hall and every unit resolved "no target in reach",
+        // which means idle, which means no swing, no projectile, nothing.
+        if (!isStatic && ageMs > C.STALE_POSITION_MS) continue;
 
         live.push({
           u, uuid: u.uuid, x, y, facing, sampleTime,
@@ -340,7 +558,10 @@
           teamId: u._teamId,
           isNeutral: !!u._isNeutral,
           isCamp,
-          targetOnly: !!u.isBuilding
+          targetOnly: !!u.isBuilding,
+          // Flyer? Decides whether a ground-only weapon may target it at all —
+          // see canTarget. moveType is the SLK `movetp` from unitMovement.json.
+          isAir: !!(u.meta && (u.meta.moveType === 'fly' || u.meta.moveType === 'hover'))
         });
       }
 
@@ -367,7 +588,7 @@
 
       const byUuid = new Map();
       const campsEngaged = new Set();
-      const stats = { walk: 0, attack: 0, idle: 0, replenish: 0, suppressedNoTarget: 0, bySource: { battle: 0, order: 0, camp: 0 } };
+      const stats = { walk: 0, attack: 0, idle: 0, replenish: 0, suppressedNoTarget: 0, bySource: { battle: 0, order: 0, camp: 0, summon: 0 } };
       const scratch = [];
 
       for (const a of live) {
@@ -390,12 +611,24 @@
           continue;
         }
 
+        // `aim` is who the unit keeps LOOKING at while it is not swinging —
+        // typically the target it just lost reach on. It is passed only on
+        // CORROBORATED paths, where the replay says this unit is in a fight.
+        //
+        // The uncorroborated case used to aim too ("a unit on guard", at the
+        // nearest hostile in weapon reach) and it was the single largest source
+        // of units pirouetting on the spot: nothing corroborates that aim, so it
+        // is rotation invented from a target the unit was never shown to notice,
+        // and for a 500-range weapon in a busy area the nearest hostile churns
+        // every few frames as an army walks past. Camp creeps and archers
+        // watching a march-by accounted for 14 of 19 measured spins in one
+        // replay. A unit standing still beats a unit tracking nothing — the rule
+        // that governs swinging governs turning.
         const emitIdle = (reason, aim) => {
-          let facing = a.facing;
-          if (aim) facing = this._facingFor(a, aim, t);
           byUuid.set(a.uuid, {
             uuid: a.uuid, state: 'idle', x: a.x, y: a.y,
-            facing, bakedFacing: a.facing, speed: 0, strideScale: 1,
+            facing: aim ? this._facingFor(a, aim, t) : a.facing,
+            bakedFacing: a.facing, speed: 0, strideScale: 1,
             melee: isMelee(meta), targetUuid: null,
             aimUuid: aim ? aim.uuid : null, reason
           });
@@ -405,13 +638,22 @@
         if (!combat) { emitIdle('no-weapon', null); continue; }
 
         // --- CORROBORATION (cheap; evaluated before the spatial query) -------
+        //
+        // A 'stop' is NOT a veto. In WC3 it cancels the current order and the
+        // unit drops to guard — where it still auto-acquires anything that walks
+        // into range. So a stop must not silence the battle or camp sources.
+        // Its whole effect is that _orderAt returns null once it is the latest
+        // order, which correctly ends the previous order's licence early instead
+        // of letting an attack click from ten seconds ago keep running.
         let src = null;
-        if (inBattle.has(a.uuid)) src = 'battle';
+        const order = this._orderAt(a.u, t);
+        if (order) src = 'order';
+        else if (inBattle.has(a.uuid)) src = 'battle';
         else if (this._hasRecentOrder(a.u, t)) src = 'order';
         else if (a.isCamp) {
           const camp = this.camps[a.u.neutralGroupId];
           if (camp && this._campPhase(camp, t) === 'disturbed') src = 'camp';
-        }
+        } else if (this._summonCorroboration(a.u, t, inBattle)) src = 'summon';
 
         const melee = isMelee(meta);
         const reach0 = (combat.range || 0) + a.r + C.MAX_TARGET_RADIUS +
@@ -426,11 +668,20 @@
           // Hostility: neutral creeps are hostile to players and vice versa;
           // players are hostile to different teams. Creeps never fight creeps.
           if (a.isCamp ? c.isNeutral : (c.teamId === a.teamId)) continue;
+          // The engine's own targeting mask. A grunt cannot hit a gargoyle; a
+          // ghoul's second weapon only targets trees. Without this the viewer
+          // could resolve an attack it is not allowed to make and animate a
+          // melee unit swinging at a flyer overhead.
+          if (!canTarget(meta, c)) continue;
           const reach = (combat.range || 0) + a.r + c.r + (melee ? C.MELEE_TOL : C.RANGED_TOL);
           const d = Math.hypot(c.x - a.x, c.y - a.y);
           if (d > reach) continue;
-          // Deterministic tie-break: nearest, then lowest uuid. Never iteration order.
-          if (d < bestD || (d === bestD && best && c.uuid < best.uuid)) { best = c; bestD = d; }
+          // Siege minimum range — a mortar team cannot fire at something inside
+          // 250 units. Real SLK data (`minRange`), absent before this pass.
+          if (combat.minRange > 0 && d < combat.minRange) continue;
+          // Bucketed-nearest, then lowest uuid. Never iteration order, and never
+          // a raw argmin — see betterTarget.
+          if (betterTarget(c, d, best, bestD)) { best = c; bestD = d; }
         }
 
         // --- SUPPORT CASTERS: an explicit order, or it's channelling ---------
@@ -440,7 +691,7 @@
         // — only a real attack order is.
         if (SUPPORT_CASTER_IDS.has(a.u.itemId) && src !== 'order') {
           const ally = this._replenishTarget(a, live, query, scratch);
-          if (!ally) { emitIdle(src ? 'no-replenish-target' : 'no-corroboration', best); continue; }
+          if (!ally) { emitIdle(src ? 'no-replenish-target' : 'no-corroboration', src ? best : null); continue; }
 
           // Replenish is an engine-driven autocast pulse — it is never recorded
           // in the replay, so this is SYNTHESIZED, not observed: a statue with a
@@ -468,15 +719,30 @@
         }
 
         if (!src) {
-          // No reason to believe a fight is happening — but still turn to watch
-          // a nearby threat, which is what a unit on guard actually looks like.
-          emitIdle('no-corroboration', best);
+          // No reason to believe a fight is happening, so the unit does not
+          // acquire and does not turn. It holds the facing the replay recorded.
+          //
+          // This used to aim at the nearest hostile in weapon reach — "a unit on
+          // guard" — and it was by far the largest source of units pirouetting
+          // on the spot. Nothing corroborates that aim, so it is synthesized
+          // rotation invented from a target the unit was never shown to notice,
+          // and for a 500-range weapon in a busy area the nearest hostile churns
+          // constantly: measured as the reason behind 14 of 19 on-the-spot spins
+          // in one replay, mostly camp creeps and archers watching an army walk
+          // past. A unit standing still beats a unit tracking nothing — the same
+          // rule that governs swinging governs turning.
+          emitIdle('no-corroboration', null);
           continue;
         }
 
         if (!best) {
-          const aim = this._nearestThreat(a, live, query, scratch,
-            Math.max((combat.range || 0) * C.AWARE_MULT, C.AWARE_FLOOR));
+          // Corroborated, but nothing is in reach any more — usually the target
+          // this unit was just swinging at stepped out of range. Keep watching
+          // the nearest threat rather than snapping back to the baked facing:
+          // dropping the aim here does not stop rotation, it just moves it to
+          // the attack->idle boundary, where the model whips from the aimed
+          // direction to the walking one in a single frame.
+          const aim = this._nearestThreat(a, live, query, scratch, acquireRange(meta));
           emitIdle('no-target', aim);
           stats.suppressedNoTarget++;
           continue;
@@ -525,7 +791,7 @@
         if (c.teamId !== a.teamId) continue;
         const d = Math.hypot(c.x - a.x, c.y - a.y);
         if (d > radius) continue;
-        if (d < bestD || (d === bestD && best && c.uuid < best.uuid)) { best = c; bestD = d; }
+        if (betterTarget(c, d, best, bestD)) { best = c; bestD = d; }
       }
       return best;
     }
@@ -539,22 +805,29 @@
         if (a.isCamp ? c.isNeutral : (c.teamId === a.teamId)) continue;
         const d = Math.hypot(c.x - a.x, c.y - a.y);
         if (d > radius) continue;
-        if (d < bestD || (d === bestD && best && c.uuid < best.uuid)) { best = c; bestD = d; }
+        if (betterTarget(c, d, best, bestD)) { best = c; bestD = d; }
       }
       return best;
     }
 
     /**
-     * How long `a` and `c` have continuously been in reach, sampled on an
-     * ABSOLUTE time grid so the answer never depends on frame rate or on how
-     * playback arrived at t. Doubles as the facing-acquisition anchor.
+     * How long `a` and `c` have continuously been within `radius` of each other,
+     * sampled on an ABSOLUTE time grid so the answer never depends on frame rate
+     * or on how playback arrived at t.
+     *
+     * `radius` defaults to `a`'s weapon reach, which is what the melee swing
+     * gate needs. The facing code passes the much larger awareness radius
+     * instead: anchoring a turn to weapon reach meant a pair grazing the reach
+     * boundary at one past sample reset the turn, and the facing snapped back to
+     * the baked direction and out again on the next tick.
      */
-    _contactDwell (a, c, t) {
+    _contactDwell (a, c, t, radius) {
       const Q = C.ACQ_TICK_MS, K = C.ACQ_LOOKBACK_TICKS;
       const meta = a.u.meta || {};
       const combat = meta.combat || {};
       const melee = isMelee(meta);
-      const reach = (combat.range || 0) + a.r + c.r + (melee ? C.MELEE_TOL : C.RANGED_TOL);
+      const reach = (radius != null) ? radius
+        : (combat.range || 0) + a.r + c.r + (melee ? C.MELEE_TOL : C.RANGED_TOL);
       const tq = Math.floor(t / Q) * Q;
       for (let j = 1; j <= K; j++) {
         const s = tq - j * Q;
@@ -568,28 +841,100 @@
     }
 
     /**
-     * Turn-rate-limited facing toward a target, with ZERO integration.
+     * Grid time at which this unit's current stand began — the most recent grid
+     * step, scanning back, at which it was still moving. Anchors a turn so it
+     * starts from the facing the unit stopped with.
      *
-     * The turn's start is derived from data (whichever is later: when the unit
-     * stopped, or when the pair came into contact), so facing is a pure function
-     * of t. At the walk->attack boundary the budget is 0, so facing equals the
-     * walking facing and there is no pop.
+     * Deliberately NOT the last path-sample time, which is what the facing code
+     * used to anchor to. A stationary unit still receives path samples, and each
+     * arrival dragged that anchor forward, collapsing the turn window and
+     * snapping the facing back toward the baked direction — then out again on
+     * the next tick. It was the largest single source of on-the-spot whipping
+     * that survived the turn-rate limit.
+     *
+     * Uses raw segment speed rather than isMoving(): this only needs "was it in
+     * motion at that step", and isMoving's ±500ms reconstruction would cost ~9
+     * path walks per step, per unit, per frame.
+     */
+    _standStart (a, tq) {
+      const Q = C.ACQ_TICK_MS, K = C.ACQ_LOOKBACK_TICKS;
+      const path = a.u.path;
+      for (let j = 1; j <= K; j++) {
+        const s = tq - j * Q;
+        if (s < 0) return 0;
+        if (segmentSpeed(path, pathIndexAt(path, s)) > C.MOVE_OFF_WU_S) return s;
+      }
+      return tq - K * Q;
+    }
+
+    /**
+     * Turn-rate-limited facing toward a target.
+     *
+     * This used to be a single clamp: facing = rotateClamped(bakedFacing,
+     * desired(t), rate × timeSinceContact). That bounds how far the facing can
+     * sit from the BAKED facing, which is not the same thing as bounding how
+     * fast it can turn — and it was the main source of units pirouetting on the
+     * spot:
+     *
+     *   - timeSinceContact came off a 125ms-quantized backward scan, so the
+     *     budget jumped in steps. A pair that grazed the reach boundary at one
+     *     past sample collapsed the budget from π back to 0.83 rad, snapping the
+     *     facing from the target back to the baked direction, then out again on
+     *     the next tick.
+     *   - once the budget passed π the clamp did nothing at all, so the facing
+     *     WAS `desired`. Any change in `desired` — a target swap, or an enemy
+     *     walking past at close range — moved the model instantly, through any
+     *     angle, in one frame.
+     *
+     * So instead of clamping the endpoint, march the turn on the same absolute
+     * 125ms grid the rest of this file uses, rotating at most the unit's turn
+     * rate per step toward where the target was AT THAT STEP, then take one
+     * partial step to land exactly on t. The emitted facing is then Lipschitz in
+     * time with the engine's own turn rate as its constant: it physically cannot
+     * spin, no matter what the target does.
+     *
+     * Still pure. The grid is absolute (frame-rate independent, and identical
+     * scrubbing backward), the walk starts from data — the later of when the
+     * unit stopped and the top of the lookback window — and the loop is bounded
+     * by ACQ_LOOKBACK_TICKS. At the walk→attack boundary the window is empty, so
+     * facing equals the walking facing and there is no pop.
      */
     _facingFor (a, target, t) {
-      const base = (a.facing != null) ? a.facing : Math.atan2(target.y - a.y, target.x - a.x);
       const meta = a.u.meta || {};
       const ratePerMs = Math.min(meta.turnRate != null ? meta.turnRate : 0.6,
         C.TURN_RAD_PER_FRAME_CAP) / C.WC3_FRAME_MS;
-      const anchor = Math.max(a.sampleTime, t - this._contactDwell(a, target, t));
-      const budget = Math.min(Math.PI, ratePerMs * Math.max(0, t - anchor));
-      const desired = Math.atan2(target.y - a.y, target.x - a.x);
-      return rotateClamped(base, desired, budget);
+
+      const Q = C.ACQ_TICK_MS;
+      const tq = Math.floor(t / Q) * Q;
+      // The turn begins at the later of: when this unit stopped walking, and
+      // when it could first have noticed this target.
+      const noticed = tq - this._contactDwell(a, target, t,
+        acquireRange(meta) + a.r + target.r);
+      const start = Math.max(0, this._standStart(a, tq), noticed);
+      const here = Math.atan2(target.y - a.y, target.x - a.x);
+
+      // The actor is stationary on every path that reaches here (walking units
+      // return earlier), so its own position is constant across the window and
+      // only the target's motion needs sampling.
+      const s0 = sampleAt(a.u.path, start);
+      let f = (s0 && s0.facing != null) ? s0.facing
+        : (a.facing != null ? a.facing : here);
+      const stepBudget = ratePerMs * Q;
+      for (let s = start + Q; s <= tq; s += Q) {
+        const p = target.isCamp ? target : sampleAt(target.u.path, s);
+        if (!p) continue;
+        const dx = p.x - a.x, dy = p.y - a.y;
+        if (dx === 0 && dy === 0) continue;
+        f = rotateClamped(f, Math.atan2(dy, dx), stepBudget);
+      }
+      return rotateClamped(f, here, ratePerMs * Math.max(0, t - tq));
     }
   }
 
   return {
-    VERSION: 1,
+    VERSION: 2,
     C,
+    ORDER_WINDOWS,
     isPathGap,
     pathIndexAt,
     sampleAt,
@@ -597,6 +942,11 @@
     smoothedSpeed,
     isMoving,
     isMelee,
+    // Exported so tools/lib/behavior-metrics.js grades against the same
+    // acquisition radius and targeting mask the viewer decides with, instead of
+    // a second copy that can drift.
+    acquireRange,
+    canTarget,
     readyTimeOf,
     deathStartOf,
     angDiff,

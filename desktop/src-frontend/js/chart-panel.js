@@ -145,11 +145,16 @@
       const hasArmy = !!(meSlot != null && summary.players[meSlot] &&
         (summary.players[meSlot].combatUnitsTrack || []).length);
 
+      // `omit` drops a mode entirely, chip and content. The Match Summary's
+      // Overview tab carries dominance now, and two dominance plots on one
+      // screen is a question about which of them is right.
+      const omit = o.omit || [];
       const MODES = [
         { key: 'dominance', label: 'Dominance', ok: !domReason },
         { key: 'resources', label: 'Resources', ok: hasResources },
         { key: 'army', label: 'Army', ok: hasArmy }
-      ];
+      ].filter(m => omit.indexOf(m.key) === -1);
+      if (!MODES.length) return null;
       if (!MODES.some(m => m.ok)) {
         // Nothing to draw at all. A pre-v4 summary still gets the one offer
         // that changes the answer; anything else gets no panel and the tab

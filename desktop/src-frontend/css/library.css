@@ -1,0 +1,111 @@
+/* ============================================================
+   library.css, WC3V desktop.
+
+   Everybody else's games: a list beside a report column. Two panes rather than
+   Home's drawer, because the Library is a place you browse rather than a place
+   you land, and a list you have to open to use is a list nobody uses.
+
+   Loads after report.css, because the report column here is the SAME
+   `.detail-col` / `.report-body` construction and only the framing differs.
+   ============================================================ */
+
+.view-library {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+.lib-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--app-line);
+}
+.lib-head .field-inline { flex: 1 1 14rem; min-width: 0; }
+.lib-count {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* The one action on this screen that brings something new in. */
+.lib-head .btn { margin-left: auto; }
+
+/* 22rem, the width a two-name row needs before either name starts wrapping.
+   The report gets the rest, because the report is what the screen is for. */
+.lib-grid {
+  display: grid;
+  grid-template-columns: 22rem minmax(0, 1fr);
+  min-height: 0;
+}
+.lib-list {
+  min-height: 0;
+  padding: var(--sp-1) 0;
+  background: var(--app-bg);
+  border-right: 1px solid var(--app-line);
+}
+
+/* A row is both players and who won. No verdict tile: a W or an L is a claim
+   about the reader, and on this screen neither seat is theirs. */
+.lib-row {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--app-line);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lib-row:hover { background: var(--app-panel); }
+.lib-row.is-active {
+  background: var(--app-panel-2);
+  box-shadow: var(--cut);
+}
+
+.lib-names {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  min-width: 0;
+}
+.lib-names i { color: var(--ink-faint); font-style: normal; font-size: var(--fs-min); }
+.lib-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  color: var(--ink-dim);
+}
+.lib-name .race-mark { color: var(--rc-ink); }
+.lib-name b { overflow-wrap: anywhere; font-weight: 600; }
+/* The winner in full ink, the loser dimmed. That is the whole result, and it
+   costs no row height, which a verdict column would. */
+.lib-name.is-winner { color: var(--ink); }
+.lib-name.is-winner b { color: var(--verdict-win); }
+
+.lib-meta { color: var(--ink-faint); font-size: var(--fs-min); overflow-wrap: anywhere; }
+
+.lib-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: 2px; }
+
+/* The Library's report column is the same one Home draws, so it inherits every
+   fold rule with it: `.report-body` is the only thing here allowed to scroll. */
+.view-library .detail-col { min-height: 0; }
+
+/* Under 1040px there is no room for a list beside a report. The list goes on
+   top and takes a third of the height, which still shows four rows, and the
+   report keeps the rest. Both scroll independently; the view itself never does. */
+@media (max-width: 1040px) {
+  .lib-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(6rem, 1fr) 2fr;
+  }
+  .lib-list { border-right: 0; border-bottom: 1px solid var(--app-line); }
+}

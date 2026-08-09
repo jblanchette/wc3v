@@ -1,0 +1,9242 @@
+{
+  "version": 1,
+  "note": "modelScale = Art Scaling Value (usca). selectionScale = Art Selection Scale (ussc) — NEVER a geometry multiplier.",
+  "source": {
+    "units": "tools/map-data/units/unitskin.txt",
+    "doodads": "tools/map-data/doodads/doodadskins.txt",
+    "destructables": "tools/map-data/units/destructableskin.txt"
+  },
+  "units": {
+    "Hamg": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hblm": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hmkg": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Hpal": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "hbot": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "hbsh": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "unit"
+    },
+    "hdes": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "hdhw": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "hfoo": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hgry": {
+      "modelScale": 1.2,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "hgyr": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "hkni": {
+      "modelScale": 1,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "hmil": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hmpr": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hmtm": {
+      "modelScale": 1,
+      "selectionScale": 1.3,
+      "kind": "unit"
+    },
+    "hmtt": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "hpea": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hphx": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "hpxe": {
+      "modelScale": 1.25,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hrif": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hrtt": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "hsor": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "hspt": {
+      "modelScale": 0.8,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "hwat": {
+      "modelScale": 0.9,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "hwt2": {
+      "modelScale": 1.1,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "hwt3": {
+      "modelScale": 1.3,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "halt": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "harm": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "hars": {
+      "modelScale": 1,
+      "selectionScale": 3.75,
+      "kind": "building"
+    },
+    "hatw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "hbar": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "hbla": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "hcas": {
+      "modelScale": 1,
+      "selectionScale": 6.3,
+      "kind": "building"
+    },
+    "hctw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "hgra": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "hgtw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "hhou": {
+      "modelScale": 0.85,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "hkee": {
+      "modelScale": 1,
+      "selectionScale": 6.3,
+      "kind": "building"
+    },
+    "hlum": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "hshy": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "htow": {
+      "modelScale": 1,
+      "selectionScale": 6.3,
+      "kind": "building"
+    },
+    "hvlt": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "hwtw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "Obla": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Ofar": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Oshd": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "Otch": {
+      "modelScale": 1.1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nwad": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "obot": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "ocat": {
+      "modelScale": 1,
+      "selectionScale": 2.75,
+      "kind": "unit"
+    },
+    "odes": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "odoc": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "oeye": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "ogru": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ohun": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "ohwd": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "okod": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "opeo": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "orai": {
+      "modelScale": 1,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "oshm": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "osp1": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "osp2": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "osp3": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "osp4": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "ospm": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "ospw": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "osw1": {
+      "modelScale": 0.9,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "osw2": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "osw3": {
+      "modelScale": 1.3,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "otau": {
+      "modelScale": 1.1,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "otbk": {
+      "modelScale": 1.15,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "otbr": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "otot": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "owyv": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "oalt": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "obar": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "obea": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "ofor": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ofrt": {
+      "modelScale": 1,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "ogre": {
+      "modelScale": 1,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "oshy": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "osld": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ostr": {
+      "modelScale": 1,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "otrb": {
+      "modelScale": 1,
+      "selectionScale": 2.75,
+      "kind": "building"
+    },
+    "otto": {
+      "modelScale": 1,
+      "selectionScale": 3.25,
+      "kind": "building"
+    },
+    "ovln": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "owtw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "Edem": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Edmm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Edmf": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Ekee": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "Emoo": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "Ewar": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "earc": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ebal": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "ebsh": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "unit"
+    },
+    "echm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "edcm": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "edes": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "edoc": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "edot": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "edry": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "edtm": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "efdr": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "efon": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ehip": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ehpr": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "emtg": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "esen": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "espv": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "espm": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "even": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ewsp": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "eaoe": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "eaom": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "eaow": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "eate": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "eden": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "edob": {
+      "modelScale": 1,
+      "selectionScale": 4.2,
+      "kind": "building"
+    },
+    "edos": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "egol": {
+      "modelScale": 1,
+      "selectionScale": 5.5,
+      "kind": "building"
+    },
+    "emow": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "eshy": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "etoa": {
+      "modelScale": 1.15,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "etoe": {
+      "modelScale": 1.3,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "etol": {
+      "modelScale": 1,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "etrp": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "Ucrl": {
+      "modelScale": 1,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "Udea": {
+      "modelScale": 1,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "Udre": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Ulic": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "uabo": {
+      "modelScale": 0.9,
+      "selectionScale": 2.1,
+      "kind": "unit"
+    },
+    "uaco": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "uban": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ubsp": {
+      "modelScale": 0.85,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ucrm": {
+      "modelScale": 0.9,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "ucry": {
+      "modelScale": 0.9,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "ucs1": {
+      "modelScale": 0.9,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ucs2": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ucs3": {
+      "modelScale": 1.3,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ucsB": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ucsC": {
+      "modelScale": 1.3,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ufro": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "ugar": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ugho": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "ugrm": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "uloc": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "umtw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "unec": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "uobs": {
+      "modelScale": 0.85,
+      "selectionScale": 2.1,
+      "kind": "unit"
+    },
+    "uplg": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "ushd": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "uske": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "uskm": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "uubs": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "unit"
+    },
+    "uaod": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "ubon": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "ugol": {
+      "modelScale": 1,
+      "selectionScale": 5.5,
+      "kind": "building"
+    },
+    "ugrv": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "unp1": {
+      "modelScale": 1,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "unp2": {
+      "modelScale": 1,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "unpl": {
+      "modelScale": 1,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "usap": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "usep": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "ushp": {
+      "modelScale": 1,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "uslh": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "utod": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "utom": {
+      "modelScale": 1,
+      "selectionScale": 5.5,
+      "kind": "building"
+    },
+    "uzg1": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "uzg2": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "uzig": {
+      "modelScale": 1,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "Nbrn": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Nbst": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nngs": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Npbm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nalc": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nalm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nal2": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nal3": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Ntin": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nrob": {
+      "modelScale": 1,
+      "selectionScale": 3.2,
+      "kind": "unit"
+    },
+    "ncgb": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "ncg1": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "ncg2": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "ncg3": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "nfac": {
+      "modelScale": 0.9,
+      "selectionScale": 3.3,
+      "kind": "unit"
+    },
+    "nfa1": {
+      "modelScale": 0.9,
+      "selectionScale": 3.3,
+      "kind": "unit"
+    },
+    "nfa2": {
+      "modelScale": 0.9,
+      "selectionScale": 3.3,
+      "kind": "unit"
+    },
+    "Nplh": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "Nfir": {
+      "modelScale": 1.15,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Nvol": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "nlv1": {
+      "modelScale": 0.8,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nlv2": {
+      "modelScale": 1,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nlv3": {
+      "modelScale": 1.2,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "ndr1": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ndr2": {
+      "modelScale": 1.2,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "ndr3": {
+      "modelScale": 1.4,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "ngz1": {
+      "modelScale": 0.9,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ngz2": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ngz3": {
+      "modelScale": 1.25,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ngzc": {
+      "modelScale": 0.9,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ngzd": {
+      "modelScale": 1.1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "ngza": {
+      "modelScale": 1.2,
+      "selectionScale": 2.2,
+      "kind": "unit"
+    },
+    "ngz4": {
+      "modelScale": 1.3,
+      "selectionScale": 2.4,
+      "kind": "unit"
+    },
+    "npn1": {
+      "modelScale": 0.8,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "npn2": {
+      "modelScale": 0.8,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "npn3": {
+      "modelScale": 0.9,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "npn4": {
+      "modelScale": 1.1,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "npn5": {
+      "modelScale": 1.1,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "npn6": {
+      "modelScale": 1.2,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "nqb1": {
+      "modelScale": 1.2,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nqb2": {
+      "modelScale": 1.4,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nqb3": {
+      "modelScale": 1.6,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nqb4": {
+      "modelScale": 1.75,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nwe1": {
+      "modelScale": 0.9,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nwe2": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nwe3": {
+      "modelScale": 1.3,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nadk": {
+      "modelScale": 1.2,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nadr": {
+      "modelScale": 1.75,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nadw": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nahy": {
+      "modelScale": 1.55,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nanb": {
+      "modelScale": 0.65,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nanm": {
+      "modelScale": 0.65,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nanc": {
+      "modelScale": 0.65,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nane": {
+      "modelScale": 1,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "nano": {
+      "modelScale": 1.2,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nanw": {
+      "modelScale": 0.9,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "narg": {
+      "modelScale": 0.8,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nass": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nbal": {
+      "modelScale": 1.3,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nba2": {
+      "modelScale": 1.3,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nban": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nbda": {
+      "modelScale": 0.9,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nbdk": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nbdm": {
+      "modelScale": 0.9,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nbdo": {
+      "modelScale": 1.4,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nbdr": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nbds": {
+      "modelScale": 1.3,
+      "selectionScale": 2.4,
+      "kind": "unit"
+    },
+    "nbdw": {
+      "modelScale": 1.15,
+      "selectionScale": 2.2,
+      "kind": "unit"
+    },
+    "nbld": {
+      "modelScale": 1.3,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nbnb": {
+      "modelScale": 0.65,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nbot": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "unit"
+    },
+    "nbrg": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nbwm": {
+      "modelScale": 1.75,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nbzd": {
+      "modelScale": 1.75,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nbzk": {
+      "modelScale": 1.2,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nbzw": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ncea": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ncen": {
+      "modelScale": 1.45,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ncer": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ncfs": {
+      "modelScale": 0.8,
+      "selectionScale": 0.8,
+      "kind": "unit"
+    },
+    "ncim": {
+      "modelScale": 1.35,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ncks": {
+      "modelScale": 1.3,
+      "selectionScale": 1.55,
+      "kind": "unit"
+    },
+    "ncnk": {
+      "modelScale": 1.75,
+      "selectionScale": 1.9,
+      "kind": "unit"
+    },
+    "ndqn": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ndqp": {
+      "modelScale": 1.4,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "ndqs": {
+      "modelScale": 1.5,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ndqt": {
+      "modelScale": 1.4,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "ndqv": {
+      "modelScale": 1.2,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "ndrv": {
+      "modelScale": 1.4,
+      "selectionScale": 2.6,
+      "kind": "unit"
+    },
+    "ndtb": {
+      "modelScale": 1.3,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ndth": {
+      "modelScale": 1.25,
+      "selectionScale": 1.45,
+      "kind": "unit"
+    },
+    "ndtp": {
+      "modelScale": 0.9,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ndtr": {
+      "modelScale": 0.85,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ndtt": {
+      "modelScale": 1.15,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ndtw": {
+      "modelScale": 1.6,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nehy": {
+      "modelScale": 1.2,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nelb": {
+      "modelScale": 1.4,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nele": {
+      "modelScale": 1.2,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nenc": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nenf": {
+      "modelScale": 1.45,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nenp": {
+      "modelScale": 1.25,
+      "selectionScale": 1.35,
+      "kind": "unit"
+    },
+    "nepl": {
+      "modelScale": 1.4,
+      "selectionScale": 1.45,
+      "kind": "unit"
+    },
+    "nerd": {
+      "modelScale": 1.65,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "ners": {
+      "modelScale": 1.4,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nerw": {
+      "modelScale": 1.75,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nfel": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfgb": {
+      "modelScale": 1.35,
+      "selectionScale": 1.35,
+      "kind": "unit"
+    },
+    "nfgo": {
+      "modelScale": 0.9,
+      "selectionScale": 4.3,
+      "kind": "unit"
+    },
+    "nfgt": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "nfgu": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfod": {
+      "modelScale": 2.3,
+      "selectionScale": 2.4,
+      "kind": "unit"
+    },
+    "nfor": {
+      "modelScale": 1.4,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nfot": {
+      "modelScale": 1.85,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nfov": {
+      "modelScale": 1.5,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfpc": {
+      "modelScale": 1.3,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfpe": {
+      "modelScale": 1.25,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfpl": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfps": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfpt": {
+      "modelScale": 1.2,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfpu": {
+      "modelScale": 1.4,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nfra": {
+      "modelScale": 1.4,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nfrb": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfre": {
+      "modelScale": 1.25,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfrg": {
+      "modelScale": 1.3,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfrl": {
+      "modelScale": 1.15,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfrp": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfrs": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfsh": {
+      "modelScale": 1.25,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nfsp": {
+      "modelScale": 1.05,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nftb": {
+      "modelScale": 1.25,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nftk": {
+      "modelScale": 1.55,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nftr": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nftt": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngdk": {
+      "modelScale": 1.2,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nggr": {
+      "modelScale": 1.5,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "ngh1": {
+      "modelScale": 1.05,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngh2": {
+      "modelScale": 1.4,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngir": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nglm": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "ngna": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngnb": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngno": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngns": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngnv": {
+      "modelScale": 1.75,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngnw": {
+      "modelScale": 1.5,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngrd": {
+      "modelScale": 1.75,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "ngrk": {
+      "modelScale": 0.6,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ngrw": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ngsp": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ngst": {
+      "modelScale": 1.05,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "nhar": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nhdc": {
+      "modelScale": 1.2,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nhfp": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nhhr": {
+      "modelScale": 1.5,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nhrh": {
+      "modelScale": 1.7,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nhrq": {
+      "modelScale": 2.1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nhrr": {
+      "modelScale": 1.7,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nhrw": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nhyc": {
+      "modelScale": 0.8,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nhyd": {
+      "modelScale": 1.1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nhyh": {
+      "modelScale": 0.75,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nina": {
+      "modelScale": 1.5,
+      "selectionScale": 3.5,
+      "kind": "unit"
+    },
+    "ninc": {
+      "modelScale": 0.75,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "ninf": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "ninm": {
+      "modelScale": 1,
+      "selectionScale": 2.75,
+      "kind": "unit"
+    },
+    "nith": {
+      "modelScale": 1.25,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nitp": {
+      "modelScale": 1.05,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nitr": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nits": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nitt": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nitw": {
+      "modelScale": 1.55,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "njgb": {
+      "modelScale": 1.5,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "njga": {
+      "modelScale": 1.2,
+      "selectionScale": 1.45,
+      "kind": "unit"
+    },
+    "njg1": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nkob": {
+      "modelScale": 0.85,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nkog": {
+      "modelScale": 1.4,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nkol": {
+      "modelScale": 1.6,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nkot": {
+      "modelScale": 1.25,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nlds": {
+      "modelScale": 0.8,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nlkl": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nlpd": {
+      "modelScale": 0.6,
+      "selectionScale": 1.65,
+      "kind": "unit"
+    },
+    "nlpr": {
+      "modelScale": 0.55,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nlps": {
+      "modelScale": 0.55,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nlrv": {
+      "modelScale": 1.6,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nlsn": {
+      "modelScale": 0.8,
+      "selectionScale": 1.9,
+      "kind": "unit"
+    },
+    "nltc": {
+      "modelScale": 0.57,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nltl": {
+      "modelScale": 0.85,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nlur": {
+      "modelScale": 1,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "nmam": {
+      "modelScale": 0.85,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nmbg": {
+      "modelScale": 0.9,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nmcf": {
+      "modelScale": 0.8,
+      "selectionScale": 0.8,
+      "kind": "unit"
+    },
+    "nmdr": {
+      "modelScale": 1.25,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nmfs": {
+      "modelScale": 1.55,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmgd": {
+      "modelScale": 1.45,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nmgr": {
+      "modelScale": 1.325,
+      "selectionScale": 2.75,
+      "kind": "unit"
+    },
+    "nmgw": {
+      "modelScale": 1.125,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nmit": {
+      "modelScale": 1.05,
+      "selectionScale": 2.1,
+      "kind": "unit"
+    },
+    "nmmu": {
+      "modelScale": 2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmpg": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmrl": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmrm": {
+      "modelScale": 1.6,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmrr": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmrv": {
+      "modelScale": 1.5,
+      "selectionScale": 1.45,
+      "kind": "unit"
+    },
+    "nmsc": {
+      "modelScale": 1.55,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nmsn": {
+      "modelScale": 1.1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nmtw": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmyr": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nmys": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nndk": {
+      "modelScale": 1.05,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nndr": {
+      "modelScale": 1.35,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nnht": {
+      "modelScale": 0.65,
+      "selectionScale": 1.65,
+      "kind": "unit"
+    },
+    "nnmg": {
+      "modelScale": 1.1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "nnrg": {
+      "modelScale": 1.25,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nnrs": {
+      "modelScale": 1.25,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nnsu": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nnsw": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nnwa": {
+      "modelScale": 1.2,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nnwl": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nnwq": {
+      "modelScale": 1.6,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nnwr": {
+      "modelScale": 1.4,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nnws": {
+      "modelScale": 1.55,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "noga": {
+      "modelScale": 2.1,
+      "selectionScale": 2.2,
+      "kind": "unit"
+    },
+    "nogl": {
+      "modelScale": 1.7,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nogm": {
+      "modelScale": 1.6,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nogn": {
+      "modelScale": 1.6,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nogo": {
+      "modelScale": 1.6,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nogr": {
+      "modelScale": 1.25,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nomg": {
+      "modelScale": 1.4,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nowb": {
+      "modelScale": 1.2,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nowe": {
+      "modelScale": 1.4,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nowk": {
+      "modelScale": 1.6,
+      "selectionScale": 2.3,
+      "kind": "unit"
+    },
+    "npfl": {
+      "modelScale": 0.8,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "npfm": {
+      "modelScale": 1.5,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nplb": {
+      "modelScale": 0.95,
+      "selectionScale": 1.8,
+      "kind": "unit"
+    },
+    "nplg": {
+      "modelScale": 1.3,
+      "selectionScale": 2.4,
+      "kind": "unit"
+    },
+    "nqbh": {
+      "modelScale": 1.4,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrdk": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nrdr": {
+      "modelScale": 1.2,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nrel": {
+      "modelScale": 0.7,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nrog": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrvd": {
+      "modelScale": 1.5,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nrvf": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrvi": {
+      "modelScale": 1.3,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nrvl": {
+      "modelScale": 1.1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nrvs": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrwm": {
+      "modelScale": 1.75,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nrzb": {
+      "modelScale": 1.6,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrzg": {
+      "modelScale": 1.8,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrzm": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrzs": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nrzt": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsat": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsbm": {
+      "modelScale": 1.5,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nsbs": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nsc2": {
+      "modelScale": 1.2,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nsc3": {
+      "modelScale": 1.35,
+      "selectionScale": 1.72,
+      "kind": "unit"
+    },
+    "nscb": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nsel": {
+      "modelScale": 1.1,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nsgb": {
+      "modelScale": 1.2,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nsgg": {
+      "modelScale": 1.5,
+      "selectionScale": 2.3,
+      "kind": "unit"
+    },
+    "nsgh": {
+      "modelScale": 1,
+      "selectionScale": 2.4,
+      "kind": "unit"
+    },
+    "nsgn": {
+      "modelScale": 0.8,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nsgt": {
+      "modelScale": 1.25,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nska": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nske": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsca": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsce": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nskf": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nskg": {
+      "modelScale": 1.35,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nskm": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsko": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nslf": {
+      "modelScale": 1.3,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nslh": {
+      "modelScale": 0.6,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nsll": {
+      "modelScale": 1.25,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nslm": {
+      "modelScale": 0.75,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsln": {
+      "modelScale": 1.8,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nslr": {
+      "modelScale": 0.95,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nslv": {
+      "modelScale": 1.1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nsnp": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nsns": {
+      "modelScale": 1.1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nsoc": {
+      "modelScale": 1.5,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nsog": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nspb": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nspd": {
+      "modelScale": 0.6,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nspg": {
+      "modelScale": 0.6,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nspp": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nspr": {
+      "modelScale": 0.5,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nsqa": {
+      "modelScale": 1.6,
+      "selectionScale": 1.45,
+      "kind": "unit"
+    },
+    "nsqe": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nsqo": {
+      "modelScale": 1.35,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nsqt": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nsra": {
+      "modelScale": 0.9,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nsrh": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nsrn": {
+      "modelScale": 1.25,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nsrv": {
+      "modelScale": 1.05,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nsrw": {
+      "modelScale": 1.5,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nssp": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nsth": {
+      "modelScale": 1.05,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nstl": {
+      "modelScale": 1.8,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsts": {
+      "modelScale": 1.6,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nstw": {
+      "modelScale": 1.4,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nsty": {
+      "modelScale": 1.15,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nthl": {
+      "modelScale": 1.15,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "ntka": {
+      "modelScale": 0.75,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ntkc": {
+      "modelScale": 1.25,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "ntkf": {
+      "modelScale": 0.75,
+      "selectionScale": 1.35,
+      "kind": "unit"
+    },
+    "ntkh": {
+      "modelScale": 0.75,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ntks": {
+      "modelScale": 1,
+      "selectionScale": 1.66,
+      "kind": "unit"
+    },
+    "ntkt": {
+      "modelScale": 1,
+      "selectionScale": 1.66,
+      "kind": "unit"
+    },
+    "ntkw": {
+      "modelScale": 1,
+      "selectionScale": 1.66,
+      "kind": "unit"
+    },
+    "ntor": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other"
+    },
+    "ntrd": {
+      "modelScale": 1.2,
+      "selectionScale": 4,
+      "kind": "unit"
+    },
+    "ntrg": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "ntrh": {
+      "modelScale": 0.4,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ntrs": {
+      "modelScale": 0.5,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "ntrt": {
+      "modelScale": 0.8,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "ntrv": {
+      "modelScale": 0.9,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ntws": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nubk": {
+      "modelScale": 0.55,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nubr": {
+      "modelScale": 0.65,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nubw": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nvde": {
+      "modelScale": 1.5,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nvdg": {
+      "modelScale": 1.3,
+      "selectionScale": 1.3,
+      "kind": "unit"
+    },
+    "nvdl": {
+      "modelScale": 0.75,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nvdw": {
+      "modelScale": 1.15,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nwen": {
+      "modelScale": 0.9,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nwgs": {
+      "modelScale": 0.7,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nwiz": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nwld": {
+      "modelScale": 1.2,
+      "selectionScale": 1.3,
+      "kind": "unit"
+    },
+    "nwlg": {
+      "modelScale": 1.1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nwlt": {
+      "modelScale": 0.75,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "nwna": {
+      "modelScale": 1.65,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nwnr": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nwns": {
+      "modelScale": 1.2,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nwrg": {
+      "modelScale": 1.25,
+      "selectionScale": 1.9,
+      "kind": "unit"
+    },
+    "nws1": {
+      "modelScale": 1.2,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nwwd": {
+      "modelScale": 1.45,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nwwf": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nwwg": {
+      "modelScale": 1.2,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nwzd": {
+      "modelScale": 1.2,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nwzg": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nwzr": {
+      "modelScale": 0.9,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nzep": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nzom": {
+      "modelScale": 1.15,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nzof": {
+      "modelScale": 1.15,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nchp": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nhym": {
+      "modelScale": 0.9,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nalb": {
+      "modelScale": 1.2,
+      "selectionScale": 0.8,
+      "kind": "unit"
+    },
+    "nfro": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nech": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "necr": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nrac": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "ncrb": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nder": {
+      "modelScale": 1.5,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "ndog": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ndwm": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nfbr": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nhmc": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "now2": {
+      "modelScale": 1.2,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "now3": {
+      "modelScale": 1.2,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nowl": {
+      "modelScale": 1.2,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "npig": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "npng": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "npnw": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nrat": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nsea": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsha": {
+      "modelScale": 1.2,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nshe": {
+      "modelScale": 1.2,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nshf": {
+      "modelScale": 1.2,
+      "selectionScale": 0.8,
+      "kind": "unit"
+    },
+    "nshw": {
+      "modelScale": 1.2,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nskk": {
+      "modelScale": 1,
+      "selectionScale": 0.9,
+      "kind": "unit"
+    },
+    "nsno": {
+      "modelScale": 1.2,
+      "selectionScale": 0.8,
+      "kind": "unit"
+    },
+    "nvil": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nvk2": {
+      "modelScale": 1.2,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "nvl2": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nvlk": {
+      "modelScale": 1.2,
+      "selectionScale": 0.75,
+      "kind": "unit"
+    },
+    "nvlw": {
+      "modelScale": 1.05,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nvul": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ncb0": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb1": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb2": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb3": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb4": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb5": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb6": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb7": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb8": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncb9": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncba": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncbb": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncbc": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncbd": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncbe": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncbf": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncnt": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ncop": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ncp2": {
+      "modelScale": 1.5,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncp3": {
+      "modelScale": 2,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "nct1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nct2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ndch": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ndh0": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ndh1": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ndh2": {
+      "modelScale": 1.2,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "ndh3": {
+      "modelScale": 1.2,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "ndh4": {
+      "modelScale": 1.2,
+      "selectionScale": 4.25,
+      "kind": "building"
+    },
+    "ndrg": {
+      "modelScale": 1.5,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "ndrk": {
+      "modelScale": 1.5,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "ndro": {
+      "modelScale": 1.5,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "ndrr": {
+      "modelScale": 1.5,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "ndru": {
+      "modelScale": 1.5,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "ndrz": {
+      "modelScale": 1.5,
+      "selectionScale": 6.6,
+      "kind": "building"
+    },
+    "nfh0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfh1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfoh": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "nfr1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfr2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ngad": {
+      "modelScale": 1,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "ngme": {
+      "modelScale": 1,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "ngnh": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ngni": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ngol": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "ngt2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ngwr": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "nhns": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nhn2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nmer": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmg0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nmg1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nmh0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nmh1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nmh2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nmoo": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "nmr0": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr2": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr3": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr4": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr5": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr6": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr7": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr8": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmr9": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmra": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmrb": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmrc": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmrd": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmre": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmrf": {
+      "modelScale": 0.8,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nmrk": {
+      "modelScale": 1,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nnzg": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nshp": {
+      "modelScale": 1,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "ntav": {
+      "modelScale": 1,
+      "selectionScale": 6,
+      "kind": "building"
+    },
+    "nten": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "nth0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nth1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ntn2": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "ntn3": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "ntnt": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ntt2": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nwgt": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "Ecen": {
+      "modelScale": 1.4,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "Eevi": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Eevm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Efur": {
+      "modelScale": 1.1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Eidm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Eill": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Eilm": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Ekgg": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "Emfr": {
+      "modelScale": 1.2,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "Emns": {
+      "modelScale": 1.2,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "Etyr": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "Ewrd": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hant": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hapm": {
+      "modelScale": 1.1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Harf": {
+      "modelScale": 1.1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hart": {
+      "modelScale": 1.1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hdgo": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hhkl": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hjai": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hkal": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hlgr": {
+      "modelScale": 1.2,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "Hmbr": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Hmgd": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hpb1": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hpb2": {
+      "modelScale": 1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Huth": {
+      "modelScale": 1.1,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "Hvsh": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hvwd": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Nbbc": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "Nklj": {
+      "modelScale": 1,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "Nkjx": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "Nmag": {
+      "modelScale": 1.35,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "Nman": {
+      "modelScale": 1.7,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "Npld": {
+      "modelScale": 1.35,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "Nsjs": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Ocbh": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Ocb2": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Odrt": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Ogld": {
+      "modelScale": 1,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "Ogrh": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "Opgh": {
+      "modelScale": 1.2,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "Orex": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Orkn": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "Osam": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Otcc": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Othr": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Oths": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "Uanb": {
+      "modelScale": 1,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "Ubal": {
+      "modelScale": 1.6,
+      "selectionScale": 1.9,
+      "kind": "unit"
+    },
+    "Uclc": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Udth": {
+      "modelScale": 1.4,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "Uear": {
+      "modelScale": 1,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "Uktl": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Umal": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Usyl": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Utic": {
+      "modelScale": 1.15,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Uvar": {
+      "modelScale": 1.2,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "Uvng": {
+      "modelScale": 1.15,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "Uwar": {
+      "modelScale": 1.4,
+      "selectionScale": 2.1,
+      "kind": "unit"
+    },
+    "Hgam": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "eilw": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "enec": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ensh": {
+      "modelScale": 1.2,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "eshd": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "etrs": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "hbew": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "hcth": {
+      "modelScale": 1.15,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "hhdl": {
+      "modelScale": 1,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "hhes": {
+      "modelScale": 0.9,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "hrdh": {
+      "modelScale": 1,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "Naka": {
+      "modelScale": 1.5,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nsw1": {
+      "modelScale": 0.8,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nsw2": {
+      "modelScale": 1.15,
+      "selectionScale": 1.7,
+      "kind": "unit"
+    },
+    "nsw3": {
+      "modelScale": 1.4,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "ncat": {
+      "modelScale": 1,
+      "selectionScale": 2.75,
+      "kind": "unit"
+    },
+    "nbee": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nbel": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "nbsp": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "other"
+    },
+    "nchg": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nchr": {
+      "modelScale": 1.2,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "nchw": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "nckb": {
+      "modelScale": 1,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "ncpn": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ndmu": {
+      "modelScale": 1.75,
+      "selectionScale": 1.1,
+      "kind": "unit"
+    },
+    "ndrd": {
+      "modelScale": 1.15,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ndrn": {
+      "modelScale": 1.15,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ndrt": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "ndrf": {
+      "modelScale": 0.8,
+      "selectionScale": 0.85,
+      "kind": "unit"
+    },
+    "ndrh": {
+      "modelScale": 1,
+      "selectionScale": 1.05,
+      "kind": "unit"
+    },
+    "ndrj": {
+      "modelScale": 1.15,
+      "selectionScale": 1.45,
+      "kind": "unit"
+    },
+    "ndrm": {
+      "modelScale": 0.8,
+      "selectionScale": 0.85,
+      "kind": "unit"
+    },
+    "ndrp": {
+      "modelScale": 0.9,
+      "selectionScale": 0.95,
+      "kind": "unit"
+    },
+    "ndrs": {
+      "modelScale": 1.1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ndrw": {
+      "modelScale": 1,
+      "selectionScale": 1.05,
+      "kind": "unit"
+    },
+    "ndrl": {
+      "modelScale": 0.8,
+      "selectionScale": 0.8,
+      "kind": "unit"
+    },
+    "ndsa": {
+      "modelScale": 0.9,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "negz": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nemi": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nfgl": {
+      "modelScale": 1.75,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "ngbl": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "nhea": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nhef": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nhem": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nhew": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "njks": {
+      "modelScale": 1.5,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nmdm": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nmed": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "nmpe": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nmsh": {
+      "modelScale": 1,
+      "selectionScale": 1.4,
+      "kind": "unit"
+    },
+    "nser": {
+      "modelScale": 1.4,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nspc": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "other"
+    },
+    "nssn": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "nthr": {
+      "modelScale": 1.4,
+      "selectionScale": 2.25,
+      "kind": "unit"
+    },
+    "nw2w": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "nwat": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "odkt": {
+      "modelScale": 1.2,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ogrk": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ojgn": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "unit"
+    },
+    "omtg": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "onzg": {
+      "modelScale": 1,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "oosc": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "oswy": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "ovlj": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "owar": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "ownr": {
+      "modelScale": 1,
+      "selectionScale": 1.75,
+      "kind": "unit"
+    },
+    "uabc": {
+      "modelScale": 0.9,
+      "selectionScale": 2.1,
+      "kind": "unit"
+    },
+    "uarb": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "ubdd": {
+      "modelScale": 2,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "ubdr": {
+      "modelScale": 2.25,
+      "selectionScale": 2.7,
+      "kind": "unit"
+    },
+    "ubot": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "udes": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "uktg": {
+      "modelScale": 1.15,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "uktn": {
+      "modelScale": 1.15,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "uswb": {
+      "modelScale": 1.3,
+      "selectionScale": 1.3,
+      "kind": "unit"
+    },
+    "hprt": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "other"
+    },
+    "haro": {
+      "modelScale": 1,
+      "selectionScale": 6.3,
+      "kind": "building"
+    },
+    "nbfl": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "nbsm": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nbt1": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nbt2": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nbwd": {
+      "modelScale": 1,
+      "selectionScale": 4.2,
+      "kind": "building"
+    },
+    "ncap": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncaw": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ncmw": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "ncta": {
+      "modelScale": 1.15,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "ncte": {
+      "modelScale": 1.3,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "nctl": {
+      "modelScale": 1,
+      "selectionScale": 4.75,
+      "kind": "building"
+    },
+    "ndfl": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "ndgt": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ndke": {
+      "modelScale": 1,
+      "selectionScale": 8.5,
+      "kind": "building"
+    },
+    "ndkw": {
+      "modelScale": 1,
+      "selectionScale": 8.5,
+      "kind": "building"
+    },
+    "ndmg": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "ndrb": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ndt1": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ndt2": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nef0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef3": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef4": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef5": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef6": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nef7": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nefm": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "negf": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "negm": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "negt": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "net1": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "net2": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nfnp": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "nfrm": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nfrt": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "nft1": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nft2": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nfv0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfv1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfv2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfv3": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nfv4": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "ngob": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nhcn": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nheb": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "nico": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "other"
+    },
+    "nitb": {
+      "modelScale": 1,
+      "selectionScale": 3.3,
+      "kind": "building"
+    },
+    "nmgv": {
+      "modelScale": 1,
+      "selectionScale": 3.3,
+      "kind": "building"
+    },
+    "nnad": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "nnfm": {
+      "modelScale": 1,
+      "selectionScale": 3,
+      "kind": "building"
+    },
+    "nnsa": {
+      "modelScale": 0.9,
+      "selectionScale": 4.5,
+      "kind": "building"
+    },
+    "nnsg": {
+      "modelScale": 1,
+      "selectionScale": 5,
+      "kind": "building"
+    },
+    "nntg": {
+      "modelScale": 1,
+      "selectionScale": 3.25,
+      "kind": "building"
+    },
+    "nntt": {
+      "modelScale": 1,
+      "selectionScale": 5.5,
+      "kind": "building"
+    },
+    "npgf": {
+      "modelScale": 1,
+      "selectionScale": 2.75,
+      "kind": "building"
+    },
+    "npgr": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nshr": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "building"
+    },
+    "ntt1": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "ntx2": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "building"
+    },
+    "nvr0": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nvr1": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nvr2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "nwc1": {
+      "modelScale": 1,
+      "selectionScale": 3.3,
+      "kind": "building"
+    },
+    "nwc2": {
+      "modelScale": 1,
+      "selectionScale": 3.3,
+      "kind": "building"
+    },
+    "nwc3": {
+      "modelScale": 1,
+      "selectionScale": 3.3,
+      "kind": "building"
+    },
+    "nwc4": {
+      "modelScale": 1,
+      "selectionScale": 3.3,
+      "kind": "building"
+    },
+    "ocbw": {
+      "modelScale": 1,
+      "selectionScale": 2.75,
+      "kind": "building"
+    },
+    "nzin": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other"
+    },
+    "nbse": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "other"
+    },
+    "nbsw": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "other"
+    },
+    "zcso": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "zhyd": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "zjug": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "zmar": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "zshv": {
+      "modelScale": 0.85,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "zsmc": {
+      "modelScale": 1,
+      "selectionScale": 1.2,
+      "kind": "unit"
+    },
+    "zzrg": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nzlc": {
+      "modelScale": 1,
+      "selectionScale": 4,
+      "kind": "other"
+    },
+    "Nmsr": {
+      "modelScale": 1.3,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Nswt": {
+      "modelScale": 1,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nggm": {
+      "modelScale": 1.5,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nggg": {
+      "modelScale": 1.5,
+      "selectionScale": 3,
+      "kind": "unit"
+    },
+    "nggd": {
+      "modelScale": 1.05,
+      "selectionScale": 1.85,
+      "kind": "unit"
+    },
+    "ngow": {
+      "modelScale": 2.2,
+      "selectionScale": 2,
+      "kind": "unit"
+    },
+    "nwzw": {
+      "modelScale": 0.9,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "ngos": {
+      "modelScale": 2.5,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "ngog": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "nwar": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nccd": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "ncco": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nccu": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "nccr": {
+      "modelScale": 1,
+      "selectionScale": 2.5,
+      "kind": "unit"
+    },
+    "Hjnd": {
+      "modelScale": 1.1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "nmg2": {
+      "modelScale": 1,
+      "selectionScale": 3.5,
+      "kind": "building"
+    },
+    "obai": {
+      "modelScale": 1,
+      "selectionScale": 1.15,
+      "kind": "unit"
+    },
+    "hrrh": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Haah": {
+      "modelScale": 1,
+      "selectionScale": 1.5,
+      "kind": "unit"
+    },
+    "Hssa": {
+      "modelScale": 1,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "Hddt": {
+      "modelScale": 1.2,
+      "selectionScale": 1.25,
+      "kind": "unit"
+    },
+    "owad": {
+      "modelScale": 1.35,
+      "selectionScale": 1.6,
+      "kind": "unit"
+    },
+    "Hjas": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Ofth": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Uart": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Ekce": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Udef": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Edef": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Ewam": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Edei": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Emot": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Ekec": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Ekem": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Ulik": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Udrb": {
+      "modelScale": 1.6,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Udda": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Udde": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Udrm": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Udrt": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Udrv": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "other"
+    },
+    "Ucra": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Hpap": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Hpaa": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Hpaf": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Hpdo": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Hphl": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Hpnb": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Hpmd": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Hpge": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Hpau": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Haks": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Haan": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Hmmb": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Hblk": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Ofad": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Ofat": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Obbc": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Oblh": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Obhp": {
+      "modelScale": 1.2,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Obls": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Otcb": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Oshr": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Npcs": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Nbrx": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Nbrs": {
+      "modelScale": 1.1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Nbru": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit",
+      "modelScaleDefaulted": true
+    },
+    "Nngv": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Ntig": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Npma": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "other",
+      "modelScaleDefaulted": true
+    },
+    "Npla": {
+      "modelScale": 1.35,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Ekgh": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Haga": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    },
+    "Haja": {
+      "modelScale": 1,
+      "selectionScale": 1,
+      "kind": "unit"
+    }
+  },
+  "doodads": {
+    "APms": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOhs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "APtv": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "APct": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AObd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AObr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AWfs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOgs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOks": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOlg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOla": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOsk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AObo": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AOsr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "APbs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AWlp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AWfl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ARrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASbc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASbr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASHB": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASra": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASr1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASwt": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "BPca": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BObo": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BOct": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BOth": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "BOtt": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRcr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRfs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRrp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRrs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRrc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRsp": {
+      "defScale": 0.36,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BRgs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BSar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BSra": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BSr1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BSrc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BSrv": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BSrw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CObl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "COhs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "COlg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "COla": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "COob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CObo": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CPbs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CPct": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CPms": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CPlp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CRfs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CRrs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CSbc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CSbr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CSbl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CSra": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CSr1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPcr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPfp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPlp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPrs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPwb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPwh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LPcw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOam": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "LOh1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOo1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOo2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LObr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LObz": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOce": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOca": {
+      "defScale": 1.2,
+      "minScale": 1,
+      "maxScale": 1.4
+    },
+    "LOct": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOfl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOgr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOhb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOch": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOcb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOrc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOxx": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOhc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOsh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOhp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOic": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOlp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOpg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "LOrb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOrh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOsp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOsc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOss": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOsk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOsm": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOsw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOth": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOtz": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOt1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOtr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOwb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOwr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOwp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "LRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LSba": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.05
+    },
+    "LSeb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LSsb": {
+      "defScale": 1,
+      "minScale": 0.9,
+      "maxScale": 1.1
+    },
+    "LSsf": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LSgr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.05
+    },
+    "LSgs": {
+      "defScale": 1,
+      "minScale": 0.9,
+      "maxScale": 1.1
+    },
+    "LSin": {
+      "defScale": 1,
+      "minScale": 0.9,
+      "maxScale": 1.1
+    },
+    "LSra": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LSr1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LSsi": {
+      "defScale": 1,
+      "minScale": 0.9,
+      "maxScale": 1.1
+    },
+    "LSst": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1.2
+    },
+    "LSwl": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1.4
+    },
+    "LSwb": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1.2
+    },
+    "LSwm": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NObc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NObk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NObo": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NOfl": {
+      "defScale": 1,
+      "minScale": 1.2,
+      "maxScale": 1.2
+    },
+    "NOal": {
+      "defScale": 1,
+      "minScale": 1.2,
+      "maxScale": 1.2
+    },
+    "NOgv": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NOok": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NOtb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWfb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWfp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWf1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWf2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWf3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWf4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWi1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWi2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWi3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWi4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWpa": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NOfp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NOfg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NOft": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NObt": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWrw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWrd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWsp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWsd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NWwh": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "NPth": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NRfs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NRic": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NRwr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NSct": {
+      "defScale": 1,
+      "minScale": 0.9,
+      "maxScale": 1.1
+    },
+    "NSra": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NSr1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "NSrb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "VOfl": {
+      "defScale": 1,
+      "minScale": 1.2,
+      "maxScale": 1.2
+    },
+    "VOal": {
+      "defScale": 1,
+      "minScale": 1.2,
+      "maxScale": 1.2
+    },
+    "VOfs": {
+      "defScale": 1,
+      "minScale": 1.2,
+      "maxScale": 1.2
+    },
+    "VOas": {
+      "defScale": 1,
+      "minScale": 1.2,
+      "maxScale": 1.2
+    },
+    "VSvb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "YObb": {
+      "defScale": 1,
+      "minScale": 0.5,
+      "maxScale": 1.5
+    },
+    "YOwb": {
+      "defScale": 1,
+      "minScale": 0.5,
+      "maxScale": 1.5
+    },
+    "YObs": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOsa": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOsb": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOmb": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOms": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm1": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm2": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm3": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm4": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm5": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm6": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YOm7": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1.2
+    },
+    "YObw": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOwa": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOfn": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "YOgr": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOob": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOlp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YOst": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOks": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "XOcs": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "XOcl": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "XOmr": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOts": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YObg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "YOta": {
+      "defScale": 1.4,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "YOec": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YOth": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOws": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOss": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOig": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YOi1": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "YPbs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YPtp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YPfs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YPfa": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YPpp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YSaw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YSa1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YSa2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YSa3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YSca": {
+      "defScale": 1.2,
+      "minScale": 1.1,
+      "maxScale": 1.3,
+      "fixedRot": 270
+    },
+    "YSco": {
+      "defScale": 1.05,
+      "minScale": 0.9,
+      "maxScale": 1.15
+    },
+    "YScd": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095
+    },
+    "YSc5": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095
+    },
+    "YScs": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 270
+    },
+    "YSc2": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 0
+    },
+    "YSc3": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 90
+    },
+    "YSc4": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 180
+    },
+    "YSls": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 2
+    },
+    "YSw0": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YSw1": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YSw2": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YSw3": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YSw4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSw5": {
+      "defScale": 1,
+      "minScale": 1.95,
+      "maxScale": 2
+    },
+    "YSw6": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSw7": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSw8": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSw9": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSwA": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSwB": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSwC": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSwD": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSwE": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.1
+    },
+    "YSlt": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 2
+    },
+    "YSll": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 2
+    },
+    "YSta": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "COdf": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YOlb": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOtf": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOfb": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOfs": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOf1": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOf2": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOf3": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOr1": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YOr2": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "DSar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DSa1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DSah": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DSa2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOtp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOjp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOch": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOcp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DRfc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DRst": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOlc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOcr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DObh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DObk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DOkb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DObw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOab": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOtb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DOtc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DOim": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DOtt": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 2
+    },
+    "DOmc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOme": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DSp0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DSp9": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GPsh": {
+      "defScale": 1,
+      "minScale": 0.75,
+      "maxScale": 2
+    },
+    "GRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GRfc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GRst": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GOob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GSah": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GSa2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GSar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GSa1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GSp0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GSp9": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "GOlc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LWw0": {
+      "defScale": 1,
+      "minScale": 0.5,
+      "maxScale": 1.5
+    },
+    "LCc0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "LCc2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YOsw": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "YOcp": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YS00": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS01": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS02": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS03": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS04": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS05": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS06": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS07": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS08": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS09": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS10": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS11": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS12": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS13": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS14": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YS15": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YZef": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LZth": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ZObz": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOst": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "ZOsb": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "ZOss": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 2
+    },
+    "ZSar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZSa1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZSas": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZSs1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZSab": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZSb1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZWfs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZWsf": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZSrb": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOfo": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOrt": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOrp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOsh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YCc1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCc2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCc3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCc4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCd1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCd2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCd3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCd4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ZOrc": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOdt": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOd2": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOrb": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOtb": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOt2": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOvr": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZOfp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZRrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZCv1": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ZCv2": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ZWsw": {
+      "defScale": 1.75,
+      "minScale": 1.5,
+      "maxScale": 2
+    },
+    "ZWbg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IWbg": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IWie": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IWw0": {
+      "defScale": 1,
+      "minScale": 0.5,
+      "maxScale": 1.5
+    },
+    "ZPfw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZPf0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZPsh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZPlp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZPru": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZWcl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ZWca": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ZZdt": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "IOst": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ISar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ISa1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IOob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IOpr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IRic": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOas": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IOsm": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZRrs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZRsp": {
+      "defScale": 0.36,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ORrk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ORrs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "IOss": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IOsl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "AZrf": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OPop": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "IRgc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ORmk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx5": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx6": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx7": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCx8": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCr1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCr2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCr3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCr4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCp1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCp2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCp3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCp4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCs1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCs2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCs3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCs4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCt1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCt2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCt3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCt4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCo1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCo2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCo3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCo4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCg1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCg2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCg3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCg4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCu1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCu2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCu3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCu4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCl1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCl2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCl3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YCl4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ZRbs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZRbd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ORfk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "OZfc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ASpr": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ASpt": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ZPms": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ZPvp": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOls": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "YScr": {
+      "defScale": 1.2,
+      "minScale": 1.1,
+      "maxScale": 1.3,
+      "fixedRot": 270
+    },
+    "YOfr": {
+      "defScale": 0.9,
+      "minScale": 0.8,
+      "maxScale": 1
+    },
+    "ZZgr": {
+      "defScale": 1,
+      "minScale": 0.5,
+      "maxScale": 2
+    },
+    "JZif": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YSr0": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr1": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr2": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr3": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr4": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr5": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr6": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr7": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr8": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSr9": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSra": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSrb": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSrc": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSrd": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSre": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSrf": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YSbr": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YSb1": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YSb2": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ZZys": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "JScs": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 270
+    },
+    "JSc2": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 0
+    },
+    "JSc3": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 90
+    },
+    "JSc4": {
+      "defScale": 1.095,
+      "minScale": 1.095,
+      "maxScale": 1.095,
+      "fixedRot": 180
+    },
+    "JSco": {
+      "defScale": 1.05,
+      "minScale": 0.9,
+      "maxScale": 1.15
+    },
+    "JScx": {
+      "defScale": 1.05,
+      "minScale": 0.9,
+      "maxScale": 1.15
+    },
+    "JSrc": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "JSr6": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "JSar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "JSax": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZZcd": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "LSrg": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "AOnt": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOsv": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DOsw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LOwf": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "KOdr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OZsp": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ASv0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASv1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASv2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASv3": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASv4": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASx0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASx1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASx2": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOtr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZOba": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IZrw": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "KOst": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IZft": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "IOic": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IRcy": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ISsr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ISs1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IOch": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OOal": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OOgr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OOob": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OOsk": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OOst": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ORrr": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "JZud": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "OOsd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IRrs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ISrb": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "JOgr": {
+      "defScale": 0.95,
+      "minScale": 0.9,
+      "maxScale": 1
+    },
+    "BPtw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ZPtw": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "IZww": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YSlx": {
+      "defScale": 1,
+      "minScale": 1,
+      "maxScale": 2
+    },
+    "OSar": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "OSa1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SCt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SLt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BCt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ACt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ACtd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "HA00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "PVct": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "HEcs": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "HEch": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SRbc": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SRbe": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SRbv": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SRbh": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SSmt": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SSst": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "STdl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "STdm": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "STds": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWss": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWs0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWsl": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWsd": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWse": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWc0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SWe0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SAe0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SAe1": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SA00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SA01": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LSt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "EMt0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ET00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "EW00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "EG00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ASd0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SA02": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "CGd0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "VHms": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "VHs0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "VHss": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "VHae": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "MT00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "MH00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "MC00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SA03": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SD00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SDs0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "SS00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "EMs0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ES00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "EH00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "EHb0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "ET01": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "RSf0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BA00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BB00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "BC00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WSs0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WS00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WSl0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WT00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WTa0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WS01": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WSa0": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WD00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "WE00": {
+      "defScale": 1,
+      "minScale": 0.8,
+      "maxScale": 1.2
+    }
+  },
+  "destructables": {
+    "ATtr": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "BTtw": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "CTtr": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "FTtw": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "LOcg": {
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LTba": {
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LTcr": {
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "LTbr": {
+      "minScale": 1.1,
+      "maxScale": 1.5
+    },
+    "LTbx": {
+      "minScale": 1.1,
+      "maxScale": 1.5
+    },
+    "LTbs": {
+      "minScale": 1.1,
+      "maxScale": 1.5
+    },
+    "LTex": {
+      "minScale": 1.1,
+      "maxScale": 1.5
+    },
+    "LTg1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "LTg2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTg3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "LTg4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "LTe1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "LTe2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTe3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "LTe4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "ATg1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ATg2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ATg3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ATg4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "DTg5": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "DTg6": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTg7": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "DTg8": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "DTg1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "DTg2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTg3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "DTg4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "LTlt": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "NTtw": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "WTtw": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "WTst": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YTct": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YTsc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YTwt": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YTst": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YTft": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "VTlt": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "LTw0": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTw1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTw2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTw3": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YT00": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT01": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT02": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT03": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT04": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT05": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT06": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT07": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT08": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT09": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT10": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT11": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT12": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT13": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT14": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT15": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT16": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT17": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT18": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT19": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT20": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT21": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT22": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT23": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YY12": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YY13": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YY14": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YY15": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY16": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY17": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY18": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY19": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY20": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY21": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY22": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YY23": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "LT00": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LT01": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LT02": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "LT03": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "LT04": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LT05": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LT06": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "LT07": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "LT08": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LT09": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LT10": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "LT11": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "XTbd": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTvt": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "WGTR": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "LTr1": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr2": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr3": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr4": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr5": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr6": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr7": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "LTr8": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 0
+    },
+    "NTbd": {
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DTes": {
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DTsh": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YSdb": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YSdc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "XOkt": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "XOk1": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "XOk2": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "DTc1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTc2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTsp": {
+      "minScale": 0.6,
+      "maxScale": 1.2
+    },
+    "DTrc": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "DTs0": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "DTs1": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "DTs2": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "DTs3": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "Dofw": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "Dofv": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YT24": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT25": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT26": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT27": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT28": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT29": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT30": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT31": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT32": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT33": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT34": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT35": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT36": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT37": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT38": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT39": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT40": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT41": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT42": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT43": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT44": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT45": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT46": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT47": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ZTr0": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ZTr1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ZTr2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ZTr3": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ZTtw": {
+      "minScale": 0.65,
+      "maxScale": 1.05,
+      "fixedRot": 270
+    },
+    "ZTw0": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTw1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTw2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTw3": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTg1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ZTg2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTg3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ZTg4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "ITtw": {
+      "minScale": 0.8,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTd1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ITd1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ITd2": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ITd3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 90
+    },
+    "ITd4": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 180
+    },
+    "ZTd2": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ZTd3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 90
+    },
+    "ZTd4": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 180
+    },
+    "ZTd5": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ZTd6": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ZTd7": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 90
+    },
+    "ZTd8": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 180
+    },
+    "ITib": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ITi2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "ITi3": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "ITi4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "ITg1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ITg2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ITg3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ITg4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "ITw0": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ITw1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ITw2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ITw3": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTt0": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 0
+    },
+    "LTt1": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 90
+    },
+    "LTt2": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 0
+    },
+    "LTt3": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 90
+    },
+    "LTt4": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 0
+    },
+    "ATt0": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 90
+    },
+    "ATt1": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 0
+    },
+    "LTt5": {
+      "minScale": 1,
+      "maxScale": 0.8,
+      "fixedRot": 90
+    },
+    "ZTnc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ITf1": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ITf2": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ITf3": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ITf4": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ITx1": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 270
+    },
+    "ITx2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ITx3": {
+      "minScale": 0.9,
+      "maxScale": 0.9,
+      "fixedRot": 0
+    },
+    "ITx4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "ATtc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "OTtw": {
+      "minScale": 0.65,
+      "maxScale": 0.85,
+      "fixedRot": 270
+    },
+    "KTtw": {
+      "minScale": 0.65,
+      "maxScale": 0.85,
+      "fixedRot": 270
+    },
+    "ITig": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "DTrf": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTrx": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "XTmp": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "XTm5": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "XTmx": {
+      "minScale": 0.85,
+      "maxScale": 0.85
+    },
+    "XTx5": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ITcr": {
+      "minScale": 0.8,
+      "maxScale": 1.2
+    },
+    "DTep": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ATwf": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YTfb": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTfc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTlb": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "Ytlc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTpb": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTpc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTab": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTac": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "ZTsg": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "ZTsx": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTfp": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTfx": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "DTlv": {
+      "minScale": 0.9,
+      "maxScale": 1.1
+    },
+    "YTce": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "YTcx": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "LTtc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LTtx": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "JTct": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "JTtw": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ITtg": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 180
+    },
+    "GTsh": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "BTrs": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "BTrx": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "OTsp": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "OTip": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OTis": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "BTtc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "CTtc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "NTtc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ZTtc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "ITtc": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "IOt0": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "IOt1": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "IOt2": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "LTrc": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "LTrt": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YT48": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT49": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT50": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "YT51": {
+      "minScale": 1.1,
+      "maxScale": 1.1,
+      "fixedRot": 90
+    },
+    "OTds": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "ITag": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "BTsc": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "LTs1": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs2": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs3": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs4": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs5": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs6": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs7": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "LTs8": {
+      "minScale": 1.33,
+      "maxScale": 1.33,
+      "fixedRot": 225
+    },
+    "Volc": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "LFpt": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "Yts1": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "Yts2": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "Yts3": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "YTc1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YTc2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "BTsk": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "YTc4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "BTs1": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "BTs2": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "BTs3": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "BTs4": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "BTs5": {
+      "minScale": 1,
+      "maxScale": 1
+    },
+    "XTv1": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv2": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv3": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv4": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv5": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv6": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv7": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "XTv8": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YTcn": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 270
+    },
+    "YT66": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "YT67": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "STlt": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    },
+    "OG00": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OG01": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OG02": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "OG03": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "OG04": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OG05": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OG06": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "OG07": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "OG08": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OG09": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "OG10": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "OG11": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "RW00": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "RW01": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "RW02": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "RW03": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "RW04": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "RW05": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "RW06": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "RW07": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "RW08": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "RW09": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "RW10": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "RW11": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "EB00": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "EB01": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "EB02": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "EB03": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "EB04": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "EB05": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "EB06": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "EB07": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "EB08": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "EB09": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "EB10": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "EB11": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NB00": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "NB01": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "NB02": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NB03": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NB04": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "NB05": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "NB06": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NB07": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NB08": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "NB09": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 0
+    },
+    "NB10": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NB11": {
+      "minScale": 1,
+      "maxScale": 1,
+      "fixedRot": 90
+    },
+    "NTiw": {
+      "minScale": 0.8,
+      "maxScale": 1.2,
+      "fixedRot": 270
+    }
+  }
+}

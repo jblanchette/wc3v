@@ -42,12 +42,19 @@
   // so when a model's CONTENT changes (materials, geometry) the URL must change or
   // returning viewers keep the stale file. BUMP THIS whenever the roster is
   // re-exported (convert-mdx-to-gltf-skinned.js --all) and redeployed.
-  const MODEL_ASSET_VERSION = '20260804b';
+  const MODEL_ASSET_VERSION = '20260809a';
   const FADE = 0.22;                 // cross-fade seconds between looping states
   // Only used by the worker harvest-loop "is it parked at its anchor" test.
   // Animation state itself comes from UnitBehavior, which reads path-segment
   // velocity instead of finite-differencing interpolated positions.
   const MOVE_EPS2 = 9;               // (wu over ~100ms)^2 to count as walking
+  // Facing slew — the render-side turn-rate limit. Mirrors the engine cap that
+  // UnitBehavior and KinematicResim both use (0.2 rad per 30ms WC3 frame), read
+  // off UnitBehavior when it's loaded so there is one number, not three.
+  const FACING_RATE_FALLBACK = 0.2 / 30;   // rad per ms of GAME time
+  // A game-time step larger than this is a seek, not playback: snap the facing
+  // instead of slewing, so a scrub lands on the pose the authority computed.
+  const FACING_SNAP_MS = 400;
   const CORPSE_FADE_MS = 1400;       // fade after the death clip finishes, then hide
   const HERO_RING = 0xffd24a;        // gold ring for heroes (else player color)
   const ILLUSION_RING = 0x33e1ff;    // cyan ring for Mirror Image illusions
@@ -270,6 +277,7 @@
     // Called once per frame from app.render().
     update (gameTime, players, viewOptions) {
       const dt = this.clock.getDelta();
+      this._beginFacingFrame(gameTime);
       this.rendered3DUuids.clear();
       if (viewOptions) viewOptions._rendered3D = this.rendered3DUuids;
 
@@ -359,8 +367,11 @@
           let inst = this.instances[unit.uuid];
           if (inst === undefined) {
             if (count >= this.maxUnits) continue;
-            // No 3D model (water elementals, etc.) → a minimal team-colored blob so
-            // nothing renders as a 2D icon. Otherwise instantiate the skinned model.
+            // No 3D model in the manifest → a minimal team-coloured blob so
+            // nothing renders as a 2D icon. Otherwise instantiate the skinned
+            // model. (This used to name water elementals as the example; they
+            // have had a model for a while, it was just exporting as 20 of its
+            // 314 vertices. See tools/audit-model-geometry.js.)
             if (hasModel) this._create(unit, spec, player);
             else this.instances[unit.uuid] = this._createPlaceholder(unit, player);
             inst = this.instances[unit.uuid];
@@ -581,7 +592,7 @@
           this._beyondLod(inst, pos, cx, cy, lod));
         this._placeCreep(inst, pos.x, pos.y, facing, cx, cy);
         this._setCreepRing(inst, CREEP_RING);
-        if (!inst._staticOn) this._animateCreepState(inst, dt, state);
+        if (!inst._staticOn) this._animateCreepState(inst, dt, state, unit, gameTime, d);
         this._setOpacity(inst, opacity);
         inst.root.visible = true;
         if (inst.ring) inst.ring.visible = !this._suppressCreepRings;  // hidden during the guide creep tour
@@ -902,9 +913,19 @@
 
     // Creep animation: looping state machine only (idle/walk/attack). Creeps never
     // play a death clip — see _updateCreeps for why.
-    _animateCreepState (inst, dt, state) {
+    //
+    // Attacking creeps go through the SAME swing clock as player units. A ranged
+    // creep fires real projectiles, and those launch on the cooldown grid; if the
+    // clip just looped at its natural speed here, the arrow would leave at a
+    // different moment than the bow released. It also makes the swing seek-safe,
+    // which a dt-driven loop never was.
+    _animateCreepState (inst, dt, state, unit, gameTime, d) {
       if (!inst.mixer) return;
       if (inst.state === 'death') inst.state = null;
+      if (state === 'attack' && d && inst.actions.attack) {
+        this._applyAttack(inst, d, unit, gameTime);
+        return;
+      }
       this._setLoopState(inst, state);
       inst.mixer.update(dt);
     }
@@ -999,7 +1020,7 @@
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
       }
-      w.quaternion.setFromAxisAngle(UP, (facing || 0) + this._facingOffset).multiply(ZUP_TO_YUP);
+      UnitModelRenderer.faceQuaternion(this._slewFacing(inst, facing || 0), this._facingOffset, w.quaternion);
     }
 
     // Parse each model GLB ONCE into a template (shared); clone per unit so
@@ -1151,6 +1172,20 @@
       const cs = unit.collisionSize || (isHero ? 32 : (unit.meta && unit.meta.worker ? 16 : 24));
       inst.isHero = isHero;
       inst.isIllusion = !!unit.isIllusion;
+      // NOT game data — see below. `collisionSize` IS real (unitbalance.slk
+      // `collision`); the 1.35 / 1.7 multipliers are ours.
+      //
+      // WC3's real answer is Art - Selection Scale (unitskin.txt `scale`, metadata
+      // id `ussc`), which we now extract into helpers/modelScale.json as
+      // `selectionScale`. It is unusable on its own: it scales SelectionCircle.mdx,
+      // and that model is not in tools/map-data (only the circle TEXTURES are), so
+      // the absolute radius it multiplies is unknown. Deriving the base from
+      // footprints gives 25-40 world units depending on the building, and from the
+      // footman's current ring gives ~42 — no clean constant. Swapping 1.35 for
+      // another invented constant would not make this more correct.
+      //
+      // To close it: extract SelectionCircle.mdx, measure its bind-pose radius, and
+      // use `selectionScale * thatRadius`.
       inst.ringRadius = cs * (isHero ? 1.7 : 1.35);
       const ringColor = inst.isIllusion ? ILLUSION_RING : (isHero ? HERO_RING : (player.playerColor || '#ffffff'));
       this._addRing(inst, ringColor, 0.85);
@@ -1297,9 +1332,13 @@
       this.scene.add(inst.ring);
     }
 
-    // Minimal placeholder for units with no exported 3D model (water elementals,
-    // utom): a translucent team-colored blob + ground ring, so nothing falls back
-    // to a flat 2D icon. No skeleton/animation; flagged isPlaceholder.
+    // Minimal placeholder for units with no exported 3D model: a translucent
+    // team-coloured blob + ground ring, so nothing falls back to a flat 2D icon.
+    // No skeleton/animation; flagged isPlaceholder.
+    //
+    // The remaining cases are things with no mesh in the game either — the Plague
+    // Cloud (uplg) is a pure particle emitter with zero geosets. Water elementals
+    // are NOT in this set any more.
     _createPlaceholder (unit, player) {
       const root = new THREE.Group();
       const wrapper = new THREE.Group();
@@ -1407,22 +1446,42 @@
       return (ageS > inst.deathDur) ? Math.max(0, 1 - (ageS - inst.deathDur) * 1000 / CORPSE_FADE_MS) : 1;
     }
 
-    // Synthesized attack cadence: while a unit is in an active battle it swings on
-    // its REAL cooldown (meta.combat.cooldown from unitweapons.slk), the attack
-    // clip playing once per swing with the hit landing at the clip's own damage
-    // frame (~damagePoint). Driven deterministically from gameTime (paused action +
-    // manual time, like _applyDeath) so it's identical on any scrub/seek. Replays
-    // don't record individual attack events, so a steady cadence during the battle
-    // window is the best faithful synthesis.
-    _applyAttack (inst, d) {
+    // Synthesized attack cadence: a unit swings on its REAL cooldown
+    // (meta.combat from unitweapons.slk), the attack clip playing once per swing
+    // with the hit landing at the clip's own damage frame (~damagePoint). Driven
+    // deterministically from gameTime (paused action + manual time, like
+    // _applyDeath) so it's identical on any scrub/seek. Replays don't record
+    // individual attack events, so a steady cadence is the best faithful
+    // synthesis.
+    //
+    // The clock comes from ProjectileModel, NOT from UnitBehavior's swingPhase.
+    // Two reasons, and both matter:
+    //
+    //   1. It has to be the SAME clock the projectile scheduler uses, or the
+    //      arrow leaves the bow at a different moment than the bow twangs.
+    //   2. UnitBehavior's cadence FREEZES. Its anchor is
+    //      max(lastPathSampleTime, t - dwell) with dwell capped at 2s; both
+    //      terms slide with t, so two seconds into any engagement the phase
+    //      pins to a constant. Measured on a real replay: a ranged unit held
+    //      clipFill 0.500 for 45 seconds and a melee unit held 1.000 for 24.
+    //      The swing simply stopped cycling. An absolute grid can't do that.
+    _applyAttack (inst, d, unit, gameTime) {
       const a = inst.actions.attack;
       if (!a) { this._setLoopState(inst, 'idle'); inst.mixer.update(0); return; }
       const clipDur = (a.getClip() && a.getClip().duration) || 1;
-      // Cadence comes from UnitBehavior, anchored to when this unit actually
-      // ENGAGED rather than to absolute game time — so a unit starts its swing
-      // when it joins the fight instead of at an arbitrary point in a global
-      // cycle. Still a pure function of gameTime, so scrubbing is unchanged.
-      const phase = d.swingPhase;
+
+      const PM = window.ProjectileModel;
+      const combat = unit && unit.meta && unit.meta.combat;
+      let fill;
+      if (PM && d.isSupportCast) {
+        // Replenish is a flat pulse, not an attack cooldown — same grid, its
+        // own period.
+        fill = PM.gridPhase(d.uuid, gameTime, (d.swingPeriod || 1) * 1000);
+      } else if (PM && combat) {
+        fill = PM.clipFillAt(d.uuid, gameTime, combat);
+      } else {
+        fill = d.clipFill;   // ProjectileModel absent (e.g. a stripped build)
+      }
 
       if (inst.state !== 'attack') {
         for (const k of ['idle', 'walk', 'morph']) { const x = inst.actions[k]; if (x) x.stop(); }
@@ -1433,10 +1492,11 @@
       a.paused = true;
       // In-swing → play through the clip; in the cooldown gap → hold the recovery
       // (last) frame so ranged units with long cooldowns don't loop unnaturally.
-      // clipFill compresses the clip into the unit's real damagePoint+backswing,
+      // The fill compresses the clip into the unit's real damagePoint+backswing,
       // which is what makes a ranged unit read as "fire, hold, fire" against a
-      // melee unit's continuous swinging without rendering any projectile.
-      a.time = Math.min(d.clipFill * clipDur, clipDur);
+      // melee unit's continuous swinging — and it is now the same 0..1 the
+      // projectile launches off, so the arrow leaves exactly at the release.
+      a.time = Math.min(fill * clipDur, clipDur);
       inst.mixer.update(0);   // apply the seeked pose without advancing
     }
 
@@ -1477,7 +1537,7 @@
         // 'cast' is a support channel (statue Replenish). WC3 gives the statue
         // one clip — "Attack Spell" — for both, so the same cadence drives it;
         // only the aim differs (an ally instead of an enemy).
-        this._applyAttack(inst, d);   // scrub-safe cadence; drives the mixer itself
+        this._applyAttack(inst, d, unit, gameTime);   // scrub-safe cadence; drives the mixer itself
       } else {
         this._setLoopState(inst, 'idle');
         inst.mixer.update(dt);
@@ -1556,8 +1616,62 @@
         wf = inst._wf || 0;
       } else { inst._wf = wf; }
       // Model forward = +X = world facing 0; scene yaw = +worldFacing (calibrated
-      // via test-unit.html, see ZUP_TO_YUP + Ry(+wf)).
-      w.quaternion.setFromAxisAngle(UP, wf + this._facingOffset).multiply(ZUP_TO_YUP);
+      // via test-unit.html, see ZUP_TO_YUP + Ry(+wf)). Rate-limited on the way in
+      // so the mesh can never out-turn the engine — see _slewFacing.
+      UnitModelRenderer.faceQuaternion(this._slewFacing(inst, wf), this._facingOffset, w.quaternion);
+    }
+
+    /**
+     * Open a frame for the facing slew: work out how much every model is
+     * allowed to turn, and whether this is a seek.
+     *
+     * The budget is spent against GAME time, not wall time, so a unit turns at
+     * the same in-game rate whatever the playback speed or frame rate. Called
+     * once at the top of update(); the split-screen path calls update() twice
+     * per frame with the same gameTime, and that second call correctly gets a
+     * zero budget rather than turning everything twice.
+     */
+    _beginFacingFrame (gameTime) {
+      const prev = this._facingLastTime;
+      const step = (prev == null) ? Infinity : gameTime - prev;
+      // Backward or a big forward jump means the user scrubbed. Slewing across a
+      // seek would leave the model pointing at wherever it happened to be before
+      // the jump, so snap to the authority's answer instead.
+      this._facingSnap = !(step >= 0 && step <= FACING_SNAP_MS);
+      const rate = (window.UnitBehavior && window.UnitBehavior.C)
+        ? window.UnitBehavior.C.TURN_RAD_PER_FRAME_CAP / window.UnitBehavior.C.WC3_FRAME_MS
+        : FACING_RATE_FALLBACK;
+      this._facingBudget = this._facingSnap ? Infinity : rate * step;
+      this._facingLastTime = gameTime;
+    }
+
+    /**
+     * What facing to actually DRAW, given the one UnitBehavior asked for.
+     *
+     * UnitBehavior is a pure function of game time — that is what makes seeking
+     * exact — but purity also means it cannot remember the previous frame, so
+     * when a unit switches target mid-fight its answer moves instantly, through
+     * any angle. The mesh does not have to obey instantly, and it shouldn't: a
+     * model that snaps 180° between two frames is the "spinning on the spot"
+     * artifact, and no WC3 unit can turn faster than its turn rate.
+     *
+     * So this is the last line of defence, and a structural one — whatever the
+     * authority does upstream, the model physically cannot rotate faster than
+     * the engine cap. It is render-only state, discarded on a seek.
+     */
+    _slewFacing (inst, want) {
+      if (want == null || !isFinite(want)) return inst._wfShown || 0;
+      const shown = inst._wfShown;
+      if (shown == null || this._facingSnap) { inst._wfShown = want; return want; }
+      const budget = this._facingBudget;
+      if (!(budget > 0)) return shown;
+      let d = want - shown;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      if (Math.abs(d) <= budget) { inst._wfShown = want; return want; }
+      const next = shown + (d > 0 ? budget : -budget);
+      inst._wfShown = next;
+      return next;
     }
 
     // Place an instance at an explicit world position + facing. Used by the
@@ -1575,7 +1689,7 @@
       this._placeShadow(inst, wx, wy, groundY, cx, cy);
       if (inst.isPlaceholder) return;
       inst._wf = faceAng;
-      w.quaternion.setFromAxisAngle(UP, faceAng + this._facingOffset).multiply(ZUP_TO_YUP);
+      UnitModelRenderer.faceQuaternion(faceAng, this._facingOffset, w.quaternion);
     }
 
     // ── Worker harvest treatment (declutter + ambient gather loop) ───────────
@@ -1869,6 +1983,25 @@
       this._hlUuids = null;
     }
   }
+
+  /**
+   * The one place a world facing becomes a scene orientation.
+   *
+   * Model forward = +X = world facing 0; scene yaw = +worldFacing, composed on
+   * top of the exporter's Z-up→Y-up wrapper rotation. Every placement path goes
+   * through this, and so does client/test-fx.html — a bench that reimplemented
+   * the composition would be testing its own copy of the maths and would agree
+   * with itself no matter how wrong both were.
+   *
+   * @param {number} worldFacing  radians, world space
+   * @param {number} [offset]     model-forward calibration
+   * @param {THREE.Quaternion} [out]
+   */
+  UnitModelRenderer.faceQuaternion = function (worldFacing, offset, out) {
+    const q = out || new THREE.Quaternion();
+    return q.setFromAxisAngle(UP, (worldFacing || 0) + (offset || 0)).multiply(ZUP_TO_YUP);
+  };
+  UnitModelRenderer.ZUP_TO_YUP = ZUP_TO_YUP;
 
   window.UnitModelRenderer = UnitModelRenderer;
 })();

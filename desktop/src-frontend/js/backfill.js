@@ -27,7 +27,7 @@
 
   window.createBackfill = (deps) => {
     // deps: invoke, log, makeWorker, parseOn(worker, path), persistSummary(out, key),
-    //       isStored(key), status(text), onIdleChange(running),
+    //       isCurrent(key), status(text), onIdleChange(running),
     //       progress(done, total) [optional]
     const st = {
       running: false,
@@ -110,7 +110,9 @@
             update();
             continue;
           }
-          if (deps.isStored(key) || st.failedKeys.has(key) || st.claimed.has(key)) {
+          // isCurrent, not isStored: a game stored under an older schema is
+          // work this run still has to do. See store.js isCurrent().
+          if (deps.isCurrent(key) || st.failedKeys.has(key) || st.claimed.has(key)) {
             st.counts.skipped++;
             report(item.file_name, 'done');
             update();

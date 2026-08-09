@@ -73,7 +73,22 @@ function runReplay (name) {
   console.log(`    ...of which the new rule finds NO target  -> AIR SWINGS REMOVED: ${M.airSwings}` +
     ` (${pct(M.airSwings, M.legacyAttackFrames)} of all legacy swings)`);
   console.log(`    corroborated-but-no-target frames (all sources): ${M.suppressed}`);
-  console.log(`    corroboration: battle ${M.bySource.battle || 0}  order ${M.bySource.order || 0}  camp ${M.bySource.camp || 0}`);
+  console.log(`    corroboration: battle ${M.bySource.battle || 0}  order ${M.bySource.order || 0}` +
+    `  camp ${M.bySource.camp || 0}  summon ${M.bySource.summon || 0}`);
+
+  // The false-negative side. Every invariant above catches the viewer attacking
+  // when it should not; this is the count of the opposite — a unit standing idle
+  // with a valid, living, targetable enemy inside its real acquisition radius.
+  // Not an invariant (it is a pressure gauge, not a proof of error), but it is
+  // the number that moves when units stop looking frozen in fights.
+  console.log(`\n  MISSED ATTACKS  (idle with a targetable enemy inside real acquire range)`);
+  console.log(`    ${M.missedAttack} frames  (${M.missedPerMin.toFixed(0)}/game-min, ` +
+    `${pct(M.missedAttack, M.idle)} of all idle frames)`);
+  const mr = Object.entries(M.missedByReason).sort((a, b) => b[1] - a[1]);
+  if (mr.length) console.log('    by idle reason: ' + mr.map(([k, v]) => `${k} ${v}`).join('  '));
+  const ir = Object.entries(M.idleReasons).sort((a, b) => b[1] - a[1]);
+  if (ir.length) console.log('    all idle reasons: ' + ir.map(([k, v]) => `${k} ${v}`).join('  '));
+
   console.log(`\n  FLIPS`);
   console.log(`    state transitions per unit-minute: ${(M.totalFlips / M.unitCount / M.durMin).toFixed(2)}`);
 

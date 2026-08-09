@@ -143,6 +143,16 @@ function measureReplay (id) {
         ? (100 * behavior.airSwings / behavior.legacyAttackFrames) : 0).toFixed(1),
       suppressed: behavior.suppressed,
       bySource: behavior.bySource,
+      // FALSE NEGATIVES. The invariants above only ever catch the viewer
+      // attacking when it should not; this counts the opposite — idle with a
+      // targetable enemy inside the unit's real acquisition radius. Reported
+      // raw and NOT folded into `blatant`: it is a pressure gauge, not proof of
+      // a defect (a unit can legitimately stand next to an enemy). It exists so
+      // "units look frozen in fights" is a number instead of an impression.
+      missedAttack: behavior.missedAttack,
+      missedPerMin: +behavior.missedPerMin.toFixed(0),
+      missedByReason: behavior.missedByReason,
+      idleReasons: behavior.idleReasons,
       flipsPerUnitMinute: +behavior.flipsPerUnitMinute.toFixed(2)
     },
     kinematics: {
@@ -181,7 +191,8 @@ function printReplay (r) {
   const b = r.behavior, k = r.kinematics, m = r.movement, t = r.engineTruth;
   console.log(`\n── fidelity: ${r.id} ─ ${r.durationMin} min ${'─'.repeat(Math.max(1, 44 - r.id.length))}`);
   console.log(` behavior     invariants ${b.invariants.join('/')} seek ${b.mismatch}   airSwingsRemoved ${b.airSwings} (${b.airSwingPct}% of legacy)`);
-  console.log(`              attack ${b.attackPct}%  walk ${b.walkPct}%  flips/unit-min ${b.flipsPerUnitMinute}  corroboration battle ${b.bySource.battle || 0} order ${b.bySource.order || 0} camp ${b.bySource.camp || 0}`);
+  console.log(`              attack ${b.attackPct}%  walk ${b.walkPct}%  flips/unit-min ${b.flipsPerUnitMinute}  corroboration battle ${b.bySource.battle || 0} order ${b.bySource.order || 0} camp ${b.bySource.camp || 0} summon ${b.bySource.summon || 0}`);
+  console.log(`              missedAttacks ${b.missedAttack} (${b.missedPerMin}/game-min) — idle with a targetable enemy in acquire range`);
   console.log(` kinematics   speed violations ${k.speedViolations} / ${k.pairs} segments (worst ${k.worstRatio}×)  noFacing ${k.unitsWithoutFacing}`);
   if (m) {
     console.log(` movement     strict conv ${m.strictConvergencePct == null ? 'n/a' : m.strictConvergencePct + '%'} (${m.strictCmds} cmds)  posErr med ${m.posErrMedian}u p90 ${m.posErrP90}u  netSpeed med ${m.netSpeedMedian}   [moveTrace ✓]`);

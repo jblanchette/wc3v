@@ -286,7 +286,6 @@ const Wc3vViewer = class {
     this.boData = new BuildOrderData();
     this.mapRenderer = new MapRenderer();
     this.battleData = new BattleData();         // pure pipeline (BattleDetector output → indexed)
-    this.battleRenderer = new BattleRenderer(); // utility-canvas overlay (dashed tracker boxes)
     this.bottomPanel = (window.BottomPanel) ? new window.BottomPanel() : null;
     this.battleReportRenderer = (window.BattleReportRenderer)
       ? new window.BattleReportRenderer(this) : null;
@@ -819,6 +818,13 @@ const Wc3vViewer = class {
       this.buildingProgressBar.setup(buildings, this.unitBalance);
     }
 
+    // Under-attack / being-repaired markers over buildings
+    if (window.BuildingStatusFx) {
+      this.buildingStatusFx = new BuildingStatusFx(this.threeMapRenderer, this);
+      this.buildingStatusFx.setup(buildings);
+      this.buildingStatusFx.setEnabled(this.viewOptions.displayBuildingStatus !== false);
+    }
+
     // Building ground splats
     if (window.BuildingSplats) {
       this.buildingSplats = new BuildingSplats(this.threeMapRenderer);
@@ -840,6 +846,12 @@ const Wc3vViewer = class {
     // 3D animated unit models (hybrid: replaces 2D unit icons where a model exists)
     if (window.UnitModelRenderer) {
       this.unitModelRenderer = new UnitModelRenderer(this.threeMapRenderer, this);
+    }
+
+    // Ranged attack projectiles. Reads the same behaviorWorld frame as the unit
+    // renderer, so a bolt and the unit that fired it can never disagree.
+    if (window.ProjectileRenderer3D) {
+      this.projectileRenderer = new ProjectileRenderer3D(this.threeMapRenderer, this);
     }
   }
 
@@ -1361,6 +1373,11 @@ const Wc3vViewer = class {
   }
 
   showPlacementViewer (playerId) {
+    // Mobile is build-order only — setupMap() returns before
+    // placementViewer.setup(), so there is no modal to show. Entry points are
+    // hidden there too; this guards the inline-handler / console paths.
+    if (this.mobileMode) return;
+
     const player = this.players.find(p => p.playerId === String(playerId));
     if (!player) {
       console.warn('[PlacementViewer] player not found:', playerId);
@@ -1400,13 +1417,22 @@ const Wc3vViewer = class {
 
     // Footprints are a sub-style of the trail renderer, not a separate layer —
     // the boolean picks which PathTrailRenderer3D style the trails draw in.
+    // Off now means OFF: this used to fall back to the sonar-ring style, so the
+    // rings drew no matter what the toggle said and nothing could turn them off.
     if (optionKey === 'displayFootprints') {
-      this.viewOptions.pathTrailStyle = isOn ? 'combo' : 'rings';
+      this.viewOptions.pathTrailStyle = isOn ? 'footsteps' : 'none';
     }
 
     // Action feed (events): hide/show the right-edge DOM feed with the toggle.
     if (optionKey === 'displayFloatingText' && this.eventFeed) {
       this.eventFeed.setEnabled(isOn);
+    }
+
+    // Building under-attack / repair markers own their own sprites in the 3D
+    // scene, so the toggle has to reach them — a viewOptions read at draw time
+    // would never run for objects the scene graph renders on its own.
+    if (optionKey === 'displayBuildingStatus' && this.buildingStatusFx) {
+      this.buildingStatusFx.setEnabled(isOn);
     }
 
     // Sync auto-split preference to broadcast camera
@@ -1499,11 +1525,13 @@ const Wc3vViewer = class {
 
     if (this.eventFeed) this.eventFeed.reset();
     if (this.pathTrailRenderer) this.pathTrailRenderer.clear();
+    if (this.projectileRenderer) this.projectileRenderer.clear();
     if (this.broadcastCamera) this.broadcastCamera.reset();
 
-    if (this._initialZoomTransform && this.zoomContainer && this.zoom) {
-      this.zoomContainer.call(this.zoom.transform, this._initialZoomTransform);
-      if (this.scrubber) this.scrubber.updateZoomDisplay(this._initialZoomTransform.k);
+    if (this.zoomContainer && this.zoom) {
+      const base = this._baseZoomTransform();
+      this._applyZoomTransform(base);
+      if (this.scrubber) this.scrubber.updateZoomDisplay(base.k);
     }
 
     this.toggleMegaPlayButton(true);
@@ -2327,10 +2355,58 @@ const Wc3vViewer = class {
     return `<ol class="gh-steplist gh-steplist-camps">${items}</ol>`;
   }
 
+  // The replay's own base framing, rebuilt against the CURRENT display scale.
+  //
+  // d3 transforms live in display CSS pixels, so this cannot be computed once
+  // and reused: displayScale changes with every canvas rescale, and fullscreen
+  // changes it a lot. A transform captured at load and replayed after a resize
+  // frames a point that has since moved off screen.
+  _baseZoomTransform () {
+    const k = this._baseZoomLevel || 1;
+    const box = this._baseZoomCanvas;
+    const gs = this.gameScaler;
+    if (k <= 1.0 || !box || !gs) return d3.zoomIdentity;
+
+    const ds = this.displayScale || 1;
+    // Viewport centre, in display pixels.
+    const cx = (box.w * ds) / 2;
+    const cy = (box.h * ds) / 2;
+    // Centre on the PLAYABLE area, not the raw map extent. The two coincide on
+    // a symmetric map, but a map whose margins are lopsided (EchoIsles_v2.2 is
+    // 128x128 with a 108x88 playable region) has its playable centre offset
+    // from the map centre — zooming about the map centre there pushes the
+    // actual play space off to one side.
+    let px = cx, py = cy;
+    const ve = gs.viewExtent;
+    if (ve && gs.xScale && gs.yScale) {
+      px = (gs.xScale((ve.x[0] + ve.x[1]) / 2) + gs.middleX) * ds;
+      py = (gs.yScale((ve.y[0] + ve.y[1]) / 2) + gs.middleY) * ds;
+    }
+    // Standard "zoom about a point": put world point (px,py) at viewport centre.
+    return d3.zoomIdentity.translate(cx, cy).scale(k).translate(-px, -py);
+  }
+
+  // Re-seat the d3 zoom to an absolute transform, flagged as OURS.
+  //
+  // BroadcastCamera listens on 'zoom.broadcast' and treats any transform it did
+  // not originate as the user grabbing the camera — it drops to FREE and stays
+  // there. A resize / fullscreen re-seat is housekeeping, not a viewer taking
+  // control, so it has to raise the same _isProgrammatic flag the camera raises
+  // around its own scaleTo/translateTo pair.
+  _applyZoomTransform (transform) {
+    const bc = this.broadcastCamera;
+    try {
+      if (bc) bc._isProgrammatic = true;
+      this.zoomContainer.call(this.zoom.transform, transform);
+    } catch (e) { /* d3 not ready — ignore */ }
+    if (bc) bc._isProgrammatic = false;
+  }
+
   // Re-apply the current walkthrough step's camera framing — used after a window
-  // resize / fullscreen toggle, which reset the d3 zoom to identity (its
-  // internal state goes stale when the canvas changes size). Without this the
-  // camera just sits at full-map zoom for the rest of the walkthrough.
+  // resize / fullscreen toggle, which re-seats the d3 zoom to the replay's base
+  // framing (its internal state goes stale when the canvas changes size).
+  // Without this the camera just sits at that framing for the rest of the
+  // walkthrough.
   _reapplyGuideFocus () {
     if (!this.guideMode || !this.guide || this.mobileMode) return;
     // Mid-creep-tour: don't rebuild the tour (that would restart it from camp
@@ -3566,10 +3642,12 @@ const Wc3vViewer = class {
   setupViewOptions () {
     this.viewOptions = {
       displayPath: true,
-      // Footstep stamps clutter a busy map, so trails default to sonar rings
-      // only. The "Footprints" toggle promotes the style to 'combo'.
+      // Footstep stamps clutter a busy map, so hero trails draw NOTHING by
+      // default. This used to default to the sonar-ring style, which put a
+      // pulsing player-coloured ring under every hero for the whole match with
+      // no way to switch it off. The "Footprints" toggle opts back in.
       displayFootprints: false,
-      pathTrailStyle: 'rings',
+      pathTrailStyle: 'none',
       displayLevelPins: true,
       displayFloatingText: true,
       decayEffects: true,
@@ -3584,7 +3662,7 @@ const Wc3vViewer = class {
       displayCreepRoute: true,
       suppressCreepRings: false,      // hide camp ground-rings during the guide creep tour (set by _setupGuideCreepTour); not a user toggle
       displayNeutralBuildings: true,
-      displayBattles: true,           // BattleRenderer overlay (utility canvas)
+      displayBuildingStatus: true,    // under-attack / repair markers over buildings
       displayTeleports: true,         // TeleportFx cast/arrival cinematic
       // autoSplitScreen default ON: split is now a smart, reversible sub-state
       // of the AUTO camera — it slides into a diagonal split only when the 1v1
@@ -3637,6 +3715,7 @@ const Wc3vViewer = class {
         { key: 'displayBaseLabels', label: 'Base Labels' },
         { key: 'decayEffects', label: 'Fade FX' },
         { key: 'displayUnitRings', label: 'Unit Rings' },
+        { key: 'displayBuildingStatus', label: 'Building Status' },
         { key: 'displayTreeGrid', label: 'Tree Grid' },
         { key: 'autoSplitScreen', label: 'Auto Split View' }
       ];
@@ -3849,6 +3928,12 @@ const Wc3vViewer = class {
   buildBehaviorWorld () {
     if (!window.UnitBehavior) return;
     const units = [];
+    // Built once, here, because ProjectileModel needs to sample a target's PAST
+    // position (where was it when this arrow was loosed?) without resolving the
+    // behavior world at another time — that memo is a single slot shared with
+    // UnitModelRenderer, and re-resolving it mid-frame would corrupt the frame
+    // being drawn.
+    const byUuid = new Map();
     for (const p of this.players) {
       const teamId = (p.teamId != null) ? p.teamId : (p.isNeutralPlayer ? 1046 : p.playerId);
       for (const u of (p.units || [])) {
@@ -3857,8 +3942,10 @@ const Wc3vViewer = class {
         u._teamId = teamId;
         u._isNeutral = !!p.isNeutralPlayer;
         units.push(u);
+        byUuid.set(u.uuid, u);
       }
     }
+    this.unitsByUuid = byUuid;
     this.behaviorWorld = window.UnitBehavior.createWorld({
       units,
       battles: (this.mapData && this.mapData.battles) || [],
@@ -4050,31 +4137,14 @@ const Wc3vViewer = class {
       .call(this.zoom);
 
     // Apply initial zoom — center the map at INITIAL_ZOOM level.
-    // Stash the transform so restart() can return to the same framing.
-    let initialT;
-    if (INITIAL_ZOOM > 1.0) {
-      const ds = this.displayScale || 1;
-      // Viewport centre, in canvas pixels.
-      const cx = (mapWidth * ds) / 2;
-      const cy = (mapHeight * ds) / 2;
-      // Centre on the PLAYABLE area, not the raw map extent. The two coincide
-      // on a symmetric map, but a map whose margins are lopsided (EchoIsles_v2.2
-      // is 128x128 with a 108x88 playable region) has its playable centre offset
-      // from the map centre — zooming about the map centre there pushes the
-      // actual play space off to one side.
-      let px = cx, py = cy;
-      const ve = _gs.viewExtent;
-      if (ve && _gs.xScale && _gs.yScale) {
-        px = (_gs.xScale((ve.x[0] + ve.x[1]) / 2) + _gs.middleX) * ds;
-        py = (_gs.yScale((ve.y[0] + ve.y[1]) / 2) + _gs.middleY) * ds;
-      }
-      // Standard "zoom about a point": put world point (px,py) at viewport centre.
-      initialT = d3.zoomIdentity.translate(cx, cy).scale(INITIAL_ZOOM).translate(-px, -py);
-      this.zoomContainer.call(this.zoom.transform, initialT);
-    } else {
-      initialT = d3.zoomIdentity;
-    }
-    this._initialZoomTransform = initialT;
+    // The framing is remembered as INTENT (zoom level + canvas size), not as a
+    // finished transform: a d3 transform is expressed in display CSS pixels, so
+    // one captured at load is wrong the moment displayScale changes (fullscreen
+    // roughly doubles it). restart() and every resize re-seat through
+    // _baseZoomTransform(), which rebuilds it against the live displayScale.
+    this._baseZoomLevel = INITIAL_ZOOM;
+    this._baseZoomCanvas = { w: mapWidth, h: mapHeight };
+    if (INITIAL_ZOOM > 1.0) this._applyZoomTransform(this._baseZoomTransform());
 
     this.zoomContainer.on('mousemove.buildinghover', () => {
       // The guided walkthrough drives the camera itself — suppress the
@@ -4135,13 +4205,17 @@ const Wc3vViewer = class {
       // panels settle (measured 866 -> 867 -> 893 -> 934 -> 936px on a normal
       // load). Every one of those legitimately-changed sizes used to throw away
       // the playable-area fit computed in setupDrawing.
-      const base = self._initialZoomTransform || d3.zoomIdentity;
+      const base = self._baseZoomTransform();
       self.transform = { x: base.x, y: base.y, k: base.k };
-      self.zoomContainer.call(self.zoom.transform, base);
+      // Flagged programmatic: BroadcastCamera's zoom.broadcast listener drops to
+      // FREE on any transform it didn't originate, and a re-seat is ours.
+      self._applyZoomTransform(base);
       self.scrubber.updateZoomDisplay(base.k);
-      // Re-engage broadcast camera after resize
+      // Re-engage broadcast camera after resize. Its latch/zoom-steady state is
+      // held in display pixels, which the resize just rescaled — see
+      // BroadcastCamera.notifyViewportResized.
       if (self.broadcastCamera && self.broadcastCamera.enabled) {
-        self.broadcastCamera._initialized = false;
+        self.broadcastCamera.notifyViewportResized();
       }
       // Walkthrough drives the camera itself — re-frame the current step so
       // it doesn't get stranded at full-map zoom after a resize.
@@ -4205,21 +4279,44 @@ const Wc3vViewer = class {
           isFullscreen ? 'fullscreen-exit-icon' : 'fullscreen-icon'
         );
 
+        // Resizes the canvases and recomputes displayScale — but inside a rAF,
+        // so displayScale is STALE for the rest of this callback.
         self.scaleLiveModeCanvas();
 
-        if (self.gameLoaded && self.zoomContainer && self.zoom) {
-          self.transform = { x: 0, y: 0, k: 1.0 };
-          self.zoomContainer.call(self.zoom.transform, d3.zoomIdentity);
-          self.scrubber.updateZoomDisplay(1.0);
+        if (!(self.gameLoaded && self.zoomContainer && self.zoom)) return;
 
-          // Re-engage broadcast camera after fullscreen resize
+        // Everything below reads the canvas box (d3's zoom extent comes from
+        // #canvas-group's live client size) and converts through displayScale.
+        // Running it now would measure the pre-fullscreen layout: the camera
+        // would re-seed against the old box and then be marked initialized,
+        // pinning the framing to a viewport that no longer exists.
+        //
+        // rAF callbacks fire in registration order, and scaleLiveModeCanvas
+        // queued its own just above, so this one lands right after the canvases
+        // have been resized and displayScale is current.
+        requestAnimationFrame(() => {
+          if (!(self.gameLoaded && self.zoomContainer && self.zoom)) return;
+
+          // Re-seat d3.zoom (its internal state goes stale when the canvas box
+          // changes) to the REPLAY'S OWN framing, not to bare identity — same
+          // reasoning as resetZoomOnResize. Identity means "whole map extent,
+          // dead centre", which is never a framing the viewer should choose;
+          // going fullscreen used to land there and stay, because the broadcast
+          // camera's latched shot was still addressed in the old display-pixel
+          // space and MIN_SHOT_MS defended it.
+          const base = self._baseZoomTransform();
+          self.transform = { x: base.x, y: base.y, k: base.k };
+          self._applyZoomTransform(base);
+          self.scrubber.updateZoomDisplay(base.k);
+
           if (self.broadcastCamera && self.broadcastCamera.enabled) {
-            self.broadcastCamera._initialized = false;
+            self.broadcastCamera.notifyViewportResized();
             self.startRenderLoop();
           }
           // …and re-frame the walkthrough step if one's active.
           if (self.guideMode && !self.mobileMode) self._reapplyGuideFocus();
-        }
+          self.requestRender();
+        });
       });
     }
   }
@@ -4631,12 +4728,16 @@ const Wc3vViewer = class {
     if (this.threeMapRenderer) {
       this.threeMapRenderer.updatePlayerBuildings(gameTime);
       if (this.buildingProgressBar) this.buildingProgressBar.update(gameTime);
+      if (this.buildingStatusFx) this.buildingStatusFx.update(gameTime);
       if (this.buildingSplats) this.buildingSplats.updateVisibility(gameTime);
       if (this.pathTrailRenderer) {
         this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
       }
       if (this.unitModelRenderer) {
         this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
+      }
+      if (this.projectileRenderer) {
+        this.projectileRenderer.update(gameTime, this.players, this.viewOptions);
       }
     }
 
@@ -4950,6 +5051,7 @@ const Wc3vViewer = class {
       // each frame — don't pass the d3 transform to syncTransform.
       this.threeMapRenderer.updatePlayerBuildings(gameTime);
       if (this.buildingProgressBar) this.buildingProgressBar.update(gameTime);
+      if (this.buildingStatusFx) this.buildingStatusFx.update(gameTime);
       if (this.buildingSplats) this.buildingSplats.updateVisibility(gameTime);
       if (this.pathTrailRenderer) {
         this.pathTrailRenderer.update(gameTime, this.players, this.viewOptions);
@@ -4961,6 +5063,9 @@ const Wc3vViewer = class {
       if (this.guideMode) this._renderGuideHighlights();
       if (this.unitModelRenderer) {
         this.unitModelRenderer.update(gameTime, this.players, this.viewOptions);
+      }
+      if (this.projectileRenderer) {
+        this.projectileRenderer.update(gameTime, this.players, this.viewOptions);
       }
       this.threeMapRenderer.render(transform);
     }
@@ -5010,14 +5115,6 @@ const Wc3vViewer = class {
     }
     this.mapRenderer.renderNeutralBuildings(utilityCtx, transform, viewOptions, this.neutralBuildings, this.gameScaler);
 
-    // Battle overlay (dashed tracker boxes that follow the action). Drawn after
-    // neutral buildings so the overlay sits on top of any camps it overlaps.
-    // Banner above each box carries all the glance-value content (category,
-    // duration, team-color dots, trip chips, possibly-dead) — no separate
-    // floating panel.
-    if (this.battleRenderer && this.processedBattles) {
-      this.battleRenderer.render(utilityCtx, transform, gameTime, viewOptions, this.gameScaler, this.processedBattles, this.teamColorMap);
-    }
     // Teleport cinematic — channel ring + destination mirror + banner + flash.
     // L5 ACTION INDICATORS layer (#action-canvas, z 4) so it stays above unit
     // nameplates which draw on #player-canvas (z 3). See client/docs/Z_INDEX.md.
@@ -5190,6 +5287,42 @@ const Wc3vViewer = class {
 
     // Dominance tug-of-war bar + match-header badges (self-throttled).
     if (this.dominanceBar) this.dominanceBar.update(gameTime);
+
+    if (window.WC3V_CONFIG && window.WC3V_CONFIG.perf.showStats) this._renderPerfStats();
+  }
+
+  /**
+   * Opt-in frame readout (`WC3V_CONFIG.perf.showStats = true`), default off.
+   *
+   * Until this existed there was no way to answer "did that change cost
+   * anything" without an external profiler, which made every perf claim about
+   * the 3D scene an assertion rather than a measurement. Deliberately tiny: a
+   * rolling frame time, the draw-call count, and the projectile load.
+   */
+  _renderPerfStats () {
+    const now = performance.now();
+    if (this._statsLast) {
+      const dt = now - this._statsLast;
+      // Exponential moving average — no history buffer, no allocation.
+      this._statsMs = this._statsMs ? this._statsMs * 0.9 + dt * 0.1 : dt;
+    }
+    this._statsLast = now;
+
+    let el = this._statsEl;
+    if (!el) {
+      el = this._statsEl = document.createElement('div');
+      el.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:99999;' +
+        'font:11px/1.45 ui-monospace,monospace;color:#cfc7b4;background:rgba(18,16,13,.82);' +
+        'padding:6px 9px;border-radius:4px;pointer-events:none;white-space:pre';
+      document.body.appendChild(el);
+    }
+    const info = this.threeMapRenderer && this.threeMapRenderer.renderer &&
+      this.threeMapRenderer.renderer.info;
+    const p = this.projectileRenderer && this.projectileRenderer.lastCounts;
+    el.textContent =
+      (this._statsMs ? (1000 / this._statsMs).toFixed(1) + ' fps  ' + this._statsMs.toFixed(1) + ' ms' : '—') +
+      (info ? '\ndraws ' + info.render.calls + '  tris ' + (info.render.triangles / 1000).toFixed(0) + 'k' : '') +
+      (p ? '\nbolts ' + p.bolts + '  puffs ' + p.puffs : '');
   }
 
 

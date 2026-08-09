@@ -1,0 +1,962 @@
+/* ============================================================
+   report.css, WC3V desktop.
+
+   The game report: the verdict band, the comparison block, the chart panel,
+   the build cards and the build order. The screen this app exists to show.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Detail: the game report ─────────────────────────────────────────────
+   The fold rule, structurally: the report's frame (verdict band, timings,
+   tab strip) is fixed rows that always fit; the active tab's body is the one
+   scroller. The column as a whole must never scroll. */
+
+/* Verdict band, tab strip, then the one scroller. The frame was 427px of the
+   507px a 900x600 window gives, then 325, then 221 with a grade rail. The rail
+   is gone and the band carries both builds in the width it was wasting.
+
+   Flex rather than a fixed row template. Every band here is optional — no
+   build strips on a summary with no hero record, a mode switch only with a
+   live match — and a template of `auto` tracks with `1fr` last puts the
+   scroller in an `auto` row the moment one is missing, which makes the whole
+   column grow instead of the body scrolling. That is a fold-rule break the
+   audit reports as an overflowing .detail-col. */
+.detail-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-height: 0;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-well);
+}
+/* The one scroller, whatever came before it, and whichever panel built it —
+   `.report-body` for a game report, `.ng-list` for Next game. Keyed on `.scroll`
+   because that class already means "this is the designated scroller" everywhere
+   else in this app and in the fold audit. */
+.detail-col > .scroll { flex: 1 1 auto; min-height: 0; }
+.detail-col > :not(.scroll) { flex: 0 0 auto; }
+
+.detail-empty {
+  display: grid;
+  place-content: center;
+  gap: var(--sp-2);
+  height: 100%;
+  text-align: center;
+  color: var(--ink-faint);
+  /* Spans the whole banded grid when it is the only child. */
+  grid-row: 1 / -1;
+}
+
+/* ── The band, on ONE line ───────────────────────────────────────────────
+   This was three stacked things: the verdict row, the fact line under it, and
+   a four-row benchmark table beside them. 99px of fixed chrome above the only
+   scroller on the screen — on a screen where every tab needs more height than
+   it has, and where the band is the cheapest place to find it.
+
+   Nothing was removed. The verdict, the opponent, the record, the map, the
+   length, the tags, the three benchmarks and the viewer button are all still
+   here, in one 34px row that wraps if the window is too narrow for it.
+
+   `.verdict-head` is `display: contents` so its children become flex items of
+   `.vb-main` directly. That is what lets the viewer button reach the far end
+   of the row with `margin-left: auto` while the fact line, which follows it in
+   the DOM, still sits to its left. */
+.verdict-band { min-width: 0; }
+.verdict-head { display: contents; }
+/* --fs-lg, not --fs-h2. The word is one of eight things on a single row now,
+   and at heading size it set the row's height on its own. It is still the
+   first and boldest thing read; it no longer costs 20px to be. */
+.verdict-word {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 0 #000;
+  white-space: nowrap;
+}
+.verdict-word[data-v="win"]  { color: var(--verdict-win); }
+.verdict-word[data-v="loss"] { color: var(--verdict-loss); }
+.verdict-word[data-v="none"] { color: var(--ink-dim); font-size: var(--fs-lg); }
+.verdict-vs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-dim);
+  font-size: var(--fs-base);
+  min-width: 0;
+}
+
+/* Somebody else's game, in the Library. There is no Victory to print, because
+   that word is about the reader and neither seat is theirs. The result is one
+   player beating another: the winner in the win colour at the verdict's own
+   weight, the loser dimmed, and a lowercase joining word that stays out of the
+   way of both names. */
+.vs-symmetric {
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-h3);
+}
+.vs-symmetric .won,
+.vs-symmetric .lost {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+.vs-symmetric .won { color: var(--verdict-win); font-weight: 700; }
+.vs-symmetric .won .name-link { color: inherit; }
+.vs-symmetric .lost { color: var(--ink-dim); }
+.vs-symmetric .beat {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+/* "Open in viewer" rides the band, pushed to its far end. This named
+   `.btn-primary` for two releases, which is not the button's class, so it never
+   applied and the control sat packed against the record chip.
+   `order` puts it after the fact line, which follows it in the DOM. */
+.verdict-head > .btn-viewer {
+  margin-left: auto;
+  order: 9;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+}
+
+/* The all-time record against this opponent. A carved chip, opens the tab. */
+.h2h-chip {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut-in);
+  color: var(--dom-gold);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.h2h-chip:hover { border-color: var(--app-edge); color: var(--ink); }
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
+  margin: 0;
+  color: var(--ink-dim);
+  overflow-wrap: anywhere;
+}
+
+/* ── Tags ─────────────────────────────────────────────────────────────────
+   Free text somebody typed, on the fact line rather than in a band of its own:
+   most games have none, and a permanently empty band is furniture.
+
+   The add control is a button that becomes a field in place. A dialog for
+   typing one word is three clicks for something that should be one. */
+.tag-strip { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--sp-1); }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-2);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+.tag-x {
+  padding: 0 2px;
+  background: none;
+  border: 0;
+  color: var(--ink-faint);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+.tag-x:hover { color: var(--verdict-loss); }
+
+.tag-add {
+  padding: 1px var(--sp-2);
+  background: none;
+  border: 1px dashed var(--app-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-faint);
+  font: inherit;
+  font-size: var(--fs-min);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.tag-add:hover { border-color: var(--app-edge); color: var(--ink-2); }
+
+.tag-input {
+  width: 9rem;
+  padding: 1px var(--sp-2);
+  background: var(--app-well);
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-min);
+}
+
+/* ── Against your own usual, beside the verdict ──────────────────────────
+   The band used to be a headline, a meta line and one sentence across the full
+   report width, which at 1280 is a Victory and a name in 1100px. The right
+   half carried miniature builds for a while; with the real build cards on the
+   same screen that was the same information twice, so it carries the
+   comparison against your own recent games instead. Nothing else on the report
+   says it, and no website could.
+
+   `minmax(0, 1fr)` on the left column, not `1fr`. A grid track's default
+   minimum is its content, so a long opponent name would refuse to shrink and
+   push the readout off the edge instead of wrapping. */
+.vb-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 var(--sp-4);
+}
+/* One row: verdict, opponent, record, map, length, tags, viewer button. */
+.vb-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3);
+}
+
+/* Three metrics, four columns: the name, the number, the gap to your own
+   recent games, the gap to the other players of that race in your history.
+   Rows, not boxes. The tile grid this replaced was six bordered cells holding
+   six different kinds of number, which reads as a dashboard rather than as a
+   reading of a game. */
+/* Three metric groups on ONE line, at every width.
+   This was a four-row table (a head plus three metrics), which is 96px and was
+   what actually set the band's height — the verdict line beside it is half
+   that. The stacked form survived only below 1040px; now it is the only form.
+   The column alignment between rows goes with it, and at three short groups on
+   one line there is nothing left to align. */
+.gb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--sp-4);
+  padding: var(--sp-1) var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.gb-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+}
+/* The heads named the two delta columns. With the rows on one line each delta
+   sits against its own number and the row tooltip carries both in words. */
+.gb-head { display: none; }
+/* The race delta drops out of the line and stays in the tooltip: two unlabelled
+   signed numbers side by side is a readout that makes no claim. */
+.gb-row > .gb-d:last-child { display: none; }
+.gb-k { color: var(--ink-dim); font-size: var(--fs-min); }
+.gb-v {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.gb-v[data-band="good"] { color: var(--verdict-win); }
+.gb-v[data-band="poor"] { color: var(--verdict-loss); }
+.gb-d {
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+/* The heads name what each delta is against. Three signed numbers with no
+   column heads is a row that makes no claim. The race head carries the sample
+   size and the source in its tooltip. */
+.gb-head .gb-d {
+  padding-bottom: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Under 1040px the readout drops below the result instead of sitting beside
+   it. It used to be display:none here, which was defensible while it held four
+   timing numbers and is not now that it is the reason the screen exists.
+
+   The one-line form it used to switch to at this width is the form it takes at
+   every width now (see .gb above), so all that is left is the column change.
+   The frame is not allowed to grow as the window narrows. */
+@media (max-width: 1040px) {
+  .vb-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── The chart panel ─────────────────────────────────────────────────────
+   One slot, three readings: dominance, resources, army. They were a chart at
+   the top of Story and a whole Economy tab, which meant comparing the two
+   meant remembering the first one.
+
+   Every mode keeps its own height. Forcing them to a common one would either
+   crop the resource stack or float the dominance plot in empty space, and the
+   panel is above a tile grid that has no fixed position to protect. */
+
+.cp { margin-bottom: var(--sp-3); }
+.cp-head { display: flex; margin-bottom: var(--sp-1); }
+.cp-seg .seg-btn { min-height: var(--ico-sm); }
+/* A mode with nothing to draw still gets a chip, because its absence is a fact
+   about the game and a chip that vanishes makes the row jump between games. */
+.cp-seg .seg-btn.is-empty { color: var(--ink-faint); }
+
+/* ── Story: the dominance panel, then the numbers ────────────────────────
+   The default tab. The chart is drawn by the viewer's own stylesheet
+   (css/vendor/dominance.css); everything here is the housing it sits in and
+   the tile grid underneath.
+
+   The map that used to live here is gone with its stylesheet. */
+
+/* The chart, in the Story pane. The tug-of-war gauge that briefly sat in the
+   report frame above it is gone, and `DominanceBar.js` is not shipped to the
+   desktop at all — see tools/build-desktop-client.js. Its rules still live in
+   css/vendor/dominance.css, because that stylesheet is the viewer's and the
+   viewer still mounts the gauge. */
+.dom-panel {
+  margin: 0;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.dom-panel-chart { background: var(--app-well); box-shadow: var(--cut-in); }
+/* The viewer draws this 76px tall inside a ~320px insights panel. Here it is
+   the centrepiece of the default tab across the whole report width. Clamped
+   rather than fixed: at 17vh it ate the entire tab body at 1280x820 and the
+   tiles under it were never once on screen.
+
+   vh rather than a fixed height because this is the one thing on the tab that
+   can give: at 600px the whole dashboard has to fit in ~170px and the chart
+   takes 64 of it; at 820px it takes 112 and the shape of the game is readable. */
+.dom-panel .dmc-svg { height: clamp(64px, 11vh, 112px); }
+/* The title row is the readout's home and it is otherwise dead space. */
+.dom-panel .dmc-chart-wrap { padding: var(--sp-1) var(--sp-2); }
+.dom-panel .dmc-title { padding: 0 0 var(--sp-1); }
+
+/* Dragging replays the game's momentum, so the cursor says so. */
+.dom-panel-chart.is-scrubbable { cursor: ew-resize; touch-action: none; }
+.dom-panel-chart:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+/* The stat tile grid stood here: eight bordered cells of eight different kinds
+   of number under the chart. It was rendered nowhere after the 0.7.2 one-screen
+   pass and the rules outlived the markup by two releases. The comparative ones
+   are `.gb` in the verdict band now, beside the result they explain.
+
+   `.st-upgrade` below survives because chart-panel.js still draws it. */
+
+/* The offer to re-read a game stored before the block it is missing. */
+.st-upgrade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.st-upgrade .hint { margin: 0; }
+
+/* The report is one panel and one scroller. There is no tab strip: `.report-body`
+   is the only element on this screen allowed to scroll, and the verdict band
+   above it is fixed. */
+.report-body {
+  min-height: 0;
+  padding: var(--sp-3);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius);
+  box-shadow: var(--cut);
+}
+/* Panes carry no chrome of their own. The body is the panel. */
+.report-pane .lead { margin: 0 0 var(--sp-3); color: var(--ink-2); }
+
+/* A player name that goes somewhere. Underlined like a reference, not
+   glowing like a web link. Carved register. */
+.name-link {
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--app-edge);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: text-decoration-color var(--dur) var(--ease);
+}
+.name-link:hover { text-decoration-color: var(--dom-gold); }
+
+.player-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+/* The mark takes the player's own race ink wherever a title is race-keyed. The
+   NAME stays --ink: colouring names by race gives every heading on the screen a
+   different colour and the page stops having a hierarchy. */
+.player-title[data-race] .race-mark { color: var(--rc-ink); border-color: var(--rc-rim); }
+
+/* Build-order and tier columns carry the same rim as the card above them, so
+   the two halves of the report are visibly the same two players. */
+.build-col[data-race] {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--rc-wash);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--rc-rim);
+}
+.you-tag { color: var(--ink-faint); font-weight: 400; }
+
+.panel {
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-4);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius);
+  box-shadow: var(--cut);
+}
+.panel > h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.panel .lead { margin: 0 0 var(--sp-3); color: var(--ink-2); }
+
+/* Section heads, with a mark. The word alone in --ink-faint uppercase is why
+   nothing on this screen read as a section until you were already reading it.
+   The mark is decorative to a screen reader: the heading text is right there. */
+.dt-h {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin: var(--sp-5) 0 var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dt-h:first-child { margin-top: 0; }
+
+/* The one glyph rule. Anything hosting a mark sets its own colour and size;
+   this only makes the svg behave like a glyph rather than an image. */
+.glyph { display: inline-grid; place-items: center; flex: none; }
+.glyph svg { width: 1em; height: 1em; fill: currentColor; display: block; }
+.dt-h .glyph { font-size: 16px; }
+
+/* ── Moments ─────────────────────────────────────────────────────────────
+   The Story timeline these rules styled went in 0.7.2, and the rules outlived
+   it by two releases. The marks themselves live on in js/glyphs.js, which is
+   where every other section in the app now gets one. */
+
+/* ── Build order ─────────────────────────────────────────────────────── */
+
+.builds { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--sp-4); }
+.build-col h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+/* A time-ordered list, in as many columns as the width affords.
+   A row is a timestamp, a 36px icon and a short name — 131px of content that
+   was being given a 610px column, so twenty of them ran 800px down a 599px
+   report body. Two players of that is the whole scroller, for a list the build
+   card above already summarises.
+   Columns, not a smaller row: the row is 36px because that is the icon floor,
+   and the wasted axis was horizontal all along. CSS columns fill top-to-bottom
+   before moving right, which is the reading order a chronology wants. */
+.build-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  /* 13rem, measured. A row spends 102px before the name (the 3rem timestamp,
+     the 36px icon, two gaps), and the longest name the parser produces here is
+     "Troll Headhunter/Berserker" at ~160px. Narrower columns fit more of them
+     but break that name mid-word as "Ber / serker": at 11rem nine of twenty
+     rows wrapped to save 80px. Zero wrapped rows is worth the 80px. */
+  column-width: 13rem;
+  column-gap: var(--sp-4);
+}
+.build-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 2px 0;
+  font-size: var(--fs-min);
+  /* A row split across a column boundary shows half an icon. */
+  break-inside: avoid;
+}
+.build-list .t { color: var(--ink-faint); font-variant-numeric: tabular-nums; min-width: 3rem; }
+
+/* The site's own icon art, fetched from the CDN (see games-view.js). --ico-sm
+   is the floor for anything pictorial in this app, and these carry the same
+   carved edge as every other fixture. */
+.build-icon {
+  flex: none;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  border: var(--outline);
+  border-radius: 3px;
+  box-shadow: var(--cut);
+  object-fit: cover;
+}
+/* No art, or no network. Holds the row's shape so a list does not reflow as
+   icons arrive, and reads as an empty slot rather than a failure. */
+.build-icon.is-blank {
+  display: inline-block;
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+}
+.build-list li[data-type="hero"] .n { color: var(--dom-gold); }
+.build-list li[data-type="expansion"] .n { color: var(--verdict-win); }
+.build-list .n { overflow-wrap: anywhere; }
+
+/* ── The build card ──────────────────────────────────────────────────────
+   The site's `.site-build-card` shape, in the desktop's carved register. One
+   card per seat: heroes with their skill grid, key units, upgrades, and the
+   timings that define the build.
+
+   This replaced a hero-card stack plus a 16-row chronological list per player
+   — about two screens of column for a build the site fits in a card. The list
+   moved to Full details rather than being deleted.
+
+   Identity icons (which hero, which skill, which unit, which upgrade) are the
+   game's own art from the CDN, because knowing which is exactly what the art
+   is for. Everything around them stays carved. */
+
+/* `align-items: start`, so a card is as tall as its own build.
+   Grid stretches by default, which gave the player with the shorter build a
+   card ending in a slab of empty well the height of the other player's extra
+   sections. Two cards of honest different heights read better than two equal
+   boxes one of which is half air. */
+.bc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  align-items: start;
+  gap: var(--sp-3);
+}
+
+/* ── Team games: the abbreviated form ────────────────────────────────────
+   Six full cards is a document rather than a report. The compact card keeps
+   the heroes with their levels, the units and the timing chips, and
+   build-card.js drops the skill grids, carried items, upgrades, mercs and
+   purchases before they are ever built.
+
+   Narrower columns too. At 14rem a 3v3 fit five across at 1280 and put the
+   sixth player alone on a second row, which reads as a card that failed to
+   load. 11rem is 176px and a compact card needs 165 (four 36px icons, three
+   gaps, the padding), so all six seats land on one row and a 2v2 gets four. */
+.bc-grid.is-compact {
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: var(--sp-2);
+}
+.bc-compact .player-title { font-size: var(--fs-sm); }
+.bc-compact .bc-head { padding: var(--sp-1) var(--sp-2); gap: var(--sp-1); }
+/* The timings drop below the name rather than sitting at the far end of the
+   band: an 11rem card has no far end. */
+.bc-compact .bc-head .bc-chips { margin-left: 0; flex-basis: 100%; }
+/* No section marks either.
+   The mark costs a 36px column, which is a third of an 11rem card. The compact
+   card only ever draws heroes and units (build-card.js empties the other four
+   before they are built), and two rows of game art in a fixed order need no
+   marks to tell them apart. */
+.bc-compact .bc-sec {
+  display: block;
+  padding: var(--sp-1) var(--sp-2);
+}
+.bc-compact .bc-mark { display: none; }
+/* Hero portraits come down to the icon size the rest of the app uses, so three
+   heroes sit in one row inside a compact card instead of stacking down it. The
+   1v1 card keeps --ico-lg, where the portrait is the anchor of the whole card. */
+.bc-compact .bc-portrait-img { width: var(--ico-sm); height: var(--ico-sm); }
+.bc-compact .bc-hero-lvl { min-width: 14px; font-size: var(--fs-min); }
+.bc-compact .bc-hero-ord { display: none; }
+/* The lattice is for comparing two cards. Six of them are a roster, and equal
+   columns at this width would put one hero per row, so the compact card packs
+   instead. */
+.bc-compact .bc-heroes-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.bc-compact .bc-hero { padding: var(--sp-1); box-shadow: none; }
+/* The unit row is names beside icons in a 1v1. Across six seats the names are
+   most of the card, and the art already says which unit. */
+.bc-compact .bc-unit-name { display: none; }
+.bc-compact .bc-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+.bc-compact .bc-chips { gap: var(--sp-1); }
+.bc-compact .bc-chip { padding: 1px var(--sp-1); font-size: var(--fs-min); }
+
+/* The card is race material: a carved well with the race's rim as a full inset
+   ring. Never a single edge, and never a fill strong enough to read as a
+   coloured panel. `overflow: hidden` so the header band's gradient stops at the
+   radius instead of squaring off the top corners. */
+.bc {
+  display: grid;
+  align-content: start;
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    inset 0 0 0 1px var(--rc-rim),
+    var(--cut-in);
+  overflow: hidden;
+}
+
+/* ── The header band ──────────────────────────────────────────────────────
+   The card used to open on a section label and close on a wrapped row of
+   timing chips, so it had neither a top nor a bottom and two seats side by side
+   lined up on nothing.
+
+   The band is who and when: the race mark, the name, and the four timings.
+   Same construction every card, so the two cards' bodies start at the same y.
+   The hairline under it is the race rim, which is the one place the hue is
+   allowed to be a line rather than a ring, because it is a divider inside the
+   ring rather than an accent on the edge of the card. */
+.bc-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: linear-gradient(180deg, var(--rc-head-a), var(--rc-head-b));
+  border-bottom: 1px solid var(--rc-rim);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.bc-head .player-title { margin: 0; flex: 1 1 auto; min-width: 0; }
+.bc-head .player-title .name-link,
+.bc-head .player-title b { color: var(--ink); }
+/* The race mark in the header carries the race's own ink. Everywhere else it
+   is a small chrome glyph; here it is the card's identity. */
+.bc-head .race-mark { color: var(--rc-ink); border-color: var(--rc-rim); }
+/* Timings sit at the far end of the band, so the name can run as long as it
+   likes without pushing them onto a second line first. */
+.bc-head .bc-chips { flex: 0 0 auto; margin-left: auto; }
+
+/* A mark instead of a word. The label column was 5.0rem, measured against the
+   word UPGRADES and one wrap away from breaking as "UPGRADE / S", and it cost
+   80px of every row on a card whose problem was that its art had nowhere to go.
+   Glyphs.mark keeps the word as the accessible name. */
+.bc-sec {
+  display: grid;
+  grid-template-columns: var(--ico-sm) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--rc-wash);
+}
+.bc-sec + .bc-sec { border-top: 1px solid var(--app-line); }
+.bc-mark {
+  display: grid;
+  place-items: center;
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  color: var(--rc-ink);
+  opacity: 0.75;
+}
+.bc-mark svg { width: 22px; height: 22px; fill: currentColor; display: block; }
+
+/* Heroes wrap as whole cells. A hero split across two lines from its own
+   skills is unreadable. */
+/* Each hero is its own small panel. Without separation the skill icons of one
+   hero and the item icons of the next run together into a single strip and the
+   card reads as a pile of art — the ordinal badge alone is not enough once a
+   hero can carry six items.
+
+   A panel rather than a rule between cells: a third hero wraps to a second row
+   on a narrow card, and with `align-items: stretch` the divider on the last
+   hero of row one then ran the full height of BOTH rows, pointing at nothing.
+   A panel wraps correctly by construction. */
+/* Hero cells on an even grid, not a flex row.
+   Flex sized each cell to its own contents, so a hero carrying six items was
+   three times the width of one carrying none and the row ended in a wide
+   ragged gap. That gap is most of what made this card look unfinished.
+
+   The column COUNT is set inline by build-card.js from the number of heroes,
+   not by auto-fill. auto-fill sizes tracks to a minimum and then keeps making
+   them, so three heroes in a card wide enough for four left a quarter of the
+   row permanently empty, which is the same wasted space in a tidier shape.
+
+   `minmax(0, 13rem)` with `justify-content: start` gives each cell
+   min(width / n, 13rem): three heroes fill the card, one hero is a hero-sized
+   panel rather than a banner. */
+.bc-heroes-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 13rem));
+  justify-content: start;
+  gap: var(--sp-2);
+  align-items: start;
+}
+/* Children STRETCH. `justify-items: start` sized each row to its own content,
+   which is fine for a flex strip and fatal for a grid: an auto-fill track list
+   measured at min-content resolves to exactly one column, so every skill and
+   item stacked into a single 36px stripe running down the card. */
+.bc-hero {
+  display: grid;
+  align-content: start;
+  gap: var(--sp-1);
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2) var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: inset 0 0 0 1px var(--rc-rim);
+}
+
+/* The portrait is the one child that keeps its own size rather than stretching
+   to the cell. */
+.bc-hero-portrait { position: relative; justify-self: start; }
+.bc-portrait-img { width: var(--ico-lg); height: var(--ico-lg); }
+/* Level rides the portrait. A hero's face and its final level are one fact,
+   and a line of its own for "Level 5" costs a row per hero. */
+.bc-hero-lvl {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  min-width: 20px;
+  padding: 0 3px;
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border: var(--outline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut);
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.bc-hero-ord {
+  position: absolute;
+  left: -2px;
+  top: -8px;
+  padding: 0 4px;
+  background: var(--app-bg);
+  border-radius: var(--radius-pill);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+}
+
+/* Skills and items on the same 36px lattice as everything else, so a hero with
+   two skills and a hero with four line up row for row. */
+.bc-skills {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--ico-sm));
+  gap: var(--sp-1);
+  justify-content: start;
+}
+.bc-skill { position: relative; display: inline-flex; }
+.bc-skill-img { width: var(--ico-sm); height: var(--ico-sm); }
+.bc-skill-lvl {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 15px;
+  background: rgba(10, 7, 4, 0.86);
+  border-radius: 3px;
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.bc-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--ico-sm));
+  gap: var(--sp-1);
+  justify-content: start;
+}
+.bc-item-img { width: var(--ico-sm); height: var(--ico-sm); }
+
+/* Units carry their name, because a strip of six portraits is unreadable to
+   anyone who does not already know every unit by its art.
+
+   The name sits BESIDE the icon, not under it. Under it, in a 4.4rem column,
+   "Troll Headhunter" is three wrapped lines — the units section measured 226px
+   of a 382px tab body, more than the heroes it is supposed to support. Beside
+   it, a unit is one 36px row and the section is 87px. The site card stacks
+   because it has a curated short-name table; a replay gives us the parser's
+   full display name and nothing shorter. */
+/* Units keep their names, so they cannot go on the icon lattice. They get an
+   even column grid instead: two per row at the width these cards get, both
+   columns the same width, so the second unit of each row starts at the same x
+   on both cards. Flex-wrap sized every chip to its own name and staggered
+   every row. */
+.bc-units {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--sp-1);
+  align-items: start;
+}
+.bc-unit {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+  padding-right: var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  color: var(--ink-2);
+  font-size: var(--fs-min);
+}
+.bc-unit-img { width: var(--ico-sm); height: var(--ico-sm); }
+.bc-unit-name { overflow-wrap: anywhere; }
+
+/* ── The lattice ──────────────────────────────────────────────────────────
+   Upgrades, Bought and Mercs were `flex-wrap` rows. Flex packs from the left
+   and leaves whatever is left over as a ragged tail, so a five-icon row next to
+   a nine-icon row lined up on nothing, and the two cards read as two piles of
+   art rather than a comparison.
+
+   A grid on the icon size fixes it by construction: every icon in both cards
+   lands on the same 36px lattice, and a short row leaves empty CELLS in the
+   same columns as the long row's icons. That is what makes them scannable side
+   by side, which is the entire job of putting them side by side.
+
+   auto-fill, not auto-fit: auto-fit collapses the empty tracks and the
+   alignment goes with them. */
+.bc-ups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--ico-sm));
+  gap: var(--sp-1);
+  justify-content: start;
+}
+.bc-up { position: relative; display: inline-flex; }
+.bc-up-img { width: var(--ico-sm); height: var(--ico-sm); }
+/* Only where levels exist. Every upgrade showing "1" stops the ones that
+   reached 3 from standing out. */
+.bc-up-lvl {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 15px;
+  background: rgba(10, 7, 4, 0.86);
+  border-radius: 3px;
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── The Bought row ──────────────────────────────────────────────────────
+   Repeat purchases collapse into one icon carrying an ×N pip, and the row
+   splits: what the player KEPT on the left, what they SPENT on the right,
+   a hairline between. See build-card.js for why, and js/item-classes.js for
+   the split itself. */
+
+/* Same geometry as .bc-up-lvl, wider: "×12" is four glyphs where a level is
+   one. Its own class rather than a modifier, because the two pips mean
+   different things on rows that sit two apart. */
+.bc-up-n {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  min-width: 22px;
+  padding: 0 2px;
+  background: rgba(10, 7, 4, 0.86);
+  border-radius: 3px;
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 800;
+  line-height: 15px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Kept | spent. A hairline, not a gap: a gap in a wrapping flex row is
+   indistinguishable from the wrap itself. --app-edge rather than --app-line
+   because it has to read against the icons on both sides of it, which are the
+   game's own full-colour art — a divider only the CSS knows about is a gap. */
+.bc-div {
+  align-self: stretch;
+  width: 1px;
+  margin: 0 var(--sp-1);
+  background: var(--app-edge);
+}
+
+/* The fold. Reads as a chip rather than a button so the row stays a row, but
+   it is a real <button> — it is the one thing on this card you can press. */
+.bc-more {
+  align-self: center;
+  padding: 2px var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.bc-more:hover { border-color: var(--app-edge); color: var(--ink-2); }
+
+.bc-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.bc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--sp-2);
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-pill);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.bc-chip[data-kind="expo"]    { color: var(--verdict-win); }
+.bc-chip[data-kind="no-expo"] { color: var(--ink-faint); }
+.bc-chip[data-kind="tier"]    { color: var(--ink-2); }
+
+.icon-strip { display: flex; align-items: flex-start; gap: var(--sp-2); margin-top: var(--sp-2); }
+.strip-label {
+  flex: none;
+  width: 4.6rem;
+  padding-top: 7px;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.strip-icons { display: flex; flex-wrap: wrap; gap: var(--sp-1); }

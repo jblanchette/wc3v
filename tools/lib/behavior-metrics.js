@@ -89,7 +89,10 @@ function measure (data, opts) {
     meleeShortDwell: 0, creepOutOfRange: 0, facingOverBudget: 0
   };
   let frames = 0, walk = 0, attack = 0, cast = 0, idle = 0, suppressed = 0;
-  const bySource = { battle: 0, order: 0, camp: 0 };
+  const bySource = { battle: 0, order: 0, camp: 0, summon: 0 };
+  const idleReasons = {};      // why units were idle, by reason string
+  const missedByReason = {};   // idle-with-a-target-in-acquisition-range, by reason
+  let missedAttack = 0;
   let legacyAttackFrames = 0, legacyStationaryFrames = 0, airSwings = 0;
   const flips = new Map();   // uuid -> transitions
   const lastState = new Map();
@@ -156,9 +159,42 @@ function measure (data, opts) {
             }
           }
         }
-        if (!d.reason || !['battle', 'order', 'camp'].includes(d.reason)) V.attackNoCorroboration++;
+        if (!d.reason || !['battle', 'order', 'camp', 'summon'].includes(d.reason)) V.attackNoCorroboration++;
       }
       if (d.state === 'attack' && d.speed > 0) V.attackWhileMoving++;
+
+      // --- FALSE NEGATIVES ---------------------------------------------------
+      // Every invariant above catches the viewer attacking when it should not.
+      // Nothing caught the opposite, which is the complaint that actually gets
+      // reported: units standing idle in the middle of a fight. The scorecard
+      // read 0 blatant mistakes on a replay where the summoned skeletons never
+      // moved through a 41-second battle.
+      //
+      // A missed attack: idle, not walking, has a weapon, and a living hostile
+      // it is ALLOWED to target sits inside its real acquisition radius. That is
+      // not proof it was attacking — but in the engine a unit in that situation
+      // does attack, so a large count means the corroboration rules are too
+      // tight, and the idle-reason histogram says which rule to look at.
+      if (d.state === 'idle') {
+        idleReasons[d.reason] = (idleReasons[d.reason] || 0) + 1;
+        const actor = liveMap.get(uuid);
+        const combat = actor && actor.u.meta && actor.u.meta.combat;
+        if (actor && combat && !actor.targetOnly) {
+          const acq = UB.acquireRange(actor.u.meta);
+          let nearest = null, nearestD = Infinity;
+          for (const cand of frame.live) {
+            if (cand === actor) continue;
+            if (actor.isCamp ? cand.isNeutral : (cand.teamId === actor.teamId)) continue;
+            if (!UB.canTarget(actor.u.meta, cand)) continue;
+            const dd = Math.hypot(cand.x - actor.x, cand.y - actor.y);
+            if (dd < nearestD) { nearestD = dd; nearest = cand; }
+          }
+          if (nearest && nearestD <= acq) {
+            missedAttack++;
+            missedByReason[d.reason] = (missedByReason[d.reason] || 0) + 1;
+          }
+        }
+      }
 
       const prev = lastState.get(uuid);
       if (prev && prev !== d.state) flips.set(uuid, (flips.get(uuid) || 0) + 1);
@@ -193,6 +229,9 @@ function measure (data, opts) {
     mismatch,
     frames, walk, attack, cast, idle, suppressed,
     bySource,
+    idleReasons, missedAttack, missedByReason,
+    // Per game-minute, so it compares across replays of different lengths.
+    missedPerMin: missedAttack / (((times[times.length - 1] - times[0]) / 60000) || 1),
     legacyAttackFrames, legacyStationaryFrames, airSwings,
     totalFlips, unitCount, durMin,
     flipsPerUnitMinute: totalFlips / unitCount / durMin

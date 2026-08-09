@@ -47,6 +47,54 @@
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
   };
 
+  // ── A section, headed by a mark rather than a word ──────────────────────
+  //
+  // The label used to be five uppercase characters in a 5.0rem column, measured
+  // to the pixel against the word UPGRADES and one wrap away from breaking as
+  // "UPGRADE / S". That column cost about 80px of every row on a card whose
+  // whole problem was that its art had nowhere to go.
+  //
+  // A 36px mark says the same thing in the width of one icon, and the word is
+  // still there for anything that reads the page aloud: Glyphs.mark with a
+  // label makes the glyph the accessible name rather than hiding it.
+  const section = (glyph, label, extra) => {
+    const sec = node('div', 'bc-sec' + (extra ? ' ' + extra : ''));
+    const rail = window.Glyphs
+      ? window.Glyphs.mark(glyph, { className: 'bc-mark', label })
+      : node('span', 'bc-mark', label);
+    sec.appendChild(rail);
+    return sec;
+  };
+
+  // The timings that define a build, as chips. Lives in the header band now:
+  // they describe the whole build rather than any one section of it, and at the
+  // foot of the card they were the fifth thing to wrap.
+  //
+  // Nothing null gets a chip. "T3 —" is a row of furniture. "No expo" is the
+  // exception, because not expanding IS the decision.
+  const timingChips = (p) => {
+    const chips = node('div', 'bc-chips');
+    const chip = (label, value, kind) => {
+      if (!value) return;
+      const c = node('span', 'bc-chip', `${label} ${value}`);
+      if (kind) c.dataset.kind = kind;
+      chips.appendChild(c);
+    };
+    chip('T2', fmt(p.tier2Time), 'tier');
+    chip('T3', fmt(p.tier3Time), 'tier');
+    chip('Tower', fmt(p.firstTowerTime), 'tower');
+    if (p.expansionTime !== null && p.expansionTime !== undefined) {
+      const c = node('span', 'bc-chip', `Expo ${fmt(p.expansionTime)}`);
+      c.dataset.kind = 'expo';
+      chips.appendChild(c);
+    } else {
+      const c = node('span', 'bc-chip', 'No expo');
+      c.dataset.kind = 'no-expo';
+      chips.appendChild(c);
+    }
+    return chips.children.length ? chips : null;
+  };
+
   // Distinct combat units in first-seen order. Named separately from the
   // extraction so the reason for each source is visible at the call site.
   //
@@ -204,6 +252,10 @@
     // keep in step.
     heroesOf,
     keyUnits,
+    // Shared for the same reason. The Match Summary's Economy tab wants items
+    // and mercs collapsed per id with a count and a gold total, which is
+    // exactly this, and the stored rows are one per transaction on both.
+    stack,
 
     // p: a summary player. opts: { icon(itemId), title(node), isYou, compact }
     //
@@ -220,14 +272,37 @@
       const icon = o.icon;
       const compact = !!o.compact;
       const card = node('article', 'bc' + (compact ? ' bc-compact' : ''));
-      if (o.title) card.appendChild(o.title);
+
+      // The card is keyed to the player's race. `data-race` selects a material
+      // group in the token layer, so the rim, the header and the section rules
+      // all take the race's hue without a single one of them naming a colour.
+      if (p.race) card.dataset.race = p.race;
+
+      // ── The header band ──────────────────────────────────────────────────
+      //
+      // The card had no top. It opened straight onto a section label, and the
+      // timings hung off the bottom under five wrapping rows, so two seats side
+      // by side did not line up on anything at all.
+      //
+      // Now: the race mark, who it is, and the four timings that define the
+      // build, in a band that is the same height on every card. The timings
+      // moved up here because they describe the build rather than belonging to
+      // any one section of it.
+      const head = node('header', 'bc-head');
+      if (o.title) head.appendChild(o.title);
+      const chips = timingChips(p);
+      if (chips) head.appendChild(chips);
+      card.appendChild(head);
 
       // ── Heroes ───────────────────────────────────────────────────────────
       const heroes = heroesOf(p).slice(0, 4);
       if (heroes.length) {
-        const sec = node('div', 'bc-sec bc-heroes');
-        sec.appendChild(node('span', 'bc-label', 'Heroes'));
+        const sec = section('heroes', 'Heroes', 'bc-heroes');
         const row = node('div', 'bc-heroes-row');
+        // One track per hero. The CSS cannot know the count, and auto-fill
+        // leaves a permanently empty track whenever the card is wide enough for
+        // one more hero than the player had. See .bc-heroes-row in css/report.css.
+        row.style.gridTemplateColumns = `repeat(${heroes.length}, minmax(0, 13rem))`;
         heroes.forEach((h, i) => {
           const cell = node('div', 'bc-hero');
 
@@ -278,8 +353,7 @@
       // ── Units ────────────────────────────────────────────────────────────
       const units = keyUnits(p);
       if (units.length) {
-        const sec = node('div', 'bc-sec');
-        sec.appendChild(node('span', 'bc-label', 'Units'));
+        const sec = section('units', 'Units');
         const row = node('div', 'bc-units');
         for (const u of units) {
           const cell = node('div', 'bc-unit');
@@ -297,8 +371,7 @@
       // ── Upgrades ─────────────────────────────────────────────────────────
       const ups = compact ? [] : upgrades(p);
       if (ups.length) {
-        const sec = node('div', 'bc-sec');
-        sec.appendChild(node('span', 'bc-label', 'Upgrades'));
+        const sec = section('upgrades', 'Upgrades');
         const row = node('div', 'bc-ups');
         for (const u of ups) {
           const chip = node('span', 'bc-up');
@@ -342,8 +415,7 @@
         const used = bought.filter(isConsumed)
           .sort((a, b) => (b.count - a.count) || (a.firstMs - b.firstMs));
 
-        const sec = node('div', 'bc-sec');
-        sec.appendChild(node('span', 'bc-label', 'Bought'));
+        const sec = section('bought', 'Bought');
         const row = node('div', 'bc-ups');
 
         // The cap is on the whole row, not per group, and it is spent on the
@@ -387,39 +459,12 @@
       // merc camp sells four unit types, so the row cannot run away.
       const mercs = compact ? [] : stack(p.mercenariesHired);
       if (mercs.length) {
-        const sec = node('div', 'bc-sec');
-        sec.appendChild(node('span', 'bc-label', 'Mercs'));
+        const sec = section('mercs', 'Mercs');
         const row = node('div', 'bc-ups');
         for (const m of mercs) row.appendChild(stackChip(m, icon, 'Mercenary'));
         sec.appendChild(row);
         card.appendChild(sec);
       }
-
-      // ── The shape of the build, as chips ─────────────────────────────────
-      //
-      // The site card carries one expansion badge. A replay knows more than a
-      // curated build does, so the timings that define a build ride here too.
-      // Nothing that is null gets a chip: "T3 —" is a row of furniture.
-      const chips = node('div', 'bc-chips');
-      const chip = (label, value, kind) => {
-        if (!value) return;
-        const c = node('span', 'bc-chip', `${label} ${value}`);
-        if (kind) c.dataset.kind = kind;
-        chips.appendChild(c);
-      };
-      chip('T2', fmt(p.tier2Time), 'tier');
-      chip('T3', fmt(p.tier3Time), 'tier');
-      chip('Tower', fmt(p.firstTowerTime), 'tower');
-      if (p.expansionTime !== null && p.expansionTime !== undefined) {
-        const c = node('span', 'bc-chip', `Expo ${fmt(p.expansionTime)}`);
-        c.dataset.kind = 'expo';
-        chips.appendChild(c);
-      } else {
-        const c = node('span', 'bc-chip', 'No expo');
-        c.dataset.kind = 'no-expo';
-        chips.appendChild(c);
-      }
-      if (chips.children.length) card.appendChild(chips);
 
       return card;
     }

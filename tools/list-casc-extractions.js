@@ -123,6 +123,54 @@ try {
   console.log('  Run extraction #6 manually: grab everything under war3.w3mod\\PathTextures\\');
 }
 
+// --- Missile / projectile models ---
+//
+// The viewer currently draws every ranged attack as one generic streak sprite,
+// generated procedurally in client/js/ProjectileRenderer3D.js. All the BEHAVIOUR
+// is already real per-unit data (speed, arc, homing, muzzle offsets, extracted
+// by tools/extract-unit-projectiles.js) — only the model is generic.
+//
+// Extracting these swaps the generic sprite for each unit's real missile. The
+// paths below come straight from the `art` field of helpers/unitProjectiles.json,
+// so this list is derived, never hand-typed.
+//
+// TWO THINGS TO KNOW BEFORE DOING THIS WORK:
+//   1. Many WC3 missiles are ParticleEmitter2 / RibbonEmitter only, with no solid
+//      geometry at all — those convert to an EMPTY glTF, exactly like the water
+//      elemental and wisp did during the unit batch. Expect a real fraction of
+//      this list to need the sprite fallback regardless.
+//   2. The game data is inconsistently cased (`abilities\weapons\huntermissile`
+//      is lowercase while its neighbours are not). R2 is case-sensitive and the
+//      resulting 404s only show up in the DevTools Issues tab — normalise the
+//      output filenames to lowercase on conversion.
+console.log('');
+console.log('=== 7. MISSILE / PROJECTILE MODELS (optional — art upgrade) ===');
+const projPath = path.join(__dirname, '..', 'helpers', 'unitProjectiles.json');
+try {
+  const proj = require(projPath);
+  const arts = new Set();
+  for (const id in proj.units) {
+    const u = proj.units[id];
+    if (u.art) arts.add(u.art);
+    if (u.weapon2 && u.weapon2.art) arts.add(u.weapon2.art);
+  }
+  const sorted = [...arts].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  console.log('Extract these ' + sorted.length + ' models (referenced by ' +
+              Object.keys(proj.units).length + ' units):');
+  console.log('  FROM: war3.w3mod\\Abilities\\Weapons\\   (and \\Abilities\\Spells\\ for a few)');
+  console.log('  TO:   tools/map-data/abilities/weapons/');
+  console.log('');
+  console.log('  NOTE: the data says .mdl; CASC stores .mdx. Extract the .mdx.');
+  console.log('');
+  for (const a of sorted) console.log('    ' + a.replace(/\.mdl$/i, '.mdx'));
+  console.log('');
+  console.log('  Their BLP textures are referenced from inside each MDX, so run');
+  console.log('  `node tools/inspect-mdx.js --file=<extracted.mdx>` afterwards to list');
+  console.log('  what else to pull from war3.w3mod\\Textures\\.');
+} catch (err) {
+  console.log('  [run `node tools/extract-unit-projectiles.js` first — ' + err.message + ']');
+}
+
 console.log('');
 console.log('=== SUMMARY ===');
 console.log('Start with #1 (cliffs) and #3 (metadata) — those are needed first.');

@@ -1,0 +1,3139 @@
+{
+  "version": 1,
+  "units": {
+    "Hant": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "Hjai": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "Hvwd": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MoonPriestessMissile\\MoonPriestessMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Hkal": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BloodElfMissile\\BloodElfMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "Hvsh": {
+      "speed": 1200,
+      "arc": 0.08,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NagaArrowMissile\\NagaArrowMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Hgam": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "Othr": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Oths": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ocbw": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\huntermissile\\huntermissile.mdl",
+      "launchZ": 60,
+      "impactZ": 120
+    },
+    "odkt": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Odrt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Orkn": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ShadowHunterMissile\\ShadowHunterMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ovlj": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WitchDoctorMissile\\WitchDoctorMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Ogld": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SerpentWardMissile\\SerpentWardMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nqb4": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl",
+      "splash": 100,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl"
+      }
+    },
+    "osp4": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SerpentWardMissile\\SerpentWardMissile.mdl",
+      "splash": 50,
+      "launchZ": 225,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SerpentWardMissile\\SerpentWardMissile.mdl"
+      }
+    },
+    "npn5": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ojgn": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "splash": 100,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl"
+      }
+    },
+    "Uktl": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "uktn": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Usyl": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Uwar": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchY": 40,
+      "launchZ": 120,
+      "impactZ": 90,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "uswb": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BansheeMissile\\BansheeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ubdr": {
+      "speed": 800,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "splash": 75,
+      "launchY": 120,
+      "launchZ": -20,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 800,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
+      }
+    },
+    "ubdd": {
+      "speed": 800,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "splash": 25,
+      "launchY": 115,
+      "launchZ": -60,
+      "weapon2": {
+        "speed": 800,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
+      }
+    },
+    "Eilm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchZ": 160,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "Eidm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchZ": 160,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "Ecen": {
+      "speed": 1300,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Ekgg": {
+      "speed": 1300,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Efur": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Emfr": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Emns": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Eevm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchZ": 160,
+      "impactZ": 125,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "ensh": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SentinelMissile\\SentinelMissile.mdl",
+      "splash": 400,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SentinelMissile\\SentinelMissile.mdl"
+      }
+    },
+    "eshd": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": 11,
+      "launchY": 62,
+      "launchZ": 71,
+      "impactZ": 60
+    },
+    "Etyr": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MoonPriestessMissile\\MoonPriestessMissile.mdl",
+      "launchZ": 100,
+      "impactZ": 60
+    },
+    "nckb": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nchw": {
+      "speed": 1100,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nw2w": {
+      "speed": 1100,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nmed": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DruidoftheTalonMissile\\DruidoftheTalonMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nmdm": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DruidoftheTalonMissile\\DruidoftheTalonMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nser": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl",
+      "launchY": 100,
+      "launchZ": -20,
+      "impactZ": 40
+    },
+    "nthr": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl",
+      "launchY": 120,
+      "launchZ": -20,
+      "impactZ": 60
+    },
+    "nemi": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\PriestMissile\\PriestMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nhea": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": 11,
+      "launchY": 62,
+      "launchZ": 71,
+      "impactZ": 60
+    },
+    "negt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 255,
+      "impactZ": 120
+    },
+    "negf": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "launchZ": 255,
+      "impactZ": 120
+    },
+    "negm": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AncestralGuardianMissile\\AncestralGuardianMissile.mdl",
+      "launchZ": 255,
+      "impactZ": 120
+    },
+    "ndgt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 255,
+      "impactZ": 120
+    },
+    "nssn": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchX": 11,
+      "launchY": 62,
+      "launchZ": 71,
+      "impactZ": 60
+    },
+    "Uclc": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "zmar": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\Rifle\\RifleImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\Rifle\\RifleImpact.mdl"
+      }
+    },
+    "zjug": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "zhyd": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\HydraliskImpact\\HydraliskImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\HydraliskImpact\\HydraliskImpact.mdl"
+      }
+    },
+    "zcso": {
+      "speed": 1900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Rifle\\RifleImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "zsmc": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nntg": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 85,
+      "impactZ": 90
+    },
+    "nhyc": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl",
+      "launchY": 100,
+      "launchZ": 75,
+      "impactZ": 110
+    },
+    "nnsw": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchX": 25,
+      "launchY": 170,
+      "launchZ": 85,
+      "impactZ": 100
+    },
+    "nnsu": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 160
+    },
+    "nsnp": {
+      "speed": 1900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\snapMissile\\snapMissile.mdl",
+      "launchZ": 30,
+      "impactZ": 60
+    },
+    "nsbs": {
+      "speed": 1900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\snapMissile\\snapMissile.mdl",
+      "launchX": 10,
+      "launchY": -48,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nwgs": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WingedSerpentMissile\\WingedSerpentMissile.mdl",
+      "launchY": 30,
+      "launchZ": 51,
+      "impactZ": 20
+    },
+    "nbel": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BloodElfSpellThiefMISSILE\\BloodElfSpellThiefMISSILE.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ncat": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 0,
+      "art": "abilities\\weapons\\catapult\\catapultmissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.35,
+        "homing": 1,
+        "art": "abilities\\weapons\\catapult\\catapultmissile.mdl"
+      }
+    },
+    "ndsa": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 25,
+      "launchY": 120,
+      "launchZ": 20,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "ngbl": {
+      "speed": 1900,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FragDriller\\FragDriller.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "net1": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 210,
+      "impactZ": 120
+    },
+    "net2": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl",
+      "launchZ": 255,
+      "impactZ": 120
+    },
+    "nbt1": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl",
+      "splash": 50,
+      "launchZ": 110,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.35,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl"
+      }
+    },
+    "nbt2": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 0,
+      "art": "abilities\\weapons\\catapult\\catapultmissile.mdl",
+      "splash": 50,
+      "launchZ": 135,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.35,
+        "homing": 1,
+        "art": "abilities\\weapons\\catapult\\catapultmissile.mdl"
+      }
+    },
+    "nft1": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchZ": 140,
+      "impactZ": 120
+    },
+    "nft2": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "launchZ": 235,
+      "impactZ": 120
+    },
+    "ndt1": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 140,
+      "impactZ": 120
+    },
+    "ndt2": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "launchZ": 235,
+      "impactZ": 120
+    },
+    "ntt1": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Spells\\NightElf\\CorrosiveBreath\\CorrosiveBreathMissile.mdl",
+      "launchZ": 180,
+      "impactZ": 120
+    },
+    "ntx2": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Spells\\Undead\\DeathCoil\\DeathCoilMissile.mdl",
+      "launchZ": 255,
+      "impactZ": 120
+    },
+    "nchp": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\PriestMissile\\PriestMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nhym": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchX": 25,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "Nmsr": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": -12,
+      "launchY": 100,
+      "launchZ": 130,
+      "impactZ": 120
+    },
+    "Nswt": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchX": -12,
+      "launchY": 100,
+      "launchZ": 130,
+      "impactZ": 120
+    },
+    "Hblm": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BloodElfMissile\\BloodElfMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "Hamg": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "hcas": {
+      "speed": 1800,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 160
+    },
+    "hctw": {
+      "speed": 700,
+      "arc": 0.35,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\CannonTowerMissile\\CannonTowerMissile.mdl",
+      "splash": 50,
+      "launchZ": 160,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 700,
+        "arc": 0.35,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\CannonTowerMissile\\CannonTowerMissile.mdl"
+      }
+    },
+    "hdhw": {
+      "speed": 1100,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DragonHawkMissile\\DragonHawkMissile.mdl",
+      "launchY": -17,
+      "launchZ": 33,
+      "impactZ": 20
+    },
+    "hgtw": {
+      "speed": 1800,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "launchZ": 145,
+      "impactZ": 120
+    },
+    "hatw": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Spells\\Undead\\OrbOfDeath\\OrbOfDeathMissile.mdl",
+      "launchZ": 245,
+      "impactZ": 120
+    },
+    "hgyr": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\GyroCopter\\GyroCopterImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\GyroCopter\\GyroCopterMissile.mdl"
+      }
+    },
+    "hkee": {
+      "speed": 1800,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 160
+    },
+    "hmpr": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\PriestMissile\\PriestMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "hmtm": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\Mortar\\MortarMissile.mdl",
+      "splash": 25,
+      "launchX": 30,
+      "launchY": 25,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.35,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\Mortar\\MortarMissile.mdl"
+      }
+    },
+    "hrif": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\Rifle\\RifleImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\Rifle\\RifleImpact.mdl"
+      }
+    },
+    "hsor": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SorceressMissile\\SorceressMissile.mdl",
+      "launchZ": 85,
+      "impactZ": 60
+    },
+    "hspt": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BloodElfSpellThiefMISSILE\\BloodElfSpellThiefMISSILE.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "hmtt": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 2500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl"
+      }
+    },
+    "hrtt": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchY": -60,
+      "launchZ": 100,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RocketMissile\\RocketMissile.mdl"
+      }
+    },
+    "htow": {
+      "speed": 1800,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 160
+    },
+    "hwat": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1300,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl"
+      }
+    },
+    "hwt2": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1300,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl"
+      }
+    },
+    "hwt3": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1300,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl"
+      }
+    },
+    "hgry": {
+      "speed": 1100,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GryphonRiderMissile\\GryphonRiderMissile.mdl",
+      "launchX": 12,
+      "launchY": -17,
+      "launchZ": 33,
+      "impactZ": 20
+    },
+    "hphx": {
+      "speed": 1800,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\PhoenixMissile\\Phoenix_Missile.mdl",
+      "splash": 25,
+      "launchZ": 20,
+      "impactZ": 20,
+      "weapon2": {
+        "speed": 1800,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\PhoenixMissile\\Phoenix_Missile.mdl"
+      }
+    },
+    "hbsh": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl",
+      "splash": 100,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl"
+      }
+    },
+    "hdes": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl",
+      "splash": 25,
+      "launchY": 70,
+      "launchZ": 30,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl"
+      }
+    },
+    "oang": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AncestralGuardianMissile\\AncestralGuardianMissile.mdl"
+    },
+    "ocat": {
+      "speed": 900,
+      "arc": 0.35,
+      "homing": 0,
+      "art": "abilities\\weapons\\DemolisherMissile\\DemolisherMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.35,
+        "homing": 1,
+        "art": "abilities\\weapons\\DemolisherMissile\\DemolisherMissile.mdl"
+      }
+    },
+    "odoc": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WitchDoctorMissile\\WitchDoctorMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Ofar": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ohun": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\huntermissile\\huntermissile.mdl",
+      "launchX": -5,
+      "launchY": -34,
+      "launchZ": 113,
+      "impactZ": 60
+    },
+    "otbk": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\huntermissile\\huntermissile.mdl",
+      "launchX": -5,
+      "launchY": -34,
+      "launchZ": 113,
+      "impactZ": 60
+    },
+    "okod": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "oshm": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "osp1": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SerpentWardMissile\\SerpentWardMissile.mdl",
+      "launchZ": 225,
+      "impactZ": 60
+    },
+    "osp2": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SerpentWardMissile\\SerpentWardMissile.mdl",
+      "launchZ": 225,
+      "impactZ": 60
+    },
+    "osp3": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SerpentWardMissile\\SerpentWardMissile.mdl",
+      "launchZ": 225,
+      "impactZ": 60
+    },
+    "Oshd": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ShadowHunterMissile\\ShadowHunterMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "otbr": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BatTrollMissile\\BatTrollMissile.mdl",
+      "launchX": -35,
+      "launchY": 30,
+      "launchZ": 51,
+      "impactZ": 20
+    },
+    "otrb": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\huntermissile\\huntermissile.mdl",
+      "launchZ": 60,
+      "impactZ": 120
+    },
+    "orbr": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\huntermissile\\huntermissile.mdl"
+    },
+    "owyv": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\WyvernSpear\\WyvernSpearMissile.mdl",
+      "launchX": -35,
+      "launchY": 30,
+      "launchZ": 51,
+      "impactZ": 20
+    },
+    "owtw": {
+      "speed": 1800,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "launchZ": 135,
+      "impactZ": 120
+    },
+    "ospw": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SorceressMissile\\SorceressMissile.mdl",
+      "launchX": 10,
+      "launchY": 94,
+      "launchZ": 110,
+      "impactZ": 110
+    },
+    "ospm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SorceressMissile\\SorceressMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "odes": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl"
+      }
+    },
+    "uban": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BansheeMissile\\BansheeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ucrm": {
+      "speed": 500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\CryptFiendMissile\\CryptFiendMissile.mdl",
+      "launchY": 100,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ucry": {
+      "speed": 500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\CryptFiendMissile\\CryptFiendMissile.mdl",
+      "launchY": 100,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ufro": {
+      "speed": 800,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "splash": 25,
+      "launchY": 115,
+      "launchZ": 60
+    },
+    "ugrm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GargoyleMissile\\GargoyleMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Ulic": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 130,
+      "impactZ": 100
+    },
+    "unec": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "uskm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SkeletalMageMissile\\SkeletalMageMissile.mdl",
+      "launchX": -10,
+      "launchY": 75,
+      "launchZ": 70,
+      "impactZ": 60
+    },
+    "unpl": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ZigguratMissile\\ZigguratMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 260
+    },
+    "unp1": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ZigguratFrostMissile\\ZigguratFrostMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 260
+    },
+    "unp2": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ZigguratFrostMissile\\ZigguratFrostMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 260
+    },
+    "uzg1": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ZigguratMissile\\ZigguratMissile.mdl",
+      "launchZ": 145,
+      "impactZ": 120
+    },
+    "uzg2": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ZigguratFrostMissile\\ZigguratFrostMissile.mdl",
+      "launchZ": 145,
+      "impactZ": 120
+    },
+    "umtw": {
+      "speed": 900,
+      "arc": 0.3,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\MeatwagonMissile\\MeatwagonMissile.mdl",
+      "splash": 25,
+      "launchY": -30,
+      "launchZ": 150,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.3,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\MeatwagonMissile\\MeatwagonMissile.mdl"
+      }
+    },
+    "uloc": {
+      "speed": 500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LocustMissile\\LocustMissile.mdl"
+    },
+    "uobs": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ubsp": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl",
+      "splash": 1,
+      "launchX": 55,
+      "launchY": 115,
+      "launchZ": 10,
+      "impactZ": 10,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
+      }
+    },
+    "udes": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl",
+      "splash": 25,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl"
+      }
+    },
+    "uubs": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl",
+      "splash": 100,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BoatMissile\\BoatMissile.mdl"
+      }
+    },
+    "ebal": {
+      "speed": 1400,
+      "arc": 0.05,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\GlaiveMissile\\GlaiveMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 2000,
+        "arc": 0.05,
+        "homing": 0,
+        "art": "Abilities\\Weapons\\GlaiveMissile\\GlaiveMissile.mdl",
+        "splash": 25
+      }
+    },
+    "echm": {
+      "speed": 1200,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl",
+      "launchX": 10,
+      "launchY": 105,
+      "launchZ": -18,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+        "splash": 50
+      }
+    },
+    "edot": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DruidoftheTalonMissile\\DruidoftheTalonMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "edtm": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DruidoftheTalonMissile\\DruidoftheTalonMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Edmm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchZ": 160,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "Ekee": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\KeeperGroveMissile\\KeeperGroveMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Emoo": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MoonPriestessMissile\\MoonPriestessMissile.mdl",
+      "launchZ": 100,
+      "impactZ": 60
+    },
+    "esen": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SentinelMissile\\SentinelMissile.mdl",
+      "splash": 400,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SentinelMissile\\SentinelMissile.mdl"
+      }
+    },
+    "earc": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": 11,
+      "launchY": 62,
+      "launchZ": 71,
+      "impactZ": 60
+    },
+    "edry": {
+      "speed": 1000,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Dryadmissile\\Dryadmissile.mdl",
+      "launchX": -25,
+      "launchY": 40,
+      "launchZ": 125,
+      "impactZ": 60
+    },
+    "ehpr": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "espv": {
+      "speed": 1200,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SpiritOfVengeanceMissile\\SpiritOfVengeanceMissile.mdl",
+      "launchX": 70,
+      "launchZ": 140,
+      "impactZ": 120
+    },
+    "even": {
+      "speed": 1200,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\VengeanceMissile\\VengeanceMissile.mdl",
+      "launchX": 15,
+      "launchZ": 45,
+      "impactZ": 50
+    },
+    "efdr": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FaerieDragonMissile\\FaerieDragonMissile.mdl",
+      "launchY": 70,
+      "launchZ": 11,
+      "impactZ": 11
+    },
+    "edes": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl"
+      }
+    },
+    "ebsh": {
+      "speed": 900,
+      "arc": 0.1,
+      "homing": 0,
+      "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl",
+      "splash": 100,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\GuardTowerMissile\\GuardTowerMissile.mdl"
+      }
+    },
+    "nska": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": -11,
+      "launchY": 74,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nsca": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": -11,
+      "launchY": 74,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nskm": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": -11,
+      "launchY": 74,
+      "launchZ": 60,
+      "impactZ": 90
+    },
+    "nskf": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": -11,
+      "launchY": 74,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nws1": {
+      "speed": 1100,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DragonHawkMissile\\DragonHawkMissile.mdl",
+      "launchX": -87,
+      "launchY": -17,
+      "launchZ": 33,
+      "impactZ": 20
+    },
+    "nws2": {
+      "speed": 1100,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DragonHawkMissile\\DragonHawkMissile.mdl"
+    },
+    "nbrg": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Banditmissile\\Banditmissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nass": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Banditmissile\\Banditmissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nbdr": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "launchY": 90,
+      "launchZ": -20
+    },
+    "nbdk": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireballMissile\\FireballMissile.mdl",
+      "launchY": 60,
+      "launchZ": -20,
+      "impactZ": 60
+    },
+    "nbwm": {
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "splash": 50,
+      "launchY": 120,
+      "launchZ": -30,
+      "impactZ": 60,
+      "weapon2": {
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+      }
+    },
+    "nadw": {
+      "speed": 800,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "launchY": 60,
+      "launchZ": -10
+    },
+    "nadk": {
+      "speed": 800,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "launchY": 100,
+      "launchZ": -20,
+      "impactZ": 40
+    },
+    "nadr": {
+      "speed": 800,
+      "arc": 0.1,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl",
+      "splash": 75,
+      "launchY": 120,
+      "launchZ": -20,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 800,
+        "arc": 0.1,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FrostWyrmMissile\\FrostWyrmMissile.mdl"
+      }
+    },
+    "nbzw": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "launchY": 60,
+      "launchZ": -20
+    },
+    "nbzk": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "launchY": 120,
+      "launchZ": -30,
+      "impactZ": 60
+    },
+    "nbzd": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 75,
+      "launchY": 160,
+      "launchZ": -50,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "ngrw": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl",
+      "launchY": 60,
+      "launchZ": -10
+    },
+    "ngdk": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl",
+      "launchY": 120,
+      "launchZ": -20,
+      "impactZ": 60
+    },
+    "ngrd": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl",
+      "splash": 50,
+      "launchY": 120,
+      "launchZ": -30,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl"
+      }
+    },
+    "nrdk": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchY": 40,
+      "launchZ": -30
+    },
+    "nrdr": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "launchY": 30,
+      "launchZ": -20
+    },
+    "nrwm": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "splash": 50,
+      "launchY": 120,
+      "launchZ": -30,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+      }
+    },
+    "ncea": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "ncim": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "ncks": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireballMissile\\FireballMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "ndth": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireballMissile\\FireballMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 80
+    },
+    "ndtp": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireballMissile\\FireballMissile.mdl",
+      "launchZ": 110,
+      "impactZ": 80
+    },
+    "ndtr": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ndtb": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 80
+    },
+    "ndtt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ndtw": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nelb": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1300,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl"
+      }
+    },
+    "nele": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1300,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl"
+      }
+    },
+    "nfsh": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireballMissile\\FireballMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 80
+    },
+    "nfsp": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireballMissile\\FireballMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 80
+    },
+    "nftr": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nftb": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 80
+    },
+    "nftt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nftk": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nfrs": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "nfre": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "ngh1": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BansheeMissile\\BansheeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ngh2": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BansheeMissile\\BansheeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ngna": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchX": -20,
+      "launchZ": 40,
+      "impactZ": 60
+    },
+    "ngns": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\PoisonArrow\\PoisonArrowMissile.mdl",
+      "launchX": -20,
+      "launchZ": 40,
+      "impactZ": 60
+    },
+    "ngnw": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nhar": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\HarpyMissile\\HarpyMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 30
+    },
+    "nhrr": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\HarpyMissile\\HarpyMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 30
+    },
+    "nhrw": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 30
+    },
+    "nhrh": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 30
+    },
+    "nhrq": {
+      "speed": 1000,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\GargoyleMissile\\GargoyleMissile.mdl",
+      "splash": 75,
+      "launchZ": 60,
+      "impactZ": 30,
+      "weapon2": {
+        "speed": 1000,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\GargoyleMissile\\GargoyleMissile.mdl"
+      }
+    },
+    "nhfp": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nhdc": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nhhr": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nitr": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nits": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nitt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nitw": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Axe\\AxeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nith": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nitp": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nkog": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nltl": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 75,
+      "launchY": 100,
+      "launchZ": 20,
+      "impactZ": 100,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "nthl": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 75,
+      "launchY": 120,
+      "launchZ": 20,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "nstw": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 75,
+      "launchY": 150,
+      "launchZ": 20,
+      "impactZ": 140,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "nrzt": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl",
+      "launchX": 10,
+      "launchY": -48,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nqbh": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nnwl": {
+      "speed": 500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\CryptFiendMissile\\CryptFiendMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nnwr": {
+      "speed": 500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\CryptFiendMissile\\CryptFiendMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nnwq": {
+      "speed": 500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\CryptFiendMissile\\CryptFiendMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nslf": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SludgeMissile\\SludgeMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nslh": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "splash": 50,
+      "launchY": 60,
+      "launchZ": 10,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl"
+      }
+    },
+    "nslr": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "splash": 50,
+      "launchY": 100,
+      "launchZ": 20,
+      "impactZ": 100,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl"
+      }
+    },
+    "nslv": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "splash": 50,
+      "launchY": 80,
+      "launchZ": 20,
+      "impactZ": 100,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl"
+      }
+    },
+    "nsll": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "splash": 50,
+      "launchY": 140,
+      "launchZ": 20,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+      }
+    },
+    "nsat": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nsts": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BlackKeeperMissile\\BlackKeeperMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nssp": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissileSmall\\ChimaeraAcidMissileSmall.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nwzr": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchX": 25,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "nwzg": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchX": 30,
+      "launchZ": 75,
+      "impactZ": 60
+    },
+    "nwiz": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\PriestMissile\\PriestMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nwzd": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 50,
+      "launchZ": 120,
+      "impactZ": 60
+    },
+    "nbal": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchZ": 60,
+      "impactZ": 90
+    },
+    "nba2": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchZ": 60,
+      "impactZ": 90
+    },
+    "npn2": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Nbrn": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\Arrow\\ArrowMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ntrh": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "launchY": 15,
+      "launchZ": 10,
+      "impactZ": 30
+    },
+    "ntrt": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\WaterElementalMissile\\WaterElementalMissile.mdl",
+      "launchY": 40,
+      "launchZ": 25,
+      "impactZ": 100
+    },
+    "nhyd": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl",
+      "launchX": 50,
+      "launchY": 100,
+      "launchZ": 100,
+      "impactZ": 70
+    },
+    "nhyh": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl",
+      "launchX": 30,
+      "launchY": 30,
+      "launchZ": 100,
+      "impactZ": 50
+    },
+    "nehy": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl",
+      "splash": 50,
+      "launchX": 60,
+      "launchY": 150,
+      "launchZ": 150,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl"
+      }
+    },
+    "nahy": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl",
+      "splash": 50,
+      "launchX": 70,
+      "launchY": 200,
+      "launchZ": 200,
+      "impactZ": 100,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraAcidMissile\\ChimaeraAcidMissile.mdl"
+      }
+    },
+    "nltc": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MakuraMissile\\MakuraMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nlds": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MakuraMissile\\MakuraMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nmbg": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MurgulMagicMissile\\MurgulMagicMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nmsn": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MurgulMagicMissile\\MurgulMagicMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "nmsc": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MurgulMagicMissile\\MurgulMagicMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nrel": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SeaElementalMissile\\SeaElementalMissile.mdl",
+      "launchZ": 80,
+      "impactZ": 60
+    },
+    "nsel": {
+      "speed": 1300,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SeaElementalMissile\\SeaElementalMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 120
+    },
+    "nsra": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nsrh": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nsrn": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nsrw": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "Nngs": {
+      "speed": 1200,
+      "arc": 0.08,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NagaArrowMissile\\NagaArrowMissile.mdl",
+      "launchX": -12,
+      "launchY": 100,
+      "launchZ": 130,
+      "impactZ": 120
+    },
+    "Nfir": {
+      "speed": 1200,
+      "arc": 0.08,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LordofFlameMissile\\LordofFlameMissile.mdl",
+      "launchX": -12,
+      "launchY": 100,
+      "launchZ": 130,
+      "impactZ": 120
+    },
+    "nlv1": {
+      "speed": 1000,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LavaSpawnMissile\\LavaSpawnMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1000,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\LavaSpawnMissile\\LavaSpawnMissile.mdl"
+      }
+    },
+    "nlv2": {
+      "speed": 1000,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LavaSpawnMissile\\LavaSpawnMissile.mdl",
+      "splash": 25,
+      "launchZ": 70,
+      "impactZ": 70,
+      "weapon2": {
+        "speed": 1000,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\LavaSpawnMissile\\LavaSpawnMissile.mdl"
+      }
+    },
+    "nlv3": {
+      "speed": 1000,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LavaSpawnMissile\\LavaSpawnMissile.mdl",
+      "splash": 25,
+      "launchZ": 80,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 1000,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\LavaSpawnMissile\\LavaSpawnMissile.mdl"
+      }
+    },
+    "nwe1": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nwe2": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "nwe3": {
+      "speed": 1500,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\ChimaeraLightningMissile\\ChimaeraLightningMissile.mdl"
+      }
+    },
+    "nqb1": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nqb2": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nqb3": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl",
+      "splash": 25,
+      "launchZ": 60,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 1500,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\BristleBackMissile\\BristleBackMissile.mdl"
+      }
+    },
+    "nfgo": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "splash": 50,
+      "launchZ": 60,
+      "impactZ": 100,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0.15,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl"
+      }
+    },
+    "ntka": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\TuskarSpear\\TuskarSpear.mdl",
+      "launchX": 11,
+      "launchY": 62,
+      "launchZ": 71,
+      "impactZ": 60
+    },
+    "ntkt": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\TuskarSpear\\TuskarSpear.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ntks": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "abilities\\weapons\\TuskarSpear\\TuskarSpear.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nanb": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\HarpyMissile\\HarpyMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nanm": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\HarpyMissile\\HarpyMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nbnb": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\HarpyMissile\\HarpyMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nane": {
+      "speed": 1500,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\HarpyMissile\\HarpyMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nfot": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "splash": 75,
+      "launchX": -30,
+      "launchY": 70,
+      "launchZ": 60,
+      "impactZ": 160
+    },
+    "nfod": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "splash": 75,
+      "launchX": -40,
+      "launchY": 90,
+      "launchZ": 80,
+      "impactZ": 180
+    },
+    "nsns": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MurgulMagicMissile\\MurgulMagicMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nfpe": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "nfps": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 100
+    },
+    "ndqv": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ndqp": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\NecromancerMissile\\NecromancerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ninc": {
+      "speed": 700,
+      "arc": 0.08,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "splash": 75,
+      "launchY": -30,
+      "launchZ": 80,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 700,
+        "arc": 0.08,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+      }
+    },
+    "ninm": {
+      "speed": 700,
+      "arc": 0.08,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "splash": 75,
+      "launchY": -45,
+      "launchZ": 120,
+      "impactZ": 90,
+      "weapon2": {
+        "speed": 700,
+        "arc": 0.08,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+      }
+    },
+    "nina": {
+      "speed": 700,
+      "arc": 0.08,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl",
+      "splash": 75,
+      "launchY": 30,
+      "launchZ": 60,
+      "impactZ": 110,
+      "weapon2": {
+        "speed": 700,
+        "arc": 0.08,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\RedDragonBreath\\RedDragonMissile.mdl"
+      }
+    },
+    "ndrm": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ndrh": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "ndrs": {
+      "speed": 1200,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FarseerMissile\\FarseerMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nvdl": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\VoidWalkerMissile\\VoidWalkerMissile.mdl",
+      "launchX": 40,
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "nvdw": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\VoidWalkerMissile\\VoidWalkerMissile.mdl",
+      "launchX": 70,
+      "launchZ": 70,
+      "impactZ": 80
+    },
+    "nvdg": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\VoidWalkerMissile\\VoidWalkerMissile.mdl",
+      "launchX": 80,
+      "launchZ": 80,
+      "impactZ": 90
+    },
+    "nvde": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\VoidWalkerMissile\\VoidWalkerMissile.mdl",
+      "launchX": 100,
+      "launchZ": 100,
+      "impactZ": 100
+    },
+    "nnht": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl",
+      "launchY": -30,
+      "launchZ": 30
+    },
+    "nndk": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl",
+      "launchY": 80,
+      "launchZ": 5,
+      "impactZ": 120
+    },
+    "nndr": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl",
+      "splash": 75,
+      "launchY": 80,
+      "launchZ": 5,
+      "impactZ": 60,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\AvengerMissile\\AvengerMissile.mdl"
+      }
+    },
+    "ners": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchY": 40,
+      "launchZ": 140,
+      "impactZ": 120,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "nerd": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchY": 60,
+      "launchZ": 160,
+      "impactZ": 130,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "nerw": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl",
+      "splash": 50,
+      "launchY": 75,
+      "launchZ": 190,
+      "impactZ": 150,
+      "weapon2": {
+        "speed": 900,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\DemonHunterMissile\\DemonHunterMissile.mdl"
+      }
+    },
+    "nwzw": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 20,
+      "launchY": 100,
+      "launchZ": 66,
+      "impactZ": 60
+    },
+    "nwar": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 2500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl"
+      }
+    },
+    "nccd": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 2500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl"
+      }
+    },
+    "ncco": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 2500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl"
+      }
+    },
+    "nccu": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 2500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl"
+      }
+    },
+    "nccr": {
+      "instant": 1,
+      "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl",
+      "launchZ": 60,
+      "impactZ": 80,
+      "weapon2": {
+        "speed": 2500,
+        "arc": 0,
+        "homing": 1,
+        "art": "Abilities\\Weapons\\SteamTank\\SteamTankImpact.mdl"
+      }
+    },
+    "Hjnd": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\MoonPriestessMissile\\MoonPriestessMissile.mdl",
+      "launchZ": 60,
+      "impactZ": 60
+    },
+    "obai": {
+      "speed": 900,
+      "arc": 0,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\SorceressMissile\\SorceressMissile.mdl",
+      "launchX": 10,
+      "launchY": 94,
+      "launchZ": 110,
+      "impactZ": 110
+    },
+    "Haah": {
+      "speed": 900,
+      "arc": 0.15,
+      "homing": 1,
+      "art": "Abilities\\Weapons\\FireBallMissile\\FireBallMissile.mdl",
+      "launchX": 15,
+      "launchZ": 66,
+      "impactZ": 60
+    }
+  }
+}

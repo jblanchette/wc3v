@@ -353,7 +353,10 @@ const BuildOrderData = class {
 
       } else if (key === 'scout') {
         // Scouting is 1v1-only — detection mis-credits in team/FFA games.
-        if (window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
+        // `typeof window` rather than `window.` because this class also runs in
+        // Node now (SummaryBuild calls it at parse time; see the export below).
+        if (typeof window !== 'undefined' && window.wc3v
+            && typeof window.wc3v.isNonOneVsOne === 'function'
             && window.wc3v.isNonOneVsOne()) return;
         events.push(create('scout', gameTime, supplyUsed, supplyMax, w, {
           displayName: event.isLumberScout
@@ -681,9 +684,17 @@ const BuildOrderData = class {
     // Show the official pro name everywhere; the raw replay handle is kept
     // on rawDisplayName for the match-header tooltip (PlayerNames.js is the
     // single source of truth for this mapping).
-    const rawDisplayName = PlayerNames.original(player.displayName);
-    const displayName = PlayerNames.canonical(player.displayName);
-    const raceInfo = RaceLabels[race] || { label: '??', accent: '#8B949E' };
+    // Both of these are viewer globals, and this class now also runs headless
+    // (SummaryBuild calls it at parse time, in Node as well as the browser).
+    // The guarded form is what every other consumer of RaceLabels already uses.
+    // Falling back to the raw handle rather than shipping PlayerNames here is
+    // deliberate: stored data stays raw, and the UI canonicalizes.
+    const name = player.displayName || '';
+    const hasNames = typeof PlayerNames !== 'undefined';
+    const rawDisplayName = hasNames ? PlayerNames.original(name) : name;
+    const displayName = hasNames ? PlayerNames.canonical(name) : name;
+    const raceInfo = (typeof RaceLabels !== 'undefined' && RaceLabels[race])
+      || { label: '??', accent: '#8B949E' };
 
     const tier2Event = tierStream.find(t => t.tier === 2);
     const tier3Event = tierStream.find(t => t.tier === 3);
@@ -709,4 +720,13 @@ const BuildOrderData = class {
   }
 };
 
-window.BuildOrderData = BuildOrderData;
+// Dual-runtime, as of schema v5. The desktop app stores what this class
+// derives (production, tier production, the final snapshot) rather than
+// re-deriving it from a summary, so that the two apps cannot disagree about
+// what a player built. That means it runs in three places now: the viewer, the
+// desktop's main thread, and Node via tools/desktop-preview.js.
+//
+// It reaches for three viewer globals — window.wc3v, PlayerNames and
+// RaceLabels — and every one of them is guarded above rather than shipped.
+if (typeof window !== 'undefined') window.BuildOrderData = BuildOrderData;
+if (typeof module !== 'undefined' && module.exports) module.exports = BuildOrderData;

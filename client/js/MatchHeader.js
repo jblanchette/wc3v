@@ -296,9 +296,10 @@ const MatchHeader = class {
 
     // Base Layout button — opens the same placement viewer modal as the
     // build-order panel's Base button. playerId is coerced to a number to
-    // keep this inline-handler interpolation safe.
+    // keep this inline-handler interpolation safe. Hidden on mobile, where
+    // the modal's canvas + 3D renderer are never set up.
     const pid = Number(player && player.playerId);
-    if (Number.isFinite(pid)) {
+    if (Number.isFinite(pid) && !this.viewer.mobileMode) {
       html += `<div class="mh-base-btn" onclick="wc3v.showPlacementViewer(${pid})" title="View base layout">Base Layout</div>`;
     }
 

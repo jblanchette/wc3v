@@ -307,6 +307,36 @@
     }
 
     /**
+     * The canvas box changed size — window resize, layout switch, or a
+     * fullscreen enter/exit.
+     *
+     * Almost everything the shot machinery remembers between frames is stored
+     * in DISPLAY CSS PIXELS (`_latch`, `_lerpCssX/Y`) or is a rate limit keyed
+     * to those numbers (`_steadyK`, the zoom-direction hold). Display pixels
+     * are exactly the space that just changed scale: entering fullscreen can
+     * more than double `viewer.displayScale`, so a latch captured a frame
+     * earlier now names a point nowhere near the action.
+     *
+     * Carried across the resize, that stale latch is not a transient — it is
+     * DEFENDED. `_latchTarget` only re-cuts wholesale once MIN_SHOT_MS has
+     * elapsed, and until then soft-glides; `_steadyZoomTarget` slew-limits the
+     * zoom back. The camera reads as having abandoned the scene, because it
+     * has: it is holding a shot addressed in the old viewport's coordinates.
+     *
+     * So drop the viewport-space state and let the next update() re-seed from
+     * the live transform. World-space state (split targets, cluster hysteresis,
+     * intrusion) is measured in game units and survives untouched.
+     */
+    notifyViewportResized () {
+      this._initialized = false;
+      this._latch = null;
+      this._latchCutWall = null;
+      this._steadyK = null;
+      this._zoomDir = 0;
+      this._zoomDirWall = 0;
+    }
+
+    /**
      * Current playback speed, fed each frame by the viewer. When it climbs
      * (auto time-scale fast-forward, or a high manual speed) the AUTO camera
      * widens and calms its pan so skimming dead time stays watchable.

@@ -52,7 +52,16 @@
       staticPoseMinPx: 24,
       // Run the economy / dominance chart cursor updates even when their
       // bottom-panel tab is hidden. Off = skip the work nobody can see.
-      chartsWhenHidden: false
+      chartsWhenHidden: false,
+      // Draw ranged attack projectiles (arrows, bolts, artillery shells) and
+      // their impact/muzzle flashes. Two InstancedMeshes, so the cost is two
+      // draw calls and no scene-graph churn — but this gates the whole feature
+      // for A/B measurement, since perf was the main risk when it was designed.
+      projectiles: true,
+      // Corner readout: rolling frame time, draw calls, projectile counts.
+      // Off by default. Exists because there was previously no in-viewer way to
+      // measure a render change, only to assert one.
+      showStats: false
     },
     // NOTE on an optimization that was TRIED AND REMOVED: capping how many units
     // tick an AnimationMixer per frame ("animated unit budget"). Measured, it

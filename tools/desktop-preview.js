@@ -16,6 +16,7 @@
  *   node tools/desktop-preview.js --games=8 --me="SooooK#31962"
  *   node tools/desktop-preview.js --games=40 --w3c
  *   node tools/desktop-preview.js --games=40 --stale=4
+ *   node tools/desktop-preview.js --setup
  *
  * --stale=N degrades the first N games so the schema-upgrade paths render. See
  * the comment at the call site: they alternate between "stored before v4" and
@@ -24,6 +25,9 @@
  *
  * --w3c tags every name and fakes a live W3Champions match, which is the only
  * way to see the scout card without queuing for a real game.
+ *
+ * --setup shows the first-run screen, which otherwise only appears on a machine
+ * that has never run the app.
  *
  * Then open desktop/preview/preview.html in a browser.
  */
@@ -35,6 +39,7 @@ const zlib = require('zlib');
 const SummaryExtract = require('../client/js/SummaryExtract');
 const MomentsExtract = require('../client/js/MomentsExtract');
 const SeriesExtract = require('../client/js/SeriesExtract');
+const SummaryBuild = require('../client/js/SummaryBuild');
 
 const ROOT = path.resolve(__dirname, '..');
 const REPLAY_DIR = path.join(ROOT, 'client', 'replays');
@@ -60,47 +65,12 @@ if (!fs.existsSync(DIST)) {
   process.exit(1);
 }
 
-// Mirror of desktop/src-frontend/js/store.js buildSummary. Duplicated rather
-// than shared because that one is a browser module that reads window globals;
-// keeping this tool free of a DOM shim is worth twenty lines.
-const buildSummary = (out, key, playedAt) => {
-  const rawMap = (out.replay && out.replay.metadata && out.replay.metadata.map &&
-    out.replay.metadata.map.mapName) || '';
-  const durationMs = (out.replay && out.replay.subheader &&
-    out.replay.subheader.replayLengthMS) || 0;
-  const worldNeutralGroups = (out.world && out.world.neutralGroups) || null;
-  const summary = {
-    key,
-    schemaVersion: 4,
-    savedAt: Date.now(),
-    playedAt,
-    patchVersion: (out.replay && out.replay.subheader && out.replay.subheader.version) || null,
-    map: rawMap.split(/[\\/]/).pop(),
-    mapRaw: rawMap,
-    gameMode: out.gameMode || null,
-    winner: out.winner || null,
-    durationMs,
-    neutralCamps: SummaryExtract.extractNeutralCamps(worldNeutralGroups),
-    moments: MomentsExtract.extractMoments(out),
-    // Schema v4. Only replays re-parsed since the dominance engine landed
-    // carry a series, so a chunk of client/replays yields null here and
-    // exercises the desktop's "no dominance for this game" path for free.
-    dominance: SeriesExtract.extractDominance(out),
-    resources: SeriesExtract.extractResources(out),
-    players: {}
-  };
-  const combat = MomentsExtract.extractCombat(out);
-  for (const slot of Object.keys(out.players || {})) {
-    const pd = out.players[slot];
-    const rpd = out.replay && out.replay.players && out.replay.players[slot];
-    if (!pd || !rpd || pd.isNeutralPlayer) continue;
-    if (rpd.teamId >= 1000) continue;
-    summary.players[slot] = SummaryExtract.extractPlayerSummary(pd, rpd, durationMs, worldNeutralGroups);
-    summary.players[slot].teamId = rpd.teamId;
-    summary.players[slot].combat = combat[slot] || null;
-  }
-  return summary;
-};
+// The summary shape is SummaryBuild's, the same module the app calls. This tool
+// carried a hand-copied duplicate of it, which meant the harness could build a
+// summary the app would never write. Only replays re-parsed since the dominance
+// engine landed carry a series, so a chunk of client/replays yields null there
+// and exercises the "no dominance for this game" path for free.
+const buildSummary = SummaryBuild.buildSummary;
 
 const wanted = parseInt(args.games, 10) || 12;
 // --match=<substring> pins the sample to particular replays. The corpus is
@@ -208,6 +178,15 @@ const ongoing = (args.w3c && foe) ? {
   ]
 } : null;
 
+// Two seeded tags, so the Library's filter and the casting badge have
+// something real to match without anybody typing first.
+const previewTags = {};
+{
+  const keys = Object.keys(store);
+  if (keys[0]) previewTags[keys[0]] = ['grand final'];
+  if (keys[2]) previewTags[keys[2]] = ['random hero', 'showmatch'];
+}
+
 const html = `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><title>WC3V — preview</title></head>
 <body>
@@ -217,6 +196,7 @@ const html = `<!DOCTYPE html>
 // from summaries built out of real parsed replays.
 const STORE = ${JSON.stringify(store)};
 const ONGOING = ${JSON.stringify(ongoing)};
+const PREVIEW_TAGS = ${JSON.stringify(previewTags)};
 const b64 = (s) => { const bin = atob(s); const a = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
 
@@ -225,6 +205,11 @@ const b64 = (s) => { const bin = atob(s); const a = new Uint8Array(bin.length);
 // anything driven BY a parse — the first-boot catch-up chips — has to be driven
 // by hand from the console or an automated check.
 window.__WC3V_PREVIEW__ = true;
+
+// The tag sidecar, in memory. Seeded with a couple so the Library filter and
+// the casting badge have something to match on a fresh preview.
+var TAGS = PREVIEW_TAGS;
+var SHOW_SETUP = ${JSON.stringify(!!args.setup)};
 
 window.__TAURI__ = {
   core: {
@@ -255,6 +240,18 @@ window.__TAURI__ = {
         // more useful than pretending it worked.
         case 'open_in_viewer':
           throw 'the viewer handoff needs the real app (this is the UI preview)';
+        // Tags live in a real file in the real app. In here they live for as
+        // long as the page does, which is enough to drive the Library filter,
+        // the report's tag strip and the casting badge.
+        case 'read_tags': return JSON.stringify(TAGS);
+        case 'write_tags': TAGS = JSON.parse(args.json); return null;
+        // The first-run screen. Off by default here, because the preview is for
+        // looking at the app rather than at its setup; --setup turns it on.
+        // The preview is the frontend only, so it says so rather than naming a
+        // build number it is not running.
+        case 'app_version': return 'preview';
+        case 'setup_done': return !SHOW_SETUP;
+        case 'mark_setup_done': SHOW_SETUP = false; return null;
         case 'start_watching': return 2;
         case 'get_autostart': return false;
         case 'publish_overlay_state': return null;

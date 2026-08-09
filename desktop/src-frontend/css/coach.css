@@ -1,0 +1,122 @@
+/* ============================================================
+   coach.css, WC3V desktop.
+
+   Head to head and the Coach screen.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Head to head ────────────────────────────────────────────────────── */
+.h2h-who { margin: 0 0 var(--sp-1); color: var(--ink-dim); }
+
+.h2h-score { font-size: var(--fs-h2); font-weight: 700; font-variant-numeric: tabular-nums; }
+.h2h-score .w { color: var(--verdict-win); }
+.h2h-score .l { color: var(--verdict-loss); }
+.h2h-lines { list-style: none; margin: var(--sp-3) 0 0; padding: 0; }
+.h2h-lines li { padding: 2px 0; color: var(--ink-2); overflow-wrap: anywhere; }
+
+/* ── Coach ───────────────────────────────────────────────────────────────
+   A dashboard, not a document. The head band is fixed; the grid below fills
+   the rest of the window; only the two lower cells scroll. "Am I improving"
+   should be answerable at a glance, which is what the fold rule is for. */
+
+.coach-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--app-line);
+  background: var(--app-bg);
+}
+.coach-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.coach-head .field-inline { margin-left: auto; }
+.profile-name { margin: 0; font-size: var(--fs-h2); }
+.profile-sub { margin: 0; color: var(--ink-dim); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+
+.form-chip {
+  padding: 2px var(--sp-3);
+  background: var(--app-well);
+  border: var(--outline);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--cut-in);
+  color: var(--dom-gold);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.coach-grid {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-3);
+  min-height: 0;
+  padding: var(--sp-4);
+}
+/* Trend band in the fixed top row; the two cells always in the flexible one,
+   so they stretch to the fold whether or not a trend band exists. */
+.coach-grid > .trend-band { grid-row: 1; grid-column: 1 / -1; margin: 0; }
+.coach-grid > .coach-cell { grid-row: 2; }
+.coach-grid > .empty { grid-row: 1 / -1; grid-column: 1 / -1; }
+
+/* A dashboard cell: fixed chrome, scrolling body. */
+.coach-cell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--sp-2);
+  margin: 0;
+  min-height: 0;
+}
+.coach-cell > h2 { margin: 0; }
+.cell-body { min-height: 0; }
+.records-seg { justify-self: start; }
+
+.stat-table { width: 100%; border-collapse: collapse; }
+.stat-table th {
+  text-align: left;
+  padding: var(--sp-1) var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--app-line);
+}
+.stat-table td {
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--app-line);
+  overflow-wrap: anywhere;
+}
+.stat-table td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat-table tr:last-child td { border-bottom: 0; }
+
+.coach { list-style: none; margin: 0; padding: 0; }
+.coach li {
+  padding: var(--sp-2) 0 var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--app-line);
+  color: var(--ink-2);
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.coach li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 1.05em;
+  width: 6px;
+  height: 6px;
+  background: var(--dom-orange);
+  border: var(--outline);
+  transform: rotate(45deg);
+}
+.coach li:last-child { border-bottom: 0; }

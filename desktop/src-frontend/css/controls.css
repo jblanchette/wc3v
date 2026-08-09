@@ -1,0 +1,283 @@
+/* ============================================================
+   controls.css, WC3V desktop.
+
+   Buttons, the reserved Open-in-viewer control, and the activity footer.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Controls ────────────────────────────────────────────────────────── */
+
+.btn {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-4);
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.btn:hover { background: linear-gradient(180deg, #262117, var(--app-panel-2)); }
+.btn:active { box-shadow: var(--cut-in); }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+
+.btn-primary {
+  background: linear-gradient(180deg, #7a5a24, #5c4319);
+  border-color: #8a6a2c;
+  color: #f4ead5;
+}
+.btn-primary:hover { background: linear-gradient(180deg, #8a6729, #6a4d1d); }
+
+.btn-sm { min-height: var(--ico-sm); padding: 0 var(--sp-3); font-size: var(--fs-min); }
+
+/* ── Open in WC3V Viewer ─────────────────────────────────────────────────
+   RESERVED. One control, one class, one place: the game report header. It is
+   the only thing in this app that leaves it — everything else reads a file on
+   your machine, and this hands the replay to the real 3D viewer over loopback.
+   Nothing else may use `.btn-viewer`, and nothing else may put the wordmark
+   inside a control.
+
+   It is the one place the navy chrome is allowed below `main`. The rule at the
+   top of this file is that navy stops at `main`, and the exception is
+   deliberate rather than an oversight: this button is a piece of the site
+   wearing site colours, sitting inside the app, which is exactly what it does
+   when you press it. Everything around it stays warm, so it cannot be mistaken
+   for one more carved button — which is the entire point. */
+
+.btn-viewer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  min-height: var(--ico-md);
+  padding: 0 var(--sp-4);
+  /* The site's navy, lifted at the top edge the way its own chrome is. */
+  background: linear-gradient(180deg, #253048, #18202f);
+  border: 1px solid #3d4c6b;
+  border-radius: var(--radius-sm);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(0, 0, 0, 0.5);
+  color: #cdd6e6;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.btn-viewer:hover {
+  background: linear-gradient(180deg, #2c3a56, #1d2739);
+  border-color: var(--accent);
+  color: #e8eefb;
+}
+.btn-viewer:active { box-shadow: var(--cut-in); }
+
+.btn-viewer-lead, .btn-viewer-tail { color: inherit; }
+
+/* The canonical lockup: same construction as .wordmark in the app bar and
+   .site-wordmark on the site. Weight 900, tight, the 3 in --accent. Built from
+   elements rather than a string so it cannot be reproduced by accident. */
+.btn-viewer-mark {
+  font-weight: 900;
+  font-size: 1.06em;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+.btn-viewer-three { color: var(--accent); }
+
+/* No glow anywhere in this app, so the reserved look is carried by hue and
+   depth. The one motion it gets is the same as everything else. */
+@media (prefers-reduced-motion: reduce) {
+  .btn-viewer { transition: none; }
+}
+
+/* Selected state for the segmented theme/size pickers. --dom-gold, not
+   --gold: this is a warm surface, and --gold is the navy half's achievement
+   yellow. */
+.btn.is-on {
+  border-color: var(--dom-orange);
+  color: var(--dom-gold);
+  box-shadow: var(--cut-in);
+}
+
+/* The overlay preview sits on a checkerboard, because the OBS overlay is
+   transparent and a preview on a solid panel hides exactly the mistake this
+   screen exists to catch. */
+.preview-stage {
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  background-color: #17140f;
+  background-image:
+    linear-gradient(45deg, #0e0c08 25%, transparent 25%, transparent 75%, #0e0c08 75%),
+    linear-gradient(45deg, #0e0c08 25%, transparent 25%, transparent 75%, #0e0c08 75%);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  margin-bottom: var(--sp-3);
+}
+
+/* The panel checkboxes carry a name and a one-line explanation. */
+.check > span { display: grid; gap: 2px; }
+.check .hint { margin: 0; }
+
+/* Each panel is also a source on its own, so its row carries a Copy URL
+   button. The checkbox takes the room and the button sits at the end. */
+.panel-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+.panel-row .check { flex: 1; min-width: 0; }
+.panel-row .btn-sm { flex: none; margin-top: var(--sp-1); }
+
+.choices { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.choice {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.choice:hover { border-color: var(--app-edge); }
+.choice.is-active { border-color: var(--dom-green); color: var(--verdict-win); }
+
+.field { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-3); }
+.field-inline { margin-bottom: 0; min-width: 18rem; }
+.field-label { color: var(--ink-faint); font-size: var(--fs-min); text-transform: uppercase; letter-spacing: 0.08em; }
+.field input {
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
+  width: 100%;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  color: var(--ink);
+  font: inherit;
+}
+.field input:focus { border-color: var(--app-edge); }
+
+.empty { color: var(--ink-faint); padding: var(--sp-4) var(--sp-2); }
+
+/* ── Activity ────────────────────────────────────────────────────────── */
+
+.activity {
+  background: var(--app-panel);
+  border-top: 1px solid var(--app-line);
+  display: grid;
+  grid-template-rows: auto auto;
+  min-height: 0;
+}
+
+.activity-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-4);
+  background: transparent;
+  border: 0;
+  color: var(--ink-dim);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.activity-toggle:hover { color: var(--ink); }
+.status { overflow-wrap: anywhere; }
+/* A failed action has to be readable where the user already is, not only in
+   the drawer. */
+.status[data-kind="err"] { color: var(--verdict-loss); font-weight: 600; }
+.activity-label {
+  margin-left: auto;
+  color: var(--ink-faint);
+  font-size: var(--fs-min);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.activity-label::after { content: ' ▲'; }
+.activity[data-open="1"] .activity-label::after { content: ' ▼'; }
+
+.activity-log {
+  max-height: 16rem;
+  padding: 0 var(--sp-4) var(--sp-3);
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+}
+.log-line {
+  padding: var(--sp-1) 0;
+  border-bottom: 1px solid var(--app-line);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+.log-line.ok   { color: var(--dom-green); }
+.log-line.warn { color: var(--dom-gold); }
+.log-line.err  { color: var(--verdict-loss); }
+
+/* ── Trend plots ─────────────────────────────────────────────────────────
+   Three small plots, one measure each. Never one plot with two y-axes: win
+   rate is a percentage and T2 is a duration, and sharing an axis would invent
+   a relationship out of the scaling. One series per plot, so no legend. The
+   heading is the label. Grid and axes are omitted rather than drawn faintly:
+   at this size the endpoints carry the reading and a grid would be noise. */
+
+/* Three sparks side by side. The trends band is one fixed-height row of the
+   Coach dashboard, not a column of plots. */
+.trend-plots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
+.trend-plot h3 {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.spark {
+  display: block;
+  width: 100%;
+  /* 64px, down from 96: the viewBox stretches (preserveAspectRatio: none),
+     so this is pure CSS and buys the dashboard a fixed-height trends band. */
+  height: 64px;
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+/* Thin mark, recessive surface. vector-effect keeps the stroke 2px after the
+   non-uniform viewBox stretch. */
+.spark-line {
+  fill: none;
+  stroke: var(--dom-gold);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.spark-dot {
+  fill: var(--dom-gold);
+  stroke: var(--app-well);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.trend-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--sp-1);
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-variant-numeric: tabular-nums;
+}
+.trend-end.is-now { color: var(--ink); font-weight: 600; }

@@ -834,17 +834,21 @@ const BuildOrderRenderer = class {
       column.append(header);
 
       // Full-width BASE LAYOUT button, between the header card and the
-      // QUICK JUMP nav. Renders in every mode.
-      const baseBtn = document.createElement('button');
-      baseBtn.type = 'button';
-      baseBtn.classList.add('bo-base-btn');
-      baseBtn.title = 'View this player\'s base layout';
-      baseBtn.innerHTML = '<span class="bo-base-btn-icon" aria-hidden="true">\u2302</span>VIEW BASE LAYOUT';
-      baseBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.viewer.showPlacementViewer(player.playerId);
-      });
-      column.append(baseBtn);
+      // QUICK JUMP nav. Every desktop/tablet mode gets it; mobile skips the
+      // canvas + 3D subsystems the placement modal needs, so the button
+      // would be dead.
+      if (!this.viewer.mobileMode) {
+        const baseBtn = document.createElement('button');
+        baseBtn.type = 'button';
+        baseBtn.classList.add('bo-base-btn');
+        baseBtn.title = 'View this player\'s base layout';
+        baseBtn.innerHTML = '<span class="bo-base-btn-icon" aria-hidden="true">\u2302</span>VIEW BASE LAYOUT';
+        baseBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.viewer.showPlacementViewer(player.playerId);
+        });
+        column.append(baseBtn);
+      }
 
       // --- Chapter Quick-Jump ---
       if (this.viewer.chapterMarkers) {

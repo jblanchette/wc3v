@@ -3,6 +3,215 @@
 Nothing here is a public release. The app does not launch until 1.0.0; these
 builds go to R2 so the existing install can update itself. See `README.md`.
 
+## 0.9.0 — 7 Aug 2026
+
+The game report becomes the viewer's Match Summary screen, drawn by the viewer's
+own code.
+
+### Seven tabs, six of them shared
+
+Home now shows **Overview, Army, Economy, Upgrades, Creeps, Charts** and
+**Build**. The first six are `client/js/MatchSummaryView.js`, the same renderer
+the site's viewer mounts in its Match Summary modal, and this app draws none of
+them: `js/summary-model.js` turns a stored summary into the model it takes and
+injects the icon resolver and the colour function. Same rule as the dominance
+chart. If this app ever starts drawing a tab of its own, the seam has leaked.
+
+This **reverses `c6af5a5` ("one screen, no tabs")**, deliberately. What that
+change was right about is still true — the old tab strip split one game's story
+across two screens — but the Match Summary is one screen's worth of material
+per tab, not half of a report.
+
+Overview carries the dominance plot, so the chart panel's Dominance chip is
+gone; its Resources and Army charts moved into the Charts tab. Build is the only
+tab with no equivalent on the site: the build cards and the build order in the
+order it happened. "Buildings by tier" and "Upgrades and mercenaries" are gone
+from it, because the Army, Upgrades and Economy tabs are those sections.
+
+The fold rule is unchanged and re-audited: `.report-body` is still the only
+element allowed to scroll, and the tab strip sits above it in the fixed band.
+
+### The band is one line
+
+**99px → 36px**, which is 62px straight back into the only scroller on the
+screen. Nothing was removed: the verdict, the opponent, the all-time record,
+the map, the length, the tags, the three benchmarks and the viewer button are
+all still there, in one row that wraps only if the window is too narrow.
+
+It was three stacked things — a verdict row, a fact line under it, and a
+four-row benchmark table beside them. The table was 96px of the 99 on its own;
+the one-line form of it already existed but only applied below 1040px, and it
+is now the only form. Army, Economy and Upgrades fit inside the fold at
+1280x820 as a result.
+
+### Tabs looked like operating-system buttons
+
+`.ms-tab` was written for the viewer's `<div>` tabs and set only a bottom
+border. This app renders them as `<button>` for the keyboard and the `tablist`
+role, so every user-agent default came through: grey fill, full border, system
+font. The rule resets `appearance`, `background` and `border` now, and works as
+either element.
+
+### The Overview tab packs across the width
+
+`.ms-ov-bottom { margin-top: auto }` pinned Match Stats to the foot of a column
+taller than its content, which is where the hole in the middle came from. The
+sections are `.ms-block`s in a grid now, so Damage Matchup and APM sit side by
+side, and Match Stats is a wide strip of label/value pairs rather than a 180px
+two-column table. Per-player column: **734px → 554px**.
+
+### Schema v5, and a backfill that actually backfills
+
+Stored summaries now carry `players[].build` — what `BuildOrderData` derives
+from the event stream — plus the camp records the Creeps tab needs (claim state,
+owner, route order, the creeps themselves, per-hero XP).
+
+It is **stored rather than re-derived**. `BuildOrderData.buildTierSnapshots`
+accumulates gold over its own synthesised event list, not the raw stream, so a
+second extractor here would have disagreed with the viewer the first time either
+was edited. The class is dual-runtime now and runs at parse time.
+
+Measured with `tools/measure-summary-v5.js`: **+2.4 KB per game, 34 MB for
+3,072 games.**
+
+**The backfill would never have upgraded anything.** It skipped a replay when
+`isStored(key)` was true, which is presence, not freshness — so every summary
+written before a schema bump stayed at the old version forever, with only the
+per-game "Re-read" button as a way out. The store tracks stale keys now and the
+backfill skips on `isCurrent(key)`.
+
+### The app upgrades your history itself
+
+A summary written under an older schema is missing blocks only a full parse can
+produce. There is no in-place fix, so on launch **the app re-reads the whole
+history by itself**, newest first, in the background, with a strip under the app
+bar showing how far it has got and a Pause. Nothing to find, no button to press.
+
+**A game not yet re-read shows the reason and nothing else** — the result, the
+map, the length, Open in Viewer, and one line explaining that it needs
+re-reading. It does **not** draw a partial report. The old data is enough for
+build cards and a build order, and showing them was the obvious kindness, but
+the result looks complete while silently omitting the roster, the creep route,
+the upgrades and every chart. Nobody can tell that screen apart from a game
+where those things did not happen.
+
+Two bugs behind this, both of which made the update look like it had done
+nothing on a machine with history: the boot catch-up was gated on an **empty**
+store, so it never ran; and the backfill skipped on presence rather than
+freshness, so even "Parse all replays" would have skipped every stale game.
+
+### Split out of the site, not copied from it
+
+`client/css/match-summary.css` and `client/js/CombatTables.js` are new files,
+split out of `main.css` and `Constants.js` so this app can load them without
+dragging in the viewer's layout vocabulary or its canvas enums. Both are copied
+into `css/vendor` and `js/vendor` by `tools/build-desktop-client.js`, alongside
+`dominance.css`, which was split for exactly this reason a release ago.
+
+## 0.8.0 — 7 Aug 2026
+
+The report stops describing you and starts measuring you, the app learns about
+other people's replays, and the stylesheet becomes a directory.
+
+### No generated prose, anywhere
+
+`client/js/GameReport.js` is deleted, with `tools/test-game-report.js`. It wrote
+a sentence about how somebody played ("Army led it; mechanics lagged") from five
+pillar scores on an invented 0-100 scale. The sentence is gone from the report
+header, the OBS overlay and the post-game toast; the pillar bars and the named
+mistakes are gone from the overlay with it.
+
+Also cut from the report's fact line: the hero opener, `Tower rush` (which was
+`classifyArchetype` guessing a strategy from three timings) and
+`11 workers @5:00`. What is left is the result, the two races, the map and the
+length.
+
+### Three numbers against two baselines
+
+The verdict band carries **dominance, effective APM and hero kills**, each
+against your own recent games and against the other players of that race in your
+history.
+
+The second column was going to be a published race average. It was measured
+first, over all 334 replays in `client/replays`, and both candidates were dead:
+
+- **Dominance is a share of 100 between two players**, so any population average
+  of it is 50 by construction. Measured 48 to 52 across all four races. A delta
+  against that says "did you beat your opponent", which the result already says.
+- **Effective APM belongs to the bracket, not the race.** The repo's corpus is
+  professional games, medians 395 to 565. A ladder player at 74 would have been
+  told they are 490 behind Orc.
+
+Matchmaking is what fixes both, so the column is the people you actually played,
+excluding yourself. `js/race-baseline-data.js` (generated by
+`tools/build-race-baselines.js`) covers the cold start and is labelled as a
+ladder sample wherever it is used.
+
+### A metrics layer, and two schemas that were one
+
+- **`client/js/GameMetrics.js`** turns a stored summary and a seat into scalars.
+  "Workers at 5:00" had three implementations; it now has one.
+- **Dominance is time-weighted.** The stored series is not on a fixed grid, so
+  the overlay's old sample-count average over-weighted the seconds around every
+  hero death. Fixed, and asserted in `tools/test-game-metrics.js`.
+- **`client/js/SummaryBuild.js`** owns the stored-summary shape and
+  `SCHEMA_VERSION`. It existed twice, in `store.js` and hand-copied into
+  `tools/desktop-preview.js`, with the version number in only one of them.
+- **A 3v3 seat was being compared against 1v1 pro medians**, rendering 102 APM as
+  `−462.5`. The comparison block is 1v1 only now, like the result and the record.
+
+**No schema change and no re-parse.** A 0.7.x store upgrades with nothing to do.
+
+### Library
+
+A fourth view: games you were not in. Its own list, its own filters, its own
+report column, and "Open a replay…", which registers the chosen file's FOLDER as
+a replay root rather than reaching past the scoped-read guard in `read_replay`.
+
+Home and the Library mount the same renderer, `js/game-report-view.js`, extracted
+from `games-view.js`. Passing `seat: null` selects its symmetric presentation: no
+"you", no seat put first, and the result stated as one player beating another.
+The README's identity sentence changed to admit it.
+
+### Tags, and a casting overlay
+
+- **Free tags per game**, in a sidecar at `<app_data>/labels.json` keyed by
+  content key. Not on the summary: a re-parse rebuilds that, and a schema bump
+  re-parses everything. Editable from the report, filterable in the Library.
+- **`/cast` is a second overlay page**, with its own renderer and its own
+  Browser Source. Event line, two players, a running series score and a format
+  badge, plus a symmetric stat bar with no deltas, because every baseline this
+  app has is one person's history and on a broadcast neither player is that
+  person. The player overlay is untouched. Driven from Stream → Casting.
+- Both are covered in `overlay.rs`'s tests: `/cast` is asserted token-gated and
+  asserted self-contained.
+
+### First run
+
+One screen, once: replay folder, your player name, W3Champions (**checked**, with
+what it sends and where to turn it off stated on the screen), and read-my-history.
+Every row skippable. The checkbox writes through `set_w3c_enabled`, so `w3c.rs`
+stays the authority and skipping leaves lookups genuinely off.
+
+### The design pass
+
+- **Build cards are race-keyed.** A header band with the race sigil, the name and
+  all four timings (they used to dangle off the bottom under five wrapping rows),
+  a full-perimeter race rim, and section glyphs in place of a 5rem text column.
+- **Every icon is on a 36px lattice**, so both cards line up and a short row
+  leaves empty cells in the same columns as the long row's icons. Hero cells get
+  one track per hero rather than a permanently empty trailing column.
+- **Race as material**, `[data-race]` in the token layer, on cards, feed rows,
+  player titles and build-order columns. Muted, no glow, never a single edge.
+- **`js/glyphs.js`** is every mark that is not a race and not game art. Section
+  headings have icons now.
+- **`app.css` is ten ordered sheets.** 2,567 lines in one file is most of why the
+  report drifted away from the feed. Load order is the cascade and is fixed in
+  `index.html`; `states.css` is last because its breakpoints override everything.
+
+Fold audit clean at 900x600 and 1280x820, every game, every chart mode, drawer
+open and closed, all four views, plus the 3v3 path.
+
 ## 0.7.4 — 6 Aug 2026
 
 Resources stops drawing two staircases and a flat floor.

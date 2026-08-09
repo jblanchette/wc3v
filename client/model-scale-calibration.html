@@ -50,7 +50,12 @@
   <div id="panel"><h3>Loading…</h3></div>
   <div id="log">Ready</div>
   <div id="export"><div style="text-align:center">
-    <div style="margin-bottom:8px;color:#9fb0bf">Paste these into TURN_OVERRIDES… er, SCALE_OVERRIDES in tools/patch-model-scale.js</div>
+    <div style="margin-bottom:8px;color:#9fb0bf">
+      Comparison only. There is no override table any more — model scale is the game's
+      Art Scaling Value (helpers/modelScale.json), applied verbatim by
+      tools/patch-model-scale.js. If a unit reads wrong here, the model or the
+      extraction is wrong; do not hand-tune it back.
+    </div>
     <textarea id="export-text" readonly></textarea>
     <div style="margin-top:8px"><button id="btn-export-close" style="font-size:14px;padding:6px 14px;">Close</button></div>
   </div></div>

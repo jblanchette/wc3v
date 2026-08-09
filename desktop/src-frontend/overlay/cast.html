@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>WC3V cast</title>
+<!--
+  The CASTING overlay. A second page, not a mode of the player overlay.
+
+  Served by the Rust loopback server, which inlines cast.css and cast-render.js
+  into this shell at request time (they are separate files so the live preview
+  inside the WC3V window can render from exactly the same source, because a
+  preview drawn by different code is a preview that can lie).
+
+  Everything the player overlay guarantees still holds: entirely self-contained,
+  no external fonts, scripts or requests, and the only network activity is the
+  same-origin EventSource this page opens. 127.0.0.1 only, token on every route,
+  GET only, read-only.
+
+  What is different is the framing. The player overlay is one person's session,
+  said as "you", revealed after a game. This is two players side by side, said
+  as neither, held up for a whole series. Nothing here is ever about the person
+  running the app.
+
+  URL params:
+    token    required
+    view     obs | panel        (panel = opaque background, for a monitor)
+    theme    carved | slate
+    scale    number, 0.4-4
+    modules  comma list: series,stats,badge
+-->
+<style>
+  html { font-size: 16px; }
+  body { background: transparent; padding: 0.5rem; margin: 0; }
+  body[data-view="panel"] { background: #0f0d0a; min-height: 100vh; }
+/*CAST_CSS*/
+</style>
+</head>
+<body>
+  <div id="cast"></div>
+<script>
+/*CAST_RENDER_JS*/
+</script>
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(location.search);
+  var token = params.get('token') || '';
+  document.body.dataset.view = params.get('view') === 'panel' ? 'panel' : 'obs';
+  if (params.get('theme')) document.documentElement.dataset.theme = params.get('theme');
+  var scale = parseFloat(params.get('scale'));
+  if (scale > 0.4 && scale < 4) document.documentElement.style.fontSize = (16 * scale) + 'px';
+
+  // An unrecognised module name is dropped rather than failing the page, so an
+  // older URL already pasted into OBS keeps working after a rename.
+  var mods = (params.get('modules') || '').split(',')
+    .map(function (s) { return s.trim(); })
+    .filter(function (s) { return window.CastRender.ALL_MODULES.indexOf(s) !== -1; });
+
+  var root = document.getElementById('cast');
+
+  // No reveal mode. A casting overlay that vanishes mid-series is a bug on
+  // somebody's stream, and unlike the player overlay there is no "a game just
+  // finished" beat to hang a reveal on.
+  var draw = function (state) {
+    window.CastRender.render(root, state || {}, mods.length ? mods : null);
+  };
+
+  draw(null);
+
+  var es = new EventSource('/events?token=' + encodeURIComponent(token));
+  es.onmessage = function (e) {
+    try { draw(JSON.parse(e.data)); } catch (err) { /* a partial frame is not a crash */ }
+  };
+  // EventSource reconnects by itself. Nothing to do here but not throw.
+  es.onerror = function () {};
+})();
+</script>
+</body>
+</html>

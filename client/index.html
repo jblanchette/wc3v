@@ -127,11 +127,11 @@
   <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
-  <link rel="stylesheet" href="css/tokens.css?v=2">
-  <link rel="stylesheet" href="css/main.css?v=2">
+  <link rel="stylesheet" href="css/tokens.css?v=8cfad272d7">
+  <link rel="stylesheet" href="css/main.css?v=b4b77b1a31">
   <!-- New design system (DESIGN-SYSTEM.md): tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
-  <link rel="stylesheet" href="css/redesign.css?v=2">
+  <link rel="stylesheet" href="css/redesign.css?v=9fd305548f">
   <style>
     body { margin: 0; }
   </style>
@@ -140,31 +140,31 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = null; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '02af1f50f2'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
-  <script src="js/clientConfig.js?v=2"></script>
-  <script src="js/BandSwitcher.js?v=2"></script>
-  <script src="js/SiteNav.js?v=2"></script>
-  <script src="js/TosBanner.js?v=2"></script>
-  <script src="js/Security.js?v=2"></script>
-  <script src="js/PlayerNames.js?v=2"></script>
-  <script src="js/Glossary.js?v=2"></script>
-  <script src="js/MyReplays.js?v=2"></script>
+  <script src="js/clientConfig.js?v=16b088dcdf"></script>
+  <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
+  <script src="js/SiteNav.js?v=b9e5834fd5"></script>
+  <script src="js/TosBanner.js?v=7c6ea0b8fd"></script>
+  <script src="js/Security.js?v=a131c46e7c"></script>
+  <script src="js/PlayerNames.js?v=9b16a85d90"></script>
+  <script src="js/Glossary.js?v=da632b7348"></script>
+  <script src="js/MyReplays.js?v=beeae22327"></script>
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
        UploadManager.prefetchParser() warms the HTTP cache on first user intent. -->
-  <script src="js/UploadManager.js?v=3"></script>
-  <script src="js/PlayerPicker.js?v=2"></script>
-  <script src="js/ReplayTypePicker.js?v=2"></script>
-  <script src="js/SummaryExtract.js?v=2"></script>
-  <script src="js/ReplayAnalyzer.js?v=2"></script>
-  <script src="js/CompareMatcher.js?v=2"></script>
-  <script src="js/AdvancedComparePicker.js?v=2"></script>
-  <script src="js/CompareCharts.js?v=2"></script>
-  <script src="js/CompareInline.js?v=2"></script>
-  <script src="js/BugReport.js?v=2"></script>
+  <script src="js/UploadManager.js?v=3a7d35b5e2"></script>
+  <script src="js/PlayerPicker.js?v=f69946a45e"></script>
+  <script src="js/ReplayTypePicker.js?v=08de406b48"></script>
+  <script src="js/SummaryExtract.js?v=7d965b115e"></script>
+  <script src="js/ReplayAnalyzer.js?v=68a6509168"></script>
+  <script src="js/CompareMatcher.js?v=316a2323e7"></script>
+  <script src="js/AdvancedComparePicker.js?v=d5e45eae03"></script>
+  <script src="js/CompareCharts.js?v=c098396f2e"></script>
+  <script src="js/CompareInline.js?v=e6a9a3cecf"></script>
+  <script src="js/BugReport.js?v=7b19c1a873"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       // BandSwitcher must init before SiteNav so the nav's compact band
@@ -835,35 +835,6 @@
   </div>
 
   <main class="site-content">
-    <!-- Slim full-width drop bar. Replaces both the hero-bar drop zone and
-         the 380x203 empty-state panel that used to sit in the left rail.
-         The four IDs below are the entire JS contract (wireDropZone,
-         triggerUpload, setStatus, the find-replays modal) — keep them.
-         The BROWSER-ONLY trust badge is demoted to the subline here: same
-         message, no box, no pulse animation. -->
-    <div id="hero-dropzone" class="hp-dropbar">
-      <button id="hero-upload-card" type="button" class="hp-dropbar-cta" title="Pick or drop a .w3g file, analyzed locally in your browser">
-        <svg class="hp-dropbar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <span class="hp-dropbar-text">
-          <span class="hp-dropbar-label">Drop a .w3g here, or click to upload</span>
-          <span class="hp-dropbar-sub">
-            <svg class="hp-dropbar-shield" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
-            Parsed in your browser — never uploaded, no server
-          </span>
-          <!-- Scope, stated before the upload rather than after it. Team and
-               custom players used to find out their game could not be graded
-               only once they had picked a file and waited for the parse. -->
-          <span class="hp-dropbar-sub hp-dropbar-scope">
-            Recommended for 1v1. Supports every game format.
-          </span>
-        </span>
-        <span class="hp-dropbar-status" id="hero-upload-status" aria-live="polite"></span>
-      </button>
-      <button id="hero-find-replays-btn" type="button" class="hp-dropbar-help" title="Where are my replay files?">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span>Where are my replays?</span>
-      </button>
-    </div>
 
     <!-- Help modal: standard replay-folder paths. Opened from the hero
          "Where are my replays?" button. -->
@@ -1002,18 +973,56 @@
            don't claim a separate authority. -->
       <section id="builds" class="site-pros" aria-labelledby="pros-title">
         <div class="site-pros-head">
-          <!-- Title and intro share one line so the filter row and the first
-               card sit as high as possible. applyBandChrome() rewrites the
-               textContent of both nodes on band change — the wrapper is
-               presentational only. -->
-          <div class="site-pros-headline">
-            <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
-            <!-- Live count. Sits on the headline row, not in the filter bar:
-                 as a flex item there it was the first thing to wrap once the
-                 race chips filled the row, costing a whole extra row above
-                 the fold. applyFilter() finds it by ID, so it can live here. -->
-            <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
+          <!-- The section heading and the upload affordance share one row and
+               split it: library on the left, "bring your own" on the right.
+               The drop bar used to be a full-width band of its own above this
+               section, which spent a whole row of the fold on a control that
+               is one line of text wide. -->
+          <div class="site-pros-topline">
+            <!-- Title and intro share one line so the filter row and the first
+                 card sit as high as possible. applyBandChrome() rewrites the
+                 textContent of both nodes on band change — the wrapper is
+                 presentational only. -->
+            <div class="site-pros-headline">
+              <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
+              <!-- Live count. Sits on the headline row, not in the filter bar:
+                   as a flex item there it was the first thing to wrap once the
+                   race chips filled the row, costing a whole extra row above
+                   the fold. applyFilter() finds it by ID, so it can live here. -->
+              <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
+            </div>
+
+            <!-- The drop bar. The four IDs below are the entire JS contract
+                 (wireDropZone, triggerUpload, setStatus, the find-replays
+                 modal) — keep them; nothing depends on where it sits.
+                 The BROWSER-ONLY trust badge is demoted to the subline here:
+                 same message, no box, no pulse animation. -->
+            <div id="hero-dropzone" class="hp-dropbar">
+              <button id="hero-upload-card" type="button" class="hp-dropbar-cta" title="Pick or drop a .w3g file, analyzed locally in your browser">
+                <svg class="hp-dropbar-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span class="hp-dropbar-text">
+                  <span class="hp-dropbar-label">Drop a .w3g here, or click to upload</span>
+                  <span class="hp-dropbar-sub">
+                    <svg class="hp-dropbar-shield" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 L20 5 V11 C20 16 16.5 19.5 12 21 C7.5 19.5 4 16 4 11 V5 Z"/><path d="M9 12 L11 14 L15 10"/></svg>
+                    Parsed in your browser — never uploaded, no server
+                  </span>
+                  <!-- Scope, stated before the upload rather than after it. Team
+                       and custom players used to find out their game could not be
+                       graded only once they had picked a file and waited for the
+                       parse. -->
+                  <span class="hp-dropbar-sub hp-dropbar-scope">
+                    Recommended for 1v1. Supports every game format.
+                  </span>
+                </span>
+                <span class="hp-dropbar-status" id="hero-upload-status" aria-live="polite"></span>
+              </button>
+              <button id="hero-find-replays-btn" type="button" class="hp-dropbar-help" title="Where are my replay files?">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Where are my replays?</span>
+              </button>
+            </div>
           </div>
+
           <div id="pro-filter-bar" class="pro-filter-bar" role="toolbar" aria-label="Filter pro builds">
             <!-- Race chips (always visible) -->
             <div class="pfb-group" id="race-filter-host">
@@ -1781,13 +1790,17 @@
 
       // ── Header: build name + matchups + floating race watermark
       const iconId = raceIcon(build.race);
+      // One "vs" for the whole strip, then bare race tokens. Repeating the
+      // word on every chip ("vs HU" "vs ORC" "vs UD") spent a third of each
+      // chip on the same two letters and made three matchups read as three
+      // separate statements rather than one list of who this build is for.
       let matchupPills = '';
       if (build.matchups && build.matchups.length) {
         const pills = build.matchups.map(m => {
           const opp = m.split('v')[1] || '';
-          return `<span class="site-card-matchup" style="--opp-color:${raceColor(opp)}">vs ${raceAbbr(opp)}</span>`;
+          return `<span class="site-card-matchup" data-opp="${raceAbbr(opp)}" style="--opp-color:${raceColor(opp)}">${raceAbbr(opp)}</span>`;
         }).join('');
-        matchupPills = `<div class="site-card-matchups">${pills}</div>`;
+        matchupPills = `<div class="site-card-matchups"><span class="site-card-vs">vs</span>${pills}</div>`;
       }
       // User-uploaded pro replays get a small "Added by you" pill + a
       // pencil edit affordance. The pill is calmer than a hard chip so
@@ -1923,9 +1936,14 @@
         }
 
         if (upgradeBadges) {
+          // The badge row lives inside its own scroller: upgrades is the one
+          // section whose length is unbounded (one badge to nine), so it is
+          // the one that gives when the card has a fixed height.
           upgradesHtml = `<div class="site-card-upgrades">
             <span class="site-card-section-label">Upgrades</span>
-            <div class="site-card-upgrade-row">${upgradeBadges}</div>
+            <div class="site-card-upgrade-scroll">
+              <div class="site-card-upgrade-row">${upgradeBadges}</div>
+            </div>
           </div>`;
         }
       }
@@ -1934,6 +1952,12 @@
       const replays = build.replays || [];
       const hasReplay = replays.length > 0;
       let replaySection = '';
+      // The two primary actions ride the top of the card, under the header.
+      // They were the last row of the replay strip at the bottom, which put
+      // the only thing you click on a card at a different height on every
+      // card in the grid — the strip above them grows with how much metadata
+      // a build has. At the top they line up across the whole row.
+      let actionsHtml = '';
       if (hasReplay) {
         const first = replays[0];
         // User-build cards pass an explicit href that points at the
@@ -1979,7 +2003,15 @@
           const mapCount = new Set(allExtras.map(r => (r.map || 'Unknown').trim())).size;
           const subtitleText = `${extraCount} more replay${extraCount === 1 ? '' : 's'} · ${mapCount} map${mapCount === 1 ? '' : 's'}`;
 
-          moreBtn = `<button class="site-replay-toggle" data-modal-id="${modalId}" title="Show ${extraCount} more replay${extraCount === 1 ? '' : 's'}">+${extraCount} more</button>`;
+          // The foot of the card, and it should look like one: a full-width
+          // bar, a sentence rather than a count, and a chevron that says it
+          // opens. "+9 more" was a chip floating in the corner that read as a
+          // tag, so nobody knew there were nine more games behind it.
+          moreBtn = `<button class="site-replay-toggle" data-modal-id="${modalId}" title="Show ${extraCount} more replay${extraCount === 1 ? '' : 's'} on ${mapCount} map${mapCount === 1 ? '' : 's'}">`
+            + `<span class="srt-text">${extraCount} more replay${extraCount === 1 ? '' : 's'}</span>`
+            + `<span class="srt-sub">${mapCount} map${mapCount === 1 ? '' : 's'}</span>`
+            + `<svg class="srt-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>`
+            + `</button>`;
 
           moreModal = `<div class="site-replay-modal" id="${modalId}" data-build-id="${Security.escapeHtml(build.id || '')}" onclick="if(event.target===this)this.classList.remove('open')">
               <div class="site-replay-modal-box" style="--race-color:${rc}">
@@ -1995,14 +2027,22 @@
             </div>`;
         }
 
+        // Guide me / Watch, at the top of the card under the header.
+        actionsHtml = `<div class="site-card-actions">
+          <a href="${guideHref}" class="site-replay-guide-btn" title="Step through this game with commentary">▸ Guide me</a>
+          <a href="${firstHref}" class="site-replay-view-btn">Watch</a>
+        </div>`;
+
         // Three-row strip — each piece gets its own row so nothing has to
-        // shrink-and-truncate when the card is narrow (~280px in the grid):
+        // shrink-and-truncate when the card is narrow (~260px in the grid):
         //   Row 1 (identity):  "{player} vs {opponent}"   ·   {map}
         //   Row 2 (meta):      [tournament] [stage]              — wraps freely,
         //                      reserves min-height so cards align even when empty
-        //   Row 3 (actions):   [+N more]            [▸ Guide me] [Watch]
-        //                      primary group is kept together; whole right
-        //                      group wraps to a new line on very narrow cards
+        //   Row 3:             the "N more replays" bar, a direct child — Guide
+        //                      and Watch used to share this row inside a pair of
+        //                      flex wrappers, and with them gone the wrappers
+        //                      only made the bar's `width: 100%` resolve against
+        //                      a shrink-to-fit parent instead of the card.
         const firstItem = `<div class="site-replay-item">
           <div class="site-replay-item-identity">
             <span class="site-replay-item-players">${identityHtml}</span>
@@ -2012,15 +2052,7 @@
             ${firstTournamentChip}
             ${firstStageChip}
           </div>
-          <div class="site-replay-item-actions">
-            <div class="site-replay-actions-left">
-              ${moreBtn}
-            </div>
-            <div class="site-replay-actions-right">
-              <a href="${guideHref}" class="site-replay-guide-btn" title="Step through this game with commentary">▸ Guide me</a>
-              <a href="${firstHref}" class="site-replay-view-btn">Watch</a>
-            </div>
-          </div>
+          ${moreBtn}
         </div>`;
 
         replaySection = `<div class="site-replay-section">
@@ -2117,6 +2149,7 @@
       return `
         <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}${currentBand === 'new' && learnerHtml ? ' is-learner' : ''}" role="listitem" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
           ${headerHtml}
+          ${actionsHtml}
           ${heroesHtml}
           ${unitsHtml}
           ${upgradesHtml}

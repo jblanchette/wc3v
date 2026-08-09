@@ -342,6 +342,23 @@ const EventModel = (function () {
     // Build the normalized, time-sorted list from ClientPlayer instances.
     build (players) {
       const events = [];
+      // uuid -> ClientUnit, so _resolvePosition can sample where a caster
+      // actually WAS at cast time. Events carry Unit.exportUnitReference()
+      // (lib/Unit.js), a flat snapshot whose `lastPosition` is the unit's
+      // position at EXPORT time — end of replay — with no path and no
+      // interpolation. Only the live ClientUnit can answer "where at t".
+      this._unitsByUuid = new Map();
+      this._unitsByOwner = new Map();     // playerId -> ClientUnit[]
+      (players || []).forEach(player => {
+        const pid = player && player.playerId;
+        const list = [];
+        for (const u of ((player && player.units) || [])) {
+          if (u && u.uuid) this._unitsByUuid.set(u.uuid, u);
+          if (u) list.push(u);
+        }
+        if (pid != null) this._unitsByOwner.set(pid, list);
+      });
+
       (players || []).forEach((player, pIdx) => {
         if (!player || player.isNeutralPlayer) return;
         const color = player.playerColor || '#cccccc';
@@ -425,8 +442,15 @@ const EventModel = (function () {
         priority: meta.priority || 0,
         color: meta.color || CATEGORY_COLOR[meta.category] || '#cccccc',
         pos: this._resolvePosition(ev),
+        // Who acted. Kept so consumers can re-resolve the caster against the
+        // live unit rather than trusting the snapshot baked into the event.
+        actorUuid: (ev.unit && ev.unit.uuid) || null,
         // target click point — drives the caster→target connector / AoE ring
-        targetPos: ev.targetPosition || null
+        targetPos: this._resolveTargetPos(ev),
+        // Which unit the parser's target reference names, resolved by
+        // (itemId, owner) since the reference carries no uuid. Set as a side
+        // effect of _resolveTargetPos immediately above.
+        targetUuid: this._lastTargetUuid || null
       };
     }
 
@@ -461,13 +485,98 @@ const EventModel = (function () {
 
     // Mirror of the old FloatingText._resolvePosition — caster first so pips
     // float on the unit that acted, not its target.
+    //
+    // The position must be sampled AT THE EVENT. `lastPosition` is the parser's
+    // final currentX/currentY for the unit (lib/Unit.js) — where it finished the
+    // game, or died. Anchoring to it put every spell pip, connector and AoE ring
+    // at the caster's resting place instead of the cast site, which reads as
+    // "way off, and randomly so" because it depends on where each unit happened
+    // to end up. Buildings are exempt in practice (they don't move) but go
+    // through the same path so there is one rule.
     _resolvePosition (event) {
       if (event.spot) return event.spot;
-      if (event.unit && event.unit.lastPosition) return event.unit.lastPosition;
-      if (event.transport && event.transport.lastPosition) return event.transport.lastPosition;
-      if (event.targetPosition) return event.targetPosition;
-      if (event.building && event.building.lastPosition) return event.building.lastPosition;
-      return null;
+      const at = event.gameTime;
+      const UB = (typeof window !== 'undefined') ? window.UnitBehavior : null;
+      const posOf = (ref) => {
+        if (!ref) return null;
+        // The event carries a flat reference, not the ClientUnit — resolve by
+        // uuid to reach the path, then fall back to the baked snapshot for
+        // anything the index doesn't know (buildings discovered by selection,
+        // streams built before build() ran).
+        const live = (ref.uuid && this._unitsByUuid) ? this._unitsByUuid.get(ref.uuid) : null;
+        // UnitBehavior.sampleAt, NOT ClientUnit.getInterpolatedPosition. The
+        // latter interpolates around `recordIndexes.path`, a cursor the playback
+        // loop advances to the CURRENT time — it ignores the timestamp you hand
+        // it and answers for wherever the replay is parked. Events are built
+        // once at setup, so it would stamp every event with the unit's position
+        // at t=0. sampleAt is a pure binary search over the immutable path.
+        if (live && live.path && at != null && UB && typeof UB.sampleAt === 'function') {
+          const p = UB.sampleAt(live.path, at);
+          if (p) return { x: p.x, y: p.y };
+        }
+        return ref.lastPosition || (live && live.lastPosition) || null;
+      };
+      return posOf(event.unit) || posOf(event.transport) ||
+             event.targetPosition || posOf(event.building) || null;
+    }
+
+    /**
+     * Where the caster→target connector should END.
+     *
+     * For GROUND-targeted abilities `targetPosition` is the click point and is
+     * correct. For UNIT-targeted ones it is not the target at all: measured on
+     * a Mountain King Storm Bolt, the recorded point sat 246 world units from
+     * the nearest unit and every unit within 400 of it belonged to the CASTER,
+     * while the actual victim was across the map. Drawing to it produced a line
+     * pointing at bare ground.
+     *
+     * The parser resolves the target object but exports no uuid for it (see
+     * Player.js, which builds { displayName, itemId, isHero, ownerPlayerId,
+     * enemy }), so identify it the only way the data allows: the unit of that
+     * itemId, owned by that player, nearest the caster at cast time.
+     *
+     * The identification is recorded on `targetUuid`. The POSITION still comes
+     * from the click point, and that is deliberate — measured across 38
+     * unit-targeted casts, sampling the identified unit's path put 4 of them
+     * further from the caster than the recorded click point, one at 2806 world
+     * units for a Storm Bolt whose range is 800. Replay paths are built from
+     * ORDERS, not tracking, so an enemy unit's path is often stale, while the
+     * click point is a direct record of where the target was at that instant.
+     *
+     * The visible consequence: the connector can point at ground that looks
+     * empty, because the unit it names is DRAWN at its stale path position.
+     * That is a rendering-truth problem, not a targeting one, and picking which
+     * end to believe is a product call — `targetUuid` is exposed so the renderer
+     * can switch to the drawn position if that is preferred.
+     */
+    _resolveTargetPos (ev) {
+      if (!ev) return null;
+      if (ev.targeting !== 'unit' || !ev.target) return ev.targetPosition || null;
+
+      const at = ev.gameTime;
+      const owner = ev.target.ownerPlayerId;
+      const itemId = ev.target.itemId;
+      const pool = (this._unitsByOwner && owner != null) ? this._unitsByOwner.get(owner) : null;
+      const UB = (typeof window !== 'undefined') ? window.UnitBehavior : null;
+      if (!pool || !itemId || at == null || !UB || typeof UB.sampleAt !== 'function') {
+        return ev.targetPosition || null;
+      }
+
+      const from = this._resolvePosition(ev);
+      let best = null, bestD = Infinity;
+      for (const u of pool) {
+        if (!u || u.itemId !== itemId || !u.path) continue;
+        // Skip units that hadn't spawned or were already gone at cast time.
+        const ready = u.readyTime != null ? u.readyTime : u.spawnTime;
+        if (ready != null && at < ready) continue;
+        if (u.destroyedAt != null && at > u.destroyedAt) continue;
+        const p = UB.sampleAt(u.path, at);
+        if (!p) continue;
+        const d = from ? Math.hypot(p.x - from.x, p.y - from.y) : 0;
+        if (d < bestD) { bestD = d; best = { u, p }; }
+      }
+      this._lastTargetUuid = best ? best.u.uuid : null;
+      return ev.targetPosition || null;
     }
 
     // Events whose gameTime <= now (already happened), most-recent first.

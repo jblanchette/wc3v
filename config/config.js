@@ -23,7 +23,12 @@ const config = {
 	// Kinematic re-simulation of unit paths (move speed + turn rate + propulsion
 	// window) — lib/KinematicResim.js. Default ON. Set false to fall back to the
 	// legacy facing-only bake (lib/FacingInference.js) for A/B debugging.
-	kinematicResim: true
+	kinematicResim: true,
+	// Positional anchor correction — lib/AnchorCorrection.js. Pulls recorded
+	// paths onto enemy-click anchors (even-parity only; odd half is the
+	// tools/anchor-audit.js --holdout grading set). Default ON. Set false to
+	// A/B against uncorrected paths.
+	anchorCorrection: true
 };
 
 module.exports = config;

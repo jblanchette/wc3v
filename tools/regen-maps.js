@@ -19,6 +19,7 @@ const INFOFile = require("../lib/parsers/INFOFile");
 const TERRAINFile = require("../lib/parsers/TERRAINFile");
 const { getUnitInfo } = require("../helpers/mappings");
 const { renderMinimap } = require("../helpers/minimapRenderer");
+const { neutralBuildingEntry } = require("./lib/neutral-buildings");
 
 const { createCanvas, loadImage } = require("canvas");
 
@@ -415,9 +416,7 @@ async function regenMap(mapName, dryRun) {
         unitFile.units.forEach(rawUnit => {
           const info = getUnitInfo(rawUnit.type);
           if (info.isGoldmine || info.isFountain || info.isInteractiveShop) {
-            const entry = { type: rawUnit.type, x: rawUnit.position[0], y: rawUnit.position[1] };
-            if (info.isGoldmine && rawUnit.gold > 0) entry.gold = rawUnit.gold;
-            neutralBuildings.push(entry);
+            neutralBuildings.push(neutralBuildingEntry(rawUnit, info));
           }
         });
       }

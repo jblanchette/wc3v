@@ -20,11 +20,25 @@ already done: did I win, what did they do, where did the game turn. Clicking a
 moment opens it in the 3D viewer on wc3v.com at that second.
 
 Every screen answers to one sentence. **Last game is the product. Coach is Last
-game aggregated over time. Stream is Last game rendered for viewers.** One data
-model, three renderers. The tab is called Home, because the column also shows
-the game you are about to play when W3Champions says there is one. The per-game read comes from one shared module
-(`client/js/GameReport.js`), so the window, the post-game notification and the
-OBS overlay can never word the same game differently.
+game aggregated over time. Library is everybody else's last game. Stream is any
+of them rendered for viewers.** One data model, four renderers. The tab is
+called Home, because the column also shows the game you are about to play when
+W3Champions says there is one.
+
+The Library is a deliberate change to that sentence, which used to name three
+screens. Watching and studying other people's replays is most of how this game
+is consumed, and until that tab existed one of them opened a report that
+apologised for itself: no result claimed, no comparison, and your build card
+first even though neither seat was yours. Home and Library mount the SAME
+renderer (`js/game-report-view.js`); passing `seat: null` selects its symmetric
+presentation, where there is no "you" and the result is one player beating
+another.
+
+The numbers are one shared module too. `client/js/GameMetrics.js` turns a
+stored summary and a seat into scalars, so the window, the post-game
+notification and the OBS overlay cannot disagree about how a game went. There
+is no module that writes a sentence about how somebody played; there used to be
+(`GameReport.js`) and it was deleted.
 
 ## Design invariants
 
@@ -47,9 +61,17 @@ mistaken for a cheat and stays trivially auditable.
   and hands the replay over on loopback, with no upload and no server. Three
   outbound exceptions exist, all disclosed in Settings: build-order icon art and
   per-map parse data from `cdn.wc3v.com`, neither of which carries anything about
-  you, and **optional W3Champions ladder lookups, off by default** (`w3c.rs`
-  refuses every request unless its opt-in marker file exists, allows one host,
-  sends GET only, and transmits nothing about your games).
+  you, and **optional W3Champions ladder lookups** (`w3c.rs` refuses every
+  request unless its opt-in marker file exists, allows one host, sends GET only,
+  and transmits nothing about your games).
+
+  The binary's default is still OFF, and that is what "default" means here: the
+  marker file has to exist before a single request is made. The first-run screen
+  PROPOSES turning it on, with the box checked and what it sends stated on the
+  same screen, because an opt-in nobody is ever shown is an opt-in nobody gets.
+  Skipping that screen writes no marker and lookups stay off. The checkbox goes
+  through `set_w3c_enabled` like Settings does; it is not a second source of
+  truth.
 - **No overlay drawn over the game.** Output is an OBS Browser Source and an
   ordinary window. Nothing is composited onto the game.
 - **The webview gets no arbitrary-filesystem primitive.** `read_replay` and
@@ -82,14 +104,35 @@ Rust  ── discovery / watching / scoped reads / hashing / parse store / overl
 ```
 
 The frontend is a coordinator (`js/app.js`) plus one module per concern: `store`
-(parse store and corpus), `identity`, `games-view` (feed and report),
-`profile-view`, `stream-view`, `settings-view`, `replay-index` (content key to
-file), `backfill`, `overlay-state`, `w3c` (ladder client) and `scout` (the live
-match poller). The report's graphics come from `build-card`, a pure builder,
-plus `dominance-panel` and `economy-panel`, which mount the viewer's OWN widgets
+(parse store and corpus), `identity`, `games-view` (the feed), `library-view`
+(everybody else's games), `profile-view`, `stream-view`, `settings-view`,
+`first-run`, `replay-index` (content key to file), `backfill`, `game-tags`
+(the tag sidecar), `overlay-state`, `w3c` (ladder client) and `scout` (the live
+match poller).
+
+**The report is `js/game-report-view.js`**, mounted by both Home and the
+Library. It was ~490 lines inside `games-view.js`, which was right while one
+screen could show a game. `render(host, summary, opts)` returns a handle whose
+`destroy()` releases the chart, and `seat: null` selects its symmetric
+presentation. `js/ui-bits.js` holds the pieces both screens build out of,
+including the ONE copy of the icon CDN base and its id whitelist.
+
+The report's graphics come from `build-card`, a pure builder, plus
+`dominance-panel` and `economy-panel`, which mount the viewer's OWN widgets
 (`DominanceChart`, `ResourceCharts`) rather than redrawing them — see "Charts"
 below — and `chart-panel`, which wraps those two plus a `CompareCharts` army
 plot into one slot with three toggle chips.
+
+**Numbers come from `client/js/GameMetrics.js`**, which turns a stored summary
+and a seat into scalars: dominance, hero kills, effective APM and the timings.
+Everything that used to derive its own at the point of use reads it, which is
+why "workers at 5:00" no longer has three implementations. Dominance is
+TIME-weighted, because the stored series is not on a fixed grid and a plain
+mean over its samples over-weights the seconds around every hero death.
+
+**The stored-summary shape is `client/js/SummaryBuild.js`**, shared by
+`store.js` and the preview harness, which used to carry a hand-copied duplicate
+with the version number in only one of them.
 
 Each parsed game persists as one gzipped summary under
 `<app_data>/replays/<size>-<xxh3>.summary.json.gz`, single-digit KB per game,
@@ -97,7 +140,7 @@ keyed by content so the same game re-opened or found under a second path loads
 from the store instead of re-parsing. Full parses are deliberately not stored.
 The raw `.w3g` is the source of truth and full viewing re-parses on demand.
 
-The summary is `SummaryExtract`'s per-player shape plus four things that have to
+The summary is `SummaryExtract`'s per-player shape plus five things that have to
 be extracted at parse time, because they exist only in a full parse.
 **`moments`** is the ranked highlight reel, capped at 24. Per-player
 **`combat`** is the complete hero kill and death ledger, wipes and biggest
@@ -110,9 +153,111 @@ arrays and unpacks them for rendering. Measured cost of v4:
 **+1.7 KB gzipped per game**, about 26 MB for the whole 3,072-replay history
 (`node tools/measure-summary-v4.js`).
 
-**All four are extract-at-parse-time-or-never.** Bump `SCHEMA_VERSION` in
-`store.js` before adding anything with that property, and make sure it is
-current before the backfill runs.
+Per-player **`build`**, schema v5, is what `client/js/BuildOrderData.js` derives
+from the event stream: per-tier production and the closing snapshot (supply,
+workers, gold and lumber spent, upgrades, every unit made with its count and its
+attack and armor types). Schema v5 also widens `neutralCamps` with claim state,
+owner, route order, the creeps in each camp and per-hero XP.
+
+**`build` is stored rather than re-derived, and that was the whole decision.**
+The obvious alternative was a second extractor inside `SummaryExtract`. It is
+wrong because `BuildOrderData.buildTierSnapshots` accumulates gold over the
+class's OWN synthesised event list — tier upgrades with cost overrides, hero
+training, worker assignment — not over the raw stream. Reimplementing that is
+reimplementing the class, and the two answers diverge the first time either is
+edited. So the class is dual-runtime (it guards `window.wc3v`, `PlayerNames` and
+`RaceLabels`, and ships none of them) and runs at parse time. Measured cost of
+v5: **+2.4 KB gzipped per game**, about 34 MB for the 3,072-replay history
+(`node tools/measure-summary-v5.js`).
+
+Three things `BuildOrderData` produces are deliberately dropped: `tiers` and
+`snapshots`, by far the heaviest and only useful to the viewer's live panel,
+which has the full parse in hand; and `production`, which is redundant with
+`finalSnapshot.army`.
+
+**All five are extract-at-parse-time-or-never.** Bump `SCHEMA_VERSION` in
+`client/js/SummaryBuild.js` before adding anything with that property, and make
+sure it is current before the backfill runs.
+
+**A schema bump only reaches the history if the backfill can see it.** The
+backfill skips a replay on `store.isCurrent(key)` — stored AND under the current
+schema — not on `store.has(key)`. It used to skip on presence, which meant every
+summary written before a bump stayed at the old version forever and the only way
+to upgrade one was the per-game "Re-read" button. `store.staleCount` is how many
+are behind.
+
+Two things a summary deliberately does NOT carry. **Tags** live in a sidecar at
+`<app_data>/labels.json`, keyed by the same content key, because a re-parse
+rebuilds the summary and a schema bump re-parses everything: tags are the only
+thing in the store a person typed and a format upgrade must not eat them. And
+the **casting scoreboard** is live state in `localStorage`, not a record of a
+game, because a series score needs ordered games and a running total that free
+tags cannot express.
+
+## The game report
+
+Seven tabs. **Six of them are not this app's code.**
+
+`client/js/MatchSummaryView.js` draws Overview, Army, Economy, Upgrades, Creeps
+and Charts, and it is the same renderer the site's viewer mounts in its Match
+Summary modal. It knows about neither app: it takes a model, an `icon(itemId)`
+resolver and an `asset(file)` resolver, and returns DOM. `js/summary-model.js`
+turns a stored summary into that model; `client/js/MatchSummary.js` does the
+same job on the viewer's side from live parse objects.
+
+Neither app draws a tab. This is the mount-seam rule from **Charts** below,
+applied to a whole screen instead of one widget: if this app grows its own
+version of a tab, the two products have begun telling different stories about
+one game.
+
+The seventh tab, **Build**, is the only one with no equivalent on the site: the
+per-player build cards and the build order in the order it happened. Buildings
+by tier and the upgrade/merc timeline used to live there and are gone, because
+the Army, Upgrades and Economy tabs are those sections drawn from the same data.
+
+What differs from the viewer, and why:
+
+- **Colour is the warm race ramp, not in-game player colours.** The token layer
+  forbids saturated colour on warm surfaces, and a stored summary has no
+  player-colour field: schema v5 drops it rather than letting the two apps
+  disagree. `colorOf` is injected, so neither app forks the renderer.
+- **Dominance on Overview is the scrubbable panel**, not the viewer's static
+  plot. The viewer draws it progressively because it has playback of its own; a
+  finished game has nothing left to spoil, so here dragging replays the momentum
+  and a double-click opens the viewer at that moment. This is why the chart
+  panel's Dominance chip is gone — two dominance plots on one screen is a
+  question about which of them is right.
+- **The head-to-head parts drop out above two seats.** The Damage Matchup and
+  the APM ghost line are about "the opponent", which is not a thing in a 2v2.
+  Everything per-player still renders.
+
+### A store behind the schema
+
+A summary written under an older schema is missing blocks only a full parse can
+produce, so it cannot be upgraded in place. Two rules, and the second is the one
+that is easy to get wrong.
+
+**The app migrates itself.** If `store.staleCount` is non-zero after the corpus
+loads, `app.js` `startMigration()` runs the full backfill in the background,
+newest first, reporting to the `#migrate` strip under the app bar. Nothing is
+behind a button. The backfill engine needs no special mode for this: it already
+walks every replay and skips whatever `store.isCurrent(key)` calls current, so a
+run re-reads exactly the stale games.
+
+**A stale game renders the reason and NOTHING else.** Not a partial report. The
+old data is enough to draw build cards and a build order, and doing so produces
+a screen that looks complete while silently omitting the unit roster, the creep
+route, the upgrades and every chart — indistinguishable from a game where none
+of that happened. `game-report-view.js` returns early on a null model: the
+verdict band (none of which comes from the missing block) plus one line and a
+re-read button.
+
+Both of these were shipped wrong once. The boot catch-up was gated on an **empty**
+corpus, so on a machine with history it never ran; the backfill skipped on
+presence rather than freshness, so the Settings button would not have helped
+either; and the re-read offer was a hint at the foot of a scroller. The result
+was an update that looked like it had done nothing. **On any future schema bump,
+check what somebody with an existing corpus sees on first launch.**
 
 ## Charts
 
@@ -182,6 +327,60 @@ mounts it.
 There is no playback here, so the chart draws the whole game and is
 **scrubbable**: dragging it replays the momentum through the cursor and the
 readout, and a double-click opens the viewer at that second.
+
+## Library, tags and casting
+
+**The Library** lists games where no seat is yours, which is the whole rule: it
+covers a downloaded pro replay, a game you observed and a friend's replay you
+were sent, without any of them needing to be marked. With no identity set,
+nothing is yours, so the Library would be your entire history; it shows empty and
+says why instead.
+
+"Open a replay…" takes a FILE and registers the folder that holds it, then scans
+that folder. Registering rather than reading directly is not a detail:
+`read_replay` canonicalises its argument and refuses anything outside a
+registered root, and that refusal is the reason the webview has no
+arbitrary-filesystem primitive. A "just read this one path" command would hand it
+one.
+
+**Tags** are free text, deliberately. A schema for tournaments needs rounds,
+brackets, formats and a series model, and every one of those is a guess about how
+somebody runs their event. They live in `<app_data>/labels.json` keyed by content
+key, edited from the report header and filtered on in the Library. Two Tauri
+commands, `read_tags` and `write_tags`, with the same key validation the parse
+store uses and the same temp-file-and-rename write.
+
+**Casting is a second overlay page**, `/cast`, with its own renderer
+(`overlay/cast-render.js`) and its own stylesheet. The player overlay is one
+person's session said as "you", revealed after a game. A broadcast is two
+strangers said as neither, held up for a whole series. Bending one into the other
+would have meant a mode flag threaded through every module in
+`overlay-render.js`, and every OBS source already pointed at that file.
+
+It draws three things: an event line with the two players and a running score, a
+free-text format badge, and a symmetric stat bar. The stat bar has **no deltas
+and no baselines**, because every baseline this app has is built out of one
+person's history and on a broadcast neither player is that person. The scoreboard
+is live state typed in Stream → Casting, held in `localStorage` so it survives a
+restart mid-series, and it is never a record of a game.
+
+Both pages are under the same token gate and both are asserted so in
+`overlay.rs`'s tests. The `every_overlay_route_requires_the_token` test passed
+for the whole of the build that added `/cast` without ever looking at it, which
+is why the assertion is now explicit.
+
+## First run
+
+One screen, once, on a machine with no `setup-done` marker: replay folder, your
+player name, W3Champions, and read-my-history. Every row is skippable and every
+control also lives in Settings, so nothing here is a decision anybody is stuck
+with.
+
+A marker FILE rather than `localStorage`, for the same reason the W3Champions
+opt-in is one: clearing the webview's storage is a normal thing to do while
+debugging and should not put a setup screen in front of somebody who has been
+using the app for months. A failed marker write is logged rather than swallowed,
+because the symptom is the screen coming back every launch.
 
 ## Opening a moment in the viewer
 
@@ -281,7 +480,11 @@ Then open `desktop/preview/preview.html`. Flags: `--games=N`, `--me="Name#1234"`
 first N summaries so the schema-upgrade paths are reachable), `--match=<substr>`
 (pins the sample to particular replays — `--match=gso` is a 3v3, which is the
 only way to reach a team game, since the corpus is overwhelmingly 1v1 and sorts
-the numeric ladder filenames first).
+the numeric ladder filenames first), and `--setup` (shows the first-run screen,
+which otherwise only appears on a machine that has never run the app).
+
+The harness stubs the tag sidecar in memory and seeds two tags, so the Library's
+filter and the casting badge have something to match without typing first.
 
 The preview cannot run a real parse, because there are no `.w3g` files behind
 its summaries. Anything driven by a parse has to be driven by hand: set
@@ -294,31 +497,54 @@ its summaries. Anything driven by a parse has to be driven by hand: set
 Not the window, not `document.body`, not `.detail-col`. The verdict band above
 it is fixed. This is the one invariant that has broken repeatedly and silently,
 so it is checked mechanically rather than by eye, at **900x600** and
-**1280x820**, with the feed drawer open and closed:
+**1280x820**, with the feed drawer open and closed.
+
+Since the Library landed there are **two** `.detail-col`s in the document, one
+per screen, and only one of them is on screen at a time. Query them all and skip
+the hidden one (`offsetParent === null`) rather than `querySelector`, or the
+audit silently measures whichever comes first in the markup. That is also the
+class of bug the Library shipped with for one build: a global
+`.detail-col { grid-row: 3 }`, written for Home's three-row grid, put the
+Library's report under its list instead of beside it. Placement rules are scoped
+to `.view-games` now.
 
 ```js
 (async () => {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const bad = [];
   for (const row of document.querySelectorAll('.qn-chip')) {
-    row.click(); await sleep(40);
-    for (const tab of document.querySelectorAll('.cp-seg .seg-btn')) {
-      tab.click(); await sleep(40);
-      const doc = document.documentElement;
-      const col = document.querySelector('.detail-col');
-      if (doc.scrollHeight > doc.clientHeight + 1) bad.push('page scrolls');
-      if (document.body.scrollHeight > document.body.clientHeight + 1) bad.push('body scrolls');
-      if (col.scrollHeight > col.clientHeight + 1) bad.push('detail-col scrolls');
+    row.click(); await sleep(50);
+    // Every tab, and inside Charts every chart mode.
+    for (const tab of document.querySelectorAll('.ms-tabs .ms-tab')) {
+      tab.click(); await sleep(50);
+      const modes = [...document.querySelectorAll('.cp-seg .seg-btn')];
+      for (const step of (modes.length ? modes : [null])) {
+        if (step) { step.click(); await sleep(50); }
+        const doc = document.documentElement;
+        const cols = [...document.querySelectorAll('.detail-col')]
+          .filter(c => c.offsetParent !== null);
+        if (doc.scrollHeight > doc.clientHeight + 1) bad.push('page @' + tab.textContent);
+        if (document.body.scrollHeight > document.body.clientHeight + 1) bad.push('body @' + tab.textContent);
+        for (const col of cols) {
+          if (col.scrollHeight > col.clientHeight + 1) bad.push('detail-col @' + tab.textContent);
+        }
+      }
     }
   }
   return [...new Set(bad)];
 })()
 ```
 
-Pass is `[]`. The inner loop covers every chart mode, which matters: Resources is
-the tallest of the three by roughly 150px. Also worth a second sweep for clipped
-or overflowing elements anywhere outside a `.scroll` container, since
-`overflow: hidden` hides a fold bug just as effectively as a scrollbar shows one.
+Pass is `[]`. The inner loop covers every tab and, inside Charts, every chart
+mode — which matters: Resources is the tallest by roughly 150px, and Creeps is
+the tallest tab. Also worth a second sweep for clipped or overflowing elements
+anywhere outside a `.scroll` container, since `overflow: hidden` hides a fold
+bug just as effectively as a scrollbar shows one.
+
+Note the audit drives `.ms-tabs .ms-tab`, not the old chart chips. A game the
+shared renderer cannot draw (a summary stored before schema v5) has **no tab
+strip at all** and shows the Build view alone, so `querySelectorAll` returning
+nothing there is correct rather than a broken selector.
 
 Games differ in ways that change the report's shape, so audit **every** game
 rather than one: whether you were in it (no read line and no benchmark readout
@@ -430,7 +656,9 @@ there is one install on it. The moment anyone else has the app, split it: a
   by `tools/build-item-classes.js`. Re-run it and commit the output after any
   change to either source; an id it does not list counts as kept.
 - **A grading constant that has not been run over the corpus is a guess.** Every
-  first-pass threshold in `GameReport.js` was too eager in the same direction.
+  first-pass threshold in the old `GameReport.js` was too eager in the same
+  direction, and that whole module is gone now: see the 0.8.0 changelog for why
+  a per-race average of dominance or APM is not a benchmark either.
   The unit test asserts shape and will pass with meaningless labels.
 - **Anything borrowed from the viewer was drawn against the viewer's geometry.**
   Squeezing a chart to fit here has clipped it before, and `line-height: 1`

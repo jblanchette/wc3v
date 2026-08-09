@@ -12,20 +12,11 @@
 (function () {
   'use strict';
 
-  // Bump when a stored summary gains a field the UI cannot derive from an
-  // older one. v2 added `moments`, which needs the full parse because battles
-  // are not part of SummaryExtract, so a v1 game offers a re-parse instead of
-  // showing a silently empty list. v3 added per-player `combat`: the complete
-  // hero kill and death ledger, wipes, biggest swing. Same source, same
-  // reason. v4 added `dominance` and `resources`, the two time series
-  // lib/DominanceSeries.js and lib/ResourceSeries.js produce inside
-  // buildOutputObject, which is what lets the desktop draw the viewer's own
-  // dominance bar, dominance chart and resource charts.
-  //
-  // Every one of these is extract-at-parse-time-or-never, and the version must
-  // be current before the history backfill runs, or thousands of games get
-  // stored without a block only a re-parse can recover.
-  const SCHEMA_VERSION = 4;
+  // The summary shape and its version number live in client/js/SummaryBuild.js,
+  // shared with tools/desktop-preview.js and tools/build-race-baselines.js.
+  // This file used to own both, and the preview harness carried a hand-copied
+  // duplicate that was free to disagree about what a v4 summary contains.
+  const SB = () => window.SummaryBuild;
 
   window.createStore = (deps) => {
     // deps: invoke, log
@@ -33,6 +24,10 @@
 
     // Keys of games whose summary is already on disk.
     const stored = new Set();
+    // Of those, the ones written under an older schema. Populated when the
+    // corpus loads (the version is only knowable by reading the summary) and
+    // cleared per key as each is re-read. See isCurrent().
+    const staleKeys = new Set();
     let corpus = null;
     let corpusLoading = null;
 
@@ -49,63 +44,12 @@
       return new Uint8Array(await new Response(stream).arrayBuffer());
     };
 
-    // Mirror of CompareInline.buildUserSummary(), with the slot-skip rules from
-    // scripts/generate-summary.js. mapInfo needs the map-folder manifest the
-    // site fetches at runtime; the desktop app has no consumer for it yet.
-    const buildSummary = (out, key, playedAt) => {
-      const SE = window.SummaryExtract;
-      const rawMap = out.replay?.metadata?.map?.mapName || '';
-      const durationMs = out.replay?.subheader?.replayLengthMS || 0;
-      const worldNeutralGroups = out.world?.neutralGroups || null;
-      const summary = {
-        key,
-        schemaVersion: SCHEMA_VERSION,
-        savedAt: Date.now(),
-        // When the game was played, from the replay file mtime. This is what
-        // the profile layer buckets by. savedAt is when the backfill got to it.
-        playedAt: playedAt || null,
-        patchVersion: out.replay?.subheader?.version ?? null,
-        map: rawMap.split(/[\\/]/).pop(),
-        mapRaw: rawMap,
-        gameMode: out.gameMode || null,
-        winner: out.winner || null,
-        durationMs,
-        neutralCamps: SE.extractNeutralCamps(worldNeutralGroups),
-        // The fights. Neither moments nor combat can be recovered from a
-        // stored summary later, because `out.battles` exists only in the full
-        // parse, so both come out now while the parse is in hand. Moments are
-        // the capped highlight reel. Combat is the complete per-seat ledger the
-        // review layer grades from.
-        moments: window.MomentsExtract.extractMoments(out),
-        // The two time series the viewer's own charts are drawn from. Same
-        // full-parse-only rule as moments and combat, and packed as parallel
-        // arrays by SeriesExtract because they are the largest thing in a
-        // summary. Null when the dominance gate refused the replay, which is a
-        // real answer and not a missing field.
-        dominance: window.SeriesExtract.extractDominance(out),
-        resources: window.SeriesExtract.extractResources(out),
-        players: {}
-      };
-      const combat = window.MomentsExtract.extractCombat(out);
-      for (const slot of Object.keys(out.players || {})) {
-        const pd = out.players[slot];
-        const rpd = out.replay?.players?.[slot];
-        if (!pd || !rpd || pd.isNeutralPlayer) continue;
-        if (rpd.teamId >= 1000) continue; // AI / neutral teams
-        summary.players[slot] = SE.extractPlayerSummary(pd, rpd, durationMs, worldNeutralGroups);
-        // teamId is not part of the shared summary shape, because the compare
-        // modal never groups by team. The desktop views do, so carry it.
-        summary.players[slot].teamId = rpd.teamId;
-        summary.players[slot].combat = combat[slot] || null;
-      }
-      return summary;
-    };
-
     const persistSummary = async (out, key, playedAt) => {
-      const summary = buildSummary(out, key, playedAt);
+      const summary = SB().buildSummary(out, key, playedAt);
       const bytes = await gzipText(JSON.stringify(summary));
       await invoke('save_parse', { key, bytes: Array.from(bytes) });
       stored.add(key);
+      staleKeys.delete(key);   // just rewritten under the current schema
       if (corpus) {
         // Re-parsing an already-stored game, which is what a schema upgrade
         // does, has to replace its corpus entry. The profile counts games, and
@@ -142,6 +86,7 @@
         await Promise.all(Array.from({ length: 8 }, reader));
         // Newest first is the order every view wants.
         out.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
+        for (const g of out) if (g && g.key && SB().isStale(g)) staleKeys.add(g.key);
         corpus = out;
         return out;
       })();
@@ -200,14 +145,29 @@
     };
 
     return {
-      SCHEMA_VERSION,
+      get SCHEMA_VERSION () { return SB().SCHEMA_VERSION; },
       gunzipJson,
-      buildSummary,
+      buildSummary: (out, key, playedAt) => SB().buildSummary(out, key, playedAt),
       persistSummary,
       read,
       loadCorpus,
       filterCorpus,
       has: (key) => stored.has(key),
+      // "Already done", which is NOT the same question as has().
+      //
+      // After a SCHEMA_VERSION bump every stored summary is the wrong shape,
+      // and a backfill that skips on presence alone leaves the corpus on the
+      // old schema forever. The per-game "Re-read" offer is a repair for one
+      // game, not a migration path for three thousand of them, so the backfill
+      // skips on this instead.
+      //
+      // Before the corpus has loaded, staleKeys is empty and this is exactly
+      // has() — the version cannot be known without reading the summary, and
+      // the backfill must not block on that.
+      isCurrent: (key) => stored.has(key) && !staleKeys.has(key),
+      // How many stored games are behind the schema. Zero until the corpus
+      // loads. Surfaced so Settings can say what a backfill would actually do.
+      get staleCount () { return staleKeys.size; },
       get size () { return stored.size; },
       get corpus () { return corpus; },
       // Boot: the on-disk key list, so an already-parsed game is recognised
@@ -217,10 +177,10 @@
         for (const k of keys) stored.add(k);
         return stored.size;
       },
-      // A summary written under an older schema, missing moments before v2 or
-      // the combat ledger before v3. The UI offers a re-parse rather than
-      // pretending the game had neither.
-      isStale: (summary) => !summary || (summary.schemaVersion || 1) < SCHEMA_VERSION
+      // A summary written under an older schema, missing moments before v2, the
+      // combat ledger before v3 or the two series before v4. The UI offers a
+      // re-parse rather than pretending the game had none of them.
+      isStale: (summary) => !summary || SB().isStale(summary)
     };
   };
 })();

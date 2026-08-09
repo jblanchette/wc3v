@@ -1,0 +1,189 @@
+/* ============================================================
+   states.css, WC3V desktop.
+
+   Focus, motion, loading, first run, and the two window-size breakpoints.
+   LAST on purpose: the breakpoints override everything above them.
+
+   Split out of a single 2,567-line app.css. Load order is the cascade and is
+   fixed in index.html; this file assumes every file listed before it in that
+   list has already been applied.
+   ============================================================ */
+
+/* ── Focus ───────────────────────────────────────────────────────────────
+   There was no focus ring anywhere in this file, and the one UA ring the app
+   did get (on text inputs) was being removed. A window that can be driven
+   from the keyboard has to show where the keyboard is. :focus-visible, so a
+   mouse click never draws one. */
+
+:focus-visible {
+  outline: 2px solid var(--accent-ring, var(--accent));
+  outline-offset: 2px;
+}
+/* Inside the app bar the ring sits on navy and can use the accent as-is;
+   on the warm surfaces it needs the carved gold or it reads as a website
+   control that wandered in. */
+main :focus-visible,
+.activity :focus-visible {
+  outline-color: var(--dom-gold);
+}
+
+/* ── Motion ──────────────────────────────────────────────────────────────
+   Everything animated in this file is a short state change on --dur/--ease.
+   None of it carries meaning, so all of it goes when asked. */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────
+   The feed and the detail column used to ship empty and stay empty until
+   the corpus resolved, which at 3,000 stored games is a blank window that
+   looks broken. A skeleton says "this is arriving" without claiming to know
+   what it is. */
+
+.skeleton { padding: 0 var(--sp-3); }
+.skeleton-row {
+  height: calc(var(--ico-sm) + var(--sp-4));
+  margin-bottom: var(--sp-1);
+  background: linear-gradient(90deg,
+    var(--app-panel) 0%, var(--app-panel-2) 50%, var(--app-panel) 100%);
+  background-size: 200% 100%;
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  animation: skeleton-sweep 1.4s var(--ease) infinite;
+}
+/* Staggered so the column reads as several things loading, not one bar. */
+.skeleton-row:nth-child(2) { animation-delay: 0.12s; }
+.skeleton-row:nth-child(3) { animation-delay: 0.24s; }
+.skeleton-row:nth-child(4) { animation-delay: 0.36s; }
+.skeleton-row:nth-child(5) { animation-delay: 0.48s; }
+.skeleton-row:nth-child(6) { animation-delay: 0.60s; }
+
+@keyframes skeleton-sweep {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ── First run ───────────────────────────────────────────────────────────
+   Nothing parsed yet is not an error and must not read like one. */
+
+.first-run {
+  display: grid;
+  place-content: center;
+  gap: var(--sp-3);
+  height: 100%;
+  padding: var(--sp-7) var(--sp-5);
+  text-align: center;
+  /* Spans the detail column's banded grid when it is the only child. */
+  grid-row: 1 / -1;
+}
+.first-run h2 {
+  margin: 0;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  color: var(--ink);
+}
+.first-run p {
+  margin: 0 auto;
+  max-width: 34rem;
+  color: var(--ink-dim);
+}
+.first-run .btn { justify-self: center; margin-top: var(--sp-2); }
+
+/* ── Narrow windows ──────────────────────────────────────────────────── */
+
+@media (max-width: 1040px) {
+  /* The report is full width at every size now, so there is no rail to
+     narrow. What a narrow window costs is quick-nav chips, and they scroll. */
+  .detail-col { padding: var(--sp-3); }
+  .bc-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Short windows ───────────────────────────────────────────────────────
+   At the 600px minimum the report frame and the one scroller are competing
+   for the same 507px. The frame gives up what it can spare: lane height,
+   ruler height, cell padding and the gaps between bands. Nothing is removed
+   and no type gets smaller. */
+
+@media (max-height: 700px) {
+  .detail-col { gap: var(--sp-1); }
+  .report-body { padding: var(--sp-2); }
+
+  /* Story is the default tab and its chart and tiles must be on screen without
+     scrolling, so the frame above them gives up what it can spare. Nothing is
+     removed and no type gets smaller — these are all leading, padding and
+     control height.
+
+     The measured budget at 900x600 WITH a live match, which is the worst case
+     because the mode switch costs another 38px: main 507, gamebar 63,
+     detail-col 444, and after padding, gaps, the switch, the verdict band and
+     the tab strip the body is what is left. Every pixel below is one Story
+     gets back. */
+  .btn-viewer { min-height: var(--ico-sm); }
+  .verdict-read { margin-top: var(--sp-1); }
+  .verdict-head { margin-bottom: 0; }
+  .vb-bench { padding: var(--sp-1) var(--sp-3); }
+  .st-tile { padding: var(--sp-1) var(--sp-2); }
+  .story-pane > .hint { margin: 0; }
+  .cp { margin-bottom: var(--sp-1); }
+  .st-grid { margin-bottom: var(--sp-1); }
+  .report-body { padding: var(--sp-2) var(--sp-2) var(--sp-1); }
+  /* 11vh is 66px here, and the dashboard is 10px short of fitting with it. The
+     plot is still legible at 56 and the alternative is the tile row going
+     under the fold on the app's default tab. */
+  .dom-panel .dmc-svg { height: 56px; }
+}
+
+/* ── First run ────────────────────────────────────────────────────────────
+   The setup screen, once, on a machine that has never been set up. A centred
+   panel rather than the right-hand drawer `.sheet` normally is: Settings slides
+   in beside what you were doing, and this has nothing to sit beside. */
+
+.setup {
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  justify-self: center;
+  width: min(34rem, 94vw);
+  margin: auto;
+  height: fit-content;
+  max-height: 100%;
+  border: 1px solid var(--app-edge);
+  border-radius: var(--radius);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+}
+/* The dim behind it. The app is loading its corpus underneath and that is fine
+   to see; what is not fine is being able to click it. */
+.setup::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(6, 4, 2, 0.72);
+}
+
+.setup-row { padding: var(--sp-4) 0; border-bottom: 1px solid var(--app-line); }
+.setup-row:last-child { border-bottom: 0; }
+.setup-row h3 {
+  margin: 0 0 var(--sp-1);
+  font-size: var(--fs-base);
+  font-weight: 700;
+}
+.setup-row .hint { margin: var(--sp-1) 0 var(--sp-2); }
+.setup-row input[type="text"],
+.setup-row input:not([type]) {
+  width: 100%;
+  max-width: 20rem;
+}
+
+.sheet-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-3) 0 0;
+  border-top: 1px solid var(--app-line);
+}

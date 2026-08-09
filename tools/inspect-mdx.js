@@ -102,7 +102,10 @@ function main () {
   // --- Node hierarchy ---
   const bones = mdx.Bones || [];
   const helpers = mdx.Helpers || [];
-  const nodes = mdx.Nodes || [];
+  // Some MDX (kelthuzadghost, herokeeperofthegroveghost) leave holes in Nodes.
+  // The converter already does `.filter(Boolean)`; match it so inspection of
+  // those models doesn't throw.
+  const nodes = (mdx.Nodes || []).filter(Boolean);
   const pivots = mdx.PivotPoints || [];
   console.log('NODES: ' + nodes.length + ' total  (' + bones.length + ' bones, ' +
     helpers.length + ' helpers)   PivotPoints: ' + pivots.length);

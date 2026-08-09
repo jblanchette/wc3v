@@ -6551,78 +6551,143 @@ body {
    There is deliberately NO fixed-column override above 1700px — the old
    repeat(4, …) rule capped wide screens at 4 columns and so *reduced*
    density exactly where there was the most room. */
+/* Tracks stretch and cards fill them, so the gutter is exactly the gap and
+   nothing else. Capping the card and parking it in an oversized track was
+   tried and reverted: the leftover width had to land somewhere, and wherever
+   it went — gutters at 70px, or ~20px of inset on every card — it read as a
+   grid with holes in it.
+   Narrower cards come from the column floor instead: at 1377px of content a
+   255px floor lays out five tracks of 263 rather than four of 332. */
 .site-build-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fill, minmax(255px, 1fr));
+  gap: var(--sp-3);
+  /* One height for every card on the page, not one per grid row. `stretch`
+     only equalises within a row, so scrolling past three rows of builds still
+     stepped up and down. The variance all lived in the upgrades section, and
+     that section scrolls now — see .site-card-upgrades.
+     526 is measured: header 56 + actions 37 + heroes 90 + units 115 + footer 88
+     + padding 20 leaves the upgrades well its label plus exactly three 30px
+     badge rows and its own 8px of inset. Three covers most builds outright, and
+     the deeper ones cut at a row boundary rather than mid-badge. */
+  grid-auto-rows: var(--card-h, 526px);
+  align-items: stretch;
 }
+/* The learner band adds a whole tabbed guide pane per card — another ~250px of
+   fixture with its own internal scroller. It keeps natural heights: the
+   homepage redirects `?level=new` to /learn (see the guard in index.html), so
+   this path could not be rendered to measure a fixed height against, and a
+   guessed one clips the guide pane rather than scrolling it. */
+.site-build-grid:has(.site-build-card.is-learner) { grid-auto-rows: auto; }
 
 .site-build-grid > * {
   min-width: 0;
 }
 
-/* ── Build card — single clickable surface ────────────────── */
+/* ── Build card — single clickable surface ─────────────────────────────────
+   A carved panel, not a flat div. The register is the one the dominance gauge
+   established (`.dom-bar` in dominance.css): a base gradient, two off-angle
+   hairline hatches for stone grain, a hard black outline and a 1px struck
+   highlight along the top. No glow anywhere — depth is outline + inset.
+
+   Race is the flavour and it is carried by material, not by a colour swap:
+   each race gets its own surface gradient, rim and header, so a wall of cards
+   reads as four banners rather than one component tinted four ways. */
 .site-build-card {
   position: relative;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   color: inherit;
-  background: var(--card-bg, #242840);
-  border: 1px solid var(--card-border, #363a50);
-  border-radius: 10px;
-  padding: 10px 12px 10px;
-  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  background:
+    repeating-linear-gradient(114deg,
+      rgba(232, 216, 178, 0.016) 0 2px, rgba(0, 0, 0, 0.026) 2px 4px),
+    repeating-linear-gradient(23deg,
+      rgba(232, 216, 178, 0.011) 0 3px, rgba(0, 0, 0, 0.018) 3px 6px),
+    linear-gradient(to bottom,
+      var(--card-bg-top, #262a44) 0%,
+      var(--card-bg, #242840) 38%,
+      var(--card-bg-foot, #1b1e30) 100%);
+  border: 1px solid #08070a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  box-shadow:
+    /* the race rim, full perimeter — never a single edge */
+    inset 0 0 0 1px var(--card-rim, rgba(255,255,255,0.10)),
+    inset 0 1px 0 var(--card-strike, rgba(255,255,255,0.09)),
+    inset 0 -14px 22px -14px rgba(0,0,0,0.55),
+    0 2px 6px -2px rgba(0,0,0,0.55);
   overflow: hidden;
   min-width: 0;
   cursor: pointer;
 }
 
+/* Lifts, it does not light up. The rim strengthens to the race edge and the
+   panel casts a little further; nothing bloom-shaped happens. */
 .site-build-card:hover {
-  background: var(--card-bg-hover, #2c3050);
-  border-color: var(--card-border-hover, var(--race-color));
+  transform: translateY(-1px);
   box-shadow:
-    0 4px 16px rgba(0,0,0,0.25),
-    inset 0 0 30px var(--card-glow, rgba(255,255,255,0.04));
+    inset 0 0 0 1px var(--card-rim-hover, var(--race-color)),
+    inset 0 1px 0 var(--card-strike, rgba(255,255,255,0.14)),
+    inset 0 -14px 22px -14px rgba(0,0,0,0.5),
+    0 6px 14px -6px rgba(0,0,0,0.7);
 }
 
-/* ── Race-specific card themes ──────────────────────────────── */
+/* ── Race-specific card themes ──────────────────────────────────────────────
+   Four banners. Each race sets its own three-stop surface, its rim, its header
+   gradient and the hue its accents take. The hues stay where a WC3 player
+   expects them — blue, red, green, purple — but every value is pulled down out
+   of full saturation so it can carry the hard black outline the way in-game
+   art does. Human is stone and lapis, Orc is rust and ember, Night Elf is
+   moss and moonlight, Undead is bone and royal violet. */
 .site-build-card.race-H {
-  --card-bg: #1e2848;
-  --card-header-bg: #283c6a;
-  --card-border: #3860b0;
-  --card-bg-hover: #263458;
-  --card-border-hover: #5888dd;
-  --card-glow: rgba(80,130,220,0.10);
-  --card-divider: rgba(80,130,220,0.18);
+  --card-bg-top: #232f52;
+  --card-bg: #1c2643;
+  --card-bg-foot: #141b2f;
+  --card-header-a: #2f4779;
+  --card-header-b: #22335a;
+  --card-rim: rgba(96,140,206,0.26);
+  --card-rim-hover: rgba(128,172,232,0.62);
+  --card-strike: rgba(150,190,255,0.11);
+  --card-divider: rgba(96,140,206,0.20);
+  --card-accent: #7EA6DC;
 }
 .site-build-card.race-O {
-  --card-bg: #2c1e18;
-  --card-header-bg: #5a2820;
-  --card-border: #904030;
-  --card-bg-hover: #382820;
-  --card-border-hover: #bb5540;
-  --card-glow: rgba(200,80,40,0.10);
-  --card-divider: rgba(200,80,40,0.18);
+  --card-bg-top: #33231b;
+  --card-bg: #291c15;
+  --card-bg-foot: #1d140f;
+  --card-header-a: #6a3122;
+  --card-header-b: #4a231a;
+  --card-rim: rgba(186,94,62,0.26);
+  --card-rim-hover: rgba(214,124,88,0.62);
+  --card-strike: rgba(255,190,150,0.10);
+  --card-divider: rgba(186,94,62,0.20);
+  --card-accent: #D08A63;
 }
 .site-build-card.race-E {
-  --card-bg: #162820;
-  --card-header-bg: #1e4830;
-  --card-border: #286848;
-  --card-bg-hover: #1e3428;
-  --card-border-hover: #389068;
-  --card-glow: rgba(60,200,140,0.10);
-  --card-divider: rgba(60,200,140,0.18);
+  --card-bg-top: #1a2f25;
+  --card-bg: #14261e;
+  --card-bg-foot: #0e1b15;
+  --card-header-a: #24523a;
+  --card-header-b: #1a3b2a;
+  --card-rim: rgba(88,158,116,0.26);
+  --card-rim-hover: rgba(122,190,148,0.62);
+  --card-strike: rgba(170,240,200,0.10);
+  --card-divider: rgba(88,158,116,0.20);
+  --card-accent: #79B98F;
 }
 .site-build-card.race-U {
-  --card-bg: #221a38;
-  --card-header-bg: #382858;
-  --card-border: #583880;
-  --card-bg-hover: #2a2248;
-  --card-border-hover: #7848a8;
-  --card-glow: rgba(160,80,240,0.10);
-  --card-divider: rgba(160,80,240,0.18);
+  --card-bg-top: #2a2142;
+  --card-bg: #211a35;
+  --card-bg-foot: #171227;
+  --card-header-a: #443164;
+  --card-header-b: #302348;
+  --card-rim: rgba(140,104,182,0.26);
+  --card-rim-hover: rgba(174,138,216,0.62);
+  --card-strike: rgba(210,180,255,0.10);
+  --card-divider: rgba(140,104,182,0.20);
+  --card-accent: #A98CD0;
 }
 
 /* ── Match header resets on homepage cards ─────────────────── */
@@ -6637,8 +6702,9 @@ body {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+/* No halo on hover — the art direction forbids bloom. The ring brightens. */
 .site-build-card:hover .mh-race-icon {
-  box-shadow: 0 0 6px color-mix(in srgb, var(--race-color) 60%, transparent);
+  border-color: color-mix(in srgb, var(--race-color) 80%, #fff);
 }
 
 .mh-build-label {
@@ -6684,13 +6750,17 @@ body {
 }
 
 /* ── Race watermark (floated behind card content) ────────── */
+/* Stays inside the header band. It used to be 72px hung half out of the
+   header, which was fine when the next thing down was a row of hero icons for
+   it to sit behind — now it is the Guide/Watch row, and an opaque button
+   sliced the circle in half. 44px centred in a ~55px header clears both. */
 .site-card-race-watermark {
   position: absolute;
   top: 50%;
-  left: 65%;
-  transform: translateY(-15%);
-  width: 72px;
-  height: 72px;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   border: 2px solid var(--race-color);
   object-fit: cover;
@@ -6706,14 +6776,18 @@ body {
 /* ── Section labels ──────────────────────────────────────── */
 /* Eyebrow label (DESIGN-SYSTEM §3). Was 0.65rem at 45% white — below the
    0.8rem floor and failing AA contrast on every race-tinted card body. */
+/* line-height 1.1, not the inherited 1.5. An eyebrow is one short word in caps
+   with nothing above or below it to line up with, so the leading is pure
+   height — 19px a label where the glyphs are 13, three times a card. */
 .site-card-section-label {
   display: block;
   font-size: var(--fs-min);
+  line-height: 1.1;
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: var(--sp-1);
+  margin-bottom: 2px;
 }
 
 .site-card-section-label + .site-card-section-label,
@@ -6879,43 +6953,104 @@ abbr.gloss:focus-visible {
 .gloss-pop-def { color: var(--site-text-muted, #9ca3b8); }
 
 /* ── Card Header (Zone A) — colored header band ──────────── */
+/* The banner. Race gradient, the same stone grain as the card body over it, a
+   struck highlight along the top and a hard shadow line where it meets the
+   card. This is the one place the race colour is allowed to be a field rather
+   than an accent. */
 .site-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  /* Row gap 4, not 8: the matchup chips always wrap onto their own line under
+     the build name, so this gap is vertical separation between two rows that
+     belong together, not spacing between peers. */
+  gap: 4px 8px;
   margin: -10px -12px 0;
-  padding: 8px 12px 6px;
+  padding: 7px 12px 6px;
   flex-wrap: wrap;
   position: relative;
   z-index: 1;
-  background: var(--card-header-bg, rgba(255,255,255,0.04));
-  border-bottom: 1px solid var(--card-divider, rgba(255,255,255,0.06));
+  background:
+    repeating-linear-gradient(114deg,
+      rgba(255, 244, 216, 0.030) 0 2px, rgba(0, 0, 0, 0.045) 2px 4px),
+    linear-gradient(to bottom,
+      var(--card-header-a, #283c6a) 0%,
+      var(--card-header-b, #22335a) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--card-strike, rgba(255,255,255,0.12)),
+    inset 0 -1px 0 rgba(0,0,0,0.45);
+  border-bottom: 1px solid rgba(0,0,0,0.55);
 }
 
 .site-card-matchups {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
-  width: 100%;
-  margin-top: 4px;
+  /* Stops clear of the race watermark. 80% of the 240px content box is 192 and
+     the watermark's leading edge is at 198, so four matchups (171px) stay on
+     one line and five wrap — which is right, since the alternative is chips
+     over a portrait. */
+  width: 80%;
+  /* The header's row gap already separates this from the build name. */
+  margin-top: 0;
 }
 
+/* One "vs", struck into the banner rather than repeated on every token. */
+.site-card-vs {
+  flex: none;
+  color: rgba(255,255,255,0.42);
+  font: 700 0.68rem/1 Verdana;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The opponent tokens.
+   These were flat rounded rectangles filled with a 12% wash of the opponent's
+   race colour — four of them side by side read as a row of pastel stickers
+   sitting on top of the banner. They are struck into it now: a dark well cut
+   into the header, a hard black edge, a struck highlight along the bottom
+   where light would catch a recessed lip, and the race colour carried by the
+   LETTERS instead of by a fill. Same information, and it belongs to the
+   material it sits in. */
 .site-card-matchup {
-  display: inline-block;
-  padding: 1px 5px;
+  display: inline-flex;
+  align-items: center;
+  min-width: 26px;
+  justify-content: center;
+  padding: 2px 5px 1px;
   border-radius: 3px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  background: color-mix(in srgb, var(--opp-color, #888) 12%, var(--card-bg, #1a1a1e));
-  color: color-mix(in srgb, var(--opp-color, #888) 80%, #ccc);
-  border: 1px solid color-mix(in srgb, var(--opp-color, #888) 25%, transparent);
+  font: 800 0.68rem/1.25 Verdana;
+  letter-spacing: 0.05em;
+  background: rgba(0,0,0,0.30);
+  color: color-mix(in srgb, var(--opp-color, #9aa) 66%, #f2ede0);
+  border: 1px solid rgba(0,0,0,0.55);
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,0.55),
+    inset 0 -1px 0 var(--card-strike, rgba(255,255,255,0.13));
   white-space: nowrap;
 }
+/* Unknown opponent is not a race; it should not borrow a race's letterform
+   colour just because the data is missing. */
+.site-card-matchup[data-opp="??"] { color: rgba(240,236,224,0.40); }
+
+/* ── Actions, at the top ─────────────────────────────────────
+   Guide me and Watch, directly under the header. They sat on the last row of
+   the replay strip at the foot of the card, where the strip above them grows
+   with how much metadata a build carries — so the only two things you click
+   landed at a different height on every card in the row. Here they line up
+   across the grid, and the strip at the bottom keeps "+N more", which belongs
+   with the metadata it expands. */
+.site-card-actions {
+  display: flex;
+  gap: 4px;
+  padding: 5px 0 0;
+  position: relative;
+  z-index: 3;   /* above the race watermark */
+}
+.site-card-actions > * { flex: 1 1 0; }
 
 /* ── Hero Sequence (Zone B) ──────────────────────────────── */
 .site-card-heroes {
-  padding: 8px 0 6px;
+  padding: 5px 0 4px;
   border-bottom: 1px solid var(--card-divider, rgba(255,255,255,0.06));
   position: relative;
   z-index: 1;
@@ -6923,7 +7058,8 @@ abbr.gloss:focus-visible {
 
 .site-card-heroes-row {
   display: flex;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .site-card-hero {
@@ -6941,9 +7077,51 @@ abbr.gloss:focus-visible {
 /* Wins over .site-build-card .mh-hero-portrait above (same specificity, later
    in the file), so the hero size is really set here. Keep the two in step. */
 .site-card-hero .mh-hero-portrait {
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.55),
+    0 1px 2px rgba(0,0,0,0.5);
 }
+
+/* ── The first hero, given its due ──────────────────────────────────────────
+   A WC3 build IS its first hero — "DK Destroyer", "BM Wind Rider" are named
+   after it. Being leftmost was the only thing saying so, which is not a signal
+   at all once you are scanning a grid of forty cards.
+   It gets a gold-leaf frame: a tarnished bronze ring struck out of --dom-gold,
+   a hard black edge outside it and a lit top rim. Ornament rather than
+   emphasis-by-glow — nothing here casts light. */
+.site-card-hero:first-child .mh-hero-portrait {
+  width: 64px;
+  height: 64px;
+  border-color: #6a5526;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.7),
+    0 0 0 1px #201a0d,
+    0 0 0 2px rgba(201, 162, 39, 0.42),
+    0 1px 3px rgba(0,0,0,0.6);
+}
+/* Two corner studs on the frame, the way a plated portrait would be pinned.
+   ::before is the top-left, ::after the bottom-right — diagonal, so it reads
+   as a fixing rather than as a border. */
+.site-card-hero:first-child .mh-hero-portrait-wrap::before,
+.site-card-hero:first-child .mh-hero-portrait-wrap::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #e0c469, #8a6f2a);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.75);
+  z-index: 2;
+}
+.site-card-hero:first-child .mh-hero-portrait-wrap::before { top: -1px; left: -1px; }
+.site-card-hero:first-child .mh-hero-portrait-wrap::after  { bottom: -1px; right: -1px; }
+
+/* The 2nd/3rd ordinals stay. The 1st does not need one — the frame says it,
+   and "1st" on a framed portrait is the same fact twice. */
+.site-card-hero:first-child .site-card-hero-ord { display: none; }
 
 .site-card-hero-ord {
   position: absolute;
@@ -7005,7 +7183,7 @@ abbr.gloss:focus-visible {
 
 /* ── Key Units Section ────────────────────────────────────── */
 .site-card-units {
-  padding: 6px 0;
+  padding: 4px 0;
   border-top: 1px solid var(--card-divider, rgba(255,255,255,0.06));
   position: relative;
   z-index: 1;
@@ -7014,7 +7192,7 @@ abbr.gloss:focus-visible {
 .site-card-key-units {
   display: flex;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .site-card-key-unit {
@@ -7047,7 +7225,7 @@ abbr.gloss:focus-visible {
 }
 
 .site-card-expo-row {
-  margin-top: 4px;
+  margin-top: 2px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -7075,18 +7253,58 @@ abbr.gloss:focus-visible {
 .site-card-band.diff-hard   { color: #e08a6a; background: rgba(224,109,80,0.12); border-color: rgba(224,109,80,0.30); }
 
 /* ── Core Upgrades Section ─────────────────────────────── */
+/* ── Upgrades: the card's shock absorber ────────────────────────────────────
+   Every other section has a bounded size — two or three heroes, three or four
+   key units, one replay line. Upgrades is the one that runs from one badge to
+   nine, and it was the whole reason a grid of cards had no common height.
+   So it is the section that gives: it takes whatever height is left and
+   scrolls inside it, and the cards come out uniform. */
 .site-card-upgrades {
-  padding: 6px 0 4px;
+  padding: 4px 0 3px;
   border-top: 1px solid var(--card-divider, rgba(255,255,255,0.06));
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* A recessed slot, not a gap.
+   Because this section absorbs whatever height the card has spare, a build
+   with two upgrades leaves ~80px under its badges — and unstyled that is a
+   hole in the middle of the card. Cut into the panel it reads as an empty
+   rack instead: darkened well, hard top edge, a lit lip along the bottom. */
+.site-card-upgrade-scroll {
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1 1 auto;
+  padding: 4px 4px 4px 5px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.22);
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.5),
+    inset 0 -1px 0 var(--card-strike, rgba(255,255,255,0.07));
+  overscroll-behavior: contain;
+}
+.site-card-upgrade-scroll::-webkit-scrollbar { width: 6px; }
+.site-card-upgrade-scroll::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.30);
+  border-radius: 3px;
+}
+.site-card-upgrade-scroll::-webkit-scrollbar-thumb {
+  background: var(--card-rim, rgba(255,255,255,0.18));
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
+}
+.site-card-upgrade-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--card-accent, rgba(255,255,255,0.3));
 }
 
 .site-card-upgrade-row {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 /* Upgrades carry their name now. A 20px icon on its own asked the reader to
@@ -7096,7 +7314,9 @@ abbr.gloss:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 7px 3px 4px;
+  /* The 26px icon sets the badge's height on its own; the vertical padding was
+     adding 6px per badge to rows that already wrap three deep. */
+  padding: 2px 7px 2px 4px;
   border-radius: 4px;
 }
 
@@ -8158,7 +8378,7 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
    metadata they carry. The top divider belongs to .site-replay-section;
    the strip itself has no boxed background. */
 .site-replay-section {
-  padding-top: 10px;
+  padding-top: 6px;
   border-top: 1px solid var(--card-divider, rgba(255,255,255,0.08));
   margin-top: auto;
   position: relative;
@@ -8166,18 +8386,18 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
 }
 
 /* The strip is THREE rows, each with its own job. Cards in the grid can be
-   as narrow as ~280px, so we never try to put more than 2 logical pieces on
+   as narrow as ~255px, so we never try to put more than 2 logical pieces on
    one row — text and chips always have room to breathe (no truncation).
      Row 1 (.site-replay-item-identity): "{player} vs {opponent}" · {map}
      Row 2 (.site-replay-item-meta):     [tournament] [stage]   wraps freely
-     Row 3 (.site-replay-item-actions):  [+N more]      [Guide me] [Watch]
-   Each row has a min-height so curated cards (full metadata) and user-uploaded
+     Row 3 (.site-replay-toggle):        the full-width "N more replays" bar
+   Row 2 has a min-height so curated cards (full metadata) and user-uploaded
    cards (sparse) line up across the grid. No background, no border — the top
    divider on .site-replay-section + typography carry the visual weight. */
 .site-replay-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   font-size: 0.82rem;
 }
 
@@ -8213,36 +8433,6 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   align-items: center;
   gap: 4px 6px;
   min-height: 20px;
-}
-
-/* ── Row 3: Actions — "+N more" left, primary group right ─────────────
-   The two sub-groups are themselves flex containers, which lets the primary
-   group (Guide + Watch) stay glued together when the row wraps on narrow
-   cards. justify-content: space-between pins them to opposite edges when
-   they fit on one line. */
-.site-replay-item-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  min-height: 28px;
-}
-
-.site-replay-actions-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.site-replay-actions-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-  margin-left: auto;            /* keeps primary actions right-aligned even when wrapped alone */
 }
 
 /* Identity line typography: bold player, muted "vs", regular opponent. */
@@ -8299,28 +8489,55 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   border-color: rgba(200, 168, 78, 0.3) !important;
 }
 
-/* ── "View More Replays" toggle — secondary action paired with View ──── */
+/* ── The foot of the card: "N more replays" ─────────────────────────────────
+   A full-width bar cut into the bottom edge, not a chip in a corner. It used
+   to read "+9 more" in a small outlined pill, which looks like a tag — nobody
+   reading it knew there were nine more games behind it, or that it opened.
+   Now it spans the card, says what it holds, carries the map count as a
+   subline and ends in a chevron. It bleeds into the card's padding on all
+   three outer sides so it sits ON the bottom edge the way a footer does. */
 .site-replay-toggle {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  padding: 3px 10px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 4px;
-  color: #bbb;
-  font: 600 0.74rem Verdana;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  flex-shrink: 0;
+  gap: 8px;
+  /* +26/-13, not +24/-12: the card's 1px border sits outside its padding box,
+     so bleeding only through the padding left a hairline of card showing down
+     each side of the bar. The extra 2px runs under the border and is clipped
+     by the card's own overflow:hidden and radius. */
+  width: calc(100% + 26px);
+  margin: 6px -13px -11px;
+  padding: 7px 12px;
+  text-align: left;
+  border: 0;
+  border-top: 1px solid rgba(0,0,0,0.5);
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.34));
+  box-shadow: inset 0 1px 0 var(--card-strike, rgba(255,255,255,0.07));
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: background 0.15s ease, color 0.15s ease;
 }
-
 .site-replay-toggle:hover {
-  color: #fff;
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.24);
+  background: linear-gradient(180deg, rgba(0,0,0,0.10), rgba(0,0,0,0.26));
 }
+.srt-text {
+  font: 700 0.8rem/1.2 Verdana;
+  color: var(--card-accent, #cfd6e4);
+}
+.srt-sub {
+  font: 600 0.75rem/1.2 Verdana;
+  color: rgba(255,255,255,0.38);
+}
+/* Pushes the chevron to the far edge — the affordance is at the end of the
+   bar, where a disclosure control belongs. */
+.srt-chev {
+  margin-left: auto;
+  flex: none;
+  color: var(--card-accent, #cfd6e4);
+  opacity: 0.75;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.site-replay-toggle:hover .srt-chev { opacity: 1; transform: translateY(1px); }
+
 
 /* "Watch" is the card's primary action, so it takes the .btn-primary accent
    fill (DESIGN-SYSTEM §6.1). Not the race colour: "buttons never take a race
@@ -8332,17 +8549,23 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  font-size: 0.92rem;
+  /* 32px. These are a pair of side-by-side buttons that fill the card's width,
+     so the target area is wide rather than tall; 40 made the row read as the
+     heaviest thing on the card, above the build it describes. */
+  min-height: 32px;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--text-on-accent, #fff);
   background: linear-gradient(180deg, var(--accent-strong), var(--accent-deep));
   border: 1px solid var(--accent);
-  border-radius: var(--site-radius);
-  padding: 0.5rem 1.25rem;
+  border-radius: 5px;
+  padding: 0 0.85rem;
   text-decoration: none;
   white-space: nowrap;
-  box-shadow: var(--shadow-1);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.20),
+    inset 0 -1px 0 rgba(0,0,0,0.35),
+    0 1px 2px rgba(0,0,0,0.45);
   transition: background 0.15s, border-color 0.15s;
 }
 
@@ -8351,7 +8574,7 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
 }
 
 /* "Guide me" — opens the viewer's guided walkthrough. Green (the guide accent),
-   sits just left of "Watch". Both are wrapped in .site-replay-actions-right
+   sits just left of "Watch". Both are wrapped in .site-card-actions
    which handles the right-alignment, so no margin-left here. */
 /* Secondary to Watch, but a real button: this opens the 12-step coached
    walkthrough, which is the most useful thing on the card for a newer
@@ -8361,22 +8584,29 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
+  min-height: 32px;
   font-size: 0.85rem;
-  font-weight: 600;
-  color: #8ad9a3;
-  background: rgba(79,184,107,0.14);
-  border: 1px solid rgba(79,184,107,0.40);
-  border-radius: var(--site-radius);
-  padding: 0.5rem 0.9rem;
+  font-weight: 700;
+  /* Moss, struck, not a green tint on a dark hole. At 18%/9% alpha over the
+     card it read as a disabled control sitting next to a lit Watch button —
+     a real fill in the --dom-green family gives it the same weight without
+     borrowing Watch's accent or picking up any saturation. */
+  color: #d6ead9;
+  background: linear-gradient(180deg, #41694a 0%, #2b4732 100%);
+  border: 1px solid rgba(0,0,0,0.55);
+  border-radius: 5px;
+  box-shadow:
+    inset 0 1px 0 rgba(186,224,192,0.26),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 1px 2px rgba(0,0,0,0.45);
+  padding: 0 0.7rem;
   text-decoration: none;
   white-space: nowrap;
   transition: background 0.15s, border-color 0.15s;
 }
 .site-replay-guide-btn:hover {
-  background: rgba(79,184,107,0.22);
-  border-color: rgba(79,184,107,0.5);
-  color: #8fd6a6;
+  background: linear-gradient(180deg, #4e7d58 0%, #34553c 100%);
+  color: #eaf6ec;
 }
 
 .site-replay-none {
@@ -9615,956 +9845,12 @@ svg.about-feat-icon {
   height: 16px;
 }
 
-/* ===== Match Summary Modal ===== */
+/* ===== Match Summary Modal =====
+   Moved to css/match-summary.css (Aug 2026). The desktop app renders the
+   same screen through client/js/MatchSummaryView.js and loads that sheet
+   from its own css/vendor, so the rules cannot live in a stylesheet only
+   this site serves. viewer.html loads both. */
 
-#ms-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.88);
-  z-index: 5000;
-}
-
-.ms-panel {
-  background-color: #111a22;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 0.5rem;
-  width: 92%;
-  max-width: 1100px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-}
-
-.ms-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  flex-shrink: 0;
-  background: rgba(0,0,0,0.2);
-}
-
-.ms-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.ms-title {
-  font: 700 1.1rem Verdana, sans-serif;
-  color: #fff;
-}
-
-.ms-map-name {
-  font: 400 0.85rem Verdana, sans-serif;
-  color: #8a9aa5;
-}
-
-.ms-duration {
-  font: 600 0.85rem Verdana, sans-serif;
-  color: #5fa5cb;
-}
-
-.ms-close {
-  color: #666;
-  font-size: 1.6rem;
-  cursor: pointer;
-  padding: 0 0.25rem;
-  line-height: 1;
-  transition: color 0.15s;
-}
-
-.ms-close:hover {
-  color: #fff;
-}
-
-/* Tab bar */
-.ms-tabs {
-  display: flex;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  flex-shrink: 0;
-  overflow-x: auto;
-  background: rgba(0,0,0,0.15);
-}
-
-.ms-tab {
-  padding: 0.6rem 1rem;
-  font: 600 0.8rem Verdana, sans-serif;
-  color: #8a9aa5;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.ms-tab:hover {
-  color: #c8d0d8;
-}
-
-.ms-tab-active {
-  color: #fff;
-  border-bottom-color: #00aaff;
-}
-
-/* Scrollable body */
-.ms-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0.75rem;
-}
-
-/* Side-by-side player columns */
-.ms-players {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.ms-player-col {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 0.4rem;
-  padding: 0.5rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Overview column layout: top content grows, bottom stats pin down */
-.ms-ov-top { flex: 1; }
-.ms-ov-bottom { margin-top: auto; }
-
-/* Player header */
-.ms-player-name {
-  font: 700 0.95rem Verdana, sans-serif;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.ms-race-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  border: 2px solid #555;
-}
-
-.ms-race-label {
-  font: 600 0.7rem Verdana, sans-serif;
-  opacity: 0.7;
-}
-
-/* Section labels */
-.ms-section-label {
-  font: 700 0.75rem Verdana, sans-serif;
-  color: #5fa5cb;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0.6rem 0 0.3rem;
-  padding-bottom: 0.2rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-
-.ms-section-label:first-child {
-  margin-top: 0;
-}
-
-.ms-subsection {
-  font: 600 0.75rem Verdana, sans-serif;
-  color: #8a9aa5;
-  margin: 0.3rem 0 0.2rem;
-}
-
-/* Tier labels */
-.ms-tier-label {
-  font: 700 0.75rem Verdana, sans-serif;
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  margin: 0.5rem 0 0.25rem;
-}
-
-.ms-tier-label:first-child {
-  margin-top: 0;
-}
-
-.ms-tier-label.t1 { color: #fff; background: rgba(255,255,255,0.06); }
-.ms-tier-label.t2 { color: #21a5e3; background: rgba(33,165,227,0.1); }
-.ms-tier-label.t3 { color: #FFFF33; background: rgba(255,255,51,0.08); }
-
-/* Icon grid */
-.ms-icon-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.ms-icon-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.ms-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.15);
-  display: block;
-}
-
-.ms-icon-count {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background: rgba(0,0,0,0.85);
-  color: #fff;
-  font: 700 0.6rem Verdana, sans-serif;
-  padding: 0 3px;
-  border-radius: 2px;
-  min-width: 14px;
-  text-align: center;
-  line-height: 1.4;
-}
-
-/* Stat rows */
-.ms-stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.2rem 0;
-  font: 400 0.82rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.7);
-}
-
-.ms-stat-value {
-  color: #fff;
-  font-weight: 600;
-}
-
-.ms-gold { color: #FFD700; }
-.ms-lumber { color: #7CFC00; }
-
-/* Stats table for aligned overview columns */
-.ms-stats-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.ms-stats-table td {
-  padding: 0.2rem 0;
-  font: 400 0.82rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.7);
-  vertical-align: middle;
-}
-
-.ms-stats-table td:first-child {
-  width: 40%;
-}
-
-.ms-stats-table td:last-child {
-  text-align: right;
-  color: #fff;
-  font-weight: 600;
-}
-
-.ms-tier-badge {
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 0.8rem;
-}
-
-.ms-tier-badge.t1 { background: rgba(255,255,255,0.1); }
-.ms-tier-badge.t2 { color: #21a5e3; background: rgba(33,165,227,0.15); }
-.ms-tier-badge.t3 { color: #FFFF33; background: rgba(255,255,51,0.12); }
-
-.ms-expo-yes { color: #44DD88; }
-.ms-expo-no { color: #888; }
-
-/* Heroes — inline row, portrait on top, spells below */
-.ms-heroes-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 0.3rem;
-}
-
-.ms-hero-inline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.ms-hero-portrait-wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.ms-hero-portrait {
-  width: 42px;
-  height: 42px;
-  border-radius: 4px;
-  border: 2px solid rgba(255,255,255,0.2);
-  display: block;
-}
-
-.ms-hero-level {
-  position: absolute;
-  bottom: -3px;
-  right: -3px;
-  background: #111;
-  color: #FFD700;
-  font: 700 0.6rem Verdana, sans-serif;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #FFD700;
-}
-
-.ms-hero-spells-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px;
-}
-
-.ms-spell {
-  position: relative;
-  display: inline-block;
-}
-
-.ms-spell-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 2px;
-  border: 1px solid rgba(255,255,255,0.1);
-  display: block;
-}
-
-.ms-spell-level {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background: rgba(0,0,0,0.85);
-  color: #5fa5cb;
-  font: 700 0.5rem Verdana, sans-serif;
-  padding: 0 2px;
-  border-radius: 2px;
-  min-width: 9px;
-  text-align: center;
-}
-
-/* Resource icons for workers/economy */
-.ms-res-icon {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-  vertical-align: middle;
-  margin: 0 2px 0 6px;
-}
-
-.ms-res-icon:first-child { margin-left: 0; }
-
-.ms-res-pip {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  margin: 0 2px 0 6px;
-  vertical-align: middle;
-}
-
-.ms-res-build { background: #58A6FF; }
-
-/* APM line chart */
-.ms-apm-chart {
-  width: 100%;
-  height: auto;
-  max-height: 65px;
-  display: block;
-}
-
-/* Upgrade rows */
-.ms-upgrade-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.ms-upgrade-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.2rem 0.3rem;
-  border-radius: 3px;
-  font: 400 0.8rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.85);
-}
-
-.ms-upgrade-row.ms-atk { border-left: 3px solid #e74c3c; }
-.ms-upgrade-row.ms-def { border-left: 3px solid #3498db; }
-.ms-upgrade-row.ms-res { border-left: 3px solid #9b59b6; }
-
-.ms-atk-label { color: #e74c3c; }
-.ms-def-label { color: #3498db; }
-.ms-res-label { color: #9b59b6; }
-
-.ms-upgrade-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.ms-upgrade-name {
-  flex: 1;
-}
-
-.ms-upgrade-level {
-  font-weight: 700;
-  color: #fff;
-}
-
-/* Timeline mini (within upgrade tab) */
-.ms-timeline-mini {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.15rem 0;
-  font: 400 0.78rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.7);
-}
-
-.ms-timeline-mini .ms-timeline-time {
-  font-family: 'Courier New', monospace;
-  font-size: 0.78rem;
-  color: #5fa5cb;
-  min-width: 3rem;
-  text-align: right;
-}
-
-.ms-timeline-mini .ms-timeline-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-/* Creep route */
-.ms-creep-route {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-top: 0.2rem;
-}
-
-.ms-creep-step {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 2px 0;
-}
-
-.ms-creep-order {
-  font: 700 0.6rem Verdana, sans-serif;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  flex-shrink: 0;
-  border: 1.5px solid #FFD700;
-  color: #FFD700;
-  background: rgba(0,0,0,0.3);
-}
-
-.ms-creep-diff-label {
-  font: 700 0.7rem Verdana, sans-serif;
-  margin: 0.35rem 0 0.15rem;
-}
-
-.ms-creep-diff-label:first-child {
-  margin-top: 0;
-}
-
-.ms-creep-footer {
-  display: flex;
-  gap: 1rem;
-  padding: 0.4rem 0 0;
-  font: 400 0.72rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.4);
-}
-
-.ms-creep-footer-item::before {
-  content: '';
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  margin-right: 4px;
-  vertical-align: middle;
-}
-
-.ms-creep-camp {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex: 1;
-}
-
-.ms-creep-icons {
-  display: flex;
-  gap: 3px;
-}
-
-.ms-creep-icon-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.ms-creep-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.1);
-  display: block;
-}
-
-.ms-creep-lvl {
-  position: absolute;
-  bottom: -1px;
-  right: -1px;
-  background: rgba(0,0,0,0.82);
-  color: #ccc;
-  font: 700 0.55rem Verdana, sans-serif;
-  padding: 0 3px;
-  border-radius: 2px;
-  line-height: 1.4;
-}
-
-.ms-creep-camp-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.ms-creep-meta {
-  font: 600 0.68rem 'Courier New', monospace;
-  color: #5fa5cb;
-  white-space: nowrap;
-}
-
-.ms-creep-xp {
-  font: 600 0.62rem Verdana, sans-serif;
-  color: #FFD700;
-}
-
-.ms-creep-partial {
-  font: 600 0.62rem Verdana, sans-serif;
-  color: #e0a030;
-}
-
-.ms-creep-step-partial {
-  opacity: 0.65;
-  border-left: 2px dashed #e0a030;
-  padding-left: 4px;
-}
-
-/* Creep score comparison */
-.ms-creep-score {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.25rem;
-}
-
-.ms-creep-score-side {
-  display: flex;
-  flex-direction: column;
-}
-
-.ms-creep-score-name {
-  font: 700 0.8rem Verdana, sans-serif;
-}
-
-.ms-creep-score-stat {
-  font: 400 0.7rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.5);
-}
-
-.ms-creep-bar {
-  display: flex;
-  height: 6px;
-  border-radius: 3px;
-  overflow: hidden;
-  gap: 2px;
-  margin-bottom: 0.6rem;
-}
-
-.ms-creep-bar-seg {
-  height: 100%;
-  border-radius: 3px;
-  opacity: 0.7;
-}
-
-/* Hero XP breakdown */
-.ms-hero-xp-row {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 2px 0;
-}
-
-.ms-hero-xp-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.12);
-  flex-shrink: 0;
-}
-
-.ms-hero-xp-name {
-  font: 600 0.72rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.7);
-  min-width: 60px;
-}
-
-.ms-hero-xp-bar-track {
-  flex: 1;
-  height: 8px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.ms-hero-xp-bar {
-  height: 100%;
-  border-radius: 4px;
-  opacity: 0.6;
-}
-
-.ms-hero-xp-val {
-  font: 700 0.68rem Verdana, sans-serif;
-  color: #FFD700;
-  min-width: 35px;
-  text-align: right;
-}
-
-/* Charts */
-.ms-chart {
-  width: 100%;
-  height: auto;
-  max-height: 140px;
-  margin-bottom: 0.5rem;
-}
-
-.ms-chart-label {
-  fill: rgba(255,255,255,0.4);
-  font-size: 9px;
-  font-family: 'Courier New', monospace;
-}
-
-/* Tier comparison bar */
-.ms-tier-compare {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.ms-tier-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.ms-tier-player {
-  font: 600 0.8rem Verdana, sans-serif;
-  min-width: 80px;
-  text-align: right;
-}
-
-.ms-tier-bar-track {
-  flex: 1;
-  height: 20px;
-  display: flex;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.ms-tier-seg {
-  height: 100%;
-}
-
-.ms-tier-seg.t1 { background: rgba(255,255,255,0.12); }
-.ms-tier-seg.t2 { background: rgba(33,165,227,0.35); }
-.ms-tier-seg.t3 { background: rgba(255,255,51,0.3); }
-
-.ms-tier-times {
-  display: flex;
-  gap: 0.4rem;
-  min-width: 120px;
-}
-
-.ms-tier-time {
-  font: 600 0.7rem 'Courier New', monospace;
-}
-
-.ms-tier-time.t2 { color: #21a5e3; }
-.ms-tier-time.t3 { color: #FFFF33; }
-
-/* Category comparison bars */
-.ms-cat-compare {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-}
-
-.ms-cat-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.ms-cat-label {
-  font: 600 0.75rem Verdana, sans-serif;
-  color: #5fa5cb;
-  min-width: 55px;
-  text-align: right;
-}
-
-.ms-cat-bars {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ms-cat-bar-row {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-}
-
-.ms-cat-bar {
-  height: 12px;
-  border-radius: 2px;
-  min-width: 2px;
-  transition: width 0.3s;
-}
-
-.ms-cat-val {
-  font: 400 0.65rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.5);
-  min-width: 30px;
-}
-
-/* Combat types — unit roster cards */
-.ms-ct-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.ms-ct-unit {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 4px 5px;
-  background: rgba(255,255,255,0.02);
-  border-radius: 4px;
-}
-
-.ms-ct-name {
-  font: 600 0.68rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.6);
-  max-width: 72px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ms-ct-portrait-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-.ms-ct-unit-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 4px;
-  border: 1px solid rgba(255,255,255,0.15);
-  display: block;
-}
-
-.ms-ct-count {
-  position: absolute;
-  bottom: -2px;
-  right: -2px;
-  background: rgba(0,0,0,0.85);
-  color: #fff;
-  font: 700 0.6rem Verdana, sans-serif;
-  padding: 0 3px;
-  border-radius: 2px;
-  min-width: 14px;
-  text-align: center;
-  line-height: 1.4;
-}
-
-.ms-ct-type-col {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.ms-ct-typed {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.ms-ct-type-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 2px;
-}
-
-.ms-ct-type-lbl {
-  font: 400 0.62rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.45);
-}
-
-/* Damage matchup matrix table */
-.ms-matrix {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 0.15rem;
-}
-
-.ms-matrix-corner {
-  width: 1px;
-}
-
-.ms-matrix-col-hdr,
-.ms-matrix-row-hdr {
-  padding: 3px 5px;
-  font: 600 0.68rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.7);
-  white-space: nowrap;
-}
-
-.ms-matrix-col-hdr {
-  text-align: center;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-.ms-matrix-row-hdr {
-  text-align: right;
-  border-right: 1px solid rgba(255,255,255,0.08);
-}
-
-.ms-matrix-col-hdr span,
-.ms-matrix-row-hdr span {
-  vertical-align: middle;
-}
-
-.ms-matrix-hdr-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 2px;
-  border: 1px solid rgba(255,255,255,0.12);
-  vertical-align: middle;
-  margin-left: 3px;
-}
-
-.ms-matrix-cell {
-  text-align: center;
-  padding: 3px 6px;
-  font: 700 0.72rem Verdana, sans-serif;
-}
-
-.ms-mx-strong { color: #44DD88; background: rgba(68,221,136,0.08); }
-.ms-mx-weak   { color: #FF6666; background: rgba(255,68,68,0.06); }
-.ms-mx-neutral { color: rgba(255,255,255,0.45); }
-
-
-/* Hero inventory label */
-.ms-hero-inv-label {
-  font: 600 0.78rem Verdana, sans-serif;
-  color: rgba(255,255,255,0.7);
-  margin: 0.4rem 0 0.2rem;
-}
-
-/* Empty state */
-.ms-empty {
-  font: 400 0.85rem Verdana, sans-serif;
-  color: #555;
-  padding: 1rem;
-  text-align: center;
-}
-
-/* Summary button in match-complete-banner */
-.mcb-summary {
-  padding: 6px 20px;
-  font: 600 13px Verdana, sans-serif;
-  color: #fff;
-  background: #2a6e3e;
-  border: 1px solid #44aa66;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.12s;
-}
-
-.mcb-summary:hover {
-  background: #3a8e5e;
-}
-
-/* Persistent summary button in scrubber bar */
-.ms-trigger-btn {
-  padding: 3px 10px;
-  font: 600 11px Verdana, sans-serif;
-  color: #aaa;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 3px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  white-space: nowrap;
-  user-select: none;
-}
-
-.ms-trigger-btn:hover {
-  color: #fff;
-  border-color: rgba(255,255,255,0.4);
-}
-
-/* Responsive */
-@media (max-width: 700px) {
-  .ms-players {
-    grid-template-columns: 1fr;
-  }
-
-  .ms-panel {
-    width: 98%;
-    max-height: 95vh;
-  }
-
-  .ms-tabs {
-    flex-wrap: wrap;
-  }
-}
 
 /* ===== Upload + My Replays (browser-side parsing) ===== */
 
@@ -13758,6 +13044,37 @@ svg.about-feat-icon {
   border-bottom: 1px solid var(--border);
 }
 
+/* Heading left, drop bar right, one row.
+   The two are the page's two ways in — browse somebody else's build, or bring
+   your own — and they were stacked, the drop bar a full-width band above this
+   whole section. Full width bought it nothing: it is one line of text and a
+   button, so the width went to empty dashed border, and the row it occupied
+   came straight off the fold.
+   Wraps rather than squeezing. Below ~900px the drop bar drops under the
+   heading and takes the full width back, which is the right answer when there
+   is no width to split. */
+.site-pros-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+}
+.site-pros-topline .site-pros-headline { flex: 0 1 auto; }
+/* 38rem, measured. It is the narrowest width at which all three lines of the
+   bar's copy — the label, the privacy line and the scope line — each sit on
+   one line: 608px renders 75px tall, 544px renders 108, 480px renders 126.
+   Past 38rem the box grows and the text inside it does not, which only moves
+   the "Where are my replays?" button away from the words it belongs to.
+   `margin-left: auto` rather than relying on space-between, so a wrapped
+   headline still pushes it right. */
+.site-pros-topline .hp-dropbar {
+  flex: 1 1 22rem;
+  max-width: 38rem;
+  margin-left: auto;
+  margin-bottom: 0;
+}
+
 /* Heading, intro and build count share one baseline row. Stacking them cost
    ~70px above the fold and read as three separate ideas; they are one. The
    intro is the only flexible item — it wraps its own text rather than
@@ -16462,11 +15779,29 @@ fieldset.ub-editor-field input[type="text"] {
     grid-template-columns: 1fr !important;
     gap: 8px !important;
     padding: 6px 8px;
+    /* One column, so the desktop cap and its centring have nothing to do here
+       — leaving them on parked a 292px card in the middle of a 441px phone
+       with dead space down both sides. */
+    justify-items: stretch;
+    /* And no forced row height. Uniform cards are for a grid you scan across;
+       stacked one per row there is nothing to line up with, and holding 526px
+       against a phone's narrower content clipped every card. */
+    grid-auto-rows: auto !important;
   }
   .site-build-card {
     padding: 8px !important;
     border-radius: 8px !important;
+    max-width: none;
   }
+  /* The foot bar bleeds through 8px of padding here, not 12. */
+  .site-replay-toggle {
+    width: calc(100% + 18px);
+    margin: 6px -9px -9px;
+    padding: 7px 9px;
+  }
+  /* Nothing is absorbing slack without a fixed height, so the upgrades well
+     goes back to being exactly as tall as its badges. */
+  .site-card-upgrade-scroll { flex: 0 0 auto; }
   .site-card-race-watermark { display: none; }
   .site-card-section-label { display: none; }
   .site-card-user-tags,
