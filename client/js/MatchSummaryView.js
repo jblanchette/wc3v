@@ -846,11 +846,56 @@
       out.push(block('Hero Inventories', body));
     }
 
-    const xp = creepXpBlock(o, model, p);
-    if (xp) out.push(xp);
-    const route = creepRouteBlock(o, model, p);
-    if (route) out.push(route);
+    // Camps are claimed by TEAMS. In a duel each column is its own team, so
+    // the blocks live here; past two players the same team-scoped route
+    // repeated identically in three teammate columns, so team games render
+    // them once per team, full width, below the columns.
+    if (model.players.length <= 2) {
+      const xp = creepXpBlock(o, model, p);
+      if (xp) out.push(xp);
+      const route = creepRouteBlock(o, model, p);
+      if (route) out.push(route);
+    }
 
+    return out;
+  };
+
+  // One section per team: the route and the hero XP, drawn once instead of
+  // once per teammate. The hero-XP portraits search every teammate's heroes,
+  // which is also what fixes the blank portraits the per-column form had.
+  const teamCreepSections = (o, model) => {
+    const teams = [];
+    for (const p of model.players) {
+      if (p.teamId === null || p.teamId === undefined) continue;
+      if (!teams.some(t => t.teamId === p.teamId)) {
+        teams.push({ teamId: p.teamId, players: [] });
+      }
+      teams.find(t => t.teamId === p.teamId).players.push(p);
+    }
+    if (!teams.length) return null;
+
+    const out = frag();
+    for (const team of teams) {
+      // A representative player carries the teamId for campsOf, and a merged
+      // hero list so every portrait resolves.
+      const rep = {
+        teamId: team.teamId,
+        color: team.players[0].color,
+        tierProduction: {
+          heroes: team.players.flatMap(p =>
+            (p.tierProduction && p.tierProduction.heroes) || [])
+        }
+      };
+      const xp = creepXpBlock(o, model, rep);
+      const route = creepRouteBlock(o, model, rep);
+      if (!xp && !route) continue;
+
+      const names = team.players.map(p => p.name).join(', ');
+      const section = node('div', 'ms-wide-section ms-team-creeps');
+      section.appendChild(sectionLabel(`Creeps — ${names}`));
+      section.appendChild(blocks([xp, route]));
+      out.appendChild(section);
+    }
     return out;
   };
 
@@ -861,6 +906,11 @@
       const list = economyBlocks(o, model, p);
       return list.length ? blocks(list) : empty('No economy recorded');
     }));
+
+    if (model.players.length > 2) {
+      const teamCreeps = teamCreepSections(o, model);
+      if (teamCreeps) out.appendChild(teamCreeps);
+    }
 
     const score = creepScore(model);
     if (score) out.appendChild(score);
@@ -981,17 +1031,30 @@
     return block('Creep Route', body, 'ms-block-wide');
   };
 
-  // The share of the map's camps each side took, plus what nobody finished.
-  // About the game rather than about a player, so it runs full width under the
-  // columns.
+  // The share of the map's camps each SIDE took, plus what nobody finished.
+  // About the game rather than about a player, so it runs full width under
+  // the columns. Sides are teams: camps are claimed by teams, and building
+  // one side per player out of team-scoped camps counted every camp once per
+  // teammate — a 3v3 read as six sides sharing double the real total.
   const creepScore = (model) => {
     const camps = model.camps || [];
     if (!camps.length) return null;
 
-    const scores = model.players.map(p => {
-      const cleared = campsOf(model, p, [2]);
+    const sides = [];
+    for (const p of model.players) {
+      if (p.teamId === null || p.teamId === undefined) continue;
+      let side = sides.find(s => s.teamId === p.teamId);
+      if (!side) {
+        sides.push(side = { teamId: p.teamId, names: [], color: p.color, isYou: false });
+      }
+      side.names.push(p.name);
+      side.isYou = side.isYou || !!p.isYou;
+    }
+    const scores = sides.map(side => {
+      const cleared = campsOf(model, side, [2]);
       return {
-        name: p.name, color: p.color, isYou: !!p.isYou, count: cleared.length,
+        name: side.names.join(', '), color: side.color, isYou: side.isYou,
+        count: cleared.length,
         totalLvl: cleared.reduce((s, c) => s + (c.totalLevel || 0), 0),
         totalXp: cleared.reduce((s, c) => s + campXp(c), 0)
       };
@@ -1196,7 +1259,12 @@
       block('Workers Over Time', areaChart(model, p => p.workerTrack, null))
     ];
     if (model.players.some(p => p.apm)) {
-      list.push(block('APM Over Time', apmComparison(model)));
+      // The grouped bars only up to four seats. At six the group width
+      // divides down to 2px bars, which is a texture, not a chart — and each
+      // player's column already carries their own APM line.
+      if (model.players.length <= 4) {
+        list.push(block('APM Over Time', apmComparison(model)));
+      }
       list.push(block('Action Category Breakdown', categoryComparison(model)));
     }
     const wrap = blocks(list);

@@ -1071,6 +1071,10 @@
 .ms-creep-meta { color: var(--ink-faint); }
 .ms-creep-footer { color: var(--ink-faint); border-top: 1px solid var(--app-line); }
 .ms-res-build { background: var(--tier2-ink); }
+/* A half-cleared camp: the vendor marks it with a dashed left edge, which is
+   a single-edge stripe. The claim moves onto the step's own order ring. */
+.ms-creep-step-partial { border-left: 0; padding-left: 0; opacity: 0.7; }
+.ms-creep-step-partial .ms-creep-order { border-style: dashed; }
 
 /* "You", carved: a gold ring and a wash, no glow. The vendor marks the seat
    with a text-shadow bloom, which the art direction bans outright. */
@@ -1124,3 +1128,136 @@
 .ms-spell-icon, .ms-race-icon, .ms-hero-portrait, .ms-ct-unit-icon {
   border-radius: var(--radius-xs);
 }
+
+/* ── The game timeline ────────────────────────────────────────────────────
+   The match's moments on one axis — js/game-timeline.js. Marks are 36px
+   targets on an inset track (a moment at 0:00 keeps its whole hit box
+   inside the strip); the glyph inside is chart-mark sized under the same
+   exemption every spark dot has. Ink says whose moment it was: gold for
+   yours, dim for theirs, mid for nobody's. */
+.gt { min-width: 0; }
+.gt-lane { display: flex; align-items: center; gap: var(--sp-2); }
+.gt-lane-k {
+  flex: none;
+  width: 3.4rem;
+  text-align: right;
+  color: var(--ink-dim);
+  font-size: var(--fs-min);
+  font-weight: 600;
+}
+.gt-track {
+  position: relative;
+  flex: 1 1 auto;
+  height: var(--ico-sm);
+  margin: 0 calc(var(--ico-sm) / 2);
+  min-width: 0;
+}
+.gt-rule {
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  height: 1px;
+  background: var(--app-line);
+}
+.gt-mark {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--ico-sm);
+  height: var(--ico-sm);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.gt-mark[data-side="me"] { color: var(--dom-gold); }
+.gt-mark[data-side="them"] { color: var(--ink-dim); }
+.gt-mark:hover { color: var(--ink); }
+.gt-mark:focus-visible { outline: 2px solid var(--focus); outline-offset: -6px; }
+.gt-glyph { font-size: 13px; }
+.gt-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.gt-ruler-track { height: 14px; }
+.gt-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  color: var(--ink-faint);
+  font-family: var(--mono);
+  font-size: var(--fs-min);
+  line-height: 14px;
+  white-space: nowrap;
+}
+.gt-tick.is-first { transform: none; }
+.gt-tick.is-last { transform: translateX(-100%); }
+/* Above the tab row (the fixed-frame mount) it reads as part of the frame:
+   a shallow well, no card chrome. */
+.detail-col > .gt {
+  padding: 0 var(--sp-2);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+/* Inside the Overview tab it sits flush over the band. */
+.ms-tab-content > .gt { margin-bottom: var(--sp-2); }
+
+/* ══ MOCK ROUND 1 — Overview header variants. DELETE after decision. ══════
+   ov-a is the default (the rules above). ov-b and ov-c are candidates the
+   harness selects with #mock=; nothing here is reachable in the real app. */
+
+/* ov-b: two rows. The claim (verdict, opponent, record) on its own line at
+   full voice, the facts (marks, map, length, tags) under it. */
+html[data-mock="ov-b"] .ov-claim {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  min-width: 0;
+}
+html[data-mock="ov-b"] .verdict-word { font-size: var(--fs-h3); }
+
+/* ov-c: the header rides the ov-band's right column, over the tier bars,
+   beside the dominance plot. One glance carries the result AND the shape of
+   the game. With no dominance the band is one column and the header leads it. */
+html[data-mock="ov-c"] .ms-ov-band > .ms-ov-band-dom { grid-column: 1; grid-row: 1 / 3; }
+html[data-mock="ov-c"] .ms-ov-band > .ov-in-band {
+  grid-column: 2;
+  grid-row: 1;
+  border-bottom: 0;
+  margin: 0;
+  padding: 0;
+  align-self: start;
+}
+html[data-mock="ov-c"] .ms-ov-band > .ms-ov-band-tier { grid-column: 2; grid-row: 2; }
+html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band,
+html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier {
+  grid-column: 1;
+}
+html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band { grid-row: 1; }
+html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier { grid-row: 2; }
+/* The bench readout would double the right column's height; it drops under
+   the claim at reduced billing in this variant. */
+html[data-mock="ov-c"] .ov-in-band .ov-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1) 0; }
+
+/* ══ MOCK ROUND 3 — one interleaved build order. DELETE after decision. ═══
+   The merged list runs in the same responsive columns as the split form,
+   so it costs no height; each row's race ink and name say whose step it is,
+   and your own rows get the full ink. */
+html[data-mock="bo-b"] .build-merged { column-width: 17rem; }
+html[data-mock="bo-b"] .build-merged .who {
+  flex: none;
+  width: 5.2rem;
+  color: var(--rc-ink);
+  font-size: var(--fs-min);
+  overflow-wrap: anywhere;
+}
+html[data-mock="bo-b"] .build-merged li { opacity: 0.75; }
+html[data-mock="bo-b"] .build-merged li[data-mine="1"] { opacity: 1; }

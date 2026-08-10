@@ -256,6 +256,11 @@
 /* A block that is not in a .ms-blocks grid still needs its own spacing. */
 .ms-wide-section { margin-top: 0.6rem; }
 
+/* Team games: the team-scoped creep sections, once per team under the player
+   columns. The label carries the roster; the blocks inside are the same
+   Hero XP / Creep Route blocks a duel draws per column. */
+.ms-team-creeps > .ms-section-label { margin-top: 0; }
+
 /* ── Overview: the band ─────────────────────────────────────────────────
    Dominance and tier progression are the only two things on the tab that are
    about the GAME rather than about a player, and they lead it. Both are read
