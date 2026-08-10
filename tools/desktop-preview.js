@@ -16,7 +16,19 @@
  *   node tools/desktop-preview.js --games=8 --me="SooooK#31962"
  *   node tools/desktop-preview.js --games=40 --w3c
  *   node tools/desktop-preview.js --games=40 --stale=4
+ *   node tools/desktop-preview.js --mix=audit --out=preview-mix.html
  *   node tools/desktop-preview.js --setup
+ *
+ * --mix=sub[:count],sub[:count],... builds the page from BUCKETS instead of
+ * the first N files: each substring picks `count` matching replays (default
+ * 1), concatenated in the order written. This is how one page gets a 3v3, a
+ * 4v4, a busy 1v1 and a sparse fixture at once — a single --match can only
+ * narrow, never mix. `--mix=audit` is the standing audit corpus; the preset
+ * lives below and in desktop/README.md.
+ *
+ * --out=NAME writes desktop/preview/NAME instead of preview.html, so several
+ * pages (the audit matrix) can coexist. Basename only — a subdirectory would
+ * break the ../dist rebase.
  *
  * --stale=N degrades the first N games so the schema-upgrade paths render. See
  * the comment at the call site: they alternate between "stored before v4" and
@@ -78,10 +90,48 @@ const wanted = parseInt(args.games, 10) || 12;
 // without this the team games and the custom-mode replays are unreachable
 // without asking for hundreds of games. `--match=gso` is a 3v3.
 const matcher = typeof args.match === 'string' ? args.match.toLowerCase() : null;
-const files = fs.readdirSync(REPLAY_DIR)
-  .filter(f => f.endsWith('.wc3v.gz'))
-  .filter(f => !matcher || f.toLowerCase().includes(matcher))
-  .slice(0, wanted);
+
+// The standing audit corpus: every data shape the report has to survive, on
+// one page. gso is the only rich team game in the corpus (6 seats with
+// dominance/resources/APM/build); test-4v4 is 8 seats with none of that;
+// the two ladder buckets carry the personal-1v1 paths; the two fixtures are
+// genuinely thin (short, sparse moments). Frozen in desktop/README.md — a
+// layout change is audited against THIS page, not against whatever twelve
+// games the directory happens to start with.
+const MIX_PRESETS = {
+  audit: 'gso:1,test-4v4:1,happy-vs-grubby:1,Springtime13:2,EchoIsles22:1,hide-test:1,sellback-test:1'
+};
+
+const allFiles = fs.readdirSync(REPLAY_DIR).filter(f => f.endsWith('.wc3v.gz'));
+
+let files;
+if (typeof args.mix === 'string') {
+  // Buckets, not a filter: each `sub[:count]` takes the first `count` matches
+  // not already picked, in the order written, so the feed order is the bucket
+  // order. --match and --games make no sense alongside it.
+  if (matcher) {
+    console.error('--mix and --match are exclusive: mix IS a list of matches.');
+    process.exit(1);
+  }
+  const spec = MIX_PRESETS[args.mix] || args.mix;
+  files = [];
+  for (const bucket of spec.split(',')) {
+    const [sub, countRaw] = bucket.trim().split(':');
+    const count = parseInt(countRaw, 10) || 1;
+    const hits = allFiles.filter(f =>
+      f.toLowerCase().includes(sub.toLowerCase()) && !files.includes(f))
+      .slice(0, count);
+    // An empty bucket is how an audit page silently loses its 3v3. Loud.
+    if (hits.length < count) {
+      console.warn(`  mix bucket "${bucket.trim()}": wanted ${count}, found ${hits.length}`);
+    }
+    files.push(...hits);
+  }
+} else {
+  files = allFiles
+    .filter(f => !matcher || f.toLowerCase().includes(matcher))
+    .slice(0, wanted);
+}
 if (!files.length) {
   console.error(`No parsed replays in ${path.relative(ROOT, REPLAY_DIR)}`);
   process.exit(1);
@@ -311,7 +361,10 @@ ${
 `;
 
 fs.mkdirSync(PREVIEW_DIR, { recursive: true });
-const previewFile = path.join(PREVIEW_DIR, 'preview.html');
+// basename() is the subdirectory guard: the ../dist rebase only holds for a
+// file directly inside PREVIEW_DIR.
+const previewFile = path.join(PREVIEW_DIR,
+  path.basename(typeof args.out === 'string' ? args.out : 'preview.html'));
 fs.writeFileSync(previewFile, html);
 // Left behind by every run before this one, when the preview lived in dist.
 fs.rmSync(path.join(DIST, 'preview.html'), { force: true });

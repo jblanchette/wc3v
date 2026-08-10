@@ -95,6 +95,37 @@
     return cur === undefined ? null : cur;
   };
 
+  // The mode, when the parser did not say. Older bundles emit no
+  // out.gameMode, and storing null there split the desktop against itself:
+  // the report frame treats a non-'1v1' as a team game while the feed treats
+  // a falsy mode as a duel, so the same 4v4 was both at once.
+  //
+  // STRICT — must match helpers/utils.js computeGameMode, Wc3vViewer
+  // .getGameMode and the identical fallback in UploadManager.js. Teams are
+  // counted over non-neutral human seats only, the same seats buildSummary
+  // itself keeps.
+  function deriveGameMode (out) {
+    const byTeam = {};
+    let n = 0;
+    for (const slot of Object.keys(out.players || {})) {
+      const pd = out.players[slot];
+      const rpd = dig(out, ['replay', 'players', slot]);
+      if (!pd || !rpd || pd.isNeutralPlayer) continue;
+      if (rpd.teamId >= 1000) continue;
+      byTeam[rpd.teamId] = (byTeam[rpd.teamId] || 0) + 1;
+      n++;
+    }
+    const counts = Object.values(byTeam);
+    const tc = counts.length;
+    if (n < 2) return 'custom';
+    if (n === 2 && tc === 2) return '1v1';
+    if (tc === 2 && counts[0] === counts[1]) {
+      return ({ 2: '2v2', 3: '3v3', 4: '4v4' })[counts[0]] || 'custom';
+    }
+    if (n >= 3 && tc === n) return 'ffa';
+    return 'custom';
+  }
+
   /**
    * @param out      the parser's output object (a full parse)
    * @param key      the content key this game is stored under
@@ -124,7 +155,7 @@
       patchVersion: dig(out, ['replay', 'subheader', 'version']),
       map: rawMap.split(/[\\/]/).pop(),
       mapRaw: rawMap,
-      gameMode: out.gameMode || null,
+      gameMode: out.gameMode || deriveGameMode(out),
       winner: out.winner || null,
       durationMs,
       neutralCamps: SE.extractNeutralCamps(worldNeutralGroups),

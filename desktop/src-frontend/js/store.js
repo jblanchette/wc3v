@@ -61,8 +61,36 @@
       return summary;
     };
 
+    // A summary stored before SummaryBuild learned to derive the mode carries
+    // gameMode: null, and the views disagree about null — the report frame
+    // reads "not 1v1" as a team game while the feed reads falsy as a duel.
+    // The mode is fully derivable from the stored teamIds (same STRICT table
+    // as SummaryBuild.deriveGameMode), so this is a read-time repair, not a
+    // schema matter: bumping the schema over a microsecond-computable field
+    // would mark every summary on disk stale and trigger a full re-read wave.
+    const repairGameMode = (summary) => {
+      if (!summary || summary.gameMode || !summary.players) return summary;
+      const byTeam = {};
+      let n = 0;
+      for (const p of Object.values(summary.players)) {
+        const t = (p && p.teamId !== undefined && p.teamId !== null) ? p.teamId : 0;
+        byTeam[t] = (byTeam[t] || 0) + 1;
+        n++;
+      }
+      const counts = Object.values(byTeam);
+      const tc = counts.length;
+      let mode = 'custom';
+      if (n < 2) mode = 'custom';
+      else if (n === 2 && tc === 2) mode = '1v1';
+      else if (tc === 2 && counts[0] === counts[1]) {
+        mode = ({ 2: '2v2', 3: '3v3', 4: '4v4' })[counts[0]] || 'custom';
+      } else if (n >= 3 && tc === n) mode = 'ffa';
+      summary.gameMode = mode;
+      return summary;
+    };
+
     const read = async (key) =>
-      gunzipJson(new Uint8Array(await invoke('read_parse', { key })));
+      repairGameMode(await gunzipJson(new Uint8Array(await invoke('read_parse', { key }))));
 
     // The whole store, loaded once per session and appended to as new games
     // persist.
