@@ -126,7 +126,8 @@ const ClientUnit = class {
       "primaryRole", "harvestConfident", "buildWindows",
       "isTransport", "loadEvents", "loadedInto", "isMercenary",
       "destroyedByBuilding", "sacrificed", "scoutInfo",
-      "constructionStartTime", "uprootStream", "morphHistory"
+      "constructionStartTime", "uprootStream", "morphHistory",
+      "upgradeSteps", "initialItemId"
     ];
 
     dataFields.forEach(field => {

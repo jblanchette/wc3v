@@ -2291,25 +2291,40 @@
         if (!player || !player.units) continue;
         for (const unit of player.units) {
           if (!unit.isBuilding) continue;
-          const itemId = (unit.itemId || '').toLowerCase();
-          const spec = this._buildingSpec(itemId);
-          if (!spec) continue;
-          const modelName = spec.model;
-
           const wx = unit.currentX || (unit.spawnPosition && unit.spawnPosition.x) || 0;
           const wy = unit.currentY || (unit.spawnPosition && unit.spawnPosition.y) || 0;
           if (wx === 0 && wy === 0) continue;
 
-          buildingEntries.push({
-            modelName,
-            modelScale: spec.scale,
-            itemId,
-            wx, wy,
-            readyTime: unit.readyTime || unit.constructionStartTime || unit.spawnTime || 0,
-            destroyedAt: unit.destroyedAt || null,
-            playerColor: player.playerColor || '#cccccc',
-            unit
-          });
+          const readyTime = unit.readyTime || unit.constructionStartTime || unit.spawnTime || 0;
+          const destroyedAt = unit.destroyedAt || null;
+
+          // A building's exported itemId is its FINAL form. upgradeSteps (hall
+          // tiers, tower/ziggurat upgrades) carry each upgrade's completion
+          // time, so each form gets its own windowed record: the Town Hall
+          // model until the Keep completes, the Keep model after. Windows abut
+          // exactly — visible is t >= readyTime && t < destroyedAt.
+          const steps = (unit.upgradeSteps && unit.upgradeSteps.length && unit.initialItemId)
+            ? unit.upgradeSteps : null;
+          const forms = steps
+            ? [{ itemId: unit.initialItemId, from: readyTime }]
+                .concat(steps.map(s => ({ itemId: s.itemId, from: s.at })))
+            : [{ itemId: unit.itemId, from: readyTime }];
+
+          for (let fi = 0; fi < forms.length; fi++) {
+            const itemId = (forms[fi].itemId || '').toLowerCase();
+            const spec = this._buildingSpec(itemId);
+            if (!spec) continue;
+            buildingEntries.push({
+              modelName: spec.model,
+              modelScale: spec.scale,
+              itemId,
+              wx, wy,
+              readyTime: forms[fi].from,
+              destroyedAt: (fi + 1 < forms.length) ? forms[fi + 1].from : destroyedAt,
+              playerColor: player.playerColor || '#cccccc',
+              unit
+            });
+          }
         }
       }
 
