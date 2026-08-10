@@ -99,3 +99,45 @@ comparator grammar (`>=N`, `A..B`, `MM:SS..MM:SS`, ...).
 `client/data/engine-truth/_selftest.json` is a `_circular` harness selftest —
 it proves the machinery, not fidelity, and fidelity-report ignores it. Real
 fixtures must never set `_circular`.
+
+## Designed scenario maps (the second fixture source)
+
+A captured pro replay proves fidelity against real play; a DESIGNED map proves
+one mechanic in isolation, with truth known from the map itself. Both are
+non-circular; tag these fixtures `meta.source: "designed-map"`. Truth still
+requires one watch of the recording — the map tells you what SHOULD happen,
+the watch tells you what the engine actually did (surround order, wrap
+direction, who kept walking).
+
+### Workflow
+
+1. Build the map in the World Editor. Keep it minimal: one mechanic per map.
+   Prefer TRAINED or trigger-spawned armies over editor-preplaced player units
+   until the preplaced path is verified (see risk below).
+2. Record a Local Area Network game on it (single player + AI-off is fine) and
+   grab the `.w3g` from `BattleNet\<accountId>\Replays\Autosaved\Multiplayer`.
+3. Register the map: `node tools/data-tool.js --source=<folder with the .w3x> --prefix=`
+   (extracts mapdata/ + client/maps/ and patches helpers/mapConfiguration.json),
+   then `node tools/regen-maps.js --map=<Name>`, `node tools/optimize-terrain.js`,
+   `node tools/gzip-walkmaps.js` for the viewer assets.
+4. **Scratch-parse FIRST**: `node wc3v.js --replay=<scenario> --debug` and check
+   `inspect-replay --show=units` — editor-preplaced PLAYER units are an
+   untested parse path (setupUnitFileData seeds preplaced/neutral; player
+   units normally enter through the action stream). If preplaced units do not
+   track, switch the map to trigger-spawned armies.
+5. Author the fixture from the map design + one watch. Score with
+   `node tools/validate-engine-truth.js --replay=<scenario> --verbose`.
+
+### The four scenario maps (approved 2026-08-10) and their asserts
+
+1. **20 melee vs one building** (farm and town hall variants) —
+   `cluster` around the building at attack-settle time (">=18" within
+   footprint + 200u), `notIdle` over the approach window, `engagement`
+   count on the attackers.
+2. **Melee ring on one unit** — `cluster` with r ≈ ring 1 (">=5" within
+   ~120u), overflow `cluster` at a wider radius.
+3. **Mixed melee + ranged siege** — `engagement` per unit type, ranged
+   `unitPosition` at footprint edge + range (tolerance ~100u).
+4. **Blocked approach** (target behind a tree wall / narrow gap) —
+   `notIdle` through the whole window (the freeze catcher) + `cluster` at
+   the nearest reachable side of the obstruction.

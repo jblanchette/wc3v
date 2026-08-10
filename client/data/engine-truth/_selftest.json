@@ -52,6 +52,23 @@
       "clearedAt": "2:50..3:20",
       "by": 2,
       "note": "±10s reparse jitter absorbed by the 30s window"
+    },
+    {
+      "type": "cluster",
+      "t": "1:00",
+      "who": { "player": 2, "unitType": "Acolyte" },
+      "area": { "x": 2740, "y": 4720, "r": 400 },
+      "count": ">=2",
+      "note": "gold-mine acolytes cluster at the mine — position-only counting"
+    },
+    {
+      "type": "notIdle",
+      "from": "4:45",
+      "to": "5:05",
+      "who": { "player": 1 },
+      "area": { "x": -820, "y": 2280, "r": 900 },
+      "maxIdlePct": 60,
+      "note": "mid-battle army is fighting/moving, not parked — exercises the idle-share sampler. Workers/harvesters read idle by design, so scope notIdle to battle windows or moving armies."
     }
   ]
 }

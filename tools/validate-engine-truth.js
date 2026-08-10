@@ -19,10 +19,23 @@
  *   engagement    { from, to, area:{x,y,r}, attacking:[{player, unitType, count?}] }
  *   noCombat      { from, to, who:{player}, area:{x,y,r} }
  *   campClear     { match:{totalLevel, units[]}, clearedAt:"MM:SS..MM:SS", by? }
+ *   cluster       { t, who:{player, unitType?}, area:{x,y,r}, count }
+ *                 — N units inside the radius at t, attack state irrelevant.
+ *                 The surround assert: "18 of 20 grunts within 300u of the farm".
+ *   notIdle       { from, to, who:{player, unitType?}, area?:{x,y,r}, maxIdlePct? }
+ *                 — matching units' idle share over the window stays under
+ *                 maxIdlePct (default 25). The freeze catcher for designed
+ *                 scenarios: blocked attackers must keep pathing, not stand.
  *
  * Comparators (counts): true/false, 123, ">=N", "<=N", ">N", "<N", "==N", "A..B".
  * Times: "MM:SS", raw ms, or "A..B" ranges of either. campClear ranges should
  * span ≥20s — derived camp times jitter ±10s across re-parses.
+ *
+ * meta.source: "capture" (default; expectations from watching Reforged) or
+ * "designed-map" — a scenario map built for the purpose, where truth comes
+ * from the map design itself plus one watch of the recording. Both are
+ * legitimately non-circular and both are COUNTED by fidelity-report; only
+ * meta._circular selftests are skipped.
  *
  * Usage:
  *   node tools/validate-engine-truth.js --replay=ID [--verbose] [--threshold=0.8]
@@ -202,6 +215,60 @@ function evalNoCombat (data, world, obs) {
   };
 }
 
+// N units of a player (optionally a type) inside an area at one instant —
+// position only, no attack-state requirement. This is the assert engagement
+// cannot express: a surround is proven by WHERE the units stand.
+function evalCluster (data, obs) {
+  const t = parseTime(obs.t);
+  const who = obs.who || {};
+  const area = obs.area || {};
+  let count = 0;
+  for (const u of playerUnits(data, who.player)) {
+    if (u.isBuilding || !u.path || !u.path.length) continue;
+    if (who.unitType && !typeMatches(u, who.unitType)) continue;
+    if (UB.readyTimeOf(u) > t) continue;
+    const death = UB.deathStartOf(u);
+    if (death != null && death <= t) continue;
+    const s = UB.sampleAt(u.path, t);
+    if (!s) continue;
+    if (dist2d(s.x, s.y, area.x, area.y) > (area.r || 300)) continue;
+    count++;
+  }
+  const res = checkCount(count, obs.count);
+  return { pass: res.pass, blatant: false, why: `units within ${area.r || 300}u: ${res.why}` };
+}
+
+// Matching units must stay busy through the window: idle decisions under
+// maxIdlePct of their sampled frames. The designed-scenario freeze catcher.
+function evalNotIdle (data, world, obs) {
+  const from = parseTime(obs.from), to = parseTime(obs.to);
+  const who = obs.who || {};
+  const area = obs.area || null;
+  let idle = 0, total = 0;
+  for (let t = from; t <= to; t += SAMPLE_STEP_MS) {
+    const frame = world.resolve(t);
+    for (const l of frame.live) {
+      if (l.u.isBuilding) continue;
+      if (who.player != null && l.u._playerId !== Number(who.player)) continue;
+      if (who.unitType && !typeMatches(l.u, who.unitType)) continue;
+      if (area && dist2d(l.x, l.y, area.x, area.y) > (area.r || 900)) continue;
+      const d = frame.byUuid.get(l.uuid);
+      if (!d) continue;
+      total++;
+      if (d.state === 'idle') idle++;
+    }
+  }
+  const maxIdlePct = obs.maxIdlePct != null ? obs.maxIdlePct : 25;
+  const pct = total ? (100 * idle / total) : 0;
+  return {
+    pass: total > 0 && pct <= maxIdlePct,
+    blatant: false,
+    why: total
+      ? `${pct.toFixed(1)}% idle frames over ${total} samples (max ${maxIdlePct}%)`
+      : 'no matching unit-frames in window'
+  };
+}
+
 // same level + unit-name subset match as validate-camp-credit.js
 function findCamp (groups, match) {
   const want = (match.units || []).slice().sort();
@@ -254,6 +321,8 @@ function score (data, fixture) {
         case 'engagement': r = evalEngagement(data, world, obs); break;
         case 'noCombat': r = evalNoCombat(data, world, obs); break;
         case 'campClear': r = evalCampClear(data, obs); break;
+        case 'cluster': r = evalCluster(data, obs); break;
+        case 'notIdle': r = evalNotIdle(data, world, obs); break;
         default: r = { pass: false, blatant: false, why: `unknown type ${obs.type}` };
       }
     } catch (e) {
