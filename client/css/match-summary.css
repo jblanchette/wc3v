@@ -274,6 +274,10 @@
   .ms-ov-band { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* No dominance (a team game, a refused replay) leaves one block. It takes the
+   whole band rather than sitting in its 2fr track beside a hole. */
+.ms-ov-band > .ms-block:only-child { grid-column: 1 / -1; }
+
 .ms-ov-band .ms-section-label { margin-top: 0; }
 
 /* ── Overview: the player column ────────────────────────────────────────

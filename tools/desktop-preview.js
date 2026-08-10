@@ -193,6 +193,11 @@ for (const file of files) {
       summary.schemaVersion = 3;
       delete summary.dominance;
       delete summary.resources;
+      // A real pre-v5 summary has no build block either — and that absence
+      // is what makes the report drop its tabs. Leaving it in rendered the
+      // full summary under a v3 stamp, so the no-tab path was unreachable
+      // from this harness.
+      for (const p of Object.values(summary.players)) delete p.build;
     }
     staled++;
   }

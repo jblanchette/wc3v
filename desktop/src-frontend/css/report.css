@@ -1,8 +1,8 @@
 /* ============================================================
    report.css, WC3V desktop.
 
-   The game report: the verdict band, the comparison block, the chart panel,
-   the build cards and the build order. The screen this app exists to show.
+   The game report: the tab row, the Overview header, the chart panel, the
+   build cards and the build order. The screen this app exists to show.
 
    Split out of a single 2,567-line app.css. Load order is the cascade and is
    fixed in index.html; this file assumes every file listed before it in that
@@ -10,20 +10,20 @@
    ============================================================ */
 
 /* ── Detail: the game report ─────────────────────────────────────────────
-   The fold rule, structurally: the report's frame (verdict band, timings,
-   tab strip) is fixed rows that always fit; the active tab's body is the one
-   scroller. The column as a whole must never scroll. */
+   The fold rule, structurally: the report's frame (the mode switch when a
+   match is live, then the tab row) is fixed rows that always fit; the active
+   tab's body is the one scroller. The column as a whole must never scroll.
 
-/* Verdict band, tab strip, then the one scroller. The frame was 427px of the
-   507px a 900x600 window gives, then 325, then 221 with a grade rail. The rail
-   is gone and the band carries both builds in the width it was wasting.
+   The frame was 427px of the 507px a 900x600 window gives, then 325, then
+   221 with a grade rail, then ~100 with the verdict band. Now it is the tab
+   row alone: the band's content leads the Overview tab, inside the scroller.
 
-   Flex rather than a fixed row template. Every band here is optional — no
-   build strips on a summary with no hero record, a mode switch only with a
-   live match — and a template of `auto` tracks with `1fr` last puts the
-   scroller in an `auto` row the moment one is missing, which makes the whole
-   column grow instead of the body scrolling. That is a fold-rule break the
-   audit reports as an overflowing .detail-col. */
+   Flex rather than a fixed row template. Every row here is optional — the
+   mode switch only exists with a live match — and a template of `auto`
+   tracks with `1fr` last puts the scroller in an `auto` row the moment one
+   is missing, which makes the whole column grow instead of the body
+   scrolling. That is a fold-rule break the audit reports as an overflowing
+   .detail-col. */
 .detail-col {
   display: flex;
   flex-direction: column;
@@ -50,22 +50,52 @@
   grid-row: 1 / -1;
 }
 
-/* ── The band, on ONE line ───────────────────────────────────────────────
-   This was three stacked things: the verdict row, the fact line under it, and
-   a four-row benchmark table beside them. 99px of fixed chrome above the only
-   scroller on the screen — on a screen where every tab needs more height than
-   it has, and where the band is the cheapest place to find it.
+/* ── The tab row ─────────────────────────────────────────────────────────
+   The report's whole fixed frame: tabs on the left, Open in WC3V Viewer on
+   the right. The verdict band that used to sit above it is gone — its
+   content leads the Overview tab as `.ov-head` below, where it scrolls with
+   the tab instead of taxing every tab's frame.
 
-   Nothing was removed. The verdict, the opponent, the record, the map, the
-   length, the tags, the three benchmarks and the viewer button are all still
-   here, in one 34px row that wraps if the window is too narrow for it.
+   The button sits BESIDE `.ms-tabs`, never inside it: the strip is
+   overflow-x:auto, and a margin-pushed button inside it would scroll away
+   with the tabs the moment they exceed the width. */
+.report-tabbar {
+  display: flex;
+  align-items: stretch;
+  /* With tabs, the strip's flex:1 pushes the button right; without them (a
+     stale game has no strip) this keeps the button in the same corner. */
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+.report-tabbar > .ms-tabs { flex: 1 1 auto; min-width: 0; }
+.report-tabbar > .btn-viewer { flex: 0 0 auto; }
 
-   `.verdict-head` is `display: contents` so its children become flex items of
-   `.vb-main` directly. That is what lets the viewer button reach the far end
-   of the row with `margin-left: auto` while the fact line, which follows it in
-   the DOM, still sits to its left. */
-.verdict-band { min-width: 0; }
-.verdict-head { display: contents; }
+/* ── The Overview header ─────────────────────────────────────────────────
+   The old band's content at tab density: result, opponent, record, map,
+   length, tags on one wrapping line, the three benchmarks beside it. First
+   thing on the Overview tab. */
+.ov-head {
+  min-width: 0;
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--app-line);
+}
+.ov-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 var(--sp-4);
+}
+.ov-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-3);
+}
+/* The claim (verdict, opponent, record) and the fact line flow as one row,
+   wrapping as one. */
+.ov-claim { display: contents; }
 /* --fs-lg, not --fs-h2. The word is one of eight things on a single row now,
    and at heading size it set the row's height on its own. It is still the
    first and boldest thing read; it no longer costs 20px to be. */
@@ -114,17 +144,6 @@
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
-/* "Open in viewer" rides the band, pushed to its far end. This named
-   `.btn-primary` for two releases, which is not the button's class, so it never
-   applied and the control sat packed against the record chip.
-   `order` puts it after the fact line, which follows it in the DOM. */
-.verdict-head > .btn-viewer {
-  margin-left: auto;
-  order: 9;
-  min-height: var(--ico-sm);
-  padding: 0 var(--sp-3);
-}
-
 /* The all-time record against this opponent. A carved chip, opens the tab. */
 .h2h-chip {
   min-height: var(--ico-sm);
@@ -208,43 +227,10 @@
   font-size: var(--fs-min);
 }
 
-/* ── Against your own usual, beside the verdict ──────────────────────────
-   The band used to be a headline, a meta line and one sentence across the full
-   report width, which at 1280 is a Victory and a name in 1100px. The right
-   half carried miniature builds for a while; with the real build cards on the
-   same screen that was the same information twice, so it carries the
-   comparison against your own recent games instead. Nothing else on the report
-   says it, and no website could.
-
-   `minmax(0, 1fr)` on the left column, not `1fr`. A grid track's default
-   minimum is its content, so a long opponent name would refuse to shrink and
-   push the readout off the edge instead of wrapping. */
-.vb-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0 var(--sp-4);
-}
-/* One row: verdict, opponent, record, map, length, tags, viewer button. */
-.vb-main {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sp-1) var(--sp-3);
-}
-
-/* Three metrics, four columns: the name, the number, the gap to your own
-   recent games, the gap to the other players of that race in your history.
-   Rows, not boxes. The tile grid this replaced was six bordered cells holding
-   six different kinds of number, which reads as a dashboard rather than as a
-   reading of a game. */
-/* Three metric groups on ONE line, at every width.
-   This was a four-row table (a head plus three metrics), which is 96px and was
-   what actually set the band's height — the verdict line beside it is half
-   that. The stacked form survived only below 1040px; now it is the only form.
-   The column alignment between rows goes with it, and at three short groups on
-   one line there is nothing left to align. */
+/* ── Against your own usual, beside the result ───────────────────────────
+   Three metric groups on ONE line: the name, the number, the gap to your own
+   recent games (the race delta lives in the tooltip). Nothing else on the
+   report says this, and no website could. */
 .gb {
   display: flex;
   flex-wrap: wrap;
@@ -261,9 +247,6 @@
   align-items: baseline;
   gap: var(--sp-2);
 }
-/* The heads named the two delta columns. With the rows on one line each delta
-   sits against its own number and the row tooltip carries both in words. */
-.gb-head { display: none; }
 /* The race delta drops out of the line and stays in the tooltip: two unlabelled
    signed numbers side by side is a readout that makes no claim. */
 .gb-row > .gb-d:last-child { display: none; }
@@ -282,24 +265,10 @@
   text-align: right;
   white-space: nowrap;
 }
-/* The heads name what each delta is against. Three signed numbers with no
-   column heads is a row that makes no claim. The race head carries the sample
-   size and the source in its tooltip. */
-.gb-head .gb-d {
-  padding-bottom: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
 /* Under 1040px the readout drops below the result instead of sitting beside
-   it. It used to be display:none here, which was defensible while it held four
-   timing numbers and is not now that it is the reason the screen exists.
-
-   The one-line form it used to switch to at this width is the form it takes at
-   every width now (see .gb above), so all that is left is the column change.
-   The frame is not allowed to grow as the window narrows. */
+   it. The frame cost is free now — the header scrolls with Overview. */
 @media (max-width: 1040px) {
-  .vb-grid { grid-template-columns: minmax(0, 1fr); }
+  .ov-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ── The chart panel ─────────────────────────────────────────────────────
@@ -364,13 +333,6 @@
   outline-offset: -2px;
 }
 
-/* The stat tile grid stood here: eight bordered cells of eight different kinds
-   of number under the chart. It was rendered nowhere after the 0.7.2 one-screen
-   pass and the rules outlived the markup by two releases. The comparative ones
-   are `.gb` in the verdict band now, beside the result they explain.
-
-   `.st-upgrade` below survives because chart-panel.js still draws it. */
-
 /* The offer to re-read a game stored before the block it is missing. */
 .st-upgrade {
   display: flex;
@@ -386,9 +348,9 @@
 }
 .st-upgrade .hint { margin: 0; }
 
-/* The report is one panel and one scroller. There is no tab strip: `.report-body`
-   is the only element on this screen allowed to scroll, and the verdict band
-   above it is fixed. */
+/* The report is one panel and one scroller: `.report-body` is the only
+   element on this screen allowed to scroll, and the tab row above it is
+   fixed. */
 .report-body {
   min-height: 0;
   padding: var(--sp-3);
@@ -789,13 +751,20 @@
 }
 .bc-skill { position: relative; display: inline-flex; }
 .bc-skill-img { width: var(--ico-sm); height: var(--ico-sm); }
-.bc-skill-lvl {
+
+/* The scrim pip: a gold count or level riding full-colour art. One block for
+   the three of them — a skill's level, an upgrade's level, a purchase's ×N —
+   because they are one treatment, and three hand-copies of it is how the
+   scrim ended up a literal three times. Per-class deltas follow. */
+.bc-skill-lvl,
+.bc-up-lvl,
+.bc-up-n {
   position: absolute;
   right: -2px;
   bottom: -2px;
   min-width: 15px;
-  background: rgba(10, 7, 4, 0.86);
-  border-radius: 3px;
+  background: var(--scrim);
+  border-radius: var(--radius-xs);
   color: var(--dom-gold);
   font-size: var(--fs-min);
   font-weight: 800;
@@ -868,22 +837,9 @@
 }
 .bc-up { position: relative; display: inline-flex; }
 .bc-up-img { width: var(--ico-sm); height: var(--ico-sm); }
-/* Only where levels exist. Every upgrade showing "1" stops the ones that
-   reached 3 from standing out. */
-.bc-up-lvl {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  min-width: 15px;
-  background: rgba(10, 7, 4, 0.86);
-  border-radius: 3px;
-  color: var(--dom-gold);
-  font-size: var(--fs-min);
-  font-weight: 800;
-  line-height: 15px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
+/* .bc-up-lvl: only where levels exist — every upgrade showing "1" stops the
+   ones that reached 3 from standing out. Geometry shared with .bc-skill-lvl
+   above. */
 
 /* ── The Bought row ──────────────────────────────────────────────────────
    Repeat purchases collapse into one icon carrying an ×N pip, and the row
@@ -891,23 +847,12 @@
    a hairline between. See build-card.js for why, and js/item-classes.js for
    the split itself. */
 
-/* Same geometry as .bc-up-lvl, wider: "×12" is four glyphs where a level is
-   one. Its own class rather than a modifier, because the two pips mean
-   different things on rows that sit two apart. */
+/* Same geometry as .bc-up-lvl (shared block above), wider: "×12" is four
+   glyphs where a level is one. Its own class rather than a modifier, because
+   the two pips mean different things on rows that sit two apart. */
 .bc-up-n {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
   min-width: 22px;
   padding: 0 2px;
-  background: rgba(10, 7, 4, 0.86);
-  border-radius: 3px;
-  color: var(--dom-gold);
-  font-size: var(--fs-min);
-  font-weight: 800;
-  line-height: 15px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Kept | spent. A hairline, not a gap: a gap in a wrapping flex row is
@@ -967,3 +912,215 @@
   text-transform: uppercase;
 }
 .strip-icons { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+
+/* ══ The shared summary, re-registered ════════════════════════════════════
+   Everything below overrides css/vendor/match-summary.css, the sheet the
+   viewer's Match Summary modal ships and tools/build-desktop-client.js
+   copies in. That sheet is written for the viewer: Verdana, a saturated
+   #00aaff accent, cool greys, rem-scale spacing. On this app's warm carved
+   surfaces it read as a second product pasted into the middle of the first.
+
+   The RULE (tokens-desktop.css header): the vendor file is never edited —
+   these overrides win by load order, and the viewer keeps its own skin.
+   Grouped: tabs, then typography, then colour, then spacing. Selectors are
+   the vendor's own so specificity ties and order decides. */
+
+/* ── Tabs, carved ── */
+.ms-tabs {
+  background: none;
+  border-bottom: 0;
+  scrollbar-width: none;
+}
+.ms-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  min-height: var(--ico-sm);
+  border: var(--outline);
+  border-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  margin-right: var(--sp-1);
+  background: linear-gradient(180deg, var(--app-panel-2), var(--app-panel));
+  box-shadow: var(--cut);
+  font: 600 var(--fs-min)/1.2 var(--font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.ms-tab:hover { color: var(--ink-2); }
+/* Active is PRESSED, not underlined: the carved register's selected state
+   (a well, gold ink), same voice as .seg-btn.is-on. Not the vendor's
+   #00aaff underline, which is both a glow hue and an accent stripe. */
+.ms-tab-active {
+  background: var(--app-well);
+  box-shadow: var(--cut-in);
+  border-bottom: 0;
+  color: var(--dom-gold);
+}
+.ms-tab:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+/* ── Typography: the app's own face and floor ──
+   Verdana out, --font in; nothing below --fs-min (12.8px). The vendor's
+   sub-floor sizes (.5rem-.78rem) all land on the floor rather than scaling
+   proportionally: they are pips, counts and meta lines, and the floor is the
+   smallest size this app prints anything at. */
+.ms-player-name { font: 700 var(--fs-sm) var(--font); }
+.ms-race-label { font: 600 var(--fs-min) var(--font); }
+.ms-section-label,
+.ms-subsection,
+.ms-tier-label,
+.ms-creep-diff-label {
+  font: 700 var(--fs-min) var(--font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.ms-stat-k, .ms-stat-v { font: 400 var(--fs-min) var(--font); }
+.ms-stat-v { font-weight: 600; }
+.ms-tier-badge { font-size: var(--fs-min); }
+.ms-upgrade-row { font: 400 var(--fs-min) var(--font); }
+.ms-timeline-mini { font: 400 var(--fs-min) var(--font); }
+.ms-timeline-mini .ms-timeline-time { font-family: var(--mono); font-size: var(--fs-min); }
+.ms-tier-player { font: 600 var(--fs-min) var(--font); }
+.ms-tier-time { font: 600 var(--fs-min) var(--mono); }
+.ms-cat-label { font: 600 var(--fs-min) var(--font); text-transform: none; }
+.ms-cat-val { font: 400 var(--fs-min) var(--font); }
+.ms-hero-level { font: 700 var(--fs-min) var(--font); width: auto; min-width: 16px; padding: 0 2px; }
+.ms-spell-level { font: 700 var(--fs-min) var(--font); }
+.ms-icon-count { font-size: var(--fs-min); }
+.ms-creep-lvl { font-size: var(--fs-min); }
+.ms-creep-meta, .ms-creep-xp, .ms-creep-footer { font-size: var(--fs-min); }
+.ms-creep-order { font-size: var(--fs-min); }
+.ms-creep-score-name { font-size: var(--fs-sm); }
+.ms-creep-score-stat { font-size: var(--fs-min); }
+.ms-hero-xp-name, .ms-hero-xp-val { font-size: var(--fs-min); }
+.ms-hero-inv-label { font: 600 var(--fs-min) var(--font); }
+.ms-ct-name { font: 600 var(--fs-min) var(--font); }
+.ms-ct-count { font-size: var(--fs-min); }
+.ms-ct-type-lbl { font-size: var(--fs-min); }
+/* display:block turns the table into its own scroll container, so a wide
+   matchup (four armor classes) slides inside its block instead of running
+   through the pane border. Vertical is untouched — the fold rule is about
+   height, and this is the width idiom the README already blesses. */
+.ms-matrix { font-family: var(--font); display: block; max-width: 100%; overflow-x: auto; }
+.ms-matrix-col-hdr, .ms-matrix-row-hdr, .ms-matrix-cell { font-size: var(--fs-min); }
+.ms-empty { font-size: var(--fs-sm); }
+/* SVG axis text. The vendor authors 7-9px attributes; the class rule wins
+   over presentation attributes, and 10px at the charts' render scale is the
+   smallest that reads. Mono, like every other number column here. */
+.ms-chart-label { font-family: var(--mono); font-size: 10px; fill: var(--ink-faint); }
+
+/* ── Colour: the warm paintbox ── */
+.ms-section-label { color: var(--ink-dim); border-bottom-color: var(--app-line); }
+.ms-subsection { color: var(--ink-faint); }
+.ms-player-col {
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut);
+}
+.ms-stat { border-bottom-color: var(--app-line); }
+.ms-stat-k { color: var(--ink-dim); }
+.ms-stat-v { color: var(--ink); }
+.ms-gold { color: var(--dom-gold); }
+.ms-lumber { color: var(--dom-green); }
+.ms-expo-yes { color: var(--verdict-win); }
+.ms-expo-no { color: var(--ink-faint); }
+.ms-tier-label.t1 { color: var(--ink-2); background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-tier-label.t2 { color: var(--tier2-ink); background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-tier-label.t3 { color: var(--tier3-ink); background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-tier-badge.t1 { background: var(--app-well); box-shadow: var(--cut-in); color: var(--ink-2); }
+.ms-tier-badge.t2 { color: var(--tier2-ink); background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-tier-badge.t3 { color: var(--tier3-ink); background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-tier-seg.t1 { background: rgba(232, 224, 210, 0.10); }
+.ms-tier-seg.t2 { background: rgba(78, 127, 166, 0.45); }
+.ms-tier-seg.t3 { background: rgba(176, 154, 74, 0.45); }
+.ms-tier-time.t2 { color: var(--tier2-ink); }
+.ms-tier-time.t3 { color: var(--tier3-ink); }
+.ms-hero-level { background: var(--scrim); color: var(--dom-gold); border-color: var(--app-edge); }
+.ms-spell-level { background: var(--scrim); color: var(--ink-2); }
+.ms-icon-count { background: var(--scrim); color: var(--ink); }
+.ms-cat-label { color: var(--ink-dim); }
+.ms-cat-val { color: var(--ink-faint); }
+.ms-empty { color: var(--ink-faint); }
+.ms-hero-inv-label { color: var(--ink-2); }
+.ms-timeline-mini { color: var(--ink-2); }
+.ms-timeline-mini .ms-timeline-time { color: var(--ink-dim); }
+/* Damage matchup verdict cells: moss and rust, not mint and neon salmon. */
+.ms-mx-strong { color: var(--verdict-win); background: rgba(107, 141, 79, 0.10); }
+.ms-mx-weak { color: var(--verdict-loss); background: rgba(166, 83, 64, 0.10); }
+.ms-mx-neutral { color: var(--ink-faint); }
+.ms-matrix-col-hdr, .ms-matrix-row-hdr { color: var(--ink-dim); }
+/* Upgrade categories. The vendor's #e74c3c/#3498db/#9b59b6 are arcade
+   primaries; same hue jobs out of the warm paintbox — rust for attack,
+   steel for defense, the violet for research (a hue, not a race, in this
+   context). */
+.ms-atk-label { color: var(--verdict-loss); }
+.ms-def-label { color: var(--tier2-ink); }
+.ms-res-label { color: var(--race-warm-U); }
+.ms-upgrade-row { color: var(--ink-2); }
+.ms-upgrade-row.ms-atk { background: rgba(166, 83, 64, 0.08); }
+.ms-upgrade-row.ms-def { background: rgba(78, 127, 166, 0.08); }
+.ms-upgrade-row.ms-res { background: rgba(142, 109, 176, 0.08); }
+.ms-upgrade-row.ms-atk .ms-upgrade-icon { border-color: rgba(166, 83, 64, 0.55); }
+.ms-upgrade-row.ms-def .ms-upgrade-icon { border-color: rgba(78, 127, 166, 0.55); }
+.ms-upgrade-row.ms-res .ms-upgrade-icon { border-color: rgba(142, 109, 176, 0.55); }
+.ms-upgrade-level { color: var(--ink); }
+.ms-hero-xp-bar-track { background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-creep-bar { background: var(--app-well); box-shadow: var(--cut-in); }
+.ms-creep-camp { background: var(--app-panel-2); border: 1px solid var(--app-line); }
+.ms-creep-meta { color: var(--ink-faint); }
+.ms-creep-footer { color: var(--ink-faint); border-top: 1px solid var(--app-line); }
+.ms-res-build { background: var(--tier2-ink); }
+
+/* "You", carved: a gold ring and a wash, no glow. The vendor marks the seat
+   with a text-shadow bloom, which the art direction bans outright. */
+.ms-player-col.ms-is-you {
+  background: rgba(176, 154, 74, 0.05);
+  border-color: rgba(176, 154, 74, 0.45);
+  box-shadow: var(--cut), 0 0 0 1px rgba(176, 154, 74, 0.18);
+}
+.ms-you-tag {
+  font: 700 var(--fs-min) var(--font);
+  letter-spacing: 0.04em;
+  color: #14100a;
+  background: var(--dom-gold);
+  border-radius: var(--radius-xs);
+}
+.ms-tier-row.ms-is-you .ms-tier-player,
+.ms-creep-score-side.ms-is-you .ms-creep-score-name { text-shadow: none; }
+.ms-tier-row.ms-is-you .ms-tier-player::after,
+.ms-creep-score-side.ms-is-you .ms-creep-score-name::after {
+  font: 700 var(--fs-min) var(--font);
+  color: #14100a;
+  background: var(--dom-gold);
+  border-radius: var(--radius-xs);
+  text-shadow: none;
+}
+
+/* ── Spacing: the desktop scale ──
+   The vendor's rem ladder (0.2 → 1.2rem) maps onto --sp-1/2/3/4. The two
+   rhythms used to meet at the .report-body border; now there is one. */
+.ms-players { gap: var(--sp-3); }
+.ms-player-col { padding: var(--sp-2); }
+.ms-blocks { gap: 0 var(--sp-3); }
+.ms-ov-split { gap: 0 var(--sp-3); }
+.ms-ov-band { gap: 0 var(--sp-3); margin-bottom: var(--sp-2); }
+.ms-block-cols > :not(.ms-section-label) { column-gap: var(--sp-4); }
+.ms-section-label { margin: var(--sp-2) 0 var(--sp-1); padding-bottom: var(--sp-1); }
+.ms-player-name { margin-bottom: var(--sp-2); gap: var(--sp-2); }
+.ms-heroes-row { gap: var(--sp-3); margin-bottom: var(--sp-1); }
+.ms-icon-grid { gap: var(--sp-1); }
+.ms-upgrade-list { gap: var(--sp-1); }
+.ms-upgrade-row { padding: var(--sp-1) var(--sp-1); border-radius: var(--radius-xs); }
+.ms-tier-compare { gap: var(--sp-1); }
+.ms-tier-row { gap: var(--sp-2); }
+.ms-chart { margin-bottom: var(--sp-2); }
+.ms-chart-blocks { margin-top: var(--sp-2); }
+.ms-wide-section { margin-top: var(--sp-2); }
+.ms-creep-route { gap: var(--sp-1); }
+.ms-creep-step { gap: var(--sp-1); }
+.ms-ct-list { gap: var(--sp-2); }
+.ms-icon, .ms-upgrade-icon, .ms-timeline-icon, .ms-creep-icon,
+.ms-spell-icon, .ms-race-icon, .ms-hero-portrait, .ms-ct-unit-icon {
+  border-radius: var(--radius-xs);
+}

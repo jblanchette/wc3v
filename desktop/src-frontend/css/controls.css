@@ -52,8 +52,11 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
-  min-height: var(--ico-md);
-  padding: 0 var(--sp-4);
+  /* 36px, and ONLY here. This control's height was declared three times
+     (44 here, 36 in report.css, 36 again in the short-window block) and the
+     tab row it now rides is a 36px row. One declaration, one place. */
+  min-height: var(--ico-sm);
+  padding: 0 var(--sp-3);
   /* The site's navy, lifted at the top edge the way its own chrome is. */
   background: linear-gradient(180deg, #253048, #18202f);
   border: 1px solid #3d4c6b;

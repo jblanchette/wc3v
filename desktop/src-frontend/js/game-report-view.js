@@ -5,10 +5,11 @@
 // and a second implementation of "what did these two players build" would be
 // two products' worth of drift inside one window.
 //
-// `render(host, summary, opts)` owns everything below the feed: the verdict
-// band, the comparison block, the chart panel, the build cards and the record.
-// It returns a handle whose `destroy()` releases the chart, because
-// DominanceChart holds a ResizeObserver and dropping the node is not enough.
+// `render(host, summary, opts)` owns everything below the feed: the tab row
+// with the viewer button, the Overview header (result, record, benchmarks),
+// the chart panel, the build cards and the record. It returns a handle whose
+// `destroy()` releases the chart, because DominanceChart holds a
+// ResizeObserver and dropping the node is not enough.
 //
 // ── Two presentations, one renderer ─────────────────────────────────────────
 //
@@ -24,7 +25,7 @@
 // no seat means symmetric.
 //
 // The fold rule holds in both. `.report-body` is the only element that may
-// scroll; the band above it is fixed.
+// scroll; the tab row above it is fixed.
 
 (function () {
   'use strict';
@@ -209,23 +210,9 @@
         }
         if (!rows.length) return null;
 
+        // No column-head row: `.gb-head` had been display:none for two
+        // releases and its labels live in each row's tooltip.
         const wrap = node('div', 'gb');
-        const head = node('div', 'gb-row gb-head');
-        head.appendChild(node('span', 'gb-k', ''));
-        head.appendChild(node('span', 'gb-v', ''));
-        head.appendChild(node('span', 'gb-d', 'vs you'));
-
-        const raceHead = node('span', 'gb-d',
-          window.RaceBaselines ? window.RaceBaselines.head(race) : 'vs race');
-        // The tooltip is where the sample size and the source live. A shipped
-        // professional median and eleven people you beat last week are different
-        // claims and the column must not present them identically.
-        if (window.RaceBaselines) {
-          const label = window.RaceBaselines.label(race);
-          if (label) raceHead.title = label;
-        }
-        head.appendChild(raceHead);
-        wrap.appendChild(head);
         for (const r of rows) wrap.appendChild(r);
         return wrap;
       };
@@ -323,19 +310,20 @@
         return strip;
       };
 
-      // ── The band ────────────────────────────────────────────────────────
+      // ── The Overview header ─────────────────────────────────────────────
       //
-      // Facts only. Four things used to be on the meta line and are not any
-      // more, all of them descriptions rather than facts: the hero opener, which
-      // is one building order out of many and reads as a verdict on the build;
-      // `Tower rush`, which was classifyArchetype guessing a strategy from three
-      // timings; `11 workers @5:00`, one sample of one metric given top billing;
-      // and a graded sentence that told people how they played in five words.
-      const band = () => {
-        const wrap = node('div', 'verdict-band');
-        const grid = node('div', 'vb-grid');
-        const main = node('div', 'vb-main');
-        const head = node('div', 'verdict-head');
+      // The verdict band, re-homed. It was a fixed row above the tabs, which
+      // billed every game's report ~60px of frame before a single tab drew;
+      // now it is the first thing on the Overview tab and scrolls with it.
+      // The viewer button it used to carry rides the tab row instead.
+      //
+      // Facts only, same rule as always: no hero-opener verdicts, no
+      // archetype guesses, no graded sentences.
+      const overviewHeader = () => {
+        const wrap = node('div', 'ov-head');
+        const grid = node('div', 'ov-grid');
+        const main = node('div', 'ov-main');
+        const head = node('div', 'ov-claim');
 
         const slots = Object.keys(summary.players || {});
         const v = symmetric ? null : PA().gameView(summary, PA().normName(o.identityName));
@@ -348,7 +336,11 @@
           const winSlot = (summary.winner && typeof summary.winner.playerId === 'number')
             ? String(summary.winner.playerId) : null;
           const winner = winSlot && summary.players[winSlot];
-          const loserSlot = winner ? slots.filter(s => s !== winSlot)[0] : null;
+          // "A beat B" is a two-seat sentence. With six seats, "the loser" is
+          // whichever of the other five sorts first, and the line would state
+          // a 3v3 as a duel between two of its players.
+          const loserSlot = (winner && slots.length === 2)
+            ? slots.filter(s => s !== winSlot)[0] : null;
           const loser = loserSlot && summary.players[loserSlot];
 
           if (winner && loser) {
@@ -377,19 +369,24 @@
             head.appendChild(line);
           }
         } else {
-          // Four reasons a game has no verdict, with four different fixes.
-          // Collapsing them into "Result unclear" sends people hunting a parser
-          // bug when the real answer is "you never said who you are".
+          // Reasons a game has no verdict, with different fixes. Collapsing
+          // them into "Result unclear" sends people hunting a parser bug when
+          // the real answer is "you never said who you are".
+          //
+          // A team game gets NO placeholder: the meta line already says
+          // "3v3", and a sentence explaining that team games carry no result
+          // was the loudest thing on a screen it explained nothing about.
           const result = v && v.result ? v.result : 'none';
-          let unresolved;
+          let unresolved = null;
           if (!o.identityName) unresolved = 'Tell WC3V who you are to score this';
-          else if (summary.gameMode !== '1v1') unresolved = 'Team games carry no result';
-          else unresolved = 'Could not tell who won';
+          else if (summary.gameMode === '1v1') unresolved = 'Could not tell who won';
 
-          const word = node('span', 'verdict-word',
-            result === 'win' ? 'Victory' : result === 'loss' ? 'Defeat' : unresolved);
-          word.dataset.v = result;
-          head.appendChild(word);
+          if (result !== 'none' || unresolved) {
+            const word = node('span', 'verdict-word',
+              result === 'win' ? 'Victory' : result === 'loss' ? 'Defeat' : unresolved);
+            word.dataset.v = result;
+            head.appendChild(word);
+          }
 
           if (v && v.opponent) {
             const vs = node('span', 'verdict-vs');
@@ -411,7 +408,6 @@
           }
         }
 
-        head.appendChild(viewerButton());
         main.appendChild(head);
 
         // Map, races, length. One line, and it has to stay one line at 612px.
@@ -602,7 +598,14 @@
       };
 
       // ── Mount ───────────────────────────────────────────────────────────
-      host.appendChild(band());
+      //
+      // The frame is one row: the tab strip on the left, Open in WC3V Viewer
+      // on the right. The tabbar renders for EVERY game — including one the
+      // renderer cannot draw, where the tabs are absent but the viewer button
+      // is not, because that button is the single most important control on
+      // the screen and none of what it needs comes from the missing block.
+      const tabbar = node('div', 'report-tabbar');
+      const strip = node('div', 'ms-tabs');
 
       const body = node('div', 'report-body scroll');
 
@@ -615,10 +618,13 @@
       // and every chart. A reader cannot tell that screen from a game where
       // those things genuinely did not happen.
       //
-      // So: the band (result, map, length, Open in Viewer — none of which comes
-      // from the missing block) and the reason. The data is not gone; it is one
+      // So: the header (result, map, length — none of which comes from the
+      // missing block) and the reason. The data is not gone; it is one
       // re-read away, and the app is usually already doing it.
       if (!model) {
+        tabbar.appendChild(viewerButton());
+        host.appendChild(tabbar);
+        body.appendChild(overviewHeader());
         body.appendChild(upgradeNotice());
         host.appendChild(body);
         return { destroy () {} };
@@ -628,7 +634,6 @@
 
       let active = TABS.some(t => t.key === lastTab) ? lastTab : TABS[0].key;
 
-      const strip = node('div', 'ms-tabs');
       const showTab = (key) => {
         active = key;
         lastTab = key;
@@ -641,6 +646,10 @@
         if (key === 'build') { body.appendChild(reportPanel()); return; }
 
         const content = node('div', 'ms-tab-content');
+        // The header leads Overview: it is about the reader and the result,
+        // which is what somebody opens a report to learn, and it scrolls with
+        // the tab instead of taxing every other tab's frame.
+        if (key === 'overview') content.appendChild(overviewHeader());
         const rendered = window.MatchSummaryView.render(key, model, viewOpts());
         if (rendered) content.appendChild(rendered);
         if (key === 'economy') chartsPanel(content);
@@ -658,10 +667,12 @@
           btn.addEventListener('click', () => showTab(t.key));
           strip.appendChild(btn);
         }
-        // Above .report-body, so the strip is part of the fixed band and the
-        // fold rule still has exactly one scroller.
-        host.appendChild(strip);
+        tabbar.appendChild(strip);
       }
+      tabbar.appendChild(viewerButton());
+      // Above .report-body, so the row is part of the fixed frame and the
+      // fold rule still has exactly one scroller.
+      host.appendChild(tabbar);
 
       host.appendChild(body);
       showTab(active);

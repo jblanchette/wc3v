@@ -214,6 +214,22 @@ main { min-height: 0; position: relative; }
 
 .mode-seg { justify-self: start; }
 
+/* The card's own frame. It borrowed the report's verdict-band classes until
+   the band stopped existing; these are the two rules it actually used. */
+.ng-band { min-width: 0; }
+.ng-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+}
+.ng-vs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-base);
+}
+
 .ng-live {
   display: inline-flex;
   align-items: center;

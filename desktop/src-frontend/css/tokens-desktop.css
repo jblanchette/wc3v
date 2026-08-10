@@ -50,6 +50,11 @@
      • no fully saturated colour anywhere
    HOUSE RULES: no font below --fs-min (0.8rem), no icon below 36px,
    no single-edge accent stripes, no ellipsis truncation.
+   DENSITY (the same rule, said as one line): this is a fixed window with an
+   absolute fold, so spacing comes from --sp-*, radii from --radius-*, and
+   there is no rem-scale spacing and no literal colour on a warm surface.
+   Where a shared sheet ships both (css/vendor/match-summary.css), report.css
+   re-registers it — the desktop overrides, the vendor file is never edited.
    ============================================================ */
 
 :root {
@@ -168,7 +173,27 @@
   --sp-5: 16px;   /* 22 */
   --sp-6: 22px;   /* 30 */
   --sp-7: 30px;   /* 40 */
+  /* tokens.css goes on to --sp-8: 56px, which nothing here overrode — so the
+     first rule to reach for it would have silently drawn web-scale spacing
+     in a window whose whole scale tops out at 30. Closed, not banned: 40 is
+     the next step of the same ramp. */
+  --sp-8: 40px;   /* 56 */
   --page-gutter: 16px;   /* 24 */
+
+  /* Below --radius-sm (6px) the vendor sheets use bare 2-4px corners on
+     badges and pips. One name for that, so the value can move. */
+  --radius-xs: 3px;
+
+  /* The ink well behind a pip riding full-colour art — a hero level over a
+     portrait, an upgrade count over an icon. Dark enough to hold white text
+     on any art, warm enough not to read as a black sticker. */
+  --scrim: rgba(10, 7, 4, 0.86);
+
+  /* Tier marks, carved. The vendor sheet's #21a5e3 / #FFFF33 are the
+     viewer's own and glow on warm brown; same hue families, saturation
+     pulled down into the --dom-* paintbox. */
+  --tier2-ink: #4E7FA6;
+  --tier3-ink: #B09A4A;
 
   /* Hero portraits only, and not a floor — --ico-sm stays 36px, which is the
      house minimum for anything the reader has to identify by its art. */

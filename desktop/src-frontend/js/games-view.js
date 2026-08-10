@@ -482,11 +482,12 @@
       const book = live.book;
       const opp = m.opponents[0];
 
-      // Head: who, how strong, where.
-      const band = node('div', 'verdict-band');
-      const head = node('div', 'verdict-head');
+      // Head: who, how strong, where. Its own ng- classes: it BORROWED the
+      // report's verdict-band chrome until the band stopped existing.
+      const band = node('div', 'ng-band');
+      const head = node('div', 'ng-head');
       head.appendChild(node('span', 'ng-live', 'Live'));
-      const vs = node('span', 'verdict-vs');
+      const vs = node('span', 'ng-vs');
       vs.appendChild(node('span', null, 'vs '));
       vs.appendChild(nameLink(opp.name, () => deps.onOpenProfile(opp.tag)));
       vs.appendChild(raceMark(opp.race));

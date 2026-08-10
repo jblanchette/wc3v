@@ -111,30 +111,20 @@ main :focus-visible,
 
 @media (max-height: 700px) {
   .detail-col { gap: var(--sp-1); }
-  .report-body { padding: var(--sp-2); }
 
-  /* Story is the default tab and its chart and tiles must be on screen without
-     scrolling, so the frame above them gives up what it can spare. Nothing is
-     removed and no type gets smaller — these are all leading, padding and
-     control height.
+  /* The frame above the scroller gives up what it can spare. Nothing is
+     removed and no type gets smaller — these are all padding and gaps.
 
-     The measured budget at 900x600 WITH a live match, which is the worst case
-     because the mode switch costs another 38px: main 507, gamebar 63,
-     detail-col 444, and after padding, gaps, the switch, the verdict band and
-     the tab strip the body is what is left. Every pixel below is one Story
-     gets back. */
-  .btn-viewer { min-height: var(--ico-sm); }
-  .verdict-read { margin-top: var(--sp-1); }
-  .verdict-head { margin-bottom: 0; }
-  .vb-bench { padding: var(--sp-1) var(--sp-3); }
-  .st-tile { padding: var(--sp-1) var(--sp-2); }
-  .story-pane > .hint { margin: 0; }
+     The worst case at 900x600 is a live match, because the mode switch costs
+     another ~38px: main 507, gamebar 63, and after padding, gaps, the switch
+     and the tab row the body is what is left. The verdict band used to be
+     the biggest line in this budget; it is gone — its content scrolls with
+     Overview now. */
   .cp { margin-bottom: var(--sp-1); }
-  .st-grid { margin-bottom: var(--sp-1); }
   .report-body { padding: var(--sp-2) var(--sp-2) var(--sp-1); }
   /* 11vh is 66px here, and the dashboard is 10px short of fitting with it. The
-     plot is still legible at 56 and the alternative is the tile row going
-     under the fold on the app's default tab. */
+     plot is still legible at 56 and the alternative is the chart pushing the
+     roster under the fold on the app's default tab. */
   .dom-panel .dmc-svg { height: 56px; }
   /* The Overview band's own clamp is more specific than the line above, so it
      has to be named or the short-window budget silently does not apply to the
