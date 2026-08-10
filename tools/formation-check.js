@@ -21,7 +21,7 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
-const { resolveFormation, classifyRole } = require('../lib/CombatFormation');
+const { resolveFormation, resolveSurround, buildingShape, classifyRole } = require('../lib/CombatFormation');
 const { getEffectiveRange } = require('../helpers/effectiveRange');
 
 const args = {};
@@ -42,8 +42,11 @@ function check (name, cond, detail) {
 const PLAYER = { researchLevels: {} };
 
 let _uid = 0;
-function mkUnit (itemId, x, y) {
-  return { itemId, currentX: x, currentY: y, uuid: `u${itemId}-${_uid++}`, isBuilding: false };
+function mkUnit (itemId, x, y, collisionSize = 16) {
+  return {
+    itemId, currentX: x, currentY: y, uuid: `u${itemId}-${_uid++}`,
+    isBuilding: false, balanceInfo: { collisionSize }
+  };
 }
 function mkEnemy (x, y) {
   return { itemId: 'hfoo', currentX: x, currentY: y, uuid: `e-${_uid++}`, isBuilding: false };
@@ -161,6 +164,116 @@ function synthetic () {
   console.log(`\nSYNTHETIC: ${pass} passed, ${fail} failed\n`);
 }
 
+// --- surround synthetic scenarios ------------------------------------------
+
+function surroundSynthetic () {
+  console.log('SURROUND geometry tests\n');
+
+  // Chebyshev margin of a slot beyond a rect footprint (negative = inside).
+  const rectMargin = (slot, shape) =>
+    Math.max(Math.abs(slot.x - shape.x) - shape.halfW, Math.abs(slot.y - shape.y) - shape.halfH);
+  const sectorsCovered = (slots, shape, deg) => {
+    const seen = new Set();
+    for (const s of slots.values()) {
+      const a = Math.atan2(s.y - shape.y, s.x - shape.x);
+      seen.add(Math.floor(((a + Math.PI) / (2 * Math.PI)) * (360 / deg)) % (360 / deg));
+    }
+    return seen.size * deg;
+  };
+  const minPairDist = (slots) => {
+    const pts = [...slots.values()];
+    let min = Infinity;
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        min = Math.min(min, Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y));
+      }
+    }
+    return min;
+  };
+  const open = () => true;
+
+  // 20 grunts approach a town hall footprint (12x12 cells = 192u half-extent)
+  // from the east. WC3 packs the near side first and wraps as slots fill.
+  const townHall = { x: 0, y: 0, halfW: 192, halfH: 192, kind: 'rect' };
+  const grunts = [];
+  for (let i = 0; i < 20; i++) grunts.push(mkUnit('ogru', 700 + (i % 5) * 60, -240 + Math.floor(i / 5) * 120, 31));
+  const th = resolveSurround(grunts, townHall, PLAYER, open);
+
+  check('20 grunts vs town hall: everyone gets a slot',
+    th.slots.size === 20 && th.unassigned.length === 0,
+    `slots=${th.slots.size} unassigned=${th.unassigned.length}`);
+  check('every slot is outside the footprint',
+    [...th.slots.values()].every(s => rectMargin(s, townHall) > 0),
+    `worst margin=${Math.round(Math.min(...[...th.slots.values()].map(s => rectMargin(s, townHall))))}`);
+  check('slots wrap the building (>=210 degrees of coverage)',
+    sectorsCovered(th.slots, townHall, 30) >= 210,
+    `coverage=${sectorsCovered(th.slots, townHall, 30)}deg`);
+  check('no slot pile-ups (min pairwise distance >= 40u)',
+    minPairDist(th.slots) >= 40,
+    `min=${Math.round(minPairDist(th.slots))}`);
+
+  const thShuffled = resolveSurround(grunts.slice().reverse(), townHall, PLAYER, open);
+  let same = true;
+  for (const u of grunts) {
+    const a = th.slots.get(u), b = thShuffled.slots.get(u);
+    if (!b || Math.abs(a.x - b.x) > 1e-6 || Math.abs(a.y - b.y) > 1e-6) { same = false; break; }
+  }
+  check('surround is deterministic regardless of input ordering', same);
+
+  // 20 grunts vs a farm (4x4 cells = 64u half-extent): the inner ring fills
+  // completely (full wrap) and the overflow stands on an outer ring.
+  const farm = { x: 0, y: 0, halfW: 64, halfH: 64, kind: 'rect' };
+  const grunts2 = [];
+  for (let i = 0; i < 20; i++) grunts2.push(mkUnit('ogru', 500 + (i % 5) * 60, -240 + Math.floor(i / 5) * 120, 31));
+  const fm = resolveSurround(grunts2, farm, PLAYER, open);
+  check('20 grunts vs farm: everyone gets a slot', fm.slots.size === 20);
+  check('farm is fully surrounded (360 degrees, 30-degree sectors)',
+    sectorsCovered(fm.slots, farm, 30) === 360,
+    `coverage=${sectorsCovered(fm.slots, farm, 30)}deg`);
+  const margins = [...fm.slots.values()].map(s => rectMargin(s, farm)).sort((a, b) => a - b);
+  check('overflow grunts stand on an outer ring',
+    margins[margins.length - 1] > margins[0] + 60,
+    `inner=${Math.round(margins[0])} outer=${Math.round(margins[margins.length - 1])}`);
+
+  // A wall blocks everything east of x=120: no slots there, everyone still
+  // assigned on the open sides.
+  const walled = resolveSurround(grunts2, farm, PLAYER, (x, y) => x <= 120);
+  check('walled side generates no slots there',
+    [...walled.slots.values()].every(s => s.x <= 120),
+    `worst x=${Math.round(Math.max(...[...walled.slots.values()].map(s => s.x)))}`);
+  check('walled side: everyone still assigned', walled.slots.size === 20,
+    `slots=${walled.slots.size}`);
+
+  // 5 riflemen (range 400) siege a tower (4x4 = 64u) from the east: a one-
+  // sided arc at edge + range, never inside, never on the far side.
+  const tower = { x: 0, y: 0, halfW: 64, halfH: 64, kind: 'rect' };
+  const rifles = [];
+  for (let i = 0; i < 5; i++) rifles.push(mkUnit('hrif', 600, -120 + i * 60));
+  const tw = resolveSurround(rifles, tower, PLAYER, open);
+  const stops = rifles.map(u => Math.hypot(tw.slots.get(u).x, tw.slots.get(u).y));
+  check('ranged siege: stops at edge distance + range',
+    stops.every(s => s >= 448 && s <= 512),
+    `stops=${stops.map(Math.round)}`);
+  check('ranged siege: army side only (east)',
+    rifles.every(u => tw.slots.get(u).x > 0));
+
+  // 8 grunts mob a lone footman: an inner ring of ~6 forms and the rest wait
+  // on an outer ring — the WC3 surround, not a 8-wide stack.
+  const foot = { x: 0, y: 0, radius: 16, kind: 'circle' };
+  const mob = [];
+  for (let i = 0; i < 8; i++) mob.push(mkUnit('ogru', 300 + (i % 4) * 50, -80 + Math.floor(i / 4) * 80, 31));
+  const ring = resolveSurround(mob, foot, PLAYER, open);
+  const ringDists = [...ring.slots.values()].map(s => Math.hypot(s.x, s.y)).sort((a, b) => a - b);
+  check('melee ring on a unit: everyone slotted', ring.slots.size === 8);
+  check('inner ring is tight (first slots hug the target)',
+    ringDists[0] <= 80, `nearest=${Math.round(ringDists[0])}`);
+  check('overflow melee wait on an outer ring',
+    ringDists[ringDists.length - 1] > ringDists[0] + 50,
+    `inner=${Math.round(ringDists[0])} outer=${Math.round(ringDists[ringDists.length - 1])}`);
+
+  console.log(`\nSURROUND: running total ${pass} passed, ${fail} failed\n`);
+}
+
 // --- replay summary --------------------------------------------------------
 
 function readWc3v (name) {
@@ -249,6 +362,7 @@ function replaySummary (name) {
 // --- main ------------------------------------------------------------------
 
 synthetic();
+surroundSynthetic();
 let replayOk = true;
 if (args.replay) {
   try { replayOk = replaySummary(String(args.replay)); }
