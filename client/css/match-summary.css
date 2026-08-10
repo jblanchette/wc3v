@@ -40,7 +40,11 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 0.5rem;
   width: 92%;
-  max-width: 1100px;
+  /* Was 1100. The screen packs horizontally now — the Overview column is two
+     panes side by side and every other tab is a two-across block grid — so
+     width is what it converts into height it does not need. At 1100 the modal
+     column was ~510px and both panes were narrow enough to wrap unit names. */
+  max-width: 1400px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -162,7 +166,53 @@
   flex-direction: column;
 }
 
-/* ── Overview column ────────────────────────────────────────────────────
+/* ── "You" ──────────────────────────────────────────────────────────────
+   Set only when the model says so, which today is the desktop app alone: it
+   asks who you are once and remembers it, and the viewer cannot know which
+   of two strangers opened the replay. The rules below are therefore inert in
+   the viewer rather than something it has to opt out of.
+
+   A ring around the whole column and a lift of its surface, not an edge
+   stripe: the two columns are otherwise identical and the marker has to be
+   readable from the shape of the block, not from one border somebody has to
+   go looking for. */
+.ms-player-col.ms-is-you {
+  background: rgba(255,212,59,0.05);
+  border-color: rgba(255,212,59,0.4);
+  box-shadow: 0 0 0 1px rgba(255,212,59,0.14);
+}
+
+.ms-you-tag {
+  font: 700 0.8rem Verdana, sans-serif;
+  letter-spacing: 0.5px;
+  color: #14100a;
+  background: #FFD43B;
+  border-radius: 3px;
+  padding: 1px 7px;
+  margin-left: auto;
+}
+
+/* The same claim in a row rather than a column: the tier bars and the creep
+   score both list every player, and the reader's own line is the one they
+   came for. */
+.ms-tier-row.ms-is-you .ms-tier-player,
+.ms-creep-score-side.ms-is-you .ms-creep-score-name {
+  text-shadow: 0 0 10px rgba(255,212,59,0.35);
+}
+
+.ms-tier-row.ms-is-you .ms-tier-player::after,
+.ms-creep-score-side.ms-is-you .ms-creep-score-name::after {
+  content: 'You';
+  font: 700 0.8rem Verdana, sans-serif;
+  color: #14100a;
+  background: #FFD43B;
+  border-radius: 3px;
+  padding: 0 5px;
+  margin-left: 0.4rem;
+  text-shadow: none;
+}
+
+/* ── Packed blocks ──────────────────────────────────────────────────────
    `.ms-ov-top { flex: 1 }` + `.ms-ov-bottom { margin-top: auto }` used to
    pin Match Stats to the foot of the column. In the viewer's tall modal that
    lined the two players' stats up; in the desktop's report body it pushed the
@@ -172,7 +222,7 @@
    The sections pack into the column's WIDTH now. The modal was tall and
    narrow, so stacking was free; the report body is the opposite shape (about
    520px of height against a 600px-wide column) and the same stack needed
-   730px of it. */
+   730px of it. Every tab is built out of this. */
 .ms-blocks {
   display: grid;
   /* Two per row at any usable column width, one when the window is narrow
@@ -184,12 +234,88 @@
 
 /* The roster is the widest thing on the tab — five or six units with names —
    so it takes the row rather than being squeezed into half and wrapping to
-   three lines, which costs more height than it saves. */
+   three lines, which costs more height than it saves. Same for a creep route
+   and a research timeline. */
 .ms-block-wide { grid-column: 1 / -1; }
+
+/* A wide block whose CONTENT is a list of short rows. Full width buys nothing
+   for a research timeline; running it in columns buys the height back.
+   `break-inside` because a flex row split across a column boundary loses its
+   own layout. */
+.ms-block-cols > :not(.ms-section-label) {
+  columns: 2;
+  column-gap: 1.2rem;
+}
+
+.ms-block-cols > :not(.ms-section-label) > * { break-inside: avoid; }
 
 /* A block owns its own label, so the label's default top margin would open a
    gap above every block in the second row. */
 .ms-blocks .ms-section-label { margin-top: 0; }
+
+/* A block that is not in a .ms-blocks grid still needs its own spacing. */
+.ms-wide-section { margin-top: 0.6rem; }
+
+/* ── Overview: the band ─────────────────────────────────────────────────
+   Dominance and tier progression are the only two things on the tab that are
+   about the GAME rather than about a player, and they lead it. Both are read
+   as a shape, so both are short; the height they used to take is height the
+   two player columns now get. */
+.ms-ov-band {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0 1rem;
+  margin-bottom: 0.6rem;
+}
+
+/* Under 60rem they stack rather than squeezing a 17-minute plot into a third
+   of a narrow window. */
+@media (max-width: 60rem) {
+  .ms-ov-band { grid-template-columns: minmax(0, 1fr); }
+}
+
+.ms-ov-band .ms-section-label { margin-top: 0; }
+
+/* ── Overview: the player column ────────────────────────────────────────
+   Two panes, not one stack. Left is who this is and what they fielded, which
+   is a tall narrow list; right is everything measured about them, which is a
+   stack of short wide readouts. Interlocked, the tab is about half the height
+   it was, and neither pane is the empty half of a row.
+
+   auto-fit rather than two fixed tracks and a media query: this grid lives
+   inside a HALF-width player column, and a viewport query cannot tell a 1,400px
+   modal (whose columns are 680) from a 1,400px window whose report body is the
+   full width. auto-fit collapses to one pane when the column itself is too
+   narrow, which is the question actually being asked. */
+.ms-ov-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0 0.9rem;
+  align-items: start;
+}
+
+.ms-ov-left, .ms-ov-right { min-width: 0; }
+
+/* The right pane's first label lines up with the player name, not with the
+   top of the pane. */
+.ms-ov-right > .ms-block:first-child .ms-section-label { margin-top: 0; }
+
+/* The four time series, two across. One shape on one axis does not need
+   1,100px of width, and four of them stacked was the sparsest screen in the
+   summary.
+
+   Exactly two, not auto-fit. auto-fit packs as many tracks as fit, which at
+   1,280px is three or four, and a 500-unit plot drawn 300px wide has axis
+   labels nobody can read. Four charts in two rows of two is also the only
+   arrangement where no row is left with one chart and a hole. */
+.ms-chart-blocks {
+  margin-top: 0.6rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 60rem) {
+  .ms-chart-blocks { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* Player header */
 .ms-player-name {
@@ -474,9 +600,17 @@
   color: rgba(255,255,255,0.85);
 }
 
-.ms-upgrade-row.ms-atk { border-left: 3px solid #e74c3c; }
-.ms-upgrade-row.ms-def { border-left: 3px solid #3498db; }
-.ms-upgrade-row.ms-res { border-left: 3px solid #9b59b6; }
+/* Category by tint and by the portrait's own frame, not by a stripe down one
+   edge — the single-edge accent border is forbidden everywhere in this
+   project, in CSS and on canvas alike. The section label above each list
+   already names the category in the same hue; these carry it into the rows. */
+.ms-upgrade-row.ms-atk { background: rgba(231,76,60,0.08); }
+.ms-upgrade-row.ms-def { background: rgba(52,152,219,0.08); }
+.ms-upgrade-row.ms-res { background: rgba(155,89,182,0.08); }
+
+.ms-upgrade-row.ms-atk .ms-upgrade-icon { border-color: rgba(231,76,60,0.55); }
+.ms-upgrade-row.ms-def .ms-upgrade-icon { border-color: rgba(52,152,219,0.55); }
+.ms-upgrade-row.ms-res .ms-upgrade-icon { border-color: rgba(155,89,182,0.55); }
 
 .ms-atk-label { color: #e74c3c; }
 .ms-def-label { color: #3498db; }
@@ -486,6 +620,7 @@
   width: 28px;
   height: 28px;
   border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.12);
   flex-shrink: 0;
 }
 
@@ -725,10 +860,13 @@
 }
 
 /* Charts */
+/* Authored 500x120, so at half of a 1,280px report it draws ~146px tall. The
+   cap was 140, which made every plot letterbox itself inside its own block
+   rather than fill the width it was given. */
 .ms-chart {
   width: 100%;
   height: auto;
-  max-height: 140px;
+  max-height: 170px;
   margin-bottom: 0.5rem;
 }
 
@@ -751,22 +889,26 @@
    label above already provides the offset. */
 .ms-dom-slot .dmc-chart-wrap { padding: 0; }
 
-/* Taller than the 76px insights version because this one runs the full width
-   of the modal, and preserveAspectRatio="none" stretches the viewBox to match:
-   at 76px a plot four times wider flattens every swing it is there to show. */
-.ms-dom-slot .dmc-svg { height: 120px; }
+/* Short on purpose. The plot is read as a shape — who was above the even line
+   and when it swung — and it no longer needs height to compensate for being
+   stretched: DominanceChart draws responsive here (setResponsive), so a unit
+   is a pixel in both axes and a 78px plot at 1,100px wide has the same slopes
+   it has at 320px. */
+.ms-dom-slot .dmc-svg { height: 78px; }
 
 /* The chart draws its own "Dominance · 50 = even" title row. The section label
    above already says Dominance, so only the scale hint is kept. */
 .ms-dom-slot .dmc-title { padding-left: 0; }
 .ms-dom-slot .dmc-title-label { display: none; }
 
-/* Tier comparison bar */
+/* Tier comparison bar.
+   Three segments on a track and two timestamps. It was 20px of track per
+   player with 0.5rem between; at the top of the tab it earns its width, not
+   its height. */
 .ms-tier-compare {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: 0.25rem;
 }
 
 .ms-tier-row {
@@ -779,11 +921,15 @@
   font: 600 0.8rem Verdana, sans-serif;
   min-width: 80px;
   text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.1rem;
 }
 
 .ms-tier-bar-track {
   flex: 1;
-  height: 20px;
+  height: 12px;
   display: flex;
   border-radius: 3px;
   overflow: hidden;

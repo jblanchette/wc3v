@@ -1,6 +1,6 @@
 // A stored summary, as the Match Summary screen's model.
 //
-// The other half of the seam. `client/js/MatchSummaryView.js` draws six tabs
+// The other half of the seam. `client/js/MatchSummaryView.js` draws three tabs
 // and knows about neither app; the viewer feeds it from live parse objects and
 // this feeds it from a summary on disk. Neither app draws a tab.
 //
@@ -114,6 +114,12 @@
           raceIconId: raceIcons[p.race] || '',
           color,
           teamId: p.teamId === undefined ? null : p.teamId,
+          // The reader's own seat, marked on the screen rather than only
+          // sorted first. This is a desktop-only claim: the app asks who you
+          // are once and remembers it, and the viewer, which loads replays of
+          // strangers, has no seat to point at. The shared renderer treats the
+          // flag as optional for exactly that reason.
+          isYou: seat !== null && seat !== undefined && slot === seat,
 
           tierProduction: build.tierProduction,
           finalSnapshot: build.finalSnapshot,

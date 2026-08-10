@@ -137,6 +137,12 @@
 
       const chart = new window.DominanceChart(null);
       chart.setContainer(chartHost);
+      // Draw into a viewBox the size of the element. Authored, the plot is
+      // 320x96 stretched by preserveAspectRatio="none", and in a report column
+      // three or four times that wide it reads as a chart somebody zoomed into:
+      // a 100px y-axis gutter, sheared slopes, and dots that only stay round
+      // because the class scales them back by hand.
+      chart.setResponsive(true);
       chart.setPlayers(infos);
       // Trim the flat opening. The score eases out from an even 50/50 over the
       // engine's early ramp (150s), which is real but is a fixed slice of every
@@ -193,13 +199,21 @@
       // chart's own published geometry rather than assuming the full width.
       // Getting this wrong puts the cursor a minute or two off, which reads as
       // the data being wrong rather than the arithmetic.
-      const G = window.DominanceChart.GEOMETRY;
-      const leftF = G.marginLeft / G.width;
-      const innerF = (G.width - G.marginLeft - G.marginRight) / G.width;
+      // The SVG, not the host. The host carries the title row and the wrap's
+      // padding, so its left edge is several pixels left of the plot's — which
+      // put every scrub and every seek slightly early.
+      //
+      // Geometry is asked of the INSTANCE: a responsive chart re-authors its
+      // viewBox to the element, so the static GEOMETRY describes some other
+      // chart. Read per event, because the box changes under a window resize.
+      const plot = chartHost.querySelector('.dmc-svg');
 
       const timeAt = (e) => {
-        const r = chartHost.getBoundingClientRect();
+        const r = (plot || chartHost).getBoundingClientRect();
         if (r.width <= 0) return lastT;
+        const G = chart.geometry();
+        const leftF = G.marginLeft / G.width;
+        const innerF = (G.width - G.marginLeft - G.marginRight) / G.width;
         const f = (e.clientX - r.left) / r.width;
         const inner = Math.max(0, Math.min(1, (f - leftF) / innerF));
         // Across the DRAWN span. The plot no longer starts at 0:00, and

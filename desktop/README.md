@@ -196,24 +196,31 @@ tags cannot express.
 
 ## The game report
 
-Seven tabs. **Six of them are not this app's code.**
+Four tabs. **Three of them are not this app's code.**
 
-`client/js/MatchSummaryView.js` draws Overview, Army, Economy, Upgrades, Creeps
-and Charts, and it is the same renderer the site's viewer mounts in its Match
-Summary modal. It knows about neither app: it takes a model, an `icon(itemId)`
-resolver and an `asset(file)` resolver, and returns DOM. `js/summary-model.js`
-turns a stored summary into that model; `client/js/MatchSummary.js` does the
-same job on the viewer's side from live parse objects.
+`client/js/MatchSummaryView.js` draws Overview, Army and Economy, and it is the
+same renderer the site's viewer mounts in its Match Summary modal. It knows
+about neither app: it takes a model, an `icon(itemId)` resolver and an
+`asset(file)` resolver, and returns DOM. `js/summary-model.js` turns a stored
+summary into that model; `client/js/MatchSummary.js` does the same job on the
+viewer's side from live parse objects.
+
+It was six tabs until Aug 2026. Army/Upgrades and Economy/Creeps/Charts each
+held one short section list, so every one of them opened on a screen that was
+mostly background, and the sections that answer each other — what you built
+against what you upgraded, what you spent against the camps that paid for it —
+were never on screen together. **Army** is now production and research;
+**Economy** is resources, items, creeps and the four time series.
 
 Neither app draws a tab. This is the mount-seam rule from **Charts** below,
 applied to a whole screen instead of one widget: if this app grows its own
 version of a tab, the two products have begun telling different stories about
 one game.
 
-The seventh tab, **Build**, is the only one with no equivalent on the site: the
+The fourth tab, **Build**, is the only one with no equivalent on the site: the
 per-player build cards and the build order in the order it happened. Buildings
 by tier and the upgrade/merc timeline used to live there and are gone, because
-the Army, Upgrades and Economy tabs are those sections drawn from the same data.
+the Army and Economy tabs are those sections drawn from the same data.
 
 What differs from the viewer, and why:
 

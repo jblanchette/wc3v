@@ -3,6 +3,78 @@
 Nothing here is a public release. The app does not launch until 1.0.0; these
 builds go to R2 so the existing install can update itself. See `README.md`.
 
+## 0.9.1 — 10 Aug 2026
+
+Three tabs instead of six, an Overview that reads across instead of down, and a
+dominance chart that is drawn rather than stretched.
+
+### Overview leads with the game, then the players
+
+Dominance and tier progression are the only two things on the tab that are about
+the game rather than about a player, and they sat under a screenful of rosters.
+They are a band across the top now, both short: the plot is read as a shape and
+the tier bars are three segments on a track, and the height they used to take is
+height the columns below get.
+
+Inside each player column the sections sit **side by side**. Left is the
+identity, the heroes and the unit roster — one tall narrow list. Right is the
+damage matchup, the APM line and the match stats, stacked beside it. Stacked
+down the column the tab was roughly twice as tall and half of every row was
+empty.
+
+### The dominance chart was being stretched, not drawn
+
+`DominanceChart` is authored at a 320x96 viewBox with
+`preserveAspectRatio="none"`, which is right in the viewer's ~320px Insights
+panel and wrong everywhere else. In a report column three or four times that
+wide, every horizontal unit stretched to match while the vertical stayed put:
+the 30-unit y-axis gutter became a 100px trench, slopes sheared flat, and the
+momentum dots only stayed round because the class scaled them back by hand.
+
+`setResponsive(true)` matches the viewBox to the rendered element, so one unit
+is one pixel in both axes. Verified at three window sizes: the viewBox and the
+box now agree exactly. The scrub maths reads `chart.geometry()` off the
+instance rather than the class constant, and measures the plot rather than the
+panel around it — the old version was a few pixels early on every seek.
+
+### Six tabs became three
+
+**Army** is production and research. **Economy** is resources, items, creeps and
+the four time series. Army/Upgrades and Economy/Creeps/Charts were five screens
+each holding one short section list, so every one of them opened on a page that
+was mostly background — and the sections that answer each other, what you built
+against what you upgraded and what you spent against the camps that paid for it,
+were never on screen together. Every section packs two-across into its column
+now, and the four time-series plots run two-up rather than one per row.
+
+Nothing was dropped. The Build tab is unchanged. `ChartPanel`'s Resources and
+Army plots follow the charts they belong beside, to the foot of Economy.
+
+### "You" is marked, not just sorted first
+
+The reader's own seat carried a faint `you` on the Build tab and nothing at all
+on Overview, so on a screen of two symmetric columns you read a name to find
+your own half. The column now takes a gold ring and a lift, the name takes a
+`You` chip, and the tier bars and the creep score mark their own row.
+
+This is a desktop-only claim and the shared renderer treats it as optional: the
+viewer loads replays of strangers and has no seat to point at. `isYou` is set by
+`js/summary-model.js`; `client/js/MatchSummary.js` never sets it.
+
+### Everything else lands on the site too
+
+All of the above except the "You" marker is `client/js/MatchSummaryView.js` and
+`client/css/match-summary.css`, so the viewer's Match Summary modal is the same
+screen. Its panel widened from 1,100 to 1,400 because the layout converts width
+into height it no longer needs, and the Overview split degrades on the width of
+its own column rather than the window's, which is the only question a modal
+inside a wide viewport can answer.
+
+Two rules enforced while in there: the upgrade rows carried a 3px single-edge
+accent stripe per category and now carry a background tint and a coloured
+portrait frame, and the `.ms-chart` height cap was 30px under what a half-width
+plot actually needs, so every chart letterboxed itself inside its own block.
+
 ## 0.9.0 — 7 Aug 2026
 
 The game report becomes the viewer's Match Summary screen, drawn by the viewer's

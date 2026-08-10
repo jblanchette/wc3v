@@ -1,8 +1,10 @@
 /**
  * MatchSummaryView.js — the Match Summary screen, as a shared renderer.
  *
- * Six tabs about one finished game: Overview, Army, Economy, Upgrades, Creeps,
- * Charts. This file draws all of them and knows about neither app.
+ * Three tabs about one finished game: Overview (who was ahead, who each player
+ * was, what was measured about them), Army (what they built and researched) and
+ * Economy (what they earned, spent, and how it all trended). This file draws
+ * all of them and knows about neither app.
  *
  * ── Why this exists ─────────────────────────────────────────────────────────
  *
@@ -36,6 +38,9 @@
  *   matchEndMs
  *   players[] {
  *     name, race, raceLabel, raceAccent, raceIconId, color, teamId,
+ *     isYou           true for the reader's own seat. Desktop only: that app
+ *                     asks who you are once and remembers it, and the viewer
+ *                     cannot know which of two strangers loaded the replay.
  *     production      { buildings[], units[] }              BuildOrderData
  *     tierProduction  { heroes[], tierProd{1,2,3} }         BuildOrderData
  *     finalSnapshot   { army, workers, supply, economy, upgrades }
@@ -135,15 +140,30 @@
 
   const empty = (text) => node('div', 'ms-empty', text);
 
-  // Two columns, one per player. Every tab but Creeps is built out of this.
+  // Two columns, one per player. Every tab is built out of this.
+  //
+  // `p.isYou` marks the reader's own seat. It is set by the desktop adapter,
+  // which knows the seat because the app asks who you are once and remembers
+  // it; the viewer never sets it, because a replay you loaded off a site says
+  // nothing about which of these two people you are.
   const playerColumns = (model, contentFn, colClass) => {
     const wrap = node('div', 'ms-players');
     model.players.forEach((p, i) => {
-      const col = node('div', 'ms-player-col' + (colClass ? ' ' + colClass : ''));
+      const col = node('div', 'ms-player-col' + (colClass ? ' ' + colClass : '') +
+        (p.isYou ? ' ms-is-you' : ''));
       const content = contentFn(p, i);
       if (content) col.appendChild(content);
       wrap.appendChild(col);
     });
+    return wrap;
+  };
+
+  // A packed grid of titled blocks. Two per row at any usable column width,
+  // one when the window is narrow enough that a half-column would start
+  // wrapping unit names. `.ms-block-wide` takes the whole row.
+  const blocks = (list) => {
+    const wrap = node('div', 'ms-blocks');
+    for (const b of list) if (b) wrap.appendChild(b);
     return wrap;
   };
 
@@ -155,9 +175,19 @@
   // needs 730px of it. Packing them into the width is the only way that fits,
   // and a grid cannot pack a label away from its content while they are
   // separate children. See .ms-blocks in match-summary.css.
-  const block = (labelText, content, extraClass) => {
+  const block = (labelText, content, extraClass, labelClass) => {
     const el = node('div', 'ms-block' + (extraClass ? ' ' + extraClass : ''));
-    if (labelText) el.appendChild(sectionLabel(labelText));
+    if (labelText) el.appendChild(sectionLabel(labelText, labelClass));
+    if (content) el.appendChild(content);
+    return el;
+  };
+
+  // Same thing with a label element the caller built. The tier headings are
+  // coloured chips rather than rules, and rebuilding that as a variant of
+  // sectionLabel would be two spellings of one heading.
+  const blockOf = (labelEl, content, extraClass) => {
+    const el = node('div', 'ms-block' + (extraClass ? ' ' + extraClass : ''));
+    if (labelEl) el.appendChild(labelEl);
     if (content) el.appendChild(content);
     return el;
   };
@@ -198,6 +228,11 @@
       lbl.style.color = safeColor(p.raceAccent);
       row.appendChild(lbl);
     }
+    // The one thing on this screen that is about the reader rather than about
+    // the game. Loud on purpose: the two columns are otherwise symmetric, and
+    // a person opening the report of a game they just played should not have
+    // to read a name to find their own half of it.
+    if (p.isYou) row.appendChild(node('span', 'ms-you-tag', 'You'));
     return row;
   };
 
@@ -527,7 +562,7 @@
     if (!matchEnd) return wrap;
 
     for (const p of model.players) {
-      const row = node('div', 'ms-tier-row');
+      const row = node('div', 'ms-tier-row' + (p.isYou ? ' ms-is-you' : ''));
       const name = node('span', 'ms-tier-player', p.name || '');
       name.style.color = safeColor(p.color);
       row.appendChild(name);
@@ -566,11 +601,43 @@
   const renderOverview = (o, model) => {
     const out = frag();
 
-    out.appendChild(playerColumns(model, (p, i) => {
-      const col = frag();
+    // ── The band ────────────────────────────────────────────────────────────
+    //
+    // Dominance and tier progression are the only two things on this tab that
+    // are about the GAME rather than about a player, and both are read across
+    // the whole width. They used to sit under the two columns, which put the
+    // one-line answer to "who was winning" below a screenful of rosters.
+    //
+    // Both are short here. The dominance plot is a shape, not a table of
+    // values, and the tier bars are three segments on a track; neither gains
+    // anything from height, and every pixel they take is one the columns below
+    // do not get.
+    const band = node('div', 'ms-ov-band');
 
-      // Who this is, across the column. Never packed: the name and the heroes
-      // are what tells you which half of the screen you are reading.
+    // The dominance slot. Filled by the caller, because the plot is
+    // DominanceChart and its data, its gate and its teardown all belong to
+    // whoever owns the screen. Emitted only when the caller says it can fill it.
+    if (o.wantsDominance) {
+      band.appendChild(block('Dominance', node('div', 'ms-dom-slot'), 'ms-ov-band-dom'));
+    }
+    band.appendChild(block('Tier Progression', tierComparison(model), 'ms-ov-band-tier'));
+    out.appendChild(band);
+
+    out.appendChild(playerColumns(model, (p, i) => {
+      // Two panes side by side, not one stack.
+      //
+      // Left is who this is and what they fielded — the identity, the heroes
+      // and the unit roster, which is the tallest single thing on the tab.
+      // Right is everything measured about them: the matchup matrix, the APM
+      // line and the closing facts, stacked down beside the roster instead of
+      // under it.
+      //
+      // The roster is a column of five or six units and the readouts are all
+      // short and wide, so the two shapes interlock. Stacked, the tab was
+      // roughly twice as tall and half of every row was empty.
+      const split = node('div', 'ms-ov-split');
+
+      const left = node('div', 'ms-ov-left');
       const head = node('div', 'ms-ov-head');
       head.appendChild(playerIdentity(o, p));
 
@@ -591,51 +658,56 @@
         }
         head.appendChild(row);
       }
-      col.appendChild(head);
+      left.appendChild(head);
 
-      // Everything else packs into the column's width instead of stacking down
-      // it. The roster takes the full width because it is the widest thing
-      // here; the rest share a row. See .ms-blocks.
-      const blocks = node('div', 'ms-blocks');
       const combat = combatBlock(o, model, p, i) || [];
-      combat.forEach((b, bi) => {
-        if (bi === 0) b.classList.add('ms-block-wide');   // the roster
-        blocks.appendChild(b);
-      });
+      if (combat[0]) left.appendChild(combat[0]);        // the roster
+
+      const right = node('div', 'ms-ov-right');
+      if (combat[1]) right.appendChild(combat[1]);       // the damage matchup
 
       const chart = apmChart(p, model.players.length === 2
         ? model.players[i === 0 ? 1 : 0] : null);
-      if (chart) blocks.appendChild(block('APM', chart));
-      // Wide, like the roster: a row of short facts reads across, and half a
-      // grid row of nothing beside it was the emptiest space on the tab.
-      blocks.appendChild(block('Match Stats', statsTable(o, p), 'ms-block-wide'));
-      col.appendChild(blocks);
+      if (chart) right.appendChild(block('APM', chart));
+      right.appendChild(block('Match Stats', statsTable(o, p)));
 
-      return col;
+      split.appendChild(left);
+      split.appendChild(right);
+      return split;
     }, 'ms-col-overview'));
-
-    // The dominance slot. Filled by the caller, because the plot is
-    // DominanceChart and its data, its gate and its teardown all belong to
-    // whoever owns the screen. Emitted only when the caller says it can fill it.
-    if (o.wantsDominance) {
-      const label = sectionLabel('Dominance');
-      label.style.marginTop = '0.5rem';
-      out.appendChild(label);
-      out.appendChild(node('div', 'ms-dom-slot'));
-    }
-
-    const tierLabel = sectionLabel('Tier Progression');
-    tierLabel.style.marginTop = '0.5rem';
-    out.appendChild(tierLabel);
-    out.appendChild(tierComparison(model));
 
     return out;
   };
 
   // ── Army ───────────────────────────────────────────────────────────────────
+  //
+  // Was two tabs, Army and Upgrades. They answer one question — what force did
+  // this player put on the map — and split across two screens neither could be
+  // read against the other: three attack upgrades is a different sentence
+  // beside twelve grunts than beside four.
+  //
+  // Neither was close to filling a screen on its own. Every section here is an
+  // icon grid or a short list, so they pack two-across into the column's width
+  // (.ms-blocks) rather than stacking down a page of half-empty rows.
+
+  const upgradeList = (o, entries, rowClass, withLevel) => {
+    const list = node('div', 'ms-upgrade-list');
+    for (const u of entries) {
+      const row = node('div', 'ms-upgrade-row ' + rowClass);
+      const img = o.icon(u.icon || u.itemId);
+      img.classList.add('ms-upgrade-icon');
+      row.appendChild(img);
+      const lvl = Number(u.level) || 0;
+      row.appendChild(node('span', 'ms-upgrade-name',
+        u.displayName + (!withLevel && lvl > 1 ? ` Lv ${lvl}` : '')));
+      if (withLevel) row.appendChild(node('span', 'ms-upgrade-level', 'Lv ' + lvl));
+      list.appendChild(row);
+    }
+    return list;
+  };
 
   const renderArmy = (o, model) => playerColumns(model, (p) => {
-    const col = frag();
+    const out = [];
     const tp = (p.tierProduction && p.tierProduction.tierProd) || {};
 
     for (const tier of [1, 2, 3]) {
@@ -645,131 +717,53 @@
       const hasUnits = t.units && t.units.length;
       if (!hasBuildings && !hasUnits) continue;
 
-      col.appendChild(node('div', 'ms-tier-label t' + tier, 'Tier ' + tier));
+      const body = frag();
       if (hasBuildings) {
-        col.appendChild(node('div', 'ms-subsection', 'Buildings'));
-        col.appendChild(iconGrid(o, t.buildings.map(b =>
+        body.appendChild(node('div', 'ms-subsection', 'Buildings'));
+        body.appendChild(iconGrid(o, t.buildings.map(b =>
           ({ itemId: b.itemId, title: b.displayName, count: b.count }))));
       }
       if (hasUnits) {
-        col.appendChild(node('div', 'ms-subsection', 'Units'));
-        col.appendChild(iconGrid(o, t.units.map(u =>
+        body.appendChild(node('div', 'ms-subsection', 'Units'));
+        body.appendChild(iconGrid(o, t.units.map(u =>
           ({ itemId: u.itemId, title: u.displayName, count: u.count }))));
       }
+      out.push(blockOf(node('div', 'ms-tier-label t' + tier, 'Tier ' + tier), body));
     }
 
     const army = (p.finalSnapshot && p.finalSnapshot.army) || [];
     if (army.length) {
-      col.appendChild(sectionLabel('All Made Units'));
-      col.appendChild(iconGrid(o, army.map(u =>
-        ({ itemId: u.itemId, title: u.displayName, count: u.count }))));
-    }
-    return col;
-  });
-
-  // ── Economy ────────────────────────────────────────────────────────────────
-
-  const renderEconomy = (o, model) => playerColumns(model, (p) => {
-    const col = frag();
-
-    const eco = (p.finalSnapshot && p.finalSnapshot.economy) || null;
-    if (eco) {
-      col.appendChild(sectionLabel('Resources'));
-      const statRow = (label, value, cls) => {
-        const row = node('div', 'ms-stat-row');
-        row.appendChild(node('span', null, label));
-        row.appendChild(node('span', 'ms-stat-value ' + cls, Number(value) || 0));
-        col.appendChild(row);
-      };
-      statRow('Gold Spent', eco.goldSpent, 'ms-gold');
-      statRow('Lumber Spent', eco.lumberSpent, 'ms-lumber');
+      out.push(block('All Made Units', iconGrid(o, army.map(u =>
+        ({ itemId: u.itemId, title: u.displayName, count: u.count }))), 'ms-block-wide'));
     }
 
-    const purchases = p.itemPurchases || [];
-    if (purchases.length) {
-      const total = purchases.reduce((s, e) => s + (Number(e.gold) || 0), 0);
-      col.appendChild(sectionLabel(`Item Purchases (${total}g)`));
-      col.appendChild(iconGrid(o, purchases.map(e => ({
-        itemId: e.itemId,
-        count: e.count,
-        title: `${e.name} x${Number(e.count) || 0}${e.gold ? ` (${e.gold}g)` : ''}`
-      }))));
-    }
-
-    const uses = p.itemUses || [];
-    if (uses.length) {
-      col.appendChild(sectionLabel('Item Uses'));
-      col.appendChild(iconGrid(o, uses.map(e =>
-        ({ itemId: e.itemId, count: e.count, title: `${e.name} x${Number(e.count) || 0}` }))));
-    }
-
-    const mercs = p.mercenaries || [];
-    if (mercs.length) {
-      const total = mercs.reduce((s, m) => s + (Number(m.gold) || 0), 0);
-      col.appendChild(sectionLabel(`Mercenaries (${total}g)`));
-      col.appendChild(iconGrid(o, mercs.map(m => ({
-        itemId: m.itemId,
-        count: m.count,
-        title: `${m.name} x${Number(m.count) || 0} (${Number(m.gold) || 0}g)`
-      }))));
-    }
-
-    const bags = p.heroInventories || [];
-    const carried = bags.filter(h => (h.items || []).length);
-    if (carried.length) {
-      col.appendChild(sectionLabel('Hero Inventories'));
-      for (const hero of carried) {
-        col.appendChild(node('div', 'ms-hero-inv-label', hero.name || ''));
-        col.appendChild(iconGrid(o, hero.items.map(it =>
-          ({ itemId: it.itemId, title: it.name || it.itemId }))));
-      }
-    }
-
-    return col;
-  });
-
-  // ── Upgrades ───────────────────────────────────────────────────────────────
-
-  const renderUpgrades = (o, model) => playerColumns(model, (p) => {
-    const col = frag();
     const upgrades = (p.finalSnapshot && p.finalSnapshot.upgrades) || null;
-    if (!upgrades) return empty('No upgrades data');
+    const attack = upgrades ? Object.values(upgrades.attack || {}) : [];
+    const defense = upgrades ? Object.values(upgrades.defense || {}) : [];
+    const researched = upgrades ? (upgrades.researched || []) : [];
 
-    const upgradeList = (entries, rowClass, withLevel) => {
-      const list = node('div', 'ms-upgrade-list');
-      for (const u of entries) {
-        const row = node('div', 'ms-upgrade-row ' + rowClass);
-        const img = o.icon(u.icon || u.itemId);
-        img.classList.add('ms-upgrade-icon');
-        row.appendChild(img);
-        const lvl = Number(u.level) || 0;
-        row.appendChild(node('span', 'ms-upgrade-name',
-          u.displayName + (!withLevel && lvl > 1 ? ` Lv ${lvl}` : '')));
-        if (withLevel) row.appendChild(node('span', 'ms-upgrade-level', 'Lv ' + lvl));
-        list.appendChild(row);
-      }
-      return list;
-    };
-
-    const attack = Object.values(upgrades.attack || {});
     if (attack.length) {
-      col.appendChild(sectionLabel('Attack Upgrades', 'ms-atk-label'));
-      col.appendChild(upgradeList(attack, 'ms-atk', true));
+      out.push(block('Attack Upgrades', upgradeList(o, attack, 'ms-atk', true),
+        null, 'ms-atk-label'));
     }
-    const defense = Object.values(upgrades.defense || {});
     if (defense.length) {
-      col.appendChild(sectionLabel('Defense Upgrades', 'ms-def-label'));
-      col.appendChild(upgradeList(defense, 'ms-def', true));
+      out.push(block('Defense Upgrades', upgradeList(o, defense, 'ms-def', true),
+        null, 'ms-def-label'));
     }
-    const researched = upgrades.researched || [];
     if (researched.length) {
-      col.appendChild(sectionLabel('Research', 'ms-res-label'));
-      col.appendChild(upgradeList(researched, 'ms-res', false));
+      out.push(block('Research', upgradeList(o, researched, 'ms-res', false),
+        null, 'ms-res-label'));
+    }
+    if (upgrades && !attack.length && !defense.length && !researched.length) {
+      out.push(block('Upgrades', empty('No upgrades researched')));
     }
 
     const timeline = p.researchTimeline || [];
     if (timeline.length) {
-      col.appendChild(sectionLabel('Research Timeline'));
+      // A real element, not a fragment: .ms-block-cols runs this list in two
+      // columns, and a fragment's children are adopted straight into the block
+      // where there is nothing for `columns` to apply to.
+      const list = node('div', 'ms-timeline-list');
       for (const e of timeline) {
         const row = node('div', 'ms-timeline-mini');
         row.appendChild(node('span', 'ms-timeline-time', e.timeFormatted || ''));
@@ -778,15 +772,102 @@
         row.appendChild(img);
         const lvl = Number(e.level) || 0;
         row.appendChild(node('span', null, e.name + (lvl > 1 ? ` Lv ${lvl}` : '')));
-        col.appendChild(row);
+        list.appendChild(row);
       }
+      out.push(block('Research Timeline', list, 'ms-block-wide ms-block-cols'));
     }
 
-    if (!attack.length && !defense.length && !researched.length) {
-      col.appendChild(empty('No upgrades researched'));
-    }
-    return col;
+    return out.length ? blocks(out) : empty('No production recorded');
   });
+
+  // ── Economy ────────────────────────────────────────────────────────────────
+  //
+  // Was three tabs: Economy, Creeps and Charts. One question again — where the
+  // resources came from and where they went. Creeping IS income in this game,
+  // gold and hero experience both, and reading a 900g item spend without the
+  // camps that paid for it was the split that made the Economy tab look thin.
+  //
+  // Per-player sections pack into the two columns. What is about the game
+  // rather than about a player — the creep score, the four time series — runs
+  // full width underneath, in that order.
+
+  const economyBlocks = (o, model, p) => {
+    const out = [];
+
+    const eco = (p.finalSnapshot && p.finalSnapshot.economy) || null;
+    if (eco) {
+      const body = frag();
+      const statRow = (label, value, cls) => {
+        const row = node('div', 'ms-stat-row');
+        row.appendChild(node('span', null, label));
+        row.appendChild(node('span', 'ms-stat-value ' + cls, Number(value) || 0));
+        body.appendChild(row);
+      };
+      statRow('Gold Spent', eco.goldSpent, 'ms-gold');
+      statRow('Lumber Spent', eco.lumberSpent, 'ms-lumber');
+      out.push(block('Resources', body));
+    }
+
+    const purchases = p.itemPurchases || [];
+    if (purchases.length) {
+      const total = purchases.reduce((s, e) => s + (Number(e.gold) || 0), 0);
+      out.push(block(`Item Purchases (${total}g)`, iconGrid(o, purchases.map(e => ({
+        itemId: e.itemId,
+        count: e.count,
+        title: `${e.name} x${Number(e.count) || 0}${e.gold ? ` (${e.gold}g)` : ''}`
+      })))));
+    }
+
+    const uses = p.itemUses || [];
+    if (uses.length) {
+      out.push(block('Item Uses', iconGrid(o, uses.map(e =>
+        ({ itemId: e.itemId, count: e.count, title: `${e.name} x${Number(e.count) || 0}` })))));
+    }
+
+    const mercs = p.mercenaries || [];
+    if (mercs.length) {
+      const total = mercs.reduce((s, m) => s + (Number(m.gold) || 0), 0);
+      out.push(block(`Mercenaries (${total}g)`, iconGrid(o, mercs.map(m => ({
+        itemId: m.itemId,
+        count: m.count,
+        title: `${m.name} x${Number(m.count) || 0} (${Number(m.gold) || 0}g)`
+      })))));
+    }
+
+    const bags = p.heroInventories || [];
+    const carried = bags.filter(h => (h.items || []).length);
+    if (carried.length) {
+      const body = frag();
+      for (const hero of carried) {
+        body.appendChild(node('div', 'ms-hero-inv-label', hero.name || ''));
+        body.appendChild(iconGrid(o, hero.items.map(it =>
+          ({ itemId: it.itemId, title: it.name || it.itemId }))));
+      }
+      out.push(block('Hero Inventories', body));
+    }
+
+    const xp = creepXpBlock(o, model, p);
+    if (xp) out.push(xp);
+    const route = creepRouteBlock(o, model, p);
+    if (route) out.push(route);
+
+    return out;
+  };
+
+  const renderEconomy = (o, model) => {
+    const out = frag();
+
+    out.appendChild(playerColumns(model, (p) => {
+      const list = economyBlocks(o, model, p);
+      return list.length ? blocks(list) : empty('No economy recorded');
+    }));
+
+    const score = creepScore(model);
+    if (score) out.appendChild(score);
+
+    out.appendChild(chartsSection(model));
+    return out;
+  };
 
   // ── Creeps ─────────────────────────────────────────────────────────────────
 
@@ -800,70 +881,128 @@
   const campXp = (camp) =>
     (camp.heroXp || []).reduce((s, h) => s + (Number(h.xp) || 0), 0);
 
-  const renderCreeps = (o, model) => {
+  // Camps a player's team finished (`[2]`) or touched (`[1, 2]`).
+  const campsOf = (model, p, states) => (model.camps || []).filter(c =>
+    states.indexOf(c.claimState) !== -1 &&
+    c.ownerTeamId !== null && c.ownerTeamId === p.teamId);
+
+  const creepXpBlock = (o, model, p) => {
+    if (!(model.camps || []).length) return null;
+
+    const totals = {};
+    for (const camp of campsOf(model, p, [2])) {
+      for (const h of (camp.heroXp || [])) {
+        if (!totals[h.uuid]) totals[h.uuid] = { name: h.name, itemId: h.itemId, xp: 0 };
+        totals[h.uuid].xp += Number(h.xp) || 0;
+      }
+    }
+    const heroes = Object.values(totals).sort((a, b) => b.xp - a.xp);
+    if (!heroes.length) return null;
+
+    const body = frag();
+    const max = heroes[0].xp || 1;
+    for (const h of heroes) {
+      const row = node('div', 'ms-hero-xp-row');
+      // The hero's own portrait, matched by name against what it built.
+      const known = ((p.tierProduction && p.tierProduction.heroes) || [])
+        .find(x => x.displayName === h.name);
+      if (known) {
+        const img = o.icon(known.itemId);
+        img.classList.add('ms-hero-xp-icon');
+        row.appendChild(img);
+      }
+      row.appendChild(node('span', 'ms-hero-xp-name', h.name || ''));
+      const track = node('div', 'ms-hero-xp-bar-track');
+      const bar = node('div', 'ms-hero-xp-bar');
+      bar.style.width = (h.xp / max * 100).toFixed(0) + '%';
+      bar.style.background = safeColor(p.color);
+      track.appendChild(bar);
+      row.appendChild(track);
+      row.appendChild(node('span', 'ms-hero-xp-val', h.xp));
+      body.appendChild(row);
+    }
+    return block('Hero XP from Creeps', body);
+  };
+
+  // The route, grouped by difficulty. Wide: a camp step is a row of creep
+  // portraits and a time, and half a column wraps it into three lines.
+  const creepRouteBlock = (o, model, p) => {
+    const mine = campsOf(model, p, [1, 2]).slice()
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
+    if (!mine.length) return null;
+
+    const byDiff = { green: [], orange: [], red: [] };
+    mine.forEach((camp, i) => {
+      byDiff[campDifficulty(camp.totalLevel || 0).cls].push({ camp, order: i + 1 });
+    });
+
+    const body = frag();
+    for (const key of ['green', 'orange', 'red']) {
+      const group = byDiff[key];
+      if (!group.length) continue;
+      const diff = campDifficulty(key === 'green' ? 0 : key === 'orange' ? 10 : 20);
+
+      const label = node('div', 'ms-creep-diff-label', `${diff.label}s (${group.length})`);
+      label.style.color = safeColor(diff.color);
+      body.appendChild(label);
+
+      const route = node('div', 'ms-creep-route');
+      for (const { camp, order } of group) {
+        const step = node('div', 'ms-creep-step');
+        const num = node('span', 'ms-creep-order', order);
+        num.style.borderColor = safeColor(diff.color);
+        num.style.color = safeColor(diff.color);
+        step.appendChild(num);
+
+        const cell = node('div', 'ms-creep-camp');
+        const icons = node('div', 'ms-creep-icons');
+        for (const u of (camp.units || [])) {
+          const wrap = node('div', 'ms-creep-icon-wrap');
+          wrap.title = `${u.name} Lv ${u.level || 0}`;
+          const img = o.icon(u.itemId);
+          img.classList.add('ms-creep-icon');
+          wrap.appendChild(img);
+          if (u.level) wrap.appendChild(node('span', 'ms-creep-lvl', u.level));
+          icons.appendChild(wrap);
+        }
+        cell.appendChild(icons);
+
+        const info = node('div', 'ms-creep-camp-info');
+        info.appendChild(node('span', 'ms-creep-meta', camp.timeFormatted || ''));
+        const xp = campXp(camp);
+        if (xp) info.appendChild(node('span', 'ms-creep-xp', '+' + xp + ' XP'));
+        cell.appendChild(info);
+
+        step.appendChild(cell);
+        route.appendChild(step);
+      }
+      body.appendChild(route);
+    }
+    return block('Creep Route', body, 'ms-block-wide');
+  };
+
+  // The share of the map's camps each side took, plus what nobody finished.
+  // About the game rather than about a player, so it runs full width under the
+  // columns.
+  const creepScore = (model) => {
     const camps = model.camps || [];
-    if (!camps.length) return empty('No creep camp data available');
+    if (!camps.length) return null;
 
-    const campsOf = (p, states) => camps.filter(c =>
-      states.indexOf(c.claimState) !== -1 &&
-      c.ownerTeamId !== null && c.ownerTeamId === p.teamId);
-
-    const out = frag();
-
-    // ── Hero XP from creeps ─────────────────────────────────────────────────
-    out.appendChild(playerColumns(model, (p) => {
-      const col = frag();
-      col.appendChild(sectionLabel('Hero XP from Creeps'));
-
-      const totals = {};
-      for (const camp of campsOf(p, [2])) {
-        for (const h of (camp.heroXp || [])) {
-          if (!totals[h.uuid]) totals[h.uuid] = { name: h.name, itemId: h.itemId, xp: 0 };
-          totals[h.uuid].xp += Number(h.xp) || 0;
-        }
-      }
-      const heroes = Object.values(totals).sort((a, b) => b.xp - a.xp);
-      if (!heroes.length) { col.appendChild(empty('No creep XP data')); return col; }
-
-      const max = heroes[0].xp || 1;
-      for (const h of heroes) {
-        const row = node('div', 'ms-hero-xp-row');
-        // The hero's own portrait, matched by name against what it built.
-        const known = ((p.tierProduction && p.tierProduction.heroes) || [])
-          .find(x => x.displayName === h.name);
-        if (known) {
-          const img = o.icon(known.itemId);
-          img.classList.add('ms-hero-xp-icon');
-          row.appendChild(img);
-        }
-        row.appendChild(node('span', 'ms-hero-xp-name', h.name || ''));
-        const track = node('div', 'ms-hero-xp-bar-track');
-        const bar = node('div', 'ms-hero-xp-bar');
-        bar.style.width = (h.xp / max * 100).toFixed(0) + '%';
-        bar.style.background = safeColor(p.color);
-        track.appendChild(bar);
-        row.appendChild(track);
-        row.appendChild(node('span', 'ms-hero-xp-val', h.xp));
-        col.appendChild(row);
-      }
-      return col;
-    }));
-
-    // ── Creep score ─────────────────────────────────────────────────────────
     const scores = model.players.map(p => {
-      const cleared = campsOf(p, [2]);
+      const cleared = campsOf(model, p, [2]);
       return {
-        name: p.name, color: p.color, count: cleared.length,
+        name: p.name, color: p.color, isYou: !!p.isYou, count: cleared.length,
         totalLvl: cleared.reduce((s, c) => s + (c.totalLevel || 0), 0),
         totalXp: cleared.reduce((s, c) => s + campXp(c), 0)
       };
     });
+    if (!scores.some(s => s.count)) return null;
     const totalCount = scores.reduce((s, x) => s + x.count, 0) || 1;
 
-    out.appendChild(sectionLabel('Creep Score'));
+    const body = frag();
     const scoreRow = node('div', 'ms-creep-score');
     for (const s of scores) {
-      const side = node('div', 'ms-creep-score-side');
+      const side = node('div', 'ms-creep-score-side' + (s.isYou ? ' ms-is-you' : ''));
       const name = node('span', 'ms-creep-score-name', s.name || '');
       name.style.color = safeColor(s.color);
       side.appendChild(name);
@@ -871,7 +1010,7 @@
         `${s.count} camps · Lv ${s.totalLvl}${s.totalXp ? ` · ${s.totalXp} XP` : ''}`));
       scoreRow.appendChild(side);
     }
-    out.appendChild(scoreRow);
+    body.appendChild(scoreRow);
 
     const bar = node('div', 'ms-creep-bar');
     for (const s of scores) {
@@ -880,64 +1019,7 @@
       seg.style.background = safeColor(s.color);
       bar.appendChild(seg);
     }
-    out.appendChild(bar);
-
-    // ── Route, grouped by difficulty ────────────────────────────────────────
-    out.appendChild(playerColumns(model, (p) => {
-      const col = frag();
-      col.appendChild(sectionLabel('Creep Route'));
-
-      const mine = campsOf(p, [1, 2]).slice().sort((a, b) => (a.order || 0) - (b.order || 0));
-      if (!mine.length) { col.appendChild(empty('No camps claimed')); return col; }
-
-      const byDiff = { green: [], orange: [], red: [] };
-      mine.forEach((camp, i) => {
-        byDiff[campDifficulty(camp.totalLevel || 0).cls].push({ camp, order: i + 1 });
-      });
-
-      for (const key of ['green', 'orange', 'red']) {
-        const group = byDiff[key];
-        if (!group.length) continue;
-        const diff = campDifficulty(key === 'green' ? 0 : key === 'orange' ? 10 : 20);
-
-        const label = node('div', 'ms-creep-diff-label', `${diff.label}s (${group.length})`);
-        label.style.color = safeColor(diff.color);
-        col.appendChild(label);
-
-        const route = node('div', 'ms-creep-route');
-        for (const { camp, order } of group) {
-          const step = node('div', 'ms-creep-step');
-          const num = node('span', 'ms-creep-order', order);
-          num.style.borderColor = safeColor(diff.color);
-          num.style.color = safeColor(diff.color);
-          step.appendChild(num);
-
-          const body = node('div', 'ms-creep-camp');
-          const icons = node('div', 'ms-creep-icons');
-          for (const u of (camp.units || [])) {
-            const wrap = node('div', 'ms-creep-icon-wrap');
-            wrap.title = `${u.name} Lv ${u.level || 0}`;
-            const img = o.icon(u.itemId);
-            img.classList.add('ms-creep-icon');
-            wrap.appendChild(img);
-            if (u.level) wrap.appendChild(node('span', 'ms-creep-lvl', u.level));
-            icons.appendChild(wrap);
-          }
-          body.appendChild(icons);
-
-          const info = node('div', 'ms-creep-camp-info');
-          info.appendChild(node('span', 'ms-creep-meta', camp.timeFormatted || ''));
-          const xp = campXp(camp);
-          if (xp) info.appendChild(node('span', 'ms-creep-xp', '+' + xp + ' XP'));
-          body.appendChild(info);
-
-          step.appendChild(body);
-          route.appendChild(step);
-        }
-        col.appendChild(route);
-      }
-      return col;
-    }));
+    body.appendChild(bar);
 
     // Everything nobody finished. One line, because it is context and not a
     // per-camp story.
@@ -947,10 +1029,10 @@
       const footer = node('div', 'ms-creep-footer');
       if (contested) footer.appendChild(node('span', 'ms-creep-footer-item', contested + ' contested'));
       if (untouched) footer.appendChild(node('span', 'ms-creep-footer-item', untouched + ' untouched'));
-      out.appendChild(footer);
+      body.appendChild(footer);
     }
 
-    return out;
+    return block('Creep Score', body, 'ms-wide-section');
   };
 
   // ── Charts ─────────────────────────────────────────────────────────────────
@@ -1105,22 +1187,21 @@
     return wrap;
   };
 
-  const renderCharts = (o, model) => {
-    const out = frag();
-
-    out.appendChild(sectionLabel('Supply Over Time'));
-    out.appendChild(areaChart(model, p => p.supplyTrack, 100));
-
-    out.appendChild(sectionLabel('Workers Over Time'));
-    out.appendChild(areaChart(model, p => p.workerTrack, null));
-
+  // The time series, two across. Each of these is one shape on one axis, and a
+  // full-width plot of it was 500 viewBox units of chart in 1,100px of column
+  // with nothing beside it — the sparsest thing in the whole summary.
+  const chartsSection = (model) => {
+    const list = [
+      block('Supply Over Time', areaChart(model, p => p.supplyTrack, 100)),
+      block('Workers Over Time', areaChart(model, p => p.workerTrack, null))
+    ];
     if (model.players.some(p => p.apm)) {
-      out.appendChild(sectionLabel('APM Over Time'));
-      out.appendChild(apmComparison(model));
-      out.appendChild(sectionLabel('Action Category Breakdown'));
-      out.appendChild(categoryComparison(model));
+      list.push(block('APM Over Time', apmComparison(model)));
+      list.push(block('Action Category Breakdown', categoryComparison(model)));
     }
-    return out;
+    const wrap = blocks(list);
+    wrap.classList.add('ms-chart-blocks');
+    return wrap;
   };
 
   // ── Public ─────────────────────────────────────────────────────────────────
@@ -1128,22 +1209,23 @@
   const RENDERERS = {
     overview: renderOverview,
     army: renderArmy,
-    economy: renderEconomy,
-    upgrades: renderUpgrades,
-    creeps: renderCreeps,
-    charts: renderCharts
+    economy: renderEconomy
   };
 
   window.MatchSummaryView = {
     // The tab order, owned here so the two apps cannot disagree about it or
     // about what a tab is called.
+    //
+    // Was six. Army/Upgrades and Economy/Creeps/Charts were five screens each
+    // holding one short section list, so every one of them opened on a page
+    // that was mostly background — and the sections that belong side by side
+    // (what you built against what you upgraded, what you spent against the
+    // camps that paid for it) were never on screen together. Three tabs, each
+    // one question, each one full.
     TABS: [
       { key: 'overview', label: 'Overview' },
       { key: 'army', label: 'Army' },
-      { key: 'economy', label: 'Economy' },
-      { key: 'upgrades', label: 'Upgrades' },
-      { key: 'creeps', label: 'Creeps' },
-      { key: 'charts', label: 'Charts' }
+      { key: 'economy', label: 'Economy' }
     ],
 
     // Returns a node for `tab`, or null for an unknown key.

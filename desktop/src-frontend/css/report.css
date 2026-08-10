@@ -350,6 +350,13 @@
 .dom-panel .dmc-chart-wrap { padding: var(--sp-1) var(--sp-2); }
 .dom-panel .dmc-title { padding: 0 0 var(--sp-1); }
 
+/* In the Overview band it is one of two things sharing the top of the tab, and
+   the rest of the tab is what the reader came for. Shorter than the clamp
+   above, and it costs nothing to read: the chart draws responsive here, so the
+   slopes at 78px across 700px are the slopes at 78px across 320px. */
+.ms-ov-band .dom-panel .dmc-svg { height: clamp(60px, 8vh, 84px); }
+.ms-ov-band .dom-panel { border: 0; }
+
 /* Dragging replays the game's momentum, so the cursor says so. */
 .dom-panel-chart.is-scrubbable { cursor: ew-resize; touch-action: none; }
 .dom-panel-chart:focus-visible {

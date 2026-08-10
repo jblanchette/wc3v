@@ -454,14 +454,14 @@
 
       // ── The Build tab: the cards, then the order ────────────────────────
       //
-      // What the six shared tabs do NOT cover. Army shows units and buildings
+      // What the three shared tabs do NOT cover. Army shows units and buildings
       // grouped by tier and Economy shows what was bought, but neither shows a
       // build in the order it happened, and nothing anywhere else shows a
       // player's whole build as one card.
       //
       // "Buildings by tier" and "Upgrades and mercenaries" used to live here
-      // and are gone: the Army, Upgrades and Economy tabs are those sections,
-      // drawn from the same data by the shared renderer.
+      // and are gone: the Army and Economy tabs are those sections, drawn from
+      // the same data by the shared renderer.
       const reportPanel = () => {
         const panel = node('section', 'report-pane');
         const stale = o.isStale ? o.isStale(summary) : false;
@@ -521,9 +521,9 @@
 
       // ── The shared screen ───────────────────────────────────────────────
       //
-      // Six tabs drawn by client/js/MatchSummaryView.js, the viewer's own Match
-      // Summary. This file supplies the model (js/summary-model.js), the icon
-      // resolver and the teardown, and draws none of it.
+      // Three tabs drawn by client/js/MatchSummaryView.js, the viewer's own
+      // Match Summary. This file supplies the model (js/summary-model.js), the
+      // icon resolver and the teardown, and draws none of it.
       //
       // Art is fetched from the CDN by id, which is why the resolver is injected
       // rather than the renderer holding a base URL. `asset` is separate because
@@ -581,11 +581,15 @@
         if (domHandle) slot.appendChild(domHandle.chart);
       };
 
-      // Charts: the shared four, then Resources and Army from the desktop's own
-      // panel. Dominance is omitted from the chips because the Overview tab
-      // carries it, and two dominance plots on one screen is a question about
-      // which one is right.
-      const chartsTab = (content) => {
+      // The desktop's own Resources and Army plots, under the shared four at
+      // the foot of the Economy tab. Dominance is omitted from the chips
+      // because the Overview band carries it, and two dominance plots on one
+      // screen is a question about which one is right.
+      //
+      // This used to hang off a Charts tab. Charts was folded into Economy
+      // when the six tabs became three; the panel follows the charts it
+      // belongs beside rather than getting a tab of its own back.
+      const chartsPanel = (content) => {
         if (!window.ChartPanel) return content;
         if (cp && cp.destroy) { try { cp.destroy(); } catch (e) { /* already gone */ } }
         cp = window.ChartPanel.build(summary, seat, {
@@ -639,7 +643,7 @@
         const content = node('div', 'ms-tab-content');
         const rendered = window.MatchSummaryView.render(key, model, viewOpts());
         if (rendered) content.appendChild(rendered);
-        if (key === 'charts') chartsTab(content);
+        if (key === 'economy') chartsPanel(content);
         body.appendChild(content);
         if (key === 'overview') mountDominance(content);
       };

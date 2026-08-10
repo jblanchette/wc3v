@@ -136,6 +136,10 @@ main :focus-visible,
      plot is still legible at 56 and the alternative is the tile row going
      under the fold on the app's default tab. */
   .dom-panel .dmc-svg { height: 56px; }
+  /* The Overview band's own clamp is more specific than the line above, so it
+     has to be named or the short-window budget silently does not apply to the
+     one tab that opens by default. */
+  .ms-ov-band .dom-panel .dmc-svg { height: 56px; }
 }
 
 /* ── First run ────────────────────────────────────────────────────────────

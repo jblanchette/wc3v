@@ -367,6 +367,13 @@ const MatchSummary = class {
     // container, and setContainer() on it would move that chart in here.
     const chart = new window.DominanceChart(this.viewer);
     chart.setContainer(slot);
+    // Draw into a viewBox the size of the element. The Insights panel this
+    // chart was authored for is ~320px wide, which is about what the viewBox
+    // says; this modal is three times that, and preserveAspectRatio="none"
+    // stretches every horizontal unit to match while the vertical stays put.
+    // The result reads as a zoomed chart: a 90px y-axis gutter and slopes
+    // sheared flat.
+    chart.setResponsive(true);
     chart.setPlayers(infos);
     // Trim the flat opening. The score eases out of an even 50/50 over the
     // engine's 150s early ramp, which is real, but on a 17-minute game it is

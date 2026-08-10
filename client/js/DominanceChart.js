@@ -32,6 +32,14 @@
       this._totalT = 0;
       this._startT = 0;        // left edge of the x-axis; see setStart()
       this._chart = null;
+      // The viewBox this instance draws into. Authored size unless a consumer
+      // asks for responsive; see setResponsive().
+      this._w = CHART_W;
+      this._h = CHART_H;
+      this._responsive = false;
+      this._cursorT = 0;
+      this._yMin = 35;
+      this._yMax = 65;
     }
 
     setContainer (containerEl) {
@@ -63,6 +71,37 @@
     // the plot to a point.
     setStart (startT) {
       this._startT = Math.max(0, Math.min(startT || 0, Math.max(0, this._totalT - 1)));
+    }
+
+    // Draw into a viewBox the size of the rendered element instead of the
+    // authored 320x96.
+    //
+    // preserveAspectRatio is "none", which is what lets the plot fill any
+    // panel. In the viewer's ~320px insights panel the viewBox is close to the
+    // pixels and nothing distorts. Anywhere wider it does not: a 1100px report
+    // column stretches each horizontal unit 3.4x while the vertical stays at
+    // 1x, and the result reads as a chart that has been zoomed into rather than
+    // drawn — the 30-unit y-axis gutter becomes a 103px trench, every slope
+    // shears flat, and the momentum dots have to be scaled back by hand
+    // (_fitDots) to stop being lozenges.
+    //
+    // Responsive mode measures the element and matches the viewBox to it, so
+    // one unit is one pixel in both axes and the margins mean what they say.
+    // Call before build(). The size is re-measured whenever the element
+    // resizes; changing the viewBox does not change the rendered size, so this
+    // cannot feed back into the ResizeObserver.
+    setResponsive (on) {
+      this._responsive = on !== false;
+    }
+
+    // The plot area of THIS instance, in its own viewBox units. The static
+    // GEOMETRY below is only right for a chart drawn at the authored size.
+    geometry () {
+      return {
+        width: this._w,
+        marginLeft: CHART_MARGIN.left,
+        marginRight: CHART_MARGIN.right
+      };
     }
 
     // The first moment any player's score leaves the even line by more than
@@ -101,21 +140,17 @@
       wrapper.appendChild(titleEl);
 
       const svg = createSvg('svg', {
-        viewBox: '0 0 ' + CHART_W + ' ' + CHART_H,
+        viewBox: '0 0 ' + this._w + ' ' + this._h,
         preserveAspectRatio: 'none',
         class: 'dmc-svg'
       });
       wrapper.appendChild(svg);
 
-      const innerW = CHART_W - CHART_MARGIN.left - CHART_MARGIN.right;
-      const innerH = CHART_H - CHART_MARGIN.top - CHART_MARGIN.bottom;
-      const startT = this._startT || 0;
-      const span = Math.max(1, this._totalT - startT);
-      const xOf = (t) => CHART_MARGIN.left + ((t - startT) / span) * innerW;
-
       // Y range: fixed for the whole playback (no rescale jumps) but fitted
       // to the series — real games live in the 40-60 band and a hard 0-100
       // axis flattens the story. Padded, symmetric-ish around 50, min span 30.
+      // Held on the instance because it depends on the data, not the box, and
+      // _applyGeometry() rebuilds yOf without re-walking every sample.
       let lo = 50, hi = 50;
       for (const p of this._players) {
         for (const s of p.samples) {
@@ -123,33 +158,24 @@
           if (s.score > hi) hi = s.score;
         }
       }
-      const yMin = Math.max(0, Math.min(35, Math.floor(lo - 5)));
-      const yMax = Math.min(100, Math.max(65, Math.ceil(hi + 5)));
-      const yOf = (score) => {
-        const clamped = Math.max(yMin, Math.min(yMax, score));
-        return CHART_MARGIN.top + innerH - ((clamped - yMin) / (yMax - yMin)) * innerH;
-      };
+      this._yMin = Math.max(0, Math.min(35, Math.floor(lo - 5)));
+      this._yMax = Math.min(100, Math.max(65, Math.ceil(hi + 5)));
 
-      // Stroke attributes below are fallbacks; the .dmc-* classes in main.css
-      // own the chrome look (widths, dashes, non-scaling strokes).
+      // Stroke attributes below are fallbacks; the .dmc-* classes in
+      // dominance.css own the chrome look (widths, dashes, non-scaling
+      // strokes). Every coordinate is placed by _applyGeometry(), which is the
+      // one function that knows how big the box is.
       const axisColor = 'rgba(255,255,255,0.18)';
-      svg.appendChild(createSvg('line', {
-        class: 'dmc-axis',
-        x1: CHART_MARGIN.left, x2: CHART_MARGIN.left,
-        y1: CHART_MARGIN.top, y2: CHART_MARGIN.top + innerH, stroke: axisColor
-      }));
-      svg.appendChild(createSvg('line', {
-        class: 'dmc-axis',
-        x1: CHART_MARGIN.left, x2: CHART_MARGIN.left + innerW,
-        y1: CHART_MARGIN.top + innerH, y2: CHART_MARGIN.top + innerH, stroke: axisColor
-      }));
+      const axisY = createSvg('line', { class: 'dmc-axis', stroke: axisColor });
+      const axisX = createSvg('line', { class: 'dmc-axis', stroke: axisColor });
       // 50 midline — the "even game" reference.
-      svg.appendChild(createSvg('line', {
+      const mid50 = createSvg('line', {
         class: 'dmc-mid50',
-        x1: CHART_MARGIN.left, x2: CHART_MARGIN.left + innerW,
-        y1: yOf(50), y2: yOf(50),
         stroke: 'rgba(255,255,255,0.25)', 'stroke-dasharray': '4 4'
-      }));
+      });
+      svg.appendChild(axisY);
+      svg.appendChild(axisX);
+      svg.appendChild(mid50);
       // No SVG text labels — preserveAspectRatio:none would distort glyphs.
       // The dashed midline + the "50 = even" title carry the scale.
 
@@ -164,7 +190,7 @@
         const dots = (p.events || []).map(e => {
           const dot = createSvg('circle', {
             class: 'dmc-dot',
-            cx: xOf(e.t), cy: 0, r: 2.6,
+            cx: 0, cy: 0, r: 2.6,
             fill: p.color || '#888',
             stroke: e.delta < 0 ? 'rgba(255,80,80,0.9)' : 'rgba(255,255,255,0.7)',
             'stroke-width': '0.8',
@@ -181,29 +207,91 @@
 
       const cursor = createSvg('line', {
         class: 'dmc-cursor',
-        y1: CHART_MARGIN.top, y2: CHART_MARGIN.top + innerH,
-        stroke: '#FFD43B', 'stroke-width': '1.5',
-        x1: CHART_MARGIN.left, x2: CHART_MARGIN.left
+        stroke: '#FFD43B', 'stroke-width': '1.5'
       });
       svg.appendChild(cursor);
 
       this._el.appendChild(wrapper);
-      this._chart = { svg, cursor, playerLines, xOf, yOf, wrapper };
-      this.setCursor(0);
+      this._chart = {
+        svg, cursor, playerLines, wrapper, axisY, axisX, mid50,
+        xOf: (t) => t, yOf: (s) => s
+      };
+      this._applyGeometry(true);
 
-      // preserveAspectRatio="none" is what lets the plot fill any panel width,
-      // and it stretches the momentum dots with it. In the viewer's ~320px
-      // insights panel that is a 1.26x squash nobody notices; in the desktop
-      // app's full-width report it is nearly 4x, and the dots read as lozenges.
-      //
-      // Lines and strokes are already immune via non-scaling-stroke. The dots
-      // are shapes, so they get a compensating scaleX about their own centre,
-      // recomputed whenever the element resizes.
-      this._fitDots();
+      // In responsive mode the viewBox tracks the element, so the observer is
+      // what keeps the two in step. Otherwise it only compensates the dots:
+      // preserveAspectRatio="none" stretches them with the box, and while lines
+      // are immune via non-scaling-stroke, a circle is a shape.
       if (typeof ResizeObserver !== 'undefined') {
-        this._ro = new ResizeObserver(() => this._fitDots());
+        this._ro = new ResizeObserver(() => this._applyGeometry(false));
         this._ro.observe(svg);
       }
+    }
+
+    // Places every coordinate in the plot from the current box size. Called on
+    // build and on every resize, so nothing else in this class may hardcode a
+    // margin against CHART_W or CHART_H.
+    _applyGeometry (force) {
+      const c = this._chart;
+      if (!c) return;
+
+      let w = CHART_W;
+      let h = CHART_H;
+      if (this._responsive) {
+        const r = c.svg.getBoundingClientRect();
+        // A detached or collapsed element measures zero. Keep the authored box
+        // rather than dividing by it; the observer fires again on attach.
+        if (r.width >= 40 && r.height >= 20) {
+          w = Math.round(r.width);
+          h = Math.round(r.height);
+        }
+      }
+      if (!force && w === this._w && h === this._h) { this._fitDots(); return; }
+
+      this._w = w;
+      this._h = h;
+      c.svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+
+      const innerW = Math.max(1, w - CHART_MARGIN.left - CHART_MARGIN.right);
+      const innerH = Math.max(1, h - CHART_MARGIN.top - CHART_MARGIN.bottom);
+      const startT = this._startT || 0;
+      const span = Math.max(1, this._totalT - startT);
+      const yMin = this._yMin;
+      const yMax = this._yMax;
+
+      c.xOf = (t) => CHART_MARGIN.left + ((t - startT) / span) * innerW;
+      c.yOf = (score) => {
+        const clamped = Math.max(yMin, Math.min(yMax, score));
+        return CHART_MARGIN.top + innerH - ((clamped - yMin) / (yMax - yMin)) * innerH;
+      };
+
+      const left = CHART_MARGIN.left;
+      const top = CHART_MARGIN.top;
+      const right = left + innerW;
+      const bottom = top + innerH;
+
+      c.axisY.setAttribute('x1', left); c.axisY.setAttribute('x2', left);
+      c.axisY.setAttribute('y1', top); c.axisY.setAttribute('y2', bottom);
+      c.axisX.setAttribute('x1', left); c.axisX.setAttribute('x2', right);
+      c.axisX.setAttribute('y1', bottom); c.axisX.setAttribute('y2', bottom);
+      c.mid50.setAttribute('x1', left); c.mid50.setAttribute('x2', right);
+      c.mid50.setAttribute('y1', c.yOf(50)); c.mid50.setAttribute('y2', c.yOf(50));
+      c.cursor.setAttribute('y1', top); c.cursor.setAttribute('y2', bottom);
+
+      // Everything the cursor pass draws is invalidated: the polylines are
+      // rebuilt only when the visible sample window changes, and the box
+      // changing is not a window change.
+      for (const pl of c.playerLines) {
+        pl.lastEnd = -2;
+        pl.lastDots = -1;
+        for (const d of pl.dots) {
+          d.el.setAttribute('cx', c.xOf(d.data.t));
+          d.positioned = false;
+        }
+      }
+
+      this._fitDots();
+      this.setCursor(this._cursorT);
     }
 
     _fitDots () {
@@ -212,7 +300,8 @@
       const r = c.svg.getBoundingClientRect();
       if (!r.width || !r.height) return;
       // How much wider each viewBox unit renders horizontally than vertically.
-      const stretch = (r.width / CHART_W) / (r.height / CHART_H);
+      // Exactly 1 in responsive mode, which is the point of it.
+      const stretch = (r.width / this._w) / (r.height / this._h);
       c.wrapper.style.setProperty('--dmc-dot-xc', (1 / stretch).toFixed(4));
     }
 
@@ -272,6 +361,8 @@
       // not cover, where it renders left of the y axis.
       const startT = this._startT || 0;
       const t = Math.max(startT, Math.min(this._totalT, gameTime));
+      // Remembered so a resize can redraw the plot where the reader left it.
+      this._cursorT = t;
 
       const x = c.xOf(t);
       c.cursor.setAttribute('x1', x);
@@ -320,11 +411,13 @@
     }
   }
 
-  // The plot area as fractions of the rendered width. preserveAspectRatio is
-  // "none", so the viewBox stretches to the element and these fractions hold at
-  // any size. Published because a consumer that wants to turn a pointer
-  // position into a game time (the desktop app scrubs this chart) would
-  // otherwise have to hardcode the margins and drift when they change.
+  // The plot area of a chart drawn at the AUTHORED size, as viewBox units.
+  // Published because a consumer that turns a pointer position into a game time
+  // (the desktop app scrubs this chart) would otherwise hardcode the margins
+  // and drift when they change.
+  //
+  // A responsive instance re-authors its own viewBox, so this is no longer the
+  // right answer for one. Ask the instance: chart.geometry().
   DominanceChart.GEOMETRY = {
     width: CHART_W,
     marginLeft: CHART_MARGIN.left,
