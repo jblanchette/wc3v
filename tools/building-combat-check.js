@@ -45,6 +45,12 @@ function measure (data, opts) {
   let ticks = 0;
   let existSum = 0, liveSum = 0;          // buildings that exist / are in the live set
   let atkOnBuilding = 0, atkOnUnit = 0;   // resolved attack targets by kind
+  // Attack frames on buildings, split by attacker weapon class and by whether
+  // the TARGET has path samples. Most buildings have an empty path[] (only
+  // pre-placed halls and uprooted Ancients get samples), and the dwell/facing
+  // scans used to ask the path for a position — melee→pathless was measured at
+  // exactly 0 fleet-wide. That cell staying above zero IS the regression gate.
+  const split = { meleePathless: 0, meleePathful: 0, rangedPathless: 0, rangedPathful: 0 };
   const firstMiss = [];                   // buildings alive but absent from live
   const missBy = new Map();               // why they are absent
   const attackedBuildings = new Set();
@@ -76,11 +82,17 @@ function measure (data, opts) {
     }
     existSum += exist; liveSum += live;
 
-    for (const [, d] of frame.byUuid) {
+    for (const [uid, d] of frame.byUuid) {
       if (d.state !== 'attack' || !d.targetUuid) continue;
       const tgt = byUuid.get(d.targetUuid);
-      if (tgt && tgt.isBuilding) { atkOnBuilding++; attackedBuildings.add(d.targetUuid); }
-      else atkOnUnit++;
+      if (tgt && tgt.isBuilding) {
+        atkOnBuilding++; attackedBuildings.add(d.targetUuid);
+        const actor = byUuid.get(uid);
+        const melee = actor && UB.isMelee(actor.meta || {});
+        const pathless = !tgt.path || !tgt.path.length;
+        if (melee) split[pathless ? 'meleePathless' : 'meleePathful']++;
+        else split[pathless ? 'rangedPathless' : 'rangedPathful']++;
+      } else atkOnUnit++;
     }
   }
 
@@ -88,7 +100,7 @@ function measure (data, opts) {
     step, end, ticks,
     buildings: buildings.length,
     existSum, liveSum,
-    atkOnBuilding, atkOnUnit,
+    atkOnBuilding, atkOnUnit, split,
     attackedBuildings: attackedBuildings.size,
     maxR: units.reduce((m, u) => Math.max(m, u.collisionSize || 0), 0),
     firstMiss, missBy
@@ -102,6 +114,7 @@ function report (name, M) {
   console.log(`    building-ticks that EXIST (built, not destroyed)   ${M.existSum}`);
   console.log(`    ...of those, present in UnitBehavior's live set    ${M.liveSum}  ${pct(M.liveSum, M.existSum)}`);
   console.log(`    attack frames resolved onto a BUILDING             ${M.atkOnBuilding}`);
+  console.log(`      melee → pathless ${M.split.meleePathless}   melee → pathful ${M.split.meleePathful}   ranged → pathless ${M.split.rangedPathless}   ranged → pathful ${M.split.rangedPathful}`);
   console.log(`    attack frames resolved onto a UNIT   (control)     ${M.atkOnUnit}`);
   console.log(`    distinct buildings ever attacked                   ${M.attackedBuildings}`);
   // MAX_TARGET_RADIUS sizes the spatial-hash query. A target radius larger than
@@ -137,7 +150,8 @@ function main () {
     process.exit(1);
   }
 
-  const tot = { existSum: 0, liveSum: 0, atkOnBuilding: 0, atkOnUnit: 0, attacked: 0 };
+  const tot = { existSum: 0, liveSum: 0, atkOnBuilding: 0, atkOnUnit: 0, attacked: 0,
+    meleePathless: 0, meleePathful: 0, rangedPathless: 0, rangedPathful: 0 };
   for (const n of names) {
     let data;
     try { data = BM.loadReplay(n.replace(/\.wc3v\.gz$/, '')); }
@@ -146,6 +160,8 @@ function main () {
     tot.existSum += M.existSum; tot.liveSum += M.liveSum;
     tot.atkOnBuilding += M.atkOnBuilding; tot.atkOnUnit += M.atkOnUnit;
     tot.attacked += M.attackedBuildings;
+    tot.meleePathless += M.split.meleePathless; tot.meleePathful += M.split.meleePathful;
+    tot.rangedPathless += M.split.rangedPathless; tot.rangedPathful += M.split.rangedPathful;
   }
 
   if (names.length > 1) {
@@ -153,6 +169,11 @@ function main () {
     console.log(`\n  ═══ TOTAL over ${names.length} replays ═══`);
     console.log(`    buildings live / exist        ${tot.liveSum}/${tot.existSum}  ${pct(tot.liveSum, tot.existSum)}`);
     console.log(`    attack frames on buildings    ${tot.atkOnBuilding}`);
+    console.log(`      melee → pathless ${tot.meleePathless}   melee → pathful ${tot.meleePathful}   ranged → pathless ${tot.rangedPathless}   ranged → pathful ${tot.rangedPathful}`);
+    if (tot.meleePathless === 0 && tot.atkOnBuilding > 0) {
+      console.log(`    ✗ melee → pathless is ZERO: the dwell/facing scans are asking a pathless building's path[] for a position again`);
+      process.exitCode = 1;
+    }
     console.log(`    attack frames on units        ${tot.atkOnUnit}`);
     console.log(`    distinct buildings attacked   ${tot.attacked}`);
   }

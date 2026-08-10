@@ -194,6 +194,24 @@
   }
 
   /**
+   * Position of a live-set entry at grid time s, for the dwell and turn scans.
+   *
+   * Camps keep their entry position outright (single-sample paths by
+   * construction). Everything else is path-first with a static fallback for
+   * buildings: path-first because an uprooted Ancient is a building with real
+   * movement samples, and the fallback because most buildings have no path
+   * array at all — measured 62.6% across 10 replays. Asking their path for a
+   * position returned null, which pinned melee contact dwell at one tick
+   * (every melee unit at a barracks idled on 'no-contact' forever) and starved
+   * the facing integrator down to its per-bucket reset — the 8Hz, 45° facing
+   * sawtooth on units parked at a building.
+   */
+  function targetPosAt (e, s) {
+    if (e.isCamp) return e;
+    return sampleAt(e.u.path, s) || (e.targetOnly ? e : null);
+  }
+
+  /**
    * Speed of the path segment containing t, in world units/sec.
    *
    * Reads the segment directly instead of finite-differencing two interpolated
@@ -293,8 +311,10 @@
     const air = cand.isAir;
     if (cand.targetOnly) {
       // Buildings. `structure` is the mask entry; a weapon without it (e.g. the
-      // ghoul's tree weapon) cannot hit one.
-      return t.indexOf('structure') !== -1;
+      // ghoul's tree weapon) cannot hit one. The siege line (umtw/ocat/hmtm/
+      // hctw) carries `wall` instead of `structure` in the shipped SLK and
+      // demonstrably attacks buildings in game, so `wall` counts as a hit.
+      return t.indexOf('structure') !== -1 || t.indexOf('wall') !== -1;
     }
     return t.indexOf(air ? 'air' : 'ground') !== -1;
   }
@@ -832,8 +852,8 @@
       for (let j = 1; j <= K; j++) {
         const s = tq - j * Q;
         if (s < 0) return j * Q;
-        const pa = a.isCamp ? a : sampleAt(a.u.path, s);
-        const pc = c.isCamp ? c : sampleAt(c.u.path, s);
+        const pa = targetPosAt(a, s);
+        const pc = targetPosAt(c, s);
         if (!pa || !pc) return j * Q;
         if (Math.hypot(pc.x - pa.x, pc.y - pa.y) > reach) return j * Q;
       }
@@ -921,7 +941,7 @@
         : (a.facing != null ? a.facing : here);
       const stepBudget = ratePerMs * Q;
       for (let s = start + Q; s <= tq; s += Q) {
-        const p = target.isCamp ? target : sampleAt(target.u.path, s);
+        const p = targetPosAt(target, s);
         if (!p) continue;
         const dx = p.x - a.x, dy = p.y - a.y;
         if (dx === 0 && dy === 0) continue;

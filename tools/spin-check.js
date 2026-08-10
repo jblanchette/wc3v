@@ -24,8 +24,8 @@
 // pirouetting rather than tracking something.
 //
 // Usage:
-//   node tools/spin-check.js --replay=NAME [--step=100] [--from=MM:SS] [--to=MM:SS]
-//   node tools/spin-check.js --all [--limit=10] [--step=100]
+//   node tools/spin-check.js --replay=NAME [--step=25] [--from=MM:SS] [--to=MM:SS]
+//   node tools/spin-check.js --all [--limit=10] [--step=25]
 //   node tools/spin-check.js --replay=NAME --worst=15    # per-unit offender list
 //
 const fs = require('fs');
@@ -64,7 +64,10 @@ function measureSpin (data, opts) {
   const world = BM.createWorld(data, units);
   const metaByUuid = new Map(units.map(u => [u.uuid, u]));
 
-  const step = +(opts.step || 100);
+  // Must divide UnitBehavior's 125ms decision grid unevenly or sample finer
+  // than it: a 100ms step aliases against the grid and under-reported the
+  // building facing sawtooth ~25x (over-cap 148 at step=100 vs 634 at step=25).
+  const step = +(opts.step || 25);
   const from = (opts.from != null) ? +opts.from : 0;
   const end = (opts.to != null) ? +opts.to
     : (data.replay && data.replay.duration) || 900000;
@@ -224,7 +227,7 @@ function report (name, M) {
 }
 
 function main () {
-  const step = +(args.step || 100);
+  const step = +(args.step || 25);
   const from = parseClock(args.from);
   const to = parseClock(args.to);
 
@@ -236,7 +239,7 @@ function main () {
   } else if (args.replay) {
     names = [args.replay];
   } else {
-    console.log('usage: node tools/spin-check.js --replay=NAME [--step=100] [--worst=15] [--spins]');
+    console.log('usage: node tools/spin-check.js --replay=NAME [--step=25] [--worst=15] [--spins]');
     console.log('       node tools/spin-check.js --all [--limit=10]');
     process.exit(1);
   }
