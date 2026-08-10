@@ -49,7 +49,7 @@ process.argv.slice(2).forEach(r => { const [f, ...v] = r.replace(/^--/, '').spli
 // A blind union over-reports both forms — the statue's "height" would include
 // the Destroyer's wingspan. Bucket the bounds per form instead; callers pick the
 // bucket matching the manifest spec's `form` (untagged prims count for both).
-function glbBounds (file) {
+function glbBounds (file, yUp = false) {
   const buf = fs.readFileSync(file);
   if (buf.readUInt32LE(0) !== 0x46546c67) return null;           // 'glTF'
   // first chunk = JSON
@@ -80,8 +80,14 @@ function glbBounds (file) {
   }
   const finish = (box) => {
     if (!box.found) return null;
-    // MDX is Z-up: vertical extent = Z; horizontal footprint = X/Y.
     const ext = [box.max[0] - box.min[0], box.max[1] - box.min[1], box.max[2] - box.min[2]];
+    if (yUp) {
+      // Building GLBs bake the Z-up → Y-up swap into the vertices (single
+      // untransformed node): vertical extent = Y, footprint = X/Z. Reading
+      // ext[2] as height here reported footprint depth for every building.
+      return { height: ext[1], footX: ext[0], footY: ext[2], radius: 0.5 * Math.hypot(ext[0], ext[2]) };
+    }
+    // Unit GLBs keep Z-up vertices under a rotated root node: height = Z.
     return { height: ext[2], footX: ext[0], footY: ext[1], radius: 0.5 * Math.hypot(ext[0], ext[1]) };
   };
   const base = finish(boxes.base);
@@ -115,7 +121,7 @@ function boundsFor (model, form) {
   if (!(model in boundsCache)) {
     const file = path.join(MODEL_ROOT, model + '.glb');
     let b = null;
-    try { b = fs.existsSync(file) ? glbBounds(file) : null; } catch (e) { b = null; }
+    try { b = fs.existsSync(file) ? glbBounds(file, auditBuildings) : null; } catch (e) { b = null; }
     boundsCache[model] = b;
   }
   const b = boundsCache[model];
@@ -151,10 +157,23 @@ for (const [id, spec] of Object.entries(manifest)) {
   });
 }
 
-// Footman reference (the user-confirmed-correct unit).
-const foot = rows.find(r => r.id === 'hfoo') || (manifest.hfoo && boundsFor(manifest.hfoo.model)
-  ? { renderedH: boundsFor(manifest.hfoo.model).height * manifest.hfoo.scale } : null);
-const footH = foot ? foot.renderedH : null;
+// Footman reference (the user-confirmed-correct unit). In buildings mode the
+// footman lives in the UNIT manifest/dir — load it from there so vsFoot still
+// answers the question that matters: how big is this next to a footman?
+let footH = null;
+{
+  const foot = rows.find(r => r.id === 'hfoo');
+  if (foot) footH = foot.renderedH;
+  else {
+    try {
+      const um = JSON.parse(fs.readFileSync(MANIFEST, 'utf-8'));
+      if (um.hfoo && um.hfoo.model) {
+        const b = glbBounds(path.join(MODELS_DIR, um.hfoo.model + '.glb'), false);
+        if (b) footH = b.base.height * (um.hfoo.scale || 1);
+      }
+    } catch (e) { /* no reference available */ }
+  }
+}
 
 let list = rows;
 if (args.sort === 'ratio') list.sort((a, b) => (b.renderedH) - (a.renderedH));

@@ -136,7 +136,78 @@ function auditModel (modelName, mdxPath) {
   };
 }
 
+// --- buildings mode --------------------------------------------------------
+//
+// Buildings run through the OTHER converter (convert-mdx-to-gltf.js) and their
+// GLBs carry no per-geoset extras, so the grade is per FORM: the verts the
+// converter's own selection meant to export must equal the verts in the GLB,
+// and every form-visible geoset it dropped must carry a reason (particle-quad,
+// fx-texture). Anything else is a silent deletion — the class of bug that
+// shipped a Great Hall shorter than a Farm (Base.blp foundation eaten) with
+// nothing checking: buildings retained 7-25% of their MDX verts, ungraded.
+function auditBuildings () {
+  const B = require('./convert-mdx-to-gltf.js');
+  const files = B.findBuildingMDXFiles();
+  const FORMS = [
+    { suffix: '', tag: null },
+    { suffix: '_upgrade1', tag: 'first' },
+    { suffix: '_upgrade2', tag: 'second' },
+    { suffix: '_upgrade3', tag: 'third' }
+  ];
+
+  let audited = 0;
+  const bugs = [];
+  const lossy = [];
+  for (const mdxPath of files) {
+    const folder = path.basename(path.dirname(mdxPath)).toLowerCase();
+    if (onlyModel && folder !== onlyModel) continue;
+    let baseSignature = null;
+    for (const form of FORMS) {
+      let r;
+      try { r = B.mdxToBuildingGeosets(mdxPath, form.tag); }
+      catch (e) { bugs.push({ model: folder + form.suffix, why: e.message.slice(0, 60) }); break; }
+      if (r === undefined || r === null) continue;
+      if (!form.tag) baseSignature = r.signature;
+      else if (r.signature === baseSignature) continue;   // shares the base GLB
+
+      const name = folder + form.suffix;
+      const glbFile = path.join(B.BUILDINGS_OUTPUT_DIR, name + '.glb');
+      if (!fs.existsSync(glbFile)) { bugs.push({ model: name, why: 'GLB missing' }); continue; }
+
+      const expected = r.geosets.reduce((s, g) => s + g.positions.length / 3, 0);
+      const droppedVerts = r.dropped.reduce((s, d) => s + d.nv, 0);
+      const actual = glbGeometry(glbFile).total;
+      audited++;
+      if (actual !== expected) {
+        bugs.push({ model: name, why: 'GLB has ' + actual + ' verts, converter selected ' + expected });
+      } else if (droppedVerts) {
+        const visible = expected + droppedVerts;
+        lossy.push({ model: name, lossPct: Math.round(100 * droppedVerts / visible), droppedVerts, visible,
+          reasons: r.dropped.map(d => d.reason).join(',') });
+      }
+    }
+  }
+
+  console.log('  audited ' + audited + ' building form(s) in ' + B.BUILDINGS_OUTPUT_DIR);
+  if (bugs.length) {
+    console.log('\n  ✗ ' + bugs.length + ' building form(s) with unattributed loss / export drift:');
+    for (const b of bugs) console.log('      ' + b.model.padEnd(34) + b.why);
+  } else {
+    console.log('\n  ✓ every form-visible vert is either in its GLB or dropped with a reason');
+  }
+  const big = lossy.filter(l => l.lossPct >= (minLoss || 10)).sort((a, b) => b.lossPct - a.lossPct);
+  if (big.length) {
+    console.log('\n  rule-attributed loss over ' + (minLoss || 10) + '%:');
+    for (const l of big) {
+      console.log('      ' + l.model.padEnd(34) + l.lossPct + '%  (' + l.droppedVerts +
+        ' of ' + l.visible + ' verts: ' + l.reasons + ')');
+    }
+  }
+  return bugs.length ? 1 : 0;
+}
+
 function main () {
+  if (argv.includes('--buildings')) return auditBuildings();
   const mappings = getUnitMappings();
   const byModel = {};
   for (const m of Object.values(mappings)) if (!byModel[m.model]) byModel[m.model] = m.mdxPath;

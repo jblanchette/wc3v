@@ -37,6 +37,9 @@
   <div id="top">
     <strong style="color:#9fb0bf;font-size:13px;">Scale&nbsp;Calibration</strong>
     <span class="sep"></span>
+    <button data-mode="units" class="active">Units</button>
+    <button data-mode="buildings">Buildings</button>
+    <span class="sep"></span>
     <button data-race="H" class="active">Human</button>
     <button data-race="O">Orc</button>
     <button data-race="U">Undead</button>
@@ -103,10 +106,12 @@
     scene.add(new THREE.HemisphereLight(0xbfd8ec, 0x6b5a3a, 0.4));
 
     const loader = new GLBLoader();
-    const templates = {};             // model -> Promise<skinnedResult prototype>
+    const templates = {};             // mode:model -> Promise<loaded result>
     let instances = [];               // { itemId, root, wrapper, baseScale, label }
     let manifest = {};
+    const manifests = { units: null, buildings: null };
     let curRace = 'H';
+    let curMode = 'units';            // 'units' (skinned) | 'buildings' (static)
     let footmanRef = null;            // the reference footman group (kept at origin)
 
     // Floor + reference plane (rebuilt per race view to span the grid).
@@ -132,13 +137,15 @@
       return sp;
     }
 
-    function getTemplate (model) {
-      if (!templates[model]) {
-        templates[model] = new Promise((resolve) => {
-          loader.load('/assets/models/units/' + model + '.glb?v=cal', (res) => resolve(res && res.isSkinnedResult ? res : null), undefined, () => resolve(null));
+    function getTemplate (model, mode) {
+      const key = mode + ':' + model;
+      if (!templates[key]) {
+        templates[key] = new Promise((resolve) => {
+          loader.load('/assets/models/' + (mode === 'buildings' ? 'buildings/' : 'units/') + model + '.glb?v=cal',
+            (res) => resolve(res || null), undefined, () => resolve(null));
         });
       }
-      return templates[model];
+      return templates[key];
     }
 
     // Inlined skinned clone (mirrors UnitModelRenderer._cloneSkinned) so we share
@@ -155,10 +162,25 @@
       return { root, wrapper: wrapper || root };
     }
 
-    async function placeUnit (itemId, spec, x, z, isRef) {
-      const tpl = await getTemplate(spec.model);
+    // Buildings load as a Group of shader meshes or a bare BufferGeometry —
+    // no skeleton, no placement node. Clone/wrap accordingly.
+    function instantiateStatic (tpl) {
+      if (tpl.isGroup || tpl.isObject3D) {
+        const root = tpl.clone(true);
+        return { root, wrapper: root };
+      }
+      if (tpl.isBufferGeometry) {
+        const mesh = new THREE.Mesh(tpl, new THREE.MeshLambertMaterial({ color: 0x998877, flatShading: true }));
+        return { root: mesh, wrapper: mesh };
+      }
+      return null;
+    }
+
+    async function placeUnit (itemId, spec, x, z, isRef, mode) {
+      const tpl = await getTemplate(spec.model, mode || curMode);
       if (!tpl) { log('failed: ' + spec.model); return null; }
-      const c = cloneSkinned(tpl);
+      const c = (tpl.isSkinnedResult) ? cloneSkinned(tpl) : instantiateStatic(tpl);
+      if (!c) { log('unloadable: ' + spec.model); return null; }
       c.wrapper.position.set(x, 0, z);
       c.wrapper.scale.setScalar(spec.scale || 1);
       scene.add(c.root);
@@ -200,9 +222,12 @@
       const rows = Math.ceil(ids.length / cols);
       buildFloor(cols, rows);
 
-      // reference footman at origin, slightly apart
-      if (manifest[FOOTMAN_ID]) {
-        footmanRef = await placeUnit(FOOTMAN_ID, manifest[FOOTMAN_ID], -CELL, -CELL, true);
+      // reference footman at origin, slightly apart — always from the UNIT
+      // manifest, so the grunt-vs-farm comparison is judgeable in buildings
+      // mode too (the whole point of the buildings view).
+      const um = manifests.units || manifest;
+      if (um && um[FOOTMAN_ID]) {
+        footmanRef = await placeUnit(FOOTMAN_ID, um[FOOTMAN_ID], -CELL, -CELL, true, 'units');
         if (footmanRef) { footmanHeight = footmanRef.height; }
       }
 
@@ -255,6 +280,12 @@
     document.getElementById('btn-export-close').onclick = () => { document.getElementById('export').style.display = 'none'; };
     document.getElementById('search').oninput = () => loadRace(curRace);
     document.querySelectorAll('#top button[data-race]').forEach(b => b.onclick = () => loadRace(b.dataset.race));
+    document.querySelectorAll('#top button[data-mode]').forEach(b => b.onclick = () => {
+      curMode = b.dataset.mode;
+      document.querySelectorAll('#top button[data-mode]').forEach(x => x.classList.toggle('active', x === b));
+      manifest = manifests[curMode] || {};
+      loadRace(curRace);
+    });
 
     // ---- orbit camera ----
     let angle = 0.6, pitch = 0.5, dist = 1600, dragging = false, lastX = 0, lastY = 0;
@@ -280,8 +311,14 @@
     }
     animate();
 
-    fetch('/assets/models/units/unit-models.json').then(r => r.json()).then(m => {
-      manifest = m || {}; loadRace('H');
+    Promise.all([
+      fetch('/assets/models/units/unit-models.json').then(r => r.json()).catch(() => ({})),
+      fetch('/assets/models/buildings/building-models.json').then(r => r.json()).catch(() => ({}))
+    ]).then(([units, buildings]) => {
+      manifests.units = units || {};
+      manifests.buildings = buildings || {};
+      manifest = manifests[curMode];
+      loadRace('H');
     }).catch(e => log('manifest load failed: ' + e));
   </script>
 </body>

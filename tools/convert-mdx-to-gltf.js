@@ -814,13 +814,17 @@ function mdxToBuildingGeosets (mdxPath, formTag = null) {
   const mdx = parseMDX(ab);
   if (!mdx.Geosets || !mdx.Geosets.length) return null;
 
-  // Determine the form's Stand-visible geosets
+  // Determine the form's Stand-visible geosets. `dropped` records every
+  // deliberate deletion of form-visible geometry with its reason, so the
+  // geometry audit can tell an intended drop from a silent one.
   const visibleSet = getStandVisibleGeosets(mdx, formTag);
   if (visibleSet === undefined) return undefined;
+  const dropped = [];
   const selected = [];
   for (let i = 0; i < mdx.Geosets.length; i++) {
     if (visibleSet && !visibleSet.has(i)) continue;
-    if (mdx.Geosets[i].Vertices.length / 3 <= 4) continue; // skip particle quads
+    const nv = mdx.Geosets[i].Vertices.length / 3;
+    if (nv <= 4) { dropped.push({ gi: i, nv, reason: 'particle-quad' }); continue; }
     selected.push(i);
   }
   if (selected.length === 0) {
@@ -886,7 +890,7 @@ function mdxToBuildingGeosets (mdxPath, formTag = null) {
         }
       }
     }
-    if (skipGeoset) continue;
+    if (skipGeoset) { dropped.push({ gi, nv, reason: 'fx-texture' }); continue; }
 
     // Convert geometry (Z-up → Y-up, same as tree mode)
     const positions = new Float32Array(nv * 3);
@@ -916,7 +920,7 @@ function mdxToBuildingGeosets (mdxPath, formTag = null) {
 
   // Which source geosets actually made it out — two forms with the same
   // signature are byte-equivalent and share one GLB.
-  return { geosets, textureRefs, signature: exportedIndices.join(',') };
+  return { geosets, textureRefs, dropped, signature: exportedIndices.join(',') };
 }
 
 // Animprops from the race unitfunc files: the SLK's required-animation-names
