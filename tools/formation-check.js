@@ -296,11 +296,16 @@ function replaySummary (name) {
   const stopErrs = [];          // ranged stop-vs-range error
   let rangedBehindMelee = 0, mixedOrders = 0;
   let applied = 0, emptyPath = 0;   // dispatch: slots applied vs already-at-slot
+  let retried = 0, fellBack = 0, heldAtSlot = 0;   // anti-freeze dispatch outcomes
   const perItem = new Map();        // itemId -> { n, range, stops:[] }
   const perPlayer = [];
 
   for (const p of players) {
-    if (p.formApply) { applied += p.formApply.applied || 0; emptyPath += p.formApply.emptyPath || 0; }
+    if (p.formApply) {
+      applied += p.formApply.applied || 0; emptyPath += p.formApply.emptyPath || 0;
+      retried += p.formApply.retried || 0; fellBack += p.formApply.fellBack || 0;
+      heldAtSlot += p.formApply.heldAtSlot || 0;
+    }
     const trace = p.formationTrace || [];
     if (p.race != null) {
       perPlayer.push({ race: p.race, orders: trace.length, apply: p.formApply ? p.formApply.applied : 0 });
@@ -332,8 +337,15 @@ function replaySummary (name) {
   const abs = stopErrs.map(Math.abs);
 
   console.log(`  slot dispatches (applied)       : ${applied}`);
-  console.log(`  ...already at slot / held       : ${emptyPath}` +
-    (applied ? `  (${Math.round(100 * emptyPath / applied)}% — these previously got dragged to the enemy)` : ''));
+  console.log(`  ...empty-route dispatches       : ${emptyPath}` +
+    (applied ? `  (${Math.round(100 * emptyPath / applied)}%)` : ''));
+  // Every empty-route dispatch resolves to held (genuinely at the slot), a
+  // short line-of-sight hop (the remainder), a retried perimeter slot, or a
+  // plain-move fallback. A silent freeze is structurally impossible in
+  // dispatchToSlot; these counters are how a regression would show.
+  console.log(`  ...held at slot                 : ${heldAtSlot}`);
+  console.log(`  ...retried another slot         : ${retried}`);
+  console.log(`  ...fell back to plain move      : ${fellBack}`);
   console.log(`  attack orders with a formation : ${orders}`);
   console.log(`  orders that included ranged     : ${formedRanged}`);
   console.log(`  ranged stop-vs-range |err|      : median=${Math.round(med(abs))}u  n=${abs.length}`);
