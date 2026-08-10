@@ -431,48 +431,81 @@ function stripMDXChunks (buffer, chunkNames) {
 // geoset set (legs/face, extending below ground) and must never be chosen.
 // A naive startsWith('stand work') matched "Stand Work Alternate" and baked the
 // uprooted geometry — the cause of ancients rendering as crouched creatures.
-function pickRootedStandSequence (mdx) {
+// formTag: null for the base building, or 'first' | 'second' | 'third' for the
+// upgraded forms (matching the SLK Animprops tags 'upgrade,first' etc. and the
+// MDX sequences 'Stand [Work] Upgrade First/Second/Third').
+function pickStandSequence (mdx, formTag) {
   if (!mdx.Sequences || !mdx.Sequences.length) return null;
 
   const candidates = mdx.Sequences.filter(s => {
     const n = s.Name.toLowerCase();
-    return n.startsWith('stand') && !n.includes('alternate') && !n.includes('morph');
+    if (!n.startsWith('stand') || n.includes('alternate') || n.includes('morph')) return false;
+    if (formTag) return n.includes('upgrade ' + formTag);
+    return !n.includes('upgrade');
   });
   if (!candidates.length) return null;
 
   // Prefer a rooted "Stand Work" idle (used by most non-ancient buildings),
-  // otherwise the earliest plain "Stand" variant.
+  // otherwise the earliest matching "Stand" variant.
   const work = candidates.find(s => s.Name.toLowerCase().startsWith('stand work'));
   if (work) return work;
   return candidates.slice().sort((a, b) => a.Interval[0] - b.Interval[0])[0];
 }
 
-// Determine which geosets are visible during the rooted Stand sequence.
-// WC3 buildings have multiple geosets for different upgrade levels, effects, etc.
-// Only geosets visible during the rooted Stand/Stand Work sequence are exported.
-function getStandVisibleGeosets (mdx) {
-  const seq = pickRootedStandSequence(mdx);
-  if (!seq) {
-    console.log('  WARN: no rooted Stand sequence found — falling back to all structural geosets');
-    return null;
+function pickRootedStandSequence (mdx) {
+  return pickStandSequence(mdx, null);
+}
+
+// Alpha of one geoset during a sequence, evaluated the way the game does it
+// (verified against HiveWE's calculate_sequence_extents / interpolate_keyframes,
+// the compatibility implementation of the engine's own track windowing):
+//
+//   - only keys INSIDE the sequence interval count;
+//   - keys present → the value at the sequence start is the first in-range key;
+//   - NO keys inside the sequence → the track falls back to the GeosetAnim's
+//     static alpha, which is 1 for these models.
+//
+// That last clause is the authoring convention the tier files rely on: a
+// geoset hidden during a sequence carries an explicit 0-key at the sequence
+// start, and the VISIBLE geosets of that sequence simply have no keys there
+// (Farm body g1: keys at 0/60000/70000 and none inside Stand [61667,66667];
+// Town Hall Keep body g15: no keys inside the two Upgrade First stands).
+// Evaluating the track globally instead of per-sequence selects nothing at
+// all for most stands — every geoset has an explicit 0 at some earlier frame.
+function geosetVisibleInSequence (mdx, gi, seq) {
+  const ga = (mdx.GeosetAnims || []).find(a => a.GeosetId === gi);
+  if (!ga || ga.Alpha == null) return true;                 // no anim = visible
+  if (typeof ga.Alpha === 'number') return ga.Alpha > 0.01; // static alpha
+  const keys = ga.Alpha.Keys;
+  if (!keys || !keys.length) return true;
+
+  // A global-sequence alpha track loops on its own clock (pulsing effects,
+  // texture flipbooks) independent of the animation — the geoset exists;
+  // keep it if it is ever shown.
+  if (ga.Alpha.GlobalSeqId != null) {
+    return keys.some(k => k.Vector[0] > 0.01);
   }
 
   const [start, end] = [seq.Interval[0], seq.Interval[1]];
-  const visible = new Set();
+  const inRange = keys.filter(k => k.Frame >= start && k.Frame <= end);
+  if (!inRange.length) return true;       // engine: static alpha fallback
+  return inRange[0].Vector[0] > 0.01;     // engine: value at sequence start
+}
 
+// Which geosets are visible during the form's Stand sequence.
+function getStandVisibleGeosets (mdx, formTag = null) {
+  const seq = pickStandSequence(mdx, formTag);
+  if (!seq) {
+    if (!formTag) {
+      console.log('  WARN: no rooted Stand sequence found — falling back to all structural geosets');
+      return null;
+    }
+    return undefined;   // form does not exist in this MDX
+  }
+
+  const visible = new Set();
   for (let gi = 0; gi < mdx.Geosets.length; gi++) {
-    const ga = (mdx.GeosetAnims || []).find(a => a.GeosetId === gi);
-    if (!ga || !ga.Alpha || !ga.Alpha.Keys) {
-      visible.add(gi); // no animation = always visible
-      continue;
-    }
-    // Check if any key within the sequence range has alpha > 0
-    const keysInRange = ga.Alpha.Keys.filter(k => k.Frame >= start && k.Frame <= end);
-    if (keysInRange.length === 0) {
-      visible.add(gi); // no keys in this sequence = default visible
-    } else if (keysInRange[0].Vector[0] > 0) {
-      visible.add(gi);
-    }
+    if (geosetVisibleInSequence(mdx, gi, seq)) visible.add(gi);
   }
   return visible;
 }
@@ -755,16 +788,35 @@ function findBuildingMDXFiles () {
   return results;
 }
 
-// Extract per-geoset building data with material/texture info
-function mdxToBuildingGeosets (mdxPath) {
+// A layer's TextureID is usually a plain index, but it can also be an
+// animation TRACK — the WC3 texture flipbook. Same defect class as the water
+// elemental on the unit side: treating a track as "no texture" silently
+// deleted the geoset. Resolve to the first key, the frame the model is
+// authored to rest on.
+function resolveLayerTextureId (layer) {
+  const texId = layer.TextureID;
+  if (typeof texId === 'number') return texId;
+  const keys = texId && texId.Keys;
+  if (!keys || !keys.length) return null;
+  const v = keys[0].Vector;
+  const first = Array.isArray(v) || ArrayBuffer.isView(v) ? v[0] : v;
+  return (typeof first === 'number') ? first : null;
+}
+
+// Extract per-geoset building data with material/texture info for one FORM
+// (base Stand, or an upgrade tier via formTag 'first'|'second'|'third').
+// Returns null when the file yields nothing, undefined when the form does not
+// exist in this MDX.
+function mdxToBuildingGeosets (mdxPath, formTag = null) {
   const buf = fs.readFileSync(mdxPath);
   let ab = new Uint8Array(buf).buffer;
   ab = stripMDXChunks(ab, ['LITE']);
   const mdx = parseMDX(ab);
   if (!mdx.Geosets || !mdx.Geosets.length) return null;
 
-  // Determine Stand-visible geosets
-  const visibleSet = getStandVisibleGeosets(mdx);
+  // Determine the form's Stand-visible geosets
+  const visibleSet = getStandVisibleGeosets(mdx, formTag);
+  if (visibleSet === undefined) return undefined;
   const selected = [];
   for (let i = 0; i < mdx.Geosets.length; i++) {
     if (visibleSet && !visibleSet.has(i)) continue;
@@ -772,6 +824,7 @@ function mdxToBuildingGeosets (mdxPath) {
     selected.push(i);
   }
   if (selected.length === 0) {
+    if (formTag) return undefined;   // upgrade sequence exists but shows nothing
     for (let i = 0; i < mdx.Geosets.length; i++) {
       if (mdx.Geosets[i].Vertices.length / 3 > 4) selected.push(i);
     }
@@ -780,6 +833,7 @@ function mdxToBuildingGeosets (mdxPath) {
 
   // Build per-geoset data with texture references
   const geosets = [];
+  const exportedIndices = [];
   const textureRefs = []; // { blpPath, filterMode } indexed by textureIndex
 
   // Deduplicate textures
@@ -809,18 +863,20 @@ function mdxToBuildingGeosets (mdxPath) {
     if (matId !== undefined && mdx.Materials && mdx.Materials[matId]) {
       const mat = mdx.Materials[matId];
       for (const layer of mat.Layers) {
-        const texId = layer.TextureID;
-        if (texId === undefined || !mdx.Textures || !mdx.Textures[texId]) continue;
+        const texId = resolveLayerTextureId(layer);
+        if (texId == null || !mdx.Textures || !mdx.Textures[texId]) continue;
         const tex = mdx.Textures[texId];
         if (tex.ReplaceableId === 0 && tex.Image) {
           const imgLower = tex.Image.toLowerCase();
-          // Skip ubersplats (ground decals), weather, and particle effect textures
+          // Skip ubersplats (ground decals), weather, and particle effect
+          // textures. Base.blp / HumanBase.blp must NOT be here: they are the
+          // buildings' FOUNDATION geometry — dropping them took 224u off the
+          // Great Hall and left it shorter than a Farm.
           if (imgLower.includes('splats') || imgLower.includes('weather') ||
               imgLower.includes('clouds') || imgLower.includes('shockwave') ||
               imgLower.includes('deathsmug') || imgLower.includes('dust') ||
               imgLower.includes('star5') || imgLower.includes('star2_') ||
-              imgLower.includes('glow') || imgLower.includes('base.blp') ||
-              imgLower.includes('humanbase.blp')) {
+              imgLower.includes('glow')) {
             skipGeoset = true;
             break;
           }
@@ -855,9 +911,35 @@ function mdxToBuildingGeosets (mdxPath) {
       : new Uint16Array(g.Faces);
 
     geosets.push({ positions, normals, uvs, indices, textureIndex: texIndex, filterMode });
+    exportedIndices.push(gi);
   }
 
-  return { geosets, textureRefs };
+  // Which source geosets actually made it out — two forms with the same
+  // signature are byte-equivalent and share one GLB.
+  return { geosets, textureRefs, signature: exportedIndices.join(',') };
+}
+
+// Animprops from the race unitfunc files: the SLK's required-animation-names
+// field, e.g. hkee → 'upgrade,first', hcas → 'upgrade,second'. This is the
+// engine's own itemId → upgrade-form mapping — the reason a Keep plays the
+// Town Hall MDX's 'Stand Upgrade First' geometry.
+function getBuildingAnimProps () {
+  const unitsDir = path.join(__dirname, 'map-data', 'units');
+  const tags = {};
+  for (const f of fs.readdirSync(unitsDir)) {
+    if (!f.endsWith('unitfunc.txt')) continue;
+    const ini = parseINI(path.join(unitsDir, f));
+    for (const [id, fields] of Object.entries(ini)) {
+      const props = fields.animprops || fields.Animprops;
+      if (!props) continue;
+      const parts = String(props).toLowerCase().split(',').map(s => s.trim());
+      const at = parts.indexOf('upgrade');
+      if (at !== -1 && ['first', 'second', 'third'].includes(parts[at + 1])) {
+        tags[id.toLowerCase()] = parts[at + 1];
+      }
+    }
+  }
+  return tags;
 }
 
 function convertBuildings () {
@@ -878,50 +960,74 @@ function convertBuildings () {
   console.log('Found ' + Object.keys(mappings).length + ' building type codes in unitskin.txt');
   console.log('DDS index: ' + Object.keys(ddsIndex).length + ' texture files');
 
-  let ok = 0, fail = 0, texConverted = 0;
+  let ok = 0, fail = 0, texConverted = 0, tierGlbs = 0;
   const textureReport = {};
+  // modelForms[folderName] = { base: name, first?: name, second?: name, third?: name }
+  // A form identical to the base (same exported geoset signature) reuses the
+  // base GLB — most buildings have no upgrade sequences at all.
+  const modelForms = {};
+
+  const FORM_DEFS = [
+    { suffix: '', tag: null },
+    { suffix: '_upgrade1', tag: 'first' },
+    { suffix: '_upgrade2', tag: 'second' },
+    { suffix: '_upgrade3', tag: 'third' }
+  ];
 
   for (const [folderName, mdxPath] of Object.entries(modelMap)) {
-    const outPath = path.join(BUILDINGS_OUTPUT_DIR, folderName + '.glb');
-    try {
-      const result = mdxToBuildingGeosets(mdxPath);
-      if (!result || !result.geosets.length) {
-        console.log('  SKIP (no geosets): ' + folderName);
-        fail++;
-        continue;
-      }
+    const forms = {};
+    let baseSignature = null;
 
-      // Convert referenced DDS textures to PNG and embed in GLB
-      const pngBuffers = [];
-      for (const texRef of result.textureRefs) {
-        const ddsPath = ddsIndex[texRef.baseName];
-        if (ddsPath) {
-          try {
-            const pngBuf = ddsToPngBuffer(ddsPath);
-            pngBuffers.push(pngBuf);
-            texConverted++;
-          } catch (e) {
+    for (const form of FORM_DEFS) {
+      const modelName = folderName + form.suffix;
+      try {
+        const result = mdxToBuildingGeosets(mdxPath, form.tag);
+        if (result === undefined) continue;   // this MDX has no such form
+        if (!result || !result.geosets.length) {
+          if (!form.tag) { console.log('  SKIP (no geosets): ' + folderName); fail++; }
+          continue;
+        }
+        if (!form.tag) {
+          baseSignature = result.signature;
+        } else if (result.signature === baseSignature) {
+          forms[form.tag] = folderName;       // same geometry — share the base GLB
+          continue;
+        }
+
+        // Convert referenced DDS textures to PNG and embed in GLB
+        const pngBuffers = [];
+        for (const texRef of result.textureRefs) {
+          const ddsPath = ddsIndex[texRef.baseName];
+          if (ddsPath) {
+            try {
+              pngBuffers.push(ddsToPngBuffer(ddsPath));
+              texConverted++;
+            } catch (e) {
+              pngBuffers.push(null);
+            }
+          } else {
             pngBuffers.push(null);
           }
-        } else {
-          pngBuffers.push(null);
         }
+
+        textureReport[modelName] = result.textureRefs.map(t => ({
+          image: t.blpPath, baseName: t.baseName,
+          found: !!ddsIndex[t.baseName]
+        }));
+
+        const glb = buildBuildingGLB(result.geosets, pngBuffers);
+        fs.writeFileSync(path.join(BUILDINGS_OUTPUT_DIR, modelName + '.glb'), glb);
+        if (form.tag) { forms[form.tag] = modelName; tierGlbs++; }
+        else { forms.base = folderName; ok++; }
+      } catch (err) {
+        console.log('  ERROR: ' + modelName + ' — ' + err.message.slice(0, 120));
+        if (!form.tag) fail++;
       }
-
-      textureReport[folderName] = result.textureRefs.map(t => ({
-        image: t.blpPath, baseName: t.baseName,
-        found: !!ddsIndex[t.baseName]
-      }));
-
-      const glb = buildBuildingGLB(result.geosets, pngBuffers);
-      fs.writeFileSync(outPath, glb);
-      ok++;
-    } catch (err) {
-      console.log('  ERROR: ' + folderName + ' — ' + err.message.slice(0, 120));
-      fail++;
     }
+    modelForms[folderName] = forms;
   }
-  console.log('Buildings: ' + ok + ' converted, ' + fail + ' skipped, ' + texConverted + ' textures embedded');
+  console.log('Buildings: ' + ok + ' converted, ' + fail + ' skipped, ' +
+    tierGlbs + ' upgrade-tier GLBs, ' + texConverted + ' textures embedded');
 
   // Build the type-code → { model, scale } manifest.
   //
@@ -931,16 +1037,30 @@ function convertBuildings () {
   // right for 169 of 197 types and wrong for the rest — most visibly the Tree of
   // Life / Ages / Eternity, which share one MDX and differ ONLY by modelScale
   // (1.0 / 1.15 / 1.3), so all three rendered identically.
+  // Tier resolution: the SLK Animprops tag (hkee → 'upgrade,first') picks the
+  // upgrade-form GLB exported from the shared MDX. Before this, hkee/hcas
+  // rendered byte-identical to htow, ostr/ofrt to ogre, and all four human
+  // towers shared one model, while the real tier geometry sat unexported in
+  // the same file's 'Stand Upgrade First/Second' sequences.
+  const animProps = getBuildingAnimProps();
   const manifest = {};
+  let tierMapped = 0;
   for (const [typeCode, { file }] of Object.entries(mappings)) {
     // file = 'buildings/other/goldmine/goldmine'
     // Extract the folder name (second-to-last path segment)
     const parts = file.split('/');
     const modelName = parts.length >= 3 ? parts[parts.length - 2] : parts[parts.length - 1];
-    if (modelMap[modelName]) {
-      manifest[typeCode] = { model: modelName, scale: 1 };
+    if (!modelMap[modelName]) continue;
+    const forms = modelForms[modelName] || {};
+    const tag = animProps[typeCode];
+    let model = modelName;
+    if (tag && forms[tag]) {
+      model = forms[tag];
+      if (model !== modelName) tierMapped++;
     }
+    manifest[typeCode] = { model, scale: 1 };
   }
+  console.log('Tier mapping: ' + tierMapped + ' type codes use an upgrade-form GLB');
 
   const manifestPath = path.join(BUILDINGS_OUTPUT_DIR, 'building-models.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
@@ -973,26 +1093,44 @@ function listBuildings () {
   }
 }
 
+// Reused by tools/audit-model-geometry.js --buildings (grades MDX-visible
+// verts against the exported GLBs) and any form-selection debugging.
+module.exports = {
+  pickStandSequence,
+  geosetVisibleInSequence,
+  getStandVisibleGeosets,
+  getBuildingAnimProps,
+  getBuildingMappings,
+  findBuildingMDXFiles,
+  mdxToBuildingGeosets,
+  resolveLayerTextureId,
+  stripMDXChunks,
+  BUILDINGS_DIR,
+  BUILDINGS_OUTPUT_DIR
+};
+
 // --- Main ---
-const args = process.argv.slice(2);
-if (args.includes('--cliffs')) {
-  convertCliffs();
-} else if (args.includes('--trees')) {
-  convertTrees();
-} else if (args.includes('--buildings')) {
-  convertBuildings();
-} else if (args.includes('--list-trees')) {
-  listTrees();
-} else if (args.includes('--list-buildings')) {
-  listBuildings();
-} else if (args.some(a => a.startsWith('--file='))) {
-  const filePath = args.find(a => a.startsWith('--file=')).split('=')[1];
-  const outPath = filePath.replace('.mdx', '.glb');
-  convertFile(filePath, outPath);
-  console.log('Wrote: ' + outPath);
-} else {
-  console.log('Convert all (cliffs + trees + buildings)...');
-  convertCliffs();
-  convertTrees();
-  convertBuildings();
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  if (args.includes('--cliffs')) {
+    convertCliffs();
+  } else if (args.includes('--trees')) {
+    convertTrees();
+  } else if (args.includes('--buildings')) {
+    convertBuildings();
+  } else if (args.includes('--list-trees')) {
+    listTrees();
+  } else if (args.includes('--list-buildings')) {
+    listBuildings();
+  } else if (args.some(a => a.startsWith('--file='))) {
+    const filePath = args.find(a => a.startsWith('--file=')).split('=')[1];
+    const outPath = filePath.replace('.mdx', '.glb');
+    convertFile(filePath, outPath);
+    console.log('Wrote: ' + outPath);
+  } else {
+    console.log('Convert all (cliffs + trees + buildings)...');
+    convertCliffs();
+    convertTrees();
+    convertBuildings();
+  }
 }
