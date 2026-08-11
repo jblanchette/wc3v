@@ -60,6 +60,9 @@ const GROUPS = [
   { name: 'models',            localDir: path.join(CLIENT, 'assets/models'),    remote: 'r2:wc3v-cdn/assets/models',    include: null,                  cache: IMMUTABLE },
   { name: 'textures',          localDir: path.join(CLIENT, 'assets/textures'),  remote: 'r2:wc3v-cdn/assets/textures',  include: null,                  cache: IMMUTABLE },
   { name: 'terrain',           localDir: path.join(CLIENT, 'assets/terrain'),   remote: 'r2:wc3v-cdn/assets/terrain',   include: null,                  cache: IMMUTABLE },
+  // Marketing screenshots (the download page). Mutable: they are re-captured
+  // per release under the same names, and a day-stale screenshot is fine.
+  { name: 'press',             localDir: path.join(CLIENT, 'assets/press'),     remote: 'r2:wc3v-cdn/assets/press',     include: null,                  cache: MUTABLE_1D },
   // Maps split by file kind so each gets the right Content-* headers.
   { name: 'maps-immutable',    localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/heights.bin.gz'],  cache: IMMUTABLE },
   { name: 'maps-mutable-json', localDir: path.join(CLIENT, 'maps'),             remote: 'r2:wc3v-cdn/maps',             include: ['*/*.json.gz'],       cache: MUTABLE_1D, extraHeaders: ['Content-Encoding: gzip', 'Content-Type: application/json'] },

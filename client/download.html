@@ -69,6 +69,31 @@
     .dl-secondary-links { display: flex; gap: var(--sp-5); margin-top: var(--sp-5); font-size: var(--fs-sm); }
     .dl-secondary-links a { color: var(--text-muted); }
     .dl-secondary-links a:hover { color: var(--text); }
+
+    /* Screenshots run wider than the text column. The page stays a 720px
+       read; the pictures get the width pictures need. */
+    .dl-shot {
+      width: min(960px, calc(100vw - 2 * var(--page-gutter)));
+      margin: 0 0 var(--sp-2) 50%;
+      transform: translateX(-50%);
+    }
+    .dl-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+    }
+    .dl-shot-cap {
+      display: block;
+      text-align: center;
+      font-size: var(--fs-label);
+      color: var(--text-muted);
+      margin: var(--sp-2) 0 var(--sp-6);
+    }
+    .dl-shots-lead { margin-top: var(--sp-6); }
+    .dl-shots-title { font-size: var(--fs-h3); font-weight: 700; color: var(--text); margin: 0 0 var(--sp-4); }
   </style>
 </head>
 <body class="site-page">
@@ -89,8 +114,14 @@
 
       <div class="dl-hero">
         <h1 class="dl-hero-title">Download WC3V for Windows</h1>
-        <p class="dl-hero-sub">The desktop app watches your replays folder and shows the same build order and grade the site does, the moment a game ends.</p>
+        <p class="dl-hero-sub">The desktop app watches your replays folder. When a game ends, the report is already there: the result, who was ahead and when, both builds, the whole economy. Every moment opens the 3D viewer at that second.</p>
       </div>
+
+      <figure class="dl-shot dl-shots-lead">
+        <img src="/assets/press/report-overview.webp" width="1280" height="820"
+          alt="The WC3V desktop report: victory header beside the dominance chart, the timeline of the game's moments, and both players' armies side by side">
+        <figcaption class="dl-shot-cap">Your last game, scored the moment it ends.</figcaption>
+      </figure>
 
       <section class="dl-card" id="dl-version-card" aria-labelledby="dl-version-heading">
         <span class="dl-eyebrow">Latest release</span>
@@ -116,6 +147,26 @@
 
       <section aria-labelledby="dl-details-heading">
         <a id="dl-download-link" class="btn btn-primary btn-lg dl-download-btn" href="#" aria-disabled="true" tabindex="-1">Download for Windows</a>
+
+        <h2 class="dl-shots-title">What you get</h2>
+
+        <figure class="dl-shot">
+          <img src="/assets/press/report-build.webp" width="1280" height="820" loading="lazy"
+            alt="The Build tab: hero cards with skills and items, and both players' build orders interleaved as one timeline">
+          <figcaption class="dl-shot-cap">Both build orders as one timeline.</figcaption>
+        </figure>
+
+        <figure class="dl-shot">
+          <img src="/assets/press/report-economy.webp" width="1280" height="820" loading="lazy"
+            alt="The Economy tab: APM over time, action breakdown, trade balance and food charts for both players">
+          <figcaption class="dl-shot-cap">The economy behind the result.</figcaption>
+        </figure>
+
+        <figure class="dl-shot">
+          <img src="/assets/press/report-team.webp" width="1280" height="820" loading="lazy"
+            alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
+          <figcaption class="dl-shot-cap">Team games render every seat.</figcaption>
+        </figure>
 
         <h2 id="dl-details-heading" class="dl-section-title">Details</h2>
         <ul class="dl-disclosure-list">
