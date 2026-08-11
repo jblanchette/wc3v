@@ -721,13 +721,32 @@ function main () {
  * what will actually be on disk. Templated paths ({replayId}) are skipped, as
  * are directory URLs that Render serves from an index file.
  */
+/**
+ * Path prefixes that render.yaml 301-redirects to the R2 CDN. Files under these
+ * are gitignored locally and served from cdn.wc3v.com, so "not on disk" is the
+ * expected state, not a broken link. Read from render.yaml rather than
+ * hardcoded so adding a redirect there cannot silently break this check.
+ */
+function cdnRedirectPrefixes () {
+  let yaml;
+  try { yaml = fs.readFileSync(path.join(ROOT, 'render.yaml'), 'utf8'); } catch (e) { return []; }
+  const out = [];
+  // `- type: redirect` … `source: /assets/press/*` … `destination: https://cdn…`
+  for (const m of yaml.matchAll(/-\s*type:\s*redirect\s*\n\s*source:\s*(\S+)\s*\n\s*destination:\s*(\S+)/g)) {
+    if (/cdn\.wc3v\.com/.test(m[2])) out.push(m[1].replace(/\*+$/, ''));
+  }
+  return out;
+}
+
 function checkAdvertisedLinks () {
   const willExist = new Set(writes.map(w => '/' + w.rel));
+  const cdnPrefixes = cdnRedirectPrefixes();
   const seen = new Set();
 
   const resolves = (urlPath) => {
     const clean = urlPath.replace(/[#?].*$/, '');
     if (clean.includes('{')) return true;                     // template
+    if (cdnPrefixes.some(p => clean.startsWith(p))) return true;
     if (willExist.has(clean)) return true;
     if (fs.existsSync(path.join(CLIENT, clean.slice(1)))) return true;
     // A URL with no extension may be served from <path>.html or <path>/index.html.
