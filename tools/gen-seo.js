@@ -437,7 +437,7 @@ function agentSkillsIndex () {
 // extension, and Render defaults those to binary/octet-stream, so render.yaml
 // carries an explicit header rule for this exact path.
 function apiCatalog () {
-  const paths = ['api.html', 'api/openapi.json'];
+  const paths = ['api/index.html', 'api/openapi.json'];
   for (const p of paths) {
     if (!fs.existsSync(path.join(CLIENT, p))) {
       problems.push('api-catalog references client/' + p + ' but it does not exist');
@@ -590,11 +590,15 @@ function main () {
   let converted = 0, generated = 0, copied = 0;
   for (const e of entries) {
     if (!e.md) continue;
-    const mdRel = e.file.replace(/\.html$/, '.md');
+    // Derive the twin's path from the page's URL, not its filename. Those
+    // differ for directory-index pages: builds/index.html serves at /builds,
+    // so its twin belongs at /builds.md. Deriving from the filename put it at
+    // /builds/index.md while llms.txt advertised /builds.md, which 404'd.
+    const mdRel = mdUrl(e.url).slice(1);
 
     if (e.md === 'generated') {
       if (e.file === 'builds/index.html') {
-        emit('builds/index.md', BP.indexMarkdown(builds, e.lastmod));
+        emit(mdRel, BP.indexMarkdown(builds, e.lastmod));
       } else if (e.file.startsWith('builds/')) {
         const b = builds.find(x => 'builds/' + x.id + '.html' === e.file);
         if (b) emit(mdRel, BP.buildMarkdown(b, e.lastmod));
@@ -658,6 +662,13 @@ function main () {
   emit('.well-known/agent-skills/index.json', JSON.stringify(agentSkillsIndex(), null, 2) + '\n');
   emit('.well-known/api-catalog', apiCatalog());
 
+  // Every same-origin URL we advertise must resolve to a file we are about to
+  // write or that already exists. This is not paranoia: deriving twin paths
+  // from filenames instead of URLs silently published a /builds.md link in
+  // llms.txt pointing at a file that lived at /builds/index.md, and nothing
+  // caught it until a live 404.
+  checkAdvertisedLinks();
+
   // ── write / check ────────────────────────────────────────────────────────
   let changed = 0;
   for (const w of writes) {
@@ -705,6 +716,45 @@ function main () {
 //   ?v=<hash>     added later by gen-asset-manifest, which runs after this
 //   generatedAt   a wall-clock timestamp
 //   Expires       security.txt's rolling one-year expiry (and it is gitignored)
+/**
+ * Resolve every wc3v.com URL mentioned in the files we are emitting against
+ * what will actually be on disk. Templated paths ({replayId}) are skipped, as
+ * are directory URLs that Render serves from an index file.
+ */
+function checkAdvertisedLinks () {
+  const willExist = new Set(writes.map(w => '/' + w.rel));
+  const seen = new Set();
+
+  const resolves = (urlPath) => {
+    const clean = urlPath.replace(/[#?].*$/, '');
+    if (clean.includes('{')) return true;                     // template
+    if (willExist.has(clean)) return true;
+    if (fs.existsSync(path.join(CLIENT, clean.slice(1)))) return true;
+    // A URL with no extension may be served from <path>.html or <path>/index.html.
+    if (!/\.[a-z0-9]+$/i.test(clean)) {
+      if (willExist.has(clean + '.html')) return true;
+      if (fs.existsSync(path.join(CLIENT, clean.slice(1) + '.html'))) return true;
+      if (willExist.has(clean + '/index.html')) return true;
+      if (fs.existsSync(path.join(CLIENT, clean.slice(1), 'index.html'))) return true;
+    }
+    return false;
+  };
+
+  for (const w of writes) {
+    if (!/\.(txt|xml|json|md)$/.test(w.rel) && w.rel !== '.well-known/api-catalog') continue;
+    for (const m of String(w.content).matchAll(/https:\/\/wc3v\.com(\/[^\s"'()<>,\]]*)/g)) {
+      // These URLs appear in prose as well as in link syntax, so a trailing
+      // sentence-ending character is part of the sentence, not the path.
+      const urlPath = m[1].replace(/[.;:!?]+$/, '');
+      if (!urlPath || urlPath === '/') continue;
+      const key = w.rel + ' ' + urlPath;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!resolves(urlPath)) problems.push(w.rel + ': advertises ' + urlPath + ' which does not resolve');
+    }
+  }
+}
+
 function normalizeVolatile (s) {
   return s
     .replace(/\?v=[\w.]+/g, '')

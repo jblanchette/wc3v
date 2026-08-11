@@ -1,0 +1,36 @@
+name = "wc3v-edge"
+main = "src/index.js"
+compatibility_date = "2026-08-11"
+workers_dev = false
+
+# Routes are ENUMERATED on purpose. A Worker route runs on every matching
+# request; Cloudflare's cache does not short-circuit it. `wc3v.com/*` would bill
+# an invocation for every /assets/wc3icons/* request — hundreds per pageview —
+# even though those 301 to R2 from the origin. The free tier is 100k/day.
+#
+# Only HTML pages, their markdown twins, and the well-known surfaces need the
+# Worker. /js/*, /css/*, /data/*, /assets/* and /maps/* deliberately do not
+# match and go straight to origin.
+#
+# Keep this list in step with tools/seo/pages.js. `npm run check-seo` fails if a
+# registry page has no matching route here.
+routes = [
+  { pattern = "wc3v.com/",           zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/*.html",     zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/*.md",       zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/.well-known/*", zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/learn",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/about",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/community",  zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/download",   zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/privacy",    zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/terms",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/api",        zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/builds",     zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/builds/*",   zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/viewer",     zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/replays",    zone_name = "wc3v.com" }
+]
+
+[observability]
+enabled = true

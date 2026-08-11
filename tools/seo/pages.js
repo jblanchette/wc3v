@@ -40,7 +40,11 @@ const PAGES = [
   { file: 'about.html',     url: '/about',     section: 'Pages', sitemap: true,  md: 'convert' },
   { file: 'community.html', url: '/community', section: 'Pages', sitemap: true,  md: 'convert' },
   { file: 'download.html',  url: '/download',  section: 'Pages', sitemap: true,  md: 'convert' },
-  { file: 'api.html',       url: '/api',       section: 'Data & APIs', sitemap: true, md: 'convert' },
+  // client/api/index.html, not client/api.html. Both would claim /api, and
+  // Render resolves the DIRECTORY first — measured: with both present, /api
+  // returned 404 while /api/openapi.json served fine. The directory has to win
+  // anyway because the OpenAPI document lives inside it.
+  { file: 'api/index.html', url: '/api',       section: 'Data & APIs', sitemap: true, md: 'convert' },
   { file: 'privacy.html',   url: '/privacy',   section: 'Policies', sitemap: true, md: 'convert' },
   { file: 'terms.html',     url: '/terms',     section: 'Policies', sitemap: true, md: 'convert' },
 
