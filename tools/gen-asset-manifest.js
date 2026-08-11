@@ -28,7 +28,7 @@ const EXTRA_FILES = ['data/builds-manifest.json', 'data/builds-cards.json'];
 const HTML_FILES = [
   'index.html', 'viewer.html', 'replays.html',
   'about.html', 'community.html', 'terms.html', 'privacy.html',
-  'learn.html', 'download.html', 'handoff.html'
+  'learn.html', 'download.html', 'handoff.html', '404.html'
 ];
 
 function sha10 (buf) {

@@ -78,7 +78,39 @@ services:
       - path: /asset-manifest.json
         name: Cache-Control
         value: public, max-age=0, must-revalidate
+      # ── SEO PHASE 0 PROBE (temporary) ─────────────────────────────────────
+      # Answers, in one deploy, the questions that decide where the agent-
+      # discovery artifacts live. Delete this block and the probe files
+      # (client/.well-known/probe.txt, client/.well-known/mcp/probe.json,
+      # client/wk/probe.txt, client/probe.md, client/probe-page.html) once the
+      # answers are recorded below.
+      #
+      #   PROBE RESULTS (fill in after deploy):
+      #     .well-known/ survives publish?    …
+      #     nested .well-known/mcp/ survives? …
+      #     Content-Type override works?      …
+      #     type: rewrite works?              …
+      #     .md Content-Type?                 …
+      #     404.html auto-served, status 404? …
+      #     .html→extensionless 301 loops?    …
+      #
+      # Render types extensionless files as binary/octet-stream (proven by
+      # /gridtest), so RFC 9727 needs this override to be possible.
+      - path: /.well-known/api-catalog
+        name: Content-Type
+        value: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
     routes:
+      # ── SEO PHASE 0 PROBE (temporary) — delete with the block above ───────
+      # Does `type: rewrite` work, and does it work with a dot in the source?
+      # This is the fallback if client/.well-known/ is dropped at publish.
+      - type: rewrite
+        source: /.wk2/*
+        destination: /wk/*
+      # Does a .html→extensionless 301 loop against Render's own clean-URL
+      # resolution? Gates the whole Phase 2 normalization.
+      - type: redirect
+        source: /probe-page.html
+        destination: /probe-page
       # Heavy assets are hosted on R2 at cdn.wc3v.com. The client code uses
       # root-relative paths (e.g. /assets/wc3icons/foo.jpg, /maps/X/map.jpg)
       # so they "just work" in dev — these 301 redirects send production

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Page not found | WC3V</title>
+  <meta name="description" content="That page doesn't exist on WC3V. Head back to the build library, the Build Finder, or the replay simulator.">
+
+  <meta name="robots" content="noindex, follow">
+
+  <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.wc3v.com">
+
+  <link rel="stylesheet" href="css/tokens.css?v=8cfad272d7">
+  <link rel="stylesheet" href="css/main.css?v=b4b77b1a31">
+  <style>
+    body { margin: 0; }
+    .nf-page { max-width: 640px; }
+    .nf-code {
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--site-text-muted);
+      margin: 0 0 0.5rem;
+    }
+    .nf-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.75rem;
+    }
+    .nf-links a {
+      display: inline-block;
+      padding: 0.6rem 1.1rem;
+      border: 1px solid var(--site-border);
+      border-radius: 8px;
+      color: var(--site-text);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+    .nf-links a:hover { border-color: var(--site-accent); color: var(--site-accent); }
+  </style>
+</head>
+<body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() removes #site-nav before inserting
+       its own markup, so this is pure progressive enhancement: crawlers and
+       JS-off visitors get real links, everyone else gets the enhanced nav. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about.html">About</a>
+        <a class="site-nav-link" href="/community.html">Community</a>
+        <a class="site-nav-link" href="/download.html">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="js/clientConfig.js?v=16b088dcdf"></script>
+  <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
+  <script src="js/SiteNav.js?v=b9e5834fd5"></script>
+  <script src="js/BugReport.js?v=7b19c1a873"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => {
+    SiteNav.render(null);
+    window.BugReport && window.BugReport.install();
+  });</script>
+
+  <main class="site-content">
+    <article class="site-about-page nf-page">
+      <div class="about-hero">
+        <div class="about-hero-text">
+          <p class="nf-code">404</p>
+          <h1 class="about-hero-title">That page isn't here.</h1>
+          <p class="about-hero-sub">The link is either wrong or points at something that moved. Everything below still works.</p>
+        </div>
+      </div>
+
+      <div class="nf-links">
+        <a href="/">Build library</a>
+        <a href="/learn">Build Finder</a>
+        <a href="/download.html">Download the app</a>
+        <a href="/about.html">About WC3V</a>
+      </div>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="/about.html">About</a>
+        <a href="/download.html">Download</a>
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool not affiliated with or endorsed by Blizzard.
+    </div>
+  </footer>
+</body>
+</html>
