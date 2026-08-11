@@ -2,7 +2,7 @@
 title: "MK Fast Expand — Human build order (HvU, HvN)"
 url: https://wc3v.com/builds/hu-mk-fast-expand
 description: "Mountain King first into fast expansion. Storm Bolt stuns harassers, Bash provides melee dominance. Build army to 60 food then upgrade to Castle for Knights."
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # MK Fast Expand

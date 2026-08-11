@@ -2,7 +2,7 @@
 title: "KotG Mountain Giant — Night Elf build order (EvH, EvO, EvU, EvE)"
 url: https://wc3v.com/builds/ne-kotg-mountain-giant
 description: "Keeper of the Grove opener into Mountain Giant tank line. Entangle roots Human heroes, Giants taunt Human armies, and Treant summons provide free…"
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # KotG Mountain Giant

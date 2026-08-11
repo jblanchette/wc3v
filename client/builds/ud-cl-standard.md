@@ -2,7 +2,7 @@
 title: "Crypt Lord Standard — Undead build order (UvH, UvN, UvO)"
 url: https://wc3v.com/builds/ud-cl-standard
 description: "Crypt Lord first hero for Carrion Beetles map presence and Impale stun. Ghoul opener like other UD builds, transitions to Crypt Fiends and Statues at T2.…"
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # Crypt Lord Standard

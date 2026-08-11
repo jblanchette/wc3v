@@ -2,7 +2,7 @@
 title: "DH Standard — Night Elf build order (EvU, EvO, EvH)"
 url: https://wc3v.com/builds/ne-dh-fast-bear
 description: "The standard Night Elf build. Demon Hunter first for Manaburn harassment, fast tech to T3 for Druid of the Claw (bears). Bears in Bear Form have massive…"
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # DH Standard

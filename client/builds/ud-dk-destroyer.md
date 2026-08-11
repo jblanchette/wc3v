@@ -2,7 +2,7 @@
 title: "DK Destroyer — Undead build order (UvN, UvH, UvO)"
 url: https://wc3v.com/builds/ud-dk-destroyer
 description: "DK Fiend opener that priorities a fast T3 for Destroyer tech. Destroyers' Devour Magic hard-counters caster-heavy armies like NE Dryads or HU Priests."
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # DK Destroyer

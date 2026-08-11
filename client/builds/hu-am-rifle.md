@@ -2,7 +2,7 @@
 title: "AM Rifle — Human build order (HvN, HvH, HvO)"
 url: https://wc3v.com/builds/hu-am-rifle
 description: "Archmage into Footmen transitioning to Riflemen and Sorceresses. Rifle range controls space, Slow from Sorceresses kites melee armies."
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # AM Rifle

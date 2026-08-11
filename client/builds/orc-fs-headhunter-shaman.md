@@ -2,7 +2,7 @@
 title: "FS Headhunter — Orc build order (OvU, OvH)"
 url: https://wc3v.com/builds/orc-fs-headhunter-shaman
 description: "Far Seer opener with Headhunters and Shamans. The most versatile Orc opener — Bloodlust makes Headhunters burst targets down, Hex and Purge shut down…"
-updated: 2026-06-12
+updated: 2026-08-11
 ---
 
 # FS Headhunter
