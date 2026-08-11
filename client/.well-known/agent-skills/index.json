@@ -1,4 +1,33 @@
 {
   "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
-  "skills": []
+  "skills": [
+    {
+      "name": "wc3v-build-lookup",
+      "type": "skill-md",
+      "description": "Find a Warcraft III build order for a race, matchup and skill level from the WC3V library, and explain how to execute it.",
+      "url": "https://wc3v.com/skills/wc3v-build-lookup/SKILL.md",
+      "digest": "sha256:b039dc4048611756ca4d8fcd1626b64f58632a2bf5c302e5ea7365f0d163bf8c"
+    },
+    {
+      "name": "wc3v-replay-analysis",
+      "type": "skill-md",
+      "description": "Turn a WC3V replay summary into a coaching critique for a Warcraft III player, using benchmarks measured from a corpus of 192 parsed pro games.",
+      "url": "https://wc3v.com/skills/wc3v-replay-analysis/SKILL.md",
+      "digest": "sha256:2567a4c2426c8464cd11809e7570109b7ca230ef8b3a39b8aba96cbb166ff952"
+    },
+    {
+      "name": "wc3v-replay-format",
+      "type": "skill-md",
+      "description": "Parse or interpret a Warcraft III .w3g replay or a WC3V .wc3v JSON file, including the identity and worker-tracking rules that are easy to get wrong.",
+      "url": "https://wc3v.com/skills/wc3v-replay-format/SKILL.md",
+      "digest": "sha256:69e4d62ed0f89ef34a403301c347f9ac531e2cc9d34b637e56689b3ba8a88341"
+    },
+    {
+      "name": "wc3v-terminology",
+      "type": "skill-md",
+      "description": "Translate Warcraft III jargon (T2, creeping, teching, expo, harass) into plain language, using WC3V's glossary.",
+      "url": "https://wc3v.com/skills/wc3v-terminology/SKILL.md",
+      "digest": "sha256:a6ae659571354bb9162c22d421aaa0007a1242e38c5c6bdf9fc358078560ecce"
+    }
+  ]
 }

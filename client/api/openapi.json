@@ -1,0 +1,225 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "WC3V Replay Data API",
+    "version": "1.0.0",
+    "summary": "Parsed Warcraft III tournament replays as JSON.",
+    "description": "A read-only, unauthenticated, static JSON API over WC3V's corpus of parsed Warcraft III tournament replays.\n\nThis is a deliberately small contract. Only the two documents described here are covered by the stability policy; every other file under /data/ is an implementation detail of the site and may change shape without notice. See https://wc3v.com/api for the policy and the exclusion list.\n\nThere are no API keys, no rate limits beyond ordinary CDN behaviour, and no authentication. Everything is served as a static file from the same origin as the website.",
+    "termsOfService": "https://wc3v.com/terms",
+    "license": {
+      "name": "GPL-3.0-or-later",
+      "url": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md"
+    },
+    "contact": {
+      "name": "WC3V on GitHub",
+      "url": "https://github.com/jblanchette/wc3v"
+    }
+  },
+  "servers": [
+    { "url": "https://wc3v.com", "description": "Production" }
+  ],
+  "externalDocs": {
+    "description": "Human documentation, stability policy and data provenance",
+    "url": "https://wc3v.com/api"
+  },
+  "tags": [
+    { "name": "replays", "description": "The parsed pro replay corpus" }
+  ],
+  "paths": {
+    "/data/summaries-index.json": {
+      "get": {
+        "operationId": "getReplayIndex",
+        "tags": ["replays"],
+        "summary": "Index of every public parsed replay",
+        "description": "One entry per replay, with the fields needed to search and filter: map, duration, matchup, per-player race, hero and timings, plus any curated build the replay is attached to.\n\nParser test fixtures are excluded. Read `fieldNotes` in the response before relying on any timing field: `tier2Sec` and `tier3Sec` are inferred and can precede the actual tier upgrade.",
+        "responses": {
+          "200": {
+            "description": "The index",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReplayIndex" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/summaries/{replayId}.json": {
+      "get": {
+        "operationId": "getReplaySummary",
+        "tags": ["replays"],
+        "summary": "One parsed replay in full",
+        "parameters": [
+          {
+            "name": "replayId",
+            "in": "path",
+            "required": true,
+            "description": "A `replayId` from the index. Tournament replays are shaped `<timestamp>_<player>_<player>_<map>`.",
+            "schema": { "type": "string" },
+            "example": "2458063746_Eer0_FoCuS_Shattered-Exile"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The replay summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReplaySummary" }
+              }
+            }
+          },
+          "404": {
+            "description": "No replay with that id. Served as the site's 404 page, not as JSON."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Race": {
+        "type": "string",
+        "enum": ["H", "O", "E", "U"],
+        "description": "H Human, O Orc, E Night Elf, U Undead."
+      },
+      "ReplayIndex": {
+        "type": "object",
+        "required": ["generatedAt", "count", "replays"],
+        "properties": {
+          "generatedAt": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "note": { "type": "string" },
+          "fieldNotes": {
+            "type": "object",
+            "additionalProperties": { "type": "string" },
+            "description": "Per-field caveats. Read these; several timing fields are inferred rather than measured."
+          },
+          "replays": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReplayIndexEntry" }
+          }
+        }
+      },
+      "ReplayIndexEntry": {
+        "type": "object",
+        "required": ["replayId", "players", "builds"],
+        "properties": {
+          "replayId": { "type": "string" },
+          "map": { "type": ["string", "null"] },
+          "durationSec": { "type": ["integer", "null"] },
+          "matchup": {
+            "type": ["string", "null"],
+            "description": "Two race letters joined by v, alphabetically ordered, e.g. \"EvU\". Null unless the game had exactly two raced players.",
+            "examples": ["EvU", "HvO"]
+          },
+          "players": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReplayIndexPlayer" }
+          },
+          "builds": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Ids of curated builds this replay is attached to. Empty for most replays."
+          },
+          "tournamentId": { "type": ["string", "null"] }
+        }
+      },
+      "ReplayIndexPlayer": {
+        "type": "object",
+        "required": ["slot"],
+        "properties": {
+          "slot": { "type": "string" },
+          "name": { "type": ["string", "null"], "description": "The tournament handle as it appears in the replay." },
+          "race": { "oneOf": [{ "$ref": "#/components/schemas/Race" }, { "type": "null" }] },
+          "hero": { "type": ["string", "null"], "description": "First hero." },
+          "heroTimeSec": { "type": ["integer", "null"], "description": "First hero appearance. The most reliable timing here." },
+          "tier2Sec": { "type": ["integer", "null"], "description": "INFERRED. Can precede the actual tier 2 upgrade. Not a verified tech timing." },
+          "tier3Sec": { "type": ["integer", "null"], "description": "INFERRED. Same caveat as tier2Sec." },
+          "expansionSec": { "type": ["integer", "null"], "description": "First expansion town hall. Null means none detected." }
+        }
+      },
+      "ReplaySummary": {
+        "type": "object",
+        "required": ["replayId", "players"],
+        "properties": {
+          "replayId": { "type": "string" },
+          "map": { "type": ["string", "null"], "description": "Cleaned map name." },
+          "mapRaw": { "type": ["string", "null"], "description": "Map filename as recorded in the replay." },
+          "durationMs": { "type": ["integer", "null"] },
+          "durationFormatted": { "type": ["string", "null"], "examples": ["15:33"] },
+          "fingerprint": { "type": ["string", "null"], "description": "Stable identity string used to deduplicate replays." },
+          "players": {
+            "type": "object",
+            "description": "Keyed by player slot.",
+            "additionalProperties": { "$ref": "#/components/schemas/SummaryPlayer" }
+          }
+        }
+      },
+      "SummaryPlayer": {
+        "type": "object",
+        "properties": {
+          "name": { "type": ["string", "null"] },
+          "race": { "oneOf": [{ "$ref": "#/components/schemas/Race" }, { "type": "null" }] },
+          "heroOpener": { "oneOf": [{ "$ref": "#/components/schemas/TimedEntity" }, { "type": "null" }] },
+          "tier2Time": { "type": ["integer", "null"], "description": "Milliseconds. INFERRED, see the index fieldNotes." },
+          "tier2TimeFormatted": { "type": ["string", "null"] },
+          "tier3Time": { "type": ["integer", "null"], "description": "Milliseconds. INFERRED." },
+          "tier3TimeFormatted": { "type": ["string", "null"] },
+          "expansionTime": { "type": ["integer", "null"], "description": "Milliseconds." },
+          "expansionTimeFormatted": { "type": ["string", "null"] },
+          "buildPreview": {
+            "type": "array",
+            "description": "Ordered opening sequence. The ORDER is reliable; treat the timings as approximate.",
+            "items": { "$ref": "#/components/schemas/BuildStep" }
+          },
+          "t2Buildings": { "type": "array", "items": { "$ref": "#/components/schemas/NamedEntity" }, "description": "Buildings seen while the player was flagged tier 2. Because the tier flag is inferred, this list can contain tier-1 buildings." },
+          "t2Units": { "type": "array", "items": { "$ref": "#/components/schemas/NamedEntity" } },
+          "t3Buildings": { "type": "array", "items": { "$ref": "#/components/schemas/NamedEntity" } },
+          "t3Units": { "type": "array", "items": { "$ref": "#/components/schemas/NamedEntity" } },
+          "researched": { "type": "array", "items": { "$ref": "#/components/schemas/Research" } }
+        }
+      },
+      "NamedEntity": {
+        "type": "object",
+        "required": ["itemId"],
+        "properties": {
+          "name": { "type": "string" },
+          "itemId": { "type": "string", "description": "The four-character Warcraft III object id, e.g. \"ugho\"." }
+        }
+      },
+      "TimedEntity": {
+        "allOf": [
+          { "$ref": "#/components/schemas/NamedEntity" },
+          {
+            "type": "object",
+            "properties": {
+              "gameTimeMs": { "type": "integer" },
+              "gameTimeFormatted": { "type": "string", "examples": ["1:06"] }
+            }
+          }
+        ]
+      },
+      "BuildStep": {
+        "allOf": [
+          { "$ref": "#/components/schemas/TimedEntity" },
+          {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["building", "unit", "hero", "upgrade"] }
+            }
+          }
+        ]
+      },
+      "Research": {
+        "type": "object",
+        "properties": {
+          "itemId": { "type": "string" },
+          "name": { "type": "string" },
+          "level": { "type": "integer" },
+          "category": { "type": "string" },
+          "icon": { "type": "string" }
+        }
+      }
+    }
+  }
+}

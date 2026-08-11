@@ -149,6 +149,25 @@ function gitDate (rel) {
 
 // ── summaries index ─────────────────────────────────────────────────────────
 
+// client/data/summaries/ is not a clean corpus: alongside the tournament games
+// it holds ~142 dev fixtures (test-*, goblab-reveal, landmine-deploy, …) left
+// there by the parser test suite. They are useful locally and useless publicly,
+// and publishing them as "the pro replay corpus" would be a false claim — plus
+// they wreck any statistic computed over the set (they dragged the p25 game
+// length down to 73 seconds).
+//
+// Two independent signals, ORed so neither has to be perfect:
+//   - the tournament replayId shape, <digits>_<player>_<player>_<map>
+//   - a substantive game: two or more raced players and at least five minutes
+// The OR keeps three real pro games saved under dev names (gso,
+// happy-vs-grubby, test-4v4) and two genuine tournament games that ended fast.
+const TOURNAMENT_ID = /^\d{6,}_/;
+
+function isPublicReplay (r) {
+  if (TOURNAMENT_ID.test(r.replayId)) return true;
+  return r.players.filter(p => p.race).length >= 2 && (r.durationSec || 0) >= 300;
+}
+
 function buildSummariesIndex (manifest) {
   const dir = path.join(CLIENT, 'data', 'summaries');
   if (!fs.existsSync(dir)) return null;
@@ -202,13 +221,37 @@ function buildSummariesIndex (manifest) {
 
   if (skipped) notes.push(skipped + ' summary file(s) unreadable or malformed, omitted from the index');
 
+  const publicReplays = replays.filter(isPublicReplay);
+  const dropped = replays.length - publicReplays.length;
+  if (dropped) notes.push(dropped + ' dev fixture(s) excluded from the public replay index');
+
+  // Newest first, by the leading timestamp in the tournament id where present.
+  publicReplays.sort((a, b) => a.replayId < b.replayId ? 1 : a.replayId > b.replayId ? -1 : 0);
+
   return {
     generatedAt: new Date().toISOString(),
-    count: replays.length,
+    count: publicReplays.length,
     note: 'Index of the parsed pro replay corpus. Player names are the ' +
           'tournament handles already present in the public per-replay ' +
-          'summaries; no visitor data appears here.',
-    replays
+          'summaries; no visitor data appears here. Parser test fixtures are ' +
+          'excluded.',
+    // Stated here because this index is a documented API and a consumer will
+    // otherwise read tier2Sec as "when tier 2 finished". It is not that.
+    fieldNotes: {
+      tier2Sec: 'When the parser first observed the player at tier 2, from ' +
+        'selection-subgroup data. This can PRECEDE the actual tier upgrade — ' +
+        'across this corpus the associated building lists contain tier-1 ' +
+        'buildings, and medians run 2-3 minutes for Orc, Night Elf and Undead ' +
+        'against roughly 5 minutes for Human. Treat it as a loose ordering ' +
+        'signal, not a verified tech timing. Not validated against ground truth.',
+      tier3Sec: 'Same caveat as tier2Sec.',
+      expansionSec: 'Time of the first expansion town hall. Present for ' +
+        'roughly half the corpus; absent means no expansion was detected.',
+      heroTimeSec: 'First hero appearance. Consistent across races (median ' +
+        'about 1:07) and the most trustworthy timing in this index.',
+      durationSec: 'Replay length, not necessarily game length.'
+    },
+    replays: publicReplays
   };
 }
 
@@ -383,6 +426,76 @@ function agentSkillsIndex () {
   };
 }
 
+// ── api-catalog (RFC 9727) ──────────────────────────────────────────────────
+
+// RFC 9727 §4.1: "The API catalog MUST include hyperlinks to API endpoints."
+// There is no valid empty catalog, which is why this only ships now that
+// /api and /api/openapi.json actually exist. A catalog pointing at a 404 is
+// the failure mode the RFC's security section is about.
+//
+// Served with Content-Type: application/linkset+json — the file has no
+// extension, and Render defaults those to binary/octet-stream, so render.yaml
+// carries an explicit header rule for this exact path.
+function apiCatalog () {
+  const paths = ['api.html', 'api/openapi.json'];
+  for (const p of paths) {
+    if (!fs.existsSync(path.join(CLIENT, p))) {
+      problems.push('api-catalog references client/' + p + ' but it does not exist');
+    }
+  }
+
+  // Every documented path must resolve to a real file. This is what stops the
+  // contract rotting: publishing an api-catalog turns these into promises, and
+  // a promise that 404s is worse than never having advertised it.
+  const specPath = path.join(CLIENT, 'api', 'openapi.json');
+  if (fs.existsSync(specPath)) {
+    let spec;
+    try { spec = JSON.parse(fs.readFileSync(specPath, 'utf8')); } catch (e) {
+      problems.push('api/openapi.json: invalid JSON — ' + e.message);
+    }
+    if (spec && spec.paths) {
+      // A templated path is checked against a real id drawn from the index we
+      // just generated, so the check exercises an actual document.
+      const sample = (writes.find(w => w.rel === 'data/summaries-index.json') || {}).content;
+      let sampleId = null;
+      try { sampleId = JSON.parse(sample).replays[0].replayId; } catch (e) { /* index may be absent */ }
+
+      for (const p of Object.keys(spec.paths)) {
+        const concrete = p.replace('{replayId}', sampleId || '');
+        if (concrete.includes('{')) continue;          // untestable template
+        if (!fs.existsSync(path.join(CLIENT, concrete))) {
+          problems.push('openapi.json documents ' + p + ' but client' + concrete + ' does not exist');
+        }
+      }
+    }
+  }
+  const doc = {
+    linkset: [
+      {
+        anchor: ORIGIN + '/api',
+        'service-desc': [
+          { href: ORIGIN + '/api/openapi.json', type: 'application/openapi+json' }
+        ],
+        'service-doc': [
+          { href: ORIGIN + '/api', type: 'text/html' },
+          { href: ORIGIN + '/api.md', type: 'text/markdown' }
+        ],
+        'service-meta': [
+          { href: ORIGIN + '/terms', type: 'text/html' }
+        ],
+        item: [
+          { href: ORIGIN + '/data/summaries-index.json', type: 'application/json' },
+          { href: ORIGIN + '/data/summaries/{replayId}.json', type: 'application/json' }
+        ],
+        license: [
+          { href: 'https://github.com/jblanchette/wc3v/blob/master/LICENSE.md' }
+        ]
+      }
+    ]
+  };
+  return JSON.stringify(doc, null, 2) + '\n';
+}
+
 // ── main ────────────────────────────────────────────────────────────────────
 
 function main () {
@@ -531,9 +644,19 @@ function main () {
     '# WC3V — full text\n\n> Every page of wc3v.com concatenated. ' +
     'Generated by tools/gen-seo.js.\n\n' + fullParts.join('\n\n---\n\n') + '\n');
 
-  // 6. well-known ───────────────────────────────────────────────────────────
+  // 6. Publish the replay-format docs the agent skill points at ────────────
+  // They live in docs/ at the repo root, which Render does not serve. Copying
+  // rather than moving keeps the repo-root location working for contributors.
+  for (const f of ['REPLAY_FORMAT_RFC.md', 'wc3v-schema.json', 'wc3v-example.md']) {
+    const src = path.join(ROOT, 'docs', f);
+    if (!fs.existsSync(src)) { problems.push('docs/' + f + ': referenced by a skill but missing'); continue; }
+    emit('docs/' + f, fs.readFileSync(src, 'utf8'));
+  }
+
+  // 7. well-known ───────────────────────────────────────────────────────────
   emit('.well-known/security.txt', securityTxt());
   emit('.well-known/agent-skills/index.json', JSON.stringify(agentSkillsIndex(), null, 2) + '\n');
+  emit('.well-known/api-catalog', apiCatalog());
 
   // ── write / check ────────────────────────────────────────────────────────
   let changed = 0;

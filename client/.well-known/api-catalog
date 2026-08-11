@@ -1,1 +1,44 @@
-{ "linkset": [{ "anchor": "https://wc3v.com/api", "item": [] }] }
+{
+  "linkset": [
+    {
+      "anchor": "https://wc3v.com/api",
+      "service-desc": [
+        {
+          "href": "https://wc3v.com/api/openapi.json",
+          "type": "application/openapi+json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://wc3v.com/api",
+          "type": "text/html"
+        },
+        {
+          "href": "https://wc3v.com/api.md",
+          "type": "text/markdown"
+        }
+      ],
+      "service-meta": [
+        {
+          "href": "https://wc3v.com/terms",
+          "type": "text/html"
+        }
+      ],
+      "item": [
+        {
+          "href": "https://wc3v.com/data/summaries-index.json",
+          "type": "application/json"
+        },
+        {
+          "href": "https://wc3v.com/data/summaries/{replayId}.json",
+          "type": "application/json"
+        }
+      ],
+      "license": [
+        {
+          "href": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md"
+        }
+      ]
+    }
+  ]
+}

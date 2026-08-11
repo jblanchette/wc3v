@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Replay Data API | WC3V</title>
+  <meta name="description" content="A free, read-only JSON API over 192 parsed Warcraft III tournament replays. No keys, no auth, no rate limits. OpenAPI 3.1 description included.">
+
+  <link rel="canonical" href="https://wc3v.com/api">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="WC3V Replay Data API">
+  <meta property="og:description" content="192 parsed Warcraft III tournament replays as JSON. Free, read-only, no keys.">
+  <meta property="og:url" content="https://wc3v.com/api">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V build library, showing pro Warcraft III build orders by race and matchup.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WC3V Replay Data API">
+  <meta name="twitter:description" content="192 parsed Warcraft III tournament replays as JSON. Free, read-only, no keys.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
+
+  <link rel="service-desc" href="/api/openapi.json" type="application/openapi+json">
+  <link rel="alternate" type="text/markdown" href="/api.md">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebAPI",
+        "@id": "https://wc3v.com/api#api",
+        "name": "WC3V Replay Data API",
+        "url": "https://wc3v.com/api",
+        "description": "A read-only JSON API over a corpus of parsed Warcraft III tournament replays.",
+        "documentation": "https://wc3v.com/api",
+        "provider": { "@id": "https://wc3v.com/#org" },
+        "termsOfService": "https://wc3v.com/terms",
+        "isAccessibleForFree": true
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://wc3v.com/api#page",
+        "url": "https://wc3v.com/api",
+        "name": "Replay Data API",
+        "isPartOf": { "@id": "https://wc3v.com/#website" },
+        "mainEntity": { "@id": "https://wc3v.com/api#api" },
+        "publisher": { "@id": "https://wc3v.com/#org" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://wc3v.com/api#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://wc3v.com/" },
+          { "@type": "ListItem", "position": 2, "name": "API" }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.wc3v.com">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    body { margin: 0; }
+    .api-page { max-width: 820px; }
+    .api-page h2 {
+      font-size: 1.05rem; font-weight: 800; color: var(--site-text);
+      margin: 1.75rem 0 0.5rem; letter-spacing: -0.01em;
+    }
+    .api-page h3 {
+      font-size: 0.95rem; font-weight: 700; color: var(--site-text);
+      margin: 1.25rem 0 0.4rem;
+    }
+    .api-page p, .api-page li {
+      font-size: 0.92rem; line-height: 1.65; color: var(--site-text);
+    }
+    .api-page ul { padding-left: 1.25rem; }
+    .api-page li { margin-bottom: 0.4rem; }
+    .api-page a { color: var(--site-accent); text-decoration: none; }
+    .api-page a:hover { text-decoration: underline; }
+    .api-page code {
+      font-family: var(--mono); font-size: 0.85rem;
+      background: var(--bg-deep); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px;
+    }
+    .api-page pre {
+      background: var(--bg-deep); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.9rem 1rem; overflow-x: auto;
+      font-family: var(--mono); font-size: 0.82rem; line-height: 1.5;
+      color: var(--site-text);
+    }
+    .api-page pre code { background: none; border: none; padding: 0; font-size: inherit; }
+    .api-table-wrap { overflow-x: auto; }
+    .api-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin: 0.75rem 0; }
+    .api-table th, .api-table td {
+      text-align: left; padding: 0.55rem 0.7rem;
+      border-bottom: 1px solid var(--border); vertical-align: top;
+    }
+    .api-table th {
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em;
+      text-transform: uppercase; color: var(--text-dim);
+    }
+    .api-table code { white-space: nowrap; }
+    .api-callout {
+      background: rgba(240, 178, 50, 0.08);
+      border: 1px solid var(--gold-edge);
+      border-radius: 8px; padding: 1rem 1.25rem; margin: 1.25rem 0;
+      font-size: 0.92rem; line-height: 1.6;
+    }
+  </style>
+</head>
+<body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
+  <script src="js/clientConfig.js"></script>
+  <script src="js/BandSwitcher.js"></script>
+  <script src="js/SiteNav.js"></script>
+  <script src="js/BugReport.js"></script>
+  <script>document.addEventListener('DOMContentLoaded', () => {
+    SiteNav.render(null);
+    window.BugReport && window.BugReport.install();
+  });</script>
+
+  <main class="site-content">
+    <article class="site-about-page api-page">
+
+      <div class="about-hero">
+        <div class="about-hero-text">
+          <h1 class="about-hero-title">Replay Data API</h1>
+          <p class="about-hero-sub">192 parsed Warcraft III tournament games as JSON. Free, read-only, no keys and no sign-up.</p>
+        </div>
+      </div>
+
+      <p>Everything here is a static file served from the same origin as the site. There is no authentication, no rate limiting beyond ordinary CDN behaviour, and nothing to register for. Machine-readable description: <a href="/api/openapi.json">OpenAPI 3.1</a>.</p>
+
+      <h2>Endpoints</h2>
+
+      <div class="api-table-wrap">
+      <table class="api-table">
+        <thead><tr><th>Endpoint</th><th>What it is</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>GET /data/summaries-index.json</code></td>
+            <td>One entry per replay: map, duration, matchup, and each player's race, first hero and timings. Start here.</td>
+          </tr>
+          <tr>
+            <td><code>GET /data/summaries/{replayId}.json</code></td>
+            <td>One game in full, including the opening build sequence and everything researched.</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>Example</h3>
+      <pre><code>curl https://wc3v.com/data/summaries-index.json
+
+curl https://wc3v.com/data/summaries/2458063746_Eer0_FoCuS_Shattered-Exile.json</code></pre>
+
+      <p>Races are single letters: <code>H</code> Human, <code>O</code> Orc, <code>E</code> Night Elf, <code>U</code> Undead. Matchups are two race letters joined by <code>v</code>, alphabetically ordered, so Night Elf against Undead is <code>EvU</code> regardless of who is asking.</p>
+
+      <h2>Read the field notes before you trust a timing</h2>
+
+      <div class="api-callout">
+        <strong>Tier timings are inferred, not measured.</strong> <code>tier2Sec</code> and <code>tier3Sec</code> record when the parser first observed a player at that tier from selection data, which can happen before the tier upgrade actually completes. Across this corpus the associated building lists contain tier-1 buildings, and the medians run 2 to 3 minutes for Orc, Night Elf and Undead against roughly 5 minutes for Human, which is not a real racial difference. Use them for ordering within a single game if you must, but do not present them as tech benchmarks. <code>heroTimeSec</code> is consistent across races and is the timing to rely on.
+      </div>
+
+      <p>The index response carries a <code>fieldNotes</code> object saying this in machine-readable form. If you build on this data, read it.</p>
+
+      <h2>What is in the corpus</h2>
+
+      <p>Tournament games from 12+ events, parsed by <a href="https://github.com/jblanchette/wc3v">WC3V's own parser</a>. Player names are the tournament handles recorded in the replay files themselves.</p>
+
+      <p>Parser test fixtures are excluded. The <code>client/data/summaries/</code> directory in the repository holds around 142 of them alongside the real games, and they are filtered out of the published index: including them would have been a false claim about the corpus, and it dragged the 25th-percentile game length down to 73 seconds.</p>
+
+      <p>No visitor data appears anywhere in this API. Replays dropped on the site are parsed in the browser and never uploaded, which is covered in the <a href="/privacy">privacy policy</a>.</p>
+
+      <h2>Stability</h2>
+
+      <ul>
+        <li>Changes to documented fields are additive. New optional fields may appear at any time, so parse permissively.</li>
+        <li>No documented field will be removed or change type without 90 days of notice.</li>
+        <li>Notice appears here and in a <code>deprecations</code> array on the affected document.</li>
+        <li>Fields not described in the OpenAPI document are not covered and may change without warning.</li>
+      </ul>
+
+      <h2>What is deliberately not in the contract</h2>
+
+      <p>Plenty of other JSON is reachable under <code>/data/</code>. It is public because the site is static, not because it is an API, and it is excluded on purpose:</p>
+
+      <div class="api-table-wrap">
+      <table class="api-table">
+        <thead><tr><th>Path</th><th>Why not</th></tr></thead>
+        <tbody>
+          <tr><td><code>/data/builds-manifest.json</code></td><td>The curated build library. Its shape is coupled to how the homepage renders cards and changes with the design. Read the builds at <a href="/builds">/builds</a> or as Markdown at <code>/builds/&lt;id&gt;.md</code> instead.</td></tr>
+          <tr><td><code>/data/builds-cards.json</code></td><td>A render-time derivative, regenerated on every deploy.</td></tr>
+          <tr><td><code>/data/unit-balance-lite.json</code></td><td>Derived from Blizzard's own game data and changes with WC3 patches. It powers tooltips; presenting it as "the WC3V API" would misrepresent whose data it is.</td></tr>
+          <tr><td><code>/data/fx-units.json</code>, <code>/data/map-folders.json</code></td><td>Renderer internals.</td></tr>
+          <tr><td><code>/data/replay-wishlist.json</code></td><td>An editorial to-do list.</td></tr>
+          <tr><td><code>/asset-manifest.json</code></td><td>Deploy-internal content hashes.</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h2>Other machine-readable entry points</h2>
+
+      <ul>
+        <li><a href="/llms.txt">/llms.txt</a> — index of every page, for agents</li>
+        <li><a href="/.well-known/agent-skills/index.json">/.well-known/agent-skills/index.json</a> — skills this site publishes</li>
+        <li><a href="/.well-known/api-catalog">/.well-known/api-catalog</a> — RFC 9727 catalog</li>
+        <li>Every page has a Markdown twin at the same URL with <code>.md</code> appended, and answers <code>Accept: text/markdown</code></li>
+      </ul>
+
+      <h2>Attribution and licence</h2>
+
+      <p>The code is <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3</a>. If you build something on this data, a link back to <a href="/">wc3v.com</a> is appreciated and not required.</p>
+
+      <p>Warcraft III and all related assets are trademarks of Blizzard Entertainment. WC3V is a fan-made, non-commercial tool and is not affiliated with or endorsed by Blizzard.</p>
+
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="/about">About</a>
+        <a href="/download">Download</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool not affiliated with or endorsed by Blizzard.
+    </div>
+  </footer>
+</body>
+</html>

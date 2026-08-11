@@ -236,4 +236,4 @@ Full build: https://wc3v.com/builds/ud-cl-standard
 
 ## The replay corpus
 
-334 parsed pro games are indexed at https://wc3v.com/data/summaries-index.json.
+192 parsed pro games are indexed at https://wc3v.com/data/summaries-index.json.
