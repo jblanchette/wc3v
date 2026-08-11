@@ -362,7 +362,7 @@ WC3V is free, open-source software licensed under [GPLv3](https://github.com/jbl
 
 Built by Warcraft III players for Warcraft III players. No ads, no paywalls, no tracking, no data collection. All game assets and imagery are property of Blizzard Entertainment. WC3V is a fan-made educational tool, not affiliated with or endorsed by Blizzard.
 
-[Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer.html)
+[Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer)
 
 ---
 
@@ -467,7 +467,7 @@ Other libraries we lean on: [pngjs](https://github.com/lukeapage/pngjs), [rbush]
 
 External links open in a new tab. WC3V is independent and not affiliated with the sites or projects listed above. Know a community resource we should add? Open an issue on [GitHub](https://github.com/jblanchette/wc3v/issues) and tell us about it.
 
-[Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer.html)
+[Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer)
 
 ---
 
@@ -502,7 +502,7 @@ Windows 10/11, 64-bit SHA-256 ``
 
 - **Open source, GPLv3.** [Read the source or build it yourself](https://github.com/jblanchette/wc3v).
 
-- **No warranty.** See the [Terms of Service](https://wc3v.com/terms.html).
+- **No warranty.** See the [Terms of Service](https://wc3v.com/terms).
 
 ## Code signing policy
 
@@ -512,7 +512,7 @@ Windows 10/11, 64-bit SHA-256 ``
 
 - **Releases** are built from the public repository by GitHub Actions; the SHA-256 above lets you verify the file you downloaded. Signed releases are rolling out, and the current installer may predate them.
 
-- **Privacy.** The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the [privacy policy](https://wc3v.com/privacy.html).
+- **Privacy.** The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the [privacy policy](https://wc3v.com/privacy).
 
 [View source on GitHub](https://github.com/jblanchette/wc3v) [Back to WC3V](https://wc3v.com/)
 
@@ -563,7 +563,7 @@ None of this is sent to us. Clear it any time via your browser's site-data contr
 
 ## 4a. The WC3V desktop app
 
-The desktop app (downloadable from [wc3v.com/download.html](https://wc3v.com/download.html)) watches your Warcraft III replay folders and parses every game **on your machine**. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly three cases:
+The desktop app (downloadable from [wc3v.com/download.html](https://wc3v.com/download)) watches your Warcraft III replay folders and parses every game **on your machine**. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly three cases:
 
 - **Update checks** — it polls our CDN for a newer version, which reveals your IP address and the request the same way any web server sees one.
 
@@ -609,7 +609,7 @@ If this policy changes, the effective date at the top of this page will be updat
 
 Questions or concerns: open an issue on [GitHub](https://github.com/jblanchette/wc3v/issues).
 
-[Back to WC3V](https://wc3v.com/) [Terms of Service](https://wc3v.com/terms.html)
+[Back to WC3V](https://wc3v.com/) [Terms of Service](https://wc3v.com/terms)
 
 ---
 
@@ -682,7 +682,7 @@ These terms are governed by the laws of the United States and the U.S. state in 
 
 Questions, takedown requests, or feedback: open an issue on [GitHub](https://github.com/jblanchette/wc3v/issues).
 
-[Back to WC3V](https://wc3v.com/) [Privacy Policy](https://wc3v.com/privacy.html)
+[Back to WC3V](https://wc3v.com/) [Privacy Policy](https://wc3v.com/privacy)
 
 ---
 

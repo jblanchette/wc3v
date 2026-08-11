@@ -41,7 +41,29 @@ routes = [
   { pattern = "wc3v.com/builds",        zone_name = "wc3v.com" },
   { pattern = "wc3v.com/builds.md",     zone_name = "wc3v.com" },
   { pattern = "wc3v.com/builds/*",      zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/.well-known/*", zone_name = "wc3v.com" }
+  { pattern = "wc3v.com/.well-known/*", zone_name = "wc3v.com" },
+
+  # The .html forms, so the Worker can 301 them to the canonical extensionless
+  # URL. Every page answered on both forms with identical bytes until now.
+  # /404.html is deliberately absent: it is the error document, and redirecting
+  # it would turn every 404 into a redirect to another 404.
+  #
+  # The trailing * is load-bearing. Cloudflare matches a route against the FULL
+  # URL including the query string, so a bare "wc3v.com/viewer.html" does not
+  # match /viewer.html?r=abc and that request would skip the redirect entirely.
+  { pattern = "wc3v.com/index.html*",    zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/learn.html*",    zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/about.html*",    zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/community.html*", zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/download.html*", zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/privacy.html*",  zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/terms.html*",    zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/builds.html*",   zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/replays.html*",  zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/viewer.html*",   zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/compare.html*",  zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/handoff.html*",  zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/api/index.html*", zone_name = "wc3v.com" }
 ]
 
 [observability]

@@ -78,6 +78,35 @@ function twinPath (pathname) {
   return pathname.replace(/\/+$/, '') + '.md';
 }
 
+/**
+ * The extensionless URL policy, enforced here rather than at the origin or in a
+ * Redirect Rule.
+ *
+ * Not at the origin: Render resolves a static file BEFORE it consults its
+ * `routes:`, including its own clean-URL fallback, so a /about.html -> /about
+ * redirect there is silently a no-op while about.html exists on disk (measured
+ * 2026-08-11). Not a Cloudflare Redirect Rule: that needs a token permission
+ * this project does not have, and putting it here keeps one place responsible
+ * for what a URL means.
+ *
+ * /404.html is excluded because it is the error document, not a page — Render
+ * serves it in place, and redirecting it would turn every 404 into a redirect
+ * to a URL that is itself a 404.
+ */
+const NO_REDIRECT = new Set(['/404.html']);
+
+function canonicalPath (pathname) {
+  if (!pathname.endsWith('.html') || NO_REDIRECT.has(pathname)) return null;
+  const stripped = pathname.slice(0, -5);
+  // A directory index maps to the directory, not to a literal ".../index".
+  // /index.html -> / and /api/index.html -> /api. The api docs page really does
+  // live at client/api/index.html, because client/api.html and the client/api/
+  // directory would both claim /api and Render resolves the directory first.
+  if (stripped === '/index') return '/';
+  if (stripped.endsWith('/index')) return stripped.slice(0, -'/index'.length);
+  return stripped;
+}
+
 function withCors (headers) {
   headers.set('access-control-allow-origin', '*');
   headers.set('access-control-allow-methods', 'GET, HEAD, OPTIONS');
@@ -116,6 +145,16 @@ export default {
 
     if (url.pathname.startsWith('/.well-known/')) {
       return handleWellKnown(request, url);
+    }
+
+    // One canonical URL per page. Every page previously answered on both
+    // /about and /about.html with identical bytes, and the canonical tags
+    // disagreed about which one won.
+    const canonical = canonicalPath(url.pathname);
+    if (canonical) {
+      const to = new URL(url);
+      to.pathname = canonical;
+      return Response.redirect(to.toString(), 301);   // query string preserved
     }
 
     const twin = prefersMarkdown(request.headers.get('accept') || '') && twinPath(url.pathname);

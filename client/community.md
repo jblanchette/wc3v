@@ -99,4 +99,4 @@ Other libraries we lean on: [pngjs](https://github.com/lukeapage/pngjs), [rbush]
 
 External links open in a new tab. WC3V is independent and not affiliated with the sites or projects listed above. Know a community resource we should add? Open an issue on [GitHub](https://github.com/jblanchette/wc3v/issues) and tell us about it.
 
-[Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer.html)
+[Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer)

@@ -67,4 +67,4 @@ These terms are governed by the laws of the United States and the U.S. state in 
 
 Questions, takedown requests, or feedback: open an issue on [GitHub](https://github.com/jblanchette/wc3v/issues).
 
-[Back to WC3V](https://wc3v.com/) [Privacy Policy](https://wc3v.com/privacy.html)
+[Back to WC3V](https://wc3v.com/) [Privacy Policy](https://wc3v.com/privacy)

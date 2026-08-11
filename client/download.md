@@ -29,7 +29,7 @@ Windows 10/11, 64-bit SHA-256 ``
 
 - **Open source, GPLv3.** [Read the source or build it yourself](https://github.com/jblanchette/wc3v).
 
-- **No warranty.** See the [Terms of Service](https://wc3v.com/terms.html).
+- **No warranty.** See the [Terms of Service](https://wc3v.com/terms).
 
 ## Code signing policy
 
@@ -39,6 +39,6 @@ Windows 10/11, 64-bit SHA-256 ``
 
 - **Releases** are built from the public repository by GitHub Actions; the SHA-256 above lets you verify the file you downloaded. Signed releases are rolling out, and the current installer may predate them.
 
-- **Privacy.** The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the [privacy policy](https://wc3v.com/privacy.html).
+- **Privacy.** The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the [privacy policy](https://wc3v.com/privacy).
 
 [View source on GitHub](https://github.com/jblanchette/wc3v) [Back to WC3V](https://wc3v.com/)

@@ -42,7 +42,7 @@ const TosBanner = {
     banner.innerHTML = `
       <div class="tos-banner-text">
         Free hobby tool, provided as-is. Replays are parsed in your browser and never uploaded. By using the site you agree to our
-        <a href="/terms.html">Terms</a> &amp; <a href="/privacy.html">Privacy</a>.
+        <a href="/terms">Terms</a> &amp; <a href="/privacy">Privacy</a>.
       </div>
       <button type="button" class="tos-banner-dismiss" id="tos-banner-dismiss" aria-label="Dismiss notice">Dismiss</button>
     `;

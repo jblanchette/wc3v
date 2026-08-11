@@ -43,7 +43,7 @@ None of this is sent to us. Clear it any time via your browser's site-data contr
 
 ## 4a. The WC3V desktop app
 
-The desktop app (downloadable from [wc3v.com/download.html](https://wc3v.com/download.html)) watches your Warcraft III replay folders and parses every game **on your machine**. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly three cases:
+The desktop app (downloadable from [wc3v.com/download.html](https://wc3v.com/download)) watches your Warcraft III replay folders and parses every game **on your machine**. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly three cases:
 
 - **Update checks** — it polls our CDN for a newer version, which reveals your IP address and the request the same way any web server sees one.
 
@@ -89,4 +89,4 @@ If this policy changes, the effective date at the top of this page will be updat
 
 Questions or concerns: open an issue on [GitHub](https://github.com/jblanchette/wc3v/issues).
 
-[Back to WC3V](https://wc3v.com/) [Terms of Service](https://wc3v.com/terms.html)
+[Back to WC3V](https://wc3v.com/) [Terms of Service](https://wc3v.com/terms)

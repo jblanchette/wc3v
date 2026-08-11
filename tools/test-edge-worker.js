@@ -24,8 +24,8 @@ const body = src
   .replace(/^export \{[^}]*\};$/m, '')
   .replace(/^export /gm, '');
 
-const { qValue, prefersMarkdown, twinPath } =
-  new Function(body + '\n;return { qValue, prefersMarkdown, twinPath };')();
+const { qValue, prefersMarkdown, twinPath, canonicalPath } =
+  new Function(body + '\n;return { qValue, prefersMarkdown, twinPath, canonicalPath };')();
 
 let pass = 0;
 const failures = [];
@@ -119,6 +119,43 @@ for (const pat of patterns) {
   const star = pat.indexOf('*');
   const valid = star === -1 || star === pat.length - 1;
   check('route pattern is legal: ' + pat, valid, true);
+}
+
+// ── the extensionless URL policy ────────────────────────────────────────────
+check('about.html -> /about',      canonicalPath('/about.html'), '/about');
+check('index.html -> /',           canonicalPath('/index.html'), '/');
+check('builds.html -> /builds',    canonicalPath('/builds.html'), '/builds');
+check('viewer.html -> /viewer',    canonicalPath('/viewer.html'), '/viewer');
+check('extensionless untouched',   canonicalPath('/about'), null);
+check('markdown twin untouched',   canonicalPath('/about.md'), null);
+check('asset untouched',           canonicalPath('/css/main.css'), null);
+check('root untouched',            canonicalPath('/'), null);
+// The error document must not redirect: Render serves it in place, and a 301
+// would turn every 404 into a redirect to a URL that is itself a 404.
+check('404.html is NOT redirected', canonicalPath('/404.html'), null);
+
+// A page that redirects must also be ROUTED, or the Worker never sees it.
+for (const p of PAGES) {
+  if (p.file === '404.html') continue;
+  const htmlUrl = '/' + p.file;
+  if (!htmlUrl.endsWith('.html')) continue;
+  check('route covers ' + htmlUrl + ' (so it can 301)', routed(htmlUrl), true);
+}
+
+check('api/index.html -> /api',    canonicalPath('/api/index.html'), '/api');
+check('builds/index.html -> /builds', canonicalPath('/builds/index.html'), '/builds');
+
+// And the target of every redirect must itself resolve to a real page —
+// including the generated ones, which are not in the hand-written PAGES list.
+const { buildPages } = require('./seo/pages');
+const knownUrls = new Set(
+  PAGES.map(p => p.url).concat(buildPages().map(p => p.url)).concat(['/']));
+for (const p of PAGES) {
+  if (p.file === '404.html' || !p.file.endsWith('.html')) continue;
+  const target = canonicalPath('/' + p.file);
+  if (!target) continue;
+  check('redirect target ' + target + ' is a real page',
+    knownUrls.has(target) || target.startsWith('/builds/'), true);
 }
 
 // ── report ──────────────────────────────────────────────────────────────────
