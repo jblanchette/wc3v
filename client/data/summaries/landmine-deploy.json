@@ -1,0 +1,68 @@
+{
+  "replayId": "landmine-deploy",
+  "map": "Northshire LV",
+  "mapRaw": "Maps/W3Champions/v11/w3c_Northshire_LV.w3x",
+  "durationMs": 1803400,
+  "durationFormatted": "30:03",
+  "fingerprint": "Northshire LV|1803|jeef#1496",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 19298,
+        "gameTimeFormatted": "0:19"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 12763,
+          "gameTimeFormatted": "0:12"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 19298,
+          "gameTimeFormatted": "0:19"
+        },
+        {
+          "type": "unit",
+          "name": "Goblin Sapper",
+          "itemId": "ngsp",
+          "gameTimeMs": 1705033,
+          "gameTimeFormatted": "28:25"
+        },
+        {
+          "type": "unit",
+          "name": "Goblin Sapper",
+          "itemId": "ngsp",
+          "gameTimeMs": 1717588,
+          "gameTimeFormatted": "28:37"
+        },
+        {
+          "type": "unit",
+          "name": "Goblin Sapper",
+          "itemId": "ngsp",
+          "gameTimeMs": 1722924,
+          "gameTimeFormatted": "28:42"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

@@ -2,235 +2,13 @@
   "replayId": "test-move-item",
   "map": "Echo Isles",
   "mapRaw": "Maps/FrozenThrone/(2)EchoIsles.w3x",
-  "mapInfo": {
-    "name": "EchoIsles",
-    "bounds": {
-      "camera": [
-        [
-          -6912,
-          4864
-        ],
-        [
-          6912,
-          -5376
-        ]
-      ],
-      "map": [
-        [
-          -8192,
-          8192
-        ],
-        [
-          6144,
-          -6144
-        ]
-      ]
-    },
-    "gridSize": {
-      "playable": [
-        116,
-        84
-      ],
-      "full": [
-        128,
-        96
-      ],
-      "margins": [
-        6,
-        6,
-        4,
-        8
-      ]
-    }
-  },
   "durationMs": 46350,
   "durationFormatted": "0:46",
-  "neutralCamps": [
-    {
-      "groupId": "fe2973a5-4811-440f-b4fb-ce19db90508f",
-      "totalLevel": 8,
-      "bounds": {
-        "minX": -3634.150390625,
-        "minY": -4063.314208984375,
-        "maxX": -2632.96875,
-        "maxY": -3279.822998046875
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "5aa337d1-6d88-4ed4-9085-a91d212e9c02",
-      "totalLevel": 9,
-      "bounds": {
-        "minX": 2410.276611328125,
-        "minY": 4037.287109375,
-        "maxX": 3321.036865234375,
-        "maxY": 4804.45947265625
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "9c2f41b2-a754-4993-b1b3-c20f2d39451e",
-      "totalLevel": 9,
-      "bounds": {
-        "minX": -3801.58544921875,
-        "minY": 4046.68505859375,
-        "maxX": -2890.8251953125,
-        "maxY": 4813.857421875
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "a1d18cae-cb95-4fb0-8104-b192d782b15b",
-      "totalLevel": 5,
-      "bounds": {
-        "minX": -6050.57666015625,
-        "minY": 373.072509765625,
-        "maxX": -5299.12353515625,
-        "maxY": 1224.5048828125
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "0f1afa90-d2bd-4d1d-8bdd-15e1355eb940",
-      "totalLevel": 16,
-      "bounds": {
-        "minX": 5344.6103515625,
-        "minY": -1330.7238159179688,
-        "maxX": 6459.30517578125,
-        "maxY": -195.95675659179688
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "7ccbd1ed-9c89-4626-a941-f5c96d6d8c0a",
-      "totalLevel": 11,
-      "bounds": {
-        "minX": -5149.982421875,
-        "minY": -3467.08349609375,
-        "maxX": -4202.82275390625,
-        "maxY": -2499.78564453125
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "310589c5-c58a-4a48-9e53-d9ca2cd1c6ff",
-      "totalLevel": 11,
-      "bounds": {
-        "minX": 3723.730224609375,
-        "minY": -3436.0859375,
-        "maxX": 4586.83642578125,
-        "maxY": -2548.124755859375
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "bed3183c-aef7-488f-a36f-19f87d78c849",
-      "totalLevel": 17,
-      "bounds": {
-        "minX": -826.5867309570312,
-        "minY": 2498.6845703125,
-        "maxX": 326.4272766113281,
-        "maxY": 3433.72265625
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "63e578f8-9e7f-4227-ad76-0139c53ddb19",
-      "totalLevel": 8,
-      "bounds": {
-        "minX": 2467.1953125,
-        "minY": -4286.099853515625,
-        "maxX": 3234.86328125,
-        "maxY": -3303.76806640625
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "975c5976-7487-4bac-85be-040778beb27c",
-      "totalLevel": 13,
-      "bounds": {
-        "minX": -747.7492370605469,
-        "minY": -3485.489501953125,
-        "maxX": 262.19493865966797,
-        "maxY": -2802.48876953125
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "fbcb5d56-f926-4fb5-9f41-9b53f036ec7f",
-      "totalLevel": 16,
-      "bounds": {
-        "minX": -6950.9765625,
-        "minY": -1351.4896240234375,
-        "maxX": -5836.28173828125,
-        "maxY": -216.72259521484375
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "c2772e6f-68b1-40b9-90d4-4d8ef1516f87",
-      "totalLevel": 5,
-      "bounds": {
-        "minX": 4864.46484375,
-        "minY": 429.66064453125,
-        "maxX": 5568.86474609375,
-        "maxY": 1243.8426513671875
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "2589ced5-6ad8-40a4-8f61-35d5867cdde8",
-      "totalLevel": 17,
-      "bounds": {
-        "minX": -6987.26123046875,
-        "minY": -4103.482421875,
-        "maxX": -5951.98779296875,
-        "maxY": -3005.86865234375
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "85227f7f-49eb-4f31-8a25-e9a054601f25",
-      "totalLevel": 13,
-      "bounds": {
-        "minX": 2305.20361328125,
-        "minY": -1232.31201171875,
-        "maxX": 3367.417724609375,
-        "maxY": -187.22714233398438
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "40c09ce6-885d-4ec3-8119-bbf9d52b25ca",
-      "totalLevel": 13,
-      "bounds": {
-        "minX": -3980.073974609375,
-        "minY": -1233.08349609375,
-        "maxX": -2884.853759765625,
-        "maxY": -379.8839111328125
-      },
-      "hasFountain": false
-    },
-    {
-      "groupId": "a9fd68b7-a444-428b-a4f2-8798e697a018",
-      "totalLevel": 17,
-      "bounds": {
-        "minX": 5478.90087890625,
-        "minY": -5082.75634765625,
-        "maxX": 6497.2236328125,
-        "maxY": -4143.75341796875
-      },
-      "hasFountain": false
-    }
-  ],
+  "fingerprint": "Echo Isles|46|jblanch",
   "players": {
     "1": {
       "name": "jblanch",
       "race": "U",
-      "startingPosition": {
-        "x": 4672,
-        "y": 2944
-      },
       "heroOpener": {
         "name": "Death Knight",
         "itemId": "Udea",
@@ -243,27 +21,6 @@
       "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
-      "firstTowerTime": null,
-      "firstTowerTimeFormatted": null,
-      "firstUnitTime": null,
-      "firstUnitTimeFormatted": null,
-      "firstHeroLevel2Time": null,
-      "firstHeroLevel2TimeFormatted": null,
-      "firstHeroLevel3Time": null,
-      "firstHeroLevel3TimeFormatted": null,
-      "firstHeroLevel5Time": null,
-      "firstHeroLevel5TimeFormatted": null,
-      "archetype": "unknown",
-      "economyTrack": [
-        {
-          "gameTimeMs": 0,
-          "supplyUsed": 5,
-          "supplyMax": 10,
-          "workersOnGold": 3,
-          "workersOnLumber": 1,
-          "totalWorkers": 3
-        }
-      ],
       "buildPreview": [
         {
           "type": "building",
@@ -278,70 +35,13 @@
           "itemId": "Udea",
           "gameTimeMs": 15000,
           "gameTimeFormatted": "0:15"
-        },
-        {
-          "type": "building",
-          "name": "Tomb of Relics",
-          "itemId": "utom",
-          "gameTimeMs": 15500,
-          "gameTimeFormatted": "0:15"
         }
       ],
       "t2Buildings": [],
       "t2Units": [],
       "t3Buildings": [],
       "t3Units": [],
-      "researched": [],
-      "heroBuilds": [
-        {
-          "uuid": "698ec27e-ab6f-4cd8-b999-3a7cdd3bd19e",
-          "name": "Death Knight",
-          "itemId": "Udea",
-          "spawnTimeMs": 15000,
-          "finalLevel": 1,
-          "levelMilestones": [],
-          "skillOrder": [],
-          "items": [
-            {
-              "slot": "1",
-              "itemId": "stwp",
-              "name": "Scroll of Town Portal"
-            },
-            {
-              "slot": "3",
-              "itemId": "rnec",
-              "name": "Rod of Necromancy"
-            }
-          ],
-          "totalCreepXp": 0,
-          "camps": []
-        }
-      ],
-      "itemPurchases": [
-        {
-          "itemId": "rnec",
-          "name": "Rod of Necromancy",
-          "gameTimeMs": 23199,
-          "gameTimeFormatted": "0:23",
-          "goldCost": 175,
-          "isNeutralShop": false,
-          "heroUuid": "698ec27e-ab6f-4cd8-b999-3a7cdd3bd19e"
-        }
-      ],
-      "itemUses": [],
-      "mercenariesHired": [],
-      "upgradeTimeline": [],
-      "combatUnitsTrack": [
-        {
-          "gameTimeMs": 0,
-          "count": 0
-        },
-        {
-          "gameTimeMs": 30000,
-          "count": 0
-        }
-      ],
-      "apm": null
+      "researched": []
     }
   }
 }

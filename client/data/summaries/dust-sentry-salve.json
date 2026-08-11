@@ -1,0 +1,75 @@
+{
+  "replayId": "dust-sentry-salve",
+  "map": "Northshire LV",
+  "mapRaw": "Maps/W3Champions/v11/w3c_Northshire_LV.w3x",
+  "durationMs": 387150,
+  "durationFormatted": "6:27",
+  "fingerprint": "Northshire LV|387|jeef#1496",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 25125,
+        "gameTimeFormatted": "0:25"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 10663,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 16891,
+          "gameTimeFormatted": "0:16"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 25125,
+          "gameTimeFormatted": "0:25"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 33162,
+          "gameTimeFormatted": "0:33"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 39989,
+          "gameTimeFormatted": "0:39"
+        },
+        {
+          "type": "hero",
+          "name": "Tauren Chieftain",
+          "itemId": "Otch",
+          "gameTimeMs": 51544,
+          "gameTimeFormatted": "0:51"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

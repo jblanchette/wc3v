@@ -1,0 +1,54 @@
+{
+  "replayId": "creepdrop-pickup",
+  "map": "Last Refuge",
+  "mapRaw": "Maps/W3Champions/v11/w3c_LastRefuge_v1.4.w3x",
+  "durationMs": 30850,
+  "durationFormatted": "0:30",
+  "fingerprint": "Last Refuge|31|jeef#1496",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "U",
+      "heroOpener": {
+        "name": "Death Knight",
+        "itemId": "Udea",
+        "gameTimeMs": 15972,
+        "gameTimeFormatted": "0:15"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Darkness",
+          "itemId": "uaod",
+          "gameTimeMs": 10344,
+          "gameTimeFormatted": "0:10"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 11854,
+          "gameTimeFormatted": "0:11"
+        },
+        {
+          "type": "hero",
+          "name": "Death Knight",
+          "itemId": "Udea",
+          "gameTimeMs": 15972,
+          "gameTimeFormatted": "0:15"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "replayId": "sellback-test",
+  "map": "Northshire LV",
+  "mapRaw": "Maps/W3Champions/v11/w3c_Northshire_LV.w3x",
+  "durationMs": 165900,
+  "durationFormatted": "2:45",
+  "fingerprint": "Northshire LV|166|jeef#1496",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 86495,
+        "gameTimeFormatted": "1:26"
+      },
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 9644,
+          "gameTimeFormatted": "0:09"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 86495,
+          "gameTimeFormatted": "1:26"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 92561,
+          "gameTimeFormatted": "1:32"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

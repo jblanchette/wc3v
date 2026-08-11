@@ -1,0 +1,49 @@
+{
+  "replayId": "hide-test",
+  "map": "Last Refuge",
+  "mapRaw": "Maps/W3Champions/v11/w3c_LastRefuge_v1.4.w3x",
+  "durationMs": 392325,
+  "durationFormatted": "6:32",
+  "fingerprint": "Last Refuge|392|jeef#1496",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "E",
+      "heroOpener": null,
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 8436,
+          "gameTimeFormatted": "0:08"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 11151,
+          "gameTimeFormatted": "0:11"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 17588,
+          "gameTimeFormatted": "0:17"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

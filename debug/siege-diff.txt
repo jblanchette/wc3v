@@ -1,0 +1,24 @@
+Paired diff vs debug/siege-base.json — 334 common replay(s)
+  blatantPerMin mean delta: -0.001  (negative = better)
+  improved: 6   worsened: 3   ~flat: 325
+
+  aggregate dimensions (before → after):
+  invariantTotal           0  →  0
+  speedViolationTotal      62024  →  62017
+  airSwingPct mean         27.44  →  27.21
+  flips/unit-min mean      0.43  →  0.42
+  strictConv% mean         n/a  →  82.73
+  posErrMedian mean        n/a  →  224.83
+
+  5 most worsened:
+    +0.13  0 → 0.13  1031906232_FoCuS_Eer0_Springtime13
+    +0.07  0 → 0.07  1020568240_Soin_Life_EchoIsles22
+    +0.07  0 → 0.07  1174595027_Pcg123_Inspired_ShatteredExile
+    +0  0 → 0  1010267604_Snowdream_War3Orcer0_TurtleRock20
+    +0  0 → 0  1047891405_Leqi_Cash_Tidehunters12
+  5 most improved:
+    -0.13  0.13 → 0  338540307_Happy_Life_Echo-Isles-22
+    -0.07  0.07 → 0  3093723884_Leon_Eer0_NorthernIsles
+    -0.07  0.07 → 0  2857443226_Sok_Eer0_LastRefuge15
+    -0.07  0.07 → 0  2746363582_Jens_Lyn_Tidehunters12
+    -0.07  0.07 → 0  1959551150_Moon_FoCuS_Hammerfall

@@ -1,0 +1,22 @@
+Paired diff vs debug/fidelity-base.json — 334 common replay(s)
+  blatantPerMin mean delta: 0.000  (negative = better)
+  improved: 0   worsened: 0   ~flat: 334
+
+  aggregate dimensions (before → after):
+  invariantTotal           0  →  0
+  speedViolationTotal      62022  →  62022
+  airSwingPct mean         27.11  →  27.13
+  flips/unit-min mean      0.41  →  0.4
+
+  5 most worsened:
+    +0  0 → 0  1010267604_Snowdream_War3Orcer0_TurtleRock20
+    +0  0.07 → 0.07  1020568240_Soin_Life_EchoIsles22
+    +0  0 → 0  1031906232_FoCuS_Eer0_Springtime13
+    +0  0 → 0  1047891405_Leqi_Cash_Tidehunters12
+    +0  0 → 0  1053414698_Sok_Kaho_Springtime13
+  5 most improved:
+    +0  17.27 → 17.27  w3c-test
+    +0  0 → 0  test-worker-double
+    +0  15.13 → 15.13  test-wolves
+    +0  0 → 0  test-watchtower-2
+    +0  0 → 0  test-watchtower

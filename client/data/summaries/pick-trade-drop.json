@@ -1,0 +1,101 @@
+{
+  "replayId": "pick-trade-drop",
+  "map": "Northshire LV",
+  "mapRaw": "Maps/W3Champions/v11/w3c_Northshire_LV.w3x",
+  "durationMs": 479725,
+  "durationFormatted": "7:59",
+  "fingerprint": "Northshire LV|480|jeef#1496",
+  "players": {
+    "1": {
+      "name": "Jeef#1496",
+      "race": "O",
+      "heroOpener": {
+        "name": "Far Seer",
+        "itemId": "Ofar",
+        "gameTimeMs": 78367,
+        "gameTimeFormatted": "1:18"
+      },
+      "tier2Time": 200602,
+      "tier2TimeFormatted": "3:20",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 13507,
+          "gameTimeFormatted": "0:13"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 77195,
+          "gameTimeFormatted": "1:17"
+        },
+        {
+          "type": "hero",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "gameTimeMs": 78367,
+          "gameTimeFormatted": "1:18"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 82317,
+          "gameTimeFormatted": "1:22"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 133420,
+          "gameTimeFormatted": "2:13"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 136083,
+          "gameTimeFormatted": "2:16"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 155080,
+          "gameTimeFormatted": "2:35"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 194023,
+          "gameTimeFormatted": "3:14"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 372853,
+          "gameTimeFormatted": "6:12"
+        }
+      ],
+      "t2Buildings": [],
+      "t2Units": [
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

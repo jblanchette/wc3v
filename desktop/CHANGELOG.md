@@ -1,7 +1,19 @@
 # WC3V Desktop: changelog
 
-Nothing here is a public release. The app does not launch until 1.0.0; these
-builds go to R2 so the existing install can update itself. See `README.md`.
+## 1.0.0 — 10 Aug 2026
+
+The launch. Everything below 1.0.0 was dogfooding: builds published to R2 so
+one install could update itself, with nothing user-facing announcing them.
+From here the download page (wc3v.com/download.html) is live, reads the same
+update manifest the app does, and always points at this — the current —
+installer.
+
+1.0.0 is 0.10.0's report made public: the density ruleset, the one-row frame,
+the Overview header riding the dominance band, the moments timeline, the
+per-team creep truth and the interleaved build order, on the schema-v5 store
+with self-migration. See 0.10.0 below for the detail; nothing changed between
+the two but the version, the download page going live, and the launch
+housekeeping (the preview pages and pre-release language went).
 
 ## 0.10.0 — 10 Aug 2026
 

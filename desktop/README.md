@@ -3,17 +3,13 @@
 Watches your Warcraft III replay folders, parses each game locally the moment it
 finishes, and drives an OBS-ready overlay.
 
-**Status: functional, and not launched.** Discovery, scanning, watching, local
-parsing, summary persistence, the backfill engine, the profile and coach layer,
-the OBS overlay, the games UI, the W3Champions Next game panel and the "open
-this moment in the viewer" handoff are all built. A real game has been detected
-and parsed end to end. No real OBS has rendered the overlay yet.
-
-**Nothing about this app is public until 1.0.0.** Builds are published to R2 so
-the one existing install can update itself, which is dogfooding rather than
-shipping. `client/download.html` is written but deliberately not deployed, and
-nothing on the site links to it. See "Releasing" below. Version history is in
-`CHANGELOG.md`.
+**Status: launched at 1.0.0.** Discovery, scanning, watching, local parsing,
+summary persistence, the backfill engine, the profile and coach layer, the OBS
+overlay, the games UI, the W3Champions Next game panel and the "open this
+moment in the viewer" handoff are all built and shipped.
+`wc3v.com/download.html` is the public download; it reads the same
+`latest.json` the updater does, so it always points at the current installer.
+Version history is in `CHANGELOG.md`.
 
 The window is a feed of your games. You finish a match, alt-tab, and the read is
 already done: did I win, what did they do, where did the game turn. Clicking a
@@ -616,8 +612,8 @@ different size than the one you audited at.
 
 ## Releasing
 
-Users double-click an installer. There is no other distribution channel, and
-until 1.0.0 there is no public one at all.
+Users double-click an installer from `wc3v.com/download.html`. There is no
+other distribution channel.
 
 **The version lives in `desktop/src-tauri/tauri.conf.json` and nowhere else.**
 The installer, the binary and the update manifest all read it. It must be
@@ -654,10 +650,11 @@ open-source history, and this script is the only path from a build to the CDN.
 
 Everything lands in `r2:wc3v-cdn/desktop/`, public at
 `https://cdn.wc3v.com/desktop/`, which is the endpoint in `tauri.conf.json`
-under `plugins.updater.endpoints`. **Every build currently publishes to
-`desktop/latest.json`, which is *the* release channel.** That is harmless while
-there is one install on it. The moment anyone else has the app, split it: a
-`desktop/dev/latest.json` with the app's endpoint pointed there until 1.0.0.
+under `plugins.updater.endpoints`. **Every build publishes to
+`desktop/latest.json`, which is *the* release channel — and as of 1.0.0 the
+public is on it.** Dev builds must no longer be pushed there casually: split a
+`desktop/dev/latest.json` (and point a dev install's endpoint at it) before
+the next round of dogfooding-grade builds.
 
 ## Traps that have already bitten this
 
