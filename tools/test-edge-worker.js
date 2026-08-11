@@ -95,16 +95,31 @@ function routed (urlPath) {
     return re.test(urlPath);
   });
 }
+// Both the page AND its twin must be routed. Cloudflare rejects a wildcard
+// anywhere but the start of the hostname or the end of the path, so there is no
+// `*.md` pattern to lean on — each twin needs its own route.
 for (const p of PAGES) {
   if (!p.md) continue;
   check('route covers ' + p.url, routed(p.url), true);
+  check('route covers twin ' + mdUrl(p.url), routed(mdUrl(p.url)), true);
 }
-check('route covers /builds/<id>', routed('/builds/ne-dh-fast-bear'), true);
-check('route covers a twin',       routed('/about.md'), true);
-check('assets NOT routed',         routed('/assets/wc3icons/x.jpg'), false);
-check('js NOT routed',             routed('/js/app.js'), false);
-check('css NOT routed',            routed('/css/main.css'), false);
-check('summaries NOT routed',      routed('/data/summaries/x.json'), false);
+check('route covers /builds/<id>',     routed('/builds/ne-dh-fast-bear'), true);
+check('route covers a build twin',     routed('/builds/ne-dh-fast-bear.md'), true);
+check('route covers /builds.md',       routed('/builds.md'), true);
+check('route covers .well-known',      routed('/.well-known/api-catalog'), true);
+check('assets NOT routed',             routed('/assets/wc3icons/x.jpg'), false);
+check('js NOT routed',                 routed('/js/app.js'), false);
+check('css NOT routed',                routed('/css/main.css'), false);
+check('summaries NOT routed',          routed('/data/summaries/x.json'), false);
+check('openapi.json NOT routed',       routed('/api/openapi.json'), false);
+
+// Cloudflare's own constraint, enforced here so an invalid pattern is caught
+// locally instead of by a half-applied deploy (error 10022).
+for (const pat of patterns) {
+  const star = pat.indexOf('*');
+  const valid = star === -1 || star === pat.length - 1;
+  check('route pattern is legal: ' + pat, valid, true);
+}
 
 // ── report ──────────────────────────────────────────────────────────────────
 console.log('edge-worker: ' + pass + ' passed, ' + failures.length + ' failed');

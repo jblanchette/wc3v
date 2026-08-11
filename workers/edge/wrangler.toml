@@ -8,28 +8,40 @@ workers_dev = false
 # an invocation for every /assets/wc3icons/* request — hundreds per pageview —
 # even though those 301 to R2 from the origin. The free tier is 100k/day.
 #
-# Only HTML pages, their markdown twins, and the well-known surfaces need the
-# Worker. /js/*, /css/*, /data/*, /assets/* and /maps/* deliberately do not
-# match and go straight to origin.
+# Only pages that have a markdown twin, plus the well-known surfaces, need the
+# Worker. /js/*, /css/*, /data/*, /assets/*, /maps/* and /api/openapi.json
+# deliberately do not match and go straight to origin.
 #
-# Keep this list in step with tools/seo/pages.js. `npm run check-seo` fails if a
-# registry page has no matching route here.
+# Every page is listed TWICE, once as the page and once as its .md twin. That
+# is not redundancy — Cloudflare rejects a wildcard anywhere except the start of
+# the hostname or the END of the path, so `wc3v.com/*.md` is an invalid pattern
+# (error 10022) and extension matching is simply not available. The twin routes
+# exist so an agent that fetches /about.md directly still gets the right
+# content-type and CORS headers.
+#
+# Keep this list in step with tools/seo/pages.js — tools/test-edge-worker.js
+# fails if a registry page with a twin has no matching route.
 routes = [
-  { pattern = "wc3v.com/",           zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/*.html",     zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/*.md",       zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/.well-known/*", zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/learn",      zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/about",      zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/community",  zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/download",   zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/privacy",    zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/terms",      zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/api",        zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/builds",     zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/builds/*",   zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/viewer",     zone_name = "wc3v.com" },
-  { pattern = "wc3v.com/replays",    zone_name = "wc3v.com" }
+  { pattern = "wc3v.com/",              zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/index.md",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/learn",         zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/learn.md",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/about",         zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/about.md",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/community",     zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/community.md",  zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/download",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/download.md",   zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/api",           zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/api.md",        zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/privacy",       zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/privacy.md",    zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/terms",         zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/terms.md",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/builds",        zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/builds.md",     zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/builds/*",      zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/.well-known/*", zone_name = "wc3v.com" }
 ]
 
 [observability]

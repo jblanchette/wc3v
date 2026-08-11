@@ -86,3 +86,15 @@ client/assets/press/
 # `gen-seo --check` fail daily and add pure diff noise. Everything else gen-seo
 # emits IS committed, so the generated output stays reviewable.
 client/.well-known/security.txt
+
+# Secrets. Never commit credentials. The Cloudflare API token lives OUTSIDE
+# this repo at ~/.wc3v/cloudflare.env (user-only ACL) precisely so a stray
+# `git add -A` cannot pick it up; these patterns are belt-and-braces for
+# anything that does land in the tree.
+.env
+.env.*
+*.env
+!seo/copy/*.env
+.secrets/
+*.token
+cloudflare.env
