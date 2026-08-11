@@ -19,7 +19,35 @@
   <meta property="og:description" content="Pick your race, then your hero, then your army. You get one Warcraft III build to learn and a pro replay to watch it in.">
   <meta property="og:url" content="https://wc3v.com/learn">
   <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V Build Finder, matching a Warcraft III build to how you play.">
   <meta property="og:locale" content="en_US">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://wc3v.com/learn#page",
+        "url": "https://wc3v.com/learn",
+        "name": "WC3V Build Finder",
+        "description": "Pick your race, hero and army and get one Warcraft III build to learn, with a pro replay you can watch it played in.",
+        "isPartOf": { "@id": "https://wc3v.com/#website" },
+        "publisher": { "@id": "https://wc3v.com/#org" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://wc3v.com/learn#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://wc3v.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Build Finder" }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="WC3V Build Finder, Starter Warcraft III Builds for New Players">
@@ -30,6 +58,25 @@
   <link rel="stylesheet" href="css/redesign.css?v=9fd305548f">
 </head>
 <body>
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
 
   <header class="topbar">
     <span class="topbar-logo">WC<span>3</span>V</span>
@@ -106,5 +153,25 @@
       if (window.BuildFinder && window.BuildFinder.init) window.BuildFinder.init();
     });
   </script>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="site-footer-about">
+        <div class="site-footer-brand">WC3V</div>
+        <p>Free, open-source replay analysis for Warcraft III.</p>
+      </div>
+      <div class="site-footer-links">
+        <a href="/about">About</a>
+        <a href="/download">Download</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+        <a href="https://github.com/jblanchette/wc3v">GitHub</a>
+        <a href="https://github.com/jblanchette/wc3v/blob/master/LICENSE.md">GPLv3 License</a>
+      </div>
+    </div>
+    <div class="site-footer-legal">
+      Warcraft III and all related assets are trademarks of Blizzard Entertainment, Inc. This is a fan-made, non-commercial tool not affiliated with or endorsed by Blizzard.
+    </div>
+  </footer>
 </body>
 </html>

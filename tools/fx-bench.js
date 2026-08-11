@@ -1,5 +1,5 @@
 //
-// fx-bench.js — drives client/test-fx.html in a real browser and asserts that
+// fx-bench.js — drives client/dev/test-fx.html in a real browser and asserts that
 // the effect layer puts pixels on the screen.
 //
 // The gap this closes: tools/projectile-check.js validates the MODEL against a
@@ -430,7 +430,7 @@ const padL = (s, n) => String(s == null ? '' : s).padStart(n);
     process.exit(airborne.length && drew.length < airborne.length ? 1 : 0);
   }
 
-  await page.goto(BASE + '/test-fx.html', { waitUntil: 'networkidle2', timeout: 60000 });
+  await page.goto(BASE + '/dev/test-fx.html', { waitUntil: 'networkidle2', timeout: 60000 });
 
   try {
     await page.waitForFunction('window.FX_READY === true || window.FX_ERROR', { timeout: 30000 });

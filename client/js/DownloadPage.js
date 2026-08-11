@@ -81,6 +81,7 @@ const DownloadPage = {
         if (shaPending) shaPending.hidden = true;
       }
 
+      this._patchStructuredData(manifest, win);
       this._refreshGate();
     } catch (err) {
       if (cardEl) cardEl.hidden = true;
@@ -90,6 +91,30 @@ const DownloadPage = {
       if (notesCard) notesCard.hidden = true;
       if (failEl) failEl.hidden = false;
     }
+  },
+
+  // Fill the version-dependent fields of the SoftwareApplication JSON-LD in
+  // download.html. They cannot be committed statically — latest.json is the
+  // single source of truth for the shipped version, and a hardcoded number in
+  // the markup would be wrong from the first release after the commit.
+  //
+  // Crawlers that render JS (Googlebot does) pick this up; ones that don't
+  // still get a valid node, just without softwareVersion/downloadUrl. Failing
+  // silently is correct here: a broken manifest fetch already surfaces to the
+  // user through the fail notice, and structured data is not worth a throw.
+  _patchStructuredData(manifest, win) {
+    try {
+      const el = document.getElementById('ld-desktop-app');
+      if (!el) return;
+      const node = JSON.parse(el.textContent);
+      if (manifest.version) node.softwareVersion = manifest.version;
+      if (win.url) node.downloadUrl = win.url;
+      if (manifest.pub_date) {
+        const d = new Date(manifest.pub_date);
+        if (!isNaN(d.getTime())) node.datePublished = d.toISOString().slice(0, 10);
+      }
+      el.textContent = JSON.stringify(node, null, 2);
+    } catch (e) { /* structured data is not worth breaking the page over */ }
   },
 
   copySha() {

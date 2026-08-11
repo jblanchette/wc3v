@@ -7,8 +7,84 @@
   <title>Download WC3V Desktop | WC3V</title>
   <meta name="description" content="Download the WC3V desktop app for Windows. Check the version and checksum, read the disclosures, and get the installer straight from our CDN.">
 
-  <link rel="canonical" href="https://wc3v.com/download.html">
+  <link rel="canonical" href="https://wc3v.com/download">
   <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="Download WC3V for Windows">
+  <meta property="og:description" content="The desktop app watches your replays folder. When a game ends the report is already there: the result, who was ahead and when, both builds, the whole economy.">
+  <meta property="og:url" content="https://wc3v.com/download">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V desktop app showing a finished Warcraft III game report.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Download WC3V for Windows">
+  <meta name="twitter:description" content="Watches your replays folder and has the report ready when the game ends. Free, open source, Windows 10 and 11.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
+
+  <!-- SoftwareApplication for the desktop app. Deliberately carries no
+       aggregateRating and no review: Google requires one of those for a
+       Software App rich result and we have no ratings, so inventing them
+       would be a structured-data spam violation. This node is here for
+       entity comprehension (AI crawlers parse JSON-LD and do not enforce
+       Google's required-property list), not for a SERP enhancement.
+
+       softwareVersion and downloadUrl are absent on purpose. Both come from
+       https://cdn.wc3v.com/desktop/latest.json at runtime, and DownloadPage.js
+       patches them into this node once that fetch resolves. A hardcoded
+       version here would be wrong the moment a release ships. -->
+  <script type="application/ld+json" id="ld-desktop-app">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "@id": "https://wc3v.com/download#app",
+    "name": "WC3V Desktop",
+    "url": "https://wc3v.com/download",
+    "description": "Watches your Warcraft III replay folders, parses each game locally the moment it finishes, and grades it. Replays never leave the machine.",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "processorRequirements": "x86-64",
+    "isAccessibleForFree": true,
+    "license": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "softwareHelp": "https://github.com/jblanchette/wc3v",
+    "publisher": { "@id": "https://wc3v.com/#org" }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://wc3v.com/download#page",
+        "url": "https://wc3v.com/download",
+        "name": "Download WC3V Desktop",
+        "isPartOf": { "@id": "https://wc3v.com/#website" },
+        "primaryImageOfPage": "https://wc3v.com/assets/og-preview.png",
+        "mainEntity": { "@id": "https://wc3v.com/download#app" },
+        "publisher": { "@id": "https://wc3v.com/#org" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://wc3v.com/download#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://wc3v.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Download" }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
@@ -136,6 +212,25 @@
   </style>
 </head>
 <body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
   <script src="js/clientConfig.js?v=16b088dcdf"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>

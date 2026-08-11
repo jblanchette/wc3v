@@ -7,13 +7,23 @@
   <title>About WC3V - Visual Build Order &amp; Replay Analyzer for Warcraft III</title>
   <meta name="description" content="WC3V is a visual build order and replay simulator for Warcraft III. Upload .w3g replays for full breakdowns of builds, heroes, units, upgrades, and minimap playback. Free, open source, and built for the WC3 community.">
 
-  <link rel="canonical" href="https://wc3v.com/about.html">
+  <link rel="canonical" href="https://wc3v.com/about">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="WC3V">
   <meta property="og:title" content="About WC3V - Visual Build Order & Replay Analyzer for Warcraft III">
   <meta property="og:description" content="Visual replay analyzer for Warcraft III. Build order timelines, minimap playback, and pro build library. Free and open source.">
-  <meta property="og:url" content="https://wc3v.com/about.html">
+  <meta property="og:url" content="https://wc3v.com/about">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V build library, showing pro Warcraft III build orders by race and matchup.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About WC3V - Visual Build Order & Replay Analyzer for Warcraft III">
+  <meta name="twitter:description" content="Visual replay analyzer for Warcraft III. Build order timelines, minimap playback, and pro build library. Free and open source.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
 
   <meta name="robots" content="index, follow">
   <meta name="keywords" content="Warcraft 3 replay simulator, WC3 build order, w3g replay analyzer, Warcraft III strategy guide, WC3 replay parser, Warcraft 3 build orders, WC3 replay analysis, Warcraft III pro builds, WC3 minimap replay, Warcraft 3 unit composition">
@@ -21,17 +31,26 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "AboutPage",
-    "name": "About WC3V",
-    "description": "WC3V is a visual build order and replay simulator for Warcraft III. Upload .w3g replays for full game breakdowns.",
-    "mainEntity": {
-      "@type": "WebApplication",
-      "name": "WC3V",
-      "url": "https://wc3v.com",
-      "applicationCategory": "GameApplication",
-      "operatingSystem": "Web",
-      "isAccessibleForFree": true
-    }
+    "@graph": [
+      {
+        "@type": "AboutPage",
+        "@id": "https://wc3v.com/about#page",
+        "url": "https://wc3v.com/about",
+        "name": "About WC3V",
+        "description": "WC3V is a visual build order and replay simulator for Warcraft III. Upload .w3g replays for full game breakdowns.",
+        "isPartOf": { "@id": "https://wc3v.com/#website" },
+        "about": { "@id": "https://wc3v.com/#webapp" },
+        "publisher": { "@id": "https://wc3v.com/#org" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://wc3v.com/about#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://wc3v.com/" },
+          { "@type": "ListItem", "position": 2, "name": "About" }
+        ]
+      }
+    ]
   }
   </script>
 
@@ -45,6 +64,25 @@
   </style>
 </head>
 <body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
   <script src="js/clientConfig.js?v=16b088dcdf"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>

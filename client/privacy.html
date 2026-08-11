@@ -7,8 +7,48 @@
   <title>Privacy Policy | WC3V</title>
   <meta name="description" content="Privacy policy for WC3V. Replays are parsed in your browser and never uploaded. We don't sell your data because we don't have any.">
 
-  <link rel="canonical" href="https://wc3v.com/privacy.html">
+  <link rel="canonical" href="https://wc3v.com/privacy">
   <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="Privacy Policy | WC3V">
+  <meta property="og:description" content="Your replay files never leave your browser. No accounts, no analytics, nothing to sell.">
+  <meta property="og:url" content="https://wc3v.com/privacy">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V build library, showing pro Warcraft III build orders by race and matchup.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Privacy Policy | WC3V">
+  <meta name="twitter:description" content="Your replay files never leave your browser. No accounts, no analytics, nothing to sell.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": "https://wc3v.com/privacy#page",
+        "url": "https://wc3v.com/privacy",
+        "name": "Privacy Policy",
+        "isPartOf": { "@id": "https://wc3v.com/#website" },
+        "publisher": { "@id": "https://wc3v.com/#org" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://wc3v.com/privacy#breadcrumb",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://wc3v.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Privacy Policy" }
+        ]
+      }
+    ]
+  }
+  </script>
 
   <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
@@ -54,6 +94,25 @@
   </style>
 </head>
 <body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
   <script src="js/clientConfig.js?v=16b088dcdf"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>

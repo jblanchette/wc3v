@@ -8,6 +8,24 @@
   <meta name="robots" content="noindex">
   <link rel="canonical" href="https://wc3v.com/replays">
 
+  <!-- noindex above, but the OG tags still matter: unfurl scrapers ignore
+       robots directives, and a shared /replays link produced a blank card. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WC3V">
+  <meta property="og:title" content="WC3V — Your Replay Library">
+  <meta property="og:description" content="Browse, search and sort your locally-parsed Warcraft III replays. Stored in your browser, never uploaded.">
+  <meta property="og:url" content="https://wc3v.com/replays">
+  <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V build library, showing pro Warcraft III build orders by race and matchup.">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="WC3V — Your Replay Library">
+  <meta name="twitter:description" content="Browse, search and sort your locally-parsed Warcraft III replays. Stored in your browser, never uploaded.">
+  <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
+
   <link rel="preconnect" href="https://cdn.wc3v.com" crossorigin>
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
@@ -22,10 +40,29 @@
     // in its URL. Dev keeps null (no ?v=). Must stay ABOVE the script tags
     // below so it's set before UploadManager.js runs.
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '9f680974e7'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '8e41f51919'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
   <script src="js/clientConfig.js?v=16b088dcdf"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>

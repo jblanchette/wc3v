@@ -58,6 +58,9 @@
   <meta property="og:description" content="Browse pro Warcraft III builds, analyze your own .w3g replays in-browser (no upload), and compare your build to a pro's with graded feedback.">
   <meta property="og:url" content="https://wc3v.com/">
   <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The WC3V build library, showing pro Warcraft III build orders by race and matchup.">
   <meta property="og:locale" content="en_US">
 
   <!-- Twitter Card -->
@@ -66,11 +69,20 @@
   <meta name="twitter:description" content="Browse pro Warcraft III builds, drop a .w3g for a local in-browser breakdown, or compare your replay to a pro's with graded feedback.">
   <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
 
-  <!-- Per-band SEO: if the page was opened at ?level=new|improving|pro, swap
-       the title / description / canonical (and OG / Twitter variants) to that
+  <!-- Per-band framing: if the page was opened at ?level=new|improving|pro,
+       swap the title and description (and their OG / Twitter variants) to that
        band's copy before paint. Self-contained — runs long before the main
-       script. All three bands are fully indexable; one tool, one brand, three
-       lenses — not three tools. -->
+       script.
+
+       The canonical and og:url are deliberately NOT rewritten here. Google's
+       JS SEO guidance is explicit that you must not use JavaScript to change
+       the canonical to something other than the URL in the original HTML, and
+       we used to do exactly that (?level= claimed its own canonical while the
+       static HTML claimed "/"). The bands are the same page with different
+       framing, which is the thin-duplicate pattern Google consolidates no
+       matter what the canonical says. So the band is UI state now: one
+       canonical, "/", hardcoded above, and no ?level= URLs in the sitemap.
+       Titles and descriptions via JS are supported and stay. -->
   <script>
   (function () {
     var L = (new URLSearchParams(location.search).get('level') || '').toLowerCase();
@@ -87,8 +99,6 @@
     set('meta[property="og:description"]', 'content', v.d);
     set('meta[name="twitter:title"]', 'content', v.t);
     set('meta[name="twitter:description"]', 'content', v.d);
-    set('meta[property="og:url"]', 'content', 'https://wc3v.com/?level=' + L);
-    set('link[rel="canonical"]', 'href', 'https://wc3v.com/?level=' + L);
   })();
   </script>
 
@@ -97,28 +107,68 @@
   <meta name="keywords" content="Warcraft 3, WC3, build orders, replay analysis, replay parser, w3g, pro builds, strategy, Human, Orc, Night Elf, Undead, competitive, esports">
   <meta name="author" content="WC3V">
 
-  <!-- JSON-LD Structured Data -->
+  <!-- JSON-LD Structured Data.
+       One @graph with stable @ids so every other page can reference the
+       Organization and WebSite by @id instead of redeclaring them.
+
+       Note what is deliberately absent: no SearchAction on the WebSite node.
+       The sitelinks searchbox was deprecated in Oct 2024 and retired globally
+       that November, so potentialAction/SearchAction is dead weight now. The
+       bare WebSite node still feeds the site-name feature, which is why it
+       stays. Also no FAQPage and no HowTo anywhere on the site: Google dropped
+       HowTo rich results in 2023 and FAQ ones in May 2026. -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "WC3V",
-    "url": "https://wc3v.com",
-    "description": "Free, open-source Warcraft III build order library and replay analysis tool. Browse pro build orders by race and matchup, or upload .w3g replays for a full visual breakdown.",
-    "applicationCategory": "GameApplication",
-    "operatingSystem": "Web",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
-    },
-    "isAccessibleForFree": true,
-    "license": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md",
-    "sourceOrganization": {
-      "@type": "Organization",
-      "name": "WC3V",
-      "url": "https://github.com/jblanchette/wc3v"
-    }
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://wc3v.com/#org",
+        "name": "WC3V",
+        "url": "https://wc3v.com",
+        "logo": "https://wc3v.com/android-chrome-512x512.png",
+        "description": "Free, open-source Warcraft III replay analysis and a curated library of pro build orders.",
+        "foundingDate": "2021",
+        "sameAs": [
+          "https://github.com/jblanchette/wc3v"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://wc3v.com/#website",
+        "name": "WC3V",
+        "url": "https://wc3v.com",
+        "inLanguage": "en-US",
+        "publisher": { "@id": "https://wc3v.com/#org" }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://wc3v.com/#webapp",
+        "name": "WC3V",
+        "url": "https://wc3v.com",
+        "description": "Free, open-source Warcraft III build order library and replay analysis tool. Browse pro build orders by race and matchup, or upload .w3g replays for a full visual breakdown.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web",
+        "browserRequirements": "Requires a browser with WebGL 2 support.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "isAccessibleForFree": true,
+        "license": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md",
+        "featureList": [
+          "Curated pro Warcraft III build orders by race and matchup",
+          "3D replay playback with second-level scrubbing",
+          "In-browser .w3g parsing, no upload",
+          "Letter-graded comparison of your replay against a pro's"
+        ],
+        "screenshot": "https://wc3v.com/assets/og-preview.png",
+        "isPartOf": { "@id": "https://wc3v.com/#website" },
+        "publisher": { "@id": "https://wc3v.com/#org" },
+        "sourceOrganization": { "@id": "https://wc3v.com/#org" }
+      }
+    ]
   }
   </script>
 
@@ -140,10 +190,29 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '9f680974e7'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '8e41f51919'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
+  <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
+       inserting its own, so this costs nothing at runtime and gives crawlers
+       and JS-off visitors a real internal link graph. Keep the hrefs in sync
+       with the navLinks block in js/SiteNav.js. -->
+  <nav id="site-nav" role="navigation" aria-label="Main navigation">
+    <div class="site-nav-inner">
+      <a class="site-nav-logo" href="/" aria-label="WC3V home">
+        <span class="site-wordmark" aria-hidden="true">WC<span>3</span>V</span>
+      </a>
+      <div class="site-nav-spacer"></div>
+      <div class="site-nav-links">
+        <a class="site-nav-link" href="/">Home</a>
+        <a class="site-nav-link" href="/about">About</a>
+        <a class="site-nav-link" href="/community">Community</a>
+        <a class="site-nav-link" href="/download">Download</a>
+      </div>
+    </div>
+  </nav>
+
   <script src="js/clientConfig.js?v=16b088dcdf"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>
