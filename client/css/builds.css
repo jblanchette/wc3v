@@ -1,0 +1,247 @@
+/* ============================================================
+   builds.css — the generated /builds pages.
+
+   These pages are emitted by tools/seo/build-page.js from
+   builds-manifest.json. They exist because the 16 curated builds
+   previously lived only in JSON that the homepage fetched at
+   runtime, so a crawler that does not execute JS saw a tagline and
+   a footer. Now each build is a real document.
+
+   Consumes tokens.css only. Race colour is DATA here (the accent
+   stripe on a build's identity row), never chrome — per the
+   headline rule in tokens.css.
+   ============================================================ */
+
+.bp-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--page-gutter, var(--sp-5)) var(--sp-8);
+}
+
+/* ── breadcrumb ─────────────────────────────────────────────── */
+.bp-crumbs {
+  font-size: var(--fs-min);
+  color: var(--text-dim);
+  margin: 0 0 var(--sp-4);
+}
+.bp-crumbs a { color: var(--text-muted); text-decoration: none; }
+.bp-crumbs a:hover { color: var(--accent); text-decoration: underline; }
+.bp-crumbs span { margin: 0 var(--sp-2); color: var(--text-dim); }
+
+/* ── identity ───────────────────────────────────────────────── */
+.bp-title {
+  font-size: var(--fs-h1);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--sp-3);
+}
+.bp-lede {
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin: 0 0 var(--sp-5);
+}
+
+.bp-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-6);
+  padding: 0;
+  list-style: none;
+}
+.bp-fact {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-label);
+  color: var(--text);
+}
+.bp-fact b {
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+/* Race is the one place colour carries meaning on this page. */
+.bp-fact--race { border-color: var(--bp-race-edge, var(--border-2)); }
+.bp-fact--race b { color: var(--bp-race, var(--text-dim)); }
+
+/* ── sections ───────────────────────────────────────────────── */
+.bp-section { margin: 0 0 var(--sp-6); }
+.bp-section h2 {
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+.bp-section h3 {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+  color: var(--text);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+.bp-section p,
+.bp-section li {
+  font-size: var(--fs-sm);
+  line-height: 1.65;
+  color: var(--text);
+}
+.bp-section ul { padding-left: var(--sp-5); margin: 0 0 var(--sp-3); }
+.bp-section li { margin-bottom: var(--sp-2); }
+.bp-section a { color: var(--accent); text-decoration: none; }
+.bp-section a:hover { text-decoration: underline; }
+
+/* ── tier progression ───────────────────────────────────────── */
+.bp-tiers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--sp-4);
+}
+.bp-tier {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+}
+.bp-tier-name {
+  font-size: var(--fs-min);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 var(--sp-3);
+}
+.bp-tier[data-tier="t1"] .bp-tier-name { color: var(--tier-1); }
+.bp-tier[data-tier="t2"] .bp-tier-name { color: var(--tier-2); }
+.bp-tier[data-tier="t3"] .bp-tier-name { color: var(--tier-3); }
+.bp-tier dl { margin: 0; }
+.bp-tier dt {
+  font-size: var(--fs-min);
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-top: var(--sp-3);
+}
+.bp-tier dt:first-child { margin-top: 0; }
+.bp-tier dd {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-label);
+  line-height: 1.55;
+  color: var(--text);
+}
+
+/* ── mistakes ───────────────────────────────────────────────── */
+.bp-mistakes { margin: 0; }
+.bp-mistakes dt {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--text);
+  margin-top: var(--sp-4);
+}
+.bp-mistakes dt:first-child { margin-top: 0; }
+.bp-mistakes dd {
+  margin: var(--sp-1) 0 0;
+  padding-left: var(--sp-4);
+  border-left: 2px solid var(--border-2);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+/* ── replay table ───────────────────────────────────────────── */
+.bp-replays-wrap { overflow-x: auto; }
+.bp-replays {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-label);
+}
+.bp-replays th,
+.bp-replays td {
+  text-align: left;
+  padding: var(--sp-3) var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.bp-replays th {
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.bp-replays td { color: var(--text); }
+.bp-replays tr:last-child td { border-bottom: none; }
+
+/* ── index page ─────────────────────────────────────────────── */
+.bp-race-group { margin: 0 0 var(--sp-7); }
+.bp-race-heading {
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 var(--sp-4);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+.bp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--sp-4);
+}
+.bp-card {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-4);
+  text-decoration: none;
+  color: inherit;
+}
+.bp-card:hover { border-color: var(--border-3); background: var(--surface-2); }
+.bp-card-name {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 var(--sp-2);
+}
+.bp-card-meta {
+  font-size: var(--fs-min);
+  color: var(--text-dim);
+  margin: 0 0 var(--sp-3);
+}
+.bp-card-desc {
+  font-size: var(--fs-label);
+  line-height: 1.55;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ── call to action back into the app ───────────────────────── */
+.bp-cta {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  margin: var(--sp-7) 0 0;
+  text-align: center;
+}
+.bp-cta p { margin: 0 0 var(--sp-3); font-size: var(--fs-sm); color: var(--text-muted); }
+.bp-cta a {
+  display: inline-block;
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.bp-cta a:hover { background: var(--accent-strong); }

@@ -80,3 +80,9 @@ tools/hero-frames/
 .report-shots/
 client/review/
 client/assets/press/
+
+# security.txt carries a rolling Expires (build time + 364 days), so it is
+# regenerated on every deploy by tools/gen-seo.js. Committing it would make
+# `gen-seo --check` fail daily and add pure diff noise. Everything else gen-seo
+# emits IS committed, so the generated output stays reviewable.
+client/.well-known/security.txt

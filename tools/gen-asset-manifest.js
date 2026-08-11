@@ -25,11 +25,14 @@ const CLIENT = path.resolve(ROOT, 'client');
 
 const HASH_DIRS = ['js', 'css'];
 const EXTRA_FILES = ['data/builds-manifest.json', 'data/builds-cards.json'];
-const HTML_FILES = [
-  'index.html', 'viewer.html', 'replays.html',
-  'about.html', 'community.html', 'terms.html', 'privacy.html',
-  'learn.html', 'download.html', 'handoff.html', '404.html'
-];
+
+// The page list lives in tools/seo/pages.js — one registry, shared with
+// gen-seo.js. It used to be a hardcoded array here, which made this file the
+// de-facto page registry and meant a new page silently missed either the cache
+// busting or the sitemap depending on which list someone remembered to edit.
+// It includes the generated client/builds/*.html pages, which exist by the time
+// this runs (gen-seo comes earlier in render.yaml's buildCommand).
+const { HTML_FILES } = require('./seo/pages');
 
 function sha10 (buf) {
   return crypto.createHash('sha256').update(buf).digest('hex').slice(0, 10);

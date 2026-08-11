@@ -11,7 +11,15 @@ services:
     # deploy changes the hash, so browsers re-fetch. Uses only Node built-ins
     # (no npm install needed). If this command fails the deploy fails, which
     # is safe (the previous deploy keeps serving).
-    buildCommand: node tools/gen-builds-cards.js && node tools/gen-asset-manifest.js
+    # Order matters. gen-seo reads builds-manifest.json (and the cards output),
+    # and emits client/builds/*.html plus the markdown twins; gen-asset-manifest
+    # then content-hashes everything and rewrites the ?v= busters in all of it,
+    # generated pages included. Running gen-seo last would leave the 16 build
+    # pages with unversioned, immutably-cached CSS.
+    buildCommand: >-
+      node tools/gen-builds-cards.js &&
+      node tools/gen-seo.js &&
+      node tools/gen-asset-manifest.js
     headers:
       - path: /*
         name: X-Frame-Options
@@ -97,6 +105,40 @@ services:
       - path: /replays.html
         name: X-Robots-Tag
         value: noindex
+      # ── Orphans: paths deleted from the repo that Render still serves ──────
+      # Measured 2026-08-11: Render's static publish is ADDITIVE. A file removed
+      # from client/ stays reachable on the live site after the deploy that
+      # removed it, and even a `routes:` entry deleted from this file keeps
+      # firing. Header rules, by contrast, apply immediately. So until someone
+      # runs a "Clear build cache & deploy" from the Render dashboard, the only
+      # lever over already-deleted content is a header.
+      #
+      # These paths no longer exist in git. They are the pre-move locations of
+      # the /dev/* bench pages, a 478 KB debug dump, and a folder of 2021 GIFs.
+      # DELETE THIS BLOCK once a clean publish has actually dropped them —
+      # verify with `curl -o /dev/null -w '%{http_code}' https://wc3v.com/gridtest`
+      # returning 404.
+      - path: /test-fx.html
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /test-unit.html
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /test-building.html
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /model-scale-calibration.html
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /dominance-lab.html
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /gridtest
+        name: X-Robots-Tag
+        value: noindex, nofollow
+      - path: /tutorial/*
+        name: X-Robots-Tag
+        value: noindex, nofollow
       # ── What Render actually does (measured 2026-08-11, commit 7ad3b3a) ────
       # Seven questions the agent-discovery work depended on. Answers, so the
       # next person does not have to redeploy to find out:
