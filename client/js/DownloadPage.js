@@ -84,6 +84,10 @@ const DownloadPage = {
       this._refreshGate();
     } catch (err) {
       if (cardEl) cardEl.hidden = true;
+      // The notes card is manifest-fed too; empty chrome under the fail
+      // notice reads as a second bug.
+      const notesCard = document.getElementById('dl-notes-card');
+      if (notesCard) notesCard.hidden = true;
       if (failEl) failEl.hidden = false;
     }
   },

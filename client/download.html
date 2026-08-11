@@ -19,20 +19,38 @@
   <style>
     body { margin: 0; }
 
-    .dl-page { max-width: 720px; margin: 0 auto; padding: var(--sp-6) var(--page-gutter) var(--sp-8); }
+    .dl-page { max-width: 960px; margin: 0 auto; padding: var(--sp-6) var(--page-gutter) var(--sp-8); }
 
-    .dl-hero { margin-bottom: var(--sp-6); }
+    /* The hero and the release box share the top row: what it is on the
+       left, the way to get it on the right, both above the fold. */
+    .dl-top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: var(--sp-6);
+      align-items: center;
+      margin-bottom: var(--sp-6);
+    }
+    @media (max-width: 760px) { .dl-top { grid-template-columns: minmax(0, 1fr); } }
+
     .dl-hero-title { font-size: var(--fs-h1); font-weight: 800; color: var(--text); margin: 0 0 var(--sp-2); letter-spacing: -0.01em; }
     .dl-hero-sub { font-size: var(--fs-sm); color: var(--text-muted); margin: 0; line-height: 1.6; }
 
+    .dl-get {
+      background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
+      padding: var(--sp-4) var(--sp-5);
+    }
+    .dl-get-line { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+    .dl-download-btn { width: 100%; margin: 0 0 var(--sp-2); }
+    .dl-get-file { display: block; font-family: var(--mono); font-size: var(--fs-min); color: var(--text-dim); overflow-wrap: anywhere; }
+
     .dl-card {
       background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
-      padding: var(--sp-5); margin-bottom: var(--sp-5);
+      padding: var(--sp-5); margin: 0 auto var(--sp-5); max-width: 720px;
     }
     .dl-eyebrow { display: block; font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: var(--sp-2); }
     .dl-version-line { font-size: var(--fs-h2); font-weight: 800; color: var(--text); margin: 0; display: inline-block; }
-    .dl-date { display: block; font-size: var(--fs-label); color: var(--text-muted); margin-top: var(--sp-1); }
-    .dl-notes { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin: var(--sp-3) 0 0; }
+    .dl-date { font-size: var(--fs-label); color: var(--text-muted); }
+    .dl-notes { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin: 0; }
 
     .dl-file-row {
       display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
@@ -46,6 +64,51 @@
     .dl-sha-label { color: var(--text-muted); flex-shrink: 0; }
     .dl-sha-code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px 8px; overflow-wrap: anywhere; }
     .dl-sha-pending { font-size: var(--fs-label); color: var(--text-dim); margin: var(--sp-3) 0 0; }
+
+    /* ── The showcase ──────────────────────────────────────────────────────
+       One stage, four screens layered in it, a picker underneath. The stage
+       keeps the app's aspect so switching never moves the page. */
+    .dl-showcase { margin-bottom: var(--sp-6); }
+    .dl-stage {
+      position: relative;
+      aspect-ratio: 1280 / 820;
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+      background: #0d1117;
+    }
+    .dl-stage img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .dl-stage img.is-on { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { .dl-stage img { transition: none; } }
+
+    .dl-picker {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--sp-2);
+      margin-top: var(--sp-3);
+    }
+    @media (max-width: 640px) { .dl-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .dl-pick {
+      appearance: none;
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: var(--radius);
+      padding: var(--sp-2) var(--sp-3);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .dl-pick:hover { border-color: var(--border-strong, var(--accent)); }
+    .dl-pick[aria-pressed="true"] { border-color: var(--accent); background: var(--bg-deep); }
+    .dl-pick b { display: block; font-size: var(--fs-sm); color: var(--text); }
+    .dl-pick span { display: block; font-size: var(--fs-min); color: var(--text-muted); margin-top: 2px; }
+    .dl-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .dl-fail { background: var(--warn-soft); border: 1px solid var(--warn-edge); border-radius: var(--radius-lg); padding: var(--sp-4); margin-bottom: var(--sp-5); }
     .dl-fail p { margin: 0 0 var(--sp-3); color: var(--text); font-size: var(--fs-sm); }
@@ -63,37 +126,13 @@
     .dl-disclosure-list strong { color: var(--text); }
     .dl-disclosure-list a { color: var(--accent); }
 
-    .dl-download-btn { width: 100%; margin-bottom: var(--sp-6); }
     .dl-download-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
-    .dl-secondary-links { display: flex; gap: var(--sp-5); margin-top: var(--sp-5); font-size: var(--fs-sm); }
+    .dl-secondary-links { display: flex; gap: var(--sp-5); margin-top: var(--sp-5); font-size: var(--fs-sm); max-width: 720px; margin-inline: auto; }
     .dl-secondary-links a { color: var(--text-muted); }
     .dl-secondary-links a:hover { color: var(--text); }
 
-    /* Screenshots run wider than the text column. The page stays a 720px
-       read; the pictures get the width pictures need. */
-    .dl-shot {
-      width: min(960px, calc(100vw - 2 * var(--page-gutter)));
-      margin: 0 0 var(--sp-2) 50%;
-      transform: translateX(-50%);
-    }
-    .dl-shot img {
-      display: block;
-      width: 100%;
-      height: auto;
-      border: 1px solid var(--border-2);
-      border-radius: var(--radius-lg);
-      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
-    }
-    .dl-shot-cap {
-      display: block;
-      text-align: center;
-      font-size: var(--fs-label);
-      color: var(--text-muted);
-      margin: var(--sp-2) 0 var(--sp-6);
-    }
-    .dl-shots-lead { margin-top: var(--sp-6); }
-    .dl-shots-title { font-size: var(--fs-h3); font-weight: 700; color: var(--text); margin: 0 0 var(--sp-4); }
+    .dl-narrow { max-width: 720px; margin: 0 auto; }
   </style>
 </head>
 <body class="site-page">
@@ -101,36 +140,87 @@
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>
   <script src="js/BugReport.js?v=7b19c1a873"></script>
-  <script src="js/DownloadPage.js?v=c27db032dc"></script>
+  <script src="js/DownloadPage.js?v=dl-1a"></script>
   <script>document.addEventListener('DOMContentLoaded', () => {
     window.BandSwitcher.init();
     SiteNav.render('download');
     window.BugReport && window.BugReport.install();
     window.DownloadPage && window.DownloadPage.init();
+
+    // The showcase picker: one stage, the buttons choose which screen is on.
+    const stage = document.getElementById('dl-stage');
+    const picks = [...document.querySelectorAll('.dl-pick')];
+    for (const btn of picks) {
+      btn.addEventListener('click', () => {
+        for (const b of picks) b.setAttribute('aria-pressed', String(b === btn));
+        for (const img of stage.querySelectorAll('img')) {
+          img.classList.toggle('is-on', img.dataset.shot === btn.dataset.shot);
+        }
+      });
+    }
   });</script>
 
   <main class="site-content">
     <article class="dl-page">
 
-      <div class="dl-hero">
-        <h1 class="dl-hero-title">Download WC3V for Windows</h1>
-        <p class="dl-hero-sub">The desktop app watches your replays folder. When a game ends, the report is already there: the result, who was ahead and when, both builds, the whole economy. Every moment opens the 3D viewer at that second.</p>
+      <div class="dl-top">
+        <div class="dl-hero">
+          <h1 class="dl-hero-title">Download WC3V for Windows</h1>
+          <p class="dl-hero-sub">The desktop app watches your replays folder. When a game ends, the report is already there: the result, who was ahead and when, both builds, the whole economy. Every moment opens the 3D viewer at that second.</p>
+        </div>
+
+        <section class="dl-get" id="dl-version-card" aria-labelledby="dl-version-heading">
+          <span class="dl-eyebrow">Latest release</span>
+          <div class="dl-get-line">
+            <h2 id="dl-version-heading" class="dl-version-line"><span id="dl-version">Loading…</span></h2>
+            <span class="dl-date" id="dl-date"></span>
+          </div>
+          <a id="dl-download-link" class="btn btn-primary btn-lg dl-download-btn" href="#" aria-disabled="true" tabindex="-1">Download for Windows</a>
+          <code class="dl-get-file" id="dl-filename"></code>
+        </section>
       </div>
 
-      <figure class="dl-shot dl-shots-lead">
-        <img src="/assets/press/report-overview.webp" width="1280" height="820"
-          alt="The WC3V desktop report: victory header beside the dominance chart, the timeline of the game's moments, and both players' armies side by side">
-        <figcaption class="dl-shot-cap">Your last game, scored the moment it ends.</figcaption>
-      </figure>
+      <div class="dl-fail" id="dl-fail" hidden>
+        <p>Couldn't reach the update server just now. You can still get the installer from GitHub Releases.</p>
+        <a class="btn btn-ghost" href="https://github.com/jblanchette/wc3v/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+      </div>
 
-      <section class="dl-card" id="dl-version-card" aria-labelledby="dl-version-heading">
-        <span class="dl-eyebrow">Latest release</span>
-        <h2 id="dl-version-heading" class="dl-version-line"><span id="dl-version">Loading…</span></h2>
-        <span class="dl-date" id="dl-date"></span>
+      <section class="dl-showcase" aria-label="Screenshots">
+        <div class="dl-stage" id="dl-stage">
+          <img class="is-on" src="/assets/press/report-overview.webp" width="1280" height="820" data-shot="overview"
+            alt="The WC3V desktop report: victory header beside the dominance chart, the timeline of the game's moments, and both players' armies side by side">
+          <img src="/assets/press/report-build.webp" width="1280" height="820" data-shot="build" loading="lazy"
+            alt="The Build tab: hero cards with skills and items, and both players' build orders interleaved as one timeline">
+          <img src="/assets/press/report-economy.webp" width="1280" height="820" data-shot="economy" loading="lazy"
+            alt="The Economy tab: APM over time, action breakdown, trade balance and food charts for both players">
+          <img src="/assets/press/report-team.webp" width="1280" height="820" data-shot="team" loading="lazy"
+            alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
+        </div>
+        <div class="dl-picker" role="group" aria-label="Pick a screenshot">
+          <button type="button" class="dl-pick" data-shot="overview" aria-pressed="true">
+            <b>The report</b>
+            <span>Scored the moment a game ends</span>
+          </button>
+          <button type="button" class="dl-pick" data-shot="build" aria-pressed="false">
+            <b>Build orders</b>
+            <span>Both players on one timeline</span>
+          </button>
+          <button type="button" class="dl-pick" data-shot="economy" aria-pressed="false">
+            <b>Economy</b>
+            <span>APM, trades and food, charted</span>
+          </button>
+          <button type="button" class="dl-pick" data-shot="team" aria-pressed="false">
+            <b>Team games</b>
+            <span>Every seat, 2v2 to 4v4</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="dl-card" id="dl-notes-card" aria-label="Release notes">
+        <span class="dl-eyebrow">Release notes</span>
         <p class="dl-notes" id="dl-notes"></p>
         <div class="dl-file-row">
           <span class="dl-file-label">Windows 10/11, 64-bit</span>
-          <code class="dl-file-name" id="dl-filename"></code>
         </div>
         <div class="dl-sha-row" id="dl-sha-row" hidden>
           <span class="dl-sha-label">SHA-256</span>
@@ -140,34 +230,7 @@
         <p class="dl-sha-pending" id="dl-sha-pending" hidden></p>
       </section>
 
-      <div class="dl-fail" id="dl-fail" hidden>
-        <p>Couldn't reach the update server just now. You can still get the installer from GitHub Releases.</p>
-        <a class="btn btn-ghost" href="https://github.com/jblanchette/wc3v/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
-      </div>
-
-      <section aria-labelledby="dl-details-heading">
-        <a id="dl-download-link" class="btn btn-primary btn-lg dl-download-btn" href="#" aria-disabled="true" tabindex="-1">Download for Windows</a>
-
-        <h2 class="dl-shots-title">What you get</h2>
-
-        <figure class="dl-shot">
-          <img src="/assets/press/report-build.webp" width="1280" height="820" loading="lazy"
-            alt="The Build tab: hero cards with skills and items, and both players' build orders interleaved as one timeline">
-          <figcaption class="dl-shot-cap">Both build orders as one timeline.</figcaption>
-        </figure>
-
-        <figure class="dl-shot">
-          <img src="/assets/press/report-economy.webp" width="1280" height="820" loading="lazy"
-            alt="The Economy tab: APM over time, action breakdown, trade balance and food charts for both players">
-          <figcaption class="dl-shot-cap">The economy behind the result.</figcaption>
-        </figure>
-
-        <figure class="dl-shot">
-          <img src="/assets/press/report-team.webp" width="1280" height="820" loading="lazy"
-            alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
-          <figcaption class="dl-shot-cap">Team games render every seat.</figcaption>
-        </figure>
-
+      <section class="dl-narrow" aria-labelledby="dl-details-heading">
         <h2 id="dl-details-heading" class="dl-section-title">Details</h2>
         <ul class="dl-disclosure-list">
           <li><strong>Windows shows a warning on first run.</strong> SmartScreen says "Windows protected your PC" because the installer is not code-signed. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
