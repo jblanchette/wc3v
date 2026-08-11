@@ -187,6 +187,9 @@ const loadIntoSandbox = (relPath) => {
 
 vm.createContext(sandbox);
 loadIntoSandbox('client/js/vendor/wc3v-parser.bundle.js');
+// Security first: MyReplays destructures Security.escapeAttr at load time,
+// and viewer.html loads it the same way round.
+loadIntoSandbox('client/js/Security.js');
 loadIntoSandbox('client/js/MyReplays.js');
 loadIntoSandbox('client/js/UploadManager.js');
 

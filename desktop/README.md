@@ -218,9 +218,26 @@ version of a tab, the two products have begun telling different stories about
 one game.
 
 The fourth tab, **Build**, is the only one with no equivalent on the site: the
-per-player build cards and the build order in the order it happened. Buildings
-by tier and the upgrade/merc timeline used to live there and are gone, because
-the Army and Economy tabs are those sections drawn from the same data.
+per-player build cards and the build order — ONE interleaved chronology, each
+row wearing its player's race ink and the reader's own rows at full ink.
+Buildings by tier and the upgrade/merc timeline used to live there and are
+gone, because the Army and Economy tabs are those sections drawn from the same
+data.
+
+**The frame is one row.** The tab strip on the left, Open in WC3V Viewer on
+the right (`.report-tabbar`), and nothing else fixed above the scroller. The
+verdict band that used to sit there is gone: its content — result, opponent,
+the all-time record, map, length, tags, the three benchmarks — leads the
+Overview tab as `.ov-head`, riding the ov-band's right column beside the
+dominance plot, over the tier bars. A game with no dominance (a team game)
+draws the band single-column with the header leading it. A team game gets no
+"carries no result" placeholder; the meta line already says 3v3.
+
+**The moments timeline** (`js/game-timeline.js`) sits under the band on
+Overview: the summary's ≤24 typed moments on two lanes, yours over theirs
+(per TEAM in a team game), every mark a 36px target that opens the viewer at
+that second, the least important hiding when the width gets crowded. It is a
+desktop adapter, deliberately not part of the shared renderer.
 
 What differs from the viewer, and why:
 
@@ -256,8 +273,8 @@ old data is enough to draw build cards and a build order, and doing so produces
 a screen that looks complete while silently omitting the unit roster, the creep
 route, the upgrades and every chart — indistinguishable from a game where none
 of that happened. `game-report-view.js` returns early on a null model: the
-verdict band (none of which comes from the missing block) plus one line and a
-re-read button.
+tab row with the viewer button (no tabs), the Overview header (none of which
+comes from the missing block), one line and a re-read button.
 
 Both of these were shipped wrong once. The boot catch-up was gated on an **empty**
 corpus, so on a machine with history it never ran; the backfill skipped on
@@ -490,6 +507,27 @@ only way to reach a team game, since the corpus is overwhelmingly 1v1 and sorts
 the numeric ladder filenames first), and `--setup` (shows the first-run screen,
 which otherwise only appears on a machine that has never run the app).
 
+Two more flags exist for the audit matrix. `--out=NAME` writes
+`desktop/preview/NAME` so several pages coexist. `--mix=sub[:count],...`
+builds ONE page from buckets instead of the first N files; `--mix=audit` is
+the standing audit corpus (the preset lives in tools/desktop-preview.js):
+
+```
+gso:1, test-4v4:1, happy-vs-grubby:1, Springtime13:2, EchoIsles22:1,
+hide-test:1, sellback-test:1
+```
+
+`tools/report-shots.js` walks preview pages headless — every game, every tab,
+every chart mode, at 900x600 and 1280x820 — running the fold assertions below
+at every stop and screenshotting each one. `--audit-only` skips the shots;
+non-empty audit exits 1. This subsumes the manual ritual; the snippet below
+stays as the fallback.
+
+```sh
+node tools/desktop-preview.js --mix=audit --out=preview-mix.html --me="Jeef#1496"
+node tools/report-shots.js --pages=preview-mix.html --audit-only
+```
+
 The harness stubs the tag sidecar in memory and seeds two tags, so the Library's
 filter and the casting badge have something to match without typing first.
 
@@ -501,8 +539,8 @@ its summaries. Anything driven by a parse has to be driven by hand: set
 ## The fold rule
 
 **On the game report, `.report-body` is the only element allowed to scroll.**
-Not the window, not `document.body`, not `.detail-col`. The verdict band above
-it is fixed. This is the one invariant that has broken repeatedly and silently,
+Not the window, not `document.body`, not `.detail-col`. The tab row above it
+is fixed. This is the one invariant that has broken repeatedly and silently,
 so it is checked mechanically rather than by eye, at **900x600** and
 **1280x820**, with the feed drawer open and closed.
 

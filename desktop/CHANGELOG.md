@@ -3,6 +3,68 @@
 Nothing here is a public release. The app does not launch until 1.0.0; these
 builds go to R2 so the existing install can update itself. See `README.md`.
 
+## 0.10.0 — 10 Aug 2026
+
+The report gets a design system, loses its band, and reads the game's moments.
+Every layout decision below went through screenshot rounds against real games
+— personal 1v1s, the 3v3, the 4v4, sparse fixtures, stale summaries, at
+1280x820 and 900x600.
+
+### One ruleset instead of two rhythms
+
+The report body rendered from the viewer's own stylesheet: Verdana, a
+saturated `#00aaff` accent, rem-scale spacing — a second product pasted into
+the middle of a warm carved one. `report.css` now re-registers the whole
+shared sheet onto the desktop's tokens (the vendor file untouched, the viewer
+keeps its skin): the app's face everywhere, nothing under the 0.8rem floor,
+tier and category hues pulled into the warm paintbox, spacing on the `--sp-*`
+scale, the active tab a carved pressed well instead of a blue underline. New
+tokens `--radius-xs`, `--scrim`, `--tier2-ink`, `--tier3-ink`; `--sp-8`
+closed; the button height declared once instead of three times.
+
+### The band is gone; the frame is one row
+
+Tabs left, Open in WC3V Viewer right — on every game, including one whose
+summary is too old to draw tabs. The band's content (result, opponent,
+all-time record, map, length, tags, benchmarks) leads the Overview tab
+instead, riding the band's right column beside the dominance plot, over the
+tier bars: the result and the shape of the game in one glance, scrolling with
+the tab instead of taxing every tab's frame. A team game gets no "carries no
+result" placeholder — the meta line already says 3v3.
+
+### The moments timeline
+
+The summary's typed moments — hero kills, wipes, raids, tier-ups, expansions,
+scouts, up to 24 per game — were reaching the stream overlay in full and the
+report not at all. They are now two lanes under the band, yours over theirs
+(per team in team games), every mark a 36px target that opens the viewer at
+that second, the least important hiding when the width gets crowded.
+
+### Team games stop lying
+
+The mode is derived from the seats when the parser did not record it (a 4v4
+read as a duel in the feed and a team game in the report at the same time);
+old summaries are repaired at read time rather than marked stale. Team-scoped
+creep routes and hero XP render once per team instead of identically in every
+teammate's column; the creep score counts per team instead of double; the
+unreadable 2px six-seat APM bars yield to the per-player lines each column
+already carries.
+
+### One build order
+
+The Build tab's two parallel per-player columns are one interleaved
+chronology: each row wears its player's race ink, the reader's own rows at
+full ink. "He made his altar while I was still on the mill" is now a thing
+the list just says.
+
+### The audit is a command
+
+`tools/desktop-preview.js` gained `--mix` (one page carrying every data shape:
+the audit preset) and `--out` (pages coexist); new `tools/report-shots.js`
+walks every page x game x tab x chart mode x size headless, runs the README
+fold assertions at every stop, and exits non-zero on any violation. The
+release gate is a clean run across five pages.
+
 ## 0.9.1 — 10 Aug 2026
 
 Three tabs instead of six, an Overview that reads across instead of down, and a
