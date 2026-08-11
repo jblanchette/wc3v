@@ -101,6 +101,15 @@
       </ul>
       <p>None of this is sent to us. Clear it any time via your browser's site-data controls.</p>
 
+      <h2>4a. The WC3V desktop app</h2>
+      <p>The desktop app (downloadable from <a href="/download.html">wc3v.com/download.html</a>) watches your Warcraft III replay folders and parses every game <strong>on your machine</strong>. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly three cases:</p>
+      <ul>
+        <li><strong>Update checks</strong> — it polls our CDN for a newer version, which reveals your IP address and the request the same way any web server sees one.</li>
+        <li><strong>Game art</strong> — unit and item icons are fetched from our CDN by their game ID; no information about your games is attached.</li>
+        <li><strong>Optional, off by default:</strong> the W3Champions ladder lookup queries the public W3Champions API with a player's battle tag while a match is running. "Open in WC3V Viewer" opens the wc3v.com viewer in your browser; the replay data itself is served to that page over loopback (127.0.0.1) and still never leaves your machine. Both only happen when you turn them on or click them.</li>
+      </ul>
+      <p>Nothing else leaves your machine. There is no telemetry, no analytics, and no account.</p>
+
       <h2>5. Third-party content loaded by your browser</h2>
       <p>Some pages load JavaScript libraries from public CDNs so you don't have to download them from us:</p>
       <ul>
