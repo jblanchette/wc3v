@@ -81,9 +81,17 @@ function main () {
   const bundleVersion = combined.digest('hex').slice(0, 10);
 
   // ── 2. write the manifest ────────────────────────────────────────────────
+  // commit/branch come from Render's build environment. They make
+  // /asset-manifest.json a deploy stamp you can curl: "which commit is actually
+  // live, and when was it built". Worth the two lines — diagnosing a stale
+  // deploy by comparing file contents against git is slow and ambiguous, and we
+  // had to do exactly that on 2026-08-11 when changed files stopped publishing
+  // while newly added ones went out.
   const manifest = {
     bundleVersion,
     generatedAt: new Date().toISOString(),
+    commit: process.env.RENDER_GIT_COMMIT || null,
+    branch: process.env.RENDER_GIT_BRANCH || null,
     files: perFile
   };
   const manifestPath = path.join(CLIENT, 'asset-manifest.json');
