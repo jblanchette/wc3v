@@ -190,7 +190,7 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = 'bd45e3c596'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = 'ac196a8bd8'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
@@ -221,6 +221,10 @@
   <script src="js/PlayerNames.js?v=9b16a85d90"></script>
   <script src="js/Glossary.js?v=da632b7348"></script>
   <script src="js/MyReplays.js?v=beeae22327"></script>
+  <!-- WebMCP tool registration. A no-op unless the browser or an attached agent
+       provides document.modelContext, so it costs nothing for normal visitors.
+       Installed at the end of init(), once window.WC3VHome exists. -->
+  <script src="js/HomepageAgentTools.js?v=a590d3a705"></script>
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
        UploadManager.prefetchParser() warms the HTTP cache on first user intent. -->
@@ -2319,6 +2323,8 @@
     let selectedMatchup = '';
     let selectedTournament = '';
     const axisFilters = { opener: '', gamePlan: '', army: '' };
+    // Last result of applyFilter(), read by the window.WC3VHome facade.
+    let lastVisibleBuilds = [];
 
     // ─── User-uploaded pro replays (IDB → buildCard props) ──
     // Pulled from MyReplays whenever the user promotes / edits / unmarks
@@ -2581,6 +2587,10 @@
       const visibleUser = userBuilds.filter(b => buildPasses(b, buildSearchTextLite(b)));
       const visiblePro = allBuilds.filter((b, i) => buildPasses(b, buildSearchIndex[i]));
       const visible = [...visibleUser, ...visiblePro];
+      // Remembered so window.WC3VHome (and through it the WebMCP tools) can
+      // report what the page is actually showing without recomputing the
+      // filter pass and risking a different answer.
+      lastVisibleBuilds = visible;
 
       document.getElementById('all-builds-grid').innerHTML =
         visible.length
@@ -2841,6 +2851,40 @@
 
       // Card click → load first replay (let replay buttons handle themselves).
       document.getElementById('all-builds-grid').addEventListener('click', handleBuildGridClick);
+
+      // ── WebMCP facade ───────────────────────────────────────────────────
+      // Everything above is local to this inline script, so an in-page AI agent
+      // has no way to reach it. Publish the four operations HomepageAgentTools
+      // needs and let that subsystem do the WebMCP registration — coordinator
+      // pattern: state stays here, the adapter lives in its own file.
+      //
+      // setFilters drives the REAL applyFilter(), so the grid visibly updates
+      // when an agent filters. That is the whole reason to do this in the page
+      // rather than only on the remote MCP server.
+      window.WC3VHome = {
+        setFilters (f) {
+          f = f || {};
+          if (typeof f.race === 'string') selectedRace = f.race;
+          if (typeof f.matchup === 'string') selectedMatchup = f.matchup;
+          if (typeof f.query === 'string') searchQuery = f.query.toLowerCase();
+          if (typeof f.level === 'string' && window.BandSwitcher && window.BandSwitcher.setBand) {
+            window.BandSwitcher.setBand(f.level);
+          }
+          applyFilter();
+          return lastVisibleBuilds.slice();
+        },
+        getVisible () { return lastVisibleBuilds.slice(); },
+        getAllBuilds () { return allBuilds.slice(); },
+        getBuild (id) { return allBuilds.find(b => b.id === id) || null; },
+        openBuild (id) { window.location.href = '/builds/' + encodeURIComponent(id); },
+        listMyReplays (opts) {
+          const my = window.__wc3vMyReplays;
+          if (!my) return Promise.resolve([]);
+          return my.list(opts || {});
+        }
+      };
+
+      if (window.HomepageAgentTools) window.HomepageAgentTools.install(window.WC3VHome);
     }
 
     init();
