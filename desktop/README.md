@@ -620,6 +620,38 @@ The installer, the binary and the update manifest all read it. It must be
 strictly greater than the last published version or no client is offered the
 update. `src-tauri/Cargo.toml` carries a stale version that nothing reads.
 
+### Releasing, signed (the SignPath path)
+
+SignPath Foundation Authenticode-signs open-source builds for free, but ONLY
+builds it can trace to the public repository through a trusted build system —
+it will never sign a local build. The pipeline:
+
+1. Run the **desktop-release** GitHub Actions workflow (dispatch it, or push a
+   `desktop-v*` tag). It builds the installer the same way
+   `npm run desktop:build` does and, once the SignPath secrets are configured
+   (`SIGNPATH_API_TOKEN` secret; `SIGNPATH_ORG_ID`, `SIGNPATH_PROJECT_SLUG`,
+   `SIGNPATH_POLICY_SLUG` variables), submits it for signing. The repo secret
+   `TAURI_SIGNING_PRIVATE_KEY` carries the updater key, since the build now
+   happens in CI.
+2. Approve the signing request in the SignPath dashboard, then download the
+   signed installer from the workflow's `wc3v-installer-signed` artifact.
+3. Publish with the signed file:
+   `node tools/deploy-desktop.js --installer=path\to\WC3V_x.y.z_x64-setup.exe --notes="..."`.
+   The flag stages the exe under the canonical bundle name and REGENERATES the
+   updater `.sig` against the signed bytes — Authenticode changes the file, so
+   the `.sig` from build time no longer verifies and an unregenerated one
+   would make every existing install reject the update as tampered.
+
+The two keys never meet: the Authenticode certificate lives in SignPath's HSM
+and is never on this machine; the Tauri updater key stays ours (local file +
+CI secret) and keeps working exactly as before.
+
+The download page carries the "Code signing policy" section SignPath's terms
+require (attribution, team roster, privacy note). SmartScreen reputation
+accrues on the certificate and persists across releases, so the first-run
+warning fades after the first signed releases circulate — retire the
+SmartScreen bullet on the download page once that is observed, not before.
+
 ```powershell
 # 1. bump tauri.conf.json, then:
 $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content "$env:USERPROFILE\.tauri\wc3v-updater.key" -Raw).Trim()

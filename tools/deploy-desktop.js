@@ -27,7 +27,17 @@
  *   node tools/deploy-desktop.js --notes="What changed, in a sentence."
  *   node tools/deploy-desktop.js --notes="..." --dry-run   - preview, no upload
  *   node tools/deploy-desktop.js --notes="..." --skip-verify
+ *   node tools/deploy-desktop.js --notes="..." --installer=path\to\signed.exe
  *   node tools/deploy-desktop.js --prune [--keep=N]        - delete old builds
+ *
+ * --installer is the SignPath path (see desktop/README.md "Releasing,
+ * signed"): the CI workflow builds the installer, SignPath Authenticode-signs
+ * it, and the signed exe comes back as a download. Authenticode CHANGES THE
+ * BYTES, so the updater .sig generated at build time no longer verifies — this
+ * flag stages the signed exe under the canonical bundle name and regenerates
+ * the .sig against it with `tauri signer sign`, which needs
+ * TAURI_SIGNING_PRIVATE_KEY in the environment. Everything downstream (sha256,
+ * manifest, upload) then reads the signed file like any other build.
  *
  * Pruning is safe at any time, including with real installs in the field: an
  * installed 0.2.0 does not need the 0.2.0 installer to update itself, only
@@ -309,6 +319,29 @@ async function main () {
   const sigPath = `${exePath}.sig`;
 
   console.log(`WC3V desktop ${version}`);
+
+  // The SignPath path: stage an externally signed installer, then re-sign the
+  // updater signature against ITS bytes. Without the re-sign every existing
+  // install would reject the update as tampered, because the .sig on disk
+  // describes the unsigned build.
+  if (typeof args.installer === 'string') {
+    const src = path.resolve(args.installer);
+    if (!fs.existsSync(src)) die(`--installer file not found:\n  ${src}`);
+    if (!process.env.TAURI_SIGNING_PRIVATE_KEY) {
+      die('--installer needs TAURI_SIGNING_PRIVATE_KEY in the environment to\n' +
+          'regenerate the updater signature against the signed bytes.\n' +
+          'See desktop/README.md "Releasing".');
+    }
+    fs.mkdirSync(BUNDLE, { recursive: true });
+    if (src !== exePath) fs.copyFileSync(src, exePath);
+    console.log(`  staged signed installer from:\n    ${src}`);
+    const resign = spawnSync('cargo', ['tauri', 'signer', 'sign', exePath],
+      { stdio: 'inherit', shell: true });
+    if (resign.status !== 0) {
+      die('`cargo tauri signer sign` failed — the updater signature was not\n' +
+          'regenerated, so this build must not be published.');
+    }
+  }
 
   if (!fs.existsSync(exePath)) {
     die(`No installer for ${version} at:\n  ${exePath}\n\n` +
