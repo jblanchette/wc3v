@@ -1,0 +1,30 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "com.wc3v/wc3v",
+  "title": "WC3V",
+  "version": "1.0.0",
+  "description": "Warcraft III pro build orders and parsed tournament replay data from wc3v.com.",
+  "websiteUrl": "https://wc3v.com",
+  "repository": {
+    "url": "https://github.com/jblanchette/wc3v",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://wc3v.com/android-chrome-512x512.png",
+      "sizes": [
+        "512x512"
+      ],
+      "mimeType": "image/png"
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.wc3v.com/mcp",
+      "supportedProtocolVersions": [
+        "2025-06-18"
+      ]
+    }
+  ]
+}

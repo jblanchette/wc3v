@@ -496,6 +496,37 @@ function apiCatalog () {
   return JSON.stringify(doc, null, 2) + '\n';
 }
 
+// ── MCP server card ─────────────────────────────────────────────────────────
+
+/**
+ * Read the SERVER_CARD literal out of workers/mcp/src/tools.js rather than
+ * duplicating it. That file is ESM and this is CommonJS, and it is the only
+ * thing needed from it, so the object literal is extracted and evaluated. A
+ * second hand-maintained copy would eventually describe a different server
+ * from the one actually running.
+ */
+function mcpServerCard () {
+  const p = path.join(ROOT, 'workers', 'mcp', 'src', 'tools.js');
+  if (!fs.existsSync(p)) { problems.push('workers/mcp/src/tools.js missing; cannot emit the MCP server card'); return {}; }
+  const src = fs.readFileSync(p, 'utf8');
+  const m = /const SERVER_CARD = (\{[\s\S]*?\n\});/.exec(src);
+  if (!m) { problems.push('could not find SERVER_CARD in workers/mcp/src/tools.js'); return {}; }
+  let card;
+  try { card = new Function('return ' + m[1] + ';')(); } catch (e) {
+    problems.push('SERVER_CARD in workers/mcp/src/tools.js did not evaluate: ' + e.message);
+    return {};
+  }
+  // The constraints a client will actually enforce.
+  if (!/^[a-zA-Z0-9.-]+\/[a-zA-Z0-9._-]+$/.test(card.name || '')) {
+    problems.push('MCP server card name must be reverse-DNS with exactly one slash: ' + card.name);
+  }
+  if (!card.description || card.description.length > 100) {
+    problems.push('MCP server card description must be 1-100 chars (is ' +
+      ((card.description || '').length) + ')');
+  }
+  return card;
+}
+
 // ── main ────────────────────────────────────────────────────────────────────
 
 function main () {
@@ -661,6 +692,23 @@ function main () {
   emit('.well-known/security.txt', securityTxt());
   emit('.well-known/agent-skills/index.json', JSON.stringify(agentSkillsIndex(), null, 2) + '\n');
   emit('.well-known/api-catalog', apiCatalog());
+
+  // The MCP server card, mirrored onto the main origin. The spec's recommended
+  // home is <streamable-http-url>/server-card (served by workers/mcp), and
+  // docs/discovery.md explicitly argues AGAINST /.well-known/mcp/ because
+  // .well-known is for site-wide metadata rather than one server's card. But
+  // Cloudflare's agent-readiness scanner checks exactly that path, so it is
+  // served in both places. Generated from the same literal the Worker uses, so
+  // the two cannot describe different servers.
+  emit('.well-known/mcp/server-card.json', JSON.stringify(mcpServerCard(), null, 2) + '\n');
+  emit('.well-known/ai-catalog.json', JSON.stringify({
+    specVersion: '1.0',
+    entries: [{
+      identifier: 'urn:air:wc3v.com:mcp:wc3v',
+      type: 'application/mcp-server-card+json',
+      url: 'https://mcp.wc3v.com/mcp/server-card'
+    }]
+  }, null, 2) + '\n');
 
   // Every same-origin URL we advertise must resolve to a file we are about to
   // write or that already exists. This is not paranoia: deriving twin paths

@@ -1,0 +1,16 @@
+name = "wc3v-mcp"
+main = "src/index.js"
+compatibility_date = "2026-08-11"
+workers_dev = false
+
+# A Custom Domain, not a route. wrangler provisions the DNS record and the
+# certificate, and the whole hostname belongs to this Worker — which is what we
+# want, since mcp.wc3v.com has no origin behind it. Deliberately a SEPARATE
+# Worker and project from workers/edge: a bug in the MCP server must not be able
+# to take down wc3v.com.
+routes = [
+  { pattern = "mcp.wc3v.com", custom_domain = true }
+]
+
+[observability]
+enabled = true
