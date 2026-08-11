@@ -202,6 +202,71 @@ const appMapCacheDir = () => {
   return path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), id, 'maps');
 };
 
+// The installer's ladder set, frozen from a full checkout. CI has no
+// client/maps (parse caches live on the CDN, not in git), so the set cannot
+// be resolved from local directories there — it is resolved HERE on a machine
+// that has them, committed, and fetched from cdn.wc3v.com in CI.
+// Regenerate after adding a ladder map: --write-map-manifest.
+const MAP_MANIFEST = path.join(ROOT, 'desktop', 'installer-maps.json');
+const CDN_MAPS = 'https://cdn.wc3v.com/maps';
+
+const fetchTo = (url, dest) => new Promise((resolve, reject) => {
+  const https = require('https');
+  const zlib = require('zlib');
+  // The caches are stored gzipped with Content-Encoding: gzip metadata, and
+  // the edge DECOMPRESSES for clients that do not advertise gzip — the first
+  // version of this download turned a 50 MB map set into 1.8 GB of plain
+  // JSON in .gz clothing. Advertise gzip so the stored bytes pass through,
+  // and re-compress if the edge sent identity anyway.
+  https.get(url, { headers: { 'accept-encoding': 'gzip' } }, (res) => {
+    if (res.statusCode !== 200) {
+      res.resume();
+      return reject(new Error(`${res.statusCode} ${url}`));
+    }
+    const chunks = [];
+    res.on('data', (c) => chunks.push(c));
+    res.on('end', () => {
+      let buf = Buffer.concat(chunks);
+      const gzipped = buf.length >= 2 && buf[0] === 0x1f && buf[1] === 0x8b;
+      if (dest.endsWith('.gz') && !gzipped) buf = zlib.gzipSync(buf);
+      fs.writeFile(dest, buf, (e) => e ? reject(e) : resolve());
+    });
+    res.on('error', reject);
+  }).on('error', reject);
+});
+
+// Download the manifest's maps from the CDN into client/maps. Only what is
+// missing; a checkout that already has them fetches nothing.
+const fetchMaps = async () => {
+  if (!fs.existsSync(MAP_MANIFEST)) {
+    console.error('No desktop/installer-maps.json. Run --write-map-manifest on a machine with client/maps.');
+    process.exit(1);
+  }
+  const names = JSON.parse(fs.readFileSync(MAP_MANIFEST, 'utf8'));
+  let fetched = 0;
+  for (const name of names) {
+    const dir = path.join(MAPS, name);
+    fs.mkdirSync(dir, { recursive: true });
+    for (const f of PARSE_FILES) {
+      const dest = path.join(dir, f);
+      if (fs.existsSync(dest)) continue;
+      try {
+        await fetchTo(`${CDN_MAPS}/${encodeURIComponent(name)}/${f}`, dest);
+        fetched++;
+      } catch (e) {
+        // unit.json.gz is required for parses to resolve; the other two some
+        // maps legitimately lack. Only a missing unit file is fatal.
+        fs.rmSync(dest, { force: true });
+        if (f === 'unit.json.gz') {
+          console.error(`fetch-maps: ${e.message} — the installer set needs this file.`);
+          process.exit(1);
+        }
+      }
+    }
+  }
+  console.log(`fetch-maps: ${names.length} maps ensured, ${fetched} files downloaded`);
+};
+
 // Copy the parse-data files for a set of maps into `target`. Returns stats.
 const copyMapSet = (list, target, label) => {
   if (!fs.existsSync(MAPS)) {
@@ -306,4 +371,25 @@ const main = () => {
   }
 };
 
-main();
+// Freeze the ladder set a full checkout resolves into the committed manifest
+// CI fetches from. Not part of main(): it is run when the set changes, not on
+// every build.
+if (args['write-map-manifest']) {
+  const available = fs.existsSync(MAPS)
+    ? fs.readdirSync(MAPS).filter(n => fs.statSync(path.join(MAPS, n)).isDirectory())
+    : [];
+  const set = resolveLadderSet(available).sort();
+  if (!set.length) {
+    console.error('client/maps resolved an empty ladder set — nothing written.');
+    process.exit(1);
+  }
+  fs.writeFileSync(MAP_MANIFEST, JSON.stringify(set, null, 2) + '\n');
+  console.log(`wrote ${path.relative(ROOT, MAP_MANIFEST)}: ${set.length} maps`);
+  process.exit(0);
+}
+
+if (args['fetch-maps']) {
+  fetchMaps().then(() => main());
+} else {
+  main();
+}

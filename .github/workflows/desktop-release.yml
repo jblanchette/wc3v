@@ -56,7 +56,10 @@ jobs:
         run: npm ci
 
       - name: Build desktop client (bundled ladder maps)
-        run: node tools/build-desktop-client.js --bundle-maps=ladder
+        # --fetch-maps: CI has no client/maps (parse caches are CDN-hosted,
+        # not in git); the frozen set in desktop/installer-maps.json is
+        # downloaded from cdn.wc3v.com before staging.
+        run: node tools/build-desktop-client.js --bundle-maps=ladder --fetch-maps
 
       - name: Read version
         id: version
