@@ -11,14 +11,19 @@
  * HTML and Markdown come from the same functions here, so the two can never
  * describe a build differently.
  *
- * Node built-ins only, plus helpers/mappings.js (itself dependency-free) for
- * itemId to display-name lookups — CLAUDE.md makes mappings.js the source of
- * truth for those, so nothing here hardcodes a unit or upgrade name.
+ * Node built-ins only. Nothing here hardcodes a unit or upgrade name.
+ *
+ * Names come from seo/item-names.json, NOT from helpers/mappings.js directly.
+ * mappings.js is still the source of truth (per CLAUDE.md) — tools/gen-item-names.js
+ * reads it on a dev machine and freezes the result. It cannot be required here:
+ * mappings.js line 2 requires ./UnitBalance.json, which is gitignored SLK data,
+ * so on Render's clean clone the require throws MODULE_NOT_FOUND and the entire
+ * build fails. It did exactly that on 2026-08-11.
  */
 
 'use strict';
 
-const { getUnitInfo, researchMeta } = require('../../helpers/mappings');
+const ITEM_NAMES = require('./item-names.json').names;
 
 const ORIGIN = 'https://wc3v.com';
 
@@ -42,25 +47,19 @@ function esc (s) {
 const unresolved = new Set();
 
 /**
- * itemId -> human name, via helpers/mappings.js, which CLAUDE.md makes the
- * source of truth for these. Nothing here hardcodes a unit or upgrade name.
- *
- * The case-insensitive retry matters: hero ids are capitalised in mappings
- * ('Udea', 'Hamg') and lowercased in the manifest's heroSkills keys ('udea').
+ * itemId -> human name, from the frozen lookup. The case-insensitive retry is
+ * kept because hero ids are capitalised in mappings ('Udea') and lowercased in
+ * the manifest's heroSkills keys ('udea'), and the lookup is keyed by whichever
+ * form the manifest used.
  */
 function nameOf (itemId) {
   if (!itemId) return '';
-  const r = researchMeta && researchMeta[itemId];
-  if (r && r.name) return r.name;
-
-  const direct = getUnitInfo(itemId);
-  if (direct && direct.isKnownId && direct.displayName) return direct.displayName;
+  if (ITEM_NAMES[itemId]) return ITEM_NAMES[itemId];
 
   const cased = itemId[0].toUpperCase() + itemId.slice(1).toLowerCase();
-  if (cased !== itemId) {
-    const alt = getUnitInfo(cased);
-    if (alt && alt.isKnownId && alt.displayName) return alt.displayName;
-  }
+  if (ITEM_NAMES[cased]) return ITEM_NAMES[cased];
+  const lower = itemId.toLowerCase();
+  if (ITEM_NAMES[lower]) return ITEM_NAMES[lower];
 
   unresolved.add(itemId);
   return itemId;
