@@ -393,14 +393,6 @@
    different colour and the page stops having a hierarchy. */
 .player-title[data-race] .race-mark { color: var(--rc-ink); border-color: var(--rc-rim); }
 
-/* Build-order and tier columns carry the same rim as the card above them, so
-   the two halves of the report are visibly the same two players. */
-.build-col[data-race] {
-  padding: var(--sp-2) var(--sp-3);
-  background: var(--rc-wash);
-  border-radius: var(--radius-sm);
-  box-shadow: inset 0 0 0 1px var(--rc-rim);
-}
 .you-tag { color: var(--ink-faint); font-weight: 400; }
 
 .panel {
@@ -450,13 +442,6 @@
 
 /* ── Build order ─────────────────────────────────────────────────────── */
 
-.builds { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--sp-4); }
-.build-col h3 {
-  margin: 0 0 var(--sp-2);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
 /* A time-ordered list, in as many columns as the width affords.
    A row is a timestamp, a 36px icon and a short name — 131px of content that
    was being given a 610px column, so twenty of them ran 800px down a 599px
@@ -1130,28 +1115,40 @@
 }
 
 /* ── The game timeline ────────────────────────────────────────────────────
-   The match's moments on one axis — js/game-timeline.js. Marks are 36px
-   targets on an inset track (a moment at 0:00 keeps its whole hit box
-   inside the strip); the glyph inside is chart-mark sized under the same
-   exemption every spark dot has. Ink says whose moment it was: gold for
-   yours, dim for theirs, mid for nobody's. */
-.gt { min-width: 0; }
+   The match's moments on two lanes — js/game-timeline.js. Marks keep their
+   36px hit targets, but the lanes are drawn at 24px and the targets overlap
+   the lane gaps invisibly: inside the scroller that costs nothing, and the
+   strip reads as one carved instrument (a well, two rules, a ruler) rather
+   than three stacked rows. Ink says whose moment it was: gold for yours,
+   dim for theirs. */
+.gt {
+  min-width: 0;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+  margin-bottom: var(--sp-2);
+}
 .gt-lane { display: flex; align-items: center; gap: var(--sp-2); }
 .gt-lane-k {
   flex: none;
-  width: 3.4rem;
+  width: 2.8rem;
   text-align: right;
-  color: var(--ink-dim);
+  color: var(--ink-faint);
   font-size: var(--fs-min);
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .gt-track {
   position: relative;
   flex: 1 1 auto;
-  height: var(--ico-sm);
+  height: 24px;
   margin: 0 calc(var(--ico-sm) / 2);
   min-width: 0;
 }
+.gt-2 .gt-lane:first-child .gt-track { height: 26px; }
 .gt-rule {
   position: absolute;
   left: 0; right: 0; top: 50%;
@@ -1175,57 +1172,33 @@
 .gt-mark[data-side="me"] { color: var(--dom-gold); }
 .gt-mark[data-side="them"] { color: var(--ink-dim); }
 .gt-mark:hover { color: var(--ink); }
-.gt-mark:focus-visible { outline: 2px solid var(--focus); outline-offset: -6px; }
-.gt-glyph { font-size: 13px; }
+.gt-mark:focus-visible { outline: 2px solid var(--focus); outline-offset: -8px; }
+.gt-glyph { font-size: 12px; }
 .gt-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
   background: currentColor;
 }
-.gt-ruler-track { height: 14px; }
+.gt-ruler-track { height: 12px; }
 .gt-tick {
   position: absolute;
   transform: translateX(-50%);
   color: var(--ink-faint);
   font-family: var(--mono);
   font-size: var(--fs-min);
-  line-height: 14px;
+  line-height: 12px;
   white-space: nowrap;
 }
 .gt-tick.is-first { transform: none; }
 .gt-tick.is-last { transform: translateX(-100%); }
-/* Above the tab row (the fixed-frame mount) it reads as part of the frame:
-   a shallow well, no card chrome. */
-.detail-col > .gt {
-  padding: 0 var(--sp-2);
-  background: var(--app-well);
-  border: 1px solid var(--app-line);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--cut-in);
-}
-/* Inside the Overview tab it sits flush over the band. */
-.ms-tab-content > .gt { margin-bottom: var(--sp-2); }
 
-/* ══ MOCK ROUND 1 — Overview header variants. DELETE after decision. ══════
-   ov-a is the default (the rules above). ov-b and ov-c are candidates the
-   harness selects with #mock=; nothing here is reachable in the real app. */
-
-/* ov-b: two rows. The claim (verdict, opponent, record) on its own line at
-   full voice, the facts (marks, map, length, tags) under it. */
-html[data-mock="ov-b"] .ov-claim {
-  display: flex;
-  flex-basis: 100%;
-  align-items: center;
-  gap: var(--sp-1) var(--sp-3);
-  min-width: 0;
-}
-html[data-mock="ov-b"] .verdict-word { font-size: var(--fs-h3); }
-
-/* ov-c: the header rides the ov-band's right column, over the tier bars,
-   beside the dominance plot. One glance carries the result AND the shape of
-   the game. With no dominance the band is one column and the header leads it. */
-html[data-mock="ov-c"] .ms-ov-band > .ms-ov-band-dom { grid-column: 1; grid-row: 1 / 3; }
-html[data-mock="ov-c"] .ms-ov-band > .ov-in-band {
+/* ── The header in the band ───────────────────────────────────────────────
+   The Overview header rides the ov-band's right column, over the tier bars,
+   beside the dominance plot: one glance carries the result AND the shape of
+   the game. With no dominance (a team game) the band is one column and the
+   header leads it. Chosen over a row of its own in the Aug 2026 mock round. */
+.ms-ov-band > .ms-ov-band-dom { grid-column: 1; grid-row: 1 / 3; }
+.ms-ov-band > .ov-in-band {
   grid-column: 2;
   grid-row: 1;
   border-bottom: 0;
@@ -1233,31 +1206,28 @@ html[data-mock="ov-c"] .ms-ov-band > .ov-in-band {
   padding: 0;
   align-self: start;
 }
-html[data-mock="ov-c"] .ms-ov-band > .ms-ov-band-tier { grid-column: 2; grid-row: 2; }
-html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) {
-  grid-template-columns: minmax(0, 1fr);
-}
-html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band,
-html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier {
-  grid-column: 1;
-}
-html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band { grid-row: 1; }
-html[data-mock="ov-c"] .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier { grid-row: 2; }
-/* The bench readout would double the right column's height; it drops under
-   the claim at reduced billing in this variant. */
-html[data-mock="ov-c"] .ov-in-band .ov-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1) 0; }
+.ms-ov-band > .ms-ov-band-tier { grid-column: 2; grid-row: 2; }
+.ms-ov-band:not(:has(.ms-ov-band-dom)) { grid-template-columns: minmax(0, 1fr); }
+.ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band,
+.ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier { grid-column: 1; }
+.ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band { grid-row: 1; }
+.ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier { grid-row: 2; }
+/* The bench readout would double the right column's height; it sits under
+   the claim at one-column billing. */
+.ov-in-band .ov-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1) 0; }
 
-/* ══ MOCK ROUND 3 — one interleaved build order. DELETE after decision. ═══
-   The merged list runs in the same responsive columns as the split form,
-   so it costs no height; each row's race ink and name say whose step it is,
-   and your own rows get the full ink. */
-html[data-mock="bo-b"] .build-merged { column-width: 17rem; }
-html[data-mock="bo-b"] .build-merged .who {
+/* ── The merged build order ───────────────────────────────────────────────
+   One chronology in the same responsive columns as the old split form, so
+   it costs no height; each row's race ink and name say whose step it is,
+   and the reader's own rows carry full ink (only when a seat is known —
+   `.has-mine` — so somebody else's game is not all-dim). */
+.build-merged { column-width: 17rem; }
+.build-merged .who {
   flex: none;
   width: 5.2rem;
   color: var(--rc-ink);
   font-size: var(--fs-min);
   overflow-wrap: anywhere;
 }
-html[data-mock="bo-b"] .build-merged li { opacity: 0.75; }
-html[data-mock="bo-b"] .build-merged li[data-mine="1"] { opacity: 1; }
+.build-merged.has-mine li { opacity: 0.7; }
+.build-merged.has-mine li[data-mine="1"] { opacity: 1; }

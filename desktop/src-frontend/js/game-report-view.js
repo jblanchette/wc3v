@@ -33,13 +33,6 @@
   const U = () => window.UIBits;
   const PA = () => window.ProfileAggregate;
 
-  // MOCK ROUND — preview-only layout variants, driven by #mock=<name> in the
-  // harness. Unreachable in the real app (__WC3V_PREVIEW__ is the preview
-  // stub's flag). DELETE after the round: the chosen variant becomes the
-  // unconditional code and this switch goes with the losers.
-  const MOCK = (window.__WC3V_PREVIEW__ &&
-    (location.hash.match(/mock=([\w-]+)/) || [])[1]) || null;
-  if (MOCK) document.documentElement.dataset.mock = MOCK;
 
   // A baseline is only quoted at this many samples. "vs your median (n=2)" is
   // not a benchmark, and a confident-looking delta built on two games is worse
@@ -497,57 +490,37 @@
         }
 
         // ── Build order ───────────────────────────────────────────────────
+        // ONE chronology, both players interleaved, each row wearing its
+        // player's race ink and the reader's own rows at full ink. It reads
+        // as the game's actual sequence — "he made his altar while I was
+        // still on the mill" — instead of two parallel lists the reader has
+        // to zip by eye. Was two columns per player until the Aug 2026
+        // mock round.
         panel.appendChild(sectionHead('time', 'Build order'));
-        if (MOCK === 'bo-b') {
-          // MOCK ROUND 3: ONE chronology, both players interleaved, each row
-          // wearing its player's race ink. Reads as the game's actual
-          // sequence — "he made his altar while I was still on the mill" —
-          // instead of two parallel lists the reader has to zip by eye.
-          const merged = [];
-          for (const slot of slots) {
-            const p = summary.players[slot];
-            for (const b of (p.buildPreview || [])) {
-              merged.push({ b, slot, race: p.race, mine: !symmetric && slot === seat });
-            }
+        const merged = [];
+        for (const slot of slots) {
+          const p = summary.players[slot];
+          for (const b of (p.buildPreview || [])) {
+            merged.push({ b, slot, race: p.race, mine: !symmetric && slot === seat });
           }
-          merged.sort((x, y) => (x.b.gameTimeMs || 0) - (y.b.gameTimeMs || 0));
-          const list = node('ul', 'build-list build-merged');
-          for (const { b, slot, race, mine } of merged) {
-            const li = node('li');
-            li.dataset.type = b.type || '';
-            if (race) li.dataset.race = race;
-            if (mine) li.dataset.mine = '1';
-            li.appendChild(node('span', 't', b.gameTimeFormatted || ''));
-            li.appendChild(node('span', 'who',
-              String((summary.players[slot].name || '?')).replace(/#.*$/, '').slice(0, 10)));
-            li.appendChild(buildIcon(b.itemId));
-            li.appendChild(node('span', 'n', b.name || ''));
-            list.appendChild(li);
-          }
-          if (!list.children.length) panel.appendChild(node('p', 'hint', 'No build recorded.'));
-          else panel.appendChild(list);
-        } else {
-          const orders = node('div', 'builds');
-          for (const slot of slots) {
-            const p = summary.players[slot];
-            const col = node('div', 'build-col');
-            if (p.race) col.dataset.race = p.race;
-            col.appendChild(titleFor(p, slot));
-            const list = node('ul', 'build-list');
-            for (const b of (p.buildPreview || [])) {
-              const li = node('li');
-              li.dataset.type = b.type || '';
-              li.appendChild(node('span', 't', b.gameTimeFormatted || ''));
-              li.appendChild(buildIcon(b.itemId));
-              li.appendChild(node('span', 'n', b.name || ''));
-              list.appendChild(li);
-            }
-            if (!list.children.length) col.appendChild(node('p', 'hint', 'No build recorded.'));
-            else col.appendChild(list);
-            orders.appendChild(col);
-          }
-          panel.appendChild(orders);
         }
+        merged.sort((x, y) => (x.b.gameTimeMs || 0) - (y.b.gameTimeMs || 0));
+        const list = node('ul', 'build-list build-merged');
+        if (!symmetric) list.classList.add('has-mine');
+        for (const { b, slot, race, mine } of merged) {
+          const li = node('li');
+          li.dataset.type = b.type || '';
+          if (race) li.dataset.race = race;
+          if (mine) li.dataset.mine = '1';
+          li.appendChild(node('span', 't', b.gameTimeFormatted || ''));
+          li.appendChild(node('span', 'who',
+            String((summary.players[slot].name || '?')).replace(/#.*$/, '').slice(0, 10)));
+          li.appendChild(buildIcon(b.itemId));
+          li.appendChild(node('span', 'n', b.name || ''));
+          list.appendChild(li);
+        }
+        if (!list.children.length) panel.appendChild(node('p', 'hint', 'No build recorded.'));
+        else panel.appendChild(list);
 
         if (stale) panel.appendChild(staleRow());
         return panel;
@@ -601,15 +574,14 @@
       let cp = null;
       let tlHandle = null;
 
-      // MOCK ROUND 2 — where the moments timeline lives. tl-a is fixed frame
-      // (above the tab row, on every tab); tl-b and tl-c ride the Overview
-      // tab. Two lanes for tl-c. Delete with the round.
-      const mountTimeline = (into, lanes) => {
-        if (!window.GameTimeline) return;
+      // The moments timeline: two lanes (yours / theirs, per team in a team
+      // game). Built here, placed by the caller.
+      const buildTimeline = () => {
+        if (!window.GameTimeline) return null;
         if (tlHandle) { try { tlHandle.destroy(); } catch (e) { /* gone */ } tlHandle = null; }
         tlHandle = window.GameTimeline.build(summary, symmetric ? null : seat,
-          { onWatch: o.onWatch, lanes });
-        if (tlHandle) into.appendChild(tlHandle.el);
+          { onWatch: o.onWatch, lanes: 2 });
+        return tlHandle ? tlHandle.el : null;
       };
 
       const mountDominance = (host) => {
@@ -696,24 +668,21 @@
         if (key === 'build') { body.appendChild(reportPanel()); return; }
 
         const content = node('div', 'ms-tab-content');
-        // The header leads Overview: it is about the reader and the result,
-        // which is what somebody opens a report to learn, and it scrolls with
-        // the tab instead of taxing every other tab's frame.
-        const wantsHeader = key === 'overview';
-        if (wantsHeader && MOCK !== 'ov-c') content.appendChild(overviewHeader());
-        if (wantsHeader && (MOCK === 'tl-b' || MOCK === 'tl-c')) {
-          mountTimeline(content, MOCK === 'tl-c' ? 2 : 1);
-        }
         const rendered = window.MatchSummaryView.render(key, model, viewOpts());
         if (rendered) content.appendChild(rendered);
-        // MOCK ov-c: the header rides the ov-band beside the dominance plot
-        // instead of being a row of its own. Falls back to the row form when
-        // the band is absent.
-        if (wantsHeader && MOCK === 'ov-c') {
+        if (key === 'overview') {
+          // The header rides the ov-band's right column, over the tier bars,
+          // beside the dominance plot: the result and the shape of the game
+          // in one glance, and it scrolls with the tab instead of taxing
+          // every other tab's frame. A band-less game (no shared render,
+          // never on this path) would take the row form instead.
           const band = content.querySelector('.ms-ov-band');
           const hdr = overviewHeader();
           if (band) { hdr.classList.add('ov-in-band'); band.appendChild(hdr); }
           else content.insertBefore(hdr, content.firstChild);
+          // The timeline, under the band and above the player columns.
+          const tl = buildTimeline();
+          if (tl) content.insertBefore(tl, content.querySelector('.ms-players'));
         }
         if (key === 'economy') chartsPanel(content);
         body.appendChild(content);
@@ -733,9 +702,6 @@
         tabbar.appendChild(strip);
       }
       tabbar.appendChild(viewerButton());
-      // MOCK tl-a: the timeline as fixed frame, above the tab row, visible
-      // from every tab.
-      if (MOCK === 'tl-a') mountTimeline(host, 1);
       // Above .report-body, so the row is part of the fixed frame and the
       // fold rule still has exactly one scroller.
       host.appendChild(tabbar);
