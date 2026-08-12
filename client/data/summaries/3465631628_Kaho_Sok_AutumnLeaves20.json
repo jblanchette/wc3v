@@ -138,15 +138,8 @@
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 392158,
-          "gameTimeFormatted": "6:32"
-        },
-        {
-          "type": "building",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 452860,
-          "gameTimeFormatted": "7:32"
+          "gameTimeMs": 391673,
+          "gameTimeFormatted": "6:31"
         },
         {
           "type": "unit",
@@ -161,6 +154,13 @@
           "itemId": "edry",
           "gameTimeMs": 502861,
           "gameTimeFormatted": "8:22"
+        },
+        {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
+          "gameTimeMs": 522625,
+          "gameTimeFormatted": "8:42"
         }
       ],
       "t2Buildings": [
@@ -197,6 +197,10 @@
           "itemId": "emow"
         },
         {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
           "name": "Ancient of Wind",
           "itemId": "eaow"
         },
@@ -213,10 +217,6 @@
         {
           "name": "Druid of the Claw",
           "itemId": "edoc"
-        },
-        {
-          "name": "DruidoftheClawMorph",
-          "itemId": "edcm"
         },
         {
           "name": "Priestess of the Moon",
@@ -417,8 +417,8 @@
           "type": "building",
           "name": "Arcane Vault",
           "itemId": "hvlt",
-          "gameTimeMs": 329788,
-          "gameTimeFormatted": "5:29"
+          "gameTimeMs": 331329,
+          "gameTimeFormatted": "5:31"
         },
         {
           "type": "unit",
@@ -443,9 +443,16 @@
         },
         {
           "type": "building",
+          "name": "Blacksmith",
+          "itemId": "hbla",
+          "gameTimeMs": 405579,
+          "gameTimeFormatted": "6:45"
+        },
+        {
+          "type": "building",
           "name": "Farm",
           "itemId": "hhou",
-          "gameTimeMs": 410571,
+          "gameTimeMs": 410329,
           "gameTimeFormatted": "6:50"
         },
         {
@@ -454,13 +461,6 @@
           "itemId": "hfoo",
           "gameTimeMs": 435404,
           "gameTimeFormatted": "7:15"
-        },
-        {
-          "type": "building",
-          "name": "Blacksmith",
-          "itemId": "hbla",
-          "gameTimeMs": 436459,
-          "gameTimeFormatted": "7:16"
         }
       ],
       "t2Buildings": [

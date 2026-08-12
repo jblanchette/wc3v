@@ -19,8 +19,8 @@
       "tier2TimeFormatted": "6:26",
       "tier3Time": 528340,
       "tier3TimeFormatted": "8:48",
-      "expansionTime": 303532,
-      "expansionTimeFormatted": "5:03",
+      "expansionTime": 299047,
+      "expansionTimeFormatted": "4:59",
       "buildPreview": [
         {
           "type": "building",
@@ -35,6 +35,13 @@
           "itemId": "hbar",
           "gameTimeMs": 18874,
           "gameTimeFormatted": "0:18"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 36277,
+          "gameTimeFormatted": "0:36"
         },
         {
           "type": "building",
@@ -138,8 +145,8 @@
           "type": "expansion",
           "name": "Town Hall",
           "itemId": "htow",
-          "gameTimeMs": 303532,
-          "gameTimeFormatted": "5:03"
+          "gameTimeMs": 299047,
+          "gameTimeFormatted": "4:59"
         },
         {
           "type": "unit",
@@ -154,13 +161,6 @@
           "itemId": "hfoo",
           "gameTimeMs": 337159,
           "gameTimeFormatted": "5:37"
-        },
-        {
-          "type": "unit",
-          "name": "Footman",
-          "itemId": "hfoo",
-          "gameTimeMs": 384620,
-          "gameTimeFormatted": "6:24"
         }
       ],
       "t2Buildings": [

@@ -47,7 +47,7 @@
           "type": "building",
           "name": "War Mill",
           "itemId": "ofor",
-          "gameTimeMs": 175520,
+          "gameTimeMs": 175580,
           "gameTimeFormatted": "2:55"
         },
         {
@@ -156,11 +156,11 @@
           "gameTimeFormatted": "9:45"
         },
         {
-          "type": "unit",
-          "name": "Troll Batrider",
-          "itemId": "otbr",
-          "gameTimeMs": 585732,
-          "gameTimeFormatted": "9:45"
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 587115,
+          "gameTimeFormatted": "9:47"
         }
       ],
       "t2Buildings": [
@@ -357,6 +357,13 @@
           "gameTimeFormatted": "9:02"
         },
         {
+          "type": "unit",
+          "name": "Shade",
+          "itemId": "ushd",
+          "gameTimeMs": 550464,
+          "gameTimeFormatted": "9:10"
+        },
+        {
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
@@ -409,6 +416,10 @@
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
+        },
+        {
+          "name": "Shade",
+          "itemId": "ushd"
         }
       ],
       "researched": [

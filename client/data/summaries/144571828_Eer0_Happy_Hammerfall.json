@@ -145,6 +145,13 @@
           "type": "unit",
           "name": "Crypt Fiend",
           "itemId": "ucry",
+          "gameTimeMs": 573996,
+          "gameTimeFormatted": "9:33"
+        },
+        {
+          "type": "unit",
+          "name": "Crypt Fiend",
+          "itemId": "ucry",
           "gameTimeMs": 579036,
           "gameTimeFormatted": "9:39"
         },
@@ -154,13 +161,6 @@
           "itemId": "uobs",
           "gameTimeMs": 601274,
           "gameTimeFormatted": "10:01"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 653567,
-          "gameTimeFormatted": "10:53"
         }
       ],
       "t2Buildings": [
@@ -183,6 +183,10 @@
         {
           "name": "Ziggurat",
           "itemId": "uzig"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
         }
       ],
       "t3Units": [

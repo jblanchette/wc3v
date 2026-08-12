@@ -19,8 +19,8 @@
       "tier2TimeFormatted": "2:32",
       "tier3Time": 342744,
       "tier3TimeFormatted": "5:42",
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 760326,
+      "expansionTimeFormatted": "12:40",
       "buildPreview": [
         {
           "type": "building",
@@ -149,18 +149,18 @@
           "gameTimeFormatted": "6:28"
         },
         {
-          "type": "unit",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 401435,
-          "gameTimeFormatted": "6:41"
-        },
-        {
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
           "gameTimeMs": 402052,
           "gameTimeFormatted": "6:42"
+        },
+        {
+          "type": "unit",
+          "name": "Druid of the Claw",
+          "itemId": "edoc",
+          "gameTimeMs": 473218,
+          "gameTimeFormatted": "7:53"
         }
       ],
       "t2Buildings": [
@@ -195,16 +195,20 @@
         {
           "name": "Moon Well",
           "itemId": "emow"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
         }
       ],
       "t3Units": [
         {
-          "name": "Ancient of Lore",
-          "itemId": "eaoe"
-        },
-        {
           "name": "Druid of the Claw",
           "itemId": "edoc"
+        },
+        {
+          "name": "Dryad",
+          "itemId": "edry"
         }
       ],
       "researched": [
@@ -225,6 +229,33 @@
           "icon": "btndocmastertraining",
           "gameTimeMs": 492425,
           "gameTimeFormatted": "8:12"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 556160,
+          "gameTimeFormatted": "9:16"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 2,
+          "category": "defense",
+          "icon": "btnimprovedreinforcedhides",
+          "gameTimeMs": 714373,
+          "gameTimeFormatted": "11:54"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 633362,
+          "gameTimeFormatted": "10:33"
         }
       ]
     },
@@ -378,11 +409,11 @@
           "gameTimeFormatted": "8:26"
         },
         {
-          "type": "building",
-          "name": "Moon Well",
-          "itemId": "emow",
-          "gameTimeMs": 516074,
-          "gameTimeFormatted": "8:36"
+          "type": "unit",
+          "name": "Druid of the Claw",
+          "itemId": "edoc",
+          "gameTimeMs": 511654,
+          "gameTimeFormatted": "8:31"
         }
       ],
       "t2Buildings": [
@@ -423,6 +454,22 @@
         {
           "name": "Dryad",
           "itemId": "edry"
+        },
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "Chimaera",
+          "itemId": "echm"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
         }
       ],
       "researched": [
@@ -452,6 +499,42 @@
           "icon": "btndocmastertraining",
           "gameTimeMs": 523692,
           "gameTimeFormatted": "8:43"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 603054,
+          "gameTimeFormatted": "10:03"
+        },
+        {
+          "itemId": "Recb",
+          "name": "Corrosive Breath",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncorrosivebreath",
+          "gameTimeMs": 680190,
+          "gameTimeFormatted": "11:20"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnreinforcedhides",
+          "gameTimeMs": 700479,
+          "gameTimeFormatted": "11:40"
+        },
+        {
+          "itemId": "Resw",
+          "name": "Strength of the Wild",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnstrengthofthewild",
+          "gameTimeMs": 700663,
+          "gameTimeFormatted": "11:40"
         }
       ]
     }

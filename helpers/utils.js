@@ -1115,6 +1115,12 @@ const readCliArgs = (argv) => {
         config.debugFormation = true;
       break;
 
+      // Selection rule A/B — see config.selectionRule and
+      // tools/order-trace.js --selcheck.
+      case "select-rule":
+        config.selectionRule = val;
+      break;
+
       case "debug-items":
         config.debugItemDispatch = true;
       break;

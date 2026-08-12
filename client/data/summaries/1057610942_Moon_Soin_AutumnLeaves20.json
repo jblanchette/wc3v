@@ -207,6 +207,10 @@
         {
           "name": "Ancient of Wonders",
           "itemId": "eden"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
         }
       ],
       "t3Units": [
@@ -241,11 +245,11 @@
         {
           "itemId": "Rerh",
           "name": "Reinforced Hides",
-          "level": 1,
+          "level": 2,
           "category": "defense",
-          "icon": "btnreinforcedhides",
-          "gameTimeMs": 415740,
-          "gameTimeFormatted": "6:55"
+          "icon": "btnimprovedreinforcedhides",
+          "gameTimeMs": 815031,
+          "gameTimeFormatted": "13:35"
         },
         {
           "itemId": "Redc",
@@ -259,11 +263,11 @@
         {
           "itemId": "Resw",
           "name": "Strength of the Wild",
-          "level": 1,
+          "level": 2,
           "category": "attack",
-          "icon": "btnstrengthofthewild",
-          "gameTimeMs": 681113,
-          "gameTimeFormatted": "11:21"
+          "icon": "btnimprovedstrengthofthewild",
+          "gameTimeMs": 814847,
+          "gameTimeFormatted": "13:34"
         },
         {
           "itemId": "Reeb",
@@ -289,8 +293,8 @@
       "tier2TimeFormatted": "2:17",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 801266,
+      "expansionTimeFormatted": "13:21",
       "buildPreview": [
         {
           "type": "building",
@@ -457,6 +461,10 @@
         {
           "name": "Voodoo Lounge",
           "itemId": "ovln"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
         }
       ],
       "t2Units": [

@@ -2,7 +2,7 @@
 title: "Lich Fast Tech — Undead build order (UvH, UvU, UvO)"
 url: https://wc3v.com/builds/ud-lich-fast-tech
 description: "Lich first hero for early Frost Armor tankiness and Frost Nova burst. Slightly defensive opener that creeps with Ghouls and rushes T2 Crypt Fiends. DK as…"
-updated: 2026-08-11
+updated: 2026-08-12
 ---
 
 # Lich Fast Tech

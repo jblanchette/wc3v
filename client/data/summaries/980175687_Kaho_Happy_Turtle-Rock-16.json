@@ -135,6 +135,13 @@
           "gameTimeFormatted": "7:52"
         },
         {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
+          "gameTimeMs": 472744,
+          "gameTimeFormatted": "7:52"
+        },
+        {
           "type": "building",
           "name": "Ancient of Wonders",
           "itemId": "eden",
@@ -154,13 +161,6 @@
           "itemId": "edry",
           "gameTimeMs": 559635,
           "gameTimeFormatted": "9:19"
-        },
-        {
-          "type": "unit",
-          "name": "Dryad",
-          "itemId": "edry",
-          "gameTimeMs": 599306,
-          "gameTimeFormatted": "9:59"
         }
       ],
       "t2Buildings": [
@@ -256,6 +256,15 @@
           "icon": "btndryaddispelmagic",
           "gameTimeMs": 1054602,
           "gameTimeFormatted": "17:34"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 1207604,
+          "gameTimeFormatted": "20:07"
         },
         {
           "itemId": "Recb",

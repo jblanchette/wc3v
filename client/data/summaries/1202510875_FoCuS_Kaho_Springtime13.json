@@ -19,7 +19,7 @@
       "tier2TimeFormatted": "2:27",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": 553710,
+      "expansionTime": 553559,
       "expansionTimeFormatted": "9:13",
       "buildPreview": [
         {
@@ -145,7 +145,7 @@
           "type": "expansion",
           "name": "Great Hall",
           "itemId": "ogre",
-          "gameTimeMs": 553710,
+          "gameTimeMs": 553559,
           "gameTimeFormatted": "9:13"
         },
         {
@@ -369,13 +369,6 @@
           "gameTimeFormatted": "5:27"
         },
         {
-          "type": "building",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 333415,
-          "gameTimeFormatted": "5:33"
-        },
-        {
           "type": "unit",
           "name": "Dryad",
           "itemId": "edry",
@@ -395,6 +388,13 @@
           "itemId": "edry",
           "gameTimeMs": 433186,
           "gameTimeFormatted": "7:13"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 455534,
+          "gameTimeFormatted": "7:35"
         },
         {
           "type": "unit",
@@ -437,6 +437,10 @@
         }
       ],
       "t3Buildings": [
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
         {
           "name": "Moon Well",
           "itemId": "emow"

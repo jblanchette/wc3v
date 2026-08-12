@@ -223,6 +223,10 @@
         {
           "name": "Ziggurat",
           "itemId": "uzig"
+        },
+        {
+          "name": "Crypt",
+          "itemId": "usep"
         }
       ],
       "t3Units": [
@@ -233,6 +237,38 @@
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
+        },
+        {
+          "name": "Shade",
+          "itemId": "ushd"
+        },
+        {
+          "name": "Necromancer",
+          "itemId": "unec"
+        },
+        {
+          "name": "Meatwagon",
+          "itemId": "umtw"
+        },
+        {
+          "name": "Crypt Fiend",
+          "itemId": "ucry"
+        },
+        {
+          "name": "Skeletal Mage",
+          "itemId": "uskm"
+        },
+        {
+          "name": "Gargoyle",
+          "itemId": "ugar"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
+        },
+        {
+          "name": "Abomination",
+          "itemId": "uabo"
         }
       ],
       "researched": [
@@ -262,6 +298,69 @@
           "icon": "btnghoulfrenzy",
           "gameTimeMs": 634425,
           "gameTimeFormatted": "10:34"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 652012,
+          "gameTimeFormatted": "10:52"
+        },
+        {
+          "itemId": "Rune",
+          "name": "Necromancer Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnnecromancermaster",
+          "gameTimeMs": 694121,
+          "gameTimeFormatted": "11:34"
+        },
+        {
+          "itemId": "Rume",
+          "name": "Unholy Strength",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnimprovedunholystrength",
+          "gameTimeMs": 777509,
+          "gameTimeFormatted": "12:57"
+        },
+        {
+          "itemId": "Rusm",
+          "name": "Skeletal Mastery",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnskeletonmage",
+          "gameTimeMs": 695854,
+          "gameTimeFormatted": "11:35"
+        },
+        {
+          "itemId": "Ruex",
+          "name": "Exhume Corpses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnexhumecorpses",
+          "gameTimeMs": 718504,
+          "gameTimeFormatted": "11:58"
+        },
+        {
+          "itemId": "Rupc",
+          "name": "Plague Cloud",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnplaguecloud",
+          "gameTimeMs": 854406,
+          "gameTimeFormatted": "14:14"
+        },
+        {
+          "itemId": "Ruwb",
+          "name": "Web",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnweb",
+          "gameTimeMs": 861102,
+          "gameTimeFormatted": "14:21"
         }
       ]
     },
@@ -387,13 +486,6 @@
           "gameTimeFormatted": "6:49"
         },
         {
-          "type": "building",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 432278,
-          "gameTimeFormatted": "7:12"
-        },
-        {
           "type": "unit",
           "name": "Dryad",
           "itemId": "edry",
@@ -420,6 +512,13 @@
           "itemId": "edoc",
           "gameTimeMs": 546396,
           "gameTimeFormatted": "9:06"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 549062,
+          "gameTimeFormatted": "9:09"
         }
       ],
       "t2Buildings": [
@@ -450,6 +549,14 @@
         {
           "name": "Ancient of Wonders",
           "itemId": "eden"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Chimaera Roost",
+          "itemId": "edos"
         }
       ],
       "t3Units": [
@@ -460,6 +567,22 @@
         {
           "name": "Druid of the Claw",
           "itemId": "edoc"
+        },
+        {
+          "name": "Priestess of the Moon",
+          "itemId": "Emoo"
+        },
+        {
+          "name": "Mountain Giant",
+          "itemId": "emtg"
+        },
+        {
+          "name": "Chimaera",
+          "itemId": "echm"
+        },
+        {
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb"
         }
       ],
       "researched": [
@@ -475,11 +598,11 @@
         {
           "itemId": "Rerh",
           "name": "Reinforced Hides",
-          "level": 1,
+          "level": 3,
           "category": "defense",
-          "icon": "btnreinforcedhides",
-          "gameTimeMs": 479657,
-          "gameTimeFormatted": "7:59"
+          "icon": "btnadvancedreinforcedhides",
+          "gameTimeMs": 780862,
+          "gameTimeFormatted": "13:00"
         },
         {
           "itemId": "Redc",
@@ -493,11 +616,11 @@
         {
           "itemId": "Resw",
           "name": "Strength of the Wild",
-          "level": 1,
+          "level": 2,
           "category": "attack",
-          "icon": "btnstrengthofthewild",
-          "gameTimeMs": 554649,
-          "gameTimeFormatted": "9:14"
+          "icon": "btnimprovedstrengthofthewild",
+          "gameTimeMs": 860235,
+          "gameTimeFormatted": "14:20"
         },
         {
           "itemId": "Resi",
@@ -516,6 +639,60 @@
           "icon": "btnwellspring",
           "gameTimeMs": 623751,
           "gameTimeFormatted": "10:23"
+        },
+        {
+          "itemId": "Repm",
+          "name": "nightelf backpack",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpackbeast",
+          "gameTimeMs": 690842,
+          "gameTimeFormatted": "11:30"
+        },
+        {
+          "itemId": "Rehs",
+          "name": "Hardened Skin",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnhardenedskin",
+          "gameTimeMs": 693067,
+          "gameTimeFormatted": "11:33"
+        },
+        {
+          "itemId": "Rers",
+          "name": "Resistant Skin",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnresistantskin",
+          "gameTimeMs": 710097,
+          "gameTimeFormatted": "11:50"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 839897,
+          "gameTimeFormatted": "13:59"
+        },
+        {
+          "itemId": "Recb",
+          "name": "Corrosive Breath",
+          "level": 1,
+          "category": "ability",
+          "icon": "btncorrosivebreath",
+          "gameTimeMs": 1079073,
+          "gameTimeFormatted": "17:59"
+        },
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 1380549,
+          "gameTimeFormatted": "23:00"
         }
       ]
     }

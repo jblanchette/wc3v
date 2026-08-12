@@ -24,6 +24,22 @@ const config = {
 	// window) — lib/KinematicResim.js. Default ON. Set false to fall back to the
 	// legacy facing-only bake (lib/FacingInference.js) for A/B debugging.
 	kinematicResim: true,
+	// How a selectMode=1 ChangeSelection combines with the current selection.
+	// The replay protocol has no "replace": a click sends DESELECT then SELECT,
+	// a shift-add sends SELECT alone. Which of those a bare SELECT is cannot be
+	// read off the action, so the rule is empirical — grade candidates against
+	// the AssignGroupHotkey oracle with
+	//   node tools/order-trace.js --replay=R --selcheck --rule=NAME
+	//
+	//   'legacy'       replace unless the previous change shared this gameTime.
+	//                  Evicts already-selected units on every shift-add.
+	//   'merge'        always add. Fixes shift-add, but drift never clears.
+	//   'merge-resync' add, except a SELECT directly after a DESELECT in the
+	//                  same tick replaces (click-to-reselect resync).
+	//   'add-single'   add only when the SELECT names a single unit (a
+	//                  shift-click); a multi-unit SELECT is the complete new
+	//                  selection and replaces.
+	selectionRule: 'merge-resync',
 	// Positional anchor correction — lib/AnchorCorrection.js. Pulls recorded
 	// paths onto enemy-click anchors (even-parity only; odd half is the
 	// tools/anchor-audit.js --holdout grading set). Default ON. Set false to

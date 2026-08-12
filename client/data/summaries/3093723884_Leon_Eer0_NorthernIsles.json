@@ -15,12 +15,12 @@
         "gameTimeMs": 68303,
         "gameTimeFormatted": "1:08"
       },
-      "tier2Time": 393959,
-      "tier2TimeFormatted": "6:33",
-      "tier3Time": 535811,
-      "tier3TimeFormatted": "8:55",
-      "expansionTime": 291227,
-      "expansionTimeFormatted": "4:51",
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": 290834,
+      "expansionTimeFormatted": "4:50",
       "buildPreview": [
         {
           "type": "building",
@@ -145,8 +145,8 @@
           "type": "expansion",
           "name": "Town Hall",
           "itemId": "htow",
-          "gameTimeMs": 291227,
-          "gameTimeFormatted": "4:51"
+          "gameTimeMs": 290834,
+          "gameTimeFormatted": "4:50"
         },
         {
           "type": "unit",
@@ -154,161 +154,13 @@
           "itemId": "hfoo",
           "gameTimeMs": 309183,
           "gameTimeFormatted": "5:09"
-        },
-        {
-          "type": "building",
-          "name": "Arcane Vault",
-          "itemId": "hvlt",
-          "gameTimeMs": 342751,
-          "gameTimeFormatted": "5:42"
         }
       ],
-      "t2Buildings": [
-        {
-          "name": "Scout Tower",
-          "itemId": "hwtw"
-        },
-        {
-          "name": "Blacksmith",
-          "itemId": "hbla"
-        },
-        {
-          "name": "Lumber Mill",
-          "itemId": "hlum"
-        }
-      ],
-      "t2Units": [
-        {
-          "name": "Footman",
-          "itemId": "hfoo"
-        },
-        {
-          "name": "Mountain King",
-          "itemId": "Hmkg"
-        }
-      ],
-      "t3Buildings": [
-        {
-          "name": "Workshop",
-          "itemId": "harm"
-        },
-        {
-          "name": "Barracks",
-          "itemId": "hbar"
-        },
-        {
-          "name": "Farm",
-          "itemId": "hhou"
-        },
-        {
-          "name": "Arcane Sanctum",
-          "itemId": "hars"
-        }
-      ],
-      "t3Units": [
-        {
-          "name": "Paladin",
-          "itemId": "Hpal"
-        },
-        {
-          "name": "Knight",
-          "itemId": "hkni"
-        },
-        {
-          "name": "ice troll warlord",
-          "itemId": "nitw"
-        },
-        {
-          "name": "Death Knight",
-          "itemId": "Udea"
-        },
-        {
-          "name": "Flying Machine",
-          "itemId": "hgyr"
-        },
-        {
-          "name": "Spell Breaker",
-          "itemId": "hspt"
-        },
-        {
-          "name": "Sorceress",
-          "itemId": "hsor"
-        }
-      ],
-      "researched": [
-        {
-          "itemId": "Rhar",
-          "name": "Plating",
-          "level": 3,
-          "category": "defense",
-          "icon": "btnhumanarmorupthree",
-          "gameTimeMs": 1112520,
-          "gameTimeFormatted": "18:32"
-        },
-        {
-          "itemId": "Rhme",
-          "name": "Melee Weapons",
-          "level": 2,
-          "category": "attack",
-          "icon": "btnthoriummelee",
-          "gameTimeMs": 1112580,
-          "gameTimeFormatted": "18:32"
-        },
-        {
-          "itemId": "Rhfc",
-          "name": "Flak Cannons",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnflakcannons",
-          "gameTimeMs": 634263,
-          "gameTimeFormatted": "10:34"
-        },
-        {
-          "itemId": "Rhlh",
-          "name": "Lumber Harvesting",
-          "level": 2,
-          "category": "ability",
-          "icon": "btnhumanlumberupgrade2",
-          "gameTimeMs": 706584,
-          "gameTimeFormatted": "11:46"
-        },
-        {
-          "itemId": "Rhan",
-          "name": "Animal War Training",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnanimalwartraining",
-          "gameTimeMs": 685036,
-          "gameTimeFormatted": "11:25"
-        },
-        {
-          "itemId": "Rhsb",
-          "name": "Sundering Blades",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnsunderingblades",
-          "gameTimeMs": 725108,
-          "gameTimeFormatted": "12:05"
-        },
-        {
-          "itemId": "Rhgb",
-          "name": "Flying Machine Bombs",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnhumanartilleryupone",
-          "gameTimeMs": 958515,
-          "gameTimeFormatted": "15:58"
-        },
-        {
-          "itemId": "Rhri",
-          "name": "Long Rifles",
-          "level": 1,
-          "category": "ability",
-          "icon": "btndwarvenlongrifle",
-          "gameTimeMs": 1172000,
-          "gameTimeFormatted": "19:32"
-        }
-      ]
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
     },
     "2": {
       "name": "orange#14823",
@@ -319,12 +171,12 @@
         "gameTimeMs": 73609,
         "gameTimeFormatted": "1:13"
       },
-      "tier2Time": 436803,
-      "tier2TimeFormatted": "7:16",
-      "tier3Time": 578570,
-      "tier3TimeFormatted": "9:38",
-      "expansionTime": 466614,
-      "expansionTimeFormatted": "7:46",
+      "tier2Time": null,
+      "tier2TimeFormatted": null,
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
       "buildPreview": [
         {
           "type": "building",
@@ -367,226 +219,13 @@
           "itemId": "ugol",
           "gameTimeMs": 279937,
           "gameTimeFormatted": "4:39"
-        },
-        {
-          "type": "building",
-          "name": "Graveyard",
-          "itemId": "ugrv",
-          "gameTimeMs": 451701,
-          "gameTimeFormatted": "7:31"
-        },
-        {
-          "type": "building",
-          "name": "Ziggurat",
-          "itemId": "uzig",
-          "gameTimeMs": 457926,
-          "gameTimeFormatted": "7:37"
-        },
-        {
-          "type": "expansion",
-          "name": "Necropolis",
-          "itemId": "unpl",
-          "gameTimeMs": 466614,
-          "gameTimeFormatted": "7:46"
-        },
-        {
-          "type": "building",
-          "name": "Crypt",
-          "itemId": "usep",
-          "gameTimeMs": 507395,
-          "gameTimeFormatted": "8:27"
-        },
-        {
-          "type": "building",
-          "name": "Ziggurat",
-          "itemId": "uzig",
-          "gameTimeMs": 534851,
-          "gameTimeFormatted": "8:54"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 540819,
-          "gameTimeFormatted": "9:00"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 569185,
-          "gameTimeFormatted": "9:29"
-        },
-        {
-          "type": "hero",
-          "name": "Death Knight",
-          "itemId": "Udea",
-          "gameTimeMs": 579180,
-          "gameTimeFormatted": "9:39"
-        },
-        {
-          "type": "building",
-          "name": "Slaughterhouse",
-          "itemId": "uslh",
-          "gameTimeMs": 615676,
-          "gameTimeFormatted": "10:15"
-        },
-        {
-          "type": "building",
-          "name": "Slaughterhouse",
-          "itemId": "uslh",
-          "gameTimeMs": 624145,
-          "gameTimeFormatted": "10:24"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 641900,
-          "gameTimeFormatted": "10:41"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 684163,
-          "gameTimeFormatted": "11:24"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 688785,
-          "gameTimeFormatted": "11:28"
-        },
-        {
-          "type": "unit",
-          "name": "Crypt Fiend",
-          "itemId": "ucry",
-          "gameTimeMs": 690326,
-          "gameTimeFormatted": "11:30"
         }
       ],
-      "t2Buildings": [
-        {
-          "name": "Graveyard",
-          "itemId": "ugrv"
-        },
-        {
-          "name": "Ziggurat",
-          "itemId": "uzig"
-        },
-        {
-          "name": "Necropolis",
-          "itemId": "unpl"
-        },
-        {
-          "name": "Crypt",
-          "itemId": "usep"
-        }
-      ],
-      "t2Units": [
-        {
-          "name": "Crypt Fiend",
-          "itemId": "ucry"
-        }
-      ],
-      "t3Buildings": [
-        {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
-        },
-        {
-          "name": "Ziggurat",
-          "itemId": "uzig"
-        },
-        {
-          "name": "Temple of the Damned",
-          "itemId": "utod"
-        }
-      ],
-      "t3Units": [
-        {
-          "name": "Death Knight",
-          "itemId": "Udea"
-        },
-        {
-          "name": "Crypt Fiend",
-          "itemId": "ucry"
-        },
-        {
-          "name": "Obsidian Statue",
-          "itemId": "uobs"
-        },
-        {
-          "name": "Crypt Lord",
-          "itemId": "Ucrl"
-        },
-        {
-          "name": "Abomination",
-          "itemId": "uabo"
-        },
-        {
-          "name": "Banshee",
-          "itemId": "uban"
-        }
-      ],
-      "researched": [
-        {
-          "itemId": "Rura",
-          "name": "Creature Attack",
-          "level": 1,
-          "category": "attack",
-          "icon": "btncreatureattack",
-          "gameTimeMs": 646467,
-          "gameTimeFormatted": "10:46"
-        },
-        {
-          "itemId": "Rusp",
-          "name": "Destroyer Form",
-          "level": 1,
-          "category": "ability",
-          "icon": "btndestroyer",
-          "gameTimeMs": 720374,
-          "gameTimeFormatted": "12:00"
-        },
-        {
-          "itemId": "Rugf",
-          "name": "Ghoul Frenzy",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnghoulfrenzy",
-          "gameTimeMs": 741561,
-          "gameTimeFormatted": "12:21"
-        },
-        {
-          "itemId": "Rupc",
-          "name": "Plague Cloud",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnplaguecloud",
-          "gameTimeMs": 797242,
-          "gameTimeFormatted": "13:17"
-        },
-        {
-          "itemId": "Ruba",
-          "name": "Banshee Training",
-          "level": 2,
-          "category": "ability",
-          "icon": "btnbansheemaster",
-          "gameTimeMs": 1204156,
-          "gameTimeFormatted": "20:04"
-        },
-        {
-          "itemId": "Ruwb",
-          "name": "Web",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnweb",
-          "gameTimeMs": 1165184,
-          "gameTimeFormatted": "19:25"
-        }
-      ]
+      "t2Buildings": [],
+      "t2Units": [],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
     }
   }
 }

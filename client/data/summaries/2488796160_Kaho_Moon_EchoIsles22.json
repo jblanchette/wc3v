@@ -108,13 +108,6 @@
         },
         {
           "type": "building",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 339160,
-          "gameTimeFormatted": "5:39"
-        },
-        {
-          "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
           "gameTimeMs": 342246,
@@ -135,13 +128,6 @@
           "gameTimeFormatted": "6:48"
         },
         {
-          "type": "unit",
-          "name": "Dryad",
-          "itemId": "edry",
-          "gameTimeMs": 410371,
-          "gameTimeFormatted": "6:50"
-        },
-        {
           "type": "expansion",
           "name": "Tree of Life",
           "itemId": "etol",
@@ -159,8 +145,22 @@
           "type": "unit",
           "name": "Druid of the Claw",
           "itemId": "edoc",
+          "gameTimeMs": 515260,
+          "gameTimeFormatted": "8:35"
+        },
+        {
+          "type": "unit",
+          "name": "Druid of the Claw",
+          "itemId": "edoc",
           "gameTimeMs": 539562,
           "gameTimeFormatted": "8:59"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 540480,
+          "gameTimeFormatted": "9:00"
         }
       ],
       "t2Buildings": [
@@ -195,6 +195,10 @@
         {
           "name": "Tree of Life",
           "itemId": "etol"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
         },
         {
           "name": "Moon Well",
@@ -492,6 +496,10 @@
         {
           "name": "Druid of the Claw",
           "itemId": "edoc"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
         }
       ],
       "researched": [

@@ -121,13 +121,6 @@
           "gameTimeFormatted": "16:35"
         },
         {
-          "type": "building",
-          "name": "Slaughterhouse",
-          "itemId": "uslh",
-          "gameTimeMs": 1063031,
-          "gameTimeFormatted": "17:43"
-        },
-        {
           "type": "unit",
           "name": "Obsidian Statue",
           "itemId": "uobs",
@@ -143,6 +136,13 @@
         },
         {
           "type": "building",
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol",
+          "gameTimeMs": 1077978,
+          "gameTimeFormatted": "17:57"
+        },
+        {
+          "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
           "gameTimeMs": 1079183,
@@ -152,8 +152,8 @@
           "type": "unit",
           "name": "Obsidian Statue",
           "itemId": "uobs",
-          "gameTimeMs": 1113612,
-          "gameTimeFormatted": "18:33"
+          "gameTimeMs": 1115361,
+          "gameTimeFormatted": "18:35"
         },
         {
           "type": "building",
@@ -199,6 +199,10 @@
         {
           "name": "Ziggurat",
           "itemId": "uzig"
+        },
+        {
+          "name": "Haunted Gold Mine",
+          "itemId": "ugol"
         }
       ],
       "t3Units": [

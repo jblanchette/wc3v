@@ -131,6 +131,13 @@
         },
         {
           "type": "building",
+          "name": "Arcane Vault",
+          "itemId": "hvlt",
+          "gameTimeMs": 355019,
+          "gameTimeFormatted": "5:55"
+        },
+        {
+          "type": "building",
           "name": "Lumber Mill",
           "itemId": "hlum",
           "gameTimeMs": 364424,
@@ -149,19 +156,16 @@
           "itemId": "hfoo",
           "gameTimeMs": 372135,
           "gameTimeFormatted": "6:12"
-        },
-        {
-          "type": "building",
-          "name": "Arcane Vault",
-          "itemId": "hvlt",
-          "gameTimeMs": 416995,
-          "gameTimeFormatted": "6:56"
         }
       ],
       "t2Buildings": [
         {
           "name": "Scout Tower",
           "itemId": "hwtw"
+        },
+        {
+          "name": "Arcane Vault",
+          "itemId": "hvlt"
         },
         {
           "name": "Lumber Mill",
@@ -172,8 +176,8 @@
           "itemId": "hhou"
         },
         {
-          "name": "Arcane Vault",
-          "itemId": "hvlt"
+          "name": "Blacksmith",
+          "itemId": "hbla"
         }
       ],
       "t2Units": [

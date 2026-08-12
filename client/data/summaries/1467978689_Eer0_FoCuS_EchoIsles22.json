@@ -17,8 +17,8 @@
       },
       "tier2Time": 168586,
       "tier2TimeFormatted": "2:48",
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
+      "tier3Time": 320585,
+      "tier3TimeFormatted": "5:20",
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -70,18 +70,176 @@
           "itemId": "ugrv",
           "gameTimeMs": 233318,
           "gameTimeFormatted": "3:53"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 252473,
+          "gameTimeFormatted": "4:12"
+        },
+        {
+          "type": "building",
+          "name": "Slaughterhouse",
+          "itemId": "uslh",
+          "gameTimeMs": 341667,
+          "gameTimeFormatted": "5:41"
+        },
+        {
+          "type": "unit",
+          "name": "DarkMinion1",
+          "itemId": "ndr1",
+          "gameTimeMs": 345847,
+          "gameTimeFormatted": "5:45"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 374564,
+          "gameTimeFormatted": "6:14"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 413810,
+          "gameTimeFormatted": "6:53"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 435676,
+          "gameTimeFormatted": "7:15"
+        },
+        {
+          "type": "hero",
+          "name": "Lich",
+          "itemId": "Ulic",
+          "gameTimeMs": 464610,
+          "gameTimeFormatted": "7:44"
+        },
+        {
+          "type": "unit",
+          "name": "DarkMinion1",
+          "itemId": "ndr1",
+          "gameTimeMs": 580813,
+          "gameTimeFormatted": "9:40"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 582595,
+          "gameTimeFormatted": "9:42"
+        },
+        {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 627167,
+          "gameTimeFormatted": "10:27"
+        },
+        {
+          "type": "unit",
+          "name": "DarkMinion1",
+          "itemId": "ndr1",
+          "gameTimeMs": 628388,
+          "gameTimeFormatted": "10:28"
+        },
+        {
+          "type": "building",
+          "name": "Ziggurat",
+          "itemId": "uzig",
+          "gameTimeMs": 669653,
+          "gameTimeFormatted": "11:09"
+        },
+        {
+          "type": "unit",
+          "name": "DarkMinion1",
+          "itemId": "ndr1",
+          "gameTimeMs": 681583,
+          "gameTimeFormatted": "11:21"
         }
       ],
       "t2Buildings": [
         {
           "name": "Graveyard",
           "itemId": "ugrv"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
         }
       ],
       "t2Units": [],
-      "t3Buildings": [],
-      "t3Units": [],
-      "researched": []
+      "t3Buildings": [
+        {
+          "name": "Slaughterhouse",
+          "itemId": "uslh"
+        },
+        {
+          "name": "Ziggurat",
+          "itemId": "uzig"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "DarkMinion1",
+          "itemId": "ndr1"
+        },
+        {
+          "name": "Obsidian Statue",
+          "itemId": "uobs"
+        },
+        {
+          "name": "Lich",
+          "itemId": "Ulic"
+        },
+        {
+          "name": "Gargoyle",
+          "itemId": "ugar"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rugf",
+          "name": "Ghoul Frenzy",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnghoulfrenzy",
+          "gameTimeMs": 462950,
+          "gameTimeFormatted": "7:42"
+        },
+        {
+          "itemId": "Rusp",
+          "name": "Destroyer Form",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndestroyer",
+          "gameTimeMs": 482431,
+          "gameTimeFormatted": "8:02"
+        },
+        {
+          "itemId": "Rume",
+          "name": "Unholy Strength",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnunholystrength",
+          "gameTimeMs": 685612,
+          "gameTimeFormatted": "11:25"
+        },
+        {
+          "itemId": "Ruar",
+          "name": "Unholy Armor",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnunholyarmor",
+          "gameTimeMs": 721813,
+          "gameTimeFormatted": "12:01"
+        }
+      ]
     },
     "2": {
       "name": "FoCuS#31324",
@@ -94,10 +252,10 @@
       },
       "tier2Time": 161531,
       "tier2TimeFormatted": "2:41",
-      "tier3Time": null,
-      "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "tier3Time": 324672,
+      "tier3TimeFormatted": "5:24",
+      "expansionTime": 765134,
+      "expansionTimeFormatted": "12:45",
       "buildPreview": [
         {
           "type": "building",
@@ -175,6 +333,69 @@
           "itemId": "ohun",
           "gameTimeMs": 242818,
           "gameTimeFormatted": "4:02"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 303652,
+          "gameTimeFormatted": "5:03"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 342724,
+          "gameTimeFormatted": "5:42"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 367415,
+          "gameTimeFormatted": "6:07"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 403053,
+          "gameTimeFormatted": "6:43"
+        },
+        {
+          "type": "unit",
+          "name": "Wind Rider",
+          "itemId": "owyv",
+          "gameTimeMs": 409299,
+          "gameTimeFormatted": "6:49"
+        },
+        {
+          "type": "unit",
+          "name": "Wind Rider",
+          "itemId": "owyv",
+          "gameTimeMs": 455889,
+          "gameTimeFormatted": "7:35"
+        },
+        {
+          "type": "hero",
+          "name": "Tauren Chieftain",
+          "itemId": "Otch",
+          "gameTimeMs": 469805,
+          "gameTimeFormatted": "7:49"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 505573,
+          "gameTimeFormatted": "8:25"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk",
+          "gameTimeMs": 535196,
+          "gameTimeFormatted": "8:55"
         }
       ],
       "t2Buildings": [
@@ -191,11 +412,73 @@
         {
           "name": "Troll Headhunter/Berserker",
           "itemId": "ohun"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
         }
       ],
-      "t3Buildings": [],
-      "t3Units": [],
-      "researched": []
+      "t3Buildings": [
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Wind Rider",
+          "itemId": "owyv"
+        },
+        {
+          "name": "Tauren Chieftain",
+          "itemId": "Otch"
+        },
+        {
+          "name": "Death Knight",
+          "itemId": "Udea"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 478163,
+          "gameTimeFormatted": "7:58"
+        },
+        {
+          "itemId": "Rovs",
+          "name": "Envenomed Spears",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenvenomedspear",
+          "gameTimeMs": 568857,
+          "gameTimeFormatted": "9:28"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 651560,
+          "gameTimeFormatted": "10:51"
+        }
+      ]
     }
   }
 }

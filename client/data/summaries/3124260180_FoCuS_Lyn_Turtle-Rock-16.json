@@ -310,6 +310,13 @@
           "gameTimeFormatted": "1:33"
         },
         {
+          "type": "building",
+          "name": "Spirit Lodge",
+          "itemId": "osld",
+          "gameTimeMs": 140687,
+          "gameTimeFormatted": "2:20"
+        },
+        {
           "type": "unit",
           "name": "Grunt",
           "itemId": "ogru",
@@ -406,16 +413,13 @@
           "itemId": "orai",
           "gameTimeMs": 603846,
           "gameTimeFormatted": "10:03"
-        },
-        {
-          "type": "unit",
-          "name": "Raider",
-          "itemId": "orai",
-          "gameTimeMs": 680363,
-          "gameTimeFormatted": "11:20"
         }
       ],
       "t2Buildings": [
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
+        },
         {
           "name": "Orc Burrow",
           "itemId": "otrb"
@@ -431,10 +435,6 @@
         {
           "name": "Beastiary",
           "itemId": "obea"
-        },
-        {
-          "name": "Spirit Lodge",
-          "itemId": "osld"
         },
         {
           "name": "Voodoo Lounge",
@@ -461,10 +461,6 @@
         {
           "name": "Kodo Beast",
           "itemId": "okod"
-        },
-        {
-          "name": "Spirit Walker",
-          "itemId": "ospw"
         }
       ],
       "t3Buildings": [],

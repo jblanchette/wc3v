@@ -2,7 +2,7 @@
 title: "Warcraft III build orders"
 url: https://wc3v.com/builds
 description: "16 curated Warcraft III build orders by race and matchup, each backed by a tournament replay."
-updated: 2026-08-11
+updated: 2026-08-12
 ---
 
 # Warcraft III build orders

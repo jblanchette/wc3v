@@ -2,7 +2,7 @@
 title: "AM Caster — Human build order (HvN, HvO, HvU)"
 url: https://wc3v.com/builds/hu-am-caster
 description: "Archmage into Footmen, then Priests and Spell Breakers at T2. The dominant Human build in the current meta. Inner Fire buffs Footmen, Spell Steal counters…"
-updated: 2026-08-11
+updated: 2026-08-12
 ---
 
 # AM Caster

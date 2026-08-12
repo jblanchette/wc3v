@@ -204,6 +204,7 @@ const doParsing = async (input, options = {}) => {
   });
 
   let replay;
+  let parseAborted = null;
   try {
     replay = await parser.parse(buffer);
   } catch (e) {
@@ -212,6 +213,7 @@ const doParsing = async (input, options = {}) => {
     if (replayMeta) {
       console.error(`w3gjs parse error (using partial data): ${e.message}`);
       console.error(e.stack);
+      parseAborted = { message: e.message, atGameTimeMs: globalTime };
       replay = replayMeta;
     } else {
       throw e;
@@ -221,6 +223,27 @@ const doParsing = async (input, options = {}) => {
   // Attach captured leave records (covers both the normal and the
   // partial-parse fallback path above).
   replay.leaveEvents = leaveEvents;
+
+  // A thrown action handler ends the timeslot loop, so the tail of the game is
+  // simply missing — but every downstream stat (build order, APM, dominance,
+  // winner) still computes happily over the truncated stream and the validator
+  // reported full confidence. Record it on the replay and say so loudly.
+  const stoppedEarlyBy = durationMs > 0 ? (durationMs - globalTime) : 0;
+  if (parseAborted || stoppedEarlyBy > 30000) {
+    replay.parseTruncated = {
+      lastActionGameTimeMs: globalTime,
+      replayLengthMs: durationMs,
+      missingMs: Math.max(0, stoppedEarlyBy),
+      reason: parseAborted ? parseAborted.message : 'action stream ended early'
+    };
+    const fmtMs = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms % 60000) / 1000)).padStart(2, '0')}`;
+    console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    console.error(`!! PARSE TRUNCATED — actions stop at ${fmtMs(globalTime)} of ${fmtMs(durationMs)} ` +
+      `(${fmtMs(Math.max(0, stoppedEarlyBy))} missing)`);
+    if (parseAborted) console.error(`!! cause: ${parseAborted.message}`);
+    console.error('!! Every stat below is computed over a PARTIAL game.');
+    console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+  }
 
   emitProgress('postprocess', 86, { detail: 'workers' });
 
@@ -582,7 +605,9 @@ const doParsing = async (input, options = {}) => {
   emitProgress('postprocess', 96, { detail: 'validation' });
 
   // post-parse validation: detect contradictions in parsed data
-  const validator = new ReplayValidator(playerManager.players);
+  const validator = new ReplayValidator(playerManager.players, {
+    parseTruncated: replay.parseTruncated || null
+  });
   const validation = validator.validate();
 
   if (validation.warnings.length) {

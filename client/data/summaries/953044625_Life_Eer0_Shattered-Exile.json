@@ -33,13 +33,6 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 5535,
-          "gameTimeFormatted": "0:05"
-        },
-        {
-          "type": "building",
-          "name": "Moon Well",
-          "itemId": "emow",
           "gameTimeMs": 16208,
           "gameTimeFormatted": "0:16"
         },
@@ -161,6 +154,13 @@
           "itemId": "eden",
           "gameTimeMs": 520637,
           "gameTimeFormatted": "8:40"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 522470,
+          "gameTimeFormatted": "8:42"
         }
       ],
       "t2Buildings": [
@@ -221,6 +221,10 @@
         {
           "name": "Lich",
           "itemId": "Ulic"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
         }
       ],
       "researched": [
@@ -277,6 +281,15 @@
           "icon": "btnultravision",
           "gameTimeMs": 776832,
           "gameTimeFormatted": "12:56"
+        },
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 1071410,
+          "gameTimeFormatted": "17:51"
         }
       ]
     },
@@ -328,7 +341,7 @@
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 149778,
+          "gameTimeMs": 149448,
           "gameTimeFormatted": "2:29"
         },
         {

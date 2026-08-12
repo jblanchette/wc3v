@@ -143,6 +143,13 @@
         },
         {
           "type": "unit",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 399017,
+          "gameTimeFormatted": "6:39"
+        },
+        {
+          "type": "unit",
           "name": "Troll Headhunter/Berserker",
           "itemId": "ohun",
           "gameTimeMs": 430217,
@@ -154,13 +161,6 @@
           "itemId": "otrb",
           "gameTimeMs": 438642,
           "gameTimeFormatted": "7:18"
-        },
-        {
-          "type": "unit",
-          "name": "Kodo Beast",
-          "itemId": "okod",
-          "gameTimeMs": 457395,
-          "gameTimeFormatted": "7:37"
         }
       ],
       "t2Buildings": [
@@ -201,6 +201,10 @@
         {
           "name": "Troll Headhunter/Berserker",
           "itemId": "ohun"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
         },
         {
           "name": "Kodo Beast",

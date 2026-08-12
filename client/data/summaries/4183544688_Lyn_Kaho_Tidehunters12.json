@@ -363,24 +363,10 @@
         },
         {
           "type": "building",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 362277,
-          "gameTimeFormatted": "6:02"
-        },
-        {
-          "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
           "gameTimeMs": 409646,
           "gameTimeFormatted": "6:49"
-        },
-        {
-          "type": "unit",
-          "name": "Dryad",
-          "itemId": "edry",
-          "gameTimeMs": 419556,
-          "gameTimeFormatted": "6:59"
         },
         {
           "type": "unit",
@@ -400,8 +386,22 @@
           "type": "unit",
           "name": "Dryad",
           "itemId": "edry",
+          "gameTimeMs": 497710,
+          "gameTimeFormatted": "8:17"
+        },
+        {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
           "gameTimeMs": 517653,
           "gameTimeFormatted": "8:37"
+        },
+        {
+          "type": "unit",
+          "name": "Druid of the Claw",
+          "itemId": "edoc",
+          "gameTimeMs": 522020,
+          "gameTimeFormatted": "8:42"
         }
       ],
       "t2Buildings": [
@@ -440,6 +440,10 @@
         {
           "name": "Ancient of Wonders",
           "itemId": "eden"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
         }
       ],
       "t3Units": [

@@ -149,18 +149,18 @@
           "gameTimeFormatted": "9:58"
         },
         {
+          "type": "unit",
+          "name": "Obsidian Statue",
+          "itemId": "uobs",
+          "gameTimeMs": 650057,
+          "gameTimeFormatted": "10:50"
+        },
+        {
           "type": "hero",
           "name": "Crypt Lord",
           "itemId": "Ucrl",
           "gameTimeMs": 664820,
           "gameTimeFormatted": "11:04"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 695016,
-          "gameTimeFormatted": "11:35"
         }
       ],
       "t2Buildings": [
@@ -210,12 +210,12 @@
           "itemId": "ucry"
         },
         {
-          "name": "Crypt Lord",
-          "itemId": "Ucrl"
-        },
-        {
           "name": "Obsidian Statue",
           "itemId": "uobs"
+        },
+        {
+          "name": "Crypt Lord",
+          "itemId": "Ucrl"
         },
         {
           "name": "Abomination",

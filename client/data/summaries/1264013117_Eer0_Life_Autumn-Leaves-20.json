@@ -314,18 +314,18 @@
           "gameTimeFormatted": "5:43"
         },
         {
-          "type": "building",
-          "name": "Ancient of Lore",
-          "itemId": "eaoe",
-          "gameTimeMs": 367564,
-          "gameTimeFormatted": "6:07"
-        },
-        {
           "type": "unit",
           "name": "Dryad",
           "itemId": "edry",
           "gameTimeMs": 416367,
           "gameTimeFormatted": "6:56"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 435978,
+          "gameTimeFormatted": "7:15"
         },
         {
           "type": "building",
@@ -388,6 +388,10 @@
         }
       ],
       "t3Buildings": [
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
         {
           "name": "Moon Well",
           "itemId": "emow"

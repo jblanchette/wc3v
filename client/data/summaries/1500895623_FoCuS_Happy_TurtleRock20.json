@@ -19,8 +19,8 @@
       "tier2TimeFormatted": "2:13",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": 482332,
-      "expansionTimeFormatted": "8:02",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
       "buildPreview": [
         {
           "type": "building",
@@ -70,97 +70,6 @@
           "itemId": "ogru",
           "gameTimeMs": 208929,
           "gameTimeFormatted": "3:28"
-        },
-        {
-          "type": "hero",
-          "name": "Tauren Chieftain",
-          "itemId": "Otch",
-          "gameTimeMs": 277248,
-          "gameTimeFormatted": "4:37"
-        },
-        {
-          "type": "building",
-          "name": "Beastiary",
-          "itemId": "obea",
-          "gameTimeMs": 288771,
-          "gameTimeFormatted": "4:48"
-        },
-        {
-          "type": "building",
-          "name": "Beastiary",
-          "itemId": "obea",
-          "gameTimeMs": 296387,
-          "gameTimeFormatted": "4:56"
-        },
-        {
-          "type": "unit",
-          "name": "Raider",
-          "itemId": "orai",
-          "gameTimeMs": 351773,
-          "gameTimeFormatted": "5:51"
-        },
-        {
-          "type": "unit",
-          "name": "Raider",
-          "itemId": "orai",
-          "gameTimeMs": 386849,
-          "gameTimeFormatted": "6:26"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 403276,
-          "gameTimeFormatted": "6:43"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 425396,
-          "gameTimeFormatted": "7:05"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 470572,
-          "gameTimeFormatted": "7:50"
-        },
-        {
-          "type": "expansion",
-          "name": "Great Hall",
-          "itemId": "ogre",
-          "gameTimeMs": 482332,
-          "gameTimeFormatted": "8:02"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 528101,
-          "gameTimeFormatted": "8:48"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 574974,
-          "gameTimeFormatted": "9:34"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 578994,
-          "gameTimeFormatted": "9:38"
-        },
-        {
-          "type": "unit",
-          "name": "Wind Rider",
-          "itemId": "owyv",
-          "gameTimeMs": 613011,
-          "gameTimeFormatted": "10:13"
         }
       ],
       "t2Buildings": [
@@ -171,51 +80,17 @@
         {
           "name": "Voodoo Lounge",
           "itemId": "ovln"
-        },
-        {
-          "name": "Beastiary",
-          "itemId": "obea"
-        },
-        {
-          "name": "Great Hall",
-          "itemId": "ogre"
         }
       ],
       "t2Units": [
         {
           "name": "Grunt",
           "itemId": "ogru"
-        },
-        {
-          "name": "Tauren Chieftain",
-          "itemId": "Otch"
-        },
-        {
-          "name": "Raider",
-          "itemId": "orai"
-        },
-        {
-          "name": "Wind Rider",
-          "itemId": "owyv"
-        },
-        {
-          "name": "Troll Batrider",
-          "itemId": "otbr"
         }
       ],
       "t3Buildings": [],
       "t3Units": [],
-      "researched": [
-        {
-          "itemId": "Roen",
-          "name": "Ensnare",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnensnare",
-          "gameTimeMs": 358028,
-          "gameTimeFormatted": "5:58"
-        }
-      ]
+      "researched": []
     },
     "2": {
       "name": "AuroraHappy#2668",
@@ -228,8 +103,8 @@
       },
       "tier2Time": 168981,
       "tier2TimeFormatted": "2:48",
-      "tier3Time": 311528,
-      "tier3TimeFormatted": "5:11",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
       "expansionTime": null,
       "expansionTimeFormatted": null,
       "buildPreview": [
@@ -267,138 +142,18 @@
           "itemId": "ugrv",
           "gameTimeMs": 245300,
           "gameTimeFormatted": "4:05"
-        },
-        {
-          "type": "building",
-          "name": "Ziggurat",
-          "itemId": "uzig",
-          "gameTimeMs": 255944,
-          "gameTimeFormatted": "4:15"
-        },
-        {
-          "type": "building",
-          "name": "Slaughterhouse",
-          "itemId": "uslh",
-          "gameTimeMs": 329300,
-          "gameTimeFormatted": "5:29"
-        },
-        {
-          "type": "hero",
-          "name": "Lich",
-          "itemId": "Ulic",
-          "gameTimeMs": 335151,
-          "gameTimeFormatted": "5:35"
-        },
-        {
-          "type": "building",
-          "name": "Ziggurat",
-          "itemId": "uzig",
-          "gameTimeMs": 351401,
-          "gameTimeFormatted": "5:51"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 392016,
-          "gameTimeFormatted": "6:32"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 410829,
-          "gameTimeFormatted": "6:50"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 511354,
-          "gameTimeFormatted": "8:31"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 553722,
-          "gameTimeFormatted": "9:13"
-        },
-        {
-          "type": "building",
-          "name": "Ziggurat",
-          "itemId": "uzig",
-          "gameTimeMs": 599276,
-          "gameTimeFormatted": "9:59"
-        },
-        {
-          "type": "unit",
-          "name": "Obsidian Statue",
-          "itemId": "uobs",
-          "gameTimeMs": 702103,
-          "gameTimeFormatted": "11:42"
         }
       ],
       "t2Buildings": [
         {
           "name": "Graveyard",
           "itemId": "ugrv"
-        },
-        {
-          "name": "Ziggurat",
-          "itemId": "uzig"
         }
       ],
       "t2Units": [],
-      "t3Buildings": [
-        {
-          "name": "Slaughterhouse",
-          "itemId": "uslh"
-        },
-        {
-          "name": "Ziggurat",
-          "itemId": "uzig"
-        }
-      ],
-      "t3Units": [
-        {
-          "name": "Lich",
-          "itemId": "Ulic"
-        },
-        {
-          "name": "Obsidian Statue",
-          "itemId": "uobs"
-        }
-      ],
-      "researched": [
-        {
-          "itemId": "Rugf",
-          "name": "Ghoul Frenzy",
-          "level": 1,
-          "category": "ability",
-          "icon": "btnghoulfrenzy",
-          "gameTimeMs": 453197,
-          "gameTimeFormatted": "7:33"
-        },
-        {
-          "itemId": "Rusp",
-          "name": "Destroyer Form",
-          "level": 1,
-          "category": "ability",
-          "icon": "btndestroyer",
-          "gameTimeMs": 456134,
-          "gameTimeFormatted": "7:36"
-        },
-        {
-          "itemId": "Rucr",
-          "name": "Creature Carapace",
-          "level": 1,
-          "category": "defense",
-          "icon": "btncreaturecarapace",
-          "gameTimeMs": 653401,
-          "gameTimeFormatted": "10:53"
-        }
-      ]
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
     }
   }
 }
