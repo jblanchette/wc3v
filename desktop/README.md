@@ -612,45 +612,57 @@ different size than the one you audited at.
 
 ## Releasing
 
-Users double-click an installer from `wc3v.com/download.html`. There is no
-other distribution channel.
+Users install from `wc3v.com/download`, either with the one-line PowerShell
+command or by downloading the installer directly. There is no other
+distribution channel.
 
 **The version lives in `desktop/src-tauri/tauri.conf.json` and nowhere else.**
 The installer, the binary and the update manifest all read it. It must be
 strictly greater than the last published version or no client is offered the
 update. `src-tauri/Cargo.toml` carries a stale version that nothing reads.
 
-### Releasing, signed (the SignPath path)
+### There is no code signing
 
-SignPath Foundation Authenticode-signs open-source builds for free, but ONLY
-builds it can trace to the public repository through a trusted build system —
-it will never sign a local build. The pipeline:
+SignPath Foundation declined the project's application (submitted 11 Aug 2026,
+denied). Paid signing was considered and not taken up: Azure Artifact Signing
+is ~$120/yr and still does not silence SmartScreen (EV lost instant-trust in
+2024, and reputation has to accrue either way), and the Microsoft Store, the
+only genuinely warning-free option, would mean submitting a tool full of
+Blizzard-derived icons and models to Microsoft, who now own Blizzard.
 
-1. Run the **desktop-release** GitHub Actions workflow (dispatch it, or push a
-   `desktop-v*` tag). It builds the installer the same way
-   `npm run desktop:build` does and, once the SignPath secrets are configured
-   (`SIGNPATH_API_TOKEN` secret; `SIGNPATH_ORG_ID`, `SIGNPATH_PROJECT_SLUG`,
-   `SIGNPATH_POLICY_SLUG` variables), submits it for signing. The repo secret
-   `TAURI_SIGNING_PRIVATE_KEY` carries the updater key, since the build now
-   happens in CI.
-2. Approve the signing request in the SignPath dashboard, then download the
-   signed installer from the workflow's `wc3v-installer-signed` artifact.
-3. Publish with the signed file:
-   `node tools/deploy-desktop.js --installer=path\to\WC3V_x.y.z_x64-setup.exe --notes="..."`.
-   The flag stages the exe under the canonical bundle name and REGENERATES the
-   updater `.sig` against the signed bytes — Authenticode changes the file, so
-   the `.sig` from build time no longer verifies and an unregenerated one
-   would make every existing install reject the update as tampered.
+So the installer is unsigned, and `client/install.ps1` is the answer instead:
 
-The two keys never meet: the Authenticode certificate lives in SignPath's HSM
-and is never on this machine; the Tauri updater key stays ours (local file +
-CI secret) and keeps working exactly as before.
+```powershell
+irm https://wc3v.com/install.ps1 | iex
+```
 
-The download page carries the "Code signing policy" section SignPath's terms
-require (attribution, team roster, privacy note). SmartScreen reputation
-accrues on the certificate and persists across releases, so the first-run
-warning fades after the first signed releases circulate — retire the
-SmartScreen bullet on the download page once that is observed, not before.
+SmartScreen's prompt is triggered by the **Mark of the Web**, the
+`Zone.Identifier` stream a browser writes onto a downloaded file.
+`Invoke-WebRequest` does not write it, so this path is silent. The script also
+verifies the installer against the `sha256` in `latest.json` before running it,
+which the browser path cannot do. NSIS is `installMode: currentUser` by default
+(there is no `bundle.windows.nsis` block in `tauri.conf.json`), so `/S` installs
+into `%LOCALAPPDATA%` with no UAC prompt.
+
+Two things this does NOT fix, and the download page says both: **Smart App
+Control** blocks unsigned binaries regardless of MOTW, and no publisher
+reputation ever accrues.
+
+If a certificate ever does appear, `tools/deploy-desktop.js --installer=` is
+still wired for it and is the only correct way to publish a signed build:
+Authenticode changes the bytes, so the updater `.sig` must be regenerated
+against the signed file or every existing install rejects the update as
+tampered.
+
+`client/install.ps1` is **ASCII only, deliberately**. Windows PowerShell 5.1
+decodes a BOM-less file as ANSI, so one non-ASCII character makes the whole
+script a parse error on the runtime most users have. This was measured, not
+assumed: em dashes in the first draft broke it on 5.1 while working on
+PowerShell 7. `render.yaml` forces `Content-Type: text/plain` on `/install.ps1`
+because Render types `.ps1` as octet-stream and `Invoke-RestMethod` then hands
+back bytes instead of a string, which makes `| iex` fail confusingly.
+
+### Cutting a release
 
 ```powershell
 # 1. bump tauri.conf.json, then:

@@ -20,8 +20,16 @@
  *     target; a long TTL would mean users sit on a stale version for hours
  *     after a release.
  *
- * Refuses to publish an unsigned build, a version that is not newer than what
- * is already live, or a binary older than the source it was built from.
+ * Refuses to publish a build with no minisign updater signature, a version that
+ * is not newer than what is already live, or a binary older than the source it
+ * was built from.
+ *
+ * Note that "signature" throughout this file means the MINISIGN updater
+ * signature, which is what tauri-plugin-updater verifies. The installer itself
+ * is not Authenticode-signed: SignPath Foundation declined the project in
+ * August 2026 and no certificate replaced it. First-time installs go through
+ * client/install.ps1 instead, which sidesteps SmartScreen by not being a
+ * browser download and checks the sha256 this script publishes below.
  *
  * Usage:
  *   node tools/deploy-desktop.js --notes="What changed, in a sentence."
@@ -30,14 +38,14 @@
  *   node tools/deploy-desktop.js --notes="..." --installer=path\to\signed.exe
  *   node tools/deploy-desktop.js --prune [--keep=N]        - delete old builds
  *
- * --installer is the SignPath path (see desktop/README.md "Releasing,
- * signed"): the CI workflow builds the installer, SignPath Authenticode-signs
- * it, and the signed exe comes back as a download. Authenticode CHANGES THE
- * BYTES, so the updater .sig generated at build time no longer verifies — this
- * flag stages the signed exe under the canonical bundle name and regenerates
- * the .sig against it with `tauri signer sign`, which needs
- * TAURI_SIGNING_PRIVATE_KEY in the environment. Everything downstream (sha256,
- * manifest, upload) then reads the signed file like any other build.
+ * --installer is unused in the current release flow, and is kept because it is
+ * the only correct way to publish an Authenticode-signed build should the
+ * project ever get a certificate. Authenticode CHANGES THE BYTES, so the
+ * updater .sig generated at build time no longer verifies — this flag stages
+ * the signed exe under the canonical bundle name and regenerates the .sig
+ * against it with `tauri signer sign`, which needs TAURI_SIGNING_PRIVATE_KEY in
+ * the environment. Everything downstream (sha256, manifest, upload) then reads
+ * the signed file like any other build.
  *
  * Pruning is safe at any time, including with real installs in the field: an
  * installed 0.2.0 does not need the 0.2.0 installer to update itself, only
@@ -320,10 +328,11 @@ async function main () {
 
   console.log(`WC3V desktop ${version}`);
 
-  // The SignPath path: stage an externally signed installer, then re-sign the
-  // updater signature against ITS bytes. Without the re-sign every existing
-  // install would reject the update as tampered, because the .sig on disk
-  // describes the unsigned build.
+  // Stage an externally Authenticode-signed installer, then re-sign the updater
+  // signature against ITS bytes. Without the re-sign every existing install
+  // would reject the update as tampered, because the .sig on disk describes the
+  // unsigned build. Unused today (the project has no certificate), kept because
+  // it is the only correct way to publish one if that changes.
   if (typeof args.installer === 'string') {
     const src = path.resolve(args.installer);
     if (!fs.existsSync(src)) die(`--installer file not found:\n  ${src}`);

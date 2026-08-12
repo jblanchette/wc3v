@@ -99,14 +99,17 @@
 
     /* The hero and the release box share the top row: what it is on the
        left, the way to get it on the right, both above the fold. */
+    /* The right column is sized to the install command. At --fs-min in the
+       mono face `irm https://wc3v.com/install.ps1 | iex` measures ~295px, and
+       a command that wraps mid-URL is a command people mistype. */
     .dl-top {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
+      grid-template-columns: minmax(0, 1fr) 400px;
       gap: var(--sp-6);
       align-items: center;
       margin-bottom: var(--sp-6);
     }
-    @media (max-width: 760px) { .dl-top { grid-template-columns: minmax(0, 1fr); } }
+    @media (max-width: 820px) { .dl-top { grid-template-columns: minmax(0, 1fr); } }
 
     .dl-hero-title { font-size: var(--fs-h1); font-weight: 800; color: var(--text); margin: 0 0 var(--sp-2); letter-spacing: -0.01em; }
     .dl-hero-sub { font-size: var(--fs-sm); color: var(--text-muted); margin: 0; line-height: 1.6; }
@@ -116,8 +119,25 @@
       padding: var(--sp-4) var(--sp-5);
     }
     .dl-get-line { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); }
-    .dl-download-btn { width: 100%; margin: 0 0 var(--sp-2); }
+    /* display:flex would otherwise beat the [hidden] UA rule, so hiding the
+       version line on a manifest failure would silently do nothing. */
+    .dl-get-line[hidden] { display: none; }
     .dl-get-file { display: block; font-family: var(--mono); font-size: var(--fs-min); color: var(--text-dim); overflow-wrap: anywhere; }
+
+    /* The install command is the primary path, so it gets the accent border
+       the download button used to carry. It is static markup: it keeps working
+       when the manifest fetch fails, which is exactly when someone needs it. */
+    .dl-cmd {
+      display: block;
+      font-family: var(--mono); font-size: var(--fs-min); color: var(--text);
+      background: var(--bg-deep); border: 1px solid var(--accent); border-radius: var(--radius-sm);
+      padding: var(--sp-3); white-space: nowrap; overflow-x: auto;
+    }
+    .dl-cmd-row { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-2); flex-wrap: wrap; }
+    .dl-cmd-note { font-size: var(--fs-label); color: var(--text-muted); line-height: 1.55; margin: var(--sp-3) 0 0; }
+    .dl-alt-link { font-size: var(--fs-sm); color: var(--text-muted); }
+    .dl-alt-link:hover { color: var(--text); }
+    .dl-alt-link[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
     .dl-card {
       background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
@@ -137,6 +157,9 @@
     .dl-file-name { font-family: var(--mono); font-size: var(--fs-label); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 8px; }
 
     .dl-sha-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); font-size: var(--fs-sm); }
+    /* Same trap: the row ships hidden and arms from the manifest, so without
+       this it rendered empty-labelled on every load until the fetch returned. */
+    .dl-sha-row[hidden] { display: none; }
     .dl-sha-label { color: var(--text-muted); flex-shrink: 0; }
     .dl-sha-code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px 8px; overflow-wrap: anywhere; }
     .dl-sha-pending { font-size: var(--fs-label); color: var(--text-dim); margin: var(--sp-3) 0 0; }
@@ -202,8 +225,6 @@
     .dl-disclosure-list strong { color: var(--text); }
     .dl-disclosure-list a { color: var(--accent); }
 
-    .dl-download-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
-
     .dl-secondary-links { display: flex; gap: var(--sp-5); margin-top: var(--sp-5); font-size: var(--fs-sm); max-width: 720px; margin-inline: auto; }
     .dl-secondary-links a { color: var(--text-muted); }
     .dl-secondary-links a:hover { color: var(--text); }
@@ -231,7 +252,7 @@
     </div>
   </nav>
 
-  <script src="js/clientConfig.js?v=16b088dcdf"></script>
+  <script src="js/clientConfig.js?v=3390bb4e81"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=b9e5834fd5"></script>
   <script src="js/BugReport.js?v=7b19c1a873"></script>
@@ -264,20 +285,28 @@
           <p class="dl-hero-sub">The desktop app watches your replays folder. When a game ends, the report is already there: the result, who was ahead and when, both builds, the whole economy. Every moment opens the 3D viewer at that second.</p>
         </div>
 
-        <section class="dl-get" id="dl-version-card" aria-labelledby="dl-version-heading">
+        <!-- The card itself is never hidden: it holds the install command, which
+             is static and works even when the manifest fetch is the thing that
+             failed. Only #dl-get-line, which is manifest-fed, gets hidden. -->
+        <section class="dl-get" id="dl-version-card" aria-label="Install WC3V">
           <span class="dl-eyebrow">Latest release</span>
-          <div class="dl-get-line">
-            <h2 id="dl-version-heading" class="dl-version-line"><span id="dl-version">Loading…</span></h2>
+          <div class="dl-get-line" id="dl-get-line">
+            <h2 class="dl-version-line"><span id="dl-version">Loading…</span></h2>
             <span class="dl-date" id="dl-date"></span>
           </div>
-          <a id="dl-download-link" class="btn btn-primary btn-lg dl-download-btn" href="#" aria-disabled="true" tabindex="-1">Download for Windows</a>
+          <code class="dl-cmd" id="dl-cmd">irm https://wc3v.com/install.ps1 | iex</code>
+          <div class="dl-cmd-row">
+            <button type="button" class="btn btn-ghost" id="dl-cmd-copy" onclick="DownloadPage.copyCommand()">Copy</button>
+            <a id="dl-download-link" class="dl-alt-link" href="#" aria-disabled="true" tabindex="-1">Or download the installer</a>
+          </div>
+          <p class="dl-cmd-note">Paste into PowerShell. Windows shows no warning on this path, and the script checks the download against the published SHA-256 before it installs anything.</p>
           <code class="dl-get-file" id="dl-filename"></code>
         </section>
       </div>
 
       <div class="dl-fail" id="dl-fail" hidden>
-        <p>Couldn't reach the update server just now. You can still get the installer from GitHub Releases.</p>
-        <a class="btn btn-ghost" href="https://github.com/jblanchette/wc3v/releases" target="_blank" rel="noopener noreferrer">GitHub Releases</a>
+        <p>Couldn't reach the update server just now, so the version and checksum above are missing. The install command still works: it reads the same manifest directly and will tell you what it found.</p>
+        <a class="btn btn-ghost" href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">View source on GitHub</a>
       </div>
 
       <section class="dl-showcase" aria-label="Screenshots">
@@ -328,18 +357,14 @@
       <section class="dl-narrow" aria-labelledby="dl-details-heading">
         <h2 id="dl-details-heading" class="dl-section-title">Details</h2>
         <ul class="dl-disclosure-list">
-          <li><strong>Windows shows a warning on first run.</strong> SmartScreen says "Windows protected your PC" because the installer is not code-signed. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
+          <li><strong>The installer is not code-signed.</strong> A signed build needs a certificate the project doesn't have. Download it in a browser and SmartScreen says "Windows protected your PC": choose <strong>More info</strong>, then <strong>Run anyway</strong>. The install command avoids that screen because a file fetched by PowerShell is never tagged as a browser download.</li>
+          <li><strong>Check it yourself.</strong> <a href="/install.ps1" target="_blank" rel="noopener noreferrer">Read install.ps1</a> before you run it, and compare the SHA-256 above against the file. That is what the script does on your behalf, and it will refuse to install on a mismatch.</li>
+          <li><strong>Smart App Control blocks it.</strong> If you're on a clean Windows 11 install with Smart App Control on, unsigned apps are refused outright and neither path will work. The <a href="/viewer">browser viewer</a> needs no install.</li>
+          <li><strong>Installs for you only.</strong> It goes in your user folder, asks for no administrator rights, and updates itself from inside the app. Remove it from Add or remove programs.</li>
           <li><strong>Windows 10 and 11, 64-bit.</strong> No macOS or Linux build yet.</li>
-          <li><strong>Open source, GPLv3.</strong> <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">Read the source or build it yourself</a>.</li>
-          <li><strong>No warranty.</strong> See the <a href="/terms">Terms of Service</a>.</li>
-        </ul>
-
-        <h2 class="dl-section-title">Code signing policy</h2>
-        <ul class="dl-disclosure-list">
-          <li>Free code signing provided by <a href="https://signpath.io" target="_blank" rel="noopener noreferrer">SignPath.io</a>, certificate by <a href="https://signpath.org" target="_blank" rel="noopener noreferrer">SignPath Foundation</a>.</li>
-          <li><strong>Team.</strong> Jeff Blanchette (<a href="https://github.com/jblanchette" target="_blank" rel="noopener noreferrer">jblanchette</a>) is the project's author, reviewer and release approver.</li>
-          <li><strong>Releases</strong> are built from the public repository by GitHub Actions; the SHA-256 above lets you verify the file you downloaded. Signed releases are rolling out, and the current installer may predate them.</li>
+          <li><strong>Built in the open.</strong> Every release is compiled from the public repository by GitHub Actions. <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">Read the source or build it yourself</a>, GPLv3.</li>
           <li><strong>Privacy.</strong> The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the <a href="/privacy">privacy policy</a>.</li>
+          <li><strong>No warranty.</strong> See the <a href="/terms">Terms of Service</a>.</li>
         </ul>
       </section>
 

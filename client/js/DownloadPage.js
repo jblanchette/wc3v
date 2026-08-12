@@ -7,11 +7,16 @@
  * and the actual download URL. Nothing on this page is hardcoded, so it can
  * never point at a stale installer.
  *
- * The download link starts inert and arms when the manifest loads, because
- * until then there is no URL to send anyone to. It is not a consent gate:
- * this page briefly made you tick two "I understand" boxes before it would
- * let you download, which is not a thing real software does and reads as an
- * admission that something is wrong with the file.
+ * The direct-installer link starts inert and arms when the manifest loads,
+ * because until then there is no URL to send anyone to. It is not a consent
+ * gate: this page briefly made you tick two "I understand" boxes before it
+ * would let you download, which is not a thing real software does and reads
+ * as an admission that something is wrong with the file.
+ *
+ * The install command is deliberately NOT manifest-driven. It is static markup
+ * pointing at /install.ps1, which resolves the same latest.json itself, so the
+ * primary path keeps working on the one occasion it matters most: when this
+ * fetch is the thing that failed.
  *
  * Usage: <script src="js/DownloadPage.js"></script>, then call
  * DownloadPage.init() after DOM ready.
@@ -46,7 +51,6 @@ const DownloadPage = {
   },
 
   async _loadManifest() {
-    const cardEl = document.getElementById('dl-version-card');
     const failEl = document.getElementById('dl-fail');
     const versionEl = document.getElementById('dl-version');
     const dateEl = document.getElementById('dl-date');
@@ -84,9 +88,13 @@ const DownloadPage = {
       this._patchStructuredData(manifest, win);
       this._refreshGate();
     } catch (err) {
-      if (cardEl) cardEl.hidden = true;
-      // The notes card is manifest-fed too; empty chrome under the fail
-      // notice reads as a second bug.
+      // Hide the version line, NOT the card that contains it. The card also
+      // holds the install command, which resolves this same manifest itself
+      // and is the one thing still working when this fetch is what broke.
+      const lineEl = document.getElementById('dl-get-line');
+      if (lineEl) lineEl.hidden = true;
+      // The notes card is manifest-fed end to end; empty chrome under the
+      // fail notice reads as a second bug.
       const notesCard = document.getElementById('dl-notes-card');
       if (notesCard) notesCard.hidden = true;
       if (failEl) failEl.hidden = false;
@@ -117,11 +125,15 @@ const DownloadPage = {
     } catch (e) { /* structured data is not worth breaking the page over */ }
   },
 
-  copySha() {
-    const code = document.getElementById('dl-sha-code');
-    const btn = document.getElementById('dl-sha-copy');
+  copySha() { this._copyFrom('dl-sha-code', 'dl-sha-copy'); },
+
+  copyCommand() { this._copyFrom('dl-cmd', 'dl-cmd-copy'); },
+
+  _copyFrom(sourceId, buttonId) {
+    const code = document.getElementById(sourceId);
+    const btn = document.getElementById(buttonId);
     if (!code || !btn || !navigator.clipboard) return;
-    const text = code.textContent || '';
+    const text = (code.textContent || '').trim();
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
       const original = btn.textContent;

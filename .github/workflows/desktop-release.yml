@@ -1,31 +1,24 @@
-# Desktop release build — the SignPath path.
+# Desktop release build.
 #
-# SignPath Foundation signs open-source binaries ONLY when they come from a
-# trusted build system it can verify, which for this repo is GitHub Actions.
-# This workflow builds the NSIS installer exactly the way `npm run
-# desktop:build` does locally, publishes it as a build artifact, and then (once
-# the SignPath secrets exist) submits it for Authenticode signing and publishes
-# the SIGNED installer as a second artifact.
+# Builds the NSIS installer exactly the way `npm run desktop:build` does
+# locally and publishes it as a build artifact.
+#
+# The installer is NOT Authenticode-signed. SignPath Foundation declined the
+# project's application in August 2026, and paid signing was not taken up, so
+# there is no certificate to sign with. Distribution instead leans on
+# client/install.ps1: PowerShell does not apply the Mark of the Web, so the
+# SmartScreen prompt never fires, and the script verifies the SHA-256 from
+# latest.json before running anything. See client/download.html "Details".
 #
 # What happens after this workflow is deliberately manual — see
-# desktop/README.md "Releasing, signed": download the signed installer, then
-# `node tools/deploy-desktop.js --installer=<signed.exe> --notes="..."`, which
-# regenerates the Tauri updater signature against the signed bytes (Authenticode
-# changes the file, so the .sig made at build time no longer matches) and
-# publishes installer + manifest to R2.
+# desktop/README.md "Releasing": download the artifact, then
+# `node tools/deploy-desktop.js --notes="..."` to publish installer + manifest
+# to R2.
 #
 # Secrets:
 #   TAURI_SIGNING_PRIVATE_KEY   contents of ~/.tauri/wc3v-updater.key — the
-#                               updater keypair, NOT the Authenticode cert
-#   SIGNPATH_API_TOKEN          from the SignPath dashboard (after approval)
-# Variables:
-#   SIGNPATH_ORG_ID             the SignPath organization id
-#   SIGNPATH_PROJECT_SLUG       e.g. wc3v-desktop
-#   SIGNPATH_POLICY_SLUG        e.g. release-signing
-#
-# Until the SignPath pieces exist the workflow still runs and produces the
-# unsigned artifact, so the build path can be proven before the application is
-# even approved.
+#                               minisign updater keypair. This signs the UPDATE
+#                               MANIFEST, and is unrelated to code signing.
 
 name: desktop-release
 
@@ -73,42 +66,13 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
         run: npx --yes "@tauri-apps/cli@^2" build
 
-      - name: Publish unsigned installer artifact
-        id: unsigned
+      # The .sig alongside the exe is the minisign updater signature, and
+      # tools/deploy-desktop.js refuses to publish without it.
+      - name: Publish installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wc3v-installer-unsigned
-          path: desktop/src-tauri/target/release/bundle/nsis/WC3V_${{ steps.version.outputs.version }}_x64-setup.exe
-          if-no-files-found: error
-
-      # ── SignPath ─────────────────────────────────────────────────────────
-      # Skipped cleanly until the token exists. `secrets` cannot be read in an
-      # `if:` directly, so it goes through env first.
-      - name: Check SignPath configured
-        id: signpath
-        shell: bash
-        env:
-          TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
-        run: |
-          if [ -n "$TOKEN" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else echo "enabled=false" >> "$GITHUB_OUTPUT"; fi
-
-      - name: Submit for code signing
-        if: steps.signpath.outputs.enabled == 'true'
-        uses: signpath/github-action-submit-signing-request@v1
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORG_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
-          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
-          wait-for-completion: true
-          output-artifact-directory: signed
-
-      - name: Publish signed installer artifact
-        if: steps.signpath.outputs.enabled == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: wc3v-installer-signed
-          path: signed/
+          name: wc3v-installer
+          path: |
+            desktop/src-tauri/target/release/bundle/nsis/WC3V_${{ steps.version.outputs.version }}_x64-setup.exe
+            desktop/src-tauri/target/release/bundle/nsis/WC3V_${{ steps.version.outputs.version }}_x64-setup.exe.sig
           if-no-files-found: error

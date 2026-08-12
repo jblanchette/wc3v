@@ -171,6 +171,27 @@ services:
       - path: /.well-known/api-catalog
         name: Link
         value: <https://wc3v.com/.well-known/api-catalog>; rel="api-catalog"
+      # ── The install one-liner ─────────────────────────────────────────────
+      # `irm https://wc3v.com/install.ps1 | iex`. Render types .ps1 as
+      # application/octet-stream, and Invoke-RestMethod hands back a byte array
+      # rather than a string for that type, which makes `| iex` fail in a way
+      # that reads like the script is broken. Forcing text/plain is what makes
+      # the one-liner work at all. Same lever as the api-catalog rule above.
+      #
+      # Deliberately NOT a Worker route: this is a constant header on one URL,
+      # and workers/edge/src/index.js says constants belong here.
+      - path: /install.ps1
+        name: Content-Type
+        value: text/plain; charset=utf-8
+      # Short TTL so a fix to the installer reaches people promptly. It is a
+      # few KB fetched once per install.
+      - path: /install.ps1
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
+      # Not a page. It is linked from /download, which is the indexable surface.
+      - path: /install.ps1
+        name: X-Robots-Tag
+        value: noindex
       # ── Agent discovery, RFC 8288 ─────────────────────────────────────────
       # Static, identical on every page, so it belongs here rather than in a
       # Worker: there is no reason to spend an edge invocation on a constant.
