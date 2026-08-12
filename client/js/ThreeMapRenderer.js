@@ -162,14 +162,22 @@
       this.renderer = new THREE.WebGLRenderer({
         canvas,
         antialias: true,
-        alpha: true,
+        // Opaque canvas: the clear color is opaque and scene.background is
+        // set, so an alpha channel only added compositing cost. The 2D
+        // overlay canvases stack ABOVE this one; nothing shows through it.
+        alpha: false,
+        // r160 still defaults stencil to true — nothing here uses stencil,
+        // and dropping the attachment saves bandwidth on every clear.
+        stencil: false,
+        // Ask for the discrete GPU on dual-GPU laptops. The default lets the
+        // browser pick the integrated chip for battery, which is exactly the
+        // hardware this scene struggles on.
+        powerPreference: 'high-performance',
         preserveDrawingBuffer: false
       });
-      // Cap at 1.5 (was 2): on a HiDPI display, 2.0 renders ~78% more
-      // fragments than 1.5 with no readable quality gain at this camera
-      // distance, and busy 3v3s are fill-bound. antialias stays on (MSAA is
-      // far cheaper than the supersampling a higher pixelRatio implies).
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+      // NOTE: no setPixelRatio here — resize() owns the buffer size and pins
+      // pixelRatio to 1 (the buffer is sized to the map image, not the CSS
+      // box, so DPR must not scale it again).
       this.renderer.setClearColor(0x0b1014, 1);
       this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
@@ -1091,14 +1099,18 @@
         w = Math.max(2, rect.width);
         h = Math.max(2, rect.height);
       }
-      // Pixel ratio 1 — we want the drawing buffer to be exactly mapWidth ×
-      // mapHeight, matching the 2D canvases. CSS does the display scaling.
-      this.renderer.setPixelRatio(1);
+      // w/h are the LOGICAL size (the same map-image dimensions the 2D canvases
+      // use as their coordinate space). renderScale is the fraction of that we
+      // actually rasterize — which is exactly what three's pixelRatio means, so
+      // setSize(logical) + setPixelRatio(r) gives a buffer of logical×r while
+      // the camera keeps the same aspect and projectToCanvas (which projects
+      // into gameScaler.sceneImage) needs no change at all.
+      const r = (gs && gs.renderScale) || 1;
+      this.renderer.setPixelRatio(r);
       this.renderer.setSize(w, h, false);
-      // Ensure the canvas element's drawing buffer matches (setSize with
-      // updateStyle=false doesn't touch .style.width/.style.height).
-      this.canvas.width = w;
-      this.canvas.height = h;
+      // Do NOT reassign canvas.width/height here — setSize already sized the
+      // drawing buffer to w×r, and overwriting it with the logical size would
+      // throw away the whole point (and desync the GL viewport).
       if (this.camera && this.camera.isPerspectiveCamera) {
         this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
@@ -1260,7 +1272,11 @@
     // Project a WC3 world (x, y) through the 3D camera to canvas pixel coords.
     // Returns { x, y } in CSS pixel space of the three canvas (top-left origin),
     // or null if the renderer isn't ready.
-    projectToCanvas (wx, wy) {
+    // `out` (optional) receives {x,y} instead of a fresh object. Every 2D
+    // overlay projects several points per unit per frame, so the two literals
+    // this used to allocate per point (one here, one in GameScaler.projectXY)
+    // were a steady GC drip proportional to unit count.
+    projectToCanvas (wx, wy, out) {
       if (!this.ready || !this.heightData || !this.mapInfo) return null;
 
       // Cache map center and canvas dimensions — they don't change per frame
@@ -1312,10 +1328,10 @@
       const ndcY = this._projVec4.y / this._projVec4.w;
       if (ndcX < -1 || ndcX > 1 || ndcY < -1 || ndcY > 1) return null;  // outside frustum
 
-      return {
-        x: (ndcX + 1) * 0.5 * cw,
-        y: (1 - ndcY) * 0.5 * ch
-      };
+      const px = (ndcX + 1) * 0.5 * cw;
+      const py = (1 - ndcY) * 0.5 * ch;
+      if (out) { out.x = px; out.y = py; return out; }
+      return { x: px, y: py };
     }
 
     // --- 3D Overlay Systems ---
@@ -2260,6 +2276,10 @@
               obj.rotation.set(0, nb.rotation || 0, 0);
               obj.scale.set(s, s, s);
               this.scene.add(obj);
+              // Neutral buildings never move — a cloned multi-primitive Group
+              // is a whole subtree that scene.updateMatrixWorld would otherwise
+              // re-walk every frame, once per instance.
+              this._freezeMatrix(obj);
             }
             this.requestRender();
             resolve();
@@ -2693,7 +2713,12 @@
         if (gridObj) this.scene.add(gridObj);
       }
 
-      // Render to the main renderer at target canvas size
+      // Render to the main renderer at target canvas size. Pixel ratio must be
+      // pinned to 1 here: the live viewer runs at gameScaler.renderScale, and a
+      // fractional ratio would give a buffer of tw×r that the 1:1 drawImage
+      // below would paste into the corner of the target canvas. resize()
+      // re-derives the live ratio during teardown.
+      this.renderer.setPixelRatio(1);
       const tw = targetCanvas.width;
       const th = targetCanvas.height;
       this.renderer.setSize(tw, th, false);
@@ -2715,8 +2740,10 @@
         });
       }
 
-      // Restore renderer size
-      this.renderer.setSize(savedSize.w, savedSize.h, false);
+      // Restore renderer size. resize() re-derives BOTH the logical size and the
+      // live pixel ratio from gameScaler — savedSize holds the physical buffer,
+      // which would be re-multiplied by the ratio if fed back through setSize.
+      this.resize();
 
       // Restore camera
       this.camera.position.copy(savedCamPos);
@@ -2960,16 +2987,29 @@
       return group.children.length ? group : null;
     }
 
-    // Freeze an object's transform: bake its current local matrix once and
-    // stop three.js from recomputing it (and its children's) every frame.
-    // Static scene content (terrain, water, trees, cliffs, placed buildings)
-    // never moves, so per-frame updateMatrixWorld traversal is pure waste.
-    // Call _unfreezeMatrix()/updateMatrix() before moving a frozen object.
+    // Freeze an object's transform: bake its local AND world matrices once and
+    // stop three.js from recomputing them every frame.
+    //
+    // matrixAutoUpdate=false alone only skips the local compose — r160's
+    // Object3D.updateMatrixWorld still RECURSES into every child each render,
+    // and with thousands of static objects the traversal itself is the cost
+    // (measured: updateMatrixWorld was the top three.js self-time entry).
+    // matrixWorldAutoUpdate=false on the subtree ROOT is what prunes the walk:
+    // scene.updateMatrixWorld skips a child whose flag is false when no force
+    // cascade is active, and the scene root's matrix never changes.
+    //
+    // MUST be called after the object is at its final transform AND parented
+    // (all current call sites parent to the scene, whose matrix is identity).
+    // To move a frozen object: set matrixWorldAutoUpdate=true on the root,
+    // matrixAutoUpdate=true on the node you move, or call
+    // updateMatrixWorld(true) manually after the change.
     _freezeMatrix (obj) {
       obj.traverse(c => {
         c.updateMatrix();
         c.matrixAutoUpdate = false;
       });
+      obj.updateMatrixWorld(true);
+      obj.matrixWorldAutoUpdate = false;
     }
 
     // Request a single render frame (for use after async model loads when

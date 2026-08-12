@@ -260,12 +260,21 @@ class BaseNameplateRenderer {
 
     // The player canvas backing store is the (large) map-image size but is
     // CSS-downscaled to fit the viewport. Render the plate scaled by that
-    // ratio so it has a consistent on-screen size on every map. Computed
-    // once per call — reading clientWidth forces a layout.
-    const cw = ctx.canvas.clientWidth;
-    const ratio = (cw > 0 && Number.isFinite(cw))
-      ? ctx.canvas.width / cw
-      : 1;
+    // ratio so it has a consistent on-screen size on every map.
+    //
+    // Served from GameScaler's frame-metrics cache: this used to read
+    // clientWidth directly mid-frame — after the frame's style writes — which
+    // forced a synchronous reflow every frame.
+    let ratio = 1;
+    const m = gameScaler.canvasMetrics ? gameScaler.canvasMetrics(ctx.canvas) : null;
+    if (m && m.ok) {
+      ratio = m.sx;
+    } else {
+      const cw = ctx.canvas.clientWidth;
+      // Logical width, not the physical backing store — see GameScaler.renderScale.
+      const lw = gameScaler.logicalWidth || ctx.canvas.width;
+      if (cw > 0 && Number.isFinite(cw)) ratio = lw / cw;
+    }
 
     const oldFill    = ctx.fillStyle;
     const oldStroke  = ctx.strokeStyle;

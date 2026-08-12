@@ -125,6 +125,106 @@
   // +x / +z in scene space). Scaled by unit radius.
   const SHADOW_OFFSET_X = 0.22, SHADOW_OFFSET_Z = 0.22;
 
+  // ── Instanced ring/shadow pools (perf.instancedRings) ──────────────────────
+  // Legacy: every unit carried TWO scene Meshes (selection ring + blob shadow),
+  // each with its own material — 2 scene-graph objects + 2 draw calls + 2
+  // materials per unit, all walked by scene.updateMatrixWorld every frame.
+  // Pooled: ONE InstancedMesh per kind for the whole scene. Instances keep
+  // lightweight DESCRIPTOR objects with the same field names the legacy meshes
+  // had (position / scale / visible / material.color / material.opacity), so
+  // every consumer — creep recolour, decay fade, guide highlight — works
+  // unchanged; a per-frame flush writes the visible descriptors into the pools.
+  //
+  // Per-instance alpha needs a custom shader (InstancedMesh gives matrix +
+  // color only). Colors are written in the linear working space (THREE.Color
+  // already stores linear) and converted on output via colorspace_fragment,
+  // matching what MeshBasicMaterial did.
+  const POOL_VS = `
+    attribute float aAlpha;
+    varying vec3 vColor;
+    varying float vAlpha;
+    varying vec2 vUv;
+    void main () {
+      vUv = uv;
+      vAlpha = aAlpha;
+      #ifdef USE_INSTANCING_COLOR
+        vColor = instanceColor;
+      #else
+        vColor = vec3(1.0);
+      #endif
+      vec4 p = vec4(position, 1.0);
+      #ifdef USE_INSTANCING
+        p = instanceMatrix * p;
+      #endif
+      gl_Position = projectionMatrix * modelViewMatrix * p;
+    }`;
+  const RING_FS = `
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main () {
+      gl_FragColor = vec4(vColor, vAlpha);
+      #include <colorspace_fragment>
+    }`;
+  const SHADOW_FS = `
+    uniform sampler2D uMap;
+    varying float vAlpha;
+    varying vec2 vUv;
+    void main () {
+      vec4 t = texture2D(uMap, vUv);
+      gl_FragColor = vec4(0.0, 0.0, 0.0, t.a * vAlpha);
+      #include <colorspace_fragment>
+    }`;
+
+  class RingShadowPool {
+    constructor (scene, geometry, material, capacity, renderOrder) {
+      // Clone the shared geometry: the aAlpha instanced attribute must not
+      // leak onto the legacy per-unit meshes that share ringGeo()/shadowGeo().
+      const geo = geometry.clone();
+      this.alpha = new THREE.InstancedBufferAttribute(new Float32Array(capacity), 1);
+      this.alpha.setUsage(THREE.DynamicDrawUsage);
+      geo.setAttribute('aAlpha', this.alpha);
+      const mesh = this.mesh = new THREE.InstancedMesh(geo, material, capacity);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(capacity * 3), 3);
+      mesh.instanceColor.setUsage(THREE.DynamicDrawUsage);
+      mesh.renderOrder = renderOrder;
+      mesh.frustumCulled = false;   // spans the map; units are culled upstream
+      mesh.count = 0;
+      scene.add(mesh);
+      // The pool object itself never moves — keep it out of the matrix walk.
+      mesh.updateMatrixWorld(true);
+      mesh.matrixAutoUpdate = false;
+      mesh.matrixWorldAutoUpdate = false;
+      this.capacity = capacity;
+      this.i = 0;
+      this._m = new THREE.Matrix4();
+      this._q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+      this._s = new THREE.Vector3();
+    }
+    begin () { this.i = 0; }
+    push (pos, scale, color, alphaVal) {
+      if (this.i >= this.capacity) return;
+      const i = this.i++;
+      this._s.set(scale, scale, scale);
+      this._m.compose(pos, this._q, this._s);
+      this.mesh.setMatrixAt(i, this._m);
+      if (color) this.mesh.instanceColor.setXYZ(i, color.r, color.g, color.b);
+      this.alpha.setX(i, alphaVal);
+    }
+    end () {
+      this.mesh.count = this.i;
+      this.mesh.instanceMatrix.needsUpdate = true;
+      this.mesh.instanceColor.needsUpdate = true;
+      this.alpha.needsUpdate = true;
+    }
+    dispose (scene) {
+      scene.remove(this.mesh);
+      this.mesh.geometry.dispose();
+      this.mesh.material.dispose();
+      if (this.mesh.dispose) this.mesh.dispose();
+    }
+  }
+
   class UnitModelRenderer {
     constructor (threeMapRenderer, viewer) {
       this.renderer = threeMapRenderer;
@@ -141,7 +241,63 @@
       this.maxUnits = 400;           // generous cap; instancing shares geometry+textures
       this._loader = new window.GLBLoader();
       this._facingOffset = 0;        // model-forward calibration
+      // Instanced ring/shadow pools. Decided at construction (a new renderer
+      // is built per replay load) — flipping perf.instancedRings mid-session
+      // needs a reload, since existing instances hold the other representation.
+      this._poolsEnabled = !(window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+        window.WC3V_CONFIG.perf.instancedRings === false);
+      this._ringPool = null;
+      this._shadowPool = null;
       this._loadManifest();
+    }
+
+    _ensurePools () {
+      if (!this._poolsEnabled || this._ringPool) return;
+      const cap = this.maxUnits + 360;   // player units + camp creeps
+      this._ringPool = new RingShadowPool(this.scene, ringGeo(), new THREE.ShaderMaterial({
+        vertexShader: POOL_VS, fragmentShader: RING_FS,
+        transparent: true, depthWrite: false, side: THREE.DoubleSide
+      }), cap, 3);
+      this._shadowPool = new RingShadowPool(this.scene, shadowGeo(), new THREE.ShaderMaterial({
+        vertexShader: POOL_VS, fragmentShader: SHADOW_FS,
+        uniforms: { uMap: { value: shadowTexture() } },
+        transparent: true, depthWrite: false
+      }), cap, 1);
+    }
+
+    // Write every visible pooled ring/shadow descriptor into the InstancedMesh
+    // pools. Runs at the END of update() — after the unit loop, _updateCreeps
+    // and _updateGuideHighlight, so it sees their final visible/color/opacity.
+    _flushPools () {
+      const rp = this._ringPool;
+      if (!rp) return;
+      const sp = this._shadowPool;
+      rp.begin(); sp.begin();
+      const scan = (map) => {
+        for (const k in map) {
+          const inst = map[k];
+          if (!inst || typeof inst === 'string') continue;
+          const r = inst.ring;
+          if (r && r.isPooled && r.visible && r.material.opacity > 0.004) {
+            rp.push(r.position, r.scale.x, r.material.color, r.material.opacity);
+          }
+          const s = inst.shadow;
+          if (s && s.isPooled && s.visible && s.material.opacity > 0.004) {
+            sp.push(s.position, s.scale.x, null, s.material.opacity);
+          }
+        }
+      };
+      scan(this.instances);
+      scan(this.creepInstances);
+      rp.end(); sp.end();
+    }
+
+    // Zero the pools without scanning (3D disabled / early-outs) so stale
+    // rings from the last flushed frame can't linger on screen.
+    _clearPools () {
+      if (!this._ringPool) return;
+      this._ringPool.begin(); this._ringPool.end();
+      this._shadowPool.begin(); this._shadowPool.end();
     }
 
     _loadManifest () {
@@ -199,7 +355,12 @@
     // uuid → {x,y} of adjusted positions (only for units that actually moved).
     _separateUnits (players, gameTime) {
       const out = {};
-      const ex = [], ey = [], er = [], eu = [], ox = [], oy = [];
+      // Pooled scratch arrays — this runs every frame over every ground unit;
+      // six fresh arrays per frame was steady GC pressure for nothing.
+      let s = this._sepScratch;
+      if (!s) s = this._sepScratch = { ex: [], ey: [], er: [], eu: [], ox: [], oy: [] };
+      const ex = s.ex, ey = s.ey, er = s.er, eu = s.eu, ox = s.ox, oy = s.oy;
+      ex.length = 0; ey.length = 0; er.length = 0; eu.length = 0; ox.length = 0; oy.length = 0;
       for (const player of players) {
         for (const unit of (player.units || [])) {
           if (unit.isBuilding || unit.neutralGroupId != null) continue;
@@ -299,8 +460,12 @@
         for (const k in this.instances) { const inst = this.instances[k]; if (inst && inst.root) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; } }
         for (const k in this.creepInstances) { const inst = this.creepInstances[k]; if (inst && inst.root) { inst.root.visible = false; if (inst.ring) inst.ring.visible = false; if (inst.shadow) inst.shadow.visible = false; } }
         for (const k in this.campMarkers) { const m = this.campMarkers[k]; if (m && m.sprite) m.sprite.visible = false; }
+        // The pools would otherwise keep drawing the last flushed frame.
+        this._clearPools();
         return;
       }
+      this._ensurePools();
+      this._bakeBudget = 1;   // one first-time static-pose bake per frame (see _bakedGeosFor)
 
       let cx = 0, cy = 0;
       const mi = this.renderer.mapInfo;
@@ -318,7 +483,8 @@
       // a fight stays visible); it is no longer what decides an attack.
       const battleSet = bframe ? bframe.inBattle : new Set();
       const sepMap = this._separateUnits(players, gameTime); // no two ground units share space
-      const alive = new Set();
+      const alive = this._aliveScratch || (this._aliveScratch = new Set());
+      alive.clear();
       // Built once per frame and shared with _updateCreeps below.
       const frustum = this._cullFrustum();
       const lod = this._lodParams();   // static-pose distance thresholds (null = LOD off)
@@ -357,7 +523,16 @@
           // one — a statue that becomes a Destroyer at 10:00 must render as a
           // statue before then, and flip back when the user scrubs backwards.
           const rawItemId = unit.itemIdAt ? unit.itemIdAt(gameTime) : unit.itemId;
-          const itemId = (rawItemId || '').toLowerCase();
+          // toLowerCase allocated a string per unit per frame; the raw id only
+          // changes on morphs, so memoize the lowered form on the unit.
+          let itemId;
+          if (rawItemId === unit._mrLcRaw) {
+            itemId = unit._mrLcVal;
+          } else {
+            itemId = (rawItemId || '').toLowerCase();
+            unit._mrLcRaw = rawItemId;
+            unit._mrLcVal = itemId;
+          }
           const spec = this.manifest[itemId] || this.manifest[rawItemId];
           const hasModel = !!(spec && spec.model);
 
@@ -473,6 +648,11 @@
 
       // Guide-mode focus glow (runs last so it wins over per-unit ring state).
       this._updateGuideHighlight();
+
+      // Instanced rings/shadows: write the frame's visible descriptors into
+      // the pools. Must be the LAST step — it consumes the final
+      // visible/color/opacity state everything above just decided.
+      this._flushPools();
     }
 
     // Neutral creeps. Rendered from the neutral player's own ClientUnits (stable
@@ -653,12 +833,20 @@
       inst._parked = parked;
       if (parked) {
         if (inst.root.parent) inst.root.parent.remove(inst.root);
-        if (inst.ring && inst.ring.parent) inst.ring.parent.remove(inst.ring);
-        if (inst.shadow && inst.shadow.parent) inst.shadow.parent.remove(inst.shadow);
+        // Pooled descriptors aren't in the scene — hiding them is enough (the
+        // per-frame flush simply skips them); the flow re-shows on unpark.
+        if (inst.ring) {
+          if (inst.ring.isPooled) inst.ring.visible = false;
+          else if (inst.ring.parent) inst.ring.parent.remove(inst.ring);
+        }
+        if (inst.shadow) {
+          if (inst.shadow.isPooled) inst.shadow.visible = false;
+          else if (inst.shadow.parent) inst.shadow.parent.remove(inst.shadow);
+        }
       } else {
         if (!inst.root.parent) this.scene.add(inst.root);
-        if (inst.ring && !inst.ring.parent) this.scene.add(inst.ring);
-        if (inst.shadow && !inst.shadow.parent) this.scene.add(inst.shadow);
+        if (inst.ring && !inst.ring.isPooled && !inst.ring.parent) this.scene.add(inst.ring);
+        if (inst.shadow && !inst.shadow.isPooled && !inst.shadow.parent) this.scene.add(inst.shadow);
       }
     }
 
@@ -681,14 +869,51 @@
       if (!cfg || cfg.staticPoseLOD === false) return null;
       const cam = this.renderer && this.renderer.camera;
       if (!cam || !cam.isPerspectiveCamera) return null;
-      const el = this.renderer.canvas;
       // CSS box height, not the drawing-buffer height — the buffer is sized to
       // the map image (oversampled), and pixels-on-screen is what legibility is.
-      const px = (el && (el.clientHeight || el.height)) || 900;
-      const minPx = cfg.staticPoseMinPx || 24;
+      //
+      // Reading clientHeight here every frame forced a synchronous reflow
+      // (measured ~0.27ms/frame: per-frame style writes keep layout dirty).
+      // The three-canvas shares its CSS box with the main canvas, whose
+      // metrics GameScaler.beginFrame caches — use those, and fall back to a
+      // 1s-throttled direct read when they're unavailable.
+      let px = 0;
+      const viewer = this.renderer.viewer;
+      const gs = viewer && viewer.gameScaler;
+      const m = gs && gs._frameMetrics;
+      if (m && m.ok) {
+        px = m.cssH;
+      } else {
+        const now = performance.now();
+        if (!this._lodPx || (now - this._lodPxAt) > 1000) {
+          const el = this.renderer.canvas;
+          this._lodPx = (el && (el.clientHeight || el.height)) || 900;
+          this._lodPxAt = now;
+        }
+        px = this._lodPx;
+      }
+      // Adaptive governor (mainLoop) scales the threshold under frame-time
+      // pressure: boost 1 = configured quality, boost 3 = freeze anything
+      // under ~3x the base cutoff. 1 when disabled or on fast hardware.
+      // HEROES keep the UNBOOSTED threshold — they're what the camera frames,
+      // there are at most a handful of them, and a visibly frozen hero at
+      // follow distance is the one degradation that reads as broken.
+      const boost = (viewer && viewer._lodBoost) || 1;
+      const basePx = cfg.staticPoseMinPx || 24;
       const NOMINAL_HEIGHT = 140;    // wu; a coarse everyman unit, not per-model
-      const dOn = (px * NOMINAL_HEIGHT) / (2 * Math.tan(cam.fov * Math.PI / 360) * minPx);
-      return { cam, on2: dOn * dOn, off2: (dOn * 0.85) * (dOn * 0.85) };
+      const denom = 2 * Math.tan(cam.fov * Math.PI / 360);
+      const dOn = (px * NOMINAL_HEIGHT) / (denom * basePx * boost);
+      const dOnHero = (boost === 1) ? dOn : (px * NOMINAL_HEIGHT) / (denom * basePx);
+      // Reused scratch — this runs every frame and the object never escapes
+      // the frame (consumed by _beyondLod only).
+      const out = this._lodScratch ||
+        (this._lodScratch = { cam: null, on2: 0, off2: 0, hOn2: 0, hOff2: 0 });
+      out.cam = cam;
+      out.on2 = dOn * dOn;
+      out.off2 = (dOn * 0.85) * (dOn * 0.85);
+      out.hOn2 = dOnHero * dOnHero;
+      out.hOff2 = (dOnHero * 0.85) * (dOnHero * 0.85);
+      return out;
     }
 
     // True when the unit at world (pos.x, pos.y) is beyond the static-pose
@@ -702,6 +927,7 @@
       const dy = p.y - (inst.wrapper ? inst.wrapper.position.y : 0);
       const dz = p.z - (-(pos.y - cy));
       const d2 = dx * dx + dy * dy + dz * dz;
+      if (inst.isHero) return d2 > (inst._staticOn ? lod.hOff2 : lod.hOn2);
       return d2 > (inst._staticOn ? lod.off2 : lod.on2);
     }
 
@@ -774,6 +1000,16 @@
     _bakedGeosFor (tpl, form) {
       if (!tpl._bakedGeos) tpl._bakedGeos = {};
       if (tpl._bakedGeos[form] === undefined) {
+        // Budget: at most ONE first-time bake per frame. When the adaptive LOD
+        // governor ramps, dozens of units cross the threshold on the same
+        // frame and every distinct template would bake synchronously in that
+        // one frame — measured 140-200ms worst-frame spikes. A deferred unit
+        // simply stays animated until its template's turn comes (typically
+        // the very next frame), which is invisible; the spike is not.
+        // Deferral is NOT cached — null means "bake impossible", undefined
+        // means "not yet tried".
+        if (this._bakeBudget !== undefined && this._bakeBudget <= 0) return null;
+        if (this._bakeBudget !== undefined) this._bakeBudget--;
         try { tpl._bakedGeos[form] = this._bakeStaticPose(tpl, form); }
         catch (e) { tpl._bakedGeos[form] = null; }
       }
@@ -1213,6 +1449,18 @@
     // Soft ground shadow (scene-level decal, tracks ring visibility). Radius keyed
     // to collision size; offset toward the sun's cast direction in _place.
     _addShadow (inst, cs) {
+      if (this._poolsEnabled) {
+        inst.shadow = {
+          isPooled: true,
+          position: new THREE.Vector3(),
+          scale: new THREE.Vector3(1, 1, 1),
+          visible: false,
+          material: { opacity: 0.9 }
+        };
+        inst.shadowOpacity = 0.9;
+        inst.shadowRadius = cs * 2.0;
+        return;
+      }
       inst.shadow = new THREE.Mesh(shadowGeo(), new THREE.MeshBasicMaterial({
         map: shadowTexture(), transparent: true, depthWrite: false, opacity: 0.9, color: 0x000000
       }));
@@ -1299,6 +1547,10 @@
       this._applyFormMeshes(inst, form);
       if (!inst.mixer || !inst.animations) { inst.form = form; return; }
 
+      // A form swap can rebind to a different mesh/material set — force the
+      // next _setOpacity to reapply rather than trust the last-value memo.
+      inst._lastOpacity = undefined;
+
       const prevState = inst.state;
       for (const key of Object.keys(inst.actions)) {
         const a = inst.actions[key];
@@ -1320,8 +1572,20 @@
       }
     }
 
-    // Flat ground ring added to the scene (not the facing wrapper).
+    // Flat ground ring — a pooled descriptor (see RingShadowPool), or a real
+    // scene Mesh when perf.instancedRings is off.
     _addRing (inst, colorHex, opacity) {
+      if (this._poolsEnabled) {
+        inst.ring = {
+          isPooled: true,
+          position: new THREE.Vector3(),
+          scale: new THREE.Vector3(1, 1, 1),
+          visible: false,
+          material: { color: new THREE.Color(colorHex), opacity: opacity }
+        };
+        inst.ringOpacity = opacity;   // baseline the instance fade scales
+        return;
+      }
       inst.ring = new THREE.Mesh(ringGeo(), new THREE.MeshBasicMaterial({
         color: new THREE.Color(colorHex), transparent: true, opacity: opacity, depthWrite: false, side: THREE.DoubleSide
       }));
@@ -1355,13 +1619,10 @@
       blob.frustumCulled = false;
       wrapper.add(blob);
 
-      const ring = new THREE.Mesh(ringGeo(), new THREE.MeshBasicMaterial({
-        color, transparent: true, opacity: 0.85, depthWrite: false, side: THREE.DoubleSide
-      }));
-      ring.rotation.x = -Math.PI / 2;
-      ring.renderOrder = 3;
-      ring.visible = false;
-      this.scene.add(ring);
+      // Same pooled-descriptor-or-Mesh split as every other unit ring.
+      const ringHolder = {};
+      this._addRing(ringHolder, color, 0.85);
+      const ring = ringHolder.ring;
 
       root.visible = false;
       this.scene.add(root);
@@ -1555,6 +1816,11 @@
     }
 
     _setOpacity (inst, a) {
+      // Runs for every visible unit every frame, but almost every unit sits at
+      // a=1 almost always — skip the whole material walk when nothing changed.
+      // (Quantized compare: sub-0.001 fade deltas are invisible.)
+      if (inst._lastOpacity !== undefined && Math.abs(inst._lastOpacity - a) < 0.001) return;
+      inst._lastOpacity = a;
       const fading = a < 0.999;
       // The ground ring and blob shadow are separate scene meshes, so they used
       // to hold full opacity while the body faded — a bright, crisp selection
@@ -1732,11 +1998,18 @@
       if (!this._reps) this._reps = {};
       const pid = player.playerId;
       let rec = this._reps[pid];
-      if (!rec) rec = this._reps[pid] = { gold: null, lumber: null };
-      for (const role of ['gold', 'lumber']) {
-        const cur = rec[role] ? player.units.find(u => u.uuid === rec[role]) : null;
-        if (cur && this._isLiveLooper(cur, role, gameTime)) continue;
-        rec[role] = this._pickLooper(player, role, gameTime);
+      if (!rec) rec = this._reps[pid] = { gold: null, lumber: null, _goldUnit: null, _lumberUnit: null };
+      // Keep the unit REFERENCE alongside the uuid: re-finding the unit by
+      // uuid was an O(units) scan + closure per role per player per frame.
+      let g = rec._goldUnit;
+      if (!(g && g.uuid === rec.gold && this._isLiveLooper(g, 'gold', gameTime))) {
+        g = this._pickLooper(player, 'gold', gameTime);
+        rec._goldUnit = g; rec.gold = g ? g.uuid : null;
+      }
+      let l = rec._lumberUnit;
+      if (!(l && l.uuid === rec.lumber && this._isLiveLooper(l, 'lumber', gameTime))) {
+        l = this._pickLooper(player, 'lumber', gameTime);
+        rec._lumberUnit = l; rec.lumber = l ? l.uuid : null;
       }
       return rec;
     }
@@ -1754,7 +2027,7 @@
     // the base right now (a real harvester) over a roaming army worker — UD
     // ghouls harvest lumber AND fight, so "confident lumber" alone isn't enough.
     // Falls back to the first live looper. Cached by the caller; re-picked only
-    // when it dies / changes role.
+    // when it dies / changes role. Returns the UNIT (caller records its uuid).
     _pickLooper (player, role, gameTime) {
       const anchors = player.getBaseAnchors ? player.getBaseAnchors() : null;
       let fallback = null;
@@ -1763,10 +2036,10 @@
         if (!fallback) fallback = u;
         if (anchors && anchors.length) {
           const p = u.getInterpolatedPosition(gameTime);
-          if (p && this._withinBase(p, anchors)) return u.uuid;   // home harvester — prefer it
+          if (p && this._withinBase(p, anchors)) return u;   // home harvester — prefer it
         }
       }
-      return fallback ? fallback.uuid : null;
+      return fallback;
     }
 
     _withinBase (pos, anchors) {
@@ -1969,10 +2242,13 @@
         for (const k in map) {
           const inst = map[k];
           if (inst && inst.root) this.scene.remove(inst.root);
-          if (inst && inst.ring) this.scene.remove(inst.ring);
+          if (inst && inst.ring && !inst.ring.isPooled) this.scene.remove(inst.ring);
+          if (inst && inst.shadow && !inst.shadow.isPooled) this.scene.remove(inst.shadow);
           if (inst && inst.marker) this.scene.remove(inst.marker);
         }
       }
+      if (this._ringPool) { this._ringPool.dispose(this.scene); this._ringPool = null; }
+      if (this._shadowPool) { this._shadowPool.dispose(this.scene); this._shadowPool = null; }
       for (const k in this.campMarkers) {
         const m = this.campMarkers[k];
         if (m && m.sprite) this.scene.remove(m.sprite);

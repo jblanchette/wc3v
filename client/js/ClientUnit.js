@@ -1,5 +1,12 @@
 const _iconCache = {};
 
+// Shared projection scratch. Every projectXY call used to allocate two objects
+// (one in ThreeMapRenderer.projectToCanvas, one in GameScaler.projectXY) and
+// this file projects at least once per unit per frame. All three callsites
+// consume the result immediately and never retain it, so one module-level
+// scratch is safe — there is no reentrancy, projectXYInto cannot call back in.
+const _projScratch = { x: 0, y: 0 };
+
 const HighlightModes = {
   'all': 0,
   'single': 1,
@@ -1008,7 +1015,7 @@ const ClientUnit = class {
     // 3D building models handle visual rendering now (ThreeMapRenderer).
     // Still track positions for worker-overlap hiding logic.
     const { x, y } = this.lastPosition;
-    const _proj = wc3v.gameScaler.projectXY(x, y);
+    const _proj = wc3v.gameScaler.projectXYInto(x, y, _projScratch);
     if (!_proj) return;  // building is outside the camera frustum
     const drawX = Math.round(_proj.x + wc3v.gameScaler.middleX);
     const drawY = Math.round(_proj.y + wc3v.gameScaler.middleY);
@@ -1083,7 +1090,7 @@ const ClientUnit = class {
       return;
     }
 
-    const _projCur = wc3v.gameScaler.projectXY(this.currentX, this.currentY);
+    const _projCur = wc3v.gameScaler.projectXYInto(this.currentX, this.currentY, _projScratch);
     if (!_projCur) return;  // unit is outside the camera frustum
     let drawX = _projCur.x + wc3v.gameScaler.middleX;
     let drawY = _projCur.y + wc3v.gameScaler.middleY;
@@ -1178,40 +1185,49 @@ const ClientUnit = class {
     // but never overlap.
     const visualRadius = halfIconSize + (this.isTransport ? 9 : 6);
 
-    unitDrawPositions.push({
-      uuid: this.uuid,
-      // Form-resolved: a morphing unit must draw and label as the form it is
-      // at this instant, not the one it ends the game as.
-      itemId: this.morphHistory && this.morphHistory.length
-        ? this.itemIdAt(gameTime) : this.itemId,
-      fullName: this.fullName,
-      playerId: this.playerId,
-      playerColor: this.playerColor,
-      icon: this.morphHistory && this.morphHistory.length
-        ? this.iconAt(gameTime) : this.icon,
-      iconSize: iconSize,
-      halfIconSize: halfIconSize,
-      visualRadius: visualRadius,
-      fontSize: fontSize,
-      decayLevel: this.decayLevel,
-      isHero: this.meta.hero,
-      isWorker: this.meta.worker,
-      isIllusion: !!this.isIllusion,
-      isHidden: !!this._isHiddenNow,
-      isNeutralPlayer: this.isNeutralPlayer,
-      isMainHero: this.isMainHero,
-      heroRank: this.heroRank,
-      spawnTime: this.spawnTime,
-      isTransport: !!this.isTransport,
-      cargoCount: cargoCount,
-      cargoItems: cargoItems,
-      scoutLabel: scoutLabel,
-      isInBattle: isInBattle,
-      x: drawX,
-      y: drawY,
-      count: 1,
-      drawSlots: []
-    });
+    // Per-unit descriptor, mutated in place instead of re-allocated. This is a
+    // 26-key literal that used to be built for every unit on every frame; the
+    // `drawnUnits[this.uuid]` guard above already means at most ONE push per
+    // unit per frame, so a per-instance singleton is safe. `drawSlots` is
+    // truncated rather than replaced for the same reason.
+    let d = this._drawDescriptor;
+    if (!d) {
+      d = this._drawDescriptor = { drawSlots: [] };
+    }
+
+    d.uuid = this.uuid;
+    // Form-resolved: a morphing unit must draw and label as the form it is
+    // at this instant, not the one it ends the game as.
+    const morphed = !!(this.morphHistory && this.morphHistory.length);
+    d.itemId = morphed ? this.itemIdAt(gameTime) : this.itemId;
+    d.fullName = this.fullName;
+    d.playerId = this.playerId;
+    d.playerColor = this.playerColor;
+    d.icon = morphed ? this.iconAt(gameTime) : this.icon;
+    d.iconSize = iconSize;
+    d.halfIconSize = halfIconSize;
+    d.visualRadius = visualRadius;
+    d.fontSize = fontSize;
+    d.decayLevel = this.decayLevel;
+    d.isHero = this.meta.hero;
+    d.isWorker = this.meta.worker;
+    d.isIllusion = !!this.isIllusion;
+    d.isHidden = !!this._isHiddenNow;
+    d.isNeutralPlayer = this.isNeutralPlayer;
+    d.isMainHero = this.isMainHero;
+    d.heroRank = this.heroRank;
+    d.spawnTime = this.spawnTime;
+    d.isTransport = !!this.isTransport;
+    d.cargoCount = cargoCount;
+    d.cargoItems = cargoItems;
+    d.scoutLabel = scoutLabel;
+    d.isInBattle = isInBattle;
+    d.x = drawX;
+    d.y = drawY;
+    d.count = 1;
+    d.drawSlots.length = 0;
+
+    unitDrawPositions.push(d);
 
     // Death FX: queue a one-shot ring + label at the unit's last known
     // position while the FX window is active. Drawn after the unit pass so
@@ -1266,7 +1282,7 @@ const ClientUnit = class {
 
       const { x, y } = levelRecord.position;
 
-      const _projL = wc3v.gameScaler.projectXY(x, y);
+      const _projL = wc3v.gameScaler.projectXYInto(x, y, _projScratch);
       if (!_projL) return;  // continue level-stream scan; pin is off-screen
       const drawX = _projL.x + wc3v.gameScaler.middleX;
       const drawY = _projL.y + wc3v.gameScaler.middleY;

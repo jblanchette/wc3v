@@ -72,9 +72,14 @@ const BuildingHoverLabel = class {
     const { offsetX, offsetY } = e;
     if (offsetX === undefined || offsetY === undefined) return false;
 
-    // Convert CSS pixels to canvas pixels, then to canvas-space
-    const scaleX = canvas.width / (canvas.clientWidth || canvas.width);
-    const scaleY = canvas.height / (canvas.clientHeight || canvas.height);
+    // Convert CSS pixels to LOGICAL canvas pixels, then to canvas-space.
+    // The building index is built from frameData positions, which are logical —
+    // so this must not use canvas.width, which is now the (renderScale-sized)
+    // physical backing store. canvasMetrics.sx is exactly this ratio.
+    const gs = (typeof wc3v !== 'undefined' && wc3v) ? wc3v.gameScaler : null;
+    const m = (gs && gs.canvasMetrics) ? gs.canvasMetrics(canvas) : null;
+    const scaleX = (m && m.ok) ? m.sx : canvas.width  / (canvas.clientWidth  || canvas.width);
+    const scaleY = (m && m.ok) ? m.sy : canvas.height / (canvas.clientHeight || canvas.height);
     const screenX = offsetX * scaleX;
     const screenY = offsetY * scaleY;
     const canvasX = (screenX - transform.x) / transform.k;

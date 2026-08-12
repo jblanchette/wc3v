@@ -487,10 +487,13 @@
       const b0 = DominanceBar.bracketFor(DominanceBar.evenAdjust(d0, d1));
       const b1 = DominanceBar.bracketFor(DominanceBar.evenAdjust(d1, d0));
 
-      // Geometry: smooth, so it must survive a hit-stop glide.
+      // Geometry: smooth, so it must survive a hit-stop glide. Quantized to
+      // 0.25% (≈1.5px on a wide bar) — at 0.1% any live fight moved the seam
+      // most frames, firing 5 style writes per frame; at 0.25% it's a few
+      // times a second with no visible stepping.
       const total = Math.max(1e-6, v0 + v1);
       const seamPct = (100 * v0) / total;
-      const geomKey = seamPct.toFixed(1) + '|' + b0.name + '|' + b1.name;
+      const geomKey = (Math.round(seamPct * 4) / 4) + '|' + b0.name + '|' + b1.name;
       if (geomKey !== this._lastGeomKey) {
         this._lastGeomKey = geomKey;
         this._seamPct = seamPct;

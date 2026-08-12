@@ -654,38 +654,56 @@ const ClientPlayer = class {
         isIllusion
       } = item;
 
-      const groupPad = halfIconSize * 0.4;
-      const unitBox = {
-        uuid,
-        minX:     x - halfIconSize - groupPad,
-        maxX:     x + halfIconSize + groupPad,
-        minY:     y - halfIconSize - groupPad,
-        maxY:     y + halfIconSize + groupPad,
-        drawX:    x,
-        drawY:    y,
+      // Pooled draw box — a 30-key literal per unit per frame otherwise. The
+      // pool is per-player and indexed by position in this frame's pass, so a
+      // box is only ever live for one frame at a time.
+      //
+      // EVERY field must be written here, including the ones assigned later in
+      // the pipeline (_origX/_origY/clusterCount, set only for cluster
+      // representatives at the bloom step). A stale _origX surviving on a
+      // recycled box would make the bloom-line test below think a
+      // non-representative had been displaced, and draw a leader line from a
+      // position two frames old.
+      if (!this._boxPool) this._boxPool = [];
+      const pool = this._boxPool;
+      const slot = drawBoxes.length;
+      let unitBox = pool[slot];
+      if (!unitBox) unitBox = pool[slot] = {};
 
-        fullName,
-        icon,
-        iconSize,
-        halfIconSize,
-        uuid,
-        isHero,
-        isMainHero,
-        isIllusion: isIllusion || false,
-        itemId,
-        playerId,
-        playerColor,
-        heroRank,
-        spawnTime,
-        isWorker,
-        isNeutralPlayer,
-        decayLevel,
-        isTransport: isTransport || false,
-        cargoCount: cargoCount || 0,
-        cargoItems: cargoItems || null,
-        scoutLabel: scoutLabel || null,
-        isHidden: item.isHidden || false
-      };
+      const groupPad = halfIconSize * 0.4;
+      unitBox.uuid = uuid;
+      unitBox.minX = x - halfIconSize - groupPad;
+      unitBox.maxX = x + halfIconSize + groupPad;
+      unitBox.minY = y - halfIconSize - groupPad;
+      unitBox.maxY = y + halfIconSize + groupPad;
+      unitBox.drawX = x;
+      unitBox.drawY = y;
+
+      unitBox.fullName = fullName;
+      unitBox.icon = icon;
+      unitBox.iconSize = iconSize;
+      unitBox.halfIconSize = halfIconSize;
+      unitBox.isHero = isHero;
+      unitBox.isMainHero = isMainHero;
+      unitBox.isIllusion = isIllusion || false;
+      unitBox.itemId = itemId;
+      unitBox.playerId = playerId;
+      unitBox.playerColor = playerColor;
+      unitBox.heroRank = heroRank;
+      unitBox.spawnTime = spawnTime;
+      unitBox.isWorker = isWorker;
+      unitBox.isNeutralPlayer = isNeutralPlayer;
+      unitBox.decayLevel = decayLevel;
+      unitBox.isTransport = isTransport || false;
+      unitBox.cargoCount = cargoCount || 0;
+      unitBox.cargoItems = cargoItems || null;
+      unitBox.scoutLabel = scoutLabel || null;
+      unitBox.isHidden = item.isHidden || false;
+
+      // Reset the late-assigned cluster fields (see note above).
+      unitBox.clusterCount = 1;
+      unitBox._origX = 0;
+      unitBox._origY = 0;
 
       drawBoxes.push(unitBox);
     }
@@ -926,8 +944,51 @@ const ClientPlayer = class {
            Number.isFinite(box.minY) && Number.isFinite(box.maxY);
   }
 
+  // Canvas font shorthand for an integer size, memoized. The template string
+  // was being rebuilt for every unit on every frame, in two places.
+  static _nameplateFont (size) {
+    let cache = ClientPlayer._fontCache;
+    if (!cache) cache = ClientPlayer._fontCache = new Map();
+    let s = cache.get(size);
+    if (s === undefined) {
+      s = `bold ${size}px Arial`;
+      cache.set(size, s);
+    }
+    return s;
+  }
+
+  // measureText is one of the more expensive 2D calls and it also allocates a
+  // TextMetrics object — it was running once per named unit per frame for
+  // strings that almost never change. Width depends only on (font size, text).
+  static _measureNameWidth (ctx, size, str) {
+    let cache = ClientPlayer._textWidthCache;
+    if (!cache) cache = ClientPlayer._textWidthCache = new Map();
+    const key = size + '|' + str;
+    let w = cache.get(key);
+    if (w === undefined) {
+      // Unit names are a bounded set, but cluster counts ("Ghoul [12]") and
+      // zoom-driven font sizes can widen it — cap and evict wholesale.
+      if (cache.size > 2000) cache.clear();
+      w = ctx.measureText(str).width;
+      cache.set(key, w);
+    }
+    return w;
+  }
+
   static buildNameplateBoxes (frameData, ctx) {
     const { unitDrawPositions } = frameData;
+
+    // Pooled result records — a 13-key literal per named unit per frame.
+    // Consumed within the frame by renderAllNameplates (sorted, then drawn)
+    // and never retained past it.
+    if (!frameData._namePool) frameData._namePool = [];
+    const namePool = frameData._namePool;
+
+    // Reuse the result array too — the caller overwrites
+    // frameData.allNameplateBoxes with whatever comes back, so the previous
+    // frame's array is garbage the moment this returns.
+    if (!frameData._nameBoxes) frameData._nameBoxes = [];
+    frameData._nameBoxes.length = 0;
 
     return unitDrawPositions.reduce((acc, item) => {
       const { x, y, iconSize, fontSize, isHero, heroRank, fullName, decayLevel, count, isNeutralPlayer, playerColor } = item;
@@ -959,71 +1020,95 @@ const ClientPlayer = class {
         return acc;
       }
 
-      ctx.font = `bold ${Math.ceil(fontSize)}px Arial`;
+      const fontPx = Math.ceil(fontSize);
+      ctx.font = ClientPlayer._nameplateFont(fontPx);
       ctx.textAlign = 'center';
 
       const nameStr = count === 1 ? fullName : `${fullName} [${count}]`;
-      const textWidth = ctx.measureText(nameStr).width;
+      const textWidth = ClientPlayer._measureNameWidth(ctx, fontPx, nameStr);
       const halfWidth = textWidth / 2;
       const drawY = y - iconSize;
 
       const priority = isHero ? (100 - (heroRank || 0)) : 0;
 
-      acc.push({
-        minX:     x - halfWidth,
-        maxX:     x + halfWidth,
-        minY:     drawY - fontSize,
-        maxY:     drawY,
-        drawX:    x,
-        drawY:    drawY,
-        baseY:    y,
-        nameStr:  nameStr,
-        fontSize: fontSize,
-        iconSize: iconSize,
-        isHero:   isHero,
-        priority: priority,
-        count:    count,
-        playerColor: playerColor
-      });
+      let nb = namePool[acc.length];
+      if (!nb) nb = namePool[acc.length] = {};
+      nb.minX = x - halfWidth;
+      nb.maxX = x + halfWidth;
+      nb.minY = drawY - fontSize;
+      nb.maxY = drawY;
+      nb.drawX = x;
+      nb.drawY = drawY;
+      nb.baseY = y;
+      nb.nameStr = nameStr;
+      nb.fontSize = fontSize;
+      nb.iconSize = iconSize;
+      nb.isHero = isHero;
+      nb.priority = priority;
+      nb.count = count;
+      nb.playerColor = playerColor;
+      acc.push(nb);
 
       return acc;
-    }, []);
+    }, frameData._nameBoxes);
   }
 
   static renderAllNameplates (frameData, ctx) {
     const { nameplateTree, unitDrawPositions } = frameData;
 
-    // insert unit icon bounds as obstacles so nameplates avoid other units' icons
-    const obstacles = unitDrawPositions.map(item => {
+    // Insert unit icon bounds as obstacles so nameplates avoid other units'
+    // icons. Pooled on frameData (already the per-frame reuse container): the
+    // old map+filter pair allocated one object AND two arrays per frame,
+    // scaling with unit count. The tree is cleared every frame in app.js, so
+    // recycling the entries it indexed last frame is safe.
+    if (!frameData._obstaclePool) frameData._obstaclePool = [];
+    if (!frameData._validObstacles) frameData._validObstacles = [];
+    const pool = frameData._obstaclePool;
+    const validObstacles = frameData._validObstacles;
+    validObstacles.length = 0;
+
+    for (let i = 0; i < unitDrawPositions.length; i++) {
+      const item = unitDrawPositions[i];
       const halfIcon = item.iconSize / 2;
-      return {
-        minX: item.x - halfIcon,
-        maxX: item.x + halfIcon,
-        minY: item.y - halfIcon,
-        maxY: item.y + halfIcon,
-        isObstacle: true,
-        ownerX: item.x,
-        ownerY: item.y
-      };
-    });
+      let o = pool[i];
+      if (!o) o = pool[i] = { minX: 0, maxX: 0, minY: 0, maxY: 0, isObstacle: true, ownerX: 0, ownerY: 0 };
+      o.minX = item.x - halfIcon;
+      o.maxX = item.x + halfIcon;
+      o.minY = item.y - halfIcon;
+      o.maxY = item.y + halfIcon;
+      o.ownerX = item.x;
+      o.ownerY = item.y;
+      if (ClientPlayer.isValidBox(o)) validObstacles.push(o);
+    }
 
     const allBoxes = frameData.allNameplateBoxes || [];
     allBoxes.sort((a, b) => b.priority - a.priority);
 
-    const validObstacles = obstacles.filter(o => ClientPlayer.isValidBox(o));
     nameplateTree.load(validObstacles);
 
     // helper: check for real collisions (ignoring this unit's own icon obstacle)
-    const hasRealCollision = (box, ownerX, ownerY) => {
-      const hits = nameplateTree.search(box);
-      return hits.some(h => !(h.isObstacle && h.ownerX === ownerX && h.ownerY === ownerY));
+    // Query box is a reused scratch — rbush.search only reads it.
+    if (!frameData._queryBox) frameData._queryBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    const queryBox = frameData._queryBox;
+    const hasRealCollision = (bMinX, bMinY, bMaxX, bMaxY, ownerX, ownerY) => {
+      queryBox.minX = bMinX; queryBox.minY = bMinY;
+      queryBox.maxX = bMaxX; queryBox.maxY = bMaxY;
+      const hits = nameplateTree.search(queryBox);
+      for (let i = 0; i < hits.length; i++) {
+        const h = hits[i];
+        if (!(h.isObstacle && h.ownerX === ownerX && h.ownerY === ownerY)) return true;
+      }
+      return false;
     };
 
-    allBoxes.forEach(nameBox => {
+    if (!frameData._placedPool) frameData._placedPool = [];
+    const placedPool = frameData._placedPool;
+
+    allBoxes.forEach((nameBox, boxIdx) => {
       const { drawX, baseY, nameStr, iconSize, fontSize, isHero, playerColor } = nameBox;
       let { minX, maxX, minY, maxY, drawY } = nameBox;
 
-      const collisionAbove = hasRealCollision({ minX, minY, maxX, maxY }, drawX, baseY);
+      const collisionAbove = hasRealCollision(minX, minY, maxX, maxY, drawX, baseY);
 
       // Slightly more opaque background than before so the player-color
       // stripe along the bottom has a stable dark band to sit on.
@@ -1033,8 +1118,7 @@ const ClientPlayer = class {
       if (collisionAbove) {
         // try below the unit instead
         const belowY = baseY + iconSize / 2 + fontSize + 4;
-        const belowBox = { minX, maxX, minY: belowY - fontSize, maxY: belowY };
-        const collisionBelow = hasRealCollision(belowBox, drawX, baseY);
+        const collisionBelow = hasRealCollision(minX, belowY - fontSize, maxX, belowY, drawX, baseY);
 
         if (!collisionBelow) {
           drawY = belowY;
@@ -1045,8 +1129,13 @@ const ClientPlayer = class {
         }
       }
 
-      // register this nameplate in the tree so later ones see it
-      const placedBox = { minX, minY, maxX, maxY };
+      // Register this nameplate in the tree so later ones see it. Pooled, but
+      // unlike the query scratch this one is RETAINED by the tree for the rest
+      // of the frame, so each nameplate needs its own slot — hence the index.
+      let placedBox = placedPool[boxIdx];
+      if (!placedBox) placedBox = placedPool[boxIdx] = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+      placedBox.minX = minX; placedBox.minY = minY;
+      placedBox.maxX = maxX; placedBox.maxY = maxY;
       if (!ClientPlayer.isValidBox(placedBox)) return;
       nameplateTree.insert(placedBox);
 
@@ -1061,24 +1150,12 @@ const ClientPlayer = class {
       const bgH = textH + padY * 2;
       const radius = 5;
 
-      const traceRoundedRect = () => {
-        ctx.beginPath();
-        ctx.moveTo(bgX + radius, bgY);
-        ctx.lineTo(bgX + bgW - radius, bgY);
-        ctx.quadraticCurveTo(bgX + bgW, bgY, bgX + bgW, bgY + radius);
-        ctx.lineTo(bgX + bgW, bgY + bgH - radius);
-        ctx.quadraticCurveTo(bgX + bgW, bgY + bgH, bgX + bgW - radius, bgY + bgH);
-        ctx.lineTo(bgX + radius, bgY + bgH);
-        ctx.quadraticCurveTo(bgX, bgY + bgH, bgX, bgY + bgH - radius);
-        ctx.lineTo(bgX, bgY + radius);
-        ctx.quadraticCurveTo(bgX, bgY, bgX + radius, bgY);
-        ctx.closePath();
-      };
-
-      // Dark base fill.
+      // Dark base fill. (Drawing.roundedRectPath rather than a local closure —
+      // this loop runs per nameplate per frame and the closure was allocated
+      // every time just to re-trace the same shape two or three times.)
       ctx.globalAlpha = bgAlpha;
       ctx.fillStyle = '#0d0d10';
-      traceRoundedRect();
+      Drawing.roundedRectPath(ctx, bgX, bgY, bgW, bgH, radius);
       ctx.fill();
 
       // Faint full-area playerColor tint diffused into the dark background —
@@ -1087,7 +1164,7 @@ const ClientPlayer = class {
       if (playerColor) {
         ctx.globalAlpha = 0.20 * bgAlpha;
         ctx.fillStyle = playerColor;
-        traceRoundedRect();
+        Drawing.roundedRectPath(ctx, bgX, bgY, bgW, bgH, radius);
         ctx.fill();
 
         // Full-perimeter playerColor outline. Symmetric, so it doesn't read
@@ -1097,7 +1174,7 @@ const ClientPlayer = class {
         ctx.globalAlpha = 0.95;
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = playerColor;
-        traceRoundedRect();
+        Drawing.roundedRectPath(ctx, bgX, bgY, bgW, bgH, radius);
         ctx.stroke();
       }
 
@@ -1105,7 +1182,7 @@ const ClientPlayer = class {
       ctx.globalAlpha = textAlpha;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
-      ctx.font = `bold ${Math.ceil(fontSize)}px Arial`;
+      ctx.font = ClientPlayer._nameplateFont(Math.ceil(fontSize));
       ctx.fillStyle = '#FFF';
       ctx.fillText(nameStr, drawX, drawY);
       ctx.textAlign = 'left';

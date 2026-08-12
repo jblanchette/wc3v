@@ -188,20 +188,27 @@ const BuildingSplats = class {
     const tex = this._textures[texName];
     if (!tex) return; // texture failed to load
 
-    const geo = new THREE.PlaneGeometry(worldSize, worldSize);
+    // One shared unit plane, scaled per mesh; one material per texture.
+    // A geometry + material per splat multiplied GPU objects for no visual
+    // difference — every splat with the same texture is identical apart from
+    // its transform and visibility, which live on the mesh.
+    if (!this._unitPlane) this._unitPlane = new THREE.PlaneGeometry(1, 1);
+    if (!this._matCache) this._matCache = {};
+    let mat = this._matCache[texName];
+    if (!mat) {
+      mat = this._matCache[texName] = new THREE.MeshBasicMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+        side: THREE.DoubleSide
+      });
+    }
 
-    const mat = new THREE.MeshBasicMaterial({
-      map: tex,
-      transparent: true,
-      depthWrite: false,
-      depthTest: true,
-      polygonOffset: true,
-      polygonOffsetFactor: -2,
-      polygonOffsetUnits: -2,
-      side: THREE.DoubleSide
-    });
-
-    const mesh = new THREE.Mesh(geo, mat);
+    const mesh = new THREE.Mesh(this._unitPlane, mat);
     const groundY = this.threeRenderer.sampleHeight(wx, wy);
     mesh.position.set(
       wx - mapCenterX,
@@ -209,11 +216,14 @@ const BuildingSplats = class {
       -(wy - mapCenterY)
     );
     mesh.rotation.x = -Math.PI / 2;
+    mesh.scale.set(worldSize, worldSize, 1);
     mesh.renderOrder = -1;
 
     // Neutral buildings always visible; player buildings start hidden
     mesh.visible = (readyTime === 0);
     this.threeRenderer.scene.add(mesh);
+    // Splats never move — prune them from the per-frame matrix traversal.
+    this.threeRenderer._freezeMatrix(mesh);
 
     this._splats.push({
       mesh,
@@ -288,10 +298,15 @@ const BuildingSplats = class {
   dispose () {
     for (const s of this._splats) {
       this.threeRenderer.scene.remove(s.mesh);
-      s.mesh.geometry.dispose();
-      s.mesh.material.dispose();
     }
     this._splats = [];
+
+    // Geometry + materials are shared across splats now — dispose them once.
+    if (this._unitPlane) { this._unitPlane.dispose(); this._unitPlane = null; }
+    if (this._matCache) {
+      for (const key of Object.keys(this._matCache)) this._matCache[key].dispose();
+      this._matCache = null;
+    }
 
     for (const key of Object.keys(this._textures)) {
       this._textures[key].dispose();

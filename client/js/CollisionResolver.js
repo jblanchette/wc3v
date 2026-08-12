@@ -25,6 +25,15 @@
   const EPSILON = 0.5;        // sub-pixel slop — stop iterating when below
   const MIN_SEPARATION = 0;   // extra padding between unit circles (px)
 
+  // Reused across frames. This pass used to allocate a Map + bucket arrays on
+  // EVERY relaxation iteration and build a key string per unit per neighbor
+  // cell (~10 strings × N units × 8 iterations per frame) — it was the
+  // single biggest per-frame GC source in the 2D pipeline. Integer cell keys
+  // + one build per frame remove all of it. Building the hash once is sound:
+  // relaxation pushes are a few pixels, while the 3×3 neighbor scan already
+  // reaches a full cell (≥32px) past the unit's own cell.
+  const buckets = new Map();
+
   function resolveFrame (frameData) {
     const units = frameData.unitDrawPositions;
     const buildings = frameData.buildingPositions;
@@ -51,21 +60,24 @@
     }
     const cellSize = medR * 4;
 
-    const keyOf = (x, y) => (Math.floor(x / cellSize) + ':' + Math.floor(y / cellSize));
+    // Integer cell key — canvas coords are a few thousand px, cells are
+    // ≥32px, so ±32768 cells is far beyond any map and the packed key stays
+    // a Smi (no hashing of heap strings).
+    const keyOf = (gx, gy) => (gx + 32768) * 65536 + (gy + 32768);
+
+    // Build the spatial hash ONCE per frame (see header comment).
+    buckets.clear();
+    for (let i = 0; i < units.length; i++) {
+      const u = units[i];
+      if (u._cr === 0) continue;
+      const k = keyOf(Math.floor(u.x / cellSize), Math.floor(u.y / cellSize));
+      let arr = buckets.get(k);
+      if (!arr) { arr = []; buckets.set(k, arr); }
+      arr.push(i);
+    }
 
     for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
       let moved = 0;
-
-      // (Re)build spatial hash each iteration — units have moved.
-      const buckets = new Map();
-      for (let i = 0; i < units.length; i++) {
-        const u = units[i];
-        if (u._cr === 0) continue;
-        const k = keyOf(u.x, u.y);
-        let arr = buckets.get(k);
-        if (!arr) { arr = []; buckets.set(k, arr); }
-        arr.push(i);
-      }
 
       // Unit↔unit pass
       for (let i = 0; i < units.length; i++) {
@@ -76,7 +88,7 @@
         const cy = Math.floor(a.y / cellSize);
         for (let dx = -1; dx <= 1; dx++) {
           for (let dy = -1; dy <= 1; dy++) {
-            const arr = buckets.get((cx + dx) + ':' + (cy + dy));
+            const arr = buckets.get(keyOf(cx + dx, cy + dy));
             if (!arr) continue;
             for (const j of arr) {
               if (j <= i) continue;  // each pair once

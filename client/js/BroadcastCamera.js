@@ -616,7 +616,9 @@
       // timestamps from elsewhere in the match would make the split snap open or
       // refuse to close right after a jump. (Normal playback, even at 40x, never
       // advances this much in one frame.)
+      let seeked = false;
       if (this._lastGameTime != null && Math.abs(gameTime - this._lastGameTime) > 2500) {
+        seeked = true;
         this._splitWantSince = null;
         this._splitEnteredAt = null;
         // A jump is a fresh context — the sanity pass must not glide from (or
@@ -628,13 +630,40 @@
         this._zoomDir = 0;
         this._splitLerp = null;
       }
+      this._lastGameTime = gameTime;
 
+      // --- Decision cadence -------------------------------------------------
+      //
+      // Everything below the cadence gate is the DECISION layer: anchor
+      // clustering (O(n²) over live units, per player), intrusion detection,
+      // split evaluation, activity measurement and shot targeting. Measured as
+      // the single most expensive per-frame UI-side block — and none of it
+      // needs frame-rate resolution: shots latch for seconds, split
+      // transitions debounce over seconds, and the per-frame lerp below
+      // smooths whatever the decision layer last produced. ~15Hz keeps every
+      // reaction under a tenth of a second while cutting the scan cost ~4x.
+      const DECISION_INTERVAL_MS = 66;
+      const wallNow = this._lastUpdateWall;
+      const needDecision = seeked ||
+        !this._initialized ||
+        this._lastDecisionWall == null ||
+        (wallNow - this._lastDecisionWall) >= DECISION_INTERVAL_MS;
+      if (needDecision) {
+        this._lastDecisionWall = wallNow;
+        this._runDecisions(gameTime, players);
+      }
+
+      this._advanceFrame(gameTime, players);
+    }
+
+    // The ~15Hz half of update(): shot/split/intrusion decisions. Results are
+    // stored on `this` and consumed by _advanceFrame every frame.
+    _runDecisions (gameTime, players) {
       // Per-player anchors: the main fighting force when one exists, else the
       // base (opening). Drive BOTH the split decision (separation) and the
       // per-half framing, so a lone scout/worker never triggers or steals a split.
       const anchors = this._computeAnchors(players, gameTime);
       this._separation = this._anchorSeparation(anchors);
-      this._lastGameTime = gameTime;
 
       // ----- Auto-split decision (a sub-state of AUTO) -----
       // Reversible, but stabilized: enter only when the players are clearly apart
@@ -662,7 +691,8 @@
       // What forces us out of a split even mid-dwell: a live/imminent fight, the
       // two heroes clustering (a clash starting), or a player intruding on the
       // enemy base (scout) — all override the dwell to cut to the interaction.
-      const fightNow = !!(this._activeBattleBbox() || this._imminentBattle(gameTime) ||
+      // Cached on `this` for the per-frame latch in _advanceFrame.
+      const fightNow = this._fightNow = !!(this._activeBattleBbox() || this._imminentBattle(gameTime) ||
         this._hasEngagedCluster(players) || this._intrusionTarget);
 
       // Track how long the want-condition has held (entry debounce, game time).
@@ -708,6 +738,38 @@
         }
       }
 
+      // Live activity for the time-scale: how busy the players' main forces are
+      // (anchor-based, so a wide two-army overview reads as active even though
+      // its centroid is empty midmap). Drives AutoDirector's activityCap so we
+      // slow down whenever units are doing things, not only during a battle.
+      this._activityLevel = this._forceActivityLevel(players, anchors);
+
+      if (this.mode === CameraMode.SPLIT_SCREEN) {
+        // Raw per-half targets at decision cadence; _advanceFrame smooths them
+        // every frame (keep the last valid framing when a side momentarily has
+        // no framable force, e.g. during the exit wipe).
+        const t = this._splitScreenTargets(players, gameTime);
+        if (t) this._splitRawTargets = t;
+        this._rawTarget = null;
+        return;
+      }
+      this._splitRawTargets = null;
+
+      let target = this._computeTarget(players);
+      if (target) {
+        // Replay look-ahead: if a battle is about to start, lead the camera
+        // toward it (and pre-tighten zoom) so the clash doesn't snap into
+        // frame. Skipped while a battle is already active — _actionFocus
+        // already frames that one.
+        target = this._applyLookAhead(target, players, gameTime);
+      }
+      this._rawTarget = target || null;
+    }
+
+    // The every-frame half of update(): transition wipes + camera smoothing
+    // toward whatever the decision layer last produced. Cheap by design —
+    // no unit scans, no allocation.
+    _advanceFrame (gameTime, players) {
       // Animate split entry/exit. Stepped by REAL time, not by frames: a frame-
       // counted wipe runs at whatever the frame rate happens to be, so the same
       // transition took 0.5 s at 60 fps and 2 s at 15 fps.
@@ -731,28 +793,24 @@
           this._splitExitedWall = this._lastUpdateWall || 0;  // start re-entry cooldown
           this._splitLerp = null;
           this.setMode(CameraMode.ACTION_FOCUS);
-          // Continue with action focus this frame
+          // Mode just flipped mid-wipe — re-run the decision layer so the
+          // single-view path has a fresh target to glide toward this frame.
+          this._lastDecisionWall = this._lastUpdateWall;
+          this._runDecisions(gameTime, players);
         }
       }
 
-      // Live activity for the time-scale: how busy the players' main forces are
-      // (anchor-based, so a wide two-army overview reads as active even though
-      // its centroid is empty midmap). Drives AutoDirector's activityCap so we
-      // slow down whenever units are doing things, not only during a battle.
-      this._activityLevel = this._forceActivityLevel(players, anchors);
-
       if (this.mode === CameraMode.SPLIT_SCREEN) {
-        this._updateSplitScreen(players);
+        if (this._splitRawTargets) {
+          this.splitTargets = this._smoothSplitTargets(this._splitRawTargets);
+        }
+        this._initialized = true;
         return;
       }
 
-      let target = this._computeTarget(players);
+      const target = this._rawTarget;
       if (!target) return;
-
-      // Replay look-ahead: if a battle is about to start, lead the camera toward
-      // it (and pre-tighten zoom) so the clash doesn't snap into frame. Skipped
-      // while a battle is already active — _actionFocus already frames that one.
-      target = this._applyLookAhead(target, players, gameTime);
+      const fightNow = !!this._fightNow;
 
       const gs = this.viewer.gameScaler;
       if (!gs || !gs.xScale) return;
@@ -853,15 +911,6 @@
     //  Split-screen helpers
     // ---------------------------------------------------------------
 
-    _updateSplitScreen (players) {
-      // Keep the last valid framing if a side momentarily has no framable force
-      // (e.g. during the exit transition right after a wipe) so rendering never
-      // breaks on a null target mid-animation.
-      const t = this._splitScreenTargets(players, this.viewer.gameTime);
-      if (t) this.splitTargets = this._smoothSplitTargets(t);
-      this._initialized = true;
-    }
-
     /**
      * Per-half smoothing. The raw per-half targets are recomputed every frame
      * from live force bboxes, and the renderer applies them DIRECTLY (there is
@@ -915,9 +964,11 @@
       const gs = this.viewer.gameScaler;
       if (!gs || !gs.viewExtent) return null;
 
+      // Logical (coordinate-space) size, NOT the physical backing store — the
+      // split geometry below is in the same space as xScale/yScale output.
       const canvas = this.viewer.canvas;
-      const cw = canvas && canvas.width;
-      const ch = canvas && canvas.height;
+      const cw = gs.logicalWidth || (canvas && canvas.width);
+      const ch = gs.logicalHeight || (canvas && canvas.height);
       if (!cw || !ch) return null;
 
       // World↔canvas conversion: d3 xScale.range is gs.sceneImage (the playable

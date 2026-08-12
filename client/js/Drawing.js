@@ -33,42 +33,71 @@ const Drawing = class {
   }
 
   static drawCampOrderBadge (ctx, order, centerX, centerY, teamColor, scale) {
-    const radius = Math.max(15, 18 * scale);
-    // Rounded on purpose: assigning ctx.font re-parses the font shorthand, and
-    // a fractional size made the string unique on nearly every frame (scale is
-    // continuous while zooming), so nothing could be cached. Integer px keeps
-    // the string stable across small zoom changes at no visual cost.
-    const fontSize = Math.round(Math.max(15, 18 * scale));
+    // Pre-rendered sprite per (order, color, integer radius) — the badge is
+    // static art, but it was being rebuilt from arcs + a font parse for every
+    // camp on every frame (measured ~1.2% of total CPU in a mid-game window).
+    // Radius is integer-quantized so zooming reuses a handful of sprites.
+    const radius = Math.round(Math.max(15, 18 * scale));
+    const key = order + '|' + (teamColor || '#FFF') + '|' + radius;
+    let cache = Drawing._campBadgeCache;
+    if (!cache) cache = Drawing._campBadgeCache = new Map();
+    let sprite = cache.get(key);
+    if (!sprite) {
+      // Evict wholesale if zoom churn somehow makes this grow without bound.
+      if (cache.size > 200) cache.clear();
+      const pad = 8;                       // glow ring (+5) + stroke slop
+      const S = (radius + pad) * 2;
+      sprite = document.createElement('canvas');
+      sprite.width = S; sprite.height = S;
+      const c = sprite.getContext('2d');
+      const mid = S / 2;
 
-    // outer glow ring
-    ctx.save();
-    ctx.globalAlpha = 0.35;
+      // outer glow ring
+      c.globalAlpha = 0.35;
+      c.beginPath();
+      c.arc(mid, mid, radius + 5, 0, Math.PI * 2);
+      c.fillStyle = teamColor || '#FFF';
+      c.fill();
+
+      // main circle
+      c.globalAlpha = 0.9;
+      c.beginPath();
+      c.arc(mid, mid, radius, 0, Math.PI * 2);
+      c.fillStyle = '#111';
+      c.fill();
+      c.lineWidth = 3;
+      c.strokeStyle = teamColor || '#FFF';
+      c.stroke();
+
+      // text
+      c.globalAlpha = 1;
+      c.fillStyle = '#FFF';
+      c.font = `bold ${radius}px Arial`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(order, mid, mid + 1);
+
+      cache.set(key, sprite);
+    }
+    ctx.drawImage(sprite, centerX - sprite.width / 2, centerY - sprite.height / 2);
+  }
+
+  // Trace a rounded rect as the current path (no fill/stroke — the caller
+  // decides). Exists so per-element render loops don't each allocate a closure
+  // to re-trace the same shape; renderAllNameplates traces one twice per
+  // nameplate per frame.
+  static roundedRectPath (ctx, x, y, w, h, r) {
     ctx.beginPath();
-    ctx.arc(centerX, centerY, radius + 5, 0, Math.PI * 2);
-    ctx.fillStyle = teamColor || '#FFF';
-    ctx.fill();
-
-    // main circle
-    ctx.globalAlpha = 0.9;
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#111';
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = teamColor || '#FFF';
-    ctx.stroke();
-
-    // text
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#FFF';
-    ctx.font = `bold ${fontSize}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(order, centerX, centerY + 1);
-
-    ctx.restore();
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'alphabetic';
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
   }
 
   static drawDiamond (ctx, x, y, size, fillColor, strokeColor = '#000') {
@@ -95,6 +124,41 @@ const Drawing = class {
       ctx.textAlign = "left";
   }
 
+  // Pre-clipped circular icon sprite, keyed by (src, integer size) — same
+  // pattern as drawCampOrderBadge above. This runs once per unit per frame, and
+  // the save/arc/clip/restore it replaces is the expensive part: a clip forces
+  // the rasterizer onto a masked path for the drawImage that follows. The ring
+  // is still stroked on the caller's context so the per-unit strokeStyle /
+  // lineWidth the callers set still applies.
+  static _circleIconSprite (icon, size) {
+    // Not loaded yet — don't bake a blank into the cache.
+    if (!icon.complete || !(icon.naturalWidth > 0)) return null;
+
+    const key = (icon.src || icon._cacheKey || '') + '|' + size;
+    let cache = Drawing._circleIconCache;
+    if (!cache) cache = Drawing._circleIconCache = new Map();
+    let sprite = cache.get(key);
+    if (sprite) return sprite;
+
+    // Zoom churn produces a new integer size per step; evict wholesale rather
+    // than tracking LRU (same policy as the camp badge cache).
+    if (cache.size > 400) cache.clear();
+
+    sprite = document.createElement('canvas');
+    sprite.width = size;
+    sprite.height = size;
+    const c = sprite.getContext('2d');
+    const half = size / 2;
+    c.beginPath();
+    c.arc(half, half, half, 0, Math.PI * 2, true);
+    c.closePath();
+    c.clip();
+    c.drawImage(icon, 0, 0, size, size);
+
+    cache.set(key, sprite);
+    return sprite;
+  }
+
   static drawImageCircle (ctx, icon, drawX, drawY, iconSize) {
     const halfIconSize = (iconSize / 2);
 
@@ -102,27 +166,44 @@ const Drawing = class {
       return;
     }
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.clip();
+    // Quantize to whole pixels so a continuous zoom reuses a handful of
+    // sprites instead of minting one per frame.
+    const size = Math.max(1, Math.round(iconSize));
+    const sprite = Drawing._circleIconSprite(icon, size);
 
-    // draw the icons
-    ctx.drawImage(
-      icon, 
-      (drawX - halfIconSize), 
-      (drawY - halfIconSize), 
-      iconSize, 
-      iconSize
-    );
+    if (sprite) {
+      ctx.drawImage(sprite, drawX - halfIconSize, drawY - halfIconSize, iconSize, iconSize);
+    } else {
+      // Icon still loading — fall back to the direct clip path for this frame.
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(
+        icon,
+        (drawX - halfIconSize),
+        (drawY - halfIconSize),
+        iconSize,
+        iconSize
+      );
+      ctx.restore();
+    }
 
-    // draw the icon ring
+    // Draw the icon ring. The original stroked this INSIDE the circular clip,
+    // so only the inner half of the stroke width was ever visible — an annulus
+    // spanning [r - lw/2, r]. Reproduce that exactly without paying for a clip:
+    // a stroke of half the width, centred a quarter-width inside r, covers the
+    // identical band. (Stroking at full width on radius r here would render a
+    // visibly double-thick ring.)
+    const lw = ctx.lineWidth || 1;
+    const prevLineWidth = ctx.lineWidth;
+    ctx.lineWidth = lw / 2;
     ctx.beginPath();
-    ctx.arc(drawX, drawY, halfIconSize, 0, Math.PI * 2, true);
+    ctx.arc(drawX, drawY, Math.max(0, halfIconSize - lw / 4), 0, Math.PI * 2, true);
     ctx.stroke();
     ctx.closePath();
-    ctx.restore();
+    ctx.lineWidth = prevLineWidth;
   }
 
   static drawUnit (ctx, unit) {

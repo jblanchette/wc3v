@@ -193,22 +193,35 @@ const EventFeed = class {
 
   _expire (now) {
     const life = this._holdMs + this.FADE_MS;
-    this._active = this._active.filter(c => (now - c.wallShown) < life);
+    // In-place compaction — a .filter() here built a new array every frame,
+    // during playback that's 60 arrays/s for a list that changes a few times
+    // a minute.
+    const a = this._active;
+    let w = 0;
+    for (let i = 0; i < a.length; i++) {
+      if ((now - a[i].wallShown) < life) a[w++] = a[i];
+    }
+    a.length = w;
   }
 
   // Rebuild DOM only when the visible set (or hidden note) changes.
   _syncDom (speed) {
-    const visible = this._active.slice().reverse();   // newest on top
+    // Signature built without intermediate arrays (was slice+reverse+map+join
+    // per frame just to conclude "unchanged").
     const overflow = this._hidden > 0;
-    const sig = visible.map(c => c.ev.id).join('|') +
-      '#' + (overflow ? Math.min(this._hidden, 99) : 0) +
+    let sig = '#' + (overflow ? Math.min(this._hidden, 99) : 0) +
       '@' + (speed > this.HIGH_SPEED ? 'hi' : 'lo');
+    for (let i = this._active.length - 1; i >= 0; i--) {
+      sig += '|' + this._active[i].ev.id;
+    }
     if (sig === this._domSig) return;
     this._domSig = sig;
 
     const frag = document.createDocumentFragment();
-    for (const card of visible) {
+    for (let i = this._active.length - 1; i >= 0; i--) {   // newest on top
+      const card = this._active[i];
       card.el = window.EventModel.buildRowEl(card.ev, { showTime: false });
+      card._lastAlphaQ = undefined;   // fresh element — reapply opacity
       card.el.classList.add('ev-feed-row');
       frag.appendChild(card.el);
     }
@@ -234,7 +247,13 @@ const EventFeed = class {
   _applyFades (now) {
     for (const card of this._active) {
       if (!card.el) continue;
-      card.el.style.opacity = this._cardAlpha(card, now).toFixed(2);
+      // Quantized diff: cards sit at alpha 1.0 for their whole hold time, so
+      // an unconditional style write per card per frame was pure waste (and a
+      // string alloc each). Only fade transitions actually write.
+      const q = Math.round(this._cardAlpha(card, now) * 100);
+      if (card._lastAlphaQ === q) continue;
+      card._lastAlphaQ = q;
+      card.el.style.opacity = (q / 100).toFixed(2);
     }
   }
 

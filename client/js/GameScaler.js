@@ -10,8 +10,91 @@ const GameScaler = class {
     this.cameraBox = {};
     this.canvas = null;
 
+    // Physical backing-store scale. The LOGICAL coordinate space (mapImage /
+    // sceneImage / middleX / middleY / xScale / yScale) is always the map-image
+    // size; renderScale only shrinks the pixels we rasterize into. 1 = the
+    // legacy "buffer px == map-image px" sizing. See computeRenderScale.
+    this.renderScale = 1;
+
     // dependencies
     this._d3 = null;
+  }
+
+  // --- Physical buffer sizing -------------------------------------------
+  //
+  // The five stacked canvases used to be sized to the MAP IMAGE
+  // (playableTiles × 16px, i.e. 1568²–2240²) and then CSS-downscaled to fit
+  // the viewport — 3-10× more pixels than the screen ever shows, rasterized
+  // every frame, five times over. That is pure fill rate, and on integrated
+  // GPUs it was the single biggest cost left after the Aug 12 CPU pass.
+  //
+  // The fix does NOT touch the coordinate system. Logical space stays exactly
+  // as it was; the backing store shrinks by `renderScale` and each 2D context
+  // carries a matching base transform, so every drawing callsite keeps working
+  // in logical px and nothing changes size on screen (icon radii, font sizes
+  // and line widths ride the CTM). The GL canvas gets the same factor via
+  // renderer.setPixelRatio.
+  //
+  // The ladder is deliberately coarse: it makes the scale self-hysteretic, so
+  // ordinary window resizes don't reallocate the GL backing store (expensive
+  // and janky) for a 3% change in the ideal.
+  static get SCALE_LADDER () {
+    return [ 0.2, 0.25, 0.3, 0.35, 0.42, 0.5, 0.6, 0.7, 0.85, 1 ];
+  }
+
+  // Ideal = the pixels the display box actually resolves. Because it is
+  // derived from the CSS box, the buffer never drops BELOW what the screen
+  // shows — this removes supersampling nobody can see, it cannot introduce
+  // blur relative to a 1:1 display.
+  computeRenderScale (cssWidth) {
+    const cfg = (typeof window !== 'undefined' && window.WC3V_CONFIG &&
+                 window.WC3V_CONFIG.perf) || {};
+    const setting = cfg.canvasRenderScale;
+
+    // Explicit false / 1 restores the old map-image sizing.
+    if (setting === false || setting === 1) return 1;
+
+    if (typeof setting === 'number' && isFinite(setting) && setting > 0) {
+      return Math.max(0.2, Math.min(1, setting));
+    }
+
+    // 'auto' (the default) — match the display box in device pixels.
+    const logicalW = this.mapImage && this.mapImage.width;
+    if (!logicalW || !cssWidth || !isFinite(cssWidth)) return 1;
+
+    const dprCap = (typeof cfg.canvasRenderDprCap === 'number' && cfg.canvasRenderDprCap > 0)
+      ? cfg.canvasRenderDprCap : 1;
+    const dpr = Math.min(
+      (typeof window !== 'undefined' && window.devicePixelRatio) || 1,
+      dprCap
+    );
+
+    const ideal = (cssWidth * dpr) / logicalW;
+    const ladder = GameScaler.SCALE_LADDER;
+    for (let i = 0; i < ladder.length; i++) {
+      if (ladder[i] >= ideal) return ladder[i];
+    }
+    return 1;
+  }
+
+  // Logical (coordinate-space) size of the map canvases. Every callsite that
+  // used to read `canvas.width` as "the map image width" must read this
+  // instead — canvas.width is now the PHYSICAL buffer.
+  get logicalWidth ()  { return this.mapImage ? this.mapImage.width  : 0; }
+  get logicalHeight () { return this.mapImage ? this.mapImage.height : 0; }
+
+  // Physical backing-store size for a given logical dimension.
+  bufferPx (logicalPx) {
+    return Math.max(1, Math.round(logicalPx * this.renderScale));
+  }
+
+  // Apply the base transform + clear for one map canvas context. Callers work
+  // in logical px from here on.
+  resetContext (ctx) {
+    if (!ctx) return;
+    const r = this.renderScale || 1;
+    ctx.setTransform(r, 0, 0, r, 0, 0);
+    ctx.clearRect(0, 0, this.logicalWidth, this.logicalHeight);
   }
 
   addDependency (which, dep) {
@@ -193,15 +276,31 @@ const GameScaler = class {
   // and projects through the Three.js perspective camera. Otherwise it falls
   // back to the top-down d3 linear scales so setup-phase code keeps working.
   projectXY (wx, wy) {
+    return this.projectXYInto(wx, wy, { x: 0, y: 0 });
+  }
+
+  // Allocation-free variant: writes into `out` and returns it (or null, which
+  // still means "not projectable" — check the return, not `out`). Callers on
+  // the per-unit path should hold one scratch object and reuse it; projectXY
+  // stays as the allocating wrapper so cold callsites need no changes.
+  //
+  // NOTE the null contract: a null return leaves `out` holding STALE values.
+  // Never read `out` after a null.
+  projectXYInto (wx, wy, out) {
     const three = this.threeMapRenderer;
     if (three && three.ready) {
-      const p = three.projectToCanvas(wx, wy);
+      const p = three.projectToCanvas(wx, wy, out);
       // null = point is behind camera or outside frustum; the d3 fallback
       // would invent a flat-scale pixel that has no relationship to where
       // the 3D camera is actually looking, so propagate the null instead.
-      return p ? { x: p.x - this.middleX, y: p.y - this.middleY } : null;
+      if (!p) return null;
+      out.x = p.x - this.middleX;
+      out.y = p.y - this.middleY;
+      return out;
     }
-    return { x: this.xScale(wx), y: this.yScale(wy) };
+    out.x = this.xScale(wx);
+    out.y = this.yScale(wy);
+    return out;
   }
 
   // Canonical projector for HTML/CSS overlay elements (camp icons, hover
@@ -222,30 +321,77 @@ const GameScaler = class {
     // write in the same frame forces a synchronous layout. beginFrame() takes
     // the one read up front, before the frame writes anything, so every later
     // caller gets it for free.
+    //
+    // The five stacked canvases (main/player/utility/action/three) share both
+    // their backing-store size and their CSS box — scaleLiveModeCanvas writes
+    // the same style to all of them — so the cached metrics are valid for ANY
+    // canvas with the same buffer dimensions, not just the primed one.
     const c = this._frameMetrics;
-    if (c && c.canvas === canvas) return c;
+    if (c && (c.canvas === canvas ||
+              (c.ok && c.canvas.width === canvas.width && c.canvas.height === canvas.height))) {
+      return c;
+    }
     return this._readCanvasMetrics(canvas);
   }
 
   _readCanvasMetrics (canvas) {
-    const cssW = canvas.clientWidth  || canvas.width;
-    const cssH = canvas.clientHeight || canvas.height;
-    const sx = canvas.width  / cssW;
-    const sy = canvas.height / cssH;
+    // sx/sy convert LOGICAL canvas px → CSS px, and must stay defined against
+    // the logical size, not the physical backing store. Everything that holds
+    // a constant on-screen size (BaseNameplateRenderer's plate scale, CampPanel
+    // icon placement, BuildingHoverLabel hit-testing) divides by these — if
+    // they tracked the buffer, right-sizing the buffer would silently shrink
+    // every nameplate. Falls back to the physical size for any canvas that
+    // isn't one of the map canvases.
+    const isMapCanvas = !!(this.mapImage &&
+      this.bufferPx(this.mapImage.width)  === canvas.width &&
+      this.bufferPx(this.mapImage.height) === canvas.height);
+    const logicalW = isMapCanvas ? this.mapImage.width  : canvas.width;
+    const logicalH = isMapCanvas ? this.mapImage.height : canvas.height;
+
+    const cssW = canvas.clientWidth  || logicalW;
+    const cssH = canvas.clientHeight || logicalH;
+    const sx = logicalW / cssW;
+    const sy = logicalH / cssH;
     const ok = !!(sx && sy && isFinite(sx) && isFinite(sy));
-    return { canvas, cssW, cssH, sx, sy, ok };
+    return { canvas, cssW, cssH, sx, sy, ok, logicalW, logicalH };
   }
 
-  // Call once at the top of the frame, BEFORE any style writes. Invalidated
-  // implicitly every frame (the viewer calls this each render) and explicitly
-  // by passing null on resize.
+  // Call once at the top of the frame, BEFORE any style writes.
+  //
+  // Measured (perf-bench, Aug 2026): re-reading clientWidth every frame cost
+  // ~0.5ms/frame — the per-frame style writes (scrubber tracker, camp icon
+  // transforms, event-feed fades) leave layout dirty, so even the one
+  // frame-top read forced a synchronous reflow. The CSS box only actually
+  // changes on resize / layout-mode / fullscreen transitions, all of which
+  // call invalidateMetrics(). A 1s wall-clock refresh backstops any missed
+  // invalidation path (worst case: overlay icons drift for under a second).
   beginFrame (canvas) {
-    this._frameMetrics = canvas ? this._readCanvasMetrics(canvas) : null;
+    if (!canvas) { this._frameMetrics = null; return null; }
+    const c = this._frameMetrics;
+    const now = performance.now();
+    if (c && c.canvas === canvas && c.ok &&
+        (now - this._metricsReadAt) < 1000) {
+      return c;
+    }
+    this._frameMetrics = this._readCanvasMetrics(canvas);
+    this._metricsReadAt = now;
     return this._frameMetrics;
   }
 
+  // Force the next beginFrame to take a fresh layout read. Call after anything
+  // that can change the canvas CSS box: window resize, layout-mode switch,
+  // fullscreen toggle, live-mode canvas rescale.
+  invalidateMetrics () {
+    this._frameMetrics = null;
+    this._metricsReadAt = 0;
+  }
+
   projectToCssPixels (wx, wy, canvas, inset = 0, metrics = null) {
-    const p = this.projectXY(wx, wy);
+    // Scratch for the projection itself; the returned record stays a fresh
+    // object because callers hold onto it (and it's one per overlay element,
+    // not one per unit).
+    if (!this._cssScratch) this._cssScratch = { x: 0, y: 0 };
+    const p = this.projectXYInto(wx, wy, this._cssScratch);
     if (!p) return { cssX: 0, cssY: 0, valid: false, onScreen: false };
     const m = metrics || this.canvasMetrics(canvas);
     const { cssW, cssH, sx, sy } = m;

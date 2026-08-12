@@ -206,7 +206,11 @@
       const isSplit = v.broadcastCamera && v.broadcastCamera.isSplitActive;
       if (!isSplit) {
         const { x: tx, y: ty, k } = v.transform;
-        const gt = v.gameTime;
+        // gameTime advances every frame during playback, so comparing it raw
+        // made this guard never fire while playing — a full redraw (scan of
+        // every unit of every player) 60×/s for a 180px minimap. Quantize to
+        // 8Hz of game time: pips move a fraction of a pixel per bucket.
+        const gt = Math.floor(v.gameTime / 125);
         if (tx === this._lastTx && ty === this._lastTy &&
             k === this._lastK && gt === this._lastGameTime) return;
         this._lastTx = tx;

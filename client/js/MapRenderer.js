@@ -1,3 +1,11 @@
+// Four projection scratches for the camp-bbox corner projection below — that
+// runs 4 projections per neutral camp per frame (and a big map has ~20 camps),
+// each of which used to allocate two throwaway objects. The four corners are
+// live simultaneously, so they need four distinct scratches.
+const _cornerScratch = [
+  { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }, { x: 0, y: 0 }
+];
+
 // seeded pseudo-random for deterministic per-tree variation
 function tileHash (a, b) {
   let h = (a * 374761393 + b * 668265263) | 0;
@@ -225,13 +233,19 @@ const MapRenderer = class {
     const nonOneVsOne = !!(window.wc3v && typeof window.wc3v.isNonOneVsOne === 'function'
       && window.wc3v.isNonOneVsOne());
 
-    const groups = Object.values(world.neutralGroups);
+    // Cached across frames: the group list and the clear orders are pure
+    // functions of post-parse data (clearedTime / playerCredit never change
+    // during playback), but both were rebuilt+re-sorted every single frame.
+    // Keyed on the world object so a replay reload naturally invalidates.
+    if (this._campCacheWorld !== world || this._campCacheNon1v1 !== nonOneVsOne) {
+      this._campCacheWorld = world;
+      this._campCacheNon1v1 = nonOneVsOne;
+      this._campGroups = Object.values(world.neutralGroups);
+      this._campOrders = this._computeCampOrders(this._campGroups, nonOneVsOne);
+    }
+    const groups = this._campGroups;
+    const campOrders = this._campOrders;
     const claimPaths = {};
-
-    // Camp markers are driven entirely by the per-player credit model so the
-    // map and the Camp Info credit panel always agree. Clear order per team is
-    // ranked by clearedTime across every camp that team contributed work in.
-    const campOrders = this._computeCampOrders(groups, nonOneVsOne);
 
     groups.forEach((neutralGroup) => {
       const { uuid, clearedTime } = neutralGroup;
@@ -242,10 +256,10 @@ const MapRenderer = class {
       // Project the 4 bbox corners through the 3D camera and take the screen-
       // space AABB so camp rings land on the correct terrain surface.
       const _gs = window.wc3v && window.wc3v.gameScaler;
-      const _c1 = _gs.projectXY(b.minX, b.minY);
-      const _c2 = _gs.projectXY(b.maxX, b.minY);
-      const _c3 = _gs.projectXY(b.minX, b.maxY);
-      const _c4 = _gs.projectXY(b.maxX, b.maxY);
+      const _c1 = _gs.projectXYInto(b.minX, b.minY, _cornerScratch[0]);
+      const _c2 = _gs.projectXYInto(b.maxX, b.minY, _cornerScratch[1]);
+      const _c3 = _gs.projectXYInto(b.minX, b.maxY, _cornerScratch[2]);
+      const _c4 = _gs.projectXYInto(b.maxX, b.maxY, _cornerScratch[3]);
       // Any corner outside the frustum means the screen AABB would be wrong;
       // drop the camp entirely (CampPanel will hide its icon for the same
       // reason via its own projectToCssPixels check).

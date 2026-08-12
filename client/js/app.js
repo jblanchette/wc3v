@@ -1189,6 +1189,10 @@ const Wc3vViewer = class {
   }
 
   toggleMegaPlayButton (state) {
+    // The mega button doesn't exist on every page/layout (and is removed
+    // after first play). Without this guard, seekToGameTime/play threw here —
+    // which silently broke ?at= deep links, whose try/catch ate the error.
+    if (!this.megaPlayButton) return;
     if (state) {
       this.megaPlayButton.classList.remove('fading-out');
       this.megaPlayButton.style.display = "flex";
@@ -3111,6 +3115,67 @@ const Wc3vViewer = class {
     }, 0);
   }
 
+  // The on-screen CSS width the map canvases will be given, i.e. the map image
+  // fitted into #main-wrapper preserving aspect. Mirrors the fit math in
+  // scaleLiveModeCanvas so the buffer is sized against the box it really lands
+  // in, not against the wrapper's raw width.
+  _displayedCanvasWidth () {
+    const gs = this.gameScaler;
+    if (!gs || !gs.mapImage) return 0;
+    const mainWrapper = document.getElementById('main-wrapper');
+    if (!mainWrapper) return 0;
+    const availW = mainWrapper.clientWidth;
+    const availH = mainWrapper.clientHeight;
+    if (!availW || !availH) return 0;
+    const scale = Math.min(availW / gs.mapImage.width, availH / gs.mapImage.height);
+    return Math.floor(gs.mapImage.width * scale);
+  }
+
+  // Size the PHYSICAL backing store of the five map canvases. Logical space is
+  // untouched — GameScaler.renderScale is the only thing that moves, and each
+  // 2D context picks it up as a base transform in clearCanvas.
+  //
+  // No-ops when the scale ladder hasn't stepped, because resizing a canvas
+  // discards its contents and reallocating the GL backing store mid-playback is
+  // an expensive, visible hitch. That's what the coarse ladder buys.
+  applyCanvasBufferSize () {
+    const gs = this.gameScaler;
+    if (!gs || !gs.mapImage) return false;
+
+    const cssW = this._displayedCanvasWidth();
+    // Before layout has settled there is no box to measure — keep the current
+    // scale (1 on first call) and let the next resize pass right-size it.
+    const next = cssW > 0 ? gs.computeRenderScale(cssW) : gs.renderScale;
+    if (this._canvasBuffersSized && next === gs.renderScale) return false;
+
+    gs.renderScale = next;
+    this._canvasBuffersSized = true;
+
+    const bw = gs.bufferPx(gs.mapImage.width);
+    const bh = gs.bufferPx(gs.mapImage.height);
+
+    [this.canvas, this.playerCanvas, this.utilityCanvas, this.actionCanvas]
+      .filter(Boolean)
+      .forEach(c => { c.width = bw; c.height = bh; });
+
+    if (this.threeCanvas) {
+      // ThreeMapRenderer.resize owns the GL buffer (setPixelRatio + setSize),
+      // but it derives the logical size from ITS gameScaler — which isn't
+      // attached until setupTerrain, i.e. after the first call from
+      // setupDrawing. Until then, size the element directly; setupTerrain ends
+      // with its own resize() once the scaler is wired up.
+      if (this.threeMapRenderer && this.threeMapRenderer.gameScaler) {
+        this.threeMapRenderer.resize();
+      } else {
+        this.threeCanvas.width = bw;
+        this.threeCanvas.height = bh;
+      }
+    }
+
+    if (gs.invalidateMetrics) gs.invalidateMetrics();
+    return true;
+  }
+
   scaleLiveModeCanvas () {
     if (this.mobileMode) return;
     if (!this.gameScaler) return;
@@ -3148,6 +3213,16 @@ const Wc3vViewer = class {
       }
 
       this.displayScale = scale;
+
+      // The display box moved, so the ideal backing-store size may have stepped
+      // to a new ladder rung. No-ops unless it actually did.
+      this.applyCanvasBufferSize();
+
+      // The canvas CSS box just changed — the persistent frame-metrics cache
+      // (GameScaler.beginFrame) must take a fresh layout read next frame.
+      if (this.gameScaler && this.gameScaler.invalidateMetrics) {
+        this.gameScaler.invalidateMetrics();
+      }
 
       if (this.minimapPip) this.minimapPip.resize();
 
@@ -4051,30 +4126,18 @@ const Wc3vViewer = class {
     const mapWidth = this.gameScaler.mapImage.width;
     const mapHeight = this.gameScaler.mapImage.height;
 
-    self.canvas.width = mapWidth;
-    self.canvas.height = mapHeight;
-
+    // CSS box stays the LOGICAL map-image size here; scaleLiveModeCanvas
+    // downscales it to the viewport a frame later. Only the backing store is
+    // right-sized (applyCanvasBufferSize).
     self.canvas.style.width = mapWidth + "px";
     self.canvas.style.height = mapHeight + "px";
 
-    self.playerCanvas.width = mapWidth;
-    self.playerCanvas.height = mapHeight;
-
-    self.utilityCanvas.width = mapWidth;
-    self.utilityCanvas.height = mapHeight;
-
-    if (self.actionCanvas) {
-      self.actionCanvas.width = mapWidth;
-      self.actionCanvas.height = mapHeight;
-    }
-
     if (self.threeCanvas) {
-      self.threeCanvas.width = mapWidth;
-      self.threeCanvas.height = mapHeight;
       self.threeCanvas.style.width = mapWidth + "px";
       self.threeCanvas.style.height = mapHeight + "px";
-      if (self.threeMapRenderer) self.threeMapRenderer.resize();
     }
+
+    this.applyCanvasBufferSize();
 
     if (typeof CampPanel !== 'undefined') {
       // Tear down the prior panel first — it owns a perpetual rAF loop and
@@ -4195,6 +4258,11 @@ const Wc3vViewer = class {
     // when canvas dimensions change, causing pan to escape bounds
     const resetZoomOnResize = () => {
       if (!self.gameLoaded) return;
+      // Canvas CSS box may have changed with the window — drop the persistent
+      // frame-metrics cache before anything projects through it.
+      if (self.gameScaler && self.gameScaler.invalidateMetrics) {
+        self.gameScaler.invalidateMetrics();
+      }
       // Re-seat d3.zoom (its internal state goes stale when the canvas box
       // changes, which lets pan escape bounds) — but re-seat it to the REPLAY'S
       // OWN framing, not to bare identity.
@@ -4366,19 +4434,34 @@ const Wc3vViewer = class {
       canvas
     } = this;
 
-    const w = canvas.width;
-    const h = canvas.height;
+    // The four map canvases get the renderScale base transform, so every
+    // drawing callsite downstream keeps working in LOGICAL px regardless of how
+    // big the backing store actually is. playerStatusCtx is a separate,
+    // fixed-size canvas (265×200 in viewer.html) — it is not part of the map
+    // stack and must stay at identity.
+    const gs = this.gameScaler;
+    const w = gs ? gs.logicalWidth  : canvas.width;
+    const h = gs ? gs.logicalHeight : canvas.height;
+
     playerStatusCtx.setTransform(1, 0, 0, 1, 0, 0);
-    playerStatusCtx.clearRect(0, 0, w, h);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    playerCtx.setTransform(1, 0, 0, 1, 0, 0);
-    playerCtx.clearRect(0, 0, w, h);
-    utilityCtx.setTransform(1, 0, 0, 1, 0, 0);
-    utilityCtx.clearRect(0, 0, w, h);
-    if (this.actionCtx) {
-      this.actionCtx.setTransform(1, 0, 0, 1, 0, 0);
-      this.actionCtx.clearRect(0, 0, w, h);
+    playerStatusCtx.clearRect(0, 0, this.playerStatusCanvas.width, this.playerStatusCanvas.height);
+
+    if (gs) {
+      gs.resetContext(ctx);
+      gs.resetContext(playerCtx);
+      gs.resetContext(utilityCtx);
+      if (this.actionCtx) gs.resetContext(this.actionCtx);
+    } else {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      playerCtx.setTransform(1, 0, 0, 1, 0, 0);
+      playerCtx.clearRect(0, 0, w, h);
+      utilityCtx.setTransform(1, 0, 0, 1, 0, 0);
+      utilityCtx.clearRect(0, 0, w, h);
+      if (this.actionCtx) {
+        this.actionCtx.setTransform(1, 0, 0, 1, 0, 0);
+        this.actionCtx.clearRect(0, 0, w, h);
+      }
     }
   }
 
@@ -4430,6 +4513,30 @@ const Wc3vViewer = class {
     const realDelta = timestamp - this.lastFrameTimestamp;
     this.lastFrameDelta += realDelta;
     this.lastFrameTimestamp = timestamp;
+
+    // --- Adaptive LOD governor -------------------------------------------
+    // Frame-time EMA drives a multiplier on the static-pose LOD threshold
+    // (UnitModelRenderer._lodParams reads _lodBoost). Over ~25ms/frame the
+    // boost climbs — more units swap to baked poses, cutting the skeleton +
+    // matrix cost that IS the frame cost; under ~15ms it decays back to 1 so
+    // capable hardware always gets full animation. Steps are small so the
+    // threshold glides (no visible pop waves), and the EMA ignores stalls
+    // >250ms (tab switches, GC pauses, GLB parses are not render load).
+    if (realDelta > 0 && realDelta < 250) {
+      this._frameEmaMs = this._frameEmaMs
+        ? this._frameEmaMs * 0.92 + realDelta * 0.08
+        : realDelta;
+      const adaptive = !window.WC3V_CONFIG || !window.WC3V_CONFIG.perf ||
+        window.WC3V_CONFIG.perf.adaptiveLOD !== false;
+      if (adaptive) {
+        let boost = this._lodBoost || 1;
+        if (this._frameEmaMs > 25) boost += 0.03;        // ~1s from 1x to 3x at 60fps-equivalent
+        else if (this._frameEmaMs < 15) boost -= 0.015;  // relax at half speed
+        this._lodBoost = Math.max(1, Math.min(3, boost));
+      } else {
+        this._lodBoost = 1;
+      }
+    }
 
     // Effective playback speed: AUTO mode (1v1) asks the director to dynamically
     // pace the replay (fast through dead time, ~1× for fights/key moments);
@@ -4531,10 +4638,10 @@ const Wc3vViewer = class {
       return;
     }
 
-    // Release the frame's cached canvas geometry. A resize or layout-mode change
-    // between frames must not be served stale metrics; the next frame takes a
-    // fresh clean read at the top of mainLoop.
-    if (this.gameScaler) this.gameScaler._frameMetrics = null;
+    // The frame-metrics cache now persists across frames (GameScaler.beginFrame
+    // re-reads at most once per second, and every canvas-box-changing path calls
+    // invalidateMetrics). Re-reading here every frame forced a synchronous
+    // reflow per frame — the per-frame style writes above leave layout dirty.
 
     if (!this._boundMainLoop) this._boundMainLoop = this.mainLoop.bind(this);
     this.lastFrameId = requestAnimationFrame(this._boundMainLoop);
@@ -4554,7 +4661,7 @@ const Wc3vViewer = class {
     const { playerCtx, state, gameTime } = this;
     if (!playerCtx) return;
 
-    const cw = this.canvas.width;
+    const cw = this.gameScaler ? this.gameScaler.logicalWidth : this.canvas.width;
     const timeText = formatGameTime(gameTime);
     const isPlaying = state === ScrubStates.playing;
 
@@ -4566,7 +4673,14 @@ const Wc3vViewer = class {
     const topY     = 20;
 
     playerCtx.save();
-    playerCtx.setTransform(1, 0, 0, 1, 0, 0);
+    // Reset to the UNZOOMED base transform (the clock pill is screen-fixed, not
+    // world-anchored) — which is the renderScale transform, not identity.
+    if (this.gameScaler) {
+      const r = this.gameScaler.renderScale || 1;
+      playerCtx.setTransform(r, 0, 0, r, 0, 0);
+    } else {
+      playerCtx.setTransform(1, 0, 0, 1, 0, 0);
+    }
 
     playerCtx.font = `bold ${fontSize}px Arial`;
     const textW = playerCtx.measureText(timeText).width;
@@ -4646,9 +4760,9 @@ const Wc3vViewer = class {
     const canvasX = gs.xScale(wx) + gs.middleX;
     const canvasY = gs.yScale(wy) + gs.middleY;
 
-    // Canvas center
-    const cx = this.canvas.width / 2;
-    const cy = this.canvas.height / 2;
+    // Canvas center, in logical px (the space transform.x/y live in)
+    const cx = gs.logicalWidth / 2;
+    const cy = gs.logicalHeight / 2;
 
     return {
       x: cx - k * canvasX,
@@ -4687,8 +4801,8 @@ const Wc3vViewer = class {
 
     const gs = this.gameScaler;
     const { xScale, yScale } = gs;
-    const cw = this.canvas.width;
-    const ch = this.canvas.height;
+    const cw = gs.logicalWidth;
+    const ch = gs.logicalHeight;
 
     // Targets already bake in the half-viewport vertical offset and a clamp to
     // gs.viewExtent (computed inside BroadcastCamera) so the visible camera rect
@@ -4772,8 +4886,13 @@ const Wc3vViewer = class {
         this.threeMapRenderer._lastSyncY = null;
         this.threeMapRenderer.render(t);
 
-        // Copy WebGL canvas to 2D main-canvas (respects the diagonal clip)
-        ctx.drawImage(this.threeCanvas, 0, 0);
+        // Copy WebGL canvas to 2D main-canvas (respects the diagonal clip).
+        // Explicit destination size: ctx carries the renderScale base transform
+        // and works in logical px, but drawImage's 3-arg form would use the GL
+        // canvas's own (already renderScale-sized) intrinsic size as the extent
+        // and draw it at renderScale² — a shrunken terrain in the top-left
+        // corner. Both scales cancel with the 5-arg form.
+        ctx.drawImage(this.threeCanvas, 0, 0, cw, ch);
       }
 
       // --- Frame data ---

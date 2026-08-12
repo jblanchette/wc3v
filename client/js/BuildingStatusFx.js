@@ -180,6 +180,9 @@
       sp.renderOrder = 1001;   // above the construction bar stack (997–1000)
       sp.visible = false;
       this.threeRenderer.scene.add(sp);
+      // Status sprites only ever toggle `visible` — freeze their matrices out
+      // of the per-frame scene-graph walk.
+      this.threeRenderer._freezeMatrix(sp);
       return sp;
     }
 

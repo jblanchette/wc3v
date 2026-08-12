@@ -31,8 +31,12 @@
       // drains it in one frame (spiral of death). Dropping the excess is the
       // correct trade for a viewer: playback jumps, but the tab recovers.
       maxCatchupIterations: 5,
-      // Draw unit selection rings + ground shadows as two InstancedMeshes
-      // instead of two Meshes per unit (~2 draw calls + 2 materials per unit).
+      // Draw unit selection rings + ground shadows as two InstancedMeshes for
+      // the whole scene instead of two Meshes per unit (saves ~2 scene-graph
+      // objects + 2 draw calls + 2 materials per unit). Per-unit color/fade
+      // ride instanced attributes; consumers see the same descriptor fields
+      // the meshes had. NOTE: read once at renderer construction — flipping it
+      // needs a replay reload, not just a new frame.
       instancedRings: true,
       // Let Three cull off-screen skinned units, and skip their AnimationMixer
       // ticks. Safe because animation state is a pure function of gameTime, so
@@ -50,6 +54,13 @@
       // units) animated while the zoomed-out overview — where the scene-graph
       // cost actually lives — goes fully static.
       staticPoseMinPx: 24,
+      // Adaptive LOD governor: when the frame-time EMA runs over budget, the
+      // static-pose threshold scales up (more units freeze; measured: LOD off
+      // 14fps vs on 21fps in a mid-game fight window — animated skeletons ARE
+      // the frame cost), and relaxes back to staticPoseMinPx when the frame is
+      // comfortable. Trades distant animation for framerate ONLY under load,
+      // so fast machines never see it. Bounds + rates in Wc3vViewer.mainLoop.
+      adaptiveLOD: true,
       // Run the economy / dominance chart cursor updates even when their
       // bottom-panel tab is hidden. Off = skip the work nobody can see.
       chartsWhenHidden: false,
@@ -58,6 +69,21 @@
       // draw calls and no scene-graph churn — but this gates the whole feature
       // for A/B measurement, since perf was the main risk when it was designed.
       projectiles: true,
+      // Size the five map canvases (4× 2D + the WebGL buffer) to the box they
+      // are DISPLAYED in rather than to the map image. They used to be sized to
+      // playableTiles × 16px (1568²-2240²) and CSS-downscaled to fit, so a 900px
+      // viewport rasterized ~6× the pixels it showed, every frame, five times
+      // over. 'auto' matches the display box in device pixels; a number pins the
+      // scale; false restores the old map-image sizing. On-screen sizes do not
+      // change either way — only the rasterization resolution does, because the
+      // logical coordinate space is untouched and each 2D context carries a
+      // matching base transform (GameScaler.computeRenderScale).
+      canvasRenderScale: 'auto',
+      // Device-pixel-ratio ceiling for canvasRenderScale:'auto'. 1 means a HiDPI
+      // panel rasterizes at CSS resolution — this is a switch aimed at weak GPUs,
+      // and paying 4× fill for retina supersampling defeats it. Raise to 2 for a
+      // sharper picture on a fast machine with a retina display.
+      canvasRenderDprCap: 1.0,
       // Corner readout: rolling frame time, draw calls, projectile counts.
       // Off by default. Exists because there was previously no in-viewer way to
       // measure a render change, only to assert one.

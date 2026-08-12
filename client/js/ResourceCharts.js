@@ -142,7 +142,7 @@
 
       return {
         spec, titleEl, cursor, playerLines, xOf, innerH,
-        lastSampleIdx: -1, lastMax: -1
+        lastMax: -1
       };
     }
 
@@ -161,10 +161,27 @@
     }
 
     _refreshChart (chart, gameTime) {
-      // Visible index window per player. We rescale Y to the max across
-      // ANY player's value up through `gameTime`.
+      // Visible index window per player, reused scratch (this runs per chart
+      // per frame while the economy tab is open).
+      const perPlayerEnd = chart._endScratch || (chart._endScratch = []);
+      perPlayerEnd.length = this._players.length;
+      // Skip BEFORE the max scan: the visible window only grows when a new
+      // sample crosses `gameTime` (~once per game-second), but the old order
+      // rescanned every player's full history down to index 0 on every frame
+      // just to recompute an unchanged max. Compared element-wise (not a sum)
+      // so a seek that shifts two players' windows in opposite directions
+      // can't alias as "unchanged".
+      const lastEnds = chart._lastEnds || (chart._lastEnds = []);
+      let changed = lastEnds.length !== this._players.length;
+      for (let pi = 0; pi < this._players.length; pi++) {
+        const end = (perPlayerEnd[pi] = this._sampleIdxAt(this._players[pi], gameTime));
+        if (lastEnds[pi] !== end) changed = true;
+        lastEnds[pi] = end;
+      }
+      if (!changed) return;
+
+      // Rescale Y to the max across ANY player's value up through `gameTime`.
       let maxV = 1;
-      const perPlayerEnd = this._players.map(p => this._sampleIdxAt(p, gameTime));
       for (let pi = 0; pi < this._players.length; pi++) {
         const end = perPlayerEnd[pi];
         if (end < 0) continue;
@@ -178,10 +195,6 @@
           }
         }
       }
-      // Skip redraw if nothing meaningful changed.
-      const endIdxSum = perPlayerEnd.reduce((a, b) => a + b, 0);
-      if (chart.lastSampleIdx === endIdxSum && chart.lastMax === maxV) return;
-      chart.lastSampleIdx = endIdxSum;
       chart.lastMax = maxV;
 
       // Refresh title.

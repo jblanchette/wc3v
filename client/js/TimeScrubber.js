@@ -174,12 +174,16 @@ const TimeScrubber = class {
   // current multiplier so the speed button shows e.g. "AUTO 8×".
   updateAutoReadout (mult) {
     if (!this.isAuto) return;
-    const n = (mult >= 9.95) ? '10' : (Math.round(mult * 10) / 10).toFixed(1);
-    const label = `AUTO ${n}×`;
-    if (label === this._lastAutoLabel) return;   // skip redundant DOM writes
-    this._lastAutoLabel = label;
-    const el = document.getElementById(`${this.wrapperId}-speed-key`);
-    if (el) el.innerHTML = label;
+    // Diff on the QUANTIZED number, before any string is built — this runs
+    // every frame and the old check still paid a toFixed + template string
+    // per frame just to discover nothing changed.
+    const q = (mult >= 9.95) ? 100 : Math.round(mult * 10);
+    if (q === this._lastAutoQ) return;
+    this._lastAutoQ = q;
+    const label = `AUTO ${q === 100 ? '10' : (q / 10).toFixed(1)}×`;
+    let el = this._speedKeyEl;
+    if (!el || !el.isConnected) el = this._speedKeyEl = document.getElementById(`${this.wrapperId}-speed-key`);
+    if (el) el.textContent = label;
   }
 
   setupControls (domMap) {
@@ -203,12 +207,22 @@ const TimeScrubber = class {
     // Defensive: render() can fire from a zoom event before init() has run
     // in some load orderings. Skip silently rather than crash the loop.
     if (!this.trackerEl) return;
-    this.trackerEl.style.left = `${matchPercentDone}%`;
+    // Quantize to 0.01% — style.left was written unconditionally every frame,
+    // and sub-hundredth movement is invisible at any scrubber width.
+    const q = Math.round(matchPercentDone * 100) / 100;
+    if (q === this._lastTrackerPct) return;
+    this._lastTrackerPct = q;
+    this.trackerEl.style.left = `${q}%`;
   }
 
   updateZoomDisplay (k) {
     if (!this.zoomLabelEl || !this.zoomSliderEl) return;
     const pct = Math.round(k * 100);
+    // The broadcast camera re-applies its transform every frame, and the d3
+    // zoom handler forwards every one of those here — two unconditional DOM
+    // writes per frame for a number that changes maybe once a second.
+    if (pct === this._lastZoomPct) return;
+    this._lastZoomPct = pct;
     this.zoomLabelEl.textContent = pct + '%';
     this.zoomSliderEl.value = pct;
   }

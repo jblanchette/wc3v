@@ -162,10 +162,40 @@ const TeleportFx = class {
   // Uses two projected points to capture per-perspective distortion correctly.
   _radiusPx (gameScaler, originX, originY, gameRadius) {
     if (!gameRadius || gameRadius <= 0) return 0;
-    const a = gameScaler.projectXY(originX, originY);
-    const b = gameScaler.projectXY(originX + gameRadius, originY);
+    // Two scratches: both projections are live at once. Neither escapes.
+    if (!this._radiusScratchA) {
+      this._radiusScratchA = { x: 0, y: 0 };
+      this._radiusScratchB = { x: 0, y: 0 };
+    }
+    const a = gameScaler.projectXYInto(originX, originY, this._radiusScratchA);
+    const b = gameScaler.projectXYInto(originX + gameRadius, originY, this._radiusScratchB);
     if (!a || !b) return 0;
     return Math.max(8, Math.abs(b.x - a.x));
+  }
+
+  // All grabbed units' world positions at cast time, resolved ONCE per TP and
+  // memoized on the tp object (cast-time positions never change; only the
+  // projection to screen does). One pass over the unit lists total, instead
+  // of one pass per uuid per frame.
+  _grabbedPositionsAtCast (players, tp) {
+    if (tp._grabbedPosCache) return tp._grabbedPosCache;
+    const out = [];
+    const uuids = tp.grabbedUnitUuids || [];
+    if (uuids.length) {
+      const want = new Set(uuids);
+      for (const player of players) {
+        if (!player.units || !want.size) continue;
+        for (const u of player.units) {
+          if (!want.has(u.uuid)) continue;
+          want.delete(u.uuid);
+          const pos = this._grabbedUnitPos([player], u.uuid, tp.gameTime);
+          if (pos) out.push(pos);
+          if (!want.size) break;
+        }
+      }
+    }
+    tp._grabbedPosCache = out;
+    return out;
   }
 
   // Look up a grabbed unit's position at castTime via ClientUnit's path.
@@ -311,14 +341,17 @@ const TeleportFx = class {
       ctx.stroke();
 
       // 5) PER-UNIT RINGS — small synced ring on each grabbed unit.
+      // World positions are sampled AT CAST TIME, i.e. they're constants for
+      // the life of the TP — but this used to re-resolve every uuid through a
+      // scan of every unit of every player, every frame (measured ~3% of
+      // total CPU while a Town Portal was on screen). Resolve once per TP.
+      const grabbedPts = this._grabbedPositionsAtCast(players, tp);
       const pulse = 0.7 + 0.3 * Math.sin((gameTime - cast) / 90);
       ctx.globalAlpha = 0.9 * pulse;
       ctx.lineWidth = 3;
       ctx.strokeStyle = colorBright;
       ctx.setLineDash([]);
-      for (const uuid of (tp.grabbedUnitUuids || [])) {
-        const pos = this._grabbedUnitPos(players, uuid, cast);
-        if (!pos) continue;
+      for (const pos of grabbedPts) {
         const gp = this._proj(gameScaler, pos.x, pos.y);
         if (!gp) continue;  // grabbed unit is off-screen
         // Skip if the unit ring would overlap the caster ring (visual clutter).
@@ -533,13 +566,22 @@ const TeleportFx = class {
     const icon = (iconKey && this._icons[iconKey]) || null;
     const isSingleUnit = (tp.abilityCategory || this._inferCategory(tp.abilityCode)) === 'single-unit';
 
-    const headingPrefix = cancelled ? '✕' : '⚡';
-    // abilityDisplayName is parser-derived and may be absent on older replays;
-    // an unguarded .toUpperCase() would throw EVERY frame the TP is active
-    // (~6s), killing the action-overlay render loop. Fall back to the code.
-    const headingName = tp.abilityDisplayName || tp.abilityCode || 'Teleport';
-    const headingMain = String(headingName).toUpperCase() + (cancelled ? ' — CANCELLED' : '');
-    const subLine = (() => {
+    const iconSize = 48;
+    const headFont = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    const subFont  = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+
+    // Banner text + measured widths are constant for a given (tp, cancelled)
+    // — memoize on the tp. This ran three measureText calls + the string
+    // assembly on every frame of the ~6s cinematic.
+    let B = tp._bannerCache;
+    if (!B || B.cancelled !== cancelled) {
+      const headingPrefix = cancelled ? '✕' : '⚡';
+      // abilityDisplayName is parser-derived and may be absent on older
+      // replays; an unguarded .toUpperCase() would throw EVERY frame the TP
+      // is active (~6s), killing the action-overlay render loop. Fall back
+      // to the code.
+      const headingName = tp.abilityDisplayName || tp.abilityCode || 'Teleport';
+      const headingMain = String(headingName).toUpperCase() + (cancelled ? ' — CANCELLED' : '');
       const parts = [];
       // Single-unit teleports never bring company — show the qualifier
       // explicitly so the reader doesn't expect a missing "+N units".
@@ -555,20 +597,19 @@ const TeleportFx = class {
       if (tp.channelMs > 0) parts.push(`${(tp.channelMs / 1000).toFixed(1)}s channel`);
       else                  parts.push('instant');
       if (tp.invulnerable && !cancelled) parts.push('invulnerable');
-      return parts.join(' · ');
-    })();
+      const subLine = parts.join(' · ');
 
-    const iconSize = 48;
-    const headFont = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
-    const subFont  = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
-
-    ctx.font = headFont;
-    const headPrefixW = ctx.measureText(headingPrefix + ' ').width;
-    const headMainW   = ctx.measureText(headingMain).width;
-    const headW = headPrefixW + headMainW;
-    ctx.font = subFont;
-    const subW = ctx.measureText(subLine).width;
-    const textW = Math.max(headW, subW);
+      ctx.font = headFont;
+      const headPrefixW = ctx.measureText(headingPrefix + ' ').width;
+      const headMainW   = ctx.measureText(headingMain).width;
+      ctx.font = subFont;
+      const subW = ctx.measureText(subLine).width;
+      B = tp._bannerCache = {
+        cancelled, headingPrefix, headingMain, subLine, headPrefixW,
+        textW: Math.max(headPrefixW + headMainW, subW)
+      };
+    }
+    const { headingPrefix, headingMain, subLine, headPrefixW, textW } = B;
 
     const padX = 12, padY = 8, iconGap = 10;
     const innerH = iconSize;
