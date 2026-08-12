@@ -24,7 +24,8 @@
 		"gen-item-names": "node tools/gen-item-names.js",
 		"check-item-names": "node tools/gen-item-names.js --check",
 		"worker:mcp": "wrangler deploy --config workers/mcp/wrangler.toml",
-		"worker:mcp:dev": "wrangler dev --config workers/mcp/wrangler.toml"
+		"worker:mcp:dev": "wrangler dev --config workers/mcp/wrangler.toml",
+		"indexnow": "node tools/indexnow.js --all"
 	},
 	"devDependencies": {
 		"@gltf-transform/core": "^4.4.0",
