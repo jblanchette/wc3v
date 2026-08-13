@@ -743,9 +743,15 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
   const CreepGuardSim = require('../lib/CreepGuardSim');
   const creepStats = new CreepGuardSim(world, wc3vPlayers).run();
   if (creepStats.creepsMoved) {
-    console.logger(`Creep guard sim: ${creepStats.creepsMoved} creep(s) moved across ` +
+    console.log('----------------------------------');
+    console.log('CREEP GUARD SIM');
+    console.log('----------------------------------');
+    console.log(`creeps moved: ${creepStats.creepsMoved} across ` +
       `${creepStats.campsSimulated}/${creepStats.camps} camps, ${creepStats.samples} samples ` +
       `(leash ${creepStats.leash} from ${creepStats.leashSource})`);
+    console.log(`terrain: ${creepStats.blockedSteps} step(s) stopped by trees/cliffs, ` +
+      `${creepStats.blockedSamples} sample(s) on blocked ground` +
+      (creepStats.blockedSamples ? '  <-- BUG: creeps are inside terrain' : ''));
   }
 
   // remove neutral groups at player starting positions
