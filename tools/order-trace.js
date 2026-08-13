@@ -130,6 +130,16 @@ Unit.prototype.recordOrder = function (gameTime, kind, opts) {
   return r;
 };
 
+// A form change (Call to Arms, Statue->Destroyer, burrow) is a real effect
+// even though the unit neither moves nor takes an order.
+const origMorphTo = Unit.prototype.morphTo;
+Unit.prototype.morphTo = function (itemId) {
+  const from = this.displayName;
+  const r = origMorphTo.apply(this, arguments);
+  if (current && r) current.effects.push(`morph(${from} -> ${this.displayName})`);
+  return r;
+};
+
 const origCheckState = Unit.prototype.checkStateForMove;
 Unit.prototype.checkStateForMove = function () {
   if (current && this.state !== 'idle') {

@@ -106,6 +106,22 @@ const abilityActions = {
   'TransportPickUp': [ 78, 0, 13, 0 ],
   'TransportUnload': [ 80, 0, 13, 0 ],
   'TransportW3C': [ 79, 0, 13, 0 ],
+  // Call to Arms / Back to Work. All four were unmapped, so a Human player
+  // converting peasants to militia produced NOTHING: the unit kept its peasant
+  // identity, kept whatever orders it had (usually none, because militia
+  // auto-attack and pros don't micro them individually), and stood still in
+  // the viewer for the whole 45s while the real player was fighting with it.
+  // Measured on 1129305842_Leon_Lucifer_AutumnLeaves20 player 1: 10 militia
+  // orders, 9 dropped; 10 back-to-work orders, 9 dropped.
+  //
+  // The game emits BOTH the convert and the plain form; which one depends on
+  // whether the order went to the town hall or the units, so handle all four.
+  // Appended at the END: findItemIdForObject scans in insertion order, so a
+  // late entry can never shadow an existing one.
+  'MilitiaConvert':   [ 103, 0, 13, 0 ],   // 0xD0067 militiaconvert
+  'Militia':          [ 104, 0, 13, 0 ],   // 0xD0068 militia
+  'MilitiaOff':       [ 105, 0, 13, 0 ],   // 0xD0069 militiaoff
+  'MilitiaUnconvert': [ -85, 2, 13, 0 ],   // 0xD02AB militiaunconvert
 };
 
 

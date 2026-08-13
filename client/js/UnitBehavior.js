@@ -137,7 +137,16 @@
     smartunit:    12000,   // right-clicked an enemy — in WC3 that IS an attack
     attackground: 10000,   // explicit a-move
     patrol:       10000,   // walks and engages
-    smartground:   6000    // walked near enemies; also what a retreat looks like
+    smartground:   6000,   // walked near enemies; also what a retreat looks like
+    // Call to Arms. Same reasoning as _summonCorroboration: the replay records
+    // that a specific peasant was converted at a specific time, and the engine
+    // guarantees what a militia then does — it is a combat unit that acquires
+    // and attacks on its own, with no further order. Without this the militia
+    // a player called into a fight stands motionless through it, which is
+    // exactly what a peasant would NOT be doing. Bounded by the real 45s
+    // militia duration, and countermanded by the 'stop' recorded on Back to
+    // Work, so the licence can never outlive the form.
+    militia:      45000
   });
 
   // --- path gap rule: identical to ClientUnit.isPathGap / KinematicResim -----
