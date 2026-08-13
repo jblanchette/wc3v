@@ -32,7 +32,6 @@
 		"assert": "^2.1.0",
 		"browserify-zlib": "^0.2.0",
 		"buffer": "^6.0.3",
-		"crypto-browserify": "^3.12.1",
 		"esbuild": "^0.25.0",
 		"events": "^3.3.0",
 		"fflate": "^0.8.2",
@@ -63,13 +62,16 @@
 	"dependencies": {
 		"@wowserhq/stormjs": "^0.4.1",
 		"canvas": "^3.2.1",
-		"d3": "^5.12.0",
-		"image-js": "^0.33.1",
-		"image-size": "^0.9.1",
 		"pngjs": "^6.0.0",
 		"rbush": "^3.0.1",
 		"w3gjs": "3.0.0",
 		"war3-model": "^4.0.1"
+	},
+	"overridesRationale": {
+		"protobufjs": "Reaches the BROWSER: w3gjs decodes Reforged player metadata with it, and the parser runs client-side on user-uploaded .w3g files. w3gjs is pinned to 3.0.0 and resolves protobufjs 7.5.4, which carries a critical RCE advisory plus prototype-injection and unbounded-recursion issues that apply to DECODING untrusted bytes. 7.6.5 is the first patched release; the Type/Field API w3gjs uses is unchanged across 7.x. See docs/DEPENDENCY_SECURITY.md."
+	},
+	"overrides": {
+		"protobufjs": "^7.6.5"
 	},
 	"license": "GNU v3.0",
 	"readmeFilename": "README.md"

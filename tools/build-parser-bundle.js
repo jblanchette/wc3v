@@ -75,14 +75,12 @@ const main = async () => {
       events: 'events',
       util: 'util',
       zlib: SHIM_ZLIB,
-      crypto: 'crypto-browserify',
       assert: 'assert',
       // w3gjs uses node: prefixed imports — alias each variant.
       'node:events': 'events',
       'node:zlib': SHIM_ZLIB,
       'node:buffer': 'buffer',
       'node:util': 'util',
-      'node:crypto': 'crypto-browserify',
       'node:path': 'path-browserify',
       'node:fs': SHIM_FS,
       'node:os': SHIM_OS
