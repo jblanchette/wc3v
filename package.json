@@ -68,7 +68,7 @@
 		"war3-model": "^4.0.1"
 	},
 	"overridesRationale": {
-		"protobufjs": "Reaches the BROWSER: w3gjs decodes Reforged player metadata with it, and the parser runs client-side on user-uploaded .w3g files. w3gjs is pinned to 3.0.0 and resolves protobufjs 7.5.4, which carries a critical RCE advisory plus prototype-injection and unbounded-recursion issues that apply to DECODING untrusted bytes. 7.6.5 is the first patched release; the Type/Field API w3gjs uses is unchanged across 7.x. See docs/DEPENDENCY_SECURITY.md."
+		"protobufjs": "Reaches the BROWSER: w3gjs decodes Reforged player metadata with it, and the parser runs client-side on user-uploaded .w3g files. w3gjs is pinned to 3.0.0 and resolves protobufjs 7.5.4, which carries a critical RCE advisory plus prototype-injection and unbounded-recursion issues that apply to DECODING untrusted bytes. 7.6.5 is the first patched release; the Type/Field API w3gjs uses is unchanged across 7.x."
 	},
 	"overrides": {
 		"protobufjs": "^7.6.5"
