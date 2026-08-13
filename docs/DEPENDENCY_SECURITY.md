@@ -98,11 +98,20 @@ It is also not in anything we ship: gtk/glib is the **Linux** webview backend,
 and `tools/deploy-desktop.js` publishes only the Windows NSIS installer
 (`WC3V_<version>_x64-setup.exe`).
 
-Dismissed as `not_used`. **Two things would make it relevant again:**
-`tauri.conf.json` still lists `deb` and `appimage` in `bundle.targets`, so a
-Linux build would compile this code — and if Linux artifacts are ever published,
-re-open this. Either ship Linux and accept/track the advisory, or drop those
-targets so the config matches what is actually released.
+Dismissed as `not_used`. `bundle.targets` has since been narrowed from
+`["nsis", "deb", "appimage"]` to `["nsis"]`, so the config now declares only what
+is actually released (CI is `windows-latest` and collects solely from
+`bundle/nsis/`, so the Linux formats were never built anywhere).
+
+**That narrowing is config honesty, NOT a security fix — do not read it as one.**
+`bundle.targets` chooses which installer formats get packaged; it does not
+change the dependency graph. Cargo still resolves Tauri's
+`cfg(target_os = "linux")` dependencies into `Cargo.lock`, so glib is still
+there and Dependabot will still see it. Verified after the change.
+
+**What would make it relevant again:** publishing any Linux artifact. At that
+point this code really does compile and ship, so re-open the alert and either
+accept the risk explicitly or wait for Tauri to migrate off gtk3.
 
 ---
 
