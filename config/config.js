@@ -40,6 +40,22 @@ const config = {
 	//                  shift-click); a multi-unit SELECT is the complete new
 	//                  selection and replaces.
 	selectionRule: 'merge-resync',
+	// Block a tree doodad's pathing square CENTRED on the doodad position
+	// instead of growing it +x/-y from that point. The doodad position is a
+	// centre (the renderer draws the canopy there), so the old box sat half a
+	// tile off the tree and units stood where the viewer draws foliage.
+	// Measure with `node tools/tree-overlap.js --replay=R`.
+	//
+	// OFF pending its own reparse. The offset is a genuine defect and centring
+	// does help, but only modestly — on
+	// 1129305842_Leon_Lucifer_AutumnLeaves20, samples drawn inside a canopy go
+	// 5.6% -> 4.8% and samples inside the tree's own tile 0.8% -> 0.6%. It is
+	// not the cause of "units stuck in trees": the worst offenders report
+	// pathBlocked=yes, i.e. they are placed inside already-blocked tiles by
+	// collision separation / formation slots / anchor inserts, all of which run
+	// downstream of this grid. Turning it on perturbs every path on every map,
+	// so it wants a dedicated reparse and a look, not a ride-along.
+	centredTreeBlocks: false,
 	// Emit anchor corrections larger than AnchorCorrection's JUMP_DIST (1500wu)
 	// as isJump snaps. The client renders those as a unit teleporting across
 	// the map, which reads as a bug; false skips those anchors instead, so

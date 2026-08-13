@@ -87,6 +87,10 @@
   const WORKER_BASE_RADIUS = 2000;          // world units from a base anchor (matches ClientUnit)
   const WORKER_COMBAT_VISIBLE_MS = 12 * 1000;
   const LOOP_DWELL_MS = 650;                // pause at each end (mining / dropping off)
+  // Facing change (radians, per frame) past which a unit counts as turning and
+  // must keep its skeleton rather than drop to a frozen static pose. Small
+  // enough to catch a slow pivot, large enough to ignore facing jitter.
+  const TURN_EPSILON = 0.01;
   const LOOP_MIN_DIST = 192;                // below this a loop is pointless — render parked
   // Lumber drop-offs beyond the town halls (halls accept both resources for every
   // race). Human Lumber Mill + Undead Graveyard; Orc/NE return lumber to the hall.
@@ -617,7 +621,27 @@
           // three walks every bone + updates every visible skeleton per frame).
           // Death and morph windows force the animated path: the corpse pose
           // and the transition are the two things a frozen pose would get wrong.
-          this._setStatic(inst, lod && !inDeath && !morph && inst._tpl && !inst.isPlaceholder &&
+          // Movement is ALWAYS animated. The LOD test above is screen-size
+          // only, but a frozen unit still gets its position updated every
+          // frame — so a small-on-screen walker slid across the ground locked
+          // in an idle pose. adaptiveLOD made it worse by raising the
+          // threshold under frame-time pressure, which is exactly when a fight
+          // has put many units on screen. Freeze only units that are genuinely
+          // standing still:
+          //   - never a harvest looper: it marches its route continuously,
+          //   - never a unit whose behaviour state is anything but idle,
+          //   - never a unit that is turning; a rotating model with a locked
+          //     skeleton reads as broken just like sliding does.
+          // Idle armies and standing workers are the bulk of the units at
+          // full-map zoom, so the perf win this LOD was built for survives.
+          const d = bframe ? bframe.byUuid.get(unit.uuid) : null;
+          const turning = (inst._wf != null && d && d.facing != null)
+            ? Math.abs(Math.atan2(Math.sin(d.facing - inst._wf),
+                                  Math.cos(d.facing - inst._wf))) > TURN_EPSILON
+            : false;
+          const stationary = !loopAnchors && !turning && (!d || d.state === 'idle');
+
+          this._setStatic(inst, lod && stationary && !inDeath && !morph && inst._tpl && !inst.isPlaceholder &&
             this._beyondLod(inst, pos, cx, cy, lod));
 
           if (loopAnchors) {
@@ -626,7 +650,6 @@
             // Place at the collision-separated position (units never share space in
             // WC3); drive animation from the RAW path position so being nudged apart
             // doesn't read as walking.
-            const d = bframe ? bframe.byUuid.get(unit.uuid) : null;
             this._place(inst, unit, sepMap[unit.uuid] || pos, gameTime, cx, cy, d);
             if (inst._staticOn) this._applyLivingOpacity(inst, unit); // frozen pose still fades
             else this._animate(inst, unit, gameTime, dt, deathStart, d, morph);
