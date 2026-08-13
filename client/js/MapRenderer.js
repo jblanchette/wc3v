@@ -285,8 +285,22 @@ const MapRenderer = class {
       const hasCampProgress = !!currentTeams;
       const isCleared = (clearedTime != null) && (gameTime >= clearedTime);
 
-      // hide neutral units once any team has interacted with the camp
-      if (hasCampProgress) {
+      // Hide the camp's creeps once the camp is CLEARED — i.e. once they are
+      // dead. This used to hide them the moment any team so much as touched
+      // the camp, which meant the creeps vanished exactly when the fight
+      // started and the player's army was drawn swinging at empty ground.
+      //
+      // `isNeutralGroupHidden` makes ClientUnit.update bail before it computes
+      // a position, so a hidden creep cannot be drawn by ANY renderer. That was
+      // survivable when this file drew the whole map; now the 3D path owns
+      // creeps and has its own, correct rule (park at cs.phase === 'cleared'),
+      // so the two disagreed and this one won.
+      //
+      // Approximation, stated: creeps die one at a time during the fight and we
+      // have no per-creep death, so the whole camp stays visible until
+      // clearedTime and then goes at once. Visible-and-slightly-late beats
+      // invisible-during-the-only-moment-they-matter.
+      if (isCleared) {
         if (!neutralGroup.isHidden) {
           neutralGroup.isHidden = true;
           neutralPlayer.units.forEach(unit => {

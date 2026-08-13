@@ -604,7 +604,7 @@
           // declutters harvesting workers, so it stays hidden in both views.
           let loopAnchors = null;
           const inDeath = deathStart != null && gameTime >= deathStart;
-          if (!inDeath && unit._isHarvester && unit._isHarvester()) {
+          if (!inDeath && unit._isHarvester && unit._isHarvester(gameTime)) {
             const treat = this._workerTreatment(unit, pos, player, gameTime, battleSet, harvestReps);
             if (treat === 'hidden') {
               inst.root.visible = false;

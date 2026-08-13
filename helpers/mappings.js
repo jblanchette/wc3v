@@ -444,7 +444,14 @@ const unitMetaData = {
     'hmil': {
         'displayName': 'Militia',
         'hero': false,
-        'worker': true,
+        // NOT a worker. A militia cannot harvest, build or repair — that is the
+        // entire trade Call to Arms makes. Flagging it as one put it through
+        // every worker code path there is: the viewer's declutter hides idle
+        // and harvesting workers, the harvest loop wants to march it between a
+        // mine and a drop-off, and worker counts included it. A player who
+        // calls militia does it to FIGHT, and the fight is the one thing the
+        // worker treatment suppresses.
+        'worker': false,
         'permanent': true,
         'playerShop': false,
         'race': 'H',

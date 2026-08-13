@@ -440,9 +440,36 @@ const ClientUnit = class {
   // wisp), plus units assigned a gold/lumber role — notably the lumber GHOUL,
   // which is a fighting unit (meta.worker=false) doing economy. Army ghouls
   // have no harvest role, so they're never hidden.
-  _isHarvester () {
-    if (this.meta && this.meta.worker) return true;
+  // gameTime is optional but should be passed by anything that runs per frame:
+  // a peasant under Call to Arms is a MILITIA at that moment, and a militia is
+  // not a worker — it cannot harvest, build or repair, and it was converted
+  // specifically to fight. Judging by the unit's FINAL form put a militia
+  // through the declutter's worker rules mid-battle and hid it whenever it was
+  // near a base, which is exactly where a defending militia stands.
+  _isHarvester (gameTime) {
+    if (this.workerAt(gameTime)) return true;
+    // Morphed out of its worker form right now (peasant → militia). Its
+    // primaryRole still reads gold/lumber — it is a peasant either side of the
+    // conversion — so the role fallback below would hide it anyway. Return
+    // outright: a militia is not harvesting anything.
+    if (gameTime != null && this.morphHistory && this.morphHistory.length) return false;
     return this.primaryRole === 'lumber' || this.primaryRole === 'gold';
+  }
+
+  // Was this unit a worker at `gameTime`? Mirrors itemIdAt: walk the morph
+  // timeline, since the exported `meta` only ever describes the FINAL form.
+  workerAt (gameTime) {
+    const history = this.morphHistory;
+    if (gameTime == null || !history || !history.length) {
+      return !!(this.meta && this.meta.worker);
+    }
+    let worker = history[0].fromWorker;
+    if (worker === undefined) worker = !!(this.meta && this.meta.worker);
+    for (let i = 0; i < history.length; i++) {
+      if (history[i].gameTime > gameTime) break;
+      if (history[i].worker !== undefined) worker = history[i].worker;
+    }
+    return !!worker;
   }
 
   // Confident harvest treatment for the 3D viewer, or null if we are NOT
@@ -1172,7 +1199,7 @@ const ClientUnit = class {
     // direct attack order, scouting, or out of the base entirely. Keeps the
     // economy off the tactical map while still surfacing a defending acolyte or
     // a pulled peon. (Buildings/heroes are never workers.)
-    if (this._isHarvester() && !this._isWorkerRelevant(gameTime, frameData, isInBattle)) {
+    if (this._isHarvester(gameTime) && !this._isWorkerRelevant(gameTime, frameData, isInBattle)) {
       return;
     }
 

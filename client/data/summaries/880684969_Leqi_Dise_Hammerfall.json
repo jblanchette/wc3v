@@ -19,8 +19,8 @@
       "tier2TimeFormatted": "5:27",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": 186912,
-      "expansionTimeFormatted": "3:06",
+      "expansionTime": 189950,
+      "expansionTimeFormatted": "3:09",
       "buildPreview": [
         {
           "type": "building",
@@ -89,8 +89,8 @@
           "type": "expansion",
           "name": "Town Hall",
           "itemId": "htow",
-          "gameTimeMs": 186912,
-          "gameTimeFormatted": "3:06"
+          "gameTimeMs": 189950,
+          "gameTimeFormatted": "3:09"
         },
         {
           "type": "unit",
@@ -150,17 +150,17 @@
         },
         {
           "type": "building",
-          "name": "Lumber Mill",
-          "itemId": "hlum",
-          "gameTimeMs": 353266,
-          "gameTimeFormatted": "5:53"
-        },
-        {
-          "type": "building",
           "name": "Blacksmith",
           "itemId": "hbla",
           "gameTimeMs": 353388,
           "gameTimeFormatted": "5:53"
+        },
+        {
+          "type": "building",
+          "name": "Farm",
+          "itemId": "hhou",
+          "gameTimeMs": 355784,
+          "gameTimeFormatted": "5:55"
         }
       ],
       "t2Buildings": [
@@ -169,12 +169,12 @@
           "itemId": "hhou"
         },
         {
-          "name": "Lumber Mill",
-          "itemId": "hlum"
-        },
-        {
           "name": "Blacksmith",
           "itemId": "hbla"
+        },
+        {
+          "name": "Lumber Mill",
+          "itemId": "hlum"
         },
         {
           "name": "Scout Tower",

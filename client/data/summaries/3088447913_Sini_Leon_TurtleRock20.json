@@ -263,7 +263,7 @@
       "tier2TimeFormatted": "5:35",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": 205206,
+      "expansionTime": 205717,
       "expansionTimeFormatted": "3:25",
       "buildPreview": [
         {
@@ -347,7 +347,7 @@
           "type": "expansion",
           "name": "Town Hall",
           "itemId": "htow",
-          "gameTimeMs": 205206,
+          "gameTimeMs": 205717,
           "gameTimeFormatted": "3:25"
         },
         {
@@ -368,8 +368,8 @@
           "type": "building",
           "name": "Arcane Vault",
           "itemId": "hvlt",
-          "gameTimeMs": 243490,
-          "gameTimeFormatted": "4:03"
+          "gameTimeMs": 240933,
+          "gameTimeFormatted": "4:00"
         },
         {
           "type": "unit",
@@ -394,27 +394,27 @@
         },
         {
           "type": "building",
-          "name": "Lumber Mill",
-          "itemId": "hlum",
-          "gameTimeMs": 360164,
-          "gameTimeFormatted": "6:00"
-        },
-        {
-          "type": "building",
           "name": "Farm",
           "itemId": "hhou",
           "gameTimeMs": 390658,
           "gameTimeFormatted": "6:30"
+        },
+        {
+          "type": "building",
+          "name": "Lumber Mill",
+          "itemId": "hlum",
+          "gameTimeMs": 426039,
+          "gameTimeFormatted": "7:06"
         }
       ],
       "t2Buildings": [
         {
-          "name": "Lumber Mill",
-          "itemId": "hlum"
-        },
-        {
           "name": "Farm",
           "itemId": "hhou"
+        },
+        {
+          "name": "Lumber Mill",
+          "itemId": "hlum"
         },
         {
           "name": "Blacksmith",
