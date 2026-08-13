@@ -122,6 +122,17 @@ const abilityActions = {
   'Militia':          [ 104, 0, 13, 0 ],   // 0xD0068 militia
   'MilitiaOff':       [ 105, 0, 13, 0 ],   // 0xD0069 militiaoff
   'MilitiaUnconvert': [ -85, 2, 13, 0 ],   // 0xD02AB militiaunconvert
+  // Three more worker orders that were doing nothing. Measured on
+  // 1129305842_Leon_Lucifer_AutumnLeaves20 player 1: repair 32 of 32 dropped,
+  // resumeharvesting 28 of 37. A peasant told to repair never walked to the
+  // building, so it stood wherever it was — the "units standing around during
+  // a fight" complaint, again.
+  'Repair':           [ 56, 0, 13, 0 ],    // 0xD0038 repair
+  'ResumeHarvesting': [ 49, 0, 13, 0 ],    // 0xD0031 resumeharvesting
+  // Crypt fiend. Burrowing stops the unit dead and hides it; unmapped, the
+  // simulation kept walking a burrowed fiend to wherever it was last sent.
+  'Burrow':           [ 53, 2, 13, 0 ],    // 0xD0235 burrow
+  'Unburrow':         [ 54, 2, 13, 0 ],    // 0xD0236 unburrow
 };
 
 

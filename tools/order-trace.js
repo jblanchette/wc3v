@@ -13,8 +13,19 @@
  *   time  action-id/name  order-name  flags  target  selection  ->  EFFECT
  *
  * where EFFECT is what the parser did with it: move(N units), cancel, order
- * records, or DROPPED (no observable state change). A `DROPPED` line whose
- * order name is a real movement command is a parser bug.
+ * records, morphs, worker-role changes, or DROPPED.
+ *
+ * DROPPED IS A HEURISTIC, NOT A VERDICT. It means "none of the effects this
+ * tool probes changed". The probes are the ones below — movement, order
+ * records, move cancels, morphs, worker role/task. An action whose only effect
+ * is something else (setting harvestConfident, a burrow flag, an autocast
+ * toggle) reads as DROPPED while working perfectly. Use it to FIND candidates,
+ * then read the handler. Every time this has flagged something, checking the
+ * handler took a minute and settled it; assuming the flag was right did not.
+ *
+ * An UNMAPPED_ORDER line is the reliable signal: that order has no entry in
+ * `abilityActions` at all, so it genuinely fell through the spell lookup and
+ * did nothing.
  *
  * It re-parses the .w3g from replays/ — it does NOT read the exported .wc3v,
  * because dropped orders leave no trace in the export. Nothing is written.
@@ -137,6 +148,19 @@ Unit.prototype.morphTo = function (itemId) {
   const from = this.displayName;
   const r = origMorphTo.apply(this, arguments);
   if (current && r) current.effects.push(`morph(${from} -> ${this.displayName})`);
+  return r;
+};
+
+// Worker task/role changes are a real effect too — a harvest resume or a
+// repair changes no position and issues no order, but it is exactly what the
+// action was for.
+const origSetWorkerRole = Unit.prototype.setWorkerRole;
+Unit.prototype.setWorkerRole = function (role) {
+  const before = this.primaryRole, beforeTask = this.currentTask;
+  const r = origSetWorkerRole.apply(this, arguments);
+  if (current && (before !== this.primaryRole || beforeTask !== this.currentTask)) {
+    current.effects.push(`role(${this.displayName}:${beforeTask}->${this.currentTask})`);
+  }
   return r;
 };
 
