@@ -5,7 +5,7 @@
    -> result flow on learn.html, driven by REAL data fetched from
    /data/builds-manifest.json (.builds).
 
-   Build order rendering follows docs/DESIGN-SYSTEM.md §12 (the one
+   Build order rendering follows the canonical .bo-* markup (the one
    canonical look, matching the viewer's BuildOrderRenderer). Notes:
      1. Data is real (the manifest), not hand-authored.
      2. heroSkills in the manifest are keyed by LOWERCASE hero id; the
@@ -15,7 +15,7 @@
         punctuation, then HTML-escaped. Replay-derived names go through
         Security.sanitizeUserText + escapeHtml.
 
-   Build Order rendering (DESIGN-SYSTEM.md §12) uses the canonical .bo-*
+   Build Order rendering uses the canonical .bo-*
    components from redesign.css so the learn page and the viewer never
    drift. No ad-hoc tier rows; no single-edge color stripes.
 

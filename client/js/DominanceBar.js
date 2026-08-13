@@ -49,7 +49,7 @@
   ];
 
   // Race is encoded twice on the caps — icon AND this label — so it is never
-  // identified by color alone (DESIGN-SYSTEM.md §1.3).
+  // identified by color alone (accessibility rule of the design system).
   const RACE_LABELS = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead' };
 
   const MAJOR_KINDS = { heroDeath: true, heroKill: true, baseRaze: true };

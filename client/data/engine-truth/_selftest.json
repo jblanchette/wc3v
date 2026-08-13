@@ -2,7 +2,7 @@
   "replayId": "happy-vs-grubby",
   "meta": {
     "_circular": true,
-    "_README": "HARNESS SELFTEST ONLY. These observations are derived FROM parser output, so they prove the resolution/comparator/sampling machinery works end-to-end — they prove NOTHING about fidelity, and fidelity-report skips _circular fixtures. Real fixtures must come from watching WC3 play the replay (docs/ENGINE_TRUTH_CAPTURE.md) and must never copy parser values.",
+    "_README": "HARNESS SELFTEST ONLY. These observations are derived FROM parser output, so they prove the resolution/comparator/sampling machinery works end-to-end — they prove NOTHING about fidelity, and fidelity-report skips _circular fixtures. Real fixtures must come from watching WC3 play the replay and must never copy parser values.",
     "capturedOn": "2026-07-30",
     "author": "selftest"
   },

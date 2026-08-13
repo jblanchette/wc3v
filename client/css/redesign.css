@@ -1,6 +1,6 @@
 /* ============================================================
    redesign.css: shared components for the WC3V homepage redesign.
-   Implements docs/DESIGN-SYSTEM.md (§6-§7, §10, §12).
+   Component layer of the design system. Tokens live in tokens.css.
 
    TOKENS LIVE IN tokens.css and must be loaded FIRST. main.css also
    consumes them, so tokens.css goes on EVERY page, not just this one.
@@ -556,7 +556,7 @@ img { display: block; }
 
 /* ── Build Finder page layout (learn.html) ──────────────────────────
    Page-level composition/positioning for the new-player Build Finder
-   (DESIGN-SYSTEM.md §6.4 race cards, §6.8 steps). Lays out the system
+   (race cards and build steps). Lays out the system
    components; does not re-skin them (§10). */
 .bf-lead {
   text-align: center;
@@ -716,7 +716,7 @@ img { display: block; }
    JS or DOM. This stylesheet loads AFTER main.css so the rules
    below win.
 
-   Core fix (DESIGN-SYSTEM.md s1): the chrome accent is unified
+   Core fix: the chrome accent is unified
    to --accent (#5B8DEF, the app own cool blue), NOT the Human
    race blue #4488FF. Human #4488FF survives ONLY where it
    identifies the Human race (race-themed cards / matchup-vs-HU).

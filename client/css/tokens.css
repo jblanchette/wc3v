@@ -1,6 +1,7 @@
 /* ============================================================
    tokens.css — THE design token layer for the whole site.
-   Implements docs/DESIGN-SYSTEM.md §2-§5, §12.1.
+   Token layer of the design system: colour, type, spacing, elevation.
+   Components that consume these live in redesign.css.
 
    Load this FIRST on every page, before main.css and redesign.css.
    Both of them consume these variables; a page that loads main.css

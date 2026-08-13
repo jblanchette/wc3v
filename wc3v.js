@@ -662,7 +662,7 @@ const doParsing = async (input, options = {}) => {
     `total hidden: ${(hideStats.totalHideTimeMs / 1000).toFixed(1)}s`);
 
   // Positional anchor correction — enemy clicks recorded in the replay prove
-  // where the clicked unit really was (docs/POSITIONAL_ANCHORS.md: 52% of
+  // where the clicked unit really was (measured Aug 2026: 52% of
   // those checks were >320wu off). Inserts anchor samples into raw paths so
   // the resim below tracks them; consumes EVEN-parity anchors only — the odd
   // half stays untouched for tools/anchor-audit.js --holdout grading. Runs

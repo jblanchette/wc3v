@@ -73,11 +73,15 @@ const distPointToAabb = (px, py, b) => {
 // Tolerance for the clamp arithmetic + the 2-decimal rounding in the export.
 const EPS_WU = 2;
 
+// A creep further than this from its spawn at the end of its motion, on a camp
+// that was never cleared, counts as stranded (see the STRANDED check below).
+const STRANDED_WU = 200;
+
 const checkReplay = (id, data) => {
   const out = {
     id, creeps: 0, movingCreeps: 0, samples: 0,
     leashViolations: [], postClearViolations: [],
-    foreignCampViolations: [], orderViolations: [],
+    foreignCampViolations: [], orderViolations: [], stranded: [],
     adjacentCampOverlaps: 0
   };
 
@@ -108,7 +112,7 @@ const checkReplay = (id, data) => {
 
     const tally = out.byCamp[camp.uuid] || (out.byCamp[camp.uuid] = {
       level: camp.totalLevel, clearedTime: camp.clearedTime,
-      creeps: 0, moving: 0, maxLeash: 0
+      creeps: 0, moving: 0, maxLeash: 0, stranded: 0
     });
     tally.creeps++;
 
@@ -121,6 +125,21 @@ const checkReplay = (id, data) => {
     // Spawn = the FIRST sample. CreepGuardSim only ever appends, so sample 0
     // is the map-file spawn point the leash is measured from.
     const spawn = p[0];
+
+    // STRANDED: a creep on a camp that was never cleared must end up back on
+    // its guard post. Its creeps are alive at the end of the replay, so a
+    // creep left standing in a field is a permanent visual artifact — a troll
+    // parked in the open forever. (On a CLEARED camp the creeps are dead and
+    // hidden, so where they stopped does not matter.)
+    const last = p[p.length - 1];
+    if (camp.clearedTime == null &&
+        dist(last.x, last.y, spawn.x, spawn.y) > STRANDED_WU) {
+      out.stranded.push({
+        unit: u.displayName || u.itemId, campUuid: camp.uuid,
+        gameTime: last.gameTime, distance: Math.round(dist(last.x, last.y, spawn.x, spawn.y))
+      });
+      tally.stranded++;
+    }
 
     let prevT = -Infinity;
     p.forEach((s, i) => {
@@ -189,7 +208,7 @@ if (args.replay) {
 
 const totals = {
   replays: 0, creeps: 0, movingCreeps: 0, samples: 0,
-  leash: 0, postClear: 0, foreign: 0, order: 0, adjacent: 0, replaysWithViolations: 0
+  leash: 0, postClear: 0, foreign: 0, order: 0, adjacent: 0, stranded: 0, replaysWithViolations: 0
 };
 
 ids.forEach(id => {
@@ -210,6 +229,7 @@ ids.forEach(id => {
   totals.foreign += r.foreignCampViolations.length;
   totals.order += r.orderViolations.length;
   totals.adjacent += r.adjacentCampOverlaps;
+  totals.stranded += r.stranded.length;
   if (bad) totals.replaysWithViolations++;
 
   if (VERBOSE && (bad || args.replay)) {
@@ -243,6 +263,8 @@ console.log(`  leash violations       : ${totals.leash}`);
 console.log(`  post-clear movement    : ${totals.postClear}`);
 console.log(`  wandered to other camp : ${totals.foreign}`);
 console.log(`  out-of-order samples   : ${totals.order}`);
+console.log('');
+console.log(`  stranded (uncleared camp, creep not home at end): ${totals.stranded}`);
 console.log('');
 console.log(`  adjacent-camp overlap  : ${totals.adjacent} (not a violation — camps closer`);
 console.log(`                           together than one leash have overlapping guard circles)`);

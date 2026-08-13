@@ -3,7 +3,7 @@
  * hand-authored observations of the REAL game engine playing the same replay.
  *
  * Ground truth comes from watching WC3 (Reforged) play the replay back —
- * see docs/ENGINE_TRUTH_CAPTURE.md for the capture protocol. Fixtures live in
+ * fixtures must come from watching WC3 play the replay. They live in
  * client/data/engine-truth/<replay-id>.json and must NEVER be authored from
  * parser output (that would be circular); the only exception is a fixture
  * whose meta._circular flag is set, which marks a harness selftest that

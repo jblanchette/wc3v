@@ -3,7 +3,7 @@
  *
  * Read-only over the parsed .wc3v. Emits an ordered checklist of game-clock
  * marks worth observing while Reforged plays the replay back (protocol:
- * docs/ENGINE_TRUTH_CAPTURE.md), prioritised for the two fidelity targets:
+ * by watching the replay in WC3), prioritised for the two fidelity targets:
  * phantom combat and position drift.
  *
  * Mark sources:
@@ -118,7 +118,8 @@ for (let i = 1; i <= POS_MARKS; i++) {
 marks.sort((a, b) => a.t - b.t);
 
 console.log(`\ncapture plan: ${args.replay} (${fmt(duration)} long, ${battles.length} battles, ${Object.values(groups).filter(g => g.clearedTime != null).length} camp clears)`);
-console.log(`protocol: docs/ENGINE_TRUTH_CAPTURE.md — play 4–8×, drop to 1× ~15s before each mark\n`);
+console.log(`protocol: play the replay in WC3 at 4–8×, drop to 1× ~15s before each mark,`);
+console.log(`          and record what you SEE — never copy parser or viewer values.\n`);
 for (const m of marks) console.log(`  ${fmt(m.t).padStart(6)}  ${m.what}`);
 
 // --- skeleton ---------------------------------------------------------------
@@ -172,7 +173,7 @@ if (args.out) {
   const skeleton = {
     replayId: args.replay,
     meta: {
-      _README: 'GROUND TRUTH ONLY: every VERIFY field must be filled from watching WC3 play this replay (docs/ENGINE_TRUTH_CAPTURE.md). Never copy parser/viewer values into expectations — that makes the fixture circular and worthless. Windows/areas were pre-filled as places to LOOK, from the capture plan.',
+      _README: 'GROUND TRUTH ONLY: every VERIFY field must be filled from watching WC3 play this replay. Never copy parser/viewer values into expectations — that makes the fixture circular and worthless. Windows/areas were pre-filled as places to LOOK, from the capture plan.',
       capturedOn: 'VERIFY: YYYY-MM-DD',
       wc3Build: 'VERIFY: e.g. 2.0.x',
       speedUsed: 'VERIFY: e.g. 1x-8x',

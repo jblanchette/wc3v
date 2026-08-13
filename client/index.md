@@ -2,7 +2,7 @@
 title: "WC3V — Pro Build Orders, In-Browser Replay Analysis & Pro Comparison"
 url: https://wc3v.com/
 description: "Free Warcraft III build order library and replay analyzer. Browse pro builds by race and matchup, drop a .w3g to analyze it locally in your browser (never uploaded), or compare your replay to a pro's with letter-graded macro, tech, expansion, and build-order feedback."
-updated: 2026-08-11
+updated: 2026-08-13
 ---
 
 # WC3V
