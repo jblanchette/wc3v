@@ -40,6 +40,13 @@ const config = {
 	//                  shift-click); a multi-unit SELECT is the complete new
 	//                  selection and replaces.
 	selectionRule: 'merge-resync',
+	// Emit anchor corrections larger than AnchorCorrection's JUMP_DIST (1500wu)
+	// as isJump snaps. The client renders those as a unit teleporting across
+	// the map, which reads as a bug; false skips those anchors instead, so
+	// corrected paths stay continuous and the only snaps left are real in-game
+	// teleports. Small corrections — where the measured accuracy gain lives —
+	// are unaffected either way.
+	anchorSnapFar: false,
 	// Positional anchor correction — lib/AnchorCorrection.js. Pulls recorded
 	// paths onto enemy-click anchors (even-parity only; odd half is the
 	// tools/anchor-audit.js --holdout grading set). Default ON. Set false to

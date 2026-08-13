@@ -1121,6 +1121,11 @@ const readCliArgs = (argv) => {
         config.selectionRule = val;
       break;
 
+      // A/B the anchor-correction snap behaviour — see config.anchorSnapFar.
+      case "anchor-snap-far":
+        config.anchorSnapFar = true;
+      break;
+
       case "debug-items":
         config.debugItemDispatch = true;
       break;
