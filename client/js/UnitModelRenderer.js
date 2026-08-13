@@ -774,24 +774,28 @@
         // range, so a Murloc at the back of a camp with a footman at the front
         // simply has no target and stands there — which is the requirement.
         //
-        // There is deliberately no 'walk' branch: camp creeps have single-sample
-        // paths (ClientUnit never advances the neutral player's path cursor), so
-        // they cannot move in this data model. The old walk branch was dead code
-        // and pretending otherwise would be a lie about what the replay knows.
+        // Creeps can also WALK: lib/CreepGuardSim reconstructs guard aggro,
+        // chase and leash-back into their path, and UnitBehavior resolves that
+        // motion to 'walk' like any other unit's. A creep that was never pulled
+        // still has a single-sample path and simply never reaches that state.
         const d = bframe ? bframe.byUuid.get(unit.uuid) : null;
         const pos = (d && d.x != null) ? { x: d.x, y: d.y }
           : (unit.spawnPosition ? { x: unit.spawnPosition.x, y: unit.spawnPosition.y }
             : { x: cs.geom.cx, y: cs.geom.cy });
 
-        const state = (d && d.state === 'attack' && inst.actions.attack) ? 'attack' : 'idle';
+        let state = 'idle';
+        if (d && d.state === 'attack' && inst.actions.attack) state = 'attack';
+        else if (d && d.state === 'walk' && inst.actions.walk) state = 'walk';
         // Facing: at its target while fighting, at a nearby threat while merely
         // watching one, else outward from the camp centre ("guard" pose).
         const facing = (d && d.facing != null) ? d.facing : (inst.facing0 || 0);
 
         const opacity = (cs.phase === 'disturbed') ? CREEP_DISTURBED_OPACITY : 1;
         // Distant guards freeze in their baked idle pose (camp bones dominate
-        // the scene graph on creep-heavy maps); a fighting creep stays animated.
-        this._setStatic(inst, lod && state !== 'attack' && inst._tpl &&
+        // the scene graph on creep-heavy maps); a fighting or WALKING creep
+        // stays animated. Freezing a walker is the bug that made small
+        // on-screen units slide along in an idle pose.
+        this._setStatic(inst, lod && state === 'idle' && inst._tpl &&
           this._beyondLod(inst, pos, cx, cy, lod));
         this._placeCreep(inst, pos.x, pos.y, facing, cx, cy);
         this._setCreepRing(inst, CREEP_RING);
@@ -1186,6 +1190,11 @@
         return;
       }
       this._setLoopState(inst, state);
+      // Stride-lock the walk cycle to the creep's ground speed, same as player
+      // units, so a chasing troll's feet track the ground instead of skating.
+      if (state === 'walk' && inst.actions.walk && d && d.strideScale) {
+        inst.actions.walk.setEffectiveTimeScale(d.strideScale);
+      }
       inst.mixer.update(dt);
     }
 

@@ -627,7 +627,11 @@
         const combat = meta.combat;
 
         // --- WALK wins over everything: you cannot swing while walking.
-        if (!a.isCamp && isMoving(a.u.path, t)) {
+        // Camp creeps reach here too: lib/CreepGuardSim bakes their aggro,
+        // chase and leash-back into path[], so a creep with real motion at t is
+        // walking for the same reason any other unit is. Creeps that were never
+        // pulled keep a single-sample path, where isMoving is false anyway.
+        if (isMoving(a.u.path, t)) {
           const spd = smoothedSpeed(a.u.path, t);
           const base = meta.movespeed || 270;
           byUuid.set(a.uuid, {

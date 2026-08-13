@@ -733,6 +733,21 @@ const buildOutputObject = (replay, wc3vPlayers, world, validation = null) => {
 
   assignCampOrder(world, wc3vPlayers);
 
+  // Creep guard behaviour — aggro, chase and leash-back baked into each camp
+  // creep's path. Runs HERE, not in the wc3v.js pass chain, because it needs
+  // two things that only exist at this point: finished player paths (the
+  // Anchor/Kinematic passes have already rewritten them) and each camp's
+  // clearedTime (set just above by claims + SettlementClear), since a creep
+  // must never be animated after its camp is dead. Invariants are asserted by
+  // tools/creep-leash-check.js. See lib/CreepGuardSim.js.
+  const CreepGuardSim = require('../lib/CreepGuardSim');
+  const creepStats = new CreepGuardSim(world, wc3vPlayers).run();
+  if (creepStats.creepsMoved) {
+    console.logger(`Creep guard sim: ${creepStats.creepsMoved} creep(s) moved across ` +
+      `${creepStats.campsSimulated}/${creepStats.camps} camps, ${creepStats.samples} samples ` +
+      `(leash ${creepStats.leash} from ${creepStats.leashSource})`);
+  }
+
   // remove neutral groups at player starting positions
   // WC3 removes creeps at occupied spawn locations; the map file has them for all slots
   const SPAWN_CAMP_DISTANCE = 1500;

@@ -798,6 +798,11 @@ const ClientUnit = class {
     // idle/death pipeline — neutral group visibility is managed by camp-level
     // hide rules and overlap fading in drawResolvedUnits.
     if (this.isNeutralPlayer) {
+      // Camp creeps DO move: lib/CreepGuardSim bakes aggro/chase/leash-back
+      // into their path, so the cursor has to advance like any other unit's or
+      // they render frozen at spawn. Creeps that never got pulled still have a
+      // single-sample path and this is a no-op for them.
+      this.getCurrentMovePath(gameTime);
       this.decayLevel = 0.75;
       this._deathFxStartTime = null;
       this._deathFxActive = false;
