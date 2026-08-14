@@ -96,9 +96,28 @@
   // race). Human Lumber Mill + Undead Graveyard; Orc/NE return lumber to the hall.
   const LUMBER_DROPOFF_IDS = new Set(['hlum', 'ugrv']);
 
-  // Shared flat selection-ring geometry (radius 1, laid on the ground per instance).
+  // Shared flat unit-ring geometry (radius 1, laid on the ground per instance).
   let RING_GEO = null;
   function ringGeo () { if (!RING_GEO) RING_GEO = new THREE.RingGeometry(0.82, 1.0, 32); return RING_GEO; }
+
+  // Shared flat SELECTION-ring geometry. Deliberately a different shape from
+  // ringGeo above: a thin bright hoop (6% of radius vs the unit ring's 18%),
+  // drawn at a larger radius so the two read as different things even with
+  // Settings -> Unit Rings on. 48 segments keeps it smooth at that radius.
+  let SEL_RING_GEO = null;
+  function selRingGeo () { if (!SEL_RING_GEO) SEL_RING_GEO = new THREE.RingGeometry(0.94, 1.0, 48); return SEL_RING_GEO; }
+
+  // Selection ring sizing / lifetime.
+  const SEL_RING_SCALE = 1.28;    // multiples of inst.ringRadius — clear gap outside the unit ring
+  const SEL_RING_ALPHA = 0.95;
+  // The selection stream is HOLD-UNTIL-NEXT (Helpers.StandardStreamSearch), so
+  // without a ceiling the last selection of the match stays ringed forever —
+  // through the post-game tail, and through any stretch where a player stops
+  // issuing UpdateSubgroup (alt-tab, a game ending on a leave). Measured max gap
+  // between real selection records is 4,669 ms, so 12 s is ~2.5x the worst
+  // observed and never truncates a legitimately-held selection.
+  const SEL_MAX_HOLD_MS = 12000;
+  const SEL_FADE_MS = 600;
 
   // Shared sphere geometry for the no-model placeholder blob.
   let BLOB_GEO = null;
@@ -252,6 +271,14 @@
         window.WC3V_CONFIG.perf.instancedRings === false);
       this._ringPool = null;
       this._shadowPool = null;
+      // Selection hoops get their OWN pool rather than borrowing inst.ring:
+      // that descriptor already has three writers (the displayUnitRings toggle,
+      // _setCreepRing's camp-phase colour, _updateGuideHighlight's snapshot /
+      // restore) and a fourth would have to fight the guide glow over who runs
+      // last. One extra draw call buys all of that away.
+      this._selectionPool = null;
+      this._selColors = new Map();   // playerId -> THREE.Color, allocated once each
+      this._frameSeq = 0;            // stamped onto every instance _place() touches
       this._loadManifest();
     }
 
@@ -267,6 +294,106 @@
         uniforms: { uMap: { value: shadowTexture() } },
         transparent: true, depthWrite: false
       }), cap, 1);
+      // renderOrder 4 = above the unit-ring pool (3), so a selected unit that
+      // also has its ambient ring on shows the hoop on top. Capacity 96: WC3
+      // caps a selection at 12 units and the map caps at 8 seats.
+      this._selectionPool = new RingShadowPool(this.scene, selRingGeo(), new THREE.ShaderMaterial({
+        vertexShader: POOL_VS, fragmentShader: RING_FS,
+        transparent: true, depthWrite: false, side: THREE.DoubleSide
+      }), 96, 4);
+    }
+
+    // Player-colour THREE.Color, cached forever. The pools take the shared
+    // reference and copy out of it, so handing the same object to every push is
+    // safe and allocates nothing.
+    _selColor (player) {
+      let c = this._selColors.get(player.playerId);
+      if (!c) {
+        c = new THREE.Color(player.playerColor || '#FFFFFF');
+        this._selColors.set(player.playerId, c);
+      }
+      return c;
+    }
+
+    // WC3-style selection hoops for every player's CURRENT selection, in that
+    // player's colour. Runs after _updateGuideHighlight and before _flushPools.
+    //
+    // ClientPlayer.currentGroup is already the resolved ClientUnit[] (rebuilt
+    // only when the selection stream index actually moves) and is capped at 12
+    // by the game, so iterating it directly beats mirroring it into a Set —
+    // worst case here is 96 array reads and 96 hash lookups, typically 0-24,
+    // and it allocates nothing.
+    //
+    // Two things this pass deliberately does NOT cover:
+    //   - BUILDINGS. update() skips isBuilding, so they have no entry in
+    //     this.instances at all. ClientPlayer.renderSelectionMarkers rings them
+    //     in 2D off frameData.buildingPositions instead.
+    //   - Off-screen units. The frustum-park path continues before _place, so
+    //     their ring position is last frame's; the _posFrame stamp below drops
+    //     them rather than paint a ghost hoop where they used to be.
+    //
+    // NOTE ~5-12% of selection references never resolve to an exported unit
+    // (measured 87.7-94.6% resolve; rare itemIdHash collisions keep only the
+    // last instance). Those units correctly get no hoop. That is the data, not
+    // a bug — do not paper over it here.
+    _flushSelection (players, gameTime, viewOptions) {
+      const pool = this._selectionPool;
+      if (!pool) return;
+      pool.begin();
+
+      const enabled = !(window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+        window.WC3V_CONFIG.perf.selectionRings === false) &&
+        !(viewOptions && viewOptions.displaySelectionRings === false);
+
+      if (enabled) {
+        for (const player of players) {
+          if (!player || player.isNeutralPlayer) continue;
+          const group = player.currentGroup;
+          if (!group || !group.length) continue;
+
+          // Age out a stale hold (see SEL_MAX_HOLD_MS).
+          let hold = 1;
+          const t = player.currentGroupT;
+          if (t != null) {
+            const age = gameTime - t;
+            if (age > SEL_MAX_HOLD_MS) continue;
+            if (age > SEL_MAX_HOLD_MS - SEL_FADE_MS) {
+              hold = (SEL_MAX_HOLD_MS - age) / SEL_FADE_MS;
+            }
+          }
+
+          const color = this._selColor(player);
+          for (let i = 0; i < group.length; i++) {
+            const unit = group[i];
+            if (!unit) continue;
+            const inst = this.instances[unit.uuid];
+            if (!inst || typeof inst === 'string') continue;      // pending / failed -> 2D fallback
+            if (!inst.root || !inst.root.visible) continue;       // dead, swept, or 3D off
+            if (inst.state === 'death') continue;                 // corpse mid-fade still has a visible root
+            // _place / _placeAt stamp this. Anything that `continue`d before
+            // placement this frame (frustum park, pre-readyTime, _destroyed,
+            // harvest declutter) still holds LAST frame's ring position — a
+            // ghost hoop at the unit's last on-screen spot.
+            if (inst._posFrame !== this._frameSeq) continue;
+            const ring = inst.ring;
+            if (!ring) continue;
+
+            // Fade with the body: a lost/decaying unit shouldn't keep a crisp
+            // hoop after it has faded out (same lesson as _setOpacity).
+            const decay = inst._lastOpacity != null ? inst._lastOpacity : 1;
+            const alpha = SEL_RING_ALPHA * hold * decay;
+            if (alpha <= 0.004) continue;
+
+            // Lift 1 unit above the ambient ring (groundY + 2) so the two can
+            // never z-fight when both are on. One reused scratch vector.
+            const p = this._selPos || (this._selPos = new THREE.Vector3());
+            p.set(ring.position.x, ring.position.y + 1, ring.position.z);
+            pool.push(p, (inst.ringRadius || 24) * SEL_RING_SCALE, color, alpha);
+          }
+        }
+      }
+
+      pool.end();
     }
 
     // Write every visible pooled ring/shadow descriptor into the InstancedMesh
@@ -302,6 +429,7 @@
       if (!this._ringPool) return;
       this._ringPool.begin(); this._ringPool.end();
       this._shadowPool.begin(); this._shadowPool.end();
+      if (this._selectionPool) { this._selectionPool.begin(); this._selectionPool.end(); }
     }
 
     _loadManifest () {
@@ -442,6 +570,9 @@
     // Called once per frame from app.render().
     update (gameTime, players, viewOptions) {
       const dt = this.clock.getDelta();
+      // Stamped by _place/_placeAt. _flushSelection uses it to tell "placed
+      // this frame" from "holding a stale position" — see the note there.
+      this._frameSeq = (this._frameSeq | 0) + 1;
       this._beginFacingFrame(gameTime);
       this.rendered3DUuids.clear();
       if (viewOptions) viewOptions._rendered3D = this.rendered3DUuids;
@@ -671,6 +802,10 @@
 
       // Guide-mode focus glow (runs last so it wins over per-unit ring state).
       this._updateGuideHighlight();
+
+      // WC3 selection hoops. Its own pool, so it reads final positions without
+      // contending with anything above for inst.ring.
+      this._flushSelection(players, gameTime, viewOptions);
 
       // Instanced rings/shadows: write the frame's visible descriptors into
       // the pools. Must be the LAST step — it consumes the final
@@ -1890,11 +2025,12 @@
       if (inst.scale !== 1) w.scale.setScalar(inst.scale);
       this._updateCullBounds(inst, w.position.x, bodyY, w.position.z);
 
-      // Ground selection ring (flat, does not rotate with facing).
+      // Ground ring (flat, does not rotate with facing).
       if (inst.ring) {
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
       }
+      inst._posFrame = this._frameSeq;   // this instance holds a FRESH position
       this._placeShadow(inst, wx, wy, groundY, cx, cy);
 
       // The placeholder blob is authored Y-up and rotationally symmetric — skip the
@@ -1984,6 +2120,7 @@
         inst.ring.position.set(wx - cx, groundY + 2, -(wy - cy));
         inst.ring.scale.set(inst.ringRadius, inst.ringRadius, inst.ringRadius);
       }
+      inst._posFrame = this._frameSeq;   // see _place
       this._placeShadow(inst, wx, wy, groundY, cx, cy);
       if (inst.isPlaceholder) return;
       inst._wf = faceAng;
@@ -2281,6 +2418,8 @@
       }
       if (this._ringPool) { this._ringPool.dispose(this.scene); this._ringPool = null; }
       if (this._shadowPool) { this._shadowPool.dispose(this.scene); this._shadowPool = null; }
+      if (this._selectionPool) { this._selectionPool.dispose(this.scene); this._selectionPool = null; }
+      this._selColors.clear();
       for (const k in this.campMarkers) {
         const m = this.campMarkers[k];
         if (m && m.sprite) this.scene.remove(m.sprite);

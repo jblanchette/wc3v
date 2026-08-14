@@ -49,6 +49,7 @@ const ClientPlayer = class {
     };
 
     this.currentGroup = null;
+    this.currentGroupT = null;   // gameTime the current selection was recorded at
     this.setupUnits(units);
 
     if (window.WC3V_CONFIG) window.WC3V_CONFIG.log('app', "setup player: ", this);
@@ -214,6 +215,12 @@ const ClientPlayer = class {
 
     const { selection } = item;
 
+    // When this selection was made. The stream holds a record until the next
+    // one, with no explicit clear, so consumers that draw a live selection cue
+    // (UnitModelRenderer's hoops) need the age to stop showing the final
+    // selection of the match forever.
+    this.currentGroupT = item.gameTime;
+
     this.currentGroup = selection.units.reduce((acc, unit) => {
       const { itemId1, itemId2 } = unit;
       if (!itemId1 || !itemId2) {
@@ -339,6 +346,7 @@ const ClientPlayer = class {
     this.recordIndexes.selection = -1;
     this.recordIndexes.tier = -1;
     this.currentGroup = null;
+    this.currentGroupT = null;
     this.tier = 1;
 
     this.units.forEach(unit => {
@@ -937,6 +945,100 @@ const ClientPlayer = class {
       }
       frameData.idleMarkers.length = 0;
     }
+  }
+
+  // 2D selection markers. Covers everything the 3D hoop pass did NOT draw:
+  //
+  //   - BUILDINGS, always. UnitModelRenderer.update skips isBuilding outright
+  //     (they are instanced meshes owned by ThreeMapRenderer with no per-
+  //     building ring descriptor), so this is the only selection cue a
+  //     selected hall ever gets — and selecting a hall to queue workers is
+  //     one of the most common things a WC3 player does.
+  //   - Settings → 3D Units off.
+  //   - The window right after a spawn while that unit's GLB is still parsing
+  //     (instance === 'pending').
+  //
+  // Anything already ringed in 3D is skipped via viewOptions._rendered3D, so a
+  // unit never gets two rings.
+  //
+  // Units read frameData.udpByUuid, which app.js already builds once per
+  // frame. Buildings need a linear scan of buildingPositions (no uuid index
+  // exists and one selected building doesn't justify building one) — guarded
+  // so it only runs when a building is actually selected.
+  static renderSelectionMarkers (frameData, ctx, players, gameScaler, viewOptions) {
+    if (!frameData || !ctx || !players) return;
+    if (viewOptions && viewOptions.displaySelectionRings === false) return;
+    if (window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+        window.WC3V_CONFIG.perf.selectionRings === false) return;
+    const udp = frameData.udpByUuid;
+    if (!udp) return;
+    const rendered3D = viewOptions && viewOptions._rendered3D;
+
+    // Constant on-screen line weight regardless of map image size — the same
+    // canvasMetrics().sx ratio BaseNameplateRenderer uses. Served from the
+    // per-frame cache, so no layout read.
+    let ratio = 1;
+    if (gameScaler && gameScaler.canvasMetrics) {
+      const m = gameScaler.canvasMetrics(ctx.canvas);
+      if (m && m.ok) ratio = m.sx;
+    }
+
+    let saved = false;
+    for (let p = 0; p < players.length; p++) {
+      const player = players[p];
+      if (!player || player.isNeutralPlayer) continue;
+      const group = player.currentGroup;
+      if (!group || !group.length) continue;
+
+      for (let i = 0; i < group.length; i++) {
+        const unit = group[i];
+        if (!unit || unit._destroyed) continue;
+        if (rendered3D && rendered3D.has(unit.uuid)) continue;
+
+        let cx, cy, rx, ry, alpha = 0.95;
+        if (unit.isBuilding) {
+          const b = ClientPlayer._findBuildingBox(frameData, unit.uuid);
+          if (!b) continue;
+          cx = b.x; cy = b.y;
+          // WC3 rings a building too; size it to the footprint so it reads as
+          // "this structure", not "a unit standing here".
+          rx = b.halfWidth * 1.18;
+          ry = b.halfHeight * 1.18;
+        } else {
+          const box = udp.get(unit.uuid);
+          if (!box || !Number.isFinite(box.iconSize)) continue;
+          cx = box.x; cy = box.y;
+          rx = ry = box.iconSize * 0.62;
+          if (box.decayLevel != null) alpha *= box.decayLevel;
+        }
+        if (!Number.isFinite(cx) || !Number.isFinite(cy) ||
+            !Number.isFinite(rx) || !Number.isFinite(ry)) continue;
+
+        if (!saved) {
+          ctx.save();
+          ctx.lineWidth = Math.max(2, 2 * ratio);
+          saved = true;
+        }
+        ctx.strokeStyle = player.playerColor || '#FFF';
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    if (saved) ctx.restore();
+  }
+
+  // Linear scan of this frame's building boxes. Only ever called for a
+  // SELECTED building (0-2 per frame), against a list of a few dozen, so a
+  // uuid index would cost more to maintain than this costs to run.
+  static _findBuildingBox (frameData, uuid) {
+    const list = frameData.buildingPositions;
+    if (!list) return null;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].uuid === uuid) return list[i];
+    }
+    return null;
   }
 
   static isValidBox (box) {

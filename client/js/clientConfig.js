@@ -38,6 +38,16 @@
       // the meshes had. NOTE: read once at renderer construction — flipping it
       // needs a replay reload, not just a new frame.
       instancedRings: true,
+      // WC3-style selection hoops under each player's currently-selected units,
+      // in that player's colour. A THIRD InstancedMesh alongside the ring and
+      // shadow pools, so the cost is one draw call and no scene-graph churn.
+      // Unlike instancedRings above this is read EVERY FRAME — it only gates
+      // whether the pool is filled, not how instances are represented, so it
+      // can be flipped live without a replay reload. NOTE it still depends on
+      // instancedRings: the selection pool is built in the same _ensurePools()
+      // the other two are, so instancedRings:false turns selection rings off
+      // as well. That is the legacy A/B path only.
+      selectionRings: true,
       // Let Three cull off-screen skinned units, and skip their AnimationMixer
       // ticks. Safe because animation state is a pure function of gameTime, so
       // a unit re-entering the frustum poses correctly with no catch-up.
@@ -61,9 +71,19 @@
       // comfortable. Trades distant animation for framerate ONLY under load,
       // so fast machines never see it. Bounds + rates in Wc3vViewer.mainLoop.
       adaptiveLOD: true,
-      // Run the economy / dominance chart cursor updates even when their
-      // bottom-panel tab is hidden. Off = skip the work nobody can see.
-      chartsWhenHidden: false,
+      // Bottom-centre match graphs HUD (dominance history + food). Its static
+      // series are pre-rendered into two offscreen bitmaps, so a frame is a
+      // clearRect, two drawImage and a handful of fillText — but this gates the
+      // whole feature for A/B measurement.
+      hudCharts: true,
+      // Device-pixel-ratio ceiling for the HUD canvas ONLY. Deliberately not
+      // canvasRenderDprCap (1.0): that cap exists because the five map canvases
+      // are viewport-sized and rasterized every frame five times over, where
+      // retina supersampling is pure fill-rate loss. The HUD is <=600x96 CSS px
+      // and rasterizes once into a bitmap, and text legibility is the entire
+      // point of the feature. Capped at 2 so a 3x phone panel doesn't pay 2.25x
+      // for a difference nobody can see.
+      hudChartsDpr: 2,
       // Draw ranged attack projectiles (arrows, bolts, artillery shells) and
       // their impact/muzzle flashes. Two InstancedMeshes, so the cost is two
       // draw calls and no scene-graph churn — but this gates the whole feature

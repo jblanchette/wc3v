@@ -1081,7 +1081,12 @@ const ClientUnit = class {
       playerId: this.playerId,
       displayName: this.displayName,
       itemId: this.itemId,
-      playerColor: this.playerColor
+      playerColor: this.playerColor,
+      // Needed by ClientPlayer.renderSelectionMarkers: selecting a hall to
+      // queue workers is routine, and buildings are skipped by the 3D unit
+      // pass entirely, so this record is the only place their on-screen box
+      // exists.
+      uuid: this.uuid
     });
   }
 

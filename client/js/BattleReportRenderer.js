@@ -1,14 +1,16 @@
 /**
- * BattleReportRenderer — renders per-battle loss summaries in two places:
+ * BattleReportRenderer — the persistent Battles panel: a collapsible list in
+ * the DOM (a BottomPanel tab) accumulating every battle with losses,
+ * click-to-seek.
  *
- *   1. Transient banner: drawn on #action-canvas near each battle's bbox
- *      when gameTime enters the window [battle.endTime + 600ms, +4600ms].
- *      Player-coloured columns showing losses split into definite/estimated.
+ * It is also the ONE place that decides what a fight means. collectSides() and
+ * computeVerdict() are public because the on-canvas callout consumes them too:
+ * setBattles() builds a finished model per battle and hands it to
+ * BattleCallout (client/js/BattleCallout.js), which owns all of the transient
+ * on-canvas drawing. That split is deliberate — the box and the panel can
+ * never disagree about who won a fight, because they read one computation.
  *
- *   2. Persistent panel: a collapsible list in the DOM (#battle-report-panel)
- *      that accumulates every battle with losses, click-to-seek.
- *
- * Source data: world.battles[*].summary.perPlayer (see lib/BattleSummary.js).
+ * Source data: world.battles[*].summary (see lib/BattleSummary.js).
  */
 
 (function () {
@@ -58,18 +60,28 @@
     { key: 'reengage', title: 'Re-engaged',          icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 4a8 8 0 1 1-7.5 5.2l2 .8A6 6 0 1 0 12 6V3l5 4-5 4V4z" fill="#FF8AAB"/></svg>' }
   ];
 
-  const BANNER_DELAY_MS = 600;   // brief beat after battle end before banner shows
-  const BANNER_DURATION_MS = 4000;
-  const BANNER_FADE_MS = 600;    // fade in/out tail of the window
-  const BANNER_WIDTH = 230;
-  const BANNER_LINE_HEIGHT = 16;
-  const BANNER_PADDING = 10;
+  // The on-canvas callout window lives in BattleCallout now; we only need the
+  // offsets here to stamp t0/t1 onto each model.
+  const CALLOUT_DELAY_MS    = 600;   // brief beat after battle end
+  const CALLOUT_DURATION_MS = 4000;
+
+  // How many unit lines one side gets in the on-canvas callout before we
+  // collapse the tail into "+N more". The box has to stay glanceable at a
+  // legible type size; the Battles tab carries the full itemisation.
+  const CALLOUT_UNIT_LINES = 3;
 
   function formatTime (ms) {
     const s = Math.floor(ms / 1000);
     const m = Math.floor(s / 60);
     const r = s - m * 60;
     return m + ':' + (r < 10 ? '0' + r : r);
+  }
+
+  // Thousands separator. Resource totals in a fight run to four digits and
+  // "1150g" reads as noise next to "1,150g".
+  function fmtNum (n) {
+    const v = Math.round(n || 0);
+    return v >= 1000 ? v.toLocaleString('en-US') : String(v);
   }
 
   class BattleReportRenderer {
@@ -94,146 +106,128 @@
       this._battles = (battles || []).filter(b => b && b.summary && b.summary.hasLosses);
       this._panelBuilt = false;
       this._metaCache = new Map();
+
+      // Hand the on-canvas callout a finished, immutable model per battle.
+      // Everything expensive — verdict, sides, canonical names, every string —
+      // is resolved HERE, once, instead of being rebuilt inside a render loop.
+      const cal = this.viewer && this.viewer.battleCallout;
+      if (cal) cal.setBattles(this._buildCalloutModels());
     }
 
     // --------------------------------------------------------------
-    // Transient banner (called per frame from app.js render loop)
+    // On-canvas callout models (built once, consumed by BattleCallout)
     // --------------------------------------------------------------
 
-    render (ctx, gameTime, gameScaler) {
-      if (!this._battles.length) return;
-
+    _buildCalloutModels () {
+      const models = [];
       for (const battle of this._battles) {
-        const t0 = battle.endTime + BANNER_DELAY_MS;
-        const t1 = t0 + BANNER_DURATION_MS;
-        if (gameTime < t0 || gameTime > t1) continue;
-        this._drawBanner(ctx, battle, gameTime - t0, gameScaler);
+        const model = this._calloutModel(battle);
+        if (model) models.push(model);
       }
+      models.sort((a, b) => a.t0 - b.t0);
+      return models;
     }
 
-    _drawBanner (ctx, battle, ageMs, gameScaler) {
+    _calloutModel (battle) {
       const summary = battle.summary;
-      const players = Object.values(summary.perPlayer);
-      if (!players.length) return;
+      const center = summary && summary.center;
+      if (!center || !Number.isFinite(center.x) || !Number.isFinite(center.y)) return null;
 
-      // Position banner above the battle bbox centre in canvas pixels.
-      const c = summary.center;
-      const proj = gameScaler.projectXY(c.x, c.y);
-      if (!proj) return;  // battle centre is off-screen
-      const cx = proj.x + gameScaler.middleX;
-      const cy = proj.y + gameScaler.middleY;
+      const sides = this.collectSides(battle);
+      if (!sides.length) return null;
+      const verdict = this.computeVerdict(sides);
+      const type = summary.engagementType || 'skirmish';
 
-      // Layout: stack player columns vertically.
+      const C = window.BattleCallout || {};
+      const accent = summary.hasHeroDeath
+        ? (C.COLOR_HERO || '#FFD43B')
+        : ((verdict && verdict.winner && verdict.winner.color) || '#8AA0C0');
+
       const lines = [];
-      for (const p of players) {
-        const def = p.definite, est = p.estimated;
-        if (def.count === 0 && est.count === 0) continue;
-        lines.push({ kind: 'header', text: 'Player ' + p.playerId, color: p.playerColor });
-        for (const u of def.units) {
-          lines.push({
-            kind: 'unit',
-            text: u.count + '× ' + u.displayName,
-            hero: u.isHero,
-            confidence: 'definite'
-          });
-        }
-        for (const u of est.units) {
-          lines.push({
-            kind: 'unit',
-            text: u.count + '× ' + u.displayName + ' (likely)',
-            hero: u.isHero,
-            confidence: 'estimated'
-          });
-        }
-        const tot = {
-          food: def.food + est.food,
-          gold: def.gold + est.gold,
-          lumber: def.lumber + est.lumber
-        };
+
+      // Title — what kind of fight, and how it went.
+      const typeLabel = TYPE_LABELS[type] || 'Fight';
+      lines.push({
+        kind: 'title',
+        text: verdict && verdict.label ? typeLabel + ' — ' + verdict.label : typeLabel,
+        color: accent
+      });
+
+      // Subtitle — the plain-language read.
+      const sub = this._calloutSubtitle(verdict, type);
+      if (sub) lines.push({ kind: 'sub', text: sub, color: C.COLOR_SUB || '#BBB' });
+
+      // One block per side: who, then what they lost, then the bill.
+      for (const side of sides) {
+        const n = side.loss.count;
         lines.push({
-          kind: 'totals',
-          text: tot.food + ' food • ' + tot.gold + 'g • ' + tot.lumber + 'l'
+          kind: 'side',
+          text: side.name + (n ? '  lost ' + n + (n === 1 ? ' unit' : ' units') : '  lost nothing'),
+          color: side.color || '#FFF'
+        });
+        if (!n) continue;
+
+        // Heroes first — they are the reason anyone cares about this box.
+        const units = side.units.slice().sort((a, b) => {
+          if (!!b.isHero !== !!a.isHero) return b.isHero ? 1 : -1;
+          if (!!a.estimated !== !!b.estimated) return a.estimated ? 1 : -1;
+          return (b.count || 0) - (a.count || 0);
+        });
+        const shown = Math.min(units.length, CALLOUT_UNIT_LINES);
+        for (let i = 0; i < shown; i++) {
+          const u = units[i];
+          const label = (u.count || 1) + '× ' + u.displayName;
+          if (u.isHero) {
+            lines.push({ kind: 'hero', text: '★ ' + label, color: C.COLOR_HERO || '#FFD43B' });
+          } else if (u.estimated) {
+            lines.push({ kind: 'unitEst', text: label + ' (likely)', color: C.COLOR_EST || '#999' });
+          } else {
+            lines.push({ kind: 'unit', text: label, color: C.COLOR_UNIT || '#FFF' });
+          }
+        }
+        if (units.length > shown) {
+          lines.push({
+            kind: 'more',
+            text: '+' + (units.length - shown) + ' more',
+            color: C.COLOR_EST || '#999'
+          });
+        }
+
+        lines.push({
+          kind: 'stat',
+          text: side.loss.food + ' food · ' + fmtNum(side.loss.gold) + 'g · ' +
+                fmtNum(side.loss.lumber) + 'l',
+          color: C.COLOR_STAT || '#8AE890'
         });
       }
-      if (!lines.length) return;
 
-      const totalHeight = BANNER_PADDING * 2 + lines.length * BANNER_LINE_HEIGHT;
-      const x = Math.round(cx - BANNER_WIDTH / 2);
-      const y = Math.round(cy - totalHeight - 40);  // float above battle
-
-      // Alpha — fade in/out at the edges of the window.
-      let alpha = 1;
-      if (ageMs < BANNER_FADE_MS) {
-        alpha = ageMs / BANNER_FADE_MS;
-      } else if (ageMs > BANNER_DURATION_MS - BANNER_FADE_MS) {
-        alpha = (BANNER_DURATION_MS - ageMs) / BANNER_FADE_MS;
-      }
-      alpha = Math.max(0, Math.min(1, alpha));
-      if (alpha < 0.02) return;
-
-      ctx.save();
-      ctx.globalAlpha = alpha;
-
-      // Background.
-      ctx.fillStyle = 'rgba(12, 12, 18, 0.88)';
-      this._roundedRect(ctx, x, y, BANNER_WIDTH, totalHeight, 6);
-      ctx.fill();
-      // Hero-death thick top border.
-      if (summary.hasHeroDeath) {
-        ctx.fillStyle = '#FFD43B';
-        this._roundedRect(ctx, x, y, BANNER_WIDTH, 3, 6);
-        ctx.fill();
-      } else {
-        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-        ctx.lineWidth = 1;
-        this._roundedRect(ctx, x + 0.5, y + 0.5, BANNER_WIDTH - 1, totalHeight - 1, 6);
-        ctx.stroke();
-      }
-
-      // Lines.
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      let ly = y + BANNER_PADDING + BANNER_LINE_HEIGHT / 2;
-      for (const line of lines) {
-        if (line.kind === 'header') {
-          ctx.font = 'bold 12px sans-serif';
-          ctx.fillStyle = line.color || '#FFF';
-          ctx.fillText('LOST: ' + line.text, x + BANNER_PADDING, ly);
-        } else if (line.kind === 'unit') {
-          ctx.font = line.hero ? 'bold 12px sans-serif' : '11px sans-serif';
-          if (line.hero) {
-            // Hero callout — bright + dot indicator
-            ctx.fillStyle = '#FFD43B';
-            ctx.fillText('★ ' + line.text, x + BANNER_PADDING, ly);
-          } else if (line.confidence === 'estimated') {
-            ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            ctx.fillText(line.text, x + BANNER_PADDING + 6, ly);
-          } else {
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillText(line.text, x + BANNER_PADDING + 6, ly);
-          }
-        } else if (line.kind === 'totals') {
-          ctx.font = '11px sans-serif';
-          ctx.fillStyle = '#8AE890';
-          ctx.fillText(line.text, x + BANNER_PADDING + 6, ly);
-        }
-        ly += BANNER_LINE_HEIGHT;
-      }
-      ctx.restore();
+      return {
+        id: battle.id,
+        t0: battle.endTime + CALLOUT_DELAY_MS,
+        t1: battle.endTime + CALLOUT_DELAY_MS + CALLOUT_DURATION_MS,
+        cx: center.x,
+        cy: center.y,
+        accent,
+        lines,
+        // Layout cache, keyed by the quantized canvas->CSS ratio. Filled by
+        // BattleCallout on first draw and on every resize, never per frame.
+        _w: { rq: -1, w: 0, h: 0, padX: 0, padY: 0, accentH: 0, radius: 0, border: 1, swatch: 0 },
+        _solvedAt: -1, _anchorX: 0, _anchorY: 0,
+        _offX: 0, _offY: 0, _slideX: 0, _slideY: 0, _slideAt: -1
+      };
     }
 
-    _roundedRect (ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
+    _calloutSubtitle (verdict, type) {
+      if (!verdict) return TYPE_DESC[type] || '';
+      if (verdict.kind === 'solo') return TYPE_DESC[type] || '';
+      if (verdict.tier === 'even') {
+        return verdict.label === 'No losses' ? 'Nobody traded' : 'Roughly an even trade';
+      }
+      const who = verdict.winner && verdict.winner.name;
+      if (!who) return TYPE_DESC[type] || '';
+      return verdict.heroSwing
+        ? who + ' wins the trade — hero down'
+        : who + ' wins the trade';
     }
 
     // --------------------------------------------------------------
@@ -311,7 +305,9 @@
     // each side's losses from summary.perPlayer. This is what lets us show a
     // real head-to-head trade and name the winner; perPlayer alone only ever
     // lists the side(s) that took losses.
-    _collectSides (battle) {
+    // Public: BattleCallout's models are built from this at load time, so the
+    // on-canvas box and the Battles tab can never disagree about a fight.
+    collectSides (battle) {
       const summary = battle.summary || {};
       const perPlayer = summary.perPlayer || {};
       const recs = new Map();
@@ -391,7 +387,7 @@
 
     // Reduce a fight's sides to an outcome verdict. The side that lost less
     // value wins; how lopsided decides decisive / favorable / even.
-    _computeVerdict (sides) {
+    computeVerdict (sides) {
       if (!sides.length) return null;
       if (sides.length === 1) return { kind: 'solo', side: sides[0] };
 
@@ -421,8 +417,8 @@
     _buildFightRow (battle) {
       const summary = battle.summary;
       const type = summary.engagementType || 'skirmish';
-      const sides = this._collectSides(battle);
-      const verdict = this._computeVerdict(sides);
+      const sides = this.collectSides(battle);
+      const verdict = this.computeVerdict(sides);
       const totalVal = sides.reduce((a, s) => a + s.value, 0);
 
       const row = document.createElement('div');
@@ -635,8 +631,8 @@
       const teams = new Map();
       let evenCount = 0;
       for (const battle of this._battles) {
-        const sides = this._collectSides(battle);
-        const verdict = this._computeVerdict(sides);
+        const sides = this.collectSides(battle);
+        const verdict = this.computeVerdict(sides);
         for (const s of sides) {
           let t = teams.get(s.key);
           if (!t) {

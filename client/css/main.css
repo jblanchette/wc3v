@@ -16528,6 +16528,60 @@ button.mcb-summary {
 .corner-stack-right { right: 12px; align-items: flex-end; }
 
 /* ============================================================
+   Match graphs HUD (#hud-charts-canvas) — dominance + food history,
+   centred along the bottom of the map, 10px above the scrubber.
+
+   Sized in REAL CSS PIXELS (the class multiplies by DPR for the
+   backing store), unlike the five map canvases which live in the
+   map image's logical space. It is a sibling of #canvas-group so it
+   escapes the live-mode transform and the object-fit letterbox.
+
+   z 6 threads between .minimap-pip (5) and .camera-toolbar (20).
+
+   The left/right insets are the load-bearing part. Both corner stacks
+   live at z 20 and would draw straight over this; centring on the
+   geometric middle of #main-wrapper put the HUD's bottom-left corner
+   under the collapsed Insights panel at any viewport under ~1500px.
+   Reserving their zones and centring in what is LEFT (auto margins on
+   an auto width) keeps it centred on the free band with no JS layout
+   maths and no collision at any width. Below 360px of band the class
+   hides itself rather than render something unreadable.
+
+   336px = .corner-stack-left (10) + .ip (320) + 6 breathing room.
+   216px = .corner-stack-right (12) + .minimap-pip (~192) + 12.
+
+   The positioning lives on the WRAPPER DIV, not the canvas. A <canvas>
+   is a REPLACED element: `width:auto` on one resolves from its intrinsic
+   300x150 ratio (192px at height 96) and makes the left/right insets be
+   ignored entirely, per CSS 2.1 §10.3.8. Measured, and it silently
+   shrank the HUD below its own render threshold. A plain div follows
+   §10.3.7 instead, where `margin:0 auto` with both insets set really
+   does centre the box.
+   ============================================================ */
+#hud-charts {
+  position: absolute;
+  bottom: 10px;
+  left: 336px;
+  right: 216px;
+  margin: 0 auto;
+  max-width: 600px;
+  height: 96px;
+  z-index: 6;
+  pointer-events: none;
+  display: none;                /* JS adds .hud-on once it has data */
+}
+#hud-charts.hud-on { display: block; }
+#hud-charts-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Build-order-only layouts have no map to hang it over. live-bo is the
+   viewer's DEFAULT layout and must keep it. */
+.layout-mode-static-bo #hud-charts,
+.layout-mode-mobile-bo #hud-charts { display: none !important; }
+
+/* ============================================================
    Insights Panel (#insights-panel) — tabbed container hosting
    Battle Report, Economy, Camp Key. Replaces the three separate
    floating panels with a single visually-tidy box.

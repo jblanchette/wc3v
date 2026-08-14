@@ -276,6 +276,88 @@ function resolveFile (urlStr) {
     process.stdout.write(`  split-screen: ${ok === true ? 'forced' : 'FAILED — ' + ok}\n`);
   }
 
+  // --probe=<selector> — dump one element's computed geometry at the paused
+  // frame. Overlay bugs ("it isn't drawing") are almost always a layout box of
+  // the wrong size or in the wrong place, and a screenshot cannot tell you
+  // which; this can. Also reports HudCharts' internal size state, since that
+  // class deliberately never reads clientWidth and can only learn its box from
+  // a ResizeObserver — a discrepancy here IS the bug.
+  if (args.probe) {
+    const info = await page.evaluate((sel) => {
+      const el = document.querySelector(sel);
+      const out = { selector: sel, found: !!el };
+      if (el) {
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        out.rect = { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
+        out.display = cs.display;
+        out.zIndex = cs.zIndex;
+        out.classList = [...el.classList];
+        if (el.tagName === 'CANVAS') out.backing = el.width + 'x' + el.height;
+        const p = el.parentElement;
+        if (p) {
+          const pr = p.getBoundingClientRect();
+          out.parent = (p.id || p.tagName) + ' ' + Math.round(pr.width) + 'x' + Math.round(pr.height);
+        }
+      }
+      const v = window.wc3v;
+      const hc = v && v.hudCharts;
+      out.hudCharts = hc
+        ? { cssW: hc._cssW, cssH: hc._cssH, built: hc._built, visible: hc._visible,
+            rows: hc._rows.length, dpr: hc._dpr, hasDom: !!hc._dom, hasFood: !!hc._food }
+        : 'null';
+
+      const bc = v && v.battleCallout;
+      if (bc) {
+        const t = v.gameTime;
+        const active = bc._models.filter(m => t >= m.t0 && t <= m.t1);
+        out.battleCallout = {
+          models: bc._models.length,
+          activeNow: active.length,
+          windows: bc._models.slice(0, 4).map(m => Math.round(m.t0 / 1000) + '-' + Math.round(m.t1 / 1000) + 's'),
+          sample: active[0] ? active[0].lines.map(l => l.kind + ': ' + l.text) : null
+        };
+      } else out.battleCallout = 'null';
+
+      // Selection: what each player holds at this instant, and how much of it
+      // resolved to a unit the client actually knows about.
+      const umr0 = v && v.unitModelRenderer;
+      out.selection = (v && v.players || []).filter(p => !p.isNeutralPlayer).map(p => ({
+        player: p.playerId,
+        selected: p.currentGroup ? p.currentGroup.length : 0,
+        atT: p.currentGroupT,
+        // Why each selected unit did or didn't get a hoop. A silent zero here
+        // is the difference between "nothing was selected" and "the ring pass
+        // is skipping everything", and only this tells them apart.
+        units: (p.currentGroup || []).map(u => {
+          const inst = umr0 && umr0.instances[u.uuid];
+          let why = 'drawn (3D hoop)';
+          if (u.isBuilding) {
+            const fd = v._frameData;
+            const list = (fd && fd.buildingPositions) || [];
+            const b = list.find(x => x.uuid === u.uuid);
+            // Not drawn this frame is a legitimate outcome (off-camera, or
+            // mid-morph) — the count says whether the list itself is healthy.
+            why = b ? 'drawn (2D building ring)'
+              : 'not rendered this frame (' + list.length + ' buildings drawn)';
+          }
+          else if (!inst) why = 'no instance';
+          else if (typeof inst === 'string') why = 'instance=' + inst;
+          else if (!inst.root || !inst.root.visible) why = 'root hidden';
+          else if (inst.state === 'death') why = 'death';
+          else if (inst._posFrame !== umr0._frameSeq) why = 'stale position (not placed this frame)';
+          return (u.displayName || u.itemId) + ' -> ' + why;
+        })
+      }));
+      const umr = v && v.unitModelRenderer;
+      out.selectionPool = umr && umr._selectionPool
+        ? { capacity: umr._selectionPool.capacity, drawn: umr._selectionPool.mesh.count }
+        : 'null';
+      return out;
+    }, String(args.probe));
+    process.stdout.write('  probe: ' + JSON.stringify(info, null, 2).replace(/\n/g, '\n  ') + '\n');
+  }
+
   if (args.still) {
     const outPath = typeof args.still === 'string'
       ? args.still

@@ -9,9 +9,14 @@
  * Tabs live at the panel top; content lives below. Click a tab to switch.
  * The panel itself is collapsible via the title bar (▾/▸ toggle).
  *
- * Other renderers (BattleReportRenderer, ResourceCharts, CampPanel) own
+ * Other renderers (BattleReportRenderer, InsightsEventLog, CampPanel) own
  * their own DOM and ask the BottomPanel to host it as tab content. Keeps
  * rendering logic separated from layout.
+ *
+ * Current tabs: Battles, Events, Camp Key. The Economy and Dominance tabs
+ * left for the always-on bottom-centre HUD (client/js/HudCharts.js) —
+ * this panel is collapsed by default, so charts hosted here were charts
+ * nobody saw.
  */
 
 (function () {

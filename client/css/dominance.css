@@ -1,6 +1,5 @@
 /* ============================================================
-   dominance.css — the dominance gauge, the dominance chart and the
-   resource charts.
+   dominance.css — the dominance gauge and the dominance chart.
 
    Split out of main.css (Aug 2026) because the DESKTOP APP draws these
    exact widgets from a stored summary, and a second copy of 650 lines of
@@ -8,31 +7,18 @@
    overlay.css: a preview drawn by separate code is a preview that can lie.
 
    Loaded by client/viewer.html and client/dominance-lab.html — the only
-   two pages that mount DominanceBar / DominanceChart / ResourceCharts —
-   and copied into the desktop's css/vendor by
-   tools/build-desktop-client.js.
+   two pages that mount DominanceBar / DominanceChart — and copied
+   WHOLESALE into the desktop's css/vendor by
+   tools/build-desktop-client.js. Any edit here ships to the desktop.
+
+   The .rcp-* resource-chart rules lived here until ResourceCharts.js was
+   deleted; the viewer's economy surface is the bottom-centre HUD now
+   (client/js/HudCharts.js), which draws on a canvas and needs no CSS
+   beyond its element box in main.css.
 
    Depends on tokens.css for the --dom-* WCL bracket ramp and --gold.
    Nothing here defines a token.
    ============================================================ */
-
-/* Resource Charts (now tab content inside #insights-panel). */
-.rcp-charts { padding: 6px; }
-.rcp-chart { margin-bottom: 4px; }
-.rcp-chart-title {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
-  padding: 2px 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.rcp-chart-svg {
-  /* SVG fills the tab width; height is fixed in CSS for consistent reading.
-     preserveAspectRatio="none" on the SVG lets viewBox stretch to fill. */
-  width: 100%;
-  height: 56px;
-  display: block;
-}
 
 /* ============================================================
    Dominance — forged tug-of-war gauge (.dom-bar, under the match

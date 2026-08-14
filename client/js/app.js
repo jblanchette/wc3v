@@ -287,16 +287,25 @@ const Wc3vViewer = class {
     this.mapRenderer = new MapRenderer();
     this.battleData = new BattleData();         // pure pipeline (BattleDetector output → indexed)
     this.bottomPanel = (window.BottomPanel) ? new window.BottomPanel() : null;
+    // Construct the callout FIRST: BattleReportRenderer.setBattles hands it the
+    // precomputed models, and setBattles can run as soon as world data lands.
+    this.battleCallout = (window.BattleCallout)
+      ? new window.BattleCallout(this) : null;     // transient on-canvas fight box (#action-canvas)
     this.battleReportRenderer = (window.BattleReportRenderer)
       ? new window.BattleReportRenderer(this) : null;
     this.insightsEventLog = (window.InsightsEventLog)
       ? new window.InsightsEventLog(this) : null;
-    this.resourceCharts = (window.ResourceCharts)
-      ? new window.ResourceCharts(this) : null;
     this.dominanceBar = (window.DominanceBar)
       ? new window.DominanceBar(this) : null;      // tug-of-war widget under the match header (1v1 only)
-    this.dominanceChart = (window.DominanceChart)
-      ? new window.DominanceChart(this) : null;    // Dominance insights tab (1v1 only)
+    // NOTE there is no viewer-owned DominanceChart any more. That class still
+    // ships — it is vendored to the desktop app, and MatchSummary builds its
+    // OWN instance for the summary modal — but the viewer's dominance surface
+    // is the bottom-centre HUD now.
+    //
+    // The HUD itself is constructed in _setupHudCharts(), once the series are
+    // known. Drop any instance from a previous load here: it owns a
+    // ResizeObserver and two offscreen bitmaps, so it must not outlive a load.
+    if (this.hudCharts) { this.hudCharts.destroy(); this.hudCharts = null; }
     this.teleportFx = new TeleportFx();         // teleport cast/arrival cinematic
     // Staged loading overlay (step checklist + progress bar). Recreated per
     // load; setup() adopts the inline #boot-loading block on first construction.
@@ -1437,6 +1446,13 @@ const Wc3vViewer = class {
     // would never run for objects the scene graph renders on its own.
     if (optionKey === 'displayBuildingStatus' && this.buildingStatusFx) {
       this.buildingStatusFx.setEnabled(isOn);
+    }
+
+    // The graphs HUD owns its own canvas element, so hiding it is a class-level
+    // call, not a draw-time read. setVisible(true) is still subject to the
+    // data gates _setupHudCharts applied — it never mounts without series.
+    if (optionKey === 'displayHudCharts' && this.hudCharts) {
+      this.hudCharts.setVisible(isOn);
     }
 
     // Sync auto-split preference to broadcast camera
@@ -3372,54 +3388,10 @@ const Wc3vViewer = class {
         });
       }
 
-      // Economy tab.
-      if (this.resourceCharts && this.mapData && this.mapData.players) {
-        const playerInfos = [];
-        for (const [pid, p] of Object.entries(this.mapData.players)) {
-          if (p && p.resourceSeries && p.resourceSeries.length) {
-            const cp = this.players.find(cp => String(cp.playerId) === String(pid));
-            playerInfos.push({
-              id: pid,
-              color: (cp && cp.playerColor) || '#888',
-              resourceSeries: p.resourceSeries
-            });
-          }
-        }
-        if (playerInfos.length) {
-          const tabContent = document.createElement('div');
-          this.resourceCharts.setContainer(tabContent);
-          this.resourceCharts.setPlayers(playerInfos);
-          this.resourceCharts.build();
-          this.bottomPanel.addTab('economy', 'Economy', tabContent);
-        }
-      }
-
-      // Dominance tab — strict gate: 1v1 + parser-emitted availability flag.
-      // Degraded parses carry no dominanceSeries at all (see lib/DominanceSeries.js).
-      if (this.dominanceChart && this.mapData && this.mapData.players &&
-          this.mapData.dominance && this.mapData.dominance.available &&
-          this.getGameMode() === '1v1') {
-        const domInfos = [];
-        for (const [pid, p] of Object.entries(this.mapData.players)) {
-          if (p && p.dominanceSeries && p.dominanceSeries.samples &&
-              p.dominanceSeries.samples.length) {
-            const cp = this.players.find(cp => String(cp.playerId) === String(pid));
-            domInfos.push({
-              id: pid,
-              color: (cp && cp.playerColor) || '#888',
-              samples: p.dominanceSeries.samples,
-              events: p.dominanceSeries.events || []
-            });
-          }
-        }
-        if (domInfos.length === 2) {
-          const tabContent = document.createElement('div');
-          this.dominanceChart.setContainer(tabContent);
-          this.dominanceChart.setPlayers(domInfos);
-          this.dominanceChart.build();
-          this.bottomPanel.addTab('dominance', 'Dominance', tabContent);
-        }
-      }
+      // The Economy and Dominance tabs used to live here. Both are now the
+      // always-on bottom-centre HUD (_setupHudCharts / client/js/HudCharts.js):
+      // this panel is collapsed by default and their cursor updates were gated
+      // off whenever it was hidden, so in practice nobody ever saw them.
 
       // Camp Key tab — adopt the existing #camp-legend element if present.
       const campLegend = document.getElementById('camp-legend');
@@ -3433,6 +3405,11 @@ const Wc3vViewer = class {
         if (det) det.open = true;
       }
     }
+
+    // Match graphs HUD — the same series the Economy/Dominance tabs used, drawn
+    // permanently on its own canvas at the bottom-centre of the map. Kept
+    // outside the bottomPanel block: it does not belong to the panel.
+    this._setupHudCharts();
 
     this.buildWrapper = document.getElementById("build-wrapper");
 
@@ -3748,7 +3725,17 @@ const Wc3vViewer = class {
       display3DUnits: true,           // 3D animated unit models are the default; toggle off for 2D icons
       // Team-color ground rings under player units default OFF (visual clutter).
       // Creep camp rings are camp-state UI (pristine/cleared) and are unaffected.
-      displayUnitRings: false
+      displayUnitRings: false,
+      // WC3 selection hoops under each player's currently-selected units. ON by
+      // default — this is the basic "what is that player looking at" cue, and
+      // it is visually distinct from displayUnitRings above (thin bright hoop
+      // at a larger radius, its own instanced pool).
+      displaySelectionRings: true,
+      // Transient on-canvas fight summary after each battle. Deliberately NOT
+      // folded into displayFloatingText — that gates the EventFeed.
+      displayBattleCallouts: true,
+      // Bottom-centre dominance + food history HUD.
+      displayHudCharts: true
     };
 
     // Creep/spawn-camp route detection is keyed off 1v1 team heuristics and
@@ -3786,9 +3773,12 @@ const Wc3vViewer = class {
         { key: 'displayFootprints', label: 'Footprints' },
         { key: 'displayLevelPins', label: 'Level Pins' },
         { key: 'displayFloatingText', label: 'Action Feed' },
+        { key: 'displayBattleCallouts', label: 'Battle Callouts' },
+        { key: 'displayHudCharts', label: 'Match Graphs' },
         { key: 'displayText', label: 'Unit Names' },
         { key: 'displayBaseLabels', label: 'Base Labels' },
         { key: 'decayEffects', label: 'Fade FX' },
+        { key: 'displaySelectionRings', label: 'Selection Rings' },
         { key: 'displayUnitRings', label: 'Unit Rings' },
         { key: 'displayBuildingStatus', label: 'Building Status' },
         { key: 'displayTreeGrid', label: 'Tree Grid' },
@@ -3904,6 +3894,84 @@ const Wc3vViewer = class {
     label.textContent = `Viewing ${modeLabel} game`;
     band.innerHTML = '';
     band.appendChild(label);
+  }
+
+  /**
+   * Mount the bottom-centre match graphs HUD (dominance history + food).
+   *
+   * Gating mirrors what the two Insights tabs used to do:
+   *   - dominance row: strict 1v1 + the parser's own availability flag +
+   *     exactly two series (degraded parses carry no dominanceSeries at all,
+   *     see lib/DominanceSeries.js)
+   *   - food row: any player with a resourceSeries
+   *   - more than 4 players: hidden. There is no readable 8-line 38px plot.
+   *   - mobile / build-order-only layouts: hidden (CSS handles the layout modes)
+   */
+  _setupHudCharts () {
+    if (!window.HudCharts || this.mobileMode) return;
+    if (window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
+        window.WC3V_CONFIG.perf.hudCharts === false) return;
+    if (!this.mapData || !this.mapData.players) return;
+
+    if (this.hudCharts) this.hudCharts.destroy();
+    this.hudCharts = new window.HudCharts(this);
+    if (!this.hudCharts.mount()) { this.hudCharts = null; return; }
+
+    // Tear down rather than hide when there is nothing to draw: a live-but-empty
+    // instance would let the Settings toggle put a blank plate on the map.
+    const drop = () => { this.hudCharts.destroy(); this.hudCharts = null; };
+
+    const entries = Object.entries(this.mapData.players);
+    if (entries.length > 4) { drop(); return; }   // no readable 8-line 38px plot
+
+    const colorOf = (pid) => {
+      const cp = this.players.find(c => String(c.playerId) === String(pid));
+      return (cp && cp.playerColor) || '#888';
+    };
+
+    let domInfos = null;
+    if (this.mapData.dominance && this.mapData.dominance.available &&
+        this.getGameMode() === '1v1') {
+      const list = [];
+      for (const [pid, p] of entries) {
+        if (p && p.dominanceSeries && p.dominanceSeries.samples &&
+            p.dominanceSeries.samples.length) {
+          list.push({ id: pid, color: colorOf(pid), samples: p.dominanceSeries.samples });
+        }
+      }
+      if (list.length === 2) domInfos = list;
+    }
+
+    const foodInfos = [];
+    for (const [pid, p] of entries) {
+      if (p && p.resourceSeries && p.resourceSeries.length) {
+        foodInfos.push({ id: pid, color: colorOf(pid), series: p.resourceSeries });
+      }
+    }
+
+    if (!domInfos && !foodInfos.length) { drop(); return; }
+
+    this.hudCharts.setPlayers(domInfos, foodInfos);
+    // Trim the flat opening the same way the dominance tab did, so the width
+    // goes to the part of the match that has a story.
+    this.hudCharts.setStart(domInfos ? this._hudFirstMove(domInfos) : 0);
+    this.hudCharts.setVisible(this.viewOptions ? this.viewOptions.displayHudCharts !== false : true);
+  }
+
+  // First moment any player's dominance leaves the even line by >1 point.
+  // Mirrors DominanceChart.firstMoveT without reaching into that class, which
+  // is vendored to the desktop app and must keep its contract untouched.
+  _hudFirstMove (domInfos) {
+    let earliest = null;
+    for (const p of domInfos) {
+      for (const s of p.samples) {
+        if (Math.abs((s.score || 50) - 50) > 1) {
+          if (earliest === null || s.t < earliest) earliest = s.t;
+          break;
+        }
+      }
+    }
+    return earliest === null ? 0 : earliest;
   }
 
   setupPlayers () {
@@ -4953,6 +5021,19 @@ const Wc3vViewer = class {
       // here so all players' FX render together on top of unit icons.
       ClientPlayer.drawDeathFxQueue(frameData, playerCtx);
 
+      // uuid -> draw position, for the 2D selection fallback. The main render
+      // path builds this for its own reasons; the split path doesn't, so build
+      // it here. Reused Map, cleared not reallocated.
+      if (!frameData.udpByUuid) frameData.udpByUuid = new Map();
+      frameData.udpByUuid.clear();
+      for (let i = 0; i < frameData.unitDrawPositions.length; i++) {
+        const u = frameData.unitDrawPositions[i];
+        frameData.udpByUuid.set(u.uuid, u);
+      }
+      // 3D hoops ride along automatically here (they live in the scene, which
+      // both halves render); this only covers units 3D didn't draw.
+      ClientPlayer.renderSelectionMarkers(frameData, playerCtx, players, gs, viewOptions);
+
       // Nameplates
       if (viewOptions.displayText) {
         frameData.allNameplateBoxes = ClientPlayer.buildNameplateBoxes(frameData, playerCtx);
@@ -5116,6 +5197,13 @@ const Wc3vViewer = class {
       this.gameScaler.beginFrame(this.canvas);
     }
 
+    // Match graphs HUD. Drawn here — before the split-screen bail — because it
+    // is global match chrome on its own CSS-pixel canvas, so it is view- and
+    // camera-independent and one call site covers both paths. Sitting inside
+    // render() (not mainLoop) is also what keeps the cursor live while paused:
+    // every seek path calls render() synchronously after the loop self-stops.
+    if (this.hudCharts) this.hudCharts.render(this.gameTime);
+
     // Split-screen mode: render two diagonal halves
     if (this.broadcastCamera && this.broadcastCamera.isSplitActive) {
       this.renderSplitScreen();
@@ -5241,31 +5329,19 @@ const Wc3vViewer = class {
       this.teleportFx.render(this.actionCtx, transform, gameTime, viewOptions, this.gameScaler, this.players);
     }
 
-    // Battle Report transient banner: same canvas (action-canvas) as the
-    // teleport cinematic so it sits above unit icons. Also syncs the panel
-    // active-row highlight.
-    if (this.battleReportRenderer && this.actionCtx) {
-      this.battleReportRenderer.render(this.actionCtx, gameTime, this.gameScaler);
+    // Battle Report panel active-row highlight (self-throttled to 250ms).
+    // The transient on-canvas box is drawn much later in this frame — see the
+    // BattleCallout block below renderAllNameplates.
+    if (this.battleReportRenderer) {
       this.battleReportRenderer.syncPanel(gameTime);
     }
     if (this.insightsEventLog) {
       this.insightsEventLog.sync(gameTime);
     }
-    // Chart cursors. Both rebuild SVG polyline point strings and rescan every
-    // player's full sample array, so they're gated on their tab actually being
-    // on screen — otherwise a collapsed panel still paid for two chart updates
-    // every single frame. `perf.chartsWhenHidden` restores the old behaviour.
-    const bp = this.bottomPanel;
-    const chartsAlways = !!(window.WC3V_CONFIG && window.WC3V_CONFIG.perf &&
-      window.WC3V_CONFIG.perf.chartsWhenHidden);
-    const tabShowing = (id) => chartsAlways || !bp || !bp.isTabShowing || bp.isTabShowing(id);
-    if (this.resourceCharts && tabShowing('economy')) {
-      this.resourceCharts.setCursor(gameTime);
-    }
-    // Dominance chart now-cursor + progressive line reveal.
-    if (this.dominanceChart && tabShowing('dominance')) {
-      this.dominanceChart.setCursor(gameTime);
-    }
+    // The economy / dominance SVG chart cursors used to run here, each
+    // rebuilding polyline point strings and rescanning every player's full
+    // sample array. HudCharts replaced both with a cached-bitmap blit driven
+    // from the top of render().
 
     players.forEach(player => {
       player.preRender(
@@ -5355,6 +5431,12 @@ const Wc3vViewer = class {
     // here so all players' FX render together on top of unit icons.
     ClientPlayer.drawDeathFxQueue(frameData, playerCtx);
 
+    // Selection rings for anything the 3D pass didn't hoop (3D units off, or a
+    // model still loading). The 3D hoops themselves are drawn in the scene by
+    // UnitModelRenderer._flushSelection. Selection is UI, so it goes above
+    // corpses and below the base labels.
+    ClientPlayer.renderSelectionMarkers(frameData, playerCtx, players, this.gameScaler, viewOptions);
+
     // Per-player base nameplates — drawn on the unit layer so live unit
     // nameplates / floating text (rendered just after) sit on top of them.
     if (this.baseNameplateRenderer) {
@@ -5370,6 +5452,15 @@ const Wc3vViewer = class {
     if (viewOptions.displayFloatingText && this.eventFeed) {
       this.eventFeed.update(gameTime);
       this.eventFeed.renderPips(playerCtx, gameTime);
+    }
+
+    // Transient post-battle callout. Runs HERE, not up with teleportFx, because
+    // its placement solver queries frameData.nameplateTree — which is only
+    // populated by renderAllNameplates above. Draws on #action-canvas (L5), a
+    // different canvas but the same logical coordinate space, and actionCtx is
+    // deliberately outside the ctx/playerCtx/utilityCtx save/restore pair.
+    if (this.battleCallout && this.actionCtx && viewOptions.displayBattleCallouts) {
+      this.battleCallout.render(this.actionCtx, gameTime, this.gameScaler, frameData, viewOptions);
     }
 
     // Guided walkthrough: the step's emphasised units/buildings are lit IN the
