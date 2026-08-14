@@ -65,9 +65,9 @@
   const CALLOUT_DELAY_MS    = 600;   // brief beat after battle end
   const CALLOUT_DURATION_MS = 4000;
 
-  // How many unit lines one side gets in the on-canvas callout before we
-  // collapse the tail into "+N more". The box has to stay glanceable at a
-  // legible type size; the Battles tab carries the full itemisation.
+  // How many unit stacks one side names on its single units row before the
+  // tail collapses to "+N". The box has to stay glanceable at a legible type
+  // size; the Battles tab carries the full itemisation.
   const CALLOUT_UNIT_LINES = 3;
 
   function formatTime (ms) {
@@ -139,17 +139,27 @@
       const type = summary.engagementType || 'skirmish';
 
       const C = window.BattleCallout || {};
-      const accent = summary.hasHeroDeath
-        ? (C.COLOR_HERO || '#FFD43B')
-        : ((verdict && verdict.winner && verdict.winner.color) || '#8AA0C0');
+      // Two different jobs, deliberately not the same colour:
+      //   accent — the winning side's own colour, used ONLY on the verdict
+      //            word. Player colour is data.
+      //   rim    — the plate's metal. Tarnished gold when a hero died,
+      //            plain bronze otherwise.
+      // The dominance gauge sets the rule this follows: identity lives at the
+      // caps, the chassis stays metal. A saturated player colour wrapped all
+      // the way around a 220px plate reads as neon and fights the register.
+      const accent = (verdict && verdict.winner && verdict.winner.color) || '#C9BB96';
+      const rim = summary.hasHeroDeath ? '#C9A227' : '#6d5a35';
 
       const lines = [];
 
-      // Title — what kind of fight, and how it went.
+      // Eyebrow — the fight type, stamped into the plate in engraved serif.
       const typeLabel = TYPE_LABELS[type] || 'Fight';
+      lines.push({ kind: 'eyebrow', text: typeLabel.toUpperCase() });
+
+      // Title — how it went. This is the one thing a 4-second glance must land.
       lines.push({
         kind: 'title',
-        text: verdict && verdict.label ? typeLabel + ' — ' + verdict.label : typeLabel,
+        text: (verdict && verdict.label) ? verdict.label : 'Engagement',
         color: accent
       });
 
@@ -157,48 +167,51 @@
       const sub = this._calloutSubtitle(verdict, type);
       if (sub) lines.push({ kind: 'sub', text: sub, color: C.COLOR_SUB || '#BBB' });
 
-      // One block per side: who, then what they lost, then the bill.
+      // One block per side, at most three lines: who and what it cost them,
+      // the heroes (if any), then everything else on ONE line.
+      //
+      // This used to itemise one unit per line and a hero-snipe with two full
+      // armies produced a 14-line, 320px-tall plate — a wall of text where a
+      // 4-second glance was wanted. The Battles tab carries the full list.
       for (const side of sides) {
         const n = side.loss.count;
+        if (!n) {
+          lines.push({ kind: 'side', text: side.name + '  lost nothing', color: side.color || '#FFF' });
+          continue;
+        }
+
+        // Headline: who, how many, and the bill — all on the name row.
         lines.push({
           kind: 'side',
-          text: side.name + (n ? '  lost ' + n + (n === 1 ? ' unit' : ' units') : '  lost nothing'),
+          text: side.name + '  ' + n + (n === 1 ? ' unit' : ' units') + ' · ' +
+                side.loss.food + ' food · ' + fmtNum(side.loss.gold) + 'g',
           color: side.color || '#FFF'
         });
-        if (!n) continue;
 
-        // Heroes first — they are the reason anyone cares about this box.
-        const units = side.units.slice().sort((a, b) => {
-          if (!!b.isHero !== !!a.isHero) return b.isHero ? 1 : -1;
-          if (!!a.estimated !== !!b.estimated) return a.estimated ? 1 : -1;
-          return (b.count || 0) - (a.count || 0);
-        });
-        const shown = Math.min(units.length, CALLOUT_UNIT_LINES);
-        for (let i = 0; i < shown; i++) {
-          const u = units[i];
-          const label = (u.count || 1) + '× ' + u.displayName;
-          if (u.isHero) {
-            lines.push({ kind: 'hero', text: '★ ' + label, color: C.COLOR_HERO || '#FFD43B' });
-          } else if (u.estimated) {
-            lines.push({ kind: 'unitEst', text: label + ' (likely)', color: C.COLOR_EST || '#999' });
-          } else {
-            lines.push({ kind: 'unit', text: label, color: C.COLOR_UNIT || '#FFF' });
-          }
-        }
-        if (units.length > shown) {
+        // Heroes get their own row — they are the reason anyone cares.
+        const heroes = side.units.filter(u => u.isHero);
+        if (heroes.length) {
           lines.push({
-            kind: 'more',
-            text: '+' + (units.length - shown) + ' more',
-            color: C.COLOR_EST || '#999'
+            kind: 'hero',
+            text: '★ ' + heroes.map(u => u.displayName).join(' · '),
+            color: C.COLOR_HERO || '#E0B84A'
           });
         }
 
-        lines.push({
-          kind: 'stat',
-          text: side.loss.food + ' food · ' + fmtNum(side.loss.gold) + 'g · ' +
-                fmtNum(side.loss.lumber) + 'l',
-          color: C.COLOR_STAT || '#8AE890'
-        });
+        // Everything else, one row, biggest stacks first.
+        const rest = side.units.filter(u => !u.isHero)
+          .sort((a, b) => (b.count || 0) - (a.count || 0));
+        if (rest.length) {
+          const shown = rest.slice(0, CALLOUT_UNIT_LINES);
+          let text = shown.map(u => (u.count || 1) + '× ' + u.displayName).join(' · ');
+          if (rest.length > shown.length) text += '  +' + (rest.length - shown.length);
+          const allEstimated = shown.every(u => u.estimated);
+          lines.push({
+            kind: allEstimated ? 'unitEst' : 'unit',
+            text: allEstimated ? text + ' (likely)' : text,
+            color: allEstimated ? (C.COLOR_EST || '#999') : (C.COLOR_UNIT || '#FFF')
+          });
+        }
       }
 
       return {
@@ -208,12 +221,16 @@
         cx: center.x,
         cy: center.y,
         accent,
+        rim,
         lines,
         // Layout cache, keyed by the quantized canvas->CSS ratio. Filled by
         // BattleCallout on first draw and on every resize, never per frame.
         _w: { rq: -1, w: 0, h: 0, padX: 0, padY: 0, accentH: 0, radius: 0, border: 1, swatch: 0 },
         _solvedAt: -1, _anchorX: 0, _anchorY: 0,
-        _offX: 0, _offY: 0, _slideX: 0, _slideY: 0, _slideAt: -1
+        _offX: 0, _offY: 0, _slideX: 0, _slideY: 0, _slideAt: -1,
+        // Baked plate bitmap — filled by BattleCallout on first draw and on a
+        // resize, dropped by its small LRU. See BattleCallout._bake.
+        _bmp: null
       };
     }
 

@@ -16547,8 +16547,12 @@ button.mcb-summary {
    maths and no collision at any width. Below 360px of band the class
    hides itself rather than render something unreadable.
 
-   336px = .corner-stack-left (10) + .ip (320) + 6 breathing room.
-   216px = .corner-stack-right (12) + .minimap-pip (~192) + 12.
+   The insets are SYMMETRIC (336 both sides) even though the right-hand
+   stack is narrower than the left. Reserving each side's true width
+   centred the box on the free band, which sits ~58px right of the map's
+   actual centre — visibly off. Equal insets keep it on the real centre
+   line at every width, and the wider of the two stacks is the one that
+   has to be cleared anyway. 336 = .corner-stack-left (10) + .ip (320) + 6.
 
    The positioning lives on the WRAPPER DIV, not the canvas. A <canvas>
    is a REPLACED element: `width:auto` on one resolves from its intrinsic
@@ -16562,10 +16566,10 @@ button.mcb-summary {
   position: absolute;
   bottom: 10px;
   left: 336px;
-  right: 216px;
+  right: 336px;
   margin: 0 auto;
-  max-width: 600px;
-  height: 96px;
+  max-width: 620px;
+  height: 100px;      /* 9 pad + 36 well + 10 gap + 36 well + 9 pad */
   z-index: 6;
   pointer-events: none;
   display: none;                /* JS adds .hud-on once it has data */
@@ -16580,6 +16584,18 @@ button.mcb-summary {
    viewer's DEFAULT layout and must keep it. */
 .layout-mode-static-bo #hud-charts,
 .layout-mode-mobile-bo #hud-charts { display: none !important; }
+
+/* Below 1036px of map area the two 336px reservations leave less than the
+   360px the class will render into, and the box collapses to zero width while
+   still being display:block. Hide it outright instead.
+   #main-wrapper already declares `container-type: inline-size`, so this is an
+   exact query against the real available width rather than a viewport guess —
+   the build-order panel's width is what actually decides this, not the window.
+   At that size the map itself is ~660px and a 100px HUD over it would be an
+   intrusion anyway. 1036 = 336 + 360 + 336 + 4 slack. */
+@container (max-width: 1036px) {
+  #hud-charts { display: none !important; }
+}
 
 /* ============================================================
    Insights Panel (#insights-panel) — tabbed container hosting

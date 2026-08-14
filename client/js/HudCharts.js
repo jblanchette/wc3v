@@ -30,34 +30,31 @@
  */
 
 (function () {
-  const PAD_X = 8;
-  const PAD_Y = 6;
-  // 88, not 66: "DOMINANCE" at bold 12.8px Arial measures ~78px and was
-  // running into the plot. Sized to the longest title with a little slack.
-  const LABEL_W = 88;      // left gutter: row title
-  const VALUE_W = 76;      // right gutter: readouts
-  const ROW_H = 38;
-  const ROW_GAP = 8;
+  // Plate geometry. The panel is a cast slab with a channel cut per row —
+  // see client/js/ForgedPanel.js for the material and why it looks like this.
+  const PAD_X = 11;
+  const PAD_Y = 9;
+  // 106: "DOMINANCE" set in tracked Georgia is ~95px at 12.8 and was landing
+  // on the housing. Measured, not guessed.
+  const LABEL_W = 106;     // left gutter: engraved row wordmark
+  const VALUE_W = 74;      // right gutter: readouts
+  const ROW_H = 40;        // bronze housing; the cut channel is LIP smaller
+  const ROW_GAP = 10;
+  const CHAMFER = 10;
+  // Visible bronze lip between the housing edge and the channel floor. This
+  // is the whole reason the plot reads as cut into metal rather than painted
+  // onto it — see .dom-track's note about 2px vanishing.
+  const LIP = 4;
 
   const TITLE_PX = 12.8;   // the project's minimum readable size, exactly
-  const VALUE_PX = 14;
+  const VALUE_PX = 15;
 
-  // Below this the label gutter is dropped and titles draw inline over the
-  // plot; below the second, the HUD hides rather than render something unreadable.
-  const NARROW_W = 460;
+  // Below this the label gutter is dropped and wordmarks draw over the well;
+  // below the second, the HUD hides rather than render something unreadable.
+  const NARROW_W = 470;
   const MIN_W = 360;
 
-  // 0.94, not 0.90: at 0.90 the terrain reads through the plate enough to
-  // fight the lines over the bright grass this map is mostly made of.
-  const BG        = 'rgba(12, 12, 18, 0.94)';
-  const BORDER    = 'rgba(255, 255, 255, 0.16)';
-  const AXIS      = 'rgba(255, 255, 255, 0.16)';
-  const GRID      = 'rgba(255, 255, 255, 0.10)';
-  const MID       = 'rgba(255, 255, 255, 0.26)';
-  const TITLE_COL = 'rgba(255, 255, 255, 0.62)';
-  const CURSOR    = '#FFD43B';
-
-  const FAINT_ALPHA = 0.22;   // the not-yet-played portion of every line
+  const FAINT_ALPHA = 0.20;   // the not-yet-played portion of every line
 
   // WC3 upkeep thresholds. Real reference lines, not decoration: crossing 50
   // costs 30% of gold income and crossing 80 costs 60%.
@@ -162,12 +159,20 @@
     }
 
     _resize (cssW, cssH) {
-      if (!(cssW > 0) || !(cssH > 0)) return;
       if (Math.abs(cssW - this._cssW) < 0.5 && Math.abs(cssH - this._cssH) < 0.5) return;
       this._cssW = cssW;
       this._cssH = cssH;
+      // A collapsed or hidden box reports 0. Drop the built state rather than
+      // keeping a stale bitmap alive against a size that no longer exists —
+      // CSS hides the element below the fit threshold, but the observer still
+      // fires and this must not be left claiming it is built.
       this._built = false;
       this._dirty = true;
+      if (!(cssW > 0) || !(cssH > 0)) {
+        this._bmpChrome = null;
+        this._bmpBright = null;
+        this._rows.length = 0;
+      }
     }
 
     // ------------------------------------------------------------------
@@ -195,9 +200,12 @@
       this.canvas.width = Math.round(cssW * dpr);
       this.canvas.height = Math.round(cssH * dpr);
 
+      // The housing spans the gutters; the plot is the channel inside it.
       const labelW = cssW < NARROW_W ? 0 : LABEL_W;
-      const plotX = PAD_X + labelW;
-      const plotW = Math.max(40, cssW - plotX - VALUE_W - PAD_X);
+      const frameX = PAD_X + labelW;
+      const frameW = Math.max(40 + LIP * 2, cssW - frameX - VALUE_W - PAD_X);
+      const plotX = frameX + LIP;
+      const plotW = frameW - LIP * 2;
 
       // Time domain — shared by both rows so the two cursors line up.
       this._endT = this._matchEnd();
@@ -205,12 +213,17 @@
 
       this._rows.length = 0;
       let y = PAD_Y;
+      const geom = (fy) => ({
+        fx: frameX, fy, fw: frameW, fh: ROW_H,            // bronze housing
+        x: plotX, y: fy + LIP, w: plotW, h: ROW_H - LIP * 2,  // cut channel = the plot
+        labelW
+      });
       if (this._dom) {
-        this._rows.push(this._buildDomRow(plotX, y, plotW, ROW_H, labelW));
+        this._rows.push(this._buildDomRow(geom(y)));
         y += ROW_H + ROW_GAP;
       }
       if (this._food) {
-        this._rows.push(this._buildFoodRow(plotX, y, plotW, ROW_H, labelW));
+        this._rows.push(this._buildFoodRow(geom(y)));
         y += ROW_H + ROW_GAP;
       }
       if (!this._rows.length) return false;
@@ -244,7 +257,7 @@
       return end;
     }
 
-    _buildDomRow (x, y, w, h, labelW) {
+    _buildDomRow (g) {
       // Same fitted band DominanceChart uses (padded, symmetric-ish about 50,
       // min span 30) — a hard 0-100 axis flattens a game that lived in 40-60.
       let lo = 50, hi = 50;
@@ -256,16 +269,20 @@
       }
       const yMin = Math.max(0, Math.min(35, Math.floor(lo - 5)));
       const yMax = Math.min(100, Math.max(65, Math.ceil(hi + 5)));
-      return {
-        kind: 'dom', title: 'DOMINANCE', x, y, w, h, labelW,
+      return Object.assign({}, g, {
+        kind: 'dom', title: 'DOMINANCE',
         yMin, yMax,
         series: this._dom.map(p => ({ color: p.color, pts: p.samples, key: 'score' })),
+        // No numeric readout — DominanceBar above owns the current split, and
+        // the same number twice on one screen is noise. The right gutter names
+        // the reference groove instead, so it reads as labelled, not empty.
         readout: false,
-        guides: [{ v: 50, color: MID, dash: true }]
-      };
+        gutterMark: { text: 'EVEN', v: 50 },
+        guides: [{ v: 50, strong: true }]
+      });
     }
 
-    _buildFoodRow (x, y, w, h, labelW) {
+    _buildFoodRow (g) {
       // Fixed to the WHOLE-GAME max, unlike the old ResourceCharts which
       // rescaled to the max up to the cursor. A pre-rendered bitmap can't
       // rescale — and a fixed axis is also the only way the curve is
@@ -279,15 +296,15 @@
       }
       max = Math.ceil(max / 10) * 10;
       const guides = [];
-      if (max > UPKEEP_LOW) guides.push({ v: UPKEEP_LOW, color: GRID, dash: true });
-      if (max > UPKEEP_HIGH) guides.push({ v: UPKEEP_HIGH, color: GRID, dash: true });
-      return {
-        kind: 'food', title: 'FOOD', x, y, w, h, labelW,
+      if (max > UPKEEP_LOW) guides.push({ v: UPKEEP_LOW });
+      if (max > UPKEEP_HIGH) guides.push({ v: UPKEEP_HIGH, strong: true });
+      return Object.assign({}, g, {
+        kind: 'food', title: 'FOOD',
         yMin: 0, yMax: max,
         series: this._food.map(p => ({ color: p.color, pts: p.series, key: 'foodUsed' })),
         readout: true,
         guides
-      };
+      });
     }
 
     // ------------------------------------------------------------------
@@ -303,89 +320,195 @@
       return { canvas: c, ctx: g };
     }
 
-    // Chrome carries the panel, the axes, the titles AND both lines at low
-    // alpha; bright carries ONLY the lines at full strength on a transparent
-    // background. The split is load-bearing: the reveal clip is applied to the
-    // bright blit alone, so it can never brighten a row title.
+    // Chrome carries the plate, the cut channels, the engraved wordmarks, the
+    // etched reference grooves AND both series at low alpha; bright carries
+    // ONLY the series at full strength on a transparent background. The split
+    // is load-bearing: the reveal clip is applied to the bright blit alone, so
+    // it can never brighten a wordmark or a stud.
     _paintBitmaps (cssW, cssH, dpr) {
+      const F = window.ForgedPanel;
       const chrome = this._newBitmap(cssW, cssH, dpr);
       const bright = this._newBitmap(cssW, cssH, dpr);
       const g = chrome.ctx;
 
-      g.fillStyle = BG;
-      this._roundRect(g, 0.5, 0.5, cssW - 1, cssH - 1, 8);
-      g.fill();
-      g.strokeStyle = BORDER;
-      g.lineWidth = 1;
-      g.stroke();
+      F.chassis(g, 0, 0, cssW, cssH, { chamfer: CHAMFER });
+
+      // Mounting studs inside the chamfers, same as the gauge's rail.
+      const sr = 2.5;
+      const si = CHAMFER + 3;
+      F.stud(g, si, si, sr);
+      F.stud(g, cssW - si, si, sr);
+      F.stud(g, si, cssH - si, sr);
+      F.stud(g, cssW - si, cssH - si, sr);
 
       for (const row of this._rows) {
-        // Title in the left gutter, or inline over the plot when narrow.
-        g.font = 'bold ' + TITLE_PX + 'px Arial';
-        g.fillStyle = TITLE_COL;
-        g.textBaseline = 'middle';
+        // Bronze housing, then the channel cut into it. The LIP between the
+        // two is what makes this read as metal rather than a painted band.
+        F.frame(g, row.fx, row.fy, row.fw, row.fh, 7);
+        F.well(g, row.x, row.y, row.w, row.h, 4);
+        // Mounting studs on the housing lip, as on the gauge's rail.
+        F.stud(g, row.fx + LIP / 2 + 1, row.fy + row.fh / 2, 1.8);
+        F.stud(g, row.fx + row.fw - LIP / 2 - 1, row.fy + row.fh / 2, 1.8);
+
+        // Engraved wordmark in the left gutter. When the gutter is dropped it
+        // goes over the channel's top-left — still engraved, just tighter.
         if (row.labelW > 0) {
-          g.textAlign = 'left';
-          g.fillText(row.title, PAD_X, row.y + row.h / 2);
+          F.engrave(g, row.title, PAD_X, row.fy + row.fh / 2, TITLE_PX, { tracking: 0.10 });
         } else {
-          g.textAlign = 'left';
-          g.fillText(row.title, row.x + 2, row.y + TITLE_PX * 0.6);
+          F.engrave(g, row.title, row.x + 6, row.y + 9, TITLE_PX * 0.86, { tracking: 0.06 });
         }
 
-        // Guides + baseline.
+        // Right gutter: name the reference groove on rows with no readout.
+        if (row.gutterMark) {
+          F.engrave(g, row.gutterMark.text,
+                    cssW - PAD_X, this._yOf(row, row.gutterMark.v),
+                    TITLE_PX * 0.86, { tracking: 0.16, align: 'right' });
+        }
+
+        // Minute grid, etched into the channel floor. Without it the plot is
+        // a curve floating in a black box with no sense of pace; with it the
+        // reveal reads against real elapsed time. Interval picked to land
+        // 4-8 divisions across whatever span this match actually has.
+        const span = this._endT - this._startT;
+        const step = [60, 120, 180, 300, 600, 900]
+          .find(s => span / (s * 1000) <= 8) || 1200;
+        g.save();
+        F.path(g, row.x, row.y, row.w, row.h, 4);
+        g.clip();
+        for (let t = Math.ceil(this._startT / (step * 1000)) * step * 1000;
+             t < this._endT; t += step * 1000) {
+          const gx = Math.round(this._xOf(row, t)) + 0.5;
+          g.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          g.fillRect(gx - 1, row.y, 1, row.h);
+          g.fillStyle = 'rgba(201, 187, 150, 0.07)';
+          g.fillRect(gx, row.y, 1, row.h);
+        }
+        g.restore();
+
+        // Reference grooves, cut into the channel floor (the 50 midline; the
+        // 50/80 upkeep thresholds). Drawn as horizontal etch: a dark cut with
+        // a struck highlight under it.
         for (const guide of row.guides) {
-          const gy = this._yOf(row, guide.v);
-          g.strokeStyle = guide.color;
+          const gy = Math.round(this._yOf(row, guide.v)) + 0.5;
+          g.save();
+          F.path(g, row.x, row.y, row.w, row.h, 4);
+          g.clip();
+          g.strokeStyle = 'rgba(0, 0, 0, 0.75)';
           g.lineWidth = 1;
-          if (guide.dash) g.setLineDash([4, 4]);
-          g.beginPath();
-          g.moveTo(row.x, gy + 0.5);
-          g.lineTo(row.x + row.w, gy + 0.5);
-          g.stroke();
-          g.setLineDash([]);
+          g.beginPath(); g.moveTo(row.x, gy); g.lineTo(row.x + row.w, gy); g.stroke();
+          g.strokeStyle = guide.strong
+            ? 'rgba(201, 187, 150, 0.26)' : 'rgba(201, 187, 150, 0.13)';
+          g.beginPath(); g.moveTo(row.x, gy + 1); g.lineTo(row.x + row.w, gy + 1); g.stroke();
+          g.restore();
         }
-        g.strokeStyle = AXIS;
-        g.lineWidth = 1;
-        g.beginPath();
-        g.moveTo(row.x + 0.5, row.y);
-        g.lineTo(row.x + 0.5, row.y + row.h);
-        g.moveTo(row.x, row.y + row.h + 0.5);
-        g.lineTo(row.x + row.w, row.y + row.h + 0.5);
-        g.stroke();
 
-        // Lines — faint into chrome, full strength into bright.
+        // Series. Faint into chrome, full strength into bright — each with a
+        // filled body beneath it so the curve reads as something poured into
+        // the channel rather than a hairline floating in it.
         for (const s of row.series) {
-          this._strokeSeries(g, row, s, FAINT_ALPHA, 1.4);
-          this._strokeSeries(bright.ctx, row, s, 1, 1.8);
+          this._strokeSeries(g, row, s, FAINT_ALPHA, 1.4, false);
+          this._strokeSeries(bright.ctx, row, s, 1, 2, true);
         }
+
+        // Glass over the channel, last, so it sits on the fills.
+        F.glass(g, row.x, row.y, row.w, row.h, 4);
       }
 
       this._bmpChrome = chrome.canvas;
       this._bmpBright = bright.canvas;
     }
 
-    _strokeSeries (g, row, s, alpha, width) {
+    // One series. `body` fills the area between the curve and its baseline —
+    // the dominance row fills back to the 50 line (so a lead reads as mass on
+    // one side of even), the food row fills to the floor. Fill is shaded top
+    // light / bottom dark like .dom-seg: a flat slab of colour reads as paint
+    // no matter how good the hue is.
+    _strokeSeries (g, row, s, alpha, width, body) {
       const pts = s.pts;
       if (!pts || pts.length < 2) return;
       const key = s.key;
+      const baseY = row.kind === 'dom'
+        ? this._yOf(row, 50)
+        : row.y + row.h;
+
+      // Trace once into a reusable path array so the fill and the stroke can
+      // share it without walking the samples twice.
+      let first = true, lastX = 0;
       g.save();
-      g.globalAlpha = alpha;
-      g.strokeStyle = s.color || '#888';
-      g.lineWidth = width;
-      g.lineJoin = 'round';
-      g.lineCap = 'round';
+      // Everything this series draws stays inside its own channel.
+      window.ForgedPanel.path(g, row.x, row.y, row.w, row.h, 4);
+      g.clip();
       g.beginPath();
-      let started = false;
       for (let i = 0; i < pts.length; i++) {
         const p = pts[i];
         if (p.t < this._startT) continue;
         const px = this._xOf(row, p.t);
         const py = this._yOf(row, p[key]);
-        if (!started) { g.moveTo(px, py); started = true; }
+        if (first) { g.moveTo(px, py); first = false; }
+        else g.lineTo(px, py);
+        lastX = px;
+      }
+      if (first) { g.restore(); return; }
+
+      if (body) {
+        // Close down to the baseline and fill.
+        g.lineTo(lastX, baseY);
+        g.lineTo(this._xOf(row, this._startT), baseY);
+        g.closePath();
+        // Shaded like .dom-seg — bright where the light hits, deep at the
+        // bottom. A flat wash of colour reads as paint no matter how good the
+        // hue is, and at low alpha over a near-black channel it vanishes.
+        const grad = g.createLinearGradient(0, row.y, 0, row.y + row.h);
+        grad.addColorStop(0, this._rgba(s.color, 0.60));
+        grad.addColorStop(0.55, this._rgba(s.color, 0.32));
+        grad.addColorStop(1, this._rgba(s.color, 0.10));
+        g.fillStyle = grad;
+        g.fill();
+      }
+
+      // Re-trace for the stroke (the fill closed the path).
+      g.beginPath();
+      first = true;
+      for (let i = 0; i < pts.length; i++) {
+        const p = pts[i];
+        if (p.t < this._startT) continue;
+        const px = this._xOf(row, p.t);
+        const py = this._yOf(row, p[key]);
+        if (first) { g.moveTo(px, py); first = false; }
         else g.lineTo(px, py);
       }
-      if (started) g.stroke();
+      g.lineJoin = 'round';
+      g.lineCap = 'round';
+      // Hard black backing under the curve — the in-game way to seat a bright
+      // line on a dark field. No glow anywhere.
+      if (body) {
+        g.globalAlpha = 0.85;
+        g.strokeStyle = '#000';
+        g.lineWidth = width + 2;
+        g.stroke();
+      }
+      g.globalAlpha = alpha;
+      g.strokeStyle = s.color || '#888';
+      g.lineWidth = width;
+      g.stroke();
       g.restore();
+    }
+
+    // '#rrggbb' -> 'rgba(r,g,b,a)'. Memoized per (color, alpha) pair; this
+    // runs only at build time but the parse is pure waste to repeat.
+    _rgba (hex, a) {
+      const key = hex + '|' + a;
+      if (!this._rgbaCache) this._rgbaCache = new Map();
+      let out = this._rgbaCache.get(key);
+      if (out === undefined) {
+        const h = String(hex || '#888888').replace('#', '');
+        const n = h.length === 3
+          ? h.split('').map(c => parseInt(c + c, 16))
+          : [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+        out = 'rgba(' + (n[0] | 0) + ',' + (n[1] | 0) + ',' + (n[2] | 0) + ',' + a + ')';
+        this._rgbaCache.set(key, out);
+      }
+      return out;
     }
 
     _xOf (row, t) {
@@ -400,20 +523,6 @@
       let u = span > 0 ? (v - row.yMin) / span : 0;
       if (u < 0) u = 0; else if (u > 1) u = 1;
       return row.y + row.h - u * row.h;
-    }
-
-    _roundRect (g, x, y, w, h, r) {
-      g.beginPath();
-      g.moveTo(x + r, y);
-      g.lineTo(x + w - r, y);
-      g.quadraticCurveTo(x + w, y, x + w, y + r);
-      g.lineTo(x + w, y + h - r);
-      g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      g.lineTo(x + r, y + h);
-      g.quadraticCurveTo(x, y + h, x, y + h - r);
-      g.lineTo(x, y + r);
-      g.quadraticCurveTo(x, y, x + r, y);
-      g.closePath();
     }
 
     // ------------------------------------------------------------------
@@ -473,6 +582,7 @@
 
       ctx.drawImage(this._bmpChrome, 0, 0, W, H);
 
+      const F = window.ForgedPanel;
       const row0 = this._rows[0];
       const cursorX = this._xOf(row0, gameTime);
 
@@ -483,31 +593,31 @@
       ctx.drawImage(this._bmpBright, 0, 0, W, H);
       ctx.restore();
 
-      // Cursor — fillRect, not a stroked path, so no path building per frame.
-      ctx.fillStyle = CURSOR;
+      // Playback cursor — a struck bone groove, not a bright rule. Three
+      // 1px fillRects (shadow / cut / highlight), so still no path building.
+      const cx = Math.round(cursorX);
       for (let i = 0; i < this._rows.length; i++) {
         const row = this._rows[i];
-        ctx.fillRect(Math.round(cursorX), row.y, 1, row.h);
+        if (cx < row.x || cx > row.x + row.w) continue;
+        F.groove(ctx, cx, row.y + 1, row.h - 2, F.COLORS.bone);
       }
 
-      // Readouts.
-      ctx.font = 'bold ' + VALUE_PX + 'px Arial';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
+      // Readouts, set as in-game numerals: tabular mono with a hard black
+      // backing. Player colour is data and stays.
       const rx = W - PAD_X;
       for (let i = 0; i < this._rows.length; i++) {
         const row = this._rows[i];
         if (!row.readout) continue;
-        let ty = row.y + row.h / 2 - (row.series.length - 1) * 9;
+        let ty = row.y + row.h / 2 - (row.series.length - 1) * 10;
         for (let si = 0; si < row.series.length; si++) {
           const s = row.series[si];
           const v = this._valueAt(row, s, gameTime);
           if (v != null) {
             const n = Math.round(v);
-            ctx.fillStyle = s.color || '#FFF';
-            ctx.fillText(n >= 0 && n <= 200 ? this._nums[n] : '-', rx, ty);
+            F.numeral(ctx, n >= 0 && n <= 200 ? this._nums[n] : '-',
+                      rx, ty, VALUE_PX, s.color || F.COLORS.ink);
           }
-          ty += 18;
+          ty += 20;
         }
       }
     }

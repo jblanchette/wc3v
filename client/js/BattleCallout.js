@@ -57,30 +57,34 @@
 
   const EDGE_INSET = 8;
 
-  const COLOR_BG      = 'rgba(12, 12, 18, 0.90)';
-  const COLOR_BORDER  = 'rgba(255, 255, 255, 0.18)';
-  const COLOR_HERO    = '#FFD43B';
-  const COLOR_SUB     = 'rgba(255, 255, 255, 0.72)';
-  const COLOR_UNIT    = '#FFFFFF';
-  const COLOR_EST     = 'rgba(255, 255, 255, 0.58)';
-  const COLOR_STAT    = '#8AE890';
+  // Ink colours, pulled toward the viewer's warm carved register rather than
+  // pure white / neon. Player and verdict colours are DATA and stay as-is.
+  const COLOR_HERO    = '#E0B84A';   // tarnished gold, not #FFD43B neon
+  const COLOR_SUB     = 'rgba(214, 200, 168, 0.72)';
+  const COLOR_UNIT    = '#d9d2c0';
+  const COLOR_EST     = 'rgba(214, 200, 168, 0.52)';
+  const COLOR_STAT    = '#93A97B';   // moss, matching the --dom-green register
 
   // Per-line-kind metrics, as multiples of F. Kept as a lookup rather than a
-  // switch so the layout pass is a flat loop.
-  //   size   — font size multiplier
-  //   bold   — font weight
-  //   lead   — line height multiplier
-  //   indent — left offset multiplier
-  //   gap    — extra space ABOVE this line
+  // switch so the layout pass is a flat loop. Every `size` is chosen so that
+  // size * SCREEN_FONT_PX clears the project's 12.8px floor.
+  //   size     — font size multiplier
+  //   bold     — heavier sans weight
+  //   serif    — engraved plate lettering instead of body sans
+  //   tracking — letter-spacing in em
+  //   lead     — line height multiplier
+  //   indent   — left offset multiplier
+  //   gap      — extra space ABOVE this line
   const KIND = {
-    title:   { size: 1.25, bold: true,  lead: 1.72, indent: 0.00, gap: 0.00 },
-    sub:     { size: 0.88, bold: false, lead: 1.28, indent: 0.00, gap: 0.00 },
-    side:    { size: 1.00, bold: true,  lead: 1.50, indent: 1.00, gap: 0.38 },
-    hero:    { size: 1.00, bold: true,  lead: 1.34, indent: 0.90, gap: 0.00 },
-    unit:    { size: 1.00, bold: false, lead: 1.34, indent: 0.90, gap: 0.00 },
-    unitEst: { size: 1.00, bold: false, lead: 1.34, indent: 0.90, gap: 0.00 },
-    more:    { size: 0.88, bold: false, lead: 1.28, indent: 0.90, gap: 0.00 },
-    stat:    { size: 0.88, bold: false, lead: 1.34, indent: 0.90, gap: 0.00 }
+    eyebrow: { size: 0.88, serif: true, tracking: 0.22, lead: 1.45, indent: 0.00, gap: 0.00 },
+    title:   { size: 1.22, bold: true,  lead: 1.58, indent: 0.00, gap: 0.10 },
+    sub:     { size: 0.88, bold: false, lead: 1.30, indent: 0.00, gap: 0.00 },
+    side:    { size: 1.00, bold: true,  lead: 1.50, indent: 1.00, gap: 0.40 },
+    hero:    { size: 1.00, bold: true,  lead: 1.34, indent: 0.95, gap: 0.00 },
+    unit:    { size: 1.00, bold: false, lead: 1.34, indent: 0.95, gap: 0.00 },
+    unitEst: { size: 1.00, bold: false, lead: 1.34, indent: 0.95, gap: 0.00 },
+    more:    { size: 0.88, bold: false, lead: 1.28, indent: 0.95, gap: 0.00 },
+    stat:    { size: 0.88, bold: false, lead: 1.34, indent: 0.95, gap: 0.00 }
   };
 
   class BattleCallout {
@@ -95,10 +99,7 @@
       this._queryBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
       this._placed = [];        // pooled AABBs of banners drawn THIS frame
       this._placedN = 0;
-      // Memoized `bold ${n}px Arial` / `${n}px Arial` strings. Font assignment
-      // is one of the pricier 2D state changes and the old banner built a
-      // fresh literal for it on every line of every frame.
-      this._fontCache = new Map();
+      this._baked = [];         // LRU of models holding a baked plate bitmap
     }
 
     // Models come pre-built from BattleReportRenderer.setBattles — see the
@@ -111,6 +112,8 @@
     reset () {
       this._cursor = 0;
       this._lastT = -1;
+      for (const m of this._baked) { m._bmp = null; m._w.rq = -1; }
+      this._baked.length = 0;
       for (const m of this._models) {
         m._solvedAt = -1;
         m._anchorX = 0; m._anchorY = 0;
@@ -118,16 +121,6 @@
         m._slideX = 0; m._slideY = 0;
         m._slideAt = -1;
       }
-    }
-
-    _font (px, bold) {
-      const key = bold ? -px : px;
-      let s = this._fontCache.get(key);
-      if (s === undefined) {
-        s = (bold ? 'bold ' : '') + px + 'px Arial';
-        this._fontCache.set(key, s);
-      }
-      return s;
     }
 
     // ------------------------------------------------------------------
@@ -139,12 +132,12 @@
       const w = model._w;
       if (w.rq === rq) return;
 
-      const padX = Math.round(F * 0.80);
-      const padY = Math.round(F * 0.55);
-      const accentH = Math.round(F * 0.26);
+      const FP = window.ForgedPanel;
+      const padX = Math.round(F * 0.85);
+      const padY = Math.round(F * 0.62);
 
       let maxContent = 0;
-      let y = padY + accentH;
+      let y = padY;
 
       for (let i = 0; i < model.lines.length; i++) {
         const line = model.lines[i];
@@ -154,29 +147,117 @@
         const indent = Math.round(F * k.indent);
         const gap = i === 0 ? 0 : Math.round(F * k.gap);
 
-        ctx.font = this._font(px, k.bold);
-        const tw = ctx.measureText(line.text).width;
+        // Measured through the same helper that paints, so layout and paint
+        // can never disagree about a serif or a tracked string.
+        const tw = FP.measure(ctx, line.text, px, {
+          serif: k.serif, tracking: k.tracking, weight: k.bold ? 800 : 500
+        });
         if (indent + tw > maxContent) maxContent = indent + tw;
 
-        // Cached per line, parallel arrays would save nothing here — these
-        // objects already exist and are mutated in place, not reallocated.
+        // Cached per line; these objects already exist and are mutated in
+        // place, not reallocated.
         line._px = px;
-        line._bold = k.bold;
+        line._bold = !!k.bold;
         line._indent = indent;
         line._y = y + gap + lead / 2;
         y += gap + lead;
       }
 
-      const minW = F * 14, maxW = F * 26;
+      const minW = F * 15, maxW = F * 27;
       w.rq = rq;
       w.padX = padX;
       w.padY = padY;
-      w.accentH = accentH;
       w.w = Math.round(Math.max(minW, Math.min(maxW, padX * 2 + maxContent)));
       w.h = Math.round(y + padY);
-      w.radius = Math.round(F * 0.42);
-      w.border = Math.max(1, F * 0.13);
-      w.swatch = Math.round(F * 0.60);
+      // Chamfer, not a corner radius — a cut corner reads as a machined plate.
+      w.radius = Math.round(F * 0.62);
+      w.border = Math.max(2, Math.round(F * 0.13));
+      w.swatch = Math.round(F * 0.52);
+
+      this._bake(model, F);
+    }
+
+    /**
+     * Render the whole plate — chassis, studs, every line of type — into an
+     * offscreen bitmap ONCE per (battle, ratio).
+     *
+     * The box's content never changes; only where it sits and how faded it is.
+     * Baking means the carved material costs nothing per frame: a frame is one
+     * drawImage plus the leader line, instead of a gradient fill, a pattern
+     * fill, four radial gradients and ~20 fillText. It is also what keeps the
+     * per-frame allocation count at zero — createLinearGradient and
+     * createRadialGradient both allocate, and four studs per banner per frame
+     * would have been ~360 short-lived gradient objects a second.
+     */
+    _bake (model, F) {
+      const w = model._w;
+      const FP = window.ForgedPanel;
+      const cv = model._bmp || (model._bmp = document.createElement('canvas'));
+      cv.width = w.w;
+      cv.height = w.h;
+      const g = cv.getContext('2d');
+      g.clearRect(0, 0, w.w, w.h);
+
+      // Cast plate. The verdict colour is carried by a FULL PERIMETER border
+      // plus a full-area wash — a coloured bar along one edge is forbidden in
+      // this project, canvas included.
+      FP.chassis(g, 0, 0, w.w, w.h, {
+        chamfer: w.radius,
+        border: model.rim || '#6d5a35',
+        borderWidth: w.border,
+        // A warm wash, not a player-colour one — the plate is metal; the
+        // fight's colour belongs on the verdict word and the side rivets.
+        tint: model.rim || '#6d5a35',
+        tintAlpha: 0.06
+      });
+
+      const sr = Math.max(1.6, F * 0.15);
+      const si = w.radius + F * 0.20;
+      FP.stud(g, si, si, sr);
+      FP.stud(g, w.w - si, si, sr);
+      FP.stud(g, si, w.h - si, sr);
+      FP.stud(g, w.w - si, w.h - si, sr);
+
+      const lines = model.lines;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const tx = w.padX + line._indent;
+        const ty = line._y;
+
+        if (line.kind === 'eyebrow') {
+          FP.engrave(g, line.text, tx, ty, line._px, { tracking: 0.22 });
+          // Hairline rule running out from the wordmark to the plate edge.
+          const tw = FP.measure(g, line.text, line._px, { serif: true, tracking: 0.22 });
+          const rx0 = tx + tw + F * 0.5;
+          const rx1 = w.w - w.padX;
+          if (rx1 > rx0) {
+            g.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            g.fillRect(rx0, Math.round(ty), rx1 - rx0, 1);
+            g.fillStyle = 'rgba(201, 187, 150, 0.13)';
+            g.fillRect(rx0, Math.round(ty) + 1, rx1 - rx0, 1);
+          }
+        } else if (line.kind === 'side') {
+          // Small leading rivet. A dot is the sanctioned alternative to the
+          // forbidden edge stripe.
+          FP.stud(g, w.padX + w.swatch / 2, ty, w.swatch / 2);
+          FP.inked(g, line.text, tx, ty, line._px, line.color, { weight: 800, tracking: 0.02 });
+        } else {
+          FP.inked(g, line.text, tx, ty, line._px, line.color,
+                   { weight: line._bold ? 800 : 500 });
+        }
+      }
+
+      // Keep only the few most recently baked plates. A long match can detect
+      // 30+ battles and each bitmap is a few hundred KB; at most two are ever
+      // on screen at once.
+      const lru = this._baked;
+      const at = lru.indexOf(model);
+      if (at >= 0) lru.splice(at, 1);
+      lru.push(model);
+      while (lru.length > 4) {
+        const old = lru.shift();
+        if (old !== model) { old._bmp = null; old._w.rq = -1; }
+      }
     }
 
     // ------------------------------------------------------------------
@@ -387,70 +468,34 @@
 
     _draw (ctx, model, x, y, ax, ay, alpha, F) {
       const w = model._w;
-      const accent = model.accent;
+      const FP = window.ForgedPanel;
 
       ctx.globalAlpha = alpha;
 
       // Leader line back to the fight — the box can be pushed well away from
-      // its anchor now, so without this the link is lost.
+      // its anchor now, so without this the link is lost. Drawn as a cut line
+      // (black backing, bone over it) rather than a coloured beam.
       const lx = Math.max(x, Math.min(ax, x + w.w));
       const ly = Math.max(y, Math.min(ay, y + w.h));
       if (lx !== ax || ly !== ay) {
-        ctx.globalAlpha = alpha * 0.45;
-        ctx.strokeStyle = accent;
-        ctx.lineWidth = Math.max(1, F * 0.13);
-        ctx.beginPath();
-        ctx.moveTo(lx, ly);
-        ctx.lineTo(ax, ay);
-        ctx.stroke();
-        ctx.fillStyle = accent;
-        ctx.beginPath();
-        ctx.arc(ax, ay, F * 0.22, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = alpha * 0.75;
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = Math.max(2, F * 0.20);
+        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(ax, ay); ctx.stroke();
+        ctx.globalAlpha = alpha * 0.55;
+        ctx.strokeStyle = FP.COLORS.bone;
+        ctx.lineWidth = Math.max(1, F * 0.09);
+        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(ax, ay); ctx.stroke();
+        // Struck rivet at the fight itself.
         ctx.globalAlpha = alpha;
+        FP.stud(ctx, ax, ay, Math.max(2, F * 0.24));
       }
 
-      // Plate.
-      ctx.fillStyle = COLOR_BG;
-      Drawing.roundedRectPath(ctx, x, y, w.w, w.h, w.radius);
-      ctx.fill();
-      ctx.strokeStyle = COLOR_BORDER;
-      ctx.lineWidth = w.border;
-      Drawing.roundedRectPath(ctx, x + w.border / 2, y + w.border / 2,
-                              w.w - w.border, w.h - w.border, w.radius);
-      ctx.stroke();
-
-      // Accent rule along the top — gold when a hero died, else the winning
-      // side's colour. Clipped to the plate so it keeps the rounded corners.
-      ctx.save();
-      Drawing.roundedRectPath(ctx, x, y, w.w, w.h, w.radius);
-      ctx.clip();
-      ctx.fillStyle = accent;
-      ctx.fillRect(x, y, w.w, w.accentH);
-      ctx.restore();
-
-      // Lines.
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      const lines = model.lines;
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        ctx.font = this._font(line._px, line._bold);
-        const tx = x + w.padX + line._indent;
-        const ty = y + line._y;
-
-        if (line.kind === 'side') {
-          // Colour swatch in the left gutter the indent reserves.
-          ctx.fillStyle = line.color || '#888';
-          const s = w.swatch;
-          Drawing.roundedRectPath(ctx, x + w.padX, ty - s / 2, s, s, Math.max(1, s * 0.28));
-          ctx.fill();
-          ctx.fillStyle = line.color || '#FFF';
-        } else {
-          ctx.fillStyle = line.color;
-        }
-        ctx.fillText(line.text, tx, ty);
-      }
+      // The plate itself: one blit of the bitmap baked in _bake(). Everything
+      // carved about it — chassis, grain, studs, engraved type — was drawn
+      // once, at load or on a resize.
+      if (model._bmp) ctx.drawImage(model._bmp, x, y);
     }
   }
 
