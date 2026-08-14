@@ -19,6 +19,14 @@
   --win: #86a96b;
   --loss: #b5563f;
   --gold: #c9a227;
+  /* The accent at fill strength, for the dominance curve's area. It was a
+     hardcoded rgba() of --gold, which meant a theme could restate the accent
+     and the one large block of it on the card stayed the old hue. */
+  --gold-soft: rgba(201, 162, 39, 0.18);
+  /* Wells: the bed under a chip, a track or the wordmark pill. Stated as a
+     token because a light theme has to invert them and they were literals. */
+  --well: rgba(0, 0, 0, 0.35);
+  --chip: rgba(255, 255, 255, 0.05);
 
   /* The carved vocabulary: a struck highlight over a dark bed, on a near-black
      outline. This is the whole depth system — no shadow halos, no text-shadow,
@@ -39,18 +47,141 @@
   --race-R: #A2917A;
   --race-N: #7A756C;
 }
+/* ── Themes ───────────────────────────────────────────────────────────────
+   Three, and they differ in FORM rather than in hue. A set of re-tints of the
+   same dark box is a picker that costs a streamer a decision and gives them
+   nothing, so each of these is a different object on a scene:
+
+     carved     a filled stone panel. The default.
+     etched     no panel at all. Text struck straight onto the footage.
+     parchment  a light quest-log page, for a scene the dark box fights.
+
+   `slate` is the fourth and is deliberately absent from the picker in the app.
+   It was one of the re-tints. The rules stay, because the theme name is in
+   every OBS URL copied while it was offered and dropping them would repaint
+   somebody's live scene on an app update. */
+
 [data-theme="slate"] {
   --panel: rgba(21, 24, 28, 0.92);
   --panel-edge: #2e3640;
   --ink: #dde4ea;
   --dim: #8a97a3;
   --gold: #a3b8c9;
+  --gold-soft: rgba(163, 184, 201, 0.18);
   /* Overridden too. Leaving these on the carved defaults put moss and rust
      on a cool grey panel, which is the one combination this theme exists to
      avoid. Same readings, pulled toward the slate. */
   --win: #6f9f7d;
   --loss: #a8564f;
 }
+
+/* ── etched ───────────────────────────────────────────────────────────────
+   No bed. The card is the words, sitting directly on whatever the scene is
+   behind them, which is what a streamer who has already spent their screen on
+   the game actually wants in a corner.
+
+   Legibility over unknown footage comes from a STROKE around the type: four
+   hard one-pixel shadows, no blur. It is the same idea as the carved panel's
+   struck outline with the panel taken away, and it is the one place this file
+   is allowed a text-shadow, because without a bed there is nothing else
+   holding the letterforms off a bright minimap.
+
+   Four hard offsets rather than one soft halo on purpose. A blurred shadow
+   under light type reads as a drop shadow, which is a different look and a
+   worse one; a stroke reads as the letterform having an edge, which is what
+   every broadcast graphic that sits on footage actually does. */
+[data-theme="etched"] {
+  --panel: transparent;
+  --panel-edge: rgba(201, 162, 39, 0.35);
+  --ink: #f2ead9;
+  --dim: #c3b699;
+  --well: rgba(0, 0, 0, 0.45);
+  --chip: rgba(0, 0, 0, 0.35);
+  /* Lifted off the carved values. Every reading here is sitting on footage
+     rather than on a dark bed, so it has to carry itself. */
+  --win: #9dc47e;
+  --loss: #d1705a;
+  --gold: #dfb63c;
+  --gold-soft: rgba(223, 182, 60, 0.22);
+}
+[data-theme="etched"] .wc3v-ov .card {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  text-shadow:
+    1px 0 0 #0b0906, -1px 0 0 #0b0906, 0 1px 0 #0b0906, 0 -1px 0 #0b0906,
+    1px 1px 0 #0b0906, -1px 1px 0 #0b0906, 1px -1px 0 #0b0906, -1px -1px 0 #0b0906;
+}
+/* The crests and section marks are drawn shapes, not type, so they take the
+   stroke as a filter or they sit on bright footage with no edge at all. */
+[data-theme="etched"] .wc3v-ov .crest svg,
+[data-theme="etched"] .wc3v-ov .gly svg {
+  filter: drop-shadow(1px 0 0 #0b0906) drop-shadow(-1px 0 0 #0b0906)
+          drop-shadow(0 1px 0 #0b0906) drop-shadow(0 -1px 0 #0b0906);
+}
+/* The one bar with a fill of its own. Without an edge it is a floating stripe
+   of gold on the footage. */
+[data-theme="etched"] .wc3v-ov .domstat .track { border-color: #0b0906; }
+/* Hairline rules instead of panel seams, and the race band under the verdict
+   becomes a tinted wash rather than a filled header. */
+[data-theme="etched"] .wc3v-ov .mod + .mod {
+  border-top: 1px solid var(--panel-edge);
+}
+[data-theme="etched"] .wc3v-ov .verdict .banner {
+  background: linear-gradient(90deg, var(--rc-head-a), transparent 85%);
+  border-bottom: 0;
+  box-shadow: none;
+}
+/* The one element that keeps a bed. The mark has to stay readable on any
+   footage, and it is the thing that says whose numbers these are. */
+[data-theme="etched"] .wc3v-ov .mark .wordmark {
+  background: rgba(0, 0, 0, 0.55);
+  text-shadow: none;
+}
+
+/* ── parchment ────────────────────────────────────────────────────────────
+   The quest log. A light page for a scene the dark box fights: a bright
+   webcam layout, a light desktop capture, a face cam on a pale wall.
+
+   The carved vocabulary inverts rather than disappears. On a dark bed the
+   struck highlight is white on top and shadow beneath; on paper it is the
+   other way round. */
+[data-theme="parchment"] {
+  --panel: rgba(224, 210, 181, 0.96);
+  --panel-edge: #b39d76;
+  --ink: #2b2219;
+  --dim: #6d5c43;
+  --win: #4c6b37;
+  --loss: #8e392a;
+  --gold: #8a6414;
+  --gold-soft: rgba(138, 100, 20, 0.2);
+  --ov-outline: #6d5837;
+  --ov-cut: inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(0, 0, 0, 0.16);
+  --well: rgba(0, 0, 0, 0.1);
+  --chip: rgba(255, 255, 255, 0.45);
+}
+/* Race beds go to a tint of the page rather than a dark header, or the banner
+   is a black bar across a sheet of paper. */
+[data-theme="parchment"] .wc3v-ov [data-race="H"] { --rc-head-a: #c9d3dd; --rc-head-b: #dbdfe2; }
+[data-theme="parchment"] .wc3v-ov [data-race="O"] { --rc-head-a: #dfc4b6; --rc-head-b: #e5d3c6; }
+[data-theme="parchment"] .wc3v-ov [data-race="E"] { --rc-head-a: #c8d7bd; --rc-head-b: #d9e0cd; }
+[data-theme="parchment"] .wc3v-ov [data-race="U"] { --rc-head-a: #d0c6de; --rc-head-b: #ded7e5; }
+[data-theme="parchment"] .wc3v-ov [data-race="R"] { --rc-head-a: #ded5c2; --rc-head-b: #e4dcca; }
+[data-theme="parchment"] .wc3v-ov [data-race="N"] { --rc-head-a: #dcd7cc; --rc-head-b: #e3ded4; }
+/* Race ink darkened for the crests. The dark-theme hues are picked to sit on
+   near-black and several of them wash out on paper. */
+[data-theme="parchment"] .wc3v-ov {
+  --race-H: #38618b;
+  --race-O: #94381f;
+  --race-E: #45702c;
+  --race-U: #614089;
+  --race-R: #6e5f47;
+  --race-N: #575249;
+}
+[data-theme="parchment"] .wc3v-ov .mark .wordmark { background: rgba(255, 255, 255, 0.5); }
+[data-theme="parchment"] .wc3v-ov .demo { background: rgba(138, 100, 20, 0.18); }
 
 /* Race material for the verdict banner: the --rc-head-a/b pairs from
    tokens-desktop.css, as a gradient bed under the crest and the result. Set on
@@ -179,29 +310,87 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
   box-shadow: var(--ov-cut);
   object-fit: cover;
 }
-.wc3v-ov .portrait.is-blank { background: rgba(0, 0, 0, 0.35); }
+.wc3v-ov .portrait.is-blank { background: var(--well); }
 
-/* Provenance. One line, permanently, under the heading of the one module that
-   is not a replay this machine parsed. */
+/* Provenance. One line, permanently, in the one module that is not a replay
+   this machine parsed. It sits UNDER the opponent rather than above it: the
+   claim it qualifies is the ladder lookup, and the `from your replays` label
+   below it marks where the other claim starts. */
 .wc3v-ov .src {
   font-size: 0.8rem;
   color: var(--dim);
   letter-spacing: 0.03em;
-  margin: -0.15rem 0 0.35rem;
+  margin: 0.25rem 0 0.35rem;
 }
 
-/* ── scouting (pre-game) ─────────────────────────────────────────────── */
+/* ── the live match ──────────────────────────────────────────────────────
+   What is on the card while a game is being played. The class is still
+   `scout`, because the module key is (see overlay-render.js). */
 .wc3v-ov .scout { padding: 0.55rem 0.9rem 0.7rem; }
+
+/* The one row that says a game is happening. A muted dot, not a saturated
+   light: this sits next to gameplay footage and nothing on this card glows. */
+.wc3v-ov .live-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin-bottom: 0.4rem;
+}
+.wc3v-ov .live-head .dot {
+  align-self: center;
+  width: 0.55rem;
+  height: 0.55rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--loss);
+  box-shadow: 0 0 0 1px var(--ov-outline);
+}
+.wc3v-ov .live-head .lbl {
+  color: var(--loss);
+  font-weight: 700;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+}
+/* The clock is the number a viewer checks, so it is the largest thing on the
+   row and tabular, or every tick shifts the map name beside it. */
+.wc3v-ov .live-head .clk {
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.wc3v-ov .live-head .where {
+  margin-left: auto;
+  color: var(--dim);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
 .wc3v-ov .scout-vs { display: flex; align-items: center; gap: 0.6rem; }
 .wc3v-ov .scout-vs .who { min-width: 0; }
 .wc3v-ov .scout-vs b { font-size: 1.05rem; font-weight: 700; overflow-wrap: anywhere; }
 .wc3v-ov .scout-vs .meta { padding: 0; }
-.wc3v-ov .scout-h2h { font-size: 0.9rem; margin: 0.15rem 0 0.3rem; }
-.wc3v-ov .scout-h2h.dim { color: var(--dim); }
-.wc3v-ov .scout-h2h .rec { font-weight: 700; margin-left: 0.35rem; }
-.wc3v-ov .scout-h2h .rec .w { color: var(--win); }
-.wc3v-ov .scout-h2h .rec .l { color: var(--loss); }
 .wc3v-ov .scout .note { font-size: 0.85rem; padding: 0.08rem 0; overflow-wrap: anywhere; }
+
+/* Two records on one row: against this person, and on this map. Side by side
+   because they answer the same question from two directions, and stacking them
+   spent two lines on four numbers. */
+.wc3v-ov .recs { display: flex; gap: 1.4rem; margin: 0.15rem 0 0.3rem; }
+.wc3v-ov .rec-cell { display: flex; align-items: baseline; gap: 0.35rem; min-width: 0; }
+.wc3v-ov .rec-cell .k {
+  color: var(--dim);
+  font-size: 0.8rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+.wc3v-ov .rec-cell .rec { font-size: 1.05rem; font-weight: 700; white-space: nowrap; }
+.wc3v-ov .rec-cell .rec.dim {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--dim);
+}
+.wc3v-ov .rec-cell .rec .w { color: var(--win); }
+.wc3v-ov .rec-cell .rec .l { color: var(--loss); }
 
 /* Their usual openers, as the art rather than as a list of names. A viewer who
    cannot read a hero name at this size knows the Death Knight on sight. */
@@ -235,6 +424,21 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 .wc3v-ov .sess-top .score .w { color: var(--win); }
 .wc3v-ov .sess-top .score .l { color: var(--loss); }
 .wc3v-ov .sess-top .streak { margin-left: auto; color: var(--gold); font-weight: 600; }
+/* Where you are on the ladder and how far today moved it. The climb carries
+   the colour, because it is the only part of the line that is a result. */
+.wc3v-ov .sess-ladder {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+  font-size: 0.9rem;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.wc3v-ov .sess-ladder .mmr { color: var(--ink); font-weight: 600; }
+.wc3v-ov .sess-ladder .up { margin-left: auto; color: var(--win); font-weight: 700; }
+.wc3v-ov .sess-ladder .down { margin-left: auto; color: var(--loss); font-weight: 700; }
+
 .wc3v-ov .sess-trend { margin-top: 0.25rem; font-size: 0.8rem; color: var(--dim); }
 
 /* ── verdict ─────────────────────────────────────────────────────────────
@@ -302,7 +506,7 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 .wc3v-ov .domstat .track {
   flex: 1;
   height: 0.65rem;
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--well);
   border: 1px solid var(--ov-outline);
   border-radius: 999px;
   overflow: hidden;
@@ -322,7 +526,7 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
    what a viewer reads is the shape of the game and not a plot. */
 .wc3v-ov .sk { margin: 0.1rem 0 0.4rem; }
 .wc3v-ov .sk svg { display: block; width: 100%; height: 2.6rem; }
-.wc3v-ov .sk .sk-a { fill: rgba(201, 162, 39, 0.18); }
+.wc3v-ov .sk .sk-a { fill: var(--gold-soft); }
 .wc3v-ov .sk .sk-l { fill: none; stroke: var(--gold); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
 .wc3v-ov .sk .sk-m { stroke: var(--panel-edge); stroke-width: 1; vector-effect: non-scaling-stroke; }
 
@@ -378,7 +582,7 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 .wc3v-ov .bd-row { display: flex; flex-wrap: wrap; gap: 0.3rem 0.4rem; }
 .wc3v-ov .bd-chip {
   font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--chip);
   border: 1px solid var(--panel-edge);
   border-radius: 4px;
   padding: 0.08rem 0.4rem;
@@ -391,7 +595,7 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
    before ever playing. It must be impossible to mistake for a real result. */
 .wc3v-ov .demo {
   padding: 0.3rem 0.9rem;
-  background: rgba(201, 162, 39, 0.16);
+  background: var(--gold-soft);
   color: var(--gold);
   font-size: 0.8rem;
   font-variant: small-caps;
@@ -409,7 +613,7 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 }
 .wc3v-ov .mark .wordmark {
   display: inline-block;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--well);
   border: 1px solid var(--ov-outline);
   border-radius: 999px;
   box-shadow: var(--ov-cut);

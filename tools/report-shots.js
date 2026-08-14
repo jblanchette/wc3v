@@ -175,6 +175,58 @@ const FOLD_CHECK = () => {
             }
           }
         }
+        // ── Stream ──────────────────────────────────────────────────────────
+        //
+        // The fold rule is a rule about every view, not only the report, and
+        // Stream is the other screen with a fixed two-column frame. It is also
+        // the one nobody looks at while working, so it is exactly where a
+        // column that grew a row quietly starts scrolling the whole app.
+        //
+        // Both modes: the scoreboard is a different grid from the player card's
+        // settings rail and fails the fold independently.
+        const streamNav = await page.$('.nav-item[data-view="stream"]');
+        if (streamNav) {
+          await page.evaluate(() => {
+            document.querySelector('.nav-item[data-view="stream"]').click();
+          });
+          await sleep(250);
+
+          const modeCount = await page.$$eval('.stream-modes .seg-btn', els => els.length);
+          for (let sm = 0; sm < Math.max(1, modeCount); sm++) {
+            if (modeCount) {
+              await page.evaluate((n) => {
+                document.querySelectorAll('.stream-modes .seg-btn')[n].click();
+              }, sm);
+              await sleep(200);
+            }
+            const label = modeCount
+              ? await page.$$eval('.stream-modes .seg-btn.is-on', els =>
+                (els[0] && els[0].textContent || '').trim())
+              : 'stream';
+
+            const bad = await page.evaluate(FOLD_CHECK);
+            // The two columns are their own scrollers by design, so they are
+            // not a violation. The frame around them is.
+            for (const issue of bad) {
+              audit.push({ page: pg, size: `${size.w}x${size.h}`, mock, game: 'stream', tab: label, issue });
+            }
+            if (!auditOnly) {
+              const name = [
+                pg.replace(/\.html$/, ''), `${size.w}x${size.h}`,
+                'stream', label.toLowerCase().replace(/\s+/g, '-'), mock
+              ].filter(Boolean).join('--') + '.png';
+              await page.screenshot({ path: path.join(shotsDir, name) });
+              shots.push({ file: name, page: pg, size: `${size.w}x${size.h}`, mock, game: 'stream', tab: label });
+            }
+          }
+          // Back to the feed, so the next size starts where this one did.
+          await page.evaluate(() => {
+            const g = document.querySelector('.nav-item[data-view="games"]');
+            if (g) g.click();
+          });
+          await sleep(150);
+        }
+
         console.log(`${pg} ${size.w}x${size.h}${mock ? ' #' + mock : ''}: ${games} games walked`);
       }
     }

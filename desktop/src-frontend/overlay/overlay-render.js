@@ -92,9 +92,15 @@
     img.src = ICON_BASE + id + '.jpg';
     // Offline, or an id the site has no art for. A blank tile holds the
     // layout; a broken-image glyph on a live broadcast does not.
+    //
+    // The element is REPLACED rather than emptied. Blanking it in place left an
+    // <img> that had already failed, and a browser keeps painting its own
+    // broken-image mark on one of those however the src attribute is edited
+    // afterwards. Swapping in the same blank span the invalid-id path above
+    // returns is the only version of this that is actually blank.
     img.addEventListener('error', function () {
-      img.classList.add('is-blank');
-      img.removeAttribute('src');
+      var blank = el('span', 'portrait is-blank');
+      if (img.parentNode) img.parentNode.replaceChild(blank, img);
     });
     return img;
   }
@@ -119,24 +125,87 @@
     return m ? '~' + m + ' min' : '';
   }
 
-  // The live opponent, before a replay of this game exists at all.
+  // ── The live clock ───────────────────────────────────────────────────────
   //
-  // This is the one module on the card that is not a game this machine parsed.
-  // It is scout.js polling the public W3Champions endpoint for an ongoing
-  // ladder match: that a match exists, and who is on the other side. The same
-  // thing any viewer could look up on the W3Champions site, and nothing about
-  // the game in progress. The heading and the source line say exactly that,
-  // permanently, rather than implying the app can see into a live match.
+  // The card is redrawn only when the published state changes, which while a
+  // match is on is every 20 to 60 seconds. A clock that advanced only then
+  // would sit still for a minute and jump, which reads as broken, so it ticks
+  // itself off the one absolute instant in the payload.
+  //
+  // One interval for the module, restarted by every render and cleared as soon
+  // as a redraw leaves no clock on the card. Both consumers are one page
+  // holding one card, so a module-level handle is the whole bookkeeping.
+  var clockTimer = null;
+
+  function fmtClock (ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+  }
+
+  function tickClocks (root) {
+    // The WC3V window renders the preview into a host it throws away when the
+    // user leaves the Stream screen. In the Browser Source this is never true;
+    // there, the card is the page.
+    var nodes = root.isConnected ? root.querySelectorAll('[data-since]') : [];
+    if (!nodes.length) {
+      clearInterval(clockTimer);
+      clockTimer = null;
+      return false;
+    }
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = fmtClock(Date.now() - Number(nodes[i].dataset.since));
+    }
+    return true;
+  }
+
+  function startClocks (root) {
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+    if (!tickClocks(root)) return;
+    clockTimer = setInterval(function () { tickClocks(root); }, 1000);
+  }
+
+  // The match happening RIGHT NOW: who is on the other side, how long it has
+  // been going, and what this machine's own replays say about them.
+  //
+  // This is the only module that is not a game this machine parsed. It is
+  // scout.js polling the public W3Champions endpoint for an ongoing ladder
+  // match: that a match exists, who is in it, and when the ladder created it.
+  // Nothing about the game in progress, which no replay can answer until it
+  // ends. The source line says exactly that, permanently.
+  //
+  // It carries the card while a game is on. Before this existed the whole
+  // stream card was the LAST game's verdict, which during a match is a result
+  // for a game that finished, sitting on a broadcast under a player who is
+  // visibly still playing.
+  //
+  // The module key stays `scout` after the panel became the live card, for the
+  // same reason `report` kept its: shell.html drops module names it does not
+  // recognise, so a rename silently blanks the panel in every OBS source
+  // already pointed at this app.
   function scoutModule (scout) {
     if (!scout || !scout.opponent) return null;
     var box = el('div', 'mod scout');
-    box.appendChild(el('h2', null, 'scouting'));
-    // Unconditional. This used to appear only when a rank came back, which
-    // meant the provenance was missing exactly when the panel was thinnest.
-    box.appendChild(el('div', 'src', 'public W3Champions ladder data'));
 
-    var head = el('div', 'scout-vs');
-    head.appendChild(crest(scout.opponent.race, 'tile'));
+    // The one row that says a game is happening. A muted dot rather than a
+    // saturated light: this sits beside gameplay footage, and the overlay's
+    // whole art direction is earthy and unlit.
+    var head = el('div', 'live-head');
+    head.appendChild(el('span', 'dot'));
+    head.appendChild(el('span', 'lbl', 'live'));
+    if (scout.startedAt) {
+      // Counted from the ladder's match-created time, which is the queue pop
+      // and runs a little ahead of the first frame. That is why this is
+      // labelled `live` and never presented as the in-game timer.
+      var clk = el('span', 'clk');
+      clk.dataset.since = String(scout.startedAt);
+      clk.textContent = fmtClock(Date.now() - scout.startedAt);
+      head.appendChild(clk);
+    }
+    if (scout.map) head.appendChild(el('span', 'where', scout.map));
+    box.appendChild(head);
+
+    var vs = el('div', 'scout-vs');
+    vs.appendChild(crest(scout.opponent.race, 'tile'));
     var who = el('div', 'who');
     who.appendChild(el('b', null, scout.opponent.name || '?'));
     var sub = [RACE[scout.opponent.race] || scout.opponent.race || null];
@@ -144,27 +213,42 @@
       sub.push('rank ' + scout.ladder.rank);
       if (scout.ladder.mmr) sub.push(scout.ladder.mmr + ' mmr');
     }
-    if (scout.map) sub.push(scout.map);
     who.appendChild(el('div', 'meta', sub.filter(Boolean).join(' · ')));
-    head.appendChild(who);
-    box.appendChild(head);
+    vs.appendChild(who);
+    box.appendChild(vs);
+    box.appendChild(el('div', 'src', 'public W3Champions ladder data'));
 
     // Everything below this line was learned from replays parsed on this
     // machine, which is a different claim from the ladder lookup above and is
     // labelled as one.
     box.appendChild(el('div', 'bd-label', 'from your replays'));
-    if (scout.h2h && scout.h2h.games) {
-      var h2h = el('div', 'scout-h2h');
-      h2h.appendChild(el('span', null, 'all time'));
+
+    // Two records side by side: against this person, and on this map. The map
+    // one is knowable without them and it is the only line here a viewer can
+    // act on before anything has happened.
+    var recs = el('div', 'recs');
+    var record = function (label, wins, losses) {
+      var r = el('div', 'rec-cell');
+      r.appendChild(el('span', 'k', label));
       var rec = el('span', 'rec');
-      rec.appendChild(el('span', 'w', String(scout.h2h.wins)));
+      rec.appendChild(el('span', 'w', String(wins)));
       rec.appendChild(el('span', null, '–'));
-      rec.appendChild(el('span', 'l', String(scout.h2h.losses)));
-      h2h.appendChild(rec);
-      box.appendChild(h2h);
+      rec.appendChild(el('span', 'l', String(losses)));
+      r.appendChild(rec);
+      return r;
+    };
+    if (scout.h2h && scout.h2h.games) {
+      recs.appendChild(record('all time', scout.h2h.wins, scout.h2h.losses));
     } else {
-      box.appendChild(el('div', 'scout-h2h dim', 'first time against them'));
+      var first = el('div', 'rec-cell');
+      first.appendChild(el('span', 'k', 'all time'));
+      first.appendChild(el('span', 'rec dim', 'first meeting'));
+      recs.appendChild(first);
     }
+    if (scout.yourMap) {
+      recs.appendChild(record('this map', scout.yourMap.wins, scout.yourMap.losses));
+    }
+    box.appendChild(recs);
 
     if (scout.openers && scout.openers.length) {
       var ops = el('div', 'openers');
@@ -202,6 +286,25 @@
       top.appendChild(el('span', 'streak', (st.kind === 'win' ? 'W' : 'L') + st.count + ' streak'));
     }
     box.appendChild(top);
+
+    // Where you actually are on the ladder, and how far today has moved it.
+    //
+    // Every ladder stream on the platform carries this and the card never has.
+    // It is also the only number here that keeps meaning something between
+    // games, which is most of a session.
+    var L = s.ladder;
+    if (L && (L.rank || L.mmr)) {
+      var line = el('div', 'sess-ladder');
+      if (L.rank) line.appendChild(el('span', null, 'rank ' + L.rank));
+      if (L.mmr) line.appendChild(el('span', 'mmr', L.mmr + ' mmr'));
+      // Zero is not shown. "+0 today" is the same information as no line at
+      // all, wearing the styling of a result.
+      if (L.climb) {
+        line.appendChild(el('span', L.climb > 0 ? 'up' : 'down',
+          (L.climb > 0 ? '+' : '') + L.climb + ' today'));
+      }
+      box.appendChild(line);
+    }
 
     // Career context under the session line: recent form is not matchup
     // specific, so both can be true at once and both are worth a viewer's
@@ -477,7 +580,17 @@
     var scoutEl = want.scout ? scoutModule(s.scout) : null;
     if (scoutEl) card.appendChild(scoutEl);
 
-    if (g) {
+    // A match is on AND the live card is on this source, so the last game's
+    // verdict comes off. A finished result under a player who is visibly still
+    // playing is the single most confusing thing this card could show, and the
+    // live block is the better use of the same space.
+    //
+    // Gated on the live card actually rendering. A source composed WITHOUT it
+    // (`modules=verdict`) would otherwise go blank mid-game with nothing in its
+    // place, so that selection keeps the last game exactly as it always did.
+    var live = !!scoutEl;
+
+    if (g && !live) {
       [want.verdict && verdictModule(s, g), want.report && reportModule(g),
         want.momentum && momentumModule(g), want.h2h && h2hModule(g),
         want.moments && momentsModule(g), want.build && buildModule(g)]
@@ -502,6 +615,7 @@
     if (want.session) card.appendChild(sessionModule(s));
 
     root.appendChild(card);
+    startClocks(root);
   }
 
   window.OverlayRender = {

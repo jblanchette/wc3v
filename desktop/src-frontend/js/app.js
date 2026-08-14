@@ -272,7 +272,10 @@ const scout = window.createScout({
   onMatch: (match, ladder, book) => {
     gamesView.setLiveMatch(match, ladder, book);
     overlayState.publishScout(match, ladder, book);
-  }
+  },
+  // Your own standing. Overlay only: the app already shows this on Profile,
+  // and a second copy in the report column would be the same number twice.
+  onLadder: (mine) => overlayState.publishLadder(mine)
 });
 
 // Free tags on a game, in a sidecar the schema cannot eat. See js/game-tags.js.

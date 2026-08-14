@@ -227,6 +227,14 @@ const ongoing = (args.w3c && foe) ? {
   id: 'preview-ongoing',
   gameMode: 1,
   mapName: 'Echo Isles',
+  // Nine minutes ago, so the overlay's live clock is exercised. Without a
+  // startTime the card degrades to no clock, which is the correct behaviour
+  // and also hides the whole feature from anyone looking at the preview.
+  //
+  // Stamped when the page is WRITTEN, not when it is opened, so a preview left
+  // open overnight reads as a very long game. That is the honest cost of a
+  // static harness and it is what --w3c is for.
+  startTime: new Date(Date.now() - 9 * 60 * 1000).toISOString(),
   teams: [
     { players: [{ battleTag: me, race: W3C_RACE[raceByName.get(me)] ?? 1, oldMmr: 1804 }] },
     { players: [{ battleTag: foe[0], race: W3C_RACE[raceByName.get(foe[0])] ?? 2, oldMmr: 1877 }] }

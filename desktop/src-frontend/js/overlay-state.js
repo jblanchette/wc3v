@@ -134,6 +134,7 @@
       session: [],    // summaries of live games, in arrival order
       lastGame: null, // summary shown in the game panel (live only, or boot seed)
       scout: null,    // the live opponent, from scout.js, while a match is on
+      ladder: null,   // your own rank, mmr and today's climb, from scout.js
       demo: false,    // showing the labelled stand-in game for OBS setup
       // The casting scoreboard, typed in Stream → Casting. Persisted to
       // localStorage rather than to the store: it is the state of a broadcast
@@ -613,6 +614,7 @@
           streak: streakOf(views)
         },
         scout: st.scout,
+        ladder: st.ladder,
         trend: trendSummary(),
         game: gamePayload(),
         cast: castPayload()
@@ -651,9 +653,14 @@
         recentForm: { n: 10, wins: 6, losses: 4 },
         matchup: { key: 'HvO', wins: 18, losses: 11, winRate: 62, games: 29 }
       },
+      ladder: { rank: 42, mmr: 1850, climb: 75 },
       scout: {
         opponent: { name: 'NextOpponent', race: 'U' },
         map: 'Turtle Rock',
+        // Filled in by demoState(). A clock is an absolute instant and this
+        // object is a literal, so the only honest value here is none.
+        startedAt: null,
+        yourMap: { wins: 7, losses: 3 },
         ladder: { rank: 42, mmr: 1850, games: 120, wins: 66, losses: 54 },
         h2h: { games: 4, wins: 3, losses: 1 },
         openers: [
@@ -714,6 +721,15 @@
       }
     };
 
+    // Nine minutes into the stand-in game. A clock reading 0:00 renders the
+    // same as a broken one, so the demo has to be mid-game for the live card to
+    // be worth previewing at all.
+    const DEMO_ELAPSED_MS = 9 * 60 * 1000;
+    const demoState = () => ({
+      ...DEMO,
+      scout: { ...DEMO.scout, startedAt: Date.now() - DEMO_ELAPSED_MS }
+    });
+
     return {
       publish,
       sessionSummary,
@@ -737,10 +753,15 @@
       },
 
       // What the OBS source is showing right now, for the in-window preview.
-      previewState: () => (st.demo ? DEMO : buildPayload()),
+      previewState: () => (st.demo ? demoState() : buildPayload()),
+      // The stand-in, for the Stream screen's state stepper. Somebody setting
+      // up OBS at 3pm is not in a game and has no live block to look at, so the
+      // preview borrows this one. It stays flagged `demo`, which is what draws
+      // the "not a real game" band across the card.
+      demoPreview: () => demoState(),
       async publishDemo () {
         st.demo = true;
-        await send(DEMO);
+        await send(demoState());
       },
       get isDemo () { return !!st.demo; },
       // The opponent scout.js just found, or null when the match ended or was
@@ -753,6 +774,17 @@
         const next = opp ? {
           opponent: { name: opp.name, race: opp.race },
           map: window.SummaryExtract.cleanMapName(match.map) || match.map,
+          // When the ladder created the match, so the card can count up. The
+          // overlay renders it as an elapsed "live" clock and never claims it
+          // is the in-game timer: this is the queue pop, which is a little
+          // ahead of the first frame. Null whenever w3c.js could not trust it.
+          startedAt: match.startedAt || null,
+          // Your own record on the map about to be played. Knowable without
+          // them, and the one line here a viewer can act on before anything
+          // has happened. Two games is the floor games-view already uses.
+          yourMap: book && book.yourMap && book.yourMap.games >= 2
+            ? { wins: book.yourMap.wins, losses: book.yourMap.losses }
+            : null,
           ladder: ladder ? {
             rank: ladder.rank, mmr: ladder.mmr,
             games: ladder.games, wins: ladder.wins, losses: ladder.losses
@@ -770,6 +802,13 @@
         } : null;
         if (!next && !st.scout) return;
         st.scout = next;
+        send(buildPayload());
+      },
+      // Your own rank, MMR and how far it has moved since the app opened. It
+      // outlives the live match on purpose: the climb is a session-long number
+      // and belongs beside the session score, not only while a game is on.
+      publishLadder (mine) {
+        st.ladder = mine || null;
         send(buildPayload());
       },
       recordGame (summary) {

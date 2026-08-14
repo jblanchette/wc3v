@@ -4,13 +4,22 @@
 // route, GET only), because an OBS Browser Source is a separate Chromium
 // process and cannot see this window's state any other way.
 //
-// Two rules this screen exists to satisfy:
+// Three rules this screen exists to satisfy:
 //
-//   1. Nobody configures an overlay blind. The preview here renders from the
+//   1. The first thing on it is how to get it into OBS. Everything else on
+//      this screen is a preference; that is the step without which none of it
+//      is on anyone's stream.
+//   2. Nobody configures an overlay blind. The preview here renders from the
 //      same overlay.css and overlay-render.js the Browser Source loads, so
 //      what is on this screen is what goes on stream.
-//   2. The overlay URL carries the access token, so it goes to the clipboard
+//   3. The overlay URL carries the access token, so it goes to the clipboard
 //      and never to the DOM or the log. This window may be on camera.
+//
+// Two overlays ship, and they are set up separately: your own stream, and a
+// caster's scoreboard for a match between two other people. They are a MODE
+// switch rather than two panels down one column, because nobody is doing both
+// at once and the scoreboard used to sit below the fold of a scroller with its
+// own copy button below that.
 
 (function () {
   'use strict';
@@ -21,13 +30,15 @@
   // three small sources they can place independently far more often than they
   // use one tall card, so each carries its own URL and suggested size. The
   // size is the part nobody can guess from the UI.
+  //
+  // `scout` is the live match card. The key stays as it was when the panel was
+  // only a pre-game scouting report: shell.html drops module names it does not
+  // recognise, so renaming it would silently blank the panel in every OBS
+  // source already pointed at this app. Same rule keeps `report`.
   const MODULES = [
-    { key: 'scout', label: 'Scouting', size: '380 × 240' },
-    { key: 'session', label: 'Session score', size: '300 × 110' },
+    { key: 'scout', label: 'Live match', size: '380 × 260' },
+    { key: 'session', label: 'Session score', size: '300 × 130' },
     { key: 'verdict', label: 'Last game', size: '460 × 150' },
-    // Key stays `report` after the grades became three numbers: shell.html
-    // drops module names it does not recognise, so renaming it would silently
-    // blank the panel in every OBS source already pointed at this app.
     { key: 'report', label: 'This game', size: '380 × 170' },
     { key: 'momentum', label: 'The game', size: '380 × 190' },
     { key: 'h2h', label: 'Head to head', size: '360 × 80' },
@@ -39,8 +50,8 @@
   // Slim are the two shapes people actually want, and Custom is where the
   // per-panel list lives for anyone who wants to compose their own.
   const LAYOUTS = [
-    { key: 'full', label: 'Full card' },
-    { key: 'strip', label: 'Slim strip' },
+    { key: 'full', label: 'Full' },
+    { key: 'strip', label: 'Slim' },
     { key: 'custom', label: 'Custom' }
   ];
 
@@ -48,23 +59,35 @@
   // card collapses to when a reveal hold expires.
   const STRIP_MODULES = ['scout', 'session'];
 
-  // The preview's three states, derived here rather than published. A card that
-  // collapses has to be inspectable without playing three games to see it.
+  // The card's three states over a night, in the order they happen. Derived
+  // here rather than published: the stepper is a control on this screen, it
+  // touches no payload, it only subtracts from the state that is already there.
   const PREVIEW_STATES = [
-    { key: 'post', label: 'After a game' },
-    { key: 'between', label: 'Between games' },
-    { key: 'idle', label: 'Idle' }
+    { key: 'idle', label: 'Waiting' },
+    { key: 'live', label: 'During a game' },
+    { key: 'post', label: 'After a game' }
   ];
 
+  // Three themes, and they differ in FORM rather than hue (see overlay.css).
+  // `slate` was a fourth and is gone from here on purpose: it was a re-tint of
+  // carved, which is a decision that costs a streamer time and gives them
+  // nothing. Its rules stay in the stylesheet so URLs copied while it was
+  // offered keep rendering as they did.
   const THEMES = [
     { key: 'carved', label: 'Carved' },
-    { key: 'slate', label: 'Slate' }
+    { key: 'etched', label: 'Etched' },
+    { key: 'parchment', label: 'Parchment' }
   ];
 
   const SCALES = [
     { key: '0.85', label: 'Small' },
     { key: '1', label: 'Normal' },
     { key: '1.25', label: 'Large' }
+  ];
+
+  const SHOW = [
+    { key: 'always', label: 'Always' },
+    { key: 'post', label: 'After a game' }
   ];
 
   const HOLDS = [
@@ -106,12 +129,21 @@
         // the curated Full card.
         if (!saved.layout) saved.layout = saved.modules ? 'custom' : 'full';
         Object.assign(prefs, saved);
+        // A saved `slate` still renders, but it is no longer in the picker, so
+        // leaving it selected would show a control with nothing lit.
+        if (!THEMES.some(t => t.key === prefs.theme)) prefs.theme = 'carved';
       }
     } catch (e) { /* corrupt prefs just mean defaults */ }
 
     const savePrefs = () => {
       try { localStorage.setItem('wc3v-overlay-prefs', JSON.stringify(prefs)); } catch (e) {}
     };
+
+    // 'player' | 'cast'. Which overlay this screen is setting up.
+    let mode = 'player';
+
+    // Which of the three card states the preview is showing.
+    let previewAt = 'live';
 
     const activeModules = () => {
       if (prefs.layout === 'strip') return STRIP_MODULES.slice();
@@ -154,26 +186,48 @@
       }
     };
 
-    // Which of the three states the preview is showing. Local to this screen:
-    // it publishes nothing and touches no payload, it just subtracts from the
-    // state that is already there.
-    let previewAt = 'post';
+    // Same rule as above: the token goes to the clipboard and nowhere else.
+    const copyCastUrl = async (btn) => {
+      const was = btn.textContent;
+      try {
+        const info = await deps.invoke('overlay_info');
+        await navigator.clipboard.writeText(info.url.replace('/overlay?', '/cast?'));
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = was; }, 4000);
+        deps.log('casting overlay URL copied, add it as a Browser Source', 'ok');
+      } catch (e) {
+        deps.log(`overlay URL unavailable: ${deps.errText(e)}`, 'err');
+      }
+    };
+
+    // The state the preview draws, for whichever of the three the stepper is
+    // on. Nothing here publishes.
+    //
+    // A state the real payload cannot supply falls back to the stand-in game,
+    // because somebody placing a source in OBS at three in the afternoon is not
+    // in a game and has no live block to aim at. The fallback keeps the `demo`
+    // flag, which is what puts the "not a real game" band across the card.
+    const previewPayload = () => {
+      const live = deps.overlayState.previewState();
+      if (previewAt === 'idle') return { ...live, scout: null, game: null };
+      if (previewAt === 'live') {
+        return live.scout
+          ? { ...live }
+          : { ...live, scout: deps.overlayState.demoPreview().scout, demo: true };
+      }
+      // After a game. The live block comes off, or the renderer would treat
+      // this as a match still in progress and hide the result.
+      return live.game
+        ? { ...live, scout: null }
+        : { ...deps.overlayState.demoPreview(), scout: null };
+    };
 
     const renderPreview = () => {
-      const live = deps.overlayState.previewState();
-      // Between games there is no finished game to show; idle is that with
-      // nobody on the other side of the ladder either. Both land on the same
-      // phase, because both ARE the strip.
-      const state = previewAt === 'post' ? live
-        : previewAt === 'between' ? { ...live, game: null }
-          : { ...live, game: null, scout: null };
-
       const host = el('overlay-preview');
       if (host) {
         host.dataset.theme = prefs.theme;
-        host.dataset.phase = previewAt === 'post' ? 'post' : 'idle';
         host.style.fontSize = `${16 * parseFloat(prefs.scale)}px`;
-        window.OverlayRender.render(host, state, activeModules());
+        window.OverlayRender.render(host, previewPayload(), activeModules());
       }
 
       // The casting page is a separate Browser Source with a separate renderer,
@@ -183,27 +237,195 @@
       const cast = el('cast-preview');
       if (cast && window.CastRender) {
         cast.dataset.theme = prefs.theme;
-        window.CastRender.render(cast, live, null);
+        window.CastRender.render(cast, deps.overlayState.previewState(), null);
       }
     };
 
     const segmented = (items, current, onPick) => {
-      const row = node('div', 'row');
+      const seg = node('div', 'seg');
       for (const item of items) {
-        const b = node('button', 'btn btn-sm' + (item.key === current ? ' is-on' : ''), item.label);
+        const b = node('button', 'seg-btn' + (item.key === current ? ' is-on' : ''), item.label);
         b.type = 'button';
         b.addEventListener('click', () => onPick(item.key));
-        row.appendChild(b);
+        seg.appendChild(b);
       }
+      return seg;
+    };
+
+    // A named setting: label left, control right, one row. The Look panel used
+    // to put every label on its own line above its buttons, which spent a third
+    // of the panel's height on four words.
+    const control = (label, items, current, onPick) => {
+      const row = node('div', 'ctl');
+      row.appendChild(node('span', 'ctl-k', label));
+      row.appendChild(segmented(items, current, onPick));
       return row;
     };
 
-    // ── The Casting panel ─────────────────────────────────────────────────
+    const panel = (title) => {
+      const p = node('section', 'panel');
+      p.appendChild(node('h2', null, title));
+      return p;
+    };
+
+    // ── OBS setup ───────────────────────────────────────────────────────────
     //
-    // Two names with their races, an event line, a format badge and a score
-    // that goes up and down. Every change publishes immediately, because the
-    // whole point of a caster's control is that the change is on screen before
-    // they let go of the mouse.
+    // First panel on the screen. The URL is a credential and the shutdown
+    // setting is a real failure mode, so both stay here where the URL gets
+    // copied. Everything else that used to sit under this was explanation.
+    const obsPanel = () => {
+      const p = panel('OBS setup');
+
+      const row = node('div', 'row');
+      const copy = node('button', 'btn btn-primary', 'Copy Browser Source URL');
+      copy.type = 'button';
+      copy.addEventListener('click', () => copyUrl(copy, null,
+        'OBS URL copied. Add a Browser Source, suggested 460×560.'));
+      row.appendChild(copy);
+
+      const player = node('button', 'btn', 'Open the player view');
+      player.type = 'button';
+      player.title = 'An ordinary window for a second monitor';
+      player.addEventListener('click', () =>
+        deps.invoke('open_player_view')
+          .catch(e => deps.log(`player view failed: ${deps.errText(e)}`, 'err')));
+      row.appendChild(player);
+      p.appendChild(row);
+
+      p.appendChild(node('p', 'hint',
+        'In OBS: Sources, add Browser, paste the URL, size 460 × 560.'));
+      p.appendChild(node('p', 'hint',
+        'Turn off “Shutdown source when not visible”, or the overlay stops ' +
+        'updating whenever the scene is not live.'));
+      p.appendChild(node('p', 'hint',
+        'The URL contains your access token. Keep it off stream.'));
+      return p;
+    };
+
+    // ── Card ────────────────────────────────────────────────────────────────
+    //
+    // Layout and Look were two panels asking one question, which is what the
+    // card looks like. The per-panel checkbox list is still one click in, under
+    // Custom, because composing a card is the decision almost nobody wants to
+    // make first.
+    const cardPanel = () => {
+      const p = panel('Card');
+
+      p.appendChild(control('Panels', LAYOUTS, prefs.layout, (k) => {
+        prefs.layout = k;
+        savePrefs();
+        build();
+      }));
+
+      if (prefs.layout === 'custom') {
+        const on = activeModules();
+        const list = node('div', 'mod-list');
+        for (const m of MODULES) {
+          const row = node('div', 'panel-row');
+          const label = node('label', 'check');
+          const box = document.createElement('input');
+          box.type = 'checkbox';
+          box.checked = on.indexOf(m.key) !== -1;
+          box.addEventListener('change', () => {
+            const next = window.OverlayRender.ALL_MODULES.filter(k =>
+              k === m.key ? box.checked : activeModules().indexOf(k) !== -1);
+            // Everything off leaves a blank source and no way back from OBS.
+            if (!next.length) { box.checked = true; return; }
+            prefs.modules = next;
+            savePrefs();
+            renderPreview();
+          });
+          label.appendChild(box);
+          const text = node('span');
+          text.appendChild(node('span', null, m.label));
+          text.appendChild(node('span', 'hint', m.size));
+          label.appendChild(text);
+          row.appendChild(label);
+
+          const solo = node('button', 'btn btn-sm', 'Copy URL');
+          solo.type = 'button';
+          solo.title = `A Browser Source showing only ${m.label.toLowerCase()}`;
+          solo.addEventListener('click', () => copyUrl(solo, m.key,
+            `${m.label} URL copied. Add a Browser Source, suggested ${m.size}.`));
+          row.appendChild(solo);
+          list.appendChild(row);
+        }
+        p.appendChild(list);
+      }
+
+      p.appendChild(control('Theme', THEMES, prefs.theme, (k) => {
+        prefs.theme = k; savePrefs(); build();
+      }));
+      p.appendChild(control('Size', SCALES, prefs.scale, (k) => {
+        prefs.scale = k; savePrefs(); build();
+      }));
+
+      // The reveal, as a two-way choice rather than a checkbox with a hidden
+      // consequence. On, the card holds after a game and then collapses to the
+      // slim strip instead of vanishing.
+      p.appendChild(control('Show', SHOW, prefs.reveal ? 'post' : 'always', (k) => {
+        prefs.reveal = k === 'post';
+        savePrefs();
+        build();
+      }));
+      if (prefs.reveal) {
+        p.appendChild(control('Hold for', HOLDS, String(prefs.hold), (k) => {
+          prefs.hold = parseInt(k, 10); savePrefs(); build();
+        }));
+        p.appendChild(node('p', 'hint',
+          'Then it collapses to the live match and your session score. A ' +
+          'single-panel source hides instead.'));
+      }
+      return p;
+    };
+
+    // ── Preview ─────────────────────────────────────────────────────────────
+    const previewPanel = () => {
+      const p = panel('Preview');
+
+      // The card is three different objects over a night and the streamer has
+      // to be able to place a source against all three. With a reveal hold set,
+      // the full one is on screen for twenty seconds a game.
+      p.appendChild(segmented(PREVIEW_STATES, previewAt, (k) => {
+        previewAt = k;
+        build();
+      }));
+
+      const stage = node('div', 'preview-stage');
+      const root = node('div');
+      root.id = 'overlay-preview';
+      stage.appendChild(root);
+      p.appendChild(stage);
+
+      const row = node('div', 'row');
+      const demo = node('button', 'btn', deps.overlayState.isDemo
+        ? 'Back to the real game' : 'Send a test game to OBS');
+      demo.type = 'button';
+      demo.addEventListener('click', async () => {
+        if (deps.overlayState.isDemo) await deps.overlayState.publish();
+        else await deps.overlayState.publishDemo();
+        deps.log(deps.overlayState.isDemo
+          ? 'test game pushed to OBS, labelled as a preview on the overlay'
+          : 'overlay back to your real games', 'ok');
+        build();
+      });
+      row.appendChild(demo);
+      p.appendChild(row);
+      return p;
+    };
+
+    // ── Casting ─────────────────────────────────────────────────────────────
+    //
+    // The caster's control surface, and the one part of this app that is not
+    // derived from a replay. A series score needs ordered games and a running
+    // total, which free tags cannot express, and a caster changes the names
+    // between matches anyway. So it is typed here and published live: every
+    // change is on screen before they let go of the mouse.
+    //
+    // It drives a SECOND overlay page (/cast). The player overlay is one
+    // person's session said as "you"; a broadcast is two strangers said as
+    // neither, and bending one into the other would have meant a mode flag
+    // through every module in overlay-render.js.
     const RACE_PICK = [
       { key: '', label: '—' },
       { key: 'H', label: 'HU' },
@@ -213,46 +435,79 @@
       { key: 'R', label: 'RD' }
     ];
 
-    const castPanel = () => {
-      const panel = node('section', 'panel');
-      panel.appendChild(node('h2', null, 'Casting'));
+    const cur = () => deps.overlayState.cast || {
+      event: '', round: '', badge: '', a: { name: '', race: '' }, b: { name: '', race: '' },
+      scoreA: 0, scoreB: 0
+    };
+    const commit = (patch) => {
+      deps.overlayState.setCast({ ...cur(), ...patch });
+      renderPreview();
+    };
 
-      const cur = () => deps.overlayState.cast || {
-        event: '', round: '', badge: '', a: { name: '', race: '' }, b: { name: '', race: '' },
-        scoreA: 0, scoreB: 0
-      };
-      const commit = (patch) => {
-        deps.overlayState.setCast({ ...cur(), ...patch });
-        renderPreview();
-      };
+    const field = (label, value, placeholder, onChange) => {
+      const wrap = node('label', 'field');
+      wrap.appendChild(node('span', 'field-label', label));
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = value || '';
+      input.placeholder = placeholder;
+      input.addEventListener('change', () => onChange(input.value.trim()));
+      wrap.appendChild(input);
+      return wrap;
+    };
 
-      const field = (label, value, placeholder, onChange) => {
-        const wrap = node('label', 'field');
-        wrap.appendChild(node('span', 'field-label', label));
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.value = value || '';
-        input.placeholder = placeholder;
-        input.addEventListener('change', () => onChange(input.value.trim()));
-        wrap.appendChild(input);
-        return wrap;
-      };
+    const castSetupPanel = () => {
+      const p = panel('OBS setup');
 
-      // Nobody configures an overlay blind. This renders from cast-render.js,
-      // the same file the Browser Source is served, for the same reason the
-      // panel preview above does: a preview drawn by different code can lie.
+      const row = node('div', 'row');
+      const copy = node('button', 'btn btn-primary', 'Copy Browser Source URL');
+      copy.type = 'button';
+      copy.addEventListener('click', () => copyCastUrl(copy));
+      row.appendChild(copy);
+
+      const clear = node('button', 'btn', 'Clear the scoreboard');
+      clear.type = 'button';
+      clear.title = 'Take the scoreboard off the broadcast';
+      clear.addEventListener('click', () => {
+        deps.overlayState.setCast(null);
+        build();
+      });
+      row.appendChild(clear);
+      p.appendChild(row);
+
+      p.appendChild(node('p', 'hint',
+        'In OBS: Sources, add Browser, paste the URL, size 480 × 220.'));
+      p.appendChild(node('p', 'hint',
+        'A separate source from your own card. The URL contains your access ' +
+        'token. Keep it off stream.'));
+      return p;
+    };
+
+    const castPreviewPanel = () => {
+      const p = panel('Preview');
       const stage = node('div', 'preview-stage cast-stage');
-      const castRoot = node('div');
-      castRoot.id = 'cast-preview';
-      castRoot.dataset.view = 'panel';
-      stage.appendChild(castRoot);
-      panel.appendChild(stage);
+      const root = node('div');
+      root.id = 'cast-preview';
+      root.dataset.view = 'panel';
+      stage.appendChild(root);
+      p.appendChild(stage);
+      // The scoreboard draws nothing until it has something to say, which is
+      // correct on a broadcast and reads as a broken panel here.
+      const c = deps.overlayState.cast;
+      const empty = !c || (!c.event && !c.round && !c.badge &&
+        !(c.a && c.a.name) && !(c.b && c.b.name));
+      if (empty) p.appendChild(node('p', 'hint', 'Fill in the scoreboard to see it.'));
+      return p;
+    };
+
+    const scoreboardPanel = () => {
+      const p = panel('Scoreboard');
 
       const head = node('div', 'cast-head');
       head.appendChild(field('Event', cur().event, 'WC3L Season 18', v => commit({ event: v })));
       head.appendChild(field('Round', cur().round, 'Grand final', v => commit({ round: v })));
       head.appendChild(field('Badge', cur().badge, 'Random hero', v => commit({ badge: v })));
-      panel.appendChild(head);
+      p.appendChild(head);
 
       // One side of the scoreboard.
       const side = (which) => {
@@ -301,239 +556,46 @@
       sides.appendChild(side('a'));
       sides.appendChild(node('span', 'cast-v', 'v'));
       sides.appendChild(side('b'));
-      panel.appendChild(sides);
+      p.appendChild(sides);
 
-      const row = node('div', 'row');
-      const copy = node('button', 'btn btn-primary', 'Copy casting overlay URL');
-      copy.type = 'button';
-      copy.addEventListener('click', () => copyCastUrl(copy));
-      row.appendChild(copy);
-
-      const clear = node('button', 'btn', 'Clear');
-      clear.type = 'button';
-      clear.title = 'Take the scoreboard off the broadcast';
-      clear.addEventListener('click', () => {
-        deps.overlayState.setCast(null);
-        build();
-      });
-      row.appendChild(clear);
-      panel.appendChild(row);
-
-      panel.appendChild(node('p', 'hint',
-        'A separate Browser Source from the panels below. Suggested size 480 × 220.'));
-      return panel;
-    };
-
-    // Same rule as the player overlay's URL: the token goes to the clipboard
-    // and never to the DOM, the log or a tooltip. This window may be on camera.
-    const copyCastUrl = async (btn) => {
-      const was = btn.textContent;
-      try {
-        const info = await deps.invoke('overlay_info');
-        const url = info.url.replace('/overlay?', '/cast?');
-        await navigator.clipboard.writeText(url);
-        btn.textContent = 'Copied';
-        setTimeout(() => { btn.textContent = was; }, 4000);
-        deps.log('casting overlay URL copied, add it as a Browser Source', 'ok');
-      } catch (e) {
-        deps.log(`overlay URL unavailable: ${deps.errText(e)}`, 'err');
-      }
+      p.appendChild(node('p', 'hint',
+        'The stat bar under it follows whichever game finished last.'));
+      return p;
     };
 
     const build = () => {
       const host = el('stream-body');
       host.innerHTML = '';
+      host.dataset.mode = mode;
 
-      // Two columns, each its own scroller. The preview goes left at full
-      // width, since it is the point of the screen, and the controls stack on
-      // the right. The view itself never scrolls, per the fold rule.
+      // Which overlay is being set up. A mode rather than two panels down one
+      // column: the scoreboard used to be below the fold of a scroller with its
+      // own copy button below that, which is the worst place on the screen for
+      // a control whose whole point is that it is live.
+      const modes = node('div', 'stream-modes');
+      modes.appendChild(segmented(
+        [{ key: 'player', label: 'Your stream' }, { key: 'cast', label: 'Casting a match' }],
+        mode,
+        (k) => { mode = k; build(); }
+      ));
+      host.appendChild(modes);
+
+      // Two columns, each its own scroller. The view frame never scrolls, per
+      // the fold rule.
       const left = node('div', 'col scroll');
       const right = node('div', 'col scroll');
       host.appendChild(left);
       host.appendChild(right);
 
-      // ── Preview ─────────────────────────────────────────────────────────
-      const preview = node('section', 'panel');
-      preview.appendChild(node('h2', null, 'What viewers see'));
-
-      // The card is three different objects over a session, and the full one
-      // is the rarest: with a reveal hold set it is on screen for twenty
-      // seconds a game and the strip is on screen for the rest of the night.
-      // Stepping the states here is the only way to place a source against
-      // what it will actually look like most of the time.
-      preview.appendChild(segmented(PREVIEW_STATES, previewAt, (k) => {
-        previewAt = k;
-        build();
-      }));
-
-      const stage = node('div', 'preview-stage');
-      const root = node('div');
-      root.id = 'overlay-preview';
-      stage.appendChild(root);
-      preview.appendChild(stage);
-
-      const demoRow = node('div', 'row');
-      const demo = node('button', 'btn', deps.overlayState.isDemo
-        ? 'Back to the real game' : 'Send a test game to OBS');
-      demo.type = 'button';
-      demo.addEventListener('click', async () => {
-        if (deps.overlayState.isDemo) await deps.overlayState.publish();
-        else await deps.overlayState.publishDemo();
-        deps.log(deps.overlayState.isDemo
-          ? 'test game pushed to OBS, labelled as a preview on the overlay'
-          : 'overlay back to your real games', 'ok');
-        build();
-      });
-      demoRow.appendChild(demo);
-      preview.appendChild(demoRow);
-      left.appendChild(preview);
-
-      // ── Casting ─────────────────────────────────────────────────────────
-      //
-      // The caster's control surface, and the one part of this app that is not
-      // derived from a replay. A series score needs ordered games and a running
-      // total, which free tags cannot express, and a caster changes the names
-      // between matches anyway. So it is typed here and published live.
-      //
-      // It drives a SECOND overlay page (/cast), not this one. The player
-      // overlay is one person's session said as "you"; a broadcast is two
-      // strangers said as neither, and bending one into the other would have
-      // meant a mode flag through every module in overlay-render.js.
-      left.appendChild(castPanel());
-
-      // ── Layout ──────────────────────────────────────────────────────────
-      //
-      // Eight checkboxes made composing a card the first decision anybody had
-      // to make, and it is the one almost nobody wants to make. Two shapes and
-      // an escape hatch: the per-panel list still exists, one click in.
-      const mods = node('section', 'panel');
-      mods.appendChild(node('h2', null, 'Layout'));
-      mods.appendChild(segmented(LAYOUTS, prefs.layout, (k) => {
-        prefs.layout = k;
-        savePrefs();
-        build();
-      }));
-
-      if (prefs.layout === 'full') {
-        mods.appendChild(node('p', 'hint',
-          'The last game, with the scouting strip and your session score. ' +
-          'Key moments and the build order are in Custom.'));
-      } else if (prefs.layout === 'strip') {
-        mods.appendChild(node('p', 'hint',
-          'Who you are about to play and today’s score. Nothing about ' +
-          'the last game.'));
+      if (mode === 'cast') {
+        left.appendChild(castSetupPanel());
+        left.appendChild(castPreviewPanel());
+        right.appendChild(scoreboardPanel());
       } else {
-        const on = activeModules();
-        for (const m of MODULES) {
-          const row = node('div', 'panel-row');
-          const label = node('label', 'check');
-          const box = document.createElement('input');
-          box.type = 'checkbox';
-          box.checked = on.indexOf(m.key) !== -1;
-          box.addEventListener('change', () => {
-            const next = window.OverlayRender.ALL_MODULES.filter(k =>
-              k === m.key ? box.checked : activeModules().indexOf(k) !== -1);
-            // Everything off leaves a blank source and no way back from OBS.
-            if (!next.length) { box.checked = true; return; }
-            prefs.modules = next;
-            savePrefs();
-            renderPreview();
-          });
-          label.appendChild(box);
-          const text = node('span');
-          text.appendChild(node('span', null, m.label));
-          text.appendChild(node('span', 'hint', m.size));
-          label.appendChild(text);
-          row.appendChild(label);
-
-          const solo = node('button', 'btn btn-sm', 'Copy URL');
-          solo.type = 'button';
-          solo.title = `A Browser Source showing only ${m.label.toLowerCase()}`;
-          solo.addEventListener('click', () => copyUrl(solo, m.key,
-            `${m.label} URL copied. Add a Browser Source, suggested ${m.size}.`));
-          row.appendChild(solo);
-          mods.appendChild(row);
-        }
-        mods.appendChild(node('p', 'hint',
-          'These are the player panels, framed as you. Casting above is a ' +
-          'separate source for two players.'));
+        left.appendChild(previewPanel());
+        right.appendChild(obsPanel());
+        right.appendChild(cardPanel());
       }
-      right.appendChild(mods);
-
-      // ── Look ────────────────────────────────────────────────────────────
-      const look = node('section', 'panel');
-      look.appendChild(node('h2', null, 'Look'));
-      look.appendChild(node('p', 'lead', 'Theme'));
-      look.appendChild(segmented(THEMES, prefs.theme, (k) => {
-        prefs.theme = k; savePrefs(); build();
-      }));
-      look.appendChild(node('p', 'lead', 'Size'));
-      look.appendChild(segmented(SCALES, prefs.scale, (k) => {
-        prefs.scale = k; savePrefs(); build();
-      }));
-
-      // ── Post-game reveal ────────────────────────────────────────────────
-      look.appendChild(node('p', 'lead', 'When to show it'));
-      const revealLabel = node('label', 'check');
-      const revealBox = document.createElement('input');
-      revealBox.type = 'checkbox';
-      revealBox.checked = !!prefs.reveal;
-      revealBox.addEventListener('change', () => {
-        prefs.reveal = revealBox.checked;
-        savePrefs();
-        build();
-      });
-      revealLabel.appendChild(revealBox);
-      const revealText = node('span');
-      revealText.appendChild(node('span', null, 'Only after a game'));
-      revealLabel.appendChild(revealText);
-      look.appendChild(revealLabel);
-
-      if (prefs.reveal) {
-        look.appendChild(segmented(HOLDS, String(prefs.hold), (k) => {
-          prefs.hold = parseInt(k, 10); savePrefs(); build();
-        }));
-        look.appendChild(node('p', 'hint',
-          'The full card holds for this long, then collapses to the score ' +
-          'strip. A single-panel source hides instead.'));
-      }
-      right.appendChild(look);
-
-      // ── Connect ─────────────────────────────────────────────────────────
-      const setup = node('section', 'panel');
-      setup.appendChild(node('h2', null, 'Put it in OBS'));
-
-      const row = node('div', 'row');
-      const copy = node('button', 'btn btn-primary', 'Copy OBS Browser Source URL');
-      copy.type = 'button';
-      copy.addEventListener('click', () => copyUrl(copy, null,
-        'OBS URL copied. Add a Browser Source, suggested 460×560.'));
-      row.appendChild(copy);
-
-      const player = node('button', 'btn', 'Open the player view');
-      player.type = 'button';
-      player.title = 'An ordinary window for a second monitor';
-      player.addEventListener('click', () =>
-        deps.invoke('open_player_view')
-          .catch(e => deps.log(`player view failed: ${deps.errText(e)}`, 'err')));
-      row.appendChild(player);
-      setup.appendChild(row);
-
-      // The URL is a credential and the source setting is a real failure mode.
-      // Both stay, where the URL gets copied, rather than in a document nobody
-      // opens. Everything else that used to sit here was explanation.
-      setup.appendChild(node('p', 'hint',
-        'The URL contains your access token. Keep it off stream.'));
-      setup.appendChild(node('p', 'hint', 'Suggested size: 460 × 560.'));
-      setup.appendChild(node('p', 'hint',
-        'Turn off “Shutdown source when not visible” in the source, or the ' +
-        'overlay stops updating whenever the scene is not live.'));
-      // One sentence, because the card now carries its own source line under
-      // the Scouting heading and this used to say the same thing twice.
-      setup.appendChild(node('p', 'hint',
-        'Everything comes from finished replays, except Scouting, which is ' +
-        'public W3Champions data about your opponent.'));
-      right.appendChild(setup);
 
       renderPreview();
     };

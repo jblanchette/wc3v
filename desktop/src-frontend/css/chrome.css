@@ -379,18 +379,57 @@ main { min-height: 0; position: relative; }
   border-top: 1px solid var(--app-line);
 }
 
-/* ── Stream: two columns, each its own scroller ──────────────────────────
+/* ── Stream: a mode row over two columns, each its own scroller ──────────
    The view frame never scrolls; the columns do. */
 
 .stream-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
-  gap: var(--sp-4);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--sp-3) var(--sp-4);
   min-height: 0;
   padding: var(--sp-4);
 }
+/* Which overlay is being set up. Spans the width because it reframes both
+   columns under it, not one of them. */
+.stream-modes { grid-column: 1 / -1; }
 .stream-grid > .col { min-height: 0; }
 .stream-grid .panel:last-child { margin-bottom: 0; }
+
+/* Casting splits evenly. The scoreboard control is a three-column grid of two
+   players either side of a divider, which does not fit the narrow settings
+   rail the player card's controls live in. */
+.stream-grid[data-mode="cast"] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+/* A named setting: label left, control right, one row. The Look panel used to
+   stack every label above its buttons, which spent a third of the panel's
+   height on four words. */
+.ctl {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--hit-min);
+}
+.ctl + .ctl { margin-top: var(--sp-1); }
+.ctl-k { color: var(--ink-dim); font-size: var(--fs-min); font-weight: 600; }
+.ctl .seg { margin-left: auto; }
+
+/* The per-panel list, one click in under Custom. A well rather than an indent
+   rule, so it reads as detail belonging to the row above without putting a
+   stripe down one edge of it. */
+.mod-list {
+  margin: var(--sp-2) 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--app-well);
+  border: 1px solid var(--app-line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--cut-in);
+}
+.mod-list .panel-row { display: flex; align-items: center; gap: var(--sp-3); }
+.mod-list .panel-row .check { flex: 1 1 auto; min-width: 0; }
+.mod-list .hint { display: block; margin: 0; }
 
 /* --fs-min is the floor and this is the one line allowed to sit on it. */
 .legal {

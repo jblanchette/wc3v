@@ -34,6 +34,28 @@
     };
   };
 
+  // When the ladder created this match. It is the queue pop rather than the
+  // first frame, so it runs a little ahead of the in-game clock, which is why
+  // the overlay labels what it draws from this "live" and never "game time".
+  //
+  // The field has been an ISO string and epoch millis at different points in
+  // this API's life, so both are read.
+  const startedAt = (raw) => {
+    const v = raw.startTime !== undefined ? raw.startTime : raw.startedAt;
+    let ms = null;
+    if (typeof v === 'number' && isFinite(v)) ms = v < 1e12 ? v * 1000 : v;
+    else if (typeof v === 'string') {
+      const t = Date.parse(v);
+      if (isFinite(t)) ms = t;
+    }
+    if (ms === null) return null;
+    // A clock counting up from the wrong zero is worse on a broadcast than no
+    // clock at all. In the future, or older than any WC3 game, is not this one.
+    const age = Date.now() - ms;
+    if (age < -60000 || age > 3 * 3600 * 1000) return null;
+    return ms;
+  };
+
   const asMatch = (raw, meTag) => {
     if (!raw || typeof raw !== 'object') return null;
     const seats = [];
@@ -50,6 +72,7 @@
       id: raw.id || raw.matchId || null,
       map: raw.mapName || raw.map || null,
       mode: num(raw.gameMode),
+      startedAt: startedAt(raw),
       me: seatOf(me),
       opponents: them.map(seatOf)
     };

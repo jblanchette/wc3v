@@ -1,5 +1,64 @@
 # WC3V Desktop: changelog
 
+## 1.0.1 — 14 Aug 2026
+
+The Stream tab, and an overlay that has something to say while you are playing.
+
+### The card during a game
+
+The overlay used to show the last game's verdict for the whole time you were
+in the next one. A finished result sitting under a player who is visibly still
+playing is the most confusing thing the card could do, so it now comes off and
+the scouting panel becomes the live match: a LIVE mark, a clock counting up,
+your opponent with their rank and MMR, your record against them, your record on
+the map being played, and the heroes they usually open on.
+
+The session footer gained your ladder rank, your MMR, and how far it has moved
+since the app opened. It is what every ladder stream carries and this never had.
+
+The clock counts from the ladder's match-created time, which is the queue pop
+rather than the first frame, so it says "live" and never claims to be the
+in-game timer. Where W3Champions gives no usable start time the card shows no
+clock rather than a wrong one.
+
+None of this reads the running game. It is the public W3Champions ongoing-match
+lookup over the replays already on this machine, and the card says so on itself.
+
+### The Stream screen
+
+Getting it into OBS is the first thing on the screen instead of the last, and
+it is called OBS setup. The copy button sits at the top of it.
+
+Casting is a mode now rather than a panel below the fold of a scroller with its
+own copy button below that. The switch at the top picks your own stream or a
+match you are casting, and each gets its own setup panel and preview.
+
+Layout and Look were two panels asking one question, so they are one panel
+called Card. Each setting is a labelled row rather than a heading stacked above
+its buttons.
+
+The preview steps through the three states a card actually passes through in a
+night: waiting, during a game, after a game.
+
+### Themes
+
+Three, and they differ in form rather than in colour. Carved is the stone panel
+and the default. Etched has no panel at all and strikes the type onto the
+footage, for a scene that has already spent its screen on the game. Parchment is
+a light quest-log page for a bright scene the dark box fights. The WC3V mark is
+on every one of them, in every state.
+
+Slate was a re-tint of Carved and is gone from the picker. Its styling stays, so
+an overlay URL copied while it was offered keeps rendering exactly as it did.
+
+### Fixes
+
+- A hero portrait that failed to load left the browser's broken-image mark on
+  the card. It is replaced with a blank tile now, which is what an OBS machine
+  with no internet was always supposed to get.
+- A W3Champions account with no ladder record made an extra lookup on every
+  poll for the rest of the session.
+
 ## 1.0.0 — 10 Aug 2026
 
 The launch. Everything below 1.0.0 was dogfooding: builds published to R2 so

@@ -32,6 +32,7 @@
   window.createScout = (deps) => {
     // deps: w3c, store, identityName(), visible(), log,
     //       onMatch(match, ladder, book) with null for "no live match"
+    //       onLadder(mine) with your own rank, mmr and climb, or null
 
     let timer = null;
     let match = null;
@@ -44,6 +45,35 @@
       const s = await deps.w3c.stats(tag);
       stats.set(tag, s);
       return s;
+    };
+
+    // Your own standing, and how far it has moved since the app opened. Rank
+    // and MMR are what every ladder stream puts on screen, and the climb is the
+    // part that makes a session worth watching rather than a scoreboard.
+    //
+    // Deliberately not on the `stats` cache, which never expires: this is the
+    // one tag whose numbers change while the app is running. Refreshed only
+    // when the match state flips rather than on every tick, because MMR moves
+    // when a game ends, so it costs two lookups a game and the idle poll stays
+    // a single request.
+    let mine = null;
+    let openedAt = null;
+    // Which tag the two above describe. A seat change makes them somebody
+    // else's numbers, and a climb measured from a different player's MMR is a
+    // wrong number rather than a missing one.
+    let mineTag = null;
+
+    const refreshMine = async (tag) => {
+      if (tag !== mineTag) {
+        mineTag = tag;
+        openedAt = null;
+        mine = null;
+      }
+      const s = await deps.w3c.stats(tag);
+      if (!s || s.mmr === null) return;
+      if (openedAt === null) openedAt = s.mmr;
+      mine = { rank: s.rank, mmr: s.mmr, climb: s.mmr - openedAt };
+      deps.onLadder(mine);
     };
 
     // What this machine knows about them. Returns null when they have never
@@ -128,9 +158,20 @@
       // Hidden to the tray. Leave whatever is on screen alone and wait.
       if (!(await deps.visible())) return;
 
+      // First look of the session, so the climb has a zero to count from.
+      //
+      // Gated on having ASKED, not on having an answer. A tag with no ladder
+      // record answers null forever, and gating on the result would put a
+      // second request on every idle poll for the rest of the session.
+      if (mineTag !== me) await refreshMine(me).catch(() => {});
+
       const found = await deps.w3c.ongoing(me);
       if (!found) {
-        if (match) clear();
+        if (match) {
+          // A game just ended. This is the one moment your own MMR moves.
+          clear();
+          await refreshMine(me).catch(() => {});
+        }
         return;
       }
       // Same match, already drawn.
