@@ -287,10 +287,6 @@ const Wc3vViewer = class {
     this.mapRenderer = new MapRenderer();
     this.battleData = new BattleData();         // pure pipeline (BattleDetector output → indexed)
     this.bottomPanel = (window.BottomPanel) ? new window.BottomPanel() : null;
-    // Construct the callout FIRST: BattleReportRenderer.setBattles hands it the
-    // precomputed models, and setBattles can run as soon as world data lands.
-    this.battleCallout = (window.BattleCallout)
-      ? new window.BattleCallout(this) : null;     // transient on-canvas fight box (#action-canvas)
     this.battleReportRenderer = (window.BattleReportRenderer)
       ? new window.BattleReportRenderer(this) : null;
     this.insightsEventLog = (window.InsightsEventLog)
@@ -3343,7 +3339,15 @@ const Wc3vViewer = class {
     this.setupMap();
 
     // Build the unified event model now that players + their streams exist.
-    if (this.eventModel) this.eventModel.build(this.players);
+    // Battles fold in as `battleResult` events so a finished fight surfaces as
+    // an ordinary feed card — same markup and pacing as casts and level-ups —
+    // instead of a bespoke box drawn into the map canvas's downscaled space.
+    if (this.eventModel) {
+      this.eventModel.build(this.players);
+      if (this.battleReportRenderer && this.mapData && Array.isArray(this.mapData.battles)) {
+        this.eventModel.addBattles(this.mapData.battles, this.battleReportRenderer);
+      }
+    }
 
     // Process detected battles once mapData is available. Old replays parsed
     // before the BattleDetector landed simply have no `battles` array; the
@@ -3731,9 +3735,6 @@ const Wc3vViewer = class {
       // it is visually distinct from displayUnitRings above (thin bright hoop
       // at a larger radius, its own instanced pool).
       displaySelectionRings: true,
-      // Transient on-canvas fight summary after each battle. Deliberately NOT
-      // folded into displayFloatingText — that gates the EventFeed.
-      displayBattleCallouts: true,
       // Bottom-centre dominance + food history HUD.
       displayHudCharts: true
     };
@@ -3773,7 +3774,6 @@ const Wc3vViewer = class {
         { key: 'displayFootprints', label: 'Footprints' },
         { key: 'displayLevelPins', label: 'Level Pins' },
         { key: 'displayFloatingText', label: 'Action Feed' },
-        { key: 'displayBattleCallouts', label: 'Battle Callouts' },
         { key: 'displayHudCharts', label: 'Match Graphs' },
         { key: 'displayText', label: 'Unit Names' },
         { key: 'displayBaseLabels', label: 'Base Labels' },
@@ -5330,8 +5330,8 @@ const Wc3vViewer = class {
     }
 
     // Battle Report panel active-row highlight (self-throttled to 250ms).
-    // The transient on-canvas box is drawn much later in this frame — see the
-    // BattleCallout block below renderAllNameplates.
+    // A finished fight's own summary surfaces through the EventFeed as a
+    // `battleResult` event card — see EventModel.addBattles.
     if (this.battleReportRenderer) {
       this.battleReportRenderer.syncPanel(gameTime);
     }
@@ -5452,15 +5452,6 @@ const Wc3vViewer = class {
     if (viewOptions.displayFloatingText && this.eventFeed) {
       this.eventFeed.update(gameTime);
       this.eventFeed.renderPips(playerCtx, gameTime);
-    }
-
-    // Transient post-battle callout. Runs HERE, not up with teleportFx, because
-    // its placement solver queries frameData.nameplateTree — which is only
-    // populated by renderAllNameplates above. Draws on #action-canvas (L5), a
-    // different canvas but the same logical coordinate space, and actionCtx is
-    // deliberately outside the ctx/playerCtx/utilityCtx save/restore pair.
-    if (this.battleCallout && this.actionCtx && viewOptions.displayBattleCallouts) {
-      this.battleCallout.render(this.actionCtx, gameTime, this.gameScaler, frameData, viewOptions);
     }
 
     // Guided walkthrough: the step's emphasised units/buildings are lit IN the

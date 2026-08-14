@@ -6,9 +6,10 @@
  * It is also the ONE place that decides what a fight means. collectSides() and
  * computeVerdict() are public because the on-canvas callout consumes them too:
  * setBattles() builds a finished model per battle and hands it to
- * BattleCallout (client/js/BattleCallout.js), which owns all of the transient
- * on-canvas drawing. That split is deliberate — the box and the panel can
- * never disagree about who won a fight, because they read one computation.
+ * EventModel.addBattles, which turns each fight into a `battleResult` event so
+ * it surfaces in the action feed as an ordinary card. That split is deliberate
+ * — the feed card and the panel can never disagree about who won a fight,
+ * because they read one computation.
  *
  * Source data: world.battles[*].summary (see lib/BattleSummary.js).
  */
@@ -60,16 +61,6 @@
     { key: 'reengage', title: 'Re-engaged',          icon: '<svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 4a8 8 0 1 1-7.5 5.2l2 .8A6 6 0 1 0 12 6V3l5 4-5 4V4z" fill="#FF8AAB"/></svg>' }
   ];
 
-  // The on-canvas callout window lives in BattleCallout now; we only need the
-  // offsets here to stamp t0/t1 onto each model.
-  const CALLOUT_DELAY_MS    = 600;   // brief beat after battle end
-  const CALLOUT_DURATION_MS = 4000;
-
-  // How many unit stacks one side names on its single units row before the
-  // tail collapses to "+N". The box has to stay glanceable at a legible type
-  // size; the Battles tab carries the full itemisation.
-  const CALLOUT_UNIT_LINES = 3;
-
   function formatTime (ms) {
     const s = Math.floor(ms / 1000);
     const m = Math.floor(s / 60);
@@ -106,145 +97,6 @@
       this._battles = (battles || []).filter(b => b && b.summary && b.summary.hasLosses);
       this._panelBuilt = false;
       this._metaCache = new Map();
-
-      // Hand the on-canvas callout a finished, immutable model per battle.
-      // Everything expensive — verdict, sides, canonical names, every string —
-      // is resolved HERE, once, instead of being rebuilt inside a render loop.
-      const cal = this.viewer && this.viewer.battleCallout;
-      if (cal) cal.setBattles(this._buildCalloutModels());
-    }
-
-    // --------------------------------------------------------------
-    // On-canvas callout models (built once, consumed by BattleCallout)
-    // --------------------------------------------------------------
-
-    _buildCalloutModels () {
-      const models = [];
-      for (const battle of this._battles) {
-        const model = this._calloutModel(battle);
-        if (model) models.push(model);
-      }
-      models.sort((a, b) => a.t0 - b.t0);
-      return models;
-    }
-
-    _calloutModel (battle) {
-      const summary = battle.summary;
-      const center = summary && summary.center;
-      if (!center || !Number.isFinite(center.x) || !Number.isFinite(center.y)) return null;
-
-      const sides = this.collectSides(battle);
-      if (!sides.length) return null;
-      const verdict = this.computeVerdict(sides);
-      const type = summary.engagementType || 'skirmish';
-
-      const C = window.BattleCallout || {};
-      // Two different jobs, deliberately not the same colour:
-      //   accent — the winning side's own colour, used ONLY on the verdict
-      //            word. Player colour is data.
-      //   rim    — the plate's metal. Tarnished gold when a hero died,
-      //            plain bronze otherwise.
-      // The dominance gauge sets the rule this follows: identity lives at the
-      // caps, the chassis stays metal. A saturated player colour wrapped all
-      // the way around a 220px plate reads as neon and fights the register.
-      const accent = (verdict && verdict.winner && verdict.winner.color) || '#C9BB96';
-      const rim = summary.hasHeroDeath ? '#C9A227' : '#6d5a35';
-
-      const lines = [];
-
-      // Eyebrow — the fight type, stamped into the plate in engraved serif.
-      const typeLabel = TYPE_LABELS[type] || 'Fight';
-      lines.push({ kind: 'eyebrow', text: typeLabel.toUpperCase() });
-
-      // Title — how it went. This is the one thing a 4-second glance must land.
-      lines.push({
-        kind: 'title',
-        text: (verdict && verdict.label) ? verdict.label : 'Engagement',
-        color: accent
-      });
-
-      // Subtitle — the plain-language read.
-      const sub = this._calloutSubtitle(verdict, type);
-      if (sub) lines.push({ kind: 'sub', text: sub, color: C.COLOR_SUB || '#BBB' });
-
-      // One block per side, at most three lines: who and what it cost them,
-      // the heroes (if any), then everything else on ONE line.
-      //
-      // This used to itemise one unit per line and a hero-snipe with two full
-      // armies produced a 14-line, 320px-tall plate — a wall of text where a
-      // 4-second glance was wanted. The Battles tab carries the full list.
-      for (const side of sides) {
-        const n = side.loss.count;
-        if (!n) {
-          lines.push({ kind: 'side', text: side.name + '  lost nothing', color: side.color || '#FFF' });
-          continue;
-        }
-
-        // Headline: who, how many, and the bill — all on the name row.
-        lines.push({
-          kind: 'side',
-          text: side.name + '  ' + n + (n === 1 ? ' unit' : ' units') + ' · ' +
-                side.loss.food + ' food · ' + fmtNum(side.loss.gold) + 'g',
-          color: side.color || '#FFF'
-        });
-
-        // Heroes get their own row — they are the reason anyone cares.
-        const heroes = side.units.filter(u => u.isHero);
-        if (heroes.length) {
-          lines.push({
-            kind: 'hero',
-            text: '★ ' + heroes.map(u => u.displayName).join(' · '),
-            color: C.COLOR_HERO || '#E0B84A'
-          });
-        }
-
-        // Everything else, one row, biggest stacks first.
-        const rest = side.units.filter(u => !u.isHero)
-          .sort((a, b) => (b.count || 0) - (a.count || 0));
-        if (rest.length) {
-          const shown = rest.slice(0, CALLOUT_UNIT_LINES);
-          let text = shown.map(u => (u.count || 1) + '× ' + u.displayName).join(' · ');
-          if (rest.length > shown.length) text += '  +' + (rest.length - shown.length);
-          const allEstimated = shown.every(u => u.estimated);
-          lines.push({
-            kind: allEstimated ? 'unitEst' : 'unit',
-            text: allEstimated ? text + ' (likely)' : text,
-            color: allEstimated ? (C.COLOR_EST || '#999') : (C.COLOR_UNIT || '#FFF')
-          });
-        }
-      }
-
-      return {
-        id: battle.id,
-        t0: battle.endTime + CALLOUT_DELAY_MS,
-        t1: battle.endTime + CALLOUT_DELAY_MS + CALLOUT_DURATION_MS,
-        cx: center.x,
-        cy: center.y,
-        accent,
-        rim,
-        lines,
-        // Layout cache, keyed by the quantized canvas->CSS ratio. Filled by
-        // BattleCallout on first draw and on every resize, never per frame.
-        _w: { rq: -1, w: 0, h: 0, padX: 0, padY: 0, accentH: 0, radius: 0, border: 1, swatch: 0 },
-        _solvedAt: -1, _anchorX: 0, _anchorY: 0,
-        _offX: 0, _offY: 0, _slideX: 0, _slideY: 0, _slideAt: -1,
-        // Baked plate bitmap — filled by BattleCallout on first draw and on a
-        // resize, dropped by its small LRU. See BattleCallout._bake.
-        _bmp: null
-      };
-    }
-
-    _calloutSubtitle (verdict, type) {
-      if (!verdict) return TYPE_DESC[type] || '';
-      if (verdict.kind === 'solo') return TYPE_DESC[type] || '';
-      if (verdict.tier === 'even') {
-        return verdict.label === 'No losses' ? 'Nobody traded' : 'Roughly an even trade';
-      }
-      const who = verdict.winner && verdict.winner.name;
-      if (!who) return TYPE_DESC[type] || '';
-      return verdict.heroSwing
-        ? who + ' wins the trade — hero down'
-        : who + ' wins the trade';
     }
 
     // --------------------------------------------------------------
@@ -322,8 +174,8 @@
     // each side's losses from summary.perPlayer. This is what lets us show a
     // real head-to-head trade and name the winner; perPlayer alone only ever
     // lists the side(s) that took losses.
-    // Public: BattleCallout's models are built from this at load time, so the
-    // on-canvas box and the Battles tab can never disagree about a fight.
+    // Public: EventModel.addBattles builds its feed cards from this, so the
+    // action feed and the Battles tab can never disagree about a fight.
     collectSides (battle) {
       const summary = battle.summary || {};
       const perPlayer = summary.perPlayer || {};

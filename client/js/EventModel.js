@@ -326,6 +326,16 @@ const EventModel = (function () {
   };
 
   // Category → accent color for filter chips + row tint (shared with CSS).
+  // Fight-type labels for the battleResult KIND kicker. Mirrors
+  // BattleReportRenderer's TYPE_LABELS (the Battles tab chips) — kept here
+  // because that file is a renderer and this one must not depend on it for a
+  // static string table.
+  const TYPE_LABELS_REF = {
+    campClear: 'Camp',      creepJack: 'Creep Jack', baseRaid: 'Base Raid',
+    defense:   'Defense',   heroSnipe: 'Hero Snipe', wipe:     'Wipe',
+    harass:    'Harass',    skirmish:  'Skirmish'
+  };
+
   const CATEGORY_COLOR = {
     combat:      '#88CCFF',
     progression: '#FFD166',
@@ -379,6 +389,121 @@ const EventModel = (function () {
       events.sort((a, b) => (a.gameTime - b.gameTime) || (a.priority - b.priority));
       this.events = events;
       return events;
+    }
+
+    /**
+     * Fold detected battles in as `battleResult` events.
+     *
+     * A finished fight is an event like any other, so it belongs in the same
+     * feed as casts and level-ups rather than in a bespoke on-canvas box. It
+     * gets the same row markup, the same wall-clock pacing, the same caster
+     * pip on the map, and — the reason this exists — real CSS pixel type
+     * instead of text drawn into the map canvas's downscaled logical space.
+     *
+     * `reporter` is BattleReportRenderer: it stays the one place that decides
+     * what a fight means (collectSides / computeVerdict), exactly as the
+     * Battles tab uses it.
+     *
+     * Call AFTER build(); it merges and re-sorts.
+     */
+    addBattles (battles, reporter) {
+      if (!battles || !battles.length || !reporter) return this.events;
+      const out = [];
+      for (const b of battles) {
+        const ev = this._normalizeBattle(b, reporter);
+        if (ev) out.push(ev);
+      }
+      if (!out.length) return this.events;
+      this.events = this.events.concat(out)
+        .sort((a, b2) => (a.gameTime - b2.gameTime) || (a.priority - b2.priority));
+      return this.events;
+    }
+
+    _normalizeBattle (battle, reporter) {
+      const summary = battle && battle.summary;
+      if (!summary || !summary.hasLosses) return null;
+      const sides = reporter.collectSides(battle);
+      if (!sides.length) return null;
+      const verdict = reporter.computeVerdict(sides);
+      const type = summary.engagementType || 'skirmish';
+
+      // Heaviest loss on each side carries the portraits: primary is what the
+      // losing side lost, secondary what the other side lost. Heroes outrank
+      // stacks — a dead hero is the story.
+      const heaviest = (side) => {
+        let best = null;
+        for (const u of side.units) {
+          if (!best) { best = u; continue; }
+          if (!!u.isHero !== !!best.isHero) { if (u.isHero) best = u; continue; }
+          if ((u.count || 0) > (best.count || 0)) best = u;
+        }
+        return best;
+      };
+
+      const byLoss = sides.slice().sort((a, b) => b.value - a.value);
+      const loser = byLoss[0];
+      const other = byLoss[1] || null;
+      const lostMost = heaviest(loser);
+      const lostOther = other ? heaviest(other) : null;
+
+      let title, badge = null;
+      if (!verdict || verdict.kind === 'solo') {
+        title = loser.loss.count
+          ? loser.name + ' lost ' + loser.loss.count
+          : loser.name + ' — no losses';
+      } else if (verdict.tier === 'even') {
+        title = verdict.label === 'No losses' ? 'No losses' : 'Even trade';
+      } else {
+        title = verdict.label + ' — ' + verdict.winner.name;
+        if (verdict.margin > 0) badge = '+' + Math.round(verdict.margin);
+      }
+
+      // One line, per side: how many, and what it cost. No prose.
+      const money = (n) => {
+        const v = Math.round(n || 0);
+        return v >= 1000 ? v.toLocaleString('en-US') : String(v);
+      };
+      const detail = sides.map(s => s.loss.count
+        ? s.name + ' −' + s.loss.count + ' · ' + s.loss.food + 'f · ' + money(s.loss.gold) + 'g'
+        : s.name + ' clean'
+      ).join('  ·  ');
+
+      return {
+        id: 'battle:' + battle.id,
+        gameTime: battle.endTime || battle.startTime || 0,
+        playerIndex: -1,
+        // The ring around the primary icon means "who owns this unit" here as
+        // everywhere else in the feed — so it is the colour of the side whose
+        // unit is in the portrait, NOT the winner's. On an even trade there is
+        // no winner to colour it with anyway.
+        playerColor: loser.color || '#888',
+        playerName: (verdict && verdict.winner && verdict.winner.name) || '',
+        category: 'combat',
+        type: 'battleResult',
+        kind: TYPE_LABELS_REF[type] || 'Fight',
+        icon: lostMost ? lostMost.itemId : null,
+        title,
+        badge,
+        secondary: lostOther
+          ? { kind: 'target', icon: lostOther.itemId, label: lostOther.displayName,
+              hero: !!lostOther.isHero }
+          : null,
+        actor: null,
+        detail,
+        target: null,
+        targeting: null,
+        isAoe: false,
+        tags: ['battle', 'combat'],
+        onCanvas: true,
+        // Above spell casts: when a fight ends, its result is the headline.
+        priority: 120,
+        color: summary.hasHeroDeath ? '#FFD166' : CATEGORY_COLOR.combat,
+        pos: (summary.center && Number.isFinite(summary.center.x))
+          ? { x: summary.center.x, y: summary.center.y } : null,
+        actorUuid: null,
+        targetPos: null,
+        targetUuid: null
+      };
     }
 
     _normalize (ev, playerIndex, playerColor, playerName, streamIndex) {

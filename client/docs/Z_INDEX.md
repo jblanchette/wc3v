@@ -22,7 +22,7 @@ Stacked back → front by CSS z-index inside `#canvas-group`:
 | 1       | `#main-canvas`     | **L2 LEGACY**     | Unused; kept for backward-compat with older render paths                                              |
 | 2       | `#utility-canvas`  | **L3 MAP OVERLAYS** | Map grid, neutral building icons, creep camp rings + their bg, tree icons                             |
 | 3       | `#player-canvas`   | **L4 UNITS + NAMEPLATES** | Unit icons, hero portraits, death FX, 2D selection markers, base nameplates, unit nameplates (`renderAllNameplates`), unit nameplate bars, floating text |
-| 4       | `#action-canvas`   | **L5 ACTION INDICATORS** | Teleport cinematics (channel ring, destination mirror, INCOMING label, dashed trail, arrival flash), post-battle callouts. Future: hero level-up burst, scout ping |
+| 4       | `#action-canvas`   | **L5 ACTION INDICATORS** | Teleport cinematics (channel ring, destination mirror, INCOMING label, dashed trail, arrival flash). Future: hero level-up burst, scout ping |
 
 **Not in this stack:** `#hud-charts-canvas` (the match graphs HUD) is a
 *sibling* of `#canvas-group`, not a member of it — see the DOM table below.
@@ -122,19 +122,18 @@ This is fine because L5 ACTION CANVAS sits above the whole thing anyway.
 ### `#action-canvas` (z 4) draw sequence per frame
 
 1. `teleportFx.render()` — channel ring + destination mirror + banner + flash + trail
-2. `battleCallout.render()` — post-battle verdict/loss callout
 
-**Ordering note that matters:** `battleCallout.render()` is called from
-`Wc3vViewer.render()` *after* `ClientPlayer.renderAllNameplates()`, even though
-it draws on a different canvas. Its placement solver queries
-`frameData.nameplateTree`, which is cleared at the top of the frame and only
-populated by `renderAllNameplates` — querying it any earlier returns nothing,
-and the callout would go back to covering whatever it landed on. (The two
-canvases share one logical coordinate space, and `actionCtx` sits outside the
-`ctx`/`playerCtx`/`utilityCtx` save/restore pair, so the late call is safe.)
+**Post-battle summaries do NOT live here.** They were an on-canvas box for a
+while and it was the wrong call: this canvas is in the map image's LOGICAL
+space and is CSS-downscaled, so its text is small however carefully you size
+it, and every piece of chrome had to be hand-drawn instead of styled. A
+finished fight is now a `battleResult` event (`EventModel.addBattles`) and
+surfaces in the action feed as an ordinary DOM card, in real CSS pixels with
+the same `ev-` markup as spell casts and level-ups. **Before adding any new
+text-heavy overlay here, ask whether it is really an event feed card.**
 
 Future additions to this canvas (level-up burst, scout ping, etc.) should
-render either before or after these depending on priority — the same
+render either before or after teleportFx depending on priority — the same
 draw-order rule applies within the canvas.
 
 ### `#hud-charts-canvas` (z 6, DOM sibling) per frame
@@ -185,11 +184,14 @@ camera toolbar" — that's L5 ACTION CANVAS. Add it there.
   LOGICAL space (the map image, 1568–2240px) which is then CSS-downscaled with
   `object-fit: contain` — landing at roughly 4–6 CSS px on screen, a ~3×
   violation of the project's 12.8px floor. This doc had also gone stale and
-  still listed it on `#utility-canvas`. Fixed by extracting `BattleCallout`,
-  deriving every dimension from `F = SCREEN_FONT_PX × canvasMetrics().sx` the
-  way `BaseNameplateRenderer` already did, and correcting the tables here.
+  still listed it on `#utility-canvas`. Two rounds of `sx`-correcting and
+  restyling it made it legible but never right — it was reinventing, on a
+  surface that fights you, a card the site already had. Fixed properly by
+  deleting the on-canvas box and making a finished fight a `battleResult`
+  event so it renders as a normal feed card in real CSS pixels.
   **Lesson:** a size constant on any of the five map canvases is a size in map
-  pixels, not screen pixels, and needs the `sx` correction to be legible.
+  pixels, not screen pixels. And when a canvas overlay is mostly *text*, that
+  is the signal it wants to be DOM.
 - **Lich didn't teleport with the casting DK** (2026-05): a different kind of
   bug (game-mechanic exclusion, not z-index) but worth noting the pattern:
   visual contradictions between what we draw and what should happen often

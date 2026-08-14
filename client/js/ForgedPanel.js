@@ -11,8 +11,13 @@
  * mounting studs at the ends, an engraved serif wordmark, and numerals set
  * with a hard black shadow. That is all CSS. Everything the viewer draws on a
  * canvas needs the same material or it reads as app chrome bolted onto a game
- * prop — so the recipe lives here once, and HudCharts and BattleCallout both
- * build out of it instead of each inventing their own panel.
+ * prop — so the recipe lives here once and HudCharts builds out of it instead
+ * of inventing its own panel. Any future canvas-drawn instrument should too.
+ *
+ * NOTE this is the register for INSTRUMENTS (gauges, meters, readouts), the
+ * family the dominance bar belongs to. Cards that present data — a fight
+ * summary, an event row — use the site's ordinary panel styling instead; see
+ * `.ip` / `.ev-row` / `.brp-fight` in main.css.
  *
  * Palette is lifted from tokens.css (--vc-* / the .dom-frame gradient stops)
  * rather than re-picked, so canvas and CSS stay the same fixture.
