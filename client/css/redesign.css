@@ -851,6 +851,79 @@ img { display: block; }
   .hp-pillars-inner { padding: var(--sp-5) var(--page-gutter) var(--sp-6); }
 }
 
+/* ── Pillar placement ──────────────────────────────────────────
+   The strip is the last child of .site-browse-layout, so phones and the
+   single-column collapse put it under the build grid for free — no order
+   or grid-area juggling, just DOM order. Desktop (>=1025px) places it:
+
+     no replays  → it IS the left column. The rail is display:none in that
+                   state (main.css), so the column was simply absent; the
+                   strip claims it and the three tiles stack. 320px, not the
+                   rail's 380, because the strip is narrower than a replay
+                   card needs to be and every pixel it gives back goes to the
+                   build grid. Measured at 1440: the grid runs 5 cards across
+                   full-bleed and 3 beside a 320px column. Four would need
+                   the column under 300px (4x255 + 3x12 gap), which squeezes
+                   the tile art below the point where it reads. Three larger
+                   cards beat four cramped ones, so 320 stands.
+     has replays → back under the grid, full width, where it has always sat.
+                   "Your replays" gets the rail to itself.
+
+   Inside the layout, .site-content already owns the page gutter, so the
+   inner wrapper must not add its own — that is the double-gutter the
+   .site-browse-layout comment in main.css warns about. */
+.site-browse-layout > .hp-pillars {
+  background: transparent;
+  min-width: 0;
+}
+.site-browse-layout > .hp-pillars .hp-pillars-inner {
+  max-width: none;
+  padding-inline: 0;
+}
+
+@media (min-width: 1025px) {
+  /* Explicit placement, not auto: with the rail hidden the strip and the
+     build grid are the only two items, and auto-placement would run them
+     in DOM order (grid first, strip second) — the wrong way round. */
+  html:not([data-mine="has"]) .site-browse-layout {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+  html:not([data-mine="has"]) .site-browse-layout > .hp-pillars {
+    grid-column: 1;
+    grid-row: 1;
+    border-top: none;
+  }
+  html:not([data-mine="has"]) .site-browse-layout > #builds {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  /* Rail form: one tile per row, and a heading that lines up with "Pro
+     builds" across the gap. Same size, weight and hairline as
+     .site-mine-head, so the two column headers read as one row.
+     The strip deliberately does NOT go sticky the way .site-mine does —
+     it is the pitch, and it should scroll away once the visitor starts
+     working the grid. */
+  html:not([data-mine="has"]) .hp-pillars-track {
+    grid-template-columns: 1fr;
+    gap: var(--sp-3);
+  }
+  html:not([data-mine="has"]) .hp-pillars-inner { padding-block: 0; }
+  html:not([data-mine="has"]) .hp-pillars-title {
+    font-weight: 800;
+    padding-bottom: var(--sp-2);
+    margin-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Bottom form. .site-browse-layout is display:block in this state (the
+     two columns live in .site-browse-cols), so the strip is just the next
+     block and needs its own top gap where the grid gap used to be. */
+  html[data-mine="has"] .site-browse-layout > .hp-pillars {
+    margin-top: var(--sp-5);
+  }
+}
+
 /* ── Hero strip ────────────────────────────────────────────────
    One short band under the app bar: the page's proposition on the
    left, the band switcher on the right. Full-bleed background with

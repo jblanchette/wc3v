@@ -178,10 +178,10 @@
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
   <link rel="stylesheet" href="css/tokens.css?v=d4b178845b">
-  <link rel="stylesheet" href="css/main.css?v=98afb8869b">
+  <link rel="stylesheet" href="css/main.css?v=3d8aca9738">
   <!-- New design system: tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
-  <link rel="stylesheet" href="css/redesign.css?v=b499b1dc5b">
+  <link rel="stylesheet" href="css/redesign.css?v=2590c472a5">
   <style>
     body { margin: 0; }
   </style>
@@ -190,7 +190,7 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '2657a56599'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = 'f1892cb9fd'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
@@ -999,6 +999,16 @@
 
     <div class="site-browse-layout">
 
+      <!-- The rail and the build grid share a wrapper so the sticky rail is
+           bounded by THEM and not by the whole layout. Chrome clamps a sticky
+           grid item to the grid container's box rather than to its own grid
+           area, so with the pillar strip added as a second row of the layout
+           the rail could slide 148px past the bottom of the build grid and
+           paint over the strip. The wrapper is `display: contents` in every
+           state except the two-column desktop one, so it costs no box and the
+           DOM order the mobile collapse depends on is unchanged. -->
+      <div class="site-browse-cols">
+
       <!-- Left rail: your replays. Empty state shown when no replays in IDB. -->
       <section id="my-replays-section" class="site-mine" aria-labelledby="mine-title">
         <div class="site-mine-head">
@@ -1144,6 +1154,61 @@
         </div>
       </section>
 
+      </div><!-- /.site-browse-cols -->
+
+      <!-- Product-story strip. Two homes, one DOM position: it is the LAST
+           child of the browse layout, so phones and the single-column
+           collapse land it under the build grid exactly where it has always
+           been, with no ordering CSS at all. Desktop places it explicitly
+           (.hp-pillars placement block in redesign.css): it takes the left
+           rail while the visitor has no replays — the rail is display:none
+           there, so the column was empty — and drops back under the grid
+           once "Your replays" claims that column.
+           User testing was blunt that a visitor must be shown a capability,
+           not a category, so each tile states what the thing DOES in one
+           line. Every tile is a real link — a tile that looks clickable and
+           isn't was the single worst finding in that testing, so don't add
+           one here. -->
+      <section class="hp-pillars" aria-labelledby="hp-pillars-title">
+        <div class="hp-pillars-inner">
+          <h2 class="hp-pillars-title" id="hp-pillars-title">What WC3V does</h2>
+          <div class="hp-pillars-track">
+
+            <a class="hp-pillar hp-pillar-lib" href="#all-builds-grid">
+              <img class="hp-pillar-media" src="/assets/hero/library-preview.webp" alt="Two pro build cards showing heroes, key units and the tournament each came from" width="760" height="224" loading="lazy" decoding="async">
+              <span class="hp-pillar-body">
+                <span class="hp-pillar-label">Pro build library</span>
+                <span class="hp-pillar-note">Tournament builds by race and matchup, each with the pro replay behind it.</span>
+              </span>
+            </a>
+
+            <!-- Animated loop on desktop; the poster is swapped in for mobile and
+                 for prefers-reduced-motion, and because those sources resolve to a
+                 plain <img>, the animated file is never fetched on those paths. -->
+            <a class="hp-pillar hp-pillar-sim" href="/viewer?r=12016427_FoCuS_Happy_Springtime-13&amp;player=1">
+              <picture>
+                <source srcset="/assets/hero/simulator-poster.webp" media="(prefers-reduced-motion: reduce)">
+                <source srcset="/assets/hero/simulator-poster.webp" media="(max-width: 860px)">
+                <img class="hp-pillar-media" src="/assets/hero/simulator-loop.webp" alt="A replay playing in the simulator, build order rows beside the 3D map" width="760" height="224" loading="lazy" decoding="async">
+              </picture>
+              <span class="hp-pillar-body">
+                <span class="hp-pillar-label">Replay simulator</span>
+                <span class="hp-pillar-note">Warcraft III can't rewind a replay. This rebuilds the game from the file, so you can jump to any second.</span>
+              </span>
+            </a>
+
+            <a class="hp-pillar hp-pillar-app" href="/download">
+              <img class="hp-pillar-media" src="/assets/hero/desktop-preview.webp" alt="The WC3V desktop app showing a finished game, its verdict and a link into the simulator" width="760" height="224" loading="lazy" decoding="async">
+              <span class="hp-pillar-body">
+                <span class="hp-pillar-label">Desktop companion</span>
+                <span class="hp-pillar-note">Watches your replay folder and grades each game as you finish it.</span>
+              </span>
+            </a>
+
+          </div>
+        </div>
+      </section>
+
     </div>
 
     <!-- Compare drawer: slides in from the right, overlays the pro grid.
@@ -1195,53 +1260,6 @@
       </form>
     </div>
   </main>
-
-  <!-- Product-story strip. Deliberately BELOW the build grid: the grid and the
-       drop bar above already are the product, so this is the "what else is
-       here" summary rather than something that pushes content down. User
-       testing was blunt that a visitor must be shown a capability, not a
-       category, so each tile states what the thing DOES in one line. Every
-       tile is a real link — a tile that looks clickable and isn't was the
-       single worst finding in that testing, so don't add one here. -->
-  <section class="hp-pillars" aria-labelledby="hp-pillars-title">
-    <div class="hp-pillars-inner">
-      <h2 class="hp-pillars-title" id="hp-pillars-title">What WC3V does</h2>
-      <div class="hp-pillars-track">
-
-        <a class="hp-pillar hp-pillar-lib" href="#all-builds-grid">
-          <img class="hp-pillar-media" src="/assets/hero/library-preview.webp" alt="Two pro build cards showing heroes, key units and the tournament each came from" width="760" height="224" loading="lazy" decoding="async">
-          <span class="hp-pillar-body">
-            <span class="hp-pillar-label">Pro build library</span>
-            <span class="hp-pillar-note">Tournament builds by race and matchup, each with the pro replay behind it.</span>
-          </span>
-        </a>
-
-        <!-- Animated loop on desktop; the poster is swapped in for mobile and
-             for prefers-reduced-motion, and because those sources resolve to a
-             plain <img>, the animated file is never fetched on those paths. -->
-        <a class="hp-pillar hp-pillar-sim" href="/viewer?r=12016427_FoCuS_Happy_Springtime-13&amp;player=1">
-          <picture>
-            <source srcset="/assets/hero/simulator-poster.webp" media="(prefers-reduced-motion: reduce)">
-            <source srcset="/assets/hero/simulator-poster.webp" media="(max-width: 860px)">
-            <img class="hp-pillar-media" src="/assets/hero/simulator-loop.webp" alt="A replay playing in the simulator, build order rows beside the 3D map" width="760" height="224" loading="lazy" decoding="async">
-          </picture>
-          <span class="hp-pillar-body">
-            <span class="hp-pillar-label">Replay simulator</span>
-            <span class="hp-pillar-note">Warcraft III can't rewind a replay. This rebuilds the game from the file, so you can jump to any second.</span>
-          </span>
-        </a>
-
-        <a class="hp-pillar hp-pillar-app" href="/download">
-          <img class="hp-pillar-media" src="/assets/hero/desktop-preview.webp" alt="The WC3V desktop app showing a finished game, its verdict and a link into the simulator" width="760" height="224" loading="lazy" decoding="async">
-          <span class="hp-pillar-body">
-            <span class="hp-pillar-label">Desktop companion</span>
-            <span class="hp-pillar-note">Watches your replay folder and grades each game as you finish it.</span>
-          </span>
-        </a>
-
-      </div>
-    </div>
-  </section>
 
   <footer class="site-footer">
     <div class="site-footer-inner">

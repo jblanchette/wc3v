@@ -8178,6 +8178,10 @@ abbr.gloss:focus-visible {
 /* ── Browse layout: sidebar + grid ───────────────────────── */
 /* Single column is the DEFAULT. The "Your replays" rail only claims a
    column once the visitor actually has replays — see html[data-mine] below.
+   The left column is never empty though: while the rail is hidden, the
+   "What WC3V does" strip takes that slot instead, and hands it back when
+   the rail appears. Both halves of that live in redesign.css under
+   "Pillar placement" — this file only owns the has-replays geometry.
    No horizontal padding: .site-content already supplies --page-gutter, and
    adding it again here was double-guttering the build grid by 48px. */
 .site-browse-layout {
@@ -8190,13 +8194,26 @@ abbr.gloss:focus-visible {
   padding: 0 0 var(--sp-6);
 }
 
+/* The rail and the build grid share .site-browse-cols. It is `display:
+   contents` by default — invisible to layout, DOM order untouched — and only
+   becomes a real box for the two-column desktop state. That box exists to
+   bound the sticky rail: Chrome clamps a sticky grid item to the grid
+   CONTAINER's box, not to its own grid area, so once the pillar strip became
+   a second row of .site-browse-layout the rail could slide 148px past the
+   bottom of the build grid and paint straight over the strip. */
+.site-browse-cols { display: contents; }
+
 /* Two columns only when there is something to put in the rail, and only
    above the 1024px collapse. The min-width wrapper matters: media queries
    add no specificity, so an unwrapped html[data-mine] rule (0,2,0) would
    beat the max-width:1024px collapse below (0,1,0). */
 @media (min-width: 1025px) {
-  html[data-mine="has"] .site-browse-layout {
+  html[data-mine="has"] .site-browse-layout { display: block; }
+  html[data-mine="has"] .site-browse-cols {
+    display: grid;
     grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+    gap: var(--sp-5);
+    align-items: start;
   }
 }
 
