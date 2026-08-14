@@ -3974,8 +3974,9 @@ const Wc3vViewer = class {
     const entries = Object.entries(this.mapData.players);
     if (entries.length > 4) { drop(); return; }   // no readable 8-line 38px plot
 
+    const cpOf = (pid) => this.players.find(c => String(c.playerId) === String(pid));
     const colorOf = (pid) => {
-      const cp = this.players.find(c => String(c.playerId) === String(pid));
+      const cp = cpOf(pid);
       return (cp && cp.playerColor) || '#888';
     };
 
@@ -3995,33 +3996,23 @@ const Wc3vViewer = class {
     const foodInfos = [];
     for (const [pid, p] of entries) {
       if (p && p.resourceSeries && p.resourceSeries.length) {
-        foodInfos.push({ id: pid, color: colorOf(pid), series: p.resourceSeries });
+        const cp = cpOf(pid);
+        // race drives the readout portrait — the HUD's numerals are neutral
+        // ink now, so the icon is what says whose supply is whose.
+        foodInfos.push({
+          id: pid, color: colorOf(pid), race: cp && cp.race,
+          series: p.resourceSeries
+        });
       }
     }
 
     if (!domInfos && !foodInfos.length) { drop(); return; }
 
     this.hudCharts.setPlayers(domInfos, foodInfos);
-    // Trim the flat opening the same way the dominance tab did, so the width
-    // goes to the part of the match that has a story.
-    this.hudCharts.setStart(domInfos ? this._hudFirstMove(domInfos) : 0);
+    // The axis start is static (HudCharts.START_T_MS, corpus-derived), the
+    // same for every match — not the old per-match first-dominance-move trim,
+    // which made the same HUD start somewhere different on every replay.
     this.hudCharts.setVisible(this.viewOptions ? this.viewOptions.displayHudCharts !== false : true);
-  }
-
-  // First moment any player's dominance leaves the even line by >1 point.
-  // Mirrors DominanceChart.firstMoveT without reaching into that class, which
-  // is vendored to the desktop app and must keep its contract untouched.
-  _hudFirstMove (domInfos) {
-    let earliest = null;
-    for (const p of domInfos) {
-      for (const s of p.samples) {
-        if (Math.abs((s.score || 50) - 50) > 1) {
-          if (earliest === null || s.t < earliest) earliest = s.t;
-          break;
-        }
-      }
-    }
-    return earliest === null ? 0 : earliest;
   }
 
   setupPlayers () {

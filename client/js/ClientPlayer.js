@@ -14,12 +14,20 @@ const TierColors = {
 // The shared race table. `icon` is a /assets/wc3icons/ id: the race's hero
 // portrait, which is the most colourful and recognizable race symbol in the
 // icon set we already ship and stays readable down to ~16px. Consumers:
-// BaseNameplateRenderer's map plates and the camera toolbar's P1/P2 buttons.
+// BaseNameplateRenderer's map plates, the camera toolbar's P1/P2 buttons and
+// HudCharts' food readouts.
+//
+// CAPITALIZED, and it must stay that way. These are canonical WC3 itemIds and
+// the shipped files are Obla.jpg / Hpal.jpg / Udea.jpg / Edem.jpg. In prod
+// /assets/wc3icons/* 301s to cdn.wc3v.com (R2), which is case-SENSITIVE, so a
+// lowercase id 404s there while resolving fine on case-insensitive Windows —
+// it shipped lowercase and every one of these portraits was silently missing
+// in production. Verified 2026-08-14: obla.jpg 404, Obla.jpg 200.
 const RaceLabels = {
-  'O': { label: 'ORC', accent: '#FF4444', icon: 'obla' },  // Blademaster
-  'H': { label: 'HU',  accent: '#4488FF', icon: 'hpal' },  // Paladin
-  'U': { label: 'UD',  accent: '#AA66FF', icon: 'udea' },  // Death Knight
-  'E': { label: 'NE',  accent: '#44DD88', icon: 'edem' }   // Demon Hunter
+  'O': { label: 'ORC', accent: '#FF4444', icon: 'Obla' },  // Blademaster
+  'H': { label: 'HU',  accent: '#4488FF', icon: 'Hpal' },  // Paladin
+  'U': { label: 'UD',  accent: '#AA66FF', icon: 'Udea' },  // Death Knight
+  'E': { label: 'NE',  accent: '#44DD88', icon: 'Edem' }   // Demon Hunter
 };
 
 const TeamColors = {

@@ -16610,12 +16610,12 @@ button.mcb-summary {
    maths and no collision at any width. Below 360px of band the class
    hides itself rather than render something unreadable.
 
-   The insets are SYMMETRIC (336 both sides) even though the right-hand
+   The insets are SYMMETRIC (316 both sides) even though the right-hand
    stack is narrower than the left. Reserving each side's true width
    centred the box on the free band, which sits ~58px right of the map's
    actual centre — visibly off. Equal insets keep it on the real centre
    line at every width, and the wider of the two stacks is the one that
-   has to be cleared anyway. 336 = .corner-stack-left (10) + .ip (320) + 6.
+   has to be cleared anyway. 316 = .corner-stack-left (10) + .ip (300) + 6.
 
    The positioning lives on the WRAPPER DIV, not the canvas. A <canvas>
    is a REPLACED element: `width:auto` on one resolves from its intrinsic
@@ -16628,16 +16628,31 @@ button.mcb-summary {
 #hud-charts {
   position: absolute;
   bottom: 10px;
-  left: 336px;
-  right: 336px;
+  left: 316px;
+  right: 316px;
   margin: 0 auto;
   max-width: 620px;
   height: 100px;      /* 9 pad + 36 well + 10 gap + 36 well + 9 pad */
   z-index: 6;
   pointer-events: none;
   display: none;                /* JS adds .hud-on once it has data */
+  /* Idle fade, driven by HudCharts (the wrapper is pointer-events:none so
+     CSS :hover can never fire — hover is a point-in-rect test in JS).
+     Bright end here; the resting state and its slow decay are .hud-dim.
+     This short transition is the RECOVERY speed when the pointer arrives. */
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
 }
 #hud-charts.hud-on { display: block; }
+/* Resting state: still readable, clearly ambient. Applied ~100ms after the
+   HUD shows (and re-applied when the pointer leaves), so the plate holds its
+   bright end for the 3s delay, then eases down over 6s.
+   0.78, not lower: at 0.55 the map read through the plate and the food lines
+   went muddy — this is meant to recede, not to disappear. */
+#hud-charts.hud-dim {
+  opacity: 0.78;
+  transition: opacity 6s linear 3s;
+}
 #hud-charts-canvas {
   display: block;
   width: 100%;
@@ -16648,15 +16663,15 @@ button.mcb-summary {
 .layout-mode-static-bo #hud-charts,
 .layout-mode-mobile-bo #hud-charts { display: none !important; }
 
-/* Below 1036px of map area the two 336px reservations leave less than the
+/* Below 996px of map area the two 316px reservations leave less than the
    360px the class will render into, and the box collapses to zero width while
    still being display:block. Hide it outright instead.
    #main-wrapper already declares `container-type: inline-size`, so this is an
    exact query against the real available width rather than a viewport guess —
    the build-order panel's width is what actually decides this, not the window.
    At that size the map itself is ~660px and a 100px HUD over it would be an
-   intrusion anyway. 1036 = 336 + 360 + 336 + 4 slack. */
-@container (max-width: 1036px) {
+   intrusion anyway. 996 = 316 + 360 + 316 + 4 slack. */
+@container (max-width: 996px) {
   #hud-charts { display: none !important; }
 }
 
@@ -16666,7 +16681,7 @@ button.mcb-summary {
    floating panels with a single visually-tidy box.
    ============================================================ */
 .ip {
-  width: 320px;
+  width: 300px;
   max-height: 60vh;
   display: flex;
   flex-direction: column;
@@ -16678,6 +16693,10 @@ button.mcb-summary {
   overflow: hidden;
   pointer-events: auto;
 }
+/* Collapsed = just the title bar, so the box shrinks to the title instead of
+   holding a 300px plate over the map corner. Grows back on expand. */
+.ip.ip-collapsed { width: max-content; }
+.ip.ip-collapsed .ip-title { white-space: nowrap; }
 .ip-header {
   flex: 0 0 auto;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -16687,7 +16706,7 @@ button.mcb-summary {
   align-items: center;
   gap: 6px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: rgba(255, 255, 255, 0.06);
   border: none;
   color: #FFF;
@@ -16760,7 +16779,7 @@ button.mcb-summary {
    single-edge stripe accents (forbidden per project convention). */
 .brp-list { padding: 0 0 6px; }
 .brp-empty {
-  padding: 16px 12px;
+  padding: 14px 10px;
   color: rgba(255, 255, 255, 0.55);
   font-size: 0.85rem;
   line-height: 1.4;
@@ -16790,7 +16809,7 @@ button.mcb-summary {
 
 /* ---- Match-wide scoreboard ------------------------------------------- */
 .brp-scoreboard {
-  padding: 10px 12px;
+  padding: 10px;
   background: rgba(255, 255, 255, 0.03);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -16870,7 +16889,7 @@ button.mcb-summary {
 /* ---- Legend ----------------------------------------------------------- */
 .brp-legend {
   margin: 0;
-  padding: 0 12px;
+  padding: 0 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .brp-legend > summary {
@@ -16912,7 +16931,7 @@ button.mcb-summary {
 
 /* ---- Fight card ------------------------------------------------------- */
 .brp-fight {
-  padding: 8px 12px 10px;
+  padding: 8px 10px 10px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
   transition: background 0.1s;
@@ -16960,7 +16979,7 @@ button.mcb-summary {
 /* A side reads as one tinted row keyed to the player colour, with a thin
    colour edge carried by an inset ring (full perimeter — not a stripe). */
 .brp-side {
-  padding: 7px 9px;
+  padding: 6px 8px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.03);
   background:
@@ -17152,7 +17171,11 @@ button.mcb-summary {
    edge as the camera toolbar above it and the minimap below. */
 #event-feed {
   position: absolute;
-  top: 52px;              /* clear the camera toolbar (top 8px + ~32px tall) */
+  /* Clear the camera toolbar: top 8px + 5px pad + CAMERA label ~12px + 3px
+     gap + 28px button row (20px race portrait + padding/borders) + 5px pad
+     ≈ ends at 61px. The old 52px was measured against the pre-label,
+     pre-portrait toolbar and put feed cards under the buttons. */
+  top: 74px;
   right: 12px;            /* align with .corner-stack-right / minimap */
   width: 272px;
   max-width: 46%;

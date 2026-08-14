@@ -34,10 +34,19 @@
   // see client/js/ForgedPanel.js for the material and why it looks like this.
   const PAD_X = 11;
   const PAD_Y = 9;
-  // 106: "DOMINANCE" set in tracked Georgia is ~95px at 12.8 and was landing
-  // on the housing. Measured, not guessed.
-  const LABEL_W = 106;     // left gutter: engraved row wordmark
-  const VALUE_W = 74;      // right gutter: readouts
+  // Right gutter only: live readouts and the EVEN groove label. The old
+  // 106px left wordmark gutter is gone — row titles are engraved inside
+  // their channels, so the plot gets the width and no text can reach the
+  // plate corners.
+  //
+  // A readout is [race portrait][gap][numeral]: the portrait says WHOSE
+  // number it is, so the numeral itself is neutral ink. Player-coloured
+  // numerals read as a status colour (good/bad/warning) rather than as
+  // identity, which is exactly what they are not.
+  const ICON_PX = 18;      // inline glyph — see the note in _paintReadouts
+  const ICON_GAP = 5;
+  const NUM_W = 28;        // 3 digits of 15px Consolas, measured
+  const VALUE_W = ICON_PX + ICON_GAP + NUM_W + 5;
   const ROW_H = 40;        // bronze housing; the cut channel is LIP smaller
   const ROW_GAP = 10;
   const CHAMFER = 10;
@@ -46,15 +55,32 @@
   // onto it — see .dom-track's note about 2px vanishing.
   const LIP = 4;
 
-  const TITLE_PX = 12.8;   // the project's minimum readable size, exactly
+  // Under the 12.8px floor on purpose (user call): the wordmark is engraved
+  // chrome naming a channel, not information text, and at 12.8 it competed
+  // with the plot it labels. The readouts — the actual data — stay at 15.
+  const TITLE_PX = 11;
   const VALUE_PX = 15;
 
-  // Below this the label gutter is dropped and wordmarks draw over the well;
-  // below the second, the HUD hides rather than render something unreadable.
-  const NARROW_W = 470;
+  // Below this the HUD hides rather than render something unreadable.
   const MIN_W = 360;
 
+  // Static time-axis start, shared by both rows. Never 0:00: before the
+  // first supply-carrying event (~10-20s) the resource series is a
+  // meaningless 0/0 flat, and nothing a chart can show happens before the
+  // first food building. Corpus (334 pro replays / 393 players): first
+  // food-provider completion — the first foodMax rise in resourceSeries —
+  // lands at mean 33s, median 20s, p90 40s. Mean minus a ~10s lead-in,
+  // rounded to the sample grid: 0:20.
+  const START_T_MS = 20 * 1000;
+
   const FAINT_ALPHA = 0.20;   // the not-yet-played portion of every line
+
+  // Race portraits for the readout gutter, shared across instances (the viewer
+  // rebuilds this class on every replay load). Records are { img, ok, failed,
+  // waiting } — `waiting` holds the invalidate callbacks of every instance that
+  // asked for the icon before it landed, so a HUD built during the load still
+  // repaints once the portrait arrives instead of keeping its fallback chip.
+  const ICON_CACHE = new Map();
 
   // WC3 upkeep thresholds. Real reference lines, not decoration: crossing 50
   // costs 30% of gold income and crossing 80 costs 60%.
@@ -70,8 +96,14 @@
 
       this._dom = null;        // [{ id, color, samples }]
       this._food = null;       // [{ id, color, series }]
-      this._startT = 0;
+      this._t0 = 0;            // effective axis start, resolved in build()
       this._endT = 0;
+
+      // Idle-fade state — see the fade block in mount().
+      this._fadeRect = null;
+      this._hover = false;
+      this._onMouseMove = null;
+      this._fadeTimer = null;
 
       this._rows = [];         // built layout, one entry per visible row
       this._bmpChrome = null;
@@ -88,6 +120,10 @@
       // Zero-allocation integer formatting for the food readouts. Supply caps
       // at 100; 201 covers any oddity without a String() on the render path.
       this._nums = null;
+
+      // Handed to ICON_CACHE records so a late-arriving portrait triggers a
+      // rebuild. Bound once — the record dedupes on identity.
+      this._onIconLoad = () => this.invalidate();
     }
 
     // ------------------------------------------------------------------
@@ -113,15 +149,30 @@
           if (!e) return;
           const r = e.contentRect;
           this._resize(r.width, r.height);
+          // RO fires post-layout, so this read is the one place a
+          // getBoundingClientRect here cannot force a reflow. The screen box
+          // feeds the idle-fade hover test below.
+          this._fadeRect = this.canvas.getBoundingClientRect();
         });
         this._ro.observe(this.canvas);
       }
+
+      // Idle fade. The HUD starts semi-transparent and settles to a fainter
+      // resting state (.hud-dim, main.css) so it reads as ambient
+      // instrumentation rather than a panel parked over the map. Pointer
+      // proximity restores it; while the pointer stays inside it holds at the
+      // bright end. The wrapper is pointer-events:none ON PURPOSE — the map
+      // underneath keeps its clicks and drags — so hover cannot be CSS
+      // :hover; it is a point-in-rect test against the cached screen box.
+      this._onMouseMove = (e) => this._fadeTrack(e.clientX, e.clientY);
+      document.addEventListener('mousemove', this._onMouseMove, { passive: true });
       return true;
     }
 
     // dominanceInfos: [{ id, color, samples:[{t,score}] }] — pass null/[] to
     //   omit the dominance row (non-1v1, or no dominance data).
-    // foodInfos: [{ id, color, series:[{t,foodUsed,foodMax}] }]
+    // foodInfos: [{ id, color, race, series:[{t,foodUsed,foodMax}] }] — `race`
+    //   is a RaceLabels key ('O'/'H'/'U'/'E') and picks the readout portrait.
     setPlayers (dominanceInfos, foodInfos) {
       this._dom = (dominanceInfos && dominanceInfos.length >= 2) ? dominanceInfos : null;
       this._food = (foodInfos && foodInfos.length) ? foodInfos : null;
@@ -129,17 +180,39 @@
       this._dirty = true;
     }
 
-    // Trim the flat opening so the interesting part of the match gets the width.
-    setStart (tMs) {
-      this._startT = tMs > 0 ? tMs : 0;
-      this._built = false;
+    setVisible (on) {
+      this._visible = !!on;
+      if (this.wrap) {
+        this.wrap.classList.toggle('hud-on', this._visible);
+        // Restart the idle fade from its bright end on every show. The dim
+        // class lands a beat later so the element is displayed (and painted)
+        // first — a class applied in the same frame as display:block would
+        // skip the transition and snap straight to the resting state.
+        this.wrap.classList.remove('hud-dim');
+        clearTimeout(this._fadeTimer);
+        if (this._visible) {
+          this._fadeTimer = setTimeout(() => {
+            if (this._visible && !this._hover && this.wrap) {
+              this.wrap.classList.add('hud-dim');
+            }
+          }, 120);
+        }
+      }
       this._dirty = true;
     }
 
-    setVisible (on) {
-      this._visible = !!on;
-      if (this.wrap) this.wrap.classList.toggle('hud-on', this._visible);
-      this._dirty = true;
+    // Point-in-rect hover for the idle fade. Runs on every document
+    // mousemove, so it only compares against the cached box — no DOM reads,
+    // and no writes unless the inside/outside state actually flips.
+    _fadeTrack (x, y) {
+      if (!this._visible || !this.wrap) return;
+      const r = this._fadeRect;
+      if (!r) return;
+      const inside = x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+      if (inside === this._hover) return;
+      this._hover = inside;
+      // Inside: hold at the bright end. Leaving: let the slow fade resume.
+      this.wrap.classList.toggle('hud-dim', !inside);
     }
 
     invalidate () {
@@ -149,13 +222,18 @@
 
     destroy () {
       if (this._ro) { this._ro.disconnect(); this._ro = null; }
+      if (this._onMouseMove) {
+        document.removeEventListener('mousemove', this._onMouseMove);
+        this._onMouseMove = null;
+      }
+      clearTimeout(this._fadeTimer);
       // The bitmaps are the only large allocation here and the viewer rebuilds
       // its subsystems on every replay load, so dropping them matters.
       this._bmpChrome = null;
       this._bmpBright = null;
       this._rows.length = 0;
       this._built = false;
-      if (this.wrap) this.wrap.classList.remove('hud-on');
+      if (this.wrap) this.wrap.classList.remove('hud-on', 'hud-dim');
     }
 
     _resize (cssW, cssH) {
@@ -200,23 +278,25 @@
       this.canvas.width = Math.round(cssW * dpr);
       this.canvas.height = Math.round(cssH * dpr);
 
-      // The housing spans the gutters; the plot is the channel inside it.
-      const labelW = cssW < NARROW_W ? 0 : LABEL_W;
-      const frameX = PAD_X + labelW;
+      // The housing spans everything but the right readout gutter; the plot
+      // is the channel inside it.
+      const frameX = PAD_X;
       const frameW = Math.max(40 + LIP * 2, cssW - frameX - VALUE_W - PAD_X);
       const plotX = frameX + LIP;
       const plotW = frameW - LIP * 2;
 
-      // Time domain — shared by both rows so the two cursors line up.
+      // Time domain — shared by both rows so the two cursors line up. The
+      // static trim only applies when the match is long enough to have a
+      // life after it; a degenerate sub-minute replay keeps the full axis.
       this._endT = this._matchEnd();
-      if (!(this._endT > this._startT)) this._endT = this._startT + 1;
+      this._t0 = (this._endT - START_T_MS > 40 * 1000) ? START_T_MS : 0;
+      if (!(this._endT > this._t0)) this._endT = this._t0 + 1;
 
       this._rows.length = 0;
       let y = PAD_Y;
       const geom = (fy) => ({
         fx: frameX, fy, fw: frameW, fh: ROW_H,            // bronze housing
-        x: plotX, y: fy + LIP, w: plotW, h: ROW_H - LIP * 2,  // cut channel = the plot
-        labelW
+        x: plotX, y: fy + LIP, w: plotW, h: ROW_H - LIP * 2   // cut channel = the plot
       });
       if (this._dom) {
         this._rows.push(this._buildDomRow(geom(y)));
@@ -301,10 +381,47 @@
       return Object.assign({}, g, {
         kind: 'food', title: 'FOOD',
         yMin: 0, yMax: max,
-        series: this._food.map(p => ({ color: p.color, pts: p.series, key: 'foodUsed' })),
+        series: this._food.map(p => ({
+          color: p.color, pts: p.series, key: 'foodUsed', race: p.race
+        })),
         readout: true,
         guides
       });
+    }
+
+    // Vertical centre of one readout. Shared by the bitmap bake (portraits)
+    // and the per-frame draw (numerals) so the two can never disagree.
+    _readoutY (row, si) {
+      return row.y + row.h / 2 - (row.series.length - 1) * 10 + si * 20;
+    }
+
+    // The race portrait for a readout, or null while it loads / if it fails.
+    // Callers draw a same-size fallback chip on null so the gutter never pops.
+    _icon (race) {
+      const meta = (typeof RaceLabels !== 'undefined') ? RaceLabels[race] : null;
+      if (!meta || !meta.icon) return null;
+      const src = '/assets/wc3icons/' + meta.icon + '.jpg';
+
+      let rec = ICON_CACHE.get(src);
+      if (!rec) {
+        rec = { img: new Image(), ok: false, failed: false, waiting: [] };
+        ICON_CACHE.set(src, rec);
+        rec.img.onload = () => {
+          rec.ok = true;
+          const w = rec.waiting;
+          rec.waiting = [];
+          for (const fn of w) fn();
+        };
+        rec.img.onerror = () => { rec.failed = true; rec.waiting = []; };
+        rec.img.src = src;
+      }
+      if (rec.ok) return rec.img;
+      // Still in flight: rebuild when it lands. A failed load never retries —
+      // registering there would leak a callback per build forever.
+      if (!rec.failed && rec.waiting.indexOf(this._onIconLoad) === -1) {
+        rec.waiting.push(this._onIconLoad);
+      }
+      return null;
     }
 
     // ------------------------------------------------------------------
@@ -333,13 +450,10 @@
 
       F.chassis(g, 0, 0, cssW, cssH, { chamfer: CHAMFER });
 
-      // Mounting studs inside the chamfers, same as the gauge's rail.
-      const sr = 2.5;
-      const si = CHAMFER + 3;
-      F.stud(g, si, si, sr);
-      F.stud(g, cssW - si, si, sr);
-      F.stud(g, si, cssH - si, sr);
-      F.stud(g, cssW - si, cssH - si, sr);
+      // No corner studs on this plate. The housings run nearly edge to edge
+      // and the right gutter carries live readouts, so studs inside the
+      // chamfers land under text or on the housing frames — the gauge keeps
+      // them, this instrument keeps only the studs on each housing's lip.
 
       for (const row of this._rows) {
         // Bronze housing, then the channel cut into it. The LIP between the
@@ -350,32 +464,29 @@
         F.stud(g, row.fx + LIP / 2 + 1, row.fy + row.fh / 2, 1.8);
         F.stud(g, row.fx + row.fw - LIP / 2 - 1, row.fy + row.fh / 2, 1.8);
 
-        // Engraved wordmark in the left gutter. When the gutter is dropped it
-        // goes over the channel's top-left — still engraved, just tighter.
-        if (row.labelW > 0) {
-          F.engrave(g, row.title, PAD_X, row.fy + row.fh / 2, TITLE_PX, { tracking: 0.10 });
-        } else {
-          F.engrave(g, row.title, row.x + 6, row.y + 9, TITLE_PX * 0.86, { tracking: 0.06 });
-        }
+        // Engraved wordmark inside the channel's top-left — small on purpose:
+        // it names the row, the plot is the point. (This was a 106px left
+        // gutter of 12.8px tracked Georgia; the plot gets that width now.)
+        F.engrave(g, row.title, row.x + 6, row.y + 9, TITLE_PX, { tracking: 0.06 });
 
         // Right gutter: name the reference groove on rows with no readout.
         if (row.gutterMark) {
           F.engrave(g, row.gutterMark.text,
                     cssW - PAD_X, this._yOf(row, row.gutterMark.v),
-                    TITLE_PX * 0.86, { tracking: 0.16, align: 'right' });
+                    TITLE_PX, { tracking: 0.16, align: 'right' });
         }
 
         // Minute grid, etched into the channel floor. Without it the plot is
         // a curve floating in a black box with no sense of pace; with it the
         // reveal reads against real elapsed time. Interval picked to land
         // 4-8 divisions across whatever span this match actually has.
-        const span = this._endT - this._startT;
+        const span = this._endT - this._t0;
         const step = [60, 120, 180, 300, 600, 900]
           .find(s => span / (s * 1000) <= 8) || 1200;
         g.save();
         F.path(g, row.x, row.y, row.w, row.h, 4);
         g.clip();
-        for (let t = Math.ceil(this._startT / (step * 1000)) * step * 1000;
+        for (let t = Math.ceil(this._t0 / (step * 1000)) * step * 1000;
              t < this._endT; t += step * 1000) {
           const gx = Math.round(this._xOf(row, t)) + 0.5;
           g.fillStyle = 'rgba(0, 0, 0, 0.55)';
@@ -412,10 +523,52 @@
 
         // Glass over the channel, last, so it sits on the fills.
         F.glass(g, row.x, row.y, row.w, row.h, 4);
+
+        // Readout portraits. Static — position and image never change once
+        // built — so they belong in the bitmap; only the numerals are drawn
+        // per frame.
+        if (row.readout) this._paintReadoutIcons(g, row, cssW);
       }
 
       this._bmpChrome = chrome.canvas;
       this._bmpBright = bright.canvas;
+    }
+
+    // Race portrait per readout, seated in a full-perimeter ring of the
+    // player's colour — the site's "who owns this" language (.cam-race,
+    // .ev-icon), and the only place colour appears in this gutter now that
+    // the numerals are neutral. The ring also separates a mirror matchup,
+    // where both portraits are the same image.
+    //
+    // 18px is an inline GLYPH read together with the number beside it, not a
+    // standalone icon, so the project's 36px icon floor doesn't apply — same
+    // exception the camera toolbar's 20px .cam-race takes, one size down
+    // because the readout pitch here is 20px.
+    _paintReadoutIcons (g, row, cssW) {
+      const ix = cssW - PAD_X - NUM_W - ICON_GAP - ICON_PX;
+      for (let si = 0; si < row.series.length; si++) {
+        const s = row.series[si];
+        const iy = Math.round(this._readoutY(row, si) - ICON_PX / 2);
+        const img = this._icon(s.race);
+
+        g.save();
+        if (img) {
+          g.drawImage(img, ix, iy, ICON_PX, ICON_PX);
+        } else {
+          // Same-size chip, so a portrait landing late swaps in place rather
+          // than reflowing the gutter.
+          g.fillStyle = s.color || '#555';
+          g.fillRect(ix, iy, ICON_PX, ICON_PX);
+        }
+        g.lineWidth = 1;
+        g.strokeStyle = s.color || '#888';
+        g.strokeRect(ix + 0.5, iy + 0.5, ICON_PX - 1, ICON_PX - 1);
+        // Hard black outer line — what seats it on the plate instead of
+        // letting it float. No glow, per the material.
+        g.strokeStyle = 'rgba(0, 0, 0, 0.75)';
+        g.strokeRect(ix - 0.5, iy - 0.5, ICON_PX + 1, ICON_PX + 1);
+        g.restore();
+      }
     }
 
     // One series. `body` fills the area between the curve and its baseline —
@@ -431,29 +584,52 @@
         ? this._yOf(row, 50)
         : row.y + row.h;
 
-      // Trace once into a reusable path array so the fill and the stroke can
-      // share it without walking the samples twice.
-      let first = true, lastX = 0;
+      // Trace the polyline. Samples before the axis start are skipped, but
+      // the LAST pre-start sample decides where the line enters the left
+      // edge — dominance samples are sparse event pairs, and dropping the
+      // entry point outright would make a series that existed at t0 appear
+      // minutes late. Dominance interpolates across the cut; food is a step
+      // series, so it enters holding the pre-start value.
+      const trace = () => {
+        let began = false, endX = 0;
+        for (let i = 0; i < pts.length; i++) {
+          const p = pts[i];
+          if (p.t < this._t0) continue;
+          const px = this._xOf(row, p.t);
+          const py = this._yOf(row, p[key]);
+          if (!began) {
+            if (i > 0 && p.t > this._t0) {
+              const a = pts[i - 1];
+              let v0 = a[key];
+              if (row.kind === 'dom' && p.t !== a.t) {
+                v0 += (p[key] - a[key]) * ((this._t0 - a.t) / (p.t - a.t));
+              }
+              g.moveTo(this._xOf(row, this._t0), this._yOf(row, v0));
+              g.lineTo(px, py);
+            } else {
+              g.moveTo(px, py);
+            }
+            began = true;
+          } else {
+            g.lineTo(px, py);
+          }
+          endX = px;
+        }
+        return began ? endX : null;
+      };
+
       g.save();
       // Everything this series draws stays inside its own channel.
       window.ForgedPanel.path(g, row.x, row.y, row.w, row.h, 4);
       g.clip();
       g.beginPath();
-      for (let i = 0; i < pts.length; i++) {
-        const p = pts[i];
-        if (p.t < this._startT) continue;
-        const px = this._xOf(row, p.t);
-        const py = this._yOf(row, p[key]);
-        if (first) { g.moveTo(px, py); first = false; }
-        else g.lineTo(px, py);
-        lastX = px;
-      }
-      if (first) { g.restore(); return; }
+      const lastX = trace();
+      if (lastX === null) { g.restore(); return; }
 
       if (body) {
         // Close down to the baseline and fill.
         g.lineTo(lastX, baseY);
-        g.lineTo(this._xOf(row, this._startT), baseY);
+        g.lineTo(this._xOf(row, this._t0), baseY);
         g.closePath();
         // Shaded like .dom-seg — bright where the light hits, deep at the
         // bottom. A flat wash of colour reads as paint no matter how good the
@@ -468,15 +644,7 @@
 
       // Re-trace for the stroke (the fill closed the path).
       g.beginPath();
-      first = true;
-      for (let i = 0; i < pts.length; i++) {
-        const p = pts[i];
-        if (p.t < this._startT) continue;
-        const px = this._xOf(row, p.t);
-        const py = this._yOf(row, p[key]);
-        if (first) { g.moveTo(px, py); first = false; }
-        else g.lineTo(px, py);
-      }
+      trace();
       g.lineJoin = 'round';
       g.lineCap = 'round';
       // Hard black backing under the curve — the in-game way to seat a bright
@@ -512,8 +680,8 @@
     }
 
     _xOf (row, t) {
-      const span = this._endT - this._startT;
-      let u = span > 0 ? (t - this._startT) / span : 0;
+      const span = this._endT - this._t0;
+      let u = span > 0 ? (t - this._t0) / span : 0;
       if (u < 0) u = 0; else if (u > 1) u = 1;
       return row.x + u * row.w;
     }
@@ -603,21 +771,20 @@
       }
 
       // Readouts, set as in-game numerals: tabular mono with a hard black
-      // backing. Player colour is data and stays.
+      // backing, in NEUTRAL ink. The race portrait baked beside each one
+      // (with its player-colour ring) carries whose number it is; colouring
+      // the digits too made them read as a status, not an identity.
       const rx = W - PAD_X;
       for (let i = 0; i < this._rows.length; i++) {
         const row = this._rows[i];
         if (!row.readout) continue;
-        let ty = row.y + row.h / 2 - (row.series.length - 1) * 10;
         for (let si = 0; si < row.series.length; si++) {
           const s = row.series[si];
           const v = this._valueAt(row, s, gameTime);
-          if (v != null) {
-            const n = Math.round(v);
-            F.numeral(ctx, n >= 0 && n <= 200 ? this._nums[n] : '-',
-                      rx, ty, VALUE_PX, s.color || F.COLORS.ink);
-          }
-          ty += 20;
+          if (v == null) continue;
+          const n = Math.round(v);
+          F.numeral(ctx, n >= 0 && n <= 200 ? this._nums[n] : '-',
+                    rx, this._readoutY(row, si), VALUE_PX, F.COLORS.ink);
         }
       }
     }
