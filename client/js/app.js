@@ -1222,19 +1222,69 @@ const Wc3vViewer = class {
     toolbar.id = 'camera-toolbar';
     toolbar.className = 'camera-toolbar';
 
+    // Named, so the cluster reads as one control rather than four loose chips.
+    const label = document.createElement('span');
+    label.className = 'cam-label';
+    label.textContent = 'Camera';
+    toolbar.appendChild(label);
+
+    const row = document.createElement('div');
+    row.className = 'cam-row';
+    toolbar.appendChild(row);
+
+    const plain = (mode, text) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cam-btn';
+      b.dataset.mode = mode;
+      b.textContent = text;
+      return b;
+    };
+
+    // P1/P2 carry the player's race portrait and a HINT of their colour: a
+    // full-perimeter ring on the portrait (the site's "who owns this" language
+    // everywhere else) plus a low-percentage wash on the button. Not a fill —
+    // these are still chrome, and a saturated player colour on a control reads
+    // as a state, not an identity.
+    const playerBtn = (mode, text, player) => {
+      const b = plain(mode, '');
+      b.classList.add('cam-btn-player');
+      const race = (player && typeof RaceLabels !== 'undefined')
+        ? RaceLabels[player.race] : null;
+      const color = (player && player.playerColor) || '#888';
+      b.style.setProperty('--cam-pcolor', color);
+      if (race && race.icon) {
+        const img = document.createElement('img');
+        img.className = 'cam-race';
+        img.src = '/assets/wc3icons/' + race.icon + '.jpg';
+        img.alt = '';
+        img.onerror = function () { this.remove(); };
+        b.appendChild(img);
+      }
+      const lbl = document.createElement('span');
+      lbl.className = 'cam-btn-lbl';
+      lbl.textContent = text;
+      b.appendChild(lbl);
+      if (player) {
+        const nm = (typeof PlayerNames !== 'undefined' && PlayerNames.canonical)
+          ? PlayerNames.canonical(player.displayName) : player.displayName;
+        b.title = 'Follow ' + (nm || text) + (race ? ' (' + race.label + ')' : '');
+      }
+      return b;
+    };
+
     // Split is no longer a user-selectable mode — AUTO owns it as an automatic
     // sub-state (enters when the 1v1 players are far apart, exits on contact).
     // Non-1v1: per-player (P1/P2) cameras don't generalize past two players —
     // only Auto (fits all action) and Free are offered.
-    toolbar.innerHTML = (this.isNonOneVsOne() ? [
-      '<button class="cam-btn cam-btn-active" data-mode="auto">AUTO</button>',
-      '<button class="cam-btn" data-mode="free">FREE</button>'
-    ] : [
-      '<button class="cam-btn cam-btn-active" data-mode="auto">AUTO</button>',
-      '<button class="cam-btn" data-mode="p1">P1</button>',
-      '<button class="cam-btn" data-mode="p2">P2</button>',
-      '<button class="cam-btn" data-mode="free">FREE</button>'
-    ]).join('');
+    const live = (this.players || []).filter(p => p && !p.isNeutralPlayer);
+    row.appendChild(plain('auto', 'AUTO'));
+    row.firstChild.classList.add('cam-btn-active');
+    if (!this.isNonOneVsOne()) {
+      row.appendChild(playerBtn('p1', 'P1', live[0]));
+      row.appendChild(playerBtn('p2', 'P2', live[1]));
+    }
+    row.appendChild(plain('free', 'FREE'));
     // Idempotent: _setupCameraToolbar runs on every load — drop any prior
     // toolbar so only one #camera-toolbar exists (also fixes highlight desync).
     // The toolbar's own click listener is bound to the fresh node, so it's

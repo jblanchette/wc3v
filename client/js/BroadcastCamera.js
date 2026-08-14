@@ -41,6 +41,26 @@
   const ZOOM_RATE_REF = 0.9;     // |Δk|/k at which zoom rate hits MAX
   const PAN_DEADZONE_PX = 3.5;   // ignore sub-pixel target jitter (anti-drift)
 
+  // --- Keep-up: velocity feed-forward + a hard lag ceiling ----------------
+  //
+  // An exponential chase NEVER catches a moving target; it settles at a lag of
+  // roughly targetVelocity / rate. With the rates above that is 6-17x the
+  // per-frame target velocity, and CALM_PAN_DAMP made it worse exactly when the
+  // scene was moving fastest. The result was a camera permanently trailing the
+  // thing it had chosen to frame.
+  //
+  // Fix: move the camera AT the target's own velocity (feed-forward) and use
+  // the exponential term only to correct the residual. Steady-state lag goes to
+  // ~zero at any target speed without making the correction any snappier, so
+  // the broadcast feel is unchanged. FF_SMOOTH_TC smooths the measured velocity
+  // because targets are recomputed on a ~15Hz decision cadence, not per frame —
+  // raw frame-to-frame deltas are 0,0,0,spike.
+  const FF_SMOOTH_TC = () => CCFG('camera', 'ffSmoothTc', 0.22);     // s, EMA time constant on measured target velocity
+  const FF_MAX_PX_S  = () => CCFG('camera', 'ffMaxPxPerSec', 6000);  // clamp — a target JUMP must not fling the camera
+  // Backstop so "always fast enough" is an invariant, not an emergent property
+  // of the tuning: the camera is never allowed to trail by more than this.
+  const MAX_LAG_PX   = () => CCFG('camera', 'maxLagPx', 260);
+
   // Shot latching (see _latchTarget). A shot flies to a FIXED destination and
   // then only corrects slowly, so "holding" actually looks held. Anything past
   // these thresholds is treated as a new shot rather than as drift.
@@ -472,6 +492,40 @@
     setTransitionHold (on) { this._transitionHold = !!on; }
 
     /**
+     * EMA of the raw target's velocity, in CSS px/sec.
+     *
+     * Targets are recomputed on a ~15Hz decision cadence while frames run at
+     * 60, so raw per-frame deltas read 0, 0, 0, spike. The EMA turns that into
+     * the steady velocity the scene is actually moving at. Breathing-bbox
+     * jitter has ~zero mean, so it contributes ~nothing and cannot cause drift.
+     *
+     * Reset whenever the camera is re-seeded (`!_initialized`: construction,
+     * mode change, seek) — otherwise the discontinuity reads as one enormous
+     * velocity sample and the camera lunges.
+     */
+    _measureTargetVelocity (rawX, rawY) {
+      const dt = this._frameDtSec();
+      if (!this._initialized || this._prevRawX == null || !(dt > 0)) {
+        this._prevRawX = rawX; this._prevRawY = rawY;
+        this._ffVx = 0; this._ffVy = 0;
+        return;
+      }
+      const vx = (rawX - this._prevRawX) / dt;
+      const vy = (rawY - this._prevRawY) / dt;
+      this._prevRawX = rawX; this._prevRawY = rawY;
+
+      // A latch re-cut or a fresh cluster is a JUMP, not motion. Clamping the
+      // sample keeps one frame of teleport out of the smoothed velocity.
+      const cap = FF_MAX_PX_S();
+      const mag = Math.hypot(vx, vy);
+      const s = mag > cap ? cap / mag : 1;
+
+      const a = 1 - Math.exp(-dt / Math.max(0.01, FF_SMOOTH_TC()));
+      this._ffVx += (vx * s - this._ffVx) * a;
+      this._ffVy += (vy * s - this._ffVy) * a;
+    }
+
+    /**
      * Hold a shot's destination still, and allow only bounded correction once
      * we've arrived. Returns the destination the lerp should actually chase.
      *
@@ -516,10 +570,24 @@
 
       // Small change => track it, but only within a budget, and only once the
       // camera has actually arrived (never re-aim mid-flight).
+      //
+      // The POSITION half of that gate had a hole: a fight that walks across
+      // the map moves the raw target continuously, and while the camera was in
+      // flight the latch held still — so the camera flew to a destination the
+      // scene had already left, arrived, and only then began tracking, at a
+      // 1.6s time constant. Feeding the measured velocity into the latch every
+      // frame makes the destination TRANSLATE with the scene whether or not we
+      // have arrived, while the eased residual correction below stays gated on
+      // `settled` — which is the part that was actually protecting against
+      // breathing-bbox re-aim.
+      const dtSec = this._frameDtSec();
+      L.x += this._ffVx * dtSec;
+      L.y += this._ffVy * dtSec;
+
       if (this.settled) {
-        const ease = Math.min(1, this._frameDtSec() / LATCH_FOLLOW_TC());
-        L.x += dx * ease;
-        L.y += dy * ease;
+        const ease = Math.min(1, dtSec / LATCH_FOLLOW_TC());
+        L.x += (rawX - L.x) * ease;
+        L.y += (rawY - L.y) * ease;
         L.k += (rawK - L.k) * ease;
       }
       return L;
@@ -844,6 +912,11 @@
       // `fightNow` (live/imminent battle, engaged heroes, intrusion) marks the
       // cuts that are allowed to move fast; everything else is bound by the
       // sanity pass (min shot duration, zoom direction hold, zoom slew).
+      // Measure how fast the RAW target is moving, before latching flattens it.
+      // This is what both the latch and the pan lerp feed forward on, so the
+      // whole chain translates with the scene instead of trailing it.
+      this._measureTargetVelocity(cssPx, cssPy);
+
       const latched = this._latchTarget(cssPx, cssPy, targetK, fightNow);
       cssPx = latched.x; cssPy = latched.y;
       targetK = this._steadyZoomTarget(latched.k, fightNow);
@@ -882,16 +955,45 @@
       const dtSec = this._frameDtSec();
       const perSec = (frac60) => 1 - Math.pow(1 - frac60, dtSec * 60);
 
-      const dPanX = cssPx - this._lerpCssX;
-      const dPanY = cssPy - this._lerpCssY;
-      const panDist = Math.hypot(dPanX, dPanY);
-      if (panDist >= PAN_DEADZONE_PX && !this._transitionHold) {
-        let panRate = PAN_RATE_MIN +
-          (PAN_RATE_MAX - PAN_RATE_MIN) * Math.min(1, panDist / PAN_RATE_REF_PX);
-        panRate *= (1 - CALM_PAN_DAMP * fast);   // calmer pan when fast-forwarding
-        const k = Math.min(1, perSec(panRate));
-        this._lerpCssX += dPanX * k;
-        this._lerpCssY += dPanY * k;
+      if (!this._transitionHold) {
+        // 1. Feed-forward: move AT the scene's own velocity. This is what makes
+        //    the camera able to keep up at all — the exponential term below can
+        //    only ever close a fraction of the remaining gap per frame, so on
+        //    its own it settles at a permanent lag proportional to how fast the
+        //    target is moving. Deliberately NOT damped by CALM_PAN_DAMP: that
+        //    is a calmness control for the correction, and applying it here was
+        //    slowing the camera down precisely when the scene was fastest.
+        this._lerpCssX += this._ffVx * dtSec;
+        this._lerpCssY += this._ffVy * dtSec;
+
+        // 2. Exponential correction of whatever residual is left.
+        let dPanX = cssPx - this._lerpCssX;
+        let dPanY = cssPy - this._lerpCssY;
+        let panDist = Math.hypot(dPanX, dPanY);
+        if (panDist >= PAN_DEADZONE_PX) {
+          let panRate = PAN_RATE_MIN +
+            (PAN_RATE_MAX - PAN_RATE_MIN) * Math.min(1, panDist / PAN_RATE_REF_PX);
+          panRate *= (1 - CALM_PAN_DAMP * fast);   // calmer pan when fast-forwarding
+          const k = Math.min(1, perSec(panRate));
+          this._lerpCssX += dPanX * k;
+          this._lerpCssY += dPanY * k;
+          dPanX -= dPanX * k;
+          dPanY -= dPanY * k;
+          panDist = Math.hypot(dPanX, dPanY);
+        }
+
+        // 3. Hard ceiling. Feed-forward handles steady motion and the term
+        //    above handles the residual, but neither GUARANTEES a bound — an
+        //    accelerating target, a mid-flight re-cut or a stall can still open
+        //    a gap. Close anything past the ceiling outright so "the camera can
+        //    always centre what it wants to" is an invariant of the code rather
+        //    than a property of the tuning.
+        const maxLag = MAX_LAG_PX();
+        if (panDist > maxLag) {
+          const pull = (panDist - maxLag) / panDist;
+          this._lerpCssX += dPanX * pull;
+          this._lerpCssY += dPanY * pull;
+        }
       }
 
       // --- Distance-scaled zoom smoothing (gentler than pan) ---

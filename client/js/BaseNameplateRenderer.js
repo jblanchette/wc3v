@@ -59,15 +59,15 @@ class BaseNameplateRenderer {
     this.FALLBACK_ACCENT = '#8B949E';
     this.LOGO_FALLBACK   = '#5b5bf5';  // matches the WC3V app-icon purple
 
-    // Race -> portrait icon under /assets/wc3icons/. Hero portraits are the
-    // most colorful + recognizable race symbol available in the existing
-    // icon set; they read clearly even at ~14-18 device px.
-    this.RACE_ICON_FILES = {
-      'H': 'hpal.jpg',  // Paladin
-      'O': 'obla.jpg',  // Blademaster
-      'U': 'udea.jpg',  // Death Knight
-      'E': 'edem.jpg'   // Demon Hunter
-    };
+    // Race -> portrait icon under /assets/wc3icons/, from the shared race
+    // table in ClientPlayer.js so the plates, the camera toolbar and anything
+    // else that needs a race glyph can never drift apart.
+    this.RACE_ICON_FILES = {};
+    if (typeof RaceLabels !== 'undefined') {
+      for (const r of Object.keys(RaceLabels)) {
+        this.RACE_ICON_FILES[r] = RaceLabels[r].icon + '.jpg';
+      }
+    }
 
     // Image cache — load every tile once. If a tile isn't ready (still
     // loading, failed, or unknown race) the plate draws a same-size colored

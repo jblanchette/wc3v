@@ -50,7 +50,14 @@
       zoomRateMin: 0.045,
       zoomRateMax: 0.11,
       panDeadzonePx: 3.5,
-      hysteresisMs: 500    // a new cluster must keep winning this long to take over
+      hysteresisMs: 500,   // a new cluster must keep winning this long to take over
+      // Keep-up (see BroadcastCamera's "velocity feed-forward" note). An
+      // exponential chase settles at a lag of ~targetVelocity/rate and never
+      // actually catches a moving target; the camera moves at the scene's own
+      // velocity as well, so only the residual is eased.
+      ffSmoothTc: 0.22,    // s — EMA on measured target velocity (decisions are ~15Hz, frames 60)
+      ffMaxPxPerSec: 6000, // clamp so a target JUMP can't be read as motion
+      maxLagPx: 260        // hard ceiling: the camera never trails further than this
     },
 
     // --- shot latching (BroadcastCamera) ------------------------------------

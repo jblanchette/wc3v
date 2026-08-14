@@ -5397,24 +5397,51 @@ body {
   right: 0.5rem;
   z-index: 20;
   display: flex;
-  gap: 2px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
   background: rgba(0, 0, 0, 0.65);
   border-radius: 4px;
-  padding: 3px;
+  padding: 5px 5px 5px;
   backdrop-filter: blur(4px);
 }
 
+/* Names the cluster. Same small-caps meta-label idiom the rest of the viewer
+   chrome uses (.ip-title-text, .brp-chip) rather than a new one. Deliberately
+   quiet — it labels the control, it is not part of it. */
+.cam-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim, #6b7290);
+  text-align: center;
+  line-height: 1;
+  padding: 0 0 1px;
+  cursor: default;
+  user-select: none;
+}
+
+.cam-row {
+  display: flex;
+  gap: 2px;
+}
+
 .cam-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: rgba(255, 255, 255, 0.08);
   color: #aaa;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 3px;
   padding: 4px 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
   font-family: inherit;
 }
 
@@ -5428,6 +5455,42 @@ body {
   color: #8cc8ff;
   border-color: rgba(100, 180, 255, 0.4);
 }
+
+/* ---- P1 / P2: race portrait + a hint of the player's colour ------------
+   The colour arrives as a FULL-PERIMETER ring on the portrait — the same
+   "who owns this" language as .ev-icon and .dom-ident-img — plus a low
+   percentage wash on the button. Never an edge stripe, never a fill. */
+.cam-btn-player {
+  padding: 3px 7px 3px 3px;
+  gap: 5px;
+  background: color-mix(in srgb, var(--cam-pcolor, #888) 10%, rgba(255, 255, 255, 0.06));
+  border-color: color-mix(in srgb, var(--cam-pcolor, #888) 28%, rgba(255, 255, 255, 0.12));
+}
+.cam-btn-player:hover {
+  background: color-mix(in srgb, var(--cam-pcolor, #888) 20%, rgba(255, 255, 255, 0.10));
+  color: #fff;
+}
+.cam-btn-player.cam-btn-active {
+  /* Active reads in the PLAYER's colour here, not the generic blue — the
+     whole point of the button is whose camera you are on. */
+  background: color-mix(in srgb, var(--cam-pcolor, #888) 30%, rgba(255, 255, 255, 0.08));
+  border-color: color-mix(in srgb, var(--cam-pcolor, #888) 62%, transparent);
+  color: #fff;
+}
+/* An inline race GLYPH, not a standalone icon: it identifies which player the
+   button follows and is read together with the "P1" beside it, so the house
+   36px icon floor (which governs icons you read on their own) would only make
+   the toolbar bulky. Kept at 20px so the cluster stays corner chrome. */
+.cam-race {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--cam-pcolor, #888);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.55);
+}
+.cam-btn-lbl { line-height: 1; }
 
 .cam-btn-unavailable {
   opacity: 0.25;

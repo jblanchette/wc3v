@@ -11,11 +11,15 @@ const TierColors = {
   3: "#FFFF33"
 };
 
+// The shared race table. `icon` is a /assets/wc3icons/ id: the race's hero
+// portrait, which is the most colourful and recognizable race symbol in the
+// icon set we already ship and stays readable down to ~16px. Consumers:
+// BaseNameplateRenderer's map plates and the camera toolbar's P1/P2 buttons.
 const RaceLabels = {
-  'O': { label: 'ORC', accent: '#FF4444' },
-  'H': { label: 'HU',  accent: '#4488FF' },
-  'U': { label: 'UD',  accent: '#AA66FF' },
-  'E': { label: 'NE',  accent: '#44DD88' }
+  'O': { label: 'ORC', accent: '#FF4444', icon: 'obla' },  // Blademaster
+  'H': { label: 'HU',  accent: '#4488FF', icon: 'hpal' },  // Paladin
+  'U': { label: 'UD',  accent: '#AA66FF', icon: 'udea' },  // Death Knight
+  'E': { label: 'NE',  accent: '#44DD88', icon: 'edem' }   // Demon Hunter
 };
 
 const TeamColors = {
