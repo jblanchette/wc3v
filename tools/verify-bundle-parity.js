@@ -154,20 +154,10 @@ const resolveMapName = async (buffer, mapDataByFile) => {
   if (!info || !info.metadata || !info.metadata.map) {
     throw new Error('Replay header missing map data');
   }
-  let mapName = info.metadata.map.mapName.split('\\').join('/');
-  mapName = path.basename(mapName).toLowerCase().trim().replace(/ /g, '');
-  const stripped = (mapName.match(/^\d+_w3c_\d+_\d+_(.+)$/) || [])[1] || mapName;
-
-  if (mapDataByFile[mapName]) return mapDataByFile[mapName].name;
-  for (const key of Object.keys(mapDataByFile)) {
-    const search = mapDataByFile[key].name.toLowerCase();
-    if (mapName.indexOf(search) !== -1) return mapDataByFile[key].name;
-    if (stripped !== mapName && stripped.indexOf(search) !== -1) return mapDataByFile[key].name;
-    const baseSearch = search.replace(/[_-]v[\d._-]+$/, '');
-    const baseMap = stripped.replace('.w3x', '').replace(/[_-]v[\d._-]+$/, '');
-    if (baseSearch.length > 3 && baseMap === baseSearch) return mapDataByFile[key].name;
-  }
-  throw new Error(`Map not in library: ${info.metadata.map.mapName}`);
+  const { resolveMapDataName } = require(path.join(ROOT, 'helpers', 'mapResolver.js'));
+  const name = resolveMapDataName(info.metadata.map.mapName, mapDataByFile);
+  if (!name) throw new Error(`Map not in library: ${info.metadata.map.mapName}`);
+  return name;
 };
 
 // ── Path B: parse via the committed browser bundle ──────────────────────────

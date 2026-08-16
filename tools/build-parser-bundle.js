@@ -13,6 +13,15 @@ const ROOT = path.resolve(__dirname, '..');
 const ENTRY = path.resolve(ROOT, 'client/js/parser/parserEntry.js');
 const OUTFILE = path.resolve(ROOT, 'client/js/vendor/wc3v-parser.bundle.js');
 
+// helpers/mapResolver.js decides which map a replay was played on. It is
+// bundled into the parser above, but pages that only read an already-parsed
+// summary still have to answer the same question, and they load plain script
+// tags rather than the parser. Copied out verbatim (it has no dependencies)
+// so both answers come from one file instead of two that drift — which is the
+// bug this whole seam exists to prevent.
+const RESOLVER_SRC = path.resolve(ROOT, 'helpers/mapResolver.js');
+const RESOLVER_OUT = path.resolve(ROOT, 'client/js/vendor/MapResolver.js');
+
 const SHIM_FS = path.resolve(ROOT, 'client/js/parser/shims/fs-stub.js');
 const SHIM_OS = path.resolve(ROOT, 'client/js/parser/shims/os-stub.js');
 const SHIM_ZLIB = path.resolve(ROOT, 'client/js/parser/shims/zlib-shim.js');
@@ -148,10 +157,13 @@ var Wc3vParser = (() => {` },
   // Re-emit a small attach line at the end:
   fs.appendFileSync(OUTFILE, '\nif (typeof window !== "undefined") window.Wc3vParser = Wc3vParser;\n');
 
+  fs.copyFileSync(RESOLVER_SRC, RESOLVER_OUT);
+
   const stat = fs.statSync(OUTFILE);
   console.log(`\nBundle: ${path.relative(ROOT, OUTFILE)}`);
   console.log(`Size:   ${(stat.size / 1024).toFixed(1)} KB`);
   console.log(`Hash:   ${sourceHash}`);
+  console.log(`Copied: ${path.relative(ROOT, RESOLVER_OUT)}`);
 };
 
 main().catch(e => {

@@ -175,6 +175,17 @@ which has the full parse in hand; and `production`, which is redundant with
 `client/js/SummaryBuild.js` before adding anything with that property, and make
 sure it is current before the backfill runs.
 
+**Schema v6 adds no field.** It exists because a parse can be wrong rather than
+incomplete, and a stored summary records the result without recording which map
+produced it. Map resolution used to take the first library name that appeared
+anywhere in the replay's filename, so any map whose name is a prefix of another
+resolved to the shorter one — Echo Isles S2 parsed as classic Echo Isles, with
+starting positions 1536 units out and another map's creep camps. Nothing threw
+and nothing looked obviously wrong. `helpers/mapResolver.js` is the fix; the
+bump is the only thing that makes an installed app re-read what it already has.
+A correctness bump is the same mechanism as a field bump, and the rule for both
+is that staleness is the only route to games already on disk.
+
 **A schema bump only reaches the history if the backfill can see it.** The
 backfill skips a replay on `store.isCurrent(key)` — stored AND under the current
 schema — not on `store.has(key)`. It used to skip on presence, which meant every

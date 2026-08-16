@@ -1,5 +1,30 @@
 # WC3V Desktop: changelog
 
+## Unreleased
+
+### Games on newer map versions were read against the wrong map
+
+A replay names the map file it was played on, and WC3V matched that name against
+its map library by taking the first library entry whose name appeared anywhere in
+it. Map names nest, so the shortest one always won: a game on Echo Isles S2 was
+read against classic Echo Isles, AutumnLeaves v2.0 against v2-0, Tidehunters v1.2
+against Tidehunters.
+
+Nothing failed. The game parsed, the report rendered, every number had a value.
+They were just measured against another map's terrain, creep camps and starting
+positions — on Echo Isles S2 the bases were placed 1536 units from where the
+players actually built, which put ordinary base activity on top of a creep camp
+that was not there and recorded a camp clear that never happened.
+
+Half the ladder pool was affected: 175 of 362 test replays resolved to a
+different map than they were played on. Games on maps whose name is nobody's
+prefix — Concealed Hill, Twisted Meadows, Northern Isles — were always read
+correctly.
+
+Stored summaries carry the consequences with no marker, so this is a schema
+bump (v6) rather than a silent fix: the app re-reads the games it already has.
+Existing games show as stale and "Parse all replays" brings them current.
+
 ## 1.0.2 — 16 Aug 2026
 
 An overlay pass driven by actually streaming with it. Both complaints turned

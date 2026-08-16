@@ -42,7 +42,20 @@
   // reimplementing the grouping and the cost accumulation, which is two
   // implementations of "what did this player build" and two answers the first
   // time one of them is edited.
-  const SCHEMA_VERSION = 5;
+  //
+  // v6 is the first bump that adds no field. Map resolution used to scan the
+  // map library in declaration order and take the first name that appeared in
+  // the replay's filename, so every map whose name is a prefix of another one
+  // resolved to the shorter entry: Echo Isles S2 parsed as classic Echo Isles,
+  // AutumnLeaves v2.0 as v2-0, Tidehunters v1.2 as Tidehunters. Those games
+  // parsed and rendered normally against another map's terrain, creep camps
+  // and starting positions — on Echo Isles S2 the bases were 1536 units out.
+  //
+  // A stored summary carries the consequences and no marker, and every field
+  // in it is already at its newest shape, so staleness is the only mechanism
+  // that can reach the games already on disk. helpers/mapResolver.js is the
+  // fix; this bump is what makes an installed app re-read them.
+  const SCHEMA_VERSION = 6;
 
   // Resolved per call rather than once at load: in the browser these are plain
   // scripts, and a wrong tag order would otherwise bake nulls in here at parse

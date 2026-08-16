@@ -40,29 +40,25 @@
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   // Resolve a raw replay map name to the matching `mapDataByFile` entry.
-  // Mirrors the algorithm in lib/PlayerManager.js setGridData() — same loops,
-  // same fallbacks. Accepts mapDataByFile as a parameter so both Node (which
-  // requires it from helpers/mappings) and browser (which fetches a slim
-  // manifest at runtime) can share the function.
+  // The rules live in helpers/mapResolver.js, which lib/PlayerManager.js also
+  // uses, so a summary can never disagree with the parse it describes.
+  // mapDataByFile stays a parameter because Node requires the real table while
+  // the browser fetches a slim manifest at runtime.
+  //
+  // Node reaches the resolver by require; the browser gets it from the
+  // <script> tag that defines window.MapResolver. Looked up per call rather
+  // than at load time so this file does not care which script tag runs first.
+  function getMapResolver () {
+    if (typeof module !== 'undefined' && module.exports) {
+      return require('../../helpers/mapResolver');
+    }
+    return (typeof window !== 'undefined' && window.MapResolver) || null;
+  }
+
   function resolveMapFolder (rawMapName, mapDataByFile) {
     if (!rawMapName || !mapDataByFile) return null;
-    let mapName = String(rawMapName).split(/[\\/]/).pop().toLowerCase().trim();
-    mapName = mapName.replace(/ /g, '');
-    const w3cPrefixMatch = mapName.match(/^\d+_w3c_\d+_\d+_(.+)$/);
-    const strippedMapName = w3cPrefixMatch ? w3cPrefixMatch[1] : mapName;
-
-    if (mapDataByFile[mapName]) return mapDataByFile[mapName];
-    for (const key of Object.keys(mapDataByFile)) {
-      const entry = mapDataByFile[key];
-      const searchName = (entry.name || '').toLowerCase();
-      if (!searchName) continue;
-      if (mapName.indexOf(searchName) !== -1) return entry;
-      if (strippedMapName !== mapName && strippedMapName.indexOf(searchName) !== -1) return entry;
-      const baseSearchName = searchName.replace(/[_-]v[\d._-]+$/, '');
-      const baseMapName = strippedMapName.replace('.w3x', '').replace(/[_-]v[\d._-]+$/, '');
-      if (baseSearchName.length > 3 && baseMapName === baseSearchName) return entry;
-    }
-    return null;
+    const mapResolver = getMapResolver();
+    return mapResolver ? mapResolver.resolveMapEntry(rawMapName, mapDataByFile) : null;
   }
 
   // Slim copy of a mapDataByFile entry for inclusion in summary.mapInfo —

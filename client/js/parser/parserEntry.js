@@ -24,41 +24,17 @@ const ReplayParser = require('../../../node_modules/w3gjs/dist/lib/parsers/Repla
 const wc3v = require('../../../wc3v');
 const utils = require('../../../helpers/utils');
 const { mapDataByFile } = require('../../../helpers/mappings');
+const mapResolver = require('../../../helpers/mapResolver');
 const { buildBrowserMapLoader } = require('./browserMapLoader');
 
 // Sentinel exception used to abort the peek-parse once metadata is captured.
 // Anything else thrown during peek is a real error and propagates.
 const PEEK_DONE = Symbol('PEEK_DONE');
 
-// Map-name resolution mirrors PlayerManager.setGridData: lowercase, strip
-// spaces, strip the W3C numbered prefix, then look up via mapDataByFile.
-// Returns the canonical mapData.name (used as the cache directory name) or
-// null if no match.
-const resolveMapDataName = (rawMapName) => {
-  if (!rawMapName) return null;
-  let mapName = rawMapName.split('\\').join('/');
-  mapName = require('path').basename(mapName).toLowerCase();
-  mapName = mapName.trim().replace(/ /g, '');
-
-  const w3cPrefixMatch = mapName.match(/^\d+_w3c_\d+_\d+_(.+)$/);
-  const strippedMapName = w3cPrefixMatch ? w3cPrefixMatch[1] : mapName;
-
-  if (mapDataByFile[mapName]) return mapDataByFile[mapName].name;
-
-  for (const key of Object.keys(mapDataByFile)) {
-    const searchName = mapDataByFile[key].name.toLowerCase();
-    if (mapName.indexOf(searchName) !== -1) return mapDataByFile[key].name;
-    if (strippedMapName !== mapName && strippedMapName.indexOf(searchName) !== -1) {
-      return mapDataByFile[key].name;
-    }
-    const baseSearchName = searchName.replace(/[_-]v[\d._-]+$/, '');
-    const baseMapName = strippedMapName.replace('.w3x', '').replace(/[_-]v[\d._-]+$/, '');
-    if (baseSearchName.length > 3 && baseMapName === baseSearchName) {
-      return mapDataByFile[key].name;
-    }
-  }
-  return null;
-};
+// Resolution rules are shared with PlayerManager.setGridData via
+// helpers/mapResolver.js. The name it returns is also the map's cache
+// directory, which is what the fetch below asks the CDN for.
+const resolveMapDataName = (rawMapName) => mapResolver.resolveMapDataName(rawMapName, mapDataByFile);
 
 const peekMetadata = async (buffer) => {
   const peeker = new ReplayParser();
