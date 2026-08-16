@@ -19,8 +19,10 @@
   URL params:
     token    required
     view     obs | panel        (panel = opaque background, for a monitor)
-    theme    carved | slate
-    scale    number, 0.4–4
+    theme    carved | etched | parchment   (slate still renders, see overlay.css)
+    scale    number, 0.4–4. The app offers 1 to 2 and defaults to 1.25; the
+             range stays wide because a URL is a URL, but anything under 1 is
+             below what a viewer can read off a downscaled stream.
     modules  comma list: scout,session,verdict,report,momentum,h2h,moments,build
     reveal   seconds to hold the full card after a game (absent = always on)
 -->
@@ -82,10 +84,28 @@
   // forever.
   function hasStrip () { return !!root.querySelector('.mod:not(.post)'); }
 
+  // Is there anything CURRENT on this card? No live match, and no last-game
+  // panel that will actually be painted — either because the reveal hold
+  // collapsed them or because no game has ever landed.
+  //
+  // Separate from the reveal phase on purpose. Most sources never ask for a
+  // reveal, and those spend most of a night with nothing to show; keying the
+  // resting board off the phase would have left exactly those sources with the
+  // squeezed footer they had before.
+  //
+  // Runs after every render, because only the DOM knows the answer.
+  function settle () {
+    var collapsed = document.body.dataset.phase === 'idle';
+    var current = !!root.querySelector('.live-head') ||
+      (!collapsed && !!root.querySelector('.mod.post'));
+    document.body.dataset.board = current ? 'off' : 'on';
+  }
+
   function rest () {
     if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
     document.body.dataset.phase = 'idle';
     document.body.dataset.shown = hasStrip() ? 'yes' : 'no';
+    settle();
   }
 
   function showFor (seconds) {
@@ -93,6 +113,7 @@
     document.body.dataset.shown = 'yes';
     if (hideTimer) clearTimeout(hideTimer);
     hideTimer = setTimeout(rest, seconds * 1000);
+    settle();
   }
 
   var es = new EventSource('/events?token=' + encodeURIComponent(token));
@@ -104,6 +125,9 @@
     try {
       window.OverlayRender.render(root, state, mods);
     } catch (err) { return; }
+    // Before the reveal bookkeeping, and again inside it: a source with no
+    // reveal at all still has a resting state, and it is the common one.
+    settle();
 
     if (!reveals) return;
     var id = state.game && state.game.gameId;

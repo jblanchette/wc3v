@@ -12,10 +12,17 @@
    deliberately, the same way cast.css copies the race hues. */
 
 :root {
-  --panel: rgba(24, 20, 15, 0.92);
+  /* Was 0.92. Eight per cent of a bright minimap coming through the bed is
+     what "I can barely see it" looks like from the sofa: it does not read as
+     translucency, it reads as a washed-out graphic. Still not opaque, because
+     a flat black rectangle on footage is worse. */
+  --panel: rgba(24, 20, 15, 0.95);
   --panel-edge: #3a3226;
   --ink: #e8e0d2;
-  --dim: #9a8f7d;
+  /* Was #9a8f7d, 5.8:1 on the bed. Muted is the art direction and faint is
+     not: this ink carries the labels, the ladder line and the trend, which is
+     most of the words on a resting card. 7.5:1, still earthy. */
+  --dim: #b0a48d;
   --win: #86a96b;
   --loss: #b5563f;
   --gold: #c9a227;
@@ -255,26 +262,60 @@ body[data-reveal="on"][data-shown="yes"] .wc3v-ov .card {
   body[data-reveal="on"]:not([data-shown]) .wc3v-ov .card { transform: none; }
 }
 
-/* ── Phase: the strip ─────────────────────────────────────────────────────
+/* ── Phase: the board ─────────────────────────────────────────────────────
    After the post-game hold the card does not vanish, it collapses to what is
-   still true: the scout strip and the session score. Everything about the last
-   game carries `.post` and goes.
+   still true: the live match if there is one, and the session board.
+   Everything about the last game carries `.post` and goes.
 
    Two selectors for one rule. In OBS the phase is on <body>; in the WC3V
-   window's preview it is on the host element, which is .wc3v-ov itself. */
+   window's preview it is on the host element, which is .wc3v-ov itself.
+
+   It used to also HALVE the padding and shrink the mark, on the theory that a
+   resting card should get out of the way. That was wrong in the direction that
+   matters: a stream is watched at 720p or smaller, several metres away, and a
+   0.9rem wordmark over two squeezed lines is not a scene element that has
+   politely stepped back — it is a smudge in the corner that reads as broken.
+
+   So the board goes the other way. It takes the room the last game's panels
+   just gave up and spends it on the three things that are still true between
+   games: the score, the night's shape, and where you are on the ladder. */
 body[data-phase="idle"] .wc3v-ov .mod.post,
 .wc3v-ov[data-phase="idle"] .mod.post { display: none; }
 
-/* Visibly a different object, not the same card with holes in it: half the
-   padding and a smaller mark. */
-body[data-phase="idle"] .wc3v-ov .scout,
-body[data-phase="idle"] .wc3v-ov .session,
-.wc3v-ov[data-phase="idle"] .scout,
-.wc3v-ov[data-phase="idle"] .session { padding-top: 0.3rem; padding-bottom: 0.35rem; }
-body[data-phase="idle"] .wc3v-ov .mark,
-.wc3v-ov[data-phase="idle"] .mark { padding: 0.25rem 0.5rem 0; }
-body[data-phase="idle"] .wc3v-ov .mark .wordmark,
-.wc3v-ov[data-phase="idle"] .mark .wordmark { font-size: 0.9rem; padding: 0.1rem 0.5rem; }
+/* ── The resting board ────────────────────────────────────────────────────
+   `data-board` and `data-phase` are two different questions and were nearly
+   one attribute.
+
+   `data-phase="idle"` is the reveal COLLAPSE: hide the last game. It only ever
+   applies to a source that asked for a reveal hold.
+
+   `data-board="on"` is "there is nothing current on this card" — no live
+   match, and no last-game panel visible, whether that is because the hold
+   expired or because no game has ever landed. Set by the shell after each
+   render (and by the in-window preview), because only the DOM knows it.
+
+   The sizing hangs off `board`, not off `phase`. Hanging it off the phase
+   would have left the default source — reveal OFF, which is most of them —
+   showing the footer treatment for the whole of a night between games, which
+   is the exact complaint this pass exists to answer. */
+body[data-board="on"] .wc3v-ov .session,
+.wc3v-ov[data-board="on"] .session { padding: 0.7rem 0.9rem 0.85rem; }
+
+/* The score is the card now, so it is sized like it. */
+body[data-board="on"] .wc3v-ov .sess-top,
+.wc3v-ov[data-board="on"] .sess-top { gap: 0.6rem; }
+body[data-board="on"] .wc3v-ov .sess-top .score,
+.wc3v-ov[data-board="on"] .sess-top .score { font-size: 2rem; line-height: 1.05; }
+body[data-board="on"] .wc3v-ov .sess-top .streak,
+.wc3v-ov[data-board="on"] .sess-top .streak { font-size: 1rem; }
+body[data-board="on"] .wc3v-ov .form .pip,
+.wc3v-ov[data-board="on"] .form .pip { width: 1.6rem; height: 1rem; }
+body[data-board="on"] .wc3v-ov .sess-ladder,
+.wc3v-ov[data-board="on"] .sess-ladder { font-size: 1.05rem; margin-top: 0.4rem; }
+body[data-board="on"] .wc3v-ov .sess-last,
+.wc3v-ov[data-board="on"] .sess-last { font-size: 1.05rem; }
+body[data-board="on"] .wc3v-ov .sess-trend,
+.wc3v-ov[data-board="on"] .sess-trend { font-size: 0.9rem; }
 
 .wc3v-ov .mod + .mod { border-top: 1px solid var(--panel-edge); }
 
@@ -293,16 +334,24 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 .wc3v-ov .gly svg { width: 100%; height: 100%; fill: currentColor; display: block; }
 .wc3v-ov .crest[data-race] { color: var(--rc-ink, var(--dim)); }
 
-.wc3v-ov .crest.tile { width: 36px; height: 36px; }
-.wc3v-ov .crest.big { width: 44px; height: 44px; }
-.wc3v-ov .gly { width: 22px; height: 22px; color: var(--dim); }
+/* Every mark on this card is sized in REM, not px.
+
+   They were px, which meant the Size control scaled all the type and left the
+   art exactly where it was: at Huge the card's words doubled and its crests,
+   portraits and section marks stayed 36 pixels, so the one control a streamer
+   has for "I can't read this" fixed half the card. The values are the same at
+   scale 1 (36px = 2.25rem), so nothing moves for a source already placed. */
+.wc3v-ov .crest.sm { width: 1.5rem; height: 1.5rem; }
+.wc3v-ov .crest.tile { width: 2.25rem; height: 2.25rem; }
+.wc3v-ov .crest.big { width: 2.75rem; height: 2.75rem; }
+.wc3v-ov .gly { width: 1.375rem; height: 1.375rem; color: var(--dim); }
 
 /* Hero art from the CDN. The one remote asset on the card, so it is built to
    survive not arriving: `is-blank` is a tile of the same size with nothing in
    it, and the row does not move. */
 .wc3v-ov .portrait {
-  width: 44px;
-  height: 44px;
+  width: 2.75rem;
+  height: 2.75rem;
   flex: 0 0 auto;
   display: block;
   border: 1px solid var(--ov-outline);
@@ -338,12 +387,25 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 }
 .wc3v-ov .live-head .dot {
   align-self: center;
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.7rem;
+  height: 0.7rem;
   flex: 0 0 auto;
   border-radius: 50%;
   background: var(--loss);
   box-shadow: 0 0 0 1px var(--ov-outline);
+  /* The one animation on the card, and it is a signal light rather than
+     decoration: opacity only, slow enough to be noticed but not watched, no
+     glow and no scale. A static dot beside the word "live" is the same picture
+     whether the overlay is connected or has been dead for an hour, which is
+     the one question this row exists to answer. */
+  animation: ov-breathe 2.6s ease-in-out infinite;
+}
+@keyframes ov-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.42; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wc3v-ov .live-head .dot { animation: none; }
 }
 .wc3v-ov .live-head .lbl {
   color: var(--loss);
@@ -408,10 +470,13 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
   letter-spacing: 0.04em;
 }
 .wc3v-ov .openers .op { display: flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; }
-.wc3v-ov .openers .op .portrait { width: 36px; height: 36px; }
+.wc3v-ov .openers .op .portrait { width: 2.25rem; height: 2.25rem; }
 
-/* ── session (footer) ────────────────────────────────────────────────── */
-.wc3v-ov .session { padding: 0.55rem 0.9rem; }
+/* ── session (the board) ─────────────────────────────────────────────────
+   A footer while a game is on, and the whole card between games. Sized for
+   the second job, because that is the state the overlay is in for most of a
+   night and it was the state that had nothing in it. */
+.wc3v-ov .session { padding: 0.55rem 0.9rem 0.65rem; }
 .wc3v-ov .sess-top {
   display: flex;
   align-items: baseline;
@@ -420,18 +485,53 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
   letter-spacing: 0.04em;
 }
 .wc3v-ov .sess-top .label { color: var(--dim); }
-.wc3v-ov .sess-top .score { font-size: 1.05rem; font-weight: 600; }
+/* Was 1.05rem, which put the night's score at the same weight as a metadata
+   line. It is the headline of the resting card. */
+.wc3v-ov .sess-top .score {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 .wc3v-ov .sess-top .score .w { color: var(--win); }
 .wc3v-ov .sess-top .score .l { color: var(--loss); }
 .wc3v-ov .sess-top .streak { margin-left: auto; color: var(--gold); font-weight: 600; }
+
+/* ── the form rail ──────────────────────────────────────────────────────
+   One notch per game of the night, oldest first, moss for a win and rust for
+   a loss. The same carved vocabulary as everything else on the card: a bed, a
+   near-black outline, a struck highlight. No labels, because a row of results
+   in two colours does not need any, and no counts, because the score is
+   directly above it.
+
+   This is the element that makes a resting overlay worth looking at. It is
+   also the only one that visibly changes over a session without a game being
+   on screen. */
+.wc3v-ov .form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+.wc3v-ov .form .pip {
+  width: 1.2rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  background: var(--chip);
+  border: 1px solid var(--ov-outline);
+  border-radius: 2px;
+  box-shadow: var(--ov-cut);
+}
+.wc3v-ov .form .pip.w { background: var(--win); }
+.wc3v-ov .form .pip.l { background: var(--loss); }
+
 /* Where you are on the ladder and how far today moved it. The climb carries
    the colour, because it is the only part of the line that is a result. */
 .wc3v-ov .sess-ladder {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-  margin-top: 0.2rem;
-  font-size: 0.9rem;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
   color: var(--dim);
   font-variant-numeric: tabular-nums;
 }
@@ -439,7 +539,40 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
 .wc3v-ov .sess-ladder .up { margin-left: auto; color: var(--win); font-weight: 700; }
 .wc3v-ov .sess-ladder .down { margin-left: auto; color: var(--loss); font-weight: 700; }
 
-.wc3v-ov .sess-trend { margin-top: 0.25rem; font-size: 0.8rem; color: var(--dim); }
+/* The last result, one line, the word carrying the colour — no band, no pill,
+   no bed.
+
+   It is the RESTING card's stand-in for the verdict panel, so it is painted
+   only while the board is up. On a full card the banner already says Victory
+   vs Opponent in 1.7rem type and the head-to-head row names them again; a
+   third copy in the footer is the card repeating itself. The renderer cannot
+   decide this on its own, because whether the last game is visible is settled
+   by the reveal phase after it has drawn. */
+.wc3v-ov .sess-last { display: none; }
+body[data-board="on"] .wc3v-ov .sess-last,
+.wc3v-ov[data-board="on"] .sess-last {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  min-width: 0;
+}
+.wc3v-ov .sess-last .k {
+  color: var(--dim);
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  flex: 0 0 auto;
+}
+.wc3v-ov .sess-last .r { font-weight: 700; flex: 0 0 auto; }
+.wc3v-ov .sess-last .r.win { color: var(--win); }
+.wc3v-ov .sess-last .r.loss { color: var(--loss); }
+.wc3v-ov .sess-last .vs { color: var(--dim); min-width: 0; overflow-wrap: anywhere; }
+/* Beside the name it describes. It was pushed to the far end of the row with
+   margin-left:auto, where a race crest is a mark floating on its own. */
+.wc3v-ov .sess-last .crest { margin-right: auto; }
+
+.wc3v-ov .sess-trend { margin-top: 0.3rem; font-size: 0.85rem; color: var(--dim); }
 
 /* ── verdict ─────────────────────────────────────────────────────────────
    The story band. Race material under the opponent's crest, the result at the
@@ -554,7 +687,7 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
   padding: 0.15rem 0;
   align-items: center;
 }
-.wc3v-ov .moments .gly { width: 20px; height: 20px; }
+.wc3v-ov .moments .gly { width: 1.25rem; height: 1.25rem; }
 .wc3v-ov .moments .t { color: var(--dim); font-variant-numeric: tabular-nums; min-width: 2.8rem; }
 .wc3v-ov .moments .n { overflow-wrap: anywhere; }
 .wc3v-ov .moments li.hero .n { color: var(--gold); }
@@ -589,7 +722,23 @@ body[data-phase="idle"] .wc3v-ov .mark .wordmark,
   overflow-wrap: anywhere;
 }
 
-.wc3v-ov .waiting { padding: 1.1rem 0.9rem; color: var(--dim); }
+/* The empty state, on a machine that has never parsed a replay. A plate with
+   a mark on it rather than one dim sentence: this is what a first-time
+   streamer's scene shows for as long as it takes them to play a game, and a
+   14px grey line in a corner reads as a broken source, not as "nothing has
+   happened yet". */
+.wc3v-ov .waiting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.15rem 0.9rem;
+  color: var(--dim);
+  font-size: 1rem;
+  font-variant: small-caps;
+  letter-spacing: 0.07em;
+}
+.wc3v-ov .waiting .gly { width: 1.625rem; height: 1.625rem; }
 
 /* A clearly-labelled fake game, so a streamer can size and place the source
    before ever playing. It must be impossible to mistake for a real result. */

@@ -79,11 +79,33 @@
     { key: 'parchment', label: 'Parchment' }
   ];
 
+  // Sizes, and the ladder now starts where readable starts.
+  //
+  // It was 0.85 / 1 / 1.25 with 1 as the default. That ladder was drawn against
+  // a monitor at arm's length, which is not where this card gets looked at. A
+  // Twitch stream is encoded at 1080p, watched in a browser window at 720p or
+  // smaller, metres from a sofa: at scale 1 the card's body type is 14 CSS px,
+  // which reaches that viewer as roughly nine real ones. 0.85 is off the ladder
+  // entirely because nothing under scale 1 survives the trip, and the default
+  // moved up a rung.
   const SCALES = [
-    { key: '0.85', label: 'Small' },
-    { key: '1', label: 'Normal' },
-    { key: '1.25', label: 'Large' }
+    { key: '1', label: 'Small' },
+    { key: '1.25', label: 'Normal' },
+    { key: '1.5', label: 'Large' },
+    { key: '2', label: 'Huge' }
   ];
+
+  // The suggested Browser Source size at the selected scale.
+  //
+  // The card is laid out in rem and the scale is applied to the root font size,
+  // so every dimension moves with it. The size is also the one part of the OBS
+  // step nobody can guess from the UI, so a suggestion that stayed at its
+  // scale-1 value would send a streamer to crop a card they just made bigger.
+  const sized = (spec, scale) =>
+    spec.replace(/\d+/g, (n) => String(Math.round(Number(n) * parseFloat(scale))));
+
+  // The whole card, at scale 1.
+  const CARD_SIZE = '460 × 560';
 
   const SHOW = [
     { key: 'always', label: 'Always' },
@@ -112,7 +134,8 @@
       layout: 'full',
       modules: null,   // the custom selection; null = all of them
       theme: 'carved',
-      scale: '1',
+      // A rung up from where this used to start. See SCALES.
+      scale: '1.25',
       // Post-game reveal: show up when a game lands, hold, then collapse to
       // the strip. Off by default, because an overlay that changes shape is a
       // surprise, and a surprise on a live stream is a bug report.
@@ -132,6 +155,16 @@
         // A saved `slate` still renders, but it is no longer in the picker, so
         // leaving it selected would show a control with nothing lit.
         if (!THEMES.some(t => t.key === prefs.theme)) prefs.theme = 'carved';
+        // Same rule for a scale saved while 0.85 was offered. Snapped to the
+        // nearest rung still on the ladder rather than reset to the default:
+        // somebody who picked the smallest size wants the smallest size, and
+        // that is now 1.
+        if (!SCALES.some(s => s.key === prefs.scale)) {
+          const want = parseFloat(prefs.scale) || 1;
+          prefs.scale = SCALES.reduce((best, s) =>
+            Math.abs(parseFloat(s.key) - want) < Math.abs(parseFloat(best.key) - want)
+              ? s : best).key;
+        }
       }
     } catch (e) { /* corrupt prefs just mean defaults */ }
 
@@ -209,7 +242,14 @@
     // flag, which is what puts the "not a real game" band across the card.
     const previewPayload = () => {
       const live = deps.overlayState.previewState();
-      if (previewAt === 'idle') return { ...live, scout: null, game: null };
+      // Waiting. The game STAYS in the payload and the phase attribute hides
+      // its panels, which is exactly what the Browser Source does when a reveal
+      // hold expires. Subtracting it here instead drew a board with no last
+      // result on it — a preview of a state the overlay is never actually in.
+      if (previewAt === 'idle') {
+        const base = live.game ? live : deps.overlayState.demoPreview();
+        return { ...base, scout: null };
+      }
       if (previewAt === 'live') {
         return live.scout
           ? { ...live }
@@ -226,6 +266,12 @@
       const host = el('overlay-preview');
       if (host) {
         host.dataset.theme = prefs.theme;
+        // The same two attributes shell.html puts on <body>, so the preview
+        // goes through the card's real rules instead of approximating them by
+        // taking things out of the payload. `phase` collapses the last game,
+        // `board` is what sizes the resting card. See overlay.css.
+        host.dataset.phase = previewAt === 'idle' ? 'idle' : 'post';
+        host.dataset.board = previewAt === 'idle' ? 'on' : 'off';
         host.style.fontSize = `${16 * parseFloat(prefs.scale)}px`;
         window.OverlayRender.render(host, previewPayload(), activeModules());
       }
@@ -276,11 +322,13 @@
     const obsPanel = () => {
       const p = panel('OBS setup');
 
+      const size = sized(CARD_SIZE, prefs.scale);
+
       const row = node('div', 'row');
       const copy = node('button', 'btn btn-primary', 'Copy Browser Source URL');
       copy.type = 'button';
       copy.addEventListener('click', () => copyUrl(copy, null,
-        'OBS URL copied. Add a Browser Source, suggested 460×560.'));
+        `OBS URL copied. Add a Browser Source, suggested ${size}.`));
       row.appendChild(copy);
 
       const player = node('button', 'btn', 'Open the player view');
@@ -293,7 +341,7 @@
       p.appendChild(row);
 
       p.appendChild(node('p', 'hint',
-        'In OBS: Sources, add Browser, paste the URL, size 460 × 560.'));
+        `In OBS: Sources, add Browser, paste the URL, size ${size}.`));
       p.appendChild(node('p', 'hint',
         'Turn off “Shutdown source when not visible”, or the overlay stops ' +
         'updating whenever the scene is not live.'));
@@ -321,6 +369,7 @@
         const on = activeModules();
         const list = node('div', 'mod-list');
         for (const m of MODULES) {
+          const size = sized(m.size, prefs.scale);
           const row = node('div', 'panel-row');
           const label = node('label', 'check');
           const box = document.createElement('input');
@@ -338,7 +387,7 @@
           label.appendChild(box);
           const text = node('span');
           text.appendChild(node('span', null, m.label));
-          text.appendChild(node('span', 'hint', m.size));
+          text.appendChild(node('span', 'hint', size));
           label.appendChild(text);
           row.appendChild(label);
 
@@ -346,7 +395,7 @@
           solo.type = 'button';
           solo.title = `A Browser Source showing only ${m.label.toLowerCase()}`;
           solo.addEventListener('click', () => copyUrl(solo, m.key,
-            `${m.label} URL copied. Add a Browser Source, suggested ${m.size}.`));
+            `${m.label} URL copied. Add a Browser Source, suggested ${size}.`));
           row.appendChild(solo);
           list.appendChild(row);
         }

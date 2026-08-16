@@ -268,10 +268,45 @@
     return box;
   }
 
-  // The footer. Session score plus career context, and the one thing on the
-  // card that survives the post-game hold: when the reveal expires the card
-  // collapses to this and the scout strip rather than vanishing.
-  function sessionModule (s) {
+  // How many games of the night the form rail draws. A long session runs past
+  // any width this card has, and the last dozen is the part anybody watching
+  // now was here for.
+  var FORM_MAX = 12;
+
+  // The night as a row of struck notches, oldest first.
+  //
+  // A score says 3–1 and nothing else; three wins then a loss and one loss then
+  // three wins are the same score and a completely different night. It is also
+  // the only thing on a resting card whose SHAPE changes as the session goes,
+  // which is most of what stops an idle overlay reading as a graphic that has
+  // frozen on somebody's scene.
+  function formRail (results) {
+    var list = (results || []).slice(-FORM_MAX);
+    if (!list.length) return null;
+    var rail = el('div', 'form');
+    var wins = 0;
+    var losses = 0;
+    list.forEach(function (r) {
+      if (r === 'win') wins++;
+      else if (r === 'loss') losses++;
+      rail.appendChild(el('span', 'pip ' + (r === 'win' ? 'w' : r === 'loss' ? 'l' : 'u')));
+    });
+    rail.setAttribute('aria-label', 'last ' + list.length + ' games, ' +
+      wins + ' won, ' + losses + ' lost');
+    return rail;
+  }
+
+  // The footer, and between games the whole card.
+  //
+  // Session score, the night's form, where you are on the ladder, and the last
+  // result — the things that are still true when no game is on. When the reveal
+  // hold expires this is what the card collapses TO, so it is built to be
+  // looked at on its own rather than to be a strip under something else.
+  //
+  // `live` is passed rather than read off the state, because the one line here
+  // that is about a finished game only belongs on a card that is not currently
+  // showing a match in progress.
+  function sessionModule (s, live) {
     var sess = s.session || { wins: 0, losses: 0 };
     var box = el('div', 'mod session');
     var top = el('div', 'sess-top');
@@ -286,6 +321,9 @@
       top.appendChild(el('span', 'streak', (st.kind === 'win' ? 'W' : 'L') + st.count + ' streak'));
     }
     box.appendChild(top);
+
+    var rail = formRail(sess.results);
+    if (rail) box.appendChild(rail);
 
     // Where you actually are on the ladder, and how far today has moved it.
     //
@@ -304,6 +342,33 @@
           (L.climb > 0 ? '+' : '') + L.climb + ' today'));
       }
       box.appendChild(line);
+    }
+
+    // The last result, as ONE labelled line: the resting card's stand-in for
+    // the verdict panel it collapsed.
+    //
+    // Not a stale verdict. That rule is about a finished result presented as
+    // the current one, and a line that says "last" is the opposite claim — it
+    // is also the difference between a resting card and an empty one. It comes
+    // off during a live match anyway, where the live block is the better use of
+    // the row and the ambiguity is real.
+    //
+    // Gated TWICE, because the two gates answer different questions. Here:
+    // is a match on. In overlay.css, on `data-board`: is the verdict panel
+    // itself on screen, which the renderer cannot know because the reveal
+    // phase settles it after this has drawn. Without the second gate a full
+    // card says "Victory vs Opponent" three times.
+    var g = s.game;
+    if (!live && g && (g.verdict === 'win' || g.verdict === 'loss')) {
+      var lastLine = el('div', 'sess-last');
+      lastLine.appendChild(el('span', 'k', 'last'));
+      lastLine.appendChild(el('span', 'r ' + g.verdict,
+        g.verdict === 'win' ? 'Victory' : 'Defeat'));
+      if (g.opponent && g.opponent.name) {
+        lastLine.appendChild(el('span', 'vs', 'vs ' + g.opponent.name));
+        if (g.opponent.race) lastLine.appendChild(crest(g.opponent.race, 'sm'));
+      }
+      box.appendChild(lastLine);
     }
 
     // Career context under the session line: recent form is not matchup
@@ -603,16 +668,25 @@
       // The scout card already said a game is on, so a second "waiting"
       // line under it would just repeat itself.
       //
+      // A plate rather than a sentence. This is what a machine that has never
+      // parsed a replay puts on a broadcast, and one line of dim 14px text in
+      // a corner does not read as "nothing has happened yet", it reads as the
+      // overlay having broken.
+      //
       // Tagged `post` because it stands in for the last game: it is the empty
-      // state of the block above, not part of the strip. Without the tag a
+      // state of the block above, not part of the board. Without the tag a
       // single-panel reveal source would sit on a broadcast showing "Waiting
-      // for a game." instead of getting out of the way.
-      card.appendChild(el('div', 'mod waiting post', 'Waiting for a game.'));
+      // for a game" instead of getting out of the way.
+      var wait = el('div', 'mod waiting post');
+      var waitMark = glyph('scout');
+      if (waitMark) wait.appendChild(waitMark);
+      wait.appendChild(el('span', null, 'Waiting for a game'));
+      card.appendChild(wait);
     }
 
-    // Last, because it is the footer and because it is what stays on screen
-    // when everything above it is hidden.
-    if (want.session) card.appendChild(sessionModule(s));
+    // Last, because it is the footer and because between games it is the whole
+    // card: everything above it is either hidden or was never there.
+    if (want.session) card.appendChild(sessionModule(s, live));
 
     root.appendChild(card);
     startClocks(root);

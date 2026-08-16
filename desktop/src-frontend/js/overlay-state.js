@@ -611,6 +611,14 @@
           wins: views.filter(v => v.result === 'win').length,
           losses: views.filter(v => v.result === 'loss').length,
           unknown: views.filter(v => !v.result).length,
+          // The night in order, oldest first, as the overlay's form rail.
+          //
+          // A total says 3–1 and nothing else; three wins then a loss and one
+          // loss then three wins are the same score and a completely different
+          // night. It is also the only thing on a resting card that changes
+          // shape as the session goes, which is what stops the idle overlay
+          // reading as a graphic that has frozen.
+          results: views.map(v => v.result || 'unknown'),
           streak: streakOf(views)
         },
         scout: st.scout,
@@ -648,7 +656,15 @@
       demo: true,
       needsIdentity: false,
       candidates: [],
-      session: { wins: 2, losses: 1, unknown: 0, streak: { kind: 'win', count: 2 } },
+      session: {
+        wins: 2,
+        losses: 1,
+        unknown: 0,
+        // A night with a shape to it. A flat run of wins would draw a working
+        // form rail while hiding every way the thing can be wrong.
+        results: ['win', 'loss', 'win'],
+        streak: { kind: 'win', count: 2 }
+      },
       trend: {
         recentForm: { n: 10, wins: 6, losses: 4 },
         matchup: { key: 'HvO', wins: 18, losses: 11, winRate: 62, games: 29 }
