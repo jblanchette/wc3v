@@ -27,6 +27,31 @@ replays/*.wc3v.gz
 replays/import/*.w3g
 replays/import/import.json
 
+# ── Bulk corpus ingest — LOCAL ONLY, never published ────────────────────────
+# The whole corpus acquisition/indexing toolchain stays on the local machine
+# and out of the public repo. Nothing tracked may `require` any of these:
+# lib/PlayerManager.js's mapAliases load is wrapped in try/catch precisely so
+# a clean checkout behaves exactly as it did before.
+tools/crawl-w3i.js
+tools/crawl-ingest.js
+tools/corpus-batch.js
+tools/corpus-db.js
+tools/corpus-coverage.js
+tools/gen-corpus-stats.js
+tools/gen-map-aliases.js
+tools/lib/map-coverage.js
+tools/lib/w3i-api.js
+tools/lib/replay-peek.js
+tools/lib/parse-pool.js
+helpers/mapAliases.json
+
+# Working data: staged .w3g/.nwg, the crawl journal, the ingest decision log,
+# crawler state, the derived SQLite index, and the generated aggregates.
+# data/ is ignored WHOLESALE — an earlier version listed only corpus.db* and
+# `git add -A` promptly offered to stage nine data/stats/*.json files.
+crawl/
+data/
+
 tools/map-data/
 
 marketing/raw/
