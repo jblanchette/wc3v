@@ -804,6 +804,13 @@
       + (b.matchups || []).map(function (x) { return '<span class="pill pill-dim">' + copy(x) + '</span>'; }).join('')
       + '</div></div></div>'
       + '<div class="best-body">'
+      // Watch actions and the replay list lead the card. They used to trail
+      // the notes and the full tier-by-tier tech path, which on a build with
+      // a long branch list put the one thing you came here to click a screen
+      // and a half below the title. Both are grid-column 1/-1, so this is
+      // purely DOM order — the two content columns still sit side by side.
+      + actions
+      + repsBlock
       + '<div>'
       + '<div class="fit-chips">' + fitChips(best) + '</div>'
       + (skillBuilds && anySkill ? '<div class="bo-panel bf-skill-panel">'
@@ -816,8 +823,6 @@
       + '<div class="bo-panel bf-tech-panel">' + techBlocks + '</div>'
       + branchNotes(b)
       + '</div>'
-      + repsBlock
-      + actions
       + '</div></div>'
       + (rest.length ? '<h3 class="close-head">Close matches, and how they differ from what you picked</h3>'
         + '<div class="close-grid">' + closeCards + '</div>' : '');

@@ -684,7 +684,11 @@ img { display: block; }
 .tech { background: var(--bo-bg); border: 1px solid var(--bo-border-solid); border-radius: var(--radius); padding: var(--sp-3) var(--sp-3) var(--sp-1); }
 .tech h4 { margin: 0 0 var(--sp-3); font-size: var(--fs-min); letter-spacing: 0.08em; text-transform: uppercase; color: var(--bo-text-dim); }
 
-.best-actions { grid-column: 1 / -1; display: flex; gap: var(--sp-3); flex-wrap: wrap; padding-top: var(--sp-3); border-top: 1px solid var(--border); margin-top: var(--sp-1); }
+/* Leads the card body, so no footer rule above it: .best-head already ends in
+   a border, and a second divider a row later just striped the top of the
+   card. An empty .best-actions (a build with no replay) now also leaves no
+   stray line behind. */
+.best-actions { grid-column: 1 / -1; display: flex; gap: var(--sp-3); flex-wrap: wrap; }
 .replay-note { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--text-muted); font-size: var(--fs-sm); padding: var(--sp-2) var(--sp-3); }
 
 /* pro replay list inside the best-fit card */
