@@ -37,6 +37,27 @@ const windowVisible = async () => {
   }
 };
 
+// Can ANYBODY see what the ladder poll would answer?
+//
+// Two consumers, and only one of them is this window. The other is an OBS
+// Browser Source that stays on a live broadcast after WC3V is out of the way —
+// and getting it out of the way means the TRAY, because that is what the close
+// button does and what starting at login does. Gating the poll on the window
+// alone froze the live match card on a streamer's scene for a whole session,
+// which is the one place this app is watched by other people.
+//
+// Errs toward yes: a failed count is treated as "somebody might be", because
+// the cost of guessing wrong that way is one HTTP request per poll and the cost
+// of guessing wrong the other way is a broadcast graphic that stops updating.
+const overlayWatched = async () => {
+  if (await windowVisible()) return true;
+  try {
+    return (await invoke('overlay_clients')) > 0;
+  } catch (e) {
+    return true;
+  }
+};
+
 const state = {
   roots: [],
   replays: [],
@@ -268,7 +289,7 @@ const scout = window.createScout({
   store,
   log,
   identityName: () => identity.name,
-  visible: windowVisible,
+  watched: overlayWatched,
   onMatch: (match, ladder, book) => {
     gamesView.setLiveMatch(match, ladder, book);
     overlayState.publishScout(match, ladder, book);

@@ -620,6 +620,17 @@ fn overlay_info(
     Ok(serde_json::json!({ "url": overlay.url(), "port": overlay.port }))
 }
 
+/// Is the overlay actually on a broadcast right now?
+///
+/// Its own command rather than a field on `overlay_info`, because this gets
+/// asked on a 20-second poll and `overlay_info` returns the URL with the access
+/// token in it. That value is built for the clipboard and has no business being
+/// fetched into a variable every twenty seconds.
+#[tauri::command]
+fn overlay_clients(overlay: State<'_, std::sync::Arc<overlay::Overlay>>) -> usize {
+    overlay.client_count()
+}
+
 /// Player-facing variant in the default browser (second-monitor view).
 /// Open a replay in the wc3v.com viewer, optionally seeked to a moment.
 ///
@@ -919,6 +930,7 @@ fn main() {
             scan_all,
             publish_overlay_state,
             overlay_info,
+            overlay_clients,
             open_player_view,
             open_in_viewer,
             get_autostart,

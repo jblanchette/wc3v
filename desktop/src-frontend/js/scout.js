@@ -14,8 +14,15 @@
 // what stops it reading as a band bolted onto the top of the screen.
 //
 // Polling stops the moment the feature is switched off, the identity has no
-// battle tag, or the window is hidden. A failed lookup clears the panel and
-// says nothing.
+// battle tag, or nobody can see the answer. A failed lookup clears the panel
+// and says nothing.
+//
+// "Nobody can see the answer" is NOT the same as "the window is hidden", which
+// is what this used to test. Closing WC3V hides it to the tray — that is what
+// the close button does, and what autostart-at-login does — so a streamer who
+// starts the app and gets it out of the way had the live match card freeze on
+// their broadcast for the entire session. The overlay is a second consumer that
+// outlives the window, and `watched()` is the question that covers both.
 
 (function () {
   'use strict';
@@ -30,7 +37,7 @@
   const LIVE_MS = 60000;
 
   window.createScout = (deps) => {
-    // deps: w3c, store, identityName(), visible(), log,
+    // deps: w3c, store, identityName(), watched(), log,
     //       onMatch(match, ladder, book) with null for "no live match"
     //       onLadder(mine) with your own rank, mmr and climb, or null
 
@@ -155,8 +162,9 @@
         clear();
         return;
       }
-      // Hidden to the tray. Leave whatever is on screen alone and wait.
-      if (!(await deps.visible())) return;
+      // Hidden to the tray AND not on a broadcast. Leave whatever is on screen
+      // alone and wait.
+      if (!(await deps.watched())) return;
 
       // First look of the session, so the climb has a zero to count from.
       //

@@ -1,5 +1,44 @@
 # WC3V Desktop: changelog
 
+## 1.0.2 — 16 Aug 2026
+
+An overlay pass driven by actually streaming with it. Both complaints turned
+out to share a cause: the card was built against a monitor at arm's length
+rather than a 720p window several metres away.
+
+### It is readable now
+
+The Size control ran 0.85 / 1 / 1.25 and started at 1, which puts the body type
+at 14 pixels — about nine of them once Twitch has encoded the stream and the
+viewer is not fullscreen. It now runs 1 to 2 and starts a rung higher, and the
+suggested Browser Source size follows the size you picked instead of quoting
+the old number back at you.
+
+Every crest, hero portrait and section mark was sized in pixels, so the Size
+control scaled all the words and left the art exactly where it was. The whole
+card scales together now.
+
+### Between games it says something
+
+The card used to shrink itself when there was nothing on: half the padding, a
+smaller wordmark, two grey lines in a corner. That is the state it is in for
+most of a night. It is a session board now — the score at four times its old
+size, a rail of notches for the night's results in order, your rank and MMR with
+the day's climb, and the last result on one line. Before your first game it
+shows a plate rather than a sentence.
+
+The live dot beside the clock breathes, so a card that is connected does not
+look identical to one that died an hour ago.
+
+### The live match card no longer freezes in the tray
+
+Closing WC3V hides it to the tray, which is what a streamer does after starting
+it, and starting at login goes straight there. The ladder poll behind the live
+match card stopped dead whenever that happened, so the card froze on the
+broadcast for the rest of the session. It now keeps polling for as long as a
+Browser Source is attached.
+
+
 ## 1.0.1 — 14 Aug 2026
 
 The Stream tab, and an overlay that has something to say while you are playing.

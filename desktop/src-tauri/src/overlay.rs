@@ -294,6 +294,22 @@ impl Overlay {
         clients.retain_mut(|c| c.write_all(msg.as_bytes()).and_then(|_| c.flush()).is_ok());
     }
 
+    /// How many Browser Sources are attached right now.
+    ///
+    /// Exists so the app can tell "nobody is looking at this" from "the window
+    /// is hidden but the card is on a live broadcast". Closing WC3V hides it to
+    /// the tray, which is exactly what a streamer does after starting it, and
+    /// the scout poll used to stop dead there — freezing the live match card on
+    /// somebody's stream for the whole session.
+    ///
+    /// Approximate on the high side by up to one keepalive interval: a socket
+    /// that has gone away is only noticed by the write that fails, and the
+    /// pinger runs every 20 seconds. Erring toward "somebody is watching" is
+    /// the right direction for a poll that costs one request.
+    pub fn client_count(&self) -> usize {
+        self.clients.lock().unwrap().len()
+    }
+
     /// Timing-independent comparison. Loopback timing attacks are mostly
     /// theoretical, but the constant-time fold costs nothing.
     fn token_ok(&self, presented: &str) -> bool {
@@ -660,6 +676,42 @@ mod tests {
         assert!(get(ov.port, &format!("/handoff?h={}", ids[0])).starts_with("HTTP/1.1 404"));
         let (head, _) = get_bytes(ov.port, &format!("/handoff?h={}", ids[ids.len() - 1]));
         assert!(head.starts_with("HTTP/1.1 200"));
+    }
+
+    /// The app polls the ladder while the window is hidden ONLY when a Browser
+    /// Source is attached, because closing WC3V hides it to the tray and a
+    /// streamer's overlay has to keep updating from there. A count that was
+    /// always zero would restore the freeze silently — every other test here
+    /// would still pass, and the symptom only shows up on somebody's live
+    /// broadcast.
+    #[test]
+    fn attached_browser_sources_are_counted() {
+        let ov = served("clients");
+        assert_eq!(ov.client_count(), 0, "nothing is attached yet");
+
+        let mut sse = TcpStream::connect(("127.0.0.1", ov.port)).unwrap();
+        sse.set_read_timeout(Some(Duration::from_secs(3))).unwrap();
+        write!(sse, "GET /events?token={} HTTP/1.1\r\nHost: x\r\n\r\n", ov.token).unwrap();
+        // Registration happens under the clients lock as part of serving the
+        // greeting, so read it back rather than sleeping on a race.
+        let mut reader = BufReader::new(sse.try_clone().unwrap());
+        let mut line = String::new();
+        reader.read_line(&mut line).unwrap();
+        assert!(line.starts_with("HTTP/1.1 200"), "{line}");
+        assert_eq!(ov.client_count(), 1, "an attached source was not counted");
+
+        // A source that goes away is reaped by the write that fails, which is
+        // why this is documented as approximate for up to one keepalive.
+        drop(reader);
+        drop(sse);
+        for _ in 0..50 {
+            ov.broadcast("data: {}\n\n");
+            if ov.client_count() == 0 {
+                return;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        panic!("a dropped source was never reaped");
     }
 
     #[test]
