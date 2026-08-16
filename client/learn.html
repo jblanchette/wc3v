@@ -54,10 +54,21 @@
   <meta name="twitter:description" content="Pick your race, then your hero, then your army. You get one Warcraft III build to learn and a pro replay to watch it in.">
   <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
 
+  <!-- Same three-sheet order as every other page: tokens define the
+       variables, main.css lays out the shared chrome (nav, skill band,
+       footer, skip link), redesign.css is a COMPONENT layer on top that only
+       re-skins. Dropping main.css here is what left the nav and footer as
+       unstyled link runs: redesign.css sets .site-footer colours but the box
+       itself (.site-footer-inner, padding, flex) only exists in main.css. -->
   <link rel="stylesheet" href="css/tokens.css?v=d4b178845b">
-  <link rel="stylesheet" href="css/redesign.css?v=2590c472a5">
+  <link rel="stylesheet" href="css/main.css?v=3d8aca9738">
+  <link rel="stylesheet" href="css/redesign.css?v=4fc50b05a7">
 </head>
-<body>
+<!-- site-page is not decoration: redesign.css hangs the --site-* token remap
+     off it, so without the class this page's shared chrome falls back to
+     main.css's originals and paints the nav in Human race blue (#4488FF)
+     while every other page uses the unified --accent. -->
+<body class="site-page">
   <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
        inserting its own, so this costs nothing at runtime and gives crawlers
        and JS-off visitors a real internal link graph. Keep the hrefs in sync
@@ -78,9 +89,11 @@
   </nav>
 
 
+  <!-- No wordmark here. SiteNav renders the permanent brand lockup directly
+       above this strip; a second WC3V stacked under the first read as a
+       duplicate header. This bar carries page context and its two actions. -->
   <header class="topbar">
-    <span class="topbar-logo">WC<span>3</span>V</span>
-    <span class="topbar-sub">Learning Warcraft III</span>
+    <span class="topbar-sub">Build Finder</span>
     <span class="topbar-spacer"></span>
     <button class="btn btn-ghost" type="button" onclick="BuildFinder.resetAll()">&#8635; Start over</button>
     <a class="mode-link" href="/" id="experienced-link">I'm experienced &#8594;</a>
@@ -132,25 +145,38 @@
 
   <script src="js/clientConfig.js?v=53d88a6933"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
-  <script src="js/SiteNav.js?v=b9e5834fd5"></script>
+  <script src="js/SiteNav.js?v=66285d9d27"></script>
   <script src="js/Security.js?v=a131c46e7c"></script>
   <script src="js/PlayerNames.js?v=9b16a85d90"></script>
   <script src="js/Glossary.js?v=da632b7348"></script>
-  <script src="js/BuildFinder.js?v=efa50c47b3"></script>
+  <script src="js/BuildFinder.js?v=0974c88187"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       // Chrome init order mirrors index.html: band before nav.
-      if (window.BandSwitcher && window.BandSwitcher.init) window.BandSwitcher.init();
-      if (window.SiteNav && window.SiteNav.render) window.SiteNav.render('home');
+      window.BandSwitcher.init();
+
+      // render(null), NOT 'home'. The 'home' branch of SiteNav swaps the band
+      // switcher for the homepage's #build-search box, which nothing on this
+      // page is wired to — /learn would get a dead search field and no way to
+      // leave the new-player experience.
+      SiteNav.render(null);
+
+      // The band switcher is the two-way door. index.html sends 'new' here;
+      // this sends 'improving'/'pro' back. Without it, clicking "Ladder" on
+      // this page would silently change the band and leave you standing on
+      // the new-player page.
+      window.BandSwitcher.onChange(function (band) {
+        if (band !== 'new') window.location.href = '/?level=' + encodeURIComponent(band);
+      });
 
       // "I'm experienced": flip the band to pro, then follow the link to /.
       var exp = document.getElementById('experienced-link');
       if (exp) exp.addEventListener('click', function () {
-        try { if (window.BandSwitcher && window.BandSwitcher.setBand) window.BandSwitcher.setBand('pro'); } catch (e) {}
+        try { window.BandSwitcher.setBand('pro'); } catch (e) {}
       });
 
       // Build the Build Finder (fetches the real manifest, renders into the page).
-      if (window.BuildFinder && window.BuildFinder.init) window.BuildFinder.init();
+      window.BuildFinder.init();
     });
   </script>
 

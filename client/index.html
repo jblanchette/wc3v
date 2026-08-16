@@ -18,14 +18,28 @@
        blocking. Don't reintroduce an interstitial here.
 
        Guarded to fire only at the root and never loop (/learn is not the
-       root, and it does not redirect back). -->
+       root, and it does not redirect back).
+
+       ALSO guarded on the referrer, which is what keeps it from being a
+       trap. Every in-site "Home" link and the wordmark point at "/", so a
+       visitor whose stored band is 'new' used to be bounced straight back to
+       /learn the moment they tried to leave it, with no way out but the one
+       "I'm experienced" link. A same-origin referrer means the visitor
+       clicked their way here on purpose, so we honour it. Arriving cold
+       (typed URL, bookmark, search result) still routes to the experience
+       they chose. -->
   <script>
   (function(){ try {
     var p = new URLSearchParams(location.search);
     var lvlParam = p.get('level');
     var band = lvlParam || localStorage.getItem('wc3v.level');
     var path = location.pathname.replace(/\/index\.html$/,'/');
-    if ((path === '/' || path === '') && band === 'new') {
+    var fromInside = false;
+    try {
+      fromInside = !!document.referrer &&
+        new URL(document.referrer).origin === location.origin;
+    } catch (e) {}
+    if ((path === '/' || path === '') && band === 'new' && !fromInside) {
       location.replace('/learn');
     }
   } catch(e){} })();
@@ -181,7 +195,7 @@
   <link rel="stylesheet" href="css/main.css?v=3d8aca9738">
   <!-- New design system: tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
-  <link rel="stylesheet" href="css/redesign.css?v=2590c472a5">
+  <link rel="stylesheet" href="css/redesign.css?v=4fc50b05a7">
   <style>
     body { margin: 0; }
   </style>
@@ -190,7 +204,7 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = 'f1892cb9fd'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '67dc816964'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
@@ -215,7 +229,7 @@
 
   <script src="js/clientConfig.js?v=53d88a6933"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
-  <script src="js/SiteNav.js?v=b9e5834fd5"></script>
+  <script src="js/SiteNav.js?v=66285d9d27"></script>
   <script src="js/TosBanner.js?v=16bfc558ad"></script>
   <script src="js/Security.js?v=a131c46e7c"></script>
   <script src="js/PlayerNames.js?v=9b16a85d90"></script>
@@ -247,7 +261,43 @@
       // band switch to 'new' from anywhere on this page routes there;
       // 'improving'/'pro' stay here and just refilter the pro grid.
       window.BandSwitcher.onChange((band) => { if (band === 'new') location.href = '/learn'; });
+      // onChange only fires on an actual change, so a visitor whose band is
+      // already 'new' (they walked back here from /learn) would find the
+      // "New to WC3" card inert. Route on the click itself, not the change.
+      document.addEventListener('click', (e) => {
+        const card = e.target.closest && e.target.closest('.skill-band-card[data-band="new"]');
+        if (card) location.href = '/learn';
+      });
       SiteNav.render('home');
+
+      // New-player banner. Starts `hidden` in the markup so a visitor who
+      // already dismissed it never sees it flash in before this runs.
+      const newbie = document.getElementById('hp-newbie');
+      if (newbie) {
+        let dismissed = false;
+        try { dismissed = localStorage.getItem('wc3v.newbannerDismissed') === '1'; } catch (e) {}
+        newbie.hidden = dismissed;
+        const dismissBtn = document.getElementById('hp-newbie-dismiss');
+        if (dismissBtn) dismissBtn.addEventListener('click', () => {
+          newbie.hidden = true;
+          try { localStorage.setItem('wc3v.newbannerDismissed', '1'); } catch (e) {}
+        });
+      }
+
+      // Library scale next to the section heading. Fire-and-forget: the grid
+      // does not wait on it, and a failed fetch just leaves the node hidden.
+      (async () => {
+        try {
+          const r = await fetch('/data/site-stats.json');
+          if (!r.ok) return;
+          const s = await r.json();
+          const el = document.getElementById('pfb-corpus');
+          if (!el || !s || !s.replays) return;
+          el.textContent = `${s.replays.toLocaleString()} pro replays`;
+          el.hidden = false;
+        } catch (e) {}
+      })();
+
       window.BugReport && window.BugReport.install();
 
       const my = new window.MyReplays();
@@ -997,6 +1047,29 @@
       </div>
     </div>
 
+    <!-- New-player banner. The Build Finder at /learn used to be reachable
+         only by noticing that one of three same-weight pills in the hero
+         strip was a different mode rather than a filter, which is not a
+         discoverable entry point for the exact audience least able to guess.
+         This is the signpost: full content width, above the build grid, one
+         sentence and one button.
+
+         Dismissal is remembered (wc3v.newbannerDismissed) so the pro
+         audience pays for it once. The skill-band "New to WC3" card is the
+         permanent way back in, so hiding this closes nothing off. -->
+    <aside class="hp-newbie" id="hp-newbie" hidden aria-labelledby="hp-newbie-title">
+      <img class="hp-newbie-ico" src="/assets/wc3icons/phea.jpg" alt="" aria-hidden="true"
+           loading="lazy" onerror="this.style.display='none'" />
+      <div class="hp-newbie-text">
+        <span class="hp-newbie-eyebrow">New to Warcraft III?</span>
+        <span class="hp-newbie-title" id="hp-newbie-title">Start with the Build Finder</span>
+        <span class="hp-newbie-sub">Pick your race, your hero and the army you like. You get one build to learn and a pro replay that plays it, with a walkthrough that stops at every step.</span>
+      </div>
+      <a class="hp-newbie-cta" href="/learn">Find my first build &rarr;</a>
+      <button class="hp-newbie-dismiss" type="button" id="hp-newbie-dismiss"
+              aria-label="Hide the new player banner" title="Hide this">&times;</button>
+    </aside>
+
     <div class="site-browse-layout">
 
       <!-- The rail and the build grid share a wrapper so the sticky rail is
@@ -1073,6 +1146,12 @@
                    race chips filled the row, costing a whole extra row above
                    the fold. applyFilter() finds it by ID, so it can live here. -->
               <div class="pfb-count" id="pfb-count" aria-live="polite"></div>
+              <!-- Library scale, as opposed to #pfb-count which is how many
+                   builds survived your filters. Fed from data/site-stats.json
+                   (generated by tools/gen-seo.js) so the number cannot drift
+                   from the corpus the way a hardcoded one would. Starts
+                   `hidden` and stays that way if the fetch fails. -->
+              <div class="pfb-corpus" id="pfb-corpus" hidden></div>
             </div>
 
             <!-- The drop bar. The four IDs below are the entire JS contract

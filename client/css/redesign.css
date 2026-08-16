@@ -599,7 +599,11 @@ img { display: block; }
 .race-vibe { font-size: var(--fs-label); color: var(--text-muted); margin: 0; }
 
 /* hero cards (§6.5 race-data via icon-frame border) */
-.hero-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--sp-3); }
+/* auto-FIT, not auto-fill. A race offers 3-4 heroes, and auto-fill keeps the
+   empty tracks of a 1180px row alive, pinning every card to its 190px
+   minimum and wrapping the blurbs to three words a line. auto-fit collapses
+   the empty tracks so the real cards share the width. */
+.hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: var(--sp-3); }
 .pick {
   display: flex; gap: 13px; align-items: flex-start; text-align: left; cursor: pointer; font-family: inherit;
   background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
@@ -615,7 +619,7 @@ img { display: block; }
 .pick.sel .pick-check { opacity: 1; }
 
 /* unit cards (multi-pick) */
-.unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--sp-3); }
+.unit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(176px, 1fr)); gap: var(--sp-3); }
 .unit-card {
   text-align: left; cursor: pointer; font-family: inherit;
   background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
@@ -639,6 +643,12 @@ img { display: block; }
 /* CTA bar */
 .cta-bar { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; margin: var(--sp-5) 0 var(--sp-2); padding: 18px 22px;
            background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+/* An author `display` beats the UA sheet's `[hidden] { display: none }`, so
+   without this the bar ignored its own hidden attribute: "Show me my build"
+   sat on screen before a race was picked (and again after Start over), where
+   clicking it does nothing because showMatches() returns early. .step and
+   .results already carry the same guard. */
+.cta-bar[hidden] { display: none; }
 .cta-summary { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; }
 .cta-spacer { flex: 1; }
 
@@ -960,6 +970,132 @@ img { display: block; }
 }
 .hp-hero .skill-band { flex-shrink: 0; }
 
+/* ── New-player banner ─────────────────────────────────────────
+   The signpost to /learn. Carved bronze rather than a notification
+   bar: a full border in tarnished gold over a warm wash, no single
+   edge stripe, nothing that glows. The sheen is a slow highlight
+   crossing the panel the way light moves over relief, not a pulse.
+
+   The whole strip is one flex row so the icon, the copy and the CTA
+   share a baseline; it collapses to a stack below 760px. */
+.hp-newbie {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: var(--page-max);
+  margin: 0 auto var(--sp-5);
+  padding: var(--sp-4) var(--sp-5);
+  border: 1px solid var(--gold-edge);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(240,178,50,0.10), rgba(240,178,50,0.04)),
+    var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.hp-newbie[hidden] { display: none; }
+
+/* The sheen. A wide, very low-alpha diagonal band that crosses once
+   every 9s. Sits under the content (z-index) and ignores pointers. */
+.hp-newbie::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 35%,
+    rgba(255,225,150,0.09) 50%,
+    transparent 65%);
+  transform: translateX(-100%);
+  animation: hp-newbie-sheen 9s var(--ease) 1.5s infinite;
+}
+@keyframes hp-newbie-sheen {
+  0%   { transform: translateX(-100%); }
+  55%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+.hp-newbie-ico {
+  width: var(--ico-lg);
+  height: var(--ico-lg);
+  flex: 0 0 auto;
+  border-radius: var(--radius);
+  border: 2px solid var(--gold-edge);
+}
+.hp-newbie-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hp-newbie-eyebrow {
+  font-size: var(--fs-min);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dom-gold);
+}
+.hp-newbie-title {
+  font-size: var(--fs-h3);
+  font-weight: 800;
+  color: var(--text);
+}
+.hp-newbie-sub {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.hp-newbie-cta {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hit-min);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gold-deep);
+  background: linear-gradient(180deg, var(--gold), var(--gold-deep));
+  color: var(--gold-ink);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--dur-fast), filter var(--dur-fast);
+}
+.hp-newbie-cta:hover { filter: brightness(1.08); text-decoration: none; }
+.hp-newbie-cta:active { transform: translateY(1px); }
+
+.hp-newbie-dismiss {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.hp-newbie-dismiss:hover { color: var(--text); border-color: var(--border-2); }
+
+@media (max-width: 760px) {
+  .hp-newbie { flex-wrap: wrap; padding: var(--sp-4); }
+  .hp-newbie-text { flex: 1 1 100%; order: 2; }
+  .hp-newbie-cta { order: 3; margin-left: 0; flex: 1 1 100%; }
+  .hp-newbie-dismiss { order: 1; margin-left: auto; }
+}
+
+/* The sheen is decoration; a reduced-motion visitor loses nothing. */
+@media (prefers-reduced-motion: reduce) {
+  .hp-newbie::after { animation: none; }
+}
+
 /* ── Slim drop bar ─────────────────────────────────────────────
    The single upload affordance for the whole page. One row, full
    content width. The old design spent an entire 380px column and a
@@ -1122,6 +1258,14 @@ img { display: block; }
 .site-pros-title { color: var(--text); font-weight: 800; }
 .pfb-label, .pfb-pop-label { color: var(--text-dim); font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .pfb-count { color: var(--text-dim); font-size: var(--fs-label); }
+/* Library scale. Sits a step brighter than .pfb-count so the permanent fact
+   is not outranked by the transient filter tally beside it. */
+.pfb-corpus {
+  color: var(--text-muted);
+  font-size: var(--fs-label);
+  font-variant-numeric: tabular-nums;
+}
+.pfb-corpus[hidden] { display: none; }
 
 /* "More filters" + "Advanced search" buttons: chrome, not amber. */
 .pfb-more-btn,

@@ -90,6 +90,14 @@
   }
   // sanitize + escape build prose in one step
   function copy(s) { return esc(cleanCopy(s)); }
+  // Same, but jargon terms get a glossary tooltip. Only for OUR prose, never
+  // for replay-derived text. linkifyText escapes internally and degrades to
+  // plain escaped text before load() resolves, so this is safe either way.
+  function gloss(s) {
+    var clean = cleanCopy(s);
+    if (g.Glossary && g.Glossary.linkifyText) return g.Glossary.linkifyText(clean);
+    return esc(clean);
+  }
   // sanitize + escape replay-derived names (short, attacker-controllable)
   function repName(s) {
     if (g.Security && g.Security.sanitizeUserText) {
@@ -189,8 +197,12 @@
     small: { label:'Light',     icon:'/assets/wc3icons/def-light.jpg' },
     none:  { label:'Unarmored', icon:'/assets/wc3icons/def-unarmored.jpg' }
   };
+  // Keys must cover every `army` value in builds-manifest.json. A missing key
+  // falls through to the raw manifest value, which renders as a bare
+  // lowercase word ("ranged") next to properly-cased pills.
   var ARMY = {
     ground:{ label:'Ground army',  blurb:'Melee + ranged on foot' },
+    ranged:{ label:'Ranged army',  blurb:'Shooters do the damage' },
     air:   { label:'Air army',     blurb:'Flyers do the damage' },
     caster:{ label:'Caster-heavy', blurb:'Spells win the fight' },
     mixed: { label:'Mixed army',   blurb:'A bit of everything' }
@@ -502,12 +514,32 @@
   };
   function byId(id) { return document.getElementById(id); }
   function buildsForRace(rk) { return BUILDS.filter(function (b) { return b.race === rk; }); }
+  // Steps 2 and 3 only offer picks the library can actually deliver. Offering
+  // a hero or unit no build uses turns the pick into a promise the results
+  // page then has to break ("Leads with Death Knight, not Dread Lord"). Both
+  // fall back to the full static list if the manifest has not loaded, so an
+  // empty BUILDS never renders an empty step.
+  function offeredIds(rk, pick) {
+    var used = new Set();
+    buildsForRace(rk).forEach(function (b) { pick(b).forEach(function (id) { used.add(id); }); });
+    return used;
+  }
+
   function heroesForRace(rk) {
     // playable heroes for the race (neutral N heroes are second picks, not step-2 options)
-    return Object.keys(HEROES).map(function (k) { return HEROES[k]; }).filter(function (h) { return h.race === rk; });
+    var all = Object.keys(HEROES).map(function (k) { return HEROES[k]; })
+      .filter(function (h) { return h.race === rk; });
+    var used = offeredIds(rk, buildHeroes);
+    var offered = all.filter(function (h) { return used.has(h.id); });
+    return offered.length ? offered : all;
   }
+
   function unitsForRace(rk) {
-    return Object.keys(UNITS).map(function (k) { return UNITS[k]; }).filter(function (u) { return u.race === rk && u.id !== 'ehnt'; });
+    var all = Object.keys(UNITS).map(function (k) { return UNITS[k]; })
+      .filter(function (u) { return u.race === rk && u.id !== 'ehnt'; });
+    var used = offeredIds(rk, function (b) { return b.keyUnits || []; });
+    var offered = all.filter(function (u) { return used.has(u.id); });
+    return offered.length ? offered : all;
   }
 
   function renderRaces() {
@@ -530,6 +562,10 @@
 
   function pickRace(rk) {
     sel.race = rk; sel.hero = null; sel.units = new Set();
+    // Real engagement with the Build Finder: now the band is worth keeping.
+    try {
+      if (g.BandSwitcher && g.BandSwitcher.setBand) g.BandSwitcher.setBand('new');
+    } catch (e) {}
     document.querySelectorAll('#race-grid .race-card').forEach(function (c) {
       var on = c.dataset.race === rk;
       c.classList.toggle('sel', on);
@@ -740,11 +776,11 @@
       + (guideHref ? '<a class="btn" href="' + guideHref + '">📖 Open guided walkthrough</a>' : '')
       + '</div>';
 
-    var notes = (b.beginnerNotes && b.beginnerNotes.length)
-      ? '<ol class="notes">' + b.beginnerNotes.map(function (n) { return '<li>' + copy(n) + '</li>'; }).join('') + '</ol>'
-      : ((b.strategyPoints && b.strategyPoints.length)
-        ? '<ol class="notes">' + b.strategyPoints.map(function (n) { return '<li>' + copy(n) + '</li>'; }).join('') + '</ol>'
-        : '<p class="muted">A guided walkthrough for this build is coming soon.</p>');
+    var noteList = (b.beginnerNotes && b.beginnerNotes.length) ? b.beginnerNotes
+      : ((b.strategyPoints && b.strategyPoints.length) ? b.strategyPoints : null);
+    var notes = noteList
+      ? '<ol class="notes">' + noteList.map(function (n) { return '<li>' + gloss(n) + '</li>'; }).join('') + '</ol>'
+      : '<p class="muted">A guided walkthrough for this build is coming soon.</p>';
 
     var closeCards = rest.map(function (m) {
       return '<div class="close-card">'
@@ -803,10 +839,20 @@
   // ── init: fetch the real manifest, then render the picker ──────
   function init() {
     sel.units = new Set();
-    // Landing here = "new player" band; remember it (shared BandSwitcher key).
+    // Reflect the "new player" band in the chrome so the nav switcher shows
+    // where you are, but do NOT write it to storage yet. Persisting on mere
+    // arrival means one curious click on a shared /learn link permanently
+    // rewrites which homepage that visitor gets. pickRace() persists it once
+    // they actually engage.
     try {
-      if (g.BandSwitcher && g.BandSwitcher.setBand) g.BandSwitcher.setBand('new');
+      if (g.BandSwitcher && g.BandSwitcher.setBand) {
+        g.BandSwitcher.setBand('new', { persist: false, updateUrl: false });
+      }
     } catch (e) {}
+
+    // Warm the jargon glossary so the tooltips in the results notes are live
+    // by the time anyone reaches them. Failure is silent by design.
+    try { if (g.Glossary && g.Glossary.load) g.Glossary.load(); } catch (e) {}
 
     fetch('/data/builds-manifest.json')
       .then(function (r) { return r.json(); })

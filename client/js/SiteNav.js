@@ -128,3 +128,9 @@ const SiteNav = {
     }
   }
 };
+
+// A top-level `const` in a classic script lands in the global LEXICAL scope,
+// not on `window` — so `SiteNav.render()` resolves but `window.SiteNav` is
+// undefined. learn.html guarded on the `window.` form and silently never
+// rendered a nav for it. Publish it explicitly so both spellings work.
+window.SiteNav = SiteNav;

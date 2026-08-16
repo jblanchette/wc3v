@@ -50,7 +50,13 @@ helpers/mapAliases.json
 # data/ is ignored WHOLESALE — an earlier version listed only corpus.db* and
 # `git add -A` promptly offered to stage nine data/stats/*.json files.
 crawl/
-data/
+# Anchored to the repo root ON PURPOSE. Unanchored, `data/` also swallowed
+# client/data/ — the shipped site data. The 345 files already tracked there
+# predate the rule, so the breakage was invisible until a NEW generated file
+# (site-stats.json) silently refused to stage.
+/data/
+# The pre-regeneration summaries, kept on disk as a reference. Not shipped.
+client/data/summaries/old/
 
 tools/map-data/
 
