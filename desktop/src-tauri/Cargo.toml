@@ -1,6 +1,10 @@
 [package]
 name = "wc3v-desktop"
-version = "1.0.0"
+# Kept in step with tauri.conf.json by hand. Nothing reads this one — the
+# bundle, the updater manifest and the download page all take their version
+# from tauri.conf.json — but a crate that says 1.0.0 while the product ships
+# 1.0.2 is a lie sitting in the first ten lines of the build.
+version = "1.0.2"
 description = "WC3V — local replay auto-parse and overlay"
 authors = ["Jeff Blanchette"]
 license = "GPL-3.0"
