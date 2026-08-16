@@ -84,6 +84,10 @@ the stacking context, not to compete vertically.
 Reserved corner zones (always grep CSS for `position: absolute` corner offsets before placing anything here):
 
 - **Upper-right** — `.camera-toolbar` (`top: 0.5rem; right: 0.5rem; z 20`). Do not overlap.
+  Its height is **not fixed**: the auto-return notice (`.cam-return`) adds ~19px to the
+  bottom whenever a hand-driven FREE camera is counting back down. `#event-feed` handles
+  this by stepping its `top` down under `#main-wrapper.cam-return-open`; anything else
+  placed below the toolbar needs the same treatment.
 - **Upper-left** — `#map-name-overlay` and the "SPLIT VIEW" label.
 - **Lower-right** — `.minimap-pip` (`bottom: 0.75rem; right: 0.75rem; z 5`) inside `#bottom-right-stack` (`bottom: 10px; right: 12px; z 20`). Do not overlap.
 - **Lower-left** — `#bottom-left-stack` / `#insights-panel` (`bottom: 10px; left: 10px; z 20`, 320px wide). Do not overlap. (This used to be documented as "the only consistently clear corner"; it has not been since the Insights panel landed there.)

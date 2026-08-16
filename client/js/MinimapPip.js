@@ -155,6 +155,11 @@
       if (this.viewer.broadcastCamera && this.viewer.broadcastCamera.enabled) {
         this.viewer.broadcastCamera.setMode(window.CameraMode.FREE);
       }
+      // _moveCameraFromEvent drives d3 programmatically from a NATIVE pointer
+      // listener, so d3.event is unset, sourceEvent is null, and the camera's
+      // own zoom hook never sees this as a user gesture. Say so explicitly or
+      // the auto-return countdown misses the whole minimap path.
+      this._noteGesture();
 
       this._moveCameraFromEvent(e);
     }
@@ -163,7 +168,13 @@
       if (!this._isDragging) return;
       e.preventDefault();
       e.stopPropagation();
+      this._noteGesture();
       this._moveCameraFromEvent(e);
+    }
+
+    _noteGesture () {
+      const bc = this.viewer.broadcastCamera;
+      if (bc && bc.noteUserGesture) bc.noteUserGesture();
     }
 
     _handlePointerUp (e) {

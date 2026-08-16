@@ -1293,6 +1293,16 @@ const Wc3vViewer = class {
     if (oldToolbar) oldToolbar.remove();
     container.appendChild(toolbar);
 
+    // Hands the camera back to the last chosen mode a few seconds after the
+    // viewer stops dragging it around. Rebuilt with the toolbar it lives in —
+    // destroy() first, or the previous load's interval and camera listeners
+    // outlive the node they were drawing into.
+    if (this.cameraAutoReturn) this.cameraAutoReturn.destroy();
+    if (window.CameraAutoReturn) {
+      this.cameraAutoReturn = new CameraAutoReturn(this);
+      this.cameraAutoReturn.mount(toolbar);
+    }
+
     toolbar.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-mode]');
       if (btn) this._handleCameraButton(btn.dataset.mode);
@@ -1321,6 +1331,10 @@ const Wc3vViewer = class {
     if (!this.broadcastCamera) return;
     // Non-1v1: per-player cameras are unsupported.
     if (this.isNonOneVsOne() && (mode === 'p1' || mode === 'p2')) return;
+    // Record the choice BEFORE the mode change, so the modechange that follows
+    // reads the new target. This is the only path that marks a mode as chosen
+    // rather than merely arrived at — buttons and the a/1/2/f hotkeys both.
+    if (this.cameraAutoReturn) this.cameraAutoReturn.setExplicitMode(mode);
     switch (mode) {
       case 'auto':  this.broadcastCamera.setMode(CameraMode.ACTION_FOCUS); break;
       case 'p1':    this.broadcastCamera.setMode(CameraMode.FOLLOW_HERO, 0); break;

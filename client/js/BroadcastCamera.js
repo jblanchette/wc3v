@@ -269,27 +269,53 @@
       this._zoomDirWall = 0;           // wall time the zoom direction last flipped
       this._splitLerp = null;          // smoothed per-half split targets {top,bottom}
 
-      // Multi-listener emitter for mode changes. Existing single-callback
-      // `onModeChange` keeps working (still invoked by _emitModeChange) so
-      // call sites that assign `bc.onModeChange = fn` don't need to migrate.
+      // Multi-listener emitter. Two events:
+      //   'modechange'  — the camera mode changed (payload: the new mode)
+      //   'usergesture' — the viewer moved the camera by hand (no payload)
+      // Existing single-callback `onModeChange` keeps working (still invoked by
+      // _emitModeChange) so call sites that assign `bc.onModeChange = fn` don't
+      // need to migrate.
       this.onModeChange = null;
-      this._modeListeners = [];
+      this._listeners = {};
     }
 
     on (event, fn) {
-      if (event !== 'modechange' || typeof fn !== 'function') return;
-      this._modeListeners.push(fn);
+      if (typeof fn !== 'function') return;
+      (this._listeners[event] || (this._listeners[event] = [])).push(fn);
     }
 
     off (event, fn) {
-      if (event !== 'modechange') return;
-      const i = this._modeListeners.indexOf(fn);
-      if (i >= 0) this._modeListeners.splice(i, 1);
+      const list = this._listeners[event];
+      if (!list) return;
+      const i = list.indexOf(fn);
+      if (i >= 0) list.splice(i, 1);
+    }
+
+    _emit (event, payload) {
+      const list = this._listeners[event];
+      if (!list) return;
+      // Copy: a listener may off() itself (the auto-return notice does, on
+      // teardown) and splicing the live array would skip its neighbour.
+      for (const fn of list.slice()) fn(payload);
     }
 
     _emitModeChange () {
-      for (const fn of this._modeListeners) fn(this.mode);
+      this._emit('modechange', this.mode);
       if (this.onModeChange) this.onModeChange(this.mode);
+    }
+
+    /**
+     * The viewer moved the camera by hand. Raised by `attachToZoom` for every
+     * real d3 transform, and called directly by paths d3 can't see (the minimap
+     * pip drives the zoom programmatically from a native pointer listener, so
+     * `d3.event.sourceEvent` is null there and the zoom hook never fires).
+     *
+     * Distinct from 'modechange' on purpose: only the FIRST drag event demotes
+     * the camera, but a CONTINUED drag still has to push the auto-return
+     * deadline back, and a mode change won't fire again to say so.
+     */
+    noteUserGesture () {
+      this._emit('usergesture');
     }
 
     reset () {
@@ -408,6 +434,10 @@
             this._splitTransition = 0;
             this._emitModeChange();
           }
+          // Outside the demotion guard: this fires for EVERY frame of a drag,
+          // not just the one that dropped us to FREE. CameraAutoReturn needs
+          // the whole gesture to keep its countdown pushed back.
+          this.noteUserGesture();
         }
       });
     }

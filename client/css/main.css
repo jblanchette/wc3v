@@ -5497,6 +5497,68 @@ body {
   pointer-events: none;
 }
 
+/* ---- Auto-return notice -----------------------------------------------
+   Shown only while a hand-driven FREE camera is counting back down to the
+   mode the viewer last chose. A CAPTION under the row, not a fifth button:
+   same quiet type as .cam-label (see its note — this cluster is corner
+   chrome read as one unit, which is why it sits under the 0.8rem floor),
+   no border, no fill, no hover box. The drain bar is a meter with its own
+   track — it is not an edge accent on the toolbar. */
+.cam-return {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  margin: 0;
+  padding: 1px 2px 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+/* `hidden` alone loses to display:flex. */
+.cam-return[hidden] { display: none; }
+
+.cam-return-text {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim, #6b7290);
+  text-align: center;
+  line-height: 1;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.15s;
+}
+.cam-return:hover .cam-return-text,
+.cam-return:focus-visible .cam-return-text { color: var(--text-muted, #9ca3b8); }
+
+/* Fixed cell for the digit so 5 → 4 → 3 doesn't shuffle the line. */
+.cam-return-count {
+  display: inline-block;
+  min-width: 1.1em;
+  text-align: left;
+}
+
+.cam-return-bar {
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.10);
+  overflow: hidden;
+}
+.cam-return-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  /* The toolbar's own active blue, held well back — this reports, it doesn't
+     announce. No transition: a re-arm mid-drag should visibly snap to full. */
+  background: rgba(140, 200, 255, 0.55);
+}
+/* Playback paused: the countdown is holding, not broken. */
+.cam-return-held .cam-return-fill { background: rgba(255, 255, 255, 0.22); }
+
 /* Camera mode indicators on player panels */
 .up-camera-follow,
 .up-camera-auto {
@@ -17201,7 +17263,12 @@ button.mcb-summary {
   gap: 5px;
   pointer-events: none;   /* feed is glanceable, not interactive */
   z-index: 5;
+  transition: top var(--dur, 0.18s) var(--ease, ease);
 }
+/* The camera auto-return notice adds a caption line + drain bar to the bottom
+   of the toolbar (3px gap + ~11px text + 3px gap + 2px bar ≈ 19px), so the feed
+   steps down for as long as it's up. CameraAutoReturn toggles the class. */
+#main-wrapper.cam-return-open #event-feed { top: 93px; }
 #event-feed.ev-feed-off { display: none; }
 .ev-feed-row {
   animation: evRowIn 0.18s ease-out;

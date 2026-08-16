@@ -85,6 +85,18 @@
                                    // reads as creeping around forever)
       splitReentryCooldownMs: 12000, // after leaving split, single-view holds at least this long
       splitLerpRate: 2.6           // per-second chase rate for the smoothed split halves
+    },
+
+    // --- auto-return to the broadcast (CameraAutoReturn) ---------------------
+    // Grabbing the camera by hand is a detour, not a decision: after the viewer
+    // stops fiddling, the camera hands itself back to whichever mode they last
+    // CHOSE. Both numbers are pure feel — how long a look-around gets before the
+    // broadcast resumes, and how often a continuous drag is allowed to push that
+    // deadline back (without the throttle, every frame of a drag would restart
+    // the countdown and the bar would never move).
+    autoReturn: {
+      holdMs: 3000,
+      rearmThrottleMs: 1000
     }
   };
 
