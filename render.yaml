@@ -68,6 +68,13 @@ services:
       - path: /data/unit-balance-lite.json
         name: Cache-Control
         value: public, max-age=86400, must-revalidate
+      # Corpus counts on the homepage, fetched unversioned (no ?v=), so with
+      # no rule here it would fall to heuristic freshness and the replay count
+      # could sit stale for a long time after a regen — the same gap
+      # builds-manifest.json above was fixed for.
+      - path: /data/site-stats.json
+        name: Cache-Control
+        value: public, max-age=300, must-revalidate
       # The parser worker + its bundle are loaded by importScripts()/new Worker()
       # WITHOUT a ?v= query (can't self-reference the hash), so they must keep a
       # revalidating TTL rather than being immutable. They change rarely.
