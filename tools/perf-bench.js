@@ -130,7 +130,12 @@ function resolveFile (urlStr) {
 
   const page = await browser.newPage();
   const vp = (args.viewport || '1600x900').split('x').map(Number);
-  await page.setViewport({ width: vp[0], height: vp[1] });
+  // --dsf=2 for --still shots of the CSS-pixel overlays (the HUD, the camera
+  // toolbar). Those are ~600px wide at dpr 1, which is too small to judge
+  // 11px engraved chrome in. Leave it at 1 for timing runs: it changes what
+  // the rasterizer has to do.
+  const dsf = Number(args.dsf || 1);
+  await page.setViewport({ width: vp[0], height: vp[1], deviceScaleFactor: dsf });
 
   const misses = [];
   const errors = [];

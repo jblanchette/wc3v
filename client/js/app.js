@@ -4007,6 +4007,12 @@ const Wc3vViewer = class {
       if (list.length === 2) domInfos = list;
     }
 
+    // Tier progression for the food row's lane ribbon. tierStream is ordered
+    // and opens with a tier-1 record near t=0; the HUD resolves the segments
+    // itself, this just maps to its {t, tier} shape.
+    const tiersOf = (cp) => ((cp && cp.tierStream) || [])
+      .map(e => ({ t: e.gameTime, tier: Math.min(3, e.tier) }));
+
     const foodInfos = [];
     for (const [pid, p] of entries) {
       if (p && p.resourceSeries && p.resourceSeries.length) {
@@ -4015,6 +4021,7 @@ const Wc3vViewer = class {
         // ink now, so the icon is what says whose supply is whose.
         foodInfos.push({
           id: pid, color: colorOf(pid), race: cp && cp.race,
+          tiers: tiersOf(cp),
           series: p.resourceSeries
         });
       }

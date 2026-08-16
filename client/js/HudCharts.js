@@ -87,6 +87,26 @@
   const UPKEEP_LOW = 50;
   const UPKEEP_HIGH = 80;
 
+  // Tier lanes. With exactly two players the food channel splits in half and
+  // each half is washed with its owner's colour, stepping brighter when that
+  // player techs. Tier is background context — which units they can even
+  // build — so it belongs behind the plot rather than as a third line in it.
+  //
+  // The step is ALPHA, not hue: a hue shift would put a second identity colour
+  // in a lane whose entire job is to say "this player", and the lane must not
+  // stop being theirs when they hit T2. Index is the tier; 0 is unused.
+  //
+  // T1 is 0.10, not the 0.06 it started at: below that the two halves are
+  // invisible for the whole opening and the split only appears when somebody
+  // techs, which is backwards — the lane says whose half it is, the step says
+  // what they have. Measured against the plate at 1x and 2x.
+  const TIER_ALPHA = [0, 0.10, 0.18, 0.28];
+  // The unplayed part of the ribbon, same idea as FAINT_ALPHA on the lines —
+  // the tier timeline is visible ahead of the cursor but recessed, and the
+  // reveal clip brings it up as playback reaches it.
+  const TIER_FAINT = 0.34;
+  const TIER_MARK_PX = 11;   // engraved chrome, same exception as TITLE_PX
+
   class HudCharts {
     constructor (viewer) {
       this.viewer = viewer;
@@ -171,8 +191,10 @@
 
     // dominanceInfos: [{ id, color, samples:[{t,score}] }] — pass null/[] to
     //   omit the dominance row (non-1v1, or no dominance data).
-    // foodInfos: [{ id, color, race, series:[{t,foodUsed,foodMax}] }] — `race`
-    //   is a RaceLabels key ('O'/'H'/'U'/'E') and picks the readout portrait.
+    // foodInfos: [{ id, color, race, tiers, series:[{t,foodUsed,foodMax}] }] —
+    //   `race` is a RaceLabels key ('O'/'H'/'U'/'E') and picks the readout
+    //   portrait; `tiers` is [{t,tier}] and drives the lane ribbon (two
+    //   players only). Both are optional.
     setPlayers (dominanceInfos, foodInfos) {
       this._dom = (dominanceInfos && dominanceInfos.length >= 2) ? dominanceInfos : null;
       this._food = (foodInfos && foodInfos.length) ? foodInfos : null;
@@ -382,10 +404,150 @@
         kind: 'food', title: 'FOOD',
         yMin: 0, yMax: max,
         series: this._food.map(p => ({
-          color: p.color, pts: p.series, key: 'foodUsed', race: p.race
+          color: p.color, pts: p.series, key: 'foodUsed', race: p.race,
+          tiers: p.tiers
         })),
         readout: true,
+        // Half the channel per player, only at two players. At three or four
+        // the lanes are 8px tall and a tier mark cannot be set in them, so the
+        // row falls back to a plain channel rather than an illegible one. The
+        // dominance row never gets lanes: it is already split about the 50
+        // groove and a second split would fight it.
+        lanes: this._food.length === 2,
         guides
+      });
+    }
+
+    // tierStream -> contiguous [{from, to, tier}] across the visible axis,
+    // with tier 1 filling anything the stream does not cover.
+    //
+    // These are the times the upgrade was ORDERED, not finished (lib/Building.js
+    // fires the tier event at initiation), which is also the instant the player
+    // status box starts reading "Tier N". Adding the ~140s build time here would
+    // put two surfaces in the same viewer on different tiers at the same moment.
+    _tierSegments (tiers) {
+      const out = [];
+      let tier = 1;
+      let from = this._t0;
+      if (tiers) {
+        for (const e of tiers) {
+          if (!e || !(e.tier > tier)) continue;   // stream is ordered; ignore repeats
+          if (e.t <= this._t0) { tier = e.tier; continue; }
+          if (e.t >= this._endT) break;
+          out.push({ from, to: e.t, tier });
+          from = e.t;
+          tier = e.tier;
+        }
+      }
+      out.push({ from, to: this._endT, tier });
+      return out;
+    }
+
+    // One lane per player, painted straight onto the channel floor so the
+    // minute grid, the upkeep grooves, the curves and the glass all sit over
+    // it. Lane order matches the readout gutter (series 0 on top), so the
+    // portrait beside each numeral names the lane it lines up with.
+    //
+    // Called twice: faint into the chrome bitmap, full strength into bright,
+    // so the progressive reveal clip lifts the ribbon exactly as it does the
+    // lines. The lane divider is static chrome and only goes into the first
+    // pass; the tier marks are a separate pass (_paintTierMarks) that has to
+    // run after the curves are down.
+    _paintTierLanes (g, row, opts) {
+      const F = window.ForgedPanel;
+      const n = row.series.length;
+      const laneH = row.h / n;
+
+      g.save();
+      F.path(g, row.x, row.y, row.w, row.h, 4);
+      g.clip();
+
+      for (let si = 0; si < n; si++) {
+        const s = row.series[si];
+        const ly = row.y + si * laneH;
+        for (const seg of this._tierSegments(s.tiers)) {
+          const x0 = this._xOf(row, seg.from);
+          const x1 = this._xOf(row, seg.to);
+          if (x1 - x0 < 0.5) continue;
+          g.fillStyle = this._rgba(s.color, TIER_ALPHA[seg.tier] * opts.mul);
+          g.fillRect(x0, ly, x1 - x0, laneH);
+
+          // The step itself, struck like the minute grid: a black cut with the
+          // player's colour on its lit side. Teching up should read as an
+          // event on the timeline, not as a gradient nobody notices.
+          if (seg.from > this._t0) {
+            const ex = Math.round(x0) + 0.5;
+            g.fillStyle = 'rgba(0, 0, 0, ' + (0.7 * opts.mul) + ')';
+            g.fillRect(ex - 1, ly, 1, laneH);
+            g.fillStyle = this._rgba(s.color, 0.55 * opts.mul);
+            g.fillRect(ex, ly, 1, laneH);
+          }
+        }
+      }
+
+      // Seam between the lanes. Without it two washes of nearby colour read as
+      // one field and the halves stop being halves.
+      if (opts.seam) {
+        for (let si = 1; si < n; si++) {
+          const sy = Math.round(row.y + si * laneH) + 0.5;
+          g.fillStyle = 'rgba(0, 0, 0, 0.55)';
+          g.fillRect(row.x, sy - 1, row.w, 1);
+          g.fillStyle = 'rgba(201, 187, 150, 0.08)';
+          g.fillRect(row.x, sy, row.w, 1);
+        }
+      }
+      g.restore();
+    }
+
+    // 'T2' / 'T3' beside each step, into the BRIGHT bitmap after the curves
+    // are down. Two reasons it is its own pass: a lane is 16px tall and both
+    // food curves run straight through the middle of it, so a mark painted
+    // with the ribbon gets sliced by the line it sits behind; and the bright
+    // bitmap is the reveal layer, so the mark arrives as playback reaches the
+    // tier instead of announcing it minutes early.
+    _paintTierMarks (g, row) {
+      const F = window.ForgedPanel;
+      const n = row.series.length;
+      const laneH = row.h / n;
+
+      g.save();
+      F.path(g, row.x, row.y, row.w, row.h, 4);
+      g.clip();
+      for (let si = 0; si < n; si++) {
+        const s = row.series[si];
+        const cy = row.y + si * laneH + laneH / 2;
+        for (const seg of this._tierSegments(s.tiers)) {
+          if (!(seg.from > this._t0)) continue;
+          if (this._xOf(row, seg.to) - this._xOf(row, seg.from) < 0.5) continue;
+          this._markTier(g, row, seg.tier, Math.round(this._xOf(row, seg.from)) + 0.5, cy);
+        }
+      }
+      g.restore();
+    }
+
+    // Right of the cut normally; a tier reached late enough to run off the
+    // channel flips to the left of it rather than being clipped, and one with
+    // room on neither side is dropped — the step edge still carries the moment.
+    _markTier (g, row, tier, ex, cy) {
+      const F = window.ForgedPanel;
+      const text = 'T' + tier;
+      const w = F.measure(g, text, TIER_MARK_PX, { serif: true, tracking: 0.08 });
+      let tx = ex + 5, align = 'left';
+      if (tx + w > row.x + row.w - 2) { tx = ex - 5; align = 'right'; }
+      const left = align === 'right' ? tx - w : tx;
+      if (left < row.x + 2) return;
+
+      // Seated on its own struck chip. Engrave's lowlight is a LIGHT pixel
+      // under the glyphs, which does nothing over a bright curve — the mark
+      // needs something dark of its own to sit on, the same way the in-game
+      // UI backs a number it has to put over the field.
+      g.save();
+      g.fillStyle = 'rgba(0, 0, 0, 0.62)';
+      g.fillRect(left - 3, cy - TIER_MARK_PX / 2 - 2, w + 6, TIER_MARK_PX + 4);
+      g.restore();
+
+      F.engrave(g, text, tx, cy, TIER_MARK_PX, {
+        tracking: 0.08, align, color: 'rgba(201, 187, 150, 0.72)'
       });
     }
 
@@ -460,6 +622,14 @@
         // two is what makes this read as metal rather than a painted band.
         F.frame(g, row.fx, row.fy, row.fw, row.fh, 7);
         F.well(g, row.x, row.y, row.w, row.h, 4);
+
+        // Per-player tier lanes go on the bare channel floor, before anything
+        // else is etched into it. Faint here, full strength into bright.
+        if (row.lanes) {
+          this._paintTierLanes(g, row, { mul: TIER_FAINT, seam: true });
+          this._paintTierLanes(bright.ctx, row, { mul: 1 });
+        }
+
         // Mounting studs on the housing lip, as on the gauge's rail.
         F.stud(g, row.fx + LIP / 2 + 1, row.fy + row.fh / 2, 1.8);
         F.stud(g, row.fx + row.fw - LIP / 2 - 1, row.fy + row.fh / 2, 1.8);
@@ -520,6 +690,9 @@
           this._strokeSeries(g, row, s, FAINT_ALPHA, 1.4, false);
           this._strokeSeries(bright.ctx, row, s, 1, 2, true);
         }
+
+        // Tier marks go over the curves, not under them.
+        if (row.lanes) this._paintTierMarks(bright.ctx, row);
 
         // Glass over the channel, last, so it sits on the fills.
         F.glass(g, row.x, row.y, row.w, row.h, 4);
