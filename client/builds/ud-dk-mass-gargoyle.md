@@ -2,7 +2,7 @@
 title: "DK Gargoyle — Undead build order (UvO)"
 url: https://wc3v.com/builds/ud-dk-mass-gargoyle
 description: "DK opener into mass Ghouls for lumber, then flood Gargoyles from multiple Crypts. Air superiority overwhelms Orc ground armies. Dark Ranger or Dreadlord…"
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # DK Gargoyle

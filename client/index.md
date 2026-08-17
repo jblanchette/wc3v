@@ -28,7 +28,7 @@ Full detail for each is at the linked page.
 
 ### DK Fiend Standard
 
-Undead · UvO, UvH, UvU · New to WC3 · 5 pro replays
+Undead · UvO, UvH, UvU · New player · 5 pro replays
 
 A simple Undead build for new players. Death Knight opener, Ghouls mine lumber, and your fighting army is Crypt Fiends -- you never have to micro Ghouls in a fight. Reach Tier 2, pump Fiends, add Obsidian Statues for sustain, and bring in a Lich second hero for Frost Nova burst.
 
@@ -80,7 +80,7 @@ Full build: https://wc3v.com/builds/orc-fs-headhunter-shaman
 
 ### BM Grunt Standard
 
-Orc · OvN, OvU · New to WC3 · 13 pro replays
+Orc · OvN, OvU · New player · 13 pro replays
 
 Blademaster opener into mass Grunts for an aggressive ground push. BM harasses workers while Grunts pressure the front door. Transitions into Spirit Walkers or Raiders at T2.
 
@@ -106,7 +106,7 @@ Full build: https://wc3v.com/builds/hu-am-caster
 
 ### AM Rifle
 
-Human · HvN, HvH, HvO · New to WC3 · 3 pro replays
+Human · HvN, HvH, HvO · New player · 3 pro replays
 
 Archmage into Footmen transitioning to Riflemen and Sorceresses. Rifle range controls space, Slow from Sorceresses kites melee armies.
 
@@ -197,7 +197,7 @@ Full build: https://wc3v.com/builds/ud-lich-fast-tech
 
 ### PotM Mass Huntress
 
-Night Elf · EvH, EvE, EvO · New to WC3 · 1 pro replay
+Night Elf · EvH, EvE, EvO · New player · 1 pro replay
 
 PotM first hero for Trueshot Aura damage boost and Searing Arrows hero harass. Mass Huntresses provide ranged DPS and Sentinel scout vision. Strong open-map control build.
 

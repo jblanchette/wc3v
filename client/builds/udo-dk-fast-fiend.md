@@ -2,7 +2,7 @@
 title: "DK Fiend Standard — Undead build order (UvO, UvH, UvU)"
 url: https://wc3v.com/builds/udo-dk-fast-fiend
 description: "A simple Undead build for new players. Death Knight opener, Ghouls mine lumber, and your fighting army is Crypt Fiends -- you never have to micro Ghouls…"
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # DK Fiend Standard
@@ -11,7 +11,7 @@ A simple Undead build for new players. Death Knight opener, Ghouls mine lumber, 
 
 - **Race:** Undead
 - **Matchups:** UvO, UvH, UvU
-- **Level:** New to WC3
+- **Level:** New player
 - **Difficulty:** medium
 - **Hero opener:** Death Knight
 

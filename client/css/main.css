@@ -6690,20 +6690,43 @@ body {
   /* One height for every card on the page, not one per grid row. `stretch`
      only equalises within a row, so scrolling past three rows of builds still
      stepped up and down. The variance all lived in the upgrades section, and
-     that section scrolls now — see .site-card-upgrades.
-     526 is measured: header 56 + actions 37 + heroes 90 + units 115 + footer 88
-     + padding 20 leaves the upgrades well its label plus exactly three 30px
-     badge rows and its own 8px of inset. Three covers most builds outright, and
-     the deeper ones cut at a row boundary rather than mid-badge. */
-  grid-auto-rows: var(--card-h, 526px);
+     that section scrolls when it is shown — see .site-card-upgrades.
+
+     Two heights, one per disclosure state, and both are page-level — a grid
+     never mixes them, so rows still cannot step.
+
+     410 is measured with the upgrades well hidden: the tallest card in the
+     library comes to 395 natural (three heroes, three key units, and the
+     "N more replays" bar), so this clears it by 15px and leaves that much
+     slack on everything else. Do not tighten it to 395: the header wraps to a
+     second line on a long build name, and there is no shock absorber for
+     OVERFLOW here — the card clips.
+
+     526 is measured for the open state: header 56 + actions 37 + heroes 90 +
+     units 115 + footer 88 + padding 20 leaves the upgrades well its label plus
+     exactly three 30px badge rows and its own 8px of inset. Three covers most
+     builds outright, and the deeper ones cut at a row boundary rather than
+     mid-badge. */
+  grid-auto-rows: var(--card-h, 410px);
   align-items: stretch;
 }
-/* The learner band adds a whole tabbed guide pane per card — another ~250px of
-   fixture with its own internal scroller. It keeps natural heights: the
-   homepage redirects `?level=new` to /learn (see the guard in index.html), so
-   this path could not be rendered to measure a fixed height against, and a
-   guessed one clips the guide pane rather than scrolling it. */
-.site-build-grid:has(.site-build-card.is-learner) { grid-auto-rows: auto; }
+.site-build-grid.show-upgrades { --card-h: 526px; }
+
+/* The upgrades section is rendered ALWAYS and hidden here, so the toggle is a
+   class flip on one element rather than a re-render of the whole grid. */
+.site-build-grid:not(.show-upgrades) .site-card-upgrades { display: none; }
+
+/* With the well gone, units becomes the absorber. It is bounded content — three
+   or four icons and the expo row — so the spare band is ~0-20px and reads as
+   breathing room under the icons rather than a hole, with the expo row pinned
+   to its foot to catch it. */
+.site-build-grid:not(.show-upgrades) .site-card-units {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.site-build-grid:not(.show-upgrades) .site-card-expo-row { margin-top: auto; }
 
 .site-build-grid > * {
   min-width: 0;
@@ -6815,6 +6838,151 @@ body {
   --card-accent: #A98CD0;
 }
 
+/* ── Pro builds: the elite frame ────────────────────────────────────────────
+   Ornament, not light. The card keeps its race banner exactly as it is — the
+   race rim is an INSET shadow and is untouched — and gains a plated frame
+   OUTSIDE it: a hard black edge, then a tarnished-gold ring at full perimeter,
+   then two studs pinning the plate on the diagonal. Same vocabulary as the
+   first-hero gold-leaf frame further down this file, one scale up, so the two
+   ornaments read as coming from the same workshop.
+
+   Nothing here casts light: every gold layer has a 0 blur radius, no layer is
+   a saturated primary, and the only motion on the whole card is a 9s sheen at
+   0.09 alpha confined to the PRO BUILD chip — not the 255px card. A nine-second
+   highlight crossing forty full cards is a disco; crossing forty nameplates is
+   a jewel. */
+.site-build-card.is-pro {
+  --pro-leaf:       rgba(201, 162, 39, 0.55);   /* --dom-gold, struck back */
+  --pro-leaf-hover: rgba(201, 162, 39, 0.82);
+  --pro-leaf-deep:  #201a0d;
+  --pro-stud-hi:    #e0c469;
+  --pro-stud-lo:    #8a6f2a;
+  --pro-wash:       rgba(201, 162, 39, 0.10);
+  /* Chamfer, not a pill. 8px reads as a web card; 3px plus corner studs reads
+     as a plate. The outer rings pick this radius up automatically. */
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1px var(--card-rim, rgba(255,255,255,0.10)),
+    inset 0 1px 0 var(--card-strike, rgba(255,255,255,0.09)),
+    inset 0 -14px 22px -14px rgba(0,0,0,0.55),
+    0 0 0 1px var(--pro-leaf-deep),
+    0 0 0 2px var(--pro-leaf),
+    0 2px 6px -2px rgba(0,0,0,0.60);
+}
+
+/* Lifts, it does not light up — the same rule the base card follows. The leaf
+   gains value on hover; it never gains radius. */
+.site-build-card.is-pro:hover {
+  box-shadow:
+    inset 0 0 0 1px var(--card-rim-hover, var(--race-color)),
+    inset 0 1px 0 var(--card-strike, rgba(255,255,255,0.14)),
+    inset 0 -14px 22px -14px rgba(0,0,0,0.50),
+    0 0 0 1px var(--pro-leaf-deep),
+    0 0 0 2px var(--pro-leaf-hover),
+    0 6px 14px -6px rgba(0,0,0,0.70);
+}
+
+/* Two studs, the way a plate is pinned: top-left and bottom-right, on the
+   diagonal, so they read as a fixing rather than as a border. They sit inside
+   the card's own overflow clip, and pointer-events:none so the bottom stud
+   cannot eat a click on the "N more replays" bar underneath it. */
+.site-build-card.is-pro::before,
+.site-build-card.is-pro::after {
+  content: '';
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--pro-stud-hi), var(--pro-stud-lo));
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.80);
+  pointer-events: none;
+  z-index: 4;
+}
+.site-build-card.is-pro::before { top: 4px;    left: 4px;  }
+.site-build-card.is-pro::after  { bottom: 4px; right: 4px; }
+
+/* The head plate takes a gold wash across its WHOLE face, over the race header
+   gradient. A tint, never an edge stripe — the race hue still shows through
+   underneath, so Human pro and Orc pro are still two different banners. */
+.site-build-card.is-pro .site-card-header {
+  background:
+    repeating-linear-gradient(114deg,
+      rgba(255, 244, 216, 0.030) 0 2px, rgba(0, 0, 0, 0.045) 2px 4px),
+    linear-gradient(180deg, var(--pro-wash), rgba(201,162,39,0.03)),
+    linear-gradient(to bottom,
+      var(--card-header-a, #283c6a) 0%,
+      var(--card-header-b, #22335a) 100%);
+  box-shadow:
+    inset 0  1px 0 rgba(224,196,105,0.22),
+    inset 0 -1px 0 rgba(0,0,0,0.50);
+}
+
+/* ── The "PRO BUILD" plate ──────────────────────────────────────────────────
+   Engraved, not printed. Caps at the 0.8rem floor with real letterspacing, ink
+   on tarnished gold, and the highlight BELOW the glyphs so the lettering reads
+   as struck INTO the plate rather than raised off it. #2a2107 on #c9a227 is
+   about 9:1 — comfortably AA at this weight. */
+.site-card-pro-tag {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 1px 7px;
+  border-radius: 2px;
+  font: 800 0.8rem/1.35 Verdana;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold-ink, #2a2107);
+  background: linear-gradient(180deg, #e6c76a 0%, #c9a227 55%, #a8861d 100%);
+  text-shadow: 0 1px 0 rgba(255,244,205,0.45);
+  box-shadow:
+    inset 0  1px 0 rgba(255,244,205,0.55),
+    inset 0 -1px 0 rgba(0,0,0,0.35),
+    0 0 0 1px #201a0d;
+}
+
+/* The sheen — the .hp-newbie recipe at the same 0.09 ceiling, scaled down to
+   the chip. Meta only: it is the one thing separating the two pro tiers in
+   motion, and it says "current". */
+.site-build-card.is-pro-meta .site-card-pro-tag::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(100deg,
+    transparent 35%,
+    rgba(255,246,214,0.09) 50%,
+    transparent 65%);
+  transform: translateX(-100%);
+  animation: pro-tag-sheen 9s var(--ease) 1.5s infinite;
+}
+@keyframes pro-tag-sheen {
+  0%        { transform: translateX(-100%); }
+  55%, 100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-build-card.is-pro-meta .site-card-pro-tag::after { animation: none; }
+}
+
+/* ── Pro, off the current meta ──────────────────────────────────────────────
+   The same plate, struck back. The ring drops to half value, the head wash
+   halves, and the tag loses its fill and its sheen — outline gold on the card
+   ground. The two pro classes read as the same RANK in different CONDITION,
+   not as two different components. #d9be6a on the card grounds is about 8:1. */
+.site-build-card.is-pro-off-meta {
+  --pro-leaf:       rgba(201, 162, 39, 0.30);
+  --pro-leaf-hover: rgba(201, 162, 39, 0.55);
+  --pro-wash:       rgba(201, 162, 39, 0.05);
+}
+.site-build-card.is-pro-off-meta .site-card-pro-tag {
+  color: #d9be6a;
+  background: none;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.55);
+  box-shadow: inset 0 0 0 1px rgba(201,162,39,0.45);
+}
+
 /* ── Match header resets on homepage cards ─────────────────── */
 
 .mh-race-icon {
@@ -6920,120 +7088,10 @@ body {
   margin-top: 6px;
 }
 
-/* ── Learner block (new-band cards): a tabbed, bounded "beginner guide" pane.
-   Rendered by buildCard() only while viewing the "new" band. Two tabs over a
-   fixed-height, scrollable pane so the card never balloons. Tab clicks are
-   handled in the #all-builds-grid click handler; clicks inside don't navigate. */
-.site-card-learn {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--card-divider, rgba(255,255,255,0.06));
-}
-.scl-tabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 6px;
-}
-.scl-tab {
-  flex: 1;
-  padding: 4px 6px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--site-border);
-  border-radius: 6px;
-  cursor: pointer;
-  font: 600 0.7rem Verdana;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: rgba(255,255,255,0.5);
-  font-family: inherit;
-  text-align: center;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-.scl-tab:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.75); }
-.scl-tab.active {
-  background: rgba(79,184,107,0.16);     /* new-band accent (green) */
-  border-color: rgba(79,184,107,0.45);
-  color: #6fc18a;
-}
-.scl-panes { position: relative; }
-.scl-pane {
-  max-height: 160px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 4px;
-}
-.scl-pane[hidden] { display: none !important; }
-.scl-pane::-webkit-scrollbar { width: 6px; }
-.scl-pane::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.16); border-radius: 3px; }
-.scl-pane::-webkit-scrollbar-track { background: transparent; }
-.scl-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.scl-list li {
-  position: relative;
-  padding-left: 13px;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  color: rgba(232,234,240,0.88);
-}
-.scl-list li::before {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 0.55em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #4fb86b;            /* new-band accent (green) */
-}
-.scl-prereq {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px dashed rgba(255,255,255,0.08);
-  font-size: 0.7rem;
-  line-height: 1.4;
-  color: rgba(255,255,255,0.4);
-}
-.scl-mlist {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.scl-mlist li {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  line-height: 1.35;
-  font-size: 0.82rem;
-}
-.scl-bad { color: rgba(232,234,240,0.62); }
-.scl-fix { color: rgba(232,234,240,0.92); }
-.scl-fix-tag {
-  display: inline-block;
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6fc18a;
-  background: rgba(79,184,107,0.16);
-  border-radius: 3px;
-  padding: 0 4px;
-  margin-right: 5px;
-  vertical-align: 1px;
-}
-
 /* ── Glossary tooltips ───────────────────────────────────────────────────
    Known WC3 jargon (see Glossary.js / glossary.json) gets a subtle dotted
-   underline + a native hover/focus tooltip. Used in learner-card body copy;
-   reusable elsewhere later. (Native title tooltips don't appear on touch.) */
+   underline + a native hover/focus tooltip. Used by the /learn Build Finder's
+   body copy. (Native title tooltips don't appear on touch.) */
 abbr.gloss {
   text-decoration: underline dotted rgba(255,255,255,0.32);
   text-underline-offset: 0.18em;
@@ -7357,12 +7415,13 @@ abbr.gloss:focus-visible {
   gap: 4px;
 }
 
-/* Band + difficulty pill (sits next to the expo marker). Difficulty is
-   colour-coded; the band name + icon only appear when a card is showing in
-   an adjacent band via `alsoShownIn`. */
+/* Classification + difficulty pill (sits next to the expo marker). Difficulty
+   is colour-coded. The classification name only appears for the non-pro,
+   non-unsorted classes — pro says it on the head plate instead, and a build
+   nobody has reviewed says nothing at all. */
 .site-card-band {
-  font: 700 0.65rem Verdana;
-  padding: 0 5px;
+  font: 700 var(--fs-min, 0.8rem) Verdana;   /* was 0.65rem — under the floor */
+  padding: 1px 6px;
   border-radius: 3px;
   display: inline-flex;
   align-items: center;
@@ -7372,7 +7431,6 @@ abbr.gloss:focus-visible {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.14);
 }
-.site-card-band-ico { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
 .site-card-band.diff-easy   { color: #6fc18a; background: rgba(79,184,107,0.12); border-color: rgba(79,184,107,0.30); }
 .site-card-band.diff-medium { color: #e0b94e; background: rgba(200,168,78,0.12); border-color: rgba(200,168,78,0.30); }
 .site-card-band.diff-hard   { color: #e08a6a; background: rgba(224,109,80,0.12); border-color: rgba(224,109,80,0.30); }
@@ -13563,6 +13621,85 @@ svg.about-feat-icon {
   flex-shrink: 0;
 }
 
+/* ── Classification row ─────────────────────────────────────────────────────
+   Its own row above .pro-filter-bar. Race and matchup narrow WITHIN the
+   library; classification chooses WHICH library, and it is the successor to
+   the band switch that used to sit above everything.
+
+   Chips are multi-select (aria-pressed), all on by default. The two pro chips
+   take the card's own leaf colour so the control and the grid agree about what
+   "pro" looks like — full perimeter, no fill creep, and nothing here glows. */
+.bclass-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-2);
+}
+.bclass-chips { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.bclass-actions { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+
+.bclass-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted, #d0d0d0);
+  font-family: inherit;
+  font-size: var(--fs-min);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur, 0.18s) var(--ease), border-color var(--dur, 0.18s) var(--ease), color var(--dur, 0.18s) var(--ease);
+}
+.bclass-chip:hover { background: rgba(255,255,255,0.08); }
+.bclass-chip.active {
+  background: var(--accent-soft, rgba(91,141,239,0.14));
+  border-color: var(--accent, #5B8DEF);
+  color: var(--text, #f0f0f0);
+}
+/* The pro chips wear the card's leaf, so ticking one tells you what will
+   arrive in the grid. */
+.bclass-chip.is-pro-chip.active {
+  background: rgba(201,162,39,0.14);
+  border-color: rgba(201,162,39,0.60);
+  color: #e6c76a;
+}
+
+.bclass-quick {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: var(--text-dim, #aaa);
+  font-family: inherit;
+  font-size: var(--fs-min);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur, 0.18s) var(--ease), border-color var(--dur, 0.18s) var(--ease);
+}
+.bclass-quick:hover { color: var(--text, #fff); border-color: rgba(255,255,255,0.30); }
+.bclass-quick[aria-pressed="true"] {
+  background: rgba(255,255,255,0.06);
+  color: var(--text, #fff);
+  border-color: rgba(255,255,255,0.30);
+}
+
+.bclass-chip:focus-visible,
+.bclass-quick:focus-visible {
+  outline: 2px solid var(--accent-ring, var(--accent, #5B8DEF));
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .bclass-bar { gap: 6px 8px; }
+  /* Below the auto-margin's usefulness — the actions wrap under the chips
+     rather than being shoved to a far edge that no longer exists. */
+  .bclass-actions { margin-left: 0; }
+}
+
 /* ── Broadcast-style replay card (rep-card-*) ── */
 
 .rep-card {
@@ -15886,6 +16023,16 @@ fieldset.ub-editor-field input[type="text"] {
   /* ── Collapse "Your replays" + "Filters" by default ─── */
   body:not(.mobile-mine-open) #my-replays-section { display: none; }
   body:not(.mobile-filters-open) .pro-filter-bar { display: none; }
+  /* The class row collapses with the rest. Six chips plus three buttons is
+     four wrapped rows on a phone, which pushes the first card off the screen —
+     and the default selection is every class, so a collapsed row hides
+     nothing: the grid still shows everything with pro first. */
+  body:not(.mobile-filters-open) .bclass-bar { display: none; }
+  body.mobile-filters-open .bclass-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px 10px 0;
+  }
   body.mobile-filters-open .pro-filter-bar {
     display: flex;
     flex-direction: column;

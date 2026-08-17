@@ -29,6 +29,7 @@
 
   const RACE_NAMES = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead' };
   const LEVELS = ['new', 'improving', 'pro'];
+  const CLASSES = window.BuildClass.KEYS;
 
   function text (s) {
     return { content: [{ type: 'text', text: s }] };
@@ -39,7 +40,7 @@
       '**' + b.name + '** (`' + b.id + '`)',
       RACE_NAMES[b.race] || b.race,
       (b.matchups || []).join('/'),
-      b.level || '',
+      window.BuildClass.labelOf(b),
       (b.replays || []).length + ' replay' + ((b.replays || []).length === 1 ? '' : 's')
     ].filter(Boolean);
     return '- ' + bits.join(' — ') + '\n  ' + (b.description || '').trim();
@@ -88,14 +89,15 @@
           title: 'Filter the build library',
           description:
             'Filter the Warcraft III build library on this page by race, matchup, ' +
-            'skill level or a text query, and return what matches. This drives the ' +
-            'actual page, so the user sees the grid update.',
+            'classification or a text query, and return what matches. This drives ' +
+            'the actual page, so the user sees the grid update.',
           inputSchema: {
             type: 'object',
             properties: {
               race: { type: 'string', enum: ['H', 'O', 'E', 'U'], description: 'H Human, O Orc, E Night Elf, U Undead.' },
               matchup: { type: 'string', description: 'Your race then theirs, e.g. "EvU". Requires race to agree.' },
-              level: { type: 'string', enum: LEVELS, description: 'Skill band the build is written for.' },
+              level: { type: 'string', enum: LEVELS, description: 'Skill band the build is written for. Sets the nav band; buildClasses is what filters the grid.' },
+              buildClasses: { type: 'array', items: { type: 'string', enum: CLASSES }, description: 'Which classifications the grid shows. Omit for all of them.' },
               query: { type: 'string', description: 'Free text matched against name, hero and description.' }
             },
             additionalProperties: false
@@ -132,6 +134,7 @@
             let s = '# ' + b.name + '\n\n' + (b.description || '') + '\n\n';
             s += '- Race: ' + (RACE_NAMES[b.race] || b.race) + '\n';
             s += '- Matchups: ' + (b.matchups || []).join(', ') + '\n';
+            s += '- Classification: ' + window.BuildClass.labelOf(b) + '\n';
             if (b.level) s += '- Level: ' + b.level + '\n';
             if (b.difficulty) s += '- Difficulty: ' + b.difficulty + '\n';
             if (b.heroOpener) s += '- Hero opener: ' + b.heroOpener + '\n';

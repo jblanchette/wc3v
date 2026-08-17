@@ -873,7 +873,7 @@ function generatedTwin (e, builds, replayCount) {
     for (const b of builds) {
       s += '### ' + b.name + '\n\n';
       s += BP.raceOf(b) + ' · ' + BP.matchupText(b) + ' · ' +
-        (BP.LEVEL_LABEL[b.level] || b.level) + ' · ' + b.replays.length +
+        BP.levelLabel(b) + ' · ' + b.replays.length +
         ' pro replay' + (b.replays.length === 1 ? '' : 's') + '\n\n';
       s += b.description + '\n\n';
       if (b.strategyPoints && b.strategyPoints.length) {

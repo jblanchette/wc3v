@@ -19,6 +19,7 @@ const outputDir = path.join(__dirname, '..', 'client', 'replays');
 
 const { getManifestReplayIds } = require('../helpers/utils');
 const PlayerNames = require('../client/js/PlayerNames.js');
+const BuildClass = require('../client/js/BuildClass.js');
 
 // --- arg parsing ---
 
@@ -320,9 +321,10 @@ function manifestCheck() {
     unlisted.forEach(id => console.log(`  - ${id}`));
   }
 
-  // Skill-band integrity: every curated build needs a valid `level` (the band
-  // the homepage band-switch filters on) and `difficulty` pill value.
-  const bandIssues = checkBuildBands();
+  // Classification integrity: every curated build needs a valid `buildClass`
+  // (what the homepage filter chips show), a `level` that agrees with it, and
+  // a `difficulty` pill value.
+  const bandIssues = checkBuildClasses();
 
   if (!missingW3g.length && !missingParsed.length && !unlisted.length && !bandIssues) {
     console.log('  All clear!');
@@ -330,11 +332,11 @@ function manifestCheck() {
   console.log('');
 }
 
-// Validate `level` / `difficulty` (and optional `alsoShownIn`) on every build
-// in builds-manifest.json. Returns the number of problems found.
-function checkBuildBands() {
-  const VALID_LEVELS = new Set(['new', 'improving', 'pro']);
-  const VALID_DIFFS  = new Set(['easy', 'medium', 'hard']);
+// Validate `buildClass` / `level` / `difficulty` (and optional `alsoShownIn`)
+// on every build in builds-manifest.json. Returns the number of problems found.
+function checkBuildClasses() {
+  const VALID_BANDS = new Set(['new', 'improving', 'pro']);
+  const VALID_DIFFS = new Set(['easy', 'medium', 'hard']);
   const manifestPath = path.join(__dirname, '..', 'client', 'data', 'builds-manifest.json');
   let builds;
   try { builds = (JSON.parse(fs.readFileSync(manifestPath, 'utf8')).builds) || []; }
@@ -342,20 +344,29 @@ function checkBuildBands() {
 
   const problems = [];
   const warnings = [];
-  const byBand = { new: 0, improving: 0, pro: 0 }; // effective membership (level OR alsoShownIn)
+  const byBand = { new: 0, improving: 0, pro: 0 }; // effective membership (band OR alsoShownIn)
+  const byClass = {};
+  for (const k of BuildClass.KEYS) byClass[k] = 0;
   const isStrArr = (v) => Array.isArray(v) && v.every(s => typeof s === 'string' && s.trim());
-  const inBand = (b, band) => b.level === band || (Array.isArray(b.alsoShownIn) && b.alsoShownIn.includes(band));
+  const inBand = (b, band) => BuildClass.bandFor(b) === band
+    || (Array.isArray(b.alsoShownIn) && b.alsoShownIn.includes(band));
   for (const b of builds) {
     const id = b.id || '(no id)';
-    if (!VALID_LEVELS.has(b.level)) problems.push(`${id}: level "${b.level}" — must be new | improving | pro`);
+    if (!BuildClass.isValid(b.buildClass)) {
+      problems.push(`${id}: buildClass "${b.buildClass}" — must be ${BuildClass.KEYS.join(' | ')}`);
+    } else if (b.level !== BuildClass.bandFor(b.buildClass)) {
+      // `level` is a projection of `buildClass`, not an independent field.
+      problems.push(`${id}: level "${b.level}" disagrees with buildClass "${b.buildClass}" (expected "${BuildClass.bandFor(b.buildClass)}")`);
+    }
+    byClass[BuildClass.classOf(b)]++;
     for (const band of ['new', 'improving', 'pro']) if (inBand(b, band)) byBand[band]++;
     if (!VALID_DIFFS.has(b.difficulty)) problems.push(`${id}: difficulty "${b.difficulty}" — must be easy | medium | hard`);
     if (b.alsoShownIn !== undefined) {
       if (!Array.isArray(b.alsoShownIn)) problems.push(`${id}: alsoShownIn must be an array`);
       else {
         for (const x of b.alsoShownIn) {
-          if (!VALID_LEVELS.has(x)) problems.push(`${id}: alsoShownIn has invalid band "${x}"`);
-          if (x === b.level) problems.push(`${id}: alsoShownIn lists its own band "${x}"`);
+          if (!VALID_BANDS.has(x)) problems.push(`${id}: alsoShownIn has invalid band "${x}"`);
+          if (x === BuildClass.bandFor(b)) problems.push(`${id}: alsoShownIn lists its own band "${x}"`);
         }
       }
     }
@@ -388,14 +399,16 @@ function checkBuildBands() {
   }
 
   if (problems.length) {
-    console.log(`\nBand issues (${problems.length}):`);
+    console.log(`\nClassification issues (${problems.length}):`);
     problems.forEach(p => console.log(`  - ${p}`));
-    console.log(`  (level/difficulty: node tools/backfill-levels.js · starter content: node tools/seed-starter-content.js)`);
+    console.log(`  (buildClass/level/difficulty: node tools/backfill-classes.js · starter content: node tools/seed-starter-content.js)`);
   }
   if (warnings.length) {
-    console.log(`\nBand warnings (${warnings.length}):`);
+    console.log(`\nClassification warnings (${warnings.length}):`);
     warnings.forEach(w => console.log(`  - ${w}`));
   }
+  console.log('\nClass membership:');
+  for (const k of BuildClass.KEYS) console.log(`  ${k.padEnd(16)} ${byClass[k]}`);
   console.log(`\nBand membership (incl. alsoShownIn): new=${byBand.new}  improving=${byBand.improving}  pro=${byBand.pro}`);
   return problems.length;
 }

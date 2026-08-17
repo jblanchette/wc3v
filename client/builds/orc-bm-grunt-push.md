@@ -2,7 +2,7 @@
 title: "BM Grunt Standard — Orc build order (OvN, OvU)"
 url: https://wc3v.com/builds/orc-bm-grunt-push
 description: "Blademaster opener into mass Grunts for an aggressive ground push. BM harasses workers while Grunts pressure the front door. Transitions into Spirit…"
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # BM Grunt Standard
@@ -11,7 +11,7 @@ Blademaster opener into mass Grunts for an aggressive ground push. BM harasses w
 
 - **Race:** Orc
 - **Matchups:** OvN, OvU
-- **Level:** New to WC3
+- **Level:** New player
 - **Difficulty:** easy
 - **Hero opener:** Blademaster
 

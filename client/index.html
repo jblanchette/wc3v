@@ -192,7 +192,7 @@
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
   <link rel="stylesheet" href="css/tokens.css?v=d4b178845b">
-  <link rel="stylesheet" href="css/main.css?v=9d73748006">
+  <link rel="stylesheet" href="css/main.css?v=75877e0290">
   <!-- New design system: tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
   <link rel="stylesheet" href="css/redesign.css?v=e799bc8754">
@@ -204,7 +204,7 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '8c2d573e06'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = 'ae2d5b7ef7'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
@@ -229,6 +229,7 @@
 
   <script src="js/clientConfig.js?v=53d88a6933"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
+  <script src="js/BuildClass.js?v=2df27b1482"></script>
   <script src="js/SiteNav.js?v=66285d9d27"></script>
   <script src="js/TosBanner.js?v=16bfc558ad"></script>
   <script src="js/Security.js?v=a131c46e7c"></script>
@@ -238,7 +239,7 @@
   <!-- WebMCP tool registration. A no-op unless the browser or an attached agent
        provides document.modelContext, so it costs nothing for normal visitors.
        Installed at the end of init(), once window.WC3VHome exists. -->
-  <script src="js/HomepageAgentTools.js?v=a590d3a705"></script>
+  <script src="js/HomepageAgentTools.js?v=8d5af492c4"></script>
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
        UploadManager.prefetchParser() warms the HTTP cache on first user intent. -->
@@ -1136,12 +1137,12 @@
                section, which spent a whole row of the fold on a control that
                is one line of text wide. -->
           <div class="site-pros-topline">
-            <!-- Title and intro share one line so the filter row and the first
-                 card sit as high as possible. applyBandChrome() rewrites the
-                 textContent of both nodes on band change — the wrapper is
-                 presentational only. -->
+            <!-- Title and count share one line so the filter rows and the
+                 first card sit as high as possible. -->
             <div class="site-pros-headline">
-              <h2 id="pros-title" class="site-pros-title">Pro builds</h2>
+              <!-- Static. The grid shows every classification at once now, so
+                   naming one band here would be wrong on most of what's below. -->
+              <h2 id="pros-title" class="site-pros-title">Build library</h2>
               <!-- Live count. Sits on the headline row, not in the filter bar:
                    as a flex item there it was the first thing to wrap once the
                    race chips filled the row, costing a whole extra row above
@@ -1183,6 +1184,23 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <span>Where are my replays?</span>
               </button>
+            </div>
+          </div>
+
+          <!-- Classification row. Sits ABOVE #pro-filter-bar rather than inside
+               it: race and matchup narrow WITHIN the library, classification
+               chooses WHICH library. It also inherits the band switcher's old
+               job here — the grid used to be gated to one band, and now shows
+               every class at once with pro sorted to the top. Multi-select, all
+               on by default, and the choice persists; "Pro only" is the
+               one-click path to a pro-first library that sticks. -->
+          <div id="build-class-bar" class="bclass-bar" role="group" aria-label="Filter builds by classification">
+            <span class="pfb-label">Show</span>
+            <div class="bclass-chips" id="bclass-chips"></div>
+            <div class="bclass-actions">
+              <button type="button" class="bclass-quick" data-bclass-quick="all">All</button>
+              <button type="button" class="bclass-quick" data-bclass-quick="pro">Pro only</button>
+              <button type="button" class="bclass-quick" id="toggle-upgrades" aria-pressed="false" title="Show the upgrades each build researched">Upgrades</button>
             </div>
           </div>
 
@@ -1398,31 +1416,24 @@
 
     // ─── Skill bands ────────────────────────────────────────
     // Band metadata + state live in BandSwitcher.js (site-wide source of
-    // truth). The local aliases below keep the existing card-rendering and
-    // filter code readable. `BANDS` exposes per-band labels and icon ids;
-    // the homepage chrome uses `h2` for #pros-title.
+    // truth). The band no longer filters this grid — the classification chips
+    // do — but it still routes: `new` sends you to /learn, and the viewer deep
+    // link carries `&level=` so the viewer's own chrome follows your choice.
     const BANDS = window.BandSwitcher.BANDS;
     const BAND_KEYS = window.BandSwitcher.BAND_KEYS;
     const DEFAULT_BAND = window.BandSwitcher.DEFAULT_BAND;
     const isValidBand = window.BandSwitcher.isValidBand;
     const DIFFICULTY_LABELS = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
-    function bandIcoImg(band, cls) {
-      const meta = BANDS[band];
-      if (!meta || !meta.icon) return '';
-      return `<img class="${cls || 'band-ico'}" src="/assets/wc3icons/${meta.icon}.jpg" alt="" aria-hidden="true" loading="lazy" onerror="this.style.display='none'" />`;
-    }
-
-    // Does this build belong in the given band? Curated builds match on
-    // `level` (+ optional `alsoShownIn`); user-uploaded pros are band-exempt
-    // — they're "yours" and always visible (they carry an "Added by you"
-    // marker instead of a band pill).
-    function buildInBand(b, band) {
-      if (!band) return true;
-      if (b._isUserBuild) return true;
-      if (b.level === band) return true;
-      return Array.isArray(b.alsoShownIn) && b.alsoShownIn.includes(band);
-    }
+    // ─── Build classifications ──────────────────────────────
+    // The six-class taxonomy is what the grid filters and sorts on. A build's
+    // `buildClass` is the authority; its `level` band is a projection of it,
+    // kept on disk for the band consumers above.
+    //
+    // `BuildClass` is used bare, with no local alias: BuildClass.js declares it
+    // as a top-level `const`, which in a classic script is a global lexical
+    // binding — re-declaring it here is a SyntaxError that kills this whole
+    // script block. Same reason index.html calls PlayerNames bare.
 
     function raceColor(key) { return (RACE_META[key] || {}).color || '#888'; }
     function raceAbbr(key)  { return (RACE_META[key] || {}).abbr  || '??';  }
@@ -1938,24 +1949,31 @@
       const tp = build.tierProgression;
       const heroIds = build.heroItemIds || (build.heroItemId ? [build.heroItemId] : []);
 
-      // ── Band + difficulty pill (curated builds only) ──────
-      // The grid is already filtered to one band, so the band name shows only
-      // when this card surfaced via `alsoShownIn` (its home band ≠ the band
-      // you're viewing). Difficulty always shows — it varies within a band.
-      let bandPill = '';
+      // ── Classification: the card's rank (curated builds only) ──────
+      // The grid shows every class at once now, so each card has to say which
+      // one it is. Pro says it once, on the head plate, where it is the first
+      // thing read. Everything else says it once down in the expo row next to
+      // difficulty. Never both, and "Unsorted" says nothing at all — a build
+      // nobody has reviewed yet should look ordinary, not labelled.
+      const bcls = build._isUserBuild ? null : BuildClass.classOf(build);
+      const bcMeta = bcls ? BuildClass.get(bcls) : null;
+      const proTag = (bcMeta && bcMeta.tag)
+        ? `<span class="site-card-pro-tag" title="${bcMeta.desc}">${bcMeta.tag}</span>`
+        : '';
+
+      let classPill = '';
       if (!build._isUserBuild) {
         const diffLabel = DIFFICULTY_LABELS[build.difficulty];
-        const showBand = build.level && BANDS[build.level] && build.level !== currentBand;
-        if (diffLabel || showBand) {
-          const cls = `site-card-band${build.level ? ' band-' + build.level : ''}${build.difficulty ? ' diff-' + build.difficulty : ''}`;
-          const ico = showBand ? bandIcoImg(build.level, 'site-card-band-ico') : '';
-          const label = showBand
-            ? `${BANDS[build.level].shortLabel}${diffLabel ? ' · ' + diffLabel : ''}`
+        const showClass = bcMeta && !bcMeta.isPro && bcls !== 'unsorted';
+        if (diffLabel || showClass) {
+          const cls = `site-card-band${build.difficulty ? ' diff-' + build.difficulty : ''}`;
+          const label = showClass
+            ? `${bcMeta.short}${diffLabel ? ' · ' + diffLabel : ''}`
             : diffLabel;
-          const tip = showBand
-            ? `${BANDS[build.level].seg} build${diffLabel ? ' · ' + diffLabel + ' to execute' : ''}`
+          const tip = showClass
+            ? `${bcMeta.desc}${diffLabel ? ' · ' + diffLabel + ' to execute' : ''}`
             : `${diffLabel} to execute`;
-          bandPill = `<span class="${cls}" title="${tip}">${ico}${label}</span>`;
+          classPill = `<span class="${cls}" title="${tip}">${label}</span>`;
         }
       }
 
@@ -1987,6 +2005,7 @@
       const headerHtml = `<div class="site-card-header">
         <img class="site-card-race-watermark" src="/assets/wc3icons/${iconId}.jpg" alt="" aria-hidden="true" loading="lazy" />
         <span class="mh-build-label">${build.name}</span>
+        ${proTag}
         ${addedByYou}
         ${editBtn}
         ${matchupPills}
@@ -2063,7 +2082,7 @@
           : `<span class="mh-expansion-marker mh-no-expo" title="No expansion">\u2718 No Expo</span>`;
 
         const unitsLabel = keyUnits.length ? `<span class="site-card-section-label">Units</span>` : '';
-        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}<div class="site-card-expo-row">${expoHtml}${bandPill}</div></div>`;
+        unitsHtml = `<div class="site-card-units">${unitsLabel}${keyHtml}<div class="site-card-expo-row">${expoHtml}${classPill}</div></div>`;
 
         // ── Upgrades section: all researched upgrades from replay, or coreUpgrades as fallback
         const coreUpgrades = build.coreUpgrades || [];
@@ -2268,63 +2287,22 @@
         }
       }
 
-      // ── Learner block: a tabbed, bounded "beginner guide" pane ──────────
-      // Curated builds only, and only while viewing the "new" band. Two tabs
-      // ("First steps" = beginnerNotes, "Mistakes" = commonMistakes) over a
-      // fixed-height, scrollable pane so the card stays a sane size. Tab clicks
-      // are handled in the #all-builds-grid click handler; clicks inside the
-      // block never navigate the card.
-      let learnerHtml = '';
-      if (!build._isUserBuild && currentBand === 'new') {
-        const esc = escapeHtmlSimple;
-        // Body copy gets jargon glossary tooltips (escapes + wraps known terms);
-        // falls back to plain escaping if Glossary.js isn't loaded.
-        const gloss = (window.Glossary && window.Glossary.linkifyText) || escapeHtmlSimple;
-        const notes = (build.beginnerNotes || []).filter(s => s && s.trim());
-        const mistakes = (build.commonMistakes || []).filter(m => m && (m.mistake || m.fix));
-        const prereqs = (build.prerequisites || []).filter(s => s && s.trim());
-        const tabs = [];
-        const panes = [];
-        if (notes.length) {
-          tabs.push({ key: 'steps', label: 'Key ideas' });
-          const prereqLine = prereqs.length
-            ? `<div class="scl-prereq">Assumes you're comfortable: ${prereqs.map(gloss).join(' · ')}</div>`
-            : '';
-          panes.push({ key: 'steps', html: `<ul class="scl-list">${notes.map(n => `<li>${gloss(n)}</li>`).join('')}</ul>${prereqLine}` });
-        }
-        if (mistakes.length) {
-          tabs.push({ key: 'mistakes', label: `Mistakes (${mistakes.length})` });
-          panes.push({ key: 'mistakes', html: `<ul class="scl-mlist">${mistakes.map(m => `<li>
-              <span class="scl-bad">${gloss(m.mistake || '')}</span>
-              ${m.fix ? `<span class="scl-fix"><b class="scl-fix-tag">Fix</b> ${gloss(m.fix)}</span>` : ''}
-            </li>`).join('')}</ul>` });
-        }
-        if (tabs.length) {
-          const firstKey = tabs[0].key;
-          const tabBar = tabs.map((t, i) =>
-            `<button type="button" class="scl-tab${i === 0 ? ' active' : ''}" data-learn-pane="${t.key}" role="tab" aria-selected="${i === 0 ? 'true' : 'false'}">${esc(t.label)}</button>`
-          ).join('');
-          const paneEls = panes.map(p =>
-            `<div class="scl-pane" data-learn-pane="${p.key}"${p.key === firstKey ? '' : ' hidden'}>${p.html}</div>`
-          ).join('');
-          learnerHtml = `<div class="site-card-learn">
-            <span class="site-card-section-label">How this build works</span>
-            <div class="scl-tabs" role="tablist" aria-label="How this build works">${tabBar}</div>
-            <div class="scl-panes">${paneEls}</div>
-          </div>`;
-        }
-      }
+      // The card used to carry a tabbed "How this build works" pane on
+      // new-player builds — beginnerNotes, prerequisites and commonMistakes,
+      // several paragraphs of it. It made the card the noisiest thing on the
+      // page for the readers least able to skim it. That copy still exists in
+      // the manifest and still renders where someone has come to read: the
+      // /learn Build Finder and the per-build SEO pages.
 
       const userClass = build._isUserBuild ? ' is-user-build' : '';
 
       return `
-        <div class="site-build-card race-${build.race}${hasReplay ? '' : ' no-replay'}${userClass}${currentBand === 'new' && learnerHtml ? ' is-learner' : ''}" role="listitem" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
+        <div class="site-build-card race-${build.race}${bcMeta && bcMeta.cardClass ? ' ' + bcMeta.cardClass : ''}${hasReplay ? '' : ' no-replay'}${userClass}" role="listitem" style="--race-color:${rc}"${hasReplay ? ` data-href="${cardHref}"` : ''}${build._localId ? ` data-local-id="${build._localId}"` : ''}>
           ${headerHtml}
           ${actionsHtml}
           ${heroesHtml}
           ${unitsHtml}
           ${upgradesHtml}
-          ${learnerHtml}
           ${userNotesHtml}
           ${replaySection}
         </div>
@@ -2414,9 +2392,12 @@
     let buildSearchIndex = []; // parallel array of searchable strings
     let searchQuery = '';
     // Mirror of BandSwitcher.getBand() — kept in sync via BandSwitcher.onChange
-    // below so the existing card-rendering / filter code can read it without
-    // a function call per access.
+    // below. It no longer filters the grid; it only rides along on the viewer
+    // deep link so the viewer's own chrome opens on the band you chose.
     let currentBand = window.BandSwitcher.getBand();
+    // Which of the six classifications the grid is showing. All of them by
+    // default — see BuildClass.DEFAULT_SELECTION.
+    let selectedClasses = new Set(BuildClass.DEFAULT_SELECTION);
     let selectedRace = '';
     let selectedMatchup = '';
     let selectedTournament = '';
@@ -2473,6 +2454,123 @@
       (b.matchups || []).forEach(m => parts.push(m));
       (b.tags || []).forEach(t => parts.push(t));
       return parts.join(' ').toLowerCase();
+    }
+
+    // ─── Classification chips ────────────────────────────────
+    // Multi-select, because "pro meta + pro off-meta" has to be expressible
+    // and six single-select chips can't say it. The selection persists, so a
+    // visitor who wants a pro-only library clicks "Pro only" once and keeps it.
+    const CLASS_KEY = 'wc3v.buildClasses';
+
+    function readClassSelection() {
+      try {
+        const p = new URLSearchParams(location.search);
+        // A shared ?class= link wins — it is the whole point of the link.
+        const raw = p.get('class');
+        if (raw) {
+          const keys = raw.split(',').map(s => s.trim()).filter(BuildClass.isValid);
+          if (keys.length) return new Set(keys);
+        }
+        // Then the visitor's own stored choice, which always beats one we
+        // infer for them.
+        const stored = localStorage.getItem(CLASS_KEY);
+        if (stored) {
+          const keys = stored.split(',').filter(BuildClass.isValid);
+          if (keys.length) return new Set(keys);
+        }
+        // Back-compat: a ?level= link from before the classes existed used to
+        // filter this grid. Map the band onto the classes that project onto it
+        // so an old shared link still lands somewhere sensible.
+        const lvl = (p.get('level') || '').toLowerCase();
+        if (lvl) {
+          const keys = BuildClass.KEYS.filter(k => BuildClass.get(k).band === lvl);
+          if (keys.length) return new Set(keys);
+        }
+      } catch (e) {}
+      return new Set(BuildClass.DEFAULT_SELECTION);
+    }
+
+    function writeClassSelection() {
+      try { localStorage.setItem(CLASS_KEY, [...selectedClasses].join(',')); } catch (e) {}
+    }
+
+    function syncClassChips() {
+      document.querySelectorAll('.bclass-chip[data-bclass]').forEach(btn => {
+        const on = selectedClasses.has(btn.dataset.bclass);
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+
+    function buildClassChips() {
+      const host = document.getElementById('bclass-chips');
+      if (!host) return;
+      host.innerHTML = '';
+      BuildClass.KEYS.forEach(key => {
+        const meta = BuildClass.get(key);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bclass-chip' + (meta.isPro ? ' is-pro-chip' : '');
+        btn.dataset.bclass = key;
+        btn.title = meta.desc;
+        btn.textContent = meta.label;
+        btn.addEventListener('click', () => {
+          if (selectedClasses.has(key)) {
+            // The last chip is sticky — an empty grid is never what someone
+            // meant by unticking one more box.
+            if (selectedClasses.size > 1) selectedClasses.delete(key);
+          } else {
+            selectedClasses.add(key);
+          }
+          syncClassChips();
+          writeClassSelection();
+          applyFilter();
+        });
+        host.appendChild(btn);
+      });
+      syncClassChips();
+    }
+
+    function setupClassFilter() {
+      selectedClasses = readClassSelection();
+      buildClassChips();
+      document.querySelectorAll('[data-bclass-quick]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectedClasses = btn.dataset.bclassQuick === 'pro'
+            ? new Set(BuildClass.KEYS.filter(k => BuildClass.get(k).isPro))
+            : new Set(BuildClass.KEYS);
+          syncClassChips();
+          writeClassSelection();
+          applyFilter();
+        });
+      });
+    }
+
+    // ─── Upgrades disclosure ─────────────────────────────────
+    // Page-level, not per-card. The grid gives every card one fixed height and
+    // the upgrades well is the section that absorbs the slack (see
+    // .site-build-grid in main.css) — so one card opening its well would leave
+    // a hole in every other card in the same row. One control is also less
+    // chrome than one chevron per card, which was the point.
+    const UPGRADES_KEY = 'wc3v.cardUpgrades';
+
+    function applyUpgradesPref(on) {
+      const grid = document.getElementById('all-builds-grid');
+      const btn = document.getElementById('toggle-upgrades');
+      if (grid) grid.classList.toggle('show-upgrades', !!on);
+      if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    function setupUpgradesToggle() {
+      let on = false;
+      try { on = localStorage.getItem(UPGRADES_KEY) === '1'; } catch (e) {}
+      applyUpgradesPref(on);
+      const btn = document.getElementById('toggle-upgrades');
+      if (btn) btn.addEventListener('click', () => {
+        on = !on;
+        applyUpgradesPref(on);
+        try { localStorage.setItem(UPGRADES_KEY, on ? '1' : '0'); } catch (e) {}
+      });
     }
 
     // ─── Build race filter buttons ──────────────────────────
@@ -2627,26 +2725,18 @@
 
     // ─── Skill band switch ──────────────────────────────────
     // State / persistence / URL sync / card click delegation all live in
-    // BandSwitcher.js (site-wide). Here we just sync the homepage-specific
-    // chrome (#pros-title) and re-render the grid when the band changes.
-    // Card aria-pressed state on every .skill-band-card is handled
-    // generically by BandSwitcher.applyUI(). The heading stands alone: the
-    // blurb that used to sit beside it is gone.
-    function applyBandChrome(band) {
-      const meta = BANDS[band] || BANDS[DEFAULT_BAND];
-      const title = document.getElementById('pros-title');
-      if (title) title.textContent = meta.h2;
-    }
+    // BandSwitcher.js (site-wide). Card aria-pressed state on every
+    // .skill-band-card is handled generically by BandSwitcher.applyUI().
+    //
+    // The band no longer filters this grid, so there is no re-render here and
+    // #pros-title no longer changes with it — the grid shows all six classes
+    // at once, and calling that "Pro builds" would be a lie. What the band
+    // still does: route `new` to /learn (wired in the bootstrap script above)
+    // and ride the viewer deep link as &level= so the viewer opens on the same
+    // choice.
     function setupBands() {
-      // Initial chrome sync (BandSwitcher.init() already ran in the bootstrap
-      // script before SiteNav rendered).
       currentBand = window.BandSwitcher.getBand();
-      applyBandChrome(currentBand);
-      window.BandSwitcher.onChange((band) => {
-        currentBand = band;
-        applyBandChrome(band);
-        applyFilter();
-      });
+      window.BandSwitcher.onChange((band) => { currentBand = band; });
     }
 
     // ─── Search matching ─────────────────────────────────────
@@ -2665,13 +2755,21 @@
       });
     }
 
+    // User uploads are class-exempt: they are the visitor's own games, carry no
+    // buildClass, and already say what they are with an "Added by you" pill.
+    function buildPassesClass(b) {
+      if (b._isUserBuild) return true;
+      if (selectedClasses.size === BuildClass.KEYS.length) return true;
+      return selectedClasses.has(BuildClass.classOf(b));
+    }
+
     // ─── Apply filters ──────────────────────────────────────
     // User-uploaded pro replays + curated builds share one filter
     // pipeline. User uploads render first so the user's own additions
     // are immediately visible in the grid; curated pros follow.
     function applyFilter() {
       const buildPasses = (b, searchText) => {
-        if (!buildInBand(b, currentBand)) return false;
+        if (!buildPassesClass(b)) return false;
         if (searchQuery && searchText && !matchesSearch(searchText, searchQuery)) return false;
         if (selectedRace && b.race !== selectedRace) return false;
         if (selectedMatchup && !(b.matchups || []).includes(selectedMatchup)) return false;
@@ -2684,7 +2782,16 @@
 
       const visibleUser = userBuilds.filter(b => buildPasses(b, buildSearchTextLite(b)));
       const visiblePro = allBuilds.filter((b, i) => buildPasses(b, buildSearchIndex[i]));
-      const visible = [...visibleUser, ...visiblePro];
+      // User uploads keep the head of the grid unconditionally — they are the
+      // visitor's own games and the reason they uploaded. Curated builds sort
+      // under them by classification (pro meta, pro off-meta, ladder, ladder
+      // off-meta, new player, unsorted), then by manifest order within a class.
+      //
+      // The sort runs on the array .filter() just returned, NOT on allBuilds.
+      // buildSearchIndex is a PARALLEL array indexed by position in allBuilds,
+      // so sorting that in place would quietly hand every build a different
+      // build's search text.
+      const visible = [...visibleUser, ...visiblePro.sort(BuildClass.compare)];
       // Remembered so window.WC3VHome (and through it the WebMCP tools) can
       // report what the page is actually showing without recomputing the
       // filter pass and risking a different answer.
@@ -2700,14 +2807,14 @@
         document.body.appendChild(modal);
       });
 
-      // Live count in the filter bar — relative to the current band, not the
-      // whole library (the band switch is "above" the other filters).
+      // Live count in the filter bar — relative to the classes on show, not
+      // the whole library (the class chips sit "above" the other filters).
       const countEl = document.getElementById('pfb-count');
       if (countEl) {
-        const bandTotal = allBuilds.filter(b => buildInBand(b, currentBand)).length + userBuilds.length;
-        countEl.textContent = visible.length === bandTotal
-          ? `${bandTotal} build${bandTotal === 1 ? '' : 's'}`
-          : `${visible.length} of ${bandTotal}`;
+        const classTotal = allBuilds.filter(buildPassesClass).length + userBuilds.length;
+        countEl.textContent = visible.length === classTotal
+          ? `${classTotal} build${classTotal === 1 ? '' : 's'}`
+          : `${visible.length} of ${classTotal}`;
       }
 
       // Active filter count badge on the mobile "Filters" button.
@@ -2720,6 +2827,7 @@
         if (axisFilters.gamePlan) active++;
         if (axisFilters.army) active++;
         if (selectedTournament) active++;
+        if (selectedClasses.size !== BuildClass.KEYS.length) active++;
         if (active > 0) {
           mobileFiltersCount.textContent = String(active);
           mobileFiltersCount.hidden = false;
@@ -2759,23 +2867,6 @@
         return;
       }
       if (e.target.closest('.site-replay-modal')) return;
-      // Learner block: a tab click switches panes within that card; any
-      // other click inside the block is swallowed (never navigates).
-      const learnTab = e.target.closest('.scl-tab');
-      if (learnTab) {
-        const wrap = learnTab.closest('.site-card-learn');
-        const key = learnTab.dataset.learnPane;
-        if (wrap && key) {
-          wrap.querySelectorAll('.scl-tab').forEach(t => {
-            const on = t.dataset.learnPane === key;
-            t.classList.toggle('active', on);
-            t.setAttribute('aria-selected', on ? 'true' : 'false');
-          });
-          wrap.querySelectorAll('.scl-pane').forEach(p => { p.hidden = p.dataset.learnPane !== key; });
-        }
-        return;
-      }
-      if (e.target.closest('.site-card-learn')) return;
       const card = e.target.closest('.site-build-card[data-href]');
       if (card) window.location.href = card.dataset.href;
     }
@@ -2789,6 +2880,9 @@
         const res = await fetch('/data/builds-manifest.json');
         const manifest = await res.json();
         allBuilds = manifest.builds || [];
+        // Manifest order is the editor's order. Stamp it once so the class
+        // sort has a stable tiebreak that survives filtering and re-sorting.
+        allBuilds.forEach((b, i) => { b._ord = i; });
       } catch (e) {
         document.getElementById('all-builds-grid').innerHTML =
           '<div class="site-error">Could not load builds.</div>';
@@ -2859,6 +2953,8 @@
         });
       }
 
+      setupClassFilter();
+      setupUpgradesToggle();
       buildRaceFilter();
       buildAxisFilters();
       buildTournamentFilter();
@@ -2965,8 +3061,19 @@
           if (typeof f.race === 'string') selectedRace = f.race;
           if (typeof f.matchup === 'string') selectedMatchup = f.matchup;
           if (typeof f.query === 'string') searchQuery = f.query.toLowerCase();
+          // `level` only moves the nav band now; `buildClasses` is what
+          // filters the grid, so an agent asking for pro builds has to say so
+          // through the classes.
           if (typeof f.level === 'string' && window.BandSwitcher && window.BandSwitcher.setBand) {
             window.BandSwitcher.setBand(f.level);
+          }
+          if (Array.isArray(f.buildClasses)) {
+            const keys = f.buildClasses.filter(BuildClass.isValid);
+            if (keys.length) {
+              selectedClasses = new Set(keys);
+              syncClassChips();
+              writeClassSelection();
+            }
           }
           applyFilter();
           return lastVisibleBuilds.slice();

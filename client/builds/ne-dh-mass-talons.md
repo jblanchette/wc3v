@@ -2,7 +2,7 @@
 title: "DH Mass Talons — Night Elf build order (EvO)"
 url: https://wc3v.com/builds/ne-dh-mass-talons
 description: "Demon Hunter into mass Druids of the Talon with Cyclone spam. Exploits Orc's limited dispel options. Cyclone removes key units from fights, Faerie Fire…"
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # DH Mass Talons

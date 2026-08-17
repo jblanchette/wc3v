@@ -143,6 +143,33 @@ ok('card remote is streamable-http', SERVER_CARD.remotes[0].type === 'streamable
   r = await rpc('tools/call', { name: 'search_builds', arguments: { matchup: 'EvU' } });
   ok('matchup filter works', r.result.structuredContent.count > 0);
 
+  // ── the duplicated class table ────────────────────────────────────────────
+  // The worker fetches the manifest over HTTP and cannot require
+  // client/js/BuildClass.js, so it carries its own copy of the six keys. This
+  // is what stops the two drifting: add a class there and this fails here.
+  {
+    const BuildClass = require('../client/js/BuildClass.js');
+    const schemaEnum = TOOLS.find(t => t.name === 'search_builds')
+      .inputSchema.properties.buildClass.enum;
+    check('worker buildClass enum matches BuildClass.js',
+      schemaEnum.slice().sort().join(','), BuildClass.KEYS.slice().sort().join(','));
+
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(CLIENT, 'data', 'builds-manifest.json'), 'utf8'));
+    const unknown = (manifest.builds || [])
+      .filter(b => !schemaEnum.includes(b.buildClass)).map(b => b.id);
+    ok('every manifest buildClass is in the worker enum', unknown.length === 0, unknown.join(', '));
+
+    r = await rpc('tools/call', { name: 'search_builds', arguments: { buildClass: 'pro-meta' } });
+    ok('buildClass filter works', r.result.structuredContent.count > 0);
+    ok('buildClass filter holds',
+      r.result.structuredContent.builds.every(b => b.buildClass === 'pro-meta'));
+
+    // A band filter must still match every class projecting onto it.
+    r = await rpc('tools/call', { name: 'search_builds', arguments: { level: 'pro' } });
+    ok('legacy level filter still matches pro classes', r.result.structuredContent.count > 0);
+  }
+
   r = await rpc('tools/call', { name: 'search_builds', arguments: { query: 'zzzznope' } });
   check('no matches is not an error', r.result.isError, undefined);
   ok('no matches explains the library size', r.result.content[0].text.includes('curated'));

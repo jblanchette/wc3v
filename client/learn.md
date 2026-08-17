@@ -2,7 +2,7 @@
 title: "WC3V Build Finder, Starter Warcraft III Builds for New Players"
 url: https://wc3v.com/learn
 description: "Pick your race, then your hero, then the army you like the look of. The Build Finder gives you one Warcraft III build to learn and a pro replay where someone plays it, with a walkthrough that stops at every step."
-updated: 2026-08-16
+updated: 2026-08-17
 ---
 
 # WC3V Build Finder

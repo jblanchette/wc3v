@@ -2,7 +2,7 @@
 title: "BM Wind Rider — Orc build order (OvU)"
 url: https://wc3v.com/builds/orc-bm-wind-rider
 description: "Blademaster opener with heavy early harassment, transitioning into Wind Rider air superiority. Denies expansion and wins on economic disruption."
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # BM Wind Rider

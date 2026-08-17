@@ -655,7 +655,7 @@
     score += unitHits.length * 2;
     if (hasReplays(b)) score += 0.5;
     if (b.difficulty === 'easy') score += 0.3; else if (b.difficulty === 'medium') score += 0.1;
-    if (b.level === 'new') score += 0.2;
+    if (window.BuildClass.classOf(b) === 'new-player') score += 0.2;
     return { b: b, score: score, heroMatch: heroMatch, unitHits: unitHits };
   }
 

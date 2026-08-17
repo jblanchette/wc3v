@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const m = require('../helpers/mappings.js');
+const BuildClass = require('../client/js/BuildClass.js');
 
 const args = {};
 process.argv.slice(2).forEach(raw => { const [f, ...r] = raw.replace(/^--/, '').split('='); args[f] = r.join('=') || true; });
@@ -70,7 +71,15 @@ const log = (sev, buildId, msg) => {
 for (const b of builds) {
   const race = b.race;
   // schema basics
-  if (!b.level && !(b.alsoShownIn || []).length) log('WARN', b.id, 'no `level` and no `alsoShownIn`');
+  // `buildClass` is the authority and `level` is its projection. Both live on
+  // disk so band consumers keep working, which means they can drift — and a
+  // silent drift shows as a build vanishing from /learn or the wrong label on
+  // its SEO page. Re-stamp with `node tools/backfill-classes.js`.
+  if (!BuildClass.isValid(b.buildClass)) {
+    log('ERROR', b.id, `buildClass "${b.buildClass}" — must be one of ${BuildClass.KEYS.join(' | ')}`);
+  } else if (b.level !== BuildClass.bandFor(b.buildClass)) {
+    log('ERROR', b.id, `level "${b.level}" disagrees with buildClass "${b.buildClass}" (expected "${BuildClass.bandFor(b.buildClass)}") — run node tools/backfill-classes.js`);
+  }
   if (b.recommendedReplayId && !(b.replays || []).some(r => r.replayId === b.recommendedReplayId)) {
     log('WARN', b.id, `recommendedReplayId "${b.recommendedReplayId}" not in replays[]`);
   }
@@ -90,6 +99,20 @@ for (const b of builds) {
       if (actual > tier) log('ERROR', b.id, `t${tier}.units has ${dn(id)} (${id}) which needs Tier ${actual} to train — impossible at T${tier}`);
       else if (actual < tier) log('INFO', b.id, `t${tier}.units has ${dn(id)} (${id}) — a Tier-${actual} unit (available earlier; ok if intentional)`);
     }
+  }
+}
+
+// Class membership. An empty class is only a warning — the homepage chip for
+// it renders and simply matches nothing, which is honest — but it usually
+// means a stamping pass was skipped.
+if (!args.build) {
+  const byClass = {};
+  for (const k of BuildClass.KEYS) byClass[k] = 0;
+  for (const b of builds) byClass[BuildClass.classOf(b)]++;
+  console.log('\nClass membership:');
+  for (const k of BuildClass.KEYS) {
+    console.log(`  ${k.padEnd(16)} ${byClass[k]}`);
+    if (!byClass[k]) { warns++; console.log(`  [WARN] class "${k}" has no builds`); }
   }
 }
 

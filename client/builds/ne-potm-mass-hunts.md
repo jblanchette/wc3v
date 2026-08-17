@@ -2,7 +2,7 @@
 title: "PotM Mass Huntress — Night Elf build order (EvH, EvE, EvO)"
 url: https://wc3v.com/builds/ne-potm-mass-hunts
 description: "PotM first hero for Trueshot Aura damage boost and Searing Arrows hero harass. Mass Huntresses provide ranged DPS and Sentinel scout vision. Strong…"
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # PotM Mass Huntress
@@ -11,7 +11,7 @@ PotM first hero for Trueshot Aura damage boost and Searing Arrows hero harass. M
 
 - **Race:** Night Elf
 - **Matchups:** EvH, EvE, EvO
-- **Level:** New to WC3
+- **Level:** New player
 - **Difficulty:** easy
 - **Hero opener:** Priestess of the Moon
 

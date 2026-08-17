@@ -24,12 +24,17 @@
 'use strict';
 
 const ITEM_NAMES = require('./item-names.json').names;
+// Standalone by rule (see the header note above) — BuildClass.js requires
+// nothing, which is what makes it safe to pull in here.
+const BuildClass = require('../../client/js/BuildClass.js');
 
 const ORIGIN = 'https://wc3v.com';
 
 const RACE_NAME = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead' };
 const RACE_VAR = { H: '--race-H', O: '--race-O', E: '--race-E', U: '--race-U' };
-const LEVEL_LABEL = { new: 'New to WC3', improving: 'Ladder', pro: 'Pro meta' };
+// The page's "Level" row names the build's CLASS, not its band — a pro build
+// off the current meta should say so rather than reading as current.
+const levelLabel = (b) => BuildClass.labelOf(b);
 
 // ── small helpers ───────────────────────────────────────────────────────────
 
@@ -326,7 +331,7 @@ function buildHtml (b) {
   const facts = [
     ['Race', raceOf(b), true],
     ['Matchups', matchupText(b), false],
-    ['Level', LEVEL_LABEL[b.level] || b.level || '', false],
+    ['Level', levelLabel(b), false],
     ['Difficulty', b.difficulty || '', false],
     ['Hero opener', b.heroOpener || '', false]
   ].filter(([, v]) => v);
@@ -387,7 +392,7 @@ ${groups.map(([r, list]) =>
 ${list.map(b =>
 `          <a class="bp-card" href="/builds/${esc(b.id)}">
             <p class="bp-card-name">${esc(b.name)}</p>
-            <p class="bp-card-meta">${esc(matchupText(b))} &middot; ${esc(LEVEL_LABEL[b.level] || b.level || '')} &middot; ${b.replays.length} replay${b.replays.length === 1 ? '' : 's'}</p>
+            <p class="bp-card-meta">${esc(matchupText(b))} &middot; ${esc(levelLabel(b))} &middot; ${b.replays.length} replay${b.replays.length === 1 ? '' : 's'}</p>
             <p class="bp-card-desc">${esc(buildDescription(b))}</p>
           </a>`).join('\n')}
         </div>
@@ -467,7 +472,7 @@ function buildMarkdown (b, updated) {
   s += b.description + '\n\n';
   s += '- **Race:** ' + raceOf(b) + '\n';
   s += '- **Matchups:** ' + matchupText(b) + '\n';
-  if (b.level) s += '- **Level:** ' + (LEVEL_LABEL[b.level] || b.level) + '\n';
+  if (b.level) s += '- **Level:** ' + levelLabel(b) + '\n';
   if (b.difficulty) s += '- **Difficulty:** ' + b.difficulty + '\n';
   if (b.heroOpener) s += '- **Hero opener:** ' + b.heroOpener + '\n';
   s += '\n';
@@ -548,7 +553,7 @@ function indexMarkdown (builds, updated) {
     s += '## ' + RACE_NAME[r] + '\n\n';
     for (const b of list) {
       s += '- [' + b.name + '](' + ORIGIN + '/builds/' + b.id + '): ' +
-        matchupText(b) + ', ' + (LEVEL_LABEL[b.level] || b.level) + ', ' +
+        matchupText(b) + ', ' + levelLabel(b) + ', ' +
         b.replays.length + ' replay' + (b.replays.length === 1 ? '' : 's') + '. ' +
         b.description + '\n';
     }
@@ -561,5 +566,5 @@ module.exports = {
   buildHtml, indexHtml, buildMarkdown, indexMarkdown,
   buildTitle, buildDescription, nameOf, nameList, matchupText, raceOf,
   unresolvedIds,
-  RACE_NAME, LEVEL_LABEL, frontMatter, esc, ORIGIN
+  RACE_NAME, BuildClass, levelLabel, frontMatter, esc, ORIGIN
 };

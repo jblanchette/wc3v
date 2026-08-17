@@ -2,7 +2,7 @@
 title: "Paladin Rifle — Human build order (HvO, HvN, HvU)"
 url: https://wc3v.com/builds/hu-paladin-rifle
 description: "Paladin first hero for Holy Light sustain on early Footmen. Tower up at base, mass Riflemen with Priest support. Defensive opener that scales into a…"
-updated: 2026-08-12
+updated: 2026-08-17
 ---
 
 # Paladin Rifle

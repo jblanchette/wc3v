@@ -35,7 +35,10 @@ const doc = {
     }
   }
 };
-const win = { console };
+// HomepageAgentTools reads the six-class table off window at load, the same as
+// it does in the page. Use the real module rather than a stub so the tool's
+// enum can never quietly diverge from BuildClass.js.
+const win = { console, BuildClass: require('../client/js/BuildClass.js') };
 
 const src = fs.readFileSync(
   path.join(__dirname, '..', 'client', 'js', 'HomepageAgentTools.js'), 'utf8');
@@ -149,7 +152,7 @@ function textOf (res) {
 
   // ── no modelContext: must be a silent no-op, never a page error ───────────
   const registered2 = [];
-  const win2 = { console };
+  const win2 = { console, BuildClass: require('../client/js/BuildClass.js') };
   new Function('window', 'document', src)(win2, {});
   check('no modelContext -> install returns false', win2.HomepageAgentTools.install(home), false);
   check('no modelContext -> nothing registered', registered2.length, 0);

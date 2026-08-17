@@ -18,6 +18,29 @@ const ORIGIN = 'https://wc3v.com';
 const RACE_NAME = { H: 'Human', O: 'Orc', E: 'Night Elf', U: 'Undead' };
 const RACES = ['H', 'O', 'E', 'U'];
 
+/** The six build classifications, and the band each projects onto.
+ *
+ *  DUPLICATED ON PURPOSE. client/js/BuildClass.js is the source of truth, but
+ *  this worker fetches the manifest over HTTP and has no filesystem access to
+ *  the repo, so it cannot require it. tools/test-mcp-server.js asserts the two
+ *  lists still agree — if you add a class there, that test is what fails here.
+ */
+const BUILD_CLASSES = ['pro-meta', 'pro-off-meta', 'ladder', 'ladder-off-meta', 'new-player', 'unsorted'];
+const CLASS_LABEL = {
+  'pro-meta': 'Pro meta', 'pro-off-meta': 'Pro off-meta',
+  'ladder': 'Ladder', 'ladder-off-meta': 'Ladder off-meta',
+  'new-player': 'New player', 'unsorted': 'Unsorted'
+};
+const CLASS_BAND = {
+  'pro-meta': 'pro', 'pro-off-meta': 'pro',
+  'ladder': 'improving', 'ladder-off-meta': 'improving',
+  'new-player': 'new', 'unsorted': 'improving'
+};
+const LEGACY_LEVEL = { pro: 'pro-meta', improving: 'ladder', new: 'new-player' };
+const classOf = (b) => (b && BUILD_CLASSES.includes(b.buildClass))
+  ? b.buildClass
+  : (LEGACY_LEVEL[b && b.level] || 'unsorted');
+
 /** Per-isolate memo on top of the edge cache. Cheap, and bounded by the number
  *  of distinct documents (a handful, plus one per replay actually asked for). */
 const memo = new Map();
@@ -51,7 +74,7 @@ function mmss (sec) {
 
 function buildLine (b) {
   return '- **' + b.name + '** (`' + b.id + '`) — ' + (RACE_NAME[b.race] || b.race) +
-    ', ' + (b.matchups || []).join('/') + ', ' + (b.level || '?') +
+    ', ' + (b.matchups || []).join('/') + ', ' + (CLASS_LABEL[classOf(b)] || '?') +
     ', ' + (b.replays || []).length + ' replay' + ((b.replays || []).length === 1 ? '' : 's') +
     '\n  ' + (b.description || '').trim() +
     '\n  ' + ORIGIN + '/builds/' + b.id;
@@ -70,15 +93,16 @@ const TOOLS = [
     name: 'search_builds',
     title: 'Search the curated build library',
     description:
-      'Find Warcraft III build orders by race, matchup, skill level or free text. ' +
-      'Returns a summary of each match; use get_build for the full detail.',
+      'Find Warcraft III build orders by race, matchup, classification or free ' +
+      'text. Returns a summary of each match; use get_build for the full detail.',
     inputSchema: {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Free text over name, description, hero and tags.' },
         race: { type: 'string', enum: RACES, description: 'H Human, O Orc, E Night Elf, U Undead.' },
         matchup: { type: 'string', description: 'Your race then theirs, e.g. "EvU".' },
-        level: { type: 'string', enum: ['new', 'improving', 'pro'] },
+        buildClass: { type: 'string', enum: BUILD_CLASSES, description: 'How the build is classified. "pro-meta" is what top players run now; "pro-off-meta" is pro but not current.' },
+        level: { type: 'string', enum: ['new', 'improving', 'pro'], description: 'Coarser skill band. Kept for older callers; buildClass is finer.' },
         hero: { type: 'string', description: 'Opening hero, e.g. "Demon Hunter".' },
         limit: { type: 'integer', minimum: 1, maximum: 50, default: 20 }
       },
@@ -91,7 +115,9 @@ const TOOLS = [
       const out = all.filter(b => {
         if (a.race && b.race !== a.race) return false;
         if (a.matchup && !(b.matchups || []).includes(a.matchup)) return false;
-        if (a.level && b.level !== a.level) return false;
+        if (a.buildClass && classOf(b) !== a.buildClass) return false;
+        // A band filter matches every class that projects onto it.
+        if (a.level && CLASS_BAND[classOf(b)] !== a.level) return false;
         if (a.hero && !(b.heroOpener || '').toLowerCase().includes(a.hero.toLowerCase())) return false;
         if (q && !haystack(b).includes(q)) return false;
         return true;
@@ -107,7 +133,7 @@ const TOOLS = [
           count: out.length,
           builds: out.map(b => ({
             id: b.id, name: b.name, race: b.race, matchups: b.matchups,
-            level: b.level, difficulty: b.difficulty, heroOpener: b.heroOpener,
+            buildClass: classOf(b), level: b.level, difficulty: b.difficulty, heroOpener: b.heroOpener,
             description: b.description, replayCount: (b.replays || []).length,
             url: ORIGIN + '/builds/' + b.id
           }))

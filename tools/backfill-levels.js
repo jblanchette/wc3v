@@ -1,5 +1,13 @@
 #!/usr/bin/env node
 //
+// ⚠ DEPRECATED — superseded by tools/backfill-classes.js.
+//
+// `level` is no longer hand-stamped: it is derived from `buildClass` (the
+// six-class taxonomy in client/js/BuildClass.js) and written by
+// backfill-classes.js. Running this file will overwrite `level` with a value
+// that no longer agrees with `buildClass`, and tools/lint-manifest.js will
+// error on the drift. Kept for one release; delete after.
+//
 // backfill-levels.js — one-shot: stamp every build in builds-manifest.json with
 // a `level` band (new | improving | pro), a `difficulty` (easy | medium | hard),
 // and an optional `alsoShownIn` array (extra bands the build also appears in —
