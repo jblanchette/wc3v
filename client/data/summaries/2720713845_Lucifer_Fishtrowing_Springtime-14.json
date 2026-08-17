@@ -1,0 +1,571 @@
+{
+  "replayId": "2720713845_Lucifer_Fishtrowing_Springtime-14",
+  "map": "Springtime",
+  "mapRaw": "maps\\W3Champions\\1075_w3c_260615_2308_Springtime_v1.4.w3x",
+  "durationMs": 976472,
+  "durationFormatted": "16:16",
+  "fingerprint": "Springtime|976|fishtrowing#3407,lucifer#34735",
+  "players": {
+    "1": {
+      "name": "Lucifer#34735",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 66032,
+        "gameTimeFormatted": "1:06"
+      },
+      "tier2Time": 146161,
+      "tier2TimeFormatted": "2:26",
+      "tier3Time": 679681,
+      "tier3TimeFormatted": "11:19",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 7260,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 38822,
+          "gameTimeFormatted": "0:38"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 66032,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 79741,
+          "gameTimeFormatted": "1:19"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 96361,
+          "gameTimeFormatted": "1:36"
+        },
+        {
+          "type": "building",
+          "name": "Spirit Lodge",
+          "itemId": "osld",
+          "gameTimeMs": 146161,
+          "gameTimeFormatted": "2:26"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 206251,
+          "gameTimeFormatted": "3:26"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 236281,
+          "gameTimeFormatted": "3:56"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 255092,
+          "gameTimeFormatted": "4:15"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 294750,
+          "gameTimeFormatted": "4:54"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 313111,
+          "gameTimeFormatted": "5:13"
+        },
+        {
+          "type": "building",
+          "name": "Tauren Totem",
+          "itemId": "otto",
+          "gameTimeMs": 321871,
+          "gameTimeFormatted": "5:21"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 378180,
+          "gameTimeFormatted": "6:18"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 400741,
+          "gameTimeFormatted": "6:40"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 441840,
+          "gameTimeFormatted": "7:21"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 483811,
+          "gameTimeFormatted": "8:03"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 485100,
+          "gameTimeFormatted": "8:05"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 506851,
+          "gameTimeFormatted": "8:26"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 589321,
+          "gameTimeFormatted": "9:49"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 600481,
+          "gameTimeFormatted": "10:00"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
+        },
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        },
+        {
+          "name": "War Mill",
+          "itemId": "ofor"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Grunt",
+          "itemId": "ogru"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        },
+        {
+          "name": "Raider",
+          "itemId": "orai"
+        },
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospm"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Watch Tower",
+          "itemId": "owtw"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospm"
+        },
+        {
+          "name": "Raider",
+          "itemId": "orai"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Robs",
+          "name": "Berserker Strength",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnberserk",
+          "gameTimeMs": 356941,
+          "gameTimeFormatted": "5:56"
+        },
+        {
+          "itemId": "Roen",
+          "name": "Ensnare",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnensnare",
+          "gameTimeMs": 378361,
+          "gameTimeFormatted": "6:18"
+        },
+        {
+          "itemId": "Rowt",
+          "name": "Spirit Walker Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnspiritwalkermastertraining",
+          "gameTimeMs": 854881,
+          "gameTimeFormatted": "14:14"
+        },
+        {
+          "itemId": "Ropg",
+          "name": "Pillage",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpillage",
+          "gameTimeMs": 479460,
+          "gameTimeFormatted": "7:59"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 620191,
+          "gameTimeFormatted": "10:20"
+        },
+        {
+          "itemId": "Rosp",
+          "name": "Spiked Barricades",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnimprovedspikedbarricades",
+          "gameTimeMs": 785611,
+          "gameTimeFormatted": "13:05"
+        },
+        {
+          "itemId": "Rows",
+          "name": "Pulverize",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnsmash",
+          "gameTimeMs": 920491,
+          "gameTimeFormatted": "15:20"
+        }
+      ]
+    },
+    "2": {
+      "name": "FishTrowing#3407",
+      "race": "O",
+      "heroOpener": {
+        "name": "Far Seer",
+        "itemId": "Ofar",
+        "gameTimeMs": 66270,
+        "gameTimeFormatted": "1:06"
+      },
+      "tier2Time": 141150,
+      "tier2TimeFormatted": "2:21",
+      "tier3Time": 353822,
+      "tier3TimeFormatted": "5:53",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 4171,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 41731,
+          "gameTimeFormatted": "0:41"
+        },
+        {
+          "type": "hero",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "gameTimeMs": 66270,
+          "gameTimeFormatted": "1:06"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 97021,
+          "gameTimeFormatted": "1:37"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 163650,
+          "gameTimeFormatted": "2:43"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 170401,
+          "gameTimeFormatted": "2:50"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 189091,
+          "gameTimeFormatted": "3:09"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 214710,
+          "gameTimeFormatted": "3:34"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 305941,
+          "gameTimeFormatted": "5:05"
+        },
+        {
+          "type": "building",
+          "name": "Tauren Totem",
+          "itemId": "otto",
+          "gameTimeMs": 309331,
+          "gameTimeFormatted": "5:09"
+        },
+        {
+          "type": "building",
+          "name": "Tauren Totem",
+          "itemId": "otto",
+          "gameTimeMs": 357691,
+          "gameTimeFormatted": "5:57"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 393301,
+          "gameTimeFormatted": "6:33"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 410191,
+          "gameTimeFormatted": "6:50"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 461911,
+          "gameTimeFormatted": "7:41"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 483781,
+          "gameTimeFormatted": "8:03"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 528991,
+          "gameTimeFormatted": "8:48"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 571051,
+          "gameTimeFormatted": "9:31"
+        },
+        {
+          "type": "unit",
+          "name": "Tauren",
+          "itemId": "otau",
+          "gameTimeMs": 587971,
+          "gameTimeFormatted": "9:47"
+        },
+        {
+          "type": "unit",
+          "name": "Tauren",
+          "itemId": "otau",
+          "gameTimeMs": 632431,
+          "gameTimeFormatted": "10:32"
+        },
+        {
+          "type": "building",
+          "name": "Spirit Lodge",
+          "itemId": "osld",
+          "gameTimeMs": 681571,
+          "gameTimeFormatted": "11:21"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Grunt",
+          "itemId": "ogru"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
+        },
+        {
+          "name": "War Mill",
+          "itemId": "ofor"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospm"
+        },
+        {
+          "name": "Tauren",
+          "itemId": "otau"
+        },
+        {
+          "name": "Troll Witch Doctor",
+          "itemId": "odoc"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Robs",
+          "name": "Berserker Strength",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnberserk",
+          "gameTimeMs": 292590,
+          "gameTimeFormatted": "4:52"
+        },
+        {
+          "itemId": "Rowt",
+          "name": "Spirit Walker Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnspiritwalkermastertraining",
+          "gameTimeMs": 501421,
+          "gameTimeFormatted": "8:21"
+        },
+        {
+          "itemId": "Rows",
+          "name": "Pulverize",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnsmash",
+          "gameTimeMs": 602491,
+          "gameTimeFormatted": "10:02"
+        },
+        {
+          "itemId": "Rosp",
+          "name": "Spiked Barricades",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnimprovedspikedbarricades",
+          "gameTimeMs": 707881,
+          "gameTimeFormatted": "11:47"
+        },
+        {
+          "itemId": "Rome",
+          "name": "Melee Weapons",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnorcmeleeuptwo",
+          "gameTimeMs": 963811,
+          "gameTimeFormatted": "16:03"
+        },
+        {
+          "itemId": "Rowd",
+          "name": "Witch Doctor Training",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnwitchdoctoradept",
+          "gameTimeMs": 948361,
+          "gameTimeFormatted": "15:48"
+        }
+      ]
+    }
+  }
+}

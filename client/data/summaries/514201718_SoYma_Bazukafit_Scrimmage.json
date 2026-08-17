@@ -1,0 +1,379 @@
+{
+  "replayId": "514201718_SoYma_Bazukafit_Scrimmage",
+  "map": "Scrimmage",
+  "mapRaw": "maps\\W3Champions\\5607_w3c_260615_2308_Scrimmage_v1.1.w3x",
+  "durationMs": 1416664,
+  "durationFormatted": "23:36",
+  "fingerprint": "Scrimmage|1417|bazukafit#2975,soyma#2943",
+  "players": {
+    "1": {
+      "name": "SoYma#2943",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 67621,
+        "gameTimeFormatted": "1:07"
+      },
+      "tier2Time": 168781,
+      "tier2TimeFormatted": "2:48",
+      "tier3Time": 327573,
+      "tier3TimeFormatted": "5:27",
+      "expansionTime": 273782,
+      "expansionTimeFormatted": "4:33",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 4861,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 8820,
+          "gameTimeFormatted": "0:08"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 53191,
+          "gameTimeFormatted": "0:53"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 65161,
+          "gameTimeFormatted": "1:05"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 67621,
+          "gameTimeFormatted": "1:07"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 124891,
+          "gameTimeFormatted": "2:04"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 150512,
+          "gameTimeFormatted": "2:30"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp",
+          "gameTimeMs": 187141,
+          "gameTimeFormatted": "3:07"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 199052,
+          "gameTimeFormatted": "3:19"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 221401,
+          "gameTimeFormatted": "3:41"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 247233,
+          "gameTimeFormatted": "4:07"
+        },
+        {
+          "type": "expansion",
+          "name": "Great Hall",
+          "itemId": "ogre",
+          "gameTimeMs": 273782,
+          "gameTimeFormatted": "4:33"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 287372,
+          "gameTimeFormatted": "4:47"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 341493,
+          "gameTimeFormatted": "5:41"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 343862,
+          "gameTimeFormatted": "5:43"
+        },
+        {
+          "type": "unit",
+          "name": "Goblin Shredder",
+          "itemId": "ngir",
+          "gameTimeMs": 355382,
+          "gameTimeFormatted": "5:55"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 370443,
+          "gameTimeFormatted": "6:10"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 401643,
+          "gameTimeFormatted": "6:41"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Watch Tower",
+          "itemId": "owtw"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Goblin Shredder",
+          "itemId": "ngir"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 310533,
+          "gameTimeFormatted": "5:10"
+        }
+      ]
+    },
+    "2": {
+      "name": "BAZUKAFIT#2975",
+      "race": "E",
+      "heroOpener": null,
+      "tier2Time": 200251,
+      "tier2TimeFormatted": "3:20",
+      "tier3Time": null,
+      "tier3TimeFormatted": null,
+      "expansionTime": 169321,
+      "expansionTimeFormatted": "2:49",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 29461,
+          "gameTimeFormatted": "0:29"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 32761,
+          "gameTimeFormatted": "0:32"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 73741,
+          "gameTimeFormatted": "1:13"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 79711,
+          "gameTimeFormatted": "1:19"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 85531,
+          "gameTimeFormatted": "1:25"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 102211,
+          "gameTimeFormatted": "1:42"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 113251,
+          "gameTimeFormatted": "1:53"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 122042,
+          "gameTimeFormatted": "2:02"
+        },
+        {
+          "type": "expansion",
+          "name": "Tree of Life",
+          "itemId": "etol",
+          "gameTimeMs": 169321,
+          "gameTimeFormatted": "2:49"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 217891,
+          "gameTimeFormatted": "3:37"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp",
+          "gameTimeMs": 245793,
+          "gameTimeFormatted": "4:05"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 260523,
+          "gameTimeFormatted": "4:20"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp",
+          "gameTimeMs": 272432,
+          "gameTimeFormatted": "4:32"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 282002,
+          "gameTimeFormatted": "4:42"
+        },
+        {
+          "type": "unit",
+          "name": "Goblin Shredder",
+          "itemId": "ngir",
+          "gameTimeMs": 331803,
+          "gameTimeFormatted": "5:31"
+        },
+        {
+          "type": "building",
+          "name": "Ancient Protector",
+          "itemId": "etrp",
+          "gameTimeMs": 368972,
+          "gameTimeFormatted": "6:08"
+        },
+        {
+          "type": "building",
+          "name": "Ancient Protector",
+          "itemId": "etrp",
+          "gameTimeMs": 372003,
+          "gameTimeFormatted": "6:12"
+        },
+        {
+          "type": "building",
+          "name": "Ancient Protector",
+          "itemId": "etrp",
+          "gameTimeMs": 397653,
+          "gameTimeFormatted": "6:37"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Ancient Protector",
+          "itemId": "etrp"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp"
+        },
+        {
+          "name": "Blademaster",
+          "itemId": "Obla"
+        },
+        {
+          "name": "Goblin Shredder",
+          "itemId": "ngir"
+        }
+      ],
+      "t3Buildings": [],
+      "t3Units": [],
+      "researched": []
+    }
+  }
+}

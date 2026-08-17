@@ -1,0 +1,636 @@
+{
+  "replayId": "773643090_barrage-3843_Cloud-American-player-_Scrimmage",
+  "map": "Scrimmage",
+  "mapRaw": "maps\\W3Champions\\5607_w3c_260615_2308_Scrimmage_v1.1.w3x",
+  "durationMs": 1587841,
+  "durationFormatted": "26:27",
+  "fingerprint": "Scrimmage|1588|barrage#3843,pa2ma#2983",
+  "players": {
+    "1": {
+      "name": "barrage#3843",
+      "race": "O",
+      "heroOpener": {
+        "name": "Blademaster",
+        "itemId": "Obla",
+        "gameTimeMs": 67861,
+        "gameTimeFormatted": "1:07"
+      },
+      "tier2Time": 143761,
+      "tier2TimeFormatted": "2:23",
+      "tier3Time": 803880,
+      "tier3TimeFormatted": "13:23",
+      "expansionTime": 617880,
+      "expansionTimeFormatted": "10:17",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 7171,
+          "gameTimeFormatted": "0:07"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 34050,
+          "gameTimeFormatted": "0:34"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 67861,
+          "gameTimeFormatted": "1:07"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 85321,
+          "gameTimeFormatted": "1:25"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 94081,
+          "gameTimeFormatted": "1:34"
+        },
+        {
+          "type": "unit",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 136260,
+          "gameTimeFormatted": "2:16"
+        },
+        {
+          "type": "building",
+          "name": "Spirit Lodge",
+          "itemId": "osld",
+          "gameTimeMs": 143761,
+          "gameTimeFormatted": "2:23"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 218101,
+          "gameTimeFormatted": "3:38"
+        },
+        {
+          "type": "unit",
+          "name": "Grunt",
+          "itemId": "ogru",
+          "gameTimeMs": 242731,
+          "gameTimeFormatted": "4:02"
+        },
+        {
+          "type": "hero",
+          "name": "Shadow Hunter",
+          "itemId": "Oshd",
+          "gameTimeMs": 286230,
+          "gameTimeFormatted": "4:46"
+        },
+        {
+          "type": "building",
+          "name": "Beastiary",
+          "itemId": "obea",
+          "gameTimeMs": 291000,
+          "gameTimeFormatted": "4:51"
+        },
+        {
+          "type": "building",
+          "name": "Tauren Totem",
+          "itemId": "otto",
+          "gameTimeMs": 313471,
+          "gameTimeFormatted": "5:13"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 355530,
+          "gameTimeFormatted": "5:55"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 390061,
+          "gameTimeFormatted": "6:30"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 395611,
+          "gameTimeFormatted": "6:35"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 417901,
+          "gameTimeFormatted": "6:57"
+        },
+        {
+          "type": "unit",
+          "name": "Spirit Walker",
+          "itemId": "ospm",
+          "gameTimeMs": 423151,
+          "gameTimeFormatted": "7:03"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb",
+          "gameTimeMs": 448620,
+          "gameTimeFormatted": "7:28"
+        },
+        {
+          "type": "unit",
+          "name": "Raider",
+          "itemId": "orai",
+          "gameTimeMs": 493710,
+          "gameTimeFormatted": "8:13"
+        },
+        {
+          "type": "unit",
+          "name": "Kodo Beast",
+          "itemId": "okod",
+          "gameTimeMs": 546721,
+          "gameTimeFormatted": "9:06"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Beastiary",
+          "itemId": "obea"
+        },
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        },
+        {
+          "name": "War Mill",
+          "itemId": "ofor"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Grunt",
+          "itemId": "ogru"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        },
+        {
+          "name": "Raider",
+          "itemId": "orai"
+        },
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospm"
+        },
+        {
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb"
+        },
+        {
+          "name": "Kodo Beast",
+          "itemId": "okod"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Goblin Zeppelin",
+          "itemId": "nzep"
+        },
+        {
+          "name": "Goblin Shredder",
+          "itemId": "ngir"
+        },
+        {
+          "name": "Tauren",
+          "itemId": "otau"
+        },
+        {
+          "name": "Entangled Gold Mine",
+          "itemId": "egol"
+        },
+        {
+          "name": "Spirit Walker",
+          "itemId": "ospm"
+        },
+        {
+          "name": "Raider",
+          "itemId": "orai"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Roen",
+          "name": "Ensnare",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnensnare",
+          "gameTimeMs": 389791,
+          "gameTimeFormatted": "6:29"
+        },
+        {
+          "itemId": "Rowt",
+          "name": "Spirit Walker Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnspiritwalkermastertraining",
+          "gameTimeMs": 1176181,
+          "gameTimeFormatted": "19:36"
+        },
+        {
+          "itemId": "Robs",
+          "name": "Berserker Strength",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnberserk",
+          "gameTimeMs": 566101,
+          "gameTimeFormatted": "9:26"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 566491,
+          "gameTimeFormatted": "9:26"
+        },
+        {
+          "itemId": "Ropg",
+          "name": "Pillage",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnpillage",
+          "gameTimeMs": 656190,
+          "gameTimeFormatted": "10:56"
+        },
+        {
+          "itemId": "Rome",
+          "name": "Melee Weapons",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnorcmeleeuptwo",
+          "gameTimeMs": 876091,
+          "gameTimeFormatted": "14:36"
+        },
+        {
+          "itemId": "Roar",
+          "name": "Unit Armor",
+          "level": 2,
+          "category": "defense",
+          "icon": "btnthoriumarmor",
+          "gameTimeMs": 912990,
+          "gameTimeFormatted": "15:12"
+        },
+        {
+          "itemId": "Rwdm",
+          "name": "War Drums",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndrum",
+          "gameTimeMs": 959521,
+          "gameTimeFormatted": "15:59"
+        }
+      ]
+    },
+    "2": {
+      "name": "Pa2Ma#2983",
+      "race": "E",
+      "heroOpener": {
+        "name": "Warden",
+        "itemId": "Ewar",
+        "gameTimeMs": 67710,
+        "gameTimeFormatted": "1:07"
+      },
+      "tier2Time": 175771,
+      "tier2TimeFormatted": "2:55",
+      "tier3Time": 492061,
+      "tier3TimeFormatted": "8:12",
+      "expansionTime": 399121,
+      "expansionTimeFormatted": "6:39",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 4110,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 6301,
+          "gameTimeFormatted": "0:06"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 17431,
+          "gameTimeFormatted": "0:17"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 26670,
+          "gameTimeFormatted": "0:26"
+        },
+        {
+          "type": "hero",
+          "name": "Warden",
+          "itemId": "Ewar",
+          "gameTimeMs": 67710,
+          "gameTimeFormatted": "1:07"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 85470,
+          "gameTimeFormatted": "1:25"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 92340,
+          "gameTimeFormatted": "1:32"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 133111,
+          "gameTimeFormatted": "2:13"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp",
+          "gameTimeMs": 187771,
+          "gameTimeFormatted": "3:07"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 200070,
+          "gameTimeFormatted": "3:20"
+        },
+        {
+          "type": "unit",
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb",
+          "gameTimeMs": 240841,
+          "gameTimeFormatted": "4:00"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 276510,
+          "gameTimeFormatted": "4:36"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 280771,
+          "gameTimeFormatted": "4:40"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 320100,
+          "gameTimeFormatted": "5:20"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 347670,
+          "gameTimeFormatted": "5:47"
+        },
+        {
+          "type": "building",
+          "name": "Ancient Protector",
+          "itemId": "etrp",
+          "gameTimeMs": 379621,
+          "gameTimeFormatted": "6:19"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 387811,
+          "gameTimeFormatted": "6:27"
+        },
+        {
+          "type": "expansion",
+          "name": "Tree of Life",
+          "itemId": "etol",
+          "gameTimeMs": 399121,
+          "gameTimeFormatted": "6:39"
+        },
+        {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
+          "gameTimeMs": 422311,
+          "gameTimeFormatted": "7:02"
+        },
+        {
+          "type": "unit",
+          "name": "Dryad",
+          "itemId": "edry",
+          "gameTimeMs": 538471,
+          "gameTimeFormatted": "8:58"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Ancient Protector",
+          "itemId": "etrp"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Forest Troll Shadow Priest",
+          "itemId": "nfsp"
+        },
+        {
+          "name": "Forest Troll Berserker",
+          "itemId": "nftb"
+        },
+        {
+          "name": "Blademaster",
+          "itemId": "Obla"
+        },
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        },
+        {
+          "name": "Shadow Hunter",
+          "itemId": "Oshd"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Ancient Protector",
+          "itemId": "etrp"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Ancient of War",
+          "itemId": "eaom"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        },
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Ancient of Wind",
+          "itemId": "eaow"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        },
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "DruidoftheClawMorph",
+          "itemId": "edcm"
+        },
+        {
+          "name": "Faerie Dragon",
+          "itemId": "efdr"
+        },
+        {
+          "name": "spirit of vengeance",
+          "itemId": "espv"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 316471,
+          "gameTimeFormatted": "5:16"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 592081,
+          "gameTimeFormatted": "9:52"
+        },
+        {
+          "itemId": "Redc",
+          "name": "Druid of the Claw Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btndocmastertraining",
+          "gameTimeMs": 678211,
+          "gameTimeFormatted": "11:18"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 776610,
+          "gameTimeFormatted": "12:56"
+        },
+        {
+          "itemId": "Rews",
+          "name": "Well Spring",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnwellspring",
+          "gameTimeMs": 868921,
+          "gameTimeFormatted": "14:28"
+        },
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 869191,
+          "gameTimeFormatted": "14:29"
+        }
+      ]
+    }
+  }
+}

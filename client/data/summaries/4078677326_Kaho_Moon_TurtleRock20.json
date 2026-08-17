@@ -19,8 +19,8 @@
       "tier2TimeFormatted": "2:30",
       "tier3Time": 363907,
       "tier3TimeFormatted": "6:03",
-      "expansionTime": 1239494,
-      "expansionTimeFormatted": "20:39",
+      "expansionTime": 1223293,
+      "expansionTimeFormatted": "20:23",
       "buildPreview": [
         {
           "type": "building",
@@ -47,8 +47,8 @@
           "type": "building",
           "name": "Ancient of War",
           "itemId": "eaom",
-          "gameTimeMs": 27088,
-          "gameTimeFormatted": "0:27"
+          "gameTimeMs": 26873,
+          "gameTimeFormatted": "0:26"
         },
         {
           "type": "hero",
@@ -131,8 +131,15 @@
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 313718,
+          "gameTimeMs": 313293,
           "gameTimeFormatted": "5:13"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 351811,
+          "gameTimeFormatted": "5:51"
         },
         {
           "type": "unit",
@@ -152,15 +159,8 @@
           "type": "building",
           "name": "Ancient of Wonders",
           "itemId": "eden",
-          "gameTimeMs": 422672,
+          "gameTimeMs": 422369,
           "gameTimeFormatted": "7:02"
-        },
-        {
-          "type": "unit",
-          "name": "Druid of the Claw",
-          "itemId": "edoc",
-          "gameTimeMs": 428803,
-          "gameTimeFormatted": "7:08"
         }
       ],
       "t2Buildings": [
@@ -175,6 +175,10 @@
         {
           "name": "Ancient of Lore",
           "itemId": "eaoe"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
         }
       ],
       "t2Units": [
@@ -311,8 +315,8 @@
       "tier2TimeFormatted": "2:41",
       "tier3Time": 327653,
       "tier3TimeFormatted": "5:27",
-      "expansionTime": 604320,
-      "expansionTimeFormatted": "10:04",
+      "expansionTime": 602862,
+      "expansionTimeFormatted": "10:02",
       "buildPreview": [
         {
           "type": "building",
@@ -409,7 +413,7 @@
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 307591,
+          "gameTimeMs": 307227,
           "gameTimeFormatted": "5:07"
         },
         {
@@ -444,8 +448,8 @@
           "type": "building",
           "name": "Ancient of Wonders",
           "itemId": "eden",
-          "gameTimeMs": 398813,
-          "gameTimeFormatted": "6:38"
+          "gameTimeMs": 401575,
+          "gameTimeFormatted": "6:41"
         },
         {
           "type": "unit",

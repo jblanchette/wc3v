@@ -19,21 +19,21 @@
       "tier2TimeFormatted": "5:17",
       "tier3Time": 539901,
       "tier3TimeFormatted": "8:59",
-      "expansionTime": 375358,
+      "expansionTime": 375600,
       "expansionTimeFormatted": "6:15",
       "buildPreview": [
         {
           "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
-          "gameTimeMs": 8682,
-          "gameTimeFormatted": "0:08"
+          "gameTimeMs": 9317,
+          "gameTimeFormatted": "0:09"
         },
         {
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 22456,
+          "gameTimeMs": 22638,
           "gameTimeFormatted": "0:22"
         },
         {
@@ -47,63 +47,63 @@
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 76248,
-          "gameTimeFormatted": "1:16"
+          "gameTimeMs": 77844,
+          "gameTimeFormatted": "1:17"
         },
         {
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 150526,
-          "gameTimeFormatted": "2:30"
+          "gameTimeMs": 151037,
+          "gameTimeFormatted": "2:31"
         },
         {
           "type": "building",
           "name": "Graveyard",
           "itemId": "ugrv",
-          "gameTimeMs": 240514,
+          "gameTimeMs": 240786,
           "gameTimeFormatted": "4:00"
         },
         {
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 280151,
+          "gameTimeMs": 280726,
           "gameTimeFormatted": "4:40"
         },
         {
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 351760,
+          "gameTimeMs": 351972,
           "gameTimeFormatted": "5:51"
         },
         {
           "type": "building",
           "name": "Altar of Darkness",
           "itemId": "uaod",
-          "gameTimeMs": 372007,
+          "gameTimeMs": 372399,
           "gameTimeFormatted": "6:12"
         },
         {
           "type": "expansion",
           "name": "Necropolis",
           "itemId": "unpl",
-          "gameTimeMs": 375358,
+          "gameTimeMs": 375600,
           "gameTimeFormatted": "6:15"
         },
         {
           "type": "building",
           "name": "Crypt",
           "itemId": "usep",
-          "gameTimeMs": 382600,
+          "gameTimeMs": 382930,
           "gameTimeFormatted": "6:22"
         },
         {
           "type": "building",
           "name": "Crypt",
           "itemId": "usep",
-          "gameTimeMs": 393064,
+          "gameTimeMs": 393522,
           "gameTimeFormatted": "6:33"
         },
         {
@@ -131,14 +131,14 @@
           "type": "building",
           "name": "Slaughterhouse",
           "itemId": "uslh",
-          "gameTimeMs": 573889,
-          "gameTimeFormatted": "9:33"
+          "gameTimeMs": 574191,
+          "gameTimeFormatted": "9:34"
         },
         {
           "type": "building",
           "name": "Sacrificial Pit",
           "itemId": "usap",
-          "gameTimeMs": 580117,
+          "gameTimeMs": 580328,
           "gameTimeFormatted": "9:40"
         },
         {
@@ -159,7 +159,7 @@
           "type": "building",
           "name": "Ziggurat",
           "itemId": "uzig",
-          "gameTimeMs": 714037,
+          "gameTimeMs": 714218,
           "gameTimeFormatted": "11:54"
         }
       ],
@@ -211,6 +211,10 @@
         {
           "name": "Haunted Gold Mine",
           "itemId": "ugol"
+        },
+        {
+          "name": "Temple of the Damned",
+          "itemId": "utod"
         }
       ],
       "t3Units": [
@@ -233,6 +237,14 @@
         {
           "name": "Obsidian Statue",
           "itemId": "uobs"
+        },
+        {
+          "name": "Pandaren Brewmaster",
+          "itemId": "Npbm"
+        },
+        {
+          "name": "Banshee",
+          "itemId": "uban"
         }
       ],
       "researched": [
@@ -280,6 +292,15 @@
           "icon": "btndestroyer",
           "gameTimeMs": 684251,
           "gameTimeFormatted": "11:24"
+        },
+        {
+          "itemId": "Ruba",
+          "name": "Banshee Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnbansheemaster",
+          "gameTimeMs": 1386947,
+          "gameTimeFormatted": "23:06"
         }
       ]
     },
@@ -296,29 +317,29 @@
       "tier2TimeFormatted": "4:43",
       "tier3Time": 461942,
       "tier3TimeFormatted": "7:41",
-      "expansionTime": 166867,
-      "expansionTimeFormatted": "2:46",
+      "expansionTime": 168104,
+      "expansionTimeFormatted": "2:48",
       "buildPreview": [
         {
           "type": "building",
           "name": "Altar of Elders",
           "itemId": "eate",
-          "gameTimeMs": 4296,
-          "gameTimeFormatted": "0:04"
+          "gameTimeMs": 5321,
+          "gameTimeFormatted": "0:05"
         },
         {
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 10251,
-          "gameTimeFormatted": "0:10"
+          "gameTimeMs": 14508,
+          "gameTimeFormatted": "0:14"
         },
         {
           "type": "building",
           "name": "Ancient of War",
           "itemId": "eaom",
-          "gameTimeMs": 22001,
-          "gameTimeFormatted": "0:22"
+          "gameTimeMs": 29556,
+          "gameTimeFormatted": "0:29"
         },
         {
           "type": "hero",
@@ -338,21 +359,21 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 93566,
-          "gameTimeFormatted": "1:33"
+          "gameTimeMs": 94232,
+          "gameTimeFormatted": "1:34"
         },
         {
           "type": "expansion",
           "name": "Tree of Life",
           "itemId": "etol",
-          "gameTimeMs": 166867,
-          "gameTimeFormatted": "2:46"
+          "gameTimeMs": 168104,
+          "gameTimeFormatted": "2:48"
         },
         {
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 171240,
+          "gameTimeMs": 171573,
           "gameTimeFormatted": "2:51"
         },
         {
@@ -380,36 +401,36 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 299748,
+          "gameTimeMs": 299989,
           "gameTimeFormatted": "4:59"
         },
         {
           "type": "building",
           "name": "Hunter's Hall",
           "itemId": "edob",
-          "gameTimeMs": 339977,
-          "gameTimeFormatted": "5:39"
+          "gameTimeMs": 340281,
+          "gameTimeFormatted": "5:40"
         },
         {
           "type": "building",
           "name": "Ancient Protector",
           "itemId": "etrp",
-          "gameTimeMs": 420115,
+          "gameTimeMs": 420990,
           "gameTimeFormatted": "7:00"
         },
         {
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 430727,
-          "gameTimeFormatted": "7:10"
+          "gameTimeMs": 434896,
+          "gameTimeFormatted": "7:14"
         },
         {
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 445360,
-          "gameTimeFormatted": "7:25"
+          "gameTimeMs": 451017,
+          "gameTimeFormatted": "7:31"
         },
         {
           "type": "unit",
@@ -422,15 +443,8 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 530753,
-          "gameTimeFormatted": "8:50"
-        },
-        {
-          "type": "building",
-          "name": "Ancient of Wonders",
-          "itemId": "eden",
-          "gameTimeMs": 531990,
-          "gameTimeFormatted": "8:51"
+          "gameTimeMs": 532623,
+          "gameTimeFormatted": "8:52"
         },
         {
           "type": "unit",
@@ -438,6 +452,13 @@
           "itemId": "edoc",
           "gameTimeMs": 539993,
           "gameTimeFormatted": "8:59"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 554041,
+          "gameTimeFormatted": "9:14"
         }
       ],
       "t2Buildings": [
@@ -517,11 +538,11 @@
         {
           "itemId": "Rerh",
           "name": "Reinforced Hides",
-          "level": 2,
+          "level": 3,
           "category": "defense",
-          "icon": "btnimprovedreinforcedhides",
-          "gameTimeMs": 813931,
-          "gameTimeFormatted": "13:33"
+          "icon": "btnadvancedreinforcedhides",
+          "gameTimeMs": 1163210,
+          "gameTimeFormatted": "19:23"
         },
         {
           "itemId": "Reeb",
@@ -549,6 +570,24 @@
           "icon": "btnultravision",
           "gameTimeMs": 721753,
           "gameTimeFormatted": "12:01"
+        },
+        {
+          "itemId": "Rews",
+          "name": "Well Spring",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnwellspring",
+          "gameTimeMs": 1270955,
+          "gameTimeFormatted": "21:10"
+        },
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 1304068,
+          "gameTimeFormatted": "21:44"
         }
       ]
     }

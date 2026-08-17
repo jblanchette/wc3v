@@ -208,8 +208,8 @@
       "tier2TimeFormatted": "5:22",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": null,
-      "expansionTimeFormatted": null,
+      "expansionTime": 567164,
+      "expansionTimeFormatted": "9:27",
       "buildPreview": [
         {
           "type": "building",
@@ -368,6 +368,10 @@
         {
           "name": "Scout Tower",
           "itemId": "hwtw"
+        },
+        {
+          "name": "Town Hall",
+          "itemId": "htow"
         },
         {
           "name": "Workshop",

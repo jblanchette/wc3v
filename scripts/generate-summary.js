@@ -4,6 +4,7 @@
  * Usage:
  *   node scripts/generate-summary.js --replay=happy-vs-grubby
  *   node scripts/generate-summary.js --all   (processes all named replays)
+ *   node scripts/generate-summary.js --manifest-only   (only /data/map-folders.json)
  *
  * Output: client/data/summaries/{replayId}.json
  *
@@ -121,7 +122,20 @@ function writeSummary(replayId) {
 
 // ── Entry point ──────────────────────────────────────────────────────────────
 
-if (args.all) {
+// The browser fetches /data/map-folders.json and runs the SAME
+// SummaryExtract.resolveMapFolder over it that Node runs over the real table,
+// so a manifest missing entries is a browser that resolves uploaded replays to
+// the wrong map. It shipped at 81 of 203 maps, which is every map added since
+// it was last written, including every S2 and s3 variant.
+//
+// Separate from --all because --all also rewrites every summary in this
+// script's shape, and the shipped summaries are written by
+// tools/import-replays.js --regen-summaries in a different one (it carries
+// `fingerprint`, which self-match needs). Regenerating the manifest must not
+// mean silently changing 300 summaries.
+if (args['manifest-only']) {
+  writeMapFoldersManifest();
+} else if (args.all) {
   const replaysDir = path.join(__dirname, '..', 'client', 'replays');
   const files = fs.readdirSync(replaysDir)
     .filter(f => f.endsWith('.wc3v.gz'))
@@ -140,5 +154,6 @@ if (args.all) {
 } else {
   console.log('Usage: node scripts/generate-summary.js --replay=NAME');
   console.log('       node scripts/generate-summary.js --all');
+  console.log('       node scripts/generate-summary.js --manifest-only');
   process.exit(1);
 }

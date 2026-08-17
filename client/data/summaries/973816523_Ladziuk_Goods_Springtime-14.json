@@ -1,0 +1,625 @@
+{
+  "replayId": "973816523_Ladziuk_Goods_Springtime-14",
+  "map": "Springtime",
+  "mapRaw": "maps\\W3Champions\\1075_w3c_260615_2308_Springtime_v1.4.w3x",
+  "durationMs": 1708351,
+  "durationFormatted": "28:28",
+  "fingerprint": "Springtime|1708|goods#31869,ldk#21919",
+  "players": {
+    "1": {
+      "name": "LDK#21919",
+      "race": "O",
+      "heroOpener": {
+        "name": "Far Seer",
+        "itemId": "Ofar",
+        "gameTimeMs": 106981,
+        "gameTimeFormatted": "1:46"
+      },
+      "tier2Time": 205710,
+      "tier2TimeFormatted": "3:25",
+      "tier3Time": 453091,
+      "tier3TimeFormatted": "7:33",
+      "expansionTime": null,
+      "expansionTimeFormatted": null,
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 6841,
+          "gameTimeFormatted": "0:06"
+        },
+        {
+          "type": "building",
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 91501,
+          "gameTimeFormatted": "1:31"
+        },
+        {
+          "type": "building",
+          "name": "Barracks",
+          "itemId": "obar",
+          "gameTimeMs": 104010,
+          "gameTimeFormatted": "1:44"
+        },
+        {
+          "type": "hero",
+          "name": "Far Seer",
+          "itemId": "Ofar",
+          "gameTimeMs": 106981,
+          "gameTimeFormatted": "1:46"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 165211,
+          "gameTimeFormatted": "2:45"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 177211,
+          "gameTimeFormatted": "2:57"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 215281,
+          "gameTimeFormatted": "3:35"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 234871,
+          "gameTimeFormatted": "3:54"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 250231,
+          "gameTimeFormatted": "4:10"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 270481,
+          "gameTimeFormatted": "4:30"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun",
+          "gameTimeMs": 310801,
+          "gameTimeFormatted": "5:10"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 372481,
+          "gameTimeFormatted": "6:12"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 384391,
+          "gameTimeFormatted": "6:24"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 408210,
+          "gameTimeFormatted": "6:48"
+        },
+        {
+          "type": "building",
+          "name": "Watch Tower",
+          "itemId": "owtw",
+          "gameTimeMs": 420211,
+          "gameTimeFormatted": "7:00"
+        },
+        {
+          "type": "building",
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 478171,
+          "gameTimeFormatted": "7:58"
+        },
+        {
+          "type": "building",
+          "name": "Spirit Lodge",
+          "itemId": "osld",
+          "gameTimeMs": 480360,
+          "gameTimeFormatted": "8:00"
+        },
+        {
+          "type": "building",
+          "name": "Orc Burrow",
+          "itemId": "otrb",
+          "gameTimeMs": 519750,
+          "gameTimeFormatted": "8:39"
+        },
+        {
+          "type": "unit",
+          "name": "Troll Witch Doctor",
+          "itemId": "odoc",
+          "gameTimeMs": 553710,
+          "gameTimeFormatted": "9:13"
+        },
+        {
+          "type": "hero",
+          "name": "Blademaster",
+          "itemId": "Obla",
+          "gameTimeMs": 604980,
+          "gameTimeFormatted": "10:04"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Watch Tower",
+          "itemId": "owtw"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "ohun"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Voodoo Lounge",
+          "itemId": "ovln"
+        },
+        {
+          "name": "Spirit Lodge",
+          "itemId": "osld"
+        },
+        {
+          "name": "Orc Burrow",
+          "itemId": "otrb"
+        },
+        {
+          "name": "Tauren Totem",
+          "itemId": "otto"
+        },
+        {
+          "name": "Great Hall",
+          "itemId": "ogre"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Troll Witch Doctor",
+          "itemId": "odoc"
+        },
+        {
+          "name": "Blademaster",
+          "itemId": "Obla"
+        },
+        {
+          "name": "Troll Headhunter/Berserker",
+          "itemId": "otbk"
+        },
+        {
+          "name": "Tauren",
+          "itemId": "otau"
+        },
+        {
+          "name": "Shaman",
+          "itemId": "oshm"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Rora",
+          "name": "Ranged Weapons",
+          "level": 2,
+          "category": "attack",
+          "icon": "btnthoriumranged",
+          "gameTimeMs": 541590,
+          "gameTimeFormatted": "9:01"
+        },
+        {
+          "itemId": "Rorb",
+          "name": "Reinforced Defenses",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnreinforcedburrows",
+          "gameTimeMs": 374011,
+          "gameTimeFormatted": "6:14"
+        },
+        {
+          "itemId": "Rowd",
+          "name": "Witch Doctor Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnwitchdoctormaster",
+          "gameTimeMs": 701671,
+          "gameTimeFormatted": "11:41"
+        },
+        {
+          "itemId": "Robk",
+          "name": "Berserker Upgrade",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnheadhunterberserker",
+          "gameTimeMs": 600420,
+          "gameTimeFormatted": "10:00"
+        },
+        {
+          "itemId": "Rost",
+          "name": "Shaman Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btnshamanmaster",
+          "gameTimeMs": 1382820,
+          "gameTimeFormatted": "23:02"
+        },
+        {
+          "itemId": "Rows",
+          "name": "Pulverize",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnsmash",
+          "gameTimeMs": 995161,
+          "gameTimeFormatted": "16:35"
+        },
+        {
+          "itemId": "Roar",
+          "name": "Unit Armor",
+          "level": 1,
+          "category": "defense",
+          "icon": "btnsteelarmor",
+          "gameTimeMs": 1009561,
+          "gameTimeFormatted": "16:49"
+        },
+        {
+          "itemId": "Robs",
+          "name": "Berserker Strength",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnberserk",
+          "gameTimeMs": 1277131,
+          "gameTimeFormatted": "21:17"
+        },
+        {
+          "itemId": "Rome",
+          "name": "Melee Weapons",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnorcmeleeupone",
+          "gameTimeMs": 1305450,
+          "gameTimeFormatted": "21:45"
+        }
+      ]
+    },
+    "2": {
+      "name": "goods#31869",
+      "race": "E",
+      "heroOpener": {
+        "name": "Demon Hunter",
+        "itemId": "Edem",
+        "gameTimeMs": 106711,
+        "gameTimeFormatted": "1:46"
+      },
+      "tier2Time": 206851,
+      "tier2TimeFormatted": "3:26",
+      "tier3Time": 426721,
+      "tier3TimeFormatted": "7:06",
+      "expansionTime": 1264530,
+      "expansionTimeFormatted": "21:04",
+      "buildPreview": [
+        {
+          "type": "building",
+          "name": "Altar of Elders",
+          "itemId": "eate",
+          "gameTimeMs": 4200,
+          "gameTimeFormatted": "0:04"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 17010,
+          "gameTimeFormatted": "0:17"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 39601,
+          "gameTimeFormatted": "0:39"
+        },
+        {
+          "type": "hero",
+          "name": "Demon Hunter",
+          "itemId": "Edem",
+          "gameTimeMs": 106711,
+          "gameTimeFormatted": "1:46"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 127411,
+          "gameTimeFormatted": "2:07"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 135330,
+          "gameTimeFormatted": "2:15"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 180931,
+          "gameTimeFormatted": "3:00"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 212401,
+          "gameTimeFormatted": "3:32"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 228031,
+          "gameTimeFormatted": "3:48"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 240421,
+          "gameTimeFormatted": "4:00"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 268501,
+          "gameTimeFormatted": "4:28"
+        },
+        {
+          "type": "building",
+          "name": "Moon Well",
+          "itemId": "emow",
+          "gameTimeMs": 274050,
+          "gameTimeFormatted": "4:34"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 300330,
+          "gameTimeFormatted": "5:00"
+        },
+        {
+          "type": "building",
+          "name": "Hunter's Hall",
+          "itemId": "edob",
+          "gameTimeMs": 307261,
+          "gameTimeFormatted": "5:07"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Wonders",
+          "itemId": "eden",
+          "gameTimeMs": 311911,
+          "gameTimeFormatted": "5:11"
+        },
+        {
+          "type": "unit",
+          "name": "Archer",
+          "itemId": "earc",
+          "gameTimeMs": 321661,
+          "gameTimeFormatted": "5:21"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of War",
+          "itemId": "eaom",
+          "gameTimeMs": 388140,
+          "gameTimeFormatted": "6:28"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 442590,
+          "gameTimeFormatted": "7:22"
+        },
+        {
+          "type": "building",
+          "name": "Ancient Protector",
+          "itemId": "etrp",
+          "gameTimeMs": 455490,
+          "gameTimeFormatted": "7:35"
+        },
+        {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 470881,
+          "gameTimeFormatted": "7:50"
+        }
+      ],
+      "t2Buildings": [
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        },
+        {
+          "name": "Hunter's Hall",
+          "itemId": "edob"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Ancient of War",
+          "itemId": "eaom"
+        }
+      ],
+      "t2Units": [
+        {
+          "name": "Archer",
+          "itemId": "earc"
+        }
+      ],
+      "t3Buildings": [
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
+        {
+          "name": "Ancient Protector",
+          "itemId": "etrp"
+        },
+        {
+          "name": "Ancient of Wonders",
+          "itemId": "eden"
+        },
+        {
+          "name": "Tree of Life",
+          "itemId": "etol"
+        },
+        {
+          "name": "Moon Well",
+          "itemId": "emow"
+        }
+      ],
+      "t3Units": [
+        {
+          "name": "Druid of the Claw",
+          "itemId": "edoc"
+        },
+        {
+          "name": "Keeper of the Grove",
+          "itemId": "Ekee"
+        },
+        {
+          "name": "Dryad",
+          "itemId": "edry"
+        }
+      ],
+      "researched": [
+        {
+          "itemId": "Reib",
+          "name": "Improved Bows",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnimprovedbows",
+          "gameTimeMs": 348480,
+          "gameTimeFormatted": "5:48"
+        },
+        {
+          "itemId": "Redc",
+          "name": "Druid of the Claw Training",
+          "level": 2,
+          "category": "ability",
+          "icon": "btndocmastertraining",
+          "gameTimeMs": 585810,
+          "gameTimeFormatted": "9:45"
+        },
+        {
+          "itemId": "Remk",
+          "name": "Marksmanship",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnmarksmanship",
+          "gameTimeMs": 575940,
+          "gameTimeFormatted": "9:35"
+        },
+        {
+          "itemId": "Reeb",
+          "name": "Mark of the Claw",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnenchantedbears",
+          "gameTimeMs": 633871,
+          "gameTimeFormatted": "10:33"
+        },
+        {
+          "itemId": "Resi",
+          "name": "Abolish Magic",
+          "level": 1,
+          "category": "ability",
+          "icon": "btndryaddispelmagic",
+          "gameTimeMs": 634140,
+          "gameTimeFormatted": "10:34"
+        },
+        {
+          "itemId": "Rews",
+          "name": "Well Spring",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnwellspring",
+          "gameTimeMs": 781531,
+          "gameTimeFormatted": "13:01"
+        },
+        {
+          "itemId": "Reuv",
+          "name": "Ultravision",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnultravision",
+          "gameTimeMs": 781771,
+          "gameTimeFormatted": "13:01"
+        },
+        {
+          "itemId": "Rerh",
+          "name": "Reinforced Hides",
+          "level": 2,
+          "category": "defense",
+          "icon": "btnimprovedreinforcedhides",
+          "gameTimeMs": 1183081,
+          "gameTimeFormatted": "19:43"
+        },
+        {
+          "itemId": "Resw",
+          "name": "Strength of the Wild",
+          "level": 1,
+          "category": "attack",
+          "icon": "btnstrengthofthewild",
+          "gameTimeMs": 1014151,
+          "gameTimeFormatted": "16:54"
+        },
+        {
+          "itemId": "Renb",
+          "name": "Nature's Blessing",
+          "level": 1,
+          "category": "ability",
+          "icon": "btnnaturesblessing",
+          "gameTimeMs": 1186110,
+          "gameTimeFormatted": "19:46"
+        }
+      ]
+    }
+  }
+}

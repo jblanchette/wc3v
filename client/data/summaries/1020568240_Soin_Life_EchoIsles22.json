@@ -19,21 +19,28 @@
       "tier2TimeFormatted": "2:13",
       "tier3Time": null,
       "tier3TimeFormatted": null,
-      "expansionTime": 629857,
-      "expansionTimeFormatted": "10:29",
+      "expansionTime": 635003,
+      "expansionTimeFormatted": "10:35",
       "buildPreview": [
         {
           "type": "building",
           "name": "Altar of Storms",
           "itemId": "oalt",
-          "gameTimeMs": 1867,
-          "gameTimeFormatted": "0:01"
+          "gameTimeMs": 3643,
+          "gameTimeFormatted": "0:03"
+        },
+        {
+          "type": "building",
+          "name": "Altar of Storms",
+          "itemId": "oalt",
+          "gameTimeMs": 8458,
+          "gameTimeFormatted": "0:08"
         },
         {
           "type": "building",
           "name": "Barracks",
           "itemId": "obar",
-          "gameTimeMs": 33234,
+          "gameTimeMs": 33504,
           "gameTimeFormatted": "0:33"
         },
         {
@@ -47,8 +54,8 @@
           "type": "building",
           "name": "Voodoo Lounge",
           "itemId": "ovln",
-          "gameTimeMs": 72934,
-          "gameTimeFormatted": "1:12"
+          "gameTimeMs": 73535,
+          "gameTimeFormatted": "1:13"
         },
         {
           "type": "unit",
@@ -82,8 +89,8 @@
           "type": "building",
           "name": "Tauren Totem",
           "itemId": "otto",
-          "gameTimeMs": 277575,
-          "gameTimeFormatted": "4:37"
+          "gameTimeMs": 280371,
+          "gameTimeFormatted": "4:40"
         },
         {
           "type": "unit",
@@ -131,7 +138,7 @@
           "type": "building",
           "name": "War Mill",
           "itemId": "ofor",
-          "gameTimeMs": 480647,
+          "gameTimeMs": 480859,
           "gameTimeFormatted": "8:00"
         },
         {
@@ -143,24 +150,17 @@
         },
         {
           "type": "building",
-          "name": "Voodoo Lounge",
-          "itemId": "ovln",
-          "gameTimeMs": 543421,
-          "gameTimeFormatted": "9:03"
+          "name": "War Mill",
+          "itemId": "ofor",
+          "gameTimeMs": 548387,
+          "gameTimeFormatted": "9:08"
         },
         {
           "type": "building",
-          "name": "War Mill",
-          "itemId": "ofor",
-          "gameTimeMs": 547092,
-          "gameTimeFormatted": "9:07"
-        },
-        {
-          "type": "unit",
-          "name": "Spirit Walker",
-          "itemId": "ospm",
-          "gameTimeMs": 564752,
-          "gameTimeFormatted": "9:24"
+          "name": "Voodoo Lounge",
+          "itemId": "ovln",
+          "gameTimeMs": 553409,
+          "gameTimeFormatted": "9:13"
         }
       ],
       "t2Buildings": [
@@ -279,22 +279,22 @@
           "type": "building",
           "name": "Altar of Elders",
           "itemId": "eate",
-          "gameTimeMs": 2408,
+          "gameTimeMs": 2529,
           "gameTimeFormatted": "0:02"
         },
         {
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 16404,
+          "gameTimeMs": 16705,
           "gameTimeFormatted": "0:16"
         },
         {
           "type": "building",
           "name": "Ancient of War",
           "itemId": "eaom",
-          "gameTimeMs": 20973,
-          "gameTimeFormatted": "0:20"
+          "gameTimeMs": 21303,
+          "gameTimeFormatted": "0:21"
         },
         {
           "type": "hero",
@@ -314,7 +314,7 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 91580,
+          "gameTimeMs": 91731,
           "gameTimeFormatted": "1:31"
         },
         {
@@ -328,7 +328,7 @@
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 178327,
+          "gameTimeMs": 178658,
           "gameTimeFormatted": "2:58"
         },
         {
@@ -349,8 +349,8 @@
           "type": "building",
           "name": "Hunter's Hall",
           "itemId": "edob",
-          "gameTimeMs": 225791,
-          "gameTimeFormatted": "3:45"
+          "gameTimeMs": 226152,
+          "gameTimeFormatted": "3:46"
         },
         {
           "type": "hero",
@@ -363,14 +363,14 @@
           "type": "building",
           "name": "Ancient of Lore",
           "itemId": "eaoe",
-          "gameTimeMs": 305487,
-          "gameTimeFormatted": "5:05"
+          "gameTimeMs": 306362,
+          "gameTimeFormatted": "5:06"
         },
         {
           "type": "building",
           "name": "Moon Well",
           "itemId": "emow",
-          "gameTimeMs": 319449,
+          "gameTimeMs": 319779,
           "gameTimeFormatted": "5:19"
         },
         {
@@ -388,6 +388,13 @@
           "gameTimeFormatted": "6:24"
         },
         {
+          "type": "building",
+          "name": "Ancient of Lore",
+          "itemId": "eaoe",
+          "gameTimeMs": 392162,
+          "gameTimeFormatted": "6:32"
+        },
+        {
           "type": "unit",
           "name": "Dryad",
           "itemId": "edry",
@@ -398,8 +405,8 @@
           "type": "building",
           "name": "Ancient of Wonders",
           "itemId": "eden",
-          "gameTimeMs": 458621,
-          "gameTimeFormatted": "7:38"
+          "gameTimeMs": 459283,
+          "gameTimeFormatted": "7:39"
         },
         {
           "type": "unit",
@@ -407,13 +414,6 @@
           "itemId": "edoc",
           "gameTimeMs": 482696,
           "gameTimeFormatted": "8:02"
-        },
-        {
-          "type": "unit",
-          "name": "Druid of the Claw",
-          "itemId": "edoc",
-          "gameTimeMs": 508785,
-          "gameTimeFormatted": "8:28"
         }
       ],
       "t2Buildings": [
@@ -445,6 +445,10 @@
         }
       ],
       "t3Buildings": [
+        {
+          "name": "Ancient of Lore",
+          "itemId": "eaoe"
+        },
         {
           "name": "Ancient of Wonders",
           "itemId": "eden"

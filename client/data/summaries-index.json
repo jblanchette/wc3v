@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-13T15:48:27.201Z",
-  "count": 192,
+  "generatedAt": "2026-08-17T13:01:59.389Z",
+  "count": 351,
   "note": "Index of the parsed pro replay corpus. Player names are the tournament handles already present in the public per-replay summaries; no visitor data appears here. Parser test fixtures are excluded.",
   "fieldNotes": {
     "tier2Sec": "When the parser first observed the player at tier 2, from selection-subgroup data. This can PRECEDE the actual tier upgrade — across this corpus the associated building lists contain tier-1 buildings, and medians run 2-3 minutes for Orc, Night Elf and Undead against roughly 5 minutes for Human. Treat it as a loose ordering signal, not a verified tech timing. Not validated against ground truth.",
@@ -10,6 +10,66 @@
     "durationSec": "Replay length, not necessarily game length."
   },
   "replays": [
+    {
+      "replayId": "w3i140496_1959681947_Kndnny__Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1573,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "aony123#3977",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 71,
+          "tier2Sec": 346,
+          "tier3Sec": 495,
+          "expansionSec": 264
+        },
+        {
+          "slot": "2",
+          "name": "풋사과의반쪽#3225",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 73,
+          "tier2Sec": 216,
+          "tier3Sec": 452,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "w3i140460_3621708918_Goods__Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1888,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 215,
+          "tier3Sec": 366,
+          "expansionSec": 172
+        },
+        {
+          "slot": "2",
+          "name": "기계제작법및실습#3451",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 151,
+          "tier3Sec": 304,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
     {
       "replayId": "test-4v4",
       "map": "Battleground LV",
@@ -201,6 +261,66 @@
       "tournamentId": null
     },
     {
+      "replayId": "995225061_Starbuck_Jens_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 1394,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "drǃbucki#2383",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 65,
+          "tier2Sec": 263,
+          "tier3Sec": null,
+          "expansionSec": 180
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 67,
+          "tier2Sec": 214,
+          "tier3Sec": 465,
+          "expansionSec": 943
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "993920380_Orcbrave_Banbo_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1584,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Orcbrave#3966",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 66,
+          "tier2Sec": 162,
+          "tier3Sec": null,
+          "expansionSec": 518
+        },
+        {
+          "slot": "2",
+          "name": "BeatHappy#3249",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 142,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "98941651_FoCuS_Happy_TurtleRock20",
       "map": "Turtle Rock",
       "durationSec": 1083,
@@ -264,6 +384,66 @@
         "ne-dh-fast-bear"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "979796324_Varg_OsgPACMAN_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1729,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "VARG#22958",
+          "race": "U",
+          "hero": "Dread Lord",
+          "heroTimeSec": 76,
+          "tier2Sec": 447,
+          "tier3Sec": 668,
+          "expansionSec": 449
+        },
+        {
+          "slot": "2",
+          "name": "Mohammed#210536",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 69,
+          "tier2Sec": 343,
+          "tier3Sec": 543,
+          "expansionSec": 176
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "973816523_Ladziuk_Goods_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1708,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "LDK#21919",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 107,
+          "tier2Sec": 206,
+          "tier3Sec": 453,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 107,
+          "tier2Sec": 207,
+          "tier3Sec": 427,
+          "expansionSec": 1265
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "969576579_Happy_Eer0_TurtleRock20",
@@ -392,6 +572,144 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "94595215_Rollex_Edo_Fading-Autumn-13",
+      "map": "Fading Autumn",
+      "durationSec": 1577,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "938128957_Itsjustagame_Makaveli_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 993,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "932648612_Life_Soin_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1103,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Medusa#31315",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 159,
+          "tier3Sec": 366,
+          "expansionSec": null
+        },
+        {
+          "slot": "3",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 63,
+          "tier2Sec": 138,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "923153116_KroLu_PhoeNix_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1878,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "активацияяшм#1305",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 175,
+          "tier3Sec": 482,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "DorraNi#2523",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 218,
+          "tier3Sec": 448,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "902683087_Jens_Chaemiko_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 773,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 195,
+          "tier3Sec": 388,
+          "expansionSec": 160
+        },
+        {
+          "slot": "3",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 194,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "89377930_-31494_Kndnny_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 2179,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "알에스#31494",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 72,
+          "tier2Sec": 169,
+          "tier3Sec": 400,
+          "expansionSec": 602
+        },
+        {
+          "slot": "2",
+          "name": "aony123#3977",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 70,
+          "tier2Sec": 357,
+          "tier3Sec": 519,
+          "expansionSec": 182
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "888856001_Life_Happy_Last-Refuge-15",
       "map": "Last Refuge",
       "durationSec": 1079,
@@ -454,6 +772,15 @@
       "tournamentId": null
     },
     {
+      "replayId": "867085416_Do0mtrain_Itsjustagame_Crushma-Canyon",
+      "map": "Crushma Canyon",
+      "durationSec": 425,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "809829148_ColorFul_LabyRinth_Echo-Isles-22",
       "map": "Echo Isles",
       "durationSec": 1038,
@@ -467,7 +794,7 @@
           "heroTimeSec": 66,
           "tier2Sec": 217,
           "tier3Sec": 442,
-          "expansionSec": 162
+          "expansionSec": 163
         },
         {
           "slot": "2",
@@ -485,6 +812,15 @@
         "ud-dk-mass-gargoyle"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "807513603_Sheik_Lucifer_Noxious-11",
+      "map": "Noxious",
+      "durationSec": 1423,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "781305788_FoCuS_Lyn_Twisted-Meadows-11",
@@ -518,6 +854,126 @@
         "orc-bm-grunt-push"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "773643090_barrage-3843_Cloud-American-player-_Scrimmage",
+      "map": "Scrimmage",
+      "durationSec": 1588,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "barrage#3843",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 144,
+          "tier3Sec": 804,
+          "expansionSec": 618
+        },
+        {
+          "slot": "2",
+          "name": "Pa2Ma#2983",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 68,
+          "tier2Sec": 176,
+          "tier3Sec": 492,
+          "expansionSec": 399
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "766492532_Jens_Soin_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1538,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 161,
+          "tier3Sec": 572,
+          "expansionSec": 520
+        },
+        {
+          "slot": "3",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 135,
+          "tier3Sec": null,
+          "expansionSec": 527
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "740908358_Goods_OsgPACMAN_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1599,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 194,
+          "tier3Sec": 417,
+          "expansionSec": 1335
+        },
+        {
+          "slot": "2",
+          "name": "Mohammed#210536",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 354,
+          "tier3Sec": 497,
+          "expansionSec": 187
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "732388148_GonzoTramer_SushiCore_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1447,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "GonzoTramer#2346",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 183,
+          "tier3Sec": 359,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "SushiCore#2867",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 164,
+          "tier3Sec": 353,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "722539555_Soin_Life_Hammerfall",
@@ -645,6 +1101,36 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "670242007_CryptoN_Fish_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1604,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "OrcWorker#2811",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 45,
+          "tier2Sec": 227,
+          "tier3Sec": null,
+          "expansionSec": 587
+        },
+        {
+          "slot": "2",
+          "name": "Ice#13318",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 68,
+          "tier2Sec": 168,
+          "tier3Sec": 1464,
+          "expansionSec": 605
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "65056574_TH000_Kaho_NorthernIsles",
       "map": "Northern Isles",
       "durationSec": 1249,
@@ -675,6 +1161,36 @@
         "hu-mk-fast-expand"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "631345371_Dise_Lucifer_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 813,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 69,
+          "tier2Sec": 221,
+          "tier3Sec": 434,
+          "expansionSec": 187
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 333,
+          "tier3Sec": 474,
+          "expansionSec": 378
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "600202892_Pcg123_EleGaNt_Springtime13",
@@ -767,6 +1283,36 @@
       "tournamentId": null
     },
     {
+      "replayId": "565320418_Chaemiko_Sini_Echo-Isles-22",
+      "map": "Echo Isles",
+      "durationSec": 1366,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 67,
+          "tier2Sec": 302,
+          "tier3Sec": null,
+          "expansionSec": 179
+        },
+        {
+          "slot": "2",
+          "name": "McLarenF1GTR#1647",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 261,
+          "tier3Sec": 431,
+          "expansionSec": 189
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "561773898_Eer0_Sok_TurtleRock20",
       "map": "Turtle Rock",
       "durationSec": 1153,
@@ -797,6 +1343,15 @@
         "ud-lich-fast-tech"
       ],
       "tournamentId": "wsb-2026-s3"
+    },
+    {
+      "replayId": "548958432_Superfurion_Itsjustagame_Lost-Lake-13",
+      "map": "Lost Lake",
+      "durationSec": 1169,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "546806360_Lyn_Moon_EchoIsles22",
@@ -923,6 +1478,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "514201718_SoYma_Bazukafit_Scrimmage",
+      "map": "Scrimmage",
+      "durationSec": 1417,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 169,
+          "tier3Sec": 328,
+          "expansionSec": 274
+        },
+        {
+          "slot": "2",
+          "name": "BAZUKAFIT#2975",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 200,
+          "tier3Sec": null,
+          "expansionSec": 169
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "493051196_FoCuS_Kaho_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 1164,
@@ -1047,6 +1632,105 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "427820437_GonzoTramer_SushiCore_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 717,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "GonzoTramer#2346",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 187,
+          "tier3Sec": 356,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "SushiCore#2867",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 162,
+          "tier3Sec": 347,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "427711221_Biko_Ladziuk_Fading-Autumn-13",
+      "map": "Fading Autumn",
+      "durationSec": 1503,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4239414090_Chaemiko_Lucifer_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1044,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 280,
+          "tier3Sec": 459,
+          "expansionSec": 186
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Dread Lord",
+          "heroTimeSec": 73,
+          "tier2Sec": 399,
+          "tier3Sec": null,
+          "expansionSec": 336
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4220219824_Bazukafit_MrLogical_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 2089,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "BAZUKAFIT#2975",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 69,
+          "tier2Sec": 860,
+          "tier3Sec": null,
+          "expansionSec": 1095
+        },
+        {
+          "slot": "2",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 400,
+          "tier3Sec": 1570,
+          "expansionSec": 264
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "4183544688_Lyn_Kaho_Tidehunters12",
       "map": "Tidehunters",
       "durationSec": 770,
@@ -1077,6 +1761,24 @@
       "tournamentId": null
     },
     {
+      "replayId": "4131245282_XHyui_Ares-American-player-_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 652,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4130385612_Dise_Jens_Fading-Autumn-13",
+      "map": "Fading Autumn",
+      "durationSec": 918,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "4128003586_Happy_Kaho_Echo-Isles-22",
       "map": "Echo Isles",
       "durationSec": 1897,
@@ -1100,7 +1802,7 @@
           "heroTimeSec": 67,
           "tier2Sec": 264,
           "tier3Sec": 457,
-          "expansionSec": 175
+          "expansionSec": 188
         }
       ],
       "builds": [
@@ -1155,7 +1857,7 @@
           "heroTimeSec": 68,
           "tier2Sec": 151,
           "tier3Sec": 364,
-          "expansionSec": 1239
+          "expansionSec": 1223
         },
         {
           "slot": "2",
@@ -1165,7 +1867,46 @@
           "heroTimeSec": 67,
           "tier2Sec": 162,
           "tier3Sec": 328,
-          "expansionSec": 604
+          "expansionSec": 603
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4066194314_PaTo_MisterWinner_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 489,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4062839720_Moon_Chaemiko_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 373,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 169,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "3",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 196,
+          "tier3Sec": null,
+          "expansionSec": null
         }
       ],
       "builds": [],
@@ -1234,6 +1975,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "4051516282_Azshara-QueeN_Starbuck_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 642,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "AzsharaQueeN#2924",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 69,
+          "tier2Sec": 151,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "drǃbucki#2383",
+          "race": "O",
+          "hero": "Tauren Chieftain",
+          "heroTimeSec": 69,
+          "tier2Sec": 155,
+          "tier3Sec": 348,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "4048350335_Leqi_Dise_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 625,
@@ -1258,6 +2029,66 @@
           "tier2Sec": 168,
           "tier3Sec": 357,
           "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4027278925_MisterWinner_JotM_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1539,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "MisterWinner#21670",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 175,
+          "tier3Sec": null,
+          "expansionSec": 1401
+        },
+        {
+          "slot": "2",
+          "name": "JotM#1375",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 167,
+          "tier3Sec": 389,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4021067099_Starbuck_Jens_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 874,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "drǃbucki#2383",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 498,
+          "tier2Sec": 341,
+          "tier3Sec": null,
+          "expansionSec": 274
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 174,
+          "tier3Sec": 530,
+          "expansionSec": 364
         }
       ],
       "builds": [],
@@ -1324,6 +2155,36 @@
       "tournamentId": null
     },
     {
+      "replayId": "4015076952_Dise_Jens_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1013,
+      "matchup": "EvE",
+      "players": [
+        {
+          "slot": "2",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 220,
+          "tier3Sec": null,
+          "expansionSec": 172
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 260,
+          "tier3Sec": 496,
+          "expansionSec": 211
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "4014522700_Pcg123_Inspired_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 800,
@@ -1348,6 +2209,66 @@
           "tier2Sec": 200,
           "tier3Sec": null,
           "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "400550801_Banbo_Kndnny_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1634,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "BeatHappy#3249",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 307,
+          "tier3Sec": 494,
+          "expansionSec": 239
+        },
+        {
+          "slot": "2",
+          "name": "aony123#3977",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 68,
+          "tier2Sec": 158,
+          "tier3Sec": 300,
+          "expansionSec": 1220
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "4004752655_Chaemiko_Sini_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1531,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 67,
+          "tier2Sec": 318,
+          "tier3Sec": null,
+          "expansionSec": 222
+        },
+        {
+          "slot": "2",
+          "name": "McLarenF1GTR#1647",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 199,
+          "tier3Sec": 771,
+          "expansionSec": 316
         }
       ],
       "builds": [],
@@ -1417,6 +2338,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "3979802481_Dise_MisterWinner_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 413,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 143,
+          "tier3Sec": 351,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "MisterWinner#21670",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 178,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3957504930_HawK_Jens_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 584,
@@ -1447,6 +2398,36 @@
         "hu-mk-fast-expand"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "394843798_Dise_Lucifer_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 798,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 196,
+          "tier3Sec": 378,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 161,
+          "tier3Sec": 315,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3944006659_Ugly_TH000_AutumnLeaves20",
@@ -1512,6 +2493,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "3912725033_Goods_OsgPACMAN_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 1385,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 183,
+          "tier3Sec": 403,
+          "expansionSec": 1038
+        },
+        {
+          "slot": "2",
+          "name": "Mohammed#210536",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 320,
+          "tier3Sec": 812,
+          "expansionSec": 185
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3905220979_FoCuS_Happy_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 1179,
@@ -1542,6 +2553,66 @@
       "tournamentId": null
     },
     {
+      "replayId": "3887060540_Sonik_Edo_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1574,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Sonik#21222",
+          "race": "E",
+          "hero": "Priestess of the Moon",
+          "heroTimeSec": 631,
+          "tier2Sec": 488,
+          "tier3Sec": 638,
+          "expansionSec": 290
+        },
+        {
+          "slot": "2",
+          "name": "EdoBoi#2276",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 75,
+          "tier2Sec": 350,
+          "tier3Sec": 574,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "386317597_Chaemiko_Moon_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 484,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "3",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 182,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "4",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 175,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3852178883_Pcg123_Inspired_Tidehunters12",
       "map": "Tidehunters",
       "durationSec": 1191,
@@ -1565,7 +2636,7 @@
           "heroTimeSec": 69,
           "tier2Sec": 323,
           "tier3Sec": null,
-          "expansionSec": null
+          "expansionSec": 567
         }
       ],
       "builds": [],
@@ -1596,6 +2667,66 @@
           "tier2Sec": 346,
           "tier3Sec": 513,
           "expansionSec": 245
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3818739803_Fukaimori_Homework_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1680,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "RavenTT#2656",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 66,
+          "tier2Sec": 178,
+          "tier3Sec": 413,
+          "expansionSec": 1246
+        },
+        {
+          "slot": "2",
+          "name": "作业太多#3477",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 72,
+          "tier2Sec": 514,
+          "tier3Sec": 662,
+          "expansionSec": 254
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3817815472_Moon_Chaemiko_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 724,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 191,
+          "tier3Sec": 405,
+          "expansionSec": null
+        },
+        {
+          "slot": "3",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 194,
+          "tier3Sec": null,
+          "expansionSec": null
         }
       ],
       "builds": [],
@@ -1694,6 +2825,45 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "3803992148_XHyui_Superfurion_Crushma-Canyon",
+      "map": "Crushma Canyon",
+      "durationSec": 1046,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "380264820_Ag3nt_SoYma_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1534,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "ag3nt#21617",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 167,
+          "tier3Sec": 1276,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 126,
+          "tier3Sec": null,
+          "expansionSec": 1279
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3781201998_Kaho_Happy_Springtime-13",
       "map": "Springtime",
       "durationSec": 981,
@@ -1788,6 +2958,84 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "375282618_MrLogical_starxsd-3128_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1868,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 467,
+          "tier3Sec": 616,
+          "expansionSec": 249
+        },
+        {
+          "slot": "2",
+          "name": "Starxsd#3128",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 77,
+          "tier2Sec": 207,
+          "tier3Sec": 391,
+          "expansionSec": 1047
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3748279858_Superfurion_MisterWinner_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 614,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3726110852_PhoeNix_SoYma_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1543,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DorraNi#2523",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 239,
+          "tier3Sec": 1306,
+          "expansionSec": 611
+        },
+        {
+          "slot": "2",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 69,
+          "tier2Sec": 133,
+          "tier3Sec": 420,
+          "expansionSec": 789
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3696829691_Sheik_PaTo_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 1873,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3658141668_Eer0_Sok_NorthernIsles",
       "map": "Northern Isles",
       "durationSec": 709,
@@ -1863,7 +3111,7 @@
           "heroTimeSec": 68,
           "tier2Sec": 166,
           "tier3Sec": 380,
-          "expansionSec": 646
+          "expansionSec": 647
         },
         {
           "slot": "2",
@@ -1873,9 +3121,18 @@
           "heroTimeSec": 46,
           "tier2Sec": 214,
           "tier3Sec": null,
-          "expansionSec": 576
+          "expansionSec": 575
         }
       ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3618639081_Sheik_SitioGO_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 726,
+      "matchup": null,
+      "players": [],
       "builds": [],
       "tournamentId": null
     },
@@ -1910,6 +3167,66 @@
         "ne-dh-mass-talons"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "3576038715_Chaemiko_Lucifer_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1175,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 421,
+          "tier3Sec": 567,
+          "expansionSec": 213
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Crypt Lord",
+          "heroTimeSec": 74,
+          "tier2Sec": 417,
+          "tier3Sec": 572,
+          "expansionSec": 481
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3575981332_SoYma_DagaJeoYo_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1599,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 116,
+          "tier2Sec": 248,
+          "tier3Sec": 454,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "DagaJeoYo#3259",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 116,
+          "tier2Sec": 275,
+          "tier3Sec": 685,
+          "expansionSec": 614
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3551630238_War3Orcer0_Snowdream_NorthernIsles",
@@ -1972,6 +3289,15 @@
         "ne-kotg-mountain-giant"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "3469623275_Boidyslam_PaTo_Crushma-Canyon",
+      "map": "Crushma Canyon",
+      "durationSec": 719,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3465631628_Kaho_Sok_AutumnLeaves20",
@@ -2038,6 +3364,15 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "3433540284_OsgPACMAN_Daron_Fading-Autumn-13",
+      "map": "Fading Autumn",
+      "durationSec": 1935,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3425988447_Lyn_Kaho_NorthernIsles",
       "map": "Northern Isles",
       "durationSec": 1537,
@@ -2098,6 +3433,36 @@
       "tournamentId": null
     },
     {
+      "replayId": "3408280986_Aspect_Starbuck_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 1576,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Aspect#21972",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 304,
+          "tier3Sec": 550,
+          "expansionSec": 202
+        },
+        {
+          "slot": "2",
+          "name": "drǃbucki#2383",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 66,
+          "tier2Sec": 390,
+          "tier3Sec": 698,
+          "expansionSec": 268
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3408050166_Pcg123_Inspired_Springtime13",
       "map": "Springtime",
       "durationSec": 1201,
@@ -2122,6 +3487,45 @@
           "tier2Sec": 396,
           "tier3Sec": 541,
           "expansionSec": 319
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3400579777_Makaveli_MisterWinner_Lost-Lake-13",
+      "map": "Lost Lake",
+      "durationSec": 302,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3398343816_Dise_Lucifer_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 378,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 159,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 73,
+          "tier2Sec": 161,
+          "tier3Sec": null,
+          "expansionSec": null
         }
       ],
       "builds": [],
@@ -2183,7 +3587,7 @@
           "heroTimeSec": 67,
           "tier2Sec": 160,
           "tier3Sec": 355,
-          "expansionSec": 589
+          "expansionSec": 590
         }
       ],
       "builds": [
@@ -2225,6 +3629,36 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "3371616411_Verdi_MrLogical_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 2578,
+      "matchup": "HvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Verdi#21518",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 726,
+          "tier3Sec": null,
+          "expansionSec": 363
+        },
+        {
+          "slot": "2",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 206,
+          "tier3Sec": 1259,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3355795836_Leon_Sini_ConcealedHill",
       "map": "Concealed Hill",
       "durationSec": 718,
@@ -2248,6 +3682,36 @@
           "heroTimeSec": 67,
           "tier2Sec": 187,
           "tier3Sec": 392,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3355755341_Yange_stormwc3-2234_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 1400,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "리쥬짱#3390",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 69,
+          "tier2Sec": 173,
+          "tier3Sec": 326,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "StormWc3#2234",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 69,
+          "tier2Sec": 148,
+          "tier3Sec": 580,
           "expansionSec": null
         }
       ],
@@ -2286,6 +3750,36 @@
         "ud-dk-mass-gargoyle"
       ],
       "tournamentId": "wsb-2026-s3"
+    },
+    {
+      "replayId": "3343427175_KnOfF_Biko_Turtle-Rock-20",
+      "map": "Turtle Rock",
+      "durationSec": 1553,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "KnOfF#21435",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 64,
+          "tier2Sec": 144,
+          "tier3Sec": 306,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "Cucaracha#21207",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 68,
+          "tier2Sec": 149,
+          "tier3Sec": 426,
+          "expansionSec": 737
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3310264392_Life_Fortitude_Tidehunters-12",
@@ -2384,6 +3878,126 @@
         "ud-dk-mass-gargoyle"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "3296001054_Moon_Soin_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 549,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 134,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "4",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": null,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3294973384_Edo_MrLogical_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1729,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "EdoBoi#2276",
+          "race": "U",
+          "hero": "Crypt Lord",
+          "heroTimeSec": 74,
+          "tier2Sec": 323,
+          "tier3Sec": 465,
+          "expansionSec": 410
+        },
+        {
+          "slot": "2",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 69,
+          "tier2Sec": 316,
+          "tier3Sec": 458,
+          "expansionSec": 191
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "328849719_Goods_Orcbrave_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 1568,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 169,
+          "tier3Sec": 334,
+          "expansionSec": 743
+        },
+        {
+          "slot": "2",
+          "name": "Orcbrave#3966",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 154,
+          "tier3Sec": null,
+          "expansionSec": 549
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3268981011_Life_Soin_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 673,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Medusa#31315",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 155,
+          "tier3Sec": 365,
+          "expansionSec": null
+        },
+        {
+          "slot": "3",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 135,
+          "tier3Sec": null,
+          "expansionSec": 470
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3259738147_FoCuS_LawLiet_Autumn-Leaves-20",
@@ -2504,7 +4118,7 @@
           "heroTimeSec": 66,
           "tier2Sec": 321,
           "tier3Sec": 463,
-          "expansionSec": 170
+          "expansionSec": 157
         }
       ],
       "builds": [
@@ -2512,6 +4126,36 @@
         "ud-dk-mass-gargoyle"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "3212575045_PhoeNix_Yange_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1621,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DorraNi#2523",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 219,
+          "tier3Sec": 511,
+          "expansionSec": 185
+        },
+        {
+          "slot": "2",
+          "name": "리쥬짱#3390",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 72,
+          "tier2Sec": 179,
+          "tier3Sec": 820,
+          "expansionSec": 1016
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3206550513_GodFather_Neytpoh_ConcealedHill",
@@ -2639,6 +4283,45 @@
       "tournamentId": null
     },
     {
+      "replayId": "3143900380_Makaveli_Sheik_Outland-Wilds",
+      "map": "Outland Wilds v1.0a",
+      "durationSec": 644,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3133992358_Tekko_LiiLD.C_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 2154,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Tekko1012#2394",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 69,
+          "tier2Sec": 351,
+          "tier3Sec": 1166,
+          "expansionSec": 188
+        },
+        {
+          "slot": "2",
+          "name": "LiiLDC#2753",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 175,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "3126889684_Soin_Neytpoh_ConcealedHill",
       "map": "Concealed Hill",
       "durationSec": 585,
@@ -2700,6 +4383,15 @@
         "orc-bm-grunt-push"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "3119177420_Itsjustagame_Lucifer_Outland-Wilds",
+      "map": "Outland Wilds v1.0a",
+      "durationSec": 434,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "3107737237_Soin_Sok_Tidehunters12",
@@ -2807,7 +4499,7 @@
           "heroTimeSec": 66,
           "tier2Sec": 141,
           "tier3Sec": null,
-          "expansionSec": 490
+          "expansionSec": 488
         },
         {
           "slot": "2",
@@ -2818,6 +4510,66 @@
           "tier2Sec": 172,
           "tier3Sec": 366,
           "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3027745285_qqqqing-3741_MrLogical_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1594,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "QQQQing#3741",
+          "race": "U",
+          "hero": "Lich",
+          "heroTimeSec": 75,
+          "tier2Sec": 399,
+          "tier3Sec": 543,
+          "expansionSec": 460
+        },
+        {
+          "slot": "2",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 331,
+          "tier3Sec": 473,
+          "expansionSec": 194
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "3021394803_HJ_berserk-23631_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1558,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "sorhj#4536",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 69,
+          "tier2Sec": 147,
+          "tier3Sec": 1381,
+          "expansionSec": 537
+        },
+        {
+          "slot": "2",
+          "name": "Berserk#23631",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 171,
+          "tier3Sec": 427,
+          "expansionSec": 279
         }
       ],
       "builds": [],
@@ -2954,6 +4706,96 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "2925641350_Kas_Sorah_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 1814,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "MagicGnome#221204",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 146,
+          "tier3Sec": null,
+          "expansionSec": 1481
+        },
+        {
+          "slot": "2",
+          "name": "Sorah#11401",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 70,
+          "tier2Sec": 168,
+          "tier3Sec": null,
+          "expansionSec": 446
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2921897490_JotM_Lucifer_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 431,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "JotM#1375",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 67,
+          "tier2Sec": 203,
+          "tier3Sec": null,
+          "expansionSec": 321
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 73,
+          "tier2Sec": 179,
+          "tier3Sec": 364,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2915787083_Dise_Jens_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 1083,
+      "matchup": "EvE",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 161,
+          "tier3Sec": 359,
+          "expansionSec": 557
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 217,
+          "tier3Sec": 533,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "289522245_Ugly_TH000_ShatteredExile",
       "map": "Shattered Exile",
       "durationSec": 1106,
@@ -2999,7 +4841,7 @@
           "heroTimeSec": null,
           "tier2Sec": 342,
           "tier3Sec": null,
-          "expansionSec": 214
+          "expansionSec": 215
         },
         {
           "slot": "2",
@@ -3012,6 +4854,15 @@
           "expansionSec": null
         }
       ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2858415626_Sheik_MisterWinner_Noxious-11",
+      "map": "Noxious",
+      "durationSec": 865,
+      "matchup": null,
+      "players": [],
       "builds": [],
       "tournamentId": null
     },
@@ -3073,6 +4924,36 @@
           "tier2Sec": 361,
           "tier3Sec": 507,
           "expansionSec": 325
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2829729522_LeMei_Edo_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1743,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "LeMei#2161",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 70,
+          "tier2Sec": 213,
+          "tier3Sec": 550,
+          "expansionSec": 175
+        },
+        {
+          "slot": "2",
+          "name": "EdoBoi#2276",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 73,
+          "tier2Sec": 210,
+          "tier3Sec": 378,
+          "expansionSec": 946
         }
       ],
       "builds": [],
@@ -3187,7 +5068,7 @@
           "heroTimeSec": 73,
           "tier2Sec": 318,
           "tier3Sec": 540,
-          "expansionSec": 375
+          "expansionSec": 376
         },
         {
           "slot": "2",
@@ -3197,7 +5078,97 @@
           "heroTimeSec": 66,
           "tier2Sec": 283,
           "tier3Sec": 462,
-          "expansionSec": 167
+          "expansionSec": 168
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2775896283_Dise_MisterWinner_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 858,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 216,
+          "tier3Sec": 368,
+          "expansionSec": 156
+        },
+        {
+          "slot": "2",
+          "name": "MisterWinner#21670",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 193,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2769559415_Biko_Grubby_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1702,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Cucaracha#21207",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 73,
+          "tier2Sec": 276,
+          "tier3Sec": 417,
+          "expansionSec": 385
+        },
+        {
+          "slot": "2",
+          "name": "Grubby#1278",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 140,
+          "tier3Sec": null,
+          "expansionSec": 458
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2758134329_Rollex_Hiccup_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1332,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Rollex#21258",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 48,
+          "tier2Sec": 483,
+          "tier3Sec": null,
+          "expansionSec": 293
+        },
+        {
+          "slot": "2",
+          "name": "Hiccup#21167",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 177,
+          "tier3Sec": 506,
+          "expansionSec": 838
         }
       ],
       "builds": [],
@@ -3266,6 +5237,36 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "2743607685_Moon_Soin_Concealed-Hill",
+      "map": "Concealed Hill",
+      "durationSec": 1296,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 163,
+          "tier3Sec": 531,
+          "expansionSec": 765
+        },
+        {
+          "slot": "4",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 118,
+          "tier3Sec": null,
+          "expansionSec": 673
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "273544190_Sok_Fortitude_Tidehunters-12",
       "map": "Tidehunters",
       "durationSec": 788,
@@ -3296,6 +5297,36 @@
         "hu-am-caster"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "2720713845_Lucifer_Fishtrowing_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 976,
+      "matchup": "OvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Lucifer#34735",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 146,
+          "tier3Sec": 680,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "FishTrowing#3407",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 66,
+          "tier2Sec": 141,
+          "tier3Sec": 354,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "2720674050_FoCuS_Eer0_Turtle-Rock-16",
@@ -3331,6 +5362,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "2711219884_Ladziuk_Bazukafit_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1634,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "LDK#21919",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 162,
+          "tier3Sec": 379,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "BAZUKAFIT#2975",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 157,
+          "tier3Sec": 421,
+          "expansionSec": 209
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "270744978_LawLiet_War3Orcer0_Tidehunters12",
       "map": "Tidehunters",
       "durationSec": 1136,
@@ -3344,7 +5405,7 @@
           "heroTimeSec": 67,
           "tier2Sec": 201,
           "tier3Sec": 386,
-          "expansionSec": 165
+          "expansionSec": 166
         },
         {
           "slot": "2",
@@ -3454,6 +5515,96 @@
       "tournamentId": null
     },
     {
+      "replayId": "2683926591_Ikbencool_XToy_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1164,
+      "matchup": "HvH",
+      "players": [
+        {
+          "slot": "5",
+          "name": "ikbencool#2603",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 69,
+          "tier2Sec": 398,
+          "tier3Sec": 569,
+          "expansionSec": 247
+        },
+        {
+          "slot": "6",
+          "name": "xToy#11908",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 210,
+          "tier3Sec": 780,
+          "expansionSec": 645
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2653469658_Goods_ToRReNtE_Echo-Isles-22",
+      "map": "Echo Isles",
+      "durationSec": 2048,
+      "matchup": "EvE",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 181,
+          "tier3Sec": 344,
+          "expansionSec": 1302
+        },
+        {
+          "slot": "2",
+          "name": "k3rrig4n#2848",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 199,
+          "tier3Sec": 362,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2634928242_MrLogical_Sonik_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 2226,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 615,
+          "tier3Sec": 772,
+          "expansionSec": 237
+        },
+        {
+          "slot": "2",
+          "name": "IronSonik#2342",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 351,
+          "tier3Sec": 911,
+          "expansionSec": 295
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "2631829275_Moon_Soin_Hammerfall",
       "map": "Hammerfall",
       "durationSec": 813,
@@ -3486,6 +5637,96 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "2621552523_Cloud-American-player-_Yange_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 1598,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Pa2Ma#2983",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 186,
+          "tier3Sec": 568,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "리쥬짱#3390",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 132,
+          "tier3Sec": 808,
+          "expansionSec": 626
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2616750095_Evanescence_Kas_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1588,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Evanescence#21559",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 68,
+          "tier2Sec": 184,
+          "tier3Sec": 395,
+          "expansionSec": 351
+        },
+        {
+          "slot": "2",
+          "name": "MagicGnome#221204",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 363,
+          "tier3Sec": 505,
+          "expansionSec": 237
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2577318633_VeS_riverflow-1456_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1566,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "veS#1614",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 288,
+          "tier3Sec": 437,
+          "expansionSec": 309
+        },
+        {
+          "slot": "2",
+          "name": "RiverFlow#1456",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 179,
+          "tier3Sec": 391,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "2576049378_Fortitude_Sok_Hammerfall",
       "map": "Hammerfall",
       "durationSec": 1130,
@@ -3516,6 +5757,36 @@
         "hu-am-caster"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "2555641691_Cloud-American-player-_stormwc3-2234_Echo-Isles-22",
+      "map": "Echo Isles",
+      "durationSec": 1683,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Pa2Ma#2983",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 69,
+          "tier2Sec": 209,
+          "tier3Sec": 819,
+          "expansionSec": 304
+        },
+        {
+          "slot": "2",
+          "name": "StormWc3#2234",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 68,
+          "tier2Sec": 407,
+          "tier3Sec": null,
+          "expansionSec": 307
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "2542718961_Leon_Eer0_AutumnLeaves20",
@@ -3580,6 +5851,96 @@
       "tournamentId": null
     },
     {
+      "replayId": "2538854840_SoYma_LeMei_Turtle-Rock-20",
+      "map": "Turtle Rock",
+      "durationSec": 2064,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 190,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "LeMei#2161",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 69,
+          "tier2Sec": 198,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2536006299_Starbuck_LiiLD.C_Turtle-Rock-20",
+      "map": "Turtle Rock",
+      "durationSec": 1599,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "drǃbucki#2383",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 145,
+          "tier3Sec": null,
+          "expansionSec": 1337
+        },
+        {
+          "slot": "2",
+          "name": "LiiLDC#2753",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 170,
+          "tier3Sec": 395,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2528549581_Sonik_Deathnote_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1474,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Sonik#21222",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 298,
+          "tier3Sec": 568,
+          "expansionSec": 200
+        },
+        {
+          "slot": "2",
+          "name": "Odinnsdagr#2292",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 431,
+          "tier3Sec": null,
+          "expansionSec": 249
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "2488796160_Kaho_Moon_EchoIsles22",
       "map": "Echo Isles",
       "durationSec": 1048,
@@ -3593,7 +5954,7 @@
           "heroTimeSec": 68,
           "tier2Sec": 185,
           "tier3Sec": 365,
-          "expansionSec": 442
+          "expansionSec": 444
         },
         {
           "slot": "2",
@@ -3695,6 +6056,36 @@
           "hero": "Blademaster",
           "heroTimeSec": 65,
           "tier2Sec": 166,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2481099782_Jens_Chaemiko_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 629,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 175,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "3",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 185,
           "tier3Sec": null,
           "expansionSec": null
         }
@@ -3830,6 +6221,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "2455370427_Jens_Sheik_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 678,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 115,
+          "tier2Sec": 293,
+          "tier3Sec": 521,
+          "expansionSec": 215
+        },
+        {
+          "slot": "3",
+          "name": "sheik#2417",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 121,
+          "tier2Sec": 497,
+          "tier3Sec": null,
+          "expansionSec": 436
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "2453868813_Soin_Sok_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 1443,
@@ -3892,6 +6313,36 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "244498225_Moon_Soin_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1363,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 157,
+          "tier3Sec": 337,
+          "expansionSec": 790
+        },
+        {
+          "slot": "3",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 138,
+          "tier3Sec": null,
+          "expansionSec": 700
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "2426719278_Kaho_TH000_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 485,
@@ -3952,6 +6403,36 @@
         "ne-kotg-mountain-giant"
       ],
       "tournamentId": "wsb-2026-s3"
+    },
+    {
+      "replayId": "2402041666_riverflow-1456_Varg_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1837,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "RiverFlow#1456",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 200,
+          "tier3Sec": 458,
+          "expansionSec": 279
+        },
+        {
+          "slot": "2",
+          "name": "VARG#22958",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 75,
+          "tier2Sec": 443,
+          "tier3Sec": 651,
+          "expansionSec": 465
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "2394677578_FoCuS_Happy_NorthernIsles",
@@ -4017,6 +6498,66 @@
         "hu-am-caster"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "2269330693_Rollex_Hiccup_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 639,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Rollex#21258",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 414,
+          "tier3Sec": null,
+          "expansionSec": 229
+        },
+        {
+          "slot": "2",
+          "name": "Hiccup#21167",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 183,
+          "tier3Sec": 581,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2246551454_LinJunJie_stormwc3-2234_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 1456,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Casfan#31609",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 70,
+          "tier2Sec": 205,
+          "tier3Sec": 425,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "StormWc3#2234",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 339,
+          "tier3Sec": 1132,
+          "expansionSec": 273
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "2229321501_Sok_Fortitude_Autumn-Leaves-20",
@@ -4113,6 +6654,36 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "221602064_Soin_Jens_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 1118,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 65,
+          "tier2Sec": 130,
+          "tier3Sec": 740,
+          "expansionSec": 500
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 67,
+          "tier2Sec": 223,
+          "tier3Sec": 840,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "2202133300_Jens_HawK_TurtleRock20",
       "map": "Turtle Rock",
       "durationSec": 836,
@@ -4190,7 +6761,7 @@
           "heroTimeSec": 66,
           "tier2Sec": 139,
           "tier3Sec": null,
-          "expansionSec": 426
+          "expansionSec": 436
         },
         {
           "slot": "2",
@@ -4207,6 +6778,36 @@
         "ne-dh-mass-talons"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "2073998161_Starbuck_Jens_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 884,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "drǃbucki#2383",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 346,
+          "tier3Sec": 603,
+          "expansionSec": 210
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 67,
+          "tier2Sec": 162,
+          "tier3Sec": 613,
+          "expansionSec": 302
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "2028743422_Eer0_Happy_Springtime13",
@@ -4304,6 +6905,54 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "2022214776_GeneCoder_SitioGO_Crushma-Canyon",
+      "map": "Crushma Canyon",
+      "durationSec": 1192,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "2012828383_Itsjustagame_GeneCoder_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 1033,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1994706173_Biko_Soin_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1648,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Cucaracha#21207",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 161,
+          "tier3Sec": 305,
+          "expansionSec": 750
+        },
+        {
+          "slot": "2",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 133,
+          "tier3Sec": 306,
+          "expansionSec": 1249
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1986077389_Moon_Soin_EchoIsles22",
       "map": "Echo Isles",
       "durationSec": 1138,
@@ -4327,7 +6976,7 @@
           "heroTimeSec": 65,
           "tier2Sec": 133,
           "tier3Sec": null,
-          "expansionSec": 774
+          "expansionSec": 776
         }
       ],
       "builds": [
@@ -4496,6 +7145,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "193163855_SoYma_PhoeNix_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1600,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 132,
+          "tier3Sec": 675,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "DorraNi#2523",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 566,
+          "tier2Sec": 230,
+          "tier3Sec": 421,
+          "expansionSec": 38
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1929023875_Sok_Kaho_NorthernIsles",
       "map": "Northern Isles",
       "durationSec": 455,
@@ -4591,6 +7270,66 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "1906283315_Chaemiko_Jens_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1229,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "2",
+          "name": "ZizonHuman#3182",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 362,
+          "tier3Sec": 513,
+          "expansionSec": 191
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 68,
+          "tier2Sec": 222,
+          "tier3Sec": 524,
+          "expansionSec": 303
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1888205270_Goods_Rollex_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 2128,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 184,
+          "tier3Sec": 399,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "Rollex#21258",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 352,
+          "tier3Sec": null,
+          "expansionSec": 278
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1863534699_Life_Soin_AutumnLeaves20",
       "map": "Autumn Leaves",
       "durationSec": 1338,
@@ -4654,6 +7393,135 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "1851283762_Dia_Yange_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 1527,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Templario#11745",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 70,
+          "tier2Sec": 197,
+          "tier3Sec": null,
+          "expansionSec": 1201
+        },
+        {
+          "slot": "2",
+          "name": "리쥬짱#3390",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 69,
+          "tier2Sec": 177,
+          "tier3Sec": 809,
+          "expansionSec": 782
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1844068341_Cloud-American-player-_Soin_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 2262,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Pa2Ma#2983",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 217,
+          "tier3Sec": 552,
+          "expansionSec": 473
+        },
+        {
+          "slot": "2",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 147,
+          "tier3Sec": 1398,
+          "expansionSec": 684
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1844038500_Solstice_Ares-American-player-_Crushma-Canyon",
+      "map": "Crushma Canyon",
+      "durationSec": 1292,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1822857555_Homework_LinJunJie_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1874,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "作业太多#3477",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 71,
+          "tier2Sec": 336,
+          "tier3Sec": 836,
+          "expansionSec": 196
+        },
+        {
+          "slot": "2",
+          "name": "Casfan#31609",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 73,
+          "tier2Sec": 294,
+          "tier3Sec": 471,
+          "expansionSec": 205
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1808584773_PhoeNix_SoYma_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1619,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DorraNi#2523",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 67,
+          "tier2Sec": 200,
+          "tier3Sec": 408,
+          "expansionSec": 1092
+        },
+        {
+          "slot": "2",
+          "name": "SoYma#2943",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 129,
+          "tier3Sec": 469,
+          "expansionSec": 809
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "18012366_Leqi_Dise_EchoIsles22",
       "map": "Echo Isles",
       "durationSec": 1044,
@@ -4684,6 +7552,339 @@
         "ne-dh-fast-bear"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "1790353225_Life_Soin_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 773,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Medusa#31315",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 159,
+          "tier3Sec": 374,
+          "expansionSec": null
+        },
+        {
+          "slot": "4",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 65,
+          "tier2Sec": 138,
+          "tier3Sec": null,
+          "expansionSec": 696
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786804918_Fortitude_FoCuS_Northern-Isles",
+      "map": "Northern Isles",
+      "durationSec": 729,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "毕竟罗曼蒂",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 144,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "玄穹佛爷",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 65,
+          "tier2Sec": 122,
+          "tier3Sec": null,
+          "expansionSec": 398
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786804130_Fortitude_FoCuS_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 717,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "毕竟罗曼蒂",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": 149,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "玄穹佛爷",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 67,
+          "tier2Sec": 125,
+          "tier3Sec": null,
+          "expansionSec": 400
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786803331_Fortitude_FoCuS_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 535,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "毕竟罗曼蒂",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 213,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "玄穹佛爷",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 65,
+          "tier2Sec": 123,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786802501_Fortitude_FoCuS_Concealed-Hill",
+      "map": "Concealed Hill",
+      "durationSec": 670,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "毕竟罗曼蒂",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 225,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "玄穹佛爷",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 65,
+          "tier2Sec": 121,
+          "tier3Sec": null,
+          "expansionSec": 513
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786723168_Moon_Chaemiko_Concealed-Hill",
+      "map": "Concealed Hill",
+      "durationSec": 1395,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "hihihihihi#4037",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 176,
+          "tier3Sec": 480,
+          "expansionSec": 251
+        },
+        {
+          "slot": "2",
+          "name": "WildTurkey#8269",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 66,
+          "tier2Sec": 373,
+          "tier3Sec": null,
+          "expansionSec": 292
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786720390_Chaemiko_Moon_Autumn-Leaves-20",
+      "map": "59bf278922317e9cf05ac6e7622708ec",
+      "durationSec": 2584,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786386867_Soin_ColorFul_Twisted-Meadows-11",
+      "map": "55172bd98b1a8cca19accfe8eda0cd47",
+      "durationSec": 1269,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786385851_ColorFul_Soin_Springtime-12",
+      "map": "e39c3006c10c76a281c893c86e3d7eaa",
+      "durationSec": 914,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786385188_ColorFul_Soin_Springtime-12",
+      "map": "e39c3006c10c76a281c893c86e3d7eaa",
+      "durationSec": 573,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786383496_ColorFul_Soin_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1445,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "XGAme",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 164,
+          "tier3Sec": 356,
+          "expansionSec": 904
+        },
+        {
+          "slot": "2",
+          "name": "Test",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 142,
+          "tier3Sec": null,
+          "expansionSec": 611
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786382811_Soin_ColorFul_Concealed-Hill",
+      "map": "Concealed Hill",
+      "durationSec": 540,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Test",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 65,
+          "tier2Sec": 132,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "XGAme",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 65,
+          "tier2Sec": 150,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786381215_ColorFul_Soin_Autumn-Leaves-20",
+      "map": "59bf278922317e9cf05ac6e7622708ec",
+      "durationSec": 1470,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786380038_Life_Sok_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 886,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "芳华丶",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 67,
+          "tier2Sec": 196,
+          "tier3Sec": 372,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "SoooooK",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 66,
+          "tier2Sec": 344,
+          "tier3Sec": null,
+          "expansionSec": 222
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786379267_Life_Sok_Springtime-12",
+      "map": "e39c3006c10c76a281c893c86e3d7eaa",
+      "durationSec": 722,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1786378313_Life_Sok_Last-Refuge-15",
+      "map": "135b5d6ef5dd6388ab9ef428d4a6c4f7",
+      "durationSec": 899,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1784316982_Jens_HawK_ShatteredExile",
@@ -4717,6 +7918,96 @@
         "ne-kotg-mountain-giant"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "1770986549_PaTo_RaZeR_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 333,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "2",
+          "name": "PaTo#12362",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 157,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "3",
+          "name": "RaZeR#23389",
+          "race": "U",
+          "hero": "Crypt Lord",
+          "heroTimeSec": 108,
+          "tier2Sec": 197,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1768627040_Life_Soin_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1363,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Medusa#31315",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 159,
+          "tier3Sec": 370,
+          "expansionSec": 922
+        },
+        {
+          "slot": "2",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 137,
+          "tier3Sec": null,
+          "expansionSec": 771
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1760571530_Goods_Yange_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 1437,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 195,
+          "tier3Sec": 520,
+          "expansionSec": 237
+        },
+        {
+          "slot": "2",
+          "name": "리쥬짱#3390",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 70,
+          "tier2Sec": 179,
+          "tier3Sec": 439,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "175906512_Moon_Soin_Springtime13",
@@ -4846,6 +8137,36 @@
       "tournamentId": "dolphin-wsl-s2"
     },
     {
+      "replayId": "1679757581_JotM_Lucifer_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 458,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "JotM#1375",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 174,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 73,
+          "tier2Sec": 312,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1673714928_Kaho_Lyn_Springtime13",
       "map": "Springtime",
       "durationSec": 849,
@@ -4939,6 +8260,15 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "1584792413_Solstice_Boidyslam_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 1159,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1579908815_Eer0_FoCuS_Tidehunters-12",
       "map": "Tidehunters",
       "durationSec": 914,
@@ -4969,6 +8299,126 @@
         "orc-bm-wind-rider"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "1571393245_Dise_Lucifer_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 838,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "DiSe22#2860",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 165,
+          "tier3Sec": 373,
+          "expansionSec": 632
+        },
+        {
+          "slot": "2",
+          "name": "Lucifer#34735",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 169,
+          "tier3Sec": 318,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1562383696_Soin_Moon_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 858,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "3",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 63,
+          "tier2Sec": 153,
+          "tier3Sec": null,
+          "expansionSec": 631
+        },
+        {
+          "slot": "4",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 158,
+          "tier3Sec": 348,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1539476622_Goods_stormwc3-2234_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 1748,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 199,
+          "tier3Sec": 439,
+          "expansionSec": 269
+        },
+        {
+          "slot": "2",
+          "name": "StormWc3#2234",
+          "race": "H",
+          "hero": "Mountain King",
+          "heroTimeSec": 69,
+          "tier2Sec": 307,
+          "tier3Sec": 724,
+          "expansionSec": 200
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1528139254_Goods_PPK_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 1673,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 170,
+          "tier3Sec": 370,
+          "expansionSec": 1244
+        },
+        {
+          "slot": "2",
+          "name": "Stics217#2677",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 78,
+          "tier2Sec": 180,
+          "tier3Sec": 479,
+          "expansionSec": 738
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1513798095_Lyn_Kaho_EchoIsles22",
@@ -5122,7 +8572,7 @@
           "heroTimeSec": 66,
           "tier2Sec": 162,
           "tier3Sec": 325,
-          "expansionSec": 765
+          "expansionSec": 770
         }
       ],
       "builds": [
@@ -5295,6 +8745,15 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "1408043635_Sheik_PaTo_Noxious-11",
+      "map": "Noxious",
+      "durationSec": 1242,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1364826411_Inspired_Pcg123_NorthernIsles",
       "map": "Northern Isles",
       "durationSec": 1005,
@@ -5374,7 +8833,7 @@
           "heroTimeSec": 65,
           "tier2Sec": 139,
           "tier3Sec": null,
-          "expansionSec": 530
+          "expansionSec": 533
         },
         {
           "slot": "2",
@@ -5391,6 +8850,36 @@
         "ne-dh-mass-talons"
       ],
       "tournamentId": "wsb-2026-s3"
+    },
+    {
+      "replayId": "1340933251_Fhra_Starshaped_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1754,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Fhra#1387",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 70,
+          "tier2Sec": 175,
+          "tier3Sec": 373,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "Starshaped#2916",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 171,
+          "tier3Sec": 433,
+          "expansionSec": 231
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1339797674_Life_Soin_ConcealedHill",
@@ -5486,6 +8975,66 @@
       "tournamentId": null
     },
     {
+      "replayId": "1320958614_Bazukafit_Chanji_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1748,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "BAZUKAFIT#2975",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 67,
+          "tier2Sec": 204,
+          "tier3Sec": 468,
+          "expansionSec": 221
+        },
+        {
+          "slot": "2",
+          "name": "Chanji#21896",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 143,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "130378967_RaZeR_PaTo_Boulder-Vale",
+      "map": "Boulder Vale",
+      "durationSec": 817,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "2",
+          "name": "PaTo#12362",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 66,
+          "tier2Sec": 175,
+          "tier3Sec": 355,
+          "expansionSec": 599
+        },
+        {
+          "slot": "4",
+          "name": "RaZeR#23389",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 74,
+          "tier2Sec": 179,
+          "tier3Sec": 321,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1293021105_Life_Fortitude_Turtle-Rock-16",
       "map": "Turtle Rock v1.6 dwsl",
       "durationSec": 692,
@@ -5516,6 +9065,36 @@
         "ne-dh-fast-bear"
       ],
       "tournamentId": "dolphin-wsl-s2"
+    },
+    {
+      "replayId": "1287615902_Moon_Soin_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 338,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Moon#35134",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 67,
+          "tier2Sec": 157,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "4",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 145,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1264013117_Eer0_Life_Autumn-Leaves-20",
@@ -5584,6 +9163,36 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "125307180_GodFather_Chanji_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 1027,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "ElPollitoPio#21982",
+          "race": "U",
+          "hero": "Crypt Lord",
+          "heroTimeSec": 106,
+          "tier2Sec": 448,
+          "tier3Sec": null,
+          "expansionSec": 674
+        },
+        {
+          "slot": "2",
+          "name": "Chanji#21896",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 66,
+          "tier2Sec": 159,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1241210037_Snowdream_War3Orcer0_Hammerfall",
       "map": "Hammerfall",
       "durationSec": 1186,
@@ -5627,7 +9236,7 @@
           "heroTimeSec": 65,
           "tier2Sec": 152,
           "tier3Sec": null,
-          "expansionSec": 396
+          "expansionSec": 395
         },
         {
           "slot": "2",
@@ -5644,6 +9253,135 @@
         "ne-potm-mass-hunts"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "1234983229_Saganash_OsgPACMAN_Shallow-Grave",
+      "map": "Shallow Grave",
+      "durationSec": 834,
+      "matchup": "HvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Saganash#3527",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": null,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "bQNotNow#2642",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 68,
+          "tier2Sec": null,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1232417607_Ares-American-player-_PaTo_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 683,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1220213506_Sheik_Jens_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 996,
+      "matchup": "EvU",
+      "players": [
+        {
+          "slot": "2",
+          "name": "sheik#2417",
+          "race": "U",
+          "hero": "Lich",
+          "heroTimeSec": 69,
+          "tier2Sec": 312,
+          "tier3Sec": 457,
+          "expansionSec": 226
+        },
+        {
+          "slot": "3",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 68,
+          "tier2Sec": 260,
+          "tier3Sec": 440,
+          "expansionSec": 221
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1214746922_Orcbrave_MrLogical_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 1694,
+      "matchup": "HvO",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Orcbrave#3966",
+          "race": "O",
+          "hero": "Far Seer",
+          "heroTimeSec": 66,
+          "tier2Sec": 171,
+          "tier3Sec": null,
+          "expansionSec": 564
+        },
+        {
+          "slot": "2",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 193,
+          "tier3Sec": null,
+          "expansionSec": 623
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1203566400_Sonik_Goods_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1874,
+      "matchup": "EvE",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Sonik#21222",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 70,
+          "tier2Sec": 162,
+          "tier3Sec": 512,
+          "expansionSec": 918
+        },
+        {
+          "slot": "2",
+          "name": "goods#31869",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 68,
+          "tier2Sec": 170,
+          "tier3Sec": 335,
+          "expansionSec": 1086
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1202510875_FoCuS_Kaho_Springtime13",
@@ -5745,6 +9483,36 @@
       "tournamentId": "bcup-s22"
     },
     {
+      "replayId": "1170743081_Angeline_E8Orc_Hammerfall",
+      "map": "Hammerfall",
+      "durationSec": 1649,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "angeline#31596",
+          "race": "E",
+          "hero": "Demon Hunter",
+          "heroTimeSec": 70,
+          "tier2Sec": 181,
+          "tier3Sec": 439,
+          "expansionSec": 1065
+        },
+        {
+          "slot": "2",
+          "name": "JustTiming#1467",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 67,
+          "tier2Sec": 363,
+          "tier3Sec": 505,
+          "expansionSec": 241
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1168111252_War3Orcer0_LawLiet_ConcealedHill",
       "map": "Concealed Hill",
       "durationSec": 1070,
@@ -5842,6 +9610,24 @@
         "ud-lich-fast-tech"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "1143133315_Lucifer_PaTo_Lost-Lake-13",
+      "map": "Lost Lake",
+      "durationSec": 648,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1137889134_Jens_Sheik_Fading-Autumn-13",
+      "map": "Fading Autumn",
+      "durationSec": 848,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1133376030_Eer0_FoCuS_NorthernIsles",
@@ -5966,7 +9752,7 @@
           "heroTimeSec": 67,
           "tier2Sec": 392,
           "tier3Sec": null,
-          "expansionSec": 295
+          "expansionSec": 297
         }
       ],
       "builds": [
@@ -5974,6 +9760,66 @@
         "hu-am-caster"
       ],
       "tournamentId": "wsb-2026-s3"
+    },
+    {
+      "replayId": "1105902990_Biko_Ladziuk_Last-Refuge-15",
+      "map": "Last Refuge",
+      "durationSec": 1608,
+      "matchup": "OvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Cucaracha#21207",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 73,
+          "tier2Sec": 180,
+          "tier3Sec": null,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "LDK#21919",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 65,
+          "tier2Sec": 193,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1064603614_Jens_Soin_Northern-Isles-13",
+      "map": "Northern Isles",
+      "durationSec": 573,
+      "matchup": "EvO",
+      "players": [
+        {
+          "slot": "2",
+          "name": "Jens#11592",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 255,
+          "tier3Sec": null,
+          "expansionSec": 183
+        },
+        {
+          "slot": "3",
+          "name": "전소인#3190",
+          "race": "O",
+          "hero": "Blademaster",
+          "heroTimeSec": 68,
+          "tier2Sec": 132,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1057610942_Moon_Soin_AutumnLeaves20",
@@ -6041,6 +9887,36 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "1051647054_Biko_MrLogical_Tidehunters-12",
+      "map": "Tidehunters",
+      "durationSec": 1777,
+      "matchup": "HvU",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Cucaracha#21207",
+          "race": "U",
+          "hero": "Death Knight",
+          "heroTimeSec": 67,
+          "tier2Sec": 193,
+          "tier3Sec": 443,
+          "expansionSec": null
+        },
+        {
+          "slot": "2",
+          "name": "MrLogical#21300",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 66,
+          "tier2Sec": 317,
+          "tier3Sec": 547,
+          "expansionSec": 212
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1047891405_Leqi_Cash_Tidehunters12",
       "map": "Tidehunters",
       "durationSec": 702,
@@ -6071,6 +9947,45 @@
         "orc-fs-headhunter-shaman"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "1044730018_LiiLD.C_Cloud-American-player-_Springtime-14",
+      "map": "Springtime",
+      "durationSec": 1543,
+      "matchup": "EvE",
+      "players": [
+        {
+          "slot": "1",
+          "name": "LiiLDC#2753",
+          "race": "E",
+          "hero": null,
+          "heroTimeSec": null,
+          "tier2Sec": 220,
+          "tier3Sec": 777,
+          "expansionSec": 444
+        },
+        {
+          "slot": "2",
+          "name": "Pa2Ma#2983",
+          "race": "E",
+          "hero": "Pit Lord",
+          "heroTimeSec": 590,
+          "tier2Sec": 187,
+          "tier3Sec": 484,
+          "expansionSec": 1167
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1036084851_SitioGO_Lucifer_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 320,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1031906232_FoCuS_Eer0_Springtime13",
@@ -6106,6 +10021,45 @@
       "tournamentId": "wsb-2026-s3"
     },
     {
+      "replayId": "1030888168_Superfurion_Boidyslam_Tioga-Pass",
+      "map": "Tioga Pass",
+      "durationSec": 1134,
+      "matchup": null,
+      "players": [],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1024196334_Evanescence_Trof_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1853,
+      "matchup": "EvH",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Evanescence#21559",
+          "race": "E",
+          "hero": "Warden",
+          "heroTimeSec": 68,
+          "tier2Sec": 198,
+          "tier3Sec": 521,
+          "expansionSec": 405
+        },
+        {
+          "slot": "2",
+          "name": "Trof#21166",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 70,
+          "tier2Sec": 421,
+          "tier3Sec": 729,
+          "expansionSec": 257
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
       "replayId": "1020568240_Soin_Life_EchoIsles22",
       "map": "Echo Isles",
       "durationSec": 1081,
@@ -6119,7 +10073,7 @@
           "heroTimeSec": 65,
           "tier2Sec": 133,
           "tier3Sec": null,
-          "expansionSec": 630
+          "expansionSec": 635
         },
         {
           "slot": "2",
@@ -6136,6 +10090,66 @@
         "ne-dh-mass-talons"
       ],
       "tournamentId": "bcup-s22"
+    },
+    {
+      "replayId": "1017780753_berserk-23631_Cloud-American-player-_Twisted-Meadows-11",
+      "map": "Twisted Meadows",
+      "durationSec": 1701,
+      "matchup": "EvE",
+      "players": [
+        {
+          "slot": "1",
+          "name": "Berserk#23631",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 68,
+          "tier2Sec": 165,
+          "tier3Sec": 537,
+          "expansionSec": 728
+        },
+        {
+          "slot": "2",
+          "name": "Pa2Ma#2983",
+          "race": "E",
+          "hero": "Keeper of the Grove",
+          "heroTimeSec": 997,
+          "tier2Sec": 199,
+          "tier3Sec": 551,
+          "expansionSec": 353
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
+    },
+    {
+      "replayId": "1012050322_Ikbencool_XToy_Autumn-Leaves-20",
+      "map": "Autumn Leaves",
+      "durationSec": 834,
+      "matchup": "HvH",
+      "players": [
+        {
+          "slot": "4",
+          "name": "ikbencool#2603",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 131,
+          "tier2Sec": 436,
+          "tier3Sec": null,
+          "expansionSec": 724
+        },
+        {
+          "slot": "6",
+          "name": "xToy#11908",
+          "race": "H",
+          "hero": "Archmage",
+          "heroTimeSec": 131,
+          "tier2Sec": 358,
+          "tier3Sec": null,
+          "expansionSec": null
+        }
+      ],
+      "builds": [],
+      "tournamentId": null
     },
     {
       "replayId": "1010267604_Snowdream_War3Orcer0_TurtleRock20",
