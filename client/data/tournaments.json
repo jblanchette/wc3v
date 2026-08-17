@@ -1,54 +1,55 @@
 {
   "tournaments": [
     {
-      "id": "wgl-2025-summer",
-      "name": "Warcraft Gold League 2025 Summer",
-      "shortName": "WGL Summer '25",
-      "date": "2025-07-15",
-      "endDate": "2025-07-20",
-      "organizer": "NetEase",
-      "tier": 1,
-      "region": "Global",
+      "id": "aow-2025-5",
+      "name": "Ancient of Wonders Cup 2025 #5",
+      "shortName": "AoW '25 #5",
+      "date": "2025-09-01",
+      "endDate": "2025-09-15",
+      "organizer": "Community",
+      "tier": 2,
+      "region": "EU",
       "mapPool": [
         "Autumn Leaves",
-        "Concealed Hill",
+        "Echo Isles 2",
         "Hammerfall",
+        "Last Refuge",
         "Northern Isles",
-        "Springtime",
-        "Tidehunters"
-      ],
-      "url": ""
-    },
-    {
-      "id": "blizzard-classic-2026",
-      "name": "Blizzard Classic Cup 2026",
-      "shortName": "Blizzard Classic '26",
-      "date": "2026-03-15",
-      "endDate": "2026-03-16",
-      "organizer": "Blizzard",
-      "tier": 1,
-      "region": "Global",
-      "mapPool": [],
-      "url": ""
-    },
-    {
-      "id": "being-esports-2024",
-      "name": "Being Esports World Series 2024",
-      "shortName": "Being Esports '24",
-      "date": "2024-10-01",
-      "endDate": "2024-10-15",
-      "organizer": "Being Esports",
-      "tier": 1,
-      "region": "Global",
-      "mapPool": [
-        "Autumn Leaves",
-        "Hammerfall",
-        "Northern Isles",
-        "Shallow Grave",
         "Springtime",
         "Tidehunters",
+        "Turtle Rock 2",
         "Twisted Meadows"
       ],
+      "url": ""
+    },
+    {
+      "id": "b2w-weekly-2026-03",
+      "name": "B2W Weekly Cup March 2026",
+      "shortName": "B2W Mar '26",
+      "date": "2026-03-01",
+      "endDate": "2026-03-31",
+      "organizer": "Back2Warcraft",
+      "tier": 2,
+      "region": "EU",
+      "mapPool": [
+        "Autumn Leaves",
+        "Last Refuge",
+        "Northern Isles",
+        "Tidehunters",
+        "Turtle Rock 2"
+      ],
+      "url": ""
+    },
+    {
+      "id": "bcup-s21",
+      "name": "B Cup Season 21",
+      "shortName": "B Cup S21",
+      "date": "2026-01-15",
+      "endDate": "2026-01-31",
+      "organizer": "Back2Warcraft",
+      "tier": 2,
+      "region": "EU",
+      "mapPool": [],
       "url": ""
     },
     {
@@ -74,76 +75,35 @@
       "url": ""
     },
     {
-      "id": "bcup-s21",
-      "name": "B Cup Season 21",
-      "shortName": "B Cup S21",
-      "date": "2026-01-15",
-      "endDate": "2026-01-31",
-      "organizer": "Back2Warcraft",
-      "tier": 2,
-      "region": "EU",
-      "mapPool": [],
-      "url": ""
-    },
-    {
-      "id": "b2w-weekly-2026-03",
-      "name": "B2W Weekly Cup March 2026",
-      "shortName": "B2W Mar '26",
-      "date": "2026-03-01",
-      "endDate": "2026-03-31",
-      "organizer": "Back2Warcraft",
-      "tier": 2,
-      "region": "EU",
+      "id": "being-esports-2024",
+      "name": "Being Esports World Series 2024",
+      "shortName": "Being Esports '24",
+      "date": "2024-10-01",
+      "endDate": "2024-10-15",
+      "organizer": "Being Esports",
+      "tier": 1,
+      "region": "Global",
       "mapPool": [
         "Autumn Leaves",
-        "Last Refuge",
-        "Northern Isles",
-        "Tidehunters",
-        "Turtle Rock 2"
-      ],
-      "url": ""
-    },
-    {
-      "id": "aow-2025-5",
-      "name": "Ancient of Wonders Cup 2025 #5",
-      "shortName": "AoW '25 #5",
-      "date": "2025-09-01",
-      "endDate": "2025-09-15",
-      "organizer": "Community",
-      "tier": 2,
-      "region": "EU",
-      "mapPool": [
-        "Autumn Leaves",
-        "Echo Isles 2",
         "Hammerfall",
-        "Last Refuge",
         "Northern Isles",
+        "Shallow Grave",
         "Springtime",
         "Tidehunters",
-        "Turtle Rock 2",
         "Twisted Meadows"
       ],
       "url": ""
     },
     {
-      "id": "w3il-s3",
-      "name": "Warcraft3.info League Season 3",
-      "shortName": "W3iL S3",
-      "date": "2025-06-01",
-      "endDate": "2025-08-31",
-      "organizer": "Warcraft3.info",
-      "tier": 2,
-      "region": "EU",
-      "mapPool": [
-        "Amazonia",
-        "Autumn Leaves",
-        "Concealed Hill",
-        "Echo Isles",
-        "Last Refuge",
-        "Northern Isles",
-        "Terenas Stand LV",
-        "Twisted Meadows"
-      ],
+      "id": "blizzard-classic-2026",
+      "name": "Blizzard Classic Cup 2026",
+      "shortName": "Blizzard Classic '26",
+      "date": "2026-03-15",
+      "endDate": "2026-03-16",
+      "organizer": "Blizzard",
+      "tier": 1,
+      "region": "Global",
+      "mapPool": [],
       "url": ""
     },
     {
@@ -169,18 +129,6 @@
       "url": ""
     },
     {
-      "id": "wpl-s1",
-      "name": "Warcraft Pro League Season 1",
-      "shortName": "WPL S1",
-      "date": "2025-01-01",
-      "endDate": "2025-03-31",
-      "organizer": "China",
-      "tier": 1,
-      "region": "China",
-      "mapPool": [],
-      "url": ""
-    },
-    {
       "id": "dolphin-wsl-s2",
       "name": "Dolphin Warcraft Super League Season 2",
       "shortName": "Dolphin WSL S2",
@@ -200,6 +148,82 @@
         "Turtle Rock",
         "Twisted Meadows"
       ],
+      "url": ""
+    },
+    {
+      "id": "showmatch-life-vs-sok-10th-aug-2026",
+      "name": "Showmatch Life vs Sok - 10th Aug 2026",
+      "shortName": "Life vs Sok",
+      "date": "2026-08-10",
+      "endDate": null,
+      "organizer": null,
+      "tier": null,
+      "region": null,
+      "mapPool": [],
+      "url": "https://liquipedia.net/warcraft/Showmatch_Life_vs_Sok/10_Aug_2026"
+    },
+    {
+      "id": "w3il-s3",
+      "name": "Warcraft3.info League Season 3",
+      "shortName": "W3iL S3",
+      "date": "2025-06-01",
+      "endDate": "2025-08-31",
+      "organizer": "Warcraft3.info",
+      "tier": 2,
+      "region": "EU",
+      "mapPool": [
+        "Amazonia",
+        "Autumn Leaves",
+        "Concealed Hill",
+        "Echo Isles",
+        "Last Refuge",
+        "Northern Isles",
+        "Terenas Stand LV",
+        "Twisted Meadows"
+      ],
+      "url": ""
+    },
+    {
+      "id": "welcome-to-jens-jungle",
+      "name": "Welcome to Jens' Jungle",
+      "shortName": "Jens' Jungle",
+      "date": "2026-08-10",
+      "endDate": null,
+      "organizer": null,
+      "tier": null,
+      "region": null,
+      "mapPool": [],
+      "url": "https://liquipedia.net/warcraft/Welcome_to_Jens'_Jungle"
+    },
+    {
+      "id": "wgl-2025-summer",
+      "name": "Warcraft Gold League 2025 Summer",
+      "shortName": "WGL Summer '25",
+      "date": "2025-07-15",
+      "endDate": "2025-07-20",
+      "organizer": "NetEase",
+      "tier": 1,
+      "region": "Global",
+      "mapPool": [
+        "Autumn Leaves",
+        "Concealed Hill",
+        "Hammerfall",
+        "Northern Isles",
+        "Springtime",
+        "Tidehunters"
+      ],
+      "url": ""
+    },
+    {
+      "id": "wpl-s1",
+      "name": "Warcraft Pro League Season 1",
+      "shortName": "WPL S1",
+      "date": "2025-01-01",
+      "endDate": "2025-03-31",
+      "organizer": "China",
+      "tier": 1,
+      "region": "China",
+      "mapPool": [],
       "url": ""
     },
     {

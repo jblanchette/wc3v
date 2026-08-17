@@ -59,6 +59,11 @@ const TABLE = {
   'ne-kotg-mountain-giant':  { buildClass: 'ladder',     difficulty: 'medium', alsoShownIn: ['new'] }, // tanky, forgiving NE
   'ne-dh-fast-bear':         { buildClass: 'ladder',     difficulty: 'medium' },
   'ne-dh-mass-talons':       { buildClass: 'pro-meta',   difficulty: 'hard'   }, // talon micro
+  // Found by build-meta-evidence.js --gaps: hero openers with NO build at all.
+  // Both are pro play that is not the current standard, which is the whole
+  // reason pro-off-meta exists.
+  'ne-warden-expand':        { buildClass: 'pro-off-meta', difficulty: 'hard' }, // 6 games, Jens/Life/Kaho tournament footage
+  'ne-dr-tavern-hunts':      { buildClass: 'pro-off-meta', difficulty: 'hard' }, // 9 pro-ladder games from 5 specialists
 };
 
 const VALID_BANDS = new Set(['new', 'improving', 'pro']);

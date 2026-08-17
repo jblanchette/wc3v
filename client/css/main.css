@@ -6695,22 +6695,27 @@ body {
      Two heights, one per disclosure state, and both are page-level — a grid
      never mixes them, so rows still cannot step.
 
-     410 is measured with the upgrades well hidden: the tallest card in the
-     library comes to 395 natural (three heroes, three key units, and the
-     "N more replays" bar), so this clears it by 15px and leaves that much
-     slack on everything else. Do not tighten it to 395: the header wraps to a
-     second line on a long build name, and there is no shock absorber for
-     OVERFLOW here — the card clips.
+     485 is measured with the upgrades well hidden: the tallest cards in the
+     library come to 467 natural (two heroes WITH their skill rows, a wrapping
+     title, and the "N more replays" bar), so this clears them by 18px.
+     Do not tighten it to 467. Under-size this and the symptom is NOT clipping,
+     which is why it is easy to miss: flex shrinks .site-card-units toward zero
+     and the expo row lands ON TOP of the replay line, while scrollHeight still
+     equals clientHeight and every overflow check passes.
 
-     526 is measured for the open state: header 56 + actions 37 + heroes 90 +
-     units 115 + footer 88 + padding 20 leaves the upgrades well its label plus
-     exactly three 30px badge rows and its own 8px of inset. Three covers most
-     builds outright, and the deeper ones cut at a row boundary rather than
-     mid-badge. */
-  grid-auto-rows: var(--card-h, 410px);
+     600 is the open state: 526 as originally measured (header 56 + actions 37
+     + heroes 90 + units 115 + footer 88 + padding 20, leaving the upgrades
+     well its label plus exactly three 30px badge rows and 8px of inset) plus
+     the 72px the hero skill rows added.
+
+     RE-MEASURE BOTH whenever the card gains a section OR the library gains a
+     build — the tallest card is what sets these, and a new build can become
+     it. In the browser, at a 255px column, with grid-auto-rows:auto and the
+     absorber neutralised. Check for OVERLAP, not just clipping. */
+  grid-auto-rows: var(--card-h, 485px);
   align-items: stretch;
 }
-.site-build-grid.show-upgrades { --card-h: 526px; }
+.site-build-grid.show-upgrades { --card-h: 600px; }
 
 /* The upgrades section is rendered ALWAYS and hidden here, so the toggle is a
    class flip on one element rather than a re-render of the whole grid. */

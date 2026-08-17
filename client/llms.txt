@@ -1,7 +1,7 @@
 # WC3V
 
 > Free, open-source Warcraft III replay analysis and a curated library of
-> 16 pro build orders backed by 351 parsed tournament games.
+> 18 pro build orders backed by 351 parsed tournament games.
 > Replay files are parsed entirely in the visitor's browser and never uploaded.
 
 Every page below also exists as Markdown at the same URL with a .md suffix,
@@ -17,7 +17,7 @@ and is served as text/markdown to requests that ask for it via Accept.
 
 ## Build orders
 
-- [Warcraft III build orders](https://wc3v.com/builds.md): 16 curated builds by race and matchup, each backed by a tournament replay
+- [Warcraft III build orders](https://wc3v.com/builds.md): 18 curated builds by race and matchup, each backed by a tournament replay
 - [DK Fiend Standard](https://wc3v.com/builds/udo-dk-fast-fiend.md): Undead, UvO, UvH, UvU. A simple Undead build for new players. Death Knight opener, Ghouls mine lumber, and your fighting army is Crypt Fiends -- you never have to micro Ghouls…
 - [DK Destroyer](https://wc3v.com/builds/ud-dk-destroyer.md): Undead, UvN, UvH, UvO. DK Fiend opener that priorities a fast T3 for Destroyer tech. Destroyers' Devour Magic hard-counters caster-heavy armies like NE Dryads or HU Priests.
 - [BM Wind Rider](https://wc3v.com/builds/orc-bm-wind-rider.md): Orc, OvU. Blademaster opener with heavy early harassment, transitioning into Wind Rider air superiority. Denies expansion and wins on economic disruption.
@@ -34,6 +34,8 @@ and is served as text/markdown to requests that ask for it via Accept.
 - [PotM Mass Huntress](https://wc3v.com/builds/ne-potm-mass-hunts.md): Night Elf, EvH, EvE, EvO. PotM first hero for Trueshot Aura damage boost and Searing Arrows hero harass. Mass Huntresses provide ranged DPS and Sentinel scout vision. Strong…
 - [Paladin Rifle](https://wc3v.com/builds/hu-paladin-rifle.md): Human, HvO, HvN, HvU. Paladin first hero for Holy Light sustain on early Footmen. Tower up at base, mass Riflemen with Priest support. Defensive opener that scales into a…
 - [Crypt Lord Standard](https://wc3v.com/builds/ud-cl-standard.md): Undead, UvH, UvN, UvO. Crypt Lord first hero for Carrion Beetles map presence and Impale stun. Ghoul opener like other UD builds, transitions to Crypt Fiends and Statues at T2.…
+- [Warden Fast Expand](https://wc3v.com/builds/ne-warden-expand.md): Night Elf, EvH, EvU. Warden first — she is the cheapest hero Night Elf can field, so the gold saved goes straight into an early expansion. Across the pro games behind this…
+- [Dark Ranger Huntress](https://wc3v.com/builds/ne-dr-tavern-hunts.md): Night Elf, EvH, EvO, EvU, EvE. Skip the Altar and hire a Dark Ranger from the Tavern instead. Every game behind this build does it at the same moment — 2:15 to 2:19, without exception —…
 
 ## Data & APIs
 

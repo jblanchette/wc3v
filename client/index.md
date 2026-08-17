@@ -23,7 +23,7 @@ There is also a Windows desktop app that watches your replay folder and has the 
 
 ## The build library
 
-16 curated builds, every one taken from a tournament game you can watch.
+18 curated builds, every one taken from a tournament game you can watch.
 Full detail for each is at the linked page.
 
 ### DK Fiend Standard
@@ -233,6 +233,32 @@ Crypt Lord first hero for Carrion Beetles map presence and Impale stun. Ghoul op
 - DK second hero for Death Coil sustain on CL between fights
 
 Full build: https://wc3v.com/builds/ud-cl-standard
+
+### Warden Fast Expand
+
+Night Elf · EvH, EvU · Pro off-meta · 6 pro replays
+
+Warden first — she is the cheapest hero Night Elf can field, so the gold saved goes straight into an early expansion. Across the pro games behind this build she is out at 1:07 every time, Tier 2 lands around 3:03-3:42, and five of six games take a second base at 5:03-6:13. Fan of Knives and Blink are both maxed: Fan clears creep camps and punishes clumped armies, Blink gets her out of the trouble a squishy hero finds. The army is Archers into Dryads, so Abolish Magic answers casters while the expansion pays off.
+
+- Warden at 1:07 — she costs less than any other Night Elf hero, and the saved gold is what funds the early expansion
+- Tier 2 at 3:03-3:42, then Ancient of Lore for Dryads
+- Expand at 5:03-6:13 — five of the six pro games behind this build took a second base in that window
+- Max Fan of Knives and Blink. Fan is your creep clear and your answer to a clumped army; Blink is how a 500-HP hero survives being focused
+
+Full build: https://wc3v.com/builds/ne-warden-expand
+
+### Dark Ranger Huntress
+
+Night Elf · EvH, EvO, EvU, EvE · Pro off-meta · 9 pro replays
+
+Skip the Altar and hire a Dark Ranger from the Tavern instead. Every game behind this build does it at the same moment — 2:15 to 2:19, without exception — which is what separates it from a desperation pick. Black Arrow turns every creep and every kill into a free skeleton, so the hero creeps faster than the gold she cost. Archers and Huntresses carry the fight while six of nine games expand between 3:19 and 4:54. Five players ran these nine games, which is the honest shape of an off-meta build: a small group who have the timing memorised.
+
+- Tavern Dark Ranger at 2:15 — the timing is identical across all nine pro games, this is a rehearsed opening and not an improvisation
+- Black Arrow first: every creep you kill leaves a skeleton, so the hero snowballs camps without needing your army
+- Archers into Huntresses, with Moon Glaive and Improved Bows as the upgrades that matter
+- Six of nine games expand at 3:19-4:54, behind the map presence the free skeletons buy you
+
+Full build: https://wc3v.com/builds/ne-dr-tavern-hunts
 
 ## The replay corpus
 
