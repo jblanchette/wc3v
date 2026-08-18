@@ -48,9 +48,13 @@
       lastOpts: null
     };
 
-    const report = (file, phase) => {
+    // `key` is set ONLY when this replay was actually parsed. A skip reports
+    // 'done' with no key, which is what lets a caller repaint on real work
+    // instead of once per file on disk. The signature always said three
+    // arguments; the third was being dropped here.
+    const report = (file, phase, key) => {
       if (st.onProgress) {
-        try { st.onProgress(file, phase); } catch (e) { /* UI must not stop a parse */ }
+        try { st.onProgress(file, phase, key); } catch (e) { /* UI must not stop a parse */ }
       }
     };
 
@@ -175,6 +179,11 @@
       }
       if (st.running && st.queue.length === 0) {
         st.running = false;
+        // Ran to the end, so there is nothing to resume. Only a PAUSE leaves
+        // options behind; a finished run must not hand its progress callback
+        // to whatever presses a button next.
+        st.lastOpts = null;
+        st.onProgress = null;
         // The measured end-to-end rate. The roadmap wants this number before
         // anyone quotes one.
         deps.log(

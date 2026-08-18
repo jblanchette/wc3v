@@ -1,5 +1,32 @@
 # WC3V Desktop: changelog
 
+## 1.0.5 — 18 Aug 2026
+
+### "History up to date", with a spinner still turning
+
+1.0.4 made the history update actually run. It then would not stop.
+
+Two things were wrong, and they shared a cause: the run's queue is every replay
+on disk, not the stale ones. Once the last stale game was re-read the engine
+carried on down the rest of the library, hashing each file to work out that it
+had nothing to do with it. On a four thousand game library that is four
+thousand file hashes after the strip already said it was finished.
+
+And the strip reported progress by repainting the whole games feed, once per
+replay in that queue. Not once per game re-read: once per file considered,
+including the thousands it skipped. That is the flicker, and most of the CPU.
+
+The run now ends when nothing is stale, which is what the strip has always
+claimed to be waiting for, and the feed repaints only when a game actually
+became readable. On the same library that is eight file reads and five
+repaints instead of four thousand of each.
+
+The strip also puts itself away when it is done, rather than sitting there
+finished with the spinner going.
+
+Anything that was never parsed at all is still Settings → Parse all replays.
+That was always that button's job; the history strip is only about games read
+under an older format.
 ## 1.0.4 — 18 Aug 2026
 
 ### Updating your history never actually started

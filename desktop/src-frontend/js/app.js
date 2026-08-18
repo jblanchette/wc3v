@@ -467,7 +467,12 @@ const firstRun = window.createFirstRun({
   // Typing your own name is a confirmation, so auto-detection never overrides
   // it afterwards.
   setIdentity: (name) => identity.confirm(name),
-  startBackfill: () => backfill.toggle(),
+  // Pause if one is running, otherwise start a FULL run — explicitly, not
+  // `toggle()`. Toggle resumes with the options the last run carried, which is
+  // right for the migration strip's own Pause/Resume and wrong here: after a
+  // migration it would reinstall that strip's progress handler on a run the
+  // user started from Settings.
+  startBackfill: () => { if (backfill.running) backfill.toggle(); else backfill.start({}); },
   onW3cChange: (on) => {
     w3c.setEnabled(on);
     if (on) scout.start(); else scout.stop();
@@ -866,8 +871,53 @@ const syncMigrateStrip = (running) => {
   el('migrate-toggle').textContent = running ? 'Pause' : 'Resume';
 };
 
+// Repainting the feed is the expensive part of a run: gamesView.render walks
+// the whole corpus and rebuilds the list.
+//
+// onProgress fires once per REPLAY, and the queue is every replay on disk, not
+// only the stale ones — so on a 4,000-game library this ran 4,000+ full
+// re-renders, most of them for files the run skipped without touching. That is
+// what made the window flicker and the app look busy long after it said it was
+// finished. Repaint only when a game actually became readable, and no more
+// than twice a second.
+let repaintAt = 0;
+let repaintTimer = 0;
+const repaintCorpus = () => {
+  if (!store.corpus || repaintTimer) return;
+  const wait = Math.max(0, 500 - (performance.now() - repaintAt));
+  repaintTimer = setTimeout(() => {
+    repaintTimer = 0;
+    repaintAt = performance.now();
+    if (!store.corpus) return;
+    gamesView.render(store.corpus);
+    if (currentView === 'library') libraryView.render(store.corpus);
+  }, wait);
+};
+
+// The run is over when nothing is stale, NOT when the queue empties. The queue
+// is the whole library, so left to itself the engine kept hashing thousands of
+// already-current replays behind a strip that read "History up to date" with a
+// spinner still turning. Anything never parsed at all stays that way until
+// Settings → Parse all replays, which is that button's job, not this strip's.
+let migrationDone = false;
+const finishMigration = () => {
+  if (migrationDone) return;
+  migrationDone = true;
+  if (backfill.running) backfill.toggle();
+  el('migrate-text').textContent = 'History up to date';
+  el('migrate-fill').style.width = '100%';
+  log('your history is up to date', 'ok');
+  if (store.corpus) {
+    gamesView.render(store.corpus);
+    if (currentView === 'library') libraryView.render(store.corpus);
+  }
+  // Let the finished state be read, then take the strip away.
+  setTimeout(() => syncMigrateStrip(backfill.running), 1800);
+};
+
 const startMigration = () => {
   const total = store.staleCount;
+  migrationDone = false;
   log(`${total.toLocaleString()} game(s) were read under an older format. ` +
     'Re-reading them now; newest first.', 'warn');
   syncMigrateStrip(true);
@@ -876,19 +926,16 @@ const startMigration = () => {
   // Promise.resolve() so a SYNCHRONOUS throw lands in the same handler as a
   // rejected parse rather than escaping as an uncaught error.
   Promise.resolve().then(() => backfill.start({
-    onProgress: () => {
+    onProgress: (file, phase, key) => {
       const left = store.staleCount;
+      if (!left) { finishMigration(); return; }
       const done = Math.max(0, total - left);
-      el('migrate-text').textContent = left
-        ? `Updating your history · ${done.toLocaleString()} of ${total.toLocaleString()}`
-        : 'History up to date';
+      el('migrate-text').textContent =
+        `Updating your history · ${done.toLocaleString()} of ${total.toLocaleString()}`;
       el('migrate-fill').style.width = total ? `${(done / total) * 100}%` : '100%';
-      // Repaint as each one lands, so a game becomes readable the moment it is
-      // current rather than when the whole run ends.
-      if (store.corpus) {
-        gamesView.render(store.corpus);
-        if (currentView === 'library') libraryView.render(store.corpus);
-      }
+      // A game becomes readable the moment it is current, so repaint on a real
+      // parse. `key` is absent on a skip, which is most of the queue.
+      if (phase === 'done' && key) repaintCorpus();
     }
   })).catch(fail);
 };
