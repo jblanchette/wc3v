@@ -1,6 +1,6 @@
 # WC3V Desktop: changelog
 
-## Unreleased
+## 1.0.3
 
 ### The app holds still between games now
 
