@@ -873,7 +873,9 @@ const startMigration = () => {
   syncMigrateStrip(true);
   el('migrate-text').textContent =
     `Updating your history · ${total.toLocaleString()} to go`;
-  backfill.start({
+  // Promise.resolve() so a SYNCHRONOUS throw lands in the same handler as a
+  // rejected parse rather than escaping as an uncaught error.
+  Promise.resolve().then(() => backfill.start({
     onProgress: () => {
       const left = store.staleCount;
       const done = Math.max(0, total - left);
@@ -888,7 +890,17 @@ const startMigration = () => {
         if (currentView === 'library') libraryView.render(store.corpus);
       }
     }
-  }).catch(e => log(`could not update your history: ${errText(e)}`, 'warn'));
+  })).catch(fail);
+};
+
+// Any failure at all, including one thrown before a promise exists. The strip
+// used to sit at its opening count with no explanation because
+// `backfill.start` was not exported and the TypeError never reached a .catch().
+const fail = (e) => {
+  log(`could not update your history: ${errText(e)}`, 'warn');
+  const t = el('migrate-text');
+  if (t) t.textContent = 'History update stopped. Press Resume to try again.';
+  syncMigrateStrip(false);
 };
 
 // Pause and resume. The work is resumable by construction — a game is done
@@ -897,6 +909,10 @@ const startMigration = () => {
 el('migrate-toggle').addEventListener('click', () => {
   if (backfill.running) backfill.toggle();
   else startMigration();
+  // Without this the label never flips, so a working pause still looks like a
+  // dead button. `start()` sets `running` before its first await, so the state
+  // is already correct by the time toggle() returns.
+  syncMigrateStrip(backfill.running);
 });
 
 // Every map's world bounds, as the site serves at /data/map-folders.json and

@@ -1,15 +1,17 @@
 [package]
 name = "wc3v-desktop"
-# Kept in step with tauri.conf.json by hand. Nothing reads this one — the
-# bundle, the updater manifest and the download page all take their version
-# from tauri.conf.json — but a crate that says 1.0.0 while the product ships
-# 1.0.2 is a lie sitting in the first ten lines of the build.
-version = "1.0.2"
+# Kept in step with tauri.conf.json by `node tools/version-check.js`, which the
+# desktop build and the deploy both run. Nothing reads this one: the bundle, the
+# updater manifest and the download page all take their version from
+# tauri.conf.json. That is exactly why it drifted for most of the project's life
+# (0.6.0 here against a shipped 0.7.4, then 1.0.2 against a live 1.0.3) and why
+# a tool checks it now instead of a comment asking someone to remember.
+version = "1.0.4"
 description = "WC3V — local replay auto-parse and overlay"
 authors = ["Jeff Blanchette"]
 license = "GPL-3.0"
 edition = "2021"
-rust-version = "1.77"
+rust-version = "1.77.2"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -31,6 +33,14 @@ tauri-plugin-notification = "2"
 # asks or on the once-per-launch check.
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
+
+# One app, one process. Closing the window hides to tray, so a second launch
+# used to be invisible until it did damage: a second tray icon, a second
+# watcher re-parsing and re-notifying the same games, and — worst — a second
+# overlay server that walks past the taken home port onto the ladder, leaving
+# the URL already pasted into OBS pointed at the first instance. The plugin
+# hands its argv to the running app and exits, before any of that starts.
+tauri-plugin-single-instance = "2"
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

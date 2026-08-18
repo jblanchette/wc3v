@@ -1,6 +1,69 @@
 # WC3V Desktop: changelog
 
-## 1.0.3
+## 1.0.4 — 18 Aug 2026
+
+### Updating your history never actually started
+
+The strip that says "Updating your history" opened, counted the games it had to
+re-read, and then sat there. It was not slow and it was not stuck on a bad
+replay. It had not started at all.
+
+`backfill.start` was never exported from the backfill module. The strip called
+it, got a TypeError, and the error escaped before there was a promise to catch
+it with, so nothing was logged and nothing moved. The count you were looking at
+was the opening estimate, printed once, forever.
+
+Pause did nothing for the same reason. With no run in progress the button fell
+through to "start", which threw again. And it never changed to Resume, because
+the label was only ever refreshed when a run began.
+
+Three fixes. The engine exports `start`. Pausing and resuming now carries the
+run's options with it, so a resumed migration still reports progress instead of
+coming back with a bar that never moves. And a failure of any kind, including
+one thrown before a promise exists, now says so on the strip and in the log
+rather than leaving a number sitting on screen.
+
+### One app, one process
+
+Closing the window hides WC3V to the tray, so a second launch used to be
+invisible until it did damage: a second tray icon, a second watcher re-reading
+and re-announcing the same games, and a second overlay server that walked past
+the taken port onto the next one, leaving the URL already pasted into OBS
+pointed at the first copy. Launching WC3V again now raises the window that is
+already open.
+
+### The report reads tighter
+
+Creep routes were below the fold on every screen, at the bottom of a scroller
+nobody scrolled. They now sit at the top right, beside the result, and the box
+prints what it is for: a camp total per player and how many camps were
+contested. Contested comes from the parser's own reading of each camp rather
+than from guessing at the overlap between two players' routes, which reported
+zero for every game in the corpus.
+
+The two-lane moments timeline is gone. It cost 70px of the fold to restate what
+the dominance plot beside it already showed.
+
+Alignment and empty space, found by walking every tab with a DOM auditor:
+
+- The two tier bars started at different x, because the "You" chip widened its
+  own row. They are one grid now, so names, bars and times line up down the
+  block.
+- The unit roster sized every tile to its own text, so the second row's columns
+  were 24px off the first.
+- Nothing stretches to its neighbour any more. An upgrades panel was 201px tall
+  around 66px of content, and the Economy card put 196px of blank inside a
+  drawn border.
+- The damage matchup table needed 359px in a 294px card, so it opened with a
+  scrollbar and cut "Unarmored" to "Unarn".
+
+### Settings
+
+App updates lead the sheet instead of sitting third behind two panels you set
+once. The old "App" section, which mixed updates with startup and
+notifications, is now "Startup and alerts" and holds only those.
+
+## 1.0.3 — 18 Aug 2026
 
 ### The app holds still between games now
 

@@ -331,6 +331,22 @@
         </header>
         <div class="sheet-body scroll">
           <section class="panel">
+            <h2>App updates</h2>
+            <label class="check">
+              <input type="checkbox" id="autoupdate-toggle" checked>
+              <span>
+                Check for updates automatically
+                <span class="hint">Nothing installs without you clicking.</span>
+              </span>
+            </label>
+            <div class="row">
+              <button id="check-update" class="btn" type="button">Check for updates</button>
+              <span class="hint" id="update-status"></span>
+            </div>
+            <p class="hint update-notes" id="update-notes" hidden></p>
+          </section>
+
+          <section class="panel">
             <h2>Replay folders</h2>
             <p class="hint">Replays never leave this machine. Map data and
               build-order icons come from wc3v.com's CDN.</p>
@@ -348,7 +364,7 @@
           </section>
 
           <section class="panel">
-            <h2>App</h2>
+            <h2>Startup and alerts</h2>
             <label class="check">
               <input type="checkbox" id="autostart-toggle">
               <span>Start with Windows</span>
@@ -357,18 +373,6 @@
               <input type="checkbox" id="notify-toggle" checked>
               <span>Tell me when a game finishes</span>
             </label>
-            <label class="check">
-              <input type="checkbox" id="autoupdate-toggle" checked>
-              <span>
-                Check for updates automatically
-                <span class="hint">Nothing installs without you clicking.</span>
-              </span>
-            </label>
-            <div class="row">
-              <button id="check-update" class="btn" type="button">Check for updates</button>
-              <span class="hint" id="update-status"></span>
-            </div>
-            <p class="hint update-notes" id="update-notes" hidden></p>
           </section>
 
           <!-- The one thing here that talks to a server about players. Off by
@@ -465,8 +469,6 @@
   <script src="./js/build-card.js"></script>
   <!-- Free tags, in a sidecar a re-parse cannot eat. -->
   <script src="./js/game-tags.js"></script>
-  <!-- The moments timeline the report mounts. -->
-  <script src="./js/game-timeline.js"></script>
   <!-- A stored summary as the shared Match Summary model. Needs build-card.js
        above it for the item stacking and the Mirror Image hero dedupe. -->
   <script src="./js/summary-model.js"></script>

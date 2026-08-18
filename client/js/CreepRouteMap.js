@@ -359,14 +359,35 @@
       mapInfo: (summary && summary.mapInfo) || null,
       folder: (summary && summary.mapInfo && summary.mapInfo.name) || null,
       size: opts.size || 340,
+      detail: opts.detail || 'full',
       routes,
       allCamps,
       allPoints
     };
   };
 
+  // Contested is NOT derived here. `claimState` is already on every camp in
+  // the summary (0 untouched, 1 contested, 2 cleared), decided by the camp
+  // credit model in lib/CampCreditModel.js off credit share and confidence.
+  //
+  // The first cut of this intersected the two players' own camp lists and
+  // called an overlap contested. It reported 0 for every game in the corpus
+  // while `inspect-replay --show=camps` showed 3, 3, 2, 5, 5 — because a
+  // player's list is the camps that gave THEIR heroes experience, so a camp
+  // one side merely fought over and lost never enters it. Re-deriving a
+  // number the parser already publishes got a weaker definition and a wrong
+  // answer.
+  const CONTESTED = 1;
+  const contestedCount = (model) =>
+    (model.allCamps || []).filter(c => c && c.claimState === CONTESTED).length;
+
   // The numbers, in DOM, beside the map. Doubles as the legend: each row is
   // led by its own route's colour, so no separate key is needed.
+  //
+  // `opts.detail` picks how much of that is printed. 'camps' is the report
+  // band: a total per player and the contested count, and nothing else. The
+  // levels/first/XP lines below are the compare drawer's, where the whole
+  // point is measuring your clear against somebody else's.
   const readout = (model) => {
     const box = el('div', 'crm-read');
     for (const r of model.routes) {
@@ -378,27 +399,43 @@
       const body = el('div', 'crm-seat-b');
       body.appendChild(el('span', 'crm-name', r.name));
 
-      const levels = r.camps.reduce((n, c) => n + (c.totalLevel || 0), 0);
-      const xp = r.camps.reduce((n, c) => n + (c.xpGained || 0), 0);
-      const first = r.camps.length ? r.camps[0].gameTimeMs : null;
-
       const stats = el('span', 'crm-stats');
       stats.appendChild(el('b', null, String(r.camps.length)));
       stats.appendChild(el('span', null, r.camps.length === 1 ? ' camp' : ' camps'));
-      if (levels) {
-        stats.appendChild(el('span', 'crm-sep', ' · '));
-        stats.appendChild(el('b', null, String(levels)));
-        stats.appendChild(el('span', null, ' levels'));
-      }
-      body.appendChild(stats);
 
-      const more = [];
-      if (first !== null && first !== undefined) more.push(`first ${fmtMs(first)}`);
-      if (xp) more.push(`${xp.toLocaleString()} XP`);
-      if (more.length) body.appendChild(el('span', 'crm-sub', more.join(' · ')));
+      if (model.detail !== 'camps') {
+        const levels = r.camps.reduce((n, c) => n + (c.totalLevel || 0), 0);
+        const xp = r.camps.reduce((n, c) => n + (c.xpGained || 0), 0);
+        const first = r.camps.length ? r.camps[0].gameTimeMs : null;
+        if (levels) {
+          stats.appendChild(el('span', 'crm-sep', ' · '));
+          stats.appendChild(el('b', null, String(levels)));
+          stats.appendChild(el('span', null, ' levels'));
+        }
+        body.appendChild(stats);
+
+        const more = [];
+        if (first !== null && first !== undefined) more.push(`first ${fmtMs(first)}`);
+        if (xp) more.push(`${xp.toLocaleString()} XP`);
+        if (more.length) body.appendChild(el('span', 'crm-sub', more.join(' · ')));
+      } else {
+        body.appendChild(stats);
+      }
 
       row.appendChild(body);
       box.appendChild(row);
+    }
+
+    if (model.detail === 'camps') {
+      // ALWAYS drawn, including at zero. It is a fact about the game either
+      // way, and a line that appears only sometimes makes the box a different
+      // height per match for no reason the reader can see.
+      const n = contestedCount(model);
+      const foot = el('div', 'crm-foot');
+      foot.appendChild(el('b', null, String(n)));
+      foot.appendChild(el('span', null, n === 1 ? ' contested camp' : ' contested camps'));
+      box.appendChild(foot);
+      return box;
     }
 
     const touched = new Set();

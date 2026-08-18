@@ -41,7 +41,11 @@
       // Per-run, set by start(). The full backfill leaves them null: a progress
       // chip per replay is right for ten games and absurd for three thousand.
       onProgress: null,
-      limited: false
+      limited: false,
+      // What a resume should repeat. `toggle()` used to call start() bare,
+      // which reset onProgress to null — so a paused migration came back with
+      // a strip that never moved again.
+      lastOpts: null
     };
 
     const report = (file, phase) => {
@@ -194,6 +198,7 @@
     const start = async (opts) => {
       if (st.running) return;
       const o = opts || {};
+      st.lastOpts = o;
       st.running = true;
       st.limited = !!o.limit;
       st.onProgress = o.onProgress || null;
@@ -250,7 +255,14 @@
 
     return {
       init,
-      toggle: () => (st.running ? pause() : start()),
+      // The full backfill. app.js drives the "Updating your history" strip with
+      // this and its onProgress; it was NOT exported until Aug 2026, so every
+      // call threw `backfill.start is not a function` and the migration sat at
+      // its opening count forever. Anything added here needs a caller check.
+      start,
+      // Pause, or resume the run that was paused — with the options it was
+      // started with, so the progress callback survives the round trip.
+      toggle: () => (st.running ? pause() : start(st.lastOpts || {})),
       // First-boot catch-up. Same engine, same dedupe, same failure markers,
       // just the newest N and a per-file callback for the quick-nav chips.
       catchUp: (limit, hooks) => start({ limit, ...(hooks || {}) }),

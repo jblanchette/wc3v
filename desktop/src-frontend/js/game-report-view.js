@@ -576,18 +576,7 @@
       // ResizeObserver and none is released by dropping its node.
       let domHandle = null;
       let cp = null;
-      let tlHandle = null;
       let routeHandle = null;
-
-      // The moments timeline: two lanes (yours / theirs, per team in a team
-      // game). Built here, placed by the caller.
-      const buildTimeline = () => {
-        if (!window.GameTimeline) return null;
-        if (tlHandle) { try { tlHandle.destroy(); } catch (e) { /* gone */ } tlHandle = null; }
-        tlHandle = window.GameTimeline.build(summary, symmetric ? null : seat,
-          { onWatch: o.onWatch, lanes: 2 });
-        return tlHandle ? tlHandle.el : null;
-      };
 
       const mountDominance = (host) => {
         const slot = host.querySelector('.ms-dom-slot');
@@ -622,6 +611,11 @@
         }
         routeHandle = window.CreepRouteMap.build(summary, {
           size: parseInt(slot.dataset.size, 10) || 340,
+          // A total per player and the contested count. The levels/first/XP
+          // lines belong to the site's compare drawer, where measuring your
+          // clear against somebody else's is the whole job; here they are
+          // three extra lines nobody asked the map for.
+          detail: 'camps',
           colorFor: (slotKey) => {
             const p = model.players.find(x => x.slot === slotKey);
             return (p && p.color) || '#8a8378';
@@ -719,9 +713,6 @@
           const hdr = overviewHeader();
           if (band) { hdr.classList.add('ov-in-band'); band.appendChild(hdr); }
           else content.insertBefore(hdr, content.firstChild);
-          // The timeline, under the band and above the player columns.
-          const tl = buildTimeline();
-          if (tl) content.insertBefore(tl, content.querySelector('.ms-players'));
         }
         if (key === 'economy') chartsPanel(content);
         body.appendChild(content);
@@ -759,15 +750,11 @@
           if (domHandle && domHandle.destroy) {
             try { domHandle.destroy(); } catch (e) { /* already gone */ }
           }
-          if (tlHandle && tlHandle.destroy) {
-            try { tlHandle.destroy(); } catch (e) { /* already gone */ }
-          }
           if (routeHandle && routeHandle.destroy) {
             try { routeHandle.destroy(); } catch (e) { /* already gone */ }
           }
           cp = null;
           domHandle = null;
-          tlHandle = null;
           routeHandle = null;
         }
       };

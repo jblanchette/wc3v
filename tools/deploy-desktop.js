@@ -21,8 +21,10 @@
  *     after a release.
  *
  * Refuses to publish a build with no minisign updater signature, a version that
- * is not newer than what is already live, or a binary older than the source it
- * was built from.
+ * is not newer than what is already live, a binary older than the source it
+ * was built from, or a version that does not agree across tauri.conf.json,
+ * Cargo.toml, Cargo.lock, the CHANGELOG and the compiled binary itself
+ * (tools/version-check.js --release).
  *
  * Note that "signature" throughout this file means the MINISIGN updater
  * signature, which is what tauri-plugin-updater verifies. The installer itself
@@ -180,6 +182,26 @@ function checkEmbeddedFiles () {
         'silently ships the previous version. Run `npm run desktop:build` again.');
   }
   console.log(`  embedded:  ${embeds.length} file(s) verified byte-for-byte`);
+}
+
+/**
+ * Refuse to publish unless every copy of the version agrees with
+ * tauri.conf.json, the CHANGELOG documents this release, and the binary was
+ * actually compiled at this version.
+ *
+ * Delegated to tools/version-check.js rather than reimplemented here, so the
+ * gate and the `--fix` that satisfies it cannot drift apart. `npm run
+ * desktop:build` runs the same tool without --release, which catches a stale
+ * Cargo.toml before the compile rather than after the upload.
+ */
+function checkVersions () {
+  const r = spawnSync(process.execPath,
+    [path.join(__dirname, 'version-check.js'), '--release'], { encoding: 'utf8' });
+  process.stdout.write(r.stdout || '');
+  if (r.status !== 0) {
+    die((r.stderr || '').trim() ||
+        'tools/version-check.js --release failed without a message.');
+  }
 }
 
 function checkRclone () {
@@ -369,6 +391,7 @@ async function main () {
 
   checkNotStale(exePath);
   checkEmbeddedFiles();
+  checkVersions();
 
   // A manifest whose version is not strictly greater than what is already
   // published is a no-op at best and a downgrade prompt at worst.

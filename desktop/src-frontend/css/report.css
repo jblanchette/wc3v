@@ -323,7 +323,7 @@
    the rest of the tab is what the reader came for. Shorter than the clamp
    above, and it costs nothing to read: the chart draws responsive here, so the
    slopes at 78px across 700px are the slopes at 78px across 320px. */
-.ms-ov-band .dom-panel .dmc-svg { height: clamp(60px, 8vh, 84px); }
+.ms-ov-band .dom-panel .dmc-svg { height: clamp(48px, 6vh, 64px); }
 .ms-ov-band .dom-panel { border: 0; }
 
 /* Dragging replays the game's momentum, so the cursor says so. */
@@ -988,6 +988,35 @@
    height, and this is the width idiom the README already blesses. */
 .ms-matrix { font-family: var(--font); display: block; max-width: 100%; overflow-x: auto; }
 .ms-matrix-col-hdr, .ms-matrix-row-hdr, .ms-matrix-cell { font-size: var(--fs-min); }
+
+/* The armour icon goes ABOVE its label instead of beside it.
+   The vendor sets these headers at 0.68rem and nowrap; this sheet raises them
+   to the 0.8rem floor, which pushed "Unarmored" plus an inline 18px icon to
+   112px. Three of those against an 83px row header wanted 359px inside a 294px
+   card, so the table opened with a horizontal scrollbar and the word cut to
+   "Unarn" — an ellipsis in all but name ([[feedback_no_ellipsis_truncation]]).
+   Stacked, the column is as wide as its longest word and the table fits. */
+.ms-matrix-col-hdr { padding: 2px 3px; }
+.ms-matrix-row-hdr { padding: 2px 4px; }
+.ms-matrix-cell { padding: 2px 4px; }
+.ms-matrix-col-hdr .ms-matrix-hdr-icon {
+  display: block;
+  margin: 0 auto 1px;
+}
+
+/* Below ~285px the stacked header still does not fit, so the icon goes.
+   It is the only thing in that cell that is redundant — the same armour icon
+   is already on every roster tile — and dropping it buys 21px, which is the
+   difference between fitting and scrolling for any window from about 1200px
+   up. Narrower than that the table still scrolls inside its own card, which is
+   the intended degrade: the page itself never scrolls sideways.
+
+   A CONTAINER query, not a media query. This card is half of a player column,
+   so the viewport cannot tell a 1,280px window from a 1,280px column. */
+.ms-block:has(> .ms-matrix) { container-type: inline-size; }
+@container (max-width: 285px) {
+  .ms-matrix-hdr-icon { display: none; }
+}
 .ms-empty { font-size: var(--fs-sm); }
 /* SVG axis text. The vendor authors 7-9px attributes; the class rule wins
    over presentation attributes, and 10px at the charts' render scale is the
@@ -1101,103 +1130,93 @@
 .ms-icon-grid { gap: var(--sp-1); }
 .ms-upgrade-list { gap: var(--sp-1); }
 .ms-upgrade-row { padding: var(--sp-1) var(--sp-1); border-radius: var(--radius-xs); }
-.ms-tier-compare { gap: var(--sp-1); }
-.ms-tier-row { gap: var(--sp-2); }
+/* One grid for the whole comparison, not one flex row per player.
+   The vendor sizes .ms-tier-player to its own content with a min-width, and
+   the "You" chip is an ::after INSIDE that cell — so the row carrying it was
+   120px wide against 80px for the other, and the two bars being compared
+   started at different x. The names were right-aligned inside those cells on
+   top of that, so the left edge was ragged too. `display: contents` drops the
+   row boxes into one three-column grid: every name, every track and every
+   time column lines up down the block, whoever is You and however long the
+   names are. */
+.ms-tier-compare {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+}
+.ms-tier-row { display: contents; }
+.ms-tier-player {
+  justify-content: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+.ms-tier-times { min-width: 0; justify-content: flex-end; }
 .ms-chart { margin-bottom: var(--sp-2); }
 .ms-chart-blocks { margin-top: var(--sp-2); }
 .ms-wide-section { margin-top: var(--sp-2); }
 .ms-creep-route { gap: var(--sp-1); }
 .ms-creep-step { gap: var(--sp-1); }
-.ms-ct-list { gap: var(--sp-2); }
+/* The roster is a GRID, not a wrapping flex.
+   Flex sized every tile to its own text, so "Footman x4" was 79px, "Priest
+   x11" 103px, and the second row started its columns 24px off the first. Two
+   rows of the same roster did not line up with each other. Equal tracks fix
+   the columns and cost nothing: the names already wrap rather than truncate,
+   which is what makes a fixed track safe here. */
+.ms-ct-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: var(--sp-2);
+  align-items: end;
+}
+/* A grid item's min-width is `auto`, i.e. its min-content — so a tile holding
+   "Troll Headhunter/Berserker" pushed its track past 1fr and overflowed the
+   column. The name already wraps anywhere, so the tile is free to be told it
+   may be narrower than its longest word. */
+.ms-ct-unit { min-width: 0; }
+/* And the armour rows inside it are what actually set that min-content: an
+   18px icon plus an unbreakable "Unarmored" is 103px, against a 94px track.
+   Letting the pair wrap costs 21px of height across the whole roster and is
+   the only option that neither truncates a type name nor drops the roster to
+   two columns. */
+.ms-ct-typed { flex-wrap: wrap; min-width: 0; }
+
+/* Blocks stretch to their tallest sibling for no reason: .ms-block has no
+   border, no background and no padding, so a stretched one is pure dead space.
+   Attack Upgrades was 201px tall around 66px of content. */
+.ms-blocks { align-items: start; }
+
+/* And the cards themselves. A player column IS a bordered panel, so stretching
+   it to its neighbour is at least arguable — but on Economy it made the You
+   card 987px around 791px of content, and 196px of blank inside a drawn border
+   reads as a broken panel rather than as layout. A card is now as tall as what
+   is in it. */
+.ms-players { align-items: start; }
+
+/* Same again one level down: a hero with three spells was being stretched to
+   the height of a hero with six, which put 38px of nothing under its icon. */
+.ms-heroes-row { align-items: start; }
 .ms-icon, .ms-upgrade-icon, .ms-timeline-icon, .ms-creep-icon,
 .ms-spell-icon, .ms-race-icon, .ms-hero-portrait, .ms-ct-unit-icon {
   border-radius: var(--radius-xs);
 }
 
-/* ── The game timeline ────────────────────────────────────────────────────
-   The match's moments on two lanes — js/game-timeline.js. Marks keep their
-   36px hit targets, but the lanes are drawn at 24px and the targets overlap
-   the lane gaps invisibly: inside the scroller that costs nothing, and the
-   strip reads as one carved instrument (a well, two rules, a ruler) rather
-   than three stacked rows. Ink says whose moment it was: gold for yours,
-   dim for theirs. */
-.gt {
-  min-width: 0;
-  padding: var(--sp-1) var(--sp-2);
-  background: var(--app-well);
-  border: 1px solid var(--app-line);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--cut-in);
-  margin-bottom: var(--sp-2);
-}
-.gt-lane { display: flex; align-items: center; gap: var(--sp-2); }
-.gt-lane-k {
-  flex: none;
-  width: 2.8rem;
-  text-align: right;
-  color: var(--ink-faint);
-  font-size: var(--fs-min);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.gt-track {
-  position: relative;
-  flex: 1 1 auto;
-  height: 24px;
-  margin: 0 calc(var(--ico-sm) / 2);
-  min-width: 0;
-}
-.gt-2 .gt-lane:first-child .gt-track { height: 26px; }
-.gt-rule {
-  position: absolute;
-  left: 0; right: 0; top: 50%;
-  height: 1px;
-  background: var(--app-line);
-}
-.gt-mark {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: var(--ico-sm);
-  height: var(--ico-sm);
-  display: grid;
-  place-items: center;
-  padding: 0;
-  background: none;
-  border: 0;
-  color: var(--ink-2);
-  cursor: pointer;
-}
-.gt-mark[data-side="me"] { color: var(--dom-gold); }
-.gt-mark[data-side="them"] { color: var(--ink-dim); }
-.gt-mark:hover { color: var(--ink); }
-.gt-mark:focus-visible { outline: 2px solid var(--focus); outline-offset: -8px; }
-.gt-glyph { font-size: 12px; }
-.gt-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.gt-ruler-track { height: 12px; }
-.gt-tick {
-  position: absolute;
-  transform: translateX(-50%);
-  color: var(--ink-faint);
-  font-family: var(--mono);
-  font-size: var(--fs-min);
-  line-height: 12px;
-  white-space: nowrap;
-}
-.gt-tick.is-first { transform: none; }
-.gt-tick.is-last { transform: translateX(-100%); }
+/* ── The band ─────────────────────────────────────────────────────────────
+   Three cells across: the dominance plot, the result and its numbers, and the
+   creep routes. One glance carries who won, the shape of the game, and where
+   each player spent the first ten minutes.
 
-/* ── The header in the band ───────────────────────────────────────────────
-   The Overview header rides the ov-band's right column, over the tier bars,
-   beside the dominance plot: one glance carries the result AND the shape of
-   the game. With no dominance (a team game) the band is one column and the
-   header leads it. Chosen over a row of its own in the Aug 2026 mock round. */
-.ms-ov-band > .ms-ov-band-dom { grid-column: 1; grid-row: 1 / 3; }
+   The routes used to sit full width under the player columns, where they
+   opened at y=939 inside a 630px scroller and nobody scrolled to them. Moving
+   them up cost the other two cells their width, which is the trade: the plot
+   is a shape and the bars are segments on a track, and neither needed 740px
+   to say what it says.
+
+   Height is set by the tallest cell, so the tier bars run under BOTH left
+   cells rather than stacking under one of them. That keeps the left side the
+   same height as the map instead of leaving a well of dead space beside it —
+   the failure this band was rebuilt to remove in the first place. */
+.ms-ov-band > .ms-ov-band-dom { grid-column: 1; grid-row: 1; }
 .ms-ov-band > .ov-in-band {
   grid-column: 2;
   grid-row: 1;
@@ -1206,12 +1225,72 @@
   padding: 0;
   align-self: start;
 }
-.ms-ov-band > .ms-ov-band-tier { grid-column: 2; grid-row: 2; }
-.ms-ov-band:not(:has(.ms-ov-band-dom)) { grid-template-columns: minmax(0, 1fr); }
+.ms-ov-band > .ms-ov-band-tier { grid-column: 1 / 3; grid-row: 2; align-self: start; }
+.ms-ov-band > .ms-ov-band-route { grid-column: 3; grid-row: 1 / 3; }
+
+/* No dominance (a team game, a refused replay): the result leads the band and
+   the bars sit under it, with the map still on the right. */
+.ms-ov-band:not(:has(.ms-ov-band-dom)) { grid-template-columns: minmax(0, 1fr) auto; }
 .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band,
 .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier { grid-column: 1; }
 .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ov-in-band { grid-row: 1; }
 .ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-tier { grid-row: 2; }
+.ms-ov-band:not(:has(.ms-ov-band-dom)) > .ms-ov-band-route { grid-column: 2; }
+
+/* The map is a fixed-size canvas, so its track is `auto` and the two flexible
+   cells split what is left.
+
+   The third ROW is slack, and it is load-bearing. The map cell spans the whole
+   band, and in a 3v3 its legend lists six seats, which makes it far taller than
+   a header and six tier bars. With two auto rows the grid handed that surplus
+   to BOTH of them, so the band opened with a gap under the header AND a gap
+   under the bars — the same wells this band was rebuilt to remove. A trailing
+   1fr row absorbs it in one place instead. */
+.ms-ov-band:has(.ms-ov-band-route) {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
+  grid-template-rows: auto auto 1fr;
+}
+.ms-ov-band:has(.ms-ov-band-route) > .ms-ov-band-route { grid-row: 1 / 4; }
+.ms-ov-band-route { gap: var(--sp-1); }
+
+/* The readout stays BESIDE the map rather than under it. Stacked, the cell is
+   234 wide and 320 tall against a left side of ~165, and the band grows a well
+   of dead space taller than the plot sitting in it. Side by side the cell is
+   short and wide, which is the shape the band has room for.
+
+   The vendor gives the readout `min-width: 11rem` for the site's compare
+   drawer. Here it shares a row with two other cells, so it is allowed to be
+   narrower before the names wrap. */
+.ms-ov-band-route .crm { gap: var(--sp-2); flex-wrap: nowrap; }
+.ms-ov-band-route .crm-read { min-width: 0; flex: 1 1 9rem; gap: var(--sp-1); }
+/* The footer lines up with the NAMES, not with the pips. Its own row has no
+   pip, so without this it hangs 20px left of every line above it. The indent
+   is the pip (0.75rem) plus the .crm-seat gap (0.5rem), both vendor values. */
+.ms-ov-band-route .crm-foot {
+  margin-top: 0;
+  padding-left: calc(0.75rem + 0.5rem);
+}
+
+/* Four seats or more, the legend runs in two columns. A 3v3 lists six players
+   at three lines each, which is twice the height of the map beside it and left
+   the band's other cells staring at 230px of nothing. Two columns puts the
+   list back in the map's own height. The selector counts real seats: with
+   three players the fourth child is the footer, which does not match. */
+.ms-ov-band-route .crm-read:has(.crm-seat:nth-child(4)) {
+  display: block;
+  columns: 2;
+  column-gap: var(--sp-3);
+}
+.ms-ov-band-route .crm-read:has(.crm-seat:nth-child(4)) > * {
+  break-inside: avoid;
+  margin-bottom: var(--sp-1);
+}
+/* Contested is a fact about the match, not about whoever the column flow
+   happened to leave it under. It spans, so it reads as the total it is. */
+.ms-ov-band-route .crm-read:has(.crm-seat:nth-child(4)) > .crm-foot {
+  column-span: all;
+  margin-bottom: 0;
+}
 /* The bench readout would double the right column's height; it sits under
    the claim at one-column billing. */
 .ov-in-band .ov-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-1) 0; }

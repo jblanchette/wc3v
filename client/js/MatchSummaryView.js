@@ -609,11 +609,11 @@
   //
   // Emitted only when the caller says it can fill it, so a runtime without
   // CreepRouteMap gets no empty box.
-  const routeSlot = (o, size) => {
+  const routeSlot = (o, size, cls) => {
     if (!o.wantsRoute) return null;
     const slot = node('div', 'ms-route-slot');
     slot.dataset.size = String(size);
-    return block('Creep Routes', slot, 'ms-wide-section ms-creep-route');
+    return block('Creep Routes', slot, cls || 'ms-wide-section ms-creep-route');
   };
 
   const renderOverview = (o, model) => {
@@ -626,7 +626,7 @@
     // the whole width. They used to sit under the two columns, which put the
     // one-line answer to "who was winning" below a screenful of rosters.
     //
-    // Both are short here. The dominance plot is a shape, not a table of
+    // All three are short here. The dominance plot is a shape, not a table of
     // values, and the tier bars are three segments on a track; neither gains
     // anything from height, and every pixel they take is one the columns below
     // do not get.
@@ -639,6 +639,20 @@
       band.appendChild(block('Dominance', node('div', 'ms-dom-slot'), 'ms-ov-band-dom'));
     }
     band.appendChild(block('Tier Progression', tierComparison(model), 'ms-ov-band-tier'));
+
+    // The routes ride the band's third column, beside the result and the tier
+    // bars rather than under the rosters.
+    //
+    // This reverses the original call ("a map squeezed into a quarter of the
+    // band is a decoration"), on the grounds that a decoration you can see is
+    // worth more than a map you have to scroll to: down there it opened at
+    // y=939 in a 630px scroller, so nobody met it without going looking. The
+    // objection was real, though, and the answer is that the band's other two
+    // cells gave up the width for it. A route map is legible small in a way a
+    // 17-minute plot is not, because it is a handful of ordinals on terrain.
+    const route = routeSlot(o, 176, 'ms-ov-band-route');
+    if (route) band.appendChild(route);
+
     out.appendChild(band);
 
     out.appendChild(playerColumns(model, (p, i) => {
@@ -693,12 +707,6 @@
       split.appendChild(right);
       return split;
     }, 'ms-col-overview'));
-
-    // Under the columns rather than in the band. The band is three things wide
-    // already, and a map squeezed into a quarter of it is a decoration; down
-    // here it gets the width to be read as a map.
-    const route = routeSlot(o, 340);
-    if (route) out.appendChild(route);
 
     return out;
   };

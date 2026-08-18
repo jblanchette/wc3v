@@ -55,7 +55,8 @@ function relUrl (absPath) {
 }
 
 function main () {
-  const dryRun = process.argv.includes('--dry-run') || process.argv.includes('--check');
+  const isCheck = process.argv.includes('--check');
+  const dryRun = process.argv.includes('--dry-run') || isCheck;
 
   // ── 1. hash everything ───────────────────────────────────────────────────
   const files = [];
@@ -158,6 +159,21 @@ function main () {
   console.log(`asset-manifest: bundleVersion=${bundleVersion}${dryRun ? ' (dry run — nothing written)' : ''}`);
   console.log(`  ${files.length} files hashed → ${path.relative(ROOT, manifestPath)}`);
   console.log(`  ${rewrites} HTML file(s) ${dryRun ? 'would be' : ''} rewritten`);
+
+  // --check has to FAIL on drift, or it is a gate that never gates.
+  //
+  // It exited 0 while reporting "4 HTML file(s) would be rewritten" right up
+  // until Aug 2026, which is how commit 7b8ce92 shipped a changed
+  // SummaryBuild.js while the committed HTML still pointed at the previous
+  // file's hash. The server had the new file; every browser holding the old
+  // one under that unchanged ?v= had no reason to ask for it again.
+  //
+  // --dry-run stays silent-and-zero: it is for looking, not for gating.
+  if (isCheck && rewrites > 0) {
+    console.error(`
+${rewrites} HTML file(s) are out of date. Run \`npm run gen-manifest\` and commit the result.`);
+    process.exit(1);
+  }
 }
 
 main();

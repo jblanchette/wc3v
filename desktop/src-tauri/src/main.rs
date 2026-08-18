@@ -874,6 +874,25 @@ fn build_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
 
 fn main() {
     tauri::Builder::default()
+        // FIRST, before every other plugin. Plugin setup runs in registration
+        // order and the app `setup` below runs after all of them, so a second
+        // launch is turned away here, before the overlay binds a port, before
+        // a second tray icon exists, before the watcher touches the data dir.
+        //
+        // The lock is a named mutex keyed on the bundle identifier, so it is
+        // per-Windows-session (two logged-in users each get an app) and it does
+        // NOT tell a dev build apart from an installed one: quit the tray copy
+        // before `npm run desktop`, or the dev build exits on launch and the
+        // installed window pops up instead.
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            // The OS starting us at login while an instance is already up is
+            // not a request for a window; that rule is the same one honoured
+            // in `setup`.
+            if args.iter().any(|a| a == "--autostart") {
+                return;
+            }
+            show_main_window(app);
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())

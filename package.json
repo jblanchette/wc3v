@@ -19,10 +19,11 @@
 		"fx-bench:viewer": "node tools/fx-bench.js --viewer",
 		"gen-fx-units": "node tools/gen-fx-units.js",
 		"desktop": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri dev",
-		"desktop:build": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
-		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && node tools/lifecycle-sim.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release",
+		"desktop:build": "node tools/version-check.js && node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
+		"desktop:test": "node tools/version-check.js && node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && node tools/lifecycle-sim.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release",
 		"gen-item-names": "node tools/gen-item-names.js",
 		"check-item-names": "node tools/gen-item-names.js --check",
+		"check-version": "node tools/version-check.js",
 		"worker:mcp": "wrangler deploy --config workers/mcp/wrangler.toml",
 		"worker:mcp:dev": "wrangler dev --config workers/mcp/wrangler.toml",
 		"indexnow": "node tools/indexnow.js --all"

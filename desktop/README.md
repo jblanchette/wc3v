@@ -245,16 +245,76 @@ data.
 the right (`.report-tabbar`), and nothing else fixed above the scroller. The
 verdict band that used to sit there is gone: its content — result, opponent,
 the all-time record, map, length, tags, the three benchmarks — leads the
-Overview tab as `.ov-head`, riding the ov-band's right column beside the
-dominance plot, over the tier bars. A game with no dominance (a team game)
-draws the band single-column with the header leading it. A team game gets no
-"carries no result" placeholder; the meta line already says 3v3.
+Overview tab as `.ov-head`, riding the ov-band's middle column beside the
+dominance plot. A game with no dominance (a team game) drops that column and
+the header leads the band. A team game gets no "carries no result"
+placeholder; the meta line already says 3v3.
 
-**The moments timeline** (`js/game-timeline.js`) sits under the band on
-Overview: the summary's ≤24 typed moments on two lanes, yours over theirs
-(per TEAM in a team game), every mark a 36px target that opens the viewer at
-that second, the least important hiding when the width gets crowded. It is a
-desktop adapter, deliberately not part of the shared renderer.
+**The band is three cells across**: the dominance plot, the result and its
+numbers, and the creep routes, with the tier bars running under the first two.
+The routes used to sit full width under the player columns, where they opened
+at y=939 inside a 630px scroller — below the fold on every screen, so nobody
+met them without going looking. The map is a fixed 176px canvas, so its grid
+track is `auto` and the two flexible cells split what is left.
+
+Two things about that band are load-bearing and easy to undo by accident:
+
+- **The third grid row is slack.** The map cell spans the band, and in a 3v3
+  its legend lists six seats — far taller than a header and six tier bars.
+  With two auto rows the grid hands that surplus to *both*, so the band opens
+  with a gap under the header AND under the bars. A trailing `1fr` row absorbs
+  it in one place.
+- **The legend goes two-column at four seats or more**
+  (`.crm-read:has(.crm-seat:nth-child(4))`), which puts a six-player list back
+  inside the map's own height. The selector counts real seats: with three
+  players the fourth child is the footer, which does not match. The contested
+  line `column-span: all`s out of that flow, because it is a fact about the
+  match rather than about whoever the columns left it under.
+
+The legend prints a camp total per player and the contested count, and nothing
+else (`detail: 'camps'`). The levels/first/XP lines are the site compare
+drawer's, which is what `detail: 'full'` — the default — still gives it.
+
+### Four rules that keep the report tight
+
+Found by walking every tab with a DOM auditor rather than by eye. Each was
+worth 40-200px of nothing on some tab:
+
+- **Nothing stretches to its neighbour.** `.ms-blocks` and `.ms-players` both
+  get `align-items: start`. A `.ms-block` has no border, background or padding,
+  so a stretched one is pure void (Attack Upgrades: 201px tall around 66px of
+  content). A `.ms-player-col` does have a border, which makes stretching at
+  least arguable — but on Economy it put 196px of blank inside a drawn panel,
+  which reads as broken rather than as layout.
+- **The unit roster is a grid, not a wrapping flex.** Flex sized each tile to
+  its own text, so row two's columns started 24px off row one's. Equal tracks
+  need `min-width: 0` on the tile AND `flex-wrap` on the armour rows, because a
+  grid item's min-width is its min-content and an unbreakable "Unarmored" plus
+  an 18px icon is 103px against a 94px track.
+- **The tier bars are one grid** (`.ms-tier-row { display: contents }`). Per-row
+  flex let the "You" chip widen its own row's name cell, so the two bars being
+  compared started at different x.
+- **Matrix header icons sit above their label**, not beside it, or "Unarmored"
+  pushes the table past its card.
+
+What is NOT fixed: a short block still leaves a gap under it when its row-mate
+is taller (Army's Attack Upgrades against Research, ~135px), because the next
+section cannot start until the whole row band ends. That wants masonry. CSS
+columns was measured as an alternative and reclaimed 9px, so it was not worth
+the reading-order change.
+
+**Contested is read off `claimState`, never re-derived.** Every camp in the
+summary carries one (0 untouched, 1 contested, 2 cleared) from
+`lib/CampCreditModel.js`. The first cut of this intersected the two players'
+own camp lists and called an overlap contested; it reported 0 for every game in
+the corpus while `node inspect-replay.js --replay=NAME --show=camps` showed
+3, 3, 2, 5, 5. A player's camp list is the camps that fed THEIR heroes
+experience, so a camp one side fought over and lost never appears in it.
+
+**The moments timeline is gone** (deleted Aug 2026 with `js/game-timeline.js`).
+It was two lanes of typed moments, yours over theirs, under the band. It cost
+70px of the fold to restate what the dominance plot beside it already showed as
+a shape, and the creep routes took its place.
 
 What differs from the viewer, and why:
 
@@ -562,6 +622,12 @@ install parses ladder games offline with no extra steps.
 Once installed, the app lives in the tray. Closing the window keeps it watching
 for replays, and it can start with the OS.
 
+Only one copy runs at a time. Launching a second one hands its arguments to the
+copy already running and exits, which raises that window instead of starting
+over. The lock does not distinguish a dev build from an installed one, so **quit
+the tray copy before `npm run desktop`**, or the dev build exits on launch and
+the installed window is what pops up.
+
 **`desktop/src-frontend/` is the source. `desktop/dist/` is build output** and is
 wiped and regenerated by `tools/build-desktop-client.js` on every run. Editing
 `dist` loses the edit.
@@ -754,11 +820,25 @@ back bytes instead of a string, which makes `| iex` fail confusingly.
 ### Cutting a release
 
 ```powershell
-# 1. bump tauri.conf.json, then:
+# 1. bump the version everywhere at once
+node tools/version-check.js --set=1.0.4
+
+# 2. write the CHANGELOG entry under the stub it just added, then date it
+node tools/version-check.js --stamp-date
+
+# 3. build
 $env:TAURI_SIGNING_PRIVATE_KEY = (Get-Content "$env:USERPROFILE\.tauri\wc3v-updater.key" -Raw).Trim()
 $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
 npm run desktop:build
 ```
+
+`tauri.conf.json` is the source of truth for the version, and `Cargo.toml`,
+`Cargo.lock` and the CHANGELOG are copies of it. Bumping by hand is what put
+0.6.0 in `Cargo.toml` while 0.7.4 shipped, and 1.0.2 there while 1.0.3 was live
+on the CDN. `--set` writes all of them; `node tools/version-check.js` (also
+`npm run check-version`) tells you if they have drifted, and `--fix` pulls the
+copies back up to `tauri.conf.json`. The build runs the check before it
+compiles.
 
 **Pass the key's contents, not its path.** `TAURI_SIGNING_PRIVATE_KEY_PATH` is
 advertised in the CLI's help and is ignored by this version: the build runs to
@@ -777,6 +857,14 @@ The script reads the version from `tauri.conf.json`, refuses a missing `.sig`,
 refuses a version that is not newer than what is published, uploads the
 installer before the manifest so clients are never pointed at a 404, and fetches
 both back to confirm. It needs `rclone` with an `r2:` remote.
+
+It also runs `node tools/version-check.js --release`, which is stricter than the
+plain check in two ways that only matter at a release. The top CHANGELOG heading
+has to name the version being shipped and carry a date, so a release cannot go
+out undocumented. And the version is read back out of the compiled binary's PE
+resource, which is the only thing that catches editing `tauri.conf.json` *after*
+the Rust compile: the installer filename would say the new version while the
+running app reported the old one to the updater and in the UI.
 
 **Installers are never committed.** 15 MB of binary does not belong in an
 open-source history, and this script is the only path from a build to the CDN.
