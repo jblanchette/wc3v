@@ -1,11 +1,24 @@
 // Client for the W3Champions ladder API.
 //
-// Every call resolves to null when anything goes wrong. The API is
-// undocumented and unversioned, so callers have to survive a response shape
-// nobody has seen before. Callers render null as "no online data".
+// Most calls resolve to null when anything goes wrong. The API is undocumented
+// and unversioned, so callers have to survive a response shape nobody has seen
+// before. Callers render null as "no online data".
+//
+// `ongoing` is the exception, and it is the important one. It returns
+// { state, match } where state is:
+//
+//   'live'    — the ladder says this player is in a match, and here it is.
+//   'none'    — the ladder ANSWERED and there is no match. Definite.
+//   'unknown' — nobody answered: timeout, offline, 500, junk body.
+//
+// A null return conflated the last two, and the cost was concrete: one dropped
+// request looked exactly like a game ending, so a single five-second timeout
+// cleared the live card, reset the report column and told the overlay the game
+// was over. 'unknown' is the state that must never move anything.
 //
 // The Rust side (src-tauri/src/w3c.rs) owns the host, the allowlist and the
-// opt-in check. This file only builds paths and reads what comes back.
+// opt-in check, and tags every error `code: sentence`. This file only builds
+// paths, reads what comes back, and maps those codes.
 
 (function () {
   'use strict';
@@ -104,27 +117,44 @@
     let on = false;
     let complained = false;
 
-    const get = async (path) => {
-      if (!on) return null;
+    // One lookup, as { ok, body, code }. `code` is the Rust side's error token,
+    // and the codes that mean "the server answered" are the only ones a caller
+    // may treat as fact.
+    const fetchOne = async (path) => {
+      if (!on) return { ok: false, code: 'off' };
       let text;
       try {
         text = await deps.invoke('w3c_lookup', { path });
       } catch (e) {
+        // Errors arrive as `code: sentence`. Split once; anything without a
+        // recognised code is treated as unreachable, which is the safe side —
+        // an unknown failure must never be read as a definite answer.
+        const msg = String((e && e.message) || e || '');
+        const cut = msg.indexOf(': ');
+        const code = cut > 0 ? msg.slice(0, cut) : '';
+        const said = cut > 0 ? msg.slice(cut + 2) : msg;
         // A 404 on an ongoing match means you are simply not in a game, which
         // is the state this app is in nearly all the time. Anything else gets
         // said once per session so the Activity drawer stays quiet.
-        const msg = String((e && e.message) || e || '');
-        if (msg.indexOf('not found') === -1 && !complained) {
+        if (code !== 'notfound' && !complained) {
           complained = true;
-          deps.log(`W3Champions unavailable: ${msg}`, 'warn');
+          deps.log(`W3Champions unavailable: ${said}`, 'warn');
         }
-        return null;
+        return { ok: false, code: code === 'notfound' ? 'notfound' : (code || 'unreachable') };
       }
       try {
-        return JSON.parse(text);
+        return { ok: true, body: JSON.parse(text) };
       } catch (e) {
-        return null;
+        // 200 with a body that is not JSON. The socket worked, the API did not,
+        // so this is junk rather than an answer.
+        return { ok: false, code: 'badbody' };
       }
+    };
+
+    // The old shape, for the callers that genuinely only want "data or nothing".
+    const get = async (path) => {
+      const r = await fetchOne(path);
+      return r.ok ? r.body : null;
     };
 
     const q = (tag) => encodeURIComponent(String(tag || '').trim());
@@ -136,10 +166,23 @@
         on = !!value;
         if (on) complained = false;
       },
+
+      // { state: 'live' | 'none' | 'unknown', match }
+      //
+      // 'none' is claimed on exactly two grounds, both of which are the server
+      // answering: a 404, or a 200 whose body carries no match for this tag.
+      // Everything else — timeout, offline, 5xx, junk, feature switched off —
+      // is 'unknown', and the scout holds its current state on 'unknown'.
       async ongoing (tag) {
-        if (!isTag(tag)) return null;
-        return asMatch(await get(`/api/matches/ongoing/${q(tag)}`), tag);
+        if (!isTag(tag)) return { state: 'unknown', match: null };
+        const r = await fetchOne(`/api/matches/ongoing/${q(tag)}`);
+        if (!r.ok) {
+          return { state: r.code === 'notfound' ? 'none' : 'unknown', match: null };
+        }
+        const match = asMatch(r.body, tag);
+        return match ? { state: 'live', match } : { state: 'none', match: null };
       },
+
       async stats (tag) {
         if (!isTag(tag)) return null;
         return asStats(await get(`/api/players/${q(tag)}/game-mode-stats`));

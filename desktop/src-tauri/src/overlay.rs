@@ -81,6 +81,25 @@ const HANDOFF_HTML: &str = include_str!("../../src-frontend/handoff.html");
 /// reaped even when no games are being played.
 const KEEPALIVE: Duration = Duration::from_secs(20);
 
+/// The overlay's home port, and how far up from it to walk.
+///
+/// This used to be `bind(("127.0.0.1", 0))` — an EPHEMERAL port, persisted and
+/// re-bound on the next launch. That is the one range Windows also draws from
+/// when it assigns a local port to an outbound socket (49152-65535), so after a
+/// reboot any other program on the machine could be holding it. The app then
+/// rebound somewhere else, silently, and the streamer's OBS Browser Source went
+/// blank with nothing on screen to explain why.
+///
+/// 27615 is in the registered range, which the OS never hands out on its own.
+/// Nothing but another copy of WC3V should ever want it, and the ladder covers
+/// that case.
+const HOME_PORT: u16 = 27615;
+const PORT_LADDER: u16 = 10;
+
+/// How many previously-served ports to keep answering. Bounded because each is
+/// a live listener and an accept thread.
+const LEGACY_PORTS_MAX: usize = 3;
+
 /// How long a staged replay stays available to the launcher page, and how many
 /// can be pending at once. Bounded because these hold whole .w3g files in RAM.
 const HANDOFF_TTL: Duration = Duration::from_secs(600);
@@ -105,6 +124,13 @@ struct Handoff {
 pub struct Overlay {
     /// 0 when the server failed to bind. Commands report rather than panic.
     pub port: u16,
+    /// Ports this install served on previously and is STILL answering, so a URL
+    /// already pasted into OBS keeps working after the move to a stable port.
+    pub legacy_ports: Vec<u16>,
+    /// Ports this install handed out that nothing is answering now. Non-empty is
+    /// the only case where a streamer genuinely has to re-copy the URL, so it is
+    /// reported rather than logged and forgotten.
+    pub orphaned_ports: Vec<u16>,
     token: String,
     latest: Mutex<String>,
     clients: Mutex<Vec<TcpStream>>,
@@ -157,25 +183,68 @@ fn load_or_create(path: &Path, create: impl FnOnce() -> String) -> String {
     fresh
 }
 
-/// Start the server. The token persists per install so the OBS URL survives
-/// reinstalls of the scene. The port persists so it survives app restarts,
-/// if another process took it meanwhile, a fresh ephemeral port is used and
-/// the user has to re-copy the URL (logged, not silent).
+/// Walk the ladder from `base` and return the first free port.
+///
+/// A span of 0 disables the ladder entirely, which is how the tests get an
+/// ephemeral port instead of fighting each other (and a running app) over the
+/// one home port.
+fn bind_ladder(base: u16, span: u16) -> Option<TcpListener> {
+    (0..span)
+        .filter_map(|i| base.checked_add(i))
+        .find_map(|p| TcpListener::bind(("127.0.0.1", p)).ok())
+}
+
+/// Read the comma-separated legacy port list, newest first.
+fn read_ports(path: &Path) -> Vec<u16> {
+    std::fs::read_to_string(path)
+        .unwrap_or_default()
+        .split(',')
+        .filter_map(|s| s.trim().parse().ok())
+        .collect()
+}
+
+/// Start the server.
+///
+/// The token persists per install, so the OBS URL survives reinstalls of the
+/// scene. The port is chosen to persist too, and that is the whole point of the
+/// ladder: a streamer pastes the URL into OBS once and it keeps working across
+/// every reboot from then on.
+///
+/// Three bind attempts, in order:
+///
+///   1. The home port and its ladder. Registered range, so the OS never hands
+///      it to anything else, and it is the same number on every launch.
+///   2. The port persisted from the previous launch, if the ladder is full.
+///      Not stable going forward, but it is what OBS is already pointed at.
+///   3. An ephemeral port, which is the old behaviour and now the last resort.
+///
+/// Whatever is NOT the primary but was served before gets a second listener on
+/// the same routes, so URLs copied under the old ephemeral scheme keep working
+/// without anybody re-copying anything. `orphaned_ports` is what could not be
+/// bound — the one case that needs saying out loud.
 pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
+    start_on(data_dir, HOME_PORT, PORT_LADDER)
+}
+
+fn start_on(data_dir: PathBuf, base: u16, span: u16) -> Arc<Overlay> {
     let token = load_or_create(&data_dir.join("overlay-token"), random_token);
 
     let port_file = data_dir.join("overlay-port");
+    let legacy_file = data_dir.join("overlay-legacy-ports");
+
     let persisted: Option<u16> = std::fs::read_to_string(&port_file)
         .ok()
         .and_then(|s| s.trim().parse().ok());
 
-    let listener = persisted
-        .and_then(|p| TcpListener::bind(("127.0.0.1", p)).ok())
+    let listener = bind_ladder(base, span)
+        .or_else(|| persisted.and_then(|p| TcpListener::bind(("127.0.0.1", p)).ok()))
         .or_else(|| TcpListener::bind(("127.0.0.1", 0)).ok());
 
     let Some(listener) = listener else {
         return Arc::new(Overlay {
             port: 0,
+            legacy_ports: Vec::new(),
+            orphaned_ports: Vec::new(),
             token,
             latest: Mutex::new("{}".into()),
             clients: Mutex::new(Vec::new()),
@@ -184,10 +253,44 @@ pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
         });
     };
     let port = listener.local_addr().map(|a| a.port()).unwrap_or(0);
+
+    // Everything this install has ever handed out and is not now serving as the
+    // primary. `persisted` joins the front the first time the primary moves off
+    // it, which is exactly the migration from the old ephemeral scheme.
+    let mut wanted = read_ports(&legacy_file);
+    if let Some(p) = persisted {
+        if p != port && !wanted.contains(&p) {
+            wanted.insert(0, p);
+        }
+    }
+    wanted.retain(|&p| p != 0 && p != port);
+    wanted.truncate(LEGACY_PORTS_MAX);
+
+    let mut extra = Vec::new();
+    let mut legacy_ports = Vec::new();
+    let mut orphaned_ports = Vec::new();
+    for p in &wanted {
+        match TcpListener::bind(("127.0.0.1", *p)) {
+            Ok(l) => {
+                legacy_ports.push(*p);
+                extra.push(l);
+            }
+            // Held by something else. A URL pointing here is dead, and the
+            // Stream tab says so rather than leaving a blank source unexplained.
+            Err(_) => orphaned_ports.push(*p),
+        }
+    }
+
     let _ = std::fs::write(&port_file, port.to_string());
+    let _ = std::fs::write(
+        &legacy_file,
+        wanted.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(","),
+    );
 
     let overlay = Arc::new(Overlay {
         port,
+        legacy_ports,
+        orphaned_ports,
         token,
         latest: Mutex::new("{}".into()),
         clients: Mutex::new(Vec::new()),
@@ -195,13 +298,15 @@ pub fn start(data_dir: PathBuf) -> Arc<Overlay> {
         handoff_seq: Mutex::new(0),
     });
 
-    let accept = Arc::clone(&overlay);
-    std::thread::spawn(move || {
-        for stream in listener.incoming().flatten() {
-            let ov = Arc::clone(&accept);
-            std::thread::spawn(move || handle(stream, ov));
-        }
-    });
+    for l in std::iter::once(listener).chain(extra) {
+        let accept = Arc::clone(&overlay);
+        std::thread::spawn(move || {
+            for stream in l.incoming().flatten() {
+                let ov = Arc::clone(&accept);
+                std::thread::spawn(move || handle(stream, ov));
+            }
+        });
+    }
 
     let pinger = Arc::clone(&overlay);
     std::thread::spawn(move || loop {
@@ -483,11 +588,19 @@ mod tests {
     use super::*;
     use std::io::Read;
 
-    fn served(name: &str) -> Arc<Overlay> {
+    fn dir_for(name: &str) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("wc3v-overlay-test-{name}"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
-        let ov = start(dir);
+        dir
+    }
+
+    /// Ephemeral on purpose: a span of 0 skips the ladder, so these tests never
+    /// fight each other — or a copy of WC3V running on this machine — over the
+    /// one home port. The ladder itself is tested separately, against ports it
+    /// occupies and releases itself.
+    fn served(name: &str) -> Arc<Overlay> {
+        let ov = start_on(dir_for(name), 0, 0);
         assert_ne!(ov.port, 0, "server failed to bind");
         ov
     }
@@ -500,6 +613,139 @@ mod tests {
         let mut out = String::new();
         let _ = s.read_to_string(&mut out);
         out
+    }
+
+    /// Port tests get FIXED, disjoint bases rather than ephemeral ones.
+    ///
+    /// Two reasons. Ephemeral ports handed out to one test land next to the ones
+    /// handed to another, so parallel tests walk into each other's ladders. And
+    /// the real ladder lives in the registered range precisely because the OS
+    /// never assigns from it, which is the property under test — borrowing an
+    /// ephemeral port to test it would be testing the wrong range.
+    ///
+    /// Kept well clear of HOME_PORT so a copy of WC3V running on this machine is
+    /// not part of the test.
+    const T_STABLE: u16 = 28100;
+    const T_LADDER: u16 = 28110;
+    const T_LEGACY: u16 = 28120;
+    const T_LEGACY_OLD: u16 = 28125;
+    const T_ORPHAN: u16 = 28130;
+    const T_ORPHAN_OLD: u16 = 28135;
+    const T_CAP: u16 = 28140;
+
+    /// The whole point of the change: the URL a streamer pastes into OBS is the
+    /// same string on the next launch, and the one after that.
+    ///
+    /// The two halves are asserted separately because a restart cannot be
+    /// simulated in one process — each accept thread owns its listener for the
+    /// life of the process, so the "first launch" never gives the port back.
+    /// What makes the URL stable is the port choice being deterministic instead
+    /// of ephemeral, and the token file surviving. Those are the two things.
+    #[test]
+    fn the_url_is_the_same_across_restarts() {
+        let dir = dir_for("port-stable");
+
+        let ov = start_on(dir.clone(), T_STABLE, 4);
+        assert_eq!(ov.port, T_STABLE, "a free home port must be the one taken, every launch");
+        assert!(ov.orphaned_ports.is_empty(), "nothing was handed out and dropped");
+        assert_eq!(
+            std::fs::read_to_string(dir.join("overlay-port")).unwrap().trim(),
+            T_STABLE.to_string(),
+            "the served port must be recorded for the next launch"
+        );
+
+        // Same data dir, so the token is reused and the query string does not
+        // move either. Ladder base differs only because this process is still
+        // holding T_STABLE.
+        let token = std::fs::read_to_string(dir.join("overlay-token")).unwrap();
+        let again = start_on(dir, T_STABLE + 100, 4);
+        assert!(
+            again.url().ends_with(&format!("?token={}", token.trim())),
+            "the token must survive a restart: {}",
+            again.url()
+        );
+    }
+
+    /// The failure the old code hit: something else is holding the port. The
+    /// ladder walks past it rather than falling to a fresh ephemeral port that
+    /// changes again next time.
+    #[test]
+    fn a_taken_home_port_walks_the_ladder() {
+        let squatter = TcpListener::bind(("127.0.0.1", T_LADDER)).unwrap();
+
+        let ov = start_on(dir_for("port-ladder"), T_LADDER, 4);
+        assert_ne!(ov.port, T_LADDER);
+        assert!(
+            ov.port > T_LADDER && ov.port < T_LADDER + 4,
+            "expected a ladder rung, got {}",
+            ov.port
+        );
+        assert!(get(ov.port, "/state").starts_with("HTTP/1.1 403"), "rung must serve");
+        drop(squatter);
+    }
+
+    /// Migration. An install that already handed out an ephemeral URL moves to
+    /// the stable port AND keeps answering the old one, so nobody re-copies.
+    #[test]
+    fn a_previously_served_port_keeps_answering() {
+        let dir = dir_for("port-legacy");
+        std::fs::write(dir.join("overlay-port"), T_LEGACY_OLD.to_string()).unwrap();
+
+        let ov = start_on(dir, T_LEGACY, 4);
+        assert_eq!(ov.port, T_LEGACY, "the primary moves to the stable port");
+        assert_eq!(ov.legacy_ports, vec![T_LEGACY_OLD], "the old port is still bound");
+        assert!(ov.orphaned_ports.is_empty());
+
+        // Both listeners are the same server: same token, same routes.
+        assert!(get(T_LEGACY_OLD, "/state").starts_with("HTTP/1.1 403"));
+        assert!(
+            get(T_LEGACY_OLD, &format!("/state?token={}", ov.token)).starts_with("HTTP/1.1 200")
+        );
+        assert!(get(ov.port, &format!("/state?token={}", ov.token)).starts_with("HTTP/1.1 200"));
+    }
+
+    /// The one case a streamer has to act on, and the only one worth a warning:
+    /// a URL was handed out on a port nothing can bind now.
+    #[test]
+    fn an_unbindable_old_port_is_reported_not_swallowed() {
+        let dir = dir_for("port-orphan");
+        let squatter = TcpListener::bind(("127.0.0.1", T_ORPHAN_OLD)).unwrap();
+        std::fs::write(dir.join("overlay-port"), T_ORPHAN_OLD.to_string()).unwrap();
+
+        let ov = start_on(dir, T_ORPHAN, 4);
+        assert_eq!(ov.port, T_ORPHAN);
+        assert!(ov.legacy_ports.is_empty());
+        assert_eq!(ov.orphaned_ports, vec![T_ORPHAN_OLD], "a dead URL must be reported");
+        drop(squatter);
+    }
+
+    /// Bounded: each legacy port is a live listener and an accept thread, so the
+    /// list cannot grow one entry per launch forever.
+    #[test]
+    fn legacy_ports_are_capped() {
+        let dir = dir_for("port-cap");
+        // Deliberately clear of the ladder this test's primary will walk.
+        let many: Vec<u16> = (0..8).map(|i| T_CAP + 50 + i).collect();
+        std::fs::write(
+            dir.join("overlay-legacy-ports"),
+            many.iter().map(|p| p.to_string()).collect::<Vec<_>>().join(","),
+        )
+        .unwrap();
+
+        let ov = start_on(dir.clone(), T_CAP, 4);
+        assert_eq!(ov.port, T_CAP);
+        assert!(
+            ov.legacy_ports.len() + ov.orphaned_ports.len() <= LEGACY_PORTS_MAX,
+            "kept {} legacy ports, cap is {}",
+            ov.legacy_ports.len() + ov.orphaned_ports.len(),
+            LEGACY_PORTS_MAX
+        );
+        // And the trimmed list is what the next launch will read, so the cap
+        // holds rather than being re-applied to an ever-growing file.
+        assert!(
+            read_ports(&dir.join("overlay-legacy-ports")).len() <= LEGACY_PORTS_MAX,
+            "the persisted list must be trimmed too"
+        );
     }
 
     #[test]

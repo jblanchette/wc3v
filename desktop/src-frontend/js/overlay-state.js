@@ -111,22 +111,50 @@
     // deps: invoke, log, corpus(), the stored history used for head-to-head
     const PA = window.ProfileAggregate;
     const CAST_KEY = 'wc3v-cast';
-    const readCast = () => {
+    const SESSION_KEY = 'wc3v-session';
+    const MMR_KEY = 'wc3v-mmr-baseline';
+
+    // How long a gap ends a session.
+    //
+    // The session score, the form rail and the MMR climb all used to reset to
+    // zero on every launch, so a streamer who restarted the app mid-stream had
+    // their board go 3–1 → 0–0 live on air. They persist now, and this is what
+    // stops a Tuesday night's record reappearing on Thursday. Six hours is
+    // longer than any stream and shorter than any gap between them.
+    const SESSION_GAP_MS = 6 * 3600 * 1000;
+
+    const readJson = (key) => {
+      try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; }
+    };
+    const writeJson = (key, value) => {
       try {
-        const raw = JSON.parse(localStorage.getItem(CAST_KEY) || 'null');
-        if (!raw) return null;
-        // The last game shown under the scoreboard is NOT restored. It is a
-        // summary object, and rehydrating one out of localStorage would be a
-        // second store nobody asked for. It refills the moment a game lands.
-        raw.summary = null;
-        return raw;
-      } catch (e) { return null; }
+        if (value === null || value === undefined) localStorage.removeItem(key);
+        else localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) { /* a full quota costs a restart, not the app */ }
+    };
+    const stillThisSession = (rec) =>
+      !!rec && typeof rec.at === 'number' && (Date.now() - rec.at) < SESSION_GAP_MS;
+
+    // Games are persisted as CONTENT KEYS, never as summaries.
+    //
+    // A summary is tens of kilobytes of parsed replay and it already lives in
+    // the store; a second copy in localStorage would be a second store nobody
+    // asked for, and the one that goes stale. The keys are rehydrated against
+    // the corpus once it loads, and any key the corpus cannot match is simply
+    // dropped — a deleted replay leaves no ghost on the board.
+    const readCast = () => {
+      const raw = readJson(CAST_KEY);
+      if (!raw) return null;
+      raw.summary = null; // refilled by restoreSession() or the next game
+      return raw;
     };
     const writeCast = (c) => {
-      try {
-        if (!c) localStorage.removeItem(CAST_KEY);
-        else localStorage.setItem(CAST_KEY, JSON.stringify({ ...c, summary: null }));
-      } catch (e) { /* a full quota costs the scoreboard a restart, not the app */ }
+      if (!c) { writeJson(CAST_KEY, null); return; }
+      writeJson(CAST_KEY, {
+        ...c,
+        summary: null,
+        summaryKey: (c.summary && c.summary.key) || c.summaryKey || null
+      });
     };
 
     const st = {
@@ -136,6 +164,11 @@
       scout: null,    // the live opponent, from scout.js, while a match is on
       ladder: null,   // your own rank, mmr and today's climb, from scout.js
       demo: false,    // showing the labelled stand-in game for OBS setup
+      // idle | live | post, straight from js/match-phase.js. Published rather
+      // than derived, because the OBS page used to work this out for itself in
+      // a separate Chromium process from `game.gameId` alone — so the window and
+      // the broadcast could disagree about whether a game was on.
+      phase: 'idle',
       // The casting scoreboard, typed in Stream → Casting. Persisted to
       // localStorage rather than to the store: it is the state of a broadcast
       // that is happening now, and it has to survive an app restart mid-series
@@ -602,6 +635,7 @@
       const views = st.session.map(viewFor).filter(Boolean);
       return {
         updatedAt: Date.now(),
+        phase: st.phase,
         user: st.userName,
         // Without an identity no verdict can be attributed to a seat, so the
         // overlay says so instead of showing a bare "Game over" forever.
@@ -637,9 +671,23 @@
       }
     };
 
+    // Which phase OBS was last told about, so publishScout can tell a real
+    // change from a repeat without diffing the whole payload.
+    let lastSentPhase = null;
+
     const publish = async () => {
       st.demo = false;
+      lastSentPhase = st.phase;
       await send(buildPayload());
+    };
+
+    // The session board, as content keys and a timestamp. Written on every
+    // finished game; read once at boot by restoreSession.
+    const saveSession = () => {
+      writeJson(SESSION_KEY, {
+        at: Date.now(),
+        keys: st.session.map(g => g && g.key).filter(Boolean)
+      });
     };
 
     // A stand-in game, so a streamer can size and position the Browser Source
@@ -784,6 +832,19 @@
       // never found. This is the one thing the overlay can show before a
       // replay exists at all, since it comes from polling the ladder API
       // rather than reading the game.
+      // One call from the phase owner, carrying both the phase and whatever
+      // live match goes with it. app.js subscribes to js/match-phase.js and
+      // routes it here, so there is no second opinion about what is on.
+      publishPhase (snap) {
+        st.phase = (snap && snap.phase) || 'idle';
+        const live = snap && snap.live;
+        this.publishScout(
+          live ? live.match : null,
+          live ? live.ladder : null,
+          live ? live.book : null
+        );
+      },
+
       publishScout (match, ladder, book) {
         const opp = match && match.opponents && match.opponents[0];
         const icons = opp && book ? heroIconIndex() : null;
@@ -816,16 +877,23 @@
           t2Them: book && book.t2Them !== null && book.t2Them !== undefined ? PA.fmtMs(book.t2Them) : null,
           expansionRate: book ? book.expansionRate : null
         } : null;
-        if (!next && !st.scout) return;
+        // A phase change with no scout either side of it still has to go out —
+        // the payload now carries `phase`, and holding this back would leave OBS
+        // on a stale one.
+        if (!next && !st.scout && st.phase === lastSentPhase) return;
         st.scout = next;
-        send(buildPayload());
+        // publish(), not send(). These two used to bypass it, and publish() is
+        // the only thing that clears st.demo — so a poll landing during an OBS
+        // setup preview pushed the REAL payload to the broadcast while the
+        // Stream screen still said "Back to the real game".
+        publish();
       },
       // Your own rank, MMR and how far it has moved since the app opened. It
       // outlives the live match on purpose: the climb is a session-long number
       // and belongs beside the session score, not only while a game is on.
       publishLadder (mine) {
         st.ladder = mine || null;
-        send(buildPayload());
+        publish();
       },
       recordGame (summary) {
         st.session.push(summary);
@@ -833,7 +901,8 @@
         // The casting stat bar follows the newest game too. A caster running a
         // series watches each game finish and land under the scoreboard without
         // touching anything.
-        if (st.cast) { st.cast.summary = summary; }
+        if (st.cast) { st.cast.summary = summary; writeCast(st.cast); }
+        saveSession();
         publish();
       },
       // Boot seeding. Show the most recent stored game instead of an empty
@@ -843,6 +912,43 @@
         st.lastGame = summary;
         if (st.cast && !st.cast.summary) st.cast.summary = summary;
         publish();
+      },
+
+      // Put back the session this machine was already in, if the app was
+      // restarted rather than opened fresh. Called once, after the corpus
+      // loads, because the keys are rehydrated against it.
+      //
+      // Returns true when something was restored, so app.js can seed the last
+      // game only when there is nothing better to show.
+      restoreSession (corpus) {
+        const rec = readJson(SESSION_KEY);
+        if (!stillThisSession(rec) || !Array.isArray(rec.keys) || !rec.keys.length) {
+          return false;
+        }
+        const byKey = new Map((corpus || []).map(g => [g.key, g]));
+        // A key the corpus cannot match is a replay that has since been
+        // deleted. Dropped rather than counted, so the board matches the games
+        // a viewer can actually be shown.
+        const games = rec.keys.map(k => byKey.get(k)).filter(Boolean);
+        if (!games.length) return false;
+        st.session = games;
+        st.lastGame = games[games.length - 1];
+        const castKey = st.cast && st.cast.summaryKey;
+        if (st.cast && castKey && byKey.has(castKey)) st.cast.summary = byKey.get(castKey);
+        else if (st.cast && !st.cast.summary) st.cast.summary = st.lastGame;
+        deps.log(`resumed this session: ${games.length} game${games.length === 1 ? '' : 's'}`, 'ok');
+        publish();
+        return true;
+      },
+
+      // Where the MMR climb counts from. Persisted for the same reason as the
+      // session score: a mid-stream restart should not reset it to +0.
+      readMmrBaseline (tag) {
+        const rec = readJson(MMR_KEY);
+        return stillThisSession(rec) && rec.tag === tag ? rec.mmr : null;
+      },
+      writeMmrBaseline (tag, mmr) {
+        writeJson(MMR_KEY, { tag, mmr, at: Date.now() });
       },
       // A caster picking a specific replay to show under the scoreboard, rather
       // than waiting for one to finish. Used by the Library.

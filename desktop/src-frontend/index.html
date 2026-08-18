@@ -469,6 +469,9 @@
   <!-- The report, as a renderer both Home and the Library mount. -->
   <script src="./js/game-report-view.js"></script>
   <script src="./js/w3c.js"></script>
+  <!-- One owner for idle/live/post. Above every view, because the views
+       subscribe to it rather than being pushed at. -->
+  <script src="./js/match-phase.js"></script>
   <script src="./js/scout.js"></script>
   <script src="./js/games-view.js"></script>
   <script src="./js/library-view.js"></script>

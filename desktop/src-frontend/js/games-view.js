@@ -621,7 +621,27 @@
       host.appendChild(list);
     };
 
+    // ── Batching ────────────────────────────────────────────────────────────
+    //
+    // A live game landing used to redraw this column three times: the live card
+    // coming down, the corpus re-render re-selecting the OLD key, and finally
+    // the new game. Two of those three paint the game the user is about to be
+    // moved off, and each one tears down and remounts DominanceChart with its
+    // ResizeObserver — so the previous game visibly flashed twice before the new
+    // report appeared.
+    //
+    // Depth-counted rather than a flag, so a nested caller cannot end somebody
+    // else's batch. The deferred paint reads whatever `activeKey` settled on,
+    // which is the point: intermediate selections cost nothing.
+    let batchDepth = 0;
+    let batchWanted = false;
+
     const renderDetail = (summary) => {
+      if (batchDepth > 0) { batchWanted = true; return; }
+      paintDetail(summary);
+    };
+
+    const paintDetail = (summary) => {
       const host = el('detail');
       dropChart();
       host.dataset.mode = live ? mode : 'last';
@@ -715,6 +735,17 @@
       // The backfill engine calls these while it reads the newest games. They
       // only touch the quick nav, so the feed and the report underneath keep
       // working normally throughout.
+      // Hold the report column still until endBatch. Everything between the two
+      // is free to re-select and re-render; the column paints once, at the end,
+      // from whatever the selection settled on.
+      beginBatch () { batchDepth += 1; },
+      endBatch () {
+        batchDepth = Math.max(0, batchDepth - 1);
+        if (batchDepth > 0 || !batchWanted) return;
+        batchWanted = false;
+        paintDetail(games.find(g => g.key === activeKey) || null);
+      },
+
       setParseQueue (files) {
         parsing = (files || []).map(file => ({ file, phase: 'queued' }));
         renderQuickNav();

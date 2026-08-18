@@ -125,6 +125,15 @@
     try {
       window.OverlayRender.render(root, state, mods);
     } catch (err) { return; }
+    // What the APP says it is doing, as published by js/match-phase.js.
+    //
+    // Distinct from `data-phase`, which is this page's reveal collapse and has
+    // always been a property of the source rather than of the app. This one is
+    // the app's own idle/live/post, and it is stamped rather than inferred
+    // because this page runs in a separate Chromium process: everything it used
+    // to work out for itself about whether a game was on was a second opinion
+    // that could — and did — disagree with the window.
+    document.body.dataset.appPhase = (state && state.phase) || '';
     // Before the reveal bookkeeping, and again inside it: a source with no
     // reveal at all still has a resting state, and it is the common one.
     settle();

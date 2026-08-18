@@ -610,6 +610,10 @@ fn publish_overlay_state(
 
 /// The OBS URL, token and all, for the clipboard. Never render it: it would
 /// end up on stream.
+///
+/// `orphaned` is the one field worth acting on. It lists ports this install
+/// handed out that nothing is answering now, which is the only situation where a
+/// URL already sitting in OBS is dead and has to be copied again.
 #[tauri::command]
 fn overlay_info(
     overlay: State<'_, std::sync::Arc<overlay::Overlay>>,
@@ -617,7 +621,12 @@ fn overlay_info(
     if overlay.port == 0 {
         return Err("overlay server failed to start".into());
     }
-    Ok(serde_json::json!({ "url": overlay.url(), "port": overlay.port }))
+    Ok(serde_json::json!({
+        "url": overlay.url(),
+        "port": overlay.port,
+        "legacy": overlay.legacy_ports,
+        "orphaned": overlay.orphaned_ports,
+    }))
 }
 
 /// Is the overlay actually on a broadcast right now?

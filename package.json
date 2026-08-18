@@ -20,7 +20,7 @@
 		"gen-fx-units": "node tools/gen-fx-units.js",
 		"desktop": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri dev",
 		"desktop:build": "node tools/build-desktop-client.js --bundle-maps=ladder && cd desktop/src-tauri && cargo tauri build",
-		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release",
+		"desktop:test": "node tools/test-profile-aggregate.js && node tools/test-game-metrics.js && node tools/test-backfill-catchup.js && node tools/lifecycle-sim.js && cargo test --manifest-path desktop/src-tauri/Cargo.toml --release",
 		"gen-item-names": "node tools/gen-item-names.js",
 		"check-item-names": "node tools/gen-item-names.js --check",
 		"worker:mcp": "wrangler deploy --config workers/mcp/wrangler.toml",

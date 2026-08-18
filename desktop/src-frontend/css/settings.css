@@ -26,6 +26,10 @@
 
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
 .hint { color: var(--ink-dim); font-size: var(--fs-min); margin: var(--sp-2) 0 0; }
+/* A hint the reader has to act on rather than absorb. Colour only — the
+   surrounding panel already carries the frame, and an edge stripe here would
+   be the accent bar this design system does not use. */
+.hint-warn { color: var(--verdict-loss); }
 
 /* Top-aligned, not centred: these labels carry a line of explanation under
    them, and a centred box floats halfway down the paragraph pointing at

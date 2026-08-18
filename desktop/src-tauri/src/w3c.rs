@@ -105,13 +105,22 @@ fn allowed(path: &str) -> bool {
 /// JSON text. The frontend parses and validates the shape. The API is
 /// undocumented, so every consumer has to be written to survive a response
 /// that is not what it expected.
+///
+/// Every error is `code: sentence`. The code is the part a caller branches on,
+/// the sentence is the part a human reads in the Activity drawer.
+///
+/// The distinction that matters is `notfound` against everything else. A 404 on
+/// an ongoing match is the API answering clearly — you are not in a game — and a
+/// timeout is the API not answering at all. Those used to arrive at the frontend
+/// as the same `null`, so one dropped request looked exactly like a game ending
+/// and dropped the whole app to idle. See `desktop/src-frontend/js/scout.js`.
 #[tauri::command]
 pub async fn w3c_lookup(path: String, app: tauri::AppHandle) -> Result<String, String> {
     if !w3c_enabled(app.clone()) {
-        return Err("online lookups are off".into());
+        return Err("off: online lookups are off".into());
     }
     if !allowed(&path) {
-        return Err("not an allowed lookup".into());
+        return Err("denied: not an allowed lookup".into());
     }
 
     let client = reqwest::Client::builder()
@@ -120,27 +129,31 @@ pub async fn w3c_lookup(path: String, app: tauri::AppHandle) -> Result<String, S
         // this module promises cannot happen.
         .redirect(reqwest::redirect::Policy::none())
         .build()
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| format!("unreachable: {e}"))?;
 
     let res = client
         .get(format!("{W3C_HOST}{path}"))
         .header("accept", "application/json")
         .send()
         .await
-        .map_err(|e| format!("could not reach W3Champions: {e}"))?;
+        .map_err(|e| format!("unreachable: could not reach W3Champions: {e}"))?;
 
     if res.status() == reqwest::StatusCode::NOT_FOUND {
-        return Err("not found on W3Champions".into());
+        return Err("notfound: not found on W3Champions".into());
     }
     if !res.status().is_success() {
-        return Err(format!("W3Champions returned {}", res.status()));
+        return Err(format!("http: W3Champions returned {}", res.status()));
     }
 
-    let bytes = res.bytes().await.map_err(|e| e.to_string())?;
+    let bytes = res
+        .bytes()
+        .await
+        .map_err(|e| format!("unreachable: {e}"))?;
     if bytes.len() > MAX_BYTES {
-        return Err("W3Champions returned an unexpectedly large response".into());
+        return Err("http: W3Champions returned an unexpectedly large response".into());
     }
-    String::from_utf8(bytes.to_vec()).map_err(|_| "W3Champions returned invalid text".into())
+    String::from_utf8(bytes.to_vec())
+        .map_err(|_| "http: W3Champions returned invalid text".into())
 }
 
 #[cfg(test)]

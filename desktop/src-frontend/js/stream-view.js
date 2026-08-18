@@ -204,6 +204,33 @@
       return parts.length ? `&${parts.join('&')}` : '';
     };
 
+    // Did a URL this install already handed out stop working?
+    //
+    // The server binds a fixed port and also keeps answering on every port it
+    // previously served, so the answer is normally no and this panel stays
+    // quiet. `orphaned` is the exception: a port that was handed out and is now
+    // held by something else. That is the one case where a Browser Source
+    // already in OBS points at nothing, and a streamer cannot diagnose a blank
+    // source without being told.
+    //
+    // The ports themselves are NOT rendered. They are part of the URL, and the
+    // rule for that string is that it reaches the clipboard and nothing else.
+    let portsDropped = false;
+    const checkPorts = async (host) => {
+      try {
+        const info = await deps.invoke('overlay_info');
+        portsDropped = !!(info.orphaned && info.orphaned.length);
+      } catch (e) {
+        return;
+      }
+      if (!portsDropped || !host.isConnected) return;
+      const warn = node('p', 'hint hint-warn',
+        'The overlay moved to a different port since you last copied this URL. ' +
+        'A Browser Source added before now will be blank — copy the URL again ' +
+        'and paste it over the old one.');
+      host.appendChild(warn);
+    };
+
     // The URL carries the access token, so it goes to the clipboard and never
     // to the DOM, the log or a tooltip. This window may be on camera.
     const copyUrl = async (btn, only, note) => {
@@ -342,11 +369,18 @@
 
       p.appendChild(node('p', 'hint',
         `In OBS: Sources, add Browser, paste the URL, size ${size}.`));
+      // Worth saying because the old behaviour was the opposite: the port used
+      // to be ephemeral and could be taken by any other program over a reboot,
+      // which left streamers re-pasting the URL and never knowing why.
+      p.appendChild(node('p', 'hint',
+        'Add it once. The URL does not change between sessions, so it keeps ' +
+        'working as long as WC3V is running.'));
       p.appendChild(node('p', 'hint',
         'Turn off “Shutdown source when not visible”, or the overlay stops ' +
         'updating whenever the scene is not live.'));
       p.appendChild(node('p', 'hint',
         'The URL contains your access token. Keep it off stream.'));
+      checkPorts(p);
       return p;
     };
 

@@ -281,6 +281,14 @@ const identity = window.createIdentity({
   }
 });
 
+// What the app is doing: idle, live, or post. One owner, subscribed to by
+// everything that draws a phase, so the window and the broadcast cannot
+// disagree. See js/match-phase.js for why that used to be possible.
+const matchPhase = window.createMatchPhase({ log });
+// Subscribed further down, once the views it drives exist. subscribe() fires
+// immediately so a subscriber never has to ask what it missed, which means it
+// cannot be attached before gamesView and streamView are constructed.
+
 // Who you are playing right now, from W3Champions, over your own record
 // against them. Idle until the feature is switched on in Settings, and it
 // renders nothing itself: the report column is the surface.
@@ -291,12 +299,16 @@ const scout = window.createScout({
   identityName: () => identity.name,
   watched: overlayWatched,
   onMatch: (match, ladder, book) => {
-    gamesView.setLiveMatch(match, ladder, book);
-    overlayState.publishScout(match, ladder, book);
+    if (match) matchPhase.setLive(match, ladder, book);
+    else matchPhase.clearLive();
   },
   // Your own standing. Overlay only: the app already shows this on Profile,
   // and a second copy in the report column would be the same number twice.
-  onLadder: (mine) => overlayState.publishLadder(mine)
+  onLadder: (mine) => overlayState.publishLadder(mine),
+  // The climb is measured from where this session started, and a streamer who
+  // restarts the app mid-session should not drop to +0 on air.
+  readBaseline: (tag) => overlayState.readMmrBaseline(tag),
+  writeBaseline: (tag, mmr) => overlayState.writeMmrBaseline(tag, mmr)
 });
 
 // Free tags on a game, in a sidecar the schema cannot eat. See js/game-tags.js.
@@ -334,6 +346,32 @@ const libraryView = window.createLibraryView({
 });
 
 const streamView = window.createStreamView({ invoke, log, errText, overlayState });
+
+// Which screen is up. Declared here rather than beside showView because the
+// phase subscriber below reads it, and subscribe() fires immediately.
+let currentView = 'games';
+
+// Everything that draws a phase, driven from the one owner.
+//
+// Attached HERE, below the views, because subscribe() fires immediately — a
+// subscriber should never have to ask what it missed, and that means it cannot
+// be attached before the things it calls exist.
+//
+// Three consumers that used to be pushed at separately and could disagree: the
+// report column, the broadcast, and the Stream tab's preview of the broadcast.
+matchPhase.subscribe((snap) => {
+  const live = snap.live;
+  gamesView.setLiveMatch(
+    live ? live.match : null,
+    live ? live.ladder : null,
+    live ? live.book : null
+  );
+  overlayState.publishPhase(snap);
+  // The preview used to redraw only when some other code path remembered to ask
+  // for it, and nothing in the scout path did — so it sat frozen while a match
+  // started in front of the person watching it.
+  if (currentView === 'stream') streamView.renderPreview();
+});
 
 const backfill = window.createBackfill({
   invoke,
@@ -494,8 +532,6 @@ el('update-chip').addEventListener('click', () => {
 
 // ── Views ───────────────────────────────────────────────────────────────────
 
-let currentView = 'games';
-
 const showView = (name) => {
   currentView = name;
   for (const section of document.querySelectorAll('.view')) {
@@ -621,6 +657,11 @@ const run = async (path, opts = {}) => {
   setStatus('reading…');
   const fileName = path.split(/[\\/]/).pop();
   const started = performance.now();
+  // The parse is two to five seconds during which the report column keeps
+  // showing the PREVIOUS game and nothing says why. The quick-nav parse chips
+  // already exist for exactly this and were wired only to the first-boot
+  // backfill, so a live game got no indication at all.
+  if (opts.live) gamesView.setParseProgress(fileName, 'reading');
   try {
     // Canonical identity first. A game already summarised renders from the
     // store instead of re-parsing. The key is content-based, so a copy of the
@@ -650,19 +691,39 @@ const run = async (path, opts = {}) => {
         corpus.push(summary);
         corpus.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
       }
-      if (opts.live) {
-        // Whatever the scout card was showing has just ended, and the report
-        // underneath it is the better thing to look at.
-        scout.dismiss();
-        overlayState.recordGame(summary);
-        renderSession();
-        if (currentView === 'stream') streamView.renderPreview();
-        identity.resolve();
-        notifyGameFinished(summary);
+      // Everything below re-selects and re-renders; the report column paints
+      // ONCE, at the end, on the game that actually won. Without the batch a
+      // live game landing drew three reports — the live card coming down, the
+      // corpus render re-selecting the OLD key, then the new key — so the
+      // previous game flashed twice, each time remounting DominanceChart and
+      // its ResizeObserver.
+      gamesView.beginBatch();
+      try {
+        if (opts.live) {
+          // Whatever the scout card was showing has just ended, and the report
+          // underneath it is the better thing to look at.
+          //
+          // The id goes with it: the ladder keeps reporting a finished match
+          // for a while after its replay is on disk, and without the id the
+          // next poll treated it as a brand new game and threw the column back
+          // onto a scouting panel for a game already reported on.
+          const liveId = matchPhase.live && matchPhase.live.match
+            ? matchPhase.live.match.id
+            : null;
+          scout.dismiss(liveId);
+          matchPhase.gameLanded();
+          overlayState.recordGame(summary);
+          renderSession();
+          identity.resolve();
+          notifyGameFinished(summary);
+          gamesView.clearParseQueue();
+        }
+        gamesView.render(store.corpus || [summary]);
+        if (currentView === 'library') libraryView.render(store.corpus || []);
+        gamesView.select(key);
+      } finally {
+        gamesView.endBatch();
       }
-      gamesView.render(store.corpus || [summary]);
-      if (currentView === 'library') libraryView.render(store.corpus || []);
-      gamesView.select(key);
       // A game that finished while the user was reading something else pulls
       // them to it. That is the promise. Clicking through history does not,
       // because opts.live is false there.
@@ -675,6 +736,18 @@ const run = async (path, opts = {}) => {
       log(`no local map data for "${err.mapDataName || err.rawMapName}"`, 'warn');
     } else {
       log(`could not read ${fileName}: ${errText(err)}`, 'err');
+    }
+    // A live game whose replay could not be read still ENDED. Without this the
+    // app stayed in `live` on a bad file — the only thing that ever cleared the
+    // card was a successful parse — and sat there showing a scouting panel for a
+    // match that was long over.
+    if (opts.live) {
+      gamesView.clearParseQueue();
+      const liveId = matchPhase.live && matchPhase.live.match
+        ? matchPhase.live.match.id
+        : null;
+      scout.dismiss(liveId);
+      matchPhase.parseFailed(`${fileName} could not be read`);
     }
     return null;
   }
@@ -947,7 +1020,16 @@ const boot = async () => {
     // trade.
     if (store.staleCount) startMigration();
 
-    overlayState.seedLastGame(corpus[0]);   // corpus is newest-first
+    // A restart mid-session puts the board back exactly as it was: the score,
+    // the form rail and the game under it. Only when there is no session to
+    // resume does the newest stored game get seeded as a resting card, because
+    // a seeded game deliberately does not count toward the score.
+    if (!overlayState.restoreSession(corpus)) {
+      overlayState.seedLastGame(corpus[0]);   // corpus is newest-first
+    }
+    // Something is on screen, so idle is now unreachable and the app rests in
+    // `post` between games instead of blanking.
+    if (corpus.length) matchPhase.seedGame();
     // Autocomplete covers every name ever seen. Identity is a separate and
     // explicit choice that never comes out of this box.
     const names = window.ProfileAggregate.knownNames(corpus).slice(0, 200);
