@@ -541,7 +541,11 @@
         asset: (file) => U().ICON_BASE + file,
         // The Overview tab leaves a slot; mountDominance fills it below.
         wantsDominance: !!(window.DominancePanel &&
-          !window.DominancePanel.unavailable(summary))
+          !window.DominancePanel.unavailable(summary)),
+        // Same arrangement for the creep-route map: Overview and Economy each
+        // leave a slot, mountRoute fills it.
+        wantsRoute: !!(window.CreepRouteMap &&
+          !window.CreepRouteMap.unavailable(summary))
       });
 
       const model = window.SummaryModel
@@ -573,6 +577,7 @@
       let domHandle = null;
       let cp = null;
       let tlHandle = null;
+      let routeHandle = null;
 
       // The moments timeline: two lanes (yours / theirs, per team in a team
       // game). Built here, placed by the caller.
@@ -597,6 +602,40 @@
         // viewer at that moment.
         domHandle = window.DominancePanel.build(summary, seat, { onWatch: o.onWatch });
         if (domHandle) slot.appendChild(domHandle.chart);
+      };
+
+      // Both players' creep routes, on the map they were walked on.
+      //
+      // The map image comes straight off the CDN as an <img>, which the app's
+      // CSP already permits (img-src includes cdn.wc3v.com) — the same route
+      // every unit portrait on this screen takes.
+      //
+      // Nothing is FETCHED: connect-src does not include the CDN, so the
+      // neutral-building layer the site overlays is deliberately absent here.
+      // Gold mines and shops are already drawn on the minimap art itself; the
+      // site's overlay sharpens them, and the route reads without it.
+      const mountRoute = (host) => {
+        const slot = host.querySelector('.ms-route-slot');
+        if (!slot || !window.CreepRouteMap) return;
+        if (routeHandle && routeHandle.destroy) {
+          try { routeHandle.destroy(); } catch (e) { /* already gone */ }
+        }
+        routeHandle = window.CreepRouteMap.build(summary, {
+          size: parseInt(slot.dataset.size, 10) || 340,
+          colorFor: (slotKey) => {
+            const p = model.players.find(x => x.slot === slotKey);
+            return (p && p.color) || '#8a8378';
+          },
+          // The stored summary carries raw battle tags; every other name on this
+          // screen is the model's cleaned one.
+          nameFor: (slotKey) => {
+            const p = model.players.find(x => x.slot === slotKey);
+            return p ? p.name : null;
+          },
+          mapAsset: (folder, file) =>
+            `${U().MAP_BASE}${encodeURIComponent(folder)}/${file}`
+        });
+        if (routeHandle) slot.appendChild(routeHandle.el);
       };
 
       // The desktop's own Resources and Army plots, under the shared four at
@@ -687,6 +726,9 @@
         if (key === 'economy') chartsPanel(content);
         body.appendChild(content);
         if (key === 'overview') mountDominance(content);
+        // After the append: the canvas sizes itself against devicePixelRatio and
+        // checks isConnected before painting.
+        mountRoute(content);
       };
 
       if (TABS.length > 1) {
@@ -720,9 +762,13 @@
           if (tlHandle && tlHandle.destroy) {
             try { tlHandle.destroy(); } catch (e) { /* already gone */ }
           }
+          if (routeHandle && routeHandle.destroy) {
+            try { routeHandle.destroy(); } catch (e) { /* already gone */ }
+          }
           cp = null;
           domHandle = null;
           tlHandle = null;
+          routeHandle = null;
         }
       };
     }

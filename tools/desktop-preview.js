@@ -52,6 +52,11 @@ const SummaryExtract = require('../client/js/SummaryExtract');
 const MomentsExtract = require('../client/js/MomentsExtract');
 const SeriesExtract = require('../client/js/SeriesExtract');
 const SummaryBuild = require('../client/js/SummaryBuild');
+// The map bounds table SummaryBuild stamps `mapInfo` from. The browser gets it
+// from a <script>-time fetch; here it is a require, so preview summaries carry
+// the same field a real parse would and the creep-route map draws on real
+// terrain instead of its self-scaled fallback.
+globalThis.__mapFoldersManifest = require('../client/data/map-folders.json');
 
 const ROOT = path.resolve(__dirname, '..');
 const REPLAY_DIR = path.join(ROOT, 'client', 'replays');

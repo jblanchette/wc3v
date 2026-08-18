@@ -598,6 +598,24 @@
     return wrap;
   };
 
+  // ── Creep routes ───────────────────────────────────────────────────────────
+  //
+  // A SLOT, not a drawing. Same seam as the dominance plot above: this file
+  // knows neither app, and the route map needs the raw stored summary (camp
+  // bounds, hero camp lists, starting positions, map bounds) which the model
+  // deliberately does not carry. The caller holds that summary and knows how to
+  // resolve a map image — the site serves /maps/, the desktop pulls the CDN —
+  // so the caller fills this.
+  //
+  // Emitted only when the caller says it can fill it, so a runtime without
+  // CreepRouteMap gets no empty box.
+  const routeSlot = (o, size) => {
+    if (!o.wantsRoute) return null;
+    const slot = node('div', 'ms-route-slot');
+    slot.dataset.size = String(size);
+    return block('Creep Routes', slot, 'ms-wide-section ms-creep-route');
+  };
+
   const renderOverview = (o, model) => {
     const out = frag();
 
@@ -675,6 +693,12 @@
       split.appendChild(right);
       return split;
     }, 'ms-col-overview'));
+
+    // Under the columns rather than in the band. The band is three things wide
+    // already, and a map squeezed into a quarter of it is a decoration; down
+    // here it gets the width to be read as a map.
+    const route = routeSlot(o, 340);
+    if (route) out.appendChild(route);
 
     return out;
   };
@@ -906,6 +930,12 @@
       const list = economyBlocks(o, model, p);
       return list.length ? blocks(list) : empty('No economy recorded');
     }));
+
+    // The same map at the size this tab can afford. The per-camp text list in
+    // the columns above says WHAT was killed and in what order; this says where,
+    // which is the half a list cannot carry.
+    const route = routeSlot(o, 520);
+    if (route) out.appendChild(route);
 
     if (model.players.length > 2) {
       const teamCreeps = teamCreepSections(o, model);

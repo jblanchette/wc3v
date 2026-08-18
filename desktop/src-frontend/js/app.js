@@ -899,7 +899,28 @@ el('migrate-toggle').addEventListener('click', () => {
   else startMigration();
 });
 
+// Every map's world bounds, as the site serves at /data/map-folders.json and
+// tools/build-desktop-client.js vendors in here.
+//
+// SummaryBuild reads this off the window to stamp `mapInfo` onto a stored
+// summary, which is what lets a creep camp or a starting position be placed on
+// the map image at all. It has to be up before the first parse, so it is
+// awaited in boot rather than fetched lazily — it is ~40 KB off local disk.
+//
+// A failure is not fatal: summaries store mapInfo: null and the route map falls
+// back to a self-scaled plot, which loses the terrain and keeps the shape.
+const loadMapBounds = async () => {
+  try {
+    const r = await fetch('./data/map-folders.json');
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    window.__mapFoldersManifest = await r.json();
+  } catch (e) {
+    log(`map bounds unavailable, route maps will be approximate: ${errText(e)}`, 'warn');
+  }
+};
+
 const boot = async () => {
+  await loadMapBounds();
   const info = await invoke('init');
   state.roots = info.roots;
   settingsView.renderRoots();

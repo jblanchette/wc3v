@@ -104,6 +104,10 @@
         const build = p.build;
         const color = colorFor(p.race);
         return {
+          // The summary's own key for this seat. Carried so a caller can join
+          // back to summary.players[slot] — the creep-route map needs the raw
+          // per-seat camp lists, which this model deliberately does not hold.
+          slot,
           name: cleanName(p.name),
           race: p.race,
           raceLabel: RACE_LABEL[p.race] || '??',

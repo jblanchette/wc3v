@@ -1684,241 +1684,57 @@ const CompareInline = class {
 
   // Async canvas paint for the Creeps tab.
   //
-  // Mirrors what the in-replay viewer does, but on a flat 2D canvas:
-  //   1. Background = /maps/{folder}/map.jpg (terrain palette)
-  //   2. Trees rendered as small dark dots from doo.json (mirrors
-  //      MapRenderer.renderMapTrees)
-  //   3. Neutral buildings (gold mines, shops, fountains) rendered as wc3
-  //      icons from neutralBuildings.json
-  //   4. Every neutral group on the map gets a white outline circle, with
-  //      radius = max(width, height)/2 + 4px (RING_PAD) computed from the
-  //      screen-space AABB of the bounds rectangle's 4 projected corners
-  //   5. Cleared camps overlay a small filled colored circle inside the ring
-  //      with the order number, plus a polyline through all of them
-  //
-  // If mapInfo or the map.jpg can't be loaded, falls back to a self-scaled
-  // bounding box derived from the camps themselves so something still renders.
+  // The drawing itself moved to client/js/CreepRouteMap.js so the desktop's
+  // Match Summary could have it too — this was 220 lines that only the compare
+  // drawer could reach. What is left here is the one thing that is genuinely
+  // specific to comparing: the routes come from TWO summaries (yours and a
+  // pro's) rather than from two seats of one game, and the pro's route is only
+  // drawn when both were played on the same map.
   async _renderCreepsCanvas () {
     const wrap = this.rootEl.querySelector('.ci-creeps-canvas-wrap');
     if (!wrap) return;
-    const canvas = wrap.querySelector('.ci-creeps-canvas');
+    const host = wrap.querySelector('.ci-creeps-canvas');
     const loadingEl = wrap.querySelector('.ci-creeps-loading');
+    if (!host) return;
     const sameMap = wrap.dataset.sameMap === '1';
 
-    const u = this.userSummary.players[this.userSlot] || {};
-    const p = (this._proSummary.players || {})[String(this._proEntry.playerSlot)] || {};
-    const userMapInfo = this.userSummary.mapInfo;
-    const userCamps = this._collectCamps(u);
-    const proCamps = sameMap ? this._collectCamps(p) : [];
-    const allRings = this.userSummary.neutralCamps || [];
+    const proSlot = String(this._proEntry.playerSlot);
+    // A synthetic summary with one seat per side, which is the shape
+    // CreepRouteMap reads. The pro seat is dropped on a different map: their
+    // coordinates mean nothing against this map's terrain.
+    const merged = {
+      mapInfo: this.userSummary.mapInfo,
+      neutralCamps: this.userSummary.neutralCamps || [],
+      players: {
+        you: this.userSummary.players[this.userSlot] || {},
+        pro: sameMap ? ((this._proSummary.players || {})[proSlot] || {}) : {}
+      }
+    };
+    const COLORS = { you: '#5fa5cb', pro: '#d4a23a' };
+    const NAMES = { you: 'You', pro: 'Pro' };
 
-    // The summary's mapInfo.name IS the resolved client/maps/ folder.
-    const mapFolder = userMapInfo && userMapInfo.name ? userMapInfo.name : null;
+    const handle = window.CreepRouteMap && window.CreepRouteMap.build(merged, {
+      size: 600,
+      seats: sameMap ? ['you', 'pro'] : ['you'],
+      colorFor: (slot) => COLORS[slot],
+      mapAsset: (folder, file) => `/maps/${encodeURIComponent(folder)}/${file}`,
+      iconAsset: (type) => `/assets/wc3icons/${type}.jpg`,
+      neutrals: (folder) => loadNeutralBuildings(folder)
+    });
 
-    // Parallel-load map background and neutral-building overlay data. Trees
-    // are not overlaid: the minimap (BLP from .w3x or HiveWE-style synth)
-    // already represents terrain the way the game does — adding tree dots
-    // on top would double-render.
-    let mapImg = null, neutrals = null;
-    if (mapFolder) {
-      [mapImg, neutrals] = await Promise.all([
-        loadMapImage(mapFolder),
-        loadNeutralBuildings(mapFolder)
-      ]);
-    }
-    const neutralIcons = await ensureNeutralIcons();
     if (loadingEl) loadingEl.remove();
-
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    // World→canvas transform. mapInfo.bounds.map is shaped
-    // [[xMin, yMax], [xMax, yMin]] (top-left → bottom-right corners). Use
-    // the map extent (full bg image), not the camera/playable extent — the
-    // bg jpg covers the full extent.
-    let w2c;
-    if (userMapInfo && userMapInfo.bounds && userMapInfo.bounds.map) {
-      const [[mxMin, myMax], [mxMax, myMin]] = userMapInfo.bounds.map;
-      const worldW = mxMax - mxMin;
-      const worldH = myMax - myMin;
-      w2c = (wx, wy) => ({
-        x: ((wx - mxMin) / worldW) * W,
-        // WC3 +Y = north (up). Canvas +Y = down. Flip.
-        y: ((myMax - wy) / worldH) * H
-      });
-    } else {
-      // Fallback: bounding box of available points.
-      const pts = [];
-      if (u.startingPosition) pts.push(u.startingPosition);
-      if (sameMap && p.startingPosition) pts.push(p.startingPosition);
-      for (const c of userCamps) pts.push({ x: c.x, y: c.y });
-      for (const c of proCamps)  pts.push({ x: c.x, y: c.y });
-      for (const r of allRings)  if (r.bounds) pts.push({ x: (r.bounds.minX + r.bounds.maxX)/2, y: (r.bounds.minY + r.bounds.maxY)/2 });
-      if (!pts.length) {
-        canvas.style.display = 'none';
-        wrap.insertAdjacentHTML('beforeend', '<div class="ci-empty-mini">No camp data to plot.</div>');
-        return;
-      }
-      const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
-      const pad = 800;
-      const xmin = Math.min(...xs) - pad, xmax = Math.max(...xs) + pad;
-      const ymin = Math.min(...ys) - pad, ymax = Math.max(...ys) + pad;
-      w2c = (wx, wy) => ({
-        x: ((wx - xmin) / (xmax - xmin)) * W,
-        y: ((ymax - wy) / (ymax - ymin)) * H
-      });
+    if (!handle) {
+      wrap.insertAdjacentHTML('beforeend', '<div class="ci-empty-mini">No camp data to plot.</div>');
+      host.remove();
+      return;
     }
-
-    // Background. Map.jpg covers the full mapExtent bounds, so a flat
-    // drawImage to the canvas at 0,0 → W,H aligns with the world transform.
-    if (mapImg) {
-      ctx.drawImage(mapImg, 0, 0, W, H);
-    } else {
-      ctx.fillStyle = '#0a0d10';
-      ctx.fillRect(0, 0, W, H);
-      ctx.strokeStyle = '#1d2228';
-      for (let i = 1; i < 8; i++) {
-        const v = (i / 8) * W;
-        ctx.beginPath(); ctx.moveTo(v, 0); ctx.lineTo(v, H); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(0, v); ctx.lineTo(W, v); ctx.stroke();
-      }
-    }
-
-    // Neutral buildings (gold mines, shops, fountains). Lifted
-    // from MapRenderer.renderNeutralBuildings — same icon sprites, same
-    // size scheme (gold mines bigger).
-    if (neutrals && neutrals.length) {
-      const iconSize = (type) => type === 'ngol' ? 18 : 14;
-      ctx.globalAlpha = 0.95;
-      for (const nb of neutrals) {
-        if (!nb || nb.x == null || nb.y == null) continue;
-        const cp = w2c(nb.x, nb.y);
-        const sz = iconSize(nb.type);
-        const half = sz / 2;
-        const icon = neutralIcons[nb.type];
-        if (icon && icon.complete && icon.naturalWidth) {
-          ctx.drawImage(icon, cp.x - half, cp.y - half, sz, sz);
-        } else {
-          // Fallback: colored square if icon failed to load.
-          ctx.fillStyle = nb.type === 'ngol' ? '#d4a017' : '#9966cc';
-          ctx.fillRect(cp.x - half, cp.y - half, sz, sz);
-        }
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    // Subtle vignette so route overlays read better. Applied AFTER the
-    // terrain layers (background + trees + neutrals) so the route reads on
-    // top, but BEFORE the camp rings/dots.
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
-    ctx.fillRect(0, 0, W, H);
-
-    // Project a world-space bounds rectangle to screen-space center+radius.
-    // Lifted from MapRenderer.renderNeutralGroups (lines 178–201).
-    const RING_PAD = 4;
-    const projectCamp = (b) => {
-      const c1 = w2c(b.minX, b.minY), c2 = w2c(b.maxX, b.minY);
-      const c3 = w2c(b.minX, b.maxY), c4 = w2c(b.maxX, b.maxY);
-      const minPX = Math.min(c1.x, c2.x, c3.x, c4.x);
-      const maxPX = Math.max(c1.x, c2.x, c3.x, c4.x);
-      const minPY = Math.min(c1.y, c2.y, c3.y, c4.y);
-      const maxPY = Math.max(c1.y, c2.y, c3.y, c4.y);
-      return {
-        cx: (minPX + maxPX) / 2,
-        cy: (minPY + maxPY) / 2,
-        radius: Math.max(maxPX - minPX, maxPY - minPY) / 2 + RING_PAD
-      };
-    };
-
-    // Layer 1 — every camp on the map: white outline circle (untouched-camp
-    // style from the viewer).
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-    ctx.lineWidth = 1.5;
-    for (const ring of allRings) {
-      if (!ring.bounds) continue;
-      const { cx, cy, radius } = projectCamp(ring.bounds);
-      ctx.beginPath();
-      ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-      ctx.stroke();
-    }
-
-    // Helpers reused across both routes.
-    const drawRoute = (camps, startPos, color) => {
-      if (!camps.length && !startPos) return;
-
-      // Connecting polyline through camp centers.
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2.5;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-      ctx.shadowBlur = 3;
-      ctx.beginPath();
-      let first = true;
-      if (startPos) {
-        const sp = w2c(startPos.x, startPos.y);
-        ctx.moveTo(sp.x, sp.y); first = false;
-      }
-      for (const c of camps) {
-        const cp = w2c(c.x, c.y);
-        if (first) { ctx.moveTo(cp.x, cp.y); first = false; }
-        else       { ctx.lineTo(cp.x, cp.y); }
-      }
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Start marker — small square with white border.
-      if (startPos) {
-        const sp = w2c(startPos.x, startPos.y);
-        ctx.fillStyle = color;
-        ctx.fillRect(sp.x - 6, sp.y - 6, 12, 12);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(sp.x - 6, sp.y - 6, 12, 12);
-      }
-
-      // Order dots — small filled circle inside the camp ring with the
-      // ordinal number on top.
-      camps.forEach((c, i) => {
-        const cp = w2c(c.x, c.y);
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.arc(cp.x, cp.y, 9, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.strokeStyle = '#0a0d10';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = '#0a0d10';
-        ctx.font = 'bold 11px system-ui, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(String(i + 1), cp.x, cp.y);
-      });
-    };
-
-    // Pro first (under), user on top so user's route reads as primary.
-    if (sameMap) drawRoute(proCamps, p.startingPosition, '#d4a23a');
-    drawRoute(userCamps, u.startingPosition, '#5fa5cb');
-
-    // Legend (top-left).
-    const legend = [
-      ['#5fa5cb', 'You'],
-      sameMap ? ['#d4a23a', 'Pro'] : null
-    ].filter(Boolean);
-    ctx.font = 'bold 12px system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    let ly = 16;
-    for (const [color, label] of legend) {
-      ctx.fillStyle = color;
-      ctx.fillRect(10, ly - 6, 14, 12);
-      ctx.strokeStyle = '#0a0d10';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(10, ly - 6, 14, 12);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(label, 30, ly);
-      ly += 20;
-    }
+    // The readout carries the seat names, and "you"/"pro" is not what to call
+    // them. Relabelled here because only this caller knows who they are.
+    handle.el.querySelectorAll('.crm-name').forEach((n, i) => {
+      n.textContent = NAMES[(sameMap ? ['you', 'pro'] : ['you'])[i]] || n.textContent;
+    });
+    host.replaceWith(handle.el);
+    this._creepMap = handle;
   }
 
   // ── Wiring ──────────────────────────────────────────────────────────────

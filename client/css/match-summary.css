@@ -1217,3 +1217,90 @@
     flex-wrap: wrap;
   }
 }
+
+/* ── Creep route map ────────────────────────────────────────────────────────
+   client/js/CreepRouteMap.js. The map is a canvas at a fixed square size the
+   caller picks (340 on the Overview, 520 on Economy); the readout beside it is
+   DOM, because a map canvas is downscaled logical space and text drawn on it is
+   small at every size the layout allows. */
+
+.ms-creep-route { margin-top: 0.6rem; }
+
+.crm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.crm-fig {
+  flex: 0 0 auto;
+  line-height: 0;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  background: #0a0d10;
+}
+
+.crm-canvas { display: block; max-width: 100%; height: auto; }
+
+.crm-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  padding: 1rem;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* The readout doubles as the legend: every row is led by its own route's
+   colour, so there is no separate key to read against. */
+.crm-read {
+  flex: 1 1 12rem;
+  min-width: 11rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.crm-seat { display: flex; gap: 0.5rem; align-items: flex-start; }
+
+.crm-pip {
+  flex: 0 0 auto;
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.2rem;
+  border: 1px solid rgba(0,0,0,0.55);
+  border-radius: 2px;
+}
+
+.crm-seat-b { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+
+.crm-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  /* Never truncated: a name that does not fit wraps. */
+  overflow-wrap: anywhere;
+}
+
+.crm-stats { font-size: 0.85rem; color: rgba(255,255,255,0.75); }
+.crm-stats b { color: #fff; }
+.crm-sep { opacity: 0.5; }
+.crm-sub { font-size: 0.8rem; color: rgba(255,255,255,0.55); }
+
+.crm-foot {
+  margin-top: 0.1rem;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.5);
+}
+
+/* Under the column width the report column allows, the readout goes below the
+   map rather than squeezing beside it. */
+@media (max-width: 700px) {
+  .crm { gap: 0.75rem; }
+  .crm-read { flex-basis: 100%; }
+}

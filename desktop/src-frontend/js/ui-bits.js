@@ -49,6 +49,10 @@
   // It came out of a replay a stranger made and it is going into a URL. Anything
   // else renders as no icon. ONE copy of this, on purpose.
   const ICON_BASE = 'https://cdn.wc3v.com/assets/wc3icons/';
+  // Map art, from the same CDN and under the same CSP allowance. The installer
+  // stages only the three .gz files a PARSE needs; map.jpg is display art and is
+  // pulled on demand, exactly like the unit portraits above.
+  const MAP_BASE = 'https://cdn.wc3v.com/maps/';
   const SAFE_ICON_ID = /^[A-Za-z0-9_-]+$/;
 
   const buildIcon = (itemId) => {
@@ -133,6 +137,7 @@
     // ids: the attack/armor marks on the Match Summary carry mixed extensions
     // (atk-magic is an SVG), so buildIcon's id + '.jpg' cannot reach them.
     ICON_BASE,
+    MAP_BASE,
     raceMark,
     matchupMarks,
     nameLink,

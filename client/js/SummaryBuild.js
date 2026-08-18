@@ -55,7 +55,14 @@
   // in it is already at its newest shape, so staleness is the only mechanism
   // that can reach the games already on disk. helpers/mapResolver.js is the
   // fix; this bump is what makes an installed app re-read them.
-  const SCHEMA_VERSION = 6;
+  // v7 adds `mapInfo`: the map's world extent and its folder name, which is
+  // everything needed to plot a world coordinate onto the map image. Without it
+  // a stored summary carries where every creep camp is and where both players
+  // started, and no way to draw any of it — see client/js/CreepRouteMap.js.
+  //
+  // ~160 bytes gzipped per game. The bump exists so games already on disk get
+  // re-read; nothing else about them changes.
+  const SCHEMA_VERSION = 7;
 
   // Resolved per call rather than once at load: in the browser these are plain
   // scripts, and a wrong tag order would otherwise bake nulls in here at parse
@@ -117,6 +124,30 @@
   // .getGameMode and the identical fallback in UploadManager.js. Teams are
   // counted over non-neutral human seats only, the same seats buildSummary
   // itself keeps.
+  // The map's bounds, for anything that has to place a world coordinate.
+  //
+  // `mapDataByFile` is an 84KB table that lives in helpers/mappings.js, i.e. in
+  // the parser bundle, i.e. in the WORKER — and buildSummary runs on the main
+  // thread. Both runtimes already publish a slim copy of it on the window: the
+  // site fetches /data/map-folders.json, the desktop vendors the same file. So
+  // that global is the source, and a runtime without it stores null rather than
+  // failing, which is the contract every other extractor here is under.
+  function mapInfoFor (SE, rawMap) {
+    if (!SE || !rawMap) return null;
+    // globalThis rather than window, so the same lookup works in a browser and
+    // in the Node tools that build summaries offline (tools/desktop-preview.js
+    // sets it from client/data/map-folders.json, which is the same file the
+    // site serves and the desktop vendors).
+    const g = typeof globalThis !== 'undefined' ? globalThis : null;
+    const table = (g && g.__mapFoldersManifest) || null;
+    if (!table) return null;
+    try {
+      return SE.slimMapInfo(SE.resolveMapFolder(rawMap, table)) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   function deriveGameMode (out) {
     const byTeam = {};
     let n = 0;
@@ -168,6 +199,11 @@
       patchVersion: dig(out, ['replay', 'subheader', 'version']),
       map: rawMap.split(/[\\/]/).pop(),
       mapRaw: rawMap,
+      // Name, world bounds and grid size for the resolved map, or null when the
+      // map is not in the library or the bounds table was not loaded. Read from
+      // the same window global the site's compare drawer uses, so both runtimes
+      // resolve a map exactly once and the same way.
+      mapInfo: mapInfoFor(SE, rawMap),
       gameMode: out.gameMode || deriveGameMode(out),
       winner: out.winner || null,
       durationMs,
