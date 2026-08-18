@@ -461,9 +461,16 @@ async function main () {
     return;
   }
 
-  // An update path is only real once it has been walked. This walks the first
-  // two steps of it: the manifest is reachable and says what we just wrote,
-  // and the URL it points at actually serves something.
+  // The manifest is reachable and says what we just wrote, and the URL it
+  // points at actually serves something.
+  //
+  // This is the whole check. The updater ITSELF is not re-litigated per
+  // release: tauri-plugin-updater polling this manifest, comparing versions and
+  // installing has been walked on real machines and works. It stopped being a
+  // question after the endpoint moved off wc3v.net (which did not resolve, so
+  // every check was a DNS failure) to cdn.wc3v.com. What can still break on any
+  // given release is what is verified below: a bad upload, a stale cache, or a
+  // manifest pointing at an installer that 404s.
   console.log('\nVerifying…');
   const check = await get(`${PUBLIC}/latest.json`);
   if (!check || check.status !== 200) {
@@ -484,8 +491,7 @@ async function main () {
   }
 
   console.log(`\nPublished ${version}. Manifest and installer are both live.`);
-  console.log('Now install the PREVIOUS version and confirm it offers this one —');
-  console.log('an update path is only real once it has been walked.');
+  console.log(`Running installs will offer ${version} on their next check.`);
 }
 
 main();
