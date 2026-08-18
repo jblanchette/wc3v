@@ -2,6 +2,95 @@
 
 ## Unreleased
 
+### The app holds still between games now
+
+Going from a match, to the report, to the next match flapped. It dropped to
+idle between games, and then jumped back onto a scouting panel for the match
+you had *just finished reading about*.
+
+Two causes, both about not knowing something.
+
+The ladder client collapsed a five-second timeout, an offline machine, a 500
+and a 404 into one `null`, and the poller could not tell that from "the match
+is over". A single dropped request ran the whole end-of-game transition: live
+card down, report column reset, broadcast told the game had finished. The
+lookup now answers live / none / **unknown**, unknown moves nothing at all, and
+it takes two consecutive definite misses to take a card down.
+
+And when a replay landed, the poller forgot *which* match had ended. The
+W3Champions ongoing endpoint lags the replay write by a good twenty seconds, so
+the next poll handed the finished match straight back and the app latched it as
+a new game. Ended match ids are remembered now.
+
+Underneath both: there was no state machine. "Phase" was an emergent property
+of five booleans in five modules across three processes, and nothing arbitrated
+between them, so the window and the broadcast could disagree about whether a
+game was on. One owner now decides idle/live/post, every view subscribes to it,
+and the phase is published to OBS rather than re-derived inside it.
+
+**Between games the app now rests on the previous game.** Idle is reachable
+only from a cold start with nothing on disk.
+
+Also in this pass:
+
+- One report render when a game lands, not three. Two of the three painted the
+  game you were about to be moved off, each remounting the dominance chart and
+  its resize observer, so the previous game visibly flashed twice.
+- The parse is visible. The two-to-five seconds after a match used to be a
+  blank gap with the *old* game still on screen.
+- A replay that cannot be read ends the match. The app used to sit in "in game"
+  forever on a bad file, because only a successful parse cleared the card.
+- The session board, the last game and the MMR climb baseline survive a
+  restart. Reopening the app mid-stream used to reset a 3–1 night to 0–0 on
+  air.
+- The Stream tab's preview updates when a match starts. Nothing in the poller
+  ever asked it to redraw, so it sat frozen while you watched it.
+
+### The OBS URL no longer moves
+
+The overlay port was ephemeral — persisted between launches, but drawn from the
+same 49152+ range Windows hands to outbound sockets. Any other program could
+take it over a reboot, and the app would quietly rebind somewhere else, leaving
+a Browser Source blank with nothing on screen to explain why.
+
+It now takes a fixed registered port with a deterministic fallback ladder, and
+**keeps answering on every port it previously served** — so a URL already
+pasted into OBS keeps working and nobody has to re-copy anything. In the one
+case that does need action, a handed-out port nothing can bind any more, the
+Stream tab says so.
+
+### Creep routes, on the map
+
+Both players' creep routes are drawn on the map's own minimap art: every camp
+as a ring, each route as a numbered line from the starting position, and the
+camps nobody touched still showing. Under the player columns on Overview, and
+again larger on Economy beside the per-camp list that says what was in each one.
+
+Reading a route as a numbered list answered "what did they kill" and never
+"where did they go", which is the thing a route is actually about.
+
+### The stream overlay looks like the app now
+
+The post-game card was a verdict word, three metric rows, two sentences and a
+record — while the app's own report of the same game leads with portraits. Two
+new panels are on by default:
+
+- **heroes** — every hero, their level and what they were carrying, as art. The
+  card previously showed one portrait and nobody's level.
+- **army** — what both sides fielded, biggest first, yours over theirs.
+
+Plus a timings rail on the verdict banner (tier 2, tier 3, expansion, first
+tower as ticks where they happened, which says "fast expand, late tower" before
+a label is read), and the gold trade drawn as a two-sided bar — it has been in
+the payload since the panel was written and was never on screen.
+
+One new panel is off by default and available by name: **route**, the creep-route
+map. It is the only thing on the card that fetches an image, and it wants more
+height than a default card should take.
+
+Every panel name that has ever worked still works. A URL already in OBS that
+names its panels explicitly is untouched.
+
 ### Games on newer map versions were read against the wrong map
 
 A replay names the map file it was played on, and WC3V matched that name against

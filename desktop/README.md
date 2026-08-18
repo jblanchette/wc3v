@@ -186,6 +186,16 @@ bump is the only thing that makes an installed app re-read what it already has.
 A correctness bump is the same mechanism as a field bump, and the rule for both
 is that staleness is the only route to games already on disk.
 
+**Schema v7 adds `mapInfo`**: the resolved map's name, world bounds and grid
+size, about 160 bytes gzipped. A summary already carried where every creep camp
+is, where both players started and which camps each hero took — and no way to
+place any of it, because the bounds table lives in `helpers/mappings.js`, which
+is in the parser bundle, which is in the WORKER, while `buildSummary` runs on
+the main thread. Both runtimes now publish a slim copy of that table on the
+window (`window.__mapFoldersManifest`): the site fetches `/data/map-folders.json`,
+the desktop vendors the same tracked file via `tools/build-desktop-client.js` and
+loads it in `boot()`. `client/js/CreepRouteMap.js` is what it is for.
+
 **A schema bump only reaches the history if the backfill can see it.** The
 backfill skips a replay on `store.isCurrent(key)` — stored AND under the current
 schema — not on `store.has(key)`. It used to skip on presence, which meant every
@@ -446,6 +456,66 @@ The overlay is authored as three files (`overlay/shell.html`, `overlay.css`,
 the same css and renderer the Browser Source loads. A preview drawn by separate
 code is a preview that can lie.
 
+**Panel names are permanent.** `shell.html` filters the `modules=` parameter
+against `ALL_MODULES`, so renaming or removing an entry silently blanks a panel
+in a scene somebody built months ago. Adding one is free; the current set is
+`scout, session, verdict, heroes, army, report, momentum, route, h2h, moments,
+build`, and `DEFAULT_MODULES` is everything but `route`, `moments` and `build`.
+
+**The card is art first.** `heroes` and `army` are portraits with a level and a
+count, because a viewer places a level 6 Death Knight and eleven Riflemen
+instantly and reads a number never. Everything the payload carries is an item
+**id**, resolved to one CDN image by the page — a real game's whole payload
+measures about 4 KB against the 256 KB publish cap in `main.rs`.
+
+`route` is off by default for one reason: it is the only panel that fetches
+anything but its own SSE stream. A failed map image leaves the routes on a plain
+field rather than an empty box.
+
+**The port is fixed, and the old one still answers.** `overlay.rs` binds a
+registered port (`HOME_PORT`) with a short ladder, and also binds every port
+this install previously served, so a URL already pasted into OBS keeps working
+across the change. It used to bind an *ephemeral* port — persisted, but from the
+same range Windows hands to outbound sockets, so another program could take it
+over a reboot and the Browser Source went blank with no explanation.
+`overlay_info` reports `orphaned`, the one case where a handed-out port is dead
+and a re-copy is genuinely needed; the Stream tab says so rather than leaving it
+to be discovered on air.
+
+## The lifecycle
+
+`js/match-phase.js` owns `idle | live | post` and is the only thing that may
+change it. `app.js` subscribes once, below the views, and fans out to the report
+column, the broadcast payload and the Stream preview.
+
+Before it, phase was an emergent property of five booleans in five modules
+across three processes — `scout.js`'s match, `games-view.js`'s live/mode/latched
+id, `overlay-state.js`'s scout/lastGame, `shell.html`'s independently derived
+`data-phase` inside OBS, and `stream-view.js`'s manual stepper. Nothing
+arbitrated, so the window and the broadcast could disagree about whether a game
+was on.
+
+Two rules worth knowing before touching any of it:
+
+1. **`unknown` is not `none`.** `w3c.ongoing()` answers `live` / `none` /
+   `unknown`; only the server actually answering produces `none`, and only two
+   consecutive `none`s take a live card down. Everything else — timeout,
+   offline, 5xx, junk body — holds. A five-second timeout used to run the full
+   end-of-game transition.
+2. **A finished match cannot come back.** The ladder keeps serving a match for
+   ~20s after its replay is on disk, so `scout.dismiss(id)` records the id and
+   `tick` refuses to re-latch it. Without that the report column jumped off the
+   game you just finished onto a scouting panel for that same game.
+
+**Idle is a one-way door out of.** Once anything has been seen — a game played,
+or the newest stored game seeded at boot — the resting state is `post`, holding
+the previous game. A broadcast that blanks between games looks broken.
+
+`node tools/lifecycle-sim.js` drives the real `scout.js` and `match-phase.js`
+against a scripted tape of ladder answers on a fake clock: ten scenarios, no
+browser, no network, no timers. Run it after any change to either file. It is in
+`npm run desktop:test`.
+
 ## Replay folder layout
 
 Verified against a real install, because the obvious guess is wrong. There is
@@ -541,7 +611,11 @@ filter and the casting badge have something to match without typing first.
 The preview cannot run a real parse, because there are no `.w3g` files behind
 its summaries. Anything driven by a parse has to be driven by hand: set
 `window.__WC3V_PREVIEW__` (the harness does) and `app.js` publishes
-`window.__WC3V_VIEWS__` so the views are reachable from the console.
+`window.__WC3V_VIEWS__` so the views are reachable from the console —
+`gamesView`, `store`, `backfill`, `catchUpOnRecentGames`, and `overlayState`,
+`matchPhase` and `streamView`, which a finished game would otherwise be the only
+way to reach. `overlayState.previewState()` returns exactly what OBS is being
+sent, which is the fastest way to check a payload change without playing a game.
 
 ## The fold rule
 
@@ -588,8 +662,12 @@ to `.view-games` now.
 ```
 
 Pass is `[]`. The inner loop covers every tab and, inside Charts, every chart
-mode — which matters: Resources is the tallest by roughly 150px, and Creeps is
-the tallest tab. Also worth a second sweep for clipped or overflowing elements
+mode — which matters: Resources is the tallest by roughly 150px, and Economy is
+the tallest tab, now carrying the 520px creep-route map on top of the per-camp
+list that was already the longest block on the screen. Overview carries the same
+map at 340px under the player columns. Both are `.ms-route-slot`, filled by
+`game-report-view.js`; a canvas has an intrinsic size, so either one is a
+straightforward way to break the fold and both belong in every audit run. Also worth a second sweep for clipped or overflowing elements
 anywhere outside a `.scroll` container, since `overflow: hidden` hides a fold
 bug just as effectively as a scrollbar shows one.
 

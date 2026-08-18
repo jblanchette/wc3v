@@ -33,12 +33,24 @@
   // eight stay valid forever, because shell.html filters against this list and
   // dropping a name here silently blanks a panel in an OBS scene somebody
   // built months ago.
-  var ALL_MODULES = ['scout', 'session', 'verdict', 'report', 'momentum', 'h2h', 'moments', 'build'];
+  var ALL_MODULES = ['scout', 'session', 'verdict', 'heroes', 'army', 'report',
+    'momentum', 'route', 'h2h', 'moments', 'build'];
 
-  // What a newly copied URL gets. Key moments and the build list are player
-  // detail wearing a viewer-facing card: both stay available, neither is on by
-  // default. A URL with no `modules` param still means all eight.
-  var DEFAULT_MODULES = ['scout', 'session', 'verdict', 'report', 'momentum', 'h2h'];
+  // What a newly copied URL gets.
+  //
+  // `heroes` and `army` join the defaults, and they are the point of this pass:
+  // the card was a verdict word, three metric rows, two sentences and a record,
+  // while the app's own report of the same game leads with portraits. A viewer
+  // reads a Death Knight at level 6 and eleven Riflemen instantly and reads a
+  // number never.
+  //
+  // `route` is off by default: it is a canvas that pulls one image off the CDN,
+  // which is the only module on this page that can be affected by the machine
+  // being offline, and it wants more height than a default card should take.
+  // Key moments and the build list stay off for the reason they always were —
+  // player detail wearing a viewer-facing card.
+  var DEFAULT_MODULES = ['scout', 'session', 'verdict', 'heroes', 'army',
+    'report', 'momentum', 'h2h'];
 
   // Which report row gets which mark. GameMetrics owns the keys.
   var METRIC_GLYPH = { dominanceAvg: 'dominance', apmEffective: 'apm', heroKills: 'heroKills' };
@@ -389,6 +401,8 @@
     return box;
   }
 
+  function clampPct (n) { return Math.max(0, Math.min(100, n || 0)); }
+
   // The story, first, in one band: who you beat and what it took.
   //
   // The banner wears the OPPONENT's race material, because the thing a viewer
@@ -427,10 +441,325 @@
     box.appendChild(banner);
 
     var t = g.timings || {};
-    var bits = [g.map, g.mode, fmtDur(g.durationMs), g.heroOpener,
-      t.t2 ? 'T2 ' + t.t2 : null].filter(Boolean);
+    var bits = [g.map, g.mode, fmtDur(g.durationMs), g.heroOpener].filter(Boolean);
     box.appendChild(el('div', 'meta', bits.join(' · ')));
+
+    // The timings, as a RAIL rather than the five-cell grid that used to sit
+    // here. The grid died because it was the widest, least-read thing on the
+    // card: five labelled boxes a viewer has to read left to right to learn
+    // anything. A rail is one line, and the ticks sit where in the game each
+    // thing happened, so the SHAPE says "fast expand, late tower" before a
+    // single label is read.
+    var rail = timingRail(t, g.durationMs);
+    if (rail) box.appendChild(rail);
     return box;
+  }
+
+  var TIMING_MARKS = [
+    { key: 't2', label: 'T2' },
+    { key: 't3', label: 'T3' },
+    { key: 'expansion', label: 'exp' },
+    { key: 'firstTower', label: 'twr' }
+  ];
+
+  // "12:34" back to milliseconds.
+  //
+  // The payload pre-formats every timing on purpose, because the app owns the
+  // phrasing and the overlay must never word a game differently. Placing a tick
+  // needs the number back, so it is recovered rather than added to the payload
+  // twice.
+  function msOf (text) {
+    var m = /^(\d+):(\d\d)$/.exec(String(text || ''));
+    return m ? (+m[1] * 60 + +m[2]) * 1000 : null;
+  }
+
+  function timingRail (t, durationMs) {
+    var span = durationMs || 0;
+    var marks = [];
+    for (var i = 0; i < TIMING_MARKS.length; i++) {
+      var def = TIMING_MARKS[i];
+      var at = msOf(t[def.key]);
+      if (at === null || !span) continue;
+      marks.push({ label: def.label, value: t[def.key], pct: clampPct((at / span) * 100) });
+    }
+    if (!marks.length) return null;
+
+    marks.sort(function (a, b) { return a.pct - b.pct; });
+
+    var wrap = el('div', 'rail');
+    var track = el('div', 'rail-track');
+    wrap.appendChild(track);
+    var tags = el('div', 'rail-tags');
+    marks.forEach(function (m) {
+      var tick = el('span', 'rail-tick');
+      tick.style.left = m.pct + '%';
+      track.appendChild(tick);
+      var tag = el('span', 'rail-tag');
+      tag.style.left = m.pct + '%';
+      tag.appendChild(el('b', null, m.label));
+      tag.appendChild(el('span', null, m.value));
+      m.el = tag;
+      tags.appendChild(tag);
+    });
+    wrap.appendChild(tags);
+
+    // Labels sit under their ticks, and ticks are where the events happened —
+    // which in a long game with an early tower puts two of them on top of each
+    // other. Measured and spread AFTER layout rather than guessed at: the label
+    // widths depend on the theme's font and on the scale param, so any constant
+    // here would be wrong at three of the four sizes the card offers.
+    spreadLabels(tags, marks);
+    return wrap;
+  }
+
+  // Push overlapping labels apart, left to right, then back from the right edge
+  // if the pass ran out of room. Ticks never move: the tick is the fact, the
+  // label is the annotation, and it is the annotation that gives way.
+  function spreadLabels (host, marks) {
+    if (marks.length < 2) return;
+    // Deferred one frame: the card is built detached and appended by render(),
+    // so widths are zero until it is in the document.
+    var run = function () {
+      var W = host.clientWidth;
+      if (!W) return;
+      var GAP = 6;
+      var boxes = marks.map(function (m) {
+        var w = m.el.offsetWidth;
+        return { el: m.el, w: w, x: (m.pct / 100) * W - w / 2 };
+      });
+      for (var i = 1; i < boxes.length; i++) {
+        var min = boxes[i - 1].x + boxes[i - 1].w + GAP;
+        if (boxes[i].x < min) boxes[i].x = min;
+      }
+      var last = boxes[boxes.length - 1];
+      if (last.x + last.w > W) {
+        var over = last.x + last.w - W;
+        for (var j = boxes.length - 1; j >= 0; j--) {
+          boxes[j].x -= over;
+          if (j > 0) {
+            var room = boxes[j].x - (boxes[j - 1].x + boxes[j - 1].w + GAP);
+            if (room >= 0) break;
+            over = -room;
+          }
+        }
+      }
+      if (boxes[0].x < 0) boxes[0].x = 0;
+      boxes.forEach(function (b) {
+        b.el.style.left = b.x + 'px';
+        b.el.style.transform = 'none';
+      });
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+    else run();
+  }
+
+  // The heroes, as art.
+  //
+  // The card showed ONE portrait, the opener, and said the level of nothing.
+  // The app's own report of the same game leads with every hero, their level
+  // and what they were carrying, and that is the most recognizable information
+  // in Warcraft: a viewer places a level 6 Death Knight instantly and reads a
+  // number never.
+  function heroesModule (g) {
+    var list = g.heroes || [];
+    if (!list.length) return null;
+    var box = el('div', 'mod heroes');
+    box.appendChild(el('h2', null, 'heroes'));
+    var row = el('div', 'hero-row');
+    list.forEach(function (h) {
+      var cell = el('div', 'hero');
+      var art = el('div', 'hero-art');
+      art.appendChild(portrait(h.itemId));
+      art.appendChild(el('span', 'hero-lvl', String(h.level || 1)));
+      cell.appendChild(art);
+      cell.appendChild(el('span', 'hero-name', h.name || ''));
+      if (h.items && h.items.length) {
+        var inv = el('div', 'hero-items');
+        h.items.forEach(function (id) { inv.appendChild(portrait(id)); });
+        cell.appendChild(inv);
+      }
+      row.appendChild(cell);
+    });
+    box.appendChild(row);
+    return box;
+  }
+
+  // What both sides fielded, biggest first.
+  //
+  // The app's unit roster with the attack and armour tables taken off: those
+  // are a table, and a table is the thing this card is not. Theirs sits under
+  // yours and dimmed, so the comparison is one glance down a column rather than
+  // two lists to hold in your head.
+  function armySide (units, label, cls) {
+    if (!units || !units.length) return null;
+    var row = el('div', 'army-row' + (cls ? ' ' + cls : ''));
+    row.appendChild(el('span', 'army-who', label));
+    var strip = el('div', 'army-strip');
+    units.forEach(function (u) {
+      var cell = el('div', 'unit');
+      cell.appendChild(portrait(u.itemId));
+      cell.appendChild(el('span', 'unit-n', String(u.count)));
+      cell.title = u.name + ' x' + u.count;
+      strip.appendChild(cell);
+    });
+    row.appendChild(strip);
+    return row;
+  }
+
+  function armyModule (g) {
+    var a = g.army;
+    if (!a || (!(a.mine || []).length && !(a.theirs || []).length)) return null;
+    var box = el('div', 'mod army');
+    box.appendChild(el('h2', null, 'army'));
+    var mine = armySide(a.mine, 'you', null);
+    var theirs = armySide(a.theirs, 'them', 'army-them');
+    if (mine) box.appendChild(mine);
+    if (theirs) box.appendChild(theirs);
+    return box;
+  }
+
+  // Both creep routes on the map they were walked on.
+  //
+  // The one module that draws rather than lists, and the only thing on this page
+  // that reaches the network for anything but its own SSE stream: the map image
+  // is a CDN <img>. That is why it is off the default set. A failed image leaves
+  // the routes on a plain dark field rather than an empty box.
+  var ROUTE_PX = 240;
+  var ROUTE_MINE = '#5fa5cb';
+  var ROUTE_THEIRS = '#c8683f';
+  var MAP_BASE = 'https://cdn.wc3v.com/maps/';
+  // A map FOLDER, not an item id: these carry dots and hyphens
+  // ("TurtleRock_v2.0", "Autumn-Leaves"). Same principle as SAFE_ICON_ID, which
+  // is that a name out of a stranger's replay is whitelisted before it reaches a
+  // URL, never escaped after.
+  var SAFE_MAP_FOLDER = /^[A-Za-z0-9_.-]+$/;
+
+  function routeModule (g) {
+    var r = g.route;
+    if (!r || !r.bounds || !r.bounds.map || !r.sides || !r.sides.length) return null;
+
+    var box = el('div', 'mod route');
+    box.appendChild(el('h2', null, 'creep routes'));
+    var canvas = document.createElement('canvas');
+    canvas.className = 'route-canvas';
+    canvas.setAttribute('role', 'img');
+    canvas.setAttribute('aria-label', 'Creep routes');
+    box.appendChild(canvas);
+
+    var legend = el('div', 'route-key');
+    if (r.sides.filter(function (s) { return s.mine; })[0]) {
+      legend.appendChild(keyPip('you', 'you'));
+    }
+    if (r.sides.filter(function (s) { return !s.mine; })[0]) {
+      legend.appendChild(keyPip('them', 'them'));
+    }
+    box.appendChild(legend);
+
+    drawRoute(canvas, r);
+    return box;
+  }
+
+  function keyPip (label, cls) {
+    var n = el('span', 'route-k route-k-' + cls);
+    n.appendChild(el('i'));
+    n.appendChild(el('span', null, label));
+    return n;
+  }
+
+  // The same projection client/js/CreepRouteMap.js uses, cropped to the playable
+  // extent, at a size where camp rings and ordinals would be noise: dots and
+  // lines only.
+  function drawRoute (canvas, r) {
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var W = ROUTE_PX;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(W * dpr);
+    var ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var b = r.bounds.camera || r.bounds.map;
+    var xMin = b[0][0], yMax = b[0][1], xMax = b[1][0], yMin = b[1][1];
+    var mapB = r.bounds.map;
+    var mapXMin = mapB[0][0], mapYMax = mapB[0][1];
+    var mapXMax = mapB[1][0], mapYMin = mapB[1][1];
+    if (xMax - xMin <= 0 || yMax - yMin <= 0) return;
+
+    var w2c = function (x, y) {
+      return {
+        x: ((x - xMin) / (xMax - xMin)) * W,
+        y: ((yMax - y) / (yMax - yMin)) * W
+      };
+    };
+
+    var paint = function (img) {
+      ctx.clearRect(0, 0, W, W);
+      if (img) {
+        var fx = img.naturalWidth / (mapXMax - mapXMin);
+        var fy = img.naturalHeight / (mapYMax - mapYMin);
+        ctx.drawImage(img,
+          (xMin - mapXMin) * fx, (mapYMax - yMax) * fy,
+          (xMax - xMin) * fx, (yMax - yMin) * fy,
+          0, 0, W, W);
+        ctx.fillStyle = 'rgba(0,0,0,0.30)';
+      } else {
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      }
+      ctx.fillRect(0, 0, W, W);
+
+      // Every camp, so the ones nobody touched still read.
+      ctx.fillStyle = 'rgba(255,255,255,0.34)';
+      (r.camps || []).forEach(function (c) {
+        var p = w2c(c.x, c.y);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Theirs first, so yours reads on top.
+      r.sides.slice().sort(function (a, c) {
+        return (a.mine ? 1 : 0) - (c.mine ? 1 : 0);
+      }).forEach(function (side) {
+        var color = side.mine ? ROUTE_MINE : ROUTE_THEIRS;
+        var pts = (side.points || []).map(function (p) { return w2c(p.x, p.y); });
+        if (side.start) pts.unshift(w2c(side.start.x, side.start.y));
+        if (!pts.length) return;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 2;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        if (side.start) {
+          ctx.fillStyle = color;
+          ctx.fillRect(pts[0].x - 3, pts[0].y - 3, 6, 6);
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(pts[0].x - 3, pts[0].y - 3, 6, 6);
+        }
+        for (var j = side.start ? 1 : 0; j < pts.length; j++) {
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(pts[j].x, pts[j].y, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(0,0,0,0.75)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      });
+    };
+
+    paint(null);
+    if (!r.folder || !SAFE_MAP_FOLDER.test(String(r.folder))) return;
+    var img = new Image();
+    img.onload = function () { paint(img); };
+    img.src = MAP_BASE + encodeURIComponent(r.folder) + '/map.jpg';
   }
 
   // What stood out, and nothing else.
@@ -474,8 +803,6 @@
     box.appendChild(wrap);
     return box;
   }
-
-  function clampPct (n) { return Math.max(0, Math.min(100, n || 0)); }
 
   // The dominance curve, filled against the 50% midline.
   //
@@ -541,6 +868,30 @@
     }
 
     if (m.curve && m.curve.length > 1) box.appendChild(sparkline(m.curve));
+
+    // The gold trade, as a two-sided bar.
+    //
+    // It has been in the payload since this module was written and has never
+    // been drawn. It is also the one number here that answers "did the fighting
+    // go your way" independently of who ended up ahead, which is exactly the
+    // thing a viewer who tuned in mid-game wants. A bar rather than a figure:
+    // ±3,400 gold means nothing at broadcast distance, and a bar leaning one way
+    // means everything.
+    if (m.trade) {
+      var swung = el('div', 'trade');
+      swung.appendChild(el('span', 'trade-k', 'gold traded'));
+      var bar = el('span', 'trade-bar');
+      var fill = el('span', 'trade-fill' + (m.trade > 0 ? ' up' : ' down'));
+      // Against the biggest swing that fits the bar rather than against the
+      // game's own total: this is a comparison of the two sides, not a fraction
+      // of anything, and 4k is a decisive trade in any game length.
+      fill.style.width = clampPct(Math.abs(m.trade) / 4000 * 50) + '%';
+      bar.appendChild(fill);
+      swung.appendChild(bar);
+      swung.appendChild(el('span', 'trade-v' + (m.trade > 0 ? ' up' : ' down'),
+        (m.trade > 0 ? '+' : '') + m.trade.toLocaleString()));
+      box.appendChild(swung);
+    }
 
     var lines = [];
     var c = m.combat;
@@ -656,9 +1007,11 @@
     var live = !!scoutEl;
 
     if (g && !live) {
-      [want.verdict && verdictModule(s, g), want.report && reportModule(g),
-        want.momentum && momentumModule(g), want.h2h && h2hModule(g),
-        want.moments && momentsModule(g), want.build && buildModule(g)]
+      [want.verdict && verdictModule(s, g), want.heroes && heroesModule(g),
+        want.army && armyModule(g), want.report && reportModule(g),
+        want.momentum && momentumModule(g), want.route && routeModule(g),
+        want.h2h && h2hModule(g), want.moments && momentsModule(g),
+        want.build && buildModule(g)]
         .forEach(function (mod) {
           if (!mod) return;
           mod.classList.add('post');

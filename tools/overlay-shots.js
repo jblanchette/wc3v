@@ -211,6 +211,50 @@ const GAME = {
   opponent: { name: 'Opponent', race: 'O' },
   heroOpener: 'Archmage', heroOpenerIcon: 'Hamg',
   timings: { t2: '5:40', t3: null, expansion: '9:41', firstTower: null, apm: '187' },
+  army: {
+    mine: [
+      { itemId: 'hrif', name: 'Rifleman', count: 11 },
+      { itemId: 'hmpr', name: 'Priest', count: 5 },
+      { itemId: 'hsor', name: 'Sorceress', count: 4 },
+      { itemId: 'hfoo', name: 'Footman', count: 3 },
+      { itemId: 'hmtm', name: 'Mortar Team', count: 2 }
+    ],
+    theirs: [
+      { itemId: 'ogru', name: 'Grunt', count: 8 },
+      { itemId: 'orai', name: 'Raider', count: 6 },
+      { itemId: 'oshm', name: 'Shaman', count: 4 },
+      { itemId: 'otbk', name: 'Troll Batrider', count: 2 }
+    ]
+  },
+  heroes: [
+    { itemId: 'Hamg', name: 'Archmage', level: 6, items: ['pman', 'shea', 'ratf'] },
+    { itemId: 'Hmkg', name: 'Mountain King', level: 4, items: ['pnvu', 'rat9'] }
+  ],
+  // Real Echo Isles bounds, so the projection is exercised rather than
+  // approximated. The routes are hand-placed inside the playable area.
+  route: {
+    folder: 'EchoIsles',
+    bounds: { camera: [[-3328, 3328], [3328, -3584]], map: [[-4352, 4352], [4352, -4352]] },
+    camps: [
+      { x: -2100, y: 1400 }, { x: 1900, y: -1500 }, { x: -1200, y: -900 },
+      { x: 1500, y: 1700 }, { x: 0, y: 2400 }, { x: -300, y: -2500 },
+      { x: 2600, y: 400 }, { x: -2700, y: -300 }
+    ],
+    sides: [
+      {
+        mine: true, race: 'H',
+        start: { x: -2600, y: 2400 },
+        points: [{ x: -2100, y: 1400 }, { x: -2700, y: -300 },
+          { x: -1200, y: -900 }, { x: -300, y: -2500 }]
+      },
+      {
+        mine: false, race: 'O',
+        start: { x: 2600, y: -2400 },
+        points: [{ x: 1900, y: -1500 }, { x: 2600, y: 400 },
+          { x: 1500, y: 1700 }, { x: 0, y: 2400 }]
+      }
+    ]
+  },
   h2h: { name: 'Opponent', games: 5, wins: 3, losses: 2 },
   report: {
     raceHead: 'VS HUMAN',

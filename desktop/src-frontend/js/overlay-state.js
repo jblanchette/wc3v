@@ -107,6 +107,108 @@
     return { heroes, units, upgrades, kept, used, mercs };
   };
 
+  // ── Art projections ─────────────────────────────────────────────────────
+  //
+  // The card used to be almost entirely text: a verdict word, three metric
+  // rows, two sentences and a record. Everything that makes the app's own
+  // report readable at a glance — the hero portraits, the unit roster, the
+  // route — was thrown away in this file and never reached the broadcast.
+  //
+  // These carry ITEM IDS, not bytes. The overlay resolves each to one CDN
+  // portrait, exactly as the app does, so the payload grows by a few dozen
+  // short strings and stays far inside the 256 KB publish cap.
+
+  // What they actually fielded, biggest first.
+  //
+  // Capped, because an army list is a build order and this is a broadcast
+  // graphic. Five is what fits one row at the card's 27rem without either
+  // wrapping or dropping under the icon size floor.
+  const ARMY_MAX = 5;
+  const armyFor = (p) => {
+    const army = (p && p.build && p.build.finalSnapshot && p.build.finalSnapshot.army) || [];
+    return army
+      .filter(u => u && u.itemId && (u.count || 0) > 0)
+      .slice()
+      .sort((a, b) => (b.count || 0) - (a.count || 0))
+      .slice(0, ARMY_MAX)
+      .map(u => ({ itemId: u.itemId, name: u.displayName || u.itemId, count: u.count || 0 }));
+  };
+
+  // The hero story: who, what level, and what they were carrying.
+  //
+  // Deduped by itemId keeping the highest level, the same rule heroesFor uses
+  // above — a Blademaster's Mirror Image illusions are hero-flagged units under
+  // his own itemId at level 1, and the real one has to win.
+  const HERO_ITEMS_MAX = 6;
+  const heroArtFor = (p) => {
+    const best = new Map();
+    for (const h of ((p && p.heroBuilds) || [])) {
+      if (!h || !h.itemId) continue;
+      const prev = best.get(h.itemId);
+      if (!prev || (h.finalLevel || 1) > (prev.finalLevel || 1)) best.set(h.itemId, h);
+    }
+    return Array.from(best.values())
+      .sort((a, b) => (a.spawnTimeMs || 0) - (b.spawnTimeMs || 0))
+      .map(h => ({
+        itemId: h.itemId,
+        name: h.name || 'Hero',
+        level: h.finalLevel || 1,
+        items: (h.items || [])
+          .filter(i => i && i.itemId)
+          .slice(0, HERO_ITEMS_MAX)
+          .map(i => i.itemId)
+      }));
+  };
+
+  // Both routes, reduced to what a 15rem canvas can use: the map folder, the
+  // world bounds to project against, every camp's centre, and one ordered list
+  // of points per side.
+  //
+  // Centres rather than bounds rectangles. The app's map rings each camp at its
+  // true footprint; at this size that is a two-pixel difference and four times
+  // the numbers, so the overlay draws a dot.
+  const routeFor = (summary, v) => {
+    if (!summary || !summary.mapInfo || !summary.mapInfo.bounds) return null;
+    const players = summary.players || {};
+    const slots = Object.keys(players);
+    if (!slots.length) return null;
+
+    const CRM = window.CreepRouteMap;
+    if (!CRM) return null;
+
+    // The user's seat first, so the overlay can colour "you" consistently
+    // without knowing which slot that was.
+    const ordered = slots.slice().sort((a, b) =>
+      (a === v.slot ? -1 : b === v.slot ? 1 : 0));
+
+    const sides = ordered.map((slot) => {
+      const p = players[slot] || {};
+      const camps = CRM.campsOf(p);
+      if (!camps.length && !p.startingPosition) return null;
+      return {
+        mine: slot === v.slot,
+        race: p.race || null,
+        start: p.startingPosition
+          ? { x: p.startingPosition.x, y: p.startingPosition.y }
+          : null,
+        points: camps.map(c => ({ x: Math.round(c.x), y: Math.round(c.y) }))
+      };
+    }).filter(Boolean);
+
+    if (sides.length < 1) return null;
+    return {
+      folder: summary.mapInfo.name || null,
+      bounds: summary.mapInfo.bounds,
+      camps: (summary.neutralCamps || [])
+        .filter(c => c && c.bounds)
+        .map(c => ({
+          x: Math.round((c.bounds.minX + c.bounds.maxX) / 2),
+          y: Math.round((c.bounds.minY + c.bounds.maxY) / 2)
+        })),
+      sides
+    };
+  };
+
   window.createOverlayState = (deps) => {
     // deps: invoke, log, corpus(), the stored history used for head-to-head
     const PA = window.ProfileAggregate;
@@ -193,6 +295,20 @@
       // heroes" under a card that cannot name a winner.
       if (v) { v.result = null; v.mine = false; }
       return v;
+    };
+
+    // The other side's seat.
+    //
+    // ProfileAggregate.gameView reduces the opponent to a name and a race,
+    // because that is all a profile row needs. The card wants their army, which
+    // means the raw player — resolved here rather than by widening a module two
+    // products depend on. Duels only: "theirs" is not a thing in a 2v2.
+    const otherSeat = (summary, v) => {
+      const players = (summary && summary.players) || {};
+      const slots = Object.keys(players);
+      if (slots.length !== 2) return null;
+      const other = slots.find(k => k !== v.slot);
+      return other === undefined ? null : players[other];
     };
 
     const streakOf = (views) => {
@@ -479,7 +595,14 @@
           firstTower: v.firstTower !== null ? PA.fmtMs(v.firstTower) : null,
           apm: me.apm && me.apm.effectiveAverage ? String(Math.round(me.apm.effectiveAverage)) : null
         },
-        build: richBuildFor(me)
+        build: richBuildFor(me),
+        // The art. Ids only; the overlay resolves each to one CDN portrait.
+        army: {
+          mine: armyFor(me),
+          theirs: armyFor(otherSeat(st.lastGame, v) || {})
+        },
+        heroes: heroArtFor(me),
+        route: routeFor(st.lastGame, v)
       };
     };
 
@@ -746,6 +869,50 @@
         heroOpener: 'Archmage',
         heroOpenerIcon: 'Hamg',
         timings: { t2: '5:40', t3: null, expansion: '9:41', firstTower: null, apm: '187' },
+        army: {
+          mine: [
+            { itemId: 'hrif', name: 'Rifleman', count: 11 },
+            { itemId: 'hmpr', name: 'Priest', count: 5 },
+            { itemId: 'hsor', name: 'Sorceress', count: 4 },
+            { itemId: 'hfoo', name: 'Footman', count: 3 },
+            { itemId: 'hmtm', name: 'Mortar Team', count: 2 }
+          ],
+          theirs: [
+            { itemId: 'ogru', name: 'Grunt', count: 8 },
+            { itemId: 'orai', name: 'Raider', count: 6 },
+            { itemId: 'oshm', name: 'Shaman', count: 4 },
+            { itemId: 'otbk', name: 'Troll Batrider', count: 2 }
+          ]
+        },
+        heroes: [
+          { itemId: 'Hamg', name: 'Archmage', level: 6, items: ['pman', 'shea', 'ratf'] },
+          { itemId: 'Hmkg', name: 'Mountain King', level: 4, items: ['pnvu', 'rat9'] }
+        ],
+        // Real Echo Isles bounds, so the projection is exercised rather than
+        // approximated. The routes are hand-placed inside the playable area.
+        route: {
+          folder: 'EchoIsles',
+          bounds: { camera: [[-3328, 3328], [3328, -3584]], map: [[-4352, 4352], [4352, -4352]] },
+          camps: [
+            { x: -2100, y: 1400 }, { x: 1900, y: -1500 }, { x: -1200, y: -900 },
+            { x: 1500, y: 1700 }, { x: 0, y: 2400 }, { x: -300, y: -2500 },
+            { x: 2600, y: 400 }, { x: -2700, y: -300 }
+          ],
+          sides: [
+            {
+              mine: true, race: 'H',
+              start: { x: -2600, y: 2400 },
+              points: [{ x: -2100, y: 1400 }, { x: -2700, y: -300 },
+                { x: -1200, y: -900 }, { x: -300, y: -2500 }]
+            },
+            {
+              mine: false, race: 'O',
+              start: { x: 2600, y: -2400 },
+              points: [{ x: 1900, y: -1500 }, { x: 2600, y: 400 },
+                { x: 1500, y: 1700 }, { x: 0, y: 2400 }]
+            }
+          ]
+        },
         h2h: { name: 'Opponent', games: 5, wins: 3, losses: 2 },
         report: {
           raceHead: 'VS HUMAN',

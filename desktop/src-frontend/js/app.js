@@ -910,6 +910,10 @@ el('migrate-toggle').addEventListener('click', () => {
 // A failure is not fatal: summaries store mapInfo: null and the route map falls
 // back to a self-scaled plot, which loses the terrain and keeps the shape.
 const loadMapBounds = async () => {
+  // The preview harness renders from summaries built offline, which already
+  // carry mapInfo, and its page is a file:// document that cannot fetch at all.
+  // Asking would only log a CORS failure that means nothing.
+  if (window.__WC3V_PREVIEW__) return;
   try {
     const r = await fetch('./data/map-folders.json');
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -1070,7 +1074,13 @@ const boot = async () => {
 // there, so the views it exists to exercise are reachable. Never set in a real
 // build: `__WC3V_PREVIEW__` only exists on the generated preview page.
 if (window.__WC3V_PREVIEW__) {
-  window.__WC3V_VIEWS__ = { gamesView, store, backfill, catchUpOnRecentGames };
+  window.__WC3V_VIEWS__ = {
+    gamesView, store, backfill, catchUpOnRecentGames,
+    // Driven by a finished game in a real build, so both have to be
+    // reachable here or the overlay card and every phase but the one the
+    // page loads in are unreachable without playing a match.
+    overlayState, matchPhase, streamView
+  };
 }
 
 boot().catch(e => log(`WC3V could not start: ${errText(e)}`, 'err'));

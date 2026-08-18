@@ -774,3 +774,216 @@ body[data-board="on"] .wc3v-ov .sess-last,
   line-height: 1.3;
 }
 .wc3v-ov .mark .wordmark > span { color: var(--gold); }
+
+/* ── Timings rail ────────────────────────────────────────────────────────
+   Inside the verdict module, under the meta line. Replaces the five-cell
+   grid: one track, ticks where in the game each thing happened, so the shape
+   reads before any label does. */
+.wc3v-ov .rail { padding: 0.5rem 0.9rem 0.75rem; }
+
+.wc3v-ov .rail-track {
+  position: relative;
+  height: 0.3rem;
+  background: var(--well);
+  border: 1px solid var(--ov-outline);
+  border-radius: 999px;
+  box-shadow: var(--ov-cut);
+}
+
+.wc3v-ov .rail-tick {
+  position: absolute;
+  top: 50%;
+  width: 0.3rem;
+  height: 0.9rem;
+  margin-left: -0.15rem;
+  transform: translateY(-50%);
+  background: var(--gold);
+  border-radius: 1px;
+}
+
+/* Its own row rather than absolute over the track: four labels at 0.8rem
+   cannot be positioned freely inside 27rem without overlapping, and an
+   overlapping label is worse than a slightly loose one. */
+.wc3v-ov .rail-tags {
+  position: relative;
+  height: 1.15rem;
+  margin-top: 0.35rem;
+}
+
+.wc3v-ov .rail-tag {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+.wc3v-ov .rail-tag b { color: var(--ink); font-weight: 700; margin-right: 0.2rem; }
+
+/* ── Heroes ──────────────────────────────────────────────────────────────
+   The most recognizable information in the game, as art. */
+.wc3v-ov .heroes { padding: 0.55rem 0.9rem 0.7rem; }
+
+.wc3v-ov .hero-row { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+
+.wc3v-ov .hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.wc3v-ov .hero-art { position: relative; }
+
+/* Bottom-right of the portrait, the same place the game puts it. */
+.wc3v-ov .hero-lvl {
+  position: absolute;
+  right: -0.2rem;
+  bottom: -0.2rem;
+  min-width: 1.15rem;
+  padding: 0 0.2rem;
+  background: var(--well);
+  border: 1px solid var(--ov-outline);
+  border-radius: 3px;
+  box-shadow: var(--ov-cut);
+  color: var(--gold);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.wc3v-ov .hero-name {
+  font-size: 0.8rem;
+  color: var(--dim);
+  max-width: 5.5rem;
+  text-align: center;
+  /* Wrapped, never truncated. */
+  overflow-wrap: anywhere;
+}
+
+.wc3v-ov .hero-items { display: flex; gap: 0.15rem; flex-wrap: wrap; justify-content: center; }
+.wc3v-ov .hero-items .portrait { width: 1.25rem; height: 1.25rem; border-radius: 3px; }
+
+/* ── Army ────────────────────────────────────────────────────────────────
+   Yours over theirs, so the comparison is one glance down a column. */
+.wc3v-ov .army { padding: 0.55rem 0.9rem 0.7rem; }
+
+.wc3v-ov .army-row { display: flex; align-items: center; gap: 0.5rem; }
+.wc3v-ov .army-row + .army-row { margin-top: 0.35rem; }
+
+.wc3v-ov .army-who {
+  flex: 0 0 2.4rem;
+  font-size: 0.8rem;
+  color: var(--dim);
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+.wc3v-ov .army-strip { display: flex; gap: 0.3rem; min-width: 0; }
+
+.wc3v-ov .unit { position: relative; flex: 0 0 auto; }
+.wc3v-ov .unit .portrait { width: 2.25rem; height: 2.25rem; }
+
+.wc3v-ov .unit-n {
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.15rem;
+  min-width: 1.05rem;
+  padding: 0 0.15rem;
+  background: var(--well);
+  border: 1px solid var(--ov-outline);
+  border-radius: 3px;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* Theirs reads as reference, not as a second subject. Opacity only: a tint
+   would compete with the race colour the banner already carries. */
+.wc3v-ov .army-them { opacity: 0.72; }
+.wc3v-ov .army-them .unit .portrait { width: 1.85rem; height: 1.85rem; }
+
+/* ── Gold trade ──────────────────────────────────────────────────────────
+   In the momentum module. Two-sided: the fill grows from the midline toward
+   whoever won the trade, because the direction is the whole point. */
+.wc3v-ov .trade {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+.wc3v-ov .trade-k {
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.wc3v-ov .trade-bar {
+  position: relative;
+  flex: 1 1 auto;
+  height: 0.45rem;
+  background: var(--well);
+  border: 1px solid var(--ov-outline);
+  border-radius: 999px;
+  box-shadow: var(--ov-cut);
+  overflow: hidden;
+}
+
+/* The midline, so a small swing still reads as a direction. */
+.wc3v-ov .trade-bar::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--ov-outline);
+}
+
+.wc3v-ov .trade-fill { position: absolute; top: 0; bottom: 0; }
+.wc3v-ov .trade-fill.up { left: 50%; background: var(--win); }
+.wc3v-ov .trade-fill.down { right: 50%; background: var(--loss); }
+
+.wc3v-ov .trade-v { flex: 0 0 auto; font-size: 0.8rem; font-weight: 700; }
+.wc3v-ov .trade-v.up { color: var(--win); }
+.wc3v-ov .trade-v.down { color: var(--loss); }
+
+/* ── Creep routes ────────────────────────────────────────────────────────
+   Off the default set: the only module that pulls an image off the CDN. */
+.wc3v-ov .route { padding: 0.55rem 0.9rem 0.7rem; }
+
+.wc3v-ov .route-canvas {
+  display: block;
+  width: 15rem;
+  height: 15rem;
+  max-width: 100%;
+  border: 1px solid var(--ov-outline);
+  border-radius: 4px;
+  box-shadow: var(--ov-cut);
+  background: var(--well);
+}
+
+.wc3v-ov .route-key {
+  display: flex;
+  gap: 0.9rem;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--dim);
+}
+
+.wc3v-ov .route-k { display: inline-flex; align-items: center; gap: 0.3rem; }
+.wc3v-ov .route-k i {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-radius: 2px;
+}
+/* The two literals drawRoute paints with. Duplicated for the same reason
+   every colour in this file is: the served page cannot reach the app's
+   token layer. */
+.wc3v-ov .route-k-you i { background: #5fa5cb; }
+.wc3v-ov .route-k-them i { background: #c8683f; }
