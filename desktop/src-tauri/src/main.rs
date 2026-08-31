@@ -14,6 +14,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod filter;
 mod overlay;
 mod replays;
 mod stats;
@@ -971,7 +972,9 @@ fn main() {
             w3c::w3c_lookup,
             stats::stats_enabled,
             stats::set_stats_enabled,
-            stats::stats_ping
+            stats::stats_ping,
+            filter::only_1v1_enabled,
+            filter::set_only_1v1_enabled
         ])
         .run(tauri::generate_context!())
         .expect("error while running WC3V");

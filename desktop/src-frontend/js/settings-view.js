@@ -203,6 +203,32 @@
       }
     };
 
+    // The 1v1 filter for the history backfill. Same authority rule as W3C and
+    // stats: the marker file (filter.rs) is the setting, so the box is re-read
+    // from Rust after every change rather than trusted.
+    const syncOnly1v1 = async () => {
+      const box = el('only1v1-toggle');
+      try {
+        box.checked = !!(await deps.invoke('only_1v1_enabled'));
+      } catch (err) {
+        box.checked = false;
+        box.disabled = true;
+      }
+    };
+
+    el('only1v1-toggle').addEventListener('change', async (e) => {
+      const want = e.target.checked;
+      try {
+        await deps.invoke('set_only_1v1_enabled', { enabled: want });
+        deps.log(want
+          ? 'only 1v1 games will be parsed when reading your history'
+          : '1v1 filter off; the next Parse all replays reads every game', 'ok');
+      } catch (err) {
+        deps.log(`could not change the 1v1 filter: ${deps.errText(err)}`, 'err');
+      }
+      await syncOnly1v1();
+    });
+
     el('stats-toggle').addEventListener('change', async (e) => {
       const want = e.target.checked;
       try {
@@ -234,6 +260,7 @@
       syncRetryButton,
       syncW3c,
       syncStats,
+      syncOnly1v1,
       // The silent boot and interval check. A failure here is not news: a
       // laptop that woke without a network would otherwise force the Activity
       // drawer open on a red line nobody asked for.

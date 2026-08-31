@@ -28,7 +28,8 @@
   window.createBackfill = (deps) => {
     // deps: invoke, log, makeWorker, parseOn(worker, path), persistSummary(out, key),
     //       isCurrent(key), status(text), onIdleChange(running),
-    //       progress(done, total) [optional]
+    //       progress(done, total) [optional],
+    //       peekOn(worker, path) + only1v1() [optional; the 1v1 filter]
     const st = {
       running: false,
       queue: [],
@@ -45,7 +46,10 @@
       // What a resume should repeat. `toggle()` used to call start() bare,
       // which reset onProgress to null — so a paused migration came back with
       // a strip that never moved again.
-      lastOpts: null
+      lastOpts: null,
+      // The 1v1 filter, read from Rust once per run. Per file would let the
+      // switch flip mid-run and split one run's verdicts in two.
+      only1v1: false
     };
 
     // `key` is set ONLY when this replay was actually parsed. A skip reports
@@ -72,7 +76,7 @@
 
     const processed = () => {
       const c = st.counts;
-      return c.parsed + c.skipped + c.failed + c.unreadable;
+      return c.parsed + c.skipped + c.failed + c.unreadable + c.filtered;
     };
 
     // No ETA until enough parses have been measured, and it says "rough" even
@@ -82,6 +86,7 @@
       let line = `${processed().toLocaleString()} / ${c.total.toLocaleString()}`;
       if (c.parsed) line += ` · ${c.parsed.toLocaleString()} parsed`;
       if (c.skipped) line += ` · ${c.skipped.toLocaleString()} already done`;
+      if (c.filtered) line += ` · ${c.filtered.toLocaleString()} not 1v1`;
       if (c.failed) line += ` · ${c.failed.toLocaleString()} failed`;
       if (c.unreadable) line += ` · ${c.unreadable.toLocaleString()} unreadable`;
       if (st.durations.length >= 5) {
@@ -126,8 +131,32 @@
             update();
             continue;
           }
-          st.claimed.add(key);
           if (w._dead) w = deps.makeWorker();
+
+          // The 1v1 gate. A header peek (~140ms) against a ~21s parse, and it
+          // runs only here: after the store check, so nothing already parsed
+          // pays for it, and never on the live watcher path, so a game the
+          // user just finished always lands whatever mode it was. A peek that
+          // fails or answers nothing falls through to the full parse — the
+          // filter must never drop a game it could not classify. Skips are
+          // deliberately NOT recorded anywhere: a filtered game is simply not
+          // in the store, so turning the filter off and running Parse all
+          // replays again reads exactly the games this run passed over.
+          if (st.only1v1) {
+            let mode = null;
+            try {
+              const peek = await deps.peekOn(w, item.path);
+              mode = peek && peek.gameMode;
+            } catch (e) { /* unreadable header; the full parse decides */ }
+            if (mode && mode !== '1v1') {
+              st.claimed.add(key);
+              st.counts.filtered++;
+              report(item.file_name, 'done');
+              update();
+              continue;
+            }
+          }
+          st.claimed.add(key);
 
           report(item.file_name, 'parsing');
           const t0 = performance.now();
@@ -170,6 +199,7 @@
         st.onProgress = null;
         st.limited = false;
         deps.log(`caught up: ${c.parsed} recent game(s) parsed` +
+          (c.filtered ? `, ${c.filtered} not 1v1 skipped` : '') +
           (c.failed ? `, ${c.failed} failed` : ''), 'ok');
         // The Settings status line is left alone. It reports the size of the
         // whole store, and "done: 10 parsed" there would read as the history
@@ -193,7 +223,18 @@
           (c.parsed ? `, measured ${((wall / 1000) / c.parsed).toFixed(1)} s/replay end-to-end` : ''),
           'ok'
         );
-        deps.status(`done: ${c.parsed.toLocaleString()} parsed, ${c.failed.toLocaleString()} failed`);
+        // What the filter passed over, and the way back. A silent drop would
+        // read as games missing from the feed for no reason.
+        if (c.filtered) {
+          deps.log(
+            `${c.filtered.toLocaleString()} game(s) were not 1v1 and were not read. ` +
+            'Turn the 1v1 filter off in Settings and press Parse all replays to read them.',
+            'ok'
+          );
+        }
+        deps.status(`done: ${c.parsed.toLocaleString()} parsed, ` +
+          (c.filtered ? `${c.filtered.toLocaleString()} not 1v1, ` : '') +
+          `${c.failed.toLocaleString()} failed`);
       } else {
         deps.status(`paused at ${processed().toLocaleString()} / ${c.total.toLocaleString()}. Safe to close; it resumes here.`);
       }
@@ -216,6 +257,12 @@
 
       const { replays } = await deps.invoke('scan_all');
       st.failedKeys = new Set(await deps.invoke('list_parse_failures'));
+      // Rust owns the setting (filter.rs). Unreadable means off: the filter
+      // fails toward reading everything, never toward dropping games.
+      st.only1v1 = false;
+      if (deps.only1v1) {
+        try { st.only1v1 = !!(await deps.only1v1()); } catch (e) { /* off */ }
+      }
       // LastReplay.w3g is a second encoding of a game whose autosave is also
       // in the queue. Parsing it would double-count that game in the profile.
       st.queue = replays.filter(r =>
@@ -223,7 +270,7 @@
       // Newest first is already the scan's order, so a limit is a slice.
       if (o.limit) st.queue = st.queue.slice(0, o.limit);
       st.claimed = new Set();
-      st.counts = { total: st.queue.length, parsed: 0, skipped: 0, failed: 0, unreadable: 0 };
+      st.counts = { total: st.queue.length, parsed: 0, skipped: 0, failed: 0, unreadable: 0, filtered: 0 };
       st.durations = [];
       st.startedAt = performance.now();
 

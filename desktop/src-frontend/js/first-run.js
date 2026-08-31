@@ -1,7 +1,8 @@
 // The first-run screen. Once, on a machine that has never been set up.
 //
 // Four rows: where your replays are, who you are, whether ladder lookups are
-// on, and whether to read the history already on disk. Every one of them is
+// on, and whether to read the history already on disk. A fifth appears only
+// for a big library: whether to read 1v1 games only. Every one of them is
 // reachable from Settings afterwards, so nothing here is a decision anybody is
 // stuck with, and every row is skippable.
 //
@@ -27,15 +28,24 @@
 
   window.createFirstRun = (deps) => {
     // deps: invoke, log, errText, roots(), addRoot(root), onScan(path),
-    //       setIdentity(name), startBackfill(), onW3cChange(on), onDone()
+    //       setIdentity(name), startBackfill(), onW3cChange(on),
+    //       onOnly1v1Set(), onDone()
 
     const sheet = () => el('setup-sheet');
+
+    // Below this the whole run fits in a coffee break and the question is not
+    // worth a row on the screen. Above it, hours of parsing are on the table
+    // and the filter is offered pre-checked, with the count in front of the
+    // person so the default is stated rather than sprung.
+    const ONLY_1V1_SUGGEST_AT = 500;
 
     const renderRoots = () => {
       const roots = deps.roots() || [];
       const line = el('setup-roots');
+      const filterRow = el('setup-only1v1-row');
       if (!roots.length) {
         line.textContent = 'No replay folder found. Add the one Warcraft III saves to.';
+        if (filterRow) filterRow.hidden = true;
         return;
       }
       // The count is the reassurance. "Found a folder" could be the wrong one;
@@ -44,6 +54,15 @@
       line.textContent = total
         ? `${roots.length} folder${roots.length > 1 ? 's' : ''}, ${total.toLocaleString()} replays`
         : `${roots.length} folder${roots.length > 1 ? 's' : ''}, no replays in it yet`;
+
+      if (filterRow) {
+        filterRow.hidden = total < ONLY_1V1_SUGGEST_AT;
+        if (!filterRow.hidden) {
+          el('setup-only1v1-hint').textContent =
+            `Reading all ${total.toLocaleString()} replays takes hours. This skips ` +
+            'team, FFA and custom games; the switch stays in Settings.';
+        }
+      }
     };
 
     const close = async () => {
@@ -103,6 +122,20 @@
           if (actual) deps.log('W3Champions lookups on. Off any time in Settings.', 'ok');
         } catch (e) {
           deps.log(`could not change the W3Champions setting: ${deps.errText(e)}`, 'err');
+        }
+
+        // The 1v1 filter, only when its row was actually shown. On a small
+        // library nothing is written and the default of reading everything
+        // stands. Written before the backfill starts, because the backfill
+        // reads the setting at the start of its run.
+        const filterRow = el('setup-only1v1-row');
+        if (filterRow && !filterRow.hidden) {
+          try {
+            await deps.invoke('set_only_1v1_enabled', { enabled: el('setup-only1v1').checked });
+            if (deps.onOnly1v1Set) deps.onOnly1v1Set();
+          } catch (e) {
+            deps.log(`could not change the 1v1 filter: ${deps.errText(e)}`, 'err');
+          }
         }
 
         // Backfill last, because it is the long-running one and everything

@@ -309,6 +309,19 @@
               </label>
               <p class="hint">Runs in the background. You can play while it works.</p>
             </div>
+
+          <!-- Only shown for a big library (first-run.js decides), because on
+               a small one the whole question is moot and the screen stays
+               short. Pre-checked when shown; the count and the consequence go
+               in the hint so the default is stated, not sprung. -->
+          <div class="setup-row" id="setup-only1v1-row" hidden>
+              <h3>1v1 only</h3>
+              <label class="check">
+                <input type="checkbox" id="setup-only1v1" checked>
+                <span>Only parse 1v1 games</span>
+              </label>
+              <p class="hint" id="setup-only1v1-hint"></p>
+            </div>
         </div>
         <footer class="sheet-foot">
           <button id="setup-skip" class="btn" type="button">Skip</button>
@@ -361,6 +374,20 @@
               <button id="backfill-retry" class="btn" type="button" hidden>Retry failed</button>
             </div>
             <p class="hint" id="backfill-status">idle</p>
+            <!-- Off unless the marker file exists; filter.rs is the authority
+                 and the box is re-read after every change. Skipped games are
+                 not recorded anywhere, so turning this off and parsing again
+                 reads them. -->
+            <label class="check">
+              <input type="checkbox" id="only1v1-toggle">
+              <span>
+                Only parse 1v1 games
+                <span class="hint">Skips team, FFA and custom games when
+                  reading your history. Turn it off and parse again to read
+                  them. Games you finish while the app is running are always
+                  read.</span>
+              </span>
+            </label>
           </section>
 
           <section class="panel">

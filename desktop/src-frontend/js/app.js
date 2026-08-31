@@ -381,6 +381,11 @@ const backfill = window.createBackfill({
   // skipPathfinding is allowed. Quiet leaves the status line alone.
   parseOn: (worker, path) =>
     parseReplayWith(worker, path, { quiet: true, parserOptions: { skipPathfinding: true } }),
+  // The 1v1 gate: a header peek instead of a parse, and the setting read from
+  // Rust (filter.rs) at the start of each run. The live watcher path never
+  // goes through the backfill, so a game just played always parses.
+  peekOn: (worker, path) => peekPlayers(worker, path),
+  only1v1: () => invoke('only_1v1_enabled'),
   persistSummary: store.persistSummary,
   isCurrent: (key) => store.isCurrent(key),
   status: (text) => {
@@ -477,6 +482,8 @@ const firstRun = window.createFirstRun({
     w3c.setEnabled(on);
     if (on) scout.start(); else scout.stop();
   },
+  // Settings synced its checkbox at boot, before this write existed.
+  onOnly1v1Set: () => settingsView.syncOnly1v1(),
   onDone: () => identity.render()
 });
 
@@ -998,6 +1005,7 @@ const boot = async () => {
   settingsView.syncAutostart();
   settingsView.syncW3c();
   settingsView.syncStats();
+  settingsView.syncOnly1v1();
 
   // Anonymous launch count. The Rust side (stats.rs) refuses it when the
   // Settings toggle is off, and a failure is silence either way.
