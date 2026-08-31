@@ -1,6 +1,6 @@
 # WC3V Desktop: changelog
 
-## 1.0.6 — 31 Aug 2026
+## 1.0.7 — 31 Aug 2026
 
 ### A big history stopped costing a big chunk of memory
 
@@ -30,6 +30,9 @@ answers to match exactly: 948 games, 2,863 seats, 2,863 profiles, identical.
 
 Nothing about what is stored on disk changed, so there is nothing to re-parse.
 
+
+
+## 1.0.6 — 31 Aug 2026
 
 ### An anonymous usage counter, and a switch for it
 
