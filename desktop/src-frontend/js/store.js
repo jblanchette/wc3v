@@ -44,6 +44,80 @@
       return new Uint8Array(await new Response(stream).arrayBuffer());
     };
 
+    // ── The corpus projection ───────────────────────────────────────────
+    //
+    // Measured against a real 948-game store: a summary is ~51 KB of JSON and
+    // ~86 KB once parsed into objects, and loadCorpus keeps EVERY one of them
+    // alive for the whole session. That is 337 MB at 4,000 games and 673 MB at
+    // 8,000 — committed memory, which is what makes Windows grow pagefile.sys.
+    //
+    // Almost none of it is needed at corpus level. The feed, the Library and
+    // Coach ask for scalars; the bulk is per-player detail that only matters
+    // once a report is open, and the report re-reads the game from disk now
+    // (readFull below). Per player the split measured like this:
+    //
+    //     build 2.2 KB   economyTrack 1.9   buildPreview 1.6   heroBuilds 1.5
+    //     itemUses 0.9   itemPurchases 0.6  combatUnitsTrack 0.6
+    //     upgradeTimeline 0.3  researched 0.3  ...  combat 0.3  apm 0.2
+    //
+    // KEEP is an allowlist rather than a drop-list on purpose: a new heavy
+    // field added to the summary later then stays out of memory by default,
+    // instead of silently joining the corpus because nobody remembered to add
+    // it to a list of exclusions.
+    //
+    // Everything kept is something GameMetrics.forSeat or
+    // ProfileAggregate.gameView actually reads. tools/test-corpus-slim.js
+    // proves that by running both over the full and the slim shape of every
+    // stored game and requiring identical output, so this list cannot drift
+    // away from its consumers without a test failing.
+    const KEEP_PLAYER = [
+      'name', 'race', 'teamId', 'apm', 'combat', 'heroOpener',
+      'tier', 'tier2Time', 'tier3Time', 'expansionTime', 'firstTowerTime'
+    ];
+
+    // workersAt5m walks economyTrack and stops at the 5:00 sample, so the
+    // corpus only ever needs the head of it. A 20-minute game carries ~40
+    // samples and this keeps the handful before the cutoff.
+    const ECONOMY_CUTOFF_MS = 5 * 60 * 1000;
+
+    const slimPlayer = (p) => {
+      if (!p) return p;
+      const out = {};
+      for (const k of KEEP_PLAYER) if (p[k] !== undefined) out[k] = p[k];
+      const track = p.economyTrack;
+      if (Array.isArray(track)) {
+        const head = [];
+        for (const sample of track) {
+          head.push(sample);
+          if (sample && sample.gameTimeMs > ECONOMY_CUTOFF_MS) break;
+        }
+        out.economyTrack = head;
+      }
+      return out;
+    };
+
+    // Top-level fields the corpus needs. `dominance` stays because
+    // GameMetrics.dominanceStats reads it for dominanceAvg; `neutralCamps`
+    // (8 KB) and `resources` (3.6 KB) go, because nothing above the report
+    // touches them.
+    const DROP_TOP = ['neutralCamps', 'resources'];
+
+    const slimForCorpus = (summary) => {
+      if (!summary || !summary.players) return summary;
+      const out = {};
+      for (const [k, v] of Object.entries(summary)) {
+        if (DROP_TOP.includes(k) || k === 'players') continue;
+        out[k] = v;
+      }
+      const players = {};
+      for (const [slot, p] of Object.entries(summary.players)) players[slot] = slimPlayer(p);
+      out.players = players;
+      // So a consumer that gets handed a corpus entry can tell it apart from a
+      // full read, rather than finding out through a missing field.
+      out.__slim = true;
+      return out;
+    };
+
     const persistSummary = async (out, key, playedAt) => {
       const summary = SB().buildSummary(out, key, playedAt);
       const bytes = await gzipText(JSON.stringify(summary));
@@ -55,8 +129,9 @@
         // does, has to replace its corpus entry. The profile counts games, and
         // a second copy would inflate every record it feeds.
         const at = corpus.findIndex(g => g.key === key);
-        if (at === -1) corpus.push(summary);
-        else corpus[at] = summary;
+        const slim = slimForCorpus(summary);
+        if (at === -1) corpus.push(slim);
+        else corpus[at] = slim;
       }
       return summary;
     };
@@ -106,7 +181,9 @@
           while (i < keys.length) {
             const k = keys[i++];
             try {
-              out.push(await read(k));
+              // Slimmed on the way in, so the full object is garbage the moment
+              // this line returns rather than being retained for the session.
+              out.push(slimForCorpus(await read(k)));
             } catch (e) { /* one corrupt entry must not sink the corpus */ }
             if (++done % 500 === 0) deps.log(`history: ${done}/${keys.length} games loaded`);
           }
@@ -198,6 +275,11 @@
       get staleCount () { return staleKeys.size; },
       get size () { return stored.size; },
       get corpus () { return corpus; },
+      // The whole game, off disk. Corpus entries carry only what the feed,
+      // the Library and Coach read; anything that draws a report wants this.
+      readFull: (key) => read(key),
+      // Exposed for tools/test-corpus-slim.js.
+      slimForCorpus,
       // Boot: the on-disk key list, so an already-parsed game is recognised
       // before the much slower corpus load finishes.
       async init () {

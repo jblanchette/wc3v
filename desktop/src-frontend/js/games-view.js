@@ -666,6 +666,32 @@
         return;
       }
 
+      // Corpus entries are a projection now: enough for this list, the grade
+      // rail and Coach, and nowhere near enough to draw a report. Fetch the
+      // whole game before rendering one.
+      //
+      // The old view stays on screen while that happens rather than blanking.
+      // A stored summary is a few KB of gzip off local disk, so the gap is not
+      // perceptible, and a flash of empty would be worse than a beat of stale.
+      if (summary.__slim) {
+        const wantKey = summary.key;
+        deps.store.readFull(wantKey).then((full) => {
+          // The pointer moved on while this was in flight. Whatever it landed
+          // on has painted or is painting; do not overwrite it.
+          if (activeKey !== wantKey) return;
+          paintDetail(full);
+        }).catch(() => {
+          if (activeKey !== wantKey) return;
+          // Falling back to the slim record draws a report with holes in it,
+          // so say what happened instead.
+          host.innerHTML = '';
+          const e = node('div', 'detail-empty');
+          e.appendChild(node('p', null, 'Could not read that game from disk.'));
+          host.appendChild(e);
+        });
+        return;
+      }
+
       // One screen. No tabs at all.
       //
       // It was four (Review, Story, Build, Economy), then two, and the last two

@@ -693,7 +693,11 @@ const run = async (path, opts = {}) => {
       // Keep the corpus authoritative even for a game opened out of band.
       const corpus = store.corpus;
       if (corpus && !corpus.some(g => g.key === key)) {
-        corpus.push(summary);
+        // Projected on the way in, like every other entry. Pushing the full
+        // object here would leave one game per out-of-band open retained at
+        // full size, which is exactly the shape of the problem the projection
+        // exists to remove.
+        corpus.push(store.slimForCorpus(summary));
         corpus.sort((a, b) => (b.playedAt || 0) - (a.playedAt || 0));
       }
       // Everything below re-selects and re-renders; the report column paints

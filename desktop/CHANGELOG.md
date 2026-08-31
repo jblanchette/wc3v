@@ -2,6 +2,35 @@
 
 ## 1.0.6 — 31 Aug 2026
 
+### A big history stopped costing a big chunk of memory
+
+The app kept every game you had ever played in memory, in full, for as long
+as it was open. Measured against a 948-game library that is 86 KB a game and
+80 MB of it; at four thousand games it is 336 MB, and at eight thousand,
+673 MB. That is committed memory, which is the thing Windows grows
+pagefile.sys to cover, so the people who noticed were the ones with the most
+games.
+
+Almost none of it was being used. The games feed, the Library and Coach ask
+for scalars: who won, which map, when, the tier and expansion times, APM. The
+bulk of a stored game is per-player detail that only matters once a report is
+open on screen, and a report can read the game back off disk in the time it
+takes to click one.
+
+So the list in memory is a projection now, and opening a report fetches the
+whole game. 86 KB a game becomes 15 KB, which is 60 MB at four thousand games
+instead of 336.
+
+The projection is an allowlist rather than a list of things to leave out, so a
+heavy field added later stays out by default instead of joining the list
+because nobody remembered to exclude it. tools/test-corpus-slim.js runs the
+two things that read these entries, the scalar layer and the Coach aggregate,
+over the full and the projected shape of every game on disk and requires the
+answers to match exactly: 948 games, 2,863 seats, 2,863 profiles, identical.
+
+Nothing about what is stored on disk changed, so there is nothing to re-parse.
+
+
 ### An anonymous usage counter, and a switch for it
 
 Until now the only number we had about the app was how many installers were

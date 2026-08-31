@@ -168,6 +168,23 @@
         return;
       }
 
+      // Corpus entries are a projection and cannot draw a report. Same
+      // re-read as the Home column, same reason.
+      if (summary.__slim) {
+        const wantKey = summary.key;
+        deps.store.readFull(wantKey).then((full) => {
+          if (activeKey !== wantKey) return;
+          renderDetail(full);
+        }).catch(() => {
+          if (activeKey !== wantKey) return;
+          host.innerHTML = '';
+          const e = node('div', 'detail-empty');
+          e.appendChild(node('p', null, 'Could not read that replay from disk.'));
+          host.appendChild(e);
+        });
+        return;
+      }
+
       // seat: null is what selects the symmetric presentation. Passed
       // explicitly rather than left to default, because it is the whole
       // difference between this screen and Home.
