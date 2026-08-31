@@ -390,6 +390,23 @@
             </label>
             <p class="hint" id="w3c-status"></p>
           </section>
+
+          <!-- On by default because it is anonymous: the ping is the event
+               name, app version and OS family, nothing else. No IP or ID is
+               stored server-side. Off is enforced in src-tauri/src/stats.rs
+               rather than by this checkbox. -->
+          <section class="panel">
+            <h2>Usage counter</h2>
+            <label class="check">
+              <input type="checkbox" id="stats-toggle" checked>
+              <span>
+                Count me in anonymous usage totals
+                <span class="hint">Sends only "the app started" and "a game was
+                  parsed", with the app version. Nothing about you or your
+                  games.</span>
+              </span>
+            </label>
+          </section>
         </div>
 
         <!-- Pinned at the foot of the sheet, never scrolled past.

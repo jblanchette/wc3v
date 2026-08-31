@@ -2,7 +2,7 @@
 title: "Replay Data API | WC3V"
 url: https://wc3v.com/api
 description: "A free, read-only JSON API over 192 parsed Warcraft III tournament replays. No keys, no auth, no rate limits. OpenAPI 3.1 description included."
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # Replay Data API

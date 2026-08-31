@@ -2,7 +2,7 @@
 title: "About WC3V - Visual Build Order & Replay Analyzer for Warcraft III"
 url: https://wc3v.com/about
 description: "WC3V is a visual build order and replay simulator for Warcraft III. Upload .w3g replays for full breakdowns of builds, heroes, units, upgrades, and minimap playback. Free, open source, and built for the WC3 community."
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # A Warcraft III replay simulator, built for learning the game.

@@ -310,6 +310,7 @@ ${NAV}
   <script src="/js/clientConfig.js"></script>
   <script src="/js/BandSwitcher.js"></script>
   <script src="/js/SiteNav.js"></script>
+  <script src="/js/SiteStats.js"></script>
   <script>document.addEventListener('DOMContentLoaded', () => { SiteNav.render(null); });</script>
 
   <main class="site-content">

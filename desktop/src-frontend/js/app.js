@@ -993,6 +993,11 @@ const boot = async () => {
   settingsView.renderRoots();
   settingsView.syncAutostart();
   settingsView.syncW3c();
+  settingsView.syncStats();
+
+  // Anonymous launch count. The Rust side (stats.rs) refuses it when the
+  // Settings toggle is off, and a failure is silence either way.
+  invoke('stats_ping', { event: 'app_launch' }).catch(() => {});
 
   // An unreadable store just means everything re-parses; not fatal.
   try {
@@ -1015,7 +1020,12 @@ const boot = async () => {
   await listen('replay-detected', (event) => {
     const r = event.payload;
     log(`new game: ${r.fileName}`, 'ok');
-    if (r.interesting) run(r.path, { live: true });
+    if (r.interesting) {
+      run(r.path, { live: true });
+      // Anonymous count of live games parsed. Only the watcher path pings;
+      // a backfill of an old library says nothing about current usage.
+      invoke('stats_ping', { event: 'app_game_parsed' }).catch(() => {});
+    }
   });
 
   await listen('watcher-error', (event) => log(`watcher: ${event.payload}`, 'err'));

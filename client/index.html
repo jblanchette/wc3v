@@ -192,10 +192,10 @@
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
   <link rel="stylesheet" href="css/tokens.css?v=d4b178845b">
-  <link rel="stylesheet" href="css/main.css?v=6dd77ecfce">
+  <link rel="stylesheet" href="css/main.css?v=3284dbfbe9">
   <!-- New design system: tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
-  <link rel="stylesheet" href="css/redesign.css?v=e799bc8754">
+  <link rel="stylesheet" href="css/redesign.css?v=70f867931d">
   <style>
     body { margin: 0; }
   </style>
@@ -204,7 +204,7 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '80677826c5'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '28319e9c4a'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
@@ -231,6 +231,7 @@
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/BuildClass.js?v=622d9ff5ff"></script>
   <script src="js/SiteNav.js?v=66285d9d27"></script>
+  <script src="js/SiteStats.js?v=8e159ec450"></script>
   <script src="js/TosBanner.js?v=16bfc558ad"></script>
   <script src="js/Security.js?v=a131c46e7c"></script>
   <script src="js/PlayerNames.js?v=9b16a85d90"></script>
@@ -243,7 +244,7 @@
   <!-- wc3v-parser.bundle.js (~1 MB) loads on demand: the parse runs in a Web
        Worker (parser-worker.js) that importScripts() the bundle itself, and
        UploadManager.prefetchParser() warms the HTTP cache on first user intent. -->
-  <script src="js/UploadManager.js?v=3a7d35b5e2"></script>
+  <script src="js/UploadManager.js?v=f32508a788"></script>
   <script src="js/PlayerPicker.js?v=f69946a45e"></script>
   <script src="js/ReplayTypePicker.js?v=08de406b48"></script>
   <script src="js/vendor/MapResolver.js?v=8882e954a1"></script>

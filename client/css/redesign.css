@@ -355,7 +355,9 @@ img { display: block; }
   width: 22px; height: 22px; border-radius: var(--radius-sm); object-fit: cover;
   border: 2px solid var(--bo-border-solid); background: var(--bo-bg);
 }
-.bo-skill.bo-skill-lg .bo-skill-icon { width: 28px; height: 28px; }
+/* 32 + the 2px border each side is 36, the icon floor. Keep in step with
+   the same rule in main.css. */
+.bo-skill.bo-skill-lg .bo-skill-icon { width: 32px; height: 32px; }
 .bo-skill-icon.dimmed, .bo-skill.dimmed .bo-skill-icon { opacity: 0.55; }
 .bo-skill.learned .bo-skill-icon { border-color: rgba(255,255,255,0.7); }
 .bo-skill.active  .bo-skill-icon { border-color: var(--bo-accent); }

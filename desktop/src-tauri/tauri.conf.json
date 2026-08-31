@@ -41,7 +41,7 @@
     "resources": ["resources/maps/**/*"],
     "createUpdaterArtifacts": true,
     "shortDescription": "Local WC3 replay auto-parse and overlay",
-    "longDescription": "Watches your Warcraft III replay folders, parses each game locally the moment it finishes, and drives an OBS-ready overlay. No accounts, no telemetry, no game injection."
+    "longDescription": "Watches your Warcraft III replay folders, parses each game locally the moment it finishes, and drives an OBS-ready overlay. No accounts, no game injection, and replays never leave your machine. Sends an anonymous usage count you can switch off in Settings."
   },
   "plugins": {
     "updater": {

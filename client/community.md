@@ -2,7 +2,7 @@
 title: "Community Resources - Warcraft III Sites & Tools | WC3V"
 url: https://wc3v.com/community
 description: "A hand-picked list of trusted Warcraft III community sites, tools, and resources: Liquipedia, W3Champions, Back2Warcraft, Hive Workshop, and the open-source tools that power WC3V."
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # Warcraft III Community Resources

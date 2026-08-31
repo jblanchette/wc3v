@@ -16,6 +16,7 @@
 
 mod overlay;
 mod replays;
+mod stats;
 mod w3c;
 mod watcher;
 
@@ -967,7 +968,10 @@ fn main() {
             start_watching,
             w3c::w3c_enabled,
             w3c::set_w3c_enabled,
-            w3c::w3c_lookup
+            w3c::w3c_lookup,
+            stats::stats_enabled,
+            stats::set_stats_enabled,
+            stats::stats_ping
         ])
         .run(tauri::generate_context!())
         .expect("error while running WC3V");

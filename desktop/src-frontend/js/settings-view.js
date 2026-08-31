@@ -190,6 +190,32 @@
       deps.onW3cChange(on);
     };
 
+    // The anonymous usage counter. Same shape as W3C: the truth is a marker
+    // file the Rust side (stats.rs) checks on every ping, so the checkbox is
+    // re-read after every change rather than trusted.
+    const syncStats = async () => {
+      const box = el('stats-toggle');
+      try {
+        box.checked = !!(await deps.invoke('stats_enabled'));
+      } catch (err) {
+        box.checked = false;
+        box.disabled = true;
+      }
+    };
+
+    el('stats-toggle').addEventListener('change', async (e) => {
+      const want = e.target.checked;
+      try {
+        await deps.invoke('set_stats_enabled', { enabled: want });
+        deps.log(want
+          ? 'anonymous usage counter on'
+          : 'anonymous usage counter off; this install sends nothing', 'ok');
+      } catch (err) {
+        deps.log(`could not change the usage counter setting: ${deps.errText(err)}`, 'err');
+      }
+      await syncStats();
+    });
+
     el('w3c-toggle').addEventListener('change', async (e) => {
       const want = e.target.checked;
       try {
@@ -207,6 +233,7 @@
       renderRoots,
       syncRetryButton,
       syncW3c,
+      syncStats,
       // The silent boot and interval check. A failure here is not news: a
       // laptop that woke without a network would otherwise force the Activity
       // drawer open on a red line nobody asked for.

@@ -1,4 +1,5 @@
-//! W3Champions lookups: the app's only optional outbound request.
+//! W3Champions lookups: the app's only outbound request that names a player.
+//! (The anonymous usage counter lives in stats.rs and carries no player data.)
 //!
 //! Everything else in WC3V reads files the game already wrote. This module
 //! asks a public, unauthenticated ladder API for things a replay simply does

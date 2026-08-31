@@ -2,7 +2,7 @@
 title: "Terms of Service | WC3V"
 url: https://wc3v.com/terms
 description: "Terms of service for WC3V, a free Warcraft III replay analyzer and build order library. As-is, no warranty, US governing law."
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # Terms of Service

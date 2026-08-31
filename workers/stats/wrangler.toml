@@ -1,0 +1,30 @@
+name = "wc3v-stats"
+main = "src/index.js"
+compatibility_date = "2026-08-11"
+workers_dev = false
+
+# Two routes only, both low-volume on purpose (the free tier bills every
+# invocation — see workers/edge/wrangler.toml for the arithmetic):
+#
+#   /api/event    the anonymous usage beacon. One POST per pageview plus a
+#                 handful of named events; nowhere near asset-request volume.
+#   /install.ps1  counted at the edge because PowerShell's `irm` runs no JS.
+#                 The script body itself passes through from origin untouched.
+#
+# The trailing * is load-bearing: Cloudflare matches routes against the FULL
+# URL including the query string.
+routes = [
+  { pattern = "wc3v.com/api/event*",   zone_name = "wc3v.com" },
+  { pattern = "wc3v.com/install.ps1*", zone_name = "wc3v.com" }
+]
+
+# Workers Analytics Engine. Free plan: 100k data points written/day, 10k SQL
+# reads/day — both far above this site's volume. Read it back with
+# `node tools/stats-report.js` (needs a CF API token with Account Analytics
+# read).
+[[analytics_engine_datasets]]
+binding = "STATS"
+dataset = "wc3v_stats"
+
+[observability]
+enabled = true

@@ -2646,13 +2646,17 @@ body {
 }
 
 .bo-skill.bo-skill-lg .bo-skill-icon {
-  width: 28px;
-  height: 28px;
+  /* 32 + the 2px border each side is 36, the icon floor. Measured at 28 it
+     came out 32 on screen, because the border sits outside the box here. */
+  width: 32px;
+  height: 32px;
   border-radius: 4px;
 }
 
 .bo-skill.bo-skill-lg .bo-skill-level {
-  font: 700 0.65rem Verdana;
+  /* Was 0.65rem (10.4px). The badge and the tile it sits on move together:
+     the floor digit needs the larger icon above to not swallow it. */
+  font: 700 var(--fs-min) Verdana;
 }
 
 .bo-hero-training-card.bo-live-active {

@@ -2,7 +2,7 @@
 title: "Privacy Policy | WC3V"
 url: https://wc3v.com/privacy
 description: "Privacy policy for WC3V. Replays are parsed in your browser and never uploaded. We don't sell your data because we don't have any."
-updated: 2026-08-11
+updated: 2026-08-31
 ---
 
 # Privacy Policy

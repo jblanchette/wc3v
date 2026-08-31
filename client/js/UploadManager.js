@@ -228,6 +228,11 @@ const UploadManager = class {
 
     await this.myReplays.put(record);
     this.onProgress({ phase: 'done', percent: 100 });
+
+    // Anonymous count of successful local parses. The event carries nothing
+    // about the replay — see SiteStats.js. Absent on handoff.html on purpose.
+    if (window.SiteStats) window.SiteStats.event('replay_parsed');
+
     return { id, record };
   }
 

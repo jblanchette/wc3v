@@ -113,6 +113,9 @@ const DownloadPage = {
     if (!btn) return;
     const box = btn.closest('.dl-get');
     this._copy(box && box.querySelector('.dl-cmd'), btn);
+    // Anonymous count of copy clicks; actual installs are counted when
+    // install.ps1 is fetched (workers/stats).
+    if (window.SiteStats) window.SiteStats.event('download_copy');
   },
 
   /**
