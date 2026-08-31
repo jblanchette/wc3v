@@ -1,5 +1,25 @@
 # WC3V Desktop: changelog
 
+## 1.0.6
+
+### An anonymous usage counter, and a switch for it
+
+Until now the only number we had about the app was how many installers were
+downloaded. Whether anyone opened it afterwards was a guess.
+
+The app now sends one tiny ping when it starts and one when the watcher lands
+a newly finished game. The entire message is the event name, the app version
+and the OS family. No replay data, no player names, no machine ID, no
+generated ID of any kind, and the server keeps no IP address, so two pings
+from the same install cannot be told apart. Backfilling an old library sends
+nothing; only live games count.
+
+Settings has a new "Usage counter" switch. Off means off: the refusal is
+enforced in the binary (stats.rs), the same way the W3Champions opt-in is,
+not by the checkbox. The privacy policy at wc3v.com/privacy spells out the
+full contents of the ping.
+
+
 ## 1.0.5 — 18 Aug 2026
 
 ### "History up to date", with a spinner still turning

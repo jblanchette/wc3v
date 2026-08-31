@@ -95,6 +95,6 @@ WC3V is free, open-source software licensed under [GPLv3](https://github.com/jbl
 
 ## Free Forever
 
-Built by Warcraft III players for Warcraft III players. No ads, no paywalls, no tracking, no data collection. All game assets and imagery are property of Blizzard Entertainment. WC3V is a fan-made educational tool, not affiliated with or endorsed by Blizzard.
+Built by Warcraft III players for Warcraft III players. No ads, no paywalls, no accounts, no cookies. Usage is measured only as anonymous totals with no identifiers (see the privacy policy). All game assets and imagery are property of Blizzard Entertainment. WC3V is a fan-made educational tool, not affiliated with or endorsed by Blizzard.
 
 [Browse Pro Builds](https://wc3v.com/) [Analyze Your Replay](https://wc3v.com/viewer)

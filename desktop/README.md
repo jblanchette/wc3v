@@ -47,7 +47,7 @@ mistaken for a cheat and stays trivially auditable.
   progress, because it never sees one.
 - **No live in-game state.** WC3 writes the replay at match end, and that file is
   the only data source that exists.
-- **Your replays never leave this machine.** No upload, no account, no telemetry.
+- **Your replays never leave this machine.** No upload, no account. The only thing sent is an anonymous usage count (event name, version, OS family), with an off switch in Settings.
   Not switchable, not configurable, absent.
 - **Nothing dials out unless you switch it on.** The one socket the binary opens
   by itself is the overlay's loopback listener, on 127.0.0.1 only, token-gated,
@@ -75,7 +75,7 @@ mistaken for a cheat and stays trivially auditable.
   registered replay root or the local map cache. The parse store commands
   (`save_parse` and `read_parse`) accept only a `<size>-<hash>` key of digits,
   hex and a dash, so no path fragment can reach them.
-- No accounts, no telemetry, no paywall. GPLv3, same as the parser.
+- No accounts, no paywall, and nothing identifying ever sent. GPLv3, same as the parser.
 
 ## Architecture
 

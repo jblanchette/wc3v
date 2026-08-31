@@ -21,7 +21,7 @@ Leave it running. Every game you finish is read on your own PC and laid out befo
 
 - **Never touches the game.** No injection, no memory reading, no packet capture, no input automation.
 
-- **Nothing leaves your PC.** No upload, no account, no telemetry.
+- **Nothing leaves your PC.** No upload, no account. The app sends only an anonymous usage count, and Settings can switch that off.
 
 - **One local socket.** The overlay binds `127.0.0.1`, token-gated, GET only.
 
@@ -55,8 +55,8 @@ Couldn't reach the update server, so the version and hash are missing. The comma
 
 **Windows doesn't recognise the app.** The build is not code-signed. A paid certificate runs about $120 a year and would still not silence Windows, since it dropped instant trust for those in 2024. The Microsoft Store would silence it, and that route is closed to us: the app ships Blizzard's icon art, and Microsoft owns Blizzard. The install command gets past the warning another way. SmartScreen fires on the Mark of the Web, a tag browsers write onto files they download, and PowerShell does not write it. On a clean Windows 11 machine with Smart App Control switched on, unsigned apps are refused whatever you do.
 
-**What does the command run?** [install.ps1](https://wc3v.com/install.ps1), which you can read first. It fetches the release manifest, downloads the installer, compares its SHA-256 against the one above and runs it. No elevation, no registry writes of its own, no telemetry. A hash that does not match aborts the install.
+**What does the command run?** [install.ps1](https://wc3v.com/install.ps1), which you can read first. It fetches the release manifest, downloads the installer, compares its SHA-256 against the one above and runs it. No elevation, no registry writes of its own, and the script itself sends nothing anywhere (we count how many times it is downloaded, and that is all). A hash that does not match aborts the install.
 
-**Can I get banned for it?** It reads `.w3g` files Warcraft III has already finished writing, and does nothing else. No injection, no memory reading, no packet inspection, no input automation, and nothing drawn over the game. It cannot see or touch a match in progress, which is also why the overlay is safe on a live stream. Three outbound requests exist, all named in Settings and none carrying anything about you: icon art and map data from `cdn.wc3v.com`, and the W3Champions lookup, off until you turn it on. See the [privacy policy](https://wc3v.com/privacy).
+**Can I get banned for it?** It reads `.w3g` files Warcraft III has already finished writing, and does nothing else. No injection, no memory reading, no packet inspection, no input automation, and nothing drawn over the game. It cannot see or touch a match in progress, which is also why the overlay is safe on a live stream. Four outbound requests exist, all named in Settings and none carrying anything about you or your games: icon art and map data from `cdn.wc3v.com`; the W3Champions lookup, which stays off until you turn it on; and an anonymous usage count, which is on and which Settings can switch off. The count is the event name, the app version and the OS family, with no identifier of any kind, and the server keeps no IP address. See the [privacy policy](https://wc3v.com/privacy).
 
 **Mac or Linux?** Not yet, Windows 10 and 11 64-bit only. The [browser viewer](https://wc3v.com/viewer) runs anywhere and needs no install. Uninstall from Add or remove programs.

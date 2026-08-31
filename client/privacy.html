@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Privacy Policy | WC3V</title>
-  <meta name="description" content="Privacy policy for WC3V. Replays are parsed in your browser and never uploaded. We don't sell your data because we don't have any.">
+  <meta name="description" content="Privacy policy for WC3V. Replays are parsed in your browser and never uploaded. Anonymous usage counts only: no cookies, no IDs, no IP addresses stored.">
 
   <link rel="canonical" href="https://wc3v.com/privacy">
   <meta name="robots" content="index, follow">
@@ -13,7 +13,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="WC3V">
   <meta property="og:title" content="Privacy Policy | WC3V">
-  <meta property="og:description" content="Your replay files never leave your browser. No accounts, no analytics, nothing to sell.">
+  <meta property="og:description" content="Your replay files never leave your browser. No accounts, no cookies, anonymous usage counts only.">
   <meta property="og:url" content="https://wc3v.com/privacy">
   <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
   <meta property="og:image:width" content="1200">
@@ -23,7 +23,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Privacy Policy | WC3V">
-  <meta name="twitter:description" content="Your replay files never leave your browser. No accounts, no analytics, nothing to sell.">
+  <meta name="twitter:description" content="Your replay files never leave your browser. No accounts, no cookies, anonymous usage counts only.">
   <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
 
   <script type="application/ld+json">
@@ -145,10 +145,23 @@
       <h2>2. What we don't collect</h2>
       <ul>
         <li>No user accounts, no email addresses, no passwords.</li>
-        <li>No tracking pixels, no third-party advertising, no behavioral analytics.</li>
+        <li>No cookies, no tracking pixels, no third-party advertising, no behavioral profiling, no fingerprinting.</li>
+        <li>No analytics IDs. Nothing is stored in or read from your browser for measurement, and we cannot tell two of your visits apart.</li>
         <li>No replay file uploads.</li>
         <li>No personal identifying information beyond what your browser sends to any web server (IP address, user agent — see below).</li>
       </ul>
+
+      <h2>2a. Anonymous usage counts</h2>
+      <p>We count how the site and the desktop app are used, in aggregate, so we know what is worth building. Here is the complete list of what a count contains:</p>
+      <ul>
+        <li><strong>The event name</strong> — a page was viewed, a replay was parsed in the browser, the install command was copied, the installer script was downloaded, the desktop app started, or the desktop app parsed a newly finished game.</li>
+        <li><strong>The page path</strong> — for example <code>/builds</code>. The query string is stripped before sending, so a replay id or search term is never included.</li>
+        <li><strong>The referring site's hostname</strong> — for example <code>www.google.com</code>, never the full URL.</li>
+        <li><strong>For the desktop app:</strong> its version number and OS family (for example <code>0.10.0</code> and <code>win</code>).</li>
+        <li><strong>A country code</strong> — derived at our CDN's edge from your IP address in memory. The IP address itself is not stored.</li>
+      </ul>
+      <p>That is the whole record. No IP address, no user agent, no cookie, no device ID, no generated ID of any kind is stored with it. The result is anonymous aggregate data: it is not personal data under the GDPR, the UK GDPR, or the CCPA, and no consent prompt is required for it anywhere. It also stores nothing on your device and reads nothing from it, so the ePrivacy cookie rules don't apply to it either.</p>
+      <p>We honor opt-out signals anyway: if your browser sends <strong>Do Not Track</strong> or <strong>Global Privacy Control</strong>, the site sends no usage events at all. The desktop app has its own switch (Settings, then Usage counter).</p>
 
       <h2>3. What our server sees</h2>
       <p>When you visit WC3V, our hosting provider's web server receives standard HTTP request information so it can serve pages: your IP address, the URL you requested, your user agent string, the referring URL, and a timestamp. This is standard for any website on the internet. These access logs are kept briefly for operational and security purposes (typically a few days to a few weeks at the host level) and are not combined with any other data.</p>
@@ -162,13 +175,14 @@
       <p>None of this is sent to us. Clear it any time via your browser's site-data controls.</p>
 
       <h2>4a. The WC3V desktop app</h2>
-      <p>The desktop app (downloadable from <a href="/download">wc3v.com/download.html</a>) watches your Warcraft III replay folders and parses every game <strong>on your machine</strong>. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly three cases:</p>
+      <p>The desktop app (downloadable from <a href="/download">wc3v.com/download.html</a>) watches your Warcraft III replay folders and parses every game <strong>on your machine</strong>. Replays and the reports built from them are stored locally and are never uploaded. The app makes network requests in exactly four cases:</p>
       <ul>
         <li><strong>Update checks</strong> — it polls our CDN for a newer version, which reveals your IP address and the request the same way any web server sees one.</li>
         <li><strong>Game art</strong> — unit and item icons are fetched from our CDN by their game ID; no information about your games is attached.</li>
+        <li><strong>Anonymous usage ping, on by default</strong> — when the app starts, and when it parses a newly finished game, it sends the event name, its version number, and the OS family to wc3v.com. That is the entire message: nothing about you, your games, your account names, or your machine is attached, and the server stores no IP address with it (see section 2a). Turn it off any time under Settings, then Usage counter.</li>
         <li><strong>Optional, off by default:</strong> the W3Champions ladder lookup queries the public W3Champions API with a player's battle tag while a match is running. "Open in WC3V Viewer" opens the wc3v.com viewer in your browser; the replay data itself is served to that page over loopback (127.0.0.1) and still never leaves your machine. Both only happen when you turn them on or click them.</li>
       </ul>
-      <p>Nothing else leaves your machine. There is no telemetry, no analytics, and no account.</p>
+      <p>Nothing else leaves your machine. There is no account and nothing that identifies you.</p>
 
       <h2>5. Third-party content loaded by your browser</h2>
       <p>Some pages load JavaScript libraries from public CDNs so you don't have to download them from us:</p>
@@ -180,7 +194,7 @@
       <p>When your browser fetches these files, those CDNs see your IP address and a request URL the same way any web server would. They are subject to their own privacy policies.</p>
 
       <h2>6. Cookies</h2>
-      <p>WC3V does not set tracking cookies. The hosting provider may set minimal technical cookies for security or load-balancing; we don't use any analytics or advertising cookies.</p>
+      <p>WC3V sets no cookies of its own: none for tracking, none for analytics, none for advertising. The usage counts in section 2a work without cookies and without storing anything in your browser. That is why the site shows no cookie consent banner: under the EU ePrivacy rules a banner is required for storing or reading information on your device, and we don't. The hosting provider may set minimal technical cookies for security or load balancing, which are exempt as strictly necessary.</p>
 
       <h2>7. Children's privacy</h2>
       <p>WC3V is intended for a general audience and is not directed at children under 13. We don't knowingly collect personal information from children.</p>
@@ -189,6 +203,7 @@
       <ul>
         <li><strong>Clear local data:</strong> Clear site data for wc3v.com in your browser settings to remove your replay library and preferences.</li>
         <li><strong>Stop using the site:</strong> Closing the tab is a complete privacy reset on our end — we have nothing about you to delete.</li>
+        <li><strong>Opt out of usage counts:</strong> Turn on Do Not Track or Global Privacy Control in your browser and the site sends no usage events. In the desktop app, use the switch under Settings, then Usage counter. There is no data-deletion request to make because nothing we store can be connected to you.</li>
         <li><strong>Block CDNs:</strong> If you don't want third-party CDNs to see your IP, use a browser extension or VPN of your choice.</li>
       </ul>
 

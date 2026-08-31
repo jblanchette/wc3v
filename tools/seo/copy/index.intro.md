@@ -10,6 +10,6 @@ WC3V does three things.
 
 **Compare to a pro.** Drop your own replay and it is matched to the closest pro game in the corpus, then graded: macro, production, item economy, idle resources, build order, tech timings, hero skill choices.
 
-Replay files are parsed entirely in your browser. Nothing is uploaded, there are no accounts, and there is no analytics. The site is free and open source under GPLv3.
+Replay files are parsed entirely in your browser. Nothing is uploaded, there are no accounts, and there are no cookies. The only measurement is an anonymous pageview count with no identifiers (see the privacy policy). The site is free and open source under GPLv3.
 
 There is also a Windows desktop app that watches your replay folder and has the report ready by the time you alt-tab out of a finished game.
