@@ -91,7 +91,7 @@ const FOLD_CHECK = () => {
 (async () => {
   const browser = await puppeteer.launch({
     executablePath: findBrowser(),
-    headless: 'new',
+    headless: true, // Edge 152 rejects the legacy 'new' string
     args: ['--no-sandbox', '--allow-file-access-from-files']
   });
   const page = await browser.newPage();

@@ -23,6 +23,7 @@
 //   node tools/perf-bench.js --json=out.json              # machine-readable dump
 //   node tools/perf-bench.js --cpuprofile=out.cpuprofile  # open in DevTools
 //   node tools/perf-bench.js --label=baseline             # tag the console/json output
+//   node tools/perf-bench.js --view=displayTeleports:false # override viewOptions (feature A/B)
 //
 // Uses the REAL GPU (ANGLE/D3D) by default — this is a perf rig, not a
 // reproducibility rig. --soft switches to SwiftShader if a machine needs it.
@@ -103,6 +104,67 @@ function resolveFile (urlStr) {
   return null;
 }
 
+// puppeteer's temp-profile cleanup races the browser process on Windows (a
+// failed launch's breakaway Edge still holds the profile; close() unlinks
+// while files are locked). The EBUSY lands as an unhandled rejection and
+// would kill the bench after a completed run — ignore it, crash on the rest.
+process.on('unhandledRejection', (e) => {
+  if (e && e.code === 'EBUSY') return;
+  throw e;
+});
+
+// A puppeteer.launch defeated by Edge's job-object breakaway leaves a
+// detached headless Edge running on a puppeteer temp profile with no owner.
+// Sweep those at exit (win32 only; matches only puppeteer temp profiles, so
+// a user's real Edge session is never touched).
+function sweepOrphanBrowsers () {
+  if (process.platform !== 'win32') return;
+  try {
+    require('child_process').execSync(
+      'powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"Name=\'msedge.exe\'\\" | ' +
+      'Where-Object { $_.CommandLine -match \'puppeteer_dev_chrome_profile|wc3v-bench-profile\' } | ' +
+      'ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"',
+      { stdio: 'ignore', timeout: 30000 });
+  } catch (_) { /* best effort */ }
+}
+
+// Spawn the browser directly with --remote-debugging-port=0, wait for it to
+// write DevToolsActivePort into the temp profile, and puppeteer.connect. Used
+// only when puppeteer.launch's own child-process bookkeeping is defeated by
+// Edge relaunching itself outside a job object (see call site).
+async function connectFallback (exe, headful, launchArgs) {
+  const os = require('os');
+  const { spawn } = require('child_process');
+  const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'wc3v-bench-profile-'));
+  const spawnArgs = launchArgs.concat([
+    '--user-data-dir=' + profileDir,
+    '--remote-debugging-port=0',
+    '--no-first-run', '--no-default-browser-check',
+    'about:blank'
+  ]);
+  if (!headful) spawnArgs.unshift('--headless');
+  spawn(exe, spawnArgs, { stdio: 'ignore', detached: true }).unref();
+
+  const portFile = path.join(profileDir, 'DevToolsActivePort');
+  let wsEndpoint = null;
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 250));
+    try {
+      const lines = fs.readFileSync(portFile, 'utf8').trim().split(/\r?\n/);
+      if (lines.length >= 2 && Number(lines[0]) > 0) {
+        wsEndpoint = 'ws://127.0.0.1:' + lines[0].trim() + lines[1].trim();
+        break;
+      }
+    } catch (_) { /* not written yet */ }
+  }
+  if (!wsEndpoint) throw new Error('connectFallback: browser never wrote DevToolsActivePort');
+  const browser = await puppeteer.connect({ browserWSEndpoint: wsEndpoint, protocolTimeout: 180000 });
+  // browser.close() over CDP shuts the browser down; the profile dir is
+  // best-effort cleaned on exit (Windows can hold locks briefly).
+  process.on('exit', () => { try { fs.rmSync(profileDir, { recursive: true, force: true }); } catch (_) {} });
+  return browser;
+}
+
 (async () => {
   const exe = findBrowser();
   const headful = !!args.headful;
@@ -121,12 +183,25 @@ function resolveFile (urlStr) {
   // fill/submission cost. --gpu forces the D3D11 hardware path.
   else launchArgs.push('--use-gl=angle', '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist');
 
-  const browser = await puppeteer.launch({
-    executablePath: exe,
-    headless: headful ? false : 'new',
-    protocolTimeout: 180000,
-    args: launchArgs
-  });
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      executablePath: exe,
+      // Edge 152 exits immediately (code 0, no stderr) when puppeteer passes the
+      // legacy `--headless=new` string; `true` selects the same new headless mode
+      // through the supported flag.
+      headless: headful ? false : true,
+      protocolTimeout: 180000,
+      args: launchArgs
+    });
+  } catch (e) {
+    // Under a job-object wrapper (CI, agent harnesses) Edge's initial process
+    // breaks away: it relaunches the real browser detached and exits 0, which
+    // puppeteer reports as "Failed to launch ... Code: 0". Fall back to
+    // spawning Edge ourselves and connecting over CDP via DevToolsActivePort.
+    if (!/Failed to launch/.test(String(e && e.message))) throw e;
+    browser = await connectFallback(exe, headful, launchArgs);
+  }
 
   const page = await browser.newPage();
   const vp = (args.viewport || '1600x900').split('x').map(Number);
@@ -142,9 +217,24 @@ function resolveFile (urlStr) {
   page.on('pageerror', e => errors.push('pageerror: ' + e.message));
   page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 
+  // --swap=<urlSubstring>=<localFile> — serve a local file for any request
+  // whose URL contains the substring (CDN URLs included). Built for perf
+  // experiments on vendored/CDN libraries: patch a copy, swap it in, measure.
+  let swap = null;
+  if (args.swap) {
+    const i = String(args.swap).indexOf('=');
+    if (i < 1) throw new Error('bad --swap, want urlSubstring=localFile');
+    swap = { match: String(args.swap).slice(0, i), body: fs.readFileSync(String(args.swap).slice(i + 1)) };
+    process.stdout.write(`  swap: URLs containing "${swap.match}" served from ${String(args.swap).slice(i + 1)}\n`);
+  }
+
   await page.setRequestInterception(true);
   page.on('request', req => {
     const url = req.url();
+    if (swap && url.includes(swap.match)) {
+      req.respond({ status: 200, contentType: 'text/javascript', body: swap.body });
+      return;
+    }
     if (!url.startsWith(ORIGIN)) { req.continue(); return; } // CDN etc. -> network
     const hit = resolveFile(url);
     if (!hit) {
@@ -213,7 +303,7 @@ function resolveFile (urlStr) {
     console.error('\n  never reached playing state:', JSON.stringify(state));
     if (misses.length) console.error('  404s:', [...new Set(misses)].slice(0, 20).join('\n        '));
     if (errors.length) console.error('  page errors:', [...new Set(errors)].slice(0, 10).join('\n        '));
-    await browser.close();
+    try { await browser.close(); } catch (e) { if (!e || e.code !== 'EBUSY') throw e; }
     process.exit(2);
   }
 
@@ -232,6 +322,24 @@ function resolveFile (urlStr) {
       } catch (e) {}
     }
   }, SPEED, !!args.free);
+
+  // --view=key:value,key:value — override viewer viewOptions after load
+  // (e.g. --view=displayTeleports:false,displayText:false) to A/B one
+  // feature layer's frame cost. Same value parsing as --perf.
+  if (args.view) {
+    const vov = {};
+    for (const kv of String(args.view).split(',')) {
+      const [k, v] = kv.split(':');
+      vov[k] = v === 'true' ? true
+             : v === 'false' ? false
+             : (v !== '' && !isNaN(+v)) ? +v
+             : v;
+    }
+    await page.evaluate((ov) => {
+      if (window.wc3v && window.wc3v.viewOptions) Object.assign(window.wc3v.viewOptions, ov);
+    }, vov);
+    process.stdout.write(`  viewOptions overrides: ${JSON.stringify(vov)}\n`);
+  }
 
   // Let models/GLBs stream in, then re-seek to EXACTLY the requested game
   // time and restart playback. Without this the sampled game-time window
@@ -400,7 +508,7 @@ function resolveFile (urlStr) {
     if (errors.length) {
       process.stdout.write(`  page errors (${errors.length}):\n    ${[...new Set(errors)].slice(0, 8).join('\n    ')}\n`);
     }
-    await browser.close();
+    try { await browser.close(); } catch (e) { if (!e || e.code !== 'EBUSY') throw e; }
     return;
   }
 
@@ -486,7 +594,22 @@ function resolveFile (urlStr) {
     process.stdout.write(`  screenshot: ${shot}\n`);
   }
 
-  await browser.close();
+  // --eval=<expr> — evaluate an expression in the page AFTER the sampling
+  // window and print the JSON result. For reading experiment counters left by
+  // a --swap'd instrumented library, or any ad-hoc page state.
+  if (args.eval) {
+    try {
+      const val = await page.evaluate((src) => {
+        // eslint-disable-next-line no-eval
+        return JSON.parse(JSON.stringify(eval(src)));
+      }, String(args.eval));
+      process.stdout.write(`  eval ${args.eval}:\n${JSON.stringify(val, null, 2)}\n`);
+    } catch (e) {
+      process.stdout.write(`  eval FAILED: ${e.message}\n`);
+    }
+  }
+
+  try { await browser.close(); } catch (e) { if (!e || e.code !== 'EBUSY') throw e; }
 
   // --- Aggregate the CPU profile: self time per function, per file ---
   const nodeById = new Map();
@@ -584,4 +707,5 @@ function resolveFile (urlStr) {
     process.stdout.write(`  json: ${args.json}\n`);
   }
   process.stdout.write('\n');
-})().catch(e => { console.error(e); process.exit(1); });
+  sweepOrphanBrowsers();
+})().catch(e => { console.error(e); sweepOrphanBrowsers(); process.exit(1); });

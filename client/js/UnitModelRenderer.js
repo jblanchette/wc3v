@@ -287,7 +287,10 @@
       const cap = this.maxUnits + 360;   // player units + camp creeps
       this._ringPool = new RingShadowPool(this.scene, ringGeo(), new THREE.ShaderMaterial({
         vertexShader: POOL_VS, fragmentShader: RING_FS,
-        transparent: true, depthWrite: false, side: THREE.DoubleSide
+        // forceSinglePass: three r155+ otherwise draws a transparent double-
+        // sided material twice per frame (back then front), re-resolving the
+        // shader program before each pass. Flat ground rings don't self-overlap.
+        transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
       }), cap, 3);
       this._shadowPool = new RingShadowPool(this.scene, shadowGeo(), new THREE.ShaderMaterial({
         vertexShader: POOL_VS, fragmentShader: SHADOW_FS,
@@ -299,7 +302,7 @@
       // caps a selection at 12 units and the map caps at 8 seats.
       this._selectionPool = new RingShadowPool(this.scene, selRingGeo(), new THREE.ShaderMaterial({
         vertexShader: POOL_VS, fragmentShader: RING_FS,
-        transparent: true, depthWrite: false, side: THREE.DoubleSide
+        transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
       }), 96, 4);
     }
 
@@ -770,7 +773,8 @@
             ? Math.abs(Math.atan2(Math.sin(d.facing - inst._wf),
                                   Math.cos(d.facing - inst._wf))) > TURN_EPSILON
             : false;
-          const stationary = !loopAnchors && !turning && (!d || d.state === 'idle');
+          const stationary = !loopAnchors &&
+            ((lod && lod.freezeMoving) || (!turning && (!d || d.state === 'idle')));
 
           this._setStatic(inst, lod && stationary && !inDeath && !morph && inst._tpl && !inst.isPlaceholder &&
             this._beyondLod(inst, pos, cx, cy, lod));
@@ -1069,12 +1073,20 @@
       // Reused scratch — this runs every frame and the object never escapes
       // the frame (consumed by _beyondLod only).
       const out = this._lodScratch ||
-        (this._lodScratch = { cam: null, on2: 0, off2: 0, hOn2: 0, hOff2: 0 });
+        (this._lodScratch = { cam: null, on2: 0, off2: 0, hOn2: 0, hOff2: 0, freezeMoving: false });
       out.cam = cam;
       out.on2 = dOn * dOn;
       out.off2 = (dOn * 0.85) * (dOn * 0.85);
       out.hOn2 = dOnHero * dOnHero;
       out.hOff2 = (dOnHero * 0.85) * (dOnHero * 0.85);
+      // Performance-quality lever: beyond the LOD distance, freeze WALKING and
+      // ATTACKING player units too, not just idle ones. A frozen walker slides
+      // in its baked pose — visible if you look for it, invisible at the sizes
+      // this threshold implies — and in a mid-game fight walk/attack states are
+      // most of the army, so the idle-only gate stops paying exactly when the
+      // frame is most expensive. Death/morph windows and heroes keep their
+      // exemptions regardless.
+      out.freezeMoving = cfg.staticPoseFreezeMoving === true;
       return out;
     }
 
@@ -1754,7 +1766,7 @@
         return;
       }
       inst.ring = new THREE.Mesh(ringGeo(), new THREE.MeshBasicMaterial({
-        color: new THREE.Color(colorHex), transparent: true, opacity: opacity, depthWrite: false, side: THREE.DoubleSide
+        color: new THREE.Color(colorHex), transparent: true, opacity: opacity, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
       }));
       inst.ring.rotation.x = -Math.PI / 2;
       inst.ring.renderOrder = 3;

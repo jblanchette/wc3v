@@ -408,7 +408,9 @@
         depthWrite: false,
         blending: THREE.AdditiveBlending,
         toneMapped: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        // Flat decals: skip three's two-pass transparent double-sided path.
+        forceSinglePass: true
       });
       const inst = new THREE.InstancedMesh(geo, mat, FOOT_MAX);
       inst.count = 0;

@@ -96,6 +96,8 @@ const FogOfWar = class {
       transparent: true,
       depthWrite: false,
       side: THREE.DoubleSide,
+      // Flat overlay plane: skip three's two-pass transparent double-sided path.
+      forceSinglePass: true,
       uniforms: {
         uBoundsMin: { value: new THREE.Vector2(boundsXMin, boundsZMin) },
         uBoundsMax: { value: new THREE.Vector2(boundsXMax, boundsZMax) },

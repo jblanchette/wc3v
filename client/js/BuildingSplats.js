@@ -204,7 +204,13 @@ const BuildingSplats = class {
         polygonOffset: true,
         polygonOffsetFactor: -2,
         polygonOffsetUnits: -2,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        // Without this, three r155+ renders every transparent double-sided
+        // material TWICE per object per frame (back faces then front faces),
+        // bumping material.version before each pass — which forces a full
+        // program-parameter rebuild per splat per frame. A ground-plane decal
+        // has no self-overlap to sort, so the second pass buys nothing.
+        forceSinglePass: true
       });
     }
 

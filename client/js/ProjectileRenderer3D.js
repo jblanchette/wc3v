@@ -277,7 +277,11 @@
         // cliff should be occluded by it, which is what the game does.
         depthTest: true,
         toneMapped: false,
-        side: THREE.DoubleSide
+        side: THREE.DoubleSide,
+        // Billboards have no self-overlap: skip three's two-pass transparent
+        // double-sided path, which re-resolves the shader program (and draws
+        // the whole pool) twice per frame.
+        forceSinglePass: true
       });
       const mesh = new THREE.InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);

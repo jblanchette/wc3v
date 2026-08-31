@@ -94,7 +94,7 @@ const padL = (s, n) => String(s == null ? '' : s).padStart(n);
   const headful = !!args.headful;
   const browser = await puppeteer.launch({
     executablePath: exe,
-    headless: headful ? false : 'new',
+    headless: headful ? false : true, // Edge 152 rejects the legacy 'new' string
     args: [
       '--no-sandbox',
       '--disable-dev-shm-usage',

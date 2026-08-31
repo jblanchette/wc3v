@@ -395,11 +395,22 @@
       for (const u of this.units) if (u && u.uuid) this._byUuid.set(u.uuid, u);
     }
 
-    /** Memoized on the exact gameTime, so every consumer shares one frame. */
+    /** Memoized on the exact gameTime, so every consumer shares one frame.
+     *
+     * perf.behaviorResolveMs (0 = off) quantizes the resolve time so the full
+     * _build — a scan of every live unit plus a spatial-hash rebuild — runs on
+     * a coarser clock than the render loop. Positions are NOT read from this
+     * frame (renderers interpolate paths directly), only states/facings/
+     * targets, all of which change on hundreds-of-ms scales; facing consumers
+     * additionally smooth at the turn-rate cap. Remains a pure function of
+     * gameTime, so seeking stays exact. */
     resolve (gameTime) {
-      if (gameTime === this._memoTime && this._memoFrame) return this._memoFrame;
-      this._memoFrame = this._build(gameTime);
-      this._memoTime = gameTime;
+      const cfg = (typeof window !== 'undefined' && window.WC3V_CONFIG && window.WC3V_CONFIG.perf) || null;
+      const q = cfg && cfg.behaviorResolveMs > 0 ? cfg.behaviorResolveMs : 0;
+      const t = q ? Math.round(gameTime / q) * q : gameTime;
+      if (t === this._memoTime && this._memoFrame) return this._memoFrame;
+      this._memoFrame = this._build(t);
+      this._memoTime = t;
       return this._memoFrame;
     }
 

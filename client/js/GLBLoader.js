@@ -123,7 +123,14 @@
       side: THREE.DoubleSide,
       transparent: rs.transparent,
       blending: rs.blending,
-      depthWrite: rs.depthWrite
+      depthWrite: rs.depthWrite,
+      // WC3 art is authored for single-pass double-sided rendering. three
+      // r155+ otherwise draws every transparent double-sided material twice
+      // per object per frame (back then front faces, version-bumping the
+      // material before each pass) — and the runtime fade path forces
+      // transparent:true onto EVERY unit material, so without this a fading
+      // army pays double skinned draws plus a per-mesh program re-resolve.
+      forceSinglePass: true
     });
     mat.userData.wc3 = info;   // renderer checks wc3.replaceableId / wc3.teamBlend
     // Base blend state, so the renderer's fade can force transparency then restore it.
@@ -320,6 +327,9 @@
         return new THREE.ShaderMaterial({
           uniforms,
           side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+          // Single-pass even if a runtime fade forces transparent:true —
+          // see the note on the skinned material above.
+          forceSinglePass: true,
           vertexShader: `
             uniform mat4 worldMatrix;
             varying vec2 vUV;

@@ -104,10 +104,40 @@
       // and paying 4× fill for retina supersampling defeats it. Raise to 2 for a
       // sharper picture on a fast machine with a retina display.
       canvasRenderDprCap: 1.0,
+      // Beyond the static-pose LOD distance, freeze WALKING and ATTACKING
+      // units too, not just idle ones. A frozen walker slides in its baked
+      // pose — the accepted trade of the Performance preset, because in a
+      // mid-game fight walk/attack is most of the army and the idle-only gate
+      // stops paying exactly when the frame is most expensive. Heroes and
+      // death/morph windows keep their animated exemptions regardless.
+      staticPoseFreezeMoving: false,
+      // Quantize UnitBehavior.resolve() to this many game-ms (0 = every
+      // frame). The full behavior build scans every live unit and rebuilds a
+      // spatial hash; states/facings it produces change on hundreds-of-ms
+      // scales and facing consumers smooth at the turn-rate cap. Positions
+      // are never read from the behavior frame, so motion stays per-frame.
+      behaviorResolveMs: 0,
+      // Active quality preset name — set via WC3V_CONFIG.setQuality below.
+      quality: 'balanced',
       // Corner readout: rolling frame time, draw calls, projectile counts.
       // Off by default. Exists because there was previously no in-viewer way to
       // measure a render change, only to assert one.
       showStats: false
+    },
+
+    // User-facing quality presets (Settings → Quality). Only levers that are
+    // read per-frame (or on the resize path) belong here, so a preset switch
+    // takes effect live; construction-time switches (instancedRings) do not.
+    // 'balanced' mirrors the perf defaults above — keep them in sync.
+    qualityPresets: {
+      // High: more animation at distance, retina-sharp canvases. The adaptive
+      // governor stays on as a safety net on weak machines.
+      quality:     { staticPoseMinPx: 12, staticPoseFreezeMoving: false, behaviorResolveMs: 0,   canvasRenderDprCap: 2, hudChartsDpr: 2 },
+      balanced:    { staticPoseMinPx: 24, staticPoseFreezeMoving: false, behaviorResolveMs: 0,   canvasRenderDprCap: 1, hudChartsDpr: 2 },
+      // Performance: distant units freeze even while moving, behavior state
+      // resolves at ~7Hz of game time, HUD renders at 1x. Playback content is
+      // untouched — this trades decoration fidelity only.
+      performance: { staticPoseMinPx: 48, staticPoseFreezeMoving: true,  behaviorResolveMs: 150, canvasRenderDprCap: 1, hudChartsDpr: 1 }
     },
     // NOTE on an optimization that was TRIED AND REMOVED: capping how many units
     // tick an AnimationMixer per frame ("animated unit budget"). Measured, it
@@ -137,6 +167,27 @@
       parser:     isDev
     }
   };
+
+  // Apply a quality preset by name and persist the choice. Returns false for
+  // an unknown name. hudChartsDpr applies to the next HUD build (a preset
+  // switch mid-match keeps the current HUD bitmaps); everything else is read
+  // per-frame or on the resize path.
+  config.setQuality = function (name) {
+    var p = config.qualityPresets[name];
+    if (!p) return false;
+    for (var k in p) config.perf[k] = p[k];
+    config.perf.quality = name;
+    try { localStorage.setItem('wc3v-quality', name); } catch (e) { /* private mode */ }
+    return true;
+  };
+
+  // Restore the saved preset before any subsystem reads config.perf — this
+  // file loads first on every page.
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('wc3v-quality'); } catch (e) { /* private mode */ }
+    if (saved && config.qualityPresets[saved]) config.setQuality(saved);
+  })();
 
   // Light helper so callers can write `WC3V_CONFIG.log('three', ...)` without
   // sprinkling `if (...)` everywhere. No-op when the area flag is off.

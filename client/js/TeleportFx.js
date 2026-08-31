@@ -128,6 +128,31 @@ const TeleportFx = class {
     utilityCtx.restore();
   }
 
+  // Radial glow, pre-rendered once per (colour, inner-radius ratio) and blitted
+  // scaled. Building a fresh createRadialGradient + filled arc every frame for
+  // the channel halo and the destination halo was a measurable slice of frame
+  // CPU for the whole life of a TP cinematic; the stops never change, only the
+  // radius, which drawImage scaling covers exactly.
+  _glowSprite (glowRGB, innerRatio) {
+    if (!this._glowCache) this._glowCache = {};
+    const key = glowRGB + '|' + innerRatio;
+    let c = this._glowCache[key];
+    if (!c) {
+      const S = 256;
+      c = document.createElement('canvas');
+      c.width = c.height = S;
+      const g = c.getContext('2d');
+      const grad = g.createRadialGradient(S / 2, S / 2, (S / 2) * innerRatio, S / 2, S / 2, S / 2);
+      grad.addColorStop(0,   `rgba(${glowRGB}, 0.55)`);
+      grad.addColorStop(0.6, `rgba(${glowRGB}, 0.18)`);
+      grad.addColorStop(1,   `rgba(${glowRGB}, 0)`);
+      g.fillStyle = grad;
+      g.fillRect(0, 0, S, S);
+      this._glowCache[key] = c;
+    }
+    return c;
+  }
+
   // Per-category accent palette. Single-unit teleports get a cyan look so a
   // glance is enough to tell "hero/staff jump" apart from a Town Portal mass
   // recall. Cancelled casts always switch to red regardless of category.
@@ -308,20 +333,15 @@ const TeleportFx = class {
       }
 
       // 2) RADIAL GLOW around the caster — soft halo that grows over the channel.
+      // Blitted from the pre-rendered sprite (see _glowSprite); the growth over
+      // the channel rides the drawImage scale. Inner-radius ratio is fixed at
+      // the mid-channel value 0.23 (was mainR*0.4/glowR = 0.25→0.22 over the
+      // channel), which is visually identical.
       const mainR = 60;
       const glowR = mainR * (1.6 + 0.2 * tProg);
-      const glow = ctx.createRadialGradient(
-        oPx.x, oPx.y, mainR * 0.4,
-        oPx.x, oPx.y, glowR
-      );
-      glow.addColorStop(0,   `rgba(${palette.glowRGB}, 0.55)`);
-      glow.addColorStop(0.6, `rgba(${palette.glowRGB}, 0.18)`);
-      glow.addColorStop(1,   `rgba(${palette.glowRGB}, 0)`);
       ctx.globalAlpha = 1;
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(oPx.x, oPx.y, glowR, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.drawImage(this._glowSprite(palette.glowRGB, 0.23),
+        oPx.x - glowR, oPx.y - glowR, glowR * 2, glowR * 2);
 
       // 3) PRIMARY RING — bold, bright.
       ctx.globalAlpha = 0.95;
@@ -476,15 +496,11 @@ const TeleportFx = class {
     const iconSize = 32;
 
     // Soft glow behind the ring so the icon reads against varied terrain.
-    const glow = ctx.createRadialGradient(dx, dy, 6, dx, dy, ringR * 1.9);
-    glow.addColorStop(0,   `rgba(${palette.glowRGB}, 0.55)`);
-    glow.addColorStop(0.6, `rgba(${palette.glowRGB}, 0.18)`);
-    glow.addColorStop(1,   `rgba(${palette.glowRGB}, 0)`);
+    // Pre-rendered sprite; inner ratio 0.09 ≈ the old 6px / (ringR*1.9).
+    const glowOuter = ringR * 1.9;
     ctx.globalAlpha = 1;
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(dx, dy, ringR * 1.9, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.drawImage(this._glowSprite(palette.glowRGB, 0.09),
+      dx - glowOuter, dy - glowOuter, glowOuter * 2, glowOuter * 2);
 
     // Ring proper.
     ctx.globalAlpha = 0.95 * pulse;

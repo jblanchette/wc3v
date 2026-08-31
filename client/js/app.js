@@ -3851,6 +3851,32 @@ const Wc3vViewer = class {
 
       settingsModalEl.innerHTML = '';
 
+      // Render-quality preset — cycles High → Balanced → Performance. This is
+      // the perf lever (LOD aggressiveness, behavior tick rate, canvas DPR
+      // caps); the content toggles below are unaffected by it.
+      {
+        const qLabels = { quality: 'High', balanced: 'Balanced', performance: 'Performance' };
+        const qOrder = ['quality', 'balanced', 'performance'];
+        const qEl = document.createElement('div');
+        qEl.classList.add('vc-btn');
+        const qName = () => (window.WC3V_CONFIG && window.WC3V_CONFIG.perf.quality) || 'balanced';
+        const sync = () => {
+          qEl.textContent = `Quality: ${qLabels[qName()] || 'Balanced'}`;
+          qEl.classList.toggle('on', qName() !== 'balanced');
+        };
+        sync();
+        qEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const next = qOrder[(qOrder.indexOf(qName()) + 1) % qOrder.length];
+          if (window.WC3V_CONFIG && window.WC3V_CONFIG.setQuality) window.WC3V_CONFIG.setQuality(next);
+          sync();
+          // canvasRenderDprCap feeds the renderScale ladder, which recomputes
+          // on the resize path — retrigger it so the cap applies immediately.
+          window.dispatchEvent(new Event('resize'));
+        });
+        settingsModalEl.append(qEl);
+      }
+
       const creepRouteLocked = this.isNonOneVsOne();
       const autoSplitLocked = this.isNonOneVsOne();
 
@@ -4813,7 +4839,13 @@ const Wc3vViewer = class {
     }
 
     playerCtx.font = `bold ${fontSize}px Arial`;
-    const textW = playerCtx.measureText(timeText).width;
+    // measureText forces text-metrics work every frame for a string that only
+    // changes once per game-second — memoize on the rendered text.
+    if (this._clockTextW == null || this._clockText !== timeText) {
+      this._clockText = timeText;
+      this._clockTextW = playerCtx.measureText(timeText).width;
+    }
+    const textW = this._clockTextW;
     const pillW = pillPadX + iconSize + iconGap + textW + pillPadX;
     const pillX = Math.round(cw / 2 - pillW / 2);
     const pillY = topY;

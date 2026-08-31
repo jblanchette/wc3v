@@ -948,6 +948,12 @@
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        // forceSinglePass: three r155+ otherwise renders every transparent
+        // double-sided material twice per object per frame (back faces then
+        // front faces), version-bumping the material before each pass — a
+        // full program re-resolve plus a doubled draw, every frame, for a
+        // water sheet the camera only ever sees from above.
+        forceSinglePass: true,
         uniforms: {
           lightDir: { value: new THREE.Vector3(-0.3, -1.0, -0.5).normalize() },
           uTime: { value: 0.0 }
@@ -1420,7 +1426,7 @@
 
         const mat = new THREE.MeshBasicMaterial({
           color, transparent: true, opacity: opacity || 0.6,
-          depthWrite: false, side: THREE.DoubleSide
+          depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
         });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.renderOrder = 2;
@@ -1430,7 +1436,7 @@
         const glowGeo = geo.clone();
         const glowMat = new THREE.MeshBasicMaterial({
           color, transparent: true, opacity: 0.15,
-          depthWrite: false, side: THREE.DoubleSide
+          depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
         });
         const glow = new THREE.Mesh(glowGeo, glowMat);
         glow.scale.set(2.0, 1, 2.0);
@@ -1484,7 +1490,7 @@
         const geo = new THREE.RingGeometry(innerR, outerR, 48);
         const mat = new THREE.MeshBasicMaterial({
           color, transparent: true, opacity: 0.5,
-          depthWrite: false, side: THREE.DoubleSide
+          depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
         });
         const mesh = new THREE.Mesh(geo, mat);
         mesh.rotation.x = -Math.PI / 2; // lay flat on XZ plane
@@ -1579,7 +1585,7 @@
 
         const mat = new THREE.MeshBasicMaterial({
           color, transparent: true, opacity: 0.7,
-          depthWrite: false, side: THREE.DoubleSide
+          depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
         });
         line = new THREE.Mesh(geo, mat);
         line.renderOrder = 2;
@@ -1679,7 +1685,7 @@
         if (!g) {
           g = new THREE.Mesh(this._hlGlowGeo, new THREE.MeshBasicMaterial({
             map: this._guideGlowTexture(), transparent: true, depthWrite: false, depthTest: false,
-            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false
+            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false, forceSinglePass: true
           }));
           g.rotation.x = -Math.PI / 2;   // lay flat on the ground (XZ plane)
           g.renderOrder = 4;
@@ -2039,6 +2045,7 @@
               alphaTest: texInfo.filterMode === 1 ? 0.5 : 0,
               transparent: texInfo.filterMode > 1,
               side: THREE.DoubleSide,
+              forceSinglePass: true,
               color: 0xffffff
             });
           } else {
@@ -2885,7 +2892,7 @@
         g.setAttribute('position', new THREE.Float32BufferAttribute(tintVerts, 3));
         const m = new THREE.MeshBasicMaterial({
           color: 0xe03434, transparent: true, opacity: 0.30,
-          depthTest: false, depthWrite: false, side: THREE.DoubleSide
+          depthTest: false, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
         });
         const mesh = new THREE.Mesh(g, m);
         mesh.renderOrder = 10;
@@ -2967,7 +2974,7 @@
         gf.setAttribute('position', new THREE.Float32BufferAttribute(fillVerts, 3));
         const mf = new THREE.MeshBasicMaterial({
           color: 0xffd84a, transparent: true, opacity: 0.14,
-          depthTest: false, depthWrite: false, side: THREE.DoubleSide
+          depthTest: false, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true
         });
         const fill = new THREE.Mesh(gf, mf);
         fill.renderOrder = 13;

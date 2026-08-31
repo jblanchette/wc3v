@@ -1308,7 +1308,6 @@ const ClientUnit = class {
 
   renderLevelPins (ctx, transform, gameTime, xScale, yScale, viewOptions, frameData) {
     const diamondSize = 22;
-    const iconSize = 36;
     const proximityThreshold = diamondSize + 48;
     const unitPositions = frameData ? frameData.unitDrawPositions : [];
 
@@ -1331,49 +1330,72 @@ const ClientUnit = class {
       );
       const pinAlpha = nearUnit ? 0.15 : 1.0;
 
-      // outer glow ring
-      ctx.globalAlpha = 0.3 * pinAlpha;
-      ctx.beginPath();
-      ctx.arc(drawX, drawY, diamondSize + 7, 0, Math.PI * 2);
-      ctx.fillStyle = this.playerColor;
-      ctx.fill();
-
-      // diamond pin in player color
-      ctx.globalAlpha = 0.9 * pinAlpha;
-      Drawing.drawDiamond(ctx, drawX, drawY, diamondSize, this.playerColor, '#000');
-
-      // skill icon centered in diamond
-      ctx.globalAlpha = 1.0 * pinAlpha;
-      Drawing.drawImageCircle(
-        ctx,
-        this[`spell-${levelRecord.slot}`],
-        drawX,
-        drawY,
-        iconSize
-      );
-
-      // level badge at bottom-right
-      const badgeX = drawX + diamondSize;
-      const badgeY = drawY + diamondSize;
-      ctx.beginPath();
-      ctx.arc(badgeX, badgeY, 13, 0, Math.PI * 2);
-      ctx.fillStyle = '#111';
-      ctx.fill();
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = this.playerColor;
-      ctx.stroke();
-
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#FFF';
-      ctx.globalAlpha = pinAlpha;
-      ctx.fillText(levelRecord.newLevel, badgeX, badgeY + 1);
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'alphabetic';
+      // Every historical pin redraws every frame, and its art never changes
+      // (colour + skill icon + level number). Rendering the ~10 canvas ops +
+      // fillText per pin per frame was a steady ~1% of frame CPU by mid-game;
+      // a cached sprite makes each pin one drawImage. Per-frame state is only
+      // pinAlpha, applied to the whole sprite.
+      const sprite = this._levelPinSprite(levelRecord, diamondSize);
+      if (sprite) {
+        ctx.globalAlpha = pinAlpha;
+        ctx.drawImage(sprite.canvas, drawX - sprite.cx, drawY - sprite.cy);
+      }
     });
 
     ctx.globalAlpha = 1;
+  }
+
+  // Offscreen pin sprite for one level record: glow ring + diamond + skill
+  // icon + level badge, in this player's colour. Cached per (slot, level);
+  // rebuilt if it was baked before the skill icon finished loading.
+  _levelPinSprite (levelRecord, diamondSize) {
+    const iconSize = 36;
+    const icon = this[`spell-${levelRecord.slot}`];
+    const iconReady = !!(icon && icon.complete && icon.naturalWidth);
+    if (!this._pinSprites) this._pinSprites = {};
+    const key = levelRecord.slot + '|' + levelRecord.newLevel + '|' + (iconReady ? 1 : 0);
+    let s = this._pinSprites[key];
+    if (s) return s;
+
+    // Extents: glow radius 29; badge centre (+22,+22) radius 13 (+stroke).
+    const cx = 32, cy = 32;
+    const c = document.createElement('canvas');
+    c.width = 72; c.height = 72;
+    const g = c.getContext('2d');
+
+    g.globalAlpha = 0.3;
+    g.beginPath();
+    g.arc(cx, cy, diamondSize + 7, 0, Math.PI * 2);
+    g.fillStyle = this.playerColor;
+    g.fill();
+
+    g.globalAlpha = 0.9;
+    Drawing.drawDiamond(g, cx, cy, diamondSize, this.playerColor, '#000');
+
+    g.globalAlpha = 1.0;
+    if (iconReady) Drawing.drawImageCircle(g, icon, cx, cy, iconSize);
+
+    const badgeX = cx + diamondSize;
+    const badgeY = cy + diamondSize;
+    g.beginPath();
+    g.arc(badgeX, badgeY, 13, 0, Math.PI * 2);
+    g.fillStyle = '#111';
+    g.fill();
+    g.lineWidth = 2.5;
+    g.strokeStyle = this.playerColor;
+    g.stroke();
+
+    g.font = 'bold 16px Arial';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = '#FFF';
+    g.fillText(levelRecord.newLevel, badgeX, badgeY + 1);
+
+    s = { canvas: c, cx, cy };
+    this._pinSprites[key] = s;
+    // A pin baked without its icon re-bakes once the image lands.
+    if (!iconReady) delete this._pinSprites[levelRecord.slot + '|' + levelRecord.newLevel + '|1'];
+    return s;
   }
 
   isUprootedAt (gameTime) {
