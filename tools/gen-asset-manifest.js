@@ -100,6 +100,10 @@ function main () {
 
   // ── 3. rewrite HTML cache busters ────────────────────────────────────────
   let rewrites = 0;
+  // Local js/css references the rewrite could not reach. See the note on the
+  // [\w.-] class below: a skip here is silent and permanent, so it is
+  // collected and reported rather than left to be discovered in a browser.
+  const skipped = [];
   for (const name of HTML_FILES) {
     const p = path.join(CLIENT, name);
     if (!fs.existsSync(p)) continue;
@@ -114,11 +118,27 @@ function main () {
     //    to bust every JS/CSS URL for every repeat visitor; now only the
     //    changed file gets a new URL. bundleVersion is the fallback for
     //    anything referenced but not hashed.
+    //    The existing-buster class is [\w.-], NOT [\w.]. A hyphen used to make
+    //    the whole tag unmatchable rather than just the buster: `?v=dl-5a`
+    //    matched as far as `?v=dl`, then the closing quote did not match `-`,
+    //    the optional group backtracked to empty, and the tag was skipped in
+    //    silence. That file then shipped with a FROZEN buster under the
+    //    `immutable` one-year Cache-Control on /js/*, so no later change to it
+    //    would ever have reached a repeat visitor. Shipped that way on
+    //    download.html for months.
     const verFor = (file) => perFile['/' + file.replace(/^\.{0,2}\//, '')] || bundleVersion;
     html = html.replace(
-      /((?:src|href)=")((?:\.{0,2}\/)?(?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[\w.]+)?(")/g,
+      /((?:src|href)=")((?:\.{0,2}\/)?(?:js|css)\/[^"?]+\.(?:js|css))(?:\?v=[\w.-]+)?(")/g,
       (_m, pre, file, post) => `${pre}${file}?v=${verFor(file)}${post}`
     );
+
+    //    Belt and braces, because the failure above was invisible: any local
+    //    js/css reference left carrying something other than its own hash is
+    //    one the rewrite could not reach. Report it rather than ship it.
+    for (const m of html.matchAll(/(?:src|href)="((?:\.{0,2}\/)?(?:js|css)\/[^"?]+\.(?:js|css))(\?v=([^"]*))?"/g)) {
+      const want = verFor(m[1]);
+      if (m[3] !== want) skipped.push(name + ': ' + m[1] + ' kept ?v=' + (m[3] === undefined ? '(none)' : m[3]) + ', expected ' + want);
+    }
 
     // b) viewer.html dev cache buster — between the marker comments. The
     //    committed source leaves `_assetVersion = null` so dev falls back to
@@ -159,6 +179,7 @@ function main () {
   console.log(`asset-manifest: bundleVersion=${bundleVersion}${dryRun ? ' (dry run — nothing written)' : ''}`);
   console.log(`  ${files.length} files hashed → ${path.relative(ROOT, manifestPath)}`);
   console.log(`  ${rewrites} HTML file(s) ${dryRun ? 'would be' : ''} rewritten`);
+  for (const s of skipped) console.error('  UNBUSTED  ' + s);
 
   // --check has to FAIL on drift, or it is a gate that never gates.
   //
@@ -172,6 +193,19 @@ function main () {
   if (isCheck && rewrites > 0) {
     console.error(`
 ${rewrites} HTML file(s) are out of date. Run \`npm run gen-manifest\` and commit the result.`);
+    process.exit(1);
+  }
+
+  // A reference the rewrite could not reach ships with whatever buster is
+  // hardcoded, forever, behind a one-year immutable Cache-Control. That is
+  // worse than being out of date, so it fails the build rather than --check
+  // alone.
+  if (skipped.length && !dryRun) {
+    console.error(`
+${skipped.length} js/css reference(s) did not get a content hash. A hand-written
+?v= that the rewrite cannot parse freezes that URL under the immutable
+Cache-Control on /js/* and /css/*, so later changes never reach a repeat
+visitor. Remove the hand-written buster and let this tool set it.`);
     process.exit(1);
   }
 }
