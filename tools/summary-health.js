@@ -76,10 +76,20 @@ const inspect = (name) => {
     try { resolved = mapResolver.resolveMapDataName(rawMap, mapDataByFile); } catch (e) { resolved = null; }
   }
 
+  // How much of the game the parse actually reached. A summary can carry its
+  // players and still be missing the entire match: the header names them, and
+  // a throw in an action handler ends the game-data pass right there. Counting
+  // players alone called exactly that case healthy.
+  const lenMs = (truncated && truncated.replayLengthMs) || 0;
+  const gotMs = truncated ? Math.max(0, lenMs - (truncated.missingMs || 0)) : null;
+  const coverage = (truncated && lenMs) ? gotMs / lenMs : 1;
+
   return {
     name,
     players: real.length,
     gameMode: json && json.gameMode,
+    truncated: !!truncated,
+    coverage,
     reason: truncated && truncated.reason,
     rawMap,
     mapFile: mapFileOf(rawMap),
@@ -130,6 +140,22 @@ if (missingMaps.length) {
     console.log('  ' + String(rs.length).padStart(4) + '  ' + m);
     if (verbose) for (const r of rs) console.log('          ' + r.name);
   }
+}
+
+// Summaries that DO have players but stop early. Ranked by how much of the
+// game is missing, because a parse that died at 0:00 and one that died in the
+// last minute are not the same problem.
+const cut = real
+  .filter((r) => !r.broken && r.truncated && r.coverage < 0.995)
+  .sort((a, b) => a.coverage - b.coverage);
+
+if (cut.length) {
+  console.log('\nParsed but cut short (' + cut.length + '), worst first:');
+  for (const r of cut.slice(0, verbose ? cut.length : 15)) {
+    console.log('  ' + (Math.round(r.coverage * 1000) / 10 + '%').padStart(7) +
+                ' of the game  ' + String(r.reason || '').slice(0, 44).padEnd(46) + r.name);
+  }
+  if (!verbose && cut.length > 15) console.log('  ... ' + (cut.length - 15) + ' more, --verbose for all');
 }
 
 if (otherReason.length) {
