@@ -563,6 +563,39 @@ const assignCampOrder = (world, wc3vPlayers) => {
 // equal-team shapes get a clean label; anything off-pattern is 'custom'. The
 // client mirrors this exactly (Wc3vViewer.getGameMode, UploadManager fallback);
 // keep all three in sync.
+// Reconstruct the { playerId: {teamId, isNeutralPlayer} } shape
+// computeGameMode expects from SLOT RECORDS alone, i.e. from a header peek
+// with no game parse behind it.
+//
+// This lives here rather than beside either caller because there are three of
+// them now — tools/lib/replay-peek.js (the corpus 1v1 gate), the browser
+// parser's peekPlayers (the desktop's 1v1 gate), and anything else that wants
+// a mode without paying for a parse. computeGameMode already carries a note
+// that it must stay in sync across its call sites; a second way of building
+// its input would have been the same problem one level down.
+//
+// Observers occupy a slot and must not count toward the team shape. The
+// observer team id moved with the replay format, the same boundary
+// computeWinner derives.
+const OBSERVER_TEAM_MODERN = 24;
+const OBSERVER_TEAM_LEGACY = 12;
+
+const playersFromSlots = (slotRecords, version) => {
+	const obsTeam = version >= 29 ? OBSERVER_TEAM_MODERN : OBSERVER_TEAM_LEGACY;
+	const map = {};
+
+	(slotRecords || []).forEach((slot) => {
+		if (!slot) return;
+		if (slot.teamId === obsTeam) return;
+		// slotStatus 2 === occupied (0 empty, 1 closed). Computer slots carry
+		// computerFlag and ARE real participants as far as the shape goes.
+		if (slot.slotStatus != null && slot.slotStatus !== 2) return;
+		map[slot.playerId] = { teamId: slot.teamId, isNeutralPlayer: false };
+	});
+
+	return map;
+};
+
 const computeGameMode = (playersMap) => {
   const humans = Object.values(playersMap || {}).filter(p => p && !p.isNeutralPlayer);
   const n = humans.length;
@@ -1197,6 +1230,7 @@ module.exports = {
 	writeOutput,
 	buildOutputObject,
 	computeGameMode,
+	playersFromSlots,
 
   findIndexFrom,
   StandardStreamSearch,

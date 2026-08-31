@@ -94,9 +94,22 @@ const Wc3vParser = {
       .filter(([id]) => humanIds.size === 0 || humanIds.has(id))
       .map(([playerId, name]) => ({ playerId, name }));
 
+    // The mode, from the same slot records, so a caller can gate on "is this
+    // a 1v1" without paying for a parse. Derived through the shared
+    // playersFromSlots + computeGameMode rather than counted here: the desktop
+    // 1v1 filter and the corpus ingest gate have to agree with what the full
+    // parse will later say, or a replay gets skipped and then shows up.
+    const slots = info.metadata.slotRecords || [];
+    const version = (info.subheader && info.subheader.version) || 0;
+    const slotPlayers = utils.playersFromSlots(slots, version);
+    const teamIds = new Set(Object.values(slotPlayers).map(p => p.teamId));
+
     return {
       players,
-      mapName: (info.metadata.map && info.metadata.map.mapName) || null
+      mapName: (info.metadata.map && info.metadata.map.mapName) || null,
+      gameMode: utils.computeGameMode(slotPlayers),
+      playerCount: Object.keys(slotPlayers).length,
+      teamCount: teamIds.size
     };
   },
 
