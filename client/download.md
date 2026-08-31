@@ -1,46 +1,62 @@
 ---
-title: "Download WC3V Desktop | WC3V"
+title: "WC3V Desktop for Windows | WC3V"
 url: https://wc3v.com/download
-description: "Download the WC3V desktop app for Windows. Check the version and checksum, read the disclosures, and get the installer straight from our CDN."
-updated: 2026-08-12
+description: "A free Windows app that reviews your Warcraft III games for you. It watches your replay folder, reads each game on your own PC, and has the report ready before you have alt-tabbed. Includes an OBS overlay."
+updated: 2026-08-31
 ---
 
-# Download WC3V for Windows
+WC3V Desktop · free · Windows 10 and 11
 
-The desktop app watches your replays folder. When a game ends, the report is already there: the result, who was ahead and when, both builds, the whole economy. Every moment opens the 3D viewer at that second.
+# It reviews your Warcraft III games for you.
 
-Latest release
+Leave it running. Every game you finish is read on your own PC and laid out before you have alt-tabbed.
 
-## Loading…
+`irm https://wc3v.com/install.ps1 | iex` **Loading…**
 
-`irm https://wc3v.com/install.ps1 | iex` [Or download the installer](#)
+## How it works
 
-Paste into PowerShell. Windows shows no warning on this path, and the script checks the download against the published SHA-256 before it installs anything.
+**1. It watches your replay folder** Reforged, classic and W3Champions. **2. It reads each game here** On your machine, in seconds. **3. The report is waiting** Any moment opens in the 3D viewer.
 
-``
+## Safe to run
 
-Couldn't reach the update server just now, so the version and checksum above are missing. The install command still works: it reads the same manifest directly and will tell you what it found.
+- **Never touches the game.** No injection, no memory reading, no packet capture, no input automation.
 
-[View source on GitHub](https://github.com/jblanchette/wc3v) ![The WC3V desktop report: victory header beside the dominance chart, the timeline of the game's moments, and both players' armies side by side](https://wc3v.com/assets/press/report-overview.webp) ![The Build tab: hero cards with skills and items, and both players' build orders interleaved as one timeline](https://wc3v.com/assets/press/report-build.webp) ![The Economy tab: APM over time, action breakdown, trade balance and food charts for both players](https://wc3v.com/assets/press/report-economy.webp) ![A 3v3 team game report showing tier progression and unit rosters for all six players](https://wc3v.com/assets/press/report-team.webp) Release notes
+- **Nothing leaves your PC.** No upload, no account, no telemetry.
 
-Windows 10/11, 64-bit SHA-256 ``
+- **One local socket.** The overlay binds `127.0.0.1`, token-gated, GET only.
 
-## Details
+- **Open source.** GPLv3 on [GitHub](https://github.com/jblanchette/wc3v), so you can check all of it.
 
-- **The installer is not code-signed.** A signed build needs a certificate the project doesn't have. Download it in a browser and SmartScreen says "Windows protected your PC": choose **More info**, then **Run anyway**. The install command avoids that screen because a file fetched by PowerShell is never tagged as a browser download.
+## The whole game, laid out
 
-- **Check it yourself.** [Read install.ps1](https://wc3v.com/install.ps1) before you run it, and compare the SHA-256 above against the file. That is what the script does on your behalf, and it will refuse to install on a mismatch.
+![The WC3V desktop app's Home tab: a strip of recently parsed games along the top and a status bar reading Watching for new games](https://wc3v.com/assets/press/app-home.webp) ![The Overview tab: victory header, dominance chart, moments timeline, and both players' unit rosters and match stats](https://wc3v.com/assets/press/report-overview.webp) ![The Build tab: hero cards with skills and items for both players, above their build orders interleaved as one timeline](https://wc3v.com/assets/press/report-build.webp) ![The Economy tab: APM over time, an action breakdown, trade balance and food charts for both players](https://wc3v.com/assets/press/report-economy.webp) ![A 3v3 team game report showing tier progression and unit rosters for all six players](https://wc3v.com/assets/press/report-team.webp)
 
-- **Smart App Control blocks it.** If you're on a clean Windows 11 install with Smart App Control on, unsigned apps are refused outright and neither path will work. The [browser viewer](https://wc3v.com/viewer) needs no install.
+Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.
 
-- **Installs for you only.** It goes in your user folder, asks for no administrator rights, and updates itself from inside the app. Remove it from Add or remove programs.
+## On stream
 
-- **Windows 10 and 11, 64-bit.** No macOS or Linux build yet.
+![The WC3V stream overlay card after a game: a Victory header, the map and length, hero portraits with levels, and both armies with counts](https://wc3v.com/assets/press/overlay-card.webp)
 
-- **Built in the open.** Every release is compiled from the public repository by GitHub Actions. [Read the source or build it yourself](https://github.com/jblanchette/wc3v), GPLv3.
+- **Nobody can snipe you through it.** The app never sees a live game.
 
-- **Privacy.** The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the [privacy policy](https://wc3v.com/privacy).
+- **One URL into an OBS Browser Source.** Your panels, four themes, a size control, plus a casting page for broadcasts.
 
-- **No warranty.** See the [Terms of Service](https://wc3v.com/terms).
+## Install
 
-[View source on GitHub](https://github.com/jblanchette/wc3v) [Back to WC3V](https://wc3v.com/)
+Couldn't reach the update server, so the version and hash are missing. The command still works: it reads the same manifest itself.
+
+- Version Loading…
+
+- Installs to Your user folder, no admin
+
+- SHA-256 `—`
+
+### Common questions
+
+**Windows doesn't recognise the app.** The build is not code-signed. A paid certificate runs about $120 a year and would still not silence Windows, since it dropped instant trust for those in 2024. The Microsoft Store would silence it, and that route is closed to us: the app ships Blizzard's icon art, and Microsoft owns Blizzard. The install command gets past the warning another way. SmartScreen fires on the Mark of the Web, a tag browsers write onto files they download, and PowerShell does not write it. On a clean Windows 11 machine with Smart App Control switched on, unsigned apps are refused whatever you do.
+
+**What does the command run?** [install.ps1](https://wc3v.com/install.ps1), which you can read first. It fetches the release manifest, downloads the installer, compares its SHA-256 against the one above and runs it. No elevation, no registry writes of its own, no telemetry. A hash that does not match aborts the install.
+
+**Can I get banned for it?** It reads `.w3g` files Warcraft III has already finished writing, and does nothing else. No injection, no memory reading, no packet inspection, no input automation, and nothing drawn over the game. It cannot see or touch a match in progress, which is also why the overlay is safe on a live stream. Three outbound requests exist, all named in Settings and none carrying anything about you: icon art and map data from `cdn.wc3v.com`, and the W3Champions lookup, off until you turn it on. See the [privacy policy](https://wc3v.com/privacy).
+
+**Mac or Linux?** Not yet, Windows 10 and 11 64-bit only. The [browser viewer](https://wc3v.com/viewer) runs anywhere and needs no install. Uninstall from Add or remove programs.

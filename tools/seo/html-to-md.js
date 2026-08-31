@@ -35,13 +35,19 @@ const DROP_SUBTREE = new Set([
 // Elements that produce Markdown structure.
 const BLOCK = new Set([
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'blockquote',
-  'pre', 'hr', 'dl', 'dt', 'dd', 'table', 'thead', 'tbody', 'tr', 'th', 'td'
+  'pre', 'hr', 'dl', 'dt', 'dd', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+  // A <summary> is the question of an FAQ entry. It becomes an h3 so the twin
+  // keeps the question/answer structure a collapsed <details> has visually.
+  'summary'
 ]);
 
 // Elements with no Markdown meaning that we simply descend through.
 const TRANSPARENT = new Set([
   'main', 'article', 'section', 'div', 'span', 'header', 'figure',
-  'figcaption', 'aside', 'small', 'time', 'label', 'picture', 'source'
+  'figcaption', 'aside', 'small', 'time', 'label', 'picture', 'source',
+  // Collapsed in the page, always open in the twin: a crawler should read the
+  // answers whether or not a human clicked to expand them.
+  'details'
 ]);
 
 // Inline elements with a Markdown equivalent.
@@ -290,6 +296,7 @@ function htmlToMarkdown (html, opts) {
       switch (name) {
         case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6':
           flush(); buf = '#'.repeat(Number(name[1])) + ' '; break;
+        case 'summary': flush(); buf = '### '; break;
         case 'p': case 'blockquote': case 'dt': case 'dd':
           flush(); if (name === 'blockquote') buf = '> ';
           if (name === 'dd') buf = ': ';
@@ -335,6 +342,7 @@ function htmlToMarkdown (html, opts) {
       switch (name) {
         case 'h1': case 'h2': case 'h3': case 'h4': case 'h5': case 'h6':
         case 'p': case 'blockquote': case 'li': case 'dt': case 'dd': case 'tr':
+        case 'summary':
           flush(); break;
         case 'ul': case 'ol': listStack.pop(); flush(); break;
         case 'pre': inPre = false; flush(); blocks.push('```'); break;

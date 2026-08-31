@@ -8,7 +8,8 @@
 # there is no certificate to sign with. Distribution instead leans on
 # client/install.ps1: PowerShell does not apply the Mark of the Web, so the
 # SmartScreen prompt never fires, and the script verifies the SHA-256 from
-# latest.json before running anything. See client/download.html "Details".
+# latest.json before running anything. The FAQ at the foot of
+# client/download.html says all of this to users.
 #
 # What happens after this workflow is deliberately manual — see
 # desktop/README.md "Releasing": download the artifact, then

@@ -4,16 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Download WC3V Desktop | WC3V</title>
-  <meta name="description" content="Download the WC3V desktop app for Windows. Check the version and checksum, read the disclosures, and get the installer straight from our CDN.">
+  <title>WC3V Desktop for Windows | WC3V</title>
+  <meta name="description" content="A free Windows app that reviews your Warcraft III games for you. It watches your replay folder, reads each game on your own PC, and has the report ready before you have alt-tabbed. Includes an OBS overlay.">
 
   <link rel="canonical" href="https://wc3v.com/download">
   <meta name="robots" content="index, follow">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="WC3V">
-  <meta property="og:title" content="Download WC3V for Windows">
-  <meta property="og:description" content="The desktop app watches your replays folder. When a game ends the report is already there: the result, who was ahead and when, both builds, the whole economy.">
+  <meta property="og:title" content="WC3V Desktop for Windows">
+  <meta property="og:description" content="A free Windows app that reviews your Warcraft III games for you. Leave it running and every game you finish is read before you have alt-tabbed.">
   <meta property="og:url" content="https://wc3v.com/download">
   <meta property="og:image" content="https://wc3v.com/assets/og-preview.png">
   <meta property="og:image:width" content="1200">
@@ -22,8 +22,8 @@
   <meta property="og:locale" content="en_US">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Download WC3V for Windows">
-  <meta name="twitter:description" content="Watches your replays folder and has the report ready when the game ends. Free, open source, Windows 10 and 11.">
+  <meta name="twitter:title" content="WC3V Desktop for Windows">
+  <meta name="twitter:description" content="A free Windows app that reviews your Warcraft III games for you. Nothing is uploaded, and an OBS overlay comes with it.">
   <meta name="twitter:image" content="https://wc3v.com/assets/og-preview.png">
 
   <!-- SoftwareApplication for the desktop app. Deliberately carries no
@@ -36,7 +36,11 @@
        softwareVersion and downloadUrl are absent on purpose. Both come from
        https://cdn.wc3v.com/desktop/latest.json at runtime, and DownloadPage.js
        patches them into this node once that fetch resolves. A hardcoded
-       version here would be wrong the moment a release ships. -->
+       version here would be wrong the moment a release ships.
+
+       downloadUrl stays in the patched set even though this page no longer
+       links the installer. The property means "where the software is", which
+       is still true of that URL, and install.ps1 fetches exactly it. -->
   <script type="application/ld+json" id="ld-desktop-app">
   {
     "@context": "https://schema.org",
@@ -44,12 +48,22 @@
     "@id": "https://wc3v.com/download#app",
     "name": "WC3V Desktop",
     "url": "https://wc3v.com/download",
-    "description": "Watches your Warcraft III replay folders, parses each game locally the moment it finishes, and grades it. Replays never leave the machine.",
+    "description": "A free Windows app that reviews your Warcraft III games. It watches your replay folders, parses each game locally the moment it finishes, and grades it. Replays never leave the machine. Includes an OBS Browser Source overlay for streamers.",
     "applicationCategory": "GameApplication",
     "operatingSystem": "Windows 10, Windows 11",
     "processorRequirements": "x86-64",
     "isAccessibleForFree": true,
     "license": "https://github.com/jblanchette/wc3v/blob/master/LICENSE.md",
+    "featureList": [
+      "Watches your Warcraft III replay folders and parses each new game automatically",
+      "Parsing runs on your own machine; replays are never uploaded",
+      "Per-game report: result, dominance over time, key moments, both armies",
+      "Build orders for both players interleaved on one timeline",
+      "Economy report: APM over time, action breakdown, gold traded, food",
+      "Team games and FFA, 2v2 through 4v4",
+      "OBS Browser Source overlay for streamers, plus a casting page for broadcasts",
+      "Opens any moment of a game in the wc3v.com 3D replay viewer"
+    ],
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -68,7 +82,7 @@
         "@type": "WebPage",
         "@id": "https://wc3v.com/download#page",
         "url": "https://wc3v.com/download",
-        "name": "Download WC3V Desktop",
+        "name": "WC3V Desktop for Windows",
         "isPartOf": { "@id": "https://wc3v.com/#website" },
         "primaryImageOfPage": "https://wc3v.com/assets/og-preview.png",
         "mainEntity": { "@id": "https://wc3v.com/download#app" },
@@ -90,149 +104,258 @@
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
   <link rel="stylesheet" href="css/tokens.css?v=d4b178845b">
-  <link rel="stylesheet" href="css/main.css?v=c657cd5043">
+  <link rel="stylesheet" href="css/main.css?v=d2de0cce9f">
   <link rel="stylesheet" href="css/redesign.css?v=e799bc8754">
   <style>
+    /* ══ download.html — one screen, three columns ═════════════════════════
+       This page is laid out as a panel, not as a document. Above 1100px it
+       fills exactly the viewport and does not scroll: a single-line strip
+       across the top carries the pitch and the install command, and the rest
+       is three columns that size themselves to what is left.
+
+          ┌──────────────────────────────────────────────────────────┐
+          │ what it is                          irm … | iex  [Copy]  │
+          ├────────────────┬──────────────────────┬──────────────────┤
+          │ how it works   │  the report          │  on stream       │
+          │ safe to run    │  (tabs + one frame)  │  install + FAQ   │
+          └────────────────┴──────────────────────┴──────────────────┘
+
+       The height contract is flexbox the whole way down, with no arithmetic
+       anywhere: body is a column flex of nav / main / footer, main takes what
+       is left, .dl-app fills main, .dl-cols fills what the strip leaves, and
+       every column carries min-height:0 so it may be shorter than its own
+       content. A column that cannot fit scrolls ITSELF, so opening a FAQ
+       entry never moves the screenshot.
+
+       The frame in the middle is sized by the column rather than by its own
+       aspect ratio: it is flex:1 inside the card and the image is object-fit
+       contained, so the screenshot grows on a tall monitor and shrinks on a
+       laptop instead of forcing a scrollbar.
+
+       Below 1100px this all gives up and becomes an ordinary stacked page,
+       because three columns of it on a phone is unreadable. The frame gets
+       its aspect ratio back there, since nothing is constraining its height
+       any more.
+
+       Screenshots captured out of a running app (app-home, app-stream) may
+       not be on disk yet: client/assets/press/ is gitignored and rides the
+       asset deploy. A missing one drops its own tab or hides its figure
+       rather than painting a black rectangle. */
+
     body { margin: 0; }
 
-    .dl-page { max-width: 960px; margin: 0 auto; padding: var(--sp-6) var(--page-gutter) var(--sp-8); }
+    /* The shared shell pads for a scrolling document. This page is not one. */
+    body.dl-body .site-content { max-width: 1560px; padding: var(--sp-3) var(--page-gutter) 0; }
 
-    /* The hero and the release box share the top row: what it is on the
-       left, the way to get it on the right, both above the fold. */
-    /* The right column is sized to the install command. At --fs-min in the
-       mono face `irm https://wc3v.com/install.ps1 | iex` measures ~295px, and
-       a command that wraps mid-URL is a command people mistype. */
-    .dl-top {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 400px;
-      gap: var(--sp-6);
-      align-items: center;
-      margin-bottom: var(--sp-6);
+    /* The viewport is divided by flexbox, NOT by arithmetic. A first attempt
+       subtracted --appbar-h and a guessed footer height and was 97px out,
+       because the nav actually renders 59px against the token's 52 and the
+       trimmed footer still measures 124. Letting main take "whatever is left"
+       cannot drift when either of those changes. */
+    @media (min-width: 1100px) {
+      body.dl-body { display: flex; flex-direction: column; min-height: 100dvh; }
+      body.dl-body .site-content { flex: 1 1 auto; min-height: 0; }
+      body.dl-body #site-nav, body.dl-body .site-footer { flex: 0 0 auto; }
+      .dl-app { height: 100%; }
     }
-    @media (max-width: 820px) { .dl-top { grid-template-columns: minmax(0, 1fr); } }
 
-    .dl-hero-title { font-size: var(--fs-h1); font-weight: 800; color: var(--text); margin: 0 0 var(--sp-2); letter-spacing: -0.01em; }
-    .dl-hero-sub { font-size: var(--fs-sm); color: var(--text-muted); margin: 0; line-height: 1.6; }
+    .dl-app { display: flex; flex-direction: column; gap: var(--sp-3); min-height: 0; }
 
-    .dl-get {
-      background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
-      padding: var(--sp-4) var(--sp-5);
+    /* ── The strip ─────────────────────────────────────────────────────── */
+    .dl-strip {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--sp-5); flex-wrap: wrap;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--sp-3) var(--sp-4);
+      flex: 0 0 auto;
     }
-    .dl-get-line { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-3); }
-    /* display:flex would otherwise beat the [hidden] UA rule, so hiding the
-       version line on a manifest failure would silently do nothing. */
-    .dl-get-line[hidden] { display: none; }
-    .dl-get-file { display: block; font-family: var(--mono); font-size: var(--fs-min); color: var(--text-dim); overflow-wrap: anywhere; }
-
-    /* The install command is the primary path, so it gets the accent border
-       the download button used to carry. It is static markup: it keeps working
-       when the manifest fetch fails, which is exactly when someone needs it. */
-    .dl-cmd {
+    .dl-strip-text { min-width: 0; }
+    .dl-eyebrow {
       display: block;
-      font-family: var(--mono); font-size: var(--fs-min); color: var(--text);
-      background: var(--bg-deep); border: 1px solid var(--accent); border-radius: var(--radius-sm);
-      padding: var(--sp-3); white-space: nowrap; overflow-x: auto;
+      font-size: var(--fs-min); font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-dim); margin: 0 0 2px;
     }
-    .dl-cmd-row { display: flex; align-items: center; gap: var(--sp-3); margin-top: var(--sp-2); flex-wrap: wrap; }
-    .dl-cmd-note { font-size: var(--fs-label); color: var(--text-muted); line-height: 1.55; margin: var(--sp-3) 0 0; }
-    .dl-alt-link { font-size: var(--fs-sm); color: var(--text-muted); }
-    .dl-alt-link:hover { color: var(--text); }
-    .dl-alt-link[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .dl-title { font-size: clamp(1.25rem, 2vw, 1.7rem); font-weight: 800; color: var(--text); margin: 0; letter-spacing: -0.02em; line-height: 1.15; }
+    .dl-title-sub { font-size: var(--fs-sm); color: var(--text-muted); margin: 4px 0 0; line-height: 1.45; }
+
+    /* The install command IS the download button: it is the only path the
+       page hands out, so it sits where a download button would. */
+    .dl-get { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; flex: 0 1 auto; min-width: 0; max-width: 100%; }
+    .dl-cmd {
+      font-family: var(--mono); font-size: var(--fs-min); color: var(--text);
+      background: #0a0b12; border: 1px solid var(--accent); border-radius: var(--radius-sm);
+      padding: 11px var(--sp-3); white-space: nowrap; overflow-x: auto;
+      flex: 1 1 auto; min-width: 0; max-width: 100%;
+    }
+    .dl-meta { font-size: var(--fs-min); color: var(--text-muted); white-space: nowrap; }
+    /* Hiding this on a manifest failure needs the [hidden] rule to win. */
+    .dl-meta[hidden] { display: none; }
+    .dl-meta b { color: var(--text); font-weight: 700; }
+
+    /* ── The three columns ─────────────────────────────────────────────── */
+    .dl-cols { display: grid; gap: var(--sp-3); min-height: 0; flex: 1 1 auto; }
+    @media (min-width: 1100px) {
+      .dl-cols { grid-template-columns: minmax(0, 300px) minmax(0, 1fr) minmax(0, 330px); }
+    }
+    @media (max-width: 1099px) {
+      .dl-cols { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    }
+
+    .dl-col {
+      display: flex; flex-direction: column; gap: var(--sp-3);
+      min-height: 0; min-width: 0;
+    }
+    /* A column that cannot fit scrolls ITSELF. The page stays put, so opening
+       a FAQ entry never shoves the screenshot off screen. */
+    @media (min-width: 1100px) { .dl-col { overflow-y: auto; scrollbar-width: thin; } }
 
     .dl-card {
-      background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius-lg);
-      padding: var(--sp-5); margin: 0 auto var(--sp-5); max-width: 720px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: var(--sp-3) var(--sp-4);
+      flex: 0 0 auto;
     }
-    .dl-eyebrow { display: block; font-size: var(--fs-min); font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: var(--sp-2); }
-    .dl-version-line { font-size: var(--fs-h2); font-weight: 800; color: var(--text); margin: 0; display: inline-block; }
-    .dl-date { font-size: var(--fs-label); color: var(--text-muted); }
-    .dl-notes { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin: 0; }
+    .dl-card-grow { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+    .dl-h2 { font-size: var(--fs-base); font-weight: 800; color: var(--text); margin: 0 0 var(--sp-3); letter-spacing: 0.01em; }
+    .dl-h2 em { font-style: normal; color: var(--text-muted); font-weight: 400; }
 
-    .dl-file-row {
-      display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap;
-      margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--border);
-      font-size: var(--fs-sm);
+    /* ── Column 1: the loop ────────────────────────────────────────────── */
+    .dl-steps { display: flex; flex-direction: column; gap: var(--sp-3); }
+    .dl-step { display: flex; align-items: flex-start; gap: var(--sp-3); }
+    /* A real Warcraft III icon in a struck frame: hard edge, 1px inset
+       highlight, no glow. 36px is the project floor and this sits on it. */
+    .dl-mark {
+      width: var(--ico-sm); height: var(--ico-sm); flex: 0 0 auto;
+      border-radius: var(--radius-sm); border: 1px solid var(--border-3);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.14);
+      background: var(--bg-deep);
     }
-    .dl-file-label { color: var(--text-muted); }
-    .dl-file-name { font-family: var(--mono); font-size: var(--fs-label); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 2px 8px; }
+    .dl-step b { display: block; font-size: var(--fs-sm); color: var(--text); }
+    .dl-step span { display: block; font-size: var(--fs-min); color: var(--text-muted); line-height: 1.45; }
 
-    .dl-sha-row { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-top: var(--sp-3); font-size: var(--fs-sm); }
-    /* Same trap: the row ships hidden and arms from the manifest, so without
-       this it rendered empty-labelled on every load until the fetch returned. */
-    .dl-sha-row[hidden] { display: none; }
-    .dl-sha-label { color: var(--text-muted); flex-shrink: 0; }
-    .dl-sha-code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px 8px; overflow-wrap: anywhere; }
-    .dl-sha-pending { font-size: var(--fs-label); color: var(--text-dim); margin: var(--sp-3) 0 0; }
+    /* ── Column 1: the safety claims ───────────────────────────────────── */
+    /* The lead-in runs INLINE with its claim. As a block it cost an extra
+       line per row, which was most of the 236px this column was over by. */
+    .dl-safe { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 7px; }
+    .dl-safe li { font-size: var(--fs-min); color: var(--text-muted); line-height: 1.5; }
+    /* No edge stripe: the bold lead-in is the structure. */
+    .dl-safe b { color: var(--text); font-weight: 700; }
+    .dl-safe code, .dl-points code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
+    .dl-safe a { color: var(--accent); }
 
-    /* ── The showcase ──────────────────────────────────────────────────────
-       One stage, four screens layered in it, a picker underneath. The stage
-       keeps the app's aspect so switching never moves the page. */
-    .dl-showcase { margin-bottom: var(--sp-6); }
+    /* ── Column 2: the report ──────────────────────────────────────────── */
+    .dl-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--sp-3); flex: 0 0 auto; }
+    .dl-tab {
+      appearance: none; border: 1px solid var(--border-2); cursor: pointer;
+      background: var(--bg-deep); color: var(--text-muted);
+      font-size: var(--fs-label); font-weight: 700; font-family: inherit;
+      padding: 8px var(--sp-3); border-radius: var(--radius-pill);
+      min-height: 36px;
+      transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+    }
+    .dl-tab:hover { color: var(--text); border-color: var(--border-3); }
+    .dl-tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--text-on-accent); }
+    .dl-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .dl-tab[hidden] { display: none; }
+
+    /* The frame takes whatever the column has left. aspect-ratio would fight
+       that, so the height is the free space and the image is object-fit
+       contained inside it. */
     .dl-stage {
-      position: relative;
-      aspect-ratio: 1280 / 820;
-      border: 1px solid var(--border-2);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
-      background: #0d1117;
+      position: relative; flex: 1 1 auto; min-height: 220px;
+      border: 1px solid var(--border-2); border-radius: var(--radius);
+      overflow: hidden; background: #0d1117;
     }
     .dl-stage img {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
-      opacity: 0;
-      transition: opacity 0.25s ease;
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: contain; object-position: top center;
+      opacity: 0; transition: opacity var(--dur) var(--ease);
     }
     .dl-stage img.is-on { opacity: 1; }
     @media (prefers-reduced-motion: reduce) { .dl-stage img { transition: none; } }
+    .dl-stage-note { font-size: var(--fs-min); color: var(--text-muted); line-height: 1.45; margin: var(--sp-3) 0 0; flex: 0 0 auto; min-height: 2.9em; }
 
-    .dl-picker {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: var(--sp-2);
-      margin-top: var(--sp-3);
+    /* Stacked, there is no column height to fill, so flex:1 would collapse
+       the frame to its 220px floor. Give the shape back. */
+    @media (max-width: 1099px) {
+      .dl-stage { flex: 0 0 auto; aspect-ratio: 1280 / 820; }
     }
-    @media (max-width: 640px) { .dl-picker { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    .dl-pick {
-      appearance: none;
-      background: var(--surface);
-      border: 1px solid var(--border-2);
-      border-radius: var(--radius);
-      padding: var(--sp-2) var(--sp-3);
-      cursor: pointer;
-      text-align: left;
-      transition: border-color 0.15s ease, background 0.15s ease;
+
+    /* ── Column 3 ──────────────────────────────────────────────────────── */
+    .dl-shot { display: block; margin: 0 0 var(--sp-3); border: 1px solid var(--border-2); border-radius: var(--radius-sm); overflow: hidden; background: #0d1117; }
+    .dl-shot img { display: block; width: 100%; height: auto; }
+    .dl-shot[hidden] { display: none; }
+    /* The constraint here is viewport HEIGHT, not width: on a 1280x800 laptop
+       this column ran 84px past its own bottom, and the overlay card was the
+       largest single thing in it. Cropping to the header and the heroes keeps
+       what identifies the card and drops what was unreadable at 330px anyway. */
+    @media (min-width: 1100px) and (max-height: 880px) {
+      .dl-shot img { height: 140px; object-fit: cover; object-position: top center; }
+      /* The last 41px, taken a row at a time rather than by dropping another
+         claim. Nothing here crosses a readability floor: the type is
+         untouched, only the space around it. */
+      /* The base card padding is already sp-3 vertical, so overriding the
+         shorthand with one value only moved the horizontal edges and bought
+         nothing. Take it off the axis that is actually short. */
+      .dl-card { padding: var(--sp-2) var(--sp-3); }
+      .dl-h2 { margin-bottom: var(--sp-2); }
+      .dl-spec li { padding: 3px 0; }
+      .dl-points { gap: 4px; }
+      .dl-safe { gap: 5px; }
+      .dl-faq summary { padding-top: 6px; padding-bottom: 6px; }
     }
-    .dl-pick:hover { border-color: var(--border-strong, var(--accent)); }
-    .dl-pick[aria-pressed="true"] { border-color: var(--accent); background: var(--bg-deep); }
-    .dl-pick b { display: block; font-size: var(--fs-sm); color: var(--text); }
-    .dl-pick span { display: block; font-size: var(--fs-min); color: var(--text-muted); margin-top: 2px; }
-    .dl-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-    .dl-fail { background: var(--warn-soft); border: 1px solid var(--warn-edge); border-radius: var(--radius-lg); padding: var(--sp-4); margin-bottom: var(--sp-5); }
-    .dl-fail p { margin: 0 0 var(--sp-3); color: var(--text); font-size: var(--fs-sm); }
-
-    .dl-section-title { font-size: var(--fs-h3); font-weight: 700; color: var(--text); margin: 0 0 var(--sp-3); }
-
-    /* No left-edge accent stripe. The bold lead-in is the structure; a dot
-       marks the row without decorating it. */
-    .dl-disclosure-list { list-style: none; padding: 0; margin: 0 0 var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-3); }
-    .dl-disclosure-list li { position: relative; font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; padding-left: var(--sp-4); }
-    .dl-disclosure-list li::before {
-      content: ""; position: absolute; left: 0; top: 0.62em;
-      width: 4px; height: 4px; border-radius: 50%; background: var(--text-dim);
+    .dl-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+    .dl-points li { position: relative; padding-left: var(--sp-3); font-size: var(--fs-min); color: var(--text-muted); line-height: 1.5; }
+    .dl-points li::before {
+      content: ""; position: absolute; left: 0; top: 0.55em;
+      width: 3px; height: 3px; border-radius: 50%; background: var(--text-dim);
     }
-    .dl-disclosure-list strong { color: var(--text); }
-    .dl-disclosure-list a { color: var(--accent); }
+    .dl-points strong { color: var(--text); font-weight: 700; }
 
-    .dl-secondary-links { display: flex; gap: var(--sp-5); margin-top: var(--sp-5); font-size: var(--fs-sm); max-width: 720px; margin-inline: auto; }
-    .dl-secondary-links a { color: var(--text-muted); }
-    .dl-secondary-links a:hover { color: var(--text); }
+    .dl-spec { list-style: none; padding: 0; margin: 0 0 var(--sp-3); }
+    .dl-spec li { display: flex; justify-content: space-between; gap: var(--sp-3); font-size: var(--fs-min); padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .dl-spec li:last-child { border-bottom: 0; }
+    .dl-spec .k { color: var(--text-muted); flex: 0 0 auto; }
+    .dl-spec .v { color: var(--text); text-align: right; overflow-wrap: anywhere; }
+    .dl-spec .v code { font-family: var(--mono); font-size: var(--fs-min); }
 
-    .dl-narrow { max-width: 720px; margin: 0 auto; }
+    .dl-fail { background: var(--warn-soft); border: 1px solid var(--warn-edge); border-radius: var(--radius-sm); padding: var(--sp-2); margin: 0 0 var(--sp-3); font-size: var(--fs-min); color: var(--text); line-height: 1.45; }
+    .dl-fail[hidden] { display: none; }
+
+    /* ── The FAQ, folded ───────────────────────────────────────────────── */
+    .dl-faq { border-top: 1px solid var(--border); }
+    .dl-faq details { border-bottom: 1px solid var(--border); }
+    .dl-faq summary {
+      cursor: pointer; list-style: none;
+      padding: 8px var(--sp-4) 8px 0; position: relative;
+      font-size: var(--fs-min); font-weight: 700; color: var(--text); line-height: 1.4;
+    }
+    .dl-faq summary::-webkit-details-marker { display: none; }
+    .dl-faq summary::after {
+      content: "+"; position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+      font-family: var(--mono); font-size: var(--fs-sm); color: var(--text-dim);
+    }
+    .dl-faq details[open] summary::after { content: "\2212"; }
+    .dl-faq summary:hover { color: var(--accent-strong); }
+    .dl-faq summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .dl-faq p { font-size: var(--fs-min); color: var(--text-muted); line-height: 1.55; margin: 0 0 var(--sp-3); }
+    .dl-faq p b { color: var(--text); display: block; }
+    .dl-faq a { color: var(--accent); }
+    .dl-faq code { font-family: var(--mono); font-size: var(--fs-min); color: var(--text); background: var(--bg-deep); border: 1px solid var(--border); border-radius: 4px; padding: 1px 4px; }
+
+    /* ── One-line footer, so the page ends where the viewport does ─────── */
+    body.dl-body .site-footer { margin-top: var(--sp-3); }
+    body.dl-body .site-footer-inner { padding: var(--sp-2) var(--page-gutter); align-items: center; gap: var(--sp-4); }
+    body.dl-body .site-footer-about p { display: none; }
+    body.dl-body .site-footer-legal { display: none; }
+    @media (max-width: 1099px) {
+      body.dl-body .site-footer-about p,
+      body.dl-body .site-footer-legal { display: block; }
+    }
   </style>
 </head>
-<body class="site-page">
+<body class="site-page dl-body">
   <!-- Static nav fallback. SiteNav.render() drops any existing #site-nav before
        inserting its own, so this costs nothing at runtime and gives crawlers
        and JS-off visitors a real internal link graph. Keep the hrefs in sync
@@ -252,128 +375,155 @@
     </div>
   </nav>
 
-  <script src="js/clientConfig.js?v=53d88a6933"></script>
+  <script src="js/clientConfig.js?v=9df919b703"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
   <script src="js/SiteNav.js?v=66285d9d27"></script>
   <script src="js/BugReport.js?v=7b19c1a873"></script>
-  <script src="js/DownloadPage.js?v=dl-1a"></script>
+  <script src="js/DownloadPage.js?v=dl-5a"></script>
   <script>document.addEventListener('DOMContentLoaded', () => {
     window.BandSwitcher.init();
     SiteNav.render('download');
     window.BugReport && window.BugReport.install();
     window.DownloadPage && window.DownloadPage.init();
-
-    // The showcase picker: one stage, the buttons choose which screen is on.
-    const stage = document.getElementById('dl-stage');
-    const picks = [...document.querySelectorAll('.dl-pick')];
-    for (const btn of picks) {
-      btn.addEventListener('click', () => {
-        for (const b of picks) b.setAttribute('aria-pressed', String(b === btn));
-        for (const img of stage.querySelectorAll('img')) {
-          img.classList.toggle('is-on', img.dataset.shot === btn.dataset.shot);
-        }
-      });
-    }
+    window.DownloadPage && window.DownloadPage.initStage();
   });</script>
 
   <main class="site-content">
-    <article class="dl-page">
+    <div class="dl-app">
 
-      <div class="dl-top">
-        <div class="dl-hero">
-          <h1 class="dl-hero-title">Download WC3V for Windows</h1>
-          <p class="dl-hero-sub">The desktop app watches your replays folder. When a game ends, the report is already there: the result, who was ahead and when, both builds, the whole economy. Every moment opens the 3D viewer at that second.</p>
+      <!-- ══ Strip: what it is, and the way to get it ═══════════════════ -->
+      <header class="dl-strip">
+        <div class="dl-strip-text">
+          <span class="dl-eyebrow">WC3V Desktop &middot; free &middot; Windows 10 and 11</span>
+          <h1 class="dl-title">It reviews your Warcraft&nbsp;III games for you.</h1>
+          <p class="dl-title-sub">Leave it running. Every game you finish is read on your own PC and laid out before you have alt-tabbed.</p>
         </div>
 
-        <!-- The card itself is never hidden: it holds the install command, which
-             is static and works even when the manifest fetch is the thing that
-             failed. Only #dl-get-line, which is manifest-fed, gets hidden. -->
-        <section class="dl-get" id="dl-version-card" aria-label="Install WC3V">
-          <span class="dl-eyebrow">Latest release</span>
-          <div class="dl-get-line" id="dl-get-line">
-            <h2 class="dl-version-line"><span id="dl-version">Loading…</span></h2>
-            <span class="dl-date" id="dl-date"></span>
-          </div>
-          <code class="dl-cmd" id="dl-cmd">irm https://wc3v.com/install.ps1 | iex</code>
-          <div class="dl-cmd-row">
-            <button type="button" class="btn btn-ghost" id="dl-cmd-copy" onclick="DownloadPage.copyCommand()">Copy</button>
-            <a id="dl-download-link" class="dl-alt-link" href="#" aria-disabled="true" tabindex="-1">Or download the installer</a>
-          </div>
-          <p class="dl-cmd-note">Paste into PowerShell. Windows shows no warning on this path, and the script checks the download against the published SHA-256 before it installs anything.</p>
-          <code class="dl-get-file" id="dl-filename"></code>
-        </section>
+        <div class="dl-get">
+          <code class="dl-cmd">irm https://wc3v.com/install.ps1 | iex</code>
+          <button type="button" class="btn btn-primary" onclick="DownloadPage.copyCommand(this)">Copy command</button>
+          <span class="dl-meta" data-dl-line><b data-dl-version>Loading…</b></span>
+        </div>
+      </header>
+
+      <div class="dl-cols">
+
+        <!-- ══ Column 1: how it works, and why it is safe ═══════════════ -->
+        <div class="dl-col">
+          <section class="dl-card">
+            <h2 class="dl-h2">How it works</h2>
+            <div class="dl-steps">
+              <div class="dl-step">
+                <img class="dl-mark" src="/assets/wc3icons/btnsentinel.jpg" alt="" aria-hidden="true" width="36" height="36">
+                <div>
+                  <b>1. It watches your replay folder</b>
+                  <span>Reforged, classic and W3Champions.</span>
+                </div>
+              </div>
+              <div class="dl-step">
+                <img class="dl-mark" src="/assets/wc3icons/stwp.jpg" alt="" aria-hidden="true" width="36" height="36">
+                <div>
+                  <b>2. It reads each game here</b>
+                  <span>On your machine, in seconds.</span>
+                </div>
+              </div>
+              <div class="dl-step">
+                <img class="dl-mark" src="/assets/wc3icons/tkno.jpg" alt="" aria-hidden="true" width="36" height="36">
+                <div>
+                  <b>3. The report is waiting</b>
+                  <span>Any moment opens in the 3D viewer.</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="dl-card">
+            <h2 class="dl-h2">Safe to run</h2>
+            <ul class="dl-safe">
+              <li><b>Never touches the game.</b> No injection, no memory reading, no packet capture, no input automation.</li>
+              <li><b>Nothing leaves your PC.</b> No upload, no account, no telemetry.</li>
+              <li><b>One local socket.</b> The overlay binds <code>127.0.0.1</code>, token-gated, GET only.</li>
+              <li><b>Open source.</b> GPLv3 on <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">GitHub</a>, so you can check all of it.</li>
+            </ul>
+          </section>
+        </div>
+
+        <!-- ══ Column 2: the report ═════════════════════════════════════ -->
+        <div class="dl-col">
+          <section class="dl-card dl-card-grow" aria-labelledby="dl-screens-title">
+            <h2 class="dl-h2" id="dl-screens-title">The whole game, laid out</h2>
+
+            <div class="dl-tabs" role="tablist" aria-label="Screens" id="dl-tabs">
+              <button type="button" class="dl-tab" role="tab" aria-selected="true" data-shot="home"
+                data-note="Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.">Home</button>
+              <button type="button" class="dl-tab" role="tab" aria-selected="false" data-shot="overview"
+                data-note="Who was ahead second by second, and where the game turned. Fights, expansions and hero levels on one timeline.">Overview</button>
+              <button type="button" class="dl-tab" role="tab" aria-selected="false" data-shot="build"
+                data-note="Both build orders on one clock, with the skills each hero took in order and everything they bought.">Build</button>
+              <button type="button" class="dl-tab" role="tab" aria-selected="false" data-shot="economy"
+                data-note="APM plotted across the game rather than flattened to one average, plus gold traded, food, and where the clicks went.">Economy</button>
+              <button type="button" class="dl-tab" role="tab" aria-selected="false" data-shot="team"
+                data-note="2v2 through 4v4 and FFA get every seat. Replays that are nobody's game of yours land in a separate Library tab.">Team games</button>
+            </div>
+
+            <div class="dl-stage" id="dl-stage">
+              <img class="is-on" data-shot="home" src="/assets/press/app-home.webp" width="1280" height="820"
+                alt="The WC3V desktop app's Home tab: a strip of recently parsed games along the top and a status bar reading Watching for new games">
+              <img data-shot="overview" src="/assets/press/report-overview.webp" width="1280" height="820"
+                alt="The Overview tab: victory header, dominance chart, moments timeline, and both players' unit rosters and match stats">
+              <img data-shot="build" src="/assets/press/report-build.webp" width="1280" height="820" loading="lazy"
+                alt="The Build tab: hero cards with skills and items for both players, above their build orders interleaved as one timeline">
+              <img data-shot="economy" src="/assets/press/report-economy.webp" width="1280" height="820" loading="lazy"
+                alt="The Economy tab: APM over time, an action breakdown, trade balance and food charts for both players">
+              <img data-shot="team" src="/assets/press/report-team.webp" width="1280" height="820" loading="lazy"
+                alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
+            </div>
+            <p class="dl-stage-note" id="dl-stage-note" aria-live="polite">Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.</p>
+          </section>
+        </div>
+
+        <!-- ══ Column 3: the overlay, and the install detail ════════════ -->
+        <div class="dl-col">
+          <section class="dl-card">
+            <h2 class="dl-h2">On stream</h2>
+            <!-- The overlay card, the two things worth knowing about it, and
+                 the install detail all live in one card. Three headings and
+                 three sets of padding did not fit the column. -->
+            <figure class="dl-shot">
+              <img src="/assets/press/overlay-card.webp" width="700" height="502" loading="lazy"
+                onerror="this.closest('figure').hidden = true"
+                alt="The WC3V stream overlay card after a game: a Victory header, the map and length, hero portraits with levels, and both armies with counts">
+            </figure>
+            <ul class="dl-points">
+              <li><strong>Nobody can snipe you through it.</strong> The app never sees a live game.</li>
+              <li><strong>One URL into an OBS Browser Source.</strong> Your panels, four themes, a size control, plus a casting page for broadcasts.</li>
+            </ul>
+
+            <h2 class="dl-h2" style="margin-top: var(--sp-4)">Install</h2>
+            <p class="dl-fail" id="dl-fail" hidden>Couldn't reach the update server, so the version and hash are missing. The command still works: it reads the same manifest itself.</p>
+            <ul class="dl-spec">
+              <li><span class="k">Version</span> <span class="v" data-dl-version>Loading…</span></li>
+              <li><span class="k">Installs to</span> <span class="v">Your user folder, no admin</span></li>
+              <li><span class="k">SHA-256</span> <span class="v"><code id="dl-sha-code">&mdash;</code></span></li>
+            </ul>
+
+            <div class="dl-faq" data-audit-optional>
+              <!-- Three separate <details> put 106px of summary rows below the
+                   column's bottom edge, where nobody ever saw them. One row
+                   that is visible beats three that are not. -->
+              <details>
+                <summary>Common questions</summary>
+                <p><b>Windows doesn't recognise the app.</b> The build is not code-signed. A paid certificate runs about $120 a year and would still not silence Windows, since it dropped instant trust for those in 2024. The Microsoft Store would silence it, and that route is closed to us: the app ships Blizzard's icon art, and Microsoft owns Blizzard. The install command gets past the warning another way. SmartScreen fires on the Mark of the Web, a tag browsers write onto files they download, and PowerShell does not write it. On a clean Windows 11 machine with Smart App Control switched on, unsigned apps are refused whatever you do.</p>
+                <p><b>What does the command run?</b> <a href="/install.ps1" target="_blank" rel="noopener noreferrer">install.ps1</a>, which you can read first. It fetches the release manifest, downloads the installer, compares its SHA-256 against the one above and runs it. No elevation, no registry writes of its own, no telemetry. A hash that does not match aborts the install.</p>
+                <p><b>Can I get banned for it?</b> It reads <code>.w3g</code> files Warcraft III has already finished writing, and does nothing else. No injection, no memory reading, no packet inspection, no input automation, and nothing drawn over the game. It cannot see or touch a match in progress, which is also why the overlay is safe on a live stream. Three outbound requests exist, all named in Settings and none carrying anything about you: icon art and map data from <code>cdn.wc3v.com</code>, and the W3Champions lookup, off until you turn it on. See the <a href="/privacy">privacy policy</a>.</p>
+                <p><b>Mac or Linux?</b> Not yet, Windows 10 and 11 64-bit only. The <a href="/viewer">browser viewer</a> runs anywhere and needs no install. Uninstall from Add or remove programs.</p>
+              </details>
+            </div>
+          </section>
+        </div>
+
       </div>
-
-      <div class="dl-fail" id="dl-fail" hidden>
-        <p>Couldn't reach the update server just now, so the version and checksum above are missing. The install command still works: it reads the same manifest directly and will tell you what it found.</p>
-        <a class="btn btn-ghost" href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">View source on GitHub</a>
-      </div>
-
-      <section class="dl-showcase" aria-label="Screenshots">
-        <div class="dl-stage" id="dl-stage">
-          <img class="is-on" src="/assets/press/report-overview.webp" width="1280" height="820" data-shot="overview"
-            alt="The WC3V desktop report: victory header beside the dominance chart, the timeline of the game's moments, and both players' armies side by side">
-          <img src="/assets/press/report-build.webp" width="1280" height="820" data-shot="build" loading="lazy"
-            alt="The Build tab: hero cards with skills and items, and both players' build orders interleaved as one timeline">
-          <img src="/assets/press/report-economy.webp" width="1280" height="820" data-shot="economy" loading="lazy"
-            alt="The Economy tab: APM over time, action breakdown, trade balance and food charts for both players">
-          <img src="/assets/press/report-team.webp" width="1280" height="820" data-shot="team" loading="lazy"
-            alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
-        </div>
-        <div class="dl-picker" role="group" aria-label="Pick a screenshot">
-          <button type="button" class="dl-pick" data-shot="overview" aria-pressed="true">
-            <b>The report</b>
-            <span>Scored the moment a game ends</span>
-          </button>
-          <button type="button" class="dl-pick" data-shot="build" aria-pressed="false">
-            <b>Build orders</b>
-            <span>Both players on one timeline</span>
-          </button>
-          <button type="button" class="dl-pick" data-shot="economy" aria-pressed="false">
-            <b>Economy</b>
-            <span>APM, trades and food, charted</span>
-          </button>
-          <button type="button" class="dl-pick" data-shot="team" aria-pressed="false">
-            <b>Team games</b>
-            <span>Every seat, 2v2 to 4v4</span>
-          </button>
-        </div>
-      </section>
-
-      <section class="dl-card" id="dl-notes-card" aria-label="Release notes">
-        <span class="dl-eyebrow">Release notes</span>
-        <p class="dl-notes" id="dl-notes"></p>
-        <div class="dl-file-row">
-          <span class="dl-file-label">Windows 10/11, 64-bit</span>
-        </div>
-        <div class="dl-sha-row" id="dl-sha-row" hidden>
-          <span class="dl-sha-label">SHA-256</span>
-          <code class="dl-sha-code" id="dl-sha-code"></code>
-          <button type="button" class="btn btn-ghost" id="dl-sha-copy" onclick="DownloadPage.copySha()">Copy</button>
-        </div>
-        <p class="dl-sha-pending" id="dl-sha-pending" hidden></p>
-      </section>
-
-      <section class="dl-narrow" aria-labelledby="dl-details-heading">
-        <h2 id="dl-details-heading" class="dl-section-title">Details</h2>
-        <ul class="dl-disclosure-list">
-          <li><strong>The installer is not code-signed.</strong> A signed build needs a certificate the project doesn't have. Download it in a browser and SmartScreen says "Windows protected your PC": choose <strong>More info</strong>, then <strong>Run anyway</strong>. The install command avoids that screen because a file fetched by PowerShell is never tagged as a browser download.</li>
-          <li><strong>Check it yourself.</strong> <a href="/install.ps1" target="_blank" rel="noopener noreferrer">Read install.ps1</a> before you run it, and compare the SHA-256 above against the file. That is what the script does on your behalf, and it will refuse to install on a mismatch.</li>
-          <li><strong>Smart App Control blocks it.</strong> If you're on a clean Windows 11 install with Smart App Control on, unsigned apps are refused outright and neither path will work. The <a href="/viewer">browser viewer</a> needs no install.</li>
-          <li><strong>Installs for you only.</strong> It goes in your user folder, asks for no administrator rights, and updates itself from inside the app. Remove it from Add or remove programs.</li>
-          <li><strong>Windows 10 and 11, 64-bit.</strong> No macOS or Linux build yet.</li>
-          <li><strong>Built in the open.</strong> Every release is compiled from the public repository by GitHub Actions. <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">Read the source or build it yourself</a>, GPLv3.</li>
-          <li><strong>Privacy.</strong> The app reads replays on your machine and transfers no data, with two exceptions you control: opening a game in the wc3v.com viewer, and the opt-in W3Champions ladder lookup (off by default). See the <a href="/privacy">privacy policy</a>.</li>
-          <li><strong>No warranty.</strong> See the <a href="/terms">Terms of Service</a>.</li>
-        </ul>
-      </section>
-
-      <div class="dl-secondary-links">
-        <a href="https://github.com/jblanchette/wc3v" target="_blank" rel="noopener noreferrer">View source on GitHub</a>
-        <a href="/">Back to WC3V</a>
-      </div>
-
-    </article>
+    </div>
   </main>
 
   <footer class="site-footer">

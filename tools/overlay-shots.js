@@ -59,6 +59,9 @@
  *                      `split` is the one that matters for a panel-less theme:
  *                      half the card over shadow and half over a bright
  *                      minimap is the case that decides whether it is legible.
+ *   --icons            let the icon CDN through. Screenshots only: the audit
+ *                      is meant to run offline, and a run with this on is not
+ *                      the run that gates a change.
  *   --audit-only       no screenshots, just the assertions
  *   --self-test        break the card on purpose and require each check to
  *                      catch it. An audit that cannot fail is an audit that
@@ -120,6 +123,12 @@ const BACKDROPS = {
   split: 'linear-gradient(90deg, #10140d 0 45%, #d8dcc8 55% 100%)'
 };
 const backdrop = BACKDROPS[String(args.backdrop || 'none')] || BACKDROPS.none;
+
+// Icon art is blocked by default so the audit's result cannot depend on the
+// network, and blank tiles are a state the card genuinely has to survive. The
+// flag exists for the one job the blocked build cannot do: producing a shot of
+// the card for the download page, where black squares would be a lie.
+const allowIcons = !!args.icons;
 const selfTest = !!args['self-test'];
 
 // Each check, with a way to break the card that only that check should see.
@@ -534,7 +543,7 @@ function auditInPage (phase, minPx) {
 
   const browser = await puppeteer.launch({
     executablePath: findBrowser(),
-    headless: 'new',
+    headless: true, // Edge 152 rejects the legacy 'new' string
     args: ['--no-sandbox', '--force-device-scale-factor=2']
   });
 
@@ -548,7 +557,7 @@ function auditInPage (phase, minPx) {
     // result depend on the network.
     await page.setRequestInterception(true);
     page.on('request', (r) => {
-      if (r.url().startsWith('https://cdn.wc3v.com/')) r.abort();
+      if (!allowIcons && r.url().startsWith('https://cdn.wc3v.com/')) r.abort();
       else r.continue();
     });
     await page.goto('file://' + harnessPath.replace(/\\/g, '/'), { waitUntil: 'load' });

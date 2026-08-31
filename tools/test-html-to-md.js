@@ -105,6 +105,20 @@ throws('unknown tag throws', '<p>a</p><marquee>x</marquee>', /unhandled tag <mar
   }
 })();
 
+// ── details / summary ────────────────────────────────────────────────
+// A collapsed FAQ is invisible in the page and must NOT be invisible in the
+// twin: a crawler should read the answers whether or not a human expanded
+// them. <summary> becomes an h3 so the question/answer structure survives.
+check('details unwraps, summary becomes h3',
+  md('<details><summary>Why?</summary><p>Because.</p></details>'),
+  '### Why?\n\nBecause.');
+check('several details in a row',
+  md('<details><summary>One</summary><p>A.</p></details><details><summary>Two</summary><p>B.</p></details>'),
+  '### One\n\nA.\n\n### Two\n\nB.');
+check('summary keeps its inline markup',
+  md('<details><summary>Read <code>install.ps1</code></summary><p>Yes.</p></details>'),
+  '### Read `install.ps1`\n\nYes.');
+
 // ── tokenizer units ──────────────────────────────────────────────────────────
 check('tokenizer attr with gt',
   JSON.stringify(tokenize('<a title="x > y" href="/z">t</a>')[0].attrs),

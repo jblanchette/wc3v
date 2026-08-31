@@ -112,7 +112,7 @@ tools/.reparse-report.json
 # client/assets/hero/*.webp outputs are committed.
 tools/hero-frames/
 .report-shots/
-.overlay-shots/
+.overlay-shots*/
 client/review/
 client/assets/press/
 
@@ -133,3 +133,4 @@ client/.well-known/security.txt
 .secrets/
 *.token
 cloudflare.env
+.page-shots/

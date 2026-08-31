@@ -767,9 +767,13 @@ different size than the one you audited at.
 
 ## Releasing
 
-Users install from `wc3v.com/download`, either with the one-line PowerShell
-command or by downloading the installer directly. There is no other
-distribution channel.
+Users install from `wc3v.com/download` with the one-line PowerShell command.
+That is the only path the page hands out and the only distribution channel: the
+installer URL still exists on R2, because install.ps1 and the updater both
+fetch it, but nothing links a human to it. A browser download picks up the Mark
+of the Web and walks into SmartScreen, and it cannot check the checksum, so
+offering it alongside the command only ever sent some people down the worse
+route.
 
 **The version lives in `desktop/src-tauri/tauri.conf.json` and nowhere else.**
 The installer, the binary and the update manifest all read it. It must be
