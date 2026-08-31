@@ -6774,6 +6774,13 @@ body {
   overflow: hidden;
   min-width: 0;
   cursor: pointer;
+  /* Query container for the replay strip below. The one piece of the card
+     whose height still depends on how wide the column is, is the tournament +
+     stage meta row, and the cards in a row all share a width — so asking the
+     CARD rather than the viewport gets every card in a row the same answer.
+     Safe with the card's overflow:hidden because the replay modals are moved
+     to document.body the moment the grid renders. */
+  container-type: inline-size;
 }
 
 /* Lifts, it does not light up. The rim strengthens to the race edge and the
@@ -6933,6 +6940,8 @@ body {
   display: inline-flex;
   align-items: center;
   flex: none;
+  /* Right end of the meta row, whatever the matchups do. */
+  margin-left: auto;
   padding: 1px 7px;
   border-radius: 2px;
   font: 800 0.8rem/1.35 Verdana;
@@ -7145,16 +7154,27 @@ abbr.gloss:focus-visible {
    struck highlight along the top and a hard shadow line where it meets the
    card. This is the one place the race colour is allowed to be a field rather
    than an accent. */
+/* TWO ROWS, ALWAYS — and a fixed band height to prove it. This was a wrapping
+   flex row of [name][PRO plate][matchup chips], which is two rows for a short
+   name and THREE for a long one ("Dark Ranger Huntress"): the band grew 56 →
+   79 and the actions, heroes and units sections on that one card all sat 23px
+   below the same sections on every other card in the grid row. The rows are
+   explicit now (.site-card-title-row / .site-card-meta-row) and the height is
+   pinned, so nothing the content does can move the sections underneath.
+   Right padding is 12 + 46: the race watermark is absolutely positioned over
+   the band's right end, and BOTH rows have to stop clear of it. */
 .site-card-header {
   display: flex;
-  align-items: center;
-  /* Row gap 4, not 8: the matchup chips always wrap onto their own line under
-     the build name, so this gap is vertical separation between two rows that
-     belong together, not spacing between peers. */
-  gap: 4px 8px;
+  flex-direction: column;
+  justify-content: center;
+  /* Vertical separation between two rows that belong together, not spacing
+     between peers. */
+  gap: 4px;
+  /* 19 (name line) + 4 (gap) + 20 (matchup chip) + 13 (padding) + 1 (border). */
+  height: 57px;
+  box-sizing: border-box;
   margin: -10px -12px 0;
-  padding: 7px 12px 6px;
-  flex-wrap: wrap;
+  padding: 7px 58px 6px 12px;
   position: relative;
   z-index: 1;
   background:
@@ -7169,15 +7189,44 @@ abbr.gloss:focus-visible {
   border-bottom: 1px solid rgba(0,0,0,0.55);
 }
 
+/* Row 1: the build name. It is the identity of the card, so it gets the whole
+   row — no plate beside it competing for the width. */
+.site-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  /* The label's own line box. Anything else on this row (the "Added by you"
+     pill, the edit pencil) is sized to it, because a taller control here
+     would push the band past its fixed height. */
+  min-height: 19px;
+}
+.site-card-title-row .mh-build-label { flex: 0 1 auto; }
+
+/* Row 2: the matchups, with the rank plate parked at the right end. The plate
+   moved here from row 1 because the name needs every pixel up to the
+   watermark; down here the worst case (four matchups) leaves it 60px, which
+   is why the plate reads "PRO" and not "PRO BUILD". */
+.site-card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  /* One chip's height, reserved. A build with no known matchups and no rank
+     plate renders this row empty, and without the reservation the band's two
+     rows collapse to one and the name floats to the middle of the header on
+     that card alone. */
+  min-height: 20px;
+}
+
 .site-card-matchups {
   display: flex;
   gap: 4px;
-  flex-wrap: wrap;
-  /* Stops clear of the race watermark. 80% of the 240px content box is 192 and
-     the watermark's leading edge is at 198, so four matchups (171px) stay on
-     one line and five wrap — which is right, since the alternative is chips
-     over a portrait. */
-  width: 80%;
+  min-width: 0;
+  /* Shrinks before the rank plate does; five matchups clip rather than wrap,
+     because a wrap here is the thing that used to break the band height. */
+  flex: 0 1 auto;
+  overflow: hidden;
   /* The header's row gap already separates this from the build name. */
   margin-top: 0;
 }
@@ -7186,7 +7235,7 @@ abbr.gloss:focus-visible {
 .site-card-vs {
   flex: none;
   color: rgba(255,255,255,0.42);
-  font: 700 0.68rem/1 Verdana;
+  font: 700 var(--fs-min)/1 Verdana;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -7202,11 +7251,15 @@ abbr.gloss:focus-visible {
 .site-card-matchup {
   display: inline-flex;
   align-items: center;
-  min-width: 26px;
+  /* At the 0.8rem floor. It used to be 0.68rem — three-letter race
+     abbreviations struck into a dark well are exactly the text that needs the
+     floor most, and the padding comes off to pay for the extra width so four
+     matchups plus the rank plate still fit the narrowest desktop card. */
+  min-width: 24px;
   justify-content: center;
-  padding: 2px 5px 1px;
+  padding: 1px 4px;
   border-radius: 3px;
-  font: 800 0.68rem/1.25 Verdana;
+  font: 800 var(--fs-min)/1.25 Verdana;
   letter-spacing: 0.05em;
   background: rgba(0,0,0,0.30);
   color: color-mix(in srgb, var(--opp-color, #9aa) 66%, #f2ede0);
@@ -7311,15 +7364,17 @@ abbr.gloss:focus-visible {
    and "1st" on a framed portrait is the same fact twice. */
 .site-card-hero:first-child .site-card-hero-ord { display: none; }
 
+/* The hero order plate. It was 0.5rem — 8px, well under the readable floor,
+   on a 60px portrait with room to spare. It is absolutely positioned, so the
+   size costs the heroes section nothing. */
 .site-card-hero-ord {
   position: absolute;
-  bottom: 1px;
-  right: 1px;
-  font: 700 0.5rem Verdana;
+  bottom: 0;
+  right: 0;
+  font: 700 var(--fs-min)/1.25 Verdana;
   color: #fff;
-  background: rgba(0,0,0,0.75);
-  padding: 0 3px;
-  line-height: 1.3;
+  background: rgba(0,0,0,0.78);
+  padding: 0 4px;
   border-radius: 3px 0 0 0;
 }
 
@@ -8632,12 +8687,42 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
 /* ── Row 2: Metadata chips (tournament + stage) ────────────────────────
    Reserves min-height so cards that lack chips still align with chip cards
    one grid row over. Chips wrap freely — no element ever ellipses. */
+/* 25px, not 20: that is what a tournament chip actually measures (0.8rem over
+   1.5, 2px padding, 1px border). At 20 a card with no chips came out 5px short
+   of a card with one, which walked the whole strip below it out of line. */
 .site-replay-item-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 6px;
-  min-height: 20px;
+  min-height: 25px;
+}
+
+/* The one remaining width-dependent height on the card. The widest meta row in
+   the library — "Dolphin WSL S2" + "Quarterfinals · Game 2" — needs 238px, so
+   below that it wraps to two lines, and it wraps on the cards carrying that
+   much metadata and not on the ones that don't. That walks the identity line,
+   the expo row and the units section out of line with the card next door.
+   Nothing in this row truncates, so the fix is to give the WHOLE grid both
+   lines once the column is narrow enough for any card to need them.
+
+   Container, not viewport: the cards in a grid row share a width, so asking
+   the card gets every card in the row the same answer, whatever the sidebar
+   is doing to the grid. The query size is the card's CONTENT box (card width
+   less 24px padding and 2px border). The expo row below has the same problem
+   and the same shape — "✘ No Expo" plus "New player · Medium" needs 245 —
+   so both are reserved off one threshold, the wider of the two.
+
+   245 is a BOUNDARY, not a round number with slack in it: a 1920px window lays
+   out 272px cards, which is 246px of content, and rounding this up to 250 puts
+   an empty reserved line on every card at the single most common desktop
+   width. RE-MEASURE both rows if a tournament ships a longer shortName or a
+   build class gets a longer label — the two numbers are 238 and 245 today. */
+@container (max-width: 245px) {
+  .site-replay-item-meta { min-height: 46px; align-items: flex-start; }
+  /* Bottom-anchored by margin-top:auto, so the reservation lines up the FIRST
+     line of every card's expo row; align-content packs the lines to the top. */
+  .site-card-expo-row { min-height: 45px; align-content: flex-start; }
 }
 
 /* Identity line typography: bold player, muted "vs", regular opponent. */
@@ -8655,7 +8740,14 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
 }
 
 /* Stage / round text — plain muted text alongside the tournament chip on
-   the meta row. Wraps with the rest, no truncation. */
+   the meta row. Wraps with the rest, no truncation.
+
+   The one deliberate exception to the 0.8rem floor on this page, and it is
+   held by the layout, not by preference: at the floor "Dolphin WSL S2" +
+   "Quarterfinals · Game 2" needs 258px and the row only has 246 on a 1920px
+   window, so raising it puts a reserved empty line on every card at the most
+   common desktop width. Raise it the day the chip or the stage string gets
+   shorter, and re-measure the @container threshold above with it. */
 .site-replay-stage {
   color: #999;
   font-size: 0.74rem;
@@ -8729,7 +8821,8 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   color: var(--card-accent, #cfd6e4);
 }
 .srt-sub {
-  font: 600 0.75rem/1.2 Verdana;
+  /* At the floor, like .srt-text beside it — it was 0.75rem. */
+  font: 600 var(--fs-min)/1.2 Verdana;
   color: rgba(255,255,255,0.38);
 }
 /* Pushes the chevron to the far edge — the affordance is at the end of the
@@ -8742,6 +8835,19 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
   transition: transform 0.15s ease, opacity 0.15s ease;
 }
 .site-replay-toggle:hover .srt-chev { opacity: 1; transform: translateY(1px); }
+
+/* Builds with exactly one replay have nothing to disclose, so they get the
+   bar's height and none of its material — no border, no fill, nothing to
+   click. It has to be reserved rather than skipped: the units section above is
+   the slack absorber, so without it the identity line, the meta chips and the
+   expo row all sit 30px lower than they do on the card next door. Height
+   matches .site-replay-toggle: 7+7 padding over a 16px line. */
+.site-replay-foot-spacer {
+  height: 30px;
+  flex: none;
+  margin: 6px -13px -11px;
+  pointer-events: none;
+}
 
 
 /* "Watch" is the card's primary action, so it takes the .btn-primary accent
@@ -10826,9 +10932,11 @@ svg.about-feat-icon {
 .missing-replay-body strong {
   color: #f0f0f0;
 }
+/* max(), not a bare 0.85em: the surrounding paragraph is fluid, so at narrower
+   viewports 0.85em of it lands under the readable floor. */
 .missing-replay-body code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.85em;
+  font-size: max(0.85em, var(--fs-min));
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.08);
   padding: 1px 6px;
@@ -14220,9 +14328,11 @@ body.compare-drawer-active {
 .help-modal-body p {
   margin: 0 0 12px 0;
 }
+/* max(), not a bare em: relative to the tip copy this lands at 12.4px, just
+   under the readable floor. */
 .help-modal-body code {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 0.88em;
+  font-size: max(0.88em, var(--fs-min));
   background: rgba(0,0,0,0.4);
   padding: 1px 6px;
   border-radius: 4px;
@@ -14241,7 +14351,7 @@ body.compare-drawer-active {
   gap: 4px;
 }
 .help-path-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-min);
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: #8cc878;
@@ -14409,7 +14519,7 @@ body.help-modal-active {
   font-size: 0.82rem;
 }
 .mine-toolbar-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-min);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #888;
@@ -14981,7 +15091,7 @@ body.help-modal-active {
   border: 1px solid transparent;
   border-radius: 6px;
   color: #a8a8a8;
-  font-size: 0.78rem;
+  font-size: var(--fs-min);
   font-family: inherit;
   padding: 4px 10px;
   cursor: pointer;
@@ -15619,12 +15729,16 @@ body.help-modal-active {
 /* "Added by you" pill: small attribution on user-uploaded pro cards.
    Slate-tinted so it pairs with the .is-user-build outline ring;
    weight + casing kept normal so it reads as a label, not a stamp. */
+/* Sized to the title row's 19px line box, and at the 0.8rem floor rather than
+   the 0.72rem it used to sit at. */
 .site-card-added-pill {
   display: inline-flex;
   align-items: center;
-  padding: 1px 7px;
-  margin-left: 6px;
-  font-size: 0.72rem;
+  flex: none;
+  height: 19px;
+  padding: 0 7px;
+  margin-left: 0;
+  font-size: var(--fs-min);
   font-weight: 500;
   letter-spacing: 0.2px;
   color: #b0c4d0;
@@ -15634,17 +15748,20 @@ body.help-modal-active {
   white-space: nowrap;
 }
 
+/* 22×19, not 24×24: it rides the title row inside a fixed-height header band,
+   and a control taller than the row is what pushes the band out of line. */
 .site-card-edit-btn {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  flex: none;
+  width: 22px;
+  height: 19px;
   padding: 0;
   background: transparent;
   border: 1px solid rgba(255,255,255,0.14);
-  border-radius: 6px;
+  border-radius: 4px;
   color: #d0d0d0;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, color 0.12s;
@@ -15777,14 +15894,14 @@ body.help-modal-active {
   margin: 0;
 }
 .ub-editor-label {
-  font-size: 0.78rem;
+  font-size: var(--fs-min);
   font-weight: 600;
   letter-spacing: 0.4px;
   text-transform: uppercase;
   color: #a8a8a8;
 }
 .ub-editor-hint {
-  font-size: 0.72rem;
+  font-size: var(--fs-min);
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
@@ -15999,7 +16116,7 @@ fieldset.ub-editor-field input[type="text"] {
   .mobile-action-caret {
     display: inline-block;
     transition: transform 0.15s;
-    font-size: 10px;
+    font-size: var(--fs-min);
     opacity: 0.7;
   }
   .mobile-action-count {
@@ -16093,6 +16210,9 @@ fieldset.ub-editor-field input[type="text"] {
     margin: 6px -9px -9px;
     padding: 7px 9px;
   }
+  /* Nothing to line up with in one column, so the reserved foot is just a hole
+     in the bottom of the card. */
+  .site-replay-foot-spacer { display: none; }
   /* Nothing is absorbing slack without a fixed height, so the upgrades well
      goes back to being exactly as tall as its badges. */
   .site-card-upgrade-scroll { flex: 0 0 auto; }
@@ -16109,9 +16229,15 @@ fieldset.ub-editor-field input[type="text"] {
     font-size: 12px;
     line-height: 1.35;
   }
-  .site-card-header { gap: 6px; padding-bottom: 4px; }
+  /* No fixed band height here — one card per row has nothing to line up with,
+     and the watermark is hidden, so the rows get the full width back. */
+  .site-card-header {
+    gap: 4px;
+    height: auto;
+    padding: 7px 12px 4px;
+  }
   .mh-build-label { font-size: 14px; }
-  .site-card-matchups { font-size: 11px; }
+  .site-card-matchups { font-size: 11px; flex-wrap: wrap; overflow: visible; }
   .site-card-heroes-row { gap: 8px; }
   .mh-hero-portrait { width: 36px !important; height: 36px !important; }
   .site-card-hero-skills { gap: 2px; }
@@ -16120,7 +16246,7 @@ fieldset.ub-editor-field input[type="text"] {
   .site-skill-lvl { font-size: 9px !important; }
   .site-card-key-units { gap: 4px; flex-wrap: wrap; }
   .site-card-key-icon { width: 28px !important; height: 28px !important; }
-  .site-card-key-label { font-size: 11px; }
+  .site-card-key-label { font-size: var(--fs-min); }
   .site-card-upgrade-row { gap: 4px; flex-wrap: wrap; }
   .site-upgrade-badge { padding: 2px 5px; font-size: 11px; }
   .site-upgrade-icon { width: 22px !important; height: 22px !important; }

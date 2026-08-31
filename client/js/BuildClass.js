@@ -23,14 +23,14 @@ const BuildClass = (() => {
       key: 'pro-meta', order: 0,
       label: 'Pro meta', short: 'Pro meta',
       band: 'pro', isPro: true, isOffMeta: false,
-      cardClass: 'is-pro is-pro-meta', tag: 'PRO BUILD',
+      cardClass: 'is-pro is-pro-meta', tag: 'PRO',
       desc: 'What top players are running right now'
     },
     'pro-off-meta': {
       key: 'pro-off-meta', order: 1,
       label: 'Pro off-meta', short: 'Off-meta',
       band: 'pro', isPro: true, isOffMeta: true,
-      cardClass: 'is-pro is-pro-off-meta', tag: 'PRO BUILD',
+      cardClass: 'is-pro is-pro-off-meta', tag: 'PRO',
       desc: 'Pro builds outside the current meta'
     },
     'ladder': {

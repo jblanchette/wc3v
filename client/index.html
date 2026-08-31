@@ -192,7 +192,7 @@
   <link rel="dns-prefetch" href="https://cdn.wc3v.com">
 
   <link rel="stylesheet" href="css/tokens.css?v=d4b178845b">
-  <link rel="stylesheet" href="css/main.css?v=c657cd5043">
+  <link rel="stylesheet" href="css/main.css?v=d2de0cce9f">
   <!-- New design system: tokens + bo-* components + the
        homepage re-skin section. Loaded AFTER main.css so its overrides win. -->
   <link rel="stylesheet" href="css/redesign.css?v=e799bc8754">
@@ -204,7 +204,7 @@
     // homepage can cache-bust /data/builds-cards.json (the fetch URL is in JS,
     // out of reach of the HTML ?v= rewrite). Dev keeps null (no ?v=).
     // Don't reformat the marker comments — the rewrite regex matches them.
-    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '5c890e286d'; /* @wc3v-asset-version-end */
+    /* @wc3v-asset-version-begin */ window.__WC3V_ASSET_VERSION__ = '13a2b50dbc'; /* @wc3v-asset-version-end */
   </script>
 </head>
 <body class="site-page">
@@ -227,9 +227,9 @@
     </div>
   </nav>
 
-  <script src="js/clientConfig.js?v=53d88a6933"></script>
+  <script src="js/clientConfig.js?v=9df919b703"></script>
   <script src="js/BandSwitcher.js?v=e27f20d74c"></script>
-  <script src="js/BuildClass.js?v=2df27b1482"></script>
+  <script src="js/BuildClass.js?v=622d9ff5ff"></script>
   <script src="js/SiteNav.js?v=66285d9d27"></script>
   <script src="js/TosBanner.js?v=16bfc558ad"></script>
   <script src="js/Security.js?v=a131c46e7c"></script>
@@ -1986,10 +1986,14 @@
       // separate statements rather than one list of who this build is for.
       let matchupPills = '';
       if (build.matchups && build.matchups.length) {
-        const pills = build.matchups.map(m => {
-          const opp = m.split('v')[1] || '';
-          return `<span class="site-card-matchup" data-opp="${raceAbbr(opp)}" style="--opp-color:${raceColor(opp)}">${raceAbbr(opp)}</span>`;
-        }).join('');
+        const pills = build.matchups
+          // "??" is a missing opponent race, not a matchup. It sorts to the end
+          // so the races the build is actually for read first and the gap in
+          // the data trails them, instead of "vs ?? ORC UD".
+          .map(m => m.split('v')[1] || '')
+          .sort((a, b) => (RACE_META[a] ? 0 : 1) - (RACE_META[b] ? 0 : 1))
+          .map(opp => `<span class="site-card-matchup" data-opp="${raceAbbr(opp)}" style="--opp-color:${raceColor(opp)}">${raceAbbr(opp)}</span>`)
+          .join('');
         matchupPills = `<div class="site-card-matchups"><span class="site-card-vs">vs</span>${pills}</div>`;
       }
       // User-uploaded pro replays get a small "Added by you" pill + a
@@ -2003,13 +2007,23 @@
       const editBtn = build._isUserBuild
         ? `<button class="site-card-edit-btn" type="button" data-action="edit-user-build" data-local-id="${build._localId}" title="Edit name & notes" aria-label="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>`
         : '';
+      // Two explicit rows, never a wrap flex. The header used to be one
+      // wrapping row of [name][PRO][pills]; a long name pushed the PRO plate
+      // onto a third line, the band grew from 56px to 79px, and every section
+      // under it on that ONE card sat 23px lower than the same section on its
+      // neighbours. Row 1 is the name, row 2 is the matchups with the rank
+      // plate at its right end, and the band is a fixed height.
       const headerHtml = `<div class="site-card-header">
         <img class="site-card-race-watermark" src="/assets/wc3icons/${iconId}.jpg" alt="" aria-hidden="true" loading="lazy" />
-        <span class="mh-build-label">${build.name}</span>
-        ${proTag}
-        ${addedByYou}
-        ${editBtn}
-        ${matchupPills}
+        <div class="site-card-title-row">
+          <span class="mh-build-label">${build.name}</span>
+          ${addedByYou}
+          ${editBtn}
+        </div>
+        <div class="site-card-meta-row">
+          ${matchupPills}
+          ${proTag}
+        </div>
       </div>`;
 
       // ── Heroes: portraits with skill icons ──────────────
@@ -2233,12 +2247,18 @@
         // shrink-and-truncate when the card is narrow (~260px in the grid):
         //   Row 1 (identity):  "{player} vs {opponent}"   ·   {map}
         //   Row 2 (meta):      [tournament] [stage]              — wraps freely,
-        //                      reserves min-height so cards align even when empty
-        //   Row 3:             the "N more replays" bar, a direct child — Guide
-        //                      and Watch used to share this row inside a pair of
-        //                      flex wrappers, and with them gone the wrappers
-        //                      only made the bar's `width: 100%` resolve against
-        //                      a shrink-to-fit parent instead of the card.
+        //                      reserves a chip's height so cards align when empty
+        //   Row 3:             the "N more replays" bar, or an inert spacer of
+        //                      the same height when a build has exactly one
+        //                      replay and there is nothing to disclose. Without
+        //                      the spacer the units section above absorbs the
+        //                      bar's 30px and the whole strip — identity, meta,
+        //                      the expo row — rides 30px lower than it does on
+        //                      every neighbouring card.
+        // Row 3 is a DIRECT child: Guide and Watch used to share it inside a
+        // pair of flex wrappers, and with them gone the wrappers only made the
+        // bar's `width: 100%` resolve against a shrink-to-fit parent instead
+        // of the card.
         const firstItem = `<div class="site-replay-item">
           <div class="site-replay-item-identity">
             <span class="site-replay-item-players">${identityHtml}</span>
@@ -2248,7 +2268,7 @@
             ${firstTournamentChip}
             ${firstStageChip}
           </div>
-          ${moreBtn}
+          ${moreBtn || '<div class="site-replay-foot-spacer" aria-hidden="true"></div>'}
         </div>`;
 
         replaySection = `<div class="site-replay-section">
