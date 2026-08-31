@@ -1,5 +1,33 @@
 # WC3V Desktop: changelog
 
+## 1.0.8 — 31 Aug 2026
+
+### Only parse 1v1 games, if that is all you care about
+
+Reading a whole replay library takes about seven seconds a game. On a
+four-thousand-replay history that is hours, and for most ladder players a lot
+of it goes to team and custom games they never open.
+
+Settings, under Your history, now has "Only parse 1v1 games". With it on, the
+backfill reads each replay's header first (about 140 ms) and skips anything
+that is not a 1v1. The header verdict is checked against the full parse over
+736 replays with zero disagreements, and a replay whose header cannot be read
+is parsed rather than guessed at: the filter never drops a game it could not
+classify.
+
+Nothing disappears quietly. The progress line counts what was skipped ("412
+not 1v1"), the run's closing summary repeats it, and the skips are not
+recorded anywhere, so turning the filter off and pressing Parse all replays
+reads exactly the games it passed over. Games you finish while the app is
+running are always parsed, whatever mode they are.
+
+First run offers the filter too, pre-checked, when the library it found is
+big enough (500+ replays) for the question to matter. Below that the screen
+stays as it was. The setting lives in the binary as a marker file, like the
+W3Champions opt-in, and off remains the default: a fresh install, or a wiped
+app data folder, reads everything.
+
+
 ## 1.0.7 — 31 Aug 2026
 
 ### A big history stopped costing a big chunk of memory
