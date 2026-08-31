@@ -7386,8 +7386,14 @@ abbr.gloss:focus-visible {
 
 .site-skill-icon {
   position: relative;
-  width: 22px;
-  height: 22px;
+  /* 36px is the project floor for an icon, and this was 22. The level badge
+     below could not reach its own 12.8px floor on a 22px tile without
+     swallowing it, so the two move together. Growing the strip pushed the
+     tallest card past --card-h, which is raised by the same measured delta;
+     re-measure with tools/page-audit.js and the card measurement if either
+     changes again. */
+  width: var(--ico-sm);
+  height: var(--ico-sm);
   border-radius: 3px;
   overflow: hidden;
   border: 1px solid #555;
@@ -7412,7 +7418,8 @@ abbr.gloss:focus-visible {
   position: absolute;
   bottom: 0;
   right: 0;
-  font: 700 0.5rem Verdana;
+  /* Was 0.5rem (8px). The floor is --fs-min. */
+  font: 700 var(--fs-min) Verdana;
   color: #fff;
   background: rgba(0,0,0,0.75);
   padding: 0 2px;
@@ -8750,7 +8757,9 @@ html:not([data-mine="has"]) #my-replays-section { display: none; }
    shorter, and re-measure the @container threshold above with it. */
 .site-replay-stage {
   color: #999;
-  font-size: 0.74rem;
+  /* Was 0.74rem (11.8px), under the project's 12.8px floor. This is body
+     metadata, so it goes to the floor token rather than staying small. */
+  font-size: var(--fs-min);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -16241,9 +16250,12 @@ fieldset.ub-editor-field input[type="text"] {
   .site-card-heroes-row { gap: 8px; }
   .mh-hero-portrait { width: 36px !important; height: 36px !important; }
   .site-card-hero-skills { gap: 2px; }
-  .site-skill-icon { width: 18px !important; height: 18px !important; }
-  .site-skill-icon img { width: 18px !important; height: 18px !important; }
-  .site-skill-lvl { font-size: 9px !important; }
+  /* The 36px icon floor is a desktop rule, so these stay smaller than the
+     base, but 18px/9px was small enough to be decorative rather than
+     readable. The badge goes to the text floor, which applies everywhere. */
+  .site-skill-icon { width: 28px !important; height: 28px !important; }
+  .site-skill-icon img { width: 28px !important; height: 28px !important; }
+  .site-skill-lvl { font-size: var(--fs-min) !important; }
   .site-card-key-units { gap: 4px; flex-wrap: wrap; }
   .site-card-key-icon { width: 28px !important; height: 28px !important; }
   .site-card-key-label { font-size: var(--fs-min); }
