@@ -1,6 +1,6 @@
 # WC3V Desktop: changelog
 
-## 1.0.6
+## 1.0.6 — 31 Aug 2026
 
 ### An anonymous usage counter, and a switch for it
 
