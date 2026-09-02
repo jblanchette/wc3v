@@ -701,7 +701,7 @@ function main () {
   // 6. Publish the replay-format docs the agent skill points at ────────────
   // They live in docs/ at the repo root, which Render does not serve. Copying
   // rather than moving keeps the repo-root location working for contributors.
-  for (const f of ['REPLAY_FORMAT_RFC.md', 'wc3v-schema.json', 'wc3v-example.md']) {
+  for (const f of ['REPLAY_FORMAT_RFC.md', 'wc3v-schema.json', 'wc3v-example.json']) {
     const src = path.join(ROOT, 'docs', f);
     if (!fs.existsSync(src)) { problems.push('docs/' + f + ': referenced by a skill but missing'); continue; }
     emit('docs/' + f, fs.readFileSync(src, 'utf8'));

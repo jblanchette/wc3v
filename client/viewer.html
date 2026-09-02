@@ -382,13 +382,43 @@
                   </div>
                 </div>
 
+                <!-- THE LAYER TABLE. Stacking is CSS z-index, not DOM order,
+                     so reordering these tags changes nothing. Back to front:
+
+                       z 0  #three-canvas    L1 TERRAIN     3D mesh, cliffs, doodads, building models
+                       z 1  #main-canvas     L2 LEGACY      unused, kept for old render paths
+                       z 2  #utility-canvas  L3 MAP         grid, neutral building icons, camp rings, tree icons
+                       z 3  #player-canvas   L4 UNITS       unit icons, death FX, 2D selection fallback,
+                                                            nameplates, floating text (nameplates draw last)
+                       z 4  #action-canvas   L5 ACTION      teleport cinematics; anything that marks a
+                                                            deliberate player moment goes here, above nameplates
+
+                     All five are in the map image's LOGICAL space and get
+                     CSS-downscaled, so a size constant here is map pixels, not
+                     screen pixels, and text on them needs an `sx` correction
+                     (BaseNameplateRenderer). A text-heavy overlay wants to be a
+                     DOM event-feed card instead; the post-battle box was moved
+                     that way after two rounds of trying to make it legible here.
+
+                     DOM siblings over the canvases, inside #map-container:
+                     #main-wrapper z 2 (creates the stacking context; without an
+                     explicit z-index the canvas group's own z leaked out and
+                     buried the scrubber popups), .battle-marker 3, .minimap-pip
+                     5, #hud-charts-canvas 6 (real CSS px, sibling of this group
+                     on purpose), .corner-stack and .camera-toolbar 20,
+                     #scrubber-bar 60, match header 100, modals 1000+.
+
+                     Every corner is taken: camera toolbar upper-right, map name
+                     upper-left, minimap lower-right, insights lower-left, the
+                     graphs HUD bottom-centre. New chrome joins a corner stack or
+                     displaces something. -->
                 <div id="canvas-group" role="img" aria-label="Replay map and unit playback. The build order is summarized in the build order panel below.">
                   <canvas id="three-canvas" width="550" height="650" aria-hidden="true"></canvas>
                   <canvas id="main-canvas" width="550" height="650" aria-hidden="true"></canvas>
                   <canvas id="player-canvas" width="550" height="650" aria-hidden="true"></canvas>
                   <canvas id="utility-canvas" width="550" height="650" aria-hidden="true"></canvas>
-                  <!-- L5 ACTION INDICATORS — teleport cinematics, big event callouts.
-                       Topmost canvas (CSS z-index 4). See client/docs/Z_INDEX.md. -->
+                  <!-- L5 ACTION INDICATORS: teleport cinematics, big event callouts.
+                       Topmost canvas (CSS z-index 4). -->
                   <canvas id="action-canvas" width="550" height="650" aria-hidden="true"></canvas>
                   <!-- Project C: camp icons live inside canvas-group so they
                        share the canvases' exact box + any live-mode transform -->
@@ -406,7 +436,7 @@
                      NOT the map's logical coordinate space, and a SIBLING of
                      #canvas-group on purpose — inside it the element would
                      inherit the live-mode transform and the object-fit:contain
-                     letterbox box. See client/docs/Z_INDEX.md.
+                     letterbox box. See the layer table on #canvas-group.
 
                      The wrapper div is load-bearing: <canvas> is a REPLACED
                      element, so `width:auto` on it resolves from its intrinsic

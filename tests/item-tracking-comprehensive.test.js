@@ -32,9 +32,11 @@
  *      records the drop position + item objectId (an opaque integer)
  *      but NOT the rolled itemId. We can therefore surface the CANDIDATE
  *      POOL (every item in the camp's droppedItemSets) plus a confidence
- *      tag — never the specific item that dropped. See doc:
- *      docs/ITEM_TRACKING.md → "RNG opacity" section. Asserting a
- *      specific itemId on a random drop is a test smell.
+ *      tag, never the specific item that dropped. The roll happens in the
+ *      game engine after the action fires and no replay-recoverable seed
+ *      exists (docs/PRNG_AND_REPLAY_FORMAT.md in git history, and the RFC
+ *      at docs/REPLAY_FORMAT_RFC.md). Asserting a specific itemId on a
+ *      random drop is a test smell.
  *
  *   2. PICKUPS WITHOUT FOLLOW-UP DROPS ARE INVISIBLE. The first time a
  *      hero touches a creep-drop, the action is a vanilla RightClick on

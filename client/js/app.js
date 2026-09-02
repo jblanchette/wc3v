@@ -192,8 +192,9 @@ const Wc3vViewer = class {
 
     this.utilityCanvas = null;
     this.utilityCtx = null;
-    // L5 ACTION INDICATORS — teleport cinematics + future big-event callouts.
-    // Topmost canvas (CSS z-index 4). See client/docs/Z_INDEX.md.
+    // L5 ACTION INDICATORS: teleport cinematics and big-event callouts.
+    // Topmost canvas (CSS z-index 4). The layer table is on #canvas-group in
+    // viewer.html.
     this.actionCanvas = null;
     this.actionCtx = null;
 
@@ -5418,7 +5419,7 @@ const Wc3vViewer = class {
 
     // Teleport cinematic — channel ring + destination mirror + banner + flash.
     // L5 ACTION INDICATORS layer (#action-canvas, z 4) so it stays above unit
-    // nameplates which draw on #player-canvas (z 3). See client/docs/Z_INDEX.md.
+    // nameplates which draw on #player-canvas (z 3). Layer table: viewer.html.
     if (this.teleportFx && this.actionCtx) {
       this.teleportFx.render(this.actionCtx, transform, gameTime, viewOptions, this.gameScaler, this.players);
     }

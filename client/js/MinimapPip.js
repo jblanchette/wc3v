@@ -293,8 +293,8 @@
       }
 
       // Teleport destination pulses — small bright dot at each active TP's
-      // target so users notice incoming portals even when looking away. See
-      // client/docs/Z_INDEX.md (L5 ACTION INDICATORS — minimap mirror).
+      // target so users notice incoming portals even when looking away. The
+      // minimap mirror of the L5 ACTION INDICATORS layer (see viewer.html).
       this._drawTeleportPulses(ctx);
     }
 

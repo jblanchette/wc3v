@@ -166,9 +166,11 @@ const campRecord = (camp, replayId) => {
     // Looting a creep drop would prove creeps DIED here — items only exist once
     // something drops them — which would be the ideal anti-degenerate anchor.
     // MEASURED: the corpus contains ZERO interact-item events, because
-    // Player.selectGroundItem never fires on these replays (see
-    // docs/PHASE0_FIXTURES.md). The check is kept so it lights up if that is
-    // ever fixed, but today it grades nothing and must not be read as a pass.
+    // Player.selectGroundItem never fires on these replays. (Fixture replays
+    // recorded in single-player mode emit malformed GameCache actions that
+    // truncate the stream; record fixtures as a Custom Game against an AI.)
+    // The check is kept so it lights up if that is ever fixed, but today it
+    // grades nothing and must not be read as a pass.
     lootedAt: (() => {
       const it = events.filter(e => e.stage === 'interact-item');
       return it.length ? it[0].gameTime : null;
