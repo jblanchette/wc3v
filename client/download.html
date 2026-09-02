@@ -473,7 +473,9 @@
             <h2 class="dl-h2" id="dl-screens-title">The whole game, laid out</h2>
 
             <div class="dl-tabs" role="tablist" aria-label="Screens" id="dl-tabs">
-              <button type="button" class="dl-tab" role="tab" aria-selected="true" data-shot="home"
+              <button type="button" class="dl-tab" role="tab" aria-selected="true" data-shot="setup"
+                data-note="Four steps, once. It finds your replay folders, works out which player you are from your own recent games, and says what stays on your machine before anything else.">Setup</button>
+              <button type="button" class="dl-tab" role="tab" aria-selected="false" data-shot="home"
                 data-note="Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.">Home</button>
               <button type="button" class="dl-tab" role="tab" aria-selected="false" data-shot="overview"
                 data-note="Who was ahead second by second, and where the game turned. Fights, expansions and hero levels on one timeline.">Overview</button>
@@ -486,7 +488,9 @@
             </div>
 
             <div class="dl-stage" id="dl-stage">
-              <img class="is-on" data-shot="home" src="/assets/press/app-home.webp" width="1280" height="820"
+              <img class="is-on" data-shot="setup" src="/assets/press/app-setup.webp" width="1280" height="820"
+                alt="The WC3V setup screen on its third step: one large card reading This is you with the player's name and the town halls of the races they play, smaller cards for the other names in their recent games, and a W3Champions switch">
+              <img data-shot="home" src="/assets/press/app-home.webp" width="1280" height="820" loading="lazy"
                 alt="The WC3V desktop app's Home tab: a strip of recently parsed games along the top and a status bar reading Watching for new games">
               <img data-shot="overview" src="/assets/press/report-overview.webp" width="1280" height="820"
                 alt="The Overview tab: victory header, dominance chart, moments timeline, and both players' unit rosters and match stats">
@@ -497,7 +501,7 @@
               <img data-shot="team" src="/assets/press/report-team.webp" width="1280" height="820" loading="lazy"
                 alt="A 3v3 team game report showing tier progression and unit rosters for all six players">
             </div>
-            <p class="dl-stage-note" id="dl-stage-note" aria-live="polite">Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.</p>
+            <p class="dl-stage-note" id="dl-stage-note" aria-live="polite">Four steps, once. It finds your replay folders, works out which player you are from your own recent games, and says what stays on your machine before anything else.</p>
             <div class="dl-open">
               <a class="btn dl-src" href="https://github.com/jblanchette/wc3v/tree/master/desktop" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
