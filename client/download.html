@@ -308,7 +308,9 @@
        largest single thing in it. Cropping to the header and the heroes keeps
        what identifies the card and drops what was unreadable at 330px anyway. */
     @media (min-width: 1100px) and (max-height: 880px) {
-      .dl-shot img { height: 140px; object-fit: cover; object-position: top center; }
+      .dl-shot img { height: 92px; object-fit: cover; object-position: top center; }
+      .dl-shot { margin-bottom: var(--sp-2); }
+      .dl-card .dl-h2[style] { margin-top: var(--sp-2) !important; }
       /* The last 41px, taken a row at a time rather than by dropping another
          claim. Nothing here crosses a readability floor: the type is
          untouched, only the space around it. */
@@ -317,10 +319,19 @@
          nothing. Take it off the axis that is actually short. */
       .dl-card { padding: var(--sp-2) var(--sp-3); }
       .dl-h2 { margin-bottom: var(--sp-2); }
-      .dl-spec li { padding: 3px 0; }
-      .dl-points { gap: 4px; }
-      .dl-safe { gap: 5px; }
+      .dl-spec li { padding: 1px 0; }
+      .dl-points { gap: 2px; }
+      .dl-safe { gap: 4px; }
       .dl-faq summary { padding-top: 6px; padding-bottom: 6px; }
+      /* The rest of the 1280x800 budget: the gaps between cards, the steps,
+         the leading on the small copy, and the stage's floor. Every column
+         was still 20 to 60px over with the rules above alone. */
+      .dl-cols, .dl-col { gap: var(--sp-2); }
+      .dl-steps { gap: var(--sp-2); }
+      .dl-step span, .dl-safe li, .dl-points li, .dl-open p, .dl-stage-note { line-height: 1.35; }
+      .dl-stage { min-height: 180px; }
+      .dl-stage-note { min-height: 0; margin-top: var(--sp-2); }
+      .dl-open { margin-top: var(--sp-2); padding-top: var(--sp-2); }
     }
 
     .dl-points { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -338,8 +349,6 @@
     .dl-spec .v { color: var(--text); text-align: right; overflow-wrap: anywhere; }
     .dl-spec .v code { font-family: var(--mono); font-size: var(--fs-min); }
 
-    .dl-fail { background: var(--warn-soft); border: 1px solid var(--warn-edge); border-radius: var(--radius-sm); padding: var(--sp-2); margin: 0 0 var(--sp-3); font-size: var(--fs-min); color: var(--text); line-height: 1.45; }
-    .dl-fail[hidden] { display: none; }
 
     /* ── The FAQ, folded ───────────────────────────────────────────────── */
     .dl-faq { border-top: 1px solid var(--border); }
@@ -459,8 +468,8 @@
           <section class="dl-card">
             <h2 class="dl-h2">Safe to run</h2>
             <ul class="dl-safe">
-              <li><b>Never touches the game.</b> No injection, no memory reading, no packet capture, no input automation.</li>
-              <li><b>Nothing leaves your PC.</b> No upload, no account. The app sends only an anonymous usage count, and Settings can switch that off.</li>
+              <li><b>Never touches the game.</b> No injection, no memory reading, no input automation.</li>
+              <li><b>Nothing leaves your PC.</b> No upload, no account. One anonymous usage count, off in Settings.</li>
               <li><b>One local socket.</b> The overlay binds <code>127.0.0.1</code>, token-gated, GET only.</li>
               <li><b>Open source.</b> GPLv3, the <a href="https://github.com/jblanchette/wc3v/tree/master/desktop" target="_blank" rel="noopener noreferrer"><code>desktop/</code> folder on GitHub</a>.</li>
             </ul>
@@ -526,11 +535,10 @@
             </figure>
             <ul class="dl-points">
               <li><strong>Nobody can snipe you through it.</strong> The app never sees a live game.</li>
-              <li><strong>One URL into an OBS Browser Source.</strong> Your panels, four themes, a size control, plus a casting page for broadcasts.</li>
+              <li><strong>One URL into an OBS Browser Source.</strong> Your panels, four themes, and a casting page for broadcasts.</li>
             </ul>
 
             <h2 class="dl-h2" style="margin-top: var(--sp-4)">Install</h2>
-            <p class="dl-fail" id="dl-fail" hidden>Couldn't reach the update server, so the version and hash are missing. The command still works: it reads the same manifest itself.</p>
             <ul class="dl-spec">
               <li><span class="k">Version</span> <span class="v" data-dl-version>Loading…</span></li>
               <li><span class="k">Installs to</span> <span class="v">Your user folder, no admin</span></li>

@@ -41,7 +41,6 @@ const DownloadPage = {
   },
 
   async _loadManifest() {
-    const failEl = document.getElementById('dl-fail');
     const shaCode = document.getElementById('dl-sha-code');
 
     try {
@@ -74,9 +73,12 @@ const DownloadPage = {
       // also hold the install command, which resolves this same manifest
       // itself and is the one thing still working when this fetch is what
       // broke.
+      // The failure is said in the spec table's own rows rather than in a
+      // paragraph above it: a 55px notice was what pushed the third column
+      // past a 1280x800 window whenever the manifest could not be read.
       for (const el of document.querySelectorAll('[data-dl-line]')) el.hidden = true;
       this._fill('data-dl-version', 'Latest');
-      if (failEl) failEl.hidden = false;
+      if (shaCode) shaCode.textContent = 'unavailable right now';
     }
   },
 

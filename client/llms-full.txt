@@ -518,9 +518,9 @@ Leave it running. Every game you finish is read on your own PC and laid out befo
 
 ## Safe to run
 
-- **Never touches the game.** No injection, no memory reading, no packet capture, no input automation.
+- **Never touches the game.** No injection, no memory reading, no input automation.
 
-- **Nothing leaves your PC.** No upload, no account. The app sends only an anonymous usage count, and Settings can switch that off.
+- **Nothing leaves your PC.** No upload, no account. One anonymous usage count, off in Settings.
 
 - **One local socket.** The overlay binds `127.0.0.1`, token-gated, GET only.
 
@@ -528,9 +528,9 @@ Leave it running. Every game you finish is read on your own PC and laid out befo
 
 ## The whole game, laid out
 
-![The WC3V desktop app's Home tab: a strip of recently parsed games along the top and a status bar reading Watching for new games](https://wc3v.com/assets/press/app-home.webp) ![The Overview tab: victory header, dominance chart, moments timeline, and both players' unit rosters and match stats](https://wc3v.com/assets/press/report-overview.webp) ![The Build tab: hero cards with skills and items for both players, above their build orders interleaved as one timeline](https://wc3v.com/assets/press/report-build.webp) ![The Economy tab: APM over time, an action breakdown, trade balance and food charts for both players](https://wc3v.com/assets/press/report-economy.webp) ![A 3v3 team game report showing tier progression and unit rosters for all six players](https://wc3v.com/assets/press/report-team.webp)
+![The WC3V setup screen on its third step: one large card reading This is you with the player's name and the town halls of the races they play, smaller cards for the other names in their recent games, and a W3Champions switch](https://wc3v.com/assets/press/app-setup.webp) ![The WC3V desktop app's Home tab: a strip of recently parsed games along the top and a status bar reading Watching for new games](https://wc3v.com/assets/press/app-home.webp) ![The Overview tab: victory header, dominance chart, moments timeline, and both players' unit rosters and match stats](https://wc3v.com/assets/press/report-overview.webp) ![The Build tab: hero cards with skills and items for both players, above their build orders interleaved as one timeline](https://wc3v.com/assets/press/report-build.webp) ![The Economy tab: APM over time, an action breakdown, trade balance and food charts for both players](https://wc3v.com/assets/press/report-economy.webp) ![A 3v3 team game report showing tier progression and unit rosters for all six players](https://wc3v.com/assets/press/report-team.webp)
 
-Home is a feed of your games, newest first, each one graded as it lands. The bar along the bottom says whether it is watching.
+Four steps, once. It finds your replay folders, works out which player you are from your own recent games, and says what stays on your machine before anything else.
 
 [ Source on GitHub ](https://github.com/jblanchette/wc3v/tree/master/desktop)
 
@@ -542,11 +542,9 @@ Open source, GPLv3. The app is the `desktop/` folder of the [wc3v repository](ht
 
 - **Nobody can snipe you through it.** The app never sees a live game.
 
-- **One URL into an OBS Browser Source.** Your panels, four themes, a size control, plus a casting page for broadcasts.
+- **One URL into an OBS Browser Source.** Your panels, four themes, and a casting page for broadcasts.
 
 ## Install
-
-Couldn't reach the update server, so the version and hash are missing. The command still works: it reads the same manifest itself.
 
 - Version Loading…
 
